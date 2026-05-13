@@ -27,7 +27,8 @@ function setPath(obj: Record<string, unknown>, path: string[], value: unknown): 
 function coerce(raw: string): unknown {
   if (raw === 'true') return true;
   if (raw === 'false') return false;
-  if (/^-?\d+(\.\d+)?$/.test(raw)) return Number(raw);
+  const n = Number(raw);
+  if (raw.trim() !== '' && !Number.isNaN(n) && Number.isFinite(n)) return n;
   try {
     return JSON.parse(raw);
   } catch {
@@ -56,7 +57,7 @@ export function registerConfigCommand(program: Command): void {
     .description('Update a config value and validate against schema')
     .action(async (key: string, raw: string) => {
       const cfg = await loadConfig(process.cwd());
-      const draft = JSON.parse(JSON.stringify(cfg)) as Record<string, unknown>;
+      const draft = structuredClone(cfg) as Record<string, unknown>;
       setPath(draft, key.split('.'), coerce(raw));
       const result = KeelConfigZ.safeParse(draft);
       if (!result.success) {

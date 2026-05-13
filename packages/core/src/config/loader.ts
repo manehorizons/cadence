@@ -16,7 +16,16 @@ export async function loadConfig(repoRoot: string): Promise<KeelConfig> {
   } catch (err) {
     throw new ConfigInvalidError(`config.json is not valid JSON: ${(err as Error).message}`);
   }
-  const merged = { ...defaultConfig, ...(parsed as Record<string, unknown>) };
+  const p = parsed as Record<string, unknown>;
+  const merged: Record<string, unknown> = { ...defaultConfig };
+  for (const [k, v] of Object.entries(p)) {
+    if (v !== null && typeof v === 'object' && !Array.isArray(v) &&
+        merged[k] !== null && typeof merged[k] === 'object' && !Array.isArray(merged[k])) {
+      merged[k] = { ...(merged[k] as Record<string, unknown>), ...(v as Record<string, unknown>) };
+    } else {
+      merged[k] = v;
+    }
+  }
   const result = KeelConfigZ.safeParse(merged);
   if (!result.success) {
     throw new ConfigInvalidError(`config.json failed schema validation: ${result.error.message}`);
