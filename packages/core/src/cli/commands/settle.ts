@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import type { Summary } from '@keel/types';
+import { TaskStatusZ } from '@keel/types';
 import { parseDraftMd } from '../../parse/draft-parser.js';
 import { renderSummaryMd } from '../../parse/summary-writer.js';
 import { SimpleStateBackend } from '../../state/simple.js';
@@ -57,7 +58,9 @@ export function registerSettleCommand(program: Command): void {
           acResults,
           taskResults: draft.tasks.map((t) => ({
             id: t.id,
-            status: (progress.tasks[t.id]?.status as Summary['taskResults'][number]['status']) ?? 'BLOCKED',
+            status: (TaskStatusZ.safeParse(progress.tasks[t.id]?.status).success
+              ? (progress.tasks[t.id]!.status as Summary['taskResults'][number]['status'])
+              : 'BLOCKED'),
             notes: progress.tasks[t.id]?.notes ?? '',
           })),
           decisions: [],
