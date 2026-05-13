@@ -13,28 +13,33 @@ export function registerDraftCommand(program: Command): void {
     .command('check <path>')
     .description('Coherence-check a DRAFT.md against state.json + PROJECT.md')
     .action(async (path: string) => {
-      const cwd = process.cwd();
-      const raw = await readFile(path, 'utf8');
-      const draft = parseDraftMd(raw);
-      const backend = new SimpleStateBackend(cwd);
-      const state = await backend.readState();
-      const projectMdPath = join(cwd, '.keel', 'PROJECT.md');
-      const projectMd = existsSync(projectMdPath) ? await readFile(projectMdPath, 'utf8') : '';
-      const result = coherenceCheck(draft, state, projectMd);
-      if (result.issues.length === 0) {
-        console.log('coherence: OK');
-        return;
-      }
-      let blocked = false;
-      for (const i of result.issues) {
-        const line = `[${i.severity.toUpperCase()}] ${i.code}: ${i.message}`;
-        if (i.severity === 'block') {
-          console.error(line);
-          blocked = true;
-        } else {
-          console.warn(line);
+      try {
+        const cwd = process.cwd();
+        const raw = await readFile(path, 'utf8');
+        const draft = parseDraftMd(raw);
+        const backend = new SimpleStateBackend(cwd);
+        const state = await backend.readState();
+        const projectMdPath = join(cwd, '.keel', 'PROJECT.md');
+        const projectMd = existsSync(projectMdPath) ? await readFile(projectMdPath, 'utf8') : '';
+        const result = coherenceCheck(draft, state, projectMd);
+        if (result.issues.length === 0) {
+          console.log('coherence: OK');
+          return;
         }
+        let blocked = false;
+        for (const i of result.issues) {
+          const line = `[${i.severity.toUpperCase()}] ${i.code}: ${i.message}`;
+          if (i.severity === 'block') {
+            process.stderr.write(line + '\n');
+            blocked = true;
+          } else {
+            process.stderr.write('[WARN] ' + line + '\n');
+          }
+        }
+        if (blocked) process.exitCode = 2;
+      } catch (err) {
+        process.stderr.write(`draft check failed: ${err instanceof Error ? err.message : String(err)}\n`);
+        process.exitCode = 1;
       }
-      if (blocked) process.exit(2);
     });
 }
