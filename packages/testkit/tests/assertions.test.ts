@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { assertStateValid, assertConfigValid, assertDraftValid } from '../src/assertions.js';
+import { assertStateValid, assertConfigValid, assertDraftValid, assertSummaryValid } from '../src/assertions.js';
 import { emptyState, defaultConfig } from '@keel/types';
 
 describe('custom assertions', () => {
@@ -17,5 +17,9 @@ describe('custom assertions', () => {
 
   it('assertDraftValid throws on incomplete draft', () => {
     expect(() => assertDraftValid({ id: '01-01' })).toThrow();
+  });
+
+  it('assertSummaryValid throws on incomplete summary', () => {
+    expect(() => assertSummaryValid({ draftId: '01-01' })).toThrow(/summary/i);
   });
 });
