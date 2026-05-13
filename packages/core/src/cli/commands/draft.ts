@@ -71,4 +71,42 @@ export function registerDraftCommand(program: Command): void {
         process.exitCode = 1;
       }
     });
+
+  cmd
+    .command('approve <phase> <num>')
+    .description('Approve a draft and enter BUILD phase')
+    .action(async (phase: string, num: string) => {
+      try {
+        const cwd = process.cwd();
+        const padded = num.padStart(2, '0');
+        const id = `${phase.slice(0, 2)}-${padded}`;
+        const path = join(cwd, '.keel', 'phases', phase, `${id}-DRAFT.md`);
+        const raw = await readFile(path, 'utf8');
+        const draft = parseDraftMd(raw);
+        const backend = new SimpleStateBackend(cwd);
+        const state = await backend.readState();
+        const projectMdPath = join(cwd, '.keel', 'PROJECT.md');
+        const projectMd = existsSync(projectMdPath) ? await readFile(projectMdPath, 'utf8') : '';
+        const result = coherenceCheck(draft, state, projectMd);
+        const blockers = result.issues.filter((i) => i.severity === 'block');
+        if (blockers.length > 0) {
+          for (const b of blockers) process.stderr.write(`[BLOCK] ${b.code}: ${b.message}\n`);
+          process.exitCode = 2;
+          return;
+        }
+        state.activePhase = phase;
+        state.activeDraft = id;
+        state.loopPosition = 'BUILD';
+        state.tier = draft.tier;
+        if (!state.openDrafts.some((d) => d.id === id)) {
+          state.openDrafts.push({ id, since: new Date().toISOString() });
+        }
+        await backend.writeState(state);
+        await atomicWriteText(join(cwd, '.keel', 'STATE.md'), renderStateMd(state));
+        console.log(`Approved ${id}; loopPosition=BUILD`);
+      } catch (err) {
+        process.stderr.write(`draft approve failed: ${err instanceof Error ? err.message : String(err)}\n`);
+        process.exitCode = 1;
+      }
+    });
 }
