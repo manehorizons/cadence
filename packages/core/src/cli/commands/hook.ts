@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import { AbstractEventZ } from '@keel/types';
 import { HookDispatcher } from '../../hooks/dispatcher.js';
 

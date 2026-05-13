@@ -1,5 +1,5 @@
 import type { HookContext, KeelConfig, KeelState } from '@keel/types';
-import { SimpleStateBackend } from '../state/simple.js';
+import type { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteText } from '../state/atomic-write.js';
 import { renderStateMd } from '../render/state-md.js';
 import { join } from 'node:path';

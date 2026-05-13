@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import { SimpleStateBackend } from '../../state/simple.js';
 import { nextAction } from '../../progress.js';
 

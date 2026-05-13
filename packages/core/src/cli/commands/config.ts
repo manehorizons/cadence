@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import { loadConfig, writeConfig } from '../../config/loader.js';
 import { KeelConfigZ } from '@keel/types';
 
