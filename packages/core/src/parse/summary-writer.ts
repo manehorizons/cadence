@@ -33,7 +33,7 @@ export function renderSummaryMd(s: Summary): string {
   for (const r of required) {
     lines.push(`- ${r}: ${invoked.has(r) ? 'invoked' : 'NOT INVOKED'}`);
   }
-  if (required.size === 0) lines.push('_(no required skills)_');
+  if (required.size === 0) lines.push('_(none)_');
   lines.push('');
   return lines.join('\n');
 }
