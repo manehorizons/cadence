@@ -1,0 +1,90 @@
+import { DraftZ, type Draft } from '@keel/types';
+import { KeelError } from '../errors.js';
+
+const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n/;
+
+function parseFrontmatter(raw: string): Record<string, string> {
+  const m = FRONTMATTER_RE.exec(raw);
+  if (!m) throw new KeelError('DRAFT.md missing frontmatter');
+  const out: Record<string, string> = {};
+  for (const line of m[1]!.split('\n')) {
+    const [k, ...rest] = line.split(':');
+    if (k && rest.length > 0) out[k.trim()] = rest.join(':').trim();
+  }
+  return out;
+}
+
+function stripFrontmatter(raw: string): string {
+  return raw.replace(FRONTMATTER_RE, '');
+}
+
+function extractSection(body: string, heading: string): string {
+  const re = new RegExp(`(^|\\n)## ${heading}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`);
+  const m = re.exec(body);
+  return m ? m[2]!.trim() : '';
+}
+
+function parseAcceptanceCriteria(section: string): Draft['acceptanceCriteria'] {
+  const out: Draft['acceptanceCriteria'] = [];
+  const blocks = section.split(/\n(?=### AC-)/);
+  for (const block of blocks) {
+    const head = /^### (AC-\d+):\s*(.*)$/m.exec(block);
+    if (!head) continue;
+    const id = head[1]!;
+    const given = /Given\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
+    const when = /When\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
+    const then = /Then\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
+    out.push({ id, given, when, then });
+  }
+  return out;
+}
+
+function parseTasks(section: string): Draft['tasks'] {
+  const out: Draft['tasks'] = [];
+  const blocks = section.split(/\n(?=### )/);
+  for (const block of blocks) {
+    const head = /^### (T\d+):\s*(.*)$/m.exec(block);
+    if (!head) continue;
+    const id = head[1]!;
+    const name = head[2]!.trim();
+    const filesLine = /-\s*files:\s*(.+)/.exec(block)?.[1] ?? '';
+    const files = [...filesLine.matchAll(/`([^`]+)`/g)].map((m) => m[1]!);
+    const action = /-\s*action:\s*(.+)/.exec(block)?.[1]?.trim() ?? '';
+    const verify = /-\s*verify:\s*(.+)/.exec(block)?.[1]?.trim() ?? '';
+    const done = /-\s*done:\s*(.+)/.exec(block)?.[1]?.trim() ?? '';
+    out.push({ id, name, files, action, verify, done });
+  }
+  return out;
+}
+
+function parseBoundaries(section: string): string[] {
+  return section
+    .split('\n')
+    .map((l) => l.replace(/^-\s*/, '').trim())
+    .filter((l) => l.length > 0);
+}
+
+export function parseDraftMd(raw: string): Draft {
+  const fm = parseFrontmatter(raw);
+  const body = stripFrontmatter(raw);
+  const titleMatch = /^#\s+\S+\s+—\s+(.+)$/m.exec(body);
+  const title = titleMatch ? titleMatch[1]!.trim() : (fm.id ?? 'untitled');
+  const objective = extractSection(body, 'Objective').split('\n')[0] ?? '';
+  const acceptanceCriteria = parseAcceptanceCriteria(extractSection(body, 'Acceptance Criteria'));
+  const tasks = parseTasks(extractSection(body, 'Tasks'));
+  const boundaries = parseBoundaries(extractSection(body, 'Boundaries'));
+
+  const draft: Draft = {
+    schemaVersion: 1,
+    id: fm.id ?? '',
+    phase: fm.phase ?? '',
+    tier: (fm.tier as Draft['tier']) ?? 'standard',
+    title,
+    objective,
+    acceptanceCriteria,
+    tasks,
+    boundaries,
+    status: (fm.status as Draft['status']) ?? 'PENDING',
+  };
+  return DraftZ.parse(draft);
+}
