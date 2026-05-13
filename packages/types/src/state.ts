@@ -24,6 +24,7 @@ export const DecisionZ = z.object({
   rationale: z.string().optional(),
   decidedAt: z.string(),
 });
+export type Decision = z.infer<typeof DecisionZ>;
 
 export const DeferredItemZ = z.object({
   id: z.string(),
@@ -32,6 +33,7 @@ export const DeferredItemZ = z.object({
   type: z.string().optional(),
   createdAt: z.string(),
 });
+export type DeferredItem = z.infer<typeof DeferredItemZ>;
 
 export const KeelStateZ = z.object({
   schemaVersion: z.literal(1),
