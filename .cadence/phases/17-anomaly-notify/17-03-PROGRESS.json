@@ -1,0 +1,23 @@
+{
+  "draftId": "17-03",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AnomalyEventZ.ts (required ISO8601 offset) + collectAnomalies(opts.now) + hook stamp (7+13+8 tests)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:38:07.551Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Live --since filter; legacy ts-less lines counted bad (5 new tests, 13 total)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:39:14.051Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "DESIGN.md ts note + reader paragraph live; README example + section 10 tick",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:40:07.693Z"
+    }
+  }
+}
