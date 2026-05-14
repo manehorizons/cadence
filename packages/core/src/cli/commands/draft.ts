@@ -7,6 +7,8 @@ import { SimpleStateBackend } from '../../state/simple.js';
 import { coherenceCheck } from '../../coherence/check.js';
 import { atomicWriteText } from '../../state/atomic-write.js';
 import { renderStateMd } from '../../render/state-md.js';
+import { loadConfig } from '../../config/loader.js';
+import { effectiveGateSet } from '../../gates/engine.js';
 
 export function registerDraftCommand(program: Command): void {
   const cmd = program.command('draft').description('Draft phase workflow');
@@ -95,7 +97,11 @@ export function registerDraftCommand(program: Command): void {
   cmd
     .command('approve <phase> <num>')
     .description('Approve a draft and enter BUILD phase')
-    .action(async (phase: string, num: string) => {
+    .option(
+      '--allow-auto-complex',
+      "override DESIGN.md §4 M2 soft cap: approve an auto × complex draft anyway",
+    )
+    .action(async (phase: string, num: string, opts: { allowAutoComplex?: boolean }) => {
       try {
         const cwd = process.cwd();
         const padded = num.padStart(2, '0');
@@ -114,6 +120,25 @@ export function registerDraftCommand(program: Command): void {
           process.exitCode = 2;
           return;
         }
+
+        // DESIGN.md §4 M2 — soft cap on auto × complex. Refuse before
+        // transitioning to BUILD so the user fixes the profile/tier choice
+        // before any task work happens. Phase 21.1.
+        const cfg = await loadConfig(cwd).catch(() => null);
+        const gateSet = effectiveGateSet(state, cfg, draft);
+        if (gateSet.softCap && !opts.allowAutoComplex) {
+          process.stderr.write(
+            'draft approve refused: auto × complex is soft-capped (DESIGN.md §4 M2). Pass --allow-auto-complex to override, or bump the draft\'s profile to standard/strict.\n',
+          );
+          process.exitCode = 1;
+          return;
+        }
+        if (gateSet.softCap && opts.allowAutoComplex) {
+          process.stderr.write(
+            'draft approve: --allow-auto-complex set; proceeding past soft cap (auto × complex).\n',
+          );
+        }
+
         state.activePhase = phase;
         state.activeDraft = id;
         state.loopPosition = 'BUILD';

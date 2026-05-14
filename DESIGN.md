@@ -104,7 +104,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 | # | Question | Decision |
 |---|---|---|
 | M1 | Verification: own axis or implicit? | **Implicit defaults per cell + explicit `--deep` / `--interactive` flags for override.** Two axes to teach; flags for edge cases. |
-| M2 | Cap shape for auto+complex? | **Soft cap.** Refuse by default; override with `--allow-auto-complex`. Tighten to notification-target cap once continuity-runtime ships. |
+| M2 | Cap shape for auto+complex? | **Soft cap.** Refuse by default; override with `--allow-auto-complex`. Tighten to notification-target cap once continuity-runtime ships. **Shipped — Phase 21.1** (both `cadence settle run` and `cadence draft approve` refuse the cell without the flag). |
 | M3 | Who picks tier? | **AI proposes tier with rationale in DRAFT.** Coherence check verifies against touched-files count + AC count. User can override. Catches the AI-lowballs-to-skip-gates failure mode. |
 | M4 | Profile scope — per-project or per-phase? | **Project default in config + per-phase override in DRAFT frontmatter.** Solo user sets `auto` once; bumps sensitive phases to `strict` as needed. |
 
@@ -199,5 +199,6 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
    - ~~Phase 17.3 — `AnomalyEvent.ts` + live `--since` filter~~ ✓
 7. ~~Phase 18.1 — F2 physical rename rollout~~ ✓
 8. ~~Phase 19.1 — F4 webhook transport~~ ✓
+9. ~~Phase 21.1 — auto × complex soft cap (M2)~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

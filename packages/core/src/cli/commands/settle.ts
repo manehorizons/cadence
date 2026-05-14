@@ -77,6 +77,10 @@ export function registerSettleCommand(program: Command): void {
       '--no-interactive',
       'bypass the interactive-verdict gate even if the active profile would enforce it',
     )
+    .option(
+      '--allow-auto-complex',
+      "override DESIGN.md §4 M2 soft cap: settle an auto × complex draft anyway",
+    )
     .action(
       async (opts: {
         ac?: string[];
@@ -84,6 +88,7 @@ export function registerSettleCommand(program: Command): void {
         force?: boolean;
         allowMissingCoverage?: boolean;
         deep?: boolean;
+        allowAutoComplex?: boolean;
         allowVerifierFailure?: boolean;
         interactive?: boolean;
       }) => {
@@ -115,6 +120,23 @@ export function registerSettleCommand(program: Command): void {
           cadenceConfig = null;
         }
         const gateSet = effectiveGateSet(state, cadenceConfig, draft);
+
+        // DESIGN.md §4 M2 — soft cap on auto × complex. Refuse here, before
+        // any coverage / interactive / deep work, so wasted effort is avoided.
+        // Phase 21.1 wires the locked decision into a live check.
+        if (gateSet.softCap && !opts.allowAutoComplex) {
+          process.stderr.write(
+            'settle run refused: auto × complex is soft-capped (DESIGN.md §4 M2). Pass --allow-auto-complex to override.\n',
+          );
+          process.exitCode = 1;
+          return;
+        }
+        if (gateSet.softCap && opts.allowAutoComplex) {
+          process.stderr.write(
+            'settle: --allow-auto-complex set; proceeding past soft cap (auto × complex).\n',
+          );
+        }
+
         const coverageBypassed =
           gateSet.gates.includes('test-coverage') === true &&
           opts.allowMissingCoverage === true;
