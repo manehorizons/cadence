@@ -7,6 +7,7 @@ import { registerHookCommand } from './commands/hook.js';
 import { registerBuildCommand } from './commands/build.js';
 import { registerSettleCommand } from './commands/settle.js';
 import { registerProgressCommand } from './commands/progress.js';
+import { registerStatusCommand } from './commands/status.js';
 
 const program = new Command();
 program.name('keel').description('KEEL — Keep Execution Aligned to Loop').version('0.1.0');
@@ -18,6 +19,7 @@ registerHookCommand(program);
 registerBuildCommand(program);
 registerSettleCommand(program);
 registerProgressCommand(program);
+registerStatusCommand(program);
 
 program.parseAsync(process.argv).catch((err) => {
   console.error(err instanceof Error ? err.message : err);

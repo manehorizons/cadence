@@ -18,9 +18,15 @@ npx @keel/core init --name=demo
 npx @keel/core draft new 01-foundation 01 --title=Demo
 # edit .keel/phases/01-foundation/01-01-DRAFT.md
 npx @keel/core draft approve 01-foundation 01
+npx @keel/core status                      # full phase context in one screen
 npx @keel/core build task T1 --status=DONE
 npx @keel/core settle run --ac AC-1=pass
 ```
+
+`keel status` renders project, loop position, active draft, per-task
+status, AC derivation (pass/blocked/pending), and the next-action hint.
+`keel status --json` emits the same data as a single JSON document for
+scripting.
 
 ## Use with Claude Code
 

@@ -1,0 +1,317 @@
+import { describe, it, expect, afterEach } from 'vitest';
+import type { Draft } from '@keel/types';
+import { emptyState } from '@keel/types';
+import { tempRepo, type Fixture } from '@keel/testkit';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { gatherStatus, loadStatus, renderStatus, type ProgressFile } from '../src/status.js';
+
+const baseDraft: Draft = {
+  schemaVersion: 1,
+  id: '05-01',
+  phase: '05-status-command',
+  tier: 'standard',
+  title: 'keel status — single-screen phase context',
+  objective: 'Render loop state in one view',
+  acceptanceCriteria: [
+    { id: 'AC-1', given: '', when: '', then: '' },
+    { id: 'AC-2', given: '', when: '', then: '' },
+    { id: 'AC-3', given: '', when: '', then: '' },
+  ],
+  tasks: [
+    { id: 'T1', name: 'first', files: [], action: '', verify: '', done: 'AC-1' },
+    { id: 'T2', name: 'second', files: [], action: '', verify: '', done: 'AC-1, AC-2' },
+    { id: 'T3', name: 'third', files: [], action: '', verify: '', done: 'AC-3' },
+  ],
+  boundaries: [],
+  status: 'APPROVED',
+};
+
+function progress(taskMap: Record<string, string>): ProgressFile {
+  return {
+    draftId: '05-01',
+    tasks: Object.fromEntries(
+      Object.entries(taskMap).map(([id, status]) => [
+        id,
+        { status, notes: '', touchedFiles: [], updatedAt: '2026-05-14T00:00:00Z' },
+      ]),
+    ),
+  };
+}
+
+describe('gatherStatus', () => {
+  it('IDLE state → no draft body, next-action present', () => {
+    const state = emptyState('demo');
+    const r = gatherStatus(state, null, null);
+    expect(r.project).toBe('demo');
+    expect(r.loopPosition).toBe('IDLE');
+    expect(r.activePhase).toBeNull();
+    expect(r.tasks).toEqual([]);
+    expect(r.acs).toEqual([]);
+    expect(r.next.command).toMatch(/keel draft new/);
+  });
+
+  it('BUILD with no PROGRESS.json — all tasks PENDING, all ACs pending', () => {
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const r = gatherStatus(state, baseDraft, null);
+    expect(r.activeDraft).toBe('05-01');
+    expect(r.draftTitle).toContain('keel status');
+    expect(r.tasks).toHaveLength(3);
+    for (const t of r.tasks) expect(t.status).toBe('PENDING');
+    for (const ac of r.acs) expect(ac.state).toBe('pending');
+  });
+
+  it('mixed task statuses — AC pass requires all linked tasks DONE', () => {
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const r = gatherStatus(state, baseDraft, progress({ T1: 'DONE', T2: 'DONE', T3: 'PENDING' }));
+    const ac1 = r.acs.find((a) => a.id === 'AC-1');
+    const ac2 = r.acs.find((a) => a.id === 'AC-2');
+    const ac3 = r.acs.find((a) => a.id === 'AC-3');
+    // AC-1 satisfied by T1 + T2 (both DONE)
+    expect(ac1?.state).toBe('pass');
+    // AC-2 satisfied by T2 (DONE)
+    expect(ac2?.state).toBe('pass');
+    // AC-3 satisfied by T3 (PENDING)
+    expect(ac3?.state).toBe('pending');
+  });
+
+  it('BLOCKED task blocks every linked AC', () => {
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const r = gatherStatus(state, baseDraft, progress({ T1: 'DONE', T2: 'BLOCKED', T3: 'DONE' }));
+    expect(r.acs.find((a) => a.id === 'AC-1')?.state).toBe('blocked');
+    expect(r.acs.find((a) => a.id === 'AC-2')?.state).toBe('blocked');
+    expect(r.acs.find((a) => a.id === 'AC-3')?.state).toBe('pass');
+  });
+
+  it('NEEDS_CONTEXT also blocks linked ACs', () => {
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const r = gatherStatus(state, baseDraft, progress({ T1: 'NEEDS_CONTEXT' }));
+    expect(r.acs.find((a) => a.id === 'AC-1')?.state).toBe('blocked');
+  });
+
+  it('all DONE → every AC pass', () => {
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const r = gatherStatus(state, baseDraft, progress({ T1: 'DONE', T2: 'DONE', T3: 'DONE' }));
+    for (const ac of r.acs) expect(ac.state).toBe('pass');
+  });
+
+  it('task acs[] derived from "done" field (comma-separated AC refs)', () => {
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const r = gatherStatus(state, baseDraft, null);
+    expect(r.tasks.find((t) => t.id === 'T2')?.acs).toEqual(['AC-1', 'AC-2']);
+  });
+
+  it('next action surfaced from progress.nextAction', () => {
+    const state = emptyState('demo');
+    state.activePhase = 'p';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    const r = gatherStatus(state, baseDraft, null);
+    expect(r.next.command).toMatch(/keel build|keel settle/);
+  });
+});
+
+const SAMPLE_DRAFT_MD = `---
+phase: 99-sample
+id: 99-01
+tier: standard
+status: APPROVED
+---
+
+# 99-01 — sample title
+
+## Objective
+
+Sample objective.
+
+## Acceptance Criteria
+
+### AC-1: first
+Given a
+When b
+Then c
+
+### AC-2: second
+Given a
+When b
+Then c
+
+## Tasks
+
+### T1: alpha
+- files: \`x.ts\`
+- action: do
+- verify: check
+- done: AC-1
+
+### T2: beta
+- files: \`y.ts\`
+- action: do
+- verify: check
+- done: AC-2
+
+## Boundaries
+
+- DO NOT change anything
+`;
+
+let active: Fixture | null = null;
+afterEach(async () => {
+  if (active) {
+    await active.cleanup();
+    active = null;
+  }
+});
+
+describe('renderStatus', () => {
+  it('IDLE: header + next-action only, no tables', () => {
+    const state = emptyState('demo');
+    const out = renderStatus(gatherStatus(state, null, null));
+    expect(out).toMatch(/KEEL — demo/);
+    expect(out).toMatch(/loop:\s+IDLE/);
+    expect(out).toMatch(/NEXT: keel draft new/);
+    expect(out).not.toMatch(/TASKS/);
+    expect(out).not.toMatch(/ACS/);
+  });
+
+  it('BUILD: shows phase, draft, tier, tasks, ACs, next', () => {
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const out = renderStatus(
+      gatherStatus(state, baseDraft, progress({ T1: 'DONE', T2: 'PENDING' })),
+    );
+    expect(out).toMatch(/phase: 05-status-command/);
+    expect(out).toMatch(/draft: 05-01/);
+    expect(out).toMatch(/tier:\s+standard/);
+    expect(out).toMatch(/TASKS/);
+    expect(out).toMatch(/T1\s+DONE/);
+    expect(out).toMatch(/T2\s+PENDING/);
+    expect(out).toMatch(/ACS/);
+    expect(out).toMatch(/\[\s\]\sAC-1\s+pending/); // pending because T2 still PENDING
+  });
+
+  it('renders blocked AC with [!]', () => {
+    const state = emptyState('demo');
+    state.activePhase = 'p';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const out = renderStatus(
+      gatherStatus(state, baseDraft, progress({ T2: 'BLOCKED' })),
+    );
+    expect(out).toMatch(/\[!\]\sAC-1\s+blocked/);
+  });
+
+  it('renders passing AC with [x]', () => {
+    const state = emptyState('demo');
+    state.activePhase = 'p';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const out = renderStatus(
+      gatherStatus(state, baseDraft, progress({ T1: 'DONE', T2: 'DONE', T3: 'DONE' })),
+    );
+    expect(out).toMatch(/\[x\]\sAC-1\s+pass/);
+    expect(out).toMatch(/\[x\]\sAC-2\s+pass/);
+    expect(out).toMatch(/\[x\]\sAC-3\s+pass/);
+  });
+});
+
+describe('loadStatus', () => {
+  it('IDLE fresh repo → minimal report', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'fresh' });
+    const r = await loadStatus(active.root);
+    expect(r.project).toBe('fresh');
+    expect(r.loopPosition).toBe('IDLE');
+    expect(r.tasks).toEqual([]);
+  });
+
+  it('BUILD with draft on disk + no PROGRESS → all PENDING', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'on-disk' });
+    const phaseDir = join(active.root, '.keel/phases/99-sample');
+    await mkdir(phaseDir, { recursive: true });
+    await writeFile(join(phaseDir, '99-01-DRAFT.md'), SAMPLE_DRAFT_MD, 'utf8');
+    const statePath = join(active.root, '.keel/state.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    state.activePhase = '99-sample';
+    state.activeDraft = '99-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    await writeFile(statePath, JSON.stringify(state, null, 2));
+
+    const r = await loadStatus(active.root);
+    expect(r.activeDraft).toBe('99-01');
+    expect(r.draftTitle).toContain('sample title');
+    expect(r.tasks.map((t) => t.id)).toEqual(['T1', 'T2']);
+    for (const t of r.tasks) expect(t.status).toBe('PENDING');
+  });
+
+  it('reads PROGRESS.json when present', async () => {
+    active = await tempRepo({ initialized: true });
+    const phaseDir = join(active.root, '.keel/phases/99-sample');
+    await mkdir(phaseDir, { recursive: true });
+    await writeFile(join(phaseDir, '99-01-DRAFT.md'), SAMPLE_DRAFT_MD, 'utf8');
+    await writeFile(
+      join(phaseDir, '99-01-PROGRESS.json'),
+      JSON.stringify({
+        draftId: '99-01',
+        tasks: {
+          T1: { status: 'DONE', notes: '', touchedFiles: [], updatedAt: 'now' },
+        },
+      }),
+    );
+    const statePath = join(active.root, '.keel/state.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    state.activePhase = '99-sample';
+    state.activeDraft = '99-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    await writeFile(statePath, JSON.stringify(state, null, 2));
+
+    const r = await loadStatus(active.root);
+    expect(r.tasks.find((t) => t.id === 'T1')?.status).toBe('DONE');
+    expect(r.tasks.find((t) => t.id === 'T2')?.status).toBe('PENDING');
+    expect(r.acs.find((a) => a.id === 'AC-1')?.state).toBe('pass');
+    expect(r.acs.find((a) => a.id === 'AC-2')?.state).toBe('pending');
+  });
+
+  it('missing DRAFT.md is tolerated (degrades to no-draft report)', async () => {
+    active = await tempRepo({ initialized: true });
+    const statePath = join(active.root, '.keel/state.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    state.activePhase = 'no-such';
+    state.activeDraft = '99-01';
+    state.loopPosition = 'BUILD';
+    await writeFile(statePath, JSON.stringify(state, null, 2));
+    const r = await loadStatus(active.root);
+    expect(r.draftTitle).toBeNull();
+    expect(r.tasks).toEqual([]);
+  });
+});
