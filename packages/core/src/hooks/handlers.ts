@@ -70,11 +70,13 @@ export async function handlePreToolEdit(
           if (outsiders.length > 0) {
             const gateSet = effectiveGateSet(state, config, draft);
             if (gateSet.gates.includes('anomaly-notify')) {
+              const now = new Date().toISOString();
               const events: AnomalyEvent[] = outsiders.map((file) => ({
                 type: 'files-outside-boundary' as const,
                 severity: 'warn' as const,
                 message: `${file} touched but not declared in any task's files:`,
                 context: { file, source: 'hook.preToolEdit' },
+                ts: now,
               }));
               const notifier = selectNotifier(config);
               try {

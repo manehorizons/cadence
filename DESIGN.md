@@ -56,7 +56,7 @@ Two emission surfaces share one `Notifier` transport:
 1. **Settle-side (Phase 17.1)** — `collectAnomalies(...)` walks the settle context and dispatches a batch through `selectNotifier(config)` at SETTLE close.
 2. **Hook-side (Phase 17.2)** — `handlePreToolEdit` detects `files-outside-boundary` at edit time and dispatches one event per outside path *as the edit is about to happen*. Detection-only — the hook never refuses the edit.
 
-Both surfaces gate on `'anomaly-notify'` being in the effective gate set (auto + standard×{standard,complex} cells). Six event types:
+Both surfaces gate on `'anomaly-notify'` being in the effective gate set (auto + standard×{standard,complex} cells). Each event carries `ts: ISO8601` (offset-aware, emitter-stamped via `new Date().toISOString()` — Phase 17.3). Six event types:
 
 | Type | When |
 |---|---|
@@ -75,7 +75,7 @@ Transports (`.cadence/config.json: notify.transport`):
 
 Notifier failures degrade to a single stderr warning and never block settle (or the hook). New transports plug in via the `Notifier` interface — no slack/webhook bridge is built in.
 
-Read recorded events via `cadence status anomalies [--type <t>] [--limit <n>]` — parses `.cadence/anomalies.log` newest-first, skips malformed lines (count reported on stderr), supports filter by `AnomalyType`. `--since` is reserved syntax: events carry no timestamp in the current schema, so it accepts ISO8601 but is a no-op until a future schema bump.
+Read recorded events via `cadence status anomalies [--since <iso>] [--type <t>] [--limit <n>]` — parses `.cadence/anomalies.log` newest-first, skips malformed lines (count reported on stderr), supports filter by `AnomalyType` and an inclusive `ts >= --since` boundary (Phase 17.3 lit this up — events now stamp `ts` at emission time on both surfaces).
 
 ## 4. Phase model — LOCKED
 
@@ -195,5 +195,6 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
    - ~~Phase 16 — `--interactive` human-verdict mode~~ ✓
    - ~~Phase 17 — Anomaly notify transport~~ ✓
    - ~~Phase 17.2 — Hook-side detection + `status anomalies` reader~~ ✓
+   - ~~Phase 17.3 — `AnomalyEvent.ts` + live `--since` filter~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

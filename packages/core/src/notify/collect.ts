@@ -28,12 +28,23 @@ function parseAcRefs(done: string): string[] {
     .filter((s) => /^AC-\d+$/.test(s));
 }
 
+export interface CollectAnomaliesOptions {
+  /** Test seam: stand in for `() => new Date()`. Production callers omit it. */
+  now?: () => Date;
+}
+
 /**
  * Walks settle context and emits typed anomaly events for the auto / standard
- * profile. Pure — no I/O.
+ * profile. Pure — no I/O. Each event is stamped with `ts` from `opts.now`
+ * (defaults to wall-clock).
  */
-export function collectAnomalies(ctx: CollectAnomaliesContext): AnomalyEvent[] {
+export function collectAnomalies(
+  ctx: CollectAnomaliesContext,
+  opts: CollectAnomaliesOptions = {},
+): AnomalyEvent[] {
   const events: AnomalyEvent[] = [];
+  const nowFn = opts.now ?? (() => new Date());
+  const stamp = () => nowFn().toISOString();
 
   // ac-blocked / ac-needs-context — one event per task in the affected state.
   for (const task of ctx.draft.tasks) {
@@ -45,6 +56,7 @@ export function collectAnomalies(ctx: CollectAnomaliesContext): AnomalyEvent[] {
         severity: 'warn',
         message: `${task.id} BLOCKED (${acs.length > 0 ? acs.join(', ') : 'no ACs linked'})`,
         context: { taskId: task.id, taskName: task.name, acs },
+        ts: stamp(),
       });
     } else if (status === 'NEEDS_CONTEXT') {
       events.push({
@@ -57,6 +69,7 @@ export function collectAnomalies(ctx: CollectAnomaliesContext): AnomalyEvent[] {
           acs,
           notes: ctx.progress.tasks[task.id]?.notes ?? '',
         },
+        ts: stamp(),
       });
     }
   }
@@ -68,6 +81,7 @@ export function collectAnomalies(ctx: CollectAnomaliesContext): AnomalyEvent[] {
       severity: 'warn',
       message: 'test-coverage gate bypassed via --allow-missing-coverage',
       context: {},
+      ts: stamp(),
     });
   }
 
@@ -85,6 +99,7 @@ export function collectAnomalies(ctx: CollectAnomaliesContext): AnomalyEvent[] {
         severity: 'warn',
         message: `${file} touched but not declared in any task's files:`,
         context: { file },
+        ts: stamp(),
       });
     }
   }
@@ -99,6 +114,7 @@ export function collectAnomalies(ctx: CollectAnomaliesContext): AnomalyEvent[] {
         message: ctx.verifierFailure.message,
         ...(ctx.verifierFailure.provider ? { provider: ctx.verifierFailure.provider } : {}),
       },
+      ts: stamp(),
     });
   }
 
@@ -147,6 +163,7 @@ export function collectAnomalies(ctx: CollectAnomaliesContext): AnomalyEvent[] {
         severity: 'error',
         message: `settle --force bypassed failing verdicts (${reasons.join('; ')})`,
         context: { reasons },
+        ts: stamp(),
       });
     }
   }

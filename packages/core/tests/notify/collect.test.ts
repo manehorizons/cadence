@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Draft } from '@cadence/types';
+import { AnomalyEventZ } from '@cadence/types';
 import { collectAnomalies, type CollectAnomaliesContext } from '../../src/notify/collect.js';
 import type { ProgressFile } from '../../src/status.js';
 
@@ -192,5 +193,44 @@ describe('collectAnomalies (AC-3)', () => {
     expect(types).toContain('files-outside-boundary');
     expect(types).toContain('verifier-failure');
     expect(types).toContain('force-used');
+  });
+
+  // AC-1 + AC-2 (Phase 17.3) — events carry a schema-valid ts; emitters can pin
+  // the clock via opts.now for deterministic tests.
+  it('stamps a valid ts on every emitted event', () => {
+    const progress: ProgressFile = {
+      draftId: '17-01',
+      tasks: {
+        T1: { ...baseProgress.tasks.T1!, status: 'BLOCKED', touchedFiles: ['a.ts', 'stray.ts'] },
+        T2: { ...baseProgress.tasks.T2!, status: 'NEEDS_CONTEXT' },
+      },
+    };
+    const events = collectAnomalies(
+      ctx({ progress, coverageBypassed: true, force: true, verifierFailure: { message: 'x' } }),
+    );
+    expect(events.length).toBeGreaterThan(0);
+    for (const e of events) {
+      expect(typeof e.ts).toBe('string');
+      expect(Number.isNaN(Date.parse(e.ts))).toBe(false);
+      // Every event must satisfy the strict schema.
+      const parsed = AnomalyEventZ.safeParse(e);
+      expect(parsed.success).toBe(true);
+    }
+  });
+
+  it('honors injected now() so tests can pin event timestamps (AC-2)', () => {
+    const fixed = new Date('2026-05-14T22:30:00.000Z');
+    const progress: ProgressFile = {
+      draftId: '17-01',
+      tasks: {
+        T1: { ...baseProgress.tasks.T1!, status: 'BLOCKED' },
+        T2: { ...baseProgress.tasks.T2! },
+      },
+    };
+    const events = collectAnomalies(ctx({ progress, coverageBypassed: true }), { now: () => fixed });
+    expect(events.length).toBeGreaterThan(0);
+    for (const e of events) {
+      expect(e.ts).toBe(fixed.toISOString());
+    }
   });
 });

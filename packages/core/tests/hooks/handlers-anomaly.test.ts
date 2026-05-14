@@ -148,6 +148,28 @@ describe('handlePreToolEdit anomaly emission', () => {
     expect(existsSync(join(active.root, '.cadence/anomalies.log'))).toBe(false);
   });
 
+  it('stamps a schema-valid ts on every emitted event (AC-3 — Phase 17.3)', async () => {
+    active = await tempRepo({ initialized: true });
+    await patchConfig(active.root, { notify: { transport: 'file', file: join(active.root, '.cadence/anomalies.log') } });
+    await seedActiveDraft(active.root, 'src/known.ts');
+    const before = Date.now();
+    const dispatcher = new HookDispatcher(active.root);
+    await dispatcher.dispatch('pre-tool-edit', {
+      event: 'pre-tool-edit',
+      cwd: active.root,
+      raw: { files: ['src/elsewhere.ts'] },
+    });
+    const after = Date.now();
+    const events = await readEvents(active.root);
+    expect(events).toHaveLength(1);
+    const ev = events[0]!;
+    expect(typeof (ev as unknown as { ts: string }).ts).toBe('string');
+    const parsed = Date.parse((ev as unknown as { ts: string }).ts);
+    expect(Number.isNaN(parsed)).toBe(false);
+    expect(parsed).toBeGreaterThanOrEqual(before);
+    expect(parsed).toBeLessThanOrEqual(after);
+  });
+
   it('respects transport=none (gate on, transport silenced)', async () => {
     active = await tempRepo({ initialized: true });
     await patchConfig(active.root, { notify: { transport: 'none' } });

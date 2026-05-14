@@ -10,6 +10,7 @@ describe('AnomalyEventZ (AC-1)', () => {
         severity: 'warn',
         message: 'AC-1 blocked by T2',
         context: { acId: 'AC-1', blockers: ['T2'] },
+        ts: '2026-05-14T22:30:00.000Z',
       }),
     ).not.toThrow();
   });
@@ -30,6 +31,7 @@ describe('AnomalyEventZ (AC-1)', () => {
           severity: 'info',
           message: 'x',
           context: {},
+          ts: '2026-05-14T22:30:00.000Z',
         }),
       ).not.toThrow();
     }
@@ -43,6 +45,7 @@ describe('AnomalyEventZ (AC-1)', () => {
           severity: s,
           message: 'x',
           context: {},
+          ts: '2026-05-14T22:30:00.000Z',
         }),
       ).not.toThrow();
     }
@@ -55,6 +58,7 @@ describe('AnomalyEventZ (AC-1)', () => {
         severity: 'info',
         message: 'x',
         context: {},
+        ts: '2026-05-14T22:30:00.000Z',
       }),
     ).toThrow();
   });
@@ -66,6 +70,7 @@ describe('AnomalyEventZ (AC-1)', () => {
         severity: 'critical' as never,
         message: 'x',
         context: {},
+        ts: '2026-05-14T22:30:00.000Z',
       }),
     ).toThrow();
   });
@@ -76,7 +81,51 @@ describe('AnomalyEventZ (AC-1)', () => {
         type: 'force-used',
         severity: 'info',
         message: 'x',
+        ts: '2026-05-14T22:30:00.000Z',
       } as never),
     ).toThrow();
+  });
+
+  it('rejects missing ts (AC-1 — Phase 17.3 required field)', () => {
+    expect(() =>
+      AnomalyEventZ.parse({
+        type: 'force-used',
+        severity: 'info',
+        message: 'x',
+        context: {},
+      } as never),
+    ).toThrow();
+  });
+
+  it('rejects non-ISO8601 ts (AC-1)', () => {
+    for (const bad of ['2026-05-14', 'yesterday', '', 'May 14 2026']) {
+      expect(() =>
+        AnomalyEventZ.parse({
+          type: 'force-used',
+          severity: 'info',
+          message: 'x',
+          context: {},
+          ts: bad,
+        }),
+      ).toThrow();
+    }
+  });
+
+  it('accepts offset-aware ts variants (AC-1)', () => {
+    for (const good of [
+      '2026-05-14T22:30:00.000Z',
+      '2026-05-14T22:30:00.000-05:00',
+      '2026-05-14T22:30:00+00:00',
+    ]) {
+      expect(() =>
+        AnomalyEventZ.parse({
+          type: 'force-used',
+          severity: 'info',
+          message: 'x',
+          context: {},
+          ts: good,
+        }),
+      ).not.toThrow();
+    }
   });
 });

@@ -27,5 +27,11 @@ export const AnomalyEventZ = z.object({
   message: z.string(),
   /** Type-specific free-form payload. */
   context: z.record(z.unknown()),
+  /**
+   * Wall-clock when the event was constructed. ISO8601 with offset
+   * (e.g., `"2026-05-14T22:30:00.000Z"`). Emitters stamp via
+   * `new Date().toISOString()`. Phase 17.3.
+   */
+  ts: z.string().datetime({ offset: true }),
 });
 export type AnomalyEvent = z.infer<typeof AnomalyEventZ>;

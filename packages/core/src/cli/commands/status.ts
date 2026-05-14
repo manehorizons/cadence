@@ -35,7 +35,7 @@ export function registerStatusCommand(program: Command): void {
   cmd
     .command('anomalies')
     .description('List recorded anomaly events from .cadence/anomalies.log')
-    .option('--since <iso>', 'Accepted but no-op in 17.2; events do not carry timestamps yet')
+    .option('--since <iso>', 'Only show events with ts >= this ISO8601 timestamp')
     .option('--type <type>', 'Filter by anomaly type (ac-blocked, ac-needs-context, coverage-bypassed, files-outside-boundary, verifier-failure, force-used)')
     .option('--limit <n>', 'Maximum number of events to show (newest first)', '20')
     .action(async (opts: { since?: string; type?: string; limit: string }) => {
@@ -45,16 +45,15 @@ export function registerStatusCommand(program: Command): void {
         const rel = config?.notify.file ?? DEFAULT_LOG;
         const path = isAbsolute(rel) ? rel : join(cwd, rel);
 
+        let sinceMs: number | null = null;
         if (opts.since !== undefined) {
-          const sinceMs = Date.parse(opts.since);
-          if (Number.isNaN(sinceMs)) {
+          const parsed = Date.parse(opts.since);
+          if (Number.isNaN(parsed)) {
             process.stderr.write(`status anomalies: invalid --since (not ISO8601): ${opts.since}\n`);
             process.exitCode = 1;
             return;
           }
-          process.stderr.write(
-            'status anomalies: --since is accepted but currently a no-op; events do not carry timestamps yet (deferred to a follow-up phase).\n',
-          );
+          sinceMs = parsed;
         }
 
         if (opts.type !== undefined) {
@@ -88,7 +87,13 @@ export function registerStatusCommand(program: Command): void {
 
         const kindFilter = opts.type as AnomalyType | undefined;
         const limit = Math.max(0, Number.parseInt(opts.limit, 10) || 20);
-        const filtered = (kindFilter ? events.filter((e) => e.type === kindFilter) : events)
+        let working: AnomalyEvent[] = kindFilter
+          ? events.filter((e) => e.type === kindFilter)
+          : events;
+        if (sinceMs !== null) {
+          working = working.filter((e) => Date.parse(e.ts) >= sinceMs!);
+        }
+        const filtered = working
           .reverse() // newest-first: file is append-only; tail = newest
           .slice(0, limit);
 

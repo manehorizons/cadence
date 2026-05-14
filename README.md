@@ -130,12 +130,13 @@ Notifier failures degrade to a single stderr warning and never block settle. Str
 ### Reading recorded anomalies
 
 ```bash
-cadence status anomalies                            # newest 20 events, all types
+cadence status anomalies                                       # newest 20 events, all types
 cadence status anomalies --type files-outside-boundary --limit 5
-cadence status anomalies --type force-used
+cadence status anomalies --since 2026-05-14T00:00:00Z         # events stamped at-or-after midnight UTC
+cadence status anomalies --since 2026-05-14T00:00:00Z --type force-used
 ```
 
-`status anomalies` parses `.cadence/anomalies.log` (or `config.notify.file`), skips malformed lines (count reported on stderr), and prints a table newest-first. `--since` is reserved but a no-op until events carry timestamps (deferred to a follow-up phase).
+`status anomalies` parses `.cadence/anomalies.log` (or `config.notify.file`), skips malformed lines (count reported on stderr), and prints a table newest-first. `--since <iso>` filters events whose stamped `ts` is `>=` the boundary; invalid ISO8601 exits 1. Each event carries an emitter-stamped `ts` since Phase 17.3.
 
 ## Codex support — archived
 
