@@ -75,15 +75,32 @@ export const CadenceConfigZ = z.object({
   notify: z
     .object({
       /**
-       * Anomaly-event transport (Phase 17). `stderr` (default) writes one
-       * line per event; `file` appends NDJSON to `notify.file`; `none`
-       * drops events. Only fires when `'anomaly-notify'` is in the
+       * Anomaly-event transport. `stderr` (default) writes one line per event;
+       * `file` appends NDJSON to `notify.file`; `none` drops events;
+       * `webhook` POSTs `{events: [...]}` JSON to `notify.webhook.url`
+       * (Phase 19.1). Only fires when `'anomaly-notify'` is in the
        * effective gate set.
        */
-      transport: z.enum(['stderr', 'file', 'none']).default('stderr'),
-      /** Path for the file transport. Defaults to `.cadence/anomalies.log`. */
+      transport: z.enum(['stderr', 'file', 'none', 'webhook']).default('stderr'),
+      /** Path for the `file` transport. Defaults to `.cadence/anomalies.log`. */
       file: z.string().optional(),
+      /**
+       * Webhook target for the `webhook` transport (Phase 19.1). Required
+       * when transport === 'webhook'; ignored otherwise. URL is sensitive
+       * (may carry a token); never logged on failure.
+       */
+      webhook: z
+        .object({
+          url: z.string().url(),
+          headers: z.record(z.string()).optional(),
+          timeoutMs: z.number().int().positive().optional(),
+        })
+        .optional(),
     })
+    .refine(
+      (n) => n.transport !== 'webhook' || (n.webhook !== undefined && n.webhook.url.length > 0),
+      { message: "notify.webhook.url is required when notify.transport === 'webhook'" },
+    )
     .default({ transport: 'stderr' }),
 });
 

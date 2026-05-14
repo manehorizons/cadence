@@ -72,6 +72,7 @@ Transports (`.cadence/config.json: notify.transport`):
 - `stderr` (default) — one line per event: `cadence anomaly [severity] type: message`
 - `file` — NDJSON appended to `notify.file` (defaults to `.cadence/anomalies.log`); operator owns rotation
 - `none` — drop on the floor
+- `webhook` — POST `{events: AnomalyEvent[]}` JSON to `notify.webhook.url`. Generic bridge primitive (Slack/Discord incoming, Zapier/n8n catch, continuity-runtime ingester, ...). Optional `headers` (for Authorization) and `timeoutMs` (default 5000). Failure (non-2xx / network / timeout) degrades to one stderr warning — the URL itself is never logged (may carry a secret).
 
 Notifier failures degrade to a single stderr warning and never block settle (or the hook). New transports plug in via the `Notifier` interface — no slack/webhook bridge is built in.
 
@@ -132,7 +133,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 | ~~F1~~ | ~~Final profile × tier cap rules~~ | **Resolved** — see Section 4 |
 | ~~F2~~ | ~~Backronym wording refinement (CADENCE is locked) + physical rename rollout (repo, packages, CLI binary)~~ | **Resolved — Phase 18.1.** Slash commands, settings, root `package.json`, state metadata, testkit fixture, install.ts legacy-eviction all on the cadence side; intentional history (DESIGN.md §8 rejected-names table, README Phase 12 banner) preserved. Backronym wording refinement is parked — the word is the keeper. |
 | ~~F3~~ | ~~Codex path~~ | **Resolved — archive + collapse.** Tag current state as `keel-codex-archive`, remove `packages/host-codex/` from main, collapse `HostCapabilities` abstraction back into Claude-Code-specific code. YAGNI wins; re-add later as a fresh phase if needed. |
-| F4 | Notification transport | Spans stderr → external bridge; depends on continuity-runtime decision |
+| ~~F4~~ | ~~Notification transport~~ | **Resolved — Phase 17 + 17.2 + 17.3 + 19.1.** Four transports shipped: `stderr` (default) / `file` (NDJSON) / `none` / `webhook` (POST JSON to any URL). Generic webhook primitive avoids baking a specific bridge into cadence — continuity-runtime / Slack / Discord / Zapier / n8n / etc. all hang off the same contract. |
 | F5 | Test ↔ AC linkage convention | Likely: AC id token in test name/describe; needs implementation spike |
 | F6 | Verifier agent shape (`--deep`) | Model choice, prompt design, token budget |
 
@@ -197,5 +198,6 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
    - ~~Phase 17.2 — Hook-side detection + `status anomalies` reader~~ ✓
    - ~~Phase 17.3 — `AnomalyEvent.ts` + live `--since` filter~~ ✓
 7. ~~Phase 18.1 — F2 physical rename rollout~~ ✓
+8. ~~Phase 19.1 — F4 webhook transport~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

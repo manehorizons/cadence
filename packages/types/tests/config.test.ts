@@ -105,19 +105,29 @@ describe('CadenceConfigZ', () => {
     expect(parsed.notify.file).toBeUndefined();
   });
 
-  it('accepts notify.transport = stderr | file | none', () => {
-    for (const t of ['stderr', 'file', 'none'] as const) {
-      expect(() =>
-        CadenceConfigZ.parse({ ...defaultConfig, notify: { transport: t } }),
-      ).not.toThrow();
-    }
+  it('accepts notify.transport = stderr | file | none | webhook', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, notify: { transport: 'stderr' } }),
+    ).not.toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, notify: { transport: 'file' } }),
+    ).not.toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, notify: { transport: 'none' } }),
+    ).not.toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        notify: { transport: 'webhook', webhook: { url: 'https://example.com/hook' } },
+      }),
+    ).not.toThrow();
   });
 
   it('rejects unknown notify.transport literal', () => {
     expect(() =>
       CadenceConfigZ.parse({
         ...defaultConfig,
-        notify: { transport: 'webhook' as never },
+        notify: { transport: 'pigeon' as never },
       }),
     ).toThrow();
   });
@@ -128,5 +138,44 @@ describe('CadenceConfigZ', () => {
       notify: { transport: 'file', file: 'logs/anomalies.log' },
     });
     expect(parsed.notify.file).toBe('logs/anomalies.log');
+  });
+
+  // AC-1 (Phase 19.1) — webhook transport schema.
+  it('accepts notify.transport=webhook with a valid webhook block', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      notify: {
+        transport: 'webhook',
+        webhook: { url: 'https://hooks.example.com/abc', headers: { Authorization: 'Bearer xyz' }, timeoutMs: 3000 },
+      },
+    });
+    expect(parsed.notify.transport).toBe('webhook');
+    expect(parsed.notify.webhook?.url).toBe('https://hooks.example.com/abc');
+    expect(parsed.notify.webhook?.headers?.Authorization).toBe('Bearer xyz');
+    expect(parsed.notify.webhook?.timeoutMs).toBe(3000);
+  });
+
+  it('rejects notify.transport=webhook without a webhook block (refinement)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, notify: { transport: 'webhook' } }),
+    ).toThrow(/webhook\.url is required/);
+  });
+
+  it('rejects notify.webhook.url that is not a valid URL', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        notify: { transport: 'webhook', webhook: { url: 'not-a-url' } },
+      }),
+    ).toThrow();
+  });
+
+  it('accepts notify.webhook with only url (headers + timeoutMs optional)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      notify: { transport: 'webhook', webhook: { url: 'https://example.com/hook' } },
+    });
+    expect(parsed.notify.webhook?.headers).toBeUndefined();
+    expect(parsed.notify.webhook?.timeoutMs).toBeUndefined();
   });
 });

@@ -122,8 +122,28 @@ Configure in `.cadence/config.json`:
 - `stderr` (default): `cadence anomaly [severity] type: message`
 - `file`: appends NDJSON to `notify.file` (defaults to `.cadence/anomalies.log`); the operator owns rotation
 - `none`: drops events
+- `webhook`: POSTs `{events: [...]}` JSON to `notify.webhook.url` (Phase 19.1)
 
 Notifier failures degrade to a single stderr warning and never block settle. Strict-profile cells do not include the gate — strict users see everything inline through the interactive walker.
+
+### Webhook transport
+
+Wire any system that speaks "incoming webhook" — Slack, Discord, Zapier, n8n, your own ingester — by pointing `notify.webhook.url` at it:
+
+```jsonc
+{
+  "notify": {
+    "transport": "webhook",
+    "webhook": {
+      "url": "https://hooks.slack.com/services/T000/B000/XXXXXXXX",
+      "headers": { "Authorization": "Bearer optional-token" },
+      "timeoutMs": 5000
+    }
+  }
+}
+```
+
+Body shape: `{ "events": [ { "type": "ac-blocked", "severity": "warn", "message": "...", "context": { ... } }, ... ] }`. Empty batches skip the request entirely. Failures (non-2xx / network / timeout) write one warning to stderr and continue — the URL is never logged (it may carry a secret).
 
 **Hook-side detection (Phase 17.2).** `cadence`'s pre-tool-edit hook also fires `files-outside-boundary` *at edit time* when an active draft is loaded and the host (e.g., Claude Code) is about to touch a file outside the union of the draft's `tasks[].files`. Detection only — the hook never refuses the edit. Same transport contract as settle-time emission.
 

@@ -2,6 +2,7 @@ import type { CadenceConfig } from '@cadence/types';
 import { FileNotifier } from './file.js';
 import { NullNotifier } from './null.js';
 import { StderrNotifier } from './stderr.js';
+import { WebhookNotifier } from './webhook.js';
 import type { Notifier } from './notifier.js';
 
 export interface SelectNotifierOptions {
@@ -23,6 +24,16 @@ export function selectNotifier(
   if (transport === 'none') return new NullNotifier();
   if (transport === 'file') {
     return new FileNotifier(config?.notify?.file ?? DEFAULT_FILE);
+  }
+  if (transport === 'webhook') {
+    // Schema refinement guarantees `notify.webhook` is present + valid.
+    const wh = config!.notify!.webhook!;
+    return new WebhookNotifier({
+      url: wh.url,
+      ...(wh.headers ? { headers: wh.headers } : {}),
+      ...(wh.timeoutMs !== undefined ? { timeoutMs: wh.timeoutMs } : {}),
+      ...(opts.stderrWrite ? { stderrWrite: opts.stderrWrite } : {}),
+    });
   }
   return new StderrNotifier({ write: opts.stderrWrite ?? ((c) => process.stderr.write(c)) });
 }
