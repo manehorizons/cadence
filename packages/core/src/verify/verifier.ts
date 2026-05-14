@@ -1,0 +1,62 @@
+/**
+ * Abstract interface for the `--deep` independent verifier. Implementations
+ * read AC text + relevant code + tests and return a per-AC pass/fail verdict
+ * with reasoning. Selection is config-driven (see `selectVerifier`).
+ */
+
+export interface VerifyAc {
+  /** Stable AC id, e.g. "AC-1". */
+  id: string;
+  /** Human-readable Given clause from the DRAFT. */
+  given: string;
+  /** Human-readable When clause. */
+  when: string;
+  /** Human-readable Then clause — the actual outcome to verify. */
+  then: string;
+}
+
+export interface VerifyTestRef {
+  /** Path relative to repoRoot, forward-slashed. */
+  file: string;
+  /** 1-based line where the AC token appeared. */
+  line: number;
+  /** Trimmed snippet of the matching test line. */
+  snippet: string;
+}
+
+export interface VerifyInput {
+  /** ACs to verify. */
+  acs: VerifyAc[];
+  /** Map of AC id → linked test refs (from `scanTestCoverage`). */
+  tests: Record<string, VerifyTestRef[]>;
+  /** Optional unified diff of code changes for the phase. May be empty. */
+  diff: string;
+  /** Optional list of touched source files (for context). May be empty. */
+  files: string[];
+}
+
+export interface AcVerdict {
+  pass: boolean;
+  /** Short, human-readable reason (≤ 200 chars). */
+  reason: string;
+}
+
+export interface VerifyResult {
+  /** Per-AC verdicts keyed by AC id. */
+  verdicts: Record<string, AcVerdict>;
+  /** Provider name (e.g. "mock", "anthropic"). Stamped into SUMMARY. */
+  provider: string;
+  /** Optional model name when the provider is an LLM. */
+  model?: string;
+}
+
+/**
+ * Verifiers must be safe to call without I/O setup beyond what the
+ * constructor accepts. Implementations should *not* throw on per-AC verdict
+ * failures — failed verdicts go in `result.verdicts[id].pass = false`.
+ * Throwing is reserved for transport errors (network, malformed response).
+ */
+export interface Verifier {
+  readonly name: string;
+  verify(input: VerifyInput): Promise<VerifyResult>;
+}
