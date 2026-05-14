@@ -23,6 +23,8 @@ import type {
 import type { DeepVerdict } from '@cadence/types';
 import { walkAcsInteractively, type InteractiveVerdict } from '../../verify/interactive.js';
 import { ScriptedPrompter, StdinPrompter, type Prompter } from '../../verify/prompter.js';
+import { selectNotifier } from '../../notify/factory.js';
+import { collectAnomalies } from '../../notify/collect.js';
 
 interface ProgressJson {
   draftId: string;
@@ -113,6 +115,10 @@ export function registerSettleCommand(program: Command): void {
           cadenceConfig = null;
         }
         const gateSet = effectiveGateSet(state, cadenceConfig, draft);
+        const coverageBypassed =
+          gateSet.gates.includes('test-coverage') === true &&
+          opts.allowMissingCoverage === true;
+        let verifierFailure: { message: string; provider?: string } | undefined;
         if (
           gateSet.gates.includes('test-coverage') &&
           !opts.allowMissingCoverage &&
@@ -301,6 +307,10 @@ export function registerSettleCommand(program: Command): void {
                   provider: 'unknown',
                 };
               }
+              verifierFailure = {
+                message,
+                provider: cadenceConfig?.verifier?.provider ?? 'mock',
+              };
             } else {
               process.stderr.write(
                 `deep-verify: verifier failed — ${message}. Pass --allow-verifier-failure to continue.\n`,
@@ -376,6 +386,32 @@ export function registerSettleCommand(program: Command): void {
             }
           }
           acResults = merged;
+        }
+
+        // Anomaly notify (Phase 17) — fires only when 'anomaly-notify' is in
+        // the gate set. Notifier failures degrade to a stderr warning; they
+        // never block settle.
+        if (gateSet.gates.includes('anomaly-notify')) {
+          const anomalies = collectAnomalies({
+            draft,
+            progress,
+            coverageBypassed,
+            force: opts.force === true,
+            ...(deepVerify ? { deepVerify } : {}),
+            ...(interactiveVerify ? { interactiveVerify } : {}),
+            ...(verifierFailure ? { verifierFailure } : {}),
+          });
+          if (anomalies.length > 0) {
+            const notifier = selectNotifier(cadenceConfig);
+            try {
+              await notifier.notify(anomalies);
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              process.stderr.write(
+                `notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
+              );
+            }
+          }
         }
 
         const summary: Summary = {

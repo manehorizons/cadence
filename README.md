@@ -97,6 +97,34 @@ Note (optional, one line, blank to skip):
 - `--no-interactive` bypasses the gate for one invocation.
 - Non-TTY environments (CI, piped stdin) refuse with a clear stderr message — set `CADENCE_PROMPTER_SCRIPT` env var with newline-separated answers to drive the walker programmatically in tests.
 
+### Anomaly notify
+
+When `'anomaly-notify'` is in the gate set (auto profile and standard×{standard,complex} cells), settle collects typed events and dispatches them via the configured transport. Event types:
+
+- `ac-blocked` — one per task that ended `BLOCKED`
+- `ac-needs-context` — one per task that ended `NEEDS_CONTEXT`
+- `coverage-bypassed` — when `--allow-missing-coverage` flipped an active test-coverage gate
+- `files-outside-boundary` — one per touched file not declared in any task's `files:` list
+- `verifier-failure` — when the `--deep` verifier transport blew up
+- `force-used` — when `--force` bypassed failing structural / deep / interactive verdicts
+
+Configure in `.cadence/config.json`:
+
+```jsonc
+{
+  "notify": {
+    "transport": "stderr",          // "stderr" | "file" | "none"
+    "file": ".cadence/anomalies.log" // only used when transport=file
+  }
+}
+```
+
+- `stderr` (default): `cadence anomaly [severity] type: message`
+- `file`: appends NDJSON to `notify.file` (defaults to `.cadence/anomalies.log`); the operator owns rotation
+- `none`: drops events
+
+Notifier failures degrade to a single stderr warning and never block settle. Strict-profile cells do not include the gate — strict users see everything inline through the interactive walker.
+
 ## Codex support — archived
 
 Codex CLI host adapter shipped earlier as `@keel/host-codex` (Phases 02 / 09). Phase 11 removed it from main; the complete pre-removal state is preserved on the `keel-codex-archive` git tag. Resurrection is a future v1.x/v2 phase.

@@ -1,0 +1,155 @@
+import type {
+  AnomalyEvent,
+  DeepVerdict,
+  Draft,
+} from '@cadence/types';
+import type { ProgressFile } from '../status.js';
+import type { InteractiveVerdict } from '../verify/interactive.js';
+
+export interface CollectAnomaliesContext {
+  draft: Draft;
+  progress: ProgressFile;
+  /** True iff `--allow-missing-coverage` was used AND `test-coverage` was in the gate set. */
+  coverageBypassed: boolean;
+  /** True iff `--force` was set on settle. */
+  force: boolean;
+  /** Per-AC deep verifier verdicts (Phase 15), if --deep / deep-verify gate ran. */
+  deepVerify?: Record<string, DeepVerdict> | undefined;
+  /** Per-AC interactive verdicts (Phase 16), if --interactive / interactive-verdict gate ran. */
+  interactiveVerify?: Record<string, InteractiveVerdict> | undefined;
+  /** Populated when the deep verifier transport itself failed (network/parse/etc). */
+  verifierFailure?: { message: string; provider?: string } | undefined;
+}
+
+function parseAcRefs(done: string): string[] {
+  return done
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => /^AC-\d+$/.test(s));
+}
+
+/**
+ * Walks settle context and emits typed anomaly events for the auto / standard
+ * profile. Pure — no I/O.
+ */
+export function collectAnomalies(ctx: CollectAnomaliesContext): AnomalyEvent[] {
+  const events: AnomalyEvent[] = [];
+
+  // ac-blocked / ac-needs-context — one event per task in the affected state.
+  for (const task of ctx.draft.tasks) {
+    const status = ctx.progress.tasks[task.id]?.status;
+    const acs = parseAcRefs(task.done);
+    if (status === 'BLOCKED') {
+      events.push({
+        type: 'ac-blocked',
+        severity: 'warn',
+        message: `${task.id} BLOCKED (${acs.length > 0 ? acs.join(', ') : 'no ACs linked'})`,
+        context: { taskId: task.id, taskName: task.name, acs },
+      });
+    } else if (status === 'NEEDS_CONTEXT') {
+      events.push({
+        type: 'ac-needs-context',
+        severity: 'warn',
+        message: `${task.id} NEEDS_CONTEXT (${acs.length > 0 ? acs.join(', ') : 'no ACs linked'})`,
+        context: {
+          taskId: task.id,
+          taskName: task.name,
+          acs,
+          notes: ctx.progress.tasks[task.id]?.notes ?? '',
+        },
+      });
+    }
+  }
+
+  // coverage-bypassed — single event when bypass flag flipped a gate that was active.
+  if (ctx.coverageBypassed) {
+    events.push({
+      type: 'coverage-bypassed',
+      severity: 'warn',
+      message: 'test-coverage gate bypassed via --allow-missing-coverage',
+      context: {},
+    });
+  }
+
+  // files-outside-boundary — one event per touched file that is not in any
+  // task's declared `files:` list.
+  const declared = new Set(ctx.draft.tasks.flatMap((t) => t.files));
+  const touched = new Set<string>();
+  for (const entry of Object.values(ctx.progress.tasks)) {
+    for (const f of entry.touchedFiles ?? []) touched.add(f);
+  }
+  for (const file of touched) {
+    if (!declared.has(file)) {
+      events.push({
+        type: 'files-outside-boundary',
+        severity: 'warn',
+        message: `${file} touched but not declared in any task's files:`,
+        context: { file },
+      });
+    }
+  }
+
+  // verifier-failure — emitted when the deep verifier transport itself blew up.
+  if (ctx.verifierFailure) {
+    events.push({
+      type: 'verifier-failure',
+      severity: 'error',
+      message: `deep verifier failed: ${ctx.verifierFailure.message}`,
+      context: {
+        message: ctx.verifierFailure.message,
+        ...(ctx.verifierFailure.provider ? { provider: ctx.verifierFailure.provider } : {}),
+      },
+    });
+  }
+
+  // force-used — emitted when --force was set AND something it would have
+  // bypassed actually failed (structural, deep, or interactive).
+  if (ctx.force) {
+    const failedAcs: string[] = [];
+    const reasons: string[] = [];
+
+    // structural: any AC whose linked tasks include BLOCKED/NEEDS_CONTEXT, or
+    // that has no linked tasks at all.
+    for (const ac of ctx.draft.acceptanceCriteria) {
+      const linked = ctx.draft.tasks.filter((t) =>
+        parseAcRefs(t.done).includes(ac.id),
+      );
+      if (linked.length === 0) {
+        failedAcs.push(ac.id);
+        continue;
+      }
+      const linkedStatuses = linked.map(
+        (t) => ctx.progress.tasks[t.id]?.status ?? 'PENDING',
+      );
+      if (
+        linkedStatuses.some((s) => s === 'BLOCKED' || s === 'NEEDS_CONTEXT')
+      ) {
+        failedAcs.push(ac.id);
+      }
+    }
+    if (failedAcs.length > 0) reasons.push(`structural: ${failedAcs.join(', ')}`);
+
+    if (ctx.deepVerify) {
+      const failed = Object.entries(ctx.deepVerify)
+        .filter(([, v]) => v.pass === false)
+        .map(([id]) => id);
+      if (failed.length > 0) reasons.push(`deep: ${failed.join(', ')}`);
+    }
+    if (ctx.interactiveVerify) {
+      const failed = Object.entries(ctx.interactiveVerify)
+        .filter(([, v]) => v.verdict === 'fail')
+        .map(([id]) => id);
+      if (failed.length > 0) reasons.push(`interactive: ${failed.join(', ')}`);
+    }
+    if (reasons.length > 0) {
+      events.push({
+        type: 'force-used',
+        severity: 'error',
+        message: `settle --force bypassed failing verdicts (${reasons.join('; ')})`,
+        context: { reasons },
+      });
+    }
+  }
+
+  return events;
+}

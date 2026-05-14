@@ -97,4 +97,36 @@ describe('CadenceConfigZ', () => {
     });
     expect(parsed.verifier.model).toBe('claude-haiku-4-5');
   });
+
+  it('notify defaults to transport=stderr when absent', () => {
+    const { notify: _drop, ...withoutNotify } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutNotify);
+    expect(parsed.notify.transport).toBe('stderr');
+    expect(parsed.notify.file).toBeUndefined();
+  });
+
+  it('accepts notify.transport = stderr | file | none', () => {
+    for (const t of ['stderr', 'file', 'none'] as const) {
+      expect(() =>
+        CadenceConfigZ.parse({ ...defaultConfig, notify: { transport: t } }),
+      ).not.toThrow();
+    }
+  });
+
+  it('rejects unknown notify.transport literal', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        notify: { transport: 'webhook' as never },
+      }),
+    ).toThrow();
+  });
+
+  it('accepts notify.file override for file transport', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      notify: { transport: 'file', file: 'logs/anomalies.log' },
+    });
+    expect(parsed.notify.file).toBe('logs/anomalies.log');
+  });
 });

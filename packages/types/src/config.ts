@@ -72,6 +72,19 @@ export const CadenceConfigZ = z.object({
       model: z.string().optional(),
     })
     .default({ provider: 'mock' }),
+  notify: z
+    .object({
+      /**
+       * Anomaly-event transport (Phase 17). `stderr` (default) writes one
+       * line per event; `file` appends NDJSON to `notify.file`; `none`
+       * drops events. Only fires when `'anomaly-notify'` is in the
+       * effective gate set.
+       */
+      transport: z.enum(['stderr', 'file', 'none']).default('stderr'),
+      /** Path for the file transport. Defaults to `.cadence/anomalies.log`. */
+      file: z.string().optional(),
+    })
+    .default({ transport: 'stderr' }),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -109,6 +122,7 @@ export const defaultConfig: CadenceConfig = {
     testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
   },
   verifier: { provider: 'mock' as const },
+  notify: { transport: 'stderr' as const },
 };
 
 export const presets = {
