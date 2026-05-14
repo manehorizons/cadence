@@ -49,16 +49,21 @@ Hybrid implementation:
 2. **`--deep`** — spawn an independent verifier (Phase 15, shipped). Two providers via `config.verifier.provider`: `mock` (default, deterministic linked-test rule, offline) and `anthropic` (opt-in via `ANTHROPIC_API_KEY`; uses `messages.parse()` with a Zod schema for per-AC verdicts; system prompt is prompt-cached). Refuses to settle on any non-overridden AC the verifier marks `pass=false` unless `--force`. Transport failures gated by `--allow-verifier-failure`. Per-AC results recorded into `SUMMARY.json deepVerify`.
 3. **`--interactive`** — shipped in Phase 16. Walks each AC sequentially with its given/when/then text + linked test refs + touched files, prompts the user for `pass | fail | skip` plus an optional note. Pass/fail verdicts win over structural/deep derivation; skip falls through. Per-AC results recorded into `SUMMARY.json interactiveVerify`. Refuses on TTY-less invocations unless `--no-interactive` bypasses; tests drive the walker via `CADENCE_PROMPTER_SCRIPT` env var seam.
 
-### 3.3 Anomaly notification (for `auto` profile) — shipped (Phase 17)
+### 3.3 Anomaly notification (for `auto` profile) — shipped (Phase 17 + 17.2)
 
-Settle emits typed `AnomalyEvent`s when `'anomaly-notify'` is in the effective gate set (auto + standard×{standard,complex} cells). Six event types:
+Two emission surfaces share one `Notifier` transport:
+
+1. **Settle-side (Phase 17.1)** — `collectAnomalies(...)` walks the settle context and dispatches a batch through `selectNotifier(config)` at SETTLE close.
+2. **Hook-side (Phase 17.2)** — `handlePreToolEdit` detects `files-outside-boundary` at edit time and dispatches one event per outside path *as the edit is about to happen*. Detection-only — the hook never refuses the edit.
+
+Both surfaces gate on `'anomaly-notify'` being in the effective gate set (auto + standard×{standard,complex} cells). Six event types:
 
 | Type | When |
 |---|---|
 | `ac-blocked` | A task ended `BLOCKED` |
 | `ac-needs-context` | A task ended `NEEDS_CONTEXT` |
 | `coverage-bypassed` | `--allow-missing-coverage` flipped an active test-coverage gate |
-| `files-outside-boundary` | A touched file is not in any task's declared `files:` list |
+| `files-outside-boundary` | A touched file is not in any task's declared `files:` list (settle-time reconciliation OR hook-time per-edit detection) |
 | `verifier-failure` | The `--deep` verifier transport itself failed |
 | `force-used` | `--force` bypassed at least one failing structural / deep / interactive verdict |
 
@@ -68,7 +73,9 @@ Transports (`.cadence/config.json: notify.transport`):
 - `file` — NDJSON appended to `notify.file` (defaults to `.cadence/anomalies.log`); operator owns rotation
 - `none` — drop on the floor
 
-Notifier failures degrade to a single stderr warning and never block settle. New transports plug in via the `Notifier` interface — no slack/webhook bridge is built in.
+Notifier failures degrade to a single stderr warning and never block settle (or the hook). New transports plug in via the `Notifier` interface — no slack/webhook bridge is built in.
+
+Read recorded events via `cadence status anomalies [--type <t>] [--limit <n>]` — parses `.cadence/anomalies.log` newest-first, skips malformed lines (count reported on stderr), supports filter by `AnomalyType`. `--since` is reserved syntax: events carry no timestamp in the current schema, so it accepts ISO8601 but is a no-op until a future schema bump.
 
 ## 4. Phase model — LOCKED
 
@@ -187,5 +194,6 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
    - ~~Phase 15 — `--deep` independent verifier agent~~ ✓
    - ~~Phase 16 — `--interactive` human-verdict mode~~ ✓
    - ~~Phase 17 — Anomaly notify transport~~ ✓
+   - ~~Phase 17.2 — Hook-side detection + `status anomalies` reader~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

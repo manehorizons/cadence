@@ -125,6 +125,18 @@ Configure in `.cadence/config.json`:
 
 Notifier failures degrade to a single stderr warning and never block settle. Strict-profile cells do not include the gate — strict users see everything inline through the interactive walker.
 
+**Hook-side detection (Phase 17.2).** `cadence`'s pre-tool-edit hook also fires `files-outside-boundary` *at edit time* when an active draft is loaded and the host (e.g., Claude Code) is about to touch a file outside the union of the draft's `tasks[].files`. Detection only — the hook never refuses the edit. Same transport contract as settle-time emission.
+
+### Reading recorded anomalies
+
+```bash
+cadence status anomalies                            # newest 20 events, all types
+cadence status anomalies --type files-outside-boundary --limit 5
+cadence status anomalies --type force-used
+```
+
+`status anomalies` parses `.cadence/anomalies.log` (or `config.notify.file`), skips malformed lines (count reported on stderr), and prints a table newest-first. `--since` is reserved but a no-op until events carry timestamps (deferred to a follow-up phase).
+
 ## Codex support — archived
 
 Codex CLI host adapter shipped earlier as `@keel/host-codex` (Phases 02 / 09). Phase 11 removed it from main; the complete pre-removal state is preserved on the `keel-codex-archive` git tag. Resurrection is a future v1.x/v2 phase.
