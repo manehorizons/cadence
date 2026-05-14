@@ -4,7 +4,7 @@
 
 CADENCE is a customizable plan/build/settle framework for AI-assisted development. Inspired by GSD (Get Shit Done) and PAUL (Plan-Apply-Unify Loop); independently implemented in TypeScript. The product center is a tunable quality regime: three user-involvement profiles (`strict` / `standard` / `auto`) × three phase tiers (`quick-fix` / `standard` / `complex`) decide which gates fire — see `DESIGN.md` for the full matrix.
 
-> **Status:** Phase 12 renamed the project KEEL → CADENCE (`v0.2.0-rc.1`). Earlier history shipped Phases 1–11 under the KEEL name; the `keel-codex-archive` tag preserves the dual-host implementation removed in Phase 11. Behavioral verifier (hybrid: structural + test-coverage default, `--deep` for agent, `--interactive` for human) is the next major implementation phase per `DESIGN.md`.
+> **Status:** v0.3.0 (2026-05-14). Phase 12 renamed KEEL → CADENCE (`v0.2.0-rc.1`); v0.3.0 added the behavioral verifier hybrid (test-coverage gate, `--deep` verifier agent, `--interactive` walker), four-transport anomaly notify (`stderr` / `file` / `none` / `webhook`), and the `auto × complex` soft cap enforcement. Earlier history (Phases 1–11) shipped under the KEEL name; `keel-codex-archive` tag preserves the dual-host implementation removed in Phase 11. See [CHANGELOG.md](./CHANGELOG.md) for the full Phase 13–21.1 spread.
 
 ## Loop
 
