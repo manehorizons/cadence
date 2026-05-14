@@ -28,7 +28,9 @@ npx @keel/core settle run --ac AC-1=pass
 cd your-project
 npx @keel/core init --name=your-project
 npx @keel/host-claude-code install
-# Start a new Claude Code session; KEEL hooks are now wired into .claude/settings.json
+# Start a new Claude Code session; KEEL hooks are wired into .claude/settings.json
+# and slash commands /keel-progress /keel-draft /keel-approve /keel-check /keel-build /keel-settle
+# are available under .claude/commands/.
 ```
 
 ## Packages

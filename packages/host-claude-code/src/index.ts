@@ -4,3 +4,5 @@ export { claudeCodeCapabilities } from './capabilities.js';
 export type { HostCapabilities } from './capabilities.js';
 export { installHooks } from './install.js';
 export type { InstallOptions } from './install.js';
+export { installCommands } from './install-commands.js';
+export type { InstallCommandsOptions } from './install-commands.js';

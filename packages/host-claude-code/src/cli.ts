@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { spawn } from 'node:child_process';
 import { installHooks, type InstallOptions } from './install.js';
+import { installCommands, type InstallCommandsOptions } from './install-commands.js';
 import { routeHookEvent } from './shim.js';
 
 const program = new Command();
@@ -12,28 +13,45 @@ program
 
 program
   .command('install')
-  .description('Write Claude Code hook entries to .claude/settings.json')
+  .description('Write Claude Code hook entries and slash commands into the project')
   .option('--cwd <dir>', 'project root', process.cwd())
   .option('--command <cmd>', 'base command for the shim (default: "npx @keel/host-claude-code")')
   .option('--keel <cmd>', 'base command the shim uses to invoke core (default: "npx @keel/core")')
   .option('--settings <path>', 'settings file path relative to cwd', '.claude/settings.json')
-  .action(async (opts: { cwd: string; command?: string; keel?: string; settings: string }) => {
-    try {
-      const installOpts: InstallOptions = { settingsPath: opts.settings };
-      if (opts.command !== undefined) installOpts.command = opts.command;
-      if (opts.keel !== undefined) installOpts.keelCommand = opts.keel;
-      await installHooks(opts.cwd, installOpts);
-      process.stdout.write(
-        `Installed KEEL hooks → ${opts.cwd}/${opts.settings}\n` +
-          `Start a new Claude Code session to activate.\n`,
-      );
-    } catch (err) {
-      process.stderr.write(
-        `install failed: ${err instanceof Error ? err.message : String(err)}\n`,
-      );
-      process.exitCode = 1;
-    }
-  });
+  .option('--no-hooks', 'skip writing hooks to settings.json')
+  .option('--no-commands', 'skip writing slash commands to .claude/commands/')
+  .action(
+    async (opts: {
+      cwd: string;
+      command?: string;
+      keel?: string;
+      settings: string;
+      hooks: boolean;
+      commands: boolean;
+    }) => {
+      try {
+        if (opts.hooks) {
+          const installOpts: InstallOptions = { settingsPath: opts.settings };
+          if (opts.command !== undefined) installOpts.command = opts.command;
+          if (opts.keel !== undefined) installOpts.keelCommand = opts.keel;
+          await installHooks(opts.cwd, installOpts);
+          process.stdout.write(`Installed KEEL hooks → ${opts.cwd}/${opts.settings}\n`);
+        }
+        if (opts.commands) {
+          const cmdOpts: InstallCommandsOptions = {};
+          if (opts.keel !== undefined) cmdOpts.keelCommand = opts.keel;
+          await installCommands(opts.cwd, cmdOpts);
+          process.stdout.write(`Installed KEEL slash commands → ${opts.cwd}/.claude/commands/\n`);
+        }
+        process.stdout.write('Start a new Claude Code session to activate.\n');
+      } catch (err) {
+        process.stderr.write(
+          `install failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    },
+  );
 
 program
   .command('hook')

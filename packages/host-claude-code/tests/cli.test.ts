@@ -33,13 +33,39 @@ async function tempDir(): Promise<string> {
 }
 
 describe('keel-host-claude-code install', () => {
-  it('writes settings.json into --cwd', async () => {
+  it('writes settings.json and slash commands into --cwd', async () => {
     const root = await tempDir();
     const r = await run(['install', '--cwd', root]);
     expect(r.code).toBe(0);
     expect(r.stdout).toMatch(/Installed KEEL hooks/);
+    expect(r.stdout).toMatch(/Installed KEEL slash commands/);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0]._managedBy).toBe('keel');
+    const progress = await readFile(join(root, '.claude/commands/keel-progress.md'), 'utf8');
+    expect(progress).toMatch(/!keel progress/);
+  });
+
+  it('--no-commands skips slash command writing', async () => {
+    const root = await tempDir();
+    const r = await run(['install', '--cwd', root, '--no-commands']);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/Installed KEEL slash commands/);
+    const { access } = await import('node:fs/promises');
+    let exists = true;
+    try {
+      await access(join(root, '.claude/commands/keel-progress.md'));
+    } catch {
+      exists = false;
+    }
+    expect(exists).toBe(false);
+  });
+
+  it('--no-hooks skips settings.json writing', async () => {
+    const root = await tempDir();
+    const r = await run(['install', '--cwd', root, '--no-hooks']);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/Installed KEEL hooks/);
+    expect(r.stdout).toMatch(/Installed KEEL slash commands/);
   });
 
   it('honors --command override (shim invocation)', async () => {
