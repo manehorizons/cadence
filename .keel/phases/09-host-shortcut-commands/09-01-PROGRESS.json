@@ -1,0 +1,23 @@
+{
+  "draftId": "09-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Claude Code +3 COMMANDS entries",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T13:50:54.682Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Codex +3 SKILLS entries",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T13:50:54.834Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "host tests extended, 55 cc + 82 codex green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T13:50:54.980Z"
+    }
+  }
+}

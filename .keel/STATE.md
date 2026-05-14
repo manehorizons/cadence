@@ -4,7 +4,7 @@
 
 **Project:** keel
 **Loop position:** IDLE
-**Active phase:** 08-block-shortcuts
+**Active phase:** 09-host-shortcut-commands
 **Active draft:** (none)
 **Tier:** (n/a)
 

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "draftId": "09-01",
+  "completedAt": "2026-05-14T13:51:02.930Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Claude Code +3 COMMANDS entries"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Codex +3 SKILLS entries"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "host tests extended, 55 cc + 82 codex green"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
