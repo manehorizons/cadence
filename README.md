@@ -4,7 +4,7 @@
 
 KEEL is a host-agnostic plan/build/settle framework for AI-assisted development. It is inspired by GSD (Get Shit Done) and PAUL (Plan-Apply-Unify Loop) and is independently implemented in TypeScript.
 
-> **Status:** Phase 1 (foundation) shipped — `@keel/core`, `@keel/types`, `@keel/testkit`. Phase 2 in progress — first host adapter `@keel/host-claude-code` shipped; Codex CLI adapter next.
+> **Status:** Phase 1 (foundation) shipped — `@keel/core`, `@keel/types`, `@keel/testkit`. Phase 2 — both host adapters shipped: `@keel/host-claude-code` and `@keel/host-codex`.
 
 ## Loop
 
@@ -33,12 +33,29 @@ npx @keel/host-claude-code install
 # are available under .claude/commands/.
 ```
 
+## Use with Codex CLI
+
+```bash
+cd your-project
+npx @keel/core init --name=your-project
+npx @keel/host-codex install
+# Start a new Codex session; KEEL hooks are wired into .codex/hooks.json
+# and Agent Skills $keel-progress / $keel-draft / $keel-approve / $keel-check /
+# $keel-build / $keel-settle are available under .agents/skills/.
+```
+
+> Note: PreToolUse/PostToolUse hooks do not yet fire for `apply_patch`
+> ([openai/codex#16732](https://github.com/openai/codex/issues/16732)). The
+> adapter installs the matchers so it activates automatically once upstream
+> lands the fix; SessionStart, UserPromptSubmit, and Stop hooks work today.
+
 ## Packages
 
 - `@keel/core` — CLI + state engine + parsers + classifier + hook dispatcher
 - `@keel/types` — Zod schemas + TS interfaces
 - `@keel/testkit` — fixture builder + MockHostAdapter for tests
-- `@keel/host-claude-code` — Claude Code host adapter: hook installer + event mapping
+- `@keel/host-claude-code` — Claude Code host adapter: hook installer + event mapping + slash command codegen
+- `@keel/host-codex` — Codex CLI host adapter: hook installer + apply_patch payload translation + Agent Skill codegen
 
 ## License
 
