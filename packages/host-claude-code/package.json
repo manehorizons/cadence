@@ -1,0 +1,27 @@
+{
+  "name": "@keel/host-claude-code",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+  },
+  "bin": { "keel-host-claude-code": "./bin/keel-host-claude-code.cjs" },
+  "files": ["dist", "bin"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@keel/types": "workspace:*",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "@keel/testkit": "workspace:*",
+    "vitest": "^2.1.0"
+  }
+}

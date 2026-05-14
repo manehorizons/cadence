@@ -58,6 +58,22 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.41)
 
+  packages/host-claude-code:
+    dependencies:
+      '@keel/types':
+        specifier: workspace:*
+        version: link:../types
+      commander:
+        specifier: ^13.0.0
+        version: 13.1.0
+    devDependencies:
+      '@keel/testkit':
+        specifier: workspace:*
+        version: link:../testkit
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.41)
+
   packages/testkit:
     dependencies:
       '@keel/types':
