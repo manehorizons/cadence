@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "draftId": "11-01",
+  "completedAt": "2026-05-14T18:42:53.618Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "host-codex deleted, workspace reconciled"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "HostCapabilities collapsed to TS-only interface"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "schema test dropped (host.test.ts), 196 tests green"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "README sections rewritten, status banner updated"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "grep clean, 285 -> 196 tests as expected"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "draftId": "11-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "host-codex deleted, workspace reconciled",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T18:42:52.800Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "HostCapabilities collapsed to TS-only interface",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T18:42:52.968Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "schema test dropped (host.test.ts), 196 tests green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T18:42:53.132Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "README sections rewritten, status banner updated",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T18:42:53.291Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "grep clean, 285 -> 196 tests as expected",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T18:42:53.448Z"
+    }
+  }
+}
