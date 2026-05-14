@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "draftId": "17-02",
+  "completedAt": "2026-05-14T22:30:40.974Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "hook-side files-outside-boundary emission (7 tests)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "status anomalies subcommand (9 tests; --since accepted no-op)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "DESIGN.md §3.3 + §10 ticked; README anomaly reader section + hook detection blurb"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "draftId": "17-02",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "hook-side files-outside-boundary emission (7 tests)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:26:47.701Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "status anomalies subcommand (9 tests; --since accepted no-op)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:28:27.264Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "DESIGN.md §3.3 + §10 ticked; README anomaly reader section + hook detection blurb",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:29:17.581Z"
+    }
+  }
+}
