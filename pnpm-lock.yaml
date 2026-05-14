@@ -83,6 +83,9 @@ importers:
         specifier: ^13.0.0
         version: 13.1.0
     devDependencies:
+      '@keel/host-claude-code':
+        specifier: workspace:*
+        version: link:../host-claude-code
       '@keel/testkit':
         specifier: workspace:*
         version: link:../testkit

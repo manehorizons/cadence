@@ -59,6 +59,16 @@ npx @keel/host-codex install
 > The same `--local --settings .codex/hooks.local.json` flow works for
 > Codex when dogfooding from a local checkout.
 
+## Host adapter contract
+
+Every host adapter must export a `HostCapabilities` value that conforms
+to `HostCapabilitiesZ` (Zod schema in `@keel/types`). A portability test
+in `@keel/host-codex` parses each shipped adapter's capabilities through
+the schema; adding a new host means adding a line to that test and
+declaring the matching field set. Schema fields cover hook coverage,
+slash command support, skill system, blocking events, subagent spawn
+style, and streaming output.
+
 ## Packages
 
 - `@keel/core` — CLI + state engine + parsers + classifier + hook dispatcher

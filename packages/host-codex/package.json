@@ -21,6 +21,7 @@
     "commander": "^13.0.0"
   },
   "devDependencies": {
+    "@keel/host-claude-code": "workspace:*",
     "@keel/testkit": "workspace:*",
     "vitest": "^2.1.0"
   }

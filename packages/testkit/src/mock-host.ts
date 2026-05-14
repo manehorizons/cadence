@@ -1,13 +1,4 @@
-import type { AbstractEvent, HookContext } from '@keel/types';
-
-export interface HostCapabilities {
-  hooks: AbstractEvent[];
-  slashCommands: boolean;
-  skillSystem: 'native' | 'prompted' | 'none';
-  blockingHooks: AbstractEvent[];
-  subagentSpawn: 'native' | 'shell-out' | 'none';
-  streamingOutput: boolean;
-}
+import type { AbstractEvent, HookContext, HostCapabilities } from '@keel/types';
 
 const FULL_HOOKS: AbstractEvent[] = [
   'session-start',
