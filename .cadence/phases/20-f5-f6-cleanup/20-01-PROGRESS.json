@@ -1,0 +1,11 @@
+{
+  "draftId": "20-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "F5 + F6 struck in DESIGN.md §6 with Resolved pointers (Phase 14 / Phase 15)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T23:15:56.924Z"
+    }
+  }
+}
