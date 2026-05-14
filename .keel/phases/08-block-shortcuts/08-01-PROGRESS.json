@@ -1,0 +1,23 @@
+{
+  "draftId": "08-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "block command added",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T13:39:04.400Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "needs-context command added",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T13:39:04.567Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "tests added (5 per command, 109 total)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T13:42:25.268Z"
+    }
+  }
+}

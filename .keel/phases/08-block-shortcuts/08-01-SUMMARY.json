@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "draftId": "08-01",
+  "completedAt": "2026-05-14T13:42:49.076Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "block command added"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "needs-context command added"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "tests added (5 per command, 109 total)"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
