@@ -4,3 +4,5 @@ export { codexCapabilities } from './capabilities.js';
 export type { HostCapabilities } from './capabilities.js';
 export { routeHookEvent } from './shim.js';
 export type { RouteResult } from './shim.js';
+export { installHooks } from './install.js';
+export type { InstallOptions } from './install.js';
