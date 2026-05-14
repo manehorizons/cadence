@@ -58,7 +58,22 @@ Bypass flags:
 
 The gate fires only when the active (tier × profile) puts `'test-coverage'` in the effective `GateSet`. Under `auto × quick-fix` it does not fire. See `DESIGN.md` Section 4.2 for the full matrix.
 
-`--deep` (independent verifier agent) and `--interactive` (human verdict per AC) ship in Phases 15 + 16.
+### Deep verifier (`--deep`)
+
+`cadence settle run --auto --deep` runs an independent verifier against each AC and records per-AC verdicts into `SUMMARY.json deepVerify`. Two providers, selected via `.cadence/config.json`:
+
+```json
+{
+  "verifier": { "provider": "mock" }
+}
+```
+
+- **`mock` (default)** — deterministic. Passes an AC iff it has ≥1 linked test in the coverage scan; otherwise fails with `"no linked test found"`. No I/O, no API key, works offline. Useful for CI dogfood and as a floor.
+- **`anthropic`** — opt-in. Sends each AC's plain-English text + diff + test refs to Claude (default model: `claude-sonnet-4-6`, overridable via `verifier.model`). Uses `messages.parse()` with a Zod schema for typed JSON verdicts; system prompt is prompt-cached. Requires `ANTHROPIC_API_KEY` in env — if absent, silently falls back to `mock` with a stderr warning.
+
+Failed verdicts on non-overridden ACs refuse the settle (exit 1) unless `--force` is passed. Transport failures (network / malformed JSON) refuse unless `--allow-verifier-failure` is passed (which records the failure into `deepVerify`). Explicit `--ac` overrides still win — the verifier runs for visibility but the manual verdict takes effect.
+
+`--interactive` (human verdict per AC) ships in Phase 16.
 
 ## Codex support — archived
 

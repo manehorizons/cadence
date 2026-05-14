@@ -66,4 +66,35 @@ describe('CadenceConfigZ', () => {
       }),
     ).toThrow();
   });
+
+  it('verifier defaults to provider=mock when absent', () => {
+    const { verifier: _drop, ...withoutVerifier } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutVerifier);
+    expect(parsed.verifier.provider).toBe('mock');
+  });
+
+  it('accepts verifier provider = mock | anthropic', () => {
+    for (const p of ['mock', 'anthropic'] as const) {
+      expect(() =>
+        CadenceConfigZ.parse({ ...defaultConfig, verifier: { provider: p } }),
+      ).not.toThrow();
+    }
+  });
+
+  it('rejects unknown verifier provider', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        verifier: { provider: 'openai' as never },
+      }),
+    ).toThrow();
+  });
+
+  it('accepts verifier.model override', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: { provider: 'anthropic', model: 'claude-haiku-4-5' },
+    });
+    expect(parsed.verifier.model).toBe('claude-haiku-4-5');
+  });
 });

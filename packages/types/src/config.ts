@@ -61,6 +61,17 @@ export const CadenceConfigZ = z.object({
       testGlobs: z.array(z.string()).default(['packages/**/*.test.ts', 'packages/**/*.test.tsx']),
     })
     .default({ testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'] }),
+  verifier: z
+    .object({
+      /**
+       * `--deep` verifier provider selection (Phase 15). `mock` always works
+       * offline; `anthropic` requires ANTHROPIC_API_KEY in env.
+       */
+      provider: z.enum(['mock', 'anthropic']).default('mock'),
+      /** Optional model override for the Anthropic provider. */
+      model: z.string().optional(),
+    })
+    .default({ provider: 'mock' }),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -97,6 +108,7 @@ export const defaultConfig: CadenceConfig = {
   verification: {
     testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
   },
+  verifier: { provider: 'mock' as const },
 };
 
 export const presets = {

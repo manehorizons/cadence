@@ -14,6 +14,13 @@ import { deriveAcResults, type ProgressFile } from '../../status.js';
 import { loadConfig } from '../../config/loader.js';
 import { effectiveGateSet } from '../../gates/engine.js';
 import { scanTestCoverage, uncoveredAcs } from '../../verify/coverage.js';
+import { selectVerifier } from '../../verify/factory.js';
+import type {
+  VerifyAc,
+  VerifyInput,
+  VerifyTestRef,
+} from '../../verify/verifier.js';
+import type { DeepVerdict } from '@cadence/types';
 
 interface ProgressJson {
   draftId: string;
@@ -50,12 +57,22 @@ export function registerSettleCommand(program: Command): void {
       '--allow-missing-coverage',
       "skip the test-coverage gate even if the active profile would enforce it",
     )
+    .option(
+      '--deep',
+      'run the independent verifier agent against each AC (provider from config.verifier)',
+    )
+    .option(
+      '--allow-verifier-failure',
+      'do not refuse on verifier transport failures; record failure into SUMMARY and treat as pass=false',
+    )
     .action(
       async (opts: {
         ac?: string[];
         auto?: boolean;
         force?: boolean;
         allowMissingCoverage?: boolean;
+        deep?: boolean;
+        allowVerifierFailure?: boolean;
       }) => {
       try {
         const cwd = process.cwd();
@@ -114,6 +131,97 @@ export function registerSettleCommand(program: Command): void {
             );
             process.exitCode = 1;
             return;
+          }
+        }
+
+        // Deep verifier (Phase 15) — fires on explicit --deep OR when 'deep-verify' is
+        // in the gate set (e.g. standard × complex). Records per-AC verdicts; refuses
+        // on failed verdicts for non-overridden ACs unless --force is set.
+        let deepVerify: Record<string, DeepVerdict> | undefined;
+        const deepRequested =
+          opts.deep === true || gateSet.gates.includes('deep-verify');
+        if (deepRequested && opts.auto !== false) {
+          const verifier = selectVerifier(cadenceConfig);
+          const acs: VerifyAc[] = draft.acceptanceCriteria.map((a) => ({
+            id: a.id,
+            given: a.given,
+            when: a.when,
+            then: a.then,
+          }));
+          const coverageGlobs = cadenceConfig?.verification?.testGlobs;
+          const coverageForVerifier = await scanTestCoverage(
+            cwd,
+            coverageGlobs ? { globs: coverageGlobs } : {},
+          );
+          const testsForVerifier: Record<string, VerifyTestRef[]> = {};
+          for (const [id, refs] of coverageForVerifier) {
+            testsForVerifier[id] = refs;
+          }
+          const touchedFiles = Array.from(
+            new Set(draft.tasks.flatMap((t) => t.files)),
+          );
+          const verifyInput: VerifyInput = {
+            acs,
+            tests: testsForVerifier,
+            diff: '',
+            files: touchedFiles,
+          };
+          try {
+            const result = await verifier.verify(verifyInput);
+            deepVerify = {};
+            for (const ac of acs) {
+              const v = result.verdicts[ac.id];
+              if (v) {
+                deepVerify[ac.id] = {
+                  pass: v.pass,
+                  reason: v.reason,
+                  provider: result.provider,
+                  ...(result.model ? { model: result.model } : {}),
+                };
+              }
+            }
+            const offenders = acs
+              .map((a) => a.id)
+              .filter(
+                (id) =>
+                  !explicitIds.has(id) &&
+                  deepVerify![id] !== undefined &&
+                  deepVerify![id]!.pass === false,
+              );
+            if (offenders.length > 0 && !opts.force) {
+              for (const id of offenders) {
+                process.stderr.write(
+                  `deep-verify: ${id} failed — ${deepVerify[id]!.reason} (provider: ${result.provider})\n`,
+                );
+              }
+              process.stderr.write(
+                'settle run --deep refused: the independent verifier rejected one or more ACs. ' +
+                  'Pass --force to settle anyway, or address the gaps.\n',
+              );
+              process.exitCode = 1;
+              return;
+            }
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            if (opts.allowVerifierFailure) {
+              process.stderr.write(
+                `deep-verify: verifier failed (${message}); --allow-verifier-failure set, treating all ACs as pass=false.\n`,
+              );
+              deepVerify = {};
+              for (const ac of acs) {
+                deepVerify[ac.id] = {
+                  pass: false,
+                  reason: `verifier failed: ${message}`,
+                  provider: 'unknown',
+                };
+              }
+            } else {
+              process.stderr.write(
+                `deep-verify: verifier failed — ${message}. Pass --allow-verifier-failure to continue.\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
           }
         }
 
@@ -181,6 +289,7 @@ export function registerSettleCommand(program: Command): void {
           decisions: [],
           deferred: [],
           skillAudit: state.skillAudit,
+          ...(deepVerify ? { deepVerify } : {}),
         };
 
         const summaryBase = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-SUMMARY`);
