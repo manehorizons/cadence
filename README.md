@@ -4,7 +4,7 @@
 
 KEEL is a host-agnostic plan/build/settle framework for AI-assisted development. It is inspired by GSD (Get Shit Done) and PAUL (Plan-Apply-Unify Loop) and is independently implemented in TypeScript.
 
-> **Status:** Phase 1 (foundation) shipped — `@keel/core`, `@keel/types`, `@keel/testkit`. Phase 2 — both host adapters shipped: `@keel/host-claude-code` and `@keel/host-codex`.
+> **Status:** Phase 1 foundation, Phase 2 host adapters, Phase 3 local-link dogfood, Phase 4 canonical `HostCapabilities`, Phase 5 `keel status`, Phase 6 `settle --auto` all shipped. 258 tests across 5 packages.
 
 ## Loop
 
