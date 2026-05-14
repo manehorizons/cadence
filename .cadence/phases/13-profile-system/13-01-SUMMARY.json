@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "draftId": "13-01",
+  "completedAt": "2026-05-14T19:24:59.861Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    },
+    {
+      "id": "AC-6",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "ProfileZ + GateZ + GateSetZ, config + plan extended, 25 type tests + 3 parser tests"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "DraftZ optional profile field + frontmatter parser accepts profile:"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "gate engine, 21 tests covering 9 cells + always-fire + softCap"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "StatusReport.profile field, header line, 3 new tests (28 total)"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "config get/set profile via generic dotted path, 3 new tests"
+    },
+    {
+      "id": "T6",
+      "status": "DONE",
+      "notes": "251 tests green; pre-profile DRAFT + config parse cleanly"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
