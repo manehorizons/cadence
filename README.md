@@ -4,7 +4,7 @@
 
 KEEL is a host-agnostic plan/build/settle framework for AI-assisted development. It is inspired by GSD (Get Shit Done) and PAUL (Plan-Apply-Unify Loop) and is independently implemented in TypeScript.
 
-> **Phase 1 status (foundation):** `@keel/core`, `@keel/types`, `@keel/testkit` shipped. Host adapters (Claude Code, Codex CLI) ship in Phase 2+.
+> **Status:** Phase 1 (foundation) shipped — `@keel/core`, `@keel/types`, `@keel/testkit`. Phase 2 in progress — first host adapter `@keel/host-claude-code` shipped; Codex CLI adapter next.
 
 ## Loop
 
@@ -22,11 +22,21 @@ npx @keel/core build task T1 --status=DONE
 npx @keel/core settle run --ac AC-1=pass
 ```
 
+## Use with Claude Code
+
+```bash
+cd your-project
+npx @keel/core init --name=your-project
+npx @keel/host-claude-code install
+# Start a new Claude Code session; KEEL hooks are now wired into .claude/settings.json
+```
+
 ## Packages
 
 - `@keel/core` — CLI + state engine + parsers + classifier + hook dispatcher
 - `@keel/types` — Zod schemas + TS interfaces
 - `@keel/testkit` — fixture builder + MockHostAdapter for tests
+- `@keel/host-claude-code` — Claude Code host adapter: hook installer + event mapping
 
 ## License
 
