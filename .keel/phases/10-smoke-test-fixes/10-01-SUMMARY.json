@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "draftId": "10-01",
+  "completedAt": "2026-05-14T14:35:57.639Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "draft new transitions to DRAFT state"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "progress DRAFT case uses real phase+num"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "needs-context verdict distinct from blocked"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

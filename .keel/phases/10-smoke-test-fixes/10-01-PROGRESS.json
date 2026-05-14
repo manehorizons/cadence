@@ -1,0 +1,23 @@
+{
+  "draftId": "10-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "draft new transitions to DRAFT state",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T14:35:57.143Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "progress DRAFT case uses real phase+num",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T14:35:57.312Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "needs-context verdict distinct from blocked",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T14:35:57.482Z"
+    }
+  }
+}

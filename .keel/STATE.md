@@ -4,7 +4,7 @@
 
 **Project:** keel
 **Loop position:** IDLE
-**Active phase:** 09-host-shortcut-commands
+**Active phase:** 10-smoke-test-fixes
 **Active draft:** (none)
 **Tier:** (n/a)
 

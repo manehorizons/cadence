@@ -4,7 +4,7 @@
     "name": "keel",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "09-host-shortcut-commands",
+  "activePhase": "10-smoke-test-fixes",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
