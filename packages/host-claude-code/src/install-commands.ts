@@ -66,6 +66,28 @@ const COMMANDS: CommandSpec[] = [
     cli: 'settle run $ARGUMENTS',
     trailing: 'Review SUMMARY.md; loop is back to IDLE.',
   },
+  {
+    name: 'keel-done',
+    description: 'Mark a task DONE (shortcut for build task --status=DONE)',
+    argumentHint: '<task-id> [--notes=<n>]',
+    cli: 'done $ARGUMENTS',
+    trailing: 'Continue with the next task or run /keel-settle when done.',
+  },
+  {
+    name: 'keel-block',
+    description: 'Mark a task BLOCKED (shortcut for build task --status=BLOCKED)',
+    argumentHint: '<task-id> [--notes=<n>]',
+    cli: 'block $ARGUMENTS',
+    trailing: 'Record the blocker, then unblock or escalate before settling.',
+  },
+  {
+    name: 'keel-needs-context',
+    description:
+      'Mark a task NEEDS_CONTEXT (shortcut for build task --status=NEEDS_CONTEXT)',
+    argumentHint: '<task-id> [--notes=<n>]',
+    cli: 'needs-context $ARGUMENTS',
+    trailing: 'Supply the missing context, then re-run the task.',
+  },
 ];
 
 function renderFile(spec: CommandSpec, keelCommand: string): string {

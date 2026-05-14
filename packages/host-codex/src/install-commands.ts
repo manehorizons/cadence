@@ -78,6 +78,33 @@ const SKILLS: SkillSpec[] = [
     cliSuffix: 'settle run $ARGUMENTS',
     guidance: 'Review SUMMARY.md; loop is back to IDLE.',
   },
+  {
+    name: 'keel-done',
+    description:
+      'Mark a KEEL task as DONE. Use when the user says a task finished, "T1 done", ' +
+      '"mark X done", or wants to record a passing outcome. Shortcut for ' +
+      '`build task <id> --status=DONE`. Args: <task-id> [--notes=<n>].',
+    cliSuffix: 'done $ARGUMENTS',
+    guidance: 'Continue with the next task or invoke $keel-settle when all tasks are done.',
+  },
+  {
+    name: 'keel-block',
+    description:
+      'Mark a KEEL task as BLOCKED. Use when the user says a task is stuck, blocked, or ' +
+      'waiting on an external dependency. Shortcut for `build task <id> --status=BLOCKED`. ' +
+      'Args: <task-id> [--notes=<n>].',
+    cliSuffix: 'block $ARGUMENTS',
+    guidance: 'Record the blocker, then unblock or escalate before settling.',
+  },
+  {
+    name: 'keel-needs-context',
+    description:
+      'Mark a KEEL task as NEEDS_CONTEXT. Use when the user says they need more spec, ' +
+      'design, or information before continuing a task. Shortcut for ' +
+      '`build task <id> --status=NEEDS_CONTEXT`. Args: <task-id> [--notes=<n>].',
+    cliSuffix: 'needs-context $ARGUMENTS',
+    guidance: 'Supply the missing context, then re-run the task.',
+  },
 ];
 
 function renderSkill(spec: SkillSpec, keelCommand: string): string {

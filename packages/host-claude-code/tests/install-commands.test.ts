@@ -17,18 +17,38 @@ async function tempDir(): Promise<string> {
 }
 
 describe('installCommands', () => {
-  it('writes 6 keel-*.md files under .claude/commands/', async () => {
+  it('writes 9 keel-*.md files under .claude/commands/', async () => {
     const root = await tempDir();
     await installCommands(root);
     const entries = await readdir(join(root, '.claude/commands'));
     expect(entries.sort()).toEqual([
       'keel-approve.md',
+      'keel-block.md',
       'keel-build.md',
       'keel-check.md',
+      'keel-done.md',
       'keel-draft.md',
+      'keel-needs-context.md',
       'keel-progress.md',
       'keel-settle.md',
     ]);
+  });
+
+  it('shortcut verbs (done/block/needs-context) bind to the right CLI invocation', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+    const done = await readFile(join(root, '.claude/commands/keel-done.md'), 'utf8');
+    expect(done).toMatch(/^!keel done \$ARGUMENTS\s*$/m);
+    expect(done).toMatch(/description: .*DONE/);
+    expect(done).toMatch(/<!-- managed-by: keel -->/);
+
+    const block = await readFile(join(root, '.claude/commands/keel-block.md'), 'utf8');
+    expect(block).toMatch(/^!keel block \$ARGUMENTS\s*$/m);
+    expect(block).toMatch(/description: .*BLOCKED/);
+
+    const nc = await readFile(join(root, '.claude/commands/keel-needs-context.md'), 'utf8');
+    expect(nc).toMatch(/^!keel needs-context \$ARGUMENTS\s*$/m);
+    expect(nc).toMatch(/description: .*NEEDS_CONTEXT/);
   });
 
   it('each file has frontmatter with description and allowed-tools', async () => {

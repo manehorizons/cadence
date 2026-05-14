@@ -17,22 +17,60 @@ async function tempDir(): Promise<string> {
 }
 
 describe('installCommands', () => {
-  it('creates 6 keel-* skill directories under .agents/skills/', async () => {
+  it('creates 9 keel-* skill directories under .agents/skills/', async () => {
     const root = await tempDir();
     await installCommands(root);
     const entries = await readdir(join(root, '.agents/skills'));
     expect(entries.sort()).toEqual(
-      ['keel-approve', 'keel-build', 'keel-check', 'keel-draft', 'keel-progress', 'keel-settle'].sort(),
+      [
+        'keel-approve',
+        'keel-block',
+        'keel-build',
+        'keel-check',
+        'keel-done',
+        'keel-draft',
+        'keel-needs-context',
+        'keel-progress',
+        'keel-settle',
+      ].sort(),
     );
   });
 
   it('each skill dir contains SKILL.md', async () => {
     const root = await tempDir();
     await installCommands(root);
-    for (const name of ['keel-progress', 'keel-draft', 'keel-approve', 'keel-check', 'keel-build', 'keel-settle']) {
+    for (const name of [
+      'keel-progress',
+      'keel-draft',
+      'keel-approve',
+      'keel-check',
+      'keel-build',
+      'keel-settle',
+      'keel-done',
+      'keel-block',
+      'keel-needs-context',
+    ]) {
       const body = await readFile(join(root, '.agents/skills', name, 'SKILL.md'), 'utf8');
       expect(body).toBeTruthy();
     }
+  });
+
+  it('shortcut-verb skills bind to the right CLI invocation', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+
+    const done = await readFile(join(root, '.agents/skills/keel-done/SKILL.md'), 'utf8');
+    expect(done).toMatch(/keel done \$ARGUMENTS/);
+    expect(done).toMatch(/description: .*DONE/);
+    expect(done).toMatch(/<!-- managed-by: keel -->/);
+
+    const block = await readFile(join(root, '.agents/skills/keel-block/SKILL.md'), 'utf8');
+    expect(block).toMatch(/keel block \$ARGUMENTS/);
+    expect(block).toMatch(/description: .*BLOCKED/);
+
+    const nc = await readFile(join(root, '.agents/skills/keel-needs-context/SKILL.md'), 'utf8');
+    expect(nc).toMatch(/keel needs-context \$ARGUMENTS/);
+    expect(nc).toMatch(/description: .*NEEDS_CONTEXT/);
   });
 
   it('SKILL.md has YAML frontmatter with required name + description', async () => {
