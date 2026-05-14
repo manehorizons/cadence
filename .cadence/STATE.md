@@ -4,7 +4,7 @@
 
 **Project:** keel
 **Loop position:** IDLE
-**Active phase:** 15-deep-verifier
+**Active phase:** 16-interactive-verdict
 **Active draft:** (none)
 **Tier:** (n/a)
 

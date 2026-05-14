@@ -1,0 +1,29 @@
+{
+  "draftId": "16-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Prompter interface + StdinPrompter (TTY-guarded) + ScriptedPrompter, 5 tests",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:18:12.767Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "walkAcsInteractively walker, 6 tests covering verdict/note/skip/exhaustion/empty",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:19:31.460Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "settle --interactive integration, SUMMARY.interactiveVerify, 7 integration tests covering AC-3/AC-4/AC-5",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:23:11.580Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "DESIGN.md + README updated; 312 tests green; AC-1..AC-6 self-covered",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:25:34.002Z"
+    }
+  }
+}
