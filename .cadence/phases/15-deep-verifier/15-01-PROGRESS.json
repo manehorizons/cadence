@@ -1,0 +1,35 @@
+{
+  "draftId": "15-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Verifier interface + MockVerifier with linked-test rule, 5 tests",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:56:04.010Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "AnthropicVerifier with messages.parse() + Zod schema, cached system prompt, typed APIError handling, 7 tests",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:01:59.473Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "selectVerifier factory + config.verifier schema, 6 factory tests + 4 config tests, mock fallback on missing key",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:03:49.753Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "settle --deep wired; SUMMARY.deepVerify field; 5 integration tests covering AC-3/AC-4/AC-5 paths",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:06:50.817Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "DESIGN.md + README updated; 294 tests green; AC-1..AC-6 self-covered",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:08:30.512Z"
+    }
+  }
+}
