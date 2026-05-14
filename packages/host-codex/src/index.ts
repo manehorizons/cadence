@@ -6,3 +6,5 @@ export { routeHookEvent } from './shim.js';
 export type { RouteResult } from './shim.js';
 export { installHooks } from './install.js';
 export type { InstallOptions } from './install.js';
+export { installCommands } from './install-commands.js';
+export type { InstallCommandsOptions } from './install-commands.js';
