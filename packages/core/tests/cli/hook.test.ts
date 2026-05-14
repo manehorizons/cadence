@@ -45,4 +45,17 @@ describe('keel hook', () => {
     const r = await run(['hook', 'made-up-event'], active.root);
     expect(r.code).toBe(2);
   });
+
+  it('blocking hook exits 2 with block message on stderr', async () => {
+    active = await tempRepo({ initialized: true });
+    // Enable preToolUseBuildGate; loopPosition is IDLE so pre-tool-edit must block.
+    const cfgPath = join(active.root, '.keel/config.json');
+    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+    cfg.hooks.preToolUseBuildGate = true;
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(cfgPath, JSON.stringify(cfg, null, 2));
+    const r = await run(['hook', 'pre-tool-edit'], active.root);
+    expect(r.code).toBe(2);
+    expect(r.stderr).toMatch(/BUILD/);
+  });
 });

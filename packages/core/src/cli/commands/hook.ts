@@ -28,7 +28,8 @@ export function registerHookCommand(program: Command): void {
         if (result.contextPayload) console.log(result.contextPayload);
         if (!result.ok) {
           if (result.blockMessage) process.stderr.write(result.blockMessage + '\n');
-          process.exitCode = 1;
+          // Exit 2 = blocking per Claude Code hook protocol; stderr surfaces to the model.
+          process.exitCode = 2;
         }
       } catch (err) {
         process.stderr.write(
