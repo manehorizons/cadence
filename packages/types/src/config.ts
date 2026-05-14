@@ -1,8 +1,11 @@
 import { z } from 'zod';
+import { ProfileZ } from './profile.js';
 
 export const CadenceConfigZ = z.object({
   $schema: z.string().optional(),
   schemaVersion: z.literal(1),
+  /** User-involvement profile per DESIGN.md Section 3.1. Defaults to `auto`. */
+  profile: ProfileZ.default('auto'),
   loopEnforcement: z.enum(['strict', 'soft', 'reminder']),
   acDiscipline: z.enum(['strict', 'tier-scaled', 'optional']),
   workstreamBackend: z.union([
@@ -55,6 +58,7 @@ export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
 
 export const defaultConfig: CadenceConfig = {
   schemaVersion: 1,
+  profile: 'auto',
   loopEnforcement: 'soft',
   acDiscipline: 'tier-scaled',
   workstreamBackend: 'simple',

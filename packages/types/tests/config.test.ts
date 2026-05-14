@@ -22,4 +22,22 @@ describe('CadenceConfigZ', () => {
     expect(presets.team.loopEnforcement).toBe('soft');
     expect(presets.production.loopEnforcement).toBe('strict');
   });
+
+  it('profile defaults to "auto" when omitted', () => {
+    const { profile: _drop, ...withoutProfile } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutProfile);
+    expect(parsed.profile).toBe('auto');
+  });
+
+  it('accepts profile = strict | standard | auto', () => {
+    for (const p of ['strict', 'standard', 'auto'] as const) {
+      expect(() => CadenceConfigZ.parse({ ...defaultConfig, profile: p })).not.toThrow();
+    }
+  });
+
+  it('rejects unknown profile literal', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, profile: 'lenient' as never }),
+    ).toThrow();
+  });
 });

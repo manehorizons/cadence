@@ -1,9 +1,19 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { Draft, CadenceState, LoopPosition, TaskStatus, Tier } from '@cadence/types';
+import type {
+  CadenceConfig,
+  CadenceState,
+  Draft,
+  LoopPosition,
+  Profile,
+  TaskStatus,
+  Tier,
+} from '@cadence/types';
 import { nextAction, type NextAction } from './progress.js';
 import { parseDraftMd } from './parse/draft-parser.js';
 import { SimpleStateBackend } from './state/simple.js';
+import { loadConfig } from './config/loader.js';
+import { effectiveProfile } from './gates/engine.js';
 
 export interface ProgressFile {
   draftId: string;
@@ -33,6 +43,8 @@ export interface StatusReport {
   activePhase: string | null;
   activeDraft: string | null;
   tier: Tier | null;
+  /** Effective profile: DRAFT frontmatter override (if any) wins over project config. */
+  profile: Profile;
   draftTitle: string | null;
   tasks: TaskStatusEntry[];
   acs: AcStatus[];
@@ -71,6 +83,7 @@ export function gatherStatus(
   state: CadenceState,
   draft: Draft | null,
   progress: ProgressFile | null,
+  config: Pick<CadenceConfig, 'profile'> | null = null,
 ): StatusReport {
   const base: StatusReport = {
     schemaVersion: 1,
@@ -79,6 +92,7 @@ export function gatherStatus(
     activePhase: state.activePhase ?? null,
     activeDraft: state.activeDraft ?? null,
     tier: state.tier ?? null,
+    profile: effectiveProfile(config, draft),
     draftTitle: null,
     tasks: [],
     acs: [],
@@ -202,6 +216,7 @@ export function renderStatus(r: StatusReport): string {
     out.push(`  draft: ${r.activeDraft}${title}`);
   }
   if (r.tier) out.push(`  tier:  ${r.tier}`);
+  out.push(`  profile: ${r.profile}`);
   if (r.tasks.length > 0) {
     out.push('');
     out.push(...renderTaskTable(r.tasks));
@@ -249,5 +264,11 @@ export async function loadStatus(root: string): Promise<StatusReport> {
       join(phaseDir, `${state.activeDraft}-PROGRESS.json`),
     );
   }
-  return gatherStatus(state, draft, progress);
+  let config: Pick<CadenceConfig, 'profile'> | null = null;
+  try {
+    config = await loadConfig(root);
+  } catch {
+    config = null;
+  }
+  return gatherStatus(state, draft, progress, config);
 }

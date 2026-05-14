@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { TierZ, TaskStatusZ } from './state.js';
+import { ProfileZ } from './profile.js';
 
 export const AcceptanceCriterionZ = z.object({
   id: z.string().regex(/^AC-\d+$/),
@@ -26,6 +27,8 @@ export const DraftZ = z.object({
   id: z.string().regex(/^\d{2}-\d{2}$/),
   phase: z.string(),
   tier: TierZ,
+  /** Optional per-phase profile override. When set, wins over the project default in config. */
+  profile: ProfileZ.optional(),
   title: z.string(),
   objective: z.string(),
   acceptanceCriteria: z.array(AcceptanceCriterionZ),

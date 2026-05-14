@@ -85,6 +85,7 @@ export function parseDraftMd(raw: string): Draft {
     tasks,
     boundaries,
     status: (fm.status as Draft['status']) ?? 'PENDING',
+    ...(fm.profile !== undefined ? { profile: fm.profile as Draft['profile'] } : {}),
   };
   return DraftZ.parse(draft);
 }

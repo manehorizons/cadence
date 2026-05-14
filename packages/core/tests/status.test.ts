@@ -422,4 +422,31 @@ describe('loadStatus', () => {
     expect(r.draftTitle).toBeNull();
     expect(r.tasks).toEqual([]);
   });
+
+  it('reports the active profile (defaults to auto when nothing set)', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await loadStatus(active.root);
+    expect(r.profile).toBe('auto');
+  });
+
+  it('renderStatus emits a profile header line', () => {
+    const state = emptyState('demo');
+    state.activePhase = 'p';
+    state.activeDraft = '01-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const out = renderStatus(gatherStatus(state, null, null, { profile: 'strict' }));
+    expect(out).toMatch(/profile:\s+strict/);
+  });
+
+  it('DRAFT frontmatter profile override beats config default', () => {
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const draftWithOverride = { ...baseDraft, profile: 'strict' as const };
+    const r = gatherStatus(state, draftWithOverride, null, { profile: 'auto' });
+    expect(r.profile).toBe('strict');
+  });
 });

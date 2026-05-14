@@ -70,4 +70,26 @@ describe('parseDraftMd', () => {
   it('extracts one boundary', () => {
     expect(parseDraftMd(SAMPLE).boundaries).toEqual(['Do not change `src/legacy.ts`']);
   });
+
+  it('omits profile when frontmatter has no `profile:` field', () => {
+    const d = parseDraftMd(SAMPLE);
+    expect(d.profile).toBeUndefined();
+  });
+
+  it('extracts profile override when frontmatter includes `profile: strict`', () => {
+    const withProfile = SAMPLE.replace(
+      'status: PENDING',
+      'profile: strict\nstatus: PENDING',
+    );
+    const d = parseDraftMd(withProfile);
+    expect(d.profile).toBe('strict');
+  });
+
+  it('rejects DRAFT with invalid profile value', () => {
+    const bad = SAMPLE.replace(
+      'status: PENDING',
+      'profile: lenient\nstatus: PENDING',
+    );
+    expect(() => parseDraftMd(bad)).toThrow();
+  });
 });

@@ -43,4 +43,28 @@ describe('cadence config', () => {
     expect(r.code).not.toBe(0);
     expect(r.stderr).toMatch(/loopEnforcement/i);
   });
+
+  it('config get profile defaults to "auto"', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['config', 'get', 'profile'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout.trim()).toBe('auto');
+  });
+
+  it('config set profile round-trips strict | standard | auto', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const v of ['strict', 'standard', 'auto']) {
+      const setR = await run(['config', 'set', 'profile', v], active.root);
+      expect(setR.code).toBe(0);
+      const getR = await run(['config', 'get', 'profile'], active.root);
+      expect(getR.stdout.trim()).toBe(v);
+    }
+  });
+
+  it('config set profile rejects unknown literal', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['config', 'set', 'profile', 'lenient'], active.root);
+    expect(r.code).not.toBe(0);
+    expect(r.stderr).toMatch(/profile/i);
+  });
 });
