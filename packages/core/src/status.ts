@@ -112,6 +112,39 @@ export function gatherStatus(
   return base;
 }
 
+export interface DerivedAcResult {
+  id: string;
+  verdict: 'pass' | 'blocked' | 'pending';
+  /** Task ids that prevent a pass (BLOCKED/NEEDS_CONTEXT, or not-yet-DONE). */
+  blockers: string[];
+}
+
+export function deriveAcResults(
+  draft: Draft,
+  progress: ProgressFile | null,
+): DerivedAcResult[] {
+  return draft.acceptanceCriteria.map((ac) => {
+    const linked = draft.tasks.filter((t) => parseAcRefs(t.done).includes(ac.id));
+    if (linked.length === 0) {
+      return { id: ac.id, verdict: 'pending', blockers: [] };
+    }
+    const blocking: string[] = [];
+    const stillOpen: string[] = [];
+    for (const t of linked) {
+      const status = taskStatusFromProgress(t.id, progress);
+      if (BLOCKING_STATUSES.includes(status)) blocking.push(t.id);
+      else if (!PASS_STATUSES.includes(status)) stillOpen.push(t.id);
+    }
+    if (blocking.length > 0) {
+      return { id: ac.id, verdict: 'blocked', blockers: blocking };
+    }
+    if (stillOpen.length > 0) {
+      return { id: ac.id, verdict: 'pending', blockers: stillOpen };
+    }
+    return { id: ac.id, verdict: 'pass', blockers: [] };
+  });
+}
+
 function pad(text: string, width: number): string {
   if (text.length >= width) return text;
   return text + ' '.repeat(width - text.length);

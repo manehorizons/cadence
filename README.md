@@ -20,8 +20,15 @@ npx @keel/core draft new 01-foundation 01 --title=Demo
 npx @keel/core draft approve 01-foundation 01
 npx @keel/core status                      # full phase context in one screen
 npx @keel/core build task T1 --status=DONE
-npx @keel/core settle run --ac AC-1=pass
+npx @keel/core settle run --auto                 # derive AC verdicts from task statuses
 ```
+
+`settle run --auto` reads PROGRESS.json and derives each AC's verdict
+the same way `keel status` does: all linked tasks DONE → pass, any
+BLOCKED/NEEDS_CONTEXT → fail with `auto: <task> blocked`, anything still
+PENDING → refuses with a clear error (`--force` settles anyway). Pass
+explicit `--ac AC-1=fail:custom` to override the derivation for an
+individual AC. The legacy `--ac`-only flow still works exactly as before.
 
 `keel status` renders project, loop position, active draft, per-task
 status, AC derivation (pass/blocked/pending), and the next-action hint.

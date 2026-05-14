@@ -3,10 +3,10 @@
 > Derived view. Do not edit by hand — regenerated on every state.json write.
 
 **Project:** keel
-**Loop position:** IDLE
-**Active phase:** 05-status-command
-**Active draft:** (none)
-**Tier:** (n/a)
+**Loop position:** BUILD
+**Active phase:** 06-settle-auto
+**Active draft:** 06-01
+**Tier:** standard
 
 ## Telemetry
 - Token utilization: 0%
@@ -14,7 +14,7 @@
 - Last handoff: (none)
 
 ## Counts
-- Open drafts: 0
+- Open drafts: 1
 - Decisions: 0
 - Deferred items: 0
 

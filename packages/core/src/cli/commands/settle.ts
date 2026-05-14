@@ -10,13 +10,20 @@ import { SimpleStateBackend } from '../../state/simple.js';
 import { atomicWriteJSON, atomicWriteText } from '../../state/atomic-write.js';
 import { renderStateMd } from '../../render/state-md.js';
 import { LoopViolationError } from '../../errors.js';
+import { deriveAcResults, type ProgressFile } from '../../status.js';
 
 interface ProgressJson {
   draftId: string;
   tasks: Record<string, { status: string; notes: string; touchedFiles: string[]; updatedAt: string }>;
 }
 
-function parseAcArg(arg: string): { id: string; pass: boolean; note?: string } {
+interface AcResult {
+  id: string;
+  pass: boolean;
+  note?: string;
+}
+
+function parseAcArg(arg: string): AcResult {
   const eqIdx = arg.indexOf('=');
   if (eqIdx === -1) throw new Error(`bad --ac syntax: ${arg}`);
   const id = arg.slice(0, eqIdx);
@@ -34,7 +41,9 @@ export function registerSettleCommand(program: Command): void {
     .command('run')
     .description('Generate SUMMARY.md + JSON and return to IDLE')
     .option('--ac <pair...>', 'AC verdicts: AC-1=pass  or  AC-1=fail:reason')
-    .action(async (opts: { ac?: string[] }) => {
+    .option('--auto', 'derive AC verdicts from task statuses (blocks on incomplete ACs)')
+    .option('--force', 'settle even when --auto detects blocked or pending ACs')
+    .action(async (opts: { ac?: string[]; auto?: boolean; force?: boolean }) => {
       try {
         const cwd = process.cwd();
         const backend = new SimpleStateBackend(cwd);
@@ -50,7 +59,53 @@ export function registerSettleCommand(program: Command): void {
           ? (JSON.parse(await readFile(progPath, 'utf8')) as ProgressJson)
           : { draftId: state.activeDraft, tasks: {} };
 
-        const acResults = (opts.ac ?? []).map(parseAcArg);
+        const explicit = (opts.ac ?? []).map(parseAcArg);
+        const explicitIds = new Set(explicit.map((a) => a.id));
+
+        let acResults: AcResult[] = explicit;
+        if (opts.auto) {
+          const derived = deriveAcResults(draft, progress as ProgressFile);
+          const offenders = derived.filter(
+            (d) =>
+              (d.verdict === 'blocked' || d.verdict === 'pending') &&
+              !explicitIds.has(d.id),
+          );
+          if (offenders.length > 0 && !opts.force) {
+            for (const o of offenders) {
+              const tasks = o.blockers.length > 0 ? ` (tasks: ${o.blockers.join(', ')})` : '';
+              process.stderr.write(`auto: ${o.id} ${o.verdict}${tasks}\n`);
+            }
+            process.stderr.write(
+              'settle run --auto refused: complete the blocking tasks or rerun with --force.\n',
+            );
+            process.exitCode = 1;
+            return;
+          }
+          const merged: AcResult[] = [...explicit];
+          for (const d of derived) {
+            if (explicitIds.has(d.id)) continue;
+            if (d.verdict === 'pass') {
+              merged.push({ id: d.id, pass: true });
+            } else if (d.verdict === 'blocked') {
+              merged.push({
+                id: d.id,
+                pass: false,
+                note: `auto: ${d.blockers.join(', ')} blocked`,
+              });
+            } else {
+              merged.push({
+                id: d.id,
+                pass: false,
+                note:
+                  d.blockers.length > 0
+                    ? `auto: ${d.blockers.join(', ')} incomplete`
+                    : 'auto: no linked tasks',
+              });
+            }
+          }
+          acResults = merged;
+        }
+
         const summary: Summary = {
           schemaVersion: 1,
           draftId: state.activeDraft,

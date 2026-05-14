@@ -4,7 +4,13 @@ import { emptyState } from '@keel/types';
 import { tempRepo, type Fixture } from '@keel/testkit';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { gatherStatus, loadStatus, renderStatus, type ProgressFile } from '../src/status.js';
+import {
+  deriveAcResults,
+  gatherStatus,
+  loadStatus,
+  renderStatus,
+  type ProgressFile,
+} from '../src/status.js';
 
 const baseDraft: Draft = {
   schemaVersion: 1,
@@ -185,6 +191,62 @@ afterEach(async () => {
     await active.cleanup();
     active = null;
   }
+});
+
+describe('deriveAcResults', () => {
+  it('all linked tasks DONE → every AC pass with no blockers', () => {
+    const results = deriveAcResults(baseDraft, progress({ T1: 'DONE', T2: 'DONE', T3: 'DONE' }));
+    expect(results).toEqual([
+      { id: 'AC-1', verdict: 'pass', blockers: [] },
+      { id: 'AC-2', verdict: 'pass', blockers: [] },
+      { id: 'AC-3', verdict: 'pass', blockers: [] },
+    ]);
+  });
+
+  it('BLOCKED task → linked ACs report blocked with task id', () => {
+    const results = deriveAcResults(baseDraft, progress({ T1: 'DONE', T2: 'BLOCKED', T3: 'DONE' }));
+    const ac1 = results.find((a) => a.id === 'AC-1');
+    expect(ac1?.verdict).toBe('blocked');
+    expect(ac1?.blockers).toEqual(['T2']);
+    const ac2 = results.find((a) => a.id === 'AC-2');
+    expect(ac2?.verdict).toBe('blocked');
+    expect(ac2?.blockers).toEqual(['T2']);
+    expect(results.find((a) => a.id === 'AC-3')?.verdict).toBe('pass');
+  });
+
+  it('PENDING task → linked AC pending with task id in blockers', () => {
+    const results = deriveAcResults(baseDraft, progress({ T1: 'DONE', T2: 'DONE' }));
+    const ac3 = results.find((a) => a.id === 'AC-3');
+    expect(ac3?.verdict).toBe('pending');
+    expect(ac3?.blockers).toEqual(['T3']);
+  });
+
+  it('NEEDS_CONTEXT counted as blocked', () => {
+    const results = deriveAcResults(baseDraft, progress({ T1: 'NEEDS_CONTEXT' }));
+    expect(results.find((a) => a.id === 'AC-1')?.verdict).toBe('blocked');
+  });
+
+  it('AC with no linked tasks → pending with empty blockers', () => {
+    const orphanDraft: Draft = {
+      ...baseDraft,
+      acceptanceCriteria: [
+        ...baseDraft.acceptanceCriteria,
+        { id: 'AC-4', given: '', when: '', then: '' },
+      ],
+    };
+    const results = deriveAcResults(orphanDraft, progress({ T1: 'DONE', T2: 'DONE', T3: 'DONE' }));
+    const ac4 = results.find((a) => a.id === 'AC-4');
+    expect(ac4?.verdict).toBe('pending');
+    expect(ac4?.blockers).toEqual([]);
+  });
+
+  it('null progress treated as everything PENDING', () => {
+    const results = deriveAcResults(baseDraft, null);
+    for (const r of results) {
+      expect(r.verdict).toBe('pending');
+      expect(r.blockers.length).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('renderStatus', () => {
