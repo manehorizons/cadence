@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "draftId": "22-01",
+  "completedAt": "2026-05-14T23:49:00.121Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "All 4 @cadence/* pkgs bumped to 0.3.0; pnpm install + typecheck clean"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "CHANGELOG.md Keep-a-Changelog; 11 Added + 2 Changed + 1 Removed entries; phase-numbered"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "README status banner refreshed -> v0.3.0 with CHANGELOG link"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "v0.3.0 annotated tag created locally on release commit; not pushed"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
