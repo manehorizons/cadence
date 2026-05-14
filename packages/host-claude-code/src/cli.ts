@@ -20,6 +20,7 @@ program
   .option('--settings <path>', 'settings file path relative to cwd', '.claude/settings.json')
   .option('--no-hooks', 'skip writing hooks to settings.json')
   .option('--no-commands', 'skip writing slash commands to .claude/commands/')
+  .option('--local', 'use absolute paths to the local workspace builds (monorepo dogfood)')
   .action(
     async (opts: {
       cwd: string;
@@ -28,18 +29,21 @@ program
       settings: string;
       hooks: boolean;
       commands: boolean;
+      local?: boolean;
     }) => {
       try {
         if (opts.hooks) {
           const installOpts: InstallOptions = { settingsPath: opts.settings };
           if (opts.command !== undefined) installOpts.command = opts.command;
           if (opts.keel !== undefined) installOpts.keelCommand = opts.keel;
+          if (opts.local) installOpts.local = true;
           await installHooks(opts.cwd, installOpts);
           process.stdout.write(`Installed KEEL hooks → ${opts.cwd}/${opts.settings}\n`);
         }
         if (opts.commands) {
           const cmdOpts: InstallCommandsOptions = {};
           if (opts.keel !== undefined) cmdOpts.keelCommand = opts.keel;
+          if (opts.local) cmdOpts.local = true;
           await installCommands(opts.cwd, cmdOpts);
           process.stdout.write(`Installed KEEL slash commands → ${opts.cwd}/.claude/commands/\n`);
         }

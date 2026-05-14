@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { EDIT_TOOL_MATCHER } from './event-map.js';
+import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallOptions {
   /**
@@ -15,6 +16,11 @@ export interface InstallOptions {
   keelCommand?: string;
   /** Path to hooks file relative to root. Defaults to `.codex/hooks.json`. */
   settingsPath?: string;
+  /**
+   * Use absolute paths to the local workspace builds instead of `npx`-style
+   * defaults. Intended for monorepo dogfood before the package is published.
+   */
+  local?: boolean;
 }
 
 interface HookEntry {
@@ -33,8 +39,10 @@ function isKeelEntry(entry: HookEntry): boolean {
 }
 
 export async function installHooks(root: string, opts: InstallOptions = {}): Promise<void> {
-  const base = opts.command ?? 'npx @keel/host-codex hook';
-  const command = opts.keelCommand ? `${base} --keel "${opts.keelCommand}"` : base;
+  const local = opts.local ? resolveLocalPaths() : null;
+  const base = opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @keel/host-codex hook');
+  const keelCommand = opts.keelCommand ?? (local ? `node ${local.coreCli}` : undefined);
+  const command = keelCommand ? `${base} --keel "${keelCommand}"` : base;
   const settingsPath = join(root, opts.settingsPath ?? '.codex/hooks.json');
 
   let current: HooksFile = {};

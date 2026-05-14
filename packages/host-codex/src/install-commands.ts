@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallCommandsOptions {
   /** Base CLI invocation. Default `keel`. */
@@ -12,6 +13,11 @@ export interface InstallCommandsOptions {
    * be user-initiated.
    */
   allowImplicit?: boolean;
+  /**
+   * Use the absolute path to the local workspace core CLI instead of the
+   * `keel` shorthand. Intended for monorepo dogfood before publishing.
+   */
+  local?: boolean;
 }
 
 const MANAGED_MARKER = '<!-- managed-by: keel -->';
@@ -104,7 +110,8 @@ export async function installCommands(
   root: string,
   opts: InstallCommandsOptions = {},
 ): Promise<void> {
-  const keelCommand = opts.keelCommand ?? 'keel';
+  const local = opts.local ? resolveLocalPaths() : null;
+  const keelCommand = opts.keelCommand ?? (local ? `node ${local.coreCli}` : 'keel');
   const baseDir = join(root, opts.skillsDir ?? '.agents/skills');
   const allowImplicit = opts.allowImplicit ?? false;
 

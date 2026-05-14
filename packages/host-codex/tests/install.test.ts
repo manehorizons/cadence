@@ -143,4 +143,27 @@ describe('installHooks', () => {
     const cfg = JSON.parse(await readFile(join(root, 'custom-hooks.json'), 'utf8'));
     expect(cfg.hooks.SessionStart).toBeDefined();
   });
+
+  it('local=true emits absolute paths to local builds (no npx)', async () => {
+    const root = await tempDir();
+    await installHooks(root, { local: true });
+    const cfg = JSON.parse(await readFile(join(root, '.codex/hooks.json'), 'utf8'));
+    const cmd = cfg.hooks.SessionStart[0].hooks[0].command;
+    expect(cmd).not.toMatch(/npx /);
+    expect(cmd).toMatch(/^node .+host-codex[\\/]dist[\\/]cli\.js hook /);
+    expect(cmd).toMatch(/--keel "node .+core[\\/]dist[\\/]cli[\\/]index\.js"/);
+  });
+
+  it('local=true is overridden by explicit opts.command / opts.keelCommand', async () => {
+    const root = await tempDir();
+    await installHooks(root, {
+      local: true,
+      command: 'node /custom/shim.js hook',
+      keelCommand: 'node /custom/keel.js',
+    });
+    const cfg = JSON.parse(await readFile(join(root, '.codex/hooks.json'), 'utf8'));
+    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
+      'node /custom/shim.js hook --keel "node /custom/keel.js"',
+    );
+  });
 });

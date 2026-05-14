@@ -123,4 +123,11 @@ describe('installCommands', () => {
     expect(after).toMatch(/keel progress/);
     expect(after).not.toMatch(/STALE TEXT/);
   });
+
+  it('local=true renders absolute core path in SKILL.md body', async () => {
+    const root = await tempDir();
+    await installCommands(root, { local: true });
+    const body = await readFile(join(root, '.agents/skills/keel-progress/SKILL.md'), 'utf8');
+    expect(body).toMatch(/node .+core[\\/]dist[\\/]cli[\\/]index\.js progress/);
+  });
 });

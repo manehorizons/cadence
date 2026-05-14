@@ -33,6 +33,13 @@ npx @keel/host-claude-code install
 # are available under .claude/commands/.
 ```
 
+> Dogfooding a local checkout of KEEL before publishing? Build the
+> workspace (`pnpm build`) then run
+> `node packages/host-claude-code/bin/keel-host-claude-code.cjs install --local --settings .claude/settings.local.json`.
+> `--local` writes absolute paths to the workspace builds instead of
+> `npx`-style commands; pair it with `settings.local.json` so the
+> machine-specific paths stay out of git.
+
 ## Use with Codex CLI
 
 ```bash
@@ -48,6 +55,9 @@ npx @keel/host-codex install
 > ([openai/codex#16732](https://github.com/openai/codex/issues/16732)). The
 > adapter installs the matchers so it activates automatically once upstream
 > lands the fix; SessionStart, UserPromptSubmit, and Stop hooks work today.
+>
+> The same `--local --settings .codex/hooks.local.json` flow works for
+> Codex when dogfooding from a local checkout.
 
 ## Packages
 

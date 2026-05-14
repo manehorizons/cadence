@@ -4,11 +4,16 @@
     "name": "keel",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "02-host-codex",
-  "activeDraft": null,
-  "loopPosition": "IDLE",
-  "tier": null,
-  "openDrafts": [],
+  "activePhase": "03-local-dogfood",
+  "activeDraft": "03-01",
+  "loopPosition": "BUILD",
+  "tier": "standard",
+  "openDrafts": [
+    {
+      "id": "03-01",
+      "since": "2026-05-14T01:56:56.824Z"
+    }
+  ],
   "decisions": [],
   "deferred": [],
   "session": {
@@ -20,5 +25,9 @@
     "required": [],
     "invoked": []
   },
-  "activeTask": null
+  "activeTask": {
+    "id": "T6",
+    "status": "DONE",
+    "touchedFiles": []
+  }
 }
