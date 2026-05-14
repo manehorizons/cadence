@@ -1,0 +1,23 @@
+{
+  "draftId": "19-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AnomalyTransport webhook + notify.webhook block + refinement (4 new tests, 22 total)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T23:07:21.223Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "WebhookNotifier + selectNotifier wiring (7 webhook tests, 259 core); secrets never logged",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T23:09:01.389Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "DESIGN F4 resolved + 19.1 ticked; README webhook example with headers + timeoutMs",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T23:09:29.562Z"
+    }
+  }
+}
