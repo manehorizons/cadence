@@ -1,0 +1,29 @@
+{
+  "draftId": "17-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AnomalyEventZ + Notifier interface + 3 impls (Null/Stderr/File) + tests green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:40:59.136Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "collectAnomalies pure walker — 6 event types, all branches green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:42:54.731Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "notify.transport config + selectNotifier factory + settle dispatch wired; 5 integration tests + 5 factory tests green; full suite 229 pass",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:46:34.150Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "DESIGN.md 3.3 + Section 10 ticked; README ## Anomaly notify added",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T20:47:43.088Z"
+    }
+  }
+}

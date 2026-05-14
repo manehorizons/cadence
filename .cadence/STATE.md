@@ -4,7 +4,7 @@
 
 **Project:** keel
 **Loop position:** IDLE
-**Active phase:** 16-interactive-verdict
+**Active phase:** 17-anomaly-notify
 **Active draft:** (none)
 **Tier:** (n/a)
 
