@@ -1,12 +1,12 @@
-# KEEL State
+# CADENCE State
 
 > Derived view. Do not edit by hand — regenerated on every state.json write.
 
 **Project:** keel
-**Loop position:** BUILD
+**Loop position:** IDLE
 **Active phase:** 12-rename-cadence
-**Active draft:** 12-01
-**Tier:** standard
+**Active draft:** (none)
+**Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 0%
@@ -14,7 +14,7 @@
 - Last handoff: (none)
 
 ## Counts
-- Open drafts: 1
+- Open drafts: 0
 - Decisions: 0
 - Deferred items: 0
 

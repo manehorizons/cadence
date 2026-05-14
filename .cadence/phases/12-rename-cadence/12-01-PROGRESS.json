@@ -48,6 +48,12 @@
       "notes": "keel-dashboard renamed to cadence-dashboard, 49 tests green",
       "touchedFiles": [],
       "updatedAt": "2026-05-14T19:04:50.720Z"
+    },
+    "T9": {
+      "status": "DONE",
+      "notes": "rename committed + v0.2.0-rc.1 tagged",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:05:49.203Z"
     }
   }
 }
