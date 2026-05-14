@@ -37,16 +37,26 @@ describe('installHooks', () => {
     expect(cfg.hooks.PostToolUse[0].matcher).toBe('Edit|Write|MultiEdit|NotebookEdit');
   });
 
-  it('commands invoke `<base> hook <event>` for the keel CLI', async () => {
+  it('all events point at the host-claude-code shim (single command)', async () => {
     const root = await tempDir();
     await installHooks(root);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
-    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe('npx @keel/core hook session-start');
-    expect(cfg.hooks.UserPromptSubmit[0].hooks[0].command).toBe('npx @keel/core hook user-prompt');
-    expect(cfg.hooks.PreToolUse[0].hooks[0].command).toBe('npx @keel/core hook pre-tool-edit');
-    expect(cfg.hooks.PostToolUse[0].hooks[0].command).toBe('npx @keel/core hook post-tool-edit');
-    expect(cfg.hooks.Stop[0].hooks[0].command).toBe('npx @keel/core hook session-stop');
-    expect(cfg.hooks.SubagentStop[0].hooks[0].command).toBe('npx @keel/core hook subagent-result');
+    const expected = 'npx @keel/host-claude-code hook';
+    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(expected);
+    expect(cfg.hooks.UserPromptSubmit[0].hooks[0].command).toBe(expected);
+    expect(cfg.hooks.PreToolUse[0].hooks[0].command).toBe(expected);
+    expect(cfg.hooks.PostToolUse[0].hooks[0].command).toBe(expected);
+    expect(cfg.hooks.Stop[0].hooks[0].command).toBe(expected);
+    expect(cfg.hooks.SubagentStop[0].hooks[0].command).toBe(expected);
+  });
+
+  it('keelCommand option appends --keel "<cmd>" to the shim invocation', async () => {
+    const root = await tempDir();
+    await installHooks(root, { keelCommand: 'node /abs/keel.js' });
+    const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
+    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
+      'npx @keel/host-claude-code hook --keel "node /abs/keel.js"',
+    );
   });
 
   it('entries are tagged with _managedBy=keel', async () => {
@@ -120,12 +130,10 @@ describe('installHooks', () => {
     expect(userStill).toBeDefined();
   });
 
-  it('command can be overridden via opts.command', async () => {
+  it('shim command can be overridden via opts.command', async () => {
     const root = await tempDir();
-    await installHooks(root, { command: 'node /abs/keel.js' });
+    await installHooks(root, { command: 'node /abs/shim.js hook' });
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
-    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'node /abs/keel.js hook session-start',
-    );
+    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe('node /abs/shim.js hook');
   });
 });

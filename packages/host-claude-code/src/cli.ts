@@ -1,5 +1,7 @@
 import { Command } from 'commander';
+import { spawn } from 'node:child_process';
 import { installHooks, type InstallOptions } from './install.js';
+import { routeHookEvent } from './shim.js';
 
 const program = new Command();
 
@@ -12,20 +14,65 @@ program
   .command('install')
   .description('Write Claude Code hook entries to .claude/settings.json')
   .option('--cwd <dir>', 'project root', process.cwd())
-  .option('--command <cmd>', 'base command to invoke (default: "npx @keel/core")')
+  .option('--command <cmd>', 'base command for the shim (default: "npx @keel/host-claude-code")')
+  .option('--keel <cmd>', 'base command the shim uses to invoke core (default: "npx @keel/core")')
   .option('--settings <path>', 'settings file path relative to cwd', '.claude/settings.json')
-  .action(async (opts: { cwd: string; command?: string; settings: string }) => {
+  .action(async (opts: { cwd: string; command?: string; keel?: string; settings: string }) => {
     try {
       const installOpts: InstallOptions = { settingsPath: opts.settings };
       if (opts.command !== undefined) installOpts.command = opts.command;
+      if (opts.keel !== undefined) installOpts.keelCommand = opts.keel;
       await installHooks(opts.cwd, installOpts);
       process.stdout.write(
         `Installed KEEL hooks → ${opts.cwd}/${opts.settings}\n` +
-          `Use 'claude --resume' or start a new session to activate.\n`,
+          `Start a new Claude Code session to activate.\n`,
       );
     } catch (err) {
       process.stderr.write(
         `install failed: ${err instanceof Error ? err.message : String(err)}\n`,
+      );
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command('hook')
+  .description('Shim invoked by Claude Code hooks: translates stdin and calls keel hook <event>')
+  .option('--keel <cmd>', 'base command to invoke core (default: "npx @keel/core")', 'npx @keel/core')
+  .action(async (opts: { keel: string }) => {
+    try {
+      let raw = '';
+      if (!process.stdin.isTTY) {
+        for await (const chunk of process.stdin) raw += chunk.toString();
+      }
+      const { abstractEvent, translatedStdin } = routeHookEvent(raw);
+      if (abstractEvent === null) return; // exit 0 silently for unmapped events
+      const [exe, ...baseArgs] = opts.keel.split(/\s+/).filter(Boolean);
+      if (!exe) {
+        process.stderr.write('--keel command is empty\n');
+        process.exitCode = 1;
+        return;
+      }
+      const child = spawn(exe, [...baseArgs, 'hook', abstractEvent], {
+        stdio: ['pipe', 'inherit', 'inherit'],
+        shell: process.platform === 'win32',
+      });
+      child.stdin.write(translatedStdin);
+      child.stdin.end();
+      await new Promise<void>((resolve) => {
+        child.on('exit', (code) => {
+          process.exitCode = code ?? 0;
+          resolve();
+        });
+        child.on('error', (err) => {
+          process.stderr.write(`shim spawn failed: ${err.message}\n`);
+          process.exitCode = 1;
+          resolve();
+        });
+      });
+    } catch (err) {
+      process.stderr.write(
+        `hook shim failed: ${err instanceof Error ? err.message : String(err)}\n`,
       );
       process.exitCode = 1;
     }

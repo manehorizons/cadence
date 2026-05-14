@@ -42,11 +42,21 @@ describe('keel-host-claude-code install', () => {
     expect(cfg.hooks.SessionStart[0]._managedBy).toBe('keel');
   });
 
-  it('honors --command override', async () => {
+  it('honors --command override (shim invocation)', async () => {
     const root = await tempDir();
-    const r = await run(['install', '--cwd', root, '--command', 'node /abs/k.js']);
+    const r = await run(['install', '--cwd', root, '--command', 'node /abs/shim.js hook']);
     expect(r.code).toBe(0);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
-    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe('node /abs/k.js hook session-start');
+    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe('node /abs/shim.js hook');
+  });
+
+  it('honors --keel override (appended to default shim)', async () => {
+    const root = await tempDir();
+    const r = await run(['install', '--cwd', root, '--keel', 'node /abs/k.js']);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
+    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
+      'npx @keel/host-claude-code hook --keel "node /abs/k.js"',
+    );
   });
 });

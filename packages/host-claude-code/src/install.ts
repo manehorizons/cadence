@@ -3,8 +3,18 @@ import { dirname, join } from 'node:path';
 import { EDIT_TOOL_MATCHER } from './event-map.js';
 
 export interface InstallOptions {
-  /** Base command before `hook <event>`. Defaults to `npx @keel/core`. */
+  /**
+   * Shim command that Claude Code invokes for every hook event. The shim
+   * reads stdin, translates payloads, and spawns the core CLI.
+   * Default: `npx @keel/host-claude-code hook`.
+   */
   command?: string;
+  /**
+   * Base command the shim itself should use to invoke `@keel/core`.
+   * If set, appended as `--keel "<cmd>"` to the shim command.
+   * Default: shim's own default (`npx @keel/core`).
+   */
+  keelCommand?: string;
   /** Path to settings file relative to root. Defaults to `.claude/settings.json`. */
   settingsPath?: string;
 }
@@ -25,7 +35,8 @@ function isKeelEntry(entry: HookEntry): boolean {
 }
 
 export async function installHooks(root: string, opts: InstallOptions = {}): Promise<void> {
-  const base = opts.command ?? 'npx @keel/core';
+  const base = opts.command ?? 'npx @keel/host-claude-code hook';
+  const command = opts.keelCommand ? `${base} --keel "${opts.keelCommand}"` : base;
   const settingsPath = join(root, opts.settingsPath ?? '.claude/settings.json');
 
   let current: SettingsShape = {};
@@ -36,24 +47,24 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
   }
   if (typeof current !== 'object' || current === null || Array.isArray(current)) current = {};
 
-  const keelEntry = (event: string): HookEntry => ({
-    hooks: [{ type: 'command', command: `${base} hook ${event}` }],
+  const plain = (): HookEntry => ({
+    hooks: [{ type: 'command', command }],
     _managedBy: 'keel',
   });
 
-  const keelEntryMatched = (event: string, matcher: string): HookEntry => ({
+  const matched = (matcher: string): HookEntry => ({
     matcher,
-    hooks: [{ type: 'command', command: `${base} hook ${event}` }],
+    hooks: [{ type: 'command', command }],
     _managedBy: 'keel',
   });
 
   const desired: Record<string, HookEntry> = {
-    SessionStart: keelEntry('session-start'),
-    UserPromptSubmit: keelEntry('user-prompt'),
-    PreToolUse: keelEntryMatched('pre-tool-edit', EDIT_TOOL_MATCHER),
-    PostToolUse: keelEntryMatched('post-tool-edit', EDIT_TOOL_MATCHER),
-    Stop: keelEntry('session-stop'),
-    SubagentStop: keelEntry('subagent-result'),
+    SessionStart: plain(),
+    UserPromptSubmit: plain(),
+    PreToolUse: matched(EDIT_TOOL_MATCHER),
+    PostToolUse: matched(EDIT_TOOL_MATCHER),
+    Stop: plain(),
+    SubagentStop: plain(),
   };
 
   const hooks: Record<string, HookEntry[]> = current.hooks ?? {};
