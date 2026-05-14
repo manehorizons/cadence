@@ -1,0 +1,35 @@
+{
+  "draftId": "14-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "scanner + uncoveredAcs helper, 8 tests, glob subset (**, *), per-file dedup",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:37:37.284Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "verification.testGlobs config field with default + 3 tests",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:38:48.601Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "settle integrates coverage gate; 5 new tests + legacy settle-auto updated with --allow-missing-coverage",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:42:48.397Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "DESIGN.md Section 3.2 convention locked; README ## Verification section added; Section 10 punchlist updated",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:43:52.730Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "267 tests green; self-coverage proof: AC-1..AC-6 each referenced by ≥1 test file",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:46:38.280Z"
+    }
+  }
+}
