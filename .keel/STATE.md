@@ -3,10 +3,10 @@
 > Derived view. Do not edit by hand — regenerated on every state.json write.
 
 **Project:** keel
-**Loop position:** BUILD
+**Loop position:** IDLE
 **Active phase:** 02-host-codex
-**Active draft:** 02-01
-**Tier:** complex
+**Active draft:** (none)
+**Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 0%
@@ -14,7 +14,7 @@
 - Last handoff: (none)
 
 ## Counts
-- Open drafts: 1
+- Open drafts: 0
 - Decisions: 0
 - Deferred items: 0
 

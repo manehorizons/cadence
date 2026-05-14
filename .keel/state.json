@@ -5,15 +5,10 @@
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
   "activePhase": "02-host-codex",
-  "activeDraft": "02-01",
-  "loopPosition": "BUILD",
-  "tier": "complex",
-  "openDrafts": [
-    {
-      "id": "02-01",
-      "since": "2026-05-14T01:23:49.987Z"
-    }
-  ],
+  "activeDraft": null,
+  "loopPosition": "IDLE",
+  "tier": null,
+  "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
@@ -25,9 +20,5 @@
     "required": [],
     "invoked": []
   },
-  "activeTask": {
-    "id": "T9",
-    "status": "DONE",
-    "touchedFiles": []
-  }
+  "activeTask": null
 }
