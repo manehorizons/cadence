@@ -1,0 +1,35 @@
+{
+  "draftId": "18-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "install.ts evicts _managedBy=keel; tests + 1 new legacy-eviction test (56 host)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:53:14.210Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "git-rm 6 keel-*.md + regen settings.json + settings.local.json (0 keel refs remain)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:53:55.580Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "pkg name, config templates.dir, PROJECT.md, fixture tmpdir prefix renamed",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:54:18.408Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "CONTRIBUTING.md: KEEL/@keel/core -> CADENCE/@cadence/core",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:54:34.525Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Full suite 377 pass (host +1, types/core unchanged); DESIGN F2 resolved; remaining keel refs intentional history",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T22:56:26.848Z"
+    }
+  }
+}

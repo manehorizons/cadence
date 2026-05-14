@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "project": {
-    "name": "keel",
+    "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "17-anomaly-notify",
+  "activePhase": "18-f2-rename",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,

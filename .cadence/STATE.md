@@ -2,9 +2,9 @@
 
 > Derived view. Do not edit by hand — regenerated on every state.json write.
 
-**Project:** keel
+**Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 17-anomaly-notify
+**Active phase:** 18-f2-rename
 **Active draft:** (none)
 **Tier:** (n/a)
 

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "draftId": "18-01",
+  "completedAt": "2026-05-14T22:57:20.642Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    },
+    {
+      "id": "AC-6",
+      "pass": true
+    },
+    {
+      "id": "AC-7",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "install.ts evicts _managedBy=keel; tests + 1 new legacy-eviction test (56 host)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "git-rm 6 keel-*.md + regen settings.json + settings.local.json (0 keel refs remain)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "pkg name, config templates.dir, PROJECT.md, fixture tmpdir prefix renamed"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "CONTRIBUTING.md: KEEL/@keel/core -> CADENCE/@cadence/core"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "Full suite 377 pass (host +1, types/core unchanged); DESIGN F2 resolved; remaining keel refs intentional history"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
