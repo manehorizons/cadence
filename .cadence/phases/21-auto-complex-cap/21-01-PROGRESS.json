@@ -1,0 +1,23 @@
+{
+  "draftId": "21-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "settle --allow-auto-complex flag + refusal (8 soft-cap tests cover T1+T2)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T23:32:35.538Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "draft approve --allow-auto-complex flag + refusal",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T23:32:35.746Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "DESIGN §4.3 M2 shipped + §10 ticked 21.1",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T23:33:01.943Z"
+    }
+  }
+}
