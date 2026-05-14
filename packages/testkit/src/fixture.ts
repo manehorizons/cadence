@@ -14,7 +14,7 @@ export interface FixtureOptions {
 }
 
 export async function tempRepo(opts: FixtureOptions = {}): Promise<Fixture> {
-  const root = await mkdtemp(join(tmpdir(), 'keel-test-'));
+  const root = await mkdtemp(join(tmpdir(), 'cadence-test-'));
   if (opts.initialized) {
     const cadenceDir = join(root, '.cadence');
     await mkdir(join(cadenceDir, 'phases'), { recursive: true });

@@ -5,10 +5,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @keel/host-claude-code hook"
+            "command": "npx @cadence/host-claude-code hook"
           }
         ],
-        "_managedBy": "keel"
+        "_managedBy": "cadence"
       }
     ],
     "UserPromptSubmit": [
@@ -16,10 +16,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @keel/host-claude-code hook"
+            "command": "npx @cadence/host-claude-code hook"
           }
         ],
-        "_managedBy": "keel"
+        "_managedBy": "cadence"
       }
     ],
     "PreToolUse": [
@@ -28,10 +28,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @keel/host-claude-code hook"
+            "command": "npx @cadence/host-claude-code hook"
           }
         ],
-        "_managedBy": "keel"
+        "_managedBy": "cadence"
       }
     ],
     "PostToolUse": [
@@ -40,10 +40,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @keel/host-claude-code hook"
+            "command": "npx @cadence/host-claude-code hook"
           }
         ],
-        "_managedBy": "keel"
+        "_managedBy": "cadence"
       }
     ],
     "Stop": [
@@ -51,10 +51,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @keel/host-claude-code hook"
+            "command": "npx @cadence/host-claude-code hook"
           }
         ],
-        "_managedBy": "keel"
+        "_managedBy": "cadence"
       }
     ],
     "SubagentStop": [
@@ -62,10 +62,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @keel/host-claude-code hook"
+            "command": "npx @cadence/host-claude-code hook"
           }
         ],
-        "_managedBy": "keel"
+        "_managedBy": "cadence"
       }
     ]
   }

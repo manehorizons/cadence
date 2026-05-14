@@ -130,7 +130,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 | # | Item | Why deferred |
 |---|---|---|
 | ~~F1~~ | ~~Final profile × tier cap rules~~ | **Resolved** — see Section 4 |
-| F2 | Backronym wording refinement (CADENCE is locked) + physical rename rollout (repo, packages, CLI binary) | Word locked; deliverables not yet renamed |
+| ~~F2~~ | ~~Backronym wording refinement (CADENCE is locked) + physical rename rollout (repo, packages, CLI binary)~~ | **Resolved — Phase 18.1.** Slash commands, settings, root `package.json`, state metadata, testkit fixture, install.ts legacy-eviction all on the cadence side; intentional history (DESIGN.md §8 rejected-names table, README Phase 12 banner) preserved. Backronym wording refinement is parked — the word is the keeper. |
 | ~~F3~~ | ~~Codex path~~ | **Resolved — archive + collapse.** Tag current state as `keel-codex-archive`, remove `packages/host-codex/` from main, collapse `HostCapabilities` abstraction back into Claude-Code-specific code. YAGNI wins; re-add later as a fresh phase if needed. |
 | F4 | Notification transport | Spans stderr → external bridge; depends on continuity-runtime decision |
 | F5 | Test ↔ AC linkage convention | Likely: AC id token in test name/describe; needs implementation spike |
@@ -196,5 +196,6 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
    - ~~Phase 17 — Anomaly notify transport~~ ✓
    - ~~Phase 17.2 — Hook-side detection + `status anomalies` reader~~ ✓
    - ~~Phase 17.3 — `AnomalyEvent.ts` + live `--since` filter~~ ✓
+7. ~~Phase 18.1 — F2 physical rename rollout~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

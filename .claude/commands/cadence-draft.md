@@ -1,11 +1,11 @@
 ---
 description: Scaffold a new DRAFT.md for a phase task
 argument-hint: <phase-id> <task-num> [--title=<title>]
-allowed-tools: Bash(keel:*), Read
+allowed-tools: Bash(cadence:*), Read
 ---
 
-<!-- managed-by: keel -->
+<!-- managed-by: cadence -->
 
-!keel draft new $ARGUMENTS
+!node C:\Users\digit\Documents\Projects\cadence\packages\core\dist\cli\index.js draft new $ARGUMENTS
 
 Open the new DRAFT.md and fill in summary, ACs, and tasks.

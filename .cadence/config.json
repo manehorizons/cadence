@@ -17,7 +17,7 @@
   },
   "commitCadence": "draft",
   "templates": {
-    "dir": ".keel/templates",
+    "dir": ".cadence/templates",
     "overrides": []
   },
   "hooks": {

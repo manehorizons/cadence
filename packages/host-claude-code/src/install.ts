@@ -40,6 +40,15 @@ function isCadenceEntry(entry: HookEntry): boolean {
   return entry._managedBy === 'cadence';
 }
 
+/**
+ * Pre-Phase-12 installs tagged entries with `_managedBy: 'keel'`. Phase 18.1
+ * evicts those on re-install so the rename completes operationally and old
+ * `@keel/host-claude-code` shim invocations stop firing.
+ */
+function isLegacyKeelEntry(entry: HookEntry): boolean {
+  return entry._managedBy === 'keel';
+}
+
 export async function installHooks(root: string, opts: InstallOptions = {}): Promise<void> {
   const local = opts.local ? resolveLocalPaths() : null;
   const base =
@@ -80,7 +89,9 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
 
   for (const [ccEvent, entry] of Object.entries(desired)) {
     const existing = hooks[ccEvent] ?? [];
-    const filtered = existing.filter((e) => !isCadenceEntry(e));
+    const filtered = existing.filter(
+      (e) => !isCadenceEntry(e) && !isLegacyKeelEntry(e),
+    );
     filtered.push(entry);
     hooks[ccEvent] = filtered;
   }

@@ -17,7 +17,7 @@ async function tempDir(): Promise<string> {
 }
 
 describe('installCommands', () => {
-  it('writes 9 keel-*.md files under .claude/commands/', async () => {
+  it('writes 9 cadence-*.md files under .claude/commands/', async () => {
     const root = await tempDir();
     await installCommands(root);
     const entries = await readdir(join(root, '.claude/commands'));
@@ -88,14 +88,14 @@ describe('installCommands', () => {
     expect(check).toMatch(/^!cadence draft check \$ARGUMENTS\s*$/m);
   });
 
-  it('files are tagged keel-managed via a comment header', async () => {
+  it('files are tagged cadence-managed via a comment header', async () => {
     const root = await tempDir();
     await installCommands(root);
     const body = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
     expect(body).toMatch(/<!-- managed-by: cadence -->/);
   });
 
-  it('idempotent: re-install overwrites keel-managed files only', async () => {
+  it('idempotent: re-install overwrites cadence-managed files only', async () => {
     const root = await tempDir();
     await mkdir(join(root, '.claude/commands'), { recursive: true });
     // User-defined sibling command must survive.
@@ -103,7 +103,7 @@ describe('installCommands', () => {
       join(root, '.claude/commands/my-custom.md'),
       '---\ndescription: custom\n---\nuser content\n',
     );
-    // User-overridden keel command (no managed marker) must survive.
+    // User-overridden cadence command (no managed marker) must survive.
     await writeFile(
       join(root, '.claude/commands/cadence-progress.md'),
       '---\ndescription: my override\n---\nhand-rolled\n',
@@ -118,11 +118,11 @@ describe('installCommands', () => {
     expect(progress).not.toMatch(/managed-by: cadence/);
   });
 
-  it('honors cadenceCommand override (replaces `keel` prefix)', async () => {
+  it('honors cadenceCommand override (replaces `cadence` prefix)', async () => {
     const root = await tempDir();
-    await installCommands(root, { cadenceCommand: 'node /abs/keel.js' });
+    await installCommands(root, { cadenceCommand: 'node /abs/cadence.js' });
     const body = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
-    expect(body).toMatch(/^!node \/abs\/keel\.js progress\s*$/m);
+    expect(body).toMatch(/^!node \/abs\/cadence\.js progress\s*$/m);
   });
 
   it('local=true renders absolute core path in slash body', async () => {

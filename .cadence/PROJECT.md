@@ -1,3 +1,3 @@
-# keel
+# CADENCE
 
-> KEEL project. See .keel/ROADMAP.md for phases.
+> CADENCE project. See .cadence/ROADMAP.md for phases.

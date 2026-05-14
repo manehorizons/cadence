@@ -52,14 +52,14 @@ describe('installHooks', () => {
 
   it('cadenceCommand option appends --cadence "<cmd>" to the shim invocation', async () => {
     const root = await tempDir();
-    await installHooks(root, { cadenceCommand: 'node /abs/keel.js' });
+    await installHooks(root, { cadenceCommand: 'node /abs/cadence.js' });
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'npx @cadence/host-claude-code hook --cadence "node /abs/keel.js"',
+      'npx @cadence/host-claude-code hook --cadence "node /abs/cadence.js"',
     );
   });
 
-  it('entries are tagged with _managedBy=keel', async () => {
+  it('entries are tagged with _managedBy=cadence', async () => {
     const root = await tempDir();
     await installHooks(root);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
@@ -88,7 +88,7 @@ describe('installHooks', () => {
     expect(cfg.hooks.SessionStart).toBeDefined();
   });
 
-  it('replaces only keel-managed hook entries on re-install (idempotent)', async () => {
+  it('replaces only cadence-managed hook entries on re-install (idempotent)', async () => {
     const root = await tempDir();
     await mkdir(join(root, '.claude'), { recursive: true });
     await writeFile(
@@ -152,11 +152,56 @@ describe('installHooks', () => {
     await installHooks(root, {
       local: true,
       command: 'node /custom/shim.js hook',
-      cadenceCommand: 'node /custom/keel.js',
+      cadenceCommand: 'node /custom/cadence.js',
     });
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'node /custom/shim.js hook --cadence "node /custom/keel.js"',
+      'node /custom/shim.js hook --cadence "node /custom/cadence.js"',
     );
+  });
+
+  // AC-1 (Phase 18.1) — F2 rename rollout.
+  it('evicts legacy _managedBy=keel hook entries on re-install', async () => {
+    const root = await tempDir();
+    await mkdir(join(root, '.claude'), { recursive: true });
+    // Pre-seed with two legacy `keel`-managed entries and one user-customized.
+    await writeFile(
+      join(root, '.claude/settings.json'),
+      JSON.stringify({
+        hooks: {
+          SessionStart: [
+            {
+              hooks: [{ type: 'command', command: 'npx @keel/host-claude-code hook' }],
+              _managedBy: 'keel',
+            },
+            { hooks: [{ type: 'command', command: 'user-hook' }] },
+          ],
+          PreToolUse: [
+            {
+              matcher: 'Edit|Write|MultiEdit|NotebookEdit',
+              hooks: [{ type: 'command', command: 'npx @keel/host-claude-code hook' }],
+              _managedBy: 'keel',
+            },
+          ],
+        },
+      }),
+    );
+    await installHooks(root);
+    const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
+    type Entry = { _managedBy?: string; hooks: Array<{ command: string }> };
+    // No keel-managed entries survive.
+    const legacy = (cfg.hooks.SessionStart as Entry[]).filter((e) => e._managedBy === 'keel');
+    expect(legacy).toHaveLength(0);
+    const legacyPreTool = (cfg.hooks.PreToolUse as Entry[]).filter((e) => e._managedBy === 'keel');
+    expect(legacyPreTool).toHaveLength(0);
+    // Exactly one cadence-managed SessionStart entry, user entry preserved.
+    const cadenceStarts = (cfg.hooks.SessionStart as Entry[]).filter(
+      (e) => e._managedBy === 'cadence',
+    );
+    expect(cadenceStarts).toHaveLength(1);
+    const userStill = (cfg.hooks.SessionStart as Entry[]).find((e) =>
+      e.hooks.some((h) => h.command === 'user-hook'),
+    );
+    expect(userStill).toBeDefined();
   });
 });
