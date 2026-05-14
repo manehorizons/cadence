@@ -134,8 +134,8 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 | ~~F2~~ | ~~Backronym wording refinement (CADENCE is locked) + physical rename rollout (repo, packages, CLI binary)~~ | **Resolved — Phase 18.1.** Slash commands, settings, root `package.json`, state metadata, testkit fixture, install.ts legacy-eviction all on the cadence side; intentional history (DESIGN.md §8 rejected-names table, README Phase 12 banner) preserved. Backronym wording refinement is parked — the word is the keeper. |
 | ~~F3~~ | ~~Codex path~~ | **Resolved — archive + collapse.** Tag current state as `keel-codex-archive`, remove `packages/host-codex/` from main, collapse `HostCapabilities` abstraction back into Claude-Code-specific code. YAGNI wins; re-add later as a fresh phase if needed. |
 | ~~F4~~ | ~~Notification transport~~ | **Resolved — Phase 17 + 17.2 + 17.3 + 19.1.** Four transports shipped: `stderr` (default) / `file` (NDJSON) / `none` / `webhook` (POST JSON to any URL). Generic webhook primitive avoids baking a specific bridge into cadence — continuity-runtime / Slack / Discord / Zapier / n8n / etc. all hang off the same contract. |
-| F5 | Test ↔ AC linkage convention | Likely: AC id token in test name/describe; needs implementation spike |
-| F6 | Verifier agent shape (`--deep`) | Model choice, prompt design, token budget |
+| ~~F5~~ | ~~Test ↔ AC linkage convention~~ | **Resolved — Phase 14.** AC id token (`AC-N`) anywhere in a test file's contents; binary per-AC; scanner walks `verification.testGlobs` from `.cadence/config.json` (default `packages/**/*.test.ts(x)`). |
+| ~~F6~~ | ~~Verifier agent shape (`--deep`)~~ | **Resolved — Phase 15.** Two providers: `mock` (deterministic, offline, linked-test rule) + `anthropic` (opt-in via `ANTHROPIC_API_KEY`, prompt-cached system prompt, Zod-typed per-AC verdicts via `messages.parse()`). |
 
 ## 7. Anti-goals
 
