@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "loopEnforcement": "soft",
+  "acDiscipline": "tier-scaled",
+  "workstreamBackend": "simple",
+  "ruleProvider": "trigger-taxonomy",
+  "subagentPolicy": {
+    "contextBudgetThreshold": 0.7,
+    "largeTaskTokens": 8000,
+    "mechanicalBatchMin": 3
+  },
+  "modelPerClass": {
+    "mechanical": "claude-haiku-4-5-20251001",
+    "standard": "claude-sonnet-4-6",
+    "complex": "claude-opus-4-7",
+    "drafting": "claude-opus-4-7"
+  },
+  "commitCadence": "draft",
+  "templates": {
+    "dir": ".keel/templates",
+    "overrides": []
+  },
+  "hooks": {
+    "sessionStart": true,
+    "stopReminder": true,
+    "preToolUseBuildGate": false,
+    "userPromptSubmit": true
+  },
+  "packs": {
+    "enabled": [],
+    "disabled": []
+  },
+  "telemetry": {
+    "tokenUtilization": true,
+    "skillInvocations": true,
+    "remoteOptIn": false
+  },
+  "tier": {
+    "quickFix": {
+      "maxTasks": 1,
+      "maxFiles": 1
+    },
+    "standard": {
+      "maxTasks": 5,
+      "maxFiles": 8
+    },
+    "complex": {
+      "maxTasks": 999,
+      "minTasks": 6
+    }
+  }
+}

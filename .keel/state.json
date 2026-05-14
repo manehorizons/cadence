@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "keel",
+    "createdAt": "2026-05-14T00:53:31.484Z"
+  },
+  "activePhase": null,
+  "activeDraft": null,
+  "loopPosition": "IDLE",
+  "tier": null,
+  "openDrafts": [],
+  "decisions": [],
+  "deferred": [],
+  "session": {
+    "tokenUtilization": 0,
+    "lastHandoff": null,
+    "subagentSpawns": 0
+  },
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "activeTask": null
+}

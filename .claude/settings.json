@@ -1,0 +1,72 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx @keel/host-claude-code hook"
+          }
+        ],
+        "_managedBy": "keel"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx @keel/host-claude-code hook"
+          }
+        ],
+        "_managedBy": "keel"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx @keel/host-claude-code hook"
+          }
+        ],
+        "_managedBy": "keel"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx @keel/host-claude-code hook"
+          }
+        ],
+        "_managedBy": "keel"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx @keel/host-claude-code hook"
+          }
+        ],
+        "_managedBy": "keel"
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx @keel/host-claude-code hook"
+          }
+        ],
+        "_managedBy": "keel"
+      }
+    ]
+  }
+}
