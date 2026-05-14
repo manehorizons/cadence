@@ -22,7 +22,7 @@ export interface TaskStatusEntry {
 
 export interface AcStatus {
   id: string;
-  state: 'pending' | 'pass' | 'blocked';
+  state: 'pending' | 'pass' | 'blocked' | 'needs-context';
 }
 
 export interface StatusReport {
@@ -39,7 +39,6 @@ export interface StatusReport {
   next: NextAction;
 }
 
-const BLOCKING_STATUSES: TaskStatus[] = ['BLOCKED', 'NEEDS_CONTEXT'];
 const PASS_STATUSES: TaskStatus[] = ['DONE', 'DONE_WITH_CONCERNS'];
 
 function parseAcRefs(done: string): string[] {
@@ -100,8 +99,11 @@ export function gatherStatus(
   base.acs = draft.acceptanceCriteria.map((ac) => {
     const linked = tasks.filter((t) => t.acs.includes(ac.id));
     if (linked.length === 0) return { id: ac.id, state: 'pending' };
-    if (linked.some((t) => BLOCKING_STATUSES.includes(t.status))) {
+    if (linked.some((t) => t.status === 'BLOCKED')) {
       return { id: ac.id, state: 'blocked' };
+    }
+    if (linked.some((t) => t.status === 'NEEDS_CONTEXT')) {
+      return { id: ac.id, state: 'needs-context' };
     }
     if (linked.every((t) => PASS_STATUSES.includes(t.status))) {
       return { id: ac.id, state: 'pass' };
@@ -114,7 +116,7 @@ export function gatherStatus(
 
 export interface DerivedAcResult {
   id: string;
-  verdict: 'pass' | 'blocked' | 'pending';
+  verdict: 'pass' | 'blocked' | 'needs-context' | 'pending';
   /** Task ids that prevent a pass (BLOCKED/NEEDS_CONTEXT, or not-yet-DONE). */
   blockers: string[];
 }
@@ -128,15 +130,25 @@ export function deriveAcResults(
     if (linked.length === 0) {
       return { id: ac.id, verdict: 'pending', blockers: [] };
     }
-    const blocking: string[] = [];
+    const hardBlocked: string[] = [];
+    const needsContext: string[] = [];
     const stillOpen: string[] = [];
     for (const t of linked) {
       const status = taskStatusFromProgress(t.id, progress);
-      if (BLOCKING_STATUSES.includes(status)) blocking.push(t.id);
+      if (status === 'BLOCKED') hardBlocked.push(t.id);
+      else if (status === 'NEEDS_CONTEXT') needsContext.push(t.id);
       else if (!PASS_STATUSES.includes(status)) stillOpen.push(t.id);
     }
-    if (blocking.length > 0) {
-      return { id: ac.id, verdict: 'blocked', blockers: blocking };
+    if (hardBlocked.length > 0) {
+      // BLOCKED has priority; surface NEEDS_CONTEXT tasks alongside as blockers.
+      return {
+        id: ac.id,
+        verdict: 'blocked',
+        blockers: [...hardBlocked, ...needsContext],
+      };
+    }
+    if (needsContext.length > 0) {
+      return { id: ac.id, verdict: 'needs-context', blockers: needsContext };
     }
     if (stillOpen.length > 0) {
       return { id: ac.id, verdict: 'pending', blockers: stillOpen };
@@ -167,7 +179,14 @@ function renderAcTable(acs: AcStatus[]): string[] {
   if (acs.length === 0) return [];
   const lines = ['', '  ACS', '  ' + '─'.repeat(20)];
   for (const ac of acs) {
-    const glyph = ac.state === 'pass' ? '[x]' : ac.state === 'blocked' ? '[!]' : '[ ]';
+    const glyph =
+      ac.state === 'pass'
+        ? '[x]'
+        : ac.state === 'blocked'
+          ? '[!]'
+          : ac.state === 'needs-context'
+            ? '[?]'
+            : '[ ]';
     lines.push(`  ${glyph} ${ac.id}  ${ac.state}`);
   }
   return lines;

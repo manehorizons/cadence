@@ -19,6 +19,16 @@ export function registerDraftCommand(program: Command): void {
     .action(async (phase: string, num: string, opts: { title: string; tier: string }) => {
       try {
         const cwd = process.cwd();
+        const backend = new SimpleStateBackend(cwd);
+        const state = await backend.readState();
+        if (state.loopPosition !== 'IDLE') {
+          process.stderr.write(
+            `draft new refused: loopPosition is ${state.loopPosition}, not IDLE. ` +
+              `Settle or discard the active draft (${state.activeDraft ?? '?'}) first.\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         const dir = join(cwd, '.keel', 'phases', phase);
         const padded = num.padStart(2, '0');
         const id = `${phase.slice(0, 2)}-${padded}`;
@@ -31,6 +41,16 @@ export function registerDraftCommand(program: Command): void {
         await mkdir(dir, { recursive: true });
         const body = `---\nphase: ${phase}\nid: ${id}\ntier: ${opts.tier}\nstatus: PENDING\n---\n\n# ${id} — ${opts.title}\n\n## Objective\n\n_(one sentence)_\n\n## Acceptance Criteria\n\n### AC-1: _(name)_\nGiven _(precondition)_\nWhen _(action)_\nThen _(outcome)_\n\n## Tasks\n\n### T1: _(task name)_\n- files: \`path/to/file.ts\`\n- action: _(what to do)_\n- verify: _(how to verify)_\n- done: AC-1\n\n## Boundaries\n\n- _(DO NOT change …)_\n`;
         await writeFile(path, body);
+
+        state.activePhase = phase;
+        state.activeDraft = id;
+        state.loopPosition = 'DRAFT';
+        if (!state.openDrafts.some((d) => d.id === id)) {
+          state.openDrafts.push({ id, since: new Date().toISOString() });
+        }
+        await backend.writeState(state);
+        await atomicWriteText(join(cwd, '.keel', 'STATE.md'), renderStateMd(state));
+
         console.log(`Created ${path}`);
       } catch (err) {
         process.stderr.write(`draft new failed: ${err instanceof Error ? err.message : String(err)}\n`);

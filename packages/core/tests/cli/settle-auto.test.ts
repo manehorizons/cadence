@@ -51,6 +51,34 @@ describe('keel settle run --auto', () => {
     expect((await readState(active.root)).loopPosition).toBe('IDLE');
   });
 
+  it('NEEDS_CONTEXT task → exit 1, stderr names AC + task as needs-context (not blocked)', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=NEEDS_CONTEXT'], active.root);
+    const r = await run(['settle', 'run', '--auto'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/AC-1 needs-context/);
+    expect(r.stderr).not.toMatch(/AC-1 blocked/);
+    expect(r.stderr).toMatch(/T1/);
+    expect((await readState(active.root)).loopPosition).toBe('BUILD');
+  });
+
+  it('--auto --force with NEEDS_CONTEXT records SUMMARY note as needs context', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=NEEDS_CONTEXT'], active.root);
+    const r = await run(['settle', 'run', '--auto', '--force'], active.root);
+    expect(r.code).toBe(0);
+    const { json, md } = await readSummary(active.root);
+    expect(json.acResults[0]).toMatchObject({ id: 'AC-1', pass: false });
+    expect(json.acResults[0].note).toMatch(/T1.*needs context/);
+    expect(json.acResults[0].note).not.toMatch(/blocked/);
+    expect(md).toMatch(/AC-1.*FAIL/);
+    expect(md).toMatch(/needs context/);
+  });
+
   it('BLOCKED task → exit 1, stderr names AC + task, state still BUILD, no SUMMARY', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);

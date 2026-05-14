@@ -12,11 +12,15 @@ export function nextAction(state: KeelState): NextAction {
         command: 'keel draft new <phase> <num> --title=…',
         reason: 'No active draft. Start the loop by drafting a new unit of work.',
       };
-    case 'DRAFT':
+    case 'DRAFT': {
+      const phase = state.activePhase ?? '<phase>';
+      const num = state.activeDraft?.split('-')[1] ?? '<num>';
       return {
-        command: `keel draft approve ${state.activePhase ?? '<phase>'} ${state.activeDraft?.split('-')[1] ?? '<num>'}`,
-        reason: 'Draft is open. Approve to enter BUILD or run keel draft check.',
+        command: `keel draft approve ${phase} ${num}`,
+        reason:
+          'DRAFT is open. Fill in objective, ACs, and tasks, run keel draft check, then approve to enter BUILD.',
       };
+    }
     case 'BUILD':
       return {
         command: 'keel build task <id> --status=<DONE|...>  OR  keel settle run --ac AC-1=pass',

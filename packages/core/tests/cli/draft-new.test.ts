@@ -32,6 +32,29 @@ describe('keel draft new', () => {
     expect(content).toContain('# 01-01 — Demo');
   });
 
+  it('transitions state to loopPosition=DRAFT and tracks the open draft', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    expect(r.code).toBe(0);
+    const state = JSON.parse(await readFile(join(active.root, '.keel/state.json'), 'utf8'));
+    expect(state.loopPosition).toBe('DRAFT');
+    expect(state.activePhase).toBe('01-foundation');
+    expect(state.activeDraft).toBe('01-01');
+    expect(state.openDrafts.map((d: { id: string }) => d.id)).toContain('01-01');
+    const stateMd = await readFile(join(active.root, '.keel/STATE.md'), 'utf8');
+    expect(stateMd).toMatch(/Loop position:.*DRAFT/);
+    expect(stateMd).toMatch(/01-01/);
+  });
+
+  it('refuses when loopPosition is not IDLE', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    // Now state is DRAFT — a second draft must be refused.
+    const r = await run(['draft', 'new', '01-foundation', '02', '--title=Other'], active.root);
+    expect(r.code).not.toBe(0);
+    expect(existsSync(join(active.root, '.keel/phases/01-foundation/01-02-DRAFT.md'))).toBe(false);
+  });
+
   it('refuses when DRAFT already exists', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);

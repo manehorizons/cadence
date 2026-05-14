@@ -101,13 +101,31 @@ describe('gatherStatus', () => {
     expect(r.acs.find((a) => a.id === 'AC-3')?.state).toBe('pass');
   });
 
-  it('NEEDS_CONTEXT also blocks linked ACs', () => {
+  it('NEEDS_CONTEXT yields a distinct needs-context AC state', () => {
     const state = emptyState('demo');
     state.activePhase = '05-status-command';
     state.activeDraft = '05-01';
     state.loopPosition = 'BUILD';
     state.tier = 'standard';
     const r = gatherStatus(state, baseDraft, progress({ T1: 'NEEDS_CONTEXT' }));
+    expect(r.acs.find((a) => a.id === 'AC-1')?.state).toBe('needs-context');
+  });
+
+  it('BLOCKED beats NEEDS_CONTEXT when both link to the same AC', () => {
+    // AC-1 linked to both T1 and T2; T1 BLOCKED, T2 NEEDS_CONTEXT.
+    const state = emptyState('demo');
+    state.activePhase = '05-status-command';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const mixedDraft: Draft = {
+      ...baseDraft,
+      tasks: [
+        { id: 'T1', name: 'first', files: [], action: '', verify: '', done: 'AC-1' },
+        { id: 'T2', name: 'second', files: [], action: '', verify: '', done: 'AC-1' },
+      ],
+    };
+    const r = gatherStatus(state, mixedDraft, progress({ T1: 'BLOCKED', T2: 'NEEDS_CONTEXT' }));
     expect(r.acs.find((a) => a.id === 'AC-1')?.state).toBe('blocked');
   });
 
@@ -221,9 +239,25 @@ describe('deriveAcResults', () => {
     expect(ac3?.blockers).toEqual(['T3']);
   });
 
-  it('NEEDS_CONTEXT counted as blocked', () => {
+  it('NEEDS_CONTEXT yields a needs-context verdict (not blocked)', () => {
     const results = deriveAcResults(baseDraft, progress({ T1: 'NEEDS_CONTEXT' }));
-    expect(results.find((a) => a.id === 'AC-1')?.verdict).toBe('blocked');
+    const ac1 = results.find((a) => a.id === 'AC-1');
+    expect(ac1?.verdict).toBe('needs-context');
+    expect(ac1?.blockers).toEqual(['T1']);
+  });
+
+  it('BLOCKED + NEEDS_CONTEXT on one AC → blocked verdict with both task ids', () => {
+    const mixedDraft: Draft = {
+      ...baseDraft,
+      tasks: [
+        { id: 'T1', name: 'first', files: [], action: '', verify: '', done: 'AC-1' },
+        { id: 'T2', name: 'second', files: [], action: '', verify: '', done: 'AC-1' },
+      ],
+    };
+    const results = deriveAcResults(mixedDraft, progress({ T1: 'BLOCKED', T2: 'NEEDS_CONTEXT' }));
+    const ac1 = results.find((a) => a.id === 'AC-1');
+    expect(ac1?.verdict).toBe('blocked');
+    expect(ac1?.blockers.sort()).toEqual(['T1', 'T2']);
   });
 
   it('AC with no linked tasks → pending with empty blockers', () => {
@@ -289,6 +323,18 @@ describe('renderStatus', () => {
       gatherStatus(state, baseDraft, progress({ T2: 'BLOCKED' })),
     );
     expect(out).toMatch(/\[!\]\sAC-1\s+blocked/);
+  });
+
+  it('renders needs-context AC with [?]', () => {
+    const state = emptyState('demo');
+    state.activePhase = 'p';
+    state.activeDraft = '05-01';
+    state.loopPosition = 'BUILD';
+    state.tier = 'standard';
+    const out = renderStatus(
+      gatherStatus(state, baseDraft, progress({ T1: 'NEEDS_CONTEXT' })),
+    );
+    expect(out).toMatch(/\[\?\]\sAC-1\s+needs-context/);
   });
 
   it('renders passing AC with [x]', () => {

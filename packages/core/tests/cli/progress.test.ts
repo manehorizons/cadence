@@ -26,6 +26,14 @@ describe('keel progress', () => {
     expect(r.stdout).toMatch(/keel draft new/);
   });
 
+  it('DRAFT state (after `draft new`) suggests approve with real phase + num', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    const r = await run(['progress'], active.root);
+    expect(r.stdout).toMatch(/keel draft approve 01-foundation 01/);
+    expect(r.stdout).not.toMatch(/<phase>|<num>/);
+  });
+
   it('BUILD state suggests build task or settle', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);

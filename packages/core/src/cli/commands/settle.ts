@@ -67,8 +67,7 @@ export function registerSettleCommand(program: Command): void {
           const derived = deriveAcResults(draft, progress as ProgressFile);
           const offenders = derived.filter(
             (d) =>
-              (d.verdict === 'blocked' || d.verdict === 'pending') &&
-              !explicitIds.has(d.id),
+              d.verdict !== 'pass' && !explicitIds.has(d.id),
           );
           if (offenders.length > 0 && !opts.force) {
             for (const o of offenders) {
@@ -91,6 +90,12 @@ export function registerSettleCommand(program: Command): void {
                 id: d.id,
                 pass: false,
                 note: `auto: ${d.blockers.join(', ')} blocked`,
+              });
+            } else if (d.verdict === 'needs-context') {
+              merged.push({
+                id: d.id,
+                pass: false,
+                note: `auto: ${d.blockers.join(', ')} needs context`,
               });
             } else {
               merged.push({
