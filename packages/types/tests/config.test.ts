@@ -40,4 +40,30 @@ describe('CadenceConfigZ', () => {
       CadenceConfigZ.parse({ ...defaultConfig, profile: 'lenient' as never }),
     ).toThrow();
   });
+
+  it('verification.testGlobs defaults to packages/**/*.test.ts(x) when absent (AC-4)', () => {
+    const { verification: _drop, ...withoutVerify } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutVerify);
+    expect(parsed.verification.testGlobs).toEqual([
+      'packages/**/*.test.ts',
+      'packages/**/*.test.tsx',
+    ]);
+  });
+
+  it('accepts a custom verification.testGlobs array (AC-4)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verification: { testGlobs: ['apps/**/*.spec.ts'] },
+    });
+    expect(parsed.verification.testGlobs).toEqual(['apps/**/*.spec.ts']);
+  });
+
+  it('rejects non-string entries in verification.testGlobs', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        verification: { testGlobs: [42] as never },
+      }),
+    ).toThrow();
+  });
 });

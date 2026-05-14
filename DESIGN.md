@@ -42,9 +42,12 @@ Today's KEEL behavior = `auto` without the notify part. That gap is the highest-
 
 Hybrid implementation:
 
-1. **Default** — structural (current `--auto`) **+** test-coverage proof. Each AC must have ≥1 test that references it (convention: AC id in test name/describe).
-2. **`--deep`** — spawn an independent verifier agent (fresh context, ideally different model). It reads AC text + diff + tests, reports pass/fail per AC. Catches the "I built it, I verified it" blind spot.
-3. **`--interactive`** — always available. Walks the user through each AC with the relevant diff + tests; user gives verdict.
+1. **Default** — structural (current `--auto`) **+** test-coverage proof. Each AC must have ≥1 test that references it.
+   - **Convention (locked in Phase 14):** the AC id token (`AC-N`) must appear somewhere in a test file's contents. Typical placement: inside `describe()` or `it()` strings, but any occurrence (even a comment) counts. The gate is binary per AC: at-least-one-linked-test or refuse.
+   - **Scanner:** walks `verification.testGlobs` from `.cadence/config.json` (defaults: `packages/**/*.test.ts(x)`). Whole-file text search via `/\bAC-\d+\b/g`; per-file deduplication.
+   - **Bypass per-invocation:** `cadence settle run --allow-missing-coverage` skips the check entirely. Explicit `--ac AC-1=pass:note` overrides bypass the gate for that AC only.
+2. **`--deep`** — spawn an independent verifier agent (fresh context, ideally different model). It reads AC text + diff + tests, reports pass/fail per AC. Catches the "I built it, I verified it" blind spot. *(Phase 15.)*
+3. **`--interactive`** — always available. Walks the user through each AC with the relevant diff + tests; user gives verdict. *(Phase 16.)*
 
 ### 3.3 Anomaly notification (for `auto` profile)
 
@@ -170,6 +173,11 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 3. ~~Codex disposition (F3).~~ ✓ (archive + collapse)
 4. ~~Archive codex + collapse HostCapabilities~~ ✓ (Phase 11)
 5. ~~Rename rollout~~ ✓ (Phase 12 / `v0.2.0-rc.1`)
-6. **Plan + build the verifier hybrid** — next implementation phase. Test-coverage proof per AC + `--deep` verifier agent + `--interactive` human-verdict mode.
+6. **Plan + build the verifier hybrid** — in progress.
+   - ~~Phase 13 — Profile system foundation~~ ✓
+   - ~~Phase 14 — Test-coverage proof default verifier~~ ✓
+   - Phase 15 — `--deep` independent verifier agent
+   - Phase 16 — `--interactive` human-verdict mode
+   - Phase 17 — Anomaly notify transport
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

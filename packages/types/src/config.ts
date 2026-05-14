@@ -52,6 +52,15 @@ export const CadenceConfigZ = z.object({
     standard: z.object({ maxTasks: z.number().int(), maxFiles: z.number().int() }),
     complex: z.object({ maxTasks: z.number().int(), minTasks: z.number().int() }),
   }),
+  verification: z
+    .object({
+      /**
+       * Glob patterns the test-coverage scanner walks. Supports `**` and `*`.
+       * Default scans the workspace `packages/**\/*.test.ts(x)`.
+       */
+      testGlobs: z.array(z.string()).default(['packages/**/*.test.ts', 'packages/**/*.test.tsx']),
+    })
+    .default({ testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'] }),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -84,6 +93,9 @@ export const defaultConfig: CadenceConfig = {
     quickFix: { maxTasks: 1, maxFiles: 1 },
     standard: { maxTasks: 5, maxFiles: 8 },
     complex: { maxTasks: 999, minTasks: 6 },
+  },
+  verification: {
+    testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
   },
 };
 

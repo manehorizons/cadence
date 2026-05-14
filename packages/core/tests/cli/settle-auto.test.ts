@@ -44,7 +44,7 @@ describe('cadence settle run --auto', () => {
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);
-    const r = await run(['settle', 'run', '--auto'], active.root);
+    const r = await run(['settle', 'run', '--auto', '--allow-missing-coverage'], active.root);
     expect(r.code).toBe(0);
     const { json } = await readSummary(active.root);
     expect(json.acResults).toEqual([{ id: 'AC-1', pass: true }]);
@@ -56,7 +56,7 @@ describe('cadence settle run --auto', () => {
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=NEEDS_CONTEXT'], active.root);
-    const r = await run(['settle', 'run', '--auto'], active.root);
+    const r = await run(['settle', 'run', '--auto', '--allow-missing-coverage'], active.root);
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/AC-1 needs-context/);
     expect(r.stderr).not.toMatch(/AC-1 blocked/);
@@ -69,7 +69,7 @@ describe('cadence settle run --auto', () => {
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=NEEDS_CONTEXT'], active.root);
-    const r = await run(['settle', 'run', '--auto', '--force'], active.root);
+    const r = await run(['settle', 'run', '--auto', '--force', '--allow-missing-coverage'], active.root);
     expect(r.code).toBe(0);
     const { json, md } = await readSummary(active.root);
     expect(json.acResults[0]).toMatchObject({ id: 'AC-1', pass: false });
@@ -84,7 +84,7 @@ describe('cadence settle run --auto', () => {
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=BLOCKED'], active.root);
-    const r = await run(['settle', 'run', '--auto'], active.root);
+    const r = await run(['settle', 'run', '--auto', '--allow-missing-coverage'], active.root);
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/AC-1 blocked/);
     expect(r.stderr).toMatch(/T1/);
@@ -96,7 +96,7 @@ describe('cadence settle run --auto', () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
-    const r = await run(['settle', 'run', '--auto'], active.root);
+    const r = await run(['settle', 'run', '--auto', '--allow-missing-coverage'], active.root);
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/AC-1 pending/);
     expect((await readState(active.root)).loopPosition).toBe('BUILD');
@@ -107,7 +107,7 @@ describe('cadence settle run --auto', () => {
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=BLOCKED'], active.root);
-    const r = await run(['settle', 'run', '--auto', '--force'], active.root);
+    const r = await run(['settle', 'run', '--auto', '--force', '--allow-missing-coverage'], active.root);
     expect(r.code).toBe(0);
     const { json, md } = await readSummary(active.root);
     expect(json.acResults[0]).toMatchObject({ id: 'AC-1', pass: false });

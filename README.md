@@ -41,6 +41,25 @@ npx @cadence/host-claude-code install
 
 > Dogfooding a local checkout of CADENCE before publishing? Build the workspace (`pnpm build`) then run `node packages/host-claude-code/bin/cadence-host-claude-code.cjs install --local --settings .claude/settings.local.json`. `--local` writes absolute paths to the workspace builds instead of `npx`-style commands; pair it with `settings.local.json` so the machine-specific paths stay out of git.
 
+## Verification
+
+`cadence settle run --auto` enforces two layers by default:
+
+1. **Structural** — each AC's linked tasks must all be DONE (or pre-overridden via `--ac AC-N=pass:note`).
+2. **Test-coverage** — each AC must be referenced by ≥1 test file. The scanner walks `verification.testGlobs` from `.cadence/config.json` (default: `packages/**/*.test.ts(x)`) and matches the literal token `AC-N` anywhere in test content. Refusal lists the offending ACs + the searched globs.
+
+The convention is loose by design: put the AC id in a `describe()` / `it()` name, or in a leading comment. The gate is binary per AC — coverage-percentage tools (istanbul/c8) are out of scope.
+
+Bypass flags:
+
+- `cadence settle run --allow-missing-coverage` — skip the test-coverage gate for this invocation
+- `cadence settle run --ac AC-1=pass:override` — explicit verdict wins; gate is skipped for that AC
+- `cadence settle run --auto --force` — settle past *both* structural blockers and coverage refusals (for emergencies)
+
+The gate fires only when the active (tier × profile) puts `'test-coverage'` in the effective `GateSet`. Under `auto × quick-fix` it does not fire. See `DESIGN.md` Section 4.2 for the full matrix.
+
+`--deep` (independent verifier agent) and `--interactive` (human verdict per AC) ship in Phases 15 + 16.
+
 ## Codex support — archived
 
 Codex CLI host adapter shipped earlier as `@keel/host-codex` (Phases 02 / 09). Phase 11 removed it from main; the complete pre-removal state is preserved on the `keel-codex-archive` git tag. Resurrection is a future v1.x/v2 phase.

@@ -11,6 +11,9 @@ import { atomicWriteJSON, atomicWriteText } from '../../state/atomic-write.js';
 import { renderStateMd } from '../../render/state-md.js';
 import { LoopViolationError } from '../../errors.js';
 import { deriveAcResults, type ProgressFile } from '../../status.js';
+import { loadConfig } from '../../config/loader.js';
+import { effectiveGateSet } from '../../gates/engine.js';
+import { scanTestCoverage, uncoveredAcs } from '../../verify/coverage.js';
 
 interface ProgressJson {
   draftId: string;
@@ -43,7 +46,17 @@ export function registerSettleCommand(program: Command): void {
     .option('--ac <pair...>', 'AC verdicts: AC-1=pass  or  AC-1=fail:reason')
     .option('--auto', 'derive AC verdicts from task statuses (blocks on incomplete ACs)')
     .option('--force', 'settle even when --auto detects blocked or pending ACs')
-    .action(async (opts: { ac?: string[]; auto?: boolean; force?: boolean }) => {
+    .option(
+      '--allow-missing-coverage',
+      "skip the test-coverage gate even if the active profile would enforce it",
+    )
+    .action(
+      async (opts: {
+        ac?: string[];
+        auto?: boolean;
+        force?: boolean;
+        allowMissingCoverage?: boolean;
+      }) => {
       try {
         const cwd = process.cwd();
         const backend = new SimpleStateBackend(cwd);
@@ -61,6 +74,48 @@ export function registerSettleCommand(program: Command): void {
 
         const explicit = (opts.ac ?? []).map(parseAcArg);
         const explicitIds = new Set(explicit.map((a) => a.id));
+
+        // Test-coverage gate: fires when the effective gate set includes
+        // 'test-coverage'. Skipped for explicitly-overridden ACs. The flag
+        // --allow-missing-coverage is a per-invocation bypass.
+        let cadenceConfig: Awaited<ReturnType<typeof loadConfig>> | null = null;
+        try {
+          cadenceConfig = await loadConfig(cwd);
+        } catch {
+          cadenceConfig = null;
+        }
+        const gateSet = effectiveGateSet(state, cadenceConfig, draft);
+        if (
+          gateSet.gates.includes('test-coverage') &&
+          !opts.allowMissingCoverage &&
+          opts.auto !== false // gate applies to --auto path; legacy --ac-only flow unaffected
+        ) {
+          const globs = cadenceConfig?.verification?.testGlobs;
+          const coverage = await scanTestCoverage(
+            cwd,
+            globs ? { globs } : {},
+          );
+          const acIds = draft.acceptanceCriteria.map((a) => a.id);
+          const unmet = uncoveredAcs(
+            acIds.filter((id) => !explicitIds.has(id)),
+            coverage,
+          );
+          if (unmet.length > 0 && !opts.force) {
+            const globsLabel =
+              cadenceConfig?.verification?.testGlobs?.join(', ') ?? '(defaults)';
+            for (const id of unmet) {
+              process.stderr.write(
+                `coverage: ${id} has no linked test (searched: ${globsLabel})\n`,
+              );
+            }
+            process.stderr.write(
+              'settle run refused: each AC needs at least one test that references its id (e.g. AC-1 in a describe/it). ' +
+                'Pass --allow-missing-coverage to bypass, or --force to settle anyway.\n',
+            );
+            process.exitCode = 1;
+            return;
+          }
+        }
 
         let acResults: AcResult[] = explicit;
         if (opts.auto) {
