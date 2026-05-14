@@ -22,5 +22,15 @@ export const SummaryZ = z.object({
   skillAudit: z.object({ required: z.array(z.string()), invoked: z.array(z.string()) }),
   /** Phase 15: per-AC `--deep` verifier output. Present only when `--deep` ran. */
   deepVerify: z.record(z.string(), DeepVerdictZ).optional(),
+  /** Phase 16: per-AC `--interactive` walker output. Present only when the walker ran. */
+  interactiveVerify: z
+    .record(
+      z.string(),
+      z.object({
+        verdict: z.enum(['pass', 'fail']),
+        note: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

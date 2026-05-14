@@ -47,7 +47,7 @@ Hybrid implementation:
    - **Scanner:** walks `verification.testGlobs` from `.cadence/config.json` (defaults: `packages/**/*.test.ts(x)`). Whole-file text search via `/\bAC-\d+\b/g`; per-file deduplication.
    - **Bypass per-invocation:** `cadence settle run --allow-missing-coverage` skips the check entirely. Explicit `--ac AC-1=pass:note` overrides bypass the gate for that AC only.
 2. **`--deep`** — spawn an independent verifier (Phase 15, shipped). Two providers via `config.verifier.provider`: `mock` (default, deterministic linked-test rule, offline) and `anthropic` (opt-in via `ANTHROPIC_API_KEY`; uses `messages.parse()` with a Zod schema for per-AC verdicts; system prompt is prompt-cached). Refuses to settle on any non-overridden AC the verifier marks `pass=false` unless `--force`. Transport failures gated by `--allow-verifier-failure`. Per-AC results recorded into `SUMMARY.json deepVerify`.
-3. **`--interactive`** — always available. Walks the user through each AC with the relevant diff + tests; user gives verdict. *(Phase 16.)*
+3. **`--interactive`** — shipped in Phase 16. Walks each AC sequentially with its given/when/then text + linked test refs + touched files, prompts the user for `pass | fail | skip` plus an optional note. Pass/fail verdicts win over structural/deep derivation; skip falls through. Per-AC results recorded into `SUMMARY.json interactiveVerify`. Refuses on TTY-less invocations unless `--no-interactive` bypasses; tests drive the walker via `CADENCE_PROMPTER_SCRIPT` env var seam.
 
 ### 3.3 Anomaly notification (for `auto` profile)
 
@@ -177,7 +177,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
    - ~~Phase 13 — Profile system foundation~~ ✓
    - ~~Phase 14 — Test-coverage proof default verifier~~ ✓
    - ~~Phase 15 — `--deep` independent verifier agent~~ ✓
-   - Phase 16 — `--interactive` human-verdict mode
+   - ~~Phase 16 — `--interactive` human-verdict mode~~ ✓
    - Phase 17 — Anomaly notify transport
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

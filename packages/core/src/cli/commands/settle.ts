@@ -21,6 +21,8 @@ import type {
   VerifyTestRef,
 } from '../../verify/verifier.js';
 import type { DeepVerdict } from '@cadence/types';
+import { walkAcsInteractively, type InteractiveVerdict } from '../../verify/interactive.js';
+import { ScriptedPrompter, StdinPrompter, type Prompter } from '../../verify/prompter.js';
 
 interface ProgressJson {
   draftId: string;
@@ -65,6 +67,14 @@ export function registerSettleCommand(program: Command): void {
       '--allow-verifier-failure',
       'do not refuse on verifier transport failures; record failure into SUMMARY and treat as pass=false',
     )
+    .option(
+      '--interactive',
+      'walk each AC and prompt the user for a pass/fail/skip verdict (Phase 16)',
+    )
+    .option(
+      '--no-interactive',
+      'bypass the interactive-verdict gate even if the active profile would enforce it',
+    )
     .action(
       async (opts: {
         ac?: string[];
@@ -73,6 +83,7 @@ export function registerSettleCommand(program: Command): void {
         allowMissingCoverage?: boolean;
         deep?: boolean;
         allowVerifierFailure?: boolean;
+        interactive?: boolean;
       }) => {
       try {
         const cwd = process.cwd();
@@ -128,6 +139,81 @@ export function registerSettleCommand(program: Command): void {
             process.stderr.write(
               'settle run refused: each AC needs at least one test that references its id (e.g. AC-1 in a describe/it). ' +
                 'Pass --allow-missing-coverage to bypass, or --force to settle anyway.\n',
+            );
+            process.exitCode = 1;
+            return;
+          }
+        }
+
+        // Interactive walker (Phase 16) — fires on --interactive OR when
+        // 'interactive-verdict' is in the gate set (strict profile). User verdicts
+        // override structural/coverage/deep verdicts for matching ACs.
+        // --no-interactive (commander auto-flag) sets `interactive: false` to opt out.
+        let interactiveVerify: Record<string, InteractiveVerdict> | undefined;
+        const interactiveRequested =
+          opts.interactive === true ||
+          (opts.interactive !== false &&
+            gateSet.gates.includes('interactive-verdict'));
+        if (interactiveRequested && opts.auto !== false) {
+          // Test seam: CADENCE_PROMPTER_SCRIPT env var (newline-separated answers)
+          // lets integration tests drive the walker without a real TTY.
+          let prompter: Prompter;
+          const scripted = process.env.CADENCE_PROMPTER_SCRIPT;
+          if (scripted !== undefined) {
+            const answers = scripted.split('\n').filter((s) => s.length > 0 || s === '');
+            prompter = new ScriptedPrompter(answers);
+          } else {
+            try {
+              prompter = new StdinPrompter();
+            } catch (err) {
+              process.stderr.write(
+                `interactive: ${err instanceof Error ? err.message : String(err)}\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+          }
+          try {
+            const coverageGlobs = cadenceConfig?.verification?.testGlobs;
+            const coverageForWalker = await scanTestCoverage(
+              cwd,
+              coverageGlobs ? { globs: coverageGlobs } : {},
+            );
+            const testsForWalker: Record<string, VerifyTestRef[]> = {};
+            for (const [id, refs] of coverageForWalker) {
+              testsForWalker[id] = refs;
+            }
+            const touchedFiles = Array.from(
+              new Set(draft.tasks.flatMap((t) => t.files)),
+            );
+            interactiveVerify = await walkAcsInteractively(
+              {
+                acs: draft.acceptanceCriteria.map((a) => ({
+                  id: a.id,
+                  given: a.given,
+                  when: a.when,
+                  then: a.then,
+                })),
+                tests: testsForWalker,
+                files: touchedFiles,
+              },
+              prompter,
+            );
+          } finally {
+            await prompter.close?.();
+          }
+          // Refuse on any non-overridden 'fail' verdict unless --force.
+          const failing = Object.entries(interactiveVerify).filter(
+            ([id, v]) => v.verdict === 'fail' && !explicitIds.has(id),
+          );
+          if (failing.length > 0 && !opts.force) {
+            for (const [id, v] of failing) {
+              process.stderr.write(
+                `interactive: ${id} fail${v.note ? ` — ${v.note}` : ''}\n`,
+              );
+            }
+            process.stderr.write(
+              'settle run --interactive refused: one or more ACs verdicted as fail. Pass --force to settle anyway.\n',
             );
             process.exitCode = 1;
             return;
@@ -225,12 +311,30 @@ export function registerSettleCommand(program: Command): void {
           }
         }
 
-        let acResults: AcResult[] = explicit;
+        // ACs covered by an explicit `--ac` OR an interactive verdict are
+        // excluded from auto-derivation refusal (the user verdicted them).
+        const interactiveIds = new Set(
+          interactiveVerify ? Object.keys(interactiveVerify) : [],
+        );
+        const userVerdictedIds = new Set([...explicitIds, ...interactiveIds]);
+
+        let acResults: AcResult[] = [...explicit];
+        // Merge interactive verdicts into acResults (override structural derivation).
+        if (interactiveVerify) {
+          for (const [id, v] of Object.entries(interactiveVerify)) {
+            if (explicitIds.has(id)) continue; // explicit --ac wins over interactive
+            acResults.push({
+              id,
+              pass: v.verdict === 'pass',
+              ...(v.note ? { note: v.note } : {}),
+            });
+          }
+        }
         if (opts.auto) {
           const derived = deriveAcResults(draft, progress as ProgressFile);
           const offenders = derived.filter(
             (d) =>
-              d.verdict !== 'pass' && !explicitIds.has(d.id),
+              d.verdict !== 'pass' && !userVerdictedIds.has(d.id),
           );
           if (offenders.length > 0 && !opts.force) {
             for (const o of offenders) {
@@ -243,9 +347,9 @@ export function registerSettleCommand(program: Command): void {
             process.exitCode = 1;
             return;
           }
-          const merged: AcResult[] = [...explicit];
+          const merged: AcResult[] = [...acResults];
           for (const d of derived) {
-            if (explicitIds.has(d.id)) continue;
+            if (userVerdictedIds.has(d.id)) continue;
             if (d.verdict === 'pass') {
               merged.push({ id: d.id, pass: true });
             } else if (d.verdict === 'blocked') {
@@ -290,6 +394,7 @@ export function registerSettleCommand(program: Command): void {
           deferred: [],
           skillAudit: state.skillAudit,
           ...(deepVerify ? { deepVerify } : {}),
+          ...(interactiveVerify ? { interactiveVerify } : {}),
         };
 
         const summaryBase = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-SUMMARY`);

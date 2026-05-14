@@ -73,7 +73,29 @@ The gate fires only when the active (tier × profile) puts `'test-coverage'` in 
 
 Failed verdicts on non-overridden ACs refuse the settle (exit 1) unless `--force` is passed. Transport failures (network / malformed JSON) refuse unless `--allow-verifier-failure` is passed (which records the failure into `deepVerify`). Explicit `--ac` overrides still win — the verifier runs for visibility but the manual verdict takes effect.
 
-`--interactive` (human verdict per AC) ships in Phase 16.
+### Interactive verdict (`--interactive`)
+
+`cadence settle run --auto --interactive` walks each AC sequentially:
+
+```
+──── AC-1 ────────────────────────────────────────────────
+Given: a project is initialized
+When:  cadence settle run --interactive executes
+Then:  the user is prompted per AC
+Linked tests (2):
+  - tests/foo.test.ts:12
+  - tests/bar.test.ts:45
+Touched files: src/foo.ts, src/bar.ts
+AC-1 verdict [pass/fail/skip]:
+Note (optional, one line, blank to skip):
+```
+
+- `pass` / `fail` records into `SUMMARY.json interactiveVerify` and overrides the auto-derived verdict for that AC (with the optional note).
+- `skip` falls through to the structural / coverage / deep gates — useful when the human can't judge.
+- Fail verdicts on non-overridden ACs refuse the settle (exit 1) unless `--force`.
+- Auto-enabled when `'interactive-verdict'` is in the active gate set (per matrix, all `strict` profile cells).
+- `--no-interactive` bypasses the gate for one invocation.
+- Non-TTY environments (CI, piped stdin) refuse with a clear stderr message — set `CADENCE_PROMPTER_SCRIPT` env var with newline-separated answers to drive the walker programmatically in tests.
 
 ## Codex support — archived
 
