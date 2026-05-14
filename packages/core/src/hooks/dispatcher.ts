@@ -1,4 +1,4 @@
-import type { AbstractEvent, HookContext } from '@keel/types';
+import type { AbstractEvent, HookContext } from '@cadence/types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { loadConfig } from '../config/loader.js';
 import {

@@ -1,4 +1,4 @@
-import type { HostCapabilities } from '@keel/types';
+import type { HostCapabilities } from '@cadence/types';
 
 export const claudeCodeCapabilities: HostCapabilities = {
   hooks: [

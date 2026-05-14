@@ -1,4 +1,4 @@
-import type { HookContext, KeelConfig, KeelState } from '@keel/types';
+import type { HookContext, CadenceConfig, CadenceState } from '@cadence/types';
 import type { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteText } from '../state/atomic-write.js';
 import { renderStateMd } from '../render/state-md.js';
@@ -10,9 +10,9 @@ export interface HookResult {
   contextPayload?: string;
 }
 
-export async function handleSessionStart(_ctx: HookContext, state: KeelState): Promise<HookResult> {
+export async function handleSessionStart(_ctx: HookContext, state: CadenceState): Promise<HookResult> {
   const lines = [
-    'KEEL session resumed.',
+    'CADENCE session resumed.',
     `Project: ${state.project.name}`,
     `Loop position: ${state.loopPosition}`,
     `Active phase: ${state.activePhase ?? '(none)'}`,
@@ -25,8 +25,8 @@ export async function handleSessionStart(_ctx: HookContext, state: KeelState): P
 
 export async function handleUserPrompt(
   _ctx: HookContext,
-  state: KeelState,
-  config: KeelConfig,
+  state: CadenceState,
+  config: CadenceConfig,
   backend: SimpleStateBackend,
 ): Promise<HookResult> {
   if (config.telemetry.tokenUtilization) {
@@ -42,13 +42,13 @@ export async function handleUserPrompt(
 
 export async function handlePreToolEdit(
   _ctx: HookContext,
-  state: KeelState,
-  config: KeelConfig,
+  state: CadenceState,
+  config: CadenceConfig,
 ): Promise<HookResult> {
   if (config.hooks.preToolUseBuildGate && state.loopPosition !== 'BUILD') {
     return {
       ok: false,
-      blockMessage: `preToolUseBuildGate is enabled and loopPosition=${state.loopPosition}. Run 'keel draft approve' to enter BUILD phase before editing.`,
+      blockMessage: `preToolUseBuildGate is enabled and loopPosition=${state.loopPosition}. Run 'cadence draft approve' to enter BUILD phase before editing.`,
     };
   }
   return { ok: true };
@@ -56,8 +56,8 @@ export async function handlePreToolEdit(
 
 export async function handlePostToolEdit(
   ctx: HookContext,
-  state: KeelState,
-  _config: KeelConfig,
+  state: CadenceState,
+  _config: CadenceConfig,
   backend: SimpleStateBackend,
 ): Promise<HookResult> {
   if (state.activeTask) {
@@ -74,14 +74,14 @@ export async function handlePostToolEdit(
 
 export async function handleSessionStop(
   _ctx: HookContext,
-  state: KeelState,
-  config: KeelConfig,
+  state: CadenceState,
+  config: CadenceConfig,
 ): Promise<HookResult> {
   if (config.loopEnforcement !== 'strict') return { ok: true };
   if (state.openDrafts.length > 0) {
     return {
       ok: false,
-      blockMessage: `loopEnforcement=strict and ${state.openDrafts.length} unclosed draft(s). Run 'keel settle' before ending session.`,
+      blockMessage: `loopEnforcement=strict and ${state.openDrafts.length} unclosed draft(s). Run 'cadence settle' before ending session.`,
     };
   }
   return { ok: true };
@@ -89,8 +89,8 @@ export async function handleSessionStop(
 
 export async function handleSubagentResult(
   _ctx: HookContext,
-  state: KeelState,
-  _config: KeelConfig,
+  state: CadenceState,
+  _config: CadenceConfig,
   backend: SimpleStateBackend,
 ): Promise<HookResult> {
   state.session.subagentSpawns += 1;

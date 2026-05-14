@@ -1,7 +1,7 @@
 import { readFile, mkdir, rename } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { KeelStateZ, type KeelState } from '@keel/types';
+import { CadenceStateZ, type CadenceState } from '@cadence/types';
 import { StateCorruptError } from '../errors.js';
 import { atomicWriteJSON } from './atomic-write.js';
 import type { StateBackend } from './backend.js';
@@ -10,10 +10,10 @@ export class SimpleStateBackend implements StateBackend {
   constructor(private readonly repoRoot: string) {}
 
   async resolveStateDir(): Promise<string> {
-    return join(this.repoRoot, '.keel');
+    return join(this.repoRoot, '.cadence');
   }
 
-  async readState(): Promise<KeelState> {
+  async readState(): Promise<CadenceState> {
     const path = join(await this.resolveStateDir(), 'state.json');
     let raw: string;
     try {
@@ -27,19 +27,19 @@ export class SimpleStateBackend implements StateBackend {
     } catch (err) {
       throw new StateCorruptError(`state.json is not valid JSON: ${(err as Error).message}`);
     }
-    const result = KeelStateZ.safeParse(parsed);
+    const result = CadenceStateZ.safeParse(parsed);
     if (!result.success) {
       throw new StateCorruptError(`state.json failed schema validation: ${result.error.message}`);
     }
     return result.data;
   }
 
-  async writeState(state: KeelState): Promise<void> {
+  async writeState(state: CadenceState): Promise<void> {
     const dir = await this.resolveStateDir();
     if (!existsSync(dir)) {
       await mkdir(dir, { recursive: true });
     }
-    KeelStateZ.parse(state);
+    CadenceStateZ.parse(state);
     await atomicWriteJSON(join(dir, 'state.json'), state);
   }
 

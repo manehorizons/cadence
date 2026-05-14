@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { readFile, existsSync } from 'node:fs';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 import { atomicWriteJSON } from '../../src/state/atomic-write.js';
 
 const readFileP = promisify(readFile);

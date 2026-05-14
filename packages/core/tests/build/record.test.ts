@@ -3,15 +3,15 @@ import { readFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 import { recordTaskOutcome } from '../../src/build/record.js';
 import { LoopViolationError } from '../../src/errors.js';
 
-const KEEL = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
+const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
 function run(args: string[], cwd: string): Promise<{ code: number }> {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [KEEL, ...args], { cwd });
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     p.on('exit', (code) => resolve({ code: code ?? 0 }));
   });
 }
@@ -38,11 +38,11 @@ describe('recordTaskOutcome', () => {
     await recordTaskOutcome(root, 'T1', 'DONE', 'finished');
 
     const progress = JSON.parse(
-      await readFile(join(root, '.keel/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
+      await readFile(join(root, '.cadence/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
     );
     expect(progress.tasks.T1.status).toBe('DONE');
     expect(progress.tasks.T1.notes).toBe('finished');
-    const state = JSON.parse(await readFile(join(root, '.keel/state.json'), 'utf8'));
+    const state = JSON.parse(await readFile(join(root, '.cadence/state.json'), 'utf8'));
     expect(state.activeTask?.id).toBe('T1');
     expect(state.activeTask?.status).toBe('DONE');
   });
@@ -54,11 +54,11 @@ describe('recordTaskOutcome', () => {
     );
   });
 
-  it('produces the same PROGRESS.json that `keel build task` produces', async () => {
+  it('produces the same PROGRESS.json that `cadence build task` produces', async () => {
     const rootA = await arrangeBuildPhase();
     await recordTaskOutcome(rootA, 'T1', 'DONE', 'parity');
     const helperOut = JSON.parse(
-      await readFile(join(rootA, '.keel/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
+      await readFile(join(rootA, '.cadence/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
     );
     await active!.cleanup();
     active = null;
@@ -68,7 +68,7 @@ describe('recordTaskOutcome', () => {
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE', '--notes=parity'], active.root);
     const cliOut = JSON.parse(
-      await readFile(join(active.root, '.keel/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
+      await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
     );
 
     // updatedAt timestamps differ — strip before compare

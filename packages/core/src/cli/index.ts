@@ -13,7 +13,10 @@ import { registerProgressCommand } from './commands/progress.js';
 import { registerStatusCommand } from './commands/status.js';
 
 const program = new Command();
-program.name('keel').description('KEEL — Keep Execution Aligned to Loop').version('0.1.0');
+program
+  .name('cadence')
+  .description('CADENCE — Coordinated AI-Driven Engineering with Notifications and Customizable Execution')
+  .version('0.2.0-rc.1');
 
 registerConfigCommand(program);
 registerInitCommand(program);

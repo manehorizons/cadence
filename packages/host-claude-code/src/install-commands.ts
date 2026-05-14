@@ -3,85 +3,85 @@ import { join } from 'node:path';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallCommandsOptions {
-  /** Base CLI invocation. Default `keel`. */
-  keelCommand?: string;
+  /** Base CLI invocation. Default `cadence`. */
+  cadenceCommand?: string;
   /** Override commands dir relative to root. Default `.claude/commands`. */
   commandsDir?: string;
   /**
    * Use the absolute path to the local workspace core CLI instead of the
-   * `keel` shorthand. Intended for monorepo dogfood before publishing.
+   * `cadence` shorthand. Intended for monorepo dogfood before publishing.
    */
   local?: boolean;
 }
 
-const MANAGED_MARKER = '<!-- managed-by: keel -->';
+const MANAGED_MARKER = '<!-- managed-by: cadence -->';
 
 interface CommandSpec {
   name: string;
   description: string;
   argumentHint?: string;
-  cli: string; // suffix appended to keelCommand; may include $ARGUMENTS
+  cli: string; // suffix appended to cadenceCommand; may include $ARGUMENTS
   trailing?: string;
 }
 
 const COMMANDS: CommandSpec[] = [
   {
-    name: 'keel-progress',
-    description: "Show KEEL's next suggested action",
+    name: 'cadence-progress',
+    description: "Show CADENCE's next suggested action",
     cli: 'progress',
     trailing: 'Read the output above and take the suggested next step.',
   },
   {
-    name: 'keel-draft',
+    name: 'cadence-draft',
     description: 'Scaffold a new DRAFT.md for a phase task',
     argumentHint: '<phase-id> <task-num> [--title=<title>]',
     cli: 'draft new $ARGUMENTS',
     trailing: 'Open the new DRAFT.md and fill in summary, ACs, and tasks.',
   },
   {
-    name: 'keel-approve',
+    name: 'cadence-approve',
     description: 'Approve a draft and enter BUILD',
     argumentHint: '<phase-id> <task-num>',
     cli: 'draft approve $ARGUMENTS',
-    trailing: 'Loop is now in BUILD. Use /keel-build to record task outcomes.',
+    trailing: 'Loop is now in BUILD. Use /cadence-build to record task outcomes.',
   },
   {
-    name: 'keel-check',
+    name: 'cadence-check',
     description: 'Run structural coherence check on a draft',
     argumentHint: '<phase-id> <task-num>',
     cli: 'draft check $ARGUMENTS',
     trailing: 'Address any issues reported before approving the draft.',
   },
   {
-    name: 'keel-build',
+    name: 'cadence-build',
     description: 'Record outcome of a build task',
     argumentHint: '<task-id> --status=<PASS|FAIL|BLOCKED|ESCALATED>',
     cli: 'build task $ARGUMENTS',
-    trailing: 'Continue with the next task or run /keel-settle when done.',
+    trailing: 'Continue with the next task or run /cadence-settle when done.',
   },
   {
-    name: 'keel-settle',
+    name: 'cadence-settle',
     description: 'Close the loop and write SUMMARY',
     argumentHint: '[--ac AC-1=pass ...]',
     cli: 'settle run $ARGUMENTS',
     trailing: 'Review SUMMARY.md; loop is back to IDLE.',
   },
   {
-    name: 'keel-done',
+    name: 'cadence-done',
     description: 'Mark a task DONE (shortcut for build task --status=DONE)',
     argumentHint: '<task-id> [--notes=<n>]',
     cli: 'done $ARGUMENTS',
-    trailing: 'Continue with the next task or run /keel-settle when done.',
+    trailing: 'Continue with the next task or run /cadence-settle when done.',
   },
   {
-    name: 'keel-block',
+    name: 'cadence-block',
     description: 'Mark a task BLOCKED (shortcut for build task --status=BLOCKED)',
     argumentHint: '<task-id> [--notes=<n>]',
     cli: 'block $ARGUMENTS',
     trailing: 'Record the blocker, then unblock or escalate before settling.',
   },
   {
-    name: 'keel-needs-context',
+    name: 'cadence-needs-context',
     description:
       'Mark a task NEEDS_CONTEXT (shortcut for build task --status=NEEDS_CONTEXT)',
     argumentHint: '<task-id> [--notes=<n>]',
@@ -90,18 +90,18 @@ const COMMANDS: CommandSpec[] = [
   },
 ];
 
-function renderFile(spec: CommandSpec, keelCommand: string): string {
+function renderFile(spec: CommandSpec, cadenceCommand: string): string {
   const fm: string[] = ['---'];
   fm.push(`description: ${spec.description}`);
   if (spec.argumentHint) fm.push(`argument-hint: ${spec.argumentHint}`);
-  fm.push('allowed-tools: Bash(keel:*), Read');
+  fm.push('allowed-tools: Bash(cadence:*), Read');
   fm.push('---');
   const lines = [
     fm.join('\n'),
     '',
     MANAGED_MARKER,
     '',
-    `!${keelCommand} ${spec.cli}`.trimEnd(),
+    `!${cadenceCommand} ${spec.cli}`.trimEnd(),
     '',
   ];
   if (spec.trailing) lines.push(spec.trailing, '');
@@ -113,7 +113,7 @@ export async function installCommands(
   opts: InstallCommandsOptions = {},
 ): Promise<void> {
   const local = opts.local ? resolveLocalPaths() : null;
-  const keelCommand = opts.keelCommand ?? (local ? `node ${local.coreCli}` : 'keel');
+  const cadenceCommand = opts.cadenceCommand ?? (local ? `node ${local.coreCli}` : 'cadence');
   const dir = join(root, opts.commandsDir ?? '.claude/commands');
   await mkdir(dir, { recursive: true });
 
@@ -129,6 +129,6 @@ export async function installCommands(
       // User-customized; leave it alone.
       continue;
     }
-    await writeFile(path, renderFile(spec, keelCommand), 'utf8');
+    await writeFile(path, renderFile(spec, cadenceCommand), 'utf8');
   }
 }

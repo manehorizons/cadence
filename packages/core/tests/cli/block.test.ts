@@ -3,14 +3,14 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 
-const KEEL = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
+const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
 function run(args: string[], cwd: string): Promise<{ code: number; stderr: string }> {
   return new Promise((resolve) => {
     let stderr = '';
-    const p = spawn(process.execPath, [KEEL, ...args], { cwd });
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     p.stderr.on('data', (b) => {
       stderr += b.toString();
     });
@@ -26,7 +26,7 @@ afterEach(async () => {
   }
 });
 
-describe('keel block <id>', () => {
+describe('cadence block <id>', () => {
   it('records BLOCKED with notes in PROGRESS.json (AC-1)', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
@@ -36,7 +36,7 @@ describe('keel block <id>', () => {
     expect(r.code).toBe(0);
 
     const progress = JSON.parse(
-      await readFile(join(active.root, '.keel/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
+      await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
     );
     expect(progress.tasks.T1.status).toBe('BLOCKED');
     expect(progress.tasks.T1.notes).toBe('stuck on X');
@@ -51,7 +51,7 @@ describe('keel block <id>', () => {
     expect(r.code).toBe(0);
 
     const progress = JSON.parse(
-      await readFile(join(active.root, '.keel/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
+      await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
     );
     expect(progress.tasks.T2.status).toBe('BLOCKED');
     expect(progress.tasks.T2.notes).toBe('');
@@ -72,7 +72,7 @@ describe('keel block <id>', () => {
 
     await run(['block', 'T1'], active.root);
 
-    const state = JSON.parse(await readFile(join(active.root, '.keel/state.json'), 'utf8'));
+    const state = JSON.parse(await readFile(join(active.root, '.cadence/state.json'), 'utf8'));
     expect(state.activeTask?.id).toBe('T1');
     expect(state.activeTask?.status).toBe('BLOCKED');
   });
@@ -86,7 +86,7 @@ describe('keel block <id>', () => {
     await run(['build', 'task', 'T2', '--status=BLOCKED', '--notes=parity'], active.root);
 
     const progress = JSON.parse(
-      await readFile(join(active.root, '.keel/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
+      await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-PROGRESS.json'), 'utf8'),
     );
     const stripIdAndTs = (entry: Record<string, unknown>) => {
       const { updatedAt: _t, ...rest } = entry as { updatedAt: string };

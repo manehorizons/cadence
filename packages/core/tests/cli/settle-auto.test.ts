@@ -4,13 +4,13 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 
-const KEEL = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
+const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
 function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [KEEL, ...args], { cwd });
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     let stdout = '';
     let stderr = '';
     p.stdout.on('data', (d) => (stdout += d.toString()));
@@ -20,14 +20,14 @@ function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: str
 }
 
 async function readSummary(root: string): Promise<{ md: string; json: { acResults: { id: string; pass: boolean; note?: string }[] } }> {
-  const base = join(root, '.keel/phases/01-foundation/01-01-SUMMARY');
+  const base = join(root, '.cadence/phases/01-foundation/01-01-SUMMARY');
   const md = await readFile(`${base}.md`, 'utf8');
   const json = JSON.parse(await readFile(`${base}.json`, 'utf8'));
   return { md, json };
 }
 
 async function readState(root: string): Promise<{ loopPosition: string }> {
-  return JSON.parse(await readFile(join(root, '.keel/state.json'), 'utf8'));
+  return JSON.parse(await readFile(join(root, '.cadence/state.json'), 'utf8'));
 }
 
 let active: Fixture | null = null;
@@ -38,7 +38,7 @@ afterEach(async () => {
   }
 });
 
-describe('keel settle run --auto', () => {
+describe('cadence settle run --auto', () => {
   it('all tasks DONE → every AC recorded pass automatically', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
@@ -88,7 +88,7 @@ describe('keel settle run --auto', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/AC-1 blocked/);
     expect(r.stderr).toMatch(/T1/);
-    expect(existsSync(join(active.root, '.keel/phases/01-foundation/01-01-SUMMARY.md'))).toBe(false);
+    expect(existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'))).toBe(false);
     expect((await readState(active.root)).loopPosition).toBe('BUILD');
   });
 

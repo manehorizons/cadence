@@ -1,7 +1,7 @@
 import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultConfig, emptyState } from '@keel/types';
+import { defaultConfig, emptyState } from '@cadence/types';
 
 export interface Fixture {
   root: string;
@@ -16,18 +16,18 @@ export interface FixtureOptions {
 export async function tempRepo(opts: FixtureOptions = {}): Promise<Fixture> {
   const root = await mkdtemp(join(tmpdir(), 'keel-test-'));
   if (opts.initialized) {
-    const keelDir = join(root, '.keel');
-    await mkdir(join(keelDir, 'phases'), { recursive: true });
-    await mkdir(join(keelDir, 'handoff'), { recursive: true });
-    await writeFile(join(keelDir, 'config.json'), JSON.stringify(defaultConfig, null, 2));
+    const cadenceDir = join(root, '.cadence');
+    await mkdir(join(cadenceDir, 'phases'), { recursive: true });
+    await mkdir(join(cadenceDir, 'handoff'), { recursive: true });
+    await writeFile(join(cadenceDir, 'config.json'), JSON.stringify(defaultConfig, null, 2));
     await writeFile(
-      join(keelDir, 'state.json'),
+      join(cadenceDir, 'state.json'),
       JSON.stringify(emptyState(opts.projectName ?? 'unnamed'), null, 2),
     );
-    await writeFile(join(keelDir, 'PROJECT.md'), `# ${opts.projectName ?? 'unnamed'}\n`);
-    await writeFile(join(keelDir, 'ROADMAP.md'), `# Roadmap\n`);
-    await writeFile(join(keelDir, 'STATE.md'), `# State\n\nLoop position: IDLE\n`);
-    await writeFile(join(keelDir, 'MILESTONES.md'), `# Milestones\n`);
+    await writeFile(join(cadenceDir, 'PROJECT.md'), `# ${opts.projectName ?? 'unnamed'}\n`);
+    await writeFile(join(cadenceDir, 'ROADMAP.md'), `# Roadmap\n`);
+    await writeFile(join(cadenceDir, 'STATE.md'), `# State\n\nLoop position: IDLE\n`);
+    await writeFile(join(cadenceDir, 'MILESTONES.md'), `# Milestones\n`);
   }
   return {
     root,

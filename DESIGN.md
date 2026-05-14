@@ -1,6 +1,6 @@
-# Project Design — KEEL → CADENCE (rename pending physical rollout)
+# Project Design — CADENCE
 
-> **Locked name:** CADENCE — *Coordinated AI-Driven Engineering with Notifications and Customizable Execution*. Backronym is a placeholder; easy to refine. The word CADENCE itself is the keeper.
+> **Name:** CADENCE — *Coordinated AI-Driven Engineering with Notifications and Customizable Execution*. Locked as of Phase 12 / `v0.2.0-rc.1` (2026-05-14). Backronym is refinable; the word CADENCE itself is the keeper. Historical KEEL phase artifacts under `.keel/phases/` remain by design (transition narrative).
 
 > Living design document. Captures intent, decisions, deferrals.
 > Lives at repo root, **outside** `.keel/`, so the tool isn't planning itself with itself.
@@ -168,8 +168,8 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 1. ~~Lock the name (CADENCE).~~ ✓
 2. ~~Phase tier × profile cap matrix.~~ ✓ (Section 4)
 3. ~~Codex disposition (F3).~~ ✓ (archive + collapse)
-4. **Archive codex + collapse HostCapabilities** — execute D9 as a phase.
-5. **Rename rollout** as a coordinated commit + tag + repo rename + dashboard companion-rename.
-6. **Plan + build the verifier hybrid** — lands in correctly-named `@cadence/*` packages.
+4. ~~Archive codex + collapse HostCapabilities~~ ✓ (Phase 11)
+5. ~~Rename rollout~~ ✓ (Phase 12 / `v0.2.0-rc.1`)
+6. **Plan + build the verifier hybrid** — next implementation phase. Test-coverage proof per AC + `--deep` verifier agent + `--interactive` human-verdict mode.
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

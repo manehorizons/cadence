@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { classifyTier } from '../../src/classify/tier.js';
-import { defaultConfig } from '@keel/types';
+import { defaultConfig } from '@cadence/types';
 
 describe('classifyTier', () => {
   it('classifies a 1-task 1-file draft as quick-fix', () => {

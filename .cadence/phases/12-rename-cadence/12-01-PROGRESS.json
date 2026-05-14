@@ -1,0 +1,53 @@
+{
+  "draftId": "12-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "package names + workspace deps renamed",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:04:49.554Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "cadence.cjs + cadence-host-claude-code.cjs shims, version 0.2.0-rc.1",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:04:49.716Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": ".keel/ moved to .cadence/ via git mv; in-source literals updated",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:04:49.882Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "9 slash commands renamed cadence-*, managed-by: cadence",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:04:50.052Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Keel* identifiers + CLI strings + test assertions swept",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:04:50.220Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "196 tests green across 4 packages",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:04:50.384Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "README + DESIGN.md updated",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:04:50.551Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "keel-dashboard renamed to cadence-dashboard, 49 tests green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T19:04:50.720Z"
+    }
+  }
+}

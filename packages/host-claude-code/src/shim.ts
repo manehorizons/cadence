@@ -1,4 +1,4 @@
-import type { AbstractEvent } from '@keel/types';
+import type { AbstractEvent } from '@cadence/types';
 import { extractPayload, mapEvent } from './event-map.js';
 
 export interface RouteResult {

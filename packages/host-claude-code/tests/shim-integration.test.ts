@@ -3,11 +3,11 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SHIM = join(__dirname, '../dist/cli.js');
-const KEEL = join(__dirname, '../../core/dist/cli/index.js');
+const CADENCE_CLI = join(__dirname, '../../core/dist/cli/index.js');
 
 interface Result {
   stdout: string;
@@ -37,23 +37,23 @@ afterEach(async () => {
 });
 
 describe('shim → core integration', () => {
-  it('SessionStart through shim prints KEEL session context', async () => {
+  it('SessionStart through shim prints CADENCE session context', async () => {
     active = await tempRepo({ initialized: true, projectName: 'integ' });
     const stdin = JSON.stringify({ hook_event_name: 'SessionStart' });
     const r = await runShim(
-      ['hook', '--keel', `${process.execPath} ${KEEL}`],
+      ['hook', '--cadence', `${process.execPath} ${CADENCE_CLI}`],
       active.root,
       stdin,
     );
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(/KEEL session resumed/);
+    expect(r.stdout).toMatch(/CADENCE session resumed/);
     expect(r.stdout).toMatch(/integ/);
   });
 
   it('PostToolUse Edit through shim records touchedFiles when a task is active', async () => {
     active = await tempRepo({ initialized: true });
     // Force activeTask in state to exercise post-tool-edit path.
-    const statePath = join(active.root, '.keel/state.json');
+    const statePath = join(active.root, '.cadence/state.json');
     const state = JSON.parse(await readFile(statePath, 'utf8'));
     state.activeTask = { id: 'T1', status: 'IN_PROGRESS', touchedFiles: [] };
     const { writeFile } = await import('node:fs/promises');
@@ -65,7 +65,7 @@ describe('shim → core integration', () => {
       tool_input: { file_path: '/proj/src/foo.ts', old_string: 'a', new_string: 'b' },
     });
     const r = await runShim(
-      ['hook', '--keel', `${process.execPath} ${KEEL}`],
+      ['hook', '--cadence', `${process.execPath} ${CADENCE_CLI}`],
       active.root,
       stdin,
     );
@@ -78,7 +78,7 @@ describe('shim → core integration', () => {
     active = await tempRepo({ initialized: true });
     const stdin = JSON.stringify({ hook_event_name: 'Notification', message: 'hi' });
     const r = await runShim(
-      ['hook', '--keel', `${process.execPath} ${KEEL}`],
+      ['hook', '--cadence', `${process.execPath} ${CADENCE_CLI}`],
       active.root,
       stdin,
     );

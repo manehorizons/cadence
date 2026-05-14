@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import type { Draft } from '@keel/types';
-import { emptyState } from '@keel/types';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import type { Draft } from '@cadence/types';
+import { emptyState } from '@cadence/types';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
@@ -17,7 +17,7 @@ const baseDraft: Draft = {
   id: '05-01',
   phase: '05-status-command',
   tier: 'standard',
-  title: 'keel status — single-screen phase context',
+  title: 'cadence status — single-screen phase context',
   objective: 'Render loop state in one view',
   acceptanceCriteria: [
     { id: 'AC-1', given: '', when: '', then: '' },
@@ -54,7 +54,7 @@ describe('gatherStatus', () => {
     expect(r.activePhase).toBeNull();
     expect(r.tasks).toEqual([]);
     expect(r.acs).toEqual([]);
-    expect(r.next.command).toMatch(/keel draft new/);
+    expect(r.next.command).toMatch(/cadence draft new/);
   });
 
   it('BUILD with no PROGRESS.json — all tasks PENDING, all ACs pending', () => {
@@ -65,7 +65,7 @@ describe('gatherStatus', () => {
     state.tier = 'standard';
     const r = gatherStatus(state, baseDraft, null);
     expect(r.activeDraft).toBe('05-01');
-    expect(r.draftTitle).toContain('keel status');
+    expect(r.draftTitle).toContain('cadence status');
     expect(r.tasks).toHaveLength(3);
     for (const t of r.tasks) expect(t.status).toBe('PENDING');
     for (const ac of r.acs) expect(ac.state).toBe('pending');
@@ -155,7 +155,7 @@ describe('gatherStatus', () => {
     state.activeDraft = '05-01';
     state.loopPosition = 'BUILD';
     const r = gatherStatus(state, baseDraft, null);
-    expect(r.next.command).toMatch(/keel build|keel settle/);
+    expect(r.next.command).toMatch(/cadence build|cadence settle/);
   });
 });
 
@@ -287,9 +287,9 @@ describe('renderStatus', () => {
   it('IDLE: header + next-action only, no tables', () => {
     const state = emptyState('demo');
     const out = renderStatus(gatherStatus(state, null, null));
-    expect(out).toMatch(/KEEL — demo/);
+    expect(out).toMatch(/CADENCE — demo/);
     expect(out).toMatch(/loop:\s+IDLE/);
-    expect(out).toMatch(/NEXT: keel draft new/);
+    expect(out).toMatch(/NEXT: cadence draft new/);
     expect(out).not.toMatch(/TASKS/);
     expect(out).not.toMatch(/ACS/);
   });
@@ -363,10 +363,10 @@ describe('loadStatus', () => {
 
   it('BUILD with draft on disk + no PROGRESS → all PENDING', async () => {
     active = await tempRepo({ initialized: true, projectName: 'on-disk' });
-    const phaseDir = join(active.root, '.keel/phases/99-sample');
+    const phaseDir = join(active.root, '.cadence/phases/99-sample');
     await mkdir(phaseDir, { recursive: true });
     await writeFile(join(phaseDir, '99-01-DRAFT.md'), SAMPLE_DRAFT_MD, 'utf8');
-    const statePath = join(active.root, '.keel/state.json');
+    const statePath = join(active.root, '.cadence/state.json');
     const state = JSON.parse(await readFile(statePath, 'utf8'));
     state.activePhase = '99-sample';
     state.activeDraft = '99-01';
@@ -383,7 +383,7 @@ describe('loadStatus', () => {
 
   it('reads PROGRESS.json when present', async () => {
     active = await tempRepo({ initialized: true });
-    const phaseDir = join(active.root, '.keel/phases/99-sample');
+    const phaseDir = join(active.root, '.cadence/phases/99-sample');
     await mkdir(phaseDir, { recursive: true });
     await writeFile(join(phaseDir, '99-01-DRAFT.md'), SAMPLE_DRAFT_MD, 'utf8');
     await writeFile(
@@ -395,7 +395,7 @@ describe('loadStatus', () => {
         },
       }),
     );
-    const statePath = join(active.root, '.keel/state.json');
+    const statePath = join(active.root, '.cadence/state.json');
     const state = JSON.parse(await readFile(statePath, 'utf8'));
     state.activePhase = '99-sample';
     state.activeDraft = '99-01';
@@ -412,7 +412,7 @@ describe('loadStatus', () => {
 
   it('missing DRAFT.md is tolerated (degrades to no-draft report)', async () => {
     active = await tempRepo({ initialized: true });
-    const statePath = join(active.root, '.keel/state.json');
+    const statePath = join(active.root, '.cadence/state.json');
     const state = JSON.parse(await readFile(statePath, 'utf8'));
     state.activePhase = 'no-such';
     state.activeDraft = '99-01';

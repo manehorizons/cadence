@@ -11,7 +11,7 @@ afterEach(async () => {
 });
 
 async function tempDir(): Promise<string> {
-  const d = await mkdtemp(join(tmpdir(), 'keel-cc-'));
+  const d = await mkdtemp(join(tmpdir(), 'cadence-cc-'));
   cleanup.push(() => rm(d, { recursive: true, force: true }));
   return d;
 }
@@ -41,7 +41,7 @@ describe('installHooks', () => {
     const root = await tempDir();
     await installHooks(root);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
-    const expected = 'npx @keel/host-claude-code hook';
+    const expected = 'npx @cadence/host-claude-code hook';
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(expected);
     expect(cfg.hooks.UserPromptSubmit[0].hooks[0].command).toBe(expected);
     expect(cfg.hooks.PreToolUse[0].hooks[0].command).toBe(expected);
@@ -50,12 +50,12 @@ describe('installHooks', () => {
     expect(cfg.hooks.SubagentStop[0].hooks[0].command).toBe(expected);
   });
 
-  it('keelCommand option appends --keel "<cmd>" to the shim invocation', async () => {
+  it('cadenceCommand option appends --cadence "<cmd>" to the shim invocation', async () => {
     const root = await tempDir();
-    await installHooks(root, { keelCommand: 'node /abs/keel.js' });
+    await installHooks(root, { cadenceCommand: 'node /abs/keel.js' });
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'npx @keel/host-claude-code hook --keel "node /abs/keel.js"',
+      'npx @cadence/host-claude-code hook --cadence "node /abs/keel.js"',
     );
   });
 
@@ -63,8 +63,8 @@ describe('installHooks', () => {
     const root = await tempDir();
     await installHooks(root);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
-    expect(cfg.hooks.SessionStart[0]._managedBy).toBe('keel');
-    expect(cfg.hooks.PreToolUse[0]._managedBy).toBe('keel');
+    expect(cfg.hooks.SessionStart[0]._managedBy).toBe('cadence');
+    expect(cfg.hooks.PreToolUse[0]._managedBy).toBe('cadence');
   });
 
   it('hook entries declare type=command', async () => {
@@ -109,20 +109,20 @@ describe('installHooks', () => {
     const userEntry = sessionStarts.find((e) =>
       e.hooks.some((h) => h.command === 'user-custom-hook'),
     );
-    const keelEntry = sessionStarts.find((e) => e._managedBy === 'keel');
+    const cadenceEntry = sessionStarts.find((e) => e._managedBy === 'cadence');
     expect(userEntry).toBeDefined();
-    expect(keelEntry).toBeDefined();
+    expect(cadenceEntry).toBeDefined();
     const bashEntry = (cfg.hooks.PostToolUse as Entry[]).find((e) => e.matcher === 'Bash');
     expect(bashEntry).toBeDefined();
     expect(bashEntry?._managedBy).toBeUndefined();
 
-    // Re-install should not duplicate keel entry.
+    // Re-install should not duplicate the cadence entry.
     await installHooks(root);
     const cfg2 = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
-    const keelSessionStarts = (cfg2.hooks.SessionStart as Entry[]).filter(
-      (e) => e._managedBy === 'keel',
+    const cadenceSessionStarts = (cfg2.hooks.SessionStart as Entry[]).filter(
+      (e) => e._managedBy === 'cadence',
     );
-    expect(keelSessionStarts).toHaveLength(1);
+    expect(cadenceSessionStarts).toHaveLength(1);
     // User entry still preserved.
     const userStill = (cfg2.hooks.SessionStart as Entry[]).find((e) =>
       e.hooks.some((h) => h.command === 'user-custom-hook'),
@@ -144,19 +144,19 @@ describe('installHooks', () => {
     const cmd = cfg.hooks.SessionStart[0].hooks[0].command;
     expect(cmd).not.toMatch(/npx /);
     expect(cmd).toMatch(/^node .+host-claude-code[\\/]dist[\\/]cli\.js hook /);
-    expect(cmd).toMatch(/--keel "node .+core[\\/]dist[\\/]cli[\\/]index\.js"/);
+    expect(cmd).toMatch(/--cadence "node .+core[\\/]dist[\\/]cli[\\/]index\.js"/);
   });
 
-  it('local=true is overridden by explicit opts.command / opts.keelCommand', async () => {
+  it('local=true is overridden by explicit opts.command / opts.cadenceCommand', async () => {
     const root = await tempDir();
     await installHooks(root, {
       local: true,
       command: 'node /custom/shim.js hook',
-      keelCommand: 'node /custom/keel.js',
+      cadenceCommand: 'node /custom/keel.js',
     });
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'node /custom/shim.js hook --keel "node /custom/keel.js"',
+      'node /custom/shim.js hook --cadence "node /custom/keel.js"',
     );
   });
 });

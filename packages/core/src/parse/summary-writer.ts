@@ -1,4 +1,4 @@
-import type { Summary } from '@keel/types';
+import type { Summary } from '@cadence/types';
 
 export function renderSummaryMd(s: Summary): string {
   const lines: string[] = [

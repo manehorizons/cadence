@@ -1,4 +1,4 @@
-import type { AbstractEvent, HookContext, HostCapabilities } from '@keel/types';
+import type { AbstractEvent, HookContext, HostCapabilities } from '@cadence/types';
 
 const FULL_HOOKS: AbstractEvent[] = [
   'session-start',

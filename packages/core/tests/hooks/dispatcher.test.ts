@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 import { HookDispatcher } from '../../src/hooks/dispatcher.js';
 import { SimpleStateBackend } from '../../src/state/simple.js';
 
@@ -28,7 +28,7 @@ describe('HookDispatcher', () => {
 
   it('pre-tool-edit blocks when buildGate=true and loopPosition != BUILD', async () => {
     active = await tempRepo({ initialized: true });
-    const cfgPath = join(active.root, '.keel/config.json');
+    const cfgPath = join(active.root, '.cadence/config.json');
     const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
     cfg.hooks.preToolUseBuildGate = true;
     await writeFile(cfgPath, JSON.stringify(cfg));

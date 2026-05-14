@@ -13,17 +13,17 @@ afterEach(async () => {
 });
 
 describe('tempRepo', () => {
-  it('creates an empty repo with no .keel/ by default', async () => {
+  it('creates an empty repo with no .cadence/ by default', async () => {
     active = await tempRepo();
     expect(existsSync(active.root)).toBe(true);
-    expect(existsSync(join(active.root, '.keel'))).toBe(false);
+    expect(existsSync(join(active.root, '.cadence'))).toBe(false);
   });
 
-  it('scaffolds .keel/ when initialized=true', async () => {
+  it('scaffolds .cadence/ when initialized=true', async () => {
     active = await tempRepo({ initialized: true, projectName: 'myproj' });
-    const cfg = JSON.parse(readFileSync(join(active.root, '.keel/config.json'), 'utf8'));
+    const cfg = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
     expect(cfg.schemaVersion).toBe(1);
-    const state = JSON.parse(readFileSync(join(active.root, '.keel/state.json'), 'utf8'));
+    const state = JSON.parse(readFileSync(join(active.root, '.cadence/state.json'), 'utf8'));
     expect(state.project.name).toBe('myproj');
   });
 

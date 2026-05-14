@@ -1,32 +1,32 @@
-import type { KeelState } from '@keel/types';
+import type { CadenceState } from '@cadence/types';
 
 export interface NextAction {
   command: string;
   reason: string;
 }
 
-export function nextAction(state: KeelState): NextAction {
+export function nextAction(state: CadenceState): NextAction {
   switch (state.loopPosition) {
     case 'IDLE':
       return {
-        command: 'keel draft new <phase> <num> --title=…',
+        command: 'cadence draft new <phase> <num> --title=…',
         reason: 'No active draft. Start the loop by drafting a new unit of work.',
       };
     case 'DRAFT': {
       const phase = state.activePhase ?? '<phase>';
       const num = state.activeDraft?.split('-')[1] ?? '<num>';
       return {
-        command: `keel draft approve ${phase} ${num}`,
+        command: `cadence draft approve ${phase} ${num}`,
         reason:
-          'DRAFT is open. Fill in objective, ACs, and tasks, run keel draft check, then approve to enter BUILD.',
+          'DRAFT is open. Fill in objective, ACs, and tasks, run cadence draft check, then approve to enter BUILD.',
       };
     }
     case 'BUILD':
       return {
-        command: 'keel build task <id> --status=<DONE|...>  OR  keel settle run --ac AC-1=pass',
+        command: 'cadence build task <id> --status=<DONE|...>  OR  cadence settle run --ac AC-1=pass',
         reason: 'In BUILD phase. Record task outcomes, then settle.',
       };
     case 'SETTLE':
-      return { command: 'keel settle run', reason: 'In SETTLE. Run to close.' };
+      return { command: 'cadence settle run', reason: 'In SETTLE. Run to close.' };
   }
 }

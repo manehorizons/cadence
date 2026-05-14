@@ -41,7 +41,7 @@ importers:
 
   packages/core:
     dependencies:
-      '@keel/types':
+      '@cadence/types':
         specifier: workspace:*
         version: link:../types
       commander:
@@ -51,7 +51,7 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
     devDependencies:
-      '@keel/testkit':
+      '@cadence/testkit':
         specifier: workspace:*
         version: link:../testkit
       vitest:
@@ -60,14 +60,14 @@ importers:
 
   packages/host-claude-code:
     dependencies:
-      '@keel/types':
+      '@cadence/types':
         specifier: workspace:*
         version: link:../types
       commander:
         specifier: ^13.0.0
         version: 13.1.0
     devDependencies:
-      '@keel/testkit':
+      '@cadence/testkit':
         specifier: workspace:*
         version: link:../testkit
       vitest:
@@ -76,7 +76,7 @@ importers:
 
   packages/testkit:
     dependencies:
-      '@keel/types':
+      '@cadence/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:

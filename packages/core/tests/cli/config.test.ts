@@ -2,14 +2,14 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const KEEL = join(__dirname, '../../dist/cli/index.js');
+const CADENCE_CLI = join(__dirname, '../../dist/cli/index.js');
 
 function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [KEEL, ...args], { cwd });
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     let stdout = '';
     let stderr = '';
     p.stdout.on('data', (d) => (stdout += d.toString()));
@@ -21,7 +21,7 @@ function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: str
 let active: Fixture | null = null;
 afterEach(async () => { if (active) { await active.cleanup(); active = null; } });
 
-describe('keel config', () => {
+describe('cadence config', () => {
   it('config get reads a known knob', async () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['config', 'get', 'loopEnforcement'], active.root);

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { Draft, KeelState, LoopPosition, TaskStatus, Tier } from '@keel/types';
+import type { Draft, CadenceState, LoopPosition, TaskStatus, Tier } from '@cadence/types';
 import { nextAction, type NextAction } from './progress.js';
 import { parseDraftMd } from './parse/draft-parser.js';
 import { SimpleStateBackend } from './state/simple.js';
@@ -68,7 +68,7 @@ function taskStatusFromProgress(
 }
 
 export function gatherStatus(
-  state: KeelState,
+  state: CadenceState,
   draft: Draft | null,
   progress: ProgressFile | null,
 ): StatusReport {
@@ -194,7 +194,7 @@ function renderAcTable(acs: AcStatus[]): string[] {
 
 export function renderStatus(r: StatusReport): string {
   const out: string[] = [];
-  out.push(`KEEL — ${r.project}`);
+  out.push(`CADENCE — ${r.project}`);
   out.push(`  loop:  ${r.loopPosition}`);
   if (r.activePhase) out.push(`  phase: ${r.activePhase}`);
   if (r.activeDraft) {
@@ -235,7 +235,7 @@ export async function loadStatus(root: string): Promise<StatusReport> {
   let draft: Draft | null = null;
   let progress: ProgressFile | null = null;
   if (state.activePhase && state.activeDraft) {
-    const phaseDir = join(root, '.keel/phases', state.activePhase);
+    const phaseDir = join(root, '.cadence/phases', state.activePhase);
     const draftPath = join(phaseDir, `${state.activeDraft}-DRAFT.md`);
     const draftRaw = await readTextIfExists(draftPath);
     if (draftRaw !== null) {

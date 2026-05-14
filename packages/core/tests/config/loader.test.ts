@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 import { loadConfig, writeConfig } from '../../src/config/loader.js';
-import { defaultConfig } from '@keel/types';
+import { defaultConfig } from '@cadence/types';
 import { ConfigInvalidError } from '../../src/errors.js';
 
 let active: Fixture | null = null;
@@ -19,7 +19,7 @@ describe('loadConfig', () => {
   it('merges partial config over defaults', async () => {
     active = await tempRepo({ initialized: true });
     await writeFile(
-      join(active.root, '.keel/config.json'),
+      join(active.root, '.cadence/config.json'),
       JSON.stringify({ ...defaultConfig, loopEnforcement: 'strict' }),
     );
     const cfg = await loadConfig(active.root);
@@ -29,7 +29,7 @@ describe('loadConfig', () => {
 
   it('throws ConfigInvalidError on schema violation', async () => {
     active = await tempRepo({ initialized: true });
-    await writeFile(join(active.root, '.keel/config.json'), JSON.stringify({ loopEnforcement: 'nope' }));
+    await writeFile(join(active.root, '.cadence/config.json'), JSON.stringify({ loopEnforcement: 'nope' }));
     await expect(loadConfig(active.root)).rejects.toBeInstanceOf(ConfigInvalidError);
   });
 

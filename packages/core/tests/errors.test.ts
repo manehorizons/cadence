@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { KeelError, StateCorruptError, ConfigInvalidError, LoopViolationError } from '../src/errors.js';
+import { CadenceError, StateCorruptError, ConfigInvalidError, LoopViolationError } from '../src/errors.js';
 
 describe('errors', () => {
-  it('KeelError carries a code', () => {
-    const e = new KeelError('boom', 'GENERIC');
+  it('CadenceError carries a code', () => {
+    const e = new CadenceError('boom', 'GENERIC');
     expect(e.code).toBe('GENERIC');
     expect(e instanceof Error).toBe(true);
   });

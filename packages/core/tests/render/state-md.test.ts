@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { emptyState } from '@keel/types';
+import { emptyState } from '@cadence/types';
 import { renderStateMd } from '../../src/render/state-md.js';
 
 describe('renderStateMd', () => {
   it('renders an IDLE state with the basics', () => {
     const md = renderStateMd(emptyState('demo'));
-    expect(md).toContain('# KEEL State');
+    expect(md).toContain('# CADENCE State');
     expect(md).toContain('**Project:** demo');
     expect(md).toContain('**Loop position:** IDLE');
   });

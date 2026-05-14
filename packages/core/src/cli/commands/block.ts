@@ -4,7 +4,7 @@ import { recordTaskOutcome } from '../../build/record.js';
 export function registerBlockCommand(program: Command): void {
   program
     .command('block <id>')
-    .description('Shortcut for `keel build task <id> --status=BLOCKED`')
+    .description('Shortcut for `cadence build task <id> --status=BLOCKED`')
     .option('--notes <n>', 'Notes', '')
     .action(async (taskId: string, opts: { notes: string }) => {
       try {

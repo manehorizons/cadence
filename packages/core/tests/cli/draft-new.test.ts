@@ -4,13 +4,13 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 
-const KEEL = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
+const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
 function run(args: string[], cwd: string): Promise<{ stdout: string; code: number }> {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [KEEL, ...args], { cwd });
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     let stdout = '';
     p.stdout.on('data', (d) => (stdout += d.toString()));
     p.on('exit', (code) => resolve({ stdout, code: code ?? 0 }));
@@ -20,12 +20,12 @@ function run(args: string[], cwd: string): Promise<{ stdout: string; code: numbe
 let active: Fixture | null = null;
 afterEach(async () => { if (active) { await active.cleanup(); active = null; } });
 
-describe('keel draft new', () => {
+describe('cadence draft new', () => {
   it('creates a DRAFT.md skeleton under phases/<phase>/', async () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     expect(r.code).toBe(0);
-    const path = join(active.root, '.keel/phases/01-foundation/01-01-DRAFT.md');
+    const path = join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md');
     expect(existsSync(path)).toBe(true);
     const content = await readFile(path, 'utf8');
     expect(content).toMatch(/^---\nphase: 01-foundation\nid: 01-01\ntier: standard\nstatus: PENDING\n---/);
@@ -36,12 +36,12 @@ describe('keel draft new', () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     expect(r.code).toBe(0);
-    const state = JSON.parse(await readFile(join(active.root, '.keel/state.json'), 'utf8'));
+    const state = JSON.parse(await readFile(join(active.root, '.cadence/state.json'), 'utf8'));
     expect(state.loopPosition).toBe('DRAFT');
     expect(state.activePhase).toBe('01-foundation');
     expect(state.activeDraft).toBe('01-01');
     expect(state.openDrafts.map((d: { id: string }) => d.id)).toContain('01-01');
-    const stateMd = await readFile(join(active.root, '.keel/STATE.md'), 'utf8');
+    const stateMd = await readFile(join(active.root, '.cadence/STATE.md'), 'utf8');
     expect(stateMd).toMatch(/Loop position:.*DRAFT/);
     expect(stateMd).toMatch(/01-01/);
   });
@@ -52,7 +52,7 @@ describe('keel draft new', () => {
     // Now state is DRAFT — a second draft must be refused.
     const r = await run(['draft', 'new', '01-foundation', '02', '--title=Other'], active.root);
     expect(r.code).not.toBe(0);
-    expect(existsSync(join(active.root, '.keel/phases/01-foundation/01-02-DRAFT.md'))).toBe(false);
+    expect(existsSync(join(active.root, '.cadence/phases/01-foundation/01-02-DRAFT.md'))).toBe(false);
   });
 
   it('refuses when DRAFT already exists', async () => {

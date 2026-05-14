@@ -1,6 +1,6 @@
 {
-  "name": "@keel/testkit",
-  "version": "0.1.0",
+  "name": "@cadence/testkit",
+  "version": "0.2.0-rc.1",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,7 +16,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@keel/types": "workspace:*"
+    "@cadence/types": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.0"

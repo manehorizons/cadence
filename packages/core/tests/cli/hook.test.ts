@@ -3,14 +3,14 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const KEEL = join(__dirname, '../../dist/cli/index.js');
+const CADENCE_CLI = join(__dirname, '../../dist/cli/index.js');
 
 function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [KEEL, ...args], { cwd });
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     let stdout = '';
     let stderr = '';
     p.stdout.on('data', (d) => (stdout += d.toString()));
@@ -23,12 +23,12 @@ function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: str
 let active: Fixture | null = null;
 afterEach(async () => { if (active) { await active.cleanup(); active = null; } });
 
-describe('keel hook', () => {
+describe('cadence hook', () => {
   it('session-start prints a context payload', async () => {
     active = await tempRepo({ initialized: true, projectName: 'demo' });
     const r = await run(['hook', 'session-start'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(/KEEL session resumed/);
+    expect(r.stdout).toMatch(/CADENCE session resumed/);
     expect(r.stdout).toMatch(/demo/);
   });
 
@@ -36,7 +36,7 @@ describe('keel hook', () => {
     active = await tempRepo({ initialized: true });
     await run(['hook', 'subagent-result'], active.root);
     await run(['hook', 'subagent-result'], active.root);
-    const state = JSON.parse(await readFile(join(active.root, '.keel/state.json'), 'utf8'));
+    const state = JSON.parse(await readFile(join(active.root, '.cadence/state.json'), 'utf8'));
     expect(state.session.subagentSpawns).toBe(2);
   });
 
@@ -49,7 +49,7 @@ describe('keel hook', () => {
   it('blocking hook exits 2 with block message on stderr', async () => {
     active = await tempRepo({ initialized: true });
     // Enable preToolUseBuildGate; loopPosition is IDLE so pre-tool-edit must block.
-    const cfgPath = join(active.root, '.keel/config.json');
+    const cfgPath = join(active.root, '.cadence/config.json');
     const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
     cfg.hooks.preToolUseBuildGate = true;
     const { writeFile } = await import('node:fs/promises');

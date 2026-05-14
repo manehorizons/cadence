@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { KeelConfigZ, defaultConfig, type KeelConfig } from '@keel/types';
+import { CadenceConfigZ, defaultConfig, type CadenceConfig } from '@cadence/types';
 import { ConfigInvalidError } from '../errors.js';
 import { atomicWriteJSON } from '../state/atomic-write.js';
 
-export async function loadConfig(repoRoot: string): Promise<KeelConfig> {
-  const path = join(repoRoot, '.keel', 'config.json');
+export async function loadConfig(repoRoot: string): Promise<CadenceConfig> {
+  const path = join(repoRoot, '.cadence', 'config.json');
   if (!existsSync(path)) {
     return defaultConfig;
   }
@@ -26,14 +26,14 @@ export async function loadConfig(repoRoot: string): Promise<KeelConfig> {
       merged[k] = v;
     }
   }
-  const result = KeelConfigZ.safeParse(merged);
+  const result = CadenceConfigZ.safeParse(merged);
   if (!result.success) {
     throw new ConfigInvalidError(`config.json failed schema validation: ${result.error.message}`);
   }
   return result.data;
 }
 
-export async function writeConfig(repoRoot: string, config: KeelConfig): Promise<void> {
-  KeelConfigZ.parse(config);
-  await atomicWriteJSON(join(repoRoot, '.keel', 'config.json'), config);
+export async function writeConfig(repoRoot: string, config: CadenceConfig): Promise<void> {
+  CadenceConfigZ.parse(config);
+  await atomicWriteJSON(join(repoRoot, '.cadence', 'config.json'), config);
 }

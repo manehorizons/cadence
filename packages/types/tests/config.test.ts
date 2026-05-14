@@ -1,20 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { KeelConfigZ, defaultConfig, presets } from '../src/config.js';
+import { CadenceConfigZ, defaultConfig, presets } from '../src/config.js';
 
-describe('KeelConfigZ', () => {
+describe('CadenceConfigZ', () => {
   it('accepts default config', () => {
-    expect(() => KeelConfigZ.parse(defaultConfig)).not.toThrow();
+    expect(() => CadenceConfigZ.parse(defaultConfig)).not.toThrow();
   });
 
   it('rejects invalid loopEnforcement', () => {
     expect(() =>
-      KeelConfigZ.parse({ ...defaultConfig, loopEnforcement: 'nope' }),
+      CadenceConfigZ.parse({ ...defaultConfig, loopEnforcement: 'nope' }),
     ).toThrow();
   });
 
   it('clamps contextBudgetThreshold to valid range', () => {
     const cfg = { ...defaultConfig, subagentPolicy: { ...defaultConfig.subagentPolicy, contextBudgetThreshold: 1.5 } };
-    expect(() => KeelConfigZ.parse(cfg)).toThrow();
+    expect(() => CadenceConfigZ.parse(cfg)).toThrow();
   });
 
   it('exports three named presets', () => {

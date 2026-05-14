@@ -7,16 +7,16 @@ import { routeHookEvent } from './shim.js';
 const program = new Command();
 
 program
-  .name('keel-host-claude-code')
-  .description('Claude Code host adapter for KEEL')
-  .version('0.1.0');
+  .name('cadence-host-claude-code')
+  .description('Claude Code host adapter for CADENCE')
+  .version('0.2.0-rc.1');
 
 program
   .command('install')
   .description('Write Claude Code hook entries and slash commands into the project')
   .option('--cwd <dir>', 'project root', process.cwd())
-  .option('--command <cmd>', 'base command for the shim (default: "npx @keel/host-claude-code")')
-  .option('--keel <cmd>', 'base command the shim uses to invoke core (default: "npx @keel/core")')
+  .option('--command <cmd>', 'base command for the shim (default: "npx @cadence/host-claude-code")')
+  .option('--cadence <cmd>', 'base command the shim uses to invoke core (default: "npx @cadence/core")')
   .option('--settings <path>', 'settings file path relative to cwd', '.claude/settings.json')
   .option('--no-hooks', 'skip writing hooks to settings.json')
   .option('--no-commands', 'skip writing slash commands to .claude/commands/')
@@ -25,7 +25,7 @@ program
     async (opts: {
       cwd: string;
       command?: string;
-      keel?: string;
+      cadence?: string;
       settings: string;
       hooks: boolean;
       commands: boolean;
@@ -35,17 +35,17 @@ program
         if (opts.hooks) {
           const installOpts: InstallOptions = { settingsPath: opts.settings };
           if (opts.command !== undefined) installOpts.command = opts.command;
-          if (opts.keel !== undefined) installOpts.keelCommand = opts.keel;
+          if (opts.cadence !== undefined) installOpts.cadenceCommand = opts.cadence;
           if (opts.local) installOpts.local = true;
           await installHooks(opts.cwd, installOpts);
-          process.stdout.write(`Installed KEEL hooks → ${opts.cwd}/${opts.settings}\n`);
+          process.stdout.write(`Installed CADENCE hooks → ${opts.cwd}/${opts.settings}\n`);
         }
         if (opts.commands) {
           const cmdOpts: InstallCommandsOptions = {};
-          if (opts.keel !== undefined) cmdOpts.keelCommand = opts.keel;
+          if (opts.cadence !== undefined) cmdOpts.cadenceCommand = opts.cadence;
           if (opts.local) cmdOpts.local = true;
           await installCommands(opts.cwd, cmdOpts);
-          process.stdout.write(`Installed KEEL slash commands → ${opts.cwd}/.claude/commands/\n`);
+          process.stdout.write(`Installed CADENCE slash commands → ${opts.cwd}/.claude/commands/\n`);
         }
         process.stdout.write('Start a new Claude Code session to activate.\n');
       } catch (err) {
@@ -59,9 +59,9 @@ program
 
 program
   .command('hook')
-  .description('Shim invoked by Claude Code hooks: translates stdin and calls keel hook <event>')
-  .option('--keel <cmd>', 'base command to invoke core (default: "npx @keel/core")', 'npx @keel/core')
-  .action(async (opts: { keel: string }) => {
+  .description('Shim invoked by Claude Code hooks: translates stdin and calls cadence hook <event>')
+  .option('--cadence <cmd>', 'base command to invoke core (default: "npx @cadence/core")', 'npx @cadence/core')
+  .action(async (opts: { cadence: string }) => {
     try {
       let raw = '';
       if (!process.stdin.isTTY) {
@@ -69,9 +69,9 @@ program
       }
       const { abstractEvent, translatedStdin } = routeHookEvent(raw);
       if (abstractEvent === null) return; // exit 0 silently for unmapped events
-      const [exe, ...baseArgs] = opts.keel.split(/\s+/).filter(Boolean);
+      const [exe, ...baseArgs] = opts.cadence.split(/\s+/).filter(Boolean);
       if (!exe) {
-        process.stderr.write('--keel command is empty\n');
+        process.stderr.write('--cadence command is empty\n');
         process.exitCode = 1;
         return;
       }

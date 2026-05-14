@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
-import { emptyState } from '@keel/types';
+import { tempRepo, type Fixture } from '@cadence/testkit';
+import { emptyState } from '@cadence/types';
 import { SimpleStateBackend } from '../../src/state/simple.js';
 import { StateCorruptError } from '../../src/errors.js';
 
@@ -32,7 +32,7 @@ describe('SimpleStateBackend', () => {
   it('throws StateCorruptError on invalid JSON', async () => {
     active = await tempRepo({ initialized: true });
     const { writeFile } = await import('node:fs/promises');
-    await writeFile(join(active.root, '.keel/state.json'), '{ not json');
+    await writeFile(join(active.root, '.cadence/state.json'), '{ not json');
     const backend = new SimpleStateBackend(active.root);
     await expect(backend.readState()).rejects.toBeInstanceOf(StateCorruptError);
   });

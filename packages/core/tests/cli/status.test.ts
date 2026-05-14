@@ -2,13 +2,13 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@keel/testkit';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 
-const KEEL = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
+const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
 function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [KEEL, ...args], { cwd });
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     let stdout = '';
     let stderr = '';
     p.stdout.on('data', (d) => (stdout += d.toString()));
@@ -25,14 +25,14 @@ afterEach(async () => {
   }
 });
 
-describe('keel status', () => {
+describe('cadence status', () => {
   it('IDLE: renders header + NEXT line, exit 0', async () => {
     active = await tempRepo({ initialized: true, projectName: 'status-idle' });
     const r = await run(['status'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(/KEEL — status-idle/);
+    expect(r.stdout).toMatch(/CADENCE — status-idle/);
     expect(r.stdout).toMatch(/loop:\s+IDLE/);
-    expect(r.stdout).toMatch(/NEXT: keel draft new/);
+    expect(r.stdout).toMatch(/NEXT: cadence draft new/);
   });
 
   it('BUILD with fresh approve: tasks PENDING, ACs pending', async () => {
@@ -57,7 +57,7 @@ describe('keel status', () => {
     expect(parsed.loopPosition).toBe('IDLE');
     expect(parsed.schemaVersion).toBe(1);
     expect(typeof parsed.next.command).toBe('string');
-    expect(parsed.next.command).toMatch(/keel draft new/);
+    expect(parsed.next.command).toMatch(/cadence draft new/);
   });
 
   it('--json includes tasks and acs arrays in BUILD', async () => {
@@ -78,10 +78,10 @@ describe('keel status', () => {
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     const { readFile } = await import('node:fs/promises');
-    const before = await readFile(join(active.root, '.keel/state.json'), 'utf8');
+    const before = await readFile(join(active.root, '.cadence/state.json'), 'utf8');
     await run(['status'], active.root);
     await run(['status', '--json'], active.root);
-    const after = await readFile(join(active.root, '.keel/state.json'), 'utf8');
+    const after = await readFile(join(active.root, '.cadence/state.json'), 'utf8');
     expect(after).toBe(before);
   });
 });

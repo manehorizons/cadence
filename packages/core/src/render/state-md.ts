@@ -1,8 +1,8 @@
-import type { KeelState } from '@keel/types';
+import type { CadenceState } from '@cadence/types';
 
-export function renderStateMd(state: KeelState): string {
+export function renderStateMd(state: CadenceState): string {
   const lines = [
-    '# KEEL State',
+    '# CADENCE State',
     '',
     '> Derived view. Do not edit by hand — regenerated on every state.json write.',
     '',

@@ -1,11 +1,11 @@
-import { DraftZ, type Draft } from '@keel/types';
-import { KeelError } from '../errors.js';
+import { DraftZ, type Draft } from '@cadence/types';
+import { CadenceError } from '../errors.js';
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n/;
 
 function parseFrontmatter(raw: string): Record<string, string> {
   const m = FRONTMATTER_RE.exec(raw);
-  if (!m) throw new KeelError('DRAFT.md missing frontmatter');
+  if (!m) throw new CadenceError('DRAFT.md missing frontmatter');
   const out: Record<string, string> = {};
   for (const line of m[1]!.split('\n')) {
     const [k, ...rest] = line.split(':');

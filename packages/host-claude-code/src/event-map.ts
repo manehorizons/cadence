@@ -1,4 +1,4 @@
-import type { AbstractEvent } from '@keel/types';
+import type { AbstractEvent } from '@cadence/types';
 
 export const EDIT_TOOL_MATCHER = 'Edit|Write|MultiEdit|NotebookEdit';
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const KeelConfigZ = z.object({
+export const CadenceConfigZ = z.object({
   $schema: z.string().optional(),
   schemaVersion: z.literal(1),
   loopEnforcement: z.enum(['strict', 'soft', 'reminder']),
@@ -51,9 +51,9 @@ export const KeelConfigZ = z.object({
   }),
 });
 
-export type KeelConfig = z.infer<typeof KeelConfigZ>;
+export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
 
-export const defaultConfig: KeelConfig = {
+export const defaultConfig: CadenceConfig = {
   schemaVersion: 1,
   loopEnforcement: 'soft',
   acDiscipline: 'tier-scaled',
@@ -67,7 +67,7 @@ export const defaultConfig: KeelConfig = {
     drafting: 'claude-opus-4-7',
   },
   commitCadence: 'draft',
-  templates: { dir: '.keel/templates', overrides: [] },
+  templates: { dir: '.cadence/templates', overrides: [] },
   hooks: {
     sessionStart: true,
     stopReminder: true,
@@ -97,4 +97,4 @@ export const presets = {
     acDiscipline: 'strict' as const,
     hooks: { ...defaultConfig.hooks, preToolUseBuildGate: true },
   },
-} satisfies Record<string, KeelConfig>;
+} satisfies Record<string, CadenceConfig>;

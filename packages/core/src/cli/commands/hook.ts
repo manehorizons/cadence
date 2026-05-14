@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { AbstractEventZ } from '@keel/types';
+import { AbstractEventZ } from '@cadence/types';
 import { HookDispatcher } from '../../hooks/dispatcher.js';
 
 export function registerHookCommand(program: Command): void {

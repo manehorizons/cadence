@@ -7,15 +7,15 @@ export interface InstallOptions {
   /**
    * Shim command that Claude Code invokes for every hook event. The shim
    * reads stdin, translates payloads, and spawns the core CLI.
-   * Default: `npx @keel/host-claude-code hook`.
+   * Default: `npx @cadence/host-claude-code hook`.
    */
   command?: string;
   /**
-   * Base command the shim itself should use to invoke `@keel/core`.
-   * If set, appended as `--keel "<cmd>"` to the shim command.
-   * Default: shim's own default (`npx @keel/core`).
+   * Base command the shim itself should use to invoke `@cadence/core`.
+   * If set, appended as `--cadence "<cmd>"` to the shim command.
+   * Default: shim's own default (`npx @cadence/core`).
    */
-  keelCommand?: string;
+  cadenceCommand?: string;
   /** Path to settings file relative to root. Defaults to `.claude/settings.json`. */
   settingsPath?: string;
   /**
@@ -36,16 +36,16 @@ interface SettingsShape {
   [key: string]: unknown;
 }
 
-function isKeelEntry(entry: HookEntry): boolean {
-  return entry._managedBy === 'keel';
+function isCadenceEntry(entry: HookEntry): boolean {
+  return entry._managedBy === 'cadence';
 }
 
 export async function installHooks(root: string, opts: InstallOptions = {}): Promise<void> {
   const local = opts.local ? resolveLocalPaths() : null;
   const base =
-    opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @keel/host-claude-code hook');
-  const keelCommand = opts.keelCommand ?? (local ? `node ${local.coreCli}` : undefined);
-  const command = keelCommand ? `${base} --keel "${keelCommand}"` : base;
+    opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @cadence/host-claude-code hook');
+  const cadenceCommand = opts.cadenceCommand ?? (local ? `node ${local.coreCli}` : undefined);
+  const command = cadenceCommand ? `${base} --cadence "${cadenceCommand}"` : base;
   const settingsPath = join(root, opts.settingsPath ?? '.claude/settings.json');
 
   let current: SettingsShape = {};
@@ -58,13 +58,13 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
 
   const plain = (): HookEntry => ({
     hooks: [{ type: 'command', command }],
-    _managedBy: 'keel',
+    _managedBy: 'cadence',
   });
 
   const matched = (matcher: string): HookEntry => ({
     matcher,
     hooks: [{ type: 'command', command }],
-    _managedBy: 'keel',
+    _managedBy: 'cadence',
   });
 
   const desired: Record<string, HookEntry> = {
@@ -80,7 +80,7 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
 
   for (const [ccEvent, entry] of Object.entries(desired)) {
     const existing = hooks[ccEvent] ?? [];
-    const filtered = existing.filter((e) => !isKeelEntry(e));
+    const filtered = existing.filter((e) => !isCadenceEntry(e));
     filtered.push(entry);
     hooks[ccEvent] = filtered;
   }

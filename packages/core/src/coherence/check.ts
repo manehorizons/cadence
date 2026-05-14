@@ -1,4 +1,4 @@
-import type { Draft, KeelState } from '@keel/types';
+import type { Draft, CadenceState } from '@cadence/types';
 
 export interface CoherenceIssue {
   severity: 'warn' | 'block';
@@ -12,7 +12,7 @@ export interface CoherenceResult {
 
 const DO_NOT_RE = /DO NOT\s+(?:edit|change|modify|touch)\s+`?([^\s`\n]+?)(?:`|\.(?:\s|$)|$)/gi;
 
-export function coherenceCheck(draft: Draft, state: KeelState, projectMd: string): CoherenceResult {
+export function coherenceCheck(draft: Draft, state: CadenceState, projectMd: string): CoherenceResult {
   const issues: CoherenceIssue[] = [];
   const touched = new Set(draft.tasks.flatMap((t) => t.files));
 

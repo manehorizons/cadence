@@ -13,7 +13,7 @@ export function registerDraftCommand(program: Command): void {
 
   cmd
     .command('new <phase> <num>')
-    .description('Scaffold a new DRAFT.md under .keel/phases/<phase>/')
+    .description('Scaffold a new DRAFT.md under .cadence/phases/<phase>/')
     .option('--title <t>', 'Draft title', 'Untitled')
     .option('--tier <t>', 'Tier (quick-fix | standard | complex)', 'standard')
     .action(async (phase: string, num: string, opts: { title: string; tier: string }) => {
@@ -29,7 +29,7 @@ export function registerDraftCommand(program: Command): void {
           process.exitCode = 1;
           return;
         }
-        const dir = join(cwd, '.keel', 'phases', phase);
+        const dir = join(cwd, '.cadence', 'phases', phase);
         const padded = num.padStart(2, '0');
         const id = `${phase.slice(0, 2)}-${padded}`;
         const path = join(dir, `${id}-DRAFT.md`);
@@ -49,7 +49,7 @@ export function registerDraftCommand(program: Command): void {
           state.openDrafts.push({ id, since: new Date().toISOString() });
         }
         await backend.writeState(state);
-        await atomicWriteText(join(cwd, '.keel', 'STATE.md'), renderStateMd(state));
+        await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
 
         console.log(`Created ${path}`);
       } catch (err) {
@@ -68,7 +68,7 @@ export function registerDraftCommand(program: Command): void {
         const draft = parseDraftMd(raw);
         const backend = new SimpleStateBackend(cwd);
         const state = await backend.readState();
-        const projectMdPath = join(cwd, '.keel', 'PROJECT.md');
+        const projectMdPath = join(cwd, '.cadence', 'PROJECT.md');
         const projectMd = existsSync(projectMdPath) ? await readFile(projectMdPath, 'utf8') : '';
         const result = coherenceCheck(draft, state, projectMd);
         if (result.issues.length === 0) {
@@ -100,12 +100,12 @@ export function registerDraftCommand(program: Command): void {
         const cwd = process.cwd();
         const padded = num.padStart(2, '0');
         const id = `${phase.slice(0, 2)}-${padded}`;
-        const path = join(cwd, '.keel', 'phases', phase, `${id}-DRAFT.md`);
+        const path = join(cwd, '.cadence', 'phases', phase, `${id}-DRAFT.md`);
         const raw = await readFile(path, 'utf8');
         const draft = parseDraftMd(raw);
         const backend = new SimpleStateBackend(cwd);
         const state = await backend.readState();
-        const projectMdPath = join(cwd, '.keel', 'PROJECT.md');
+        const projectMdPath = join(cwd, '.cadence', 'PROJECT.md');
         const projectMd = existsSync(projectMdPath) ? await readFile(projectMdPath, 'utf8') : '';
         const result = coherenceCheck(draft, state, projectMd);
         const blockers = result.issues.filter((i) => i.severity === 'block');
@@ -122,7 +122,7 @@ export function registerDraftCommand(program: Command): void {
           state.openDrafts.push({ id, since: new Date().toISOString() });
         }
         await backend.writeState(state);
-        await atomicWriteText(join(cwd, '.keel', 'STATE.md'), renderStateMd(state));
+        await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
         console.log(`Approved ${id}; loopPosition=BUILD`);
       } catch (err) {
         process.stderr.write(`draft approve failed: ${err instanceof Error ? err.message : String(err)}\n`);

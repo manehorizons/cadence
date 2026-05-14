@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { loadConfig, writeConfig } from '../../config/loader.js';
-import { KeelConfigZ } from '@keel/types';
+import { CadenceConfigZ } from '@cadence/types';
 
 function getPath(obj: Record<string, unknown>, path: string[]): unknown {
   let cur: unknown = obj;
@@ -37,7 +37,7 @@ function coerce(raw: string): unknown {
 }
 
 export function registerConfigCommand(program: Command): void {
-  const cmd = program.command('config').description('Read/write KEEL config');
+  const cmd = program.command('config').description('Read/write CADENCE config');
 
   cmd
     .command('get <key>')
@@ -59,7 +59,7 @@ export function registerConfigCommand(program: Command): void {
       const cfg = await loadConfig(process.cwd());
       const draft = structuredClone(cfg) as Record<string, unknown>;
       setPath(draft, key.split('.'), coerce(raw));
-      const result = KeelConfigZ.safeParse(draft);
+      const result = CadenceConfigZ.safeParse(draft);
       if (!result.success) {
         console.error(`Invalid ${key}: ${result.error.message}`);
         process.exit(2);

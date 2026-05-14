@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import type { TaskStatus } from '@keel/types';
+import type { TaskStatus } from '@cadence/types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteJSON } from '../state/atomic-write.js';
 import { LoopViolationError } from '../errors.js';
@@ -31,7 +31,7 @@ export async function recordTaskOutcome(
   }
   const progPath = join(
     cwd,
-    '.keel/phases',
+    '.cadence/phases',
     state.activePhase,
     `${state.activeDraft}-PROGRESS.json`,
   );

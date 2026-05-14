@@ -4,7 +4,7 @@ import { recordTaskOutcome } from '../../build/record.js';
 export function registerNeedsContextCommand(program: Command): void {
   program
     .command('needs-context <id>')
-    .description('Shortcut for `keel build task <id> --status=NEEDS_CONTEXT`')
+    .description('Shortcut for `cadence build task <id> --status=NEEDS_CONTEXT`')
     .option('--notes <n>', 'Notes', '')
     .action(async (taskId: string, opts: { notes: string }) => {
       try {

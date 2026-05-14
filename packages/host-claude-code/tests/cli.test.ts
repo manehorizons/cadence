@@ -27,33 +27,33 @@ afterEach(async () => {
 });
 
 async function tempDir(): Promise<string> {
-  const d = await mkdtemp(join(tmpdir(), 'keel-cc-cli-'));
+  const d = await mkdtemp(join(tmpdir(), 'cadence-cc-cli-'));
   cleanup.push(() => rm(d, { recursive: true, force: true }));
   return d;
 }
 
-describe('keel-host-claude-code install', () => {
+describe('cadence-host-claude-code install', () => {
   it('writes settings.json and slash commands into --cwd', async () => {
     const root = await tempDir();
     const r = await run(['install', '--cwd', root]);
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(/Installed KEEL hooks/);
-    expect(r.stdout).toMatch(/Installed KEEL slash commands/);
+    expect(r.stdout).toMatch(/Installed CADENCE hooks/);
+    expect(r.stdout).toMatch(/Installed CADENCE slash commands/);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
-    expect(cfg.hooks.SessionStart[0]._managedBy).toBe('keel');
-    const progress = await readFile(join(root, '.claude/commands/keel-progress.md'), 'utf8');
-    expect(progress).toMatch(/!keel progress/);
+    expect(cfg.hooks.SessionStart[0]._managedBy).toBe('cadence');
+    const progress = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
+    expect(progress).toMatch(/!cadence progress/);
   });
 
   it('--no-commands skips slash command writing', async () => {
     const root = await tempDir();
     const r = await run(['install', '--cwd', root, '--no-commands']);
     expect(r.code).toBe(0);
-    expect(r.stdout).not.toMatch(/Installed KEEL slash commands/);
+    expect(r.stdout).not.toMatch(/Installed CADENCE slash commands/);
     const { access } = await import('node:fs/promises');
     let exists = true;
     try {
-      await access(join(root, '.claude/commands/keel-progress.md'));
+      await access(join(root, '.claude/commands/cadence-progress.md'));
     } catch {
       exists = false;
     }
@@ -64,8 +64,8 @@ describe('keel-host-claude-code install', () => {
     const root = await tempDir();
     const r = await run(['install', '--cwd', root, '--no-hooks']);
     expect(r.code).toBe(0);
-    expect(r.stdout).not.toMatch(/Installed KEEL hooks/);
-    expect(r.stdout).toMatch(/Installed KEEL slash commands/);
+    expect(r.stdout).not.toMatch(/Installed CADENCE hooks/);
+    expect(r.stdout).toMatch(/Installed CADENCE slash commands/);
   });
 
   it('honors --command override (shim invocation)', async () => {
@@ -76,13 +76,13 @@ describe('keel-host-claude-code install', () => {
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe('node /abs/shim.js hook');
   });
 
-  it('honors --keel override (appended to default shim)', async () => {
+  it('honors --cadence override (appended to default shim)', async () => {
     const root = await tempDir();
-    const r = await run(['install', '--cwd', root, '--keel', 'node /abs/k.js']);
+    const r = await run(['install', '--cwd', root, '--cadence', 'node /abs/k.js']);
     expect(r.code).toBe(0);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'npx @keel/host-claude-code hook --keel "node /abs/k.js"',
+      'npx @cadence/host-claude-code hook --cadence "node /abs/k.js"',
     );
   });
 });

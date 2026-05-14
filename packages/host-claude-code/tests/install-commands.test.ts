@@ -11,7 +11,7 @@ afterEach(async () => {
 });
 
 async function tempDir(): Promise<string> {
-  const d = await mkdtemp(join(tmpdir(), 'keel-cc-cmd-'));
+  const d = await mkdtemp(join(tmpdir(), 'cadence-cc-cmd-'));
   cleanup.push(() => rm(d, { recursive: true, force: true }));
   return d;
 }
@@ -22,77 +22,77 @@ describe('installCommands', () => {
     await installCommands(root);
     const entries = await readdir(join(root, '.claude/commands'));
     expect(entries.sort()).toEqual([
-      'keel-approve.md',
-      'keel-block.md',
-      'keel-build.md',
-      'keel-check.md',
-      'keel-done.md',
-      'keel-draft.md',
-      'keel-needs-context.md',
-      'keel-progress.md',
-      'keel-settle.md',
+      'cadence-approve.md',
+      'cadence-block.md',
+      'cadence-build.md',
+      'cadence-check.md',
+      'cadence-done.md',
+      'cadence-draft.md',
+      'cadence-needs-context.md',
+      'cadence-progress.md',
+      'cadence-settle.md',
     ]);
   });
 
   it('shortcut verbs (done/block/needs-context) bind to the right CLI invocation', async () => {
     const root = await tempDir();
     await installCommands(root);
-    const done = await readFile(join(root, '.claude/commands/keel-done.md'), 'utf8');
-    expect(done).toMatch(/^!keel done \$ARGUMENTS\s*$/m);
+    const done = await readFile(join(root, '.claude/commands/cadence-done.md'), 'utf8');
+    expect(done).toMatch(/^!cadence done \$ARGUMENTS\s*$/m);
     expect(done).toMatch(/description: .*DONE/);
-    expect(done).toMatch(/<!-- managed-by: keel -->/);
+    expect(done).toMatch(/<!-- managed-by: cadence -->/);
 
-    const block = await readFile(join(root, '.claude/commands/keel-block.md'), 'utf8');
-    expect(block).toMatch(/^!keel block \$ARGUMENTS\s*$/m);
+    const block = await readFile(join(root, '.claude/commands/cadence-block.md'), 'utf8');
+    expect(block).toMatch(/^!cadence block \$ARGUMENTS\s*$/m);
     expect(block).toMatch(/description: .*BLOCKED/);
 
-    const nc = await readFile(join(root, '.claude/commands/keel-needs-context.md'), 'utf8');
-    expect(nc).toMatch(/^!keel needs-context \$ARGUMENTS\s*$/m);
+    const nc = await readFile(join(root, '.claude/commands/cadence-needs-context.md'), 'utf8');
+    expect(nc).toMatch(/^!cadence needs-context \$ARGUMENTS\s*$/m);
     expect(nc).toMatch(/description: .*NEEDS_CONTEXT/);
   });
 
   it('each file has frontmatter with description and allowed-tools', async () => {
     const root = await tempDir();
     await installCommands(root);
-    const body = await readFile(join(root, '.claude/commands/keel-progress.md'), 'utf8');
+    const body = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
     expect(body).toMatch(/^---\n/);
     expect(body).toMatch(/description: /);
     expect(body).toMatch(/allowed-tools: /);
     expect(body).toMatch(/\n---\n/);
   });
 
-  it('keel-progress invokes !keel progress with no args', async () => {
+  it('cadence-progress invokes !cadence progress with no args', async () => {
     const root = await tempDir();
     await installCommands(root);
-    const body = await readFile(join(root, '.claude/commands/keel-progress.md'), 'utf8');
-    expect(body).toMatch(/^!keel progress\s*$/m);
+    const body = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
+    expect(body).toMatch(/^!cadence progress\s*$/m);
   });
 
   it('parameterized commands use $ARGUMENTS', async () => {
     const root = await tempDir();
     await installCommands(root);
-    const draft = await readFile(join(root, '.claude/commands/keel-draft.md'), 'utf8');
-    expect(draft).toMatch(/^!keel draft new \$ARGUMENTS\s*$/m);
+    const draft = await readFile(join(root, '.claude/commands/cadence-draft.md'), 'utf8');
+    expect(draft).toMatch(/^!cadence draft new \$ARGUMENTS\s*$/m);
     expect(draft).toMatch(/argument-hint: /);
 
-    const approve = await readFile(join(root, '.claude/commands/keel-approve.md'), 'utf8');
-    expect(approve).toMatch(/^!keel draft approve \$ARGUMENTS\s*$/m);
+    const approve = await readFile(join(root, '.claude/commands/cadence-approve.md'), 'utf8');
+    expect(approve).toMatch(/^!cadence draft approve \$ARGUMENTS\s*$/m);
 
-    const build = await readFile(join(root, '.claude/commands/keel-build.md'), 'utf8');
-    expect(build).toMatch(/^!keel build task \$ARGUMENTS\s*$/m);
+    const build = await readFile(join(root, '.claude/commands/cadence-build.md'), 'utf8');
+    expect(build).toMatch(/^!cadence build task \$ARGUMENTS\s*$/m);
 
-    const settle = await readFile(join(root, '.claude/commands/keel-settle.md'), 'utf8');
-    expect(settle).toMatch(/^!keel settle run \$ARGUMENTS\s*$/m);
+    const settle = await readFile(join(root, '.claude/commands/cadence-settle.md'), 'utf8');
+    expect(settle).toMatch(/^!cadence settle run \$ARGUMENTS\s*$/m);
 
-    const check = await readFile(join(root, '.claude/commands/keel-check.md'), 'utf8');
-    expect(check).toMatch(/^!keel draft check \$ARGUMENTS\s*$/m);
+    const check = await readFile(join(root, '.claude/commands/cadence-check.md'), 'utf8');
+    expect(check).toMatch(/^!cadence draft check \$ARGUMENTS\s*$/m);
   });
 
   it('files are tagged keel-managed via a comment header', async () => {
     const root = await tempDir();
     await installCommands(root);
-    const body = await readFile(join(root, '.claude/commands/keel-progress.md'), 'utf8');
-    expect(body).toMatch(/<!-- managed-by: keel -->/);
+    const body = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
+    expect(body).toMatch(/<!-- managed-by: cadence -->/);
   });
 
   it('idempotent: re-install overwrites keel-managed files only', async () => {
@@ -105,7 +105,7 @@ describe('installCommands', () => {
     );
     // User-overridden keel command (no managed marker) must survive.
     await writeFile(
-      join(root, '.claude/commands/keel-progress.md'),
+      join(root, '.claude/commands/cadence-progress.md'),
       '---\ndescription: my override\n---\nhand-rolled\n',
     );
     await installCommands(root);
@@ -113,22 +113,22 @@ describe('installCommands', () => {
     const custom = await readFile(join(root, '.claude/commands/my-custom.md'), 'utf8');
     expect(custom).toMatch(/user content/);
 
-    const progress = await readFile(join(root, '.claude/commands/keel-progress.md'), 'utf8');
+    const progress = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
     expect(progress).toMatch(/hand-rolled/);
-    expect(progress).not.toMatch(/managed-by: keel/);
+    expect(progress).not.toMatch(/managed-by: cadence/);
   });
 
-  it('honors keelCommand override (replaces `keel` prefix)', async () => {
+  it('honors cadenceCommand override (replaces `keel` prefix)', async () => {
     const root = await tempDir();
-    await installCommands(root, { keelCommand: 'node /abs/keel.js' });
-    const body = await readFile(join(root, '.claude/commands/keel-progress.md'), 'utf8');
+    await installCommands(root, { cadenceCommand: 'node /abs/keel.js' });
+    const body = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
     expect(body).toMatch(/^!node \/abs\/keel\.js progress\s*$/m);
   });
 
   it('local=true renders absolute core path in slash body', async () => {
     const root = await tempDir();
     await installCommands(root, { local: true });
-    const body = await readFile(join(root, '.claude/commands/keel-progress.md'), 'utf8');
+    const body = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
     expect(body).toMatch(/!node .+core[\\/]dist[\\/]cli[\\/]index\.js progress/);
   });
 });

@@ -1,13 +1,13 @@
 {
-  "name": "@keel/core",
-  "version": "0.1.0",
+  "name": "@cadence/core",
+  "version": "0.2.0-rc.1",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
   },
-  "bin": { "keel": "./bin/keel.cjs" },
+  "bin": { "cadence": "./bin/cadence.cjs" },
   "files": ["dist", "bin"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -17,12 +17,12 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@keel/types": "workspace:*",
+    "@cadence/types": "workspace:*",
     "commander": "^13.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@keel/testkit": "workspace:*",
+    "@cadence/testkit": "workspace:*",
     "vitest": "^2.1.0"
   }
 }

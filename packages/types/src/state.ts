@@ -35,7 +35,7 @@ export const DeferredItemZ = z.object({
 });
 export type DeferredItem = z.infer<typeof DeferredItemZ>;
 
-export const KeelStateZ = z.object({
+export const CadenceStateZ = z.object({
   schemaVersion: z.literal(1),
   project: z.object({ name: z.string(), createdAt: z.string() }),
   activePhase: z.string().nullable(),
@@ -63,9 +63,9 @@ export const KeelStateZ = z.object({
     .nullable(),
 });
 
-export type KeelState = z.infer<typeof KeelStateZ>;
+export type CadenceState = z.infer<typeof CadenceStateZ>;
 
-export function emptyState(projectName = 'unnamed'): KeelState {
+export function emptyState(projectName = 'unnamed'): CadenceState {
   return {
     schemaVersion: 1,
     project: { name: projectName, createdAt: new Date().toISOString() },

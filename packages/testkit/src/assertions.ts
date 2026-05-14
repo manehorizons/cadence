@@ -1,17 +1,17 @@
-import { KeelStateZ, KeelConfigZ, DraftZ, SummaryZ } from '@keel/types';
-import type { KeelState, KeelConfig, Draft, Summary } from '@keel/types';
+import { CadenceStateZ, CadenceConfigZ, DraftZ, SummaryZ } from '@cadence/types';
+import type { CadenceState, CadenceConfig, Draft, Summary } from '@cadence/types';
 
-export function assertStateValid(value: unknown): asserts value is KeelState {
-  const result = KeelStateZ.safeParse(value);
+export function assertStateValid(value: unknown): asserts value is CadenceState {
+  const result = CadenceStateZ.safeParse(value);
   if (!result.success) {
-    throw new Error(`Invalid KeelState: ${result.error.message}`);
+    throw new Error(`Invalid CadenceState: ${result.error.message}`);
   }
 }
 
-export function assertConfigValid(value: unknown): asserts value is KeelConfig {
-  const result = KeelConfigZ.safeParse(value);
+export function assertConfigValid(value: unknown): asserts value is CadenceConfig {
+  const result = CadenceConfigZ.safeParse(value);
   if (!result.success) {
-    throw new Error(`Invalid KeelConfig: ${result.error.message}`);
+    throw new Error(`Invalid CadenceConfig: ${result.error.message}`);
   }
 }
 

@@ -1,11 +1,11 @@
-import type { Tier, KeelConfig } from '@keel/types';
+import type { Tier, CadenceConfig } from '@cadence/types';
 
 export interface DraftSignals {
   tasks: { files: string[] }[];
   acceptanceCriteria: unknown[];
 }
 
-export function classifyTier(d: DraftSignals, tierConfig: KeelConfig['tier']): Tier {
+export function classifyTier(d: DraftSignals, tierConfig: CadenceConfig['tier']): Tier {
   const taskCount = d.tasks.length;
   const fileCount = new Set(d.tasks.flatMap((t) => t.files)).size;
 

@@ -2,8 +2,8 @@ import type { Command } from 'commander';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import type { Summary } from '@keel/types';
-import { TaskStatusZ } from '@keel/types';
+import type { Summary } from '@cadence/types';
+import { TaskStatusZ } from '@cadence/types';
 import { parseDraftMd } from '../../parse/draft-parser.js';
 import { renderSummaryMd } from '../../parse/summary-writer.js';
 import { SimpleStateBackend } from '../../state/simple.js';
@@ -51,10 +51,10 @@ export function registerSettleCommand(program: Command): void {
         if (state.loopPosition !== 'BUILD' || !state.activeDraft || !state.activePhase) {
           throw new LoopViolationError('settle run requires loopPosition=BUILD with an active draft');
         }
-        const draftPath = join(cwd, '.keel/phases', state.activePhase, `${state.activeDraft}-DRAFT.md`);
+        const draftPath = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-DRAFT.md`);
         const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
 
-        const progPath = join(cwd, '.keel/phases', state.activePhase, `${state.activeDraft}-PROGRESS.json`);
+        const progPath = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-PROGRESS.json`);
         const progress: ProgressJson = existsSync(progPath)
           ? (JSON.parse(await readFile(progPath, 'utf8')) as ProgressJson)
           : { draftId: state.activeDraft, tasks: {} };
@@ -128,7 +128,7 @@ export function registerSettleCommand(program: Command): void {
           skillAudit: state.skillAudit,
         };
 
-        const summaryBase = join(cwd, '.keel/phases', state.activePhase, `${state.activeDraft}-SUMMARY`);
+        const summaryBase = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-SUMMARY`);
         await atomicWriteJSON(`${summaryBase}.json`, summary);
         await atomicWriteText(`${summaryBase}.md`, renderSummaryMd(summary));
 
@@ -139,7 +139,7 @@ export function registerSettleCommand(program: Command): void {
         state.loopPosition = 'IDLE';
         state.tier = null;
         await backend.writeState(state);
-        await atomicWriteText(join(cwd, '.keel', 'STATE.md'), renderStateMd(state));
+        await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
         console.log(`Settled ${draftId}`);
       } catch (err) {
         process.stderr.write(`settle run failed: ${err instanceof Error ? err.message : String(err)}\n`);

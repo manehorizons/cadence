@@ -4,7 +4,7 @@ import { recordTaskOutcome } from '../../build/record.js';
 export function registerDoneCommand(program: Command): void {
   program
     .command('done <id>')
-    .description('Shortcut for `keel build task <id> --status=DONE`')
+    .description('Shortcut for `cadence build task <id> --status=DONE`')
     .option('--notes <n>', 'Notes', '')
     .action(async (taskId: string, opts: { notes: string }) => {
       try {

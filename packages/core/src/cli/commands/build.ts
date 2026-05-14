@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { TaskStatusZ } from '@keel/types';
+import { TaskStatusZ } from '@cadence/types';
 import { recordTaskOutcome, type RecordableStatus } from '../../build/record.js';
 
 export function registerBuildCommand(program: Command): void {
