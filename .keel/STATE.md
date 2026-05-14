@@ -4,7 +4,7 @@
 
 **Project:** keel
 **Loop position:** IDLE
-**Active phase:** 06-settle-auto
+**Active phase:** 07-done-shortcut
 **Active draft:** (none)
 **Tier:** (n/a)
 

@@ -1,0 +1,23 @@
+{
+  "draftId": "07-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "extracted recordTaskOutcome helper",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T03:39:22.728Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "added keel done command",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T03:39:22.815Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "record+done test suites, 7 new tests",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-14T03:39:22.901Z"
+    }
+  }
+}
