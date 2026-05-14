@@ -4,7 +4,7 @@
 
 KEEL is a host-agnostic plan/build/settle framework for AI-assisted development. It is inspired by GSD (Get Shit Done) and PAUL (Plan-Apply-Unify Loop) and is independently implemented in TypeScript.
 
-> **Status:** Phases 1–9 shipped — foundation, host adapters, local-link dogfood, canonical `HostCapabilities`, `keel status`, `settle --auto`, and the `done` / `block` / `needs-context` shortcut verbs (both CLI and host slash commands / Agent Skills). 277 tests across 5 packages.
+> **Status:** Phases 1–11 shipped. Phase 11 archived the `@keel/host-codex` package (preserved on the `keel-codex-archive` tag) and collapsed the multi-host `HostCapabilities` abstraction; v1 ships single-host (Claude Code). See `DESIGN.md` for the broader redirection (rename to CADENCE pending, behavioral verifier on deck).
 
 ## Loop
 
@@ -53,42 +53,20 @@ npx @keel/host-claude-code install
 > `npx`-style commands; pair it with `settings.local.json` so the
 > machine-specific paths stay out of git.
 
-## Use with Codex CLI
+## Codex support — archived
 
-```bash
-cd your-project
-npx @keel/core init --name=your-project
-npx @keel/host-codex install
-# Start a new Codex session; KEEL hooks are wired into .codex/hooks.json
-# and Agent Skills $keel-progress / $keel-draft / $keel-approve / $keel-check /
-# $keel-build / $keel-settle are available under .agents/skills/.
-```
+The `@keel/host-codex` package shipped in Phases 02 / 09 has been removed from main as of Phase 11 (DESIGN.md decision D9). The complete pre-removal state is preserved on the `keel-codex-archive` git tag; resurrection is a future v1.x/v2 phase.
 
-> Note: PreToolUse/PostToolUse hooks do not yet fire for `apply_patch`
-> ([openai/codex#16732](https://github.com/openai/codex/issues/16732)). The
-> adapter installs the matchers so it activates automatically once upstream
-> lands the fix; SessionStart, UserPromptSubmit, and Stop hooks work today.
->
-> The same `--local --settings .codex/hooks.local.json` flow works for
-> Codex when dogfooding from a local checkout.
+## Host capabilities
 
-## Host adapter contract
-
-Every host adapter must export a `HostCapabilities` value that conforms
-to `HostCapabilitiesZ` (Zod schema in `@keel/types`). A portability test
-in `@keel/host-codex` parses each shipped adapter's capabilities through
-the schema; adding a new host means adding a line to that test and
-declaring the matching field set. Schema fields cover hook coverage,
-slash command support, skill system, blocking events, subagent spawn
-style, and streaming output.
+Currently single-host: Claude Code only. The capabilities surface (hook coverage, blocking events, slash command support, etc.) is declared inline in `@keel/host-claude-code` as a plain typed constant. When a second host is added back, we'll re-evaluate whether a schema-validated abstraction is worth its complexity cost.
 
 ## Packages
 
 - `@keel/core` — CLI + state engine + parsers + classifier + hook dispatcher
-- `@keel/types` — Zod schemas + TS interfaces
+- `@keel/types` — Zod schemas + TS interfaces (host capabilities now a plain interface)
 - `@keel/testkit` — fixture builder + MockHostAdapter for tests
 - `@keel/host-claude-code` — Claude Code host adapter: hook installer + event mapping + slash command codegen
-- `@keel/host-codex` — Codex CLI host adapter: hook installer + apply_patch payload translation + Agent Skill codegen
 
 ## License
 
