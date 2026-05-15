@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "draftId": "23-01",
+  "completedAt": "2026-05-15T01:10:52.755Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "AnomalyTypeZ extended with coherence-warn (67 types tests)"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

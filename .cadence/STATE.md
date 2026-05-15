@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 23-draft-read-gate
+**Active phase:** 23-coherence-warn
 **Active draft:** (none)
 **Tier:** (n/a)
 

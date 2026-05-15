@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "23-draft-read-gate",
+  "activePhase": "23-coherence-warn",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": null,
+  "draftReadAt": "2026-05-15T01:06:20.643Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
