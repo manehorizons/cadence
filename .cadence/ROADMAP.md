@@ -230,3 +230,19 @@
 - **25.1** — `plan-review` at `draft new` (before approve) or at `draft approve` (gates BUILD entry)? (Plan says approve-time; consider draft-new for stricter profiles.)
 - **25.2** — Security-audit triggers on every settle, or only on strict×complex per matrix? (Per matrix — keep it expensive-by-default.)
 - **26.2** — CLAUDE.md content: should it embed `cadence status` output as a section the agent re-reads each session? Or just a static project blurb? (Brainstorm at phase start.)
+
+---
+
+## Post-1.0 — next milestone (planning)
+
+**Status:** v0.4 → v1.0 fully shipped (Phases 13–28.1), tagged `v0.6.0`/`v0.7.0`/`v0.8.0`/`v1.0.0`, pushed. There is no v0.9.0 (v0.8.0 → v1.0.0 by design). Loop IDLE. This section is the planning anchor for the next milestone — themes only, not yet phased. Brainstorm scope, pick a version line, then write phases.
+
+Candidate themes (triage in the planning session — unordered):
+
+1. **Publish pipeline (likely v1.1).** Packages sit at `1.0.0` with NO publish automation (a deliberate Phase 28.1 boundary). Define real release: `npm publish` (or changesets) + a release workflow + provenance; decide public-npm vs private registry.
+2. **Server-side CI enforcement.** Today `main` is gated only client-side (`.githooks/pre-push`) because GitHub Free + private repos get no branch protection/rulesets. If the repo goes public or onto Pro: require the existing `ci-success` context via `gh api … rulesets` and retire the hook. If staying private+free: add a `scripts/setup` / `postinstall` to auto-wire `core.hooksPath` (currently a manual per-clone step).
+3. **Resolve deferred open questions.** The "Open questions" list above (23.1, 23.4, 24.2, 24.3, 26.2) holds real product decisions — several merit a phase each.
+4. **Backlog parking lot.** No `.cadence/` backlog file exists yet; stand one up before planning so ideas have a home (`gsd-add-backlog`-style).
+5. **Test infra.** Flake resolved (atomic-write rename retry, commit `896a140`); consider a serialized/fake-clock lane for any future timing-sensitive tests now that CI runs 6 parallel cells.
+
+Entry point next session: brainstorm/select milestone scope → update PROJECT.md if the product framing shifts → write the new milestone's phases here → run them through the dogfood loop.
