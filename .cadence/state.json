@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "25-plan-review",
+  "activePhase": "25-security-audit",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-15T13:55:55.098Z",
+  "draftReadAt": "2026-05-15T16:22:42.461Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
