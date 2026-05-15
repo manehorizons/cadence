@@ -97,6 +97,21 @@ Note (optional, one line, blank to skip):
 - `--no-interactive` bypasses the gate for one invocation.
 - Non-TTY environments (CI, piped stdin) refuse with a clear stderr message — set `CADENCE_PROMPTER_SCRIPT` env var with newline-separated answers to drive the walker programmatically in tests.
 
+### Manual approve gate
+
+When `'approve'` is in the active gate set (strict-any-tier, standard×standard, standard×complex), `cadence draft approve` prompts before transitioning to BUILD:
+
+```
+$ cadence draft approve 01-foundation 01
+Approve and enter BUILD? [y/n]: y
+Approved 01-01; loopPosition=BUILD
+```
+
+- `y` / `yes` proceeds; `n` / `no` (or empty / unrecognized after 3 retries) refuses with exit 1 and leaves state untouched.
+- `--no-approve` bypasses the gate for one invocation — required for non-TTY runs (CI, piped) when the gate is active.
+- Tests can drive the prompt via `CADENCE_PROMPTER_SCRIPT` (newline-separated answers), the same seam used by `--interactive`.
+- Under `auto` profile (or any cell where `'approve'` is not in the gate set) approve is silent and behaves exactly as before.
+
 ### Anomaly notify
 
 When `'anomaly-notify'` is in the gate set (auto profile and standard×{standard,complex} cells), settle collects typed events and dispatches them via the configured transport. Event types:

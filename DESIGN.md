@@ -91,7 +91,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 |---|---|
 | Free (always fire) | Coherence check · structural verifier · build/test must pass |
 | Cheap | DRAFT-read mtime check **(Phase 23.1)** · test-coverage proof per AC **(Phase 14)** · anomaly notify **(Phase 17)** |
-| Medium | Approve gate (manual click) · per-task verify · code review agent |
+| Medium | Approve gate (manual click) **(Phase 24.1)** · per-task verify · code review agent |
 | Expensive | Independent verifier agent (`--deep`) · interactive AC verdict (`--interactive`) · plan review · security audit |
 
 ### 4.2 Default gates per cell (deltas only; free gates always fire)
@@ -207,6 +207,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 11. ~~Phase 23.2 — coherence-warn anomaly emission~~ ✓
 12. ~~Phase 23.3 — loop-violation anomaly emission~~ ✓
 13. ~~Phase 23.4 — skillAudit wiring (`invoked` tracking; tokenUtilization deferred)~~ ✓
+14. ~~Phase 24.1 — manual approve gate (interactive Y/N at `draft approve`)~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

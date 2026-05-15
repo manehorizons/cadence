@@ -11,6 +11,29 @@ import { renderStateMd } from '../../render/state-md.js';
 import { loadConfig } from '../../config/loader.js';
 import { effectiveGateSet } from '../../gates/engine.js';
 import { selectNotifier } from '../../notify/factory.js';
+import {
+  ScriptedPrompter,
+  StdinPrompter,
+  type Prompter,
+} from '../../verify/prompter.js';
+
+/**
+ * Phase 24.1 — manual approve gate prompt walker. Accepts y/yes/n/no
+ * (case-insensitive); 3 retries before refuse. Mirrors the 3-retry pattern
+ * from `verify/interactive.ts` askVerdict.
+ */
+async function askApproveVerdict(prompter: Prompter): Promise<'yes' | 'no'> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const raw = (
+      await prompter.ask('Approve and enter BUILD? [y/n]: ')
+    )
+      .trim()
+      .toLowerCase();
+    if (raw === 'y' || raw === 'yes') return 'yes';
+    if (raw === 'n' || raw === 'no') return 'no';
+  }
+  return 'no';
+}
 
 export function registerDraftCommand(program: Command): void {
   const cmd = program.command('draft').description('Draft phase workflow');
@@ -131,7 +154,16 @@ export function registerDraftCommand(program: Command): void {
       '--allow-auto-complex',
       "override DESIGN.md §4 M2 soft cap: approve an auto × complex draft anyway",
     )
-    .action(async (phase: string, num: string, opts: { allowAutoComplex?: boolean }) => {
+    .option(
+      '--no-approve',
+      "bypass the manual approve gate (Phase 24.1) per invocation; required for non-TTY runs when the 'approve' gate is in the effective set",
+    )
+    .action(
+      async (
+        phase: string,
+        num: string,
+        opts: { allowAutoComplex?: boolean; approve?: boolean },
+      ) => {
       try {
         const cwd = process.cwd();
         const padded = num.padStart(2, '0');
@@ -167,6 +199,45 @@ export function registerDraftCommand(program: Command): void {
           process.stderr.write(
             'draft approve: --allow-auto-complex set; proceeding past soft cap (auto × complex).\n',
           );
+        }
+
+        // Phase 24.1 — manual approve gate. Fires when `'approve'` is in the
+        // effective gate set (strict-any-tier, standard×standard,
+        // standard×complex). `--no-approve` (commander auto-flag for the
+        // declared `--no-approve` option → opts.approve === false) bypasses.
+        // Coherence blockers and soft cap already refused above so the prompt
+        // only appears for otherwise-passable approvals.
+        if (gateSet.gates.includes('approve') && opts.approve !== false) {
+          let prompter: Prompter;
+          const scripted = process.env.CADENCE_PROMPTER_SCRIPT;
+          if (scripted !== undefined) {
+            const answers = scripted.split('\n').filter((s) => s.length > 0 || s === '');
+            prompter = new ScriptedPrompter(answers);
+          } else {
+            try {
+              prompter = new StdinPrompter();
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              process.stderr.write(
+                `manual-approve: ${msg} Pass --no-approve to bypass the manual approve gate.\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+          }
+          let verdict: 'yes' | 'no';
+          try {
+            verdict = await askApproveVerdict(prompter);
+          } finally {
+            await prompter.close?.();
+          }
+          if (verdict === 'no') {
+            process.stderr.write(
+              'draft approve refused: user declined manual approve gate.\n',
+            );
+            process.exitCode = 1;
+            return;
+          }
         }
 
         // Phase 23.2 — coherence-warn emission at approve time. Same pattern
@@ -211,5 +282,6 @@ export function registerDraftCommand(program: Command): void {
         process.stderr.write(`draft approve failed: ${err instanceof Error ? err.message : String(err)}\n`);
         process.exitCode = 1;
       }
-    });
+    },
+  );
 }

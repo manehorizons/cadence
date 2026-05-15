@@ -71,7 +71,11 @@ describe('auto × complex soft cap — draft approve', () => {
   it('draft.profile: standard frontmatter override avoids the cap (AC-3)', async () => {
     active = await tempRepo({ initialized: true });
     await seedDraft(active.root, 'complex', 'standard');
-    const r = await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    // standard × complex carries the 'approve' gate (Phase 24.1); bypass.
+    const r = await run(
+      ['draft', 'approve', '01-foundation', '01', '--no-approve'],
+      active.root,
+    );
     expect(r.code).toBe(0);
     expect(r.stderr).not.toMatch(/soft-capped/);
   });

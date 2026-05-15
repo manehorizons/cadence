@@ -58,7 +58,8 @@ describe('DRAFT-read mtime gate (Phase 23.1)', () => {
     active = await tempRepo({ initialized: true });
     // standard × standard cell has draft-read in gate set per DESIGN §4.2.
     const draftPath = await seedDraft(active.root, 'standard', 'standard');
-    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    // standard × standard carries the 'approve' gate (Phase 24.1); bypass.
+    await run(['draft', 'approve', '01-foundation', '01', '--no-approve'], active.root);
     // Edit the DRAFT after approve.
     await touchFuture(draftPath, 5000);
     const r = await run(
@@ -77,7 +78,8 @@ describe('DRAFT-read mtime gate (Phase 23.1)', () => {
   it('--allow-stale-draft bypasses the gate and logs INFO trace (AC-4)', async () => {
     active = await tempRepo({ initialized: true });
     const draftPath = await seedDraft(active.root, 'standard', 'standard');
-    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    // standard × standard carries the 'approve' gate (Phase 24.1); bypass.
+    await run(['draft', 'approve', '01-foundation', '01', '--no-approve'], active.root);
     await touchFuture(draftPath, 5000);
     await run(['done', 'T1', '--notes=ok'], active.root);
     const r = await run(
@@ -93,7 +95,8 @@ describe('DRAFT-read mtime gate (Phase 23.1)', () => {
   it('DRAFT not modified after approve → no refusal (AC-5)', async () => {
     active = await tempRepo({ initialized: true });
     await seedDraft(active.root, 'standard', 'standard');
-    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    // standard × standard carries the 'approve' gate (Phase 24.1); bypass.
+    await run(['draft', 'approve', '01-foundation', '01', '--no-approve'], active.root);
     await run(['done', 'T1', '--notes=ok'], active.root);
     const r = await run(
       ['settle', 'run', '--auto', '--allow-missing-coverage'],
@@ -131,7 +134,8 @@ describe('DRAFT-read mtime gate (Phase 23.1)', () => {
     active = await tempRepo({ initialized: true });
     // auto × standard cell has only test-coverage + anomaly-notify; no draft-read.
     const draftPath = await seedDraft(active.root, 'auto', 'standard');
-    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    // standard × standard carries the 'approve' gate (Phase 24.1); bypass.
+    await run(['draft', 'approve', '01-foundation', '01', '--no-approve'], active.root);
     await touchFuture(draftPath, 5000);
     await run(['done', 'T1', '--notes=ok'], active.root);
     const r = await run(

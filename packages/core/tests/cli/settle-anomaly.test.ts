@@ -71,7 +71,8 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
     active = await tempRepo({ initialized: true });
     await patchConfig(active.root, { profile: 'strict' });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
-    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    // strict × any tier carries the 'approve' gate (Phase 24.1); bypass per-invocation.
+    await run(['draft', 'approve', '01-foundation', '01', '--no-approve'], active.root);
     await run(['build', 'task', 'T1', '--status=BLOCKED'], active.root);
     const r = await run(
       [
