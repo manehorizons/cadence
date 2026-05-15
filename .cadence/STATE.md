@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 26-init-ux
+**Active phase:** 26-claude-md
 **Active draft:** (none)
 **Tier:** (n/a)
 
