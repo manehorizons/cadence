@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 26-anomalies-tail
+**Active phase:** 27-ci
 **Active draft:** (none)
 **Tier:** (n/a)
 

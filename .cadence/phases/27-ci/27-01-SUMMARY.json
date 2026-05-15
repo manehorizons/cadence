@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "draftId": "27-01",
+  "completedAt": "2026-05-15T17:08:07.612Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": false,
+      "note": "auto: no linked tasks"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": ""
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
