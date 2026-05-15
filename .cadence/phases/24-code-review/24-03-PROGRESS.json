@@ -1,0 +1,35 @@
+{
+  "draftId": "24-03",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "CodeReviewVerifier + mock + anthropic + factory",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T03:30:15.459Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "config + AnomalyType + Summary",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T03:31:37.041Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "settle.ts gate wiring + helper",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T03:34:07.763Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "13 unit + 5 CLI tests; 333 total green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T03:39:16.594Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "DESIGN §4.1+§3.3+§10; CHANGELOG; README",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T03:40:21.149Z"
+    }
+  }
+}
