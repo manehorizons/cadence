@@ -85,6 +85,9 @@ describe('HookDispatcher', () => {
     expect(state.skillAudit.invoked).toEqual([]);
   });
 
+  // AC-1: 105 serial atomic state.json writes exceed vitest's 5s default
+  // under turbo/parallel load on slower boxes; give this IO-bound test
+  // generous headroom (logic + assertions unchanged).
   it('skill-invoke caps at 100 entries with FIFO drop', async () => {
     active = await tempRepo({ initialized: true });
     const d = new HookDispatcher(active.root);
@@ -96,5 +99,5 @@ describe('HookDispatcher', () => {
     expect(state.skillAudit.invoked).toHaveLength(100);
     expect(state.skillAudit.invoked[0]).toBe('skill-5');
     expect(state.skillAudit.invoked[99]).toBe('skill-104');
-  });
+  }, 20000);
 });
