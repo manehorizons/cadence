@@ -67,9 +67,9 @@ user-owned and left untouched.
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs `lint → typecheck → test → build` (via `pnpm turbo`) on every pull request and every push to `main`, across a matrix of Node 20 + 22 on Ubuntu, Windows, and macOS. `pnpm install --frozen-lockfile` enforces the committed lockfile. No publish/release automation — CI is test-only.
+`.github/workflows/ci.yml` runs `lint → typecheck → test → build` (via `pnpm turbo`) on every pull request and every push to `main`, across a matrix of Node 20 + 22 on Ubuntu, Windows, and macOS. `pnpm install --frozen-lockfile` enforces the committed lockfile. A `ci-success` aggregator job (`needs: [test]`) collapses the six matrix cells into one stable status context. No publish/release automation — CI is test-only.
 
-Branch protection is a **manual one-time GitHub setting** (no API automation): Settings → Branches → add a rule for `main` → require the `test` status checks to pass before merging. Dependabot (`.github/dependabot.yml`) opens weekly `github-actions` + `npm` update PRs (limit 5 each), which the same CI gates.
+**Enforcing the gate.** GitHub Free private repos get neither branch protection nor rulesets (both need GitHub Pro or a public repo). This repo stays private, so the "failing CI blocks `main`" intent is enforced client-side by a tracked hook: `.githooks/pre-push` (wired via `git config core.hooksPath .githooks`, set automatically when you run the repo's setup, or manually once) runs the full `pnpm turbo run lint typecheck test build` before any push that updates `main` and aborts on failure. Bypass deliberately with `git push --no-verify`. If the repo goes public or onto Pro later, require the single `ci-success` check via Settings → Rules/Branches (or `gh api … rulesets`) and the hook can be retired. Dependabot (`.github/dependabot.yml`) opens weekly `github-actions` + `npm` update PRs (limit 5 each), which the same CI gates.
 
 ## Verification
 

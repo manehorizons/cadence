@@ -6,7 +6,8 @@ All notable changes to this project are documented in this file. Format follows 
 
 ### Changed
 
-- CI: added a `ci-success` aggregator job (`needs: [test]`) so branch protection can require one stable status context instead of the six brittle per-matrix-cell names. Branch protection on `main` enabled via `gh` API (required check `ci-success`, PRs required, admins not exempt; repo stays private).
+- CI: added a `ci-success` aggregator job (`needs: [test]`) so a single stable status context can gate `main` instead of the six brittle per-matrix-cell names.
+- CI gate enforced client-side via a tracked `.githooks/pre-push` hook (`core.hooksPath=.githooks`): pushes updating `refs/heads/main` run `pnpm turbo run lint typecheck test build` and abort on failure. Server-side branch protection / rulesets are unavailable on GitHub Free private repos (require Pro or a public repo), so the hook honors the "failing CI blocks main" intent for the private repo; bypass with `git push --no-verify`.
 
 ## [1.0.0] - 2026-05-15
 

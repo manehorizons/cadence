@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# CADENCE local CI gate (Phase 27.1 follow-up).
+#
+# GitHub Free private repos get neither branch protection nor rulesets, so
+# the "failing CI blocks main" intent is enforced client-side here. Pushes
+# that update refs/heads/main run the exact CI command; failure aborts the
+# push. Bypass (use sparingly): `git push --no-verify`.
+set -euo pipefail
+
+protected="refs/heads/main"
+gated=0
+
+# stdin: <local ref> <local sha> <remote ref> <remote sha>
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  if [ "$remote_ref" = "$protected" ]; then
+    gated=1
+  fi
+done
+
+if [ "$gated" -ne 1 ]; then
+  exit 0
+fi
+
+echo "pre-push: main is gated — running lint typecheck test build…"
+if ! pnpm turbo run lint typecheck test build; then
+  echo "pre-push: CI command failed — push to main aborted." >&2
+  echo "  Fix the failures, or bypass with: git push --no-verify" >&2
+  exit 1
+fi
+echo "pre-push: CI green — allowing push to main."
+exit 0
