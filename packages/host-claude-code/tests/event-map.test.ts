@@ -26,6 +26,15 @@ describe('mapEvent', () => {
     expect(mapEvent('PostToolUse')).toBe('post-tool-edit');
   });
 
+  // AC-2 (Phase 23.4) — Skill tool disambiguates PostToolUse → skill-invoke
+  it('maps PostToolUse + tool_name=Skill → skill-invoke', () => {
+    expect(mapEvent('PostToolUse', 'Skill')).toBe('skill-invoke');
+  });
+
+  it('maps PostToolUse + tool_name=Edit → post-tool-edit (regression)', () => {
+    expect(mapEvent('PostToolUse', 'Edit')).toBe('post-tool-edit');
+  });
+
   it('returns null for non-relevant events', () => {
     expect(mapEvent('Notification')).toBeNull();
     expect(mapEvent('PreCompact')).toBeNull();
@@ -87,5 +96,21 @@ describe('extractPayload', () => {
     expect(extractPayload({ hook_event_name: 'PostToolUse', tool_name: 'Bash' })).toBeUndefined();
     expect(extractPayload(null)).toBeUndefined();
     expect(extractPayload('not-json')).toBeUndefined();
+  });
+
+  // AC-2 (Phase 23.4) — Skill tool extracts skill name
+  it('PostToolUse Skill → {skill:<name>}', () => {
+    const raw = {
+      hook_event_name: 'PostToolUse',
+      tool_name: 'Skill',
+      tool_input: { skill: 'using-superpowers' },
+    };
+    expect(extractPayload(raw)).toEqual({ skill: 'using-superpowers' });
+  });
+
+  it('PostToolUse Skill with missing skill field → undefined', () => {
+    expect(
+      extractPayload({ hook_event_name: 'PostToolUse', tool_name: 'Skill', tool_input: {} }),
+    ).toBeUndefined();
   });
 });

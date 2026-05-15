@@ -7,6 +7,7 @@ export const AbstractEventZ = z.enum([
   'post-tool-edit',
   'session-stop',
   'subagent-result',
+  'skill-invoke',
 ]);
 export type AbstractEvent = z.infer<typeof AbstractEventZ>;
 

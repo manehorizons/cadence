@@ -206,5 +206,20 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 10. ~~Phase 23.1 — draft-read mtime gate~~ ✓
 11. ~~Phase 23.2 — coherence-warn anomaly emission~~ ✓
 12. ~~Phase 23.3 — loop-violation anomaly emission~~ ✓
+13. ~~Phase 23.4 — skillAudit wiring (`invoked` tracking; tokenUtilization deferred)~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
+
+## 11. Telemetry
+
+`state.skillAudit.invoked: string[]` records which cadence skills the user has invoked during the active session (Phase 23.4). Wiring:
+
+- Claude Code's `Skill` tool fires `PostToolUse` with `tool_name === 'Skill'` and `tool_input.skill === '<name>'`.
+- The host shim maps it to the `'skill-invoke'` abstract event and forwards the skill name via `ctx.raw.skill`.
+- The dispatcher routes `'skill-invoke'` to `handleSkillInvoke` which appends to `state.skillAudit.invoked` when `config.telemetry.skillInvocations === true`.
+- Dedup: a skill is recorded at most once per session. Cap: array is bounded at 100 entries with FIFO eviction.
+- `cadence status --json` surfaces the populated array.
+
+`tokenUtilization` real-signal wiring is deferred — host payload shape varies across Claude Code versions; a separate phase scopes the investigation. Current behavior: `handleUserPrompt` increments by `+0.01` per user-prompt event (proxy, not a real signal).
+
+`state.skillAudit.required[]` semantics (the list of skills the user *expects* to invoke each session, with a `skill-audit-miss` anomaly when one is absent at SessionStop) are also deferred.

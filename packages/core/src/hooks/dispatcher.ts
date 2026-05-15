@@ -8,6 +8,7 @@ import {
   handlePostToolEdit,
   handleSessionStop,
   handleSubagentResult,
+  handleSkillInvoke,
   type HookResult,
 } from './handlers.js';
 
@@ -31,6 +32,8 @@ export class HookDispatcher {
         return handleSessionStop(ctx, state, config);
       case 'subagent-result':
         return handleSubagentResult(ctx, state, config, backend);
+      case 'skill-invoke':
+        return handleSkillInvoke(ctx, state, config, backend);
     }
   }
 }

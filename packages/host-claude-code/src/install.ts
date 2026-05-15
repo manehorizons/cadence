@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { EDIT_TOOL_MATCHER } from './event-map.js';
+import { EDIT_TOOL_MATCHER, SKILL_TOOL_MATCHER } from './event-map.js';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallOptions {
@@ -76,23 +76,25 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
     _managedBy: 'cadence',
   });
 
-  const desired: Record<string, HookEntry> = {
-    SessionStart: plain(),
-    UserPromptSubmit: plain(),
-    PreToolUse: matched(EDIT_TOOL_MATCHER),
-    PostToolUse: matched(EDIT_TOOL_MATCHER),
-    Stop: plain(),
-    SubagentStop: plain(),
+  // Phase 23.4 — PostToolUse has two cadence-managed entries: one for edit
+  // tools (post-tool-edit abstract) and one for the Skill tool (skill-invoke).
+  const desired: Record<string, HookEntry[]> = {
+    SessionStart: [plain()],
+    UserPromptSubmit: [plain()],
+    PreToolUse: [matched(EDIT_TOOL_MATCHER)],
+    PostToolUse: [matched(EDIT_TOOL_MATCHER), matched(SKILL_TOOL_MATCHER)],
+    Stop: [plain()],
+    SubagentStop: [plain()],
   };
 
   const hooks: Record<string, HookEntry[]> = current.hooks ?? {};
 
-  for (const [ccEvent, entry] of Object.entries(desired)) {
+  for (const [ccEvent, entries] of Object.entries(desired)) {
     const existing = hooks[ccEvent] ?? [];
     const filtered = existing.filter(
       (e) => !isCadenceEntry(e) && !isLegacyKeelEntry(e),
     );
-    filtered.push(entry);
+    filtered.push(...entries);
     hooks[ccEvent] = filtered;
   }
 

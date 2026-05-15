@@ -160,6 +160,20 @@ describe('installHooks', () => {
     );
   });
 
+  // AC-2 (Phase 23.4) — PostToolUse has two cadence-managed entries (Edit-tools + Skill).
+  it('PostToolUse has both Edit-tools and Skill matchers, both cadence-managed', async () => {
+    const root = await tempDir();
+    await installHooks(root);
+    const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
+    const postToolUse = cfg.hooks.PostToolUse as Array<{ matcher: string; _managedBy: string }>;
+    expect(postToolUse).toHaveLength(2);
+    const matchers = postToolUse.map((e) => e.matcher).sort();
+    expect(matchers).toEqual(['Edit|Write|MultiEdit|NotebookEdit', 'Skill']);
+    for (const entry of postToolUse) {
+      expect(entry._managedBy).toBe('cadence');
+    }
+  });
+
   // AC-1 (Phase 18.1) — F2 rename rollout.
   it('evicts legacy _managedBy=keel hook entries on re-install', async () => {
     const root = await tempDir();

@@ -37,4 +37,64 @@ describe('HookDispatcher', () => {
     expect(r.ok).toBe(false);
     expect(r.blockMessage).toMatch(/BUILD/);
   });
+
+  // AC-3, AC-4 (Phase 23.4) — skill-invoke handler
+  it('skill-invoke appends ctx.raw.skill to state.skillAudit.invoked', async () => {
+    active = await tempRepo({ initialized: true });
+    const d = new HookDispatcher(active.root);
+    await d.dispatch('skill-invoke', {
+      cwd: active.root,
+      event: 'skill-invoke',
+      raw: { skill: 'using-superpowers' },
+    });
+    const state = await new SimpleStateBackend(active.root).readState();
+    expect(state.skillAudit.invoked).toEqual(['using-superpowers']);
+  });
+
+  it('skill-invoke dedups: invoking the same skill twice → still one entry', async () => {
+    active = await tempRepo({ initialized: true });
+    const d = new HookDispatcher(active.root);
+    await d.dispatch('skill-invoke', { cwd: active.root, event: 'skill-invoke', raw: { skill: 'foo' } });
+    await d.dispatch('skill-invoke', { cwd: active.root, event: 'skill-invoke', raw: { skill: 'foo' } });
+    const state = await new SimpleStateBackend(active.root).readState();
+    expect(state.skillAudit.invoked).toEqual(['foo']);
+  });
+
+  it('skill-invoke no-ops when telemetry.skillInvocations=false', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfgPath = join(active.root, '.cadence/config.json');
+    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+    cfg.telemetry.skillInvocations = false;
+    await writeFile(cfgPath, JSON.stringify(cfg));
+    const d = new HookDispatcher(active.root);
+    await d.dispatch('skill-invoke', {
+      cwd: active.root,
+      event: 'skill-invoke',
+      raw: { skill: 'using-superpowers' },
+    });
+    const state = await new SimpleStateBackend(active.root).readState();
+    expect(state.skillAudit.invoked).toEqual([]);
+  });
+
+  it('skill-invoke no-ops when ctx.raw.skill is missing or non-string', async () => {
+    active = await tempRepo({ initialized: true });
+    const d = new HookDispatcher(active.root);
+    await d.dispatch('skill-invoke', { cwd: active.root, event: 'skill-invoke' });
+    await d.dispatch('skill-invoke', { cwd: active.root, event: 'skill-invoke', raw: { skill: 123 } });
+    const state = await new SimpleStateBackend(active.root).readState();
+    expect(state.skillAudit.invoked).toEqual([]);
+  });
+
+  it('skill-invoke caps at 100 entries with FIFO drop', async () => {
+    active = await tempRepo({ initialized: true });
+    const d = new HookDispatcher(active.root);
+    // Push 105 unique skills; first 5 should fall off the front.
+    for (let i = 0; i < 105; i++) {
+      await d.dispatch('skill-invoke', { cwd: active.root, event: 'skill-invoke', raw: { skill: `skill-${i}` } });
+    }
+    const state = await new SimpleStateBackend(active.root).readState();
+    expect(state.skillAudit.invoked).toHaveLength(100);
+    expect(state.skillAudit.invoked[0]).toBe('skill-5');
+    expect(state.skillAudit.invoked[99]).toBe('skill-104');
+  });
 });

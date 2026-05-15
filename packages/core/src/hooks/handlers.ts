@@ -147,3 +147,29 @@ export async function handleSubagentResult(
   await backend.writeState(state);
   return { ok: true };
 }
+
+const SKILL_AUDIT_CAP = 100;
+
+/**
+ * Phase 23.4 — skillAudit wiring. Records the skill name from `ctx.raw.skill`
+ * into `state.skillAudit.invoked` when `config.telemetry.skillInvocations` is
+ * enabled. Dedups (set-like) and caps the array at 100 entries with FIFO
+ * eviction. Best-effort: missing skill or telemetry disabled → no-op.
+ */
+export async function handleSkillInvoke(
+  ctx: HookContext,
+  state: CadenceState,
+  config: CadenceConfig,
+  backend: SimpleStateBackend,
+): Promise<HookResult> {
+  if (!config.telemetry.skillInvocations) return { ok: true };
+  const skill = (ctx.raw as { skill?: unknown } | undefined)?.skill;
+  if (typeof skill !== 'string' || skill.length === 0) return { ok: true };
+  if (state.skillAudit.invoked.includes(skill)) return { ok: true };
+  state.skillAudit.invoked.push(skill);
+  while (state.skillAudit.invoked.length > SKILL_AUDIT_CAP) {
+    state.skillAudit.invoked.shift();
+  }
+  await backend.writeState(state);
+  return { ok: true };
+}
