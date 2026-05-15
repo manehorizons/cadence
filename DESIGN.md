@@ -214,6 +214,9 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 16. ~~Phase 24.3 — code-review verifier agent (gate at `settle run`)~~ ✓ (closes v0.5.0 medium-gate milestone)
 17. ~~Phase 25.1 — plan-review verifier agent (gate at `draft approve`, strict×complex)~~ ✓
 18. ~~Phase 25.2 — security-audit verifier agent (gate at `settle run`, strict×complex)~~ ✓ (closes v0.6.0 expensive-gate milestone)
+19. ~~Phase 26.1 — `cadence init` UX polish (name prompt, gate-profile heuristic, post-init summary)~~ ✓
+20. ~~Phase 26.2 — `CLAUDE.md` scaffold (managed-marker, `--claude-md` regenerate)~~ ✓
+21. ~~Phase 26.3 — `status anomalies --tail/--follow`~~ ✓ (closes v0.7.0 operator-ergonomics milestone)
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 
