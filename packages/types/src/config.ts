@@ -110,6 +110,20 @@ export const CadenceConfigZ = z.object({
       model: z.string().optional(),
     })
     .default({ provider: 'mock' }),
+  securityAudit: z
+    .object({
+      /**
+       * Security-audit verifier provider selection (Phase 25.2). Fires at
+       * `cadence settle run` (after code-review, before SUMMARY write)
+       * when `'security-audit'` is in the effective gate set
+       * (strict×complex only). CRITICAL findings refuse settle unless
+       * `--force` / `--allow-security-audit-failure`.
+       */
+      provider: z.enum(['mock', 'anthropic']).default('mock'),
+      /** Optional model override for the Anthropic provider. */
+      model: z.string().optional(),
+    })
+    .default({ provider: 'mock' }),
   notify: z
     .object({
       /**
@@ -180,6 +194,7 @@ export const defaultConfig: CadenceConfig = {
   perTaskVerifier: { provider: 'mock' as const },
   codeReview: { provider: 'mock' as const },
   planReview: { provider: 'mock' as const },
+  securityAudit: { provider: 'mock' as const },
   notify: { transport: 'stderr' as const },
 };
 

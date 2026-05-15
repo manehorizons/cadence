@@ -160,6 +160,22 @@ draft approve refused: plan-review found 1 finding(s). Fix the plan, or pass --a
 - Findings carry `severity: 'high' | 'medium' | 'low'`, a `message`, and an optional `suggestedEdit`.
 - Provider chosen via `config.planReview.provider`: `mock` (deterministic floor — pass iff ≥1 AC and every AC has non-empty Given/When/Then) or `anthropic` (holistic prompt-cached `claude-sonnet-4-6`).
 
+### Security-audit verifier (`security-audit`)
+
+The final, most expensive gate. When `'security-audit'` is in the active gate set (strict×complex only — the rarest cell), `cadence settle run` runs an OWASP-aware pass over the phase diff after code-review and before SUMMARY is written:
+
+```
+$ cadence settle run --auto
+security-audit: 12 critical — hardcoded JWT-shaped credential
+settle run refused: security-audit reported 1 CRITICAL finding(s). Pass --allow-security-audit-failure to record them and settle anyway, or --force to bypass.
+```
+
+- Input is `git diff HEAD -- <files>` for the union of touched files.
+- All findings (any severity) land on `SUMMARY.securityAudit` as a flat `Finding[]` — present only when the gate ran.
+- CRITICAL findings refuse settle unless `--force` or `--allow-security-audit-failure`; HIGH/MEDIUM/LOW are recorded but never block.
+- `Finding.severity` is `'critical' | 'high' | 'medium' | 'low'` (the `critical` tier was added for this gate).
+- Provider chosen via `config.securityAudit.provider`: `mock` (deterministic — every added `Authorization:` header value or JWT-shaped string is CRITICAL) or `anthropic` (OWASP-aware prompt-cached `claude-sonnet-4-6`).
+
 ### Anomaly notify
 
 When `'anomaly-notify'` is in the gate set (auto profile and standard×{standard,complex} cells), settle collects typed events and dispatches them via the configured transport. Event types:

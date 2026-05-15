@@ -9,9 +9,13 @@ export const DeepVerdictZ = z.object({
 });
 export type DeepVerdict = z.infer<typeof DeepVerdictZ>;
 
-/** Phase 24.3 — code-review per-file finding. */
+/**
+ * Per-file / per-diff finding. Introduced for code-review (Phase 24.3,
+ * high/medium/low). Phase 25.2 added `critical` for the security-audit
+ * gate — additive; code-review still only emits high/medium/low.
+ */
 export const FindingZ = z.object({
-  severity: z.enum(['high', 'medium', 'low']),
+  severity: z.enum(['critical', 'high', 'medium', 'low']),
   message: z.string(),
   line: z.number().int().positive().optional(),
 });
@@ -42,5 +46,7 @@ export const SummaryZ = z.object({
     .optional(),
   /** Phase 24.3: per-file code-review findings. Present only when the gate ran. */
   codeReview: z.record(z.string(), z.array(FindingZ)).optional(),
+  /** Phase 25.2: flat security-audit findings. Present only when the gate ran. */
+  securityAudit: z.array(FindingZ).optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

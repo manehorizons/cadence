@@ -94,7 +94,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 | Free (always fire) | Coherence check · structural verifier · build/test must pass |
 | Cheap | DRAFT-read mtime check **(Phase 23.1)** · test-coverage proof per AC **(Phase 14)** · anomaly notify **(Phase 17)** |
 | Medium | Approve gate (manual click) **(Phase 24.1)** · per-task verify **(Phase 24.2)** · code review agent **(Phase 24.3)** |
-| Expensive | Independent verifier agent (`--deep`) · interactive AC verdict (`--interactive`) · plan review **(Phase 25.1)** · security audit |
+| Expensive | Independent verifier agent (`--deep`) · interactive AC verdict (`--interactive`) · plan review **(Phase 25.1)** · security audit **(Phase 25.2)** |
 
 ### 4.2 Default gates per cell (deltas only; free gates always fire)
 
@@ -213,6 +213,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 15. ~~Phase 24.2 — per-task verifier agent (gate at `build task --status=DONE`)~~ ✓
 16. ~~Phase 24.3 — code-review verifier agent (gate at `settle run`)~~ ✓ (closes v0.5.0 medium-gate milestone)
 17. ~~Phase 25.1 — plan-review verifier agent (gate at `draft approve`, strict×complex)~~ ✓
+18. ~~Phase 25.2 — security-audit verifier agent (gate at `settle run`, strict×complex)~~ ✓ (closes v0.6.0 expensive-gate milestone)
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

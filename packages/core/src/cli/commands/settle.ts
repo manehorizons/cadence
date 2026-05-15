@@ -29,6 +29,7 @@ import { collectAnomalies } from '../../notify/collect.js';
 import { emitLoopViolation } from '../../notify/loop-violation.js';
 import { selectCodeReviewVerifier } from '../../verify/code-review-factory.js';
 import { emitCodeReviewHigh } from '../../notify/code-review.js';
+import { selectSecurityAuditVerifier } from '../../verify/security-audit-factory.js';
 
 interface ProgressJson {
   draftId: string;
@@ -93,6 +94,10 @@ export function registerSettleCommand(program: Command): void {
       '--allow-code-review-failure',
       'do not refuse on HIGH-severity code-review findings; record them in SUMMARY and emit anomalies anyway (Phase 24.3)',
     )
+    .option(
+      '--allow-security-audit-failure',
+      'do not refuse on CRITICAL security-audit findings; record them in SUMMARY and settle anyway (Phase 25.2)',
+    )
     .action(
       async (opts: {
         ac?: string[];
@@ -104,6 +109,7 @@ export function registerSettleCommand(program: Command): void {
         allowStaleDraft?: boolean;
         allowVerifierFailure?: boolean;
         allowCodeReviewFailure?: boolean;
+        allowSecurityAuditFailure?: boolean;
         interactive?: boolean;
       }) => {
       try {
@@ -446,6 +452,66 @@ export function registerSettleCommand(program: Command): void {
           }
         }
 
+        // Phase 25.2 — security-audit verifier gate. The final, most
+        // expensive gate. Fires when `'security-audit'` is in the effective
+        // gate set (strict×complex only). Runs an OWASP-aware pass over
+        // `git diff HEAD -- <files>` for the union of touched files, after
+        // code-review and before SUMMARY assembly. CRITICAL findings refuse
+        // settle unless `--force` / `--allow-security-audit-failure`. All
+        // findings (any severity) land on SUMMARY.securityAudit.
+        let securityAuditFindings: Finding[] | undefined;
+        if (gateSet.gates.includes('security-audit')) {
+          const touched = Array.from(
+            new Set(draft.tasks.flatMap((t) => t.files)),
+          );
+          const diff = collectDiffForCodeReview(cwd, touched);
+          const auditor = selectSecurityAuditVerifier(cadenceConfig);
+          try {
+            const result = await auditor.verify({ files: touched, diff });
+            securityAuditFindings = result.findings;
+            const criticals = result.findings.filter(
+              (f) => f.severity === 'critical',
+            );
+            const bypassed =
+              opts.force === true ||
+              opts.allowSecurityAuditFailure === true;
+            if (criticals.length > 0) {
+              for (const c of criticals) {
+                process.stderr.write(
+                  `security-audit: ${c.line !== undefined ? `${c.line} ` : ''}critical — ${c.message}\n`,
+                );
+              }
+              if (!bypassed) {
+                process.stderr.write(
+                  `settle run refused: security-audit reported ${criticals.length} CRITICAL finding(s). ` +
+                    'Pass --allow-security-audit-failure to record them and settle anyway, or --force to bypass.\n',
+                );
+                process.exitCode = 1;
+                return;
+              }
+              const flag =
+                opts.force === true
+                  ? '--force'
+                  : '--allow-security-audit-failure';
+              process.stderr.write(
+                `security-audit: ${flag} set; proceeding past ${criticals.length} CRITICAL finding(s).\n`,
+              );
+            }
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            process.stderr.write(
+              `security-audit: verifier failed — ${message}. Pass --allow-security-audit-failure to continue.\n`,
+            );
+            if (
+              opts.allowSecurityAuditFailure !== true &&
+              opts.force !== true
+            ) {
+              process.exitCode = 1;
+              return;
+            }
+          }
+        }
+
         // ACs covered by an explicit `--ac` OR an interactive verdict are
         // excluded from auto-derivation refusal (the user verdicted them).
         const interactiveIds = new Set(
@@ -557,6 +623,9 @@ export function registerSettleCommand(program: Command): void {
           ...(deepVerify ? { deepVerify } : {}),
           ...(interactiveVerify ? { interactiveVerify } : {}),
           ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
+          ...(securityAuditFindings
+            ? { securityAudit: securityAuditFindings }
+            : {}),
         };
 
         const summaryBase = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-SUMMARY`);
