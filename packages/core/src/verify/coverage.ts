@@ -1,5 +1,6 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import type { Dirent } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
 export type AcId = `AC-${number}` | string;
@@ -86,7 +87,7 @@ async function listAllFiles(root: string): Promise<string[]> {
   const stack: string[] = [root];
   while (stack.length > 0) {
     const dir = stack.pop()!;
-    let entries: import('node:fs').Dirent[];
+    let entries: Dirent[];
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch {

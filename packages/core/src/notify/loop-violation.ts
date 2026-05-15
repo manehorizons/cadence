@@ -2,7 +2,7 @@ import type { AnomalyEvent } from '@cadence/types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { loadConfig } from '../config/loader.js';
 import { effectiveGateSet } from '../gates/engine.js';
-import { LoopViolationError } from '../errors.js';
+import type { LoopViolationError } from '../errors.js';
 import { selectNotifier } from './factory.js';
 
 /**

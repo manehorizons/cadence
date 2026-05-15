@@ -1,10 +1,12 @@
 # CADENCE
 
+[![CI](https://github.com/manehorizons/cadence/actions/workflows/ci.yml/badge.svg)](https://github.com/manehorizons/cadence/actions/workflows/ci.yml)
+
 **Coordinated AI-Driven Engineering with Notifications and Customizable Execution** — structured AI-assisted development.
 
 CADENCE is a customizable plan/build/settle framework for AI-assisted development. Inspired by GSD (Get Shit Done) and PAUL (Plan-Apply-Unify Loop); independently implemented in TypeScript. The product center is a tunable quality regime: three user-involvement profiles (`strict` / `standard` / `auto`) × three phase tiers (`quick-fix` / `standard` / `complex`) decide which gates fire — see `DESIGN.md` for the full matrix.
 
-> **Status:** package `0.3.0`; milestone tag `v0.5.0` (2026-05-15). Phase 12 renamed KEEL → CADENCE (`v0.2.0-rc.1`). `v0.3.0` shipped the behavioral verifier hybrid (test-coverage gate, `--deep` verifier agent, `--interactive` walker), four-transport anomaly notify (`stderr` / `file` / `none` / `webhook`), and the `auto × complex` soft cap. `v0.4.0` shipped the cheap-gate set (DRAFT-read mtime, coherence-warn + loop-violation anomalies, `skillAudit.invoked` wiring). `v0.5.0` shipped the medium gates: manual `approve` Y/N prompt (Phase 24.1), per-task verifier (Phase 24.2), and code-review verifier (Phase 24.3). Earlier history (Phases 1–11) shipped under the KEEL name; the `keel-codex-archive` tag preserves the dual-host implementation removed in Phase 11. See [CHANGELOG.md](./CHANGELOG.md) for the full spread.
+> **Status:** package `0.3.0`; milestone tag `v0.7.0`. Phase 12 renamed KEEL → CADENCE (`v0.2.0-rc.1`). `v0.3.0` shipped the behavioral verifier hybrid (test-coverage gate, `--deep` verifier agent, `--interactive` walker), four-transport anomaly notify (`stderr` / `file` / `none` / `webhook`), and the `auto × complex` soft cap. `v0.4.0` shipped the cheap-gate set (DRAFT-read mtime, coherence-warn + loop-violation anomalies, `skillAudit.invoked` wiring). `v0.5.0` shipped the medium gates: manual `approve` prompt (24.1), per-task verifier (24.2), code-review verifier (24.3). `v0.6.0` shipped the expensive gates: plan-review at `draft approve` (25.1) and security-audit at `settle run` (25.2), both strict×complex. `v0.7.0` shipped operator ergonomics: `cadence init` UX polish (26.1), managed `CLAUDE.md` scaffold (26.2), and `status anomalies --tail/--follow` (26.3). Earlier history (Phases 1–11) shipped under the KEEL name; the `keel-codex-archive` tag preserves the dual-host implementation removed in Phase 11. See [CHANGELOG.md](./CHANGELOG.md) for the full spread.
 
 ## Loop
 
@@ -62,6 +64,12 @@ byte-for-byte, and a `CLAUDE.md` with no markers is treated as fully
 user-owned and left untouched.
 
 > Dogfooding a local checkout of CADENCE before publishing? Build the workspace (`pnpm build`) then run `node packages/host-claude-code/bin/cadence-host-claude-code.cjs install --local --settings .claude/settings.local.json`. `--local` writes absolute paths to the workspace builds instead of `npx`-style commands; pair it with `settings.local.json` so the machine-specific paths stay out of git.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs `lint → typecheck → test → build` (via `pnpm turbo`) on every pull request and every push to `main`, across a matrix of Node 20 + 22 on Ubuntu, Windows, and macOS. `pnpm install --frozen-lockfile` enforces the committed lockfile. No publish/release automation — CI is test-only.
+
+Branch protection is a **manual one-time GitHub setting** (no API automation): Settings → Branches → add a rule for `main` → require the `test` status checks to pass before merging. Dependabot (`.github/dependabot.yml`) opens weekly `github-actions` + `npm` update PRs (limit 5 each), which the same CI gates.
 
 ## Verification
 
