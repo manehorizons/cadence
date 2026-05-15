@@ -1,9 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tempRepo, type Fixture } from '@cadence/testkit';
+import { scanTestCoverage } from '../../src/verify/coverage.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CADENCE_CLI = join(__dirname, '../../dist/cli/index.js');
@@ -111,5 +113,62 @@ describe('cadence init', () => {
     expect(r.stdout).toMatch(/project {2,}demo/);
     expect(r.stdout).toMatch(/gate profile {2,}standard/);
     expect(r.stdout).toMatch(/Next: edit \.cadence\/ROADMAP\.md/);
+  });
+});
+
+describe('cadence init — F2 layout-detected testGlobs', () => {
+  it('AC-1: monorepo (packages/ present) keeps the workspace testGlobs', async () => {
+    active = await tempRepo();
+    await mkdir(join(active.root, 'packages'), { recursive: true });
+    const r = await run(
+      ['init', '--name=mono', '--gate-profile=auto'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.verification.testGlobs).toEqual([
+      'packages/**/*.test.ts',
+      'packages/**/*.test.tsx',
+    ]);
+    expect(r.stdout).toMatch(/layout {2,}monorepo/);
+  });
+
+  it('AC-2: single-package repo gets a glob the coverage scanner matches', async () => {
+    active = await tempRepo();
+    await mkdir(join(active.root, 'tests'), { recursive: true });
+    await writeFile(
+      join(active.root, 'tests/sample.test.ts'),
+      'it("covers AC-2 from a tests/ dir", () => {});\n',
+    );
+    const r = await run(
+      ['init', '--name=single', '--gate-profile=auto'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.verification.testGlobs).toEqual([
+      '**/*.test.ts',
+      '**/*.test.tsx',
+    ]);
+    // F2 runtime proof: the written glob actually links the AC.
+    const cov = await scanTestCoverage(active.root, {
+      globs: cfg.verification.testGlobs,
+    });
+    expect((cov.get('AC-2') ?? []).length).toBeGreaterThan(0);
+  });
+
+  it('AC-3: post-init summary reports detected layout + effective globs', async () => {
+    active = await tempRepo();
+    const r = await run(
+      ['init', '--name=s', '--gate-profile=auto'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/layout {2,}single-package/);
+    expect(r.stdout).toMatch(/test globs {2,}\*\*\/\*\.test\.ts/);
   });
 });

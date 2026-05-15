@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { presets, emptyState, type Profile } from '@cadence/types';
@@ -58,6 +58,27 @@ export function suggestGateProfile(cwd: string): Profile {
   } catch {
     return 'auto';
   }
+}
+
+/**
+ * Pick `verification.testGlobs` from the repo's layout (F2, Phase 29.1
+ * shakedown). A `packages/` directory at the init root means a monorepo —
+ * keep the workspace glob (correct for cadence's own dogfood). Any other
+ * shape is treated as single-package: a depth-agnostic `**\/*.test.ts(x)`
+ * glob so the test-coverage gate can match tests under `tests/`, `src/`,
+ * `__tests__/`, etc. The scanner already prunes node_modules/dist/.git/.turbo,
+ * so the broad glob is safe. Never throws.
+ */
+export function detectTestGlobs(cwd: string): string[] {
+  let monorepo = false;
+  try {
+    monorepo = statSync(join(cwd, 'packages')).isDirectory();
+  } catch {
+    monorepo = false;
+  }
+  return monorepo
+    ? ['packages/**/*.test.ts', 'packages/**/*.test.tsx']
+    : ['**/*.test.ts', '**/*.test.tsx'];
 }
 
 async function resolveName(
@@ -227,7 +248,16 @@ export function registerInitCommand(program: Command): void {
           await prompter?.close?.();
         }
 
-        const cfg = { ...presetCfg, profile: gateProfile };
+        const testGlobs = detectTestGlobs(cwd);
+        const layout =
+          testGlobs[0]?.startsWith('packages/') ?? false
+            ? 'monorepo (packages/)'
+            : 'single-package';
+        const cfg = {
+          ...presetCfg,
+          profile: gateProfile,
+          verification: { ...presetCfg.verification, testGlobs },
+        };
 
         await mkdir(join(cadenceDir, 'phases'), { recursive: true });
         await mkdir(join(cadenceDir, 'handoff'), { recursive: true });
@@ -264,6 +294,8 @@ export function registerInitCommand(program: Command): void {
         console.log(`  location      ${cadenceDir}`);
         console.log(`  preset        ${opts.profile}`);
         console.log(`  gate profile  ${gateProfile}`);
+        console.log(`  layout        ${layout}`);
+        console.log(`  test globs    ${testGlobs.join(', ')}`);
         console.log(`  scaffolded    config.json, state.json, PROJECT.md,`);
         console.log(`                ROADMAP.md, MILESTONES.md,`);
         console.log(`                SPECIAL-FLOWS.md, STATE.md, CLAUDE.md`);

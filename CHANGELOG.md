@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+### Fixed
+
+- `cadence init` now detects repo layout and writes a matching `verification.testGlobs`: a `packages/` directory → the workspace glob (`packages/**/*.test.ts(x)`, unchanged for cadence's own monorepo), any other shape → a depth-agnostic `**/*.test.ts(x)`. Previously the monorepo glob was written unconditionally, leaving the test-coverage gate unsatisfiable on every single-package repo (F2 — Phase 29.1 shakedown publish-blocker). The post-init summary now reports the detected layout and effective globs. (Phase 29.4, F2.)
+
 ### Changed
 
 - CI: added a `ci-success` aggregator job (`needs: [test]`) so a single stable status context can gate `main` instead of the six brittle per-matrix-cell names.
