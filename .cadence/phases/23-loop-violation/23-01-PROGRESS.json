@@ -1,0 +1,35 @@
+{
+  "draftId": "23-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AnomalyTypeZ + LoopViolationError {expected, actual} (68 types, 6 errors tests)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:28:32.355Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "settle catch emits loop-violation; LoopViolationError carries expected/actual",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:32:07.898Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "build/done/block/needs-context shortcut catches emit with right source labels",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:32:08.090Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Strict-profile gate-absent + missing-config best-effort paths tested (7 total)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:32:08.285Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "DESIGN.md §3.3 eight-type table + §10 punchlist 23.3 tick",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:32:53.303Z"
+    }
+  }
+}
