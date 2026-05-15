@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "24-manual-approve",
+  "activePhase": "24-per-task-verify",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-15T02:29:06.813Z",
+  "draftReadAt": "2026-05-15T02:51:48.730Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
