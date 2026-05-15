@@ -1,0 +1,35 @@
+{
+  "draftId": "23-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AbstractEventZ.skill-invoke (69 types tests)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:36:29.452Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "mapEvent(toolName?) disambig + extractPayload Skill (17 event-map tests)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:37:50.800Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "install double-entry PostToolUse (Edit+Skill matchers) + shim threads tool_name (13 install tests, 60 host total)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:39:17.314Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "handleSkillInvoke dedup+100cap+telemetry-gated (5 new dispatcher tests, 8 total)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:40:41.755Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "DESIGN.md §11 Telemetry section + §10 23.4 tick",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:41:37.255Z"
+    }
+  }
+}
