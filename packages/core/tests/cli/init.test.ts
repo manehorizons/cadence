@@ -172,3 +172,38 @@ describe('cadence init — F2 layout-detected testGlobs', () => {
     expect(r.stdout).toMatch(/test globs {2,}\*\*\/\*\.test\.ts/);
   });
 });
+
+describe('cadence init — F1/F4/F6 remediation', () => {
+  it('AC-2: standard gate profile prints the non-TTY draft-approve hint', async () => {
+    active = await tempRepo();
+    const r = await run(
+      ['init', '--name=demo', '--gate-profile=standard'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/cadence draft approve/);
+    expect(r.stdout).toMatch(/--no-approve/);
+    expect(r.stdout).toMatch(/non-TTY/);
+  });
+
+  it('AC-2: auto gate profile omits the approve hint', async () => {
+    active = await tempRepo();
+    const r = await run(
+      ['init', '--name=demo', '--gate-profile=auto'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/--no-approve/);
+  });
+
+  it('AC-3: summary disambiguates config preset vs gate profile', async () => {
+    active = await tempRepo();
+    const r = await run(
+      ['init', '--name=demo', '--gate-profile=auto'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/config preset — workflow defaults/);
+    expect(r.stdout).toMatch(/gate strictness: strict\|standard\|auto/);
+  });
+});

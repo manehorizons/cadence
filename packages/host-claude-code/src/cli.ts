@@ -48,6 +48,13 @@ program
           process.stdout.write(`Installed CADENCE slash commands → ${opts.cwd}/.claude/commands/\n`);
         }
         process.stdout.write('Start a new Claude Code session to activate.\n');
+        if (opts.local) {
+          process.stderr.write(
+            `warning: --local wrote machine-absolute paths into ${opts.settings}. ` +
+              'Do NOT commit it — add it to .gitignore; other clones/machines ' +
+              'cannot resolve these paths. Re-run install per machine instead.\n',
+          );
+        }
       } catch (err) {
         process.stderr.write(
           `install failed: ${err instanceof Error ? err.message : String(err)}\n`,

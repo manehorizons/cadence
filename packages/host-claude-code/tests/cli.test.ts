@@ -76,6 +76,22 @@ describe('cadence-host-claude-code install', () => {
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe('node /abs/shim.js hook');
   });
 
+  it('AC-1: --local emits a stderr warning about machine-absolute paths', async () => {
+    const root = await tempDir();
+    const r = await run(['install', '--cwd', root, '--local']);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/--local wrote machine-absolute paths/);
+    expect(r.stderr).toMatch(/[Dd]o NOT commit/);
+    expect(r.stderr).toMatch(/\.gitignore/);
+  });
+
+  it('AC-1: plain install (no --local) emits no such warning', async () => {
+    const root = await tempDir();
+    const r = await run(['install', '--cwd', root]);
+    expect(r.code).toBe(0);
+    expect(r.stderr).not.toMatch(/machine-absolute paths/);
+  });
+
   it('honors --cadence override (appended to default shim)', async () => {
     const root = await tempDir();
     const r = await run(['install', '--cwd', root, '--cadence', 'node /abs/k.js']);

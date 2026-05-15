@@ -220,6 +220,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 22. ~~Phase 27.1 — GitHub Actions tests-on-PR + Dependabot + lint fixes~~ ✓ (closes v0.8.0 CI milestone)
 23. ~~Phase 28.1 — v1.0.0 release (version bump 0.3.0 → 1.0.0, CHANGELOG cut, annotated tag)~~ ✓ (v1.0.0 — roadmap complete)
 24. ~~Phase 29.4 (F2 pulled forward) — `init` layout-detected `testGlobs`: `packages/` → workspace glob, else `**/*.test.ts(x)`; summary reports detected layout~~ ✓ (v1.1 publish-blocker from 29.1 shakedown)
+25. ~~Phase 29.6 — 29.1 doc/ux remediation: F1 (`--local` install warning), F6 (init non-TTY-approve hint + README), F4 (preset/gate-profile summary disambiguation) + consolidated `29-04-REMEDIATION.md` ledger~~ ✓ (29.2/29.3 resource-blocked; 30.1 publish gate cleared of open 29.1 defects)
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

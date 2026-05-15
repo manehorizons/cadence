@@ -7,6 +7,9 @@ All notable changes to this project are documented in this file. Format follows 
 ### Fixed
 
 - `cadence init` now detects repo layout and writes a matching `verification.testGlobs`: a `packages/` directory → the workspace glob (`packages/**/*.test.ts(x)`, unchanged for cadence's own monorepo), any other shape → a depth-agnostic `**/*.test.ts(x)`. Previously the monorepo glob was written unconditionally, leaving the test-coverage gate unsatisfiable on every single-package repo (F2 — Phase 29.1 shakedown publish-blocker). The post-init summary now reports the detected layout and effective globs. (Phase 29.4, F2.)
+- `cadence-host-claude-code install --local` now prints a stderr warning that the settings file contains machine-absolute paths and must not be committed (gitignore it; re-run per machine). README documents it. (Phase 29.6, F1.)
+- `cadence init` post-init summary now prints a non-TTY `draft approve` / `--no-approve` hint when the resolved gate profile is `standard` or `strict`; the README quickstart adds a ≥20-commits → `standard` heads-up. (Phase 29.6, F6.)
+- `cadence init` summary now disambiguates the config preset row ("workflow defaults: solo|team|production") from the gate-profile row ("gate strictness: strict|standard|auto"), removing the overlapping "profile" vocabulary. (Phase 29.6, F4.)
 
 ### Changed
 

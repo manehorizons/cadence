@@ -39,6 +39,13 @@ config preset (`solo | team | production`, default `team`). `--gate-profile`
 sets the gate profile (`strict | standard | auto`); when omitted it is suggested
 from git history (≥20 commits → `standard`, otherwise `auto`).
 
+> **Heads-up (mature repos):** on a repo with ≥20 commits the suggested gate
+> profile is `standard`, which puts `draft approve` behind an interactive
+> prompt. In non-TTY contexts (CI, piped stdin, agents) `cadence draft approve`
+> then **refuses** unless you pass `--no-approve` (or `--gate-profile=auto` at
+> `init`). The quickstart above only runs prompt-free because a fresh
+> non-git temp dir resolves to `auto`. The post-init summary now flags this.
+
 `settle run --auto` reads PROGRESS.json and derives each AC's verdict the same way `cadence status` does: all linked tasks DONE → pass, any BLOCKED → fail with `auto: <task> blocked`, NEEDS_CONTEXT → fail with `auto: <task> needs context`, anything still PENDING → refuses with a clear error (`--force` settles anyway). Pass explicit `--ac AC-1=fail:custom` to override the derivation for an individual AC. The legacy `--ac`-only flow still works exactly as before.
 
 `cadence status` renders project, loop position, active draft, per-task status, AC derivation (pass/blocked/needs-context/pending), and the next-action hint. `cadence status --json` emits the same data as a single JSON document for scripting.
@@ -54,6 +61,13 @@ npx @cadence/host-claude-code install
 # /cadence-build /cadence-settle /cadence-done /cadence-block /cadence-needs-context
 # are available under .claude/commands/.
 ```
+
+> **`--local` writes machine-absolute paths.** `npx @cadence/host-claude-code
+> install --local` (the monorepo-dogfood mode) bakes absolute paths to *this
+> machine's* workspace build into the settings file. **Do not commit it** — add
+> the settings file (e.g. `.claude/settings.local.json`) to `.gitignore`; other
+> clones/machines cannot resolve those paths. Re-run `install` per machine
+> instead. The installer prints this warning on stderr when `--local` is used.
 
 `cadence init` also writes a **`CLAUDE.md`** at the repo root that primes Claude
 Code on the loop, gate profile, and where state lives. It is wrapped in

@@ -292,8 +292,12 @@ export function registerInitCommand(program: Command): void {
         console.log(`  ───────────────────`);
         console.log(`  project       ${name}`);
         console.log(`  location      ${cadenceDir}`);
-        console.log(`  preset        ${opts.profile}`);
-        console.log(`  gate profile  ${gateProfile}`);
+        console.log(
+          `  preset        ${opts.profile}  (config preset — workflow defaults: solo|team|production)`,
+        );
+        console.log(
+          `  gate profile  ${gateProfile}  (gate strictness: strict|standard|auto)`,
+        );
         console.log(`  layout        ${layout}`);
         console.log(`  test globs    ${testGlobs.join(', ')}`);
         console.log(`  scaffolded    config.json, state.json, PROJECT.md,`);
@@ -305,6 +309,15 @@ export function registerInitCommand(program: Command): void {
           `  Next: edit .cadence/ROADMAP.md, then \`cadence draft new\`.`,
         );
         console.log(`  Docs: see .cadence/ROADMAP.md and the project README.`);
+        if (gateProfile === 'standard' || gateProfile === 'strict') {
+          console.log('');
+          console.log(
+            `  Note: under the \`${gateProfile}\` gate profile \`cadence draft approve\` is`,
+          );
+          console.log(
+            `  interactive — pass \`--no-approve\` for non-TTY runs (CI, scripts, agents).`,
+          );
+        }
       },
     );
 }
