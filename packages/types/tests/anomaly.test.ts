@@ -23,6 +23,7 @@ describe('AnomalyEventZ (AC-1)', () => {
       'files-outside-boundary',
       'verifier-failure',
       'force-used',
+      'coherence-warn',
     ] as const;
     for (const t of types) {
       expect(() =>
@@ -109,6 +110,19 @@ describe('AnomalyEventZ (AC-1)', () => {
         }),
       ).toThrow();
     }
+  });
+
+  // AC-1 (Phase 23.2) — coherence-warn type
+  it('accepts coherence-warn event with context.source (AC-1)', () => {
+    expect(() =>
+      AnomalyEventZ.parse({
+        type: 'coherence-warn',
+        severity: 'warn',
+        message: 'Draft touches src/foo.ts which is subject of decision D1',
+        context: { code: 'DECISION_TOUCH', source: 'coherence.check' },
+        ts: '2026-05-14T22:30:00.000Z',
+      }),
+    ).not.toThrow();
   });
 
   it('accepts offset-aware ts variants (AC-1)', () => {

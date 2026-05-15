@@ -2,13 +2,15 @@ import type { Command } from 'commander';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import type { AnomalyEvent } from '@cadence/types';
 import { parseDraftMd } from '../../parse/draft-parser.js';
 import { SimpleStateBackend } from '../../state/simple.js';
-import { coherenceCheck } from '../../coherence/check.js';
+import { coherenceCheck, type CoherenceIssue } from '../../coherence/check.js';
 import { atomicWriteText } from '../../state/atomic-write.js';
 import { renderStateMd } from '../../render/state-md.js';
 import { loadConfig } from '../../config/loader.js';
 import { effectiveGateSet } from '../../gates/engine.js';
+import { selectNotifier } from '../../notify/factory.js';
 
 export function registerDraftCommand(program: Command): void {
   const cmd = program.command('draft').description('Draft phase workflow');
@@ -78,6 +80,7 @@ export function registerDraftCommand(program: Command): void {
           return;
         }
         let blocked = false;
+        const warns: CoherenceIssue[] = [];
         for (const i of result.issues) {
           const line = `[${i.severity.toUpperCase()}] ${i.code}: ${i.message}`;
           if (i.severity === 'block') {
@@ -85,6 +88,33 @@ export function registerDraftCommand(program: Command): void {
             blocked = true;
           } else {
             process.stderr.write('[WARN] ' + line + '\n');
+            warns.push(i);
+          }
+        }
+        // Phase 23.2 — coherence-warn anomaly emission. Fires per warn issue
+        // when `'anomaly-notify'` is in the effective gate set. Block-severity
+        // issues already refuse loudly above; emission is for the soft warns.
+        if (warns.length > 0) {
+          const cfg = await loadConfig(cwd).catch(() => null);
+          const gateSet = effectiveGateSet(state, cfg, draft);
+          if (gateSet.gates.includes('anomaly-notify')) {
+            const now = new Date().toISOString();
+            const events: AnomalyEvent[] = warns.map((w) => ({
+              type: 'coherence-warn' as const,
+              severity: 'warn' as const,
+              message: w.message,
+              context: { code: w.code, source: 'coherence.check' },
+              ts: now,
+            }));
+            const notifier = selectNotifier(cfg);
+            try {
+              await notifier.notify(events);
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              process.stderr.write(
+                `cadence-notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
+              );
+            }
           }
         }
         if (blocked) process.exitCode = 2;
@@ -137,6 +167,31 @@ export function registerDraftCommand(program: Command): void {
           process.stderr.write(
             'draft approve: --allow-auto-complex set; proceeding past soft cap (auto × complex).\n',
           );
+        }
+
+        // Phase 23.2 — coherence-warn emission at approve time. Same pattern
+        // as `draft check` but with `source: 'coherence.approve'`. Fires
+        // before the BUILD state transition so failed dispatches don't leave
+        // partial state.
+        const warns = result.issues.filter((i) => i.severity === 'warn');
+        if (warns.length > 0 && gateSet.gates.includes('anomaly-notify')) {
+          const now = new Date().toISOString();
+          const events: AnomalyEvent[] = warns.map((w) => ({
+            type: 'coherence-warn' as const,
+            severity: 'warn' as const,
+            message: w.message,
+            context: { code: w.code, source: 'coherence.approve' },
+            ts: now,
+          }));
+          const notifier = selectNotifier(cfg);
+          try {
+            await notifier.notify(events);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            process.stderr.write(
+              `cadence-notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
+            );
+          }
         }
 
         state.activePhase = phase;

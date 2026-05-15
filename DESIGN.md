@@ -55,8 +55,9 @@ Two emission surfaces share one `Notifier` transport:
 
 1. **Settle-side (Phase 17.1)** — `collectAnomalies(...)` walks the settle context and dispatches a batch through `selectNotifier(config)` at SETTLE close.
 2. **Hook-side (Phase 17.2)** — `handlePreToolEdit` detects `files-outside-boundary` at edit time and dispatches one event per outside path *as the edit is about to happen*. Detection-only — the hook never refuses the edit.
+3. **Coherence-side (Phase 23.2)** — `cadence draft check` and `cadence draft approve` dispatch one `coherence-warn` event per warn-severity coherence issue. Block-severity issues already refuse loudly; warns are the soft signal the auto profile needs to know about.
 
-Both surfaces gate on `'anomaly-notify'` being in the effective gate set (auto + standard×{standard,complex} cells). Each event carries `ts: ISO8601` (offset-aware, emitter-stamped via `new Date().toISOString()` — Phase 17.3). Six event types:
+All three surfaces gate on `'anomaly-notify'` being in the effective gate set (auto + standard×{standard,complex} cells). Each event carries `ts: ISO8601` (offset-aware, emitter-stamped via `new Date().toISOString()` — Phase 17.3). Seven event types:
 
 | Type | When |
 |---|---|
@@ -66,6 +67,7 @@ Both surfaces gate on `'anomaly-notify'` being in the effective gate set (auto +
 | `files-outside-boundary` | A touched file is not in any task's declared `files:` list (settle-time reconciliation OR hook-time per-edit detection) |
 | `verifier-failure` | The `--deep` verifier transport itself failed |
 | `force-used` | `--force` bypassed at least one failing structural / deep / interactive verdict |
+| `coherence-warn` | A `severity: 'warn'` coherence issue fired from `draft check` or `draft approve` (context.source distinguishes which) |
 
 Transports (`.cadence/config.json: notify.transport`):
 
@@ -201,5 +203,6 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 8. ~~Phase 19.1 — F4 webhook transport~~ ✓
 9. ~~Phase 21.1 — auto × complex soft cap (M2)~~ ✓
 10. ~~Phase 23.1 — draft-read mtime gate~~ ✓
+11. ~~Phase 23.2 — coherence-warn anomaly emission~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).

@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
 /**
- * Anomaly event types per Phase 17 / DESIGN.md D4.
+ * Anomaly event types. Phase 17 introduced the first six; Phase 23.2 adds
+ * `coherence-warn` (emitted from `cadence draft check`/`draft approve` per
+ * warn issue). DESIGN.md §3.3 is the canonical list.
  *
- * Fired by settle when the `'anomaly-notify'` gate is in the effective gate
- * set (auto + standard×{standard,complex} cells). Informational only —
- * never block settle.
+ * Fired when the `'anomaly-notify'` gate is in the effective gate set
+ * (auto + standard×{standard,complex} cells). Informational only —
+ * never block the emitting command.
  */
 export const AnomalyTypeZ = z.enum([
   'ac-blocked',
@@ -14,6 +16,7 @@ export const AnomalyTypeZ = z.enum([
   'files-outside-boundary',
   'verifier-failure',
   'force-used',
+  'coherence-warn',
 ]);
 export type AnomalyType = z.infer<typeof AnomalyTypeZ>;
 
