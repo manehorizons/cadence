@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "24-code-review",
+  "activePhase": "25-plan-review",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-15T03:29:19.576Z",
+  "draftReadAt": "2026-05-15T13:55:55.098Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],

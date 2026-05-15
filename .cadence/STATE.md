@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 24-code-review
+**Active phase:** 25-plan-review
 **Active draft:** (none)
 **Tier:** (n/a)
 
