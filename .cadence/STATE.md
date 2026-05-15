@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 27-ci
+**Active phase:** 28-release
 **Active draft:** (none)
 **Tier:** (n/a)
 
