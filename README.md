@@ -53,6 +53,14 @@ npx @cadence/host-claude-code install
 # are available under .claude/commands/.
 ```
 
+`cadence init` also writes a **`CLAUDE.md`** at the repo root that primes Claude
+Code on the loop, gate profile, and where state lives. It is wrapped in
+`<!-- cadence:managed:start -->` / `<!-- cadence:managed:end -->` markers:
+regenerate it any time with `cadence init --claude-md` (allowed on an
+already-initialized project) — content outside the markers is preserved
+byte-for-byte, and a `CLAUDE.md` with no markers is treated as fully
+user-owned and left untouched.
+
 > Dogfooding a local checkout of CADENCE before publishing? Build the workspace (`pnpm build`) then run `node packages/host-claude-code/bin/cadence-host-claude-code.cjs install --local --settings .claude/settings.local.json`. `--local` writes absolute paths to the workspace builds instead of `npx`-style commands; pair it with `settings.local.json` so the machine-specific paths stay out of git.
 
 ## Verification

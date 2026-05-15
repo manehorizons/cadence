@@ -1,11 +1,15 @@
 import type { Command } from 'commander';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { presets, emptyState, type Profile } from '@cadence/types';
 import { atomicWriteJSON } from '../../state/atomic-write.js';
 import { renderStateMd } from '../../render/state-md.js';
+import {
+  mergeManagedBlock,
+  type MergeMode,
+} from '../../init/claude-md-template.js';
 import {
   ScriptedPrompter,
   StdinPrompter,
@@ -98,6 +102,51 @@ async function resolveGateProfile(
   return suggestion;
 }
 
+/**
+ * Merge the managed CLAUDE.md block into `<cwd>/CLAUDE.md`. Returns the
+ * merge mode so the caller can report it. `preserved` means a marker-less
+ * user file was left untouched.
+ */
+async function writeClaudeMd(
+  cwd: string,
+  opts: { projectName: string; gateProfile: Profile; preset: string },
+): Promise<MergeMode> {
+  const path = join(cwd, 'CLAUDE.md');
+  const existing = existsSync(path) ? await readFile(path, 'utf8') : null;
+  const merged = mergeManagedBlock(existing, opts);
+  if (merged.mode !== 'preserved') {
+    await writeFile(path, merged.content);
+  }
+  return merged.mode;
+}
+
+/** Read project name + gate profile from an existing `.cadence/`. */
+async function readExistingProject(
+  cadenceDir: string,
+): Promise<{ name: string; gateProfile: Profile }> {
+  let name = 'unnamed';
+  let gateProfile: Profile = 'auto';
+  try {
+    const state = JSON.parse(
+      await readFile(join(cadenceDir, 'state.json'), 'utf8'),
+    );
+    if (typeof state?.project?.name === 'string') name = state.project.name;
+  } catch {
+    /* fall back to default */
+  }
+  try {
+    const cfg = JSON.parse(
+      await readFile(join(cadenceDir, 'config.json'), 'utf8'),
+    );
+    if (cfg?.profile === 'strict' || cfg?.profile === 'standard' || cfg?.profile === 'auto') {
+      gateProfile = cfg.profile;
+    }
+  } catch {
+    /* fall back to default */
+  }
+  return { name, gateProfile };
+}
+
 export function registerInitCommand(program: Command): void {
   program
     .command('init')
@@ -108,14 +157,48 @@ export function registerInitCommand(program: Command): void {
       '--gate-profile <p>',
       'Gate profile: strict | standard | auto (suggested from git history when omitted)',
     )
+    .option(
+      '--claude-md',
+      'only (re)generate the managed CLAUDE.md block at the repo root; allowed on an already-initialized project',
+    )
     .action(
       async (opts: {
         name?: string;
         profile: 'solo' | 'team' | 'production';
         gateProfile?: string;
+        claudeMd?: boolean;
       }) => {
         const cwd = process.cwd();
         const cadenceDir = join(cwd, '.cadence');
+
+        // Phase 26.2 — standalone --claude-md: do NOT refuse on an existing
+        // .cadence/ and do NOT scaffold; just regenerate the managed block.
+        if (opts.claudeMd) {
+          const src = existsSync(cadenceDir)
+            ? await readExistingProject(cadenceDir)
+            : {
+                name: opts.name ?? 'unnamed',
+                gateProfile: (opts.gateProfile === 'strict' ||
+                opts.gateProfile === 'standard' ||
+                opts.gateProfile === 'auto'
+                  ? opts.gateProfile
+                  : 'auto') as Profile,
+              };
+          const mode = await writeClaudeMd(cwd, {
+            projectName: src.name,
+            gateProfile: src.gateProfile,
+            preset: opts.profile,
+          });
+          if (mode === 'preserved') {
+            console.error(
+              'CLAUDE.md preserved: no cadence:managed markers found — leaving the user file untouched.',
+            );
+          } else {
+            console.log(`CLAUDE.md ${mode} (${src.name}, ${src.gateProfile}).`);
+          }
+          return;
+        }
+
         if (existsSync(cadenceDir)) {
           console.error('.cadence/ already initialized in this directory');
           process.exit(2);
@@ -164,6 +247,11 @@ export function registerInitCommand(program: Command): void {
           '# Special Flows\n\n_(none yet)_\n',
         );
         await writeFile(join(cadenceDir, 'STATE.md'), renderStateMd(state));
+        await writeClaudeMd(cwd, {
+          projectName: name,
+          gateProfile,
+          preset: opts.profile,
+        });
 
         // Legacy line — retained for back-compat ahead of the summary block.
         console.log(
@@ -178,7 +266,7 @@ export function registerInitCommand(program: Command): void {
         console.log(`  gate profile  ${gateProfile}`);
         console.log(`  scaffolded    config.json, state.json, PROJECT.md,`);
         console.log(`                ROADMAP.md, MILESTONES.md,`);
-        console.log(`                SPECIAL-FLOWS.md, STATE.md`);
+        console.log(`                SPECIAL-FLOWS.md, STATE.md, CLAUDE.md`);
         console.log(`                phases/ handoff/ research/ archive/`);
         console.log('');
         console.log(
