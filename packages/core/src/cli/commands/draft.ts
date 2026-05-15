@@ -143,6 +143,9 @@ export function registerDraftCommand(program: Command): void {
         state.activeDraft = id;
         state.loopPosition = 'BUILD';
         state.tier = draft.tier;
+        // Phase 23.1 — DRAFT-read mtime gate: stamp the approve timestamp so
+        // settle can detect post-approve DRAFT edits.
+        state.draftReadAt = new Date().toISOString();
         if (!state.openDrafts.some((d) => d.id === id)) {
           state.openDrafts.push({ id, since: new Date().toISOString() });
         }

@@ -42,6 +42,13 @@ export const CadenceStateZ = z.object({
   activeDraft: z.string().nullable(),
   loopPosition: LoopPositionZ,
   tier: TierZ.nullable(),
+  /**
+   * ISO8601 timestamp of the most recent successful `cadence draft approve`.
+   * The DRAFT-read mtime gate (Phase 23.1) refuses settle when the DRAFT.md
+   * file's mtime is newer than this — the human edited the draft after
+   * approving. `null` means no approve has happened yet (gate silently passes).
+   */
+  draftReadAt: z.string().datetime({ offset: true }).nullable().default(null),
   openDrafts: z.array(z.object({ id: z.string(), since: z.string() })),
   decisions: z.array(DecisionZ),
   deferred: z.array(DeferredItemZ),
@@ -79,5 +86,6 @@ export function emptyState(projectName = 'unnamed'): CadenceState {
     session: { tokenUtilization: 0, lastHandoff: null, subagentSpawns: 0 },
     skillAudit: { required: [], invoked: [] },
     activeTask: null,
+    draftReadAt: null,
   };
 }

@@ -21,4 +21,32 @@ describe('CadenceStateZ', () => {
     const parsed = CadenceStateZ.parse(JSON.parse(JSON.stringify(s)));
     expect(parsed).toEqual(s);
   });
+
+  // AC-1 (Phase 23.1) — draftReadAt field.
+  it('emptyState includes draftReadAt: null', () => {
+    expect(emptyState().draftReadAt).toBeNull();
+  });
+
+  it('parses state.json without draftReadAt (legacy, defaults to null)', () => {
+    const s = emptyState();
+    const { draftReadAt: _drop, ...withoutField } = s;
+    const parsed = CadenceStateZ.parse(withoutField);
+    expect(parsed.draftReadAt).toBeNull();
+  });
+
+  it('rejects malformed draftReadAt ISO8601', () => {
+    const s = emptyState();
+    expect(() =>
+      CadenceStateZ.parse({ ...s, draftReadAt: 'yesterday' }),
+    ).toThrow();
+  });
+
+  it('accepts valid ISO8601 offset-aware draftReadAt', () => {
+    const s = emptyState();
+    const parsed = CadenceStateZ.parse({
+      ...s,
+      draftReadAt: '2026-05-14T22:30:00.000Z',
+    });
+    expect(parsed.draftReadAt).toBe('2026-05-14T22:30:00.000Z');
+  });
 });

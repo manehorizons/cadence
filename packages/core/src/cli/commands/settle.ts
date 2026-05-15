@@ -81,6 +81,10 @@ export function registerSettleCommand(program: Command): void {
       '--allow-auto-complex',
       "override DESIGN.md §4 M2 soft cap: settle an auto × complex draft anyway",
     )
+    .option(
+      '--allow-stale-draft',
+      "skip the DRAFT-read mtime gate even if the DRAFT.md was edited after approve",
+    )
     .action(
       async (opts: {
         ac?: string[];
@@ -89,6 +93,7 @@ export function registerSettleCommand(program: Command): void {
         allowMissingCoverage?: boolean;
         deep?: boolean;
         allowAutoComplex?: boolean;
+        allowStaleDraft?: boolean;
         allowVerifierFailure?: boolean;
         interactive?: boolean;
       }) => {
@@ -135,6 +140,31 @@ export function registerSettleCommand(program: Command): void {
           process.stderr.write(
             'settle: --allow-auto-complex set; proceeding past soft cap (auto × complex).\n',
           );
+        }
+
+        // Phase 23.1 — DRAFT-read mtime gate. Fires when 'draft-read' is in
+        // the effective gate set AND state has a draftReadAt baseline AND
+        // the DRAFT.md mtime is strictly newer than that baseline.
+        if (
+          gateSet.gates.includes('draft-read') &&
+          state.draftReadAt !== null
+        ) {
+          const { stat } = await import('node:fs/promises');
+          const draftStat = await stat(draftPath);
+          const mtimeMs = draftStat.mtime.getTime();
+          const baselineMs = Date.parse(state.draftReadAt);
+          if (mtimeMs > baselineMs) {
+            if (!opts.allowStaleDraft) {
+              process.stderr.write(
+                `settle run refused: DRAFT.md was edited after approve (mtime ${draftStat.mtime.toISOString()} > draftReadAt ${state.draftReadAt}). Re-read it then re-approve, or pass --allow-stale-draft to override.\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+            process.stderr.write(
+              'settle: --allow-stale-draft set; proceeding past draft-read gate (DRAFT.md mtime newer than draftReadAt).\n',
+            );
+          }
         }
 
         const coverageBypassed =

@@ -87,7 +87,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 | Cost | Gate |
 |---|---|
 | Free (always fire) | Coherence check · structural verifier · build/test must pass |
-| Cheap | DRAFT-read mtime check · test-coverage proof per AC · anomaly notify |
+| Cheap | DRAFT-read mtime check **(Phase 23.1)** · test-coverage proof per AC **(Phase 14)** · anomaly notify **(Phase 17)** |
 | Medium | Approve gate (manual click) · per-task verify · code review agent |
 | Expensive | Independent verifier agent (`--deep`) · interactive AC verdict (`--interactive`) · plan review · security audit |
 
@@ -200,5 +200,6 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 7. ~~Phase 18.1 — F2 physical rename rollout~~ ✓
 8. ~~Phase 19.1 — F4 webhook transport~~ ✓
 9. ~~Phase 21.1 — auto × complex soft cap (M2)~~ ✓
+10. ~~Phase 23.1 — draft-read mtime gate~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
