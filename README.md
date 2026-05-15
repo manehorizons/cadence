@@ -14,7 +14,9 @@ CADENCE is a customizable plan/build/settle framework for AI-assisted developmen
 
 ```bash
 mkdir /tmp/cadence-demo && cd /tmp/cadence-demo
-npx @cadence/core init --name=demo
+npx @cadence/core init                        # prompts: project name, gate profile
+                                              # (suggested from git history); prints
+                                              # a one-screen post-init summary
 npx @cadence/core draft new 01-foundation 01 --title=Demo
 # edit .cadence/phases/01-foundation/01-01-DRAFT.md
 npx @cadence/core draft approve 01-foundation 01
@@ -22,6 +24,18 @@ npx @cadence/core status                      # full phase context in one screen
 npx @cadence/core build task T1 --status=DONE
 npx @cadence/core settle run --auto           # derive AC verdicts from task statuses
 ```
+
+Interactive prompts only appear on a TTY. For CI / non-interactive use, pass the
+values as flags — prompts are skipped and defaults applied:
+
+```bash
+npx @cadence/core init --name=demo --profile=team --gate-profile=standard
+```
+
+`--name` is the project name (prompted when omitted). `--profile` selects the
+config preset (`solo | team | production`, default `team`). `--gate-profile`
+sets the gate profile (`strict | standard | auto`); when omitted it is suggested
+from git history (≥20 commits → `standard`, otherwise `auto`).
 
 `settle run --auto` reads PROGRESS.json and derives each AC's verdict the same way `cadence status` does: all linked tasks DONE → pass, any BLOCKED → fail with `auto: <task> blocked`, NEEDS_CONTEXT → fail with `auto: <task> needs context`, anything still PENDING → refuses with a clear error (`--force` settles anyway). Pass explicit `--ac AC-1=fail:custom` to override the derivation for an individual AC. The legacy `--ac`-only flow still works exactly as before.
 
