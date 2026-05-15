@@ -8,11 +8,30 @@ import { LoopViolationError } from '../errors.js';
 
 export type RecordableStatus = Exclude<TaskStatus, 'PENDING' | 'IN_PROGRESS'>;
 
+/**
+ * Phase 24.2 — per-task verifier verdict attached to a task row when
+ * the `'per-task-verify'` gate fires. `bypassed` is true when the user
+ * passed `--allow-per-task-failure` to record a `refuse` verdict anyway.
+ */
+export interface PerTaskVerifyRecord {
+  verdict: 'pass' | 'concerns' | 'refuse';
+  reason: string;
+  provider: string;
+  model?: string;
+  bypassed?: boolean;
+}
+
 interface ProgressJson {
   draftId: string;
   tasks: Record<
     string,
-    { status: string; notes: string; touchedFiles: string[]; updatedAt: string }
+    {
+      status: string;
+      notes: string;
+      touchedFiles: string[];
+      updatedAt: string;
+      perTaskVerify?: PerTaskVerifyRecord;
+    }
   >;
 }
 
@@ -21,6 +40,7 @@ export async function recordTaskOutcome(
   taskId: string,
   status: RecordableStatus,
   notes: string,
+  perTaskVerify?: PerTaskVerifyRecord,
 ): Promise<void> {
   const backend = new SimpleStateBackend(cwd);
   const state = await backend.readState();
@@ -47,6 +67,7 @@ export async function recordTaskOutcome(
     notes,
     touchedFiles: state.activeTask?.touchedFiles ?? [],
     updatedAt: new Date().toISOString(),
+    ...(perTaskVerify ? { perTaskVerify } : {}),
   };
   await atomicWriteJSON(progPath, progress);
   state.activeTask = { id: taskId, status, touchedFiles: [] };

@@ -97,6 +97,22 @@ Note (optional, one line, blank to skip):
 - `--no-interactive` bypasses the gate for one invocation.
 - Non-TTY environments (CI, piped stdin) refuse with a clear stderr message — set `CADENCE_PROMPTER_SCRIPT` env var with newline-separated answers to drive the walker programmatically in tests.
 
+### Per-task verifier (`per-task-verify`)
+
+When `'per-task-verify'` is in the active gate set (strict-profile cells), `cadence build task <id> --status=DONE` runs a verifier against the task's declared files and `git diff HEAD -- <files>` before recording the outcome:
+
+```
+$ cadence build task T1 --status=DONE
+per-task-verify refused: mock: no diff since last task
+Pass --allow-per-task-failure to record DONE anyway.
+```
+
+- Verdicts: `pass` / `concerns` (recorded, no error) / `refuse` (blocks DONE).
+- The verdict lands on `PROGRESS.json tasks[id].perTaskVerify` (with `bypassed: true` when `--allow-per-task-failure` was used).
+- `refuse` outcomes dispatch a `per-task-fail` anomaly (severity `error`, `context.taskId / provider / reason / bypassed`).
+- Non-`DONE` statuses (`BLOCKED`, `NEEDS_CONTEXT`, `DONE_WITH_CONCERNS`) skip the gate — they're explicit human escalations.
+- Provider chosen via `config.perTaskVerifier.provider`: `mock` (deterministic floor — `refuse` on empty files, `concerns` on empty diff, `pass` otherwise) or `anthropic` (prompt-cached `claude-sonnet-4-6`).
+
 ### Manual approve gate
 
 When `'approve'` is in the active gate set (strict-any-tier, standard×standard, standard×complex), `cadence draft approve` prompts before transitioning to BUILD:

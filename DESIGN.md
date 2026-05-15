@@ -69,6 +69,7 @@ All three surfaces gate on `'anomaly-notify'` being in the effective gate set (a
 | `force-used` | `--force` bypassed at least one failing structural / deep / interactive verdict |
 | `coherence-warn` | A `severity: 'warn'` coherence issue fired from `draft check` or `draft approve` (context.source distinguishes which) |
 | `loop-violation` | A `LoopViolationError` was thrown — context.expected vs context.actual record the mismatch + context.source identifies the command |
+| `per-task-fail` | The per-task verifier returned `refuse` at `cadence build task <id> --status=DONE` (Phase 24.2). `context.bypassed` is true when `--allow-per-task-failure` recorded DONE anyway; false when DONE was blocked |
 
 Transports (`.cadence/config.json: notify.transport`):
 
@@ -91,7 +92,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 |---|---|
 | Free (always fire) | Coherence check · structural verifier · build/test must pass |
 | Cheap | DRAFT-read mtime check **(Phase 23.1)** · test-coverage proof per AC **(Phase 14)** · anomaly notify **(Phase 17)** |
-| Medium | Approve gate (manual click) **(Phase 24.1)** · per-task verify · code review agent |
+| Medium | Approve gate (manual click) **(Phase 24.1)** · per-task verify **(Phase 24.2)** · code review agent |
 | Expensive | Independent verifier agent (`--deep`) · interactive AC verdict (`--interactive`) · plan review · security audit |
 
 ### 4.2 Default gates per cell (deltas only; free gates always fire)
@@ -208,6 +209,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 12. ~~Phase 23.3 — loop-violation anomaly emission~~ ✓
 13. ~~Phase 23.4 — skillAudit wiring (`invoked` tracking; tokenUtilization deferred)~~ ✓
 14. ~~Phase 24.1 — manual approve gate (interactive Y/N at `draft approve`)~~ ✓
+15. ~~Phase 24.2 — per-task verifier agent (gate at `build task --status=DONE`)~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

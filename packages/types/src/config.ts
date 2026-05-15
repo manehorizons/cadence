@@ -72,6 +72,18 @@ export const CadenceConfigZ = z.object({
       model: z.string().optional(),
     })
     .default({ provider: 'mock' }),
+  perTaskVerifier: z
+    .object({
+      /**
+       * Per-task verifier provider selection (Phase 24.2). Fires at
+       * `cadence build task <id> --status=DONE` when `'per-task-verify'`
+       * is in the effective gate set (strict×standard, strict×complex).
+       */
+      provider: z.enum(['mock', 'anthropic']).default('mock'),
+      /** Optional model override for the Anthropic provider. */
+      model: z.string().optional(),
+    })
+    .default({ provider: 'mock' }),
   notify: z
     .object({
       /**
@@ -139,6 +151,7 @@ export const defaultConfig: CadenceConfig = {
     testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
   },
   verifier: { provider: 'mock' as const },
+  perTaskVerifier: { provider: 'mock' as const },
   notify: { transport: 'stderr' as const },
 };
 
