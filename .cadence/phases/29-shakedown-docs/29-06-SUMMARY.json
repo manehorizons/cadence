@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "draftId": "29-06",
+  "completedAt": "2026-05-15T23:52:54.535Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "host cli.ts: --local install emits stderr warning (machine-absolute paths, don't commit, gitignore, re-run per machine)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "init.ts: standard|strict gate profile prints non-TTY draft approve --no-approve hint after summary"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "init.ts summary rows now qualified: preset=config/workflow defaults, gate profile=gate strictness"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "host cli.test.ts AC-1 (--local warn / no-warn), init.test.ts AC-2/AC-3, new docs/readme-shakedown.test.ts AC-4/AC-5; all green"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "README F6 quickstart heads-up + F1 --local note; 29-04-REMEDIATION.md ledger (F1-F6 + 29.2/29.3 resource-blocked); DESIGN #25; CHANGELOG F1/F4/F6. Full turbo suite green 392/392 core, 6/6 tasks."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 29-testinfra-timeout
+**Active phase:** 29-shakedown-docs
 **Active draft:** (none)
 **Tier:** (n/a)
 

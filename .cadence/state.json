@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "29-testinfra-timeout",
+  "activePhase": "29-shakedown-docs",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-15T23:04:21.197Z",
+  "draftReadAt": "2026-05-15T23:47:31.280Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
