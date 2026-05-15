@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-15
+
 ### Added
 
 - Manual approve gate at `cadence draft approve`: when `'approve'` is in the effective gate set (strict-any-tier, standard×standard, standard×complex), the command prompts `Approve and enter BUILD? [y/n]:` before transitioning to BUILD. Reuses the Phase 16 `Prompter` abstraction (`StdinPrompter` + `ScriptedPrompter`) and `CADENCE_PROMPTER_SCRIPT` env-var test seam. `--no-approve` bypasses per-invocation (required for non-TTY runs when the gate is on). `n` / retry-exhaustion refuses with exit 1 and no state change (Phase 24.1).
