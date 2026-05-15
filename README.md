@@ -144,6 +144,22 @@ Approved 01-01; loopPosition=BUILD
 - Tests can drive the prompt via `CADENCE_PROMPTER_SCRIPT` (newline-separated answers), the same seam used by `--interactive`.
 - Under `auto` profile (or any cell where `'approve'` is not in the gate set) approve is silent and behaves exactly as before.
 
+### Plan-review verifier (`plan-review`)
+
+When `'plan-review'` is in the active gate set (strict×complex only), `cadence draft approve` reviews the plan itself — after the manual-approve gate and before the BUILD transition:
+
+```
+$ cadence draft approve 25-plan-review 01 --no-approve
+plan-review: high — AC-1 has empty then
+  ↳ suggested: Fill in the then clause for AC-1.
+draft approve refused: plan-review found 1 finding(s). Fix the plan, or pass --allow-plan-review-failure to proceed anyway.
+```
+
+- Input is the parsed DRAFT (objective + ACs + tasks + boundaries) — there is no diff or SUMMARY at approve time.
+- `pass=false` refuses approve with exit 1 and leaves state at `loopPosition=DRAFT`; `--allow-plan-review-failure` proceeds to BUILD (findings still printed) with a `proceeding past N finding(s)` trace.
+- Findings carry `severity: 'high' | 'medium' | 'low'`, a `message`, and an optional `suggestedEdit`.
+- Provider chosen via `config.planReview.provider`: `mock` (deterministic floor — pass iff ≥1 AC and every AC has non-empty Given/When/Then) or `anthropic` (holistic prompt-cached `claude-sonnet-4-6`).
+
 ### Anomaly notify
 
 When `'anomaly-notify'` is in the gate set (auto profile and standard×{standard,complex} cells), settle collects typed events and dispatches them via the configured transport. Event types:

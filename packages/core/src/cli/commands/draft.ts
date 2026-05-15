@@ -16,6 +16,7 @@ import {
   StdinPrompter,
   type Prompter,
 } from '../../verify/prompter.js';
+import { selectPlanReviewVerifier } from '../../verify/plan-review-factory.js';
 
 /**
  * Phase 24.1 — manual approve gate prompt walker. Accepts y/yes/n/no
@@ -158,11 +159,19 @@ export function registerDraftCommand(program: Command): void {
       '--no-approve',
       "bypass the manual approve gate (Phase 24.1) per invocation; required for non-TTY runs when the 'approve' gate is in the effective set",
     )
+    .option(
+      '--allow-plan-review-failure',
+      "proceed past a failing plan-review gate (Phase 25.1) instead of refusing approve; findings are still printed",
+    )
     .action(
       async (
         phase: string,
         num: string,
-        opts: { allowAutoComplex?: boolean; approve?: boolean },
+        opts: {
+          allowAutoComplex?: boolean;
+          approve?: boolean;
+          allowPlanReviewFailure?: boolean;
+        },
       ) => {
       try {
         const cwd = process.cwd();
@@ -237,6 +246,36 @@ export function registerDraftCommand(program: Command): void {
             );
             process.exitCode = 1;
             return;
+          }
+        }
+
+        // Phase 25.1 — plan-review gate. Fires when `'plan-review'` is in
+        // the effective gate set (strict×complex). Runs against the parsed
+        // DRAFT (no diff/SUMMARY at approve time). `pass=false` refuses
+        // before any state mutation unless `--allow-plan-review-failure`.
+        if (gateSet.gates.includes('plan-review')) {
+          const verifier = selectPlanReviewVerifier(cfg);
+          const res = await verifier.verify({ draft });
+          if (!res.pass) {
+            for (const f of res.findings) {
+              process.stderr.write(
+                `plan-review: ${f.severity} — ${f.message}\n`,
+              );
+              if (f.suggestedEdit) {
+                process.stderr.write(`  ↳ suggested: ${f.suggestedEdit}\n`);
+              }
+            }
+            if (!opts.allowPlanReviewFailure) {
+              process.stderr.write(
+                `draft approve refused: plan-review found ${res.findings.length} finding(s). ` +
+                  `Fix the plan, or pass --allow-plan-review-failure to proceed anyway.\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+            process.stderr.write(
+              `plan-review: --allow-plan-review-failure set; proceeding past ${res.findings.length} finding(s).\n`,
+            );
           }
         }
 

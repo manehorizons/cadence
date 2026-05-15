@@ -97,6 +97,19 @@ export const CadenceConfigZ = z.object({
       model: z.string().optional(),
     })
     .default({ provider: 'mock' }),
+  planReview: z
+    .object({
+      /**
+       * Plan-review verifier provider selection (Phase 25.1). Fires at
+       * `cadence draft approve` when `'plan-review'` is in the effective
+       * gate set (strict×complex). `pass=false` refuses approve unless
+       * `--allow-plan-review-failure`.
+       */
+      provider: z.enum(['mock', 'anthropic']).default('mock'),
+      /** Optional model override for the Anthropic provider. */
+      model: z.string().optional(),
+    })
+    .default({ provider: 'mock' }),
   notify: z
     .object({
       /**
@@ -166,6 +179,7 @@ export const defaultConfig: CadenceConfig = {
   verifier: { provider: 'mock' as const },
   perTaskVerifier: { provider: 'mock' as const },
   codeReview: { provider: 'mock' as const },
+  planReview: { provider: 'mock' as const },
   notify: { transport: 'stderr' as const },
 };
 
