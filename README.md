@@ -97,6 +97,22 @@ Note (optional, one line, blank to skip):
 - `--no-interactive` bypasses the gate for one invocation.
 - Non-TTY environments (CI, piped stdin) refuse with a clear stderr message — set `CADENCE_PROMPTER_SCRIPT` env var with newline-separated answers to drive the walker programmatically in tests.
 
+### Code-review verifier (`code-review`)
+
+When `'code-review'` is in the active gate set (strict-profile cells + standard×complex), `cadence settle run` reviews the phase diff before writing SUMMARY:
+
+```
+$ cadence settle run --auto
+code-review: src/foo.ts:42 high — console.log left in source
+settle run refused: code-review reported 1 HIGH finding(s). Pass --allow-code-review-failure to record them and settle anyway, or --force to bypass.
+```
+
+- Findings carry `severity: 'high' | 'medium' | 'low'`, a `message`, and an optional `line`.
+- All findings land on `SUMMARY.codeReview` as `Record<file, Finding[]>` — present only when the gate ran.
+- HIGH findings refuse settle unless `--force` or `--allow-code-review-failure` is passed; MEDIUM and LOW never block.
+- Each HIGH finding dispatches a `code-review-high` anomaly (when `'anomaly-notify'` is also in the gate set, which lines up under `standard × complex`).
+- Provider chosen via `config.codeReview.provider`: `mock` (deterministic — every added `console.log` is HIGH) or `anthropic` (prompt-cached `claude-sonnet-4-6`).
+
 ### Per-task verifier (`per-task-verify`)
 
 When `'per-task-verify'` is in the active gate set (strict-profile cells), `cadence build task <id> --status=DONE` runs a verifier against the task's declared files and `git diff HEAD -- <files>` before recording the outcome:

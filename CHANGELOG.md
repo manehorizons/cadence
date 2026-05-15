@@ -8,10 +8,12 @@ All notable changes to this project are documented in this file. Format follows 
 
 - Manual approve gate at `cadence draft approve`: when `'approve'` is in the effective gate set (strict-any-tier, standard×standard, standard×complex), the command prompts `Approve and enter BUILD? [y/n]:` before transitioning to BUILD. Reuses the Phase 16 `Prompter` abstraction (`StdinPrompter` + `ScriptedPrompter`) and `CADENCE_PROMPTER_SCRIPT` env-var test seam. `--no-approve` bypasses per-invocation (required for non-TTY runs when the gate is on). `n` / retry-exhaustion refuses with exit 1 and no state change (Phase 24.1).
 - Per-task verifier gate at `cadence build task <id> --status=DONE`: when `'per-task-verify'` is in the effective gate set (strict×standard, strict×complex), runs `PerTaskVerifier` against the task's files+diff (`git diff HEAD -- <files>`) and records a `pass | concerns | refuse` verdict into `PROGRESS.json tasks[id].perTaskVerify`. `MockPerTaskVerifier` (deterministic floor) and `AnthropicPerTaskVerifier` (prompt-cached `claude-sonnet-4-6` by default) ship; `config.perTaskVerifier.provider` selects. `refuse` blocks DONE recording unless `--allow-per-task-failure` (recorded as `bypassed: true`). Non-DONE statuses skip the gate (Phase 24.2).
+- Code-review verifier gate at `cadence settle run`: when `'code-review'` is in the effective gate set (strict×standard, strict×complex, standard×complex), runs `CodeReviewVerifier` against `git diff HEAD -- <files>` for the union of touched files and records per-file `Finding[]` into `SUMMARY.codeReview`. `MockCodeReviewVerifier` flags every added `console.log` as HIGH; `AnthropicCodeReviewVerifier` reviews via prompt-cached `claude-sonnet-4-6`. HIGH findings refuse settle unless `--force` / `--allow-code-review-failure` (Phase 24.3).
 
 ### Changed
 
 - `AnomalyTypeZ` schema bump — new `per-task-fail` member emitted on `refuse` verdicts (with or without bypass). Legacy `.cadence/anomalies.log` files predating the new type continue to parse via the existing newest-first reader (Phase 24.2).
+- `AnomalyTypeZ` + `SummaryZ` schema bumps — new `code-review-high` anomaly type (one event per HIGH finding when bypassed) and new optional `Summary.codeReview: Record<file, Finding[]>` field (Phase 24.3).
 
 ## [0.3.0] - 2026-05-14
 

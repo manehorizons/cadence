@@ -84,6 +84,19 @@ export const CadenceConfigZ = z.object({
       model: z.string().optional(),
     })
     .default({ provider: 'mock' }),
+  codeReview: z
+    .object({
+      /**
+       * Code-review verifier provider selection (Phase 24.3). Fires at
+       * `cadence settle run` when `'code-review'` is in the effective
+       * gate set. HIGH findings refuse settle unless `--force` /
+       * `--allow-code-review-failure`.
+       */
+      provider: z.enum(['mock', 'anthropic']).default('mock'),
+      /** Optional model override for the Anthropic provider. */
+      model: z.string().optional(),
+    })
+    .default({ provider: 'mock' }),
   notify: z
     .object({
       /**
@@ -152,6 +165,7 @@ export const defaultConfig: CadenceConfig = {
   },
   verifier: { provider: 'mock' as const },
   perTaskVerifier: { provider: 'mock' as const },
+  codeReview: { provider: 'mock' as const },
   notify: { transport: 'stderr' as const },
 };
 

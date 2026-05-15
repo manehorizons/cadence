@@ -9,6 +9,14 @@ export const DeepVerdictZ = z.object({
 });
 export type DeepVerdict = z.infer<typeof DeepVerdictZ>;
 
+/** Phase 24.3 — code-review per-file finding. */
+export const FindingZ = z.object({
+  severity: z.enum(['high', 'medium', 'low']),
+  message: z.string(),
+  line: z.number().int().positive().optional(),
+});
+export type Finding = z.infer<typeof FindingZ>;
+
 export const SummaryZ = z.object({
   schemaVersion: z.literal(1),
   draftId: z.string(),
@@ -32,5 +40,7 @@ export const SummaryZ = z.object({
       }),
     )
     .optional(),
+  /** Phase 24.3: per-file code-review findings. Present only when the gate ran. */
+  codeReview: z.record(z.string(), z.array(FindingZ)).optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

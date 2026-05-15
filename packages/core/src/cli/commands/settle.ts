@@ -1,8 +1,9 @@
 import type { Command } from 'commander';
+import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import type { Summary } from '@cadence/types';
+import type { Summary, Finding } from '@cadence/types';
 import { TaskStatusZ } from '@cadence/types';
 import { parseDraftMd } from '../../parse/draft-parser.js';
 import { renderSummaryMd } from '../../parse/summary-writer.js';
@@ -26,6 +27,8 @@ import { ScriptedPrompter, StdinPrompter, type Prompter } from '../../verify/pro
 import { selectNotifier } from '../../notify/factory.js';
 import { collectAnomalies } from '../../notify/collect.js';
 import { emitLoopViolation } from '../../notify/loop-violation.js';
+import { selectCodeReviewVerifier } from '../../verify/code-review-factory.js';
+import { emitCodeReviewHigh } from '../../notify/code-review.js';
 
 interface ProgressJson {
   draftId: string;
@@ -86,6 +89,10 @@ export function registerSettleCommand(program: Command): void {
       '--allow-stale-draft',
       "skip the DRAFT-read mtime gate even if the DRAFT.md was edited after approve",
     )
+    .option(
+      '--allow-code-review-failure',
+      'do not refuse on HIGH-severity code-review findings; record them in SUMMARY and emit anomalies anyway (Phase 24.3)',
+    )
     .action(
       async (opts: {
         ac?: string[];
@@ -96,6 +103,7 @@ export function registerSettleCommand(program: Command): void {
         allowAutoComplex?: boolean;
         allowStaleDraft?: boolean;
         allowVerifierFailure?: boolean;
+        allowCodeReviewFailure?: boolean;
         interactive?: boolean;
       }) => {
       try {
@@ -377,6 +385,67 @@ export function registerSettleCommand(program: Command): void {
           }
         }
 
+        // Phase 24.3 — code-review verifier gate. Fires when `'code-review'`
+        // is in the effective gate set. Runs against `git diff HEAD --
+        // <files>` for the union of touched files across all tasks. HIGH
+        // findings refuse settle unless `--force` or
+        // `--allow-code-review-failure`. All findings (including bypassed
+        // HIGHs) land on SUMMARY.codeReview. `code-review-high` anomalies
+        // dispatch via the Phase 17 notifier when the anomaly gate is also
+        // in the set.
+        let codeReviewFindings: Record<string, Finding[]> | undefined;
+        if (gateSet.gates.includes('code-review')) {
+          const touched = Array.from(
+            new Set(draft.tasks.flatMap((t) => t.files)),
+          );
+          const diff = collectDiffForCodeReview(cwd, touched);
+          const reviewer = selectCodeReviewVerifier(cadenceConfig);
+          try {
+            const result = await reviewer.verify({ files: touched, diff });
+            codeReviewFindings = result.findings;
+            const highs = collectHighFindings(result.findings);
+            const bypassed =
+              opts.force === true || opts.allowCodeReviewFailure === true;
+            if (highs.length > 0) {
+              for (const h of highs) {
+                process.stderr.write(
+                  `code-review: ${h.file}${h.line !== undefined ? `:${h.line}` : ''} high — ${h.message}\n`,
+                );
+              }
+              if (!bypassed) {
+                process.stderr.write(
+                  `settle run refused: code-review reported ${highs.length} HIGH finding(s). ` +
+                    'Pass --allow-code-review-failure to record them and settle anyway, or --force to bypass.\n',
+                );
+                process.exitCode = 1;
+                return;
+              }
+              const flag = opts.force === true
+                ? '--force'
+                : '--allow-code-review-failure';
+              process.stderr.write(
+                `code-review: ${flag} set; proceeding past ${highs.length} HIGH finding(s).\n`,
+              );
+              if (gateSet.gates.includes('anomaly-notify')) {
+                await emitCodeReviewHigh(
+                  selectNotifier(cadenceConfig),
+                  result.findings,
+                  { provider: result.provider, bypassed: true },
+                );
+              }
+            }
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            process.stderr.write(
+              `code-review: verifier failed — ${message}. Pass --allow-code-review-failure to continue.\n`,
+            );
+            if (opts.allowCodeReviewFailure !== true && opts.force !== true) {
+              process.exitCode = 1;
+              return;
+            }
+          }
+        }
+
         // ACs covered by an explicit `--ac` OR an interactive verdict are
         // excluded from auto-derivation refusal (the user verdicted them).
         const interactiveIds = new Set(
@@ -487,6 +556,7 @@ export function registerSettleCommand(program: Command): void {
           skillAudit: state.skillAudit,
           ...(deepVerify ? { deepVerify } : {}),
           ...(interactiveVerify ? { interactiveVerify } : {}),
+          ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
         };
 
         const summaryBase = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-SUMMARY`);
@@ -509,5 +579,48 @@ export function registerSettleCommand(program: Command): void {
         }
         process.exitCode = 1;
       }
+    },
+  );
+}
+
+/**
+ * `git diff --no-color HEAD -- <files>` via execSync. Returns empty
+ * string on any error (non-git workdir, no diff, exec failure).
+ * Mirrors the Phase 24.2 build.ts diff collector.
+ */
+function collectDiffForCodeReview(cwd: string, files: string[]): string {
+  if (files.length === 0) return '';
+  try {
+    const args = ['diff', '--no-color', 'HEAD', '--', ...files];
+    return execSync(`git ${args.map(shellQuote).join(' ')}`, {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      maxBuffer: 16 * 1024 * 1024,
     });
+  } catch {
+    return '';
+  }
+}
+
+function shellQuote(arg: string): string {
+  if (/^[A-Za-z0-9._/=:@+-]+$/.test(arg)) return arg;
+  return `"${arg.replace(/(["\\$`])/g, '\\$1')}"`;
+}
+
+function collectHighFindings(
+  findings: Record<string, Finding[]>,
+): Array<{ file: string; line?: number; message: string }> {
+  const out: Array<{ file: string; line?: number; message: string }> = [];
+  for (const [file, list] of Object.entries(findings)) {
+    for (const f of list) {
+      if (f.severity !== 'high') continue;
+      out.push({
+        file,
+        ...(f.line !== undefined ? { line: f.line } : {}),
+        message: f.message,
+      });
+    }
+  }
+  return out;
 }
