@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { readFile, existsSync } from 'node:fs';
+import { readFile } from 'node:fs';
+import { readdir } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@cadence/testkit';
@@ -18,10 +19,13 @@ describe('atomicWriteJSON', () => {
     expect(JSON.parse(contents)).toEqual({ x: 1 });
   });
 
-  it('removes the temp file after successful rename', async () => {
+  it('leaves no temp file after successful rename', async () => {
     active = await tempRepo();
     const path = join(active.root, 'a.json');
     await atomicWriteJSON(path, { x: 1 });
-    expect(existsSync(`${path}.tmp`)).toBe(false);
+    const leftover = (await readdir(active.root)).filter((f) =>
+      f.endsWith('.tmp'),
+    );
+    expect(leftover).toEqual([]);
   });
 });
