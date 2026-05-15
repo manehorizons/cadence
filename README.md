@@ -255,9 +255,14 @@ cadence status anomalies                                       # newest 20 event
 cadence status anomalies --type files-outside-boundary --limit 5
 cadence status anomalies --since 2026-05-14T00:00:00Z         # events stamped at-or-after midnight UTC
 cadence status anomalies --since 2026-05-14T00:00:00Z --type force-used
+cadence status anomalies --tail --limit 10                    # last 10, oldest→newest
+cadence status anomalies --tail --follow                      # live stream; Ctrl-C to stop
+cadence status anomalies --tail --follow --type force-used    # follow, filtered
 ```
 
 `status anomalies` parses `.cadence/anomalies.log` (or `config.notify.file`), skips malformed lines (count reported on stderr), and prints a table newest-first. `--since <iso>` filters events whose stamped `ts` is `>=` the boundary; invalid ISO8601 exits 1. Each event carries an emitter-stamped `ts` since Phase 17.3.
+
+`--tail` flips the output to the last N events oldest→newest (the default no-`--tail` listing stays newest-first). Add `--follow` to keep the log open and stream new events as they are appended — handy when `cadence settle` runs in one terminal and you watch events in another. `--follow` honours `--type` / `--since` on both the initial tail and the streamed appends, exits cleanly on Ctrl-C (SIGINT), and needs a TTY — on a non-TTY it prints the one-shot tail, notes the fallback on stderr, and exits.
 
 ## Codex support — archived
 
