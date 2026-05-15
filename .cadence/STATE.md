@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 29-shakedown
+**Active phase:** 29-f2-testglobs
 **Active draft:** (none)
 **Tier:** (n/a)
 

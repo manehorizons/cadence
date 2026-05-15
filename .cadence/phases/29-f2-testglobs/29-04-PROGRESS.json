@@ -1,0 +1,23 @@
+{
+  "draftId": "29-04",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "detectTestGlobs(cwd) in init.ts; packages/ dir -> workspace glob, else **/*.test.ts(x); cfg.verification.testGlobs overridden; summary prints layout+globs",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T22:06:31.699Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "init.test.ts F2 describe block: AC-1 monorepo regression, AC-2 single-package + scanTestCoverage proof, AC-3 summary; 10/10 green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T22:06:31.899Z"
+    },
+    "T3": {
+      "status": "DONE_WITH_CONCERNS",
+      "notes": "DESIGN.md punchlist #24 + CHANGELOG Unreleased Fixed entry added. init+coverage isolated 30/30 green. Concern: pre-existing unrelated flake tests/hooks/dispatcher.test.ts 'skill-invoke caps at 100' times out at 5s under turbo/core parallel load on this machine (passes isolated 737ms); 385/386 pass; matches ROADMAP-deferred test-infra serialized lane (v1.2+); NOT caused by F2 (init/coverage/docs only).",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T22:10:47.467Z"
+    }
+  }
+}
