@@ -27,6 +27,7 @@ export async function recordTaskOutcome(
   if (state.loopPosition !== 'BUILD' || !state.activeDraft || !state.activePhase) {
     throw new LoopViolationError(
       'task outcome can only be recorded while loopPosition=BUILD with an active draft',
+      { expected: 'BUILD', actual: state.loopPosition },
     );
   }
   const progPath = join(

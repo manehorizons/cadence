@@ -24,6 +24,7 @@ describe('AnomalyEventZ (AC-1)', () => {
       'verifier-failure',
       'force-used',
       'coherence-warn',
+      'loop-violation',
     ] as const;
     for (const t of types) {
       expect(() =>
@@ -110,6 +111,19 @@ describe('AnomalyEventZ (AC-1)', () => {
         }),
       ).toThrow();
     }
+  });
+
+  // AC-1 (Phase 23.3) — loop-violation type
+  it('accepts loop-violation event with context.expected + actual (AC-1)', () => {
+    expect(() =>
+      AnomalyEventZ.parse({
+        type: 'loop-violation',
+        severity: 'error',
+        message: 'settle run requires loopPosition=BUILD',
+        context: { expected: 'BUILD', actual: 'IDLE', source: 'settle.run' },
+        ts: '2026-05-14T22:30:00.000Z',
+      }),
+    ).not.toThrow();
   });
 
   // AC-1 (Phase 23.2) — coherence-warn type

@@ -1,6 +1,8 @@
 import type { Command } from 'commander';
 import { TaskStatusZ } from '@cadence/types';
 import { recordTaskOutcome, type RecordableStatus } from '../../build/record.js';
+import { LoopViolationError } from '../../errors.js';
+import { emitLoopViolation } from '../../notify/loop-violation.js';
 
 export function registerBuildCommand(program: Command): void {
   const cmd = program.command('build').description('BUILD phase task tracking');
@@ -35,6 +37,9 @@ export function registerBuildCommand(program: Command): void {
         process.stderr.write(
           `build task failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
+        if (err instanceof LoopViolationError) {
+          await emitLoopViolation(process.cwd(), err, 'build.task');
+        }
         process.exitCode = 1;
       }
     });

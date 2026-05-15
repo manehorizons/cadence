@@ -20,4 +20,19 @@ describe('errors', () => {
   it('LoopViolationError code is LOOP_VIOLATION', () => {
     expect(new LoopViolationError('bad').code).toBe('LOOP_VIOLATION');
   });
+
+  // AC-2 (Phase 23.3) — LoopViolationError carries expected + actual
+  it('LoopViolationError with no opts has undefined fields (backwards-compat)', () => {
+    const e = new LoopViolationError('bad');
+    expect(e.expected).toBeUndefined();
+    expect(e.actual).toBeUndefined();
+  });
+
+  it('LoopViolationError with opts records expected + actual (AC-2)', () => {
+    const e = new LoopViolationError('bad', { expected: 'BUILD', actual: 'IDLE' });
+    expect(e.expected).toBe('BUILD');
+    expect(e.actual).toBe('IDLE');
+    expect(e.message).toBe('bad');
+    expect(e.code).toBe('LOOP_VIOLATION');
+  });
 });

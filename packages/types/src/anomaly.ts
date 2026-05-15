@@ -17,6 +17,7 @@ export const AnomalyTypeZ = z.enum([
   'verifier-failure',
   'force-used',
   'coherence-warn',
+  'loop-violation',
 ]);
 export type AnomalyType = z.infer<typeof AnomalyTypeZ>;
 

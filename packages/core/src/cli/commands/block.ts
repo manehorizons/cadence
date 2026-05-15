@@ -1,5 +1,7 @@
 import type { Command } from 'commander';
 import { recordTaskOutcome } from '../../build/record.js';
+import { LoopViolationError } from '../../errors.js';
+import { emitLoopViolation } from '../../notify/loop-violation.js';
 
 export function registerBlockCommand(program: Command): void {
   program
@@ -14,6 +16,9 @@ export function registerBlockCommand(program: Command): void {
         process.stderr.write(
           `block failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
+        if (err instanceof LoopViolationError) {
+          await emitLoopViolation(process.cwd(), err, 'build.block');
+        }
         process.exitCode = 1;
       }
     });

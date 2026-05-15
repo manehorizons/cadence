@@ -29,9 +29,21 @@ export class ConfigInvalidError extends CadenceError {
   }
 }
 
+export interface LoopViolationOptions {
+  /** Loop position the operation expected. */
+  expected?: string;
+  /** Loop position the state actually had. */
+  actual?: string;
+}
+
 export class LoopViolationError extends CadenceError {
-  constructor(message: string) {
+  readonly expected: string | undefined;
+  readonly actual: string | undefined;
+
+  constructor(message: string, opts: LoopViolationOptions = {}) {
     super(message, 'LOOP_VIOLATION');
     this.name = 'LoopViolationError';
+    this.expected = opts.expected;
+    this.actual = opts.actual;
   }
 }

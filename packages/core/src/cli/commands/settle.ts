@@ -25,6 +25,7 @@ import { walkAcsInteractively, type InteractiveVerdict } from '../../verify/inte
 import { ScriptedPrompter, StdinPrompter, type Prompter } from '../../verify/prompter.js';
 import { selectNotifier } from '../../notify/factory.js';
 import { collectAnomalies } from '../../notify/collect.js';
+import { emitLoopViolation } from '../../notify/loop-violation.js';
 
 interface ProgressJson {
   draftId: string;
@@ -102,7 +103,10 @@ export function registerSettleCommand(program: Command): void {
         const backend = new SimpleStateBackend(cwd);
         const state = await backend.readState();
         if (state.loopPosition !== 'BUILD' || !state.activeDraft || !state.activePhase) {
-          throw new LoopViolationError('settle run requires loopPosition=BUILD with an active draft');
+          throw new LoopViolationError(
+            'settle run requires loopPosition=BUILD with an active draft',
+            { expected: 'BUILD', actual: state.loopPosition },
+          );
         }
         const draftPath = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-DRAFT.md`);
         const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
@@ -500,6 +504,9 @@ export function registerSettleCommand(program: Command): void {
         console.log(`Settled ${draftId}`);
       } catch (err) {
         process.stderr.write(`settle run failed: ${err instanceof Error ? err.message : String(err)}\n`);
+        if (err instanceof LoopViolationError) {
+          await emitLoopViolation(process.cwd(), err, 'settle.run');
+        }
         process.exitCode = 1;
       }
     });

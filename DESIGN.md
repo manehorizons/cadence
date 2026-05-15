@@ -68,6 +68,7 @@ All three surfaces gate on `'anomaly-notify'` being in the effective gate set (a
 | `verifier-failure` | The `--deep` verifier transport itself failed |
 | `force-used` | `--force` bypassed at least one failing structural / deep / interactive verdict |
 | `coherence-warn` | A `severity: 'warn'` coherence issue fired from `draft check` or `draft approve` (context.source distinguishes which) |
+| `loop-violation` | A `LoopViolationError` was thrown — context.expected vs context.actual record the mismatch + context.source identifies the command |
 
 Transports (`.cadence/config.json: notify.transport`):
 
@@ -204,5 +205,6 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 9. ~~Phase 21.1 — auto × complex soft cap (M2)~~ ✓
 10. ~~Phase 23.1 — draft-read mtime gate~~ ✓
 11. ~~Phase 23.2 — coherence-warn anomaly emission~~ ✓
+12. ~~Phase 23.3 — loop-violation anomaly emission~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
