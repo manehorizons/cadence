@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "draftId": "29-05",
+  "completedAt": "2026-05-15T23:05:54.551Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Added 20000ms per-test timeout + AC-1 why-comment to dispatcher FIFO-cap test; logic/assertions unchanged. Full pnpm turbo run test --force now green: core 386/386, all packages, 6/6 tasks. Flake (5s default vs 105 serial atomic writes) cleared."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
