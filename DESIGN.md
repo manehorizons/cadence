@@ -217,6 +217,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 19. ~~Phase 26.1 — `cadence init` UX polish (name prompt, gate-profile heuristic, post-init summary)~~ ✓
 20. ~~Phase 26.2 — `CLAUDE.md` scaffold (managed-marker, `--claude-md` regenerate)~~ ✓
 21. ~~Phase 26.3 — `status anomalies --tail/--follow`~~ ✓ (closes v0.7.0 operator-ergonomics milestone)
+22. ~~Phase 27.1 — GitHub Actions tests-on-PR + Dependabot + lint fixes~~ ✓ (closes v0.8.0 CI milestone)
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

@@ -14,6 +14,7 @@ All notable changes to this project are documented in this file. Format follows 
 - `cadence init` UX polish: interactive project-name prompt when `--name` is omitted (TTY or `CADENCE_PROMPTER_SCRIPT` seam; empty → `unnamed`), a gate-profile suggestion from git history (≥20 commits → `standard`, else `auto`; git failure → `auto`) with interactive accept/override and a `--gate-profile` flag written to `config.profile`, and a one-screen post-init summary. Non-TTY without flags applies defaults and never prompts/hangs; the legacy `Initialized CADENCE …` line is retained (Phase 26.1).
 - `cadence init` writes a managed `CLAUDE.md` at the repo root (loop, gate profile, state locations, core commands) wrapped in `<!-- cadence:managed:start/end -->` markers. New `cadence init --claude-md` regenerates only the managed block — allowed on an already-initialized project, reading project name/profile from existing `state.json`/`config.json`; content outside the markers is preserved byte-for-byte and a marker-less user file is left untouched (Phase 26.2).
 - `cadence status anomalies --tail [--follow]`: `--tail` prints the last N events oldest→newest (default listing stays newest-first); `--follow` keeps the NDJSON log open and streams appended events (offset-tracked, 200ms poll), honouring `--type`/`--since` on both the initial tail and streamed appends, exiting cleanly on SIGINT, and falling back to one-shot tail on a non-TTY. Closes the v0.7.0 operator-ergonomics milestone (Phase 26.3).
+- GitHub Actions CI (`.github/workflows/ci.yml`): `pnpm install --frozen-lockfile` + `lint typecheck test build` on every PR and push to `main`, Node 20 + 22 × {ubuntu, windows, macos}; pnpm pinned to `9.12.0`. `.github/dependabot.yml` schedules weekly `github-actions` + `npm` update PRs. Branch protection documented as a manual GitHub setting (no API automation). No publish/release automation. Closes the v0.8.0 CI milestone (Phase 27.1).
 
 ### Changed
 
@@ -23,6 +24,10 @@ All notable changes to this project are documented in this file. Format follows 
 - `FindingZ` + `CadenceConfigZ` + `SummaryZ` schema bumps — `Finding.severity` enum gains `'critical'` (additive; code-review still emits only high/medium/low), new optional `config.securityAudit: { provider; model? }` block (defaults to `{ provider: 'mock' }`), and new optional `Summary.securityAudit: Finding[]` field recorded whenever the gate ran (Phase 25.2).
 - `cadence init` `--name` no longer carries a hardcoded `unnamed` default (absence is now detectable so it can prompt); new `--gate-profile` and `--claude-md` options added (Phase 26.1 / 26.2).
 - `cadence status anomalies` gained `--tail` / `--follow`; `--limit` help text de-scoped from "newest first" since ordering now depends on `--tail` (Phase 26.3).
+
+### Fixed
+
+- Two pre-existing `@typescript-eslint/consistent-type-imports` lint errors (`packages/core/src/notify/loop-violation.ts`, `packages/core/src/verify/coverage.ts`) so `pnpm turbo run lint` is green and CI can gate on it (Phase 27.1).
 
 ## [0.3.0] - 2026-05-14
 
