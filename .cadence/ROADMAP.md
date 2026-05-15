@@ -230,19 +230,106 @@
 - **25.1** — `plan-review` at `draft new` (before approve) or at `draft approve` (gates BUILD entry)? (Plan says approve-time; consider draft-new for stricter profiles.)
 - **25.2** — Security-audit triggers on every settle, or only on strict×complex per matrix? (Per matrix — keep it expensive-by-default.)
 - **26.2** — CLAUDE.md content: should it embed `cadence status` output as a section the agent re-reads each session? Or just a static project blurb? (Brainstorm at phase start.)
+- **29.1** — Which foreign project? A real greenfield is highest-signal but slowest; a small throwaway repo is faster but may not stress real assumptions. (Decide at 29.1-DRAFT; bias to a project with ≥1 real feature so the loop touches real code.)
+- **29.2** — `anthropic` providers cost real API spend per run. Cap to one strict×complex phase, or sweep every anthropic gate at least once? (Plan: one representative phase that trips all five gates; widen only if findings warrant.)
+- **30.1** — changesets vs hand-rolled release workflow; public npm vs private registry; npm provenance on/off. (Brainstorm at 30.1-DRAFT — this is the irreversible-once-published decision.)
 
 ---
 
-## Post-1.0 — next milestone (planning)
+## Process decision — stay on the CADENCE loop, do not migrate to GSD (2026-05-15)
 
-**Status:** v0.4 → v1.0 fully shipped (Phases 13–28.1), tagged `v0.6.0`/`v0.7.0`/`v0.8.0`/`v1.0.0`, pushed. There is no v0.9.0 (v0.8.0 → v1.0.0 by design). Loop IDLE. This section is the planning anchor for the next milestone — themes only, not yet phased. Brainstorm scope, pick a version line, then write phases.
+**Decided:** development process stays on the dogfooded CADENCE `DRAFT → BUILD → SETTLE` loop with `.cadence/` as the single system of record. We will **not** move the meta-process onto GSD (`.planning/`, `gsd-*` skills). Settled — do not re-litigate without a material change in the reasons below.
 
-Candidate themes (triage in the planning session — unordered):
+**Why:**
+1. **Dogfooding is the validation strategy, not a habit.** v1.1's entire thesis is that CADENCE needs more real-loop miles. Running phases through GSD instead would zero out the very coverage this milestone exists to add — self-undermining.
+2. **Two planning systems = split brain.** ROADMAP/state live in `.cadence/`; GSD wants its own `.planning/` roadmap + state machine. No clean "GSD owns process, CADENCE owns code" seam — both *are* the process. Dual systems mean drift + import/conflict tax.
+3. **Process maturity already present.** Two-commit-per-phase, annotated milestone tags, conventions doc, handoffs, green dogfood loop. GSD's heavy machinery (research / plan-check / verify subagents, parallel waves, convergence) solves problems a solo, well-scoped, full-context project does not have.
 
-1. **Publish pipeline (likely v1.1).** Packages sit at `1.0.0` with NO publish automation (a deliberate Phase 28.1 boundary). Define real release: `npm publish` (or changesets) + a release workflow + provenance; decide public-npm vs private registry.
-2. **Server-side CI enforcement.** Today `main` is gated only client-side (`.githooks/pre-push`) because GitHub Free + private repos get no branch protection/rulesets. If the repo goes public or onto Pro: require the existing `ci-success` context via `gh api … rulesets` and retire the hook. If staying private+free: add a `scripts/setup` / `postinstall` to auto-wire `core.hooksPath` (currently a manual per-clone step).
-3. **Resolve deferred open questions.** The "Open questions" list above (23.1, 23.4, 24.2, 24.3, 26.2) holds real product decisions — several merit a phase each.
-4. **Backlog parking lot.** No `.cadence/` backlog file exists yet; stand one up before planning so ideas have a home (`gsd-add-backlog`-style).
-5. **Test infra.** Flake resolved (atomic-write rename retry, commit `896a140`); consider a serialized/fake-clock lane for any future timing-sensitive tests now that CI runs 6 parallel cells.
+**Escape hatch (the only sanctioned GSD/superpowers use):** borrow individual skills as point tools at irreversible / high-ambiguity junctures only — system of record stays `.cadence/`. Pre-approved:
+- `brainstorming` / `grill-me` before **Phase 30.1** (publish is irreversible — Open question 30.1 already flags it).
+- `grill-with-docs` to pressure-test the **Phase 29.1** foreign-project pick.
 
-Entry point next session: brainstorm/select milestone scope → update PROJECT.md if the product framing shifts → write the new milestone's phases here → run them through the dogfood loop.
+Revisit only if: a second host returns (multi-host coordination), the team grows past solo, or a phase genuinely needs parallel-wave execution the CADENCE loop can't express.
+
+---
+
+## v1.1.0 — Battle-test shakedown + publish pipeline
+
+**Status:** v0.4 → v1.0 fully shipped (Phases 13–28.1), tagged through `v1.0.0`, pushed. Loop IDLE. v1.1 thesis: **CADENCE has only ever run its own happy path (`auto × standard`, `mock` providers, one host, one OS, one project — itself). Self-dogfood validated the spine; it cannot validate "works because the project IS cadence."** Phases 29.x close the validation gap; 30.1 ships publish — and is **gated on 29.4** so we never publish an untested loop. Server-side CI enforcement, the backlog parking lot, and the deferred open questions (23.1 / 23.4 / 24.3 / 26.2) move to **v1.2+** to keep this milestone tight.
+
+### Phase 29.1 — Real-project shakedown (foreign repo)
+
+**Objective.** Run CADENCE end-to-end on a **non-cadence** project. `cadence init` a real codebase (greenfield or small existing project with ≥1 real feature), then drive ≥2 real phases through `DRAFT → BUILD → SETTLE` at the default `auto × standard`. Goal is the blind-spot catch: assumptions that only hold because the dogfood target is cadence itself (path layout, monorepo shape, test-glob defaults, git-history heuristics in `init`).
+
+**Files.**
+- `.cadence/shakedown/29-01-FOREIGN.md` (new) — the foreign project chosen, commands run, every friction point / bug / surprising default, verbatim error text.
+- No `packages/**` changes in this phase — observation only; fixes land in 29.4.
+
+**ACs.** (1) A non-cadence project initialized via `cadence init` (record the `--gate-profile` suggestion vs. what was correct). (2) ≥2 phases taken full-loop to a written SUMMARY on that project. (3) Friction log captures every deviation from documented behavior with verbatim output. (4) Each finding tagged `bug | docs | ux | works-as-designed`.
+
+---
+
+### Phase 29.2 — Expensive-gate live exercise (strict×complex, `anthropic` providers)
+
+**Objective.** Exercise the matrix surface that has **never run through a real loop** — only unit tests (handoff convention: 25.x gates tested, not dogfooded). Run ≥1 phase at `strict × complex` with `verifier/codeReview/perTaskVerifier/planReview/securityAudit` provider = `anthropic` and a live `ANTHROPIC_API_KEY`, so plan-review (`draft approve`), per-task-verify, code-review, deep verifier, and security-audit (`settle run`) all fire against real input.
+
+**Files.**
+- `.cadence/shakedown/29-02-EXPENSIVE.md` (new) — per-gate: did it fire, real verdict, false-positive/negative assessment, latency, rough token cost.
+- Config diffs (provider/profile) recorded in the report; no committed config flip (the dogfood loop must stay `auto × standard` per handoff convention — use a scratch config or env override).
+
+**ACs.** (1) One phase reaches BUILD through a live `anthropic` plan-review at `draft approve`. (2) per-task-verify + code-review + deep verifier produce real (non-mock) verdicts on real diff. (3) security-audit runs on a real `git diff` at settle. (4) Each gate's real-world precision assessed (false positive / false negative / sane) with the model's actual output quoted. (5) `--allow-*-failure` and `--force` bypasses confirmed to behave as documented when a real gate refuses.
+
+---
+
+### Phase 29.3 — Interactive / approve TTY exercise
+
+**Objective.** The manual `approve` prompt and `--interactive` AC walker are only ever driven by `CADENCE_PROMPTER_SCRIPT` in tests — never a real TTY. Exercise both interactively by a human and confirm the non-TTY refusal paths (CI, piped stdin) match the README.
+
+**Files.**
+- `.cadence/shakedown/29-03-TTY.md` (new) — transcript notes: prompt clarity, retry behavior, the `n`/empty/3-retry refusal, `--no-approve`/`--no-interactive` bypass, non-TTY stderr message wording.
+
+**ACs.** (1) `draft approve` y/n prompt driven on a real TTY incl. the refuse-and-leave-state-untouched path. (2) `settle run --interactive` walked per-AC on a real TTY with pass/fail/skip + note. (3) Non-TTY refusal verified for both gates (clear stderr, exit 1). (4) Any wording/UX friction logged for 29.4.
+
+---
+
+### Phase 29.4 — Shakedown remediation
+
+**Objective.** Fold every `bug`/`docs`/`ux` finding from 29.1–29.3 into real fixes. This is the gate before publish: if the shakedown found nothing, that itself is the (verified) result. `works-as-designed` items are closed with a one-line rationale, not changed.
+
+**Files.**
+- `packages/**` — fixes per finding (scoped by the reports).
+- `README.md` / `DESIGN.md` — doc corrections for any behavior the shakedown proved misdocumented.
+- `.cadence/shakedown/29-04-REMEDIATION.md` (new) — finding → disposition (fixed-commit / doc-fixed / wontfix-rationale) table.
+
+**Depends on.** 29.1, 29.2, 29.3.
+
+**ACs.** (1) Every `bug` finding either fixed (with test) or explicitly deferred to v1.2 with rationale. (2) Every `docs` finding corrected in README/DESIGN. (3) Remediation table maps each finding to disposition. (4) Full suite green after fixes. (5) No open `bug`-tagged finding remains undispositioned.
+
+---
+
+## v1.1.0 — Publish pipeline
+
+### Phase 30.1 — Publish pipeline
+
+**Objective.** Real release automation — the deliberate Phase 28.1 boundary. changesets (or hand-rolled), a release workflow, npm provenance, public-npm vs private-registry decision. **Must include a dry-run publish** of all four packages and verify the published tarball contents (no source leak, correct `files`/`exports`, `bin` resolves).
+
+**Files.**
+- `.changeset/` + `.github/workflows/release.yml` (new), or equivalent hand-rolled release script.
+- `packages/{core,types,testkit,host-claude-code}/package.json` — `files`, `exports`, `bin`, `publishConfig`, `repository`, `provenance` as needed.
+- README — install line switches from local-dogfood to published `npx @cadence/core`.
+- `DESIGN.md` — publish-pipeline section.
+
+**Depends on.** 29.4 (do not publish an unvalidated loop).
+
+**ACs.** (1) `pnpm -r publish --dry-run` (or changesets equivalent) succeeds for all four packages. (2) Tarball inspected: no stray source/test/`.cadence` files, `bin` resolves from a clean install. (3) Release workflow gated on green CI (`needs: ci-success`). (4) Registry target (public npm vs private) decided and documented. (5) Provenance decision documented. (6) A real or scoped-test publish proves the path (revocable: `npm unpublish`/dist-tag, or a private registry).
+
+---
+
+## Deferred to v1.2+ (not in v1.1 scope)
+
+- **Server-side CI enforcement.** Today `main` is gated only client-side (`.githooks/pre-push`) — GitHub Free + private repos get no branch protection/rulesets. If repo goes public/Pro: require the existing `ci-success` context via `gh api … rulesets` and retire the hook. Else: a `scripts/setup` / `postinstall` to auto-wire `core.hooksPath`.
+- **Backlog parking lot.** No `.cadence/` backlog file exists; stand one up (`gsd-add-backlog`-style) so ideas have a home.
+- **Deferred open questions.** 23.1, 23.4, 24.3, 26.2 — real product decisions, a phase each when picked up. (24.2 may be folded in if 29.2/29.3 surface it.)
+- **Test infra.** Flake resolved (`896a140`); consider a serialized/fake-clock lane for future timing-sensitive tests now that CI runs 6 parallel cells.
+
+Entry point next session: discuss/plan **Phase 29.1** (pick the foreign project — see Open question 29.1), then run 29.x → 30.1 through the dogfood loop. 29.4 is the hard gate before 30.1.
