@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 22-v030-release
+**Active phase:** 23-draft-read-gate
 **Active draft:** (none)
 **Tier:** (n/a)
 

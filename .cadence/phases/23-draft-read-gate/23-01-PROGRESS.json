@@ -1,0 +1,29 @@
+{
+  "draftId": "23-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "CadenceStateZ.draftReadAt nullable ISO8601 with default null (+4 tests)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T00:57:00.100Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "draft approve writes draftReadAt on success (5 approve tests)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T00:58:10.456Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "settle DRAFT-read gate + --allow-stale-draft bypass (5 gate tests)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T00:59:50.995Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "DESIGN.md §4.1 cheap-gate row + §10 punchlist updated",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-15T01:00:07.204Z"
+    }
+  }
+}
