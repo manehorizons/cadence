@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 25-security-audit
+**Active phase:** 26-init-ux
 **Active draft:** (none)
 **Tier:** (n/a)
 
