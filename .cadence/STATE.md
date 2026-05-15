@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 23-skill-audit
+**Active phase:** 24-manual-approve
 **Active draft:** (none)
 **Tier:** (n/a)
 
