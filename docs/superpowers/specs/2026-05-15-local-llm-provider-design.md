@@ -51,6 +51,14 @@ localChatJSON<T>(opts: {
 ```
 
 Behavior:
+0. `localChatJSON` consumes the gate's **already-constructed, module-private
+   Zod schema object** (passed in by the `Local<Gate>Verifier` that lives in
+   the same module) — it never re-imports or re-declares schemas. The gate
+   schemas are `zod/v4` instances (`anthropic-verifier.ts` / `code-review.ts`
+   import `from 'zod/v4'`) while `config.ts` uses bare `zod`; reusing the
+   existing object avoids accidentally mixing the v3/v4 `.safeParse` surface.
+   `${baseURL}` is used verbatim; a trailing slash on `CADENCE_LOCAL_BASE_URL`
+   is not supported (the documented value `http://localhost:11434/v1` has none).
 1. POST `${baseURL}/chat/completions` with
    `{ model, messages: [{role:'system',content:system},{role:'user',content:user}],
    response_format: { type: 'json_object' }, temperature: 0 }` via `transport ?? fetch`.
@@ -77,11 +85,15 @@ Added to the existing gate modules — `verify/verifier.ts` (deep verifier),
 
 - `readonly name = 'local'`
 - Constructor: `{ baseURL: string; model: string; transport?: typeof fetch }`
-- `verify`/gate method: reuses **that gate's existing system prompt and Zod
-  response schema** (identical to its `Anthropic<Gate>Verifier`), formats the
-  same user message, and delegates transport + parse to `localChatJSON`. Maps
-  the parsed result into the gate's existing result type
-  (`VerifyResult` / code-review findings / etc.), stamping
+- `verify`/gate method: **preserves the gate's existing empty-input
+  early-return** (e.g. `input.acs.length === 0`, or empty `files` + blank
+  `diff`) — returning the same empty result its `Anthropic<Gate>Verifier`
+  returns *before any transport call*, so an empty gate never makes a needless
+  POST nor throws on a flaky endpoint. Otherwise reuses **that gate's existing
+  system prompt and module-private Zod response schema** (identical to its
+  `Anthropic<Gate>Verifier`), formats the same user message, and delegates
+  transport + parse to `localChatJSON`. Maps the parsed result into the gate's
+  existing result type (`VerifyResult` / code-review findings / etc.), stamping
   `provider: 'local'`, `model`.
 
 No gate result schema or prompt changes — only a new transport implementation
