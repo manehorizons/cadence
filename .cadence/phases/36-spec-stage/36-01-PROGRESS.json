@@ -1,0 +1,41 @@
+{
+  "draftId": "36-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "LoopPositionZ+SPEC; state.activeSpec; SpecZ; AnomalyTypeZ+spec-review-unconverged; config.specReview; +11 schema tests; types 91/91 + build green (AC-1/2/6)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T23:33:39.155Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "spec-parser clone (5 private helpers reproduced + parseSpecMd) TDD green; parse 18/18 (AC-2)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T23:34:57.252Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "spec-review verifier (mock floor: obj+>=1AC+GWT+>=1constraint) + factory (config.specReview) + notify (unconditional) cloned from plan-review trio; core build clean (AC-3/5)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T23:36:32.713Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "progress.ts case 'SPEC' + exhaustive default (TS2366 fixed); register spec; draft-new SPEC-aware msg; spec new/check/approve (ported 35.1 convergent block Draft→Spec); 7-path integration green (AC-1/3/4/5)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T23:40:24.459Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "DESIGN §10 item37 + §4.1 note; CHANGELOG Added; ROADMAP #1 ✓ delivered + #1b deferred bullet + sequence #1✓→#4(next) (AC-6)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T23:42:04.008Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "full gate 16/16 (commands.md drift-guard gap caught+fixed); feat commit landed",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T23:46:16.315Z"
+    }
+  }
+}
