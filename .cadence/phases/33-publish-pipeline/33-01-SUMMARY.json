@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "draftId": "33-01",
+  "completedAt": "2026-05-16T16:10:52.795Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    },
+    {
+      "id": "AC-6",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "metadata hardening: license/publishConfig/repository x3; testkit private:true; root license:MIT; JSON+builds OK"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "per-package LICENSE (MIT, byte-identical to root) + minimal README x3"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "publish-proof.mjs PASS: 3 pkgs->verdaccio, clean install, no workspace: leak, both bins run. DEVIATION from plan: pnpm has no --userconfig flag (npm-only) -> used npm_config_userconfig env instead. Teardown verified: no listener/proc on 4873, temp dirs 0, no repo writes."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "dry-run green x3 (types/core/host @1.0.0, public access; testkit skipped, 0 mentions, no errors). Tarball-clean verified per-pkg via npm pack --json: types=39 files, core=240 (+bin/cadence.cjs), host=36 (+bin/cadence-host-claude-code.cjs); all = LICENSE+README+bin?+dist+package.json only, NO src/tests/.cadence/tsconfig/vitest. Note: first tar -tzf parse was vacuous (empty stdout) + a name-attribution off-by-one; re-verified deterministically with npm pack --dry-run --json."
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "DESIGN §10 item34 + publish subsection; README v1.2 note (F1/F6 anchors verbatim); CHANGELOG Added; ROADMAP 30.1 delivered-status + named v1.2 Public-release milestone + corrected entry-point"
+    },
+    {
+      "id": "T6",
+      "status": "DONE",
+      "notes": "full gate green 16/16 (lint+typecheck+test+build); feat commit a001c95 landed; settle follows"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 32-lint-register
+**Active phase:** 33-publish-pipeline
 **Active draft:** (none)
 **Tier:** (n/a)
 
