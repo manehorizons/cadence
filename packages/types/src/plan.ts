@@ -34,6 +34,7 @@ export const DraftZ = z.object({
   acceptanceCriteria: z.array(AcceptanceCriterionZ),
   tasks: z.array(TaskZ),
   boundaries: z.array(z.string()),
+  requiredSkills: z.array(z.string()).optional(),
   status: z.enum(['PENDING', 'APPROVED', 'IN_PROGRESS', 'SETTLED']),
 });
 export type Draft = z.infer<typeof DraftZ>;

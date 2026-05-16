@@ -194,4 +194,25 @@ describe('CadenceConfigZ', () => {
     expect(parsed.notify.webhook?.headers).toBeUndefined();
     expect(parsed.notify.webhook?.timeoutMs).toBeUndefined();
   });
+
+  // AC-1 / AC-5 (Phase 34.1) — skillAudit.required: back-compat default + accepts list.
+  it('skillAudit.required defaults to [] when skillAudit absent (back-compat) (AC-1)', () => {
+    const { skillAudit: _drop, ...withoutSkillAudit } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutSkillAudit);
+    expect(parsed.skillAudit.required).toEqual([]);
+  });
+
+  it('skillAudit.required round-trips a declared list (AC-1)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      skillAudit: { required: ['brainstorming', 'writing-plans'] },
+    });
+    expect(parsed.skillAudit.required).toEqual(['brainstorming', 'writing-plans']);
+  });
+
+  it('rejects non-string entries in skillAudit.required (AC-5)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, skillAudit: { required: [42] as never } }),
+    ).toThrow();
+  });
 });

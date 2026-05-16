@@ -64,6 +64,15 @@ function parseBoundaries(section: string): string[] {
     .filter((l) => l.length > 0);
 }
 
+/** `requiredSkills: a, b` or `["a", , b]` → ['a','b'] (bracket/quote tolerant). */
+function parseSkillList(v: string): string[] {
+  return v
+    .replace(/^\[|\]$/g, '')
+    .split(',')
+    .map((s) => s.replace(/['"]/g, '').trim())
+    .filter((s) => s.length > 0);
+}
+
 export function parseDraftMd(raw: string): Draft {
   const fm = parseFrontmatter(raw);
   const body = stripFrontmatter(raw);
@@ -86,6 +95,9 @@ export function parseDraftMd(raw: string): Draft {
     boundaries,
     status: (fm.status as Draft['status']) ?? 'PENDING',
     ...(fm.profile !== undefined ? { profile: fm.profile as Draft['profile'] } : {}),
+    ...(fm.requiredSkills !== undefined
+      ? { requiredSkills: parseSkillList(fm.requiredSkills) }
+      : {}),
   };
   return DraftZ.parse(draft);
 }

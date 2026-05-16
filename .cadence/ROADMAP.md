@@ -224,7 +224,7 @@
 ## Open questions (resolve when each phase starts)
 
 - **23.1** — Should `draftReadAt` also be bumped by `cadence draft check`? (Probably not — check is read-only.)
-- **23.4** — `state.skillAudit.required[]` semantics: who populates it? Config? Per-phase frontmatter? Defer to a follow-up phase if the answer isn't obvious at 23.4-DRAFT time.
+- **23.4** — ✓ **RESOLVED (Phase 34.1):** `required[]` = DRAFT frontmatter `requiredSkills` ∪ `config.skillAudit.required`, enforced at `settle run` (declaration = opt-in; unconditional `skill-audit-miss` anomaly; `--allow-skill-audit-miss` bypass). 23.4's AC-2 SessionStop-anomaly idea superseded by the settle-time check.
 - **24.2** — Should `per-task-verify` fire at `--status=DONE` only, or also at `BLOCKED` / `NEEDS_CONTEXT`? (Probably DONE only — others are explicit human escalations.)
 - **24.3** — Code review runs at settle or per-task close? (Plan says settle; revisit if per-task gives better feedback loop.)
 - **25.1** — `plan-review` at `draft new` (before approve) or at `draft approve` (gates BUILD entry)? (Plan says approve-time; consider draft-new for stricter profiles.)
@@ -255,7 +255,7 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 
 ## v1.1.0 — Battle-test shakedown + publish pipeline
 
-**Status:** v0.4 → v1.0 fully shipped (Phases 13–28.1), tagged through `v1.0.0`, pushed. Loop IDLE. v1.1 thesis: **CADENCE has only ever run its own happy path (`auto × standard`, `mock` providers, one host, one OS, one project — itself). Self-dogfood validated the spine; it cannot validate "works because the project IS cadence."** Phases 29.x close the validation gap; 30.1 ships publish — and is **gated on 29.4** so we never publish an untested loop. Server-side CI enforcement, the backlog parking lot, and the deferred open questions (23.1 / 23.4 / 24.3 / 26.2) move to **v1.2+** to keep this milestone tight.
+**Status:** v0.4 → v1.0 fully shipped (Phases 13–28.1), tagged through `v1.0.0`, pushed. Loop IDLE. v1.1 thesis: **CADENCE has only ever run its own happy path (`auto × standard`, `mock` providers, one host, one OS, one project — itself). Self-dogfood validated the spine; it cannot validate "works because the project IS cadence."** Phases 29.x close the validation gap; 30.1 ships publish — and is **gated on 29.4** so we never publish an untested loop. Server-side CI enforcement, the backlog parking lot, and the deferred open questions (23.1 / 23.4 / 24.3 / 26.2) move to **v1.2+** to keep this milestone tight. (23.4 resolved — Phase 34.1; see v1.2 feature-expansion.)
 
 ### Phase 29.1 — Real-project shakedown (foreign repo)
 
@@ -331,7 +331,7 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 
 - **Server-side CI enforcement.** Today `main` is gated only client-side (`.githooks/pre-push`) — GitHub Free + private repos get no branch protection/rulesets. If repo goes public/Pro: require the existing `ci-success` context via `gh api … rulesets` and retire the hook. Else: a `scripts/setup` / `postinstall` to auto-wire `core.hooksPath`.
 - **Backlog parking lot.** No `.cadence/` backlog file exists; stand one up (`gsd-add-backlog`-style) so ideas have a home.
-- **Deferred open questions.** 23.1, 23.4, 24.3, 26.2 — real product decisions, a phase each when picked up. (24.2 may be folded in if 29.2/29.3 surface it.)
+- **Deferred open questions.** 23.1, 24.3, 26.2 — real product decisions, a phase each when picked up. (24.2 may be folded in if 29.2/29.3 surface it.) (23.4 resolved — Phase 34.1.)
 - **Test infra.** ✓ **Pulled forward into v1.1 — delivered as Phase 32.1** (shared `vitest.shared.ts` base: `testTimeout`/`hookTimeout`/`maxForks`; `tempRepo` rmdir retry; 29.5/30.2 per-test band-aids reverted). The deferral boundary was deliberately broken: the flake was costing a blocking pre-push failure + a remediation phase roughly every push (3rd recurrence at Phase 31.1).
 
 ---
@@ -351,4 +351,18 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 
 ---
 
-Entry point next session: **v1.2 "Public release"** above is the next named milestone — its first gate is the repo-visibility (public vs private) decision, since provenance + public-from-private both hinge on it. All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) is shipped.
+## v1.2.0 — Feature expansion (superpowers-inspired)
+
+Source: `docs/superpowers/2026-05-16-cadence-expansion-survey.md` (full weighing of 6 candidates). CADENCE ships DRAFT→BUILD→SETTLE; this milestone closes the gap toward the full idea→shipped arc that superpowers covers manually today.
+
+- **#6 Required-skill enforcement** — ✓ **delivered Phase 34.1** (closes open-question 23.4).
+- **#2 Review-convergence loop primitive** — bounded `review→fix→re-review→escalate`, v1 wrapping the existing `plan-review` gate. **Next.** The core superpowers value cadence lacks (iteration vs one-shot).
+- **#1 brainstorm→spec stage** — pre-DRAFT `cadence spec`; sequence AFTER #2 so spec-review reuses convergence. Heaviest; highest end-value.
+- **#4 Auto-remediation on gate fail** — second attach-point of #2's engine; small once #2 exists.
+- **#3 `cadence build --subagent` / #5 `cadence research` stage — PARKED.** Both invert the host-agnostic-engine anchor (cadence is driven *by* an agent; it is not an agent/research orchestrator). Revisit ONLY if that anchor is reconsidered.
+
+Sequence: #6 ✓ → #2 → #1 → #4 ; #3/#5 parked.
+
+---
+
+Entry point next session: two named v1.2 tracks — **Public release** (first gate: the repo-visibility decision; provenance + public-from-private hinge on it) and **Feature expansion** (#6 ✓ done; **#2 review-convergence primitive is next**). All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) is shipped; v1.2 #6 (required-skill gate, Phase 34.1) is shipped.
