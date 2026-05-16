@@ -168,7 +168,11 @@ emission.
   resolved). Resolution recorded: DRAFT frontmatter ∪ config baseline,
   settle-enforced, `skill-audit-miss` anomaly. (The skill-audit-miss-anomaly
   framing is this design's resolution, not verbatim ROADMAP text — the
-  original 23.4 question only asked the populates-it/where question.);
+  original 23.4 question only asked the populates-it/where question.) Also
+  annotate the third incidental `(23.1 / 23.4 / 24.3 / 26.2)` mention in the
+  v1.1 milestone-status prose so no stale-looking `23.4` reference remains
+  repo-wide (cosmetic but cheap; one parenthetical "23.4 resolved — see v1.2
+  feature-expansion").;
   (b) add a **v1.2 feature-expansion** section referencing the survey: #6
   delivered, then sequenced backlog **#2 (convergence primitive) → #1 (spec
   stage) → #4 (auto-remediation = 2nd attach-point of #2's engine)**, and
@@ -240,7 +244,7 @@ Vitest, in-package (`packages/**`) so the `test-coverage` gate links each AC:
   the check, `--allow-skill-audit-miss` flag, write
   `state.skillAudit.required`, emit anomaly.
 - `packages/core/tests/**` — skill-match unit; config/draft schema;
-  settle integration (5 paths).
+  settle integration (6 paths a–f, incl. the strict-profile emission-still-fires lock).
 - `DESIGN.md`, `CHANGELOG.md`, `.cadence/ROADMAP.md` — docs + 23.4 close +
   v1.2 backlog.
 
@@ -251,7 +255,7 @@ Vitest, in-package (`packages/**`) so the `test-coverage` gate links each AC:
 2. `skill-match.ts` + unit tests (TDD-able pure fn).
 3. `draft-parser.ts` parse + test.
 4. `settle.ts` resolve+check+flag+emit+state-write; settle integration tests
-   (5 paths).
+   (6 paths a–f per the Testing section).
 5. Docs: DESIGN §4.1/§10, CHANGELOG, ROADMAP (23.4 closed + v1.2 backlog).
 6. Full `pnpm turbo run lint typecheck test build` green; dogfood as CADENCE
    phase `34-required-skills`/`34-01`, tier `standard`, two-commit
