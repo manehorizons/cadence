@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "33-publish-pipeline",
+  "activePhase": "34-required-skills",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-16T15:54:54.379Z",
+  "draftReadAt": "2026-05-16T19:38:39.270Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
