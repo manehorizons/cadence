@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
 import type { Draft } from '@cadence/types';
+import { localChatJSON } from './local-client.js';
 
 /**
  * Phase 25.1 — plan-review verifier. Reviews the parsed DRAFT (objective +
@@ -182,6 +183,42 @@ export class AnthropicPlanReviewVerifier implements PlanReviewVerifier {
       findings,
       provider: this.name,
       model: this.model,
+    };
+  }
+}
+
+export interface LocalPlanReviewVerifierOptions {
+  baseURL: string;
+  model: string;
+  transport?: typeof fetch;
+}
+
+export class LocalPlanReviewVerifier implements PlanReviewVerifier {
+  readonly name = 'local';
+  constructor(private readonly o: LocalPlanReviewVerifierOptions) {}
+
+  async verify(input: PlanReviewInput): Promise<PlanReviewResult> {
+    const parsed = await localChatJSON({
+      baseURL: this.o.baseURL,
+      model: this.o.model,
+      system: SYSTEM_PROMPT,
+      user: formatUserMessage(input.draft),
+      schema: PlanReviewResponseSchema,
+      ...(this.o.transport ? { transport: this.o.transport } : {}),
+    });
+    const findings: PlanReviewFinding[] = [];
+    for (const f of parsed.findings) {
+      findings.push({
+        severity: f.severity,
+        message: f.message,
+        ...(f.suggestedEdit !== undefined ? { suggestedEdit: f.suggestedEdit } : {}),
+      });
+    }
+    return {
+      pass: parsed.pass,
+      findings,
+      provider: this.name,
+      model: this.o.model,
     };
   }
 }

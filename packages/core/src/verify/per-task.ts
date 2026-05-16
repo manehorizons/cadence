@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
+import { localChatJSON } from './local-client.js';
 
 /**
  * Phase 24.2 — per-task verifier. Sibling to the Phase 15 `Verifier` for
@@ -159,6 +160,34 @@ export class AnthropicPerTaskVerifier implements PerTaskVerifier {
       reason: parsed.reason,
       provider: this.name,
       model: this.model,
+    };
+  }
+}
+
+export interface LocalPerTaskVerifierOptions {
+  baseURL: string;
+  model: string;
+  transport?: typeof fetch;
+}
+
+export class LocalPerTaskVerifier implements PerTaskVerifier {
+  readonly name = 'local';
+  constructor(private readonly o: LocalPerTaskVerifierOptions) {}
+
+  async verify(input: PerTaskInput): Promise<PerTaskResult> {
+    const parsed = await localChatJSON({
+      baseURL: this.o.baseURL,
+      model: this.o.model,
+      system: SYSTEM_PROMPT,
+      user: formatUserMessage(input),
+      schema: PerTaskResponseSchema,
+      ...(this.o.transport ? { transport: this.o.transport } : {}),
+    });
+    return {
+      verdict: parsed.verdict,
+      reason: parsed.reason,
+      provider: this.name,
+      model: this.o.model,
     };
   }
 }

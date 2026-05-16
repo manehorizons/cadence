@@ -1,13 +1,14 @@
 import type { CadenceConfig } from '@cadence/types';
 import {
   AnthropicSecurityAuditVerifier,
+  LocalSecurityAuditVerifier,
   MockSecurityAuditVerifier,
   type SecurityAuditVerifier,
 } from './security-audit.js';
 
 export interface SelectSecurityAuditVerifierOptions {
   /** Override `config.securityAudit.provider`. */
-  override?: 'mock' | 'anthropic';
+  override?: 'mock' | 'anthropic' | 'local';
   /** Test seam: stand in for `process.env`. */
   env?: NodeJS.ProcessEnv;
   /** Test seam: emit warnings somewhere other than `process.stderr`. */
@@ -42,6 +43,18 @@ export function selectSecurityAuditVerifier(
       apiKey: env.ANTHROPIC_API_KEY,
       ...(model ? { model } : {}),
     });
+  }
+
+  if (provider === 'local') {
+    const baseURL = env.CADENCE_LOCAL_BASE_URL;
+    const model = config?.securityAudit?.model ?? env.CADENCE_LOCAL_MODEL;
+    if (!baseURL || !model) {
+      warn(
+        'security-audit: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.',
+      );
+      return new MockSecurityAuditVerifier();
+    }
+    return new LocalSecurityAuditVerifier({ baseURL, model });
   }
 
   return new MockSecurityAuditVerifier();

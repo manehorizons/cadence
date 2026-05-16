@@ -8,7 +8,7 @@ import type {
   VerifyResult,
 } from './verifier.js';
 
-const VerifierResponseSchema = z.object({
+export const VerifierResponseSchema = z.object({
   verdicts: z.array(
     z.object({
       id: z.string(),
@@ -18,7 +18,7 @@ const VerifierResponseSchema = z.object({
   ),
 });
 
-const SYSTEM_PROMPT = `You are an independent acceptance-criterion verifier for an AI-assisted development tool called CADENCE.
+export const SYSTEM_PROMPT = `You are an independent acceptance-criterion verifier for an AI-assisted development tool called CADENCE.
 
 For each acceptance criterion (AC) you receive, decide whether the supplied diff + test references actually deliver what the AC promises in plain English. Be skeptical: "tests exist" is necessary but not sufficient; the diff must actually implement the behavior the AC describes.
 
@@ -110,7 +110,7 @@ export class AnthropicVerifier implements Verifier {
   }
 }
 
-function formatUserMessage(input: VerifyInput): string {
+export function formatUserMessage(input: VerifyInput): string {
   const acList = input.acs
     .map(
       (ac) =>

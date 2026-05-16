@@ -3,6 +3,12 @@
  * read AC text + relevant code + tests and return a per-AC pass/fail verdict
  * with reasoning. Selection is config-driven (see `selectVerifier`).
  */
+import { localChatJSON } from './local-client.js';
+import {
+  SYSTEM_PROMPT,
+  VerifierResponseSchema,
+  formatUserMessage,
+} from './anthropic-verifier.js';
 
 export interface VerifyAc {
   /** Stable AC id, e.g. "AC-1". */
@@ -59,4 +65,32 @@ export interface VerifyResult {
 export interface Verifier {
   readonly name: string;
   verify(input: VerifyInput): Promise<VerifyResult>;
+}
+
+export interface LocalVerifierOptions {
+  baseURL: string;
+  model: string;
+  transport?: typeof fetch;
+}
+
+export class LocalVerifier implements Verifier {
+  readonly name = 'local';
+  constructor(private readonly o: LocalVerifierOptions) {}
+
+  async verify(input: VerifyInput): Promise<VerifyResult> {
+    if (input.acs.length === 0) {
+      return { verdicts: {}, provider: this.name, model: this.o.model };
+    }
+    const parsed = await localChatJSON({
+      baseURL: this.o.baseURL,
+      model: this.o.model,
+      system: SYSTEM_PROMPT,
+      user: formatUserMessage(input),
+      schema: VerifierResponseSchema,
+      ...(this.o.transport ? { transport: this.o.transport } : {}),
+    });
+    const verdicts: Record<string, AcVerdict> = {};
+    for (const v of parsed.verdicts) verdicts[v.id] = { pass: v.pass, reason: v.reason };
+    return { verdicts, provider: this.name, model: this.o.model };
+  }
 }

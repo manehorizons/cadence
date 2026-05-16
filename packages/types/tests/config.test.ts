@@ -98,6 +98,22 @@ describe('CadenceConfigZ', () => {
     expect(parsed.verifier.model).toBe('claude-haiku-4-5');
   });
 
+  it('accepts provider "local" on every LLM gate', () => {
+    const cfg = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: { provider: 'local' },
+      perTaskVerifier: { provider: 'local' },
+      codeReview: { provider: 'local' },
+      planReview: { provider: 'local' },
+      securityAudit: { provider: 'local' },
+    });
+    expect(cfg.verifier.provider).toBe('local');
+    expect(cfg.perTaskVerifier.provider).toBe('local');
+    expect(cfg.codeReview.provider).toBe('local');
+    expect(cfg.planReview.provider).toBe('local');
+    expect(cfg.securityAudit.provider).toBe('local');
+  });
+
   it('notify defaults to transport=stderr when absent', () => {
     const { notify: _drop, ...withoutNotify } = defaultConfig;
     const parsed = CadenceConfigZ.parse(withoutNotify);

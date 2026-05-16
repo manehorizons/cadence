@@ -114,6 +114,13 @@ The gate fires only when the active (tier × profile) puts `'test-coverage'` in 
 
 - **`mock` (default)** — deterministic. Passes an AC iff it has ≥1 linked test in the coverage scan; otherwise fails with `"no linked test found"`. No I/O, no API key, works offline. Useful for CI dogfood and as a floor.
 - **`anthropic`** — opt-in. Sends each AC's plain-English text + diff + test refs to Claude (default model: `claude-sonnet-4-6`, overridable via `verifier.model`). Uses `messages.parse()` with a Zod schema for typed JSON verdicts; system prompt is prompt-cached. Requires `ANTHROPIC_API_KEY` in env — if absent, silently falls back to `mock` with a stderr warning.
+- **`local`** — opt-in. Targets any OpenAI-compatible `/v1/chat/completions` endpoint, e.g. [Ollama](https://ollama.com). Set two env vars:
+  - `CADENCE_LOCAL_BASE_URL` — base URL of the endpoint (example: `http://localhost:11434/v1`)
+  - `CADENCE_LOCAL_MODEL` — model to request (example: `qwen3-coder:30b`)
+
+  A per-gate `model` key in config overrides `CADENCE_LOCAL_MODEL` for that gate only. If either the base URL or the effective model is unset when `provider: 'local'` is configured, the gate warns on stderr and falls back to `mock` for that invocation. No API key is required. CADENCE's own loop always uses `mock` by default — the `local` provider only activates on gates where you explicitly set it.
+
+  The same `local` provider and env vars apply across all five gates (`verifier`, `perTaskVerifier`, `codeReview`, `planReview`, `securityAudit`); each gate reads its own `model` config override first, then `CADENCE_LOCAL_MODEL`.
 
 Failed verdicts on non-overridden ACs refuse the settle (exit 1) unless `--force` is passed. Transport failures (network / malformed JSON) refuse unless `--allow-verifier-failure` is passed (which records the failure into `deepVerify`). Explicit `--ac` overrides still win — the verifier runs for visibility but the manual verdict takes effect.
 
@@ -155,7 +162,7 @@ settle run refused: code-review reported 1 HIGH finding(s). Pass --allow-code-re
 - All findings land on `SUMMARY.codeReview` as `Record<file, Finding[]>` — present only when the gate ran.
 - HIGH findings refuse settle unless `--force` or `--allow-code-review-failure` is passed; MEDIUM and LOW never block.
 - Each HIGH finding dispatches a `code-review-high` anomaly (when `'anomaly-notify'` is also in the gate set, which lines up under `standard × complex`).
-- Provider chosen via `config.codeReview.provider`: `mock` (deterministic — every added `console.log` is HIGH) or `anthropic` (prompt-cached `claude-sonnet-4-6`).
+- Provider chosen via `config.codeReview.provider`: `mock` (deterministic — every added `console.log` is HIGH), `anthropic` (prompt-cached `claude-sonnet-4-6`), or `local` (see [local provider](#deep-verifier---deep) above).
 
 ### Per-task verifier (`per-task-verify`)
 
@@ -171,7 +178,7 @@ Pass --allow-per-task-failure to record DONE anyway.
 - The verdict lands on `PROGRESS.json tasks[id].perTaskVerify` (with `bypassed: true` when `--allow-per-task-failure` was used).
 - `refuse` outcomes dispatch a `per-task-fail` anomaly (severity `error`, `context.taskId / provider / reason / bypassed`).
 - Non-`DONE` statuses (`BLOCKED`, `NEEDS_CONTEXT`, `DONE_WITH_CONCERNS`) skip the gate — they're explicit human escalations.
-- Provider chosen via `config.perTaskVerifier.provider`: `mock` (deterministic floor — `refuse` on empty files, `concerns` on empty diff, `pass` otherwise) or `anthropic` (prompt-cached `claude-sonnet-4-6`).
+- Provider chosen via `config.perTaskVerifier.provider`: `mock` (deterministic floor — `refuse` on empty files, `concerns` on empty diff, `pass` otherwise), `anthropic` (prompt-cached `claude-sonnet-4-6`), or `local` (see [local provider](#deep-verifier---deep) above).
 
 ### Manual approve gate
 
@@ -202,7 +209,7 @@ draft approve refused: plan-review found 1 finding(s). Fix the plan, or pass --a
 - Input is the parsed DRAFT (objective + ACs + tasks + boundaries) — there is no diff or SUMMARY at approve time.
 - `pass=false` refuses approve with exit 1 and leaves state at `loopPosition=DRAFT`; `--allow-plan-review-failure` proceeds to BUILD (findings still printed) with a `proceeding past N finding(s)` trace.
 - Findings carry `severity: 'high' | 'medium' | 'low'`, a `message`, and an optional `suggestedEdit`.
-- Provider chosen via `config.planReview.provider`: `mock` (deterministic floor — pass iff ≥1 AC and every AC has non-empty Given/When/Then) or `anthropic` (holistic prompt-cached `claude-sonnet-4-6`).
+- Provider chosen via `config.planReview.provider`: `mock` (deterministic floor — pass iff ≥1 AC and every AC has non-empty Given/When/Then), `anthropic` (holistic prompt-cached `claude-sonnet-4-6`), or `local` (see [local provider](#deep-verifier---deep) above).
 
 ### Security-audit verifier (`security-audit`)
 
@@ -218,7 +225,7 @@ settle run refused: security-audit reported 1 CRITICAL finding(s). Pass --allow-
 - All findings (any severity) land on `SUMMARY.securityAudit` as a flat `Finding[]` — present only when the gate ran.
 - CRITICAL findings refuse settle unless `--force` or `--allow-security-audit-failure`; HIGH/MEDIUM/LOW are recorded but never block.
 - `Finding.severity` is `'critical' | 'high' | 'medium' | 'low'` (the `critical` tier was added for this gate).
-- Provider chosen via `config.securityAudit.provider`: `mock` (deterministic — every added `Authorization:` header value or JWT-shaped string is CRITICAL) or `anthropic` (OWASP-aware prompt-cached `claude-sonnet-4-6`).
+- Provider chosen via `config.securityAudit.provider`: `mock` (deterministic — every added `Authorization:` header value or JWT-shaped string is CRITICAL), `anthropic` (OWASP-aware prompt-cached `claude-sonnet-4-6`), or `local` (see [local provider](#deep-verifier---deep) above).
 
 ### Anomaly notify
 

@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
 import type { Finding } from '@cadence/types';
+import { localChatJSON } from './local-client.js';
 
 /**
  * Phase 25.2 — security-audit verifier. The final, most expensive gate:
@@ -200,6 +201,40 @@ export class AnthropicSecurityAuditVerifier
       });
     }
     return { findings, provider: this.name, model: this.model };
+  }
+}
+
+export interface LocalSecurityAuditVerifierOptions {
+  baseURL: string;
+  model: string;
+  transport?: typeof fetch;
+}
+
+export class LocalSecurityAuditVerifier implements SecurityAuditVerifier {
+  readonly name = 'local';
+  constructor(private readonly o: LocalSecurityAuditVerifierOptions) {}
+
+  async verify(input: SecurityAuditInput): Promise<SecurityAuditResult> {
+    if (input.files.length === 0 && input.diff.trim().length === 0) {
+      return { findings: [], provider: this.name, model: this.o.model };
+    }
+    const parsed = await localChatJSON({
+      baseURL: this.o.baseURL,
+      model: this.o.model,
+      system: SYSTEM_PROMPT,
+      user: formatUserMessage(input),
+      schema: SecurityAuditResponseSchema,
+      ...(this.o.transport ? { transport: this.o.transport } : {}),
+    });
+    const findings: Finding[] = [];
+    for (const f of parsed.findings) {
+      findings.push({
+        severity: f.severity,
+        message: f.message,
+        ...(f.line !== undefined ? { line: f.line } : {}),
+      });
+    }
+    return { findings, provider: this.name, model: this.o.model };
   }
 }
 

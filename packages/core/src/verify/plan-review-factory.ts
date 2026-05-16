@@ -1,13 +1,14 @@
 import type { CadenceConfig } from '@cadence/types';
 import {
   AnthropicPlanReviewVerifier,
+  LocalPlanReviewVerifier,
   MockPlanReviewVerifier,
   type PlanReviewVerifier,
 } from './plan-review.js';
 
 export interface SelectPlanReviewVerifierOptions {
   /** Override `config.planReview.provider`. */
-  override?: 'mock' | 'anthropic';
+  override?: 'mock' | 'anthropic' | 'local';
   /** Test seam: stand in for `process.env`. */
   env?: NodeJS.ProcessEnv;
   /** Test seam: emit warnings somewhere other than `process.stderr`. */
@@ -41,6 +42,18 @@ export function selectPlanReviewVerifier(
       apiKey: env.ANTHROPIC_API_KEY,
       ...(model ? { model } : {}),
     });
+  }
+
+  if (provider === 'local') {
+    const baseURL = env.CADENCE_LOCAL_BASE_URL;
+    const model = config?.planReview?.model ?? env.CADENCE_LOCAL_MODEL;
+    if (!baseURL || !model) {
+      warn(
+        'plan-review: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.',
+      );
+      return new MockPlanReviewVerifier();
+    }
+    return new LocalPlanReviewVerifier({ baseURL, model });
   }
 
   return new MockPlanReviewVerifier();

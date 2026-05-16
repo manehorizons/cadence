@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+### Added
+
+- `local` LLM gate provider: targets any OpenAI-compatible `/v1/chat/completions` endpoint (Ollama et al.). Set `CADENCE_LOCAL_BASE_URL` (e.g. `http://localhost:11434/v1`) and `CADENCE_LOCAL_MODEL` (e.g. `qwen3-coder:30b`); a per-gate `model` key in config overrides `CADENCE_LOCAL_MODEL` for that gate. If the base URL or effective model is unset when `provider: 'local'` is configured, the gate warns on stderr and falls back to `mock`. No API key required. Cadence's own loop defaults to `mock`; the `local` provider only activates on gates where it is explicitly set. Applies across all five gates (`verifier`, `perTaskVerifier`, `codeReview`, `planReview`, `securityAudit`). (Phase 30.1.)
+
 ### Fixed
 
 - `cadence init` now detects repo layout and writes a matching `verification.testGlobs`: a `packages/` directory → the workspace glob (`packages/**/*.test.ts(x)`, unchanged for cadence's own monorepo), any other shape → a depth-agnostic `**/*.test.ts(x)`. Previously the monorepo glob was written unconditionally, leaving the test-coverage gate unsatisfiable on every single-package repo (F2 — Phase 29.1 shakedown publish-blocker). The post-init summary now reports the detected layout and effective globs. (Phase 29.4, F2.)

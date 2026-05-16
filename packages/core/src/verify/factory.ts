@@ -1,11 +1,11 @@
 import type { CadenceConfig } from '@cadence/types';
 import { AnthropicVerifier } from './anthropic-verifier.js';
 import { MockVerifier } from './mock-verifier.js';
-import type { Verifier } from './verifier.js';
+import { LocalVerifier, type Verifier } from './verifier.js';
 
 export interface SelectVerifierOptions {
   /** When provided, overrides `config.verifier.provider`. */
-  override?: 'mock' | 'anthropic';
+  override?: 'mock' | 'anthropic' | 'local';
   /** Test seam: stand in for `process.env`. */
   env?: NodeJS.ProcessEnv;
   /** Test seam: emit warnings somewhere other than `process.stderr`. */
@@ -37,6 +37,18 @@ export function selectVerifier(
       apiKey: env.ANTHROPIC_API_KEY,
       ...(model ? { model } : {}),
     });
+  }
+
+  if (provider === 'local') {
+    const baseURL = env.CADENCE_LOCAL_BASE_URL;
+    const model = config?.verifier?.model ?? env.CADENCE_LOCAL_MODEL;
+    if (!baseURL || !model) {
+      warn(
+        'verifier: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.',
+      );
+      return new MockVerifier();
+    }
+    return new LocalVerifier({ baseURL, model });
   }
 
   return new MockVerifier();

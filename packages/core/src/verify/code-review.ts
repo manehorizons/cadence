@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
+import { localChatJSON } from './local-client.js';
 
 /**
  * Phase 24.3 — code-review verifier. Per-file findings against the phase
@@ -194,6 +195,40 @@ export class AnthropicCodeReviewVerifier implements CodeReviewVerifier {
       });
     }
     return { findings, provider: this.name, model: this.model };
+  }
+}
+
+export interface LocalCodeReviewVerifierOptions {
+  baseURL: string;
+  model: string;
+  transport?: typeof fetch;
+}
+
+export class LocalCodeReviewVerifier implements CodeReviewVerifier {
+  readonly name = 'local';
+  constructor(private readonly o: LocalCodeReviewVerifierOptions) {}
+
+  async verify(input: CodeReviewInput): Promise<CodeReviewResult> {
+    if (input.files.length === 0 && input.diff.trim().length === 0) {
+      return { findings: {}, provider: this.name, model: this.o.model };
+    }
+    const parsed = await localChatJSON({
+      baseURL: this.o.baseURL,
+      model: this.o.model,
+      system: SYSTEM_PROMPT,
+      user: formatUserMessage(input),
+      schema: CodeReviewResponseSchema,
+      ...(this.o.transport ? { transport: this.o.transport } : {}),
+    });
+    const findings: Record<string, Finding[]> = {};
+    for (const f of parsed.findings) {
+      (findings[f.file] ??= []).push({
+        severity: f.severity,
+        message: f.message,
+        ...(f.line !== undefined ? { line: f.line } : {}),
+      });
+    }
+    return { findings, provider: this.name, model: this.o.model };
   }
 }
 
