@@ -51,3 +51,25 @@ per-task-verify passed all 6 with "coherent and scoped" reasons, but the scratch
 `local` provider **plumbing is proven** (per-task-verify live, end-to-end, correct). The blocking issue for using `local` on the expensive gates is **G1**: local 30B JSON-schema conformance fails the deep-verify schema past one repair retry — the `--deep` (and likely code-review/security-audit, untested here due to G4's empty-diff no-op) layers need either more robust JSON coercion in `localChatJSON`, a documented minimum-model, or a strict-retry mode. **G4** independently neutered code-review + security-audit (empty `touchedFiles` → vacuous pass) and must be understood before those gates can be judged on local. G2/G3 are observability gaps. No cloud spend incurred. ROADMAP 29.2's `anthropic` precision/cost contract remains unrun (optional, separate).
 
 **Out of scope (per DRAFT):** all fixes — remediation is a later phase, mirroring 29.1 → 29.4/29.6.
+
+---
+
+## CORRECTION (post-settlement direct-probe verification)
+
+The settle-run table above inferred code-review/security-audit behavior from `SUMMARY.codeReview = {}` / `securityAudit = []`. Direct, isolated probes of the built `Local*Verifier` classes against Ollama `qwen3-coder:30b` afterward **disprove finding G4**:
+
+| Gate | Direct probe | Result | Latency |
+|------|--------------|--------|---------|
+| code-review | diff with `console.log(secret)` + `eval(userInput)` | **LIVE, accurate** — 2 HIGH findings (debug/secret + eval injection), correct lines, `provider:local` | ~6s |
+| security-audit | diff with hardcoded JWT + `exec(userInput)` | **LIVE, accurate** — 2 CRITICAL (hardcoded JWT, command injection) | ~5s |
+| plan-review | a real DRAFT object | **LIVE, works** — `pass=false`, 3 findings, valid output | ~5s |
+| deep-verify (`LocalVerifier`) | AC + diff + tests | **FAILS** — `verdicts[0].id` expected string, received undefined → `VerifierResponseSchema` fails past the 1 repair retry | ~9s |
+
+**Revised dispositions:**
+
+- **G4 — WITHDRAWN (misdiagnosis).** Settle scopes the gate diff from **DRAFT-declared task `files:`** (`settle.ts` ~323: `draft.tasks.flatMap(t => t.files)`), *not* `PROGRESS.touchedFiles`. The scratch DRAFT declared `files:` for every task, so the diff was non-empty; code-review/security-audit **did run live and correctly returned no findings on trivial pure-arithmetic code.** `{}`/`[]` = clean-code-correct, not a no-op. No bug. (The `PROGRESS.touchedFiles: []` observation was real but irrelevant to settle-time scoping.)
+- **G1 — CONFIRMED but NARROWED.** Not a blanket "local 30B can't do JSON": 4 of 5 gates (per-task, code-review, security-audit, plan-review) produce valid schema-conforming JSON first try on the *same* model. **Only `LocalVerifier` (deep-verify) fails** — qwen3-coder:30b returns a verdicts array whose objects omit/misname the `id` field, so `VerifierResponseSchema` rejects it even after the single repair retry. Root cause is deep-verify-specific prompt/schema ergonomics (the prompt does not bind output verdict `id`s tightly to the input AC ids, nor give an example), **not** `localChatJSON`. Remediation should target the deep-verify prompt/schema-coercion (schema+example injection, id-binding, possibly an extra retry), not a global localChatJSON change.
+- **G3 — CONFIRMED + plan-review proven live.** Plan-review works on local (probe: `pass=false`, 3 findings). The gap is purely observability: at `draft approve` on **pass**, nothing is persisted, so a loop run cannot later prove plan-review ran/which provider/verdict.
+- **G2 — unchanged** (failed deep-verify records `provider:"unknown"`; the catch already has `cadenceConfig?.verifier?.provider` available at `settle.ts:382`).
+
+**Corrected headline:** the `local` provider is **production-viable for 4 of the 5 gates** as-is. The only real defect is **G1 (deep-verify only)**. **G2/G3** are observability fixes. **G4 is not a bug.** Remediation phase scope: G1 + G2 + G3.
