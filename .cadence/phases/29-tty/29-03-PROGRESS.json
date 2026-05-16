@@ -1,0 +1,11 @@
+{
+  "draftId": "29-03",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "29.3 TTY transcript captured + analyzed in 29-03-TTY.md",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T02:44:45.629Z"
+    }
+  }
+}

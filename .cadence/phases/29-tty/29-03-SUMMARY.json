@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "draftId": "29-03",
+  "completedAt": "2026-05-16T02:44:45.832Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "29.3 TTY transcript captured + analyzed in 29-03-TTY.md"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

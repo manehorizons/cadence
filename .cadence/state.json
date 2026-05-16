@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "29-gate-remediation",
+  "activePhase": "29-tty",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-16T01:59:18.367Z",
+  "draftReadAt": "2026-05-16T02:44:45.397Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
