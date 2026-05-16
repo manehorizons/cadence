@@ -1,0 +1,35 @@
+{
+  "draftId": "32-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "shared vitest base + 5 configs mergeConfig; minForks:1 added (maxForks-only RangeError caught at verify)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T14:55:22.341Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "tempRepo rm retry (maxRetries:5/retryDelay:100); testkit rebuilt; end-to-end isolated green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T14:56:02.973Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "reverted 29.5 + 30.2 per-test timeout band-aids; both files green isolated under global 20000ms",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T14:57:09.494Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "gate GREEN 3x consecutive full-parallel (31.9s/50.2s/47s); maxForks=12 held, no retune; isolated core 432/432",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T15:01:28.859Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "ROADMAP Deferred-bullet pulled-forward; DESIGN §10 item 33; CHANGELOG Unreleased/Fixed",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T15:02:49.469Z"
+    }
+  }
+}
