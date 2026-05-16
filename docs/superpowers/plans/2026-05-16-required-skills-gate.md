@@ -221,13 +221,18 @@ function parseSkillList(v: string): string[] {
 ```
 
 Then in the `const draft: Draft = { … }` literal, alongside the existing
-`...(fm.profile !== undefined ? { profile: ... } : {})`, add:
+`...(fm.profile !== undefined ? { profile: ... } : {})` spread, add:
 
 ```ts
     ...(fm.requiredSkills !== undefined
       ? { requiredSkills: parseSkillList(fm.requiredSkills) }
       : {}),
 ```
+
+**Caution:** the `fm.profile` spread is currently the *last* property in the
+literal (no trailing comma after it). When appending the new spread, add a
+comma after the `profile` spread so both are valid literal members (the
+snippet above already ends with `,`).
 
 - [ ] **Step 4:** Run → PASS (3). Re-run the whole parse suite: `pnpm -C packages/core test -- run parse` → PASS (no regression).
 
@@ -290,7 +295,9 @@ export async function emitSkillAuditMiss(
 }
 ```
 
-- [ ] **Step 2: settle.ts — add the flag.** After the `--allow-security-audit-failure` `.option(...)` (~line 97-100) add:
+- [ ] **Step 2: settle.ts — add the flag AND extend the `opts` type.** Two edits in `settle.ts`:
+
+  (2a) After the `--allow-security-audit-failure` `.option(...)` (~line 97-100) add:
 
 ```ts
     .option(
@@ -298,6 +305,14 @@ export async function emitSkillAuditMiss(
       'do not refuse when required skills were not invoked; emit a warn anomaly (bypassed:true) and settle anyway',
     )
 ```
+
+  (2b) **Required for typecheck:** the action handler's `opts` parameter is an *explicitly-typed inline object literal* (~lines 102-114) enumerating every flag (`allowCodeReviewFailure?`, `allowSecurityAuditFailure?`, `allowStaleDraft?`, …). Add a member to that type literal alongside the siblings:
+
+```ts
+      allowSkillAuditMiss?: boolean;
+```
+
+(Commander camelCases `--allow-skill-audit-miss` → `opts.allowSkillAuditMiss`, consistent with `--allow-code-review-failure` → `opts.allowCodeReviewFailure`. Without 2b, `opts.allowSkillAuditMiss` is a `Property does not exist` TS error that fails the Task-6 gate.)
 
 - [ ] **Step 3: settle.ts — imports.** Add near the other notify imports (~line 27-31):
 
@@ -311,14 +326,21 @@ import { missingSkills } from '../../verify/skill-match.js';
 ```ts
         // Required-skill enforcement (Phase 34.1 — ROADMAP 23.4). NOT a
         // gates/engine.ts matrix cell: declaring skills IS the opt-in.
+        // `cadenceConfig` is `… | null` (null when loadConfig failed) — every
+        // deref is optional-chained, mirroring the existing `cadenceConfig?.`
+        // call sites in this file. Deliberate null-config behavior: still
+        // compute+record the effective required (so SUMMARY stays truthful),
+        // but SKIP enforcement when config didn't load (cannot read telemetry
+        // reliably; never false-refuse on a degraded-config path — same
+        // never-false-refuse principle as the telemetry-off case).
         {
           const effectiveRequired = [
             ...new Set([
-              ...(cadenceConfig.skillAudit?.required ?? []),
+              ...(cadenceConfig?.skillAudit?.required ?? []),
               ...(draft.requiredSkills ?? []),
             ]),
           ];
-          if (effectiveRequired.length > 0) {
+          if (effectiveRequired.length > 0 && cadenceConfig) {
             const invoked = state.skillAudit.invoked;
             if (!cadenceConfig.telemetry.skillInvocations) {
               // Unverifiable — invoked is never populated. Warn, never refuse.
@@ -354,7 +376,8 @@ import { missingSkills } from '../../verify/skill-match.js';
               }
             }
           }
-          // Make Summary.skillAudit.required truthful (was always []).
+          // Make Summary.skillAudit.required truthful (was always []) —
+          // recorded even on the null-config skip path.
           state.skillAudit.required = effectiveRequired;
         }
 ```
