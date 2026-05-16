@@ -204,15 +204,14 @@ export async function emitPlanReviewUnconverged(
 
 **Files:** Modify `packages/core/src/cli/commands/draft.ts`; create `packages/core/tests/cli/draft-approve-convergence.test.ts`
 
-- [ ] **Step 1: Imports.** In `draft.ts` add (near the existing `selectPlanReviewVerifier` import ~line 19 and the notify imports):
+- [ ] **Step 1: Imports.** In `draft.ts` add ONLY these two genuinely-new imports (near the existing `selectPlanReviewVerifier` import ~line 19):
 
 ```ts
-import { readFile } from 'node:fs/promises';
 import { nextConvergence } from '../../verify/converge.js';
 import { emitPlanReviewUnconverged } from '../../notify/plan-review.js';
 ```
 
-(`existsSync` is already imported in draft.ts; `selectNotifier` is already imported for the coherence-warn emission; `atomicWriteText` is already used for the sidecar. If `readFile` is already imported, do not duplicate.)
+**Do NOT add a `readFile` import** — `readFile` is **already imported** at `draft.ts:2` (`import { readFile, mkdir, writeFile } from 'node:fs/promises';`); a second import is a compile error. `existsSync` (import 3), `selectNotifier` (import 13), `atomicWriteText` (import 9), `join` (import 4) are also already imported. Only the two lines above are new.
 
 - [ ] **Step 2: Replace the plan-review block.** The current block is the entire `if (gateSet.gates.includes('plan-review')) { … }` (draft.ts ~258–300: verifier → 29.7 sidecar `atomicWriteText` → `if (!res.pass) { print findings; if(!allowPlanReviewFailure){refuse} else {proceeding} }`). Replace it **whole** with:
 
@@ -321,13 +320,13 @@ import { emitPlanReviewUnconverged } from '../../notify/plan-review.js';
 
 (Leaves the `--allow-plan-review-failure` option declaration + `opts.allowPlanReviewFailure` type member untouched — both already exist. `cfg` may be `null` here; `cfg?.convergence?.maxAttempts ?? 3` is null-safe, matching the file's existing `cfg`-nullable pattern. The subsequent coherence-warn block + BUILD transition are unchanged.)
 
-- [ ] **Step 3: Write integration tests** — `packages/core/tests/cli/draft-approve-convergence.test.ts`, spawned-CLI idiom (mirror `settle-code-review.test.ts`: `tempRepo`, `run()`, `initGitRepo`, file notify transport). Force `strict×complex` (DRAFT frontmatter `profile: strict`, `--tier=complex`, ≥6 stub tasks to satisfy complex minTasks — copy the `settle-code-review.test.ts` complex-tier fixture pattern). plan-review provider = default **mock** (`MockPlanReviewVerifier`: passes iff ≥1 AC and every AC has non-empty given/when/then — so a blank-GWT AC fails, a filled one passes; drive pass/fail by editing the DRAFT's AC). Five paths, each referencing its AC token:
+- [ ] **Step 3: Write integration tests** — `packages/core/tests/cli/draft-approve-convergence.test.ts`, spawned-CLI idiom (mirror `settle-code-review.test.ts`: `tempRepo`, `run()`, `initGitRepo`, file notify transport). Force `strict×complex` (DRAFT frontmatter `profile: strict`, `--tier=complex`, ≥6 stub tasks to satisfy complex minTasks — copy the `settle-code-review.test.ts` complex-tier fixture pattern). **Every `draft approve` invocation MUST pass `--no-approve`**: `strict×complex` includes the `approve` gate and the spawned CLI has no TTY, so without `--no-approve` it hangs/refuses before plan-review (this is exactly why `settle-code-review.test.ts` always uses `--no-approve` for strict; the `CADENCE_PROMPTER_SCRIPT` env seam is the only alternative — prefer `--no-approve`). plan-review provider = default **mock** (`MockPlanReviewVerifier`: passes iff ≥1 AC and every AC has non-empty given/when/then — so a blank-GWT AC fails, a filled one passes; drive pass/fail by editing the DRAFT's AC). Five paths, each referencing its AC token:
 
   - (a) AC-1: well-formed AC → approve passes → `state.loopPosition === 'BUILD'`; sidecar `converged:true`.
   - (b) AC-3: blank-GWT AC → exit 1, stderr `attempt 1/3`, sidecar `attempts:1`, `converged:false`, `history` len 1 `verdict:"reloop"`.
   - (c) AC-4: re-run `draft approve` on the still-bad DRAFT to the 3rd attempt → exit 1, stderr `did NOT converge after 3 attempts`, anomaly log contains `"type":"plan-review-unconverged"` (assert it fires **under strict** where `anomaly-notify` is absent — the unconditional lock), sidecar `history` last `verdict:"escalate"`.
   - (d) AC-4: at escalate, `draft approve … --allow-plan-review-failure` → `loopPosition === 'BUILD'`, anomaly still present, sidecar last history entry `bypassed:true`.
-  - (e) AC-2: pre-write a **legacy 29.7-shape** sidecar (`{draftId,pass:false,provider:"mock",findings:1,at:"…"}` — NO `attempts`) then a failing `draft approve` → treated as attempt 1 (`stderr attempt 1/3`, not escalation), proving legacy→0 back-compat.
+  - (e) AC-2: legacy back-compat. Sequence precisely: `draft new` → (force strict×complex frontmatter, bad AC) → **write a legacy 29.7-shape sidecar** to `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` (`{draftId,pass:false,provider:"mock",findings:1,at:"…"}` — NO `attempts`/`history`) → then the failing `draft approve --no-approve`. The legacy file (no `attempts`) → `attemptsSoFar = 0` → this run is attempt 1 (`stderr attempt 1/3`, NOT escalation), proving legacy→0 back-compat. (Write the sidecar AFTER `draft new` and BEFORE `draft approve` so it is read, not clobbered, by the approve.)
 
   Notify: set `cfg.notify = { transport: 'file' }`; assert `.cadence/anomalies.log` (spawned CLI cwd = repo root, relative path resolves — same as `settle-code-review.test.ts`). To reach the 3rd attempt in (c) drive `draft approve` 3× without fixing the DRAFT (each failing run increments the sidecar; the test asserts the escalation on the 3rd).
 
