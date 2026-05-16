@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "draftId": "29-08",
+  "completedAt": "2026-05-16T03:04:01.442Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "T2: approve prompt attempt-count feedback; askApproveVerdict exported + unit-tested"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "T3: build task validates id vs DRAFT tasks; parity tests updated to declared ids"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "T4: settle derivation guard now opts.auto||interactiveRequested; skip falls through"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "report REMEDIATION VERIFIED + CHANGELOG x3 + DESIGN #30/#31; full turbo 431 core green"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

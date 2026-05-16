@@ -1,0 +1,29 @@
+{
+  "draftId": "29-08",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "T2: approve prompt attempt-count feedback; askApproveVerdict exported + unit-tested",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T03:03:39.834Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "T3: build task validates id vs DRAFT tasks; parity tests updated to declared ids",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T03:03:40.073Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "T4: settle derivation guard now opts.auto||interactiveRequested; skip falls through",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T03:03:40.296Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "report REMEDIATION VERIFIED + CHANGELOG x3 + DESIGN #30/#31; full turbo 431 core green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T03:03:40.499Z"
+    }
+  }
+}
