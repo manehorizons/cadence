@@ -139,6 +139,19 @@ describe('AnomalyEventZ (AC-1)', () => {
     ).not.toThrow();
   });
 
+  // AC-5 (Phase 35.1) — plan-review-unconverged type
+  it('accepts plan-review-unconverged event (AC-5)', () => {
+    expect(() =>
+      AnomalyEventZ.parse({
+        type: 'plan-review-unconverged',
+        severity: 'error',
+        message: 'plan-review did not converge for 35-01 after 3/3 attempts (2 finding(s))',
+        context: { draftId: '35-01', attempts: 3, maxAttempts: 3, findings: 2, provider: 'mock' },
+        ts: '2026-05-16T10:00:00.000Z',
+      }),
+    ).not.toThrow();
+  });
+
   it('accepts offset-aware ts variants (AC-1)', () => {
     for (const good of [
       '2026-05-14T22:30:00.000Z',

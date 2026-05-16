@@ -356,12 +356,12 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 Source: `docs/superpowers/2026-05-16-cadence-expansion-survey.md` (full weighing of 6 candidates). CADENCE ships DRAFT→BUILD→SETTLE; this milestone closes the gap toward the full idea→shipped arc that superpowers covers manually today.
 
 - **#6 Required-skill enforcement** — ✓ **delivered Phase 34.1** (closes open-question 23.4).
-- **#2 Review-convergence loop primitive** — bounded `review→fix→re-review→escalate`, v1 wrapping the existing `plan-review` gate. **Next.** The core superpowers value cadence lacks (iteration vs one-shot).
-- **#1 brainstorm→spec stage** — pre-DRAFT `cadence spec`; sequence AFTER #2 so spec-review reuses convergence. Heaviest; highest end-value.
+- **#2 Review-convergence loop primitive** — ✓ **delivered Phase 35.1** (pure `nextConvergence`; `plan-review`@approve bounded with sidecar attempts + escalation; reused by #4).
+- **#1 brainstorm→spec stage** — pre-DRAFT `cadence spec`; sequence AFTER #2 so spec-review reuses convergence. Heaviest; highest end-value. **Next.**
 - **#4 Auto-remediation on gate fail** — second attach-point of #2's engine; small once #2 exists.
 - **#3 `cadence build --subagent` / #5 `cadence research` stage — PARKED.** Both invert the host-agnostic-engine anchor (cadence is driven *by* an agent; it is not an agent/research orchestrator). Revisit ONLY if that anchor is reconsidered.
 
-Sequence: #6 ✓ → #2 → #1 → #4 ; #3/#5 parked.
+Sequence: #6 ✓ → #2 ✓ → #1 (next) → #4 ; #3/#5 parked.
 
 ---
 
