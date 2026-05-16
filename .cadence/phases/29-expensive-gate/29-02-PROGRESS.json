@@ -1,0 +1,29 @@
+{
+  "draftId": "29-02",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "29.2 live exercise captured in 29-02-EXPENSIVE.md",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T01:48:55.347Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "29.2 live exercise captured in 29-02-EXPENSIVE.md",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T01:48:55.540Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "29.2 live exercise captured in 29-02-EXPENSIVE.md",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T01:48:55.733Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "29.2 live exercise captured in 29-02-EXPENSIVE.md",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T01:48:55.925Z"
+    }
+  }
+}

@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "30-testinfra-build-per-task",
+  "activePhase": "29-expensive-gate",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-16T01:35:06.422Z",
+  "draftReadAt": "2026-05-16T01:39:07.626Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
