@@ -101,7 +101,7 @@ In `defaultConfig`, after `convergence: { maxAttempts: 3 },` add `specReview: { 
 
 **Files:** Create `packages/core/src/parse/spec-parser.ts` + `packages/core/tests/parse/spec-parser.test.ts`
 
-`spec-parser.ts` is a near-clone of `packages/core/src/parse/draft-parser.ts`: reuse `parseFrontmatter`, `stripFrontmatter`, `extractSection`, `parseAcceptanceCriteria` (same `### AC-N` Given/When/Then shape). Differences vs draft-parser: parse `## Constraints` and `## Open Questions` (each a `- ` bullet list, like `parseBoundaries`) instead of `## Tasks`/`## Boundaries`; produce a `Spec` (`SpecZ.parse`) not a `Draft`; `status` enum is `PENDING|APPROVED`.
+`spec-parser.ts` is a near-clone of `packages/core/src/parse/draft-parser.ts`. **`draft-parser.ts` exports ONLY `parseDraftMd`** — `parseFrontmatter`, `stripFrontmatter`, `extractSection`, `parseAcceptanceCriteria`, `parseBoundaries` are all module-private. So **reproduce those five helpers privately inside `spec-parser.ts`** (verbatim copies — same `### AC-N` Given/When/Then parse; `parseBoundaries` reused as a generic `parseBulletList`). Do NOT refactor `draft-parser.ts` to export them (unrelated churn). Differences vs draft-parser: parse `## Constraints` and `## Open Questions` (each a `- ` bullet list) instead of `## Tasks`/`## Boundaries`; produce a `Spec` (`SpecZ.parse`) not a `Draft`; `status` enum is `PENDING|APPROVED`.
 
 - [ ] **Step 1: Write failing test** — `tests/parse/spec-parser.test.ts`:
 
@@ -157,7 +157,7 @@ describe('parseSpecMd (AC-2)', () => {
 
 - [ ] **Step 2:** `pnpm -C packages/core test -- run parse/spec-parser` → FAIL (module missing).
 
-- [ ] **Step 3: Implement** `spec-parser.ts` — clone `draft-parser.ts`'s helpers (or import the exported ones if `draft-parser` exports them; otherwise reproduce `parseFrontmatter`/`stripFrontmatter`/`extractSection`/`parseAcceptanceCriteria`/a `parseBulletList` like `parseBoundaries`). `parseSpecMd(raw): Spec`:
+- [ ] **Step 3: Implement** `spec-parser.ts` — reproduce the five private helpers from `draft-parser.ts` verbatim (`FRONTMATTER_RE`, `parseFrontmatter`, `stripFrontmatter`, `extractSection`, `parseAcceptanceCriteria`, and `parseBoundaries` renamed `parseBulletList`) — they are NOT exported, so there is nothing to import; copying is the only path. `parseSpecMd(raw): Spec`:
 
 ```ts
 import { SpecZ, type Spec } from '@cadence/types';
@@ -187,7 +187,7 @@ export function parseSpecMd(raw: string): Spec {
 }
 ```
 
-(DRY note: if reproducing helpers, keep them private to `spec-parser.ts` — do NOT refactor `draft-parser.ts` to share, that's unrelated churn. If `draft-parser.ts` already `export`s them, import instead.)
+(DRY note: keep the copied helpers private to `spec-parser.ts`; do NOT refactor `draft-parser.ts` to share — unrelated churn. The helpers are confirmed private in `draft-parser.ts`, so reproduction is the only valid path; there is no import alternative.)
 
 - [ ] **Step 4:** `pnpm -C packages/core test -- run parse/spec-parser` → PASS (2); `pnpm -C packages/core test -- run parse` (no regression).
 
