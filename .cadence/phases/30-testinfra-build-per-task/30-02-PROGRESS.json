@@ -1,0 +1,11 @@
+{
+  "draftId": "30-02",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "describe-level {timeout:20000} on Phase 24.2 per-task CLI-spawn block; full turbo suite green 417 core, 6/6 tasks",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T01:36:07.973Z"
+    }
+  }
+}

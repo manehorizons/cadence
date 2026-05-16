@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 30-local-provider
+**Active phase:** 30-testinfra-build-per-task
 **Active draft:** (none)
 **Tier:** (n/a)
 
