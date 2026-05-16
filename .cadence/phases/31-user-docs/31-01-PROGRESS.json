@@ -1,0 +1,59 @@
+{
+  "draftId": "31-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "concepts spine",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:08:32.840Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "config schema reference",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:14:28.830Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "command reference + drift marker",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:20:06.186Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "drift guard + registrar seam",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:23:55.264Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "how-to: cli, claude-code, providers",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:30:58.556Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "quickstart tutorial (dry-run verified)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:39:10.077Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "docs index/nav",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:42:10.745Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "slim README (shakedown anchors preserved) + DESIGN + CHANGELOG",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:44:46.043Z"
+    },
+    "T9": {
+      "status": "DONE",
+      "notes": "full turbo suite green (core 432, 6/6); both doc guards green; final whole-impl review passed (5 forthcoming labels fixed)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T13:53:27.356Z"
+    }
+  }
+}
