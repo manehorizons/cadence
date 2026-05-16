@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const TierZ = z.enum(['quick-fix', 'standard', 'complex']);
 export type Tier = z.infer<typeof TierZ>;
 
-export const LoopPositionZ = z.enum(['DRAFT', 'BUILD', 'SETTLE', 'IDLE']);
+export const LoopPositionZ = z.enum(['SPEC', 'DRAFT', 'BUILD', 'SETTLE', 'IDLE']);
 export type LoopPosition = z.infer<typeof LoopPositionZ>;
 
 export const TaskStatusZ = z.enum([
@@ -40,6 +40,8 @@ export const CadenceStateZ = z.object({
   project: z.object({ name: z.string(), createdAt: z.string() }),
   activePhase: z.string().nullable(),
   activeDraft: z.string().nullable(),
+  /** Active `<id>-SPEC.md` while `loopPosition==='SPEC'`; `null` otherwise. */
+  activeSpec: z.string().nullable().default(null),
   loopPosition: LoopPositionZ,
   tier: TierZ.nullable(),
   /**
@@ -78,6 +80,7 @@ export function emptyState(projectName = 'unnamed'): CadenceState {
     project: { name: projectName, createdAt: new Date().toISOString() },
     activePhase: null,
     activeDraft: null,
+    activeSpec: null,
     loopPosition: 'IDLE',
     tier: null,
     openDrafts: [],

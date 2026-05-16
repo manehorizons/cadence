@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import { registerConfigCommand } from './commands/config.js';
 import { registerInitCommand } from './commands/init.js';
 import { registerDraftCommand } from './commands/draft.js';
+import { registerSpecCommand } from './commands/spec.js';
 import { registerHookCommand } from './commands/hook.js';
 import { registerBuildCommand } from './commands/build.js';
 import { registerDoneCommand } from './commands/done.js';
@@ -15,6 +16,7 @@ export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
   registerInitCommand(program);
   registerDraftCommand(program);
+  registerSpecCommand(program);
   registerHookCommand(program);
   registerBuildCommand(program);
   registerDoneCommand(program);

@@ -57,6 +57,12 @@ export const CadenceConfigZ = z.object({
       maxAttempts: z.number().int().positive().default(3),
     })
     .default({ maxAttempts: 3 }),
+  specReview: z
+    .object({
+      provider: z.enum(['mock', 'anthropic', 'local']).default('mock'),
+      model: z.string().optional(),
+    })
+    .default({ provider: 'mock' }),
   tier: z.object({
     quickFix: z.object({ maxTasks: z.number().int(), maxFiles: z.number().int() }),
     standard: z.object({ maxTasks: z.number().int(), maxFiles: z.number().int() }),
@@ -194,6 +200,7 @@ export const defaultConfig: CadenceConfig = {
   telemetry: { tokenUtilization: true, skillInvocations: true, remoteOptIn: false },
   skillAudit: { required: [] },
   convergence: { maxAttempts: 3 },
+  specReview: { provider: 'mock' },
   tier: {
     quickFix: { maxTasks: 1, maxFiles: 1 },
     standard: { maxTasks: 5, maxFiles: 8 },

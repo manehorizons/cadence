@@ -2,6 +2,7 @@ export * from './events.js';
 export * from './config.js';
 export * from './state.js';
 export * from './plan.js';
+export * from './spec.js';
 export * from './summary.js';
 export * from './host.js';
 export * from './profile.js';

@@ -49,4 +49,20 @@ describe('CadenceStateZ', () => {
     });
     expect(parsed.draftReadAt).toBe('2026-05-14T22:30:00.000Z');
   });
+
+  // AC-1 (Phase 36.1) — SPEC loop position + activeSpec.
+  it('accepts loopPosition SPEC (AC-1)', () => {
+    expect(() =>
+      CadenceStateZ.parse({ ...emptyState(), loopPosition: 'SPEC' }),
+    ).not.toThrow();
+  });
+
+  it('emptyState includes activeSpec: null (AC-1)', () => {
+    expect(emptyState().activeSpec).toBeNull();
+  });
+
+  it('parses state.json without activeSpec (legacy, defaults to null) (AC-1)', () => {
+    const { activeSpec: _drop, ...withoutField } = emptyState();
+    expect(CadenceStateZ.parse(withoutField).activeSpec).toBeNull();
+  });
 });

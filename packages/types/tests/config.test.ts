@@ -239,4 +239,26 @@ describe('CadenceConfigZ', () => {
       CadenceConfigZ.parse({ ...defaultConfig, convergence: { maxAttempts: 1.5 } }),
     ).toThrow();
   });
+
+  // AC-6 (Phase 36.1) — config.specReview: back-compat default + provider enum.
+  it('specReview defaults to provider=mock when absent (back-compat) (AC-6)', () => {
+    const { specReview: _drop, ...withoutSpecReview } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutSpecReview);
+    expect(parsed.specReview.provider).toBe('mock');
+  });
+
+  it('specReview round-trips a provider override (AC-6)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      specReview: { provider: 'local', model: 'qwen3-coder:30b' },
+    });
+    expect(parsed.specReview.provider).toBe('local');
+    expect(parsed.specReview.model).toBe('qwen3-coder:30b');
+  });
+
+  it('rejects unknown specReview provider (AC-6)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, specReview: { provider: 'openai' as never } }),
+    ).toThrow();
+  });
 });
