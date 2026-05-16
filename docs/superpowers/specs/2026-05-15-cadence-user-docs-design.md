@@ -22,7 +22,9 @@ VitePress/Docusaurus or any docs site/toolchain; a generated/introspected CLI re
 
 ## Ground truth (verified this session)
 
-Top-level `cadence` commands (from `cadence --help`): `config`, `init`, `draft` (→ `new`/`check`/`approve`), `hook`, `build` (→ `task`), `done`, `block`, `needs-context`, `settle` (→ `run`), `progress`, `status`. Host (`cadence-host-claude-code --help`): `install`, `hook`. Config schema: `CadenceConfigZ` in `packages/types/src/config.ts` (presets `solo`/`team`/`production`). Gate matrix: `packages/core/src/gates/engine.ts` (profiles strict/standard/auto × tiers quick-fix/standard/complex; gates test-coverage, draft-read, approve, anomaly-notify, per-task-verify, code-review, plan-review, security-audit, interactive-verdict).
+Top-level `cadence` commands (from `cadence --help`): `config`, `init`, `draft` (→ `new`/`check`/`approve`), `hook`, `build` (→ `task`), `done`, `block`, `needs-context`, `settle` (→ `run`), `progress`, `status` (plus Commander's auto `help`). Host (`cadence-host-claude-code --help`): `install`, `hook` (plus auto `help`). Config schema: `CadenceConfigZ` in `packages/types/src/config.ts` (presets `solo`/`team`/`production`).
+
+Gate universe: `GateZ` in `packages/types/src/profile.ts` — **13 gates**. 3 always-fire ("free"): `coherence-check`, `structural-verifier`, `build-test-must-pass`. 10 profile×tier-gated, by cost band: cheap — `draft-read`, `test-coverage`, `anomaly-notify`; medium — `approve`, `per-task-verify`, `code-review`; expensive — `deep-verify`, `interactive-verdict`, `plan-review`, `security-audit`. Which of the 10 fire is decided by `packages/core/src/gates/engine.ts` (profiles strict/standard/auto × tiers quick-fix/standard/complex). The docs must use this full inventory — do not undercount or omit `deep-verify`.
 
 ## Structure
 
@@ -37,8 +39,10 @@ docs/
                    Then the same via Claude Code: install + the slash-command flow.
   concepts.md     Explanation. The DRAFT→BUILD→SETTLE loop; the two-commit convention;
                    profiles (strict/standard/auto) × tiers (quick-fix/standard/complex)
-                   and what each cell gates; the gate universe (all nine) with when each
-                   fires; providers (mock/anthropic/local) at a concept level; the
+                   and what each cell gates; the full gate universe (all 13: the 3
+                   always-fire + the 10 profile×tier-gated, incl. deep-verify, grouped
+                   free/cheap/medium/expensive) with when each fires; providers
+                   (mock/anthropic/local) at a concept level; the
                    .cadence/ state + per-phase artifact files (DRAFT/PROGRESS/SUMMARY,
                    STATE.md, state.json, shakedown/, PLAN-REVIEW.json).
   cli.md          How-to: the `cadence` engine. Worked invocations for config, init,
@@ -46,10 +50,13 @@ docs/
                    shortcuts), settle run (--auto/--deep/--interactive/--force and the
                    --allow-* bypasses), status, progress. The two-commit convention in
                    practice. Note the block/needs-context id-validation carry-forward.
-  claude-code.md  How-to: `cadence-host-claude-code install` ([--local] [--settings]
-                   [--no-hooks] [--no-commands] [--cadence] [--command]). The 7 hook
-                   groups + 9 slash commands; how the agent drives the same engine;
-                   the --local machine-absolute-paths warning + gitignore guidance.
+  claude-code.md  How-to: `cadence-host-claude-code install` ([--cwd] [--local]
+                   [--settings] [--no-hooks] [--no-commands] [--cadence] [--command]).
+                   The hook groups + the 9 slash commands; how the agent drives the
+                   same engine; the --local machine-absolute-paths warning + gitignore
+                   guidance. (Author derives the exact hook-group set + count from the
+                   host installer source — `packages/host-claude-code/src/` — not from
+                   memory, per the accuracy principle.)
   providers.md    How-to: mock (offline default; deterministic floor), anthropic
                    (ANTHROPIC_API_KEY; messages.parse structured output),
                    local (CADENCE_LOCAL_BASE_URL + CADENCE_LOCAL_MODEL, OpenAI-compatible
@@ -66,11 +73,18 @@ docs/
 
 ## Accuracy + drift guard
 
-Reference content is written against the live CLI `--help` output and the `CadenceConfigZ` schema at authoring time. To prevent `reference/commands.md` from silently rotting, add **one** test, `packages/core/tests/docs/cli-reference.test.ts`: it parses the documented top-level command names out of `docs/reference/commands.md` (e.g. a fenced or list block with a stable marker) and asserts that set equals the CLI's actual registered top-level commands (obtained by invoking the built CLI `--help` or importing the command registrar). On divergence the test fails, forcing the doc to be updated alongside any command change. No generator, no toolchain. (The existing `tests/docs/readme-shakedown.test.ts` is the precedent pattern.)
+Reference content is written against the live CLI `--help` output and the `CadenceConfigZ` schema at authoring time. To prevent `reference/commands.md` from silently rotting, add **one** test, `packages/core/tests/docs/cli-reference.test.ts`, with a pinned contract (no latitude left to the implementer):
+
+- **Doc-side marker (exact):** `reference/commands.md` contains a block delimited by the literal HTML comments `<!-- cadence:commands:start -->` and `<!-- cadence:commands:end -->`, with **one top-level command name per line** between them (bare token, no backticks/prose). The test extracts that set.
+- **CLI-side set:** obtained by invoking the built CLI `node packages/core/dist/cli/index.js --help` and parsing the `Commands:` section (the implementer may instead import the command registrar if cleaner — either is acceptable, but the marker + exclusion rules below are fixed).
+- **Exclusions (both sides):** Commander's auto-generated `help` command (and any `help [command]`) is excluded from both the documented set and the CLI set before comparison. `hook` IS included (it is a real registered command, not auto).
+- **Assertion:** the two sets are exactly equal (no missing, no extra). On divergence the test fails, forcing the doc to be updated alongside any command change.
+
+No generator, no toolchain. The existing `tests/docs/readme-shakedown.test.ts` is the precedent pattern (assert on doc file text).
 
 ## README slimming
 
-Replace the long status/version-history block with: one-line description; the two-surface model (engine CLI + Claude Code host adapter); a ~6-line quickstart teaser; a prominent link to `docs/`. Keep the CI/enforcement (`.githooks/pre-push`) note. Version/milestone history is already in `CHANGELOG.md` — it is removed from README, not duplicated.
+Replace the long status/version-history block with: one-line description; the two-surface model (engine CLI + Claude Code host adapter); a ~6-line quickstart teaser; a prominent link to `docs/`. Keep the CI/enforcement (`.githooks/pre-push`) note. Version/milestone history is already in `CHANGELOG.md` — it is removed from README, not duplicated. **Consistency:** the slimmed teaser uses the same local-dogfood install as `quickstart.md` (the current README's aspirational `npx @cadence/*` lines are removed/replaced — `npx` is post-publish and that phase is paused); a one-line "not yet published — local install for now" note prevents the old npx-vs-reality mismatch.
 
 ## Affected files
 
