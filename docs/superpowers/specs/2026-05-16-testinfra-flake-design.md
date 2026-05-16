@@ -83,15 +83,18 @@ Exports the common `test` block consumed by every package config:
 - `environment: 'node'`
 - `testTimeout: 20000`
 - `hookTimeout: 20000` — `afterEach` runs `tempRepo().cleanup()`, whose rm now
-  carries retry backoff; the hook budget must cover cleanup + backoff (worst
-  case well under 20000ms for `maxRetries:5`, `retryDelay:100`).
+  carries retry backoff. Node's `fs.rm` uses **linear** backoff: the nth retry
+  waits `n × retryDelay` ms, so `maxRetries:5`, `retryDelay:100` adds at most
+  `100+200+300+400+500 = 1500ms` of wait plus the actual rm work — comfortably
+  inside a 20000ms hook budget.
 - `pool: 'forks'` (vitest 2 default; declared explicitly for clarity)
-- `poolOptions.forks.maxForks`: a bounded cap (initial value: ~50% of logical
-  cores, a small integer literal chosen for this box; tunable). This is the
-  contention damper — it stops spawn-CLI tests from oversubscribing the machine
-  with grandchild Node processes while keeping the suite parallel. The exact
-  number is validated empirically by AC-4 (the real full-suite run); the spec
-  fixes the *mechanism*, the plan/execution fixes the *number*.
+- `poolOptions.forks.maxForks`: a bounded cap. **Starting literal: `12`**
+  (~50% of this box's 24 logical cores). This is the contention damper — it
+  stops spawn-CLI tests from oversubscribing the machine with grandchild Node
+  processes while keeping the suite parallel. `12` is the starting point, not
+  a guess-and-ship: AC-4 (the real repeated full-suite run) is the empirical
+  arbiter and the plan may move it (down if still flaky, up if needlessly
+  slow). The spec fixes the *mechanism*; execution tunes the *number*.
 
 ### Per-package configs extend the base
 
@@ -146,8 +149,9 @@ memory says to stop.
   v1.2+", record it as delivered in v1.1 (note the deferral boundary was
   deliberately pulled forward).
 - `DESIGN.md` §10 punchlist — tick this phase.
-- `CHANGELOG.md` — test-infra entry under the v1.1 line if that section exists;
-  otherwise skip (no public-API change).
+- `CHANGELOG.md` — `## [Unreleased] → ### Fixed` section exists (confirmed);
+  add a one-line test-infra entry there (the flaky pre-push gate is a real
+  fixed defect even though no public API changes).
 
 ## Error semantics / risk
 
@@ -168,9 +172,8 @@ The verification **is the blocked gate itself**, not a new unit test:
 
 - `pnpm install && pnpm -C packages/types build && pnpm -C packages/testkit build
   && pnpm -C packages/core build`, then `pnpm turbo run test` **full-parallel on
-  this Windows box**, green, across **repeated** runs (the flake is
-  probabilistic — one green run is not sufficient evidence; require multiple
-  consecutive clean full runs).
+  this Windows box**, green, across **≥3 consecutive** runs (the flake is
+  probabilistic — one green run is not sufficient evidence).
 - Sanity: `pnpm -C packages/core test` still green isolated (no regression from
   the pool cap).
 - No new assertion-style tests are warranted — the change is harness config +
@@ -189,8 +192,9 @@ The verification **is the blocked gate itself**, not a new unit test:
    rebuilt so consumers get it.
 3. The Phase 29.5 and Phase 30.2 per-test/describe `{ timeout: 20000 }`
    overrides are removed.
-4. `pnpm turbo run test` passes full-parallel on this Windows box across
-   multiple consecutive runs; `pnpm -C packages/core test` still green isolated.
+4. `pnpm turbo run test` passes full-parallel on this Windows box across **≥3
+   consecutive** runs (the flake is probabilistic — one or two greens is not
+   sufficient evidence); `pnpm -C packages/core test` still green isolated.
 5. `.cadence/ROADMAP.md` "Test infra" moved out of Deferred-v1.2+ and recorded
    delivered; `DESIGN.md` §10 ticked.
 6. With the gate green, the 6 held Phase 31.1 commits are unblocked for push.
@@ -210,8 +214,8 @@ The verification **is the blocked gate itself**, not a new unit test:
   timeout (path/line confirmed at plan time).
 - The Phase 30.2 build-per-task test file — drop describe-level timeout (path
   confirmed at plan time).
-- `.cadence/ROADMAP.md`, `DESIGN.md` (§10), `CHANGELOG.md` (if a v1.1 section
-  exists).
+- `.cadence/ROADMAP.md`, `DESIGN.md` (§10), `CHANGELOG.md`
+  (`## [Unreleased] → ### Fixed`).
 
 ## Build sequence (for the plan)
 
