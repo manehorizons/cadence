@@ -54,9 +54,12 @@ export function registerDraftCommand(program: Command): void {
         const backend = new SimpleStateBackend(cwd);
         const state = await backend.readState();
         if (state.loopPosition !== 'IDLE') {
+          const hint =
+            state.loopPosition === 'SPEC'
+              ? `Approve or discard the active spec (${state.activeSpec ?? '?'}) first (cadence spec approve …).`
+              : `Settle or discard the active draft (${state.activeDraft ?? '?'}) first.`;
           process.stderr.write(
-            `draft new refused: loopPosition is ${state.loopPosition}, not IDLE. ` +
-              `Settle or discard the active draft (${state.activeDraft ?? '?'}) first.\n`,
+            `draft new refused: loopPosition is ${state.loopPosition}, not IDLE. ${hint}\n`,
           );
           process.exitCode = 1;
           return;

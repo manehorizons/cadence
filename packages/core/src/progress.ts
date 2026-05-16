@@ -21,6 +21,15 @@ export function nextAction(state: CadenceState): NextAction {
           'DRAFT is open. Fill in objective, ACs, and tasks, run cadence draft check, then approve to enter BUILD.',
       };
     }
+    case 'SPEC': {
+      const phase = state.activePhase ?? '<phase>';
+      const num = state.activeSpec?.split('-')[1] ?? '<num>';
+      return {
+        command: `cadence spec approve ${phase} ${num}`,
+        reason:
+          'SPEC is open. Fill objective, ACs, constraints, run cadence spec check, then approve to leave the spec stage.',
+      };
+    }
     case 'BUILD':
       return {
         command: 'cadence build task <id> --status=<DONE|...>  OR  cadence settle run --ac AC-1=pass',
@@ -28,5 +37,9 @@ export function nextAction(state: CadenceState): NextAction {
       };
     case 'SETTLE':
       return { command: 'cadence settle run', reason: 'In SETTLE. Run to close.' };
+    default: {
+      const _exhaustive: never = state.loopPosition;
+      return _exhaustive;
+    }
   }
 }

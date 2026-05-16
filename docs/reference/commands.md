@@ -52,6 +52,7 @@ CADENCE — Coordinated AI-Driven Engineering with Notifications and Customizabl
 config
 init
 draft
+spec
 hook
 build
 done
@@ -228,6 +229,41 @@ the plan-review gate (Phase 25.1) is bypassed separately with
 
 **Exit codes** — exits non-zero when a gate refuses and no bypass flag is
 provided.
+
+---
+
+### spec
+
+```
+Usage: cadence spec [options] [command]
+
+Spec phase workflow (pre-DRAFT)
+```
+
+The optional pre-DRAFT `SPEC` loop position (Phase 36.1). `spec new` (from
+IDLE) scaffolds `<id>-SPEC.md` (objective / acceptance criteria / constraints
+/ open questions) and moves the loop to `SPEC`; you author the SPEC
+externally; `spec check <path>` is a read-only structural sanity; `spec
+approve <phase> <num>` runs a **convergent spec-review gate** (mock /
+anthropic / local via `config.specReview`) — it tracks attempts in a
+`<id>-SPEC-REVIEW.json` sidecar and, after `config.convergence.maxAttempts`
+(default 3) failing reviews, hard-escalates with a `spec-review-unconverged`
+anomaly. On pass it returns the loop to `IDLE` (so `cadence draft new`
+proceeds). `cadence draft new` refuses while a spec is active.
+
+**Options (`spec approve`)**
+
+| Option | Description |
+|---|---|
+| `--allow-spec-review-failure` | Proceed past a failing/unconverged spec-review (any verdict) instead of refusing; findings still printed, `bypassed:true` recorded. |
+
+The spec stage is **opt-in by use** — projects that never run `cadence spec
+new` are unaffected. There is no `spec discard` command; to abandon an active
+spec, hand-edit `.cadence/state.json` (`loopPosition`→`IDLE`,
+`activeSpec`→`null`) and delete the `<id>-SPEC.md`.
+
+**Exit codes** — non-zero when spec-review refuses (reloop/escalate) without
+`--allow-spec-review-failure`.
 
 ---
 
