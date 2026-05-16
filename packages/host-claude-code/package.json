@@ -1,6 +1,7 @@
 {
   "name": "@cadence/host-claude-code",
   "version": "1.0.0",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,6 +10,12 @@
   },
   "bin": { "cadence-host-claude-code": "./bin/cadence-host-claude-code.cjs" },
   "files": ["dist", "bin"],
+  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manehorizons/cadence.git",
+    "directory": "packages/host-claude-code"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

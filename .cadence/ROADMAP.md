@@ -311,6 +311,8 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 
 ### Phase 30.1 — Publish pipeline
 
+**Status: ✓ Delivered v1.1 via the reversible proof path** (dogfood phase `33-publish-pipeline`/`33-01`). Metadata hardened on the 3 publishable packages (`@cadence/testkit` → `private`, dev-only); `scripts/publish-proof.mjs` proves real `pnpm publish` → clean-install → no `workspace:` leak → both bins run against an ephemeral local verdaccio with Windows-safe teardown; public `pnpm publish --dry-run` + `npm pack` confirm the public shape (tarballs = dist/bin/package.json/LICENSE/README only). ACs 1–6 met **by the reversible variant** (AC-6's "scoped-test publish … private registry" path). The irreversible remainder — real public publish, provenance, `release.yml`, changesets — is the **v1.2 "Public release"** milestone below. Spec/plan: `docs/superpowers/{specs,plans}/2026-05-16-publish-pipeline*`.
+
 **Objective.** Real release automation — the deliberate Phase 28.1 boundary. changesets (or hand-rolled), a release workflow, npm provenance, public-npm vs private-registry decision. **Must include a dry-run publish** of all four packages and verify the published tarball contents (no source leak, correct `files`/`exports`, `bin` resolves).
 
 **Files.**
@@ -332,4 +334,21 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 - **Deferred open questions.** 23.1, 23.4, 24.3, 26.2 — real product decisions, a phase each when picked up. (24.2 may be folded in if 29.2/29.3 surface it.)
 - **Test infra.** ✓ **Pulled forward into v1.1 — delivered as Phase 32.1** (shared `vitest.shared.ts` base: `testTimeout`/`hookTimeout`/`maxForks`; `tempRepo` rmdir retry; 29.5/30.2 per-test band-aids reverted). The deferral boundary was deliberately broken: the flake was costing a blocking pre-push failure + a remediation phase roughly every push (3rd recurrence at Phase 31.1).
 
-Entry point next session: discuss/plan **Phase 29.1** (pick the foreign project — see Open question 29.1), then run 29.x → 30.1 through the dogfood loop. 29.4 is the hard gate before 30.1.
+---
+
+## v1.2.0 — Public release (deferred, named)
+
+**Status:** named & scoped, NOT started. This is the irreversible remainder consciously split out of Phase 30.1 (v1.1 proved the path reversibly; v1.2 takes the irreversible action).
+
+**Scope.**
+- **Real public-npm publish** of `@cadence/{core,types,host-claude-code}` (metadata already hardened in 33.1 — `publishConfig.access:public` set; needs `npm login` / a publish token).
+- **npm provenance** — *gated on a conscious repo-visibility decision*: provenance attestation requires the source repo (`manehorizons/cadence`, currently **private**) be **public**; making it public exposes all `.cadence/` history. Decide explicitly before enabling.
+- **`.github/workflows/release.yml`** gated on the existing `ci-success` context.
+- **changesets** adoption (versioning + changelog automation) — or a documented hand-rolled release runbook.
+- **Re-decide `@cadence/testkit`**: stays `private`, or gets published if external adopters need the fixtures.
+
+**Depends on.** Phase 30.1 (✓ done — reversible proof) + the repo-visibility decision.
+
+---
+
+Entry point next session: **v1.2 "Public release"** above is the next named milestone — its first gate is the repo-visibility (public vs private) decision, since provenance + public-from-private both hinge on it. All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) is shipped.

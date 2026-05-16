@@ -1,6 +1,7 @@
 {
   "name": "@cadence/types",
   "version": "1.0.0",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,6 +9,12 @@
     ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
   },
   "files": ["dist"],
+  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manehorizons/cadence.git",
+    "directory": "packages/types"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
