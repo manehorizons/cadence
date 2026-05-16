@@ -1,0 +1,454 @@
+# CADENCE Quickstart
+
+This tutorial walks you through one complete CADENCE loop end-to-end — from
+`init` to a closed-phase SUMMARY — in about ten minutes.
+
+For the *why* behind the loop and the gate model, read
+[docs/concepts.md](concepts.md) first. For exhaustive flag references, see
+[docs/cli.md](cli.md) and [docs/reference/commands.md](reference/commands.md).
+
+> **Not yet published.** `@cadence/core` is not yet on npm, so `npx
+> @cadence/core` will 404. Use the local-dogfood invocation shown throughout
+> this guide. Once the package is published, replace the long `node …/…/…`
+> prefix with `cadence`.
+
+---
+
+## Table of contents
+
+- [Prerequisites](#prerequisites)
+- [Step 1 — Set up a toy project](#step-1--set-up-a-toy-project)
+- [Step 2 — Draft a phase](#step-2--draft-a-phase)
+- [Step 3 — Fill the DRAFT](#step-3--fill-the-draft)
+- [Step 4 — Coherence-check the DRAFT](#step-4--coherence-check-the-draft)
+- [Step 5 — Approve and enter BUILD](#step-5--approve-and-enter-build)
+- [Step 6 — Implement and record tasks](#step-6--implement-and-record-tasks)
+- [Step 7 — Settle the phase](#step-7--settle-the-phase)
+- [Step 8 — Two-commit wrap-up](#step-8--two-commit-wrap-up)
+- [Claude Code surface](#claude-code-surface)
+
+---
+
+## Prerequisites
+
+- Node.js 18+
+- A built CADENCE checkout (run `pnpm -C packages/core build` if needed)
+- The CLI entry point: `packages/core/bin/cadence.cjs`
+
+Throughout this guide, substitute your actual cadence checkout path for
+`<cadence>`. For example:
+
+```sh
+# Adapt this to wherever you cloned CADENCE:
+CADENCE=~/projects/cadence
+```
+
+All commands below use a shell alias for brevity:
+
+```sh
+alias cadence="node $CADENCE/packages/core/bin/cadence.cjs"
+```
+
+If you prefer not to set an alias, replace every `cadence` below with
+`node $CADENCE/packages/core/bin/cadence.cjs`.
+
+---
+
+## Step 1 — Set up a toy project
+
+Create a scratch directory **outside** the cadence repo and initialise CADENCE
+inside it:
+
+```sh
+mkdir ~/projects/my-toy-app
+cd ~/projects/my-toy-app
+
+cadence init --name "hello-cadence"
+```
+
+Output:
+
+```
+Initialized CADENCE in /home/you/projects/my-toy-app/.cadence (profile=team)
+
+  CADENCE initialized
+  ───────────────────
+  project       hello-cadence
+  location      …/my-toy-app/.cadence
+  preset        team  (config preset — workflow defaults: solo|team|production)
+  gate profile  auto  (gate strictness: strict|standard|auto)
+  layout        single-package
+  test globs    **/*.test.ts, **/*.test.tsx
+  scaffolded    config.json, state.json, PROJECT.md,
+                ROADMAP.md, MILESTONES.md,
+                SPECIAL-FLOWS.md, STATE.md, CLAUDE.md
+                phases/ handoff/ research/ archive/
+
+  Next: edit .cadence/ROADMAP.md, then `cadence draft new`.
+```
+
+The gate profile is `auto` because the directory has no git history (fewer than
+20 commits). `auto` is the hands-off profile — CADENCE drives; anomalies surface
+automatically with no interactive prompts. This keeps the quickstart clean.
+For stricter profiles (`standard`, `strict`), see
+[docs/concepts.md — Profiles × tiers](concepts.md#profiles--tiers).
+
+> **After `init`, commit `.cadence/` before starting real phase work.** The toy
+> repo in this guide skips git for brevity.
+
+---
+
+## Step 2 — Draft a phase
+
+A *phase* is one named unit of work. Create a DRAFT scaffold for a phase called
+`01-add-greeting`, task number `01`:
+
+```sh
+cadence draft new 01-add-greeting 01 --title "Add greeting module"
+```
+
+Output:
+
+```
+Created …/.cadence/phases/01-add-greeting/01-01-DRAFT.md
+```
+
+The file contains a template you fill in. Open it now.
+
+---
+
+## Step 3 — Fill the DRAFT
+
+Open `.cadence/phases/01-add-greeting/01-01-DRAFT.md` and replace the template
+placeholders. A minimal, real DRAFT for this tutorial:
+
+```markdown
+---
+phase: 01-add-greeting
+id: 01-01
+tier: quick-fix
+status: PENDING
+---
+
+# 01-01 — Add greeting module
+
+## Objective
+
+Add a `greet()` function that returns a personalised greeting string, with a
+test that covers it.
+
+## Acceptance Criteria
+
+### AC-1: greet() returns the expected string
+Given a name string passed to `greet(name)`
+When the function is called
+Then it returns `"Hello, <name>!"`
+
+### AC-2: test suite passes
+Given the implementation exists
+When the test runner executes
+Then all tests pass with zero failures
+
+## Tasks
+
+### T1: Add src/greet.js
+- files: `src/greet.js`
+- action: export `greet(name)` returning `` `Hello, ${name}!` ``
+- verify: function exists and returns correct string
+- done: AC-1
+
+### T2: Add src/greet.test.js
+- files: `src/greet.test.js`
+- action: write a test that calls `greet("World")` and asserts `"Hello, World!"`
+- verify: test file exists and passes
+- done: AC-2
+
+## Boundaries
+
+- DO NOT modify any file outside `src/`
+```
+
+Key fields:
+- `tier: quick-fix` — one or two tasks touching one or two files
+- `AC-N` — structured acceptance criteria (`Given / When / Then`)
+- `tasks` — what the AI executes, what it verifies, which AC it closes
+- `done: AC-N` — the mapping from task completion to AC satisfaction
+
+For the full field reference, see
+[docs/reference/commands.md — draft new](reference/commands.md).
+
+---
+
+## Step 4 — Coherence-check the DRAFT
+
+Before approving, run the structural coherence check:
+
+```sh
+cadence draft check .cadence/phases/01-add-greeting/01-01-DRAFT.md
+```
+
+Output (clean DRAFT):
+
+```
+coherence: OK
+```
+
+The check validates:
+- At least one AC is present and well-formed
+- Task count is consistent with the declared tier
+- The loop is in IDLE (so approve is possible)
+
+Fix any reported issues before continuing.
+
+---
+
+## Step 5 — Approve and enter BUILD
+
+```sh
+cadence draft approve 01-add-greeting 01
+```
+
+Output:
+
+```
+Approved 01-01; loopPosition=BUILD
+```
+
+Because the gate profile is `auto` and the tier is `quick-fix`, no interactive
+`approve` gate fires — the command exits immediately. For `strict` or `standard`
+profiles you would see a Y/N prompt (or need `--no-approve` in non-TTY
+environments).
+
+Check the current state:
+
+```sh
+cadence status
+```
+
+Output:
+
+```
+CADENCE — hello-cadence
+  loop:  BUILD
+  phase: 01-add-greeting
+  draft: 01-01 — Add greeting module
+  tier:  quick-fix
+  profile: auto
+
+  TASKS
+  ────────────────────────────────────
+  T1  PENDING  Add src/greet.js       → AC-1
+  T2  PENDING  Add src/greet.test.js  → AC-2
+
+  ACS
+  ────────────────────
+  [ ] AC-1  pending
+  [ ] AC-2  pending
+
+NEXT: cadence build task <id> --status=<DONE|...>  OR  cadence settle run --ac AC-1=pass
+  In BUILD phase. Record task outcomes, then settle.
+```
+
+---
+
+## Step 6 — Implement and record tasks
+
+Write the actual code (you or the AI):
+
+```sh
+mkdir -p src
+
+cat > src/greet.js << 'EOF'
+/** Returns a personalised greeting. */
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+module.exports = { greet };
+EOF
+
+cat > src/greet.test.js << 'EOF'
+const { greet } = require('./greet');
+
+test('greet returns the expected string', () => {
+  expect(greet('World')).toBe('Hello, World!');
+});
+EOF
+```
+
+Then record each task outcome with CADENCE:
+
+```sh
+cadence build task T1 --status=DONE
+```
+
+```
+Recorded T1: DONE
+```
+
+```sh
+cadence build task T2 --status=DONE --notes "test asserts greet('World') === 'Hello, World!'"
+```
+
+```
+Recorded T2: DONE
+```
+
+Valid `--status` values: `DONE` | `DONE_WITH_CONCERNS` | `NEEDS_CONTEXT` |
+`BLOCKED`. Use `cadence done T1` as a shortcut for `build task T1
+--status=DONE`.
+
+After both tasks are recorded, `status` shows the ACs satisfied:
+
+```sh
+cadence status
+```
+
+```
+CADENCE — hello-cadence
+  loop:  BUILD
+  …
+  TASKS
+  ───────────────────────────────────
+  T1  DONE    Add src/greet.js       → AC-1
+  T2  DONE    Add src/greet.test.js  → AC-2
+
+  ACS
+  ────────────────────
+  [x] AC-1  pass
+  [x] AC-2  pass
+```
+
+---
+
+## Step 7 — Settle the phase
+
+Close the loop. `--auto` derives AC verdicts from task statuses (both `DONE` →
+both ACs pass):
+
+```sh
+cadence settle run --auto
+```
+
+```
+Settled 01-01
+```
+
+`settle` writes three phase artifacts:
+
+| Artifact | Purpose |
+|---|---|
+| `01-01-SUMMARY.md` | Human-readable record of AC verdicts, task outcomes, decisions |
+| `01-01-SUMMARY.json` | Machine-readable full record |
+| `01-01-PROGRESS.json` | Task progress log |
+
+The loop is now IDLE:
+
+```sh
+cadence status
+```
+
+```
+CADENCE — hello-cadence
+  loop:  IDLE
+  phase: 01-add-greeting
+  profile: auto
+
+NEXT: cadence draft new <phase> <num> --title=…
+  No active draft. Start the loop by drafting a new unit of work.
+```
+
+---
+
+## Step 8 — Two-commit wrap-up
+
+A completed phase produces exactly **two commits**, in order:
+
+```sh
+# Commit 1 — your code change
+git add src/greet.js src/greet.test.js
+git commit -m "feat: add greeting module"
+
+# Commit 2 — phase artifacts
+git add .cadence/
+git commit -m "chore: settle 01-01 — add greeting module"
+```
+
+Why two commits? Source changes stay clean and blame-friendly; settle artifacts
+(SUMMARY, PROGRESS, state files) land in a single, atomic audit record. See
+[docs/concepts.md — Two-commit convention](concepts.md#two-commit-convention)
+for the full rationale.
+
+---
+
+## Claude Code surface
+
+If you use Claude Code as your AI editor, install the host adapter to get hooks
+and slash commands:
+
+> **Not yet published.** Use the local build:
+
+```sh
+node $CADENCE/packages/host-claude-code/bin/cadence-host-claude-code.cjs install --local
+```
+
+Output:
+
+```
+Installed CADENCE hooks → …/my-toy-app/.claude/settings.json
+Installed CADENCE slash commands → …/my-toy-app/.claude/commands/
+Start a new Claude Code session to activate.
+warning: --local wrote machine-absolute paths into .claude/settings.json.
+Do NOT commit it — add it to .gitignore; other clones/machines cannot
+resolve these paths. Re-run install per machine instead.
+```
+
+The `--local` flag resolves the absolute paths of your local workspace builds.
+**Do not commit `.claude/settings.json`** when using `--local` — the paths are
+machine-specific.
+
+`install` writes nine slash commands into `.claude/commands/`:
+
+| Command | What it does |
+|---|---|
+| `/cadence-progress` | Show CADENCE's next suggested action |
+| `/cadence-draft` | Scaffold a new DRAFT.md |
+| `/cadence-check` | Run coherence check on a draft |
+| `/cadence-approve` | Approve a draft and enter BUILD |
+| `/cadence-done` | Mark a task DONE |
+| `/cadence-build` | Record any task outcome |
+| `/cadence-block` | Mark a task BLOCKED |
+| `/cadence-needs-context` | Mark a task NEEDS\_CONTEXT |
+| `/cadence-settle` | Close the loop and write SUMMARY |
+
+### Typical Claude Code session
+
+Start a new Claude Code session after `install`. The agent sees the same loop
+state the CLI sees — both talk to the same `.cadence/` directory:
+
+1. At session start, CADENCE hooks surface the current phase and next action.
+2. Type `/cadence-draft 01-add-greeting 01 --title "Add greeting module"` to
+   scaffold a DRAFT (same as `cadence draft new …` on the CLI).
+3. The agent fills the DRAFT, runs `/cadence-check`, and calls
+   `/cadence-approve` when ready.
+4. During implementation, the agent calls `/cadence-done T1`, `/cadence-done
+   T2`, etc. as it completes each task.
+5. When all tasks are done, the agent calls `/cadence-settle --auto` to close
+   the loop.
+6. At session stop, the CADENCE hook confirms loop state is consistent.
+
+For full hook mechanics, the gate-vs-profile matrix, and how the agent drives
+CADENCE, see [docs/claude-code.md](claude-code.md).
+
+---
+
+## What's next
+
+| Topic | Where to go |
+|---|---|
+| Concepts: the loop, profiles, tiers, gate matrix | [docs/concepts.md](concepts.md) |
+| Every CLI command and flag | [docs/cli.md](cli.md) |
+| Claude Code host adapter in depth | [docs/claude-code.md](claude-code.md) |
+| LLM provider setup (for `--deep` verify) | [docs/providers.md](providers.md) |
+| Config file reference | [docs/reference/config.md](reference/config.md) |
+| Command reference (all flags) | [docs/reference/commands.md](reference/commands.md) |

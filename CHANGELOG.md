@@ -7,6 +7,7 @@ All notable changes to this project are documented in this file. Format follows 
 ### Added
 
 - `local` LLM gate provider: targets any OpenAI-compatible `/v1/chat/completions` endpoint (Ollama et al.). Set `CADENCE_LOCAL_BASE_URL` (e.g. `http://localhost:11434/v1`) and `CADENCE_LOCAL_MODEL` (e.g. `qwen3-coder:30b`); a per-gate `model` key in config overrides `CADENCE_LOCAL_MODEL` for that gate. If the base URL or effective model is unset when `provider: 'local'` is configured, the gate warns on stderr and falls back to `mock`. No API key required. Cadence's own loop defaults to `mock`; the `local` provider only activates on gates where it is explicitly set. Applies across all five gates (`verifier`, `perTaskVerifier`, `codeReview`, `planReview`, `securityAudit`). (Phase 30.1.)
+- `docs/` user guide for adopters — quickstart, concepts, the two usage surfaces (CLI engine + Claude Code host adapter), providers, and CLI/config reference; plus a command-reference drift-guard test. (Phase 31.1.)
 
 ### Fixed
 
