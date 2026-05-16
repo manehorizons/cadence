@@ -61,8 +61,17 @@ plan-review convergence verbatim).
 ### Loop position — `packages/types/src/state.ts`
 
 `LoopPositionZ = z.enum(['SPEC','DRAFT','BUILD','SETTLE','IDLE'])` (add
-`'SPEC'`). Backward-compat: old `state.json` never carries `'SPEC'`; `emptyState`
-unchanged (`'IDLE'`).
+`'SPEC'`). Backward-compat: old `state.json` never carries `'SPEC'`.
+
+New state field **`activeSpec`** — follow the existing `activeDraft` idiom
+exactly (NOT an optional property): `activeSpec: z.string().nullable()` in
+`CadenceStateZ` with `emptyState` → `activeSpec: null` (and, for old
+`state.json` lacking the key, `.default(null)` mirroring `draftReadAt`).
+`spec new` sets `state.activeSpec = id`; **`spec approve` on pass clears it
+(`state.activeSpec = null`)** alongside `loopPosition='IDLE'` — exactly how
+`settle` resets `activeDraft` to `null` on the BUILD→IDLE close — so a
+subsequent `draft new` never sees a stale active spec. On reloop/escalate
+`activeSpec` is left intact (still in the SPEC stage).
 
 Flow:
 - `cadence spec new <phase> <num>` — refuses unless `loopPosition==='IDLE'`
@@ -80,8 +89,18 @@ Flow:
   "approve or discard the active spec first (`cadence spec approve …`)" —
   the only change to existing `draft` code.
 
-`cadence progress` / STATE.md rendering: add `SPEC` to the next-action
-hints (mirror the existing `DRAFT`/`BUILD` hint arms).
+**MANDATORY compile-gate fix (not cosmetic):** `packages/core/src/progress.ts`
+`nextAction` is a `switch (state.loopPosition)` with arms for
+`IDLE/DRAFT/BUILD/SETTLE`, **no `default`**, non-optional `NextAction` return.
+Under the repo's strict tsconfig, adding `'SPEC'` to `LoopPositionZ` makes
+this switch non-exhaustive → `nextAction` **fails `typecheck`** (not all paths
+return). So a `case 'SPEC':` arm in `packages/core/src/progress.ts` is a
+**required same-change edit** (the full pre-push gate runs `typecheck`), not a
+later nicety. The `SPEC` arm returns the spec-stage next hint
+(`cadence spec approve …` / `cadence spec check …`). NOTE: the renderer
+`packages/core/src/render/state-md.ts` interpolates `loopPosition` as plain
+text and needs **no** SPEC arm — `progress.ts` is the only render-side file
+that must change.
 
 ### SPEC artifact + schema
 
@@ -187,10 +206,13 @@ the existing `config.convergence.maxAttempts` for the loop bound.
   new `SpecZ`); old state/config/draft load unchanged; no `state.json`
   breaking change; no `gates/engine.ts` change.
 - New stage cannot strand the loop: `spec new` only from IDLE; `spec
-  approve` either advances to IDLE (approved) or stays SPEC (refuse) — a
-  user can always `--allow-spec-review-failure` or delete the SPEC.md +
-  reset (document the manual-discard escape, mirroring how a stale DRAFT is
-  handled).
+  approve` either advances to IDLE (approved) or stays SPEC (refuse). Escape
+  is always available via `--allow-spec-review-failure`. **No `spec discard`
+  command is in v1 scope** (the codebase has no `draft discard` either —
+  discard is manual); discarding an active spec = hand-edit `.cadence/state.json`
+  (`loopPosition`→`IDLE`, `activeSpec`→`null`) + delete the `<id>-SPEC.md`.
+  Document this manual escape in the SPEC-stage user docs / the `spec`
+  command help text; do not infer a `spec discard` command.
 
 ## Testing
 
@@ -205,8 +227,11 @@ re-test of `nextConvergence` (Phase 35.1 owns it).
 - `spec` integration (spawned-CLI idiom, mirror
   `draft-approve-convergence.test.ts`, **mock** SpecReview provider): (a)
   `spec new` from IDLE → SPEC.md scaffolded, `loopPosition==='SPEC'`;
-  (b) `draft new` while SPEC → refused; (c) good SPEC →
-  `spec approve` → pass, `status:APPROVED`, `loopPosition==='IDLE'`,
+  (b) `draft new` while SPEC → refused; (c) good SPEC (the "good" fixture
+  **must include ≥1 Constraint** — MockSpecReview's floor requires it, which
+  is intentionally stricter than MockPlanReview; a constraint-less SPEC would
+  (correctly) fail the mock) → `spec approve` → pass, `status:APPROVED`,
+  `loopPosition==='IDLE'`, `activeSpec` cleared to `null`,
   `<id>-SPEC-REVIEW.json converged:true`; then `draft new` works;
   (d) bad SPEC → reloop, exit 1, `attempt 1/3`, sidecar `attempts:1`,
   stays SPEC; (e) bad SPEC ×maxAttempts → escalate, exit 1,
@@ -216,16 +241,20 @@ re-test of `nextConvergence` (Phase 35.1 owns it).
 
 ## Acceptance criteria (for the DRAFT)
 
-1. `LoopPositionZ += 'SPEC'`; `cadence spec new <phase> <num>` (IDLE-gated)
-   scaffolds `<id>-SPEC.md` + `loopPosition='SPEC'`; `cadence draft new`
-   refuses while `loopPosition==='SPEC'`.
+1. `LoopPositionZ += 'SPEC'`; `state.activeSpec: z.string().nullable()`
+   (`activeDraft` idiom, `emptyState` `null`, `.default(null)`);
+   `packages/core/src/progress.ts` `nextAction` gains a `case 'SPEC':` arm
+   (mandatory — the exhaustive no-`default` switch fails `typecheck`
+   otherwise); `cadence spec new <phase> <num>` (IDLE-gated) scaffolds
+   `<id>-SPEC.md` + `loopPosition='SPEC'` + `activeSpec=id`; `cadence draft
+   new` refuses while `loopPosition==='SPEC'`.
 2. `SpecZ` + `spec-parser` (objective/ACs/constraints/openQuestions; reuses
    `AcceptanceCriterionZ`; additive/back-compat); `cadence spec check`
    read-only structural check.
 3. `cadence spec approve` runs `SpecReviewVerifier` (mock/anthropic/local,
    `selectSpecReviewVerifier`) through `nextConvergence` with
    `<id>-SPEC-REVIEW.json` attempts/history (same shape as plan-review's);
-   pass → SPEC.md APPROVED + `loopPosition='IDLE'`.
+   pass → SPEC.md APPROVED + `loopPosition='IDLE'` + `activeSpec=null`.
 4. reloop: incremented sidecar + findings + `attempt N/MAX` line + exit 1,
    stays SPEC, no APPROVED.
 5. escalate at `config.convergence.maxAttempts`: distinct message +
@@ -241,7 +270,9 @@ re-test of `nextConvergence` (Phase 35.1 owns it).
 
 ## Affected files
 
-- `packages/types/src/state.ts` — `LoopPositionZ += 'SPEC'`; `activeSpec?`.
+- `packages/types/src/state.ts` — `LoopPositionZ += 'SPEC'`; `activeSpec:
+  z.string().nullable()` (+ `emptyState` `null`, `.default(null)` for
+  back-compat) — `activeDraft` idiom, NOT optional.
 - `packages/types/src/spec.ts` — **new** `SpecZ` (+ reuse `AcceptanceCriterionZ`).
 - `packages/types/src/anomaly.ts` — `AnomalyTypeZ += 'spec-review-unconverged'`.
 - `packages/types/src/config.ts` — `specReview` block + default/presets.
@@ -257,7 +288,10 @@ re-test of `nextConvergence` (Phase 35.1 owns it).
 - `packages/core/src/cli/commands/draft.ts` — one `loopPosition==='SPEC'`
   refusal guard in `draft new`.
 - `packages/core/src/cli/index.ts` (or the registrar) — register `spec`.
-- `packages/core/src/render/state-md.ts` + `progress` — SPEC hint arm.
+- `packages/core/src/progress.ts` — **mandatory** `case 'SPEC':` arm in
+  `nextAction` (the exhaustive no-`default` switch fails `typecheck` without
+  it once `LoopPositionZ` gains `'SPEC'`). `render/state-md.ts` needs **no**
+  change (interpolates `loopPosition` as text).
 - `packages/core/tests/**` — spec-parser unit; spec integration (7 paths);
   config/anomaly/state schema extensions.
 - `DESIGN.md`, `CHANGELOG.md`, `.cadence/ROADMAP.md` — docs + #1 ✓ /
@@ -265,13 +299,16 @@ re-test of `nextConvergence` (Phase 35.1 owns it).
 
 ## Build sequence (for the plan)
 
-1. `packages/types`: `LoopPositionZ`+`SPEC`, `SpecZ` (spec.ts),
+1. `packages/types`: `LoopPositionZ`+`SPEC`, `state.activeSpec`
+   (`.nullable().default(null)`, `emptyState` `null`), `SpecZ` (spec.ts),
    `AnomalyTypeZ` bump, `config.specReview`; extend type tests; build types.
 2. `spec-parser.ts` + pure unit (mirror draft-parser; TDD).
 3. `spec-review.ts` + `spec-review-factory.ts` (clone plan-review +
    factory); `notify/spec-review.ts` (clone notify/plan-review).
 4. `spec.ts` command (new/check/approve — port the Phase 35.1 convergent
-   block); `draft.ts` SPEC guard; register command; progress/state-md hint.
+   block; clear `activeSpec` on pass); `draft.ts` SPEC guard; register
+   command; **`progress.ts` `case 'SPEC':` arm (mandatory — typecheck
+   fails without it; `render/state-md.ts` needs no change)**.
    Integration tests (7 paths).
 5. Docs: DESIGN §10 item 37 + §4.1 note, CHANGELOG, ROADMAP (#1 ✓,
    deferred #1b, `#4 next`, sequence).
