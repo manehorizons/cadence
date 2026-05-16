@@ -213,7 +213,7 @@ try {
   // Fail fast — never silently test against stale storage (false green).
   if (await ping()) throw new Error(':4873 already serving before start — a previous verdaccio is orphaned. Kill it (Windows: taskkill /F /IM node.exe, or the verdaccio PID) and re-run.');
   // pre-fetch verdaccio so a cold npx download is NOT inside the timed wait
-  must(run('npx', ['--yes', 'verdaccio@^6', '--version']), 'prefetch verdaccio');
+  must(run('npx', ['--yes', 'verdaccio@^6', '--version'], { timeout: 120000 }), 'prefetch verdaccio (120s cap — a cold npx download stall fails clearly here, not as an opaque hang)');
 
   vc = spawn('npx', ['--yes', 'verdaccio@^6', '--config', vcConfig, '--listen', '4873'],
     { stdio: 'inherit', shell: WIN });
