@@ -1,0 +1,41 @@
+{
+  "draftId": "35-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AnomalyTypeZ+=plan-review-unconverged; config.convergence.maxAttempts (default 3, back-compat); +4 schema tests; types 80/80 + build green (AC-5)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T20:48:02.835Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "pure nextConvergence TDD red→green 4/4 (AC-1)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T20:49:07.882Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "emitPlanReviewUnconverged (unconditional/no-throw, mirrors skill-audit); core build clean",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T20:49:40.521Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "plan-review rewired to nextConvergence; sidecar attempts/history; reloop/escalate/pass; 5-path integration green incl. strict unconditional-anomaly + legacy back-compat (AC-2/3/4)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T20:52:13.965Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "DESIGN §10 item36 + §4.1 note; CHANGELOG Added; ROADMAP #2 ✓ delivered / #1 next / sequence (AC-6)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T20:53:58.410Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "full gate 16/16 green (flag-semantics regression caught + fixed: --allow-plan-review-failure bypasses any fail, Phase 25.1 contract preserved); feat commit landed",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T21:00:09.682Z"
+    }
+  }
+}
