@@ -185,6 +185,8 @@ describe('docs/reference/commands.md drift guard', () => {
 **Files:** Modify `README.md`, `DESIGN.md`, `CHANGELOG.md`
 
 - [ ] **Step 1: Slim repo `README.md`** — replace the status/version-history wall with: one-line description; the two-surface model; a ~6-line quickstart teaser using the **same local-dogfood install as quickstart.md** (remove the aspirational `npx @cadence/*` lines; add a one-line "not yet published — local install" note); a prominent link to `docs/`. Keep the CI/`.githooks/pre-push` enforcement note. Do not duplicate CHANGELOG history.
+
+  **CONSTRAINT — do not break `packages/core/tests/docs/readme-shakedown.test.ts`** (the Phase 29.6 F1/F6 guard). It asserts the repo `README.md` still contains all of: `≥20 commits`, `draft approve`, `--no-approve` (the standard-profile non-TTY heads-up) AND `--local`, `machine-absolute paths`, a `do not commit` phrase, `.gitignore` (the `--local` install warning). These are *current-behavior carry-forwards* — exactly what the spec's accuracy principle says the README should retain. The slimmed README MUST keep both as short notes (a one/two-line "`--local` writes machine-absolute paths — do not commit; add to `.gitignore`" note, and a one-line "on a repo with ≥20 commits the suggested profile makes `draft approve` need `--no-approve` in non-TTY" note). Verbatim phrases preserved → the existing test stays green, no test edit needed. After slimming, run `pnpm -C packages/core test -- run docs/readme-shakedown` and confirm green BEFORE the Task 8 checkpoint.
 - [ ] **Step 2: DESIGN.md** — add §10 punchlist line: `~~Phase 31.1 — user-guide docs/ tree (quickstart/concepts/cli/claude-code/providers + reference) + command-drift guard + slimmed README~~ ✓`.
 - [ ] **Step 3: CHANGELOG.md** — under `## [Unreleased] ### Added`: a user-documentation entry (the `docs/` guide + the two-surface model + drift guard).
 - [ ] **Step 4: Checkpoint** — `git add README.md DESIGN.md CHANGELOG.md`; `build task T8 --status=DONE`.
@@ -195,7 +197,7 @@ describe('docs/reference/commands.md drift guard', () => {
 
 **Files:** none new — consolidates Tasks 1–8.
 
-- [ ] **Step 1:** `pnpm turbo run test` → all green (core incl. the new `docs/cli-reference` guard; known dispatcher/build-per-task flakes are timeout-fixed — if either recurs, re-run isolated to confirm, per prior phases).
+- [ ] **Step 1:** `pnpm turbo run test` → all green (core incl. the new `docs/cli-reference` guard **and** the pre-existing `docs/readme-shakedown` guard — the latter must still pass because Task 8 preserved its anchor phrases; known dispatcher/build-per-task flakes are timeout-fixed — if either recurs, re-run isolated to confirm, per prior phases).
 - [ ] **Step 2:** `git status --short` — confirm staged: all `docs/**`, the new test, `packages/core/src/cli/` (registrar extraction), `README.md`/`DESIGN.md`/`CHANGELOG.md`. Confirm **nothing under `.cadence/` staged**.
 - [ ] **Step 3:** Single docs commit:
 
@@ -231,7 +233,7 @@ git commit -m "chore: settle Phase 31.1 — user-guide docs"
 
 - 8 new `docs/` pages exist, internally cross-linked, ground-truth-accurate (gate inventory = 13; config = `CadenceConfigZ`; commands = live `--help`).
 - `cli-reference.test.ts` green and genuinely guards (documented command set == registry minus `help`).
-- README slimmed; no npx-vs-reality mismatch; CHANGELOG/DESIGN updated.
+- README slimmed; no npx-vs-reality mismatch; CHANGELOG/DESIGN updated; **`readme-shakedown.test.ts` still green** (slimmed README retained the F1/F6 carry-forward anchor phrases).
 - Full turbo suite green; settled as a CADENCE phase (two-commit).
 - Carry-forwards documented honestly (block/needs-context id-validation; npx unpublished).
 
