@@ -23,13 +23,15 @@ import { selectPlanReviewVerifier } from '../../verify/plan-review-factory.js';
  * (case-insensitive); 3 retries before refuse. Mirrors the 3-retry pattern
  * from `verify/interactive.ts` askVerdict.
  */
-async function askApproveVerdict(prompter: Prompter): Promise<'yes' | 'no'> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const raw = (
-      await prompter.ask('Approve and enter BUILD? [y/n]: ')
-    )
-      .trim()
-      .toLowerCase();
+export async function askApproveVerdict(
+  prompter: Prompter,
+): Promise<'yes' | 'no'> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const question =
+      attempt === 1
+        ? 'Approve and enter BUILD? [y/n]: '
+        : `Please answer y or n (attempt ${attempt}/3): `;
+    const raw = (await prompter.ask(question)).trim().toLowerCase();
     if (raw === 'y' || raw === 'yes') return 'yes';
     if (raw === 'n' || raw === 'no') return 'no';
   }

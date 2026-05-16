@@ -57,6 +57,38 @@ export function registerBuildCommand(program: Command): void {
           }
           const status = statusParse.data as RecordableStatus;
 
+          // Phase 29.8 T3 — validate the task id against the active DRAFT's
+          // declared tasks so a typo'd / unknown id (e.g. `T1--status=DONE`
+          // from a missing space) errors instead of silently recording a
+          // ghost task. Only validates when a DRAFT is resolvable; the
+          // no-active-draft / loop-violation paths are handled downstream.
+          {
+            const vBackend = new SimpleStateBackend(process.cwd());
+            const vState = await vBackend.readState();
+            if (vState.activePhase && vState.activeDraft) {
+              const vDraftPath = join(
+                process.cwd(),
+                '.cadence',
+                'phases',
+                vState.activePhase,
+                `${vState.activeDraft}-DRAFT.md`,
+              );
+              if (existsSync(vDraftPath)) {
+                const vDraft = parseDraftMd(await readFile(vDraftPath, 'utf8'));
+                const validIds = vDraft.tasks.map((t) => t.id);
+                if (!validIds.includes(taskId)) {
+                  process.stderr.write(
+                    `build task: unknown task id "${taskId}". ` +
+                      `Valid ids in ${vState.activeDraft}-DRAFT.md: ${validIds.join(', ') || '(none)'}. ` +
+                      `Nothing recorded.\n`,
+                  );
+                  process.exitCode = 2;
+                  return;
+                }
+              }
+            }
+          }
+
           // Phase 24.2 — per-task verifier gate. Fires only on DONE outcomes
           // (other statuses are explicit human escalations); fires only when
           // 'per-task-verify' is in the effective gate set

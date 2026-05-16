@@ -535,7 +535,12 @@ export function registerSettleCommand(program: Command): void {
             });
           }
         }
-        if (opts.auto) {
+        // Phase 29.8 T4 — when the interactive walker ran, ACs the user
+        // skipped or never verdicted must still fall through to structural
+        // derivation (the walker promises "Skip falls through to other
+        // gates"). Previously this only happened under `--auto`, so
+        // `settle run --interactive` alone silently settled incomplete ACs.
+        if (opts.auto || interactiveRequested) {
           const derived = deriveAcResults(draft, progress as ProgressFile);
           const offenders = derived.filter(
             (d) =>

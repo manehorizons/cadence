@@ -10,6 +10,9 @@ All notable changes to this project are documented in this file. Format follows 
 
 ### Fixed
 
+- `cadence draft approve` manual y/n prompt now gives feedback on unrecognized/empty input — re-prompts `Please answer y or n (attempt N/3):` instead of silently consuming retries (Phase 29.3 finding T2). (Phase 29.8.)
+- `cadence build task <id>` now validates the id against the active DRAFT's declared tasks: an unknown/typo'd id (e.g. `T1--status=DONE` from a missing space) errors with exit 2 and records nothing, instead of silently creating a ghost task (Phase 29.3 finding T3). (Phase 29.8.)
+- `cadence settle run --interactive` without `--auto` now still falls through to structural derivation for skipped/unverdicted ACs — an AC whose linked task is incomplete refuses settle unless `--force` (the walker's "Skip falls through to other gates" was previously false without `--auto`) (Phase 29.3 finding T4). (Phase 29.8.)
 - Deep-verify on `local` providers (Phase 29.2 finding G1): the verifier prompt now lists the exact AC ids, requires one verdict per id, and embeds a schema-conforming JSON example, and `localChatJSON` allows two repair retries (was one). Local models (verified: Ollama `qwen3-coder:30b`) previously returned verdicts with missing/misnamed `id` → `VerifierResponseSchema` rejected past the single retry, making `--deep` unusable on local; now passes. Anthropic path unaffected (prompt only clarified). (Phase 29.7, G1.)
 - A failed deep verifier now records the configured `verifier.provider` (and `model` when set) in `SUMMARY.deepVerify` instead of `"unknown"` (Phase 29.2 finding G2). (Phase 29.7.)
 - `cadence draft approve` now persists `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` `{draftId,pass,provider,model?,findings,at}` on plan-review pass AND fail — previously a passing plan-review left no artifact, so a loop run could not later prove it ran / which provider / verdict (Phase 29.2 finding G3). (Phase 29.7.)

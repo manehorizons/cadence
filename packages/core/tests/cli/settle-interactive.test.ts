@@ -157,6 +157,38 @@ describe('settle --interactive (Phase 16)', () => {
     expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true }); // structural pass
   });
 
+  it('T4 (Phase 29.8): skip without --auto still falls through to structural derivation and refuses an incomplete AC', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    // NOTE: T1 deliberately left PENDING (not built).
+    const r = await run(
+      ['settle', 'run', '--interactive', '--allow-missing-coverage'],
+      active.root,
+      'skip\n',
+    );
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/AC-1/);
+    expect(
+      existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md')),
+    ).toBe(false);
+  });
+
+  it('T4 (Phase 29.8): --force still escapes the skip→structural refusal', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    const r = await run(
+      ['settle', 'run', '--interactive', '--allow-missing-coverage', '--force'],
+      active.root,
+      'skip\n',
+    );
+    expect(r.code).toBe(0);
+    expect(
+      existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json')),
+    ).toBe(true);
+  });
+
   it('explicit --ac override wins over interactive verdict (AC-3)', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
