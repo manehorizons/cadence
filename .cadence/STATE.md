@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 35-review-convergence
+**Active phase:** 36-spec-stage
 **Active draft:** (none)
 **Tier:** (n/a)
 
