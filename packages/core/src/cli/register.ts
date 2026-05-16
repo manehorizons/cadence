@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import { registerConfigCommand } from './commands/config.js';
 import { registerInitCommand } from './commands/init.js';
 import { registerDraftCommand } from './commands/draft.js';
