@@ -100,7 +100,10 @@ later nicety. The `SPEC` arm returns the spec-stage next hint
 (`cadence spec approve …` / `cadence spec check …`). NOTE: the renderer
 `packages/core/src/render/state-md.ts` interpolates `loopPosition` as plain
 text and needs **no** SPEC arm — `progress.ts` is the only render-side file
-that must change.
+that must change. *(Optional hardening, plan's call: add a `default:` with a
+`const _x: never = state.loopPosition` exhaustiveness assertion so future
+`LoopPositionZ` additions fail loudly at this site — good practice, not
+required for this phase.)*
 
 ### SPEC artifact + schema
 
