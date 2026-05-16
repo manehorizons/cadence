@@ -228,6 +228,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 30. ~~Phase 29.3 — interactive/approve TTY exercise (human-driven; `29-03-TTY.md`)~~ ✓
 31. ~~Phase 29.8 — 29.3 remediation: T2 (approve-prompt feedback), T3 (`build task` id validation), T4 (interactive skip falls through to structural derivation)~~ ✓ (all 3 shakedowns now closed; publish gate clear of open shakedown defects)
 32. ~~Phase 31.1 — user-guide docs/ tree (quickstart/concepts/cli/claude-code/providers + reference) + command-drift guard + slimmed README~~ ✓
+33. ~~Phase 32.1 — test-infra flake root-fix: shared `vitest.shared.ts` base (`testTimeout`/`hookTimeout`/`maxForks`) + `tempRepo` rmdir retry + revert 29.5/30.2 per-test timeout band-aids (pulled the ROADMAP v1.2 test-infra lane forward; 3rd parallel-load recurrence)~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

@@ -31,6 +31,7 @@ export async function tempRepo(opts: FixtureOptions = {}): Promise<Fixture> {
   }
   return {
     root,
-    cleanup: async () => rm(root, { recursive: true, force: true }),
+    cleanup: async () =>
+      rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }),
   };
 }

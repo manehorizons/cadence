@@ -330,6 +330,6 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 - **Server-side CI enforcement.** Today `main` is gated only client-side (`.githooks/pre-push`) — GitHub Free + private repos get no branch protection/rulesets. If repo goes public/Pro: require the existing `ci-success` context via `gh api … rulesets` and retire the hook. Else: a `scripts/setup` / `postinstall` to auto-wire `core.hooksPath`.
 - **Backlog parking lot.** No `.cadence/` backlog file exists; stand one up (`gsd-add-backlog`-style) so ideas have a home.
 - **Deferred open questions.** 23.1, 23.4, 24.3, 26.2 — real product decisions, a phase each when picked up. (24.2 may be folded in if 29.2/29.3 surface it.)
-- **Test infra.** Flake resolved (`896a140`); consider a serialized/fake-clock lane for future timing-sensitive tests now that CI runs 6 parallel cells.
+- **Test infra.** ✓ **Pulled forward into v1.1 — delivered as Phase 32.1** (shared `vitest.shared.ts` base: `testTimeout`/`hookTimeout`/`maxForks`; `tempRepo` rmdir retry; 29.5/30.2 per-test band-aids reverted). The deferral boundary was deliberately broken: the flake was costing a blocking pre-push failure + a remediation phase roughly every push (3rd recurrence at Phase 31.1).
 
 Entry point next session: discuss/plan **Phase 29.1** (pick the foreign project — see Open question 29.1), then run 29.x → 30.1 through the dogfood loop. 29.4 is the hard gate before 30.1.

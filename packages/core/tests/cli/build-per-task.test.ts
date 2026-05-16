@@ -71,11 +71,7 @@ async function rewireT1(root: string, relPath: string): Promise<void> {
   await writeFile(draftPath, body, 'utf8');
 }
 
-// AC-1: every it here spawns the built CLI (subprocess + execSync git +
-// tempRepo IO); the 5s default testTimeout is too tight under the full
-// turbo-parallel pre-push gate on slower boxes. Generous block-level
-// timeout (matches Phase 29.5's dispatcher fix); logic unchanged.
-describe('cadence build task (Phase 24.2 — per-task verifier gate)', { timeout: 20000 }, () => {
+describe('cadence build task (Phase 24.2 — per-task verifier gate)', () => {
   it('AC-4: gate refuses DONE when mock has no diff (concerns→pass path needs diff)', async () => {
     active = await tempRepo({ initialized: true });
     await initGitRepo(active.root);
