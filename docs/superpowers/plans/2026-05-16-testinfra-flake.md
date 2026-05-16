@@ -109,7 +109,7 @@ export default mergeConfig(
 
 Run: `pnpm -C packages/types build && pnpm -C packages/types test`
 Expected: PASS (types is the fastest package; this proves the mergeConfig base resolves, parses, and doesn't break collection). Then: `pnpm -C packages/core test -- run hooks/dispatcher`
-Expected: PASS in isolation (sanity that the shared base loads for core too — full-suite tuning is Task 4).
+Expected: PASS in isolation (sanity that the shared base loads for core too — full-suite tuning is Task 4). (Ordering note: testkit `dist` is rebuilt in Task 2 and the Phase 29.5 inline `}, 20000` is still present here — both are fine for this isolated sanity run; the inline override is reverted in Task 3 once the global budget from Step 1 covers it.)
 
 - [ ] **Step 5: Checkpoint (stage only — NO commit)**
 
