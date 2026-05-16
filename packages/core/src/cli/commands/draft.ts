@@ -17,6 +17,8 @@ import {
   type Prompter,
 } from '../../verify/prompter.js';
 import { selectPlanReviewVerifier } from '../../verify/plan-review-factory.js';
+import { nextConvergence } from '../../verify/converge.js';
+import { emitPlanReviewUnconverged } from '../../notify/plan-review.js';
 
 /**
  * Phase 24.1 — manual approve gate prompt walker. Accepts y/yes/n/no
@@ -257,25 +259,66 @@ export function registerDraftCommand(program: Command): void {
         // before any state mutation unless `--allow-plan-review-failure`.
         if (gateSet.gates.includes('plan-review')) {
           const verifier = selectPlanReviewVerifier(cfg);
+          const sidecarPath = join(
+            cwd, '.cadence', 'phases', phase, `${id}-PLAN-REVIEW.json`,
+          );
+          // Phase 35.1 — bounded review-convergence. Read prior attempts from
+          // the 29.7 sidecar; a legacy 29.7-shape file (no `attempts`) or an
+          // absent/corrupt file → attemptsSoFar = 0. `history` append-only.
+          let attemptsSoFar = 0;
+          let history: unknown[] = [];
+          if (existsSync(sidecarPath)) {
+            try {
+              const prior = JSON.parse(await readFile(sidecarPath, 'utf8'));
+              if (typeof prior.attempts === 'number') attemptsSoFar = prior.attempts;
+              if (Array.isArray(prior.history)) history = prior.history;
+            } catch {
+              /* corrupt/legacy → treat as fresh (attemptsSoFar 0) */
+            }
+          }
+
           const res = await verifier.verify({ draft });
-          // Phase 29.7 G3 — persist a plan-review record (pass OR fail) so a
-          // loop run can later prove it ran / which provider / verdict.
-          // No state-schema change: per-phase sidecar artifact.
+          const maxAttempts = cfg?.convergence?.maxAttempts ?? 3;
+          const nv = nextConvergence(res.pass, attemptsSoFar, maxAttempts);
+          const now = new Date().toISOString();
+          // `--allow-plan-review-failure` preserves its Phase 25.1 contract:
+          // it bypasses ANY failing plan-review (reloop OR escalate) and
+          // proceeds to BUILD. The convergence loop (reloop/escalate refusal)
+          // is the NON-bypass path. So `bypassed` = a failing review the flag
+          // waved through, regardless of verdict.
+          const bypassed =
+            !res.pass && opts.allowPlanReviewFailure === true;
+
+          history.push({
+            at: now,
+            pass: res.pass,
+            findingsCount: res.findings.length,
+            provider: res.provider,
+            ...(res.model ? { model: res.model } : {}),
+            verdict: nv.verdict,
+            ...(bypassed ? { bypassed: true } : {}),
+          });
           await atomicWriteText(
-            join(cwd, '.cadence', 'phases', phase, `${id}-PLAN-REVIEW.json`),
+            sidecarPath,
             JSON.stringify(
               {
                 draftId: id,
+                converged: res.pass,
+                attempts: nv.verdict === 'pass' ? attemptsSoFar : nv.attempt,
+                maxAttempts,
+                history,
+                // legacy 29.7 top-level fields preserved for old readers:
                 pass: res.pass,
                 provider: res.provider,
                 ...(res.model ? { model: res.model } : {}),
                 findings: res.findings.length,
-                at: new Date().toISOString(),
+                at: now,
               },
               null,
               2,
             ) + '\n',
           );
+
           if (!res.pass) {
             for (const f of res.findings) {
               process.stderr.write(
@@ -285,18 +328,55 @@ export function registerDraftCommand(program: Command): void {
                 process.stderr.write(`  ↳ suggested: ${f.suggestedEdit}\n`);
               }
             }
-            if (!opts.allowPlanReviewFailure) {
+
+            if (opts.allowPlanReviewFailure) {
+              // Bypass path — flag waves the failing review through (any
+              // verdict). Still emit the unconverged anomaly when the loop
+              // actually escalated (audit trail, bypassed:true).
+              if (nv.verdict === 'escalate') {
+                await emitPlanReviewUnconverged(selectNotifier(cfg), {
+                  draftId: id,
+                  attempts: nv.attempt,
+                  maxAttempts,
+                  findings: res.findings.length,
+                  provider: res.provider,
+                  ...(res.model ? { model: res.model } : {}),
+                  bypassed: true,
+                });
+              }
               process.stderr.write(
-                `draft approve refused: plan-review found ${res.findings.length} finding(s). ` +
-                  `Fix the plan, or pass --allow-plan-review-failure to proceed anyway.\n`,
+                `plan-review: --allow-plan-review-failure set; proceeding past ` +
+                  `${res.findings.length} finding(s).\n`,
+              );
+              // fall through to BUILD transition.
+            } else if (nv.verdict === 'reloop') {
+              process.stderr.write(
+                `plan-review: attempt ${nv.attempt}/${maxAttempts} did not pass — ` +
+                  `fix the DRAFT and re-run \`cadence draft approve\`, ` +
+                  `or pass --allow-plan-review-failure to proceed anyway.\n`,
+              );
+              process.exitCode = 1;
+              return;
+            } else {
+              // escalate, no bypass — hard human-decision stop.
+              await emitPlanReviewUnconverged(selectNotifier(cfg), {
+                draftId: id,
+                attempts: nv.attempt,
+                maxAttempts,
+                findings: res.findings.length,
+                provider: res.provider,
+                ...(res.model ? { model: res.model } : {}),
+              });
+              process.stderr.write(
+                `draft approve refused: plan-review did NOT converge after ` +
+                  `${maxAttempts} attempts — a human decision is required. ` +
+                  `Re-scope the plan, or pass --allow-plan-review-failure to proceed anyway.\n`,
               );
               process.exitCode = 1;
               return;
             }
-            process.stderr.write(
-              `plan-review: --allow-plan-review-failure set; proceeding past ${res.findings.length} finding(s).\n`,
-            );
           }
+          // res.pass (converged) OR bypassed → fall through to BUILD.
         }
 
         // Phase 23.2 — coherence-warn emission at approve time. Same pattern

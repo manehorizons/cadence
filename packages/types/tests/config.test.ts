@@ -215,4 +215,28 @@ describe('CadenceConfigZ', () => {
       CadenceConfigZ.parse({ ...defaultConfig, skillAudit: { required: [42] as never } }),
     ).toThrow();
   });
+
+  // AC-5 (Phase 35.1) — convergence.maxAttempts: back-compat default + bounds.
+  it('convergence.maxAttempts defaults to 3 when convergence absent (back-compat) (AC-5)', () => {
+    const { convergence: _drop, ...withoutConvergence } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutConvergence);
+    expect(parsed.convergence.maxAttempts).toBe(3);
+  });
+
+  it('convergence.maxAttempts round-trips an override (AC-5)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      convergence: { maxAttempts: 5 },
+    });
+    expect(parsed.convergence.maxAttempts).toBe(5);
+  });
+
+  it('rejects non-positive / non-int convergence.maxAttempts (AC-5)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, convergence: { maxAttempts: 0 } }),
+    ).toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, convergence: { maxAttempts: 1.5 } }),
+    ).toThrow();
+  });
 });

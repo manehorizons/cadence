@@ -98,6 +98,8 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 
 > **Required-skill enforcement (Phase 34.1)** is intentionally *not* a matrix cell. A phase declares `requiredSkills` (DRAFT frontmatter ∪ `config.skillAudit.required`); `settle run` refuses on a shortfall (or `--allow-skill-audit-miss`) and emits a `skill-audit-miss` anomaly **unconditionally** — distinct from the `anomaly-notify`-gated anomalies, since declaring skills is the opt-in and strict cells (which lack `anomaly-notify`) must still leave an audit trail. Closes ROADMAP open-question 23.4.
 
+> **Plan-review convergence (Phase 35.1)** — `plan-review` (Expensive, Phase 25.1) is no longer one-shot: at `draft approve` it tracks attempts in the `<id>-PLAN-REVIEW.json` sidecar and, after `config.convergence.maxAttempts` (default 3) failing attempts, hard-escalates with an unconditional `plan-review-unconverged` anomaly (un-gated like `skill-audit-miss`, since plan-review's only cell — strict×complex — lacks `anomaly-notify`). Same gate cell; convergence changes *how it fails*, not *whether it fires*. The `nextConvergence` primitive is reusable (survey #4's settle-gate attach-point).
+
 ### 4.2 Default gates per cell (deltas only; free gates always fire)
 
 |              | **quick-fix** | **standard** | **complex** |
@@ -233,6 +235,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 33. ~~Phase 32.1 — test-infra flake root-fix: shared `vitest.shared.ts` base (`testTimeout`/`hookTimeout`/`maxForks`) + `tempRepo` rmdir retry + revert 29.5/30.2 per-test timeout band-aids (pulled the ROADMAP v1.2 test-infra lane forward; 3rd parallel-load recurrence)~~ ✓
 34. ~~Phase 33.1 (ROADMAP "Phase 30.1") — publish pipeline reversible proof: metadata hardening (license/publishConfig/repository, per-pkg LICENSE/README), `scripts/publish-proof.mjs` (ephemeral verdaccio real publish + clean-install, no `workspace:` leak, both bins run, Windows-safe teardown), public `--dry-run` + tarball-clean (types 39 / core 240 / host 36 files, no src/tests/.cadence); `@cadence/testkit` `private`; real public publish / provenance / `release.yml` / changesets deferred to a named v1.2 public-release milestone~~ ✓
 35. ~~Phase 34.1 (closes ROADMAP open-question 23.4) — required-skill enforcement: `DraftZ.requiredSkills` ∪ `config.skillAudit.required` → effective set written to `state.skillAudit.required`; settle-time check (declaration = opt-in, NOT a gate-matrix cell), inert when empty, skip+warn when telemetry off, else refuse + unconditional `skill-audit-miss` anomaly unless `--allow-skill-audit-miss`~~ ✓
+36. ~~Phase 35.1 (v1.2 feature-expansion #2) — review-convergence loop primitive: pure `nextConvergence` (reusable by #4); `plan-review`@approve now bounded — attempts/history in the `<id>-PLAN-REVIEW.json` sidecar, reloop on fail, hard-escalate at `config.convergence.maxAttempts` (default 3) with an unconditional `plan-review-unconverged` anomaly, override = existing `--allow-plan-review-failure`. No state.json / gate-matrix change~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

@@ -52,6 +52,11 @@ export const CadenceConfigZ = z.object({
       required: z.array(z.string()).default([]),
     })
     .default({ required: [] }),
+  convergence: z
+    .object({
+      maxAttempts: z.number().int().positive().default(3),
+    })
+    .default({ maxAttempts: 3 }),
   tier: z.object({
     quickFix: z.object({ maxTasks: z.number().int(), maxFiles: z.number().int() }),
     standard: z.object({ maxTasks: z.number().int(), maxFiles: z.number().int() }),
@@ -188,6 +193,7 @@ export const defaultConfig: CadenceConfig = {
   packs: { enabled: [], disabled: [] },
   telemetry: { tokenUtilization: true, skillInvocations: true, remoteOptIn: false },
   skillAudit: { required: [] },
+  convergence: { maxAttempts: 3 },
   tier: {
     quickFix: { maxTasks: 1, maxFiles: 1 },
     standard: { maxTasks: 5, maxFiles: 8 },
