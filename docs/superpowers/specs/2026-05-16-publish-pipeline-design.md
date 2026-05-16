@@ -106,9 +106,12 @@ any POSIX CI):
 1. Start verdaccio via `npx --yes verdaccio@^6 --config <generated-config>
    --listen 4873`, storage pointed at an OS-temp dir (isolated, deleted at
    end). Wait for the port to accept connections (poll, bounded).
-2. Create a throwaway npm user/token against the local registry (verdaccio
-   default htpasswd or `--config` with auth disabled for localhost) so
-   `pnpm publish` can authenticate to `http://localhost:4873`.
+2. Authenticate non-interactively (preferred — avoid interactive
+   `npm adduser`, which is flaky in CI and on the Windows box): generate a
+   verdaccio config that allows unauthenticated publish from localhost, and
+   write a temp project `.npmrc` with a dummy
+   `//localhost:4873/:_authToken=local` so `pnpm publish` has a token without
+   any prompt. Do not use `npm adduser`.
 3. `pnpm -r --filter=!@cadence/testkit publish --registry
    http://localhost:4873 --no-git-checks --no-provenance`. `--no-git-checks`
    because the dogfood tree carries phase artifacts and the version is not
@@ -116,8 +119,12 @@ any POSIX CI):
 4. In a fresh OS-temp dir: `npm init -y` then
    `npm i @cadence/core --registry http://localhost:4873`. Assert:
    - the install resolves `@cadence/types` transitively from the local
-     registry (proves the `workspace:*`→`1.0.0` rewrite — fail if any
-     installed `package.json` still contains the string `workspace:`),
+     registry (proves the `workspace:*`→`1.0.0` rewrite). Assert precisely:
+     read the **installed `@cadence/*` package.json files under the temp
+     dir's `node_modules/@cadence/`** (not a blanket recursive scan that
+     could false-match unrelated transitive-dep fixtures) and require their
+     `@cadence/*` dep values are the concrete `1.0.0` (or a real semver
+     range), with no `workspace:` substring,
    - `npx cadence --version` (or `--help`) exits 0 from the clean install
      (proves `bin` resolves from a published tarball, not the monorepo).
 5. Repeat the bin check for `@cadence/host-claude-code`
@@ -235,4 +242,8 @@ registry would be re-implementing the script):
 6. Full gate (`lint typecheck test build`) green; dogfood as CADENCE phase
    `33-publish-pipeline`/`33-01`, tier `standard`, two-commit convention,
    settle with `--allow-missing-coverage`. Push is user-gated (the now-passing
-   pre-push hook re-runs).
+   pre-push hook re-runs). **Dual identifier (carry both, do not drift):**
+   ROADMAP "Phase 30.1 — Publish pipeline" ＝ dogfood phase dir
+   `33-publish-pipeline`/draft `33-01` — same work, distinct namespaces per
+   the project's documented ROADMAP-vs-phase-dir convention. The ROADMAP
+   note in step 5 must reference the `33-01` dogfood phase explicitly.
