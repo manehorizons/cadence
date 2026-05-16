@@ -230,9 +230,11 @@ Then in the `const draft: Draft = { … }` literal, alongside the existing
 ```
 
 **Caution:** the `fm.profile` spread is currently the *last* property in the
-literal (no trailing comma after it). When appending the new spread, add a
-comma after the `profile` spread so both are valid literal members (the
-snippet above already ends with `,`).
+`const draft` literal (it already ends with a trailing `,`, followed by
+`};`). Append the new `requiredSkills` spread as the next member after it —
+ensure a comma separates the two spreads (the preceding comma is already
+present; the snippet above also ends with `,`). Either ordering of the two
+spreads is valid.
 
 - [ ] **Step 4:** Run → PASS (3). Re-run the whole parse suite: `pnpm -C packages/core test -- run parse` → PASS (no regression).
 
