@@ -156,19 +156,29 @@ import { join } from 'node:path';
 
 const REG = 'http://localhost:4873';
 const REPO = process.cwd();
-const PKGS = ['types', 'core', 'host-claude-code']; // publish order: types first (dep)
+const PKGS = ['types', 'core', 'host-claude-code']; // publish order: types first (dep of the others)
+const WIN = process.platform === 'win32';
 const tmps = [];
 function tmp(p) { const d = mkdtempSync(join(tmpdir(), p)); tmps.push(d); return d; }
 function run(cmd, args, opts = {}) {
-  const r = spawnSync(cmd, args, { encoding: 'utf8', shell: process.platform === 'win32', ...opts });
-  return r;
+  return spawnSync(cmd, args, { encoding: 'utf8', shell: WIN, ...opts });
 }
 function must(r, label) {
-  if (r.status !== 0) {
-    console.error(`FAIL ${label}\n--- stdout ---\n${r.stdout || ''}\n--- stderr ---\n${r.stderr || ''}`);
+  if (!r || r.status !== 0) {
+    console.error(`FAIL ${label}\n--- stdout ---\n${(r && r.stdout) || ''}\n--- stderr ---\n${(r && r.stderr) || ''}`);
     throw new Error(label);
   }
 }
+// Kill the whole child tree. With shell:true on Windows, vc.pid is cmd.exe —
+// its npx->node->verdaccio descendants survive a plain process.kill(pid).
+// taskkill /T kills the tree; POSIX gets SIGTERM. This is the AC-3 fix.
+function killTree(pid) {
+  if (pid == null) return;
+  if (WIN) { try { spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore' }); } catch {} }
+  else { try { process.kill(pid, 'SIGTERM'); } catch {} }
+}
+async function ping() { try { const r = await fetch(REG + '/-/ping'); return r.ok || r.status === 404; } catch { return false; } }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const storage = tmp('vc-store-');
 const vcConfig = join(tmp('vc-conf-'), 'config.yaml');
@@ -192,25 +202,26 @@ packages:
     proxy: npmjs
 log: { type: stdout, format: pretty, level: warn }
 `);
+// userconfig token lives in an OS-temp dir — NEVER written into the repo
+// (no repo-root .npmrc artifact to leak/commit on interrupt).
+const npmrc = join(tmp('vc-rc-'), '.npmrc');
+writeFileSync(npmrc, `@cadence:registry=${REG}\n//localhost:4873/:_authToken=publishproof\n`);
 
 let vc;
 try {
-  // 1. start verdaccio
+  // pre-flight: a live :4873 BEFORE we start means a leaked prior verdaccio.
+  // Fail fast — never silently test against stale storage (false green).
+  if (await ping()) throw new Error(':4873 already serving before start — a previous verdaccio is orphaned. Kill it (Windows: taskkill /F /IM node.exe, or the verdaccio PID) and re-run.');
+  // pre-fetch verdaccio so a cold npx download is NOT inside the timed wait
+  must(run('npx', ['--yes', 'verdaccio@^6', '--version']), 'prefetch verdaccio');
+
   vc = spawn('npx', ['--yes', 'verdaccio@^6', '--config', vcConfig, '--listen', '4873'],
-    { stdio: 'inherit', shell: process.platform === 'win32' });
-  // wait for port (bounded ~30s)
+    { stdio: 'inherit', shell: WIN });
   let up = false;
-  for (let i = 0; i < 60; i++) {
-    try { const res = await fetch(REG + '/-/ping'); if (res.ok || res.status === 404) { up = true; break; } } catch {}
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  if (!up) throw new Error('verdaccio did not start on :4873');
+  for (let i = 0; i < 120; i++) { if (await ping()) { up = true; break; } await sleep(500); }
+  if (!up) throw new Error('verdaccio did not start on :4873 within 60s');
 
-  // 2. dummy auth so pnpm publish never prompts (server allows $all anyway)
-  const npmrc = join(REPO, '.npmrc.publishproof');
-  writeFileSync(npmrc, `@cadence:registry=${REG}\n//localhost:4873/:_authToken=publishproof\n`);
-
-  // 3. publish the 3 packages to verdaccio (pnpm rewrites workspace:* -> 1.0.0)
+  // publish the 3 packages to verdaccio (pnpm rewrites workspace:* -> 1.0.0)
   for (const p of PKGS) {
     must(run('pnpm', ['publish', '--registry', REG, '--no-git-checks', '--no-provenance', '--userconfig', npmrc],
       { cwd: join(REPO, 'packages', p) }), `publish @cadence/${p}`);
@@ -238,9 +249,11 @@ try {
 
   console.log('\nPUBLISH-PROOF: PASS — 3 packages published to verdaccio, clean install resolved, no workspace: leak, both bins run.');
 } finally {
-  if (vc && !vc.killed) { try { process.kill(vc.pid); } catch {} }
-  try { rmSync(join(REPO, '.npmrc.publishproof'), { force: true }); } catch {}
-  for (const d of tmps) { try { rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch {} }
+  killTree(vc && vc.pid);            // Windows-safe process-tree kill (AC-3)
+  await sleep(1000);                 // let the OS release file handles before delete (Windows)
+  // npmrc lived under an OS-temp dir tracked in `tmps` — removed here too;
+  // nothing was ever written into the repo.
+  for (const d of tmps) { try { rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); } catch {} }
 }
 ```
 
@@ -254,7 +267,7 @@ Run: `pnpm install && pnpm -C packages/types build && pnpm -C packages/core buil
 - [ ] **Step 4: Run the harness**
 
 Run: `node scripts/publish-proof.mjs`
-Expected: ends with `PUBLISH-PROOF: PASS …`; exit 0; no `.npmrc.publishproof` or temp dirs left (`git status --short` clean except intended files); no verdaccio process lingering.
+Expected: ends with `PUBLISH-PROOF: PASS …`; exit 0. Then verify teardown actually worked (the AC-3 fix): `git status --short` clean except intended files (the harness writes NOTHING into the repo — npmrc + storage live under OS-temp); no OS-temp `vc-*` dirs remain; and **no orphaned verdaccio** — on Windows confirm with `Get-NetTCPConnection -LocalPort 4873 -ErrorAction SilentlyContinue` returning nothing (or a second `node scripts/publish-proof.mjs` run must NOT fail its pre-flight ":4873 already serving" guard — that guard failing means a prior run leaked the process tree).
 
 - [ ] **Step 5: Checkpoint (stage only — NO commit)**
 
@@ -271,8 +284,9 @@ Then: `node packages/core/bin/cadence.cjs build task T3 --status=DONE --notes "p
 
 - [ ] **Step 1: Public-npm dry-run for the 3 packages**
 
-Run: `pnpm -r --filter=!@cadence/testkit publish --dry-run --no-git-checks 2>&1 | tee /tmp/cadence-dryrun.txt` (Windows: redirect to a temp file you can read back).
-Expected: success for `@cadence/core`, `@cadence/types`, `@cadence/host-claude-code`; `@cadence/testkit` skipped. No errors.
+Run (Windows PowerShell — primary, the target box): `pnpm -r --filter=!@cadence/testkit publish --dry-run --no-git-checks *>&1 | Tee-Object "$env:TEMP\cadence-dryrun.txt"`
+(POSIX equivalent: `pnpm -r --filter=!@cadence/testkit publish --dry-run --no-git-checks 2>&1 | tee /tmp/cadence-dryrun.txt`.)
+Expected: success for `@cadence/core`, `@cadence/types`, `@cadence/host-claude-code`; `@cadence/testkit` skipped. No errors. Keep the captured file — its contents are the AC-4 evidence pasted into the task notes.
 
 - [ ] **Step 2: Tarball content assertion** — pack each into a temp dir and assert the file set:
 
@@ -346,7 +360,7 @@ Then: `node packages/core/bin/cadence.cjs build task T5 --status=DONE --notes "D
 
 **Files:** none new — consolidates Tasks 1–5.
 
-- [ ] **Step 1: Confirm staging.** `git diff --cached --name-only` must be exactly: 5 package.json, 3 LICENSE, 3 README, `scripts/publish-proof.mjs`, `DESIGN.md`, `README.md`, `CHANGELOG.md`, `.cadence/ROADMAP.md`. **Nothing under `.cadence/phases/`, `.cadence/STATE.md`, `.cadence/state.json`, no `.npmrc.publishproof`, no temp/tgz** staged. `git status --short` shows no stray harness leftovers (untracked `graphify-out/` is pre-existing, not ours — leave it).
+- [ ] **Step 1: Confirm staging.** `git diff --cached --name-only` must be exactly: 5 package.json, 3 LICENSE, 3 README, `scripts/publish-proof.mjs`, `DESIGN.md`, `README.md`, `CHANGELOG.md`, `.cadence/ROADMAP.md`. **Nothing under `.cadence/phases/`, `.cadence/STATE.md`, `.cadence/state.json`, no `*.tgz`, no temp artifacts** staged (the hardened harness writes nothing into the repo). `git status --short` shows no stray harness leftovers (untracked `graphify-out/` is pre-existing, not ours — leave it).
 
 - [ ] **Step 2: Full pre-push gate** (the Phase 32.2 lesson — verify the WHOLE hook, not just test):
 
@@ -400,7 +414,7 @@ Then **stop** and report: phase settled, full gate green, N commits ahead ready 
 ## Done criteria
 
 - 3 packages carry license/publishConfig/repository + LICENSE/README; testkit `private:true`; root `license:"MIT"`.
-- `scripts/publish-proof.mjs` green: real verdaccio publish ×3, clean install resolves, no `workspace:` leak, both bins run, full teardown, exit 0, nothing left behind.
+- `scripts/publish-proof.mjs` green: real verdaccio publish ×3, clean install resolves, no `workspace:` leak, both bins run, Windows-safe process-tree teardown + pre-flight port guard, exit 0, nothing left behind (no repo writes, no OS-temp residue, no orphaned verdaccio).
 - `pnpm publish --dry-run` green ×3 (testkit skipped); tarballs = dist/bin/package.json/LICENSE/README only; file lists recorded.
 - DESIGN §10 item 34 + publish subsection; README pending-note (F1/F6 anchors intact); CHANGELOG Added; ROADMAP 30.1 delivered + named v1.2 deferred milestone.
 - Full `pnpm turbo run lint typecheck test build` green; settled via dogfood loop (two-commit). Push user-gated.
@@ -410,7 +424,7 @@ Then **stop** and report: phase settled, full gate green, N commits ahead ready 
 
 - **AC-1:** `@cadence/{core,types,host-claude-code}` each have `license:"MIT"`, `publishConfig.access:"public"`, a `repository` block with `directory`, a per-package MIT `LICENSE` and a minimal `README.md`; root `package.json` `license:"MIT"`; `@cadence/testkit` `private:true`.
 - **AC-2:** `scripts/publish-proof.mjs` on a clean run publishes the 3 packages to an ephemeral local verdaccio, installs `@cadence/core`+`@cadence/host-claude-code` into a fresh dir from it, asserts no `workspace:` survives in any installed `@cadence/*` package.json, and runs both published bins — exiting non-zero on any failure.
-- **AC-3:** The harness tears verdaccio + all temp files (incl. `.npmrc.publishproof`) down unconditionally (`finally`); no non-localhost registry is used for publish.
+- **AC-3:** The harness tears the **verdaccio process tree** (Windows-safe `taskkill /T`, not a bare `process.kill` of the shell wrapper) + all OS-temp dirs (storage, config, userconfig npmrc, install dir) down unconditionally (`finally`); it writes nothing into the repo; a pre-flight guard fails fast if `:4873` is already serving (no false-green against a leaked prior instance); no non-localhost registry is used for publish.
 - **AC-4:** `pnpm -r --filter=!@cadence/testkit publish --dry-run` succeeds for the 3; each `pnpm pack` tarball contains only dist/bin/package.json/LICENSE/README (no src/tests/.cadence/tsconfig/vitest); file lists recorded in the phase report.
 - **AC-5:** DESIGN (§10 item 34 + publish subsection), README (pending-install note, F1/F6 anchors preserved), CHANGELOG (Unreleased/Added), ROADMAP (Phase 30.1 delivered-via-reversible + named v1.2 public-release deferred milestone) updated.
 - **AC-6:** Full `pnpm turbo run lint typecheck test build` gate green; phase settled via the dogfood loop with the two-commit convention.
