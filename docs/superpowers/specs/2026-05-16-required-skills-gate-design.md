@@ -5,16 +5,23 @@
 **Context:** CADENCE v1.2 feature expansion, item #6 of the expansion survey
 (`docs/superpowers/2026-05-16-cadence-expansion-survey.md`). Picked first
 because it is the smallest, fully independent candidate and it **closes the
-pre-existing ROADMAP 23.4 deferred open question**: "`state.skillAudit.required[]`
-semantics: who populates it? Config? Per-phase frontmatter? … if missing emit
-a `skill-audit-miss` anomaly. Defer the `required` part to a follow-up phase."
-This is that follow-up.
+pre-existing ROADMAP 23.4 deferred open question**, whose verbatim text is:
+"23.4 — `state.skillAudit.required[]` semantics: who populates it? Config?
+Per-phase frontmatter? Defer to a follow-up phase if the answer isn't obvious
+at 23.4-DRAFT time." (The `skill-audit-miss` anomaly + settle-enforcement is
+**this design's resolution**, not part of the original question text — 23.4
+asked only the populates-it/where question; 23.4's own AC-2 floated an
+anomaly-at-SessionStop idea, which this design supersedes with a settle-time
+check.) This is that follow-up.
 
 ## Problem
 
 Phase 23.4 wired `state.skillAudit.invoked[]` (populated by `handleSkillInvoke`,
 `packages/core/src/hooks/handlers.ts`, from `ctx.raw.skill`, gated by
-`config.telemetry.skillInvocations`, dedup + FIFO-100). The sibling field
+`config.telemetry.skillInvocations`, dedup + FIFO-100). The `ctx.raw.skill`
+signal itself is extracted by Phase 23.4's `packages/host-claude-code/src/event-map.ts`
+`extractPayload` — **prior-phase territory, not touched by this phase**; #6
+consumes `invoked` as already-populated and adds only the `required` side. The sibling field
 `state.skillAudit.required[]` exists in the schema (`packages/types/src/state.ts`,
 `emptyState` → `{ required: [], invoked: [] }`) and is copied into
 `Summary.skillAudit` at settle (`packages/core/src/cli/commands/settle.ts`) —
@@ -123,14 +130,29 @@ order:
 (Phase 23.2 `coherence-warn`, 23.3 `loop-violation`); legacy anomaly-log
 entries are operational state, not durable data. Documented in CHANGELOG.
 
-### Anomaly emission
+### Anomaly emission — UNCONDITIONAL (deliberate divergence from precedent)
 
-Emit through the existing notifier path used for other settle-side anomalies
-(the same `selectNotifier`/emit seam `loop-violation` / `code-review-high`
-use). Gate-aware consistency: emission still respects the existing notify
-wiring; if no notifier is configured the emission is best-effort/no-throw
-exactly like the other anomaly types (the refusal exit code is independent of
-whether the anomaly was successfully written).
+Emit `skill-audit-miss` through the same notifier **transport** the other
+settle-side anomalies use (`selectNotifier` + the configured notify wiring),
+but **NOT gated on the `anomaly-notify` gate**. This is a deliberate,
+called-out divergence from `loop-violation` / `code-review-high`, which both
+short-circuit when `'anomaly-notify' ∉ gateSet.gates`
+(`notify/loop-violation.ts` early-return; the `settle.ts` `emitCodeReviewHigh`
+guard). The `anomaly-notify` gate is **absent from every `strict` cell**
+(`gates/engine.ts` `DELTAS` — strict cells never include it). Reusing that
+guard here would mean a `strict`-profile phase that fails the skill
+requirement **refuses settle with no audit trail at all** — directly
+undercutting this feature's "auditable, opt-in by declaration, independent of
+the gate matrix" purpose.
+
+Therefore `skill-audit-miss` emission is **unconditional**: it fires on the
+shortfall / unenforceable / bypass paths regardless of profile or tier,
+through whatever notifier is configured, best-effort and no-throw (a missing
+or failing notifier never changes the settle exit code — refusal is computed
+independently of whether the anomaly write succeeded, exactly as the other
+anomaly types already guarantee). Emission is profile-independent by design;
+the integration tests therefore need not (and do not) pin a profile to assert
+emission.
 
 ### Docs / ROADMAP
 
@@ -138,8 +160,15 @@ whether the anomaly was successfully written).
   declaration-opt-in, not a matrix cell); §10 punchlist item 35.
 - `CHANGELOG.md` `## [Unreleased] → ### Added` — the gate; and note the
   `AnomalyTypeZ` additive bump under a Changed/Added line.
-- `.cadence/ROADMAP.md` — (a) mark open question **23.4 closed** (`required[]`
-  semantics resolved: DRAFT frontmatter ∪ config baseline, settle-enforced);
+- `.cadence/ROADMAP.md` — (a) mark open question **23.4 closed at BOTH
+  sites**: the "Open questions" entry (the `23.4 — state.skillAudit.required[]
+  semantics: who populates it? Config? Per-phase frontmatter? …` line) **and**
+  the "Deferred open questions. 23.1, 23.4, 24.3, 26.2" reference in the
+  Deferred-to-v1.2+ list (remove `23.4` from that enumeration / annotate it
+  resolved). Resolution recorded: DRAFT frontmatter ∪ config baseline,
+  settle-enforced, `skill-audit-miss` anomaly. (The skill-audit-miss-anomaly
+  framing is this design's resolution, not verbatim ROADMAP text — the
+  original 23.4 question only asked the populates-it/where question.);
   (b) add a **v1.2 feature-expansion** section referencing the survey: #6
   delivered, then sequenced backlog **#2 (convergence primitive) → #1 (spec
   stage) → #4 (auto-remediation = 2nd attach-point of #2's engine)**, and
@@ -177,7 +206,10 @@ Vitest, in-package (`packages/**`) so the `test-coverage` gate links each AC:
   proceeds, warn anomaly `unenforceable:true`, exit 0; (f) `Summary.skillAudit.required`
   equals the resolved union. Use `tempRepo` + the file notify transport
   (absolute `notify.file` path per the known fixture gotcha) to assert
-  emitted anomalies.
+  emitted anomalies. Emission is **unconditional/profile-independent** (per
+  the Anomaly-emission section) — fixtures need not pin a profile to observe
+  `skill-audit-miss`; a `strict`-profile fixture asserting emission-still-fires
+  is worth one explicit case to lock the divergence-from-precedent.
 
 ## Acceptance criteria (for the DRAFT)
 
