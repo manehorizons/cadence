@@ -1,0 +1,41 @@
+{
+  "draftId": "34-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AnomalyTypeZ+=skill-audit-miss; config.skillAudit.required (default [] back-compat); DraftZ.requiredSkills?; +6 schema tests; types 76/76 + build green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T19:40:50.821Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "pure satisfies()/missingSkills() TDD red→green; 6/6 (AC-2)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T19:41:53.509Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "parseSkillList + optional spread (comma/bracket/quote tolerant); parse 16/16 no regression (AC-1)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T19:43:09.857Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "emitSkillAuditMiss (unconditional) + settle flag/opts-type/null-safe check; 7-path integration incl. strict-lock green; core build clean (AC-3/4/5)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T19:47:07.788Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "DESIGN §10 item35 + §4.1 note; CHANGELOG Added; ROADMAP 23.4 closed (227 resolved/258 incidental/334 deferred-list) + v1.2 feature-expansion section (#6 ✓ → #2 → #1 → #4; #3/#5 parked) (AC-6)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T19:49:59.790Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "full gate 16/16 green (FULL TURBO post-crash); feat commit e19b5c4 landed; settle in progress",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T20:23:05.701Z"
+    }
+  }
+}

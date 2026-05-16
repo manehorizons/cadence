@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 33-publish-pipeline
+**Active phase:** 34-required-skills
 **Active draft:** (none)
 **Tier:** (n/a)
 
