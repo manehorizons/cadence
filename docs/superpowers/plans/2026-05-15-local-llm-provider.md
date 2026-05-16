@@ -532,7 +532,7 @@ EOF
 )"
 ```
 
-- [ ] **Step 3:** `node packages/core/bin/cadence.cjs settle run --auto` → expect `Settled 30-01` (coverage gate passes: tests reference AC-1..AC-6 under `packages/**`).
+- [ ] **Step 3:** `node packages/core/bin/cadence.cjs settle run --auto` → expect a `Settled 30-…` line (exact id is whatever `draft new 30-local-provider 01` produced — treat `Settled 30-01` as illustrative; trust the actual output). Coverage gate passes only if each new test file literally contains its `AC-1`..`AC-6` tokens — double-check before running settle (the gate greps for them).
 - [ ] **Step 4:** Settle commit:
 
 ```bash
