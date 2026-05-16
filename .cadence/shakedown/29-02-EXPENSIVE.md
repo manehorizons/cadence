@@ -73,3 +73,14 @@ The settle-run table above inferred code-review/security-audit behavior from `SU
 - **G2 — unchanged** (failed deep-verify records `provider:"unknown"`; the catch already has `cadenceConfig?.verifier?.provider` available at `settle.ts:382`).
 
 **Corrected headline:** the `local` provider is **production-viable for 4 of the 5 gates** as-is. The only real defect is **G1 (deep-verify only)**. **G2/G3** are observability fixes. **G4 is not a bug.** Remediation phase scope: G1 + G2 + G3.
+
+---
+
+## REMEDIATION VERIFIED (Phase 29.7)
+
+- **G1 — FIXED.** Deep-verify prompt now lists the exact AC ids, demands one verdict per id, and embeds a schema-conforming JSON example (`anthropic-verifier.ts formatUserMessage`, reused by `LocalVerifier`); `localChatJSON` now allows **two** repair retries. Live re-probe vs Ollama `qwen3-coder:30b`: `LocalVerifier` returns schema-valid verdicts (`{"AC-1":{pass:true,...},"AC-2":{pass:true,...}}`), `provider:local`, ~4s, **no schema-failure throw** (passes first call now). All 5 local gates now work live.
+- **G2 — FIXED.** Failed deep-verify records the configured `verifier.provider` (+ `model` when set), not `'unknown'` (`settle.ts`). Test: `settle-deep` G2 case (local→closed port→throw→records `provider:'local', model:'tinytest'`).
+- **G3 — FIXED.** `draft approve` writes `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` `{draftId,pass,provider,model?,findings,at}` on pass AND fail — durable, inspectable, no State-schema change. Test: `draft-plan-review` G3 case.
+- **G4 — closed (not a bug)** per the correction above; no code change.
+
+Anthropic structured-output path unaffected (only the shared prompt text clarified — strictly helps). Remediation shipped in Phase 29.7 (`29-gate-remediation/29-07`).

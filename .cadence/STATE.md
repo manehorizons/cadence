@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 29-expensive-gate
+**Active phase:** 29-gate-remediation
 **Active draft:** (none)
 **Tier:** (n/a)
 

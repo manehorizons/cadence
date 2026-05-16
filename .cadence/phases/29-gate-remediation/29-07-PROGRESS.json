@@ -1,0 +1,35 @@
+{
+  "draftId": "29-07",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "deep-verify prompt: id-list + per-id + JSON example",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T02:06:08.185Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "localChatJSON MAX_REPAIR_RETRIES=2",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T02:06:08.397Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "draft approve writes <id>-PLAN-REVIEW.json pass+fail",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T02:06:08.635Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "settle failed-deep-verify stamps configured provider+model",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T02:06:08.834Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "live re-probe: deep-verify valid on qwen3-coder:30b ~4s; full turbo 422 core green; report/CHANGELOG/DESIGN updated",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T02:06:09.039Z"
+    }
+  }
+}
