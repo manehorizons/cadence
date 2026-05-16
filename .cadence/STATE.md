@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 32-testinfra-flake
+**Active phase:** 32-lint-register
 **Active draft:** (none)
 **Tier:** (n/a)
 

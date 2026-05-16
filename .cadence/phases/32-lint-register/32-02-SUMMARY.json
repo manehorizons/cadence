@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "draftId": "32-02",
+  "completedAt": "2026-05-16T15:24:06.488Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "register.ts:1 import->import type; full gate lint+typecheck+test+build 16/16 green"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

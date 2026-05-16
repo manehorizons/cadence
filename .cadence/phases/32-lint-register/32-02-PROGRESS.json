@@ -1,0 +1,11 @@
+{
+  "draftId": "32-02",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "register.ts:1 import->import type; full gate lint+typecheck+test+build 16/16 green",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-16T15:23:36.757Z"
+    }
+  }
+}

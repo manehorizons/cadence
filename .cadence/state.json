@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "32-testinfra-flake",
+  "activePhase": "32-lint-register",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-16T14:53:15.860Z",
+  "draftReadAt": "2026-05-16T15:22:26.843Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
