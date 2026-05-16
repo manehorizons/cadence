@@ -369,17 +369,21 @@ export function registerSettleCommand(program: Command): void {
               process.stderr.write(
                 `deep-verify: verifier failed (${message}); --allow-verifier-failure set, treating all ACs as pass=false.\n`,
               );
+              const failedProvider =
+                cadenceConfig?.verifier?.provider ?? 'mock';
+              const failedModel = cadenceConfig?.verifier?.model;
               deepVerify = {};
               for (const ac of acs) {
                 deepVerify[ac.id] = {
                   pass: false,
                   reason: `verifier failed: ${message}`,
-                  provider: 'unknown',
+                  provider: failedProvider,
+                  ...(failedModel ? { model: failedModel } : {}),
                 };
               }
               verifierFailure = {
                 message,
-                provider: cadenceConfig?.verifier?.provider ?? 'mock',
+                provider: failedProvider,
               };
             } else {
               process.stderr.write(

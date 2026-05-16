@@ -60,31 +60,39 @@ function safeJson(s: string): unknown {
   }
 }
 
+/** Initial call + this many repair retries before throwing. */
+const MAX_REPAIR_RETRIES = 2;
+
 export async function localChatJSON<T>(o: LocalChatJSONOptions<T>): Promise<T> {
   const messages = [
     { role: 'system', content: o.system },
     { role: 'user', content: o.user },
   ];
-  const raw1 = await callOnce(o as LocalChatJSONOptions<unknown>, messages);
-  const first = o.schema.safeParse(safeJson(extractJson(raw1)));
-  if (first.success) return first.data;
 
-  // One repair retry: feed back the bad output + the validation error.
-  const repairMessages = [
-    ...messages,
-    { role: 'assistant', content: raw1 },
-    {
-      role: 'user',
-      content:
-        'That was not valid. Return ONLY strict JSON matching the required schema, no prose, no code fences. Error: ' +
-        first.error.message,
-    },
-  ];
-  const raw2 = await callOnce(o as LocalChatJSONOptions<unknown>, repairMessages);
-  const second = o.schema.safeParse(safeJson(extractJson(raw2)));
-  if (second.success) return second.data;
+  let raw = await callOnce(o as LocalChatJSONOptions<unknown>, messages);
+  let parsed = o.schema.safeParse(safeJson(extractJson(raw)));
+  let lastError = parsed.success ? '' : parsed.error.message;
+
+  for (let retry = 0; !parsed.success && retry < MAX_REPAIR_RETRIES; retry++) {
+    // Repair retry: feed back the bad output + the validation error.
+    const repairMessages = [
+      ...messages,
+      { role: 'assistant', content: raw },
+      {
+        role: 'user',
+        content:
+          'That was not valid. Return ONLY strict JSON matching the required schema, no prose, no code fences. Error: ' +
+          lastError,
+      },
+    ];
+    raw = await callOnce(o as LocalChatJSONOptions<unknown>, repairMessages);
+    parsed = o.schema.safeParse(safeJson(extractJson(raw)));
+    if (!parsed.success) lastError = parsed.error.message;
+  }
+
+  if (parsed.success) return parsed.data;
 
   throw new Error(
-    `local provider: model output failed JSON/schema validation after one repair retry (${o.baseURL}, model=${o.model}): ${second.error.message}`,
+    `local provider: model output failed JSON/schema validation after ${MAX_REPAIR_RETRIES} repair retries (${o.baseURL}, model=${o.model}): ${lastError}`,
   );
 }

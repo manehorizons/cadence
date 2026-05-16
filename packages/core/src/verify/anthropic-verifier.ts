@@ -134,5 +134,15 @@ export function formatUserMessage(input: VerifyInput): string {
 
   const diffSection = input.diff || '(no diff supplied)';
 
-  return `# Acceptance Criteria\n\n${acList}\n\n# Linked tests\n\n${testList || '(none)'}\n\n# Touched files\n\n${fileList}\n\n# Diff\n\n${diffSection}\n\nReturn a verdict for every AC listed above.`;
+  const ids = input.acs.map((ac) => ac.id);
+  const idList = ids.join(', ');
+  const example = JSON.stringify({
+    verdicts: ids.map((id) => ({
+      id,
+      pass: true,
+      reason: 'why this AC is (or is not) delivered',
+    })),
+  });
+
+  return `# Acceptance Criteria\n\n${acList}\n\n# Linked tests\n\n${testList || '(none)'}\n\n# Touched files\n\n${fileList}\n\n# Diff\n\n${diffSection}\n\nReturn exactly one verdict object per acceptance criterion: ${idList}. Each verdict's "id" MUST be the exact AC id string shown above (e.g. "${ids[0] ?? 'AC-1'}") — do not renumber, omit, or invent ids. Respond with strict JSON in exactly this shape (same keys, one entry per AC):\n\n${example}`;
 }

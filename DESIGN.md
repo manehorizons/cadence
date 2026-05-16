@@ -222,6 +222,9 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 24. ~~Phase 29.4 (F2 pulled forward) — `init` layout-detected `testGlobs`: `packages/` → workspace glob, else `**/*.test.ts(x)`; summary reports detected layout~~ ✓ (v1.1 publish-blocker from 29.1 shakedown)
 25. ~~Phase 29.6 — 29.1 doc/ux remediation: F1 (`--local` install warning), F6 (init non-TTY-approve hint + README), F4 (preset/gate-profile summary disambiguation) + consolidated `29-04-REMEDIATION.md` ledger~~ ✓ (29.2/29.3 resource-blocked; 30.1 publish gate cleared of open 29.1 defects)
 26. ~~Phase 30.1 — local LLM provider (OpenAI-compatible /v1/chat/completions; CADENCE_LOCAL_BASE_URL/MODEL; warn+mock fallback)~~ ✓
+27. ~~Phase 30.2 — build-per-task spawn-CLI test block-timeout (2nd parallel-load flake after 29.5; v1.2 test-infra lane still deferred)~~ ✓
+28. ~~Phase 29.2 — expensive-gate live exercise on Ollama `qwen3-coder:30b` (zero cloud spend; ROADMAP anthropic→local divergence documented); `29-02-EXPENSIVE.md`~~ ✓
+29. ~~Phase 29.7 — 29.2 remediation: G1 (deep-verify local prompt id-binding + 2 retries), G2 (failed-provider stamp), G3 (plan-review pass-time artifact); G4 withdrawn~~ ✓ (all 5 gates live-verified on local)
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

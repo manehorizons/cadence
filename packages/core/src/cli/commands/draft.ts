@@ -256,6 +256,24 @@ export function registerDraftCommand(program: Command): void {
         if (gateSet.gates.includes('plan-review')) {
           const verifier = selectPlanReviewVerifier(cfg);
           const res = await verifier.verify({ draft });
+          // Phase 29.7 G3 — persist a plan-review record (pass OR fail) so a
+          // loop run can later prove it ran / which provider / verdict.
+          // No state-schema change: per-phase sidecar artifact.
+          await atomicWriteText(
+            join(cwd, '.cadence', 'phases', phase, `${id}-PLAN-REVIEW.json`),
+            JSON.stringify(
+              {
+                draftId: id,
+                pass: res.pass,
+                provider: res.provider,
+                ...(res.model ? { model: res.model } : {}),
+                findings: res.findings.length,
+                at: new Date().toISOString(),
+              },
+              null,
+              2,
+            ) + '\n',
+          );
           if (!res.pass) {
             for (const f of res.findings) {
               process.stderr.write(

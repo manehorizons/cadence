@@ -146,6 +146,55 @@ describe('settle --deep (Phase 15)', () => {
     expect(summary.deepVerify['AC-1'].pass).toBe(false);
   });
 
+  it('AC-4 (Phase 29.7 G2): failed deep-verify records the configured provider/model, not "unknown"', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    // Configure the deep verifier as `local` pointed at a closed port so the
+    // transport throws → exercises the --allow-verifier-failure catch.
+    const cfgPath = join(active.root, '.cadence/config.json');
+    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+    cfg.verifier = { provider: 'local', model: 'tinytest' };
+    await writeFile(cfgPath, JSON.stringify(cfg, null, 2));
+    const p = spawn(
+      process.execPath,
+      [
+        CADENCE_CLI,
+        'settle',
+        'run',
+        '--auto',
+        '--deep',
+        '--allow-missing-coverage',
+        '--allow-verifier-failure',
+      ],
+      {
+        cwd: active.root,
+        env: {
+          ...process.env,
+          CADENCE_LOCAL_BASE_URL: 'http://127.0.0.1:9/v1',
+          CADENCE_LOCAL_MODEL: 'tinytest',
+        },
+      },
+    );
+    const code: number = await new Promise((res) => {
+      p.stdout.on('data', () => {});
+      p.stderr.on('data', () => {});
+      p.on('exit', (c) => res(c ?? 0));
+    });
+    expect(code).toBe(0);
+    const summary = JSON.parse(
+      await readFile(
+        join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
+        'utf8',
+      ),
+    );
+    expect(summary.deepVerify['AC-1'].provider).toBe('local');
+    expect(summary.deepVerify['AC-1'].provider).not.toBe('unknown');
+    expect(summary.deepVerify['AC-1'].model).toBe('tinytest');
+    expect(summary.deepVerify['AC-1'].pass).toBe(false);
+  });
+
   it('does not run verifier when --deep is absent and deep-verify not in gate set (AC-3)', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);

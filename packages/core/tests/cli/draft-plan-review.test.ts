@@ -167,6 +167,31 @@ describe('cadence draft approve (Phase 25.1 — plan-review gate)', { timeout: 3
     expect(await loopPosition(active.root)).toBe('BUILD');
   });
 
+  it('AC-5 (Phase 29.7 G3): plan-review persists a sidecar artifact on pass', async () => {
+    active = await tempRepo({ initialized: true });
+    await initGitRepo(active.root);
+    await setProfile(active.root, 'strict');
+    await run(['draft', 'new', '25-plan-review', '01', '--tier=complex'], active.root);
+    await writeComplexDraft(active.root, { acBlank: false });
+
+    const r = await run(
+      ['draft', 'approve', '25-plan-review', '01', '--no-approve'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const rec = JSON.parse(
+      await readFile(
+        join(active.root, '.cadence/phases/25-plan-review/25-01-PLAN-REVIEW.json'),
+        'utf8',
+      ),
+    );
+    expect(rec.draftId).toBe('25-01');
+    expect(rec.pass).toBe(true);
+    expect(rec.provider).toBe('mock');
+    expect(typeof rec.findings).toBe('number');
+    expect(typeof rec.at).toBe('string');
+  });
+
   it('AC-4: auto profile (gate not in set) skips the gate entirely', async () => {
     active = await tempRepo({ initialized: true }); // default profile=auto
     await initGitRepo(active.root);

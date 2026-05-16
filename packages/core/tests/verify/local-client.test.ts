@@ -34,10 +34,18 @@ describe('localChatJSON', () => {
     expect(r.ok).toBe(false);
   });
 
-  it('AC-2: throws after failed repair', async () => {
+  it('AC-2: two repair retries — succeeds on the second retry', async () => {
+    const r = await localChatJSON({
+      ...base,
+      transport: fakeFetch(['bad', 'still bad', '{"ok":true}']),
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it('AC-2: throws after two failed repairs (message says 2 repair retries)', async () => {
     await expect(
-      localChatJSON({ ...base, transport: fakeFetch(['nope', 'still nope']) }),
-    ).rejects.toThrow(/parse|JSON|schema/i);
+      localChatJSON({ ...base, transport: fakeFetch(['n1', 'n2', 'n3']) }),
+    ).rejects.toThrow(/2 repair retries/);
   });
 
   it('AC-3: throws naming base URL on network reject', async () => {
