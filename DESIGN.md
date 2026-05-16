@@ -96,6 +96,8 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 | Medium | Approve gate (manual click) **(Phase 24.1)** · per-task verify **(Phase 24.2)** · code review agent **(Phase 24.3)** |
 | Expensive | Independent verifier agent (`--deep`) · interactive AC verdict (`--interactive`) · plan review **(Phase 25.1)** · security audit **(Phase 25.2)** |
 
+> **Required-skill enforcement (Phase 34.1)** is intentionally *not* a matrix cell. A phase declares `requiredSkills` (DRAFT frontmatter ∪ `config.skillAudit.required`); `settle run` refuses on a shortfall (or `--allow-skill-audit-miss`) and emits a `skill-audit-miss` anomaly **unconditionally** — distinct from the `anomaly-notify`-gated anomalies, since declaring skills is the opt-in and strict cells (which lack `anomaly-notify`) must still leave an audit trail. Closes ROADMAP open-question 23.4.
+
 ### 4.2 Default gates per cell (deltas only; free gates always fire)
 
 |              | **quick-fix** | **standard** | **complex** |
@@ -230,6 +232,7 @@ Roughly: 4 phases of work needs revisit. Not all is throwaway — schemas, state
 32. ~~Phase 31.1 — user-guide docs/ tree (quickstart/concepts/cli/claude-code/providers + reference) + command-drift guard + slimmed README~~ ✓
 33. ~~Phase 32.1 — test-infra flake root-fix: shared `vitest.shared.ts` base (`testTimeout`/`hookTimeout`/`maxForks`) + `tempRepo` rmdir retry + revert 29.5/30.2 per-test timeout band-aids (pulled the ROADMAP v1.2 test-infra lane forward; 3rd parallel-load recurrence)~~ ✓
 34. ~~Phase 33.1 (ROADMAP "Phase 30.1") — publish pipeline reversible proof: metadata hardening (license/publishConfig/repository, per-pkg LICENSE/README), `scripts/publish-proof.mjs` (ephemeral verdaccio real publish + clean-install, no `workspace:` leak, both bins run, Windows-safe teardown), public `--dry-run` + tarball-clean (types 39 / core 240 / host 36 files, no src/tests/.cadence); `@cadence/testkit` `private`; real public publish / provenance / `release.yml` / changesets deferred to a named v1.2 public-release milestone~~ ✓
+35. ~~Phase 34.1 (closes ROADMAP open-question 23.4) — required-skill enforcement: `DraftZ.requiredSkills` ∪ `config.skillAudit.required` → effective set written to `state.skillAudit.required`; settle-time check (declaration = opt-in, NOT a gate-matrix cell), inert when empty, skip+warn when telemetry off, else refuse + unconditional `skill-audit-miss` anomaly unless `--allow-skill-audit-miss`~~ ✓
 
 Sequencing rationale: remove dead surface before rename (smaller rename); rename before verifier (verifier born in correct namespace).
 

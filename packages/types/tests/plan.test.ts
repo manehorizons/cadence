@@ -44,6 +44,36 @@ describe('DraftZ', () => {
       }),
     ).toThrow();
   });
+
+  // AC-1 (Phase 34.1) — DraftZ.requiredSkills optional.
+  const baseDraft: Draft = {
+    schemaVersion: 1,
+    id: '01-01',
+    phase: '01-foundation',
+    tier: 'quick-fix',
+    title: 't',
+    objective: 'o',
+    acceptanceCriteria: [{ id: 'AC-1', given: '-', when: '-', then: '-' }],
+    tasks: [
+      { id: 'T1', name: 'n', files: ['a.ts'], action: 'a', verify: 'v', done: 'AC-1' },
+    ],
+    boundaries: [],
+    status: 'PENDING',
+  };
+
+  it('requiredSkills is optional — absent → undefined (AC-1)', () => {
+    const parsed = DraftZ.parse(baseDraft);
+    expect(parsed.requiredSkills).toBeUndefined();
+  });
+
+  it('requiredSkills round-trips a declared list (AC-1)', () => {
+    const parsed = DraftZ.parse({ ...baseDraft, requiredSkills: ['brainstorming', 'tdd'] });
+    expect(parsed.requiredSkills).toEqual(['brainstorming', 'tdd']);
+  });
+
+  it('rejects non-string requiredSkills entries (AC-1)', () => {
+    expect(() => DraftZ.parse({ ...baseDraft, requiredSkills: [7] as never })).toThrow();
+  });
 });
 
 describe('SummaryZ', () => {

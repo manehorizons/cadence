@@ -29,6 +29,8 @@ import { collectAnomalies } from '../../notify/collect.js';
 import { emitLoopViolation } from '../../notify/loop-violation.js';
 import { selectCodeReviewVerifier } from '../../verify/code-review-factory.js';
 import { emitCodeReviewHigh } from '../../notify/code-review.js';
+import { emitSkillAuditMiss } from '../../notify/skill-audit.js';
+import { missingSkills } from '../../verify/skill-match.js';
 import { selectSecurityAuditVerifier } from '../../verify/security-audit-factory.js';
 
 interface ProgressJson {
@@ -98,6 +100,10 @@ export function registerSettleCommand(program: Command): void {
       '--allow-security-audit-failure',
       'do not refuse on CRITICAL security-audit findings; record them in SUMMARY and settle anyway (Phase 25.2)',
     )
+    .option(
+      '--allow-skill-audit-miss',
+      'do not refuse when required skills were not invoked; emit a warn anomaly (bypassed:true) and settle anyway (Phase 34.1)',
+    )
     .action(
       async (opts: {
         ac?: string[];
@@ -110,6 +116,7 @@ export function registerSettleCommand(program: Command): void {
         allowVerifierFailure?: boolean;
         allowCodeReviewFailure?: boolean;
         allowSecurityAuditFailure?: boolean;
+        allowSkillAuditMiss?: boolean;
         interactive?: boolean;
       }) => {
       try {
@@ -612,6 +619,62 @@ export function registerSettleCommand(program: Command): void {
               );
             }
           }
+        }
+
+        // Required-skill enforcement (Phase 34.1 — ROADMAP 23.4). NOT a
+        // gates/engine.ts matrix cell: declaring skills IS the opt-in.
+        // cadenceConfig is `… | null` (null when loadConfig failed) — every
+        // deref is optional-chained, mirroring this file's other cadenceConfig?.
+        // sites. Deliberate null-config behavior: still compute+record the
+        // effective required (so SUMMARY stays truthful) but SKIP enforcement
+        // when config didn't load (cannot read telemetry reliably; never
+        // false-refuse on a degraded-config path — same never-false-refuse
+        // principle as the telemetry-off case).
+        {
+          const effectiveRequired = [
+            ...new Set([
+              ...(cadenceConfig?.skillAudit?.required ?? []),
+              ...(draft.requiredSkills ?? []),
+            ]),
+          ];
+          if (effectiveRequired.length > 0 && cadenceConfig) {
+            const invoked = state.skillAudit.invoked;
+            if (!cadenceConfig.telemetry.skillInvocations) {
+              await emitSkillAuditMiss(selectNotifier(cadenceConfig), {
+                required: effectiveRequired,
+                invoked,
+                missing: effectiveRequired,
+                severity: 'warn',
+                unenforceable: true,
+              });
+            } else {
+              const missing = missingSkills(effectiveRequired, invoked);
+              if (missing.length > 0) {
+                const bypass = opts.allowSkillAuditMiss === true;
+                await emitSkillAuditMiss(selectNotifier(cadenceConfig), {
+                  required: effectiveRequired,
+                  invoked,
+                  missing,
+                  severity: bypass ? 'warn' : 'error',
+                  ...(bypass ? { bypassed: true } : {}),
+                });
+                if (!bypass) {
+                  process.stderr.write(
+                    `settle run refused: required skill(s) not invoked: ${missing.join(', ')}. ` +
+                      `Invoke them, or pass --allow-skill-audit-miss to override.\n`,
+                  );
+                  process.exitCode = 1;
+                  return;
+                }
+                process.stderr.write(
+                  `skill-audit: --allow-skill-audit-miss set; proceeding past ${missing.length} missing skill(s).\n`,
+                );
+              }
+            }
+          }
+          // Make Summary.skillAudit.required truthful (was always []) —
+          // recorded even on the null-config skip path.
+          state.skillAudit.required = effectiveRequired;
         }
 
         const summary: Summary = {
