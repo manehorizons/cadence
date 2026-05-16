@@ -99,6 +99,29 @@ supplies the boolean, #4 will too.
 }
 ```
 
+**Normative `history` entry shape** (append one per review run; this is the
+canonical definition — the example above is illustrative):
+
+```
+{ at: string;            // ISO8601
+  pass: boolean;
+  findingsCount: number;  // intentionally NOT named `findings`; the legacy
+                          // top-level `findings` is a count kept for 29.7
+                          // readers — the divergence is deliberate, do NOT
+                          // unify the two names
+  provider: string;
+  model?: string;
+  verdict: 'pass' | 'reloop' | 'escalate';   // the nextConvergence verdict
+  bypassed?: true }       // present ONLY on an escalate entry that was
+                          // overridden by --allow-plan-review-failure
+                          // (parallels emitSkillAuditMiss's `bypassed`);
+                          // absent otherwise
+```
+
+So the escalate-with-override path writes exactly ONE history entry with
+`verdict:'escalate'` and `bypassed:true` (not a separate marker/field
+elsewhere); the non-override escalate entry is identical minus `bypassed`.
+
 Read at `draft approve`: if the file exists and has `attempts` → use it;
 if it exists in the **legacy 29.7 shape** (no `attempts`) → treat
 `attemptsSoFar = 0` (back-compat — a legacy sidecar means "reviewed once,
