@@ -4,11 +4,11 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "29-shakedown-docs",
+  "activePhase": "30-local-provider",
   "activeDraft": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-05-15T23:47:31.280Z",
+  "draftReadAt": "2026-05-16T00:36:30.186Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
