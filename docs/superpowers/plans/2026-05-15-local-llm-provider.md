@@ -8,7 +8,9 @@
 
 **Tech Stack:** TypeScript, Node 24 global `fetch` (no new dep), Zod v4 (`zod/v4`, matching the existing verifier modules), vitest. Spec: `docs/superpowers/specs/2026-05-15-local-llm-provider-design.md`.
 
-**Execution note (CADENCE dogfood):** This runs as a CADENCE phase on `main` (no worktree — project convention). Wrap the work in the loop: `cadence draft new 30-local-provider 01 --title="local LLM provider" --tier=complex` → fill DRAFT (ACs below) → `draft check` → `draft approve` → implement tasks (TDD) → `build task T<n> --status=DONE` per task → feat commit (source+tests+docs, NOT `.cadence/*`) → `settle run --auto` → settle commit (`.cadence/phases/30-local-provider/*` + STATE + state.json). Two-commit convention. `--tier=complex` (≥6 tasks); auto×complex soft-cap → pass `--allow-auto-complex` at approve. Push is user-gated.
+**Execution note (CADENCE dogfood — READ FIRST, overrides per-task git steps):** This runs as a CADENCE phase on `main` (no worktree — project convention) under the **strict two-commit-per-phase convention**: exactly ONE `feat(...)` commit (all source+tests+docs, NOT `.cadence/*`) then ONE `chore: settle …` commit (`.cadence/phases/30-local-provider/*` + STATE + state.json). The project's entire git history follows this — **never one commit per task.**
+
+Therefore the per-task "Step: Checkpoint" entries below are **stage-and-verify checkpoints, NOT commits** — run the tests, `git add` the touched files, and record loop progress with `cadence build task T<n> --status=DONE`. Do **not** `git commit` until Task 7. Loop sequence: `cadence draft new 30-local-provider 01 --title="local LLM provider" --tier=complex` → fill DRAFT (ACs below) → `draft check` → `draft approve --allow-auto-complex` (auto×complex soft-cap) → implement Tasks 1–6 TDD, `build task T<n> --status=DONE` after each → Task 7 (single feat commit → `settle run --auto` → settle commit). Push is user-gated.
 
 ---
 
@@ -34,9 +36,9 @@
 |---|---|---|---|---|
 | `verifier.ts` | `Verifier` | `VerifyResult {verdicts,provider,model}` | `VerifierResponseSchema` (in `anthropic-verifier.ts`; move/export or re-declare locally — see Task 3) | `input.acs.length === 0` |
 | `code-review.ts` | `CodeReviewVerifier` | `CodeReviewResult {findings,provider,model}` | `CodeReviewResponseSchema` | `files.length === 0 && diff.trim() === ''` |
-| `per-task.ts` | `PerTaskVerifier` | (read file) | (read file) | (mirror its `Anthropic*` early-return) |
-| `plan-review.ts` | `PlanReviewVerifier` | (read file) | (read file) | (mirror its `Anthropic*` early-return) |
-| `security-audit.ts` | `SecurityAuditVerifier` | (read file) | (read file) | (mirror its `Anthropic*` early-return) |
+| `per-task.ts` | `PerTaskVerifier` | (read file) | (read file) | **NONE** — `AnthropicPerTaskVerifier` always calls the model; `LocalPerTaskVerifier` has no early-return either (no empty-input test for it) |
+| `plan-review.ts` | `PlanReviewVerifier` | (read file) | (read file) | read `AnthropicPlanReviewVerifier`; replicate its early-return iff one exists, else none |
+| `security-audit.ts` | `SecurityAuditVerifier` | (read file) | (read file) | read `AnthropicSecurityAuditVerifier`; replicate its early-return iff one exists, else none |
 
 For per-task/plan-review/security-audit: open the module, read its `Anthropic<Gate>Verifier` + private `SYSTEM_PROMPT`/schema/`formatUserMessage`, and mirror them — the `Local` class differs ONLY in transport (Task 4 template). Do not invent prompts/schemas; reuse the module's existing ones.
 
@@ -79,12 +81,12 @@ In `packages/types/src/config.ts`, change each of the 5 gate blocks' `provider: 
 
 Run: `pnpm -C packages/types test -- run config` → PASS. Then `pnpm -C packages/types build`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Checkpoint (stage only — NO commit, per the Execution note)**
 
 ```bash
 git add packages/types/src/config.ts packages/types/tests
-git commit -m "feat(types): add 'local' to gate provider enums (Phase 30.1 T1)"
 ```
+Then: `node packages/core/bin/cadence.cjs build task T1 --status=DONE --notes "local enum on 5 gates"`
 
 ---
 
@@ -257,12 +259,12 @@ function safeJson(s: string): unknown {
 
 Run: `pnpm -C packages/core test -- run verify/local-client` → PASS (all 6).
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Checkpoint (stage only — NO commit)**
 
 ```bash
 git add packages/core/src/verify/local-client.ts packages/core/tests/verify/local-client.test.ts
-git commit -m "feat(core): localChatJSON shared OpenAI-compatible client (Phase 30.1 T2)"
 ```
+Then: `node packages/core/bin/cadence.cjs build task T2 --status=DONE --notes "localChatJSON client"`
 
 ---
 
@@ -272,7 +274,7 @@ git commit -m "feat(core): localChatJSON shared OpenAI-compatible client (Phase 
 - Modify: `packages/core/src/verify/verifier.ts` (add class) and `packages/core/src/verify/anthropic-verifier.ts` (export the schema + `formatUserMessage` + `SYSTEM_PROMPT` so the local class reuses them — they are currently module-private there)
 - Test: `packages/core/tests/verify/local-verifier.test.ts`
 
-> Reuse, do NOT re-author, the prompt/schema. `anthropic-verifier.ts` holds `SYSTEM_PROMPT`, `VerifierResponseSchema`, `formatUserMessage`. Add `export` to those three so `verifier.ts` can import them. (If a circular import results, instead move those three into `verifier.ts` and have `anthropic-verifier.ts` import them — pick whichever keeps imports acyclic; document which in the commit.)
+> Reuse, do NOT re-author, the prompt/schema. `anthropic-verifier.ts` holds `SYSTEM_PROMPT`, `VerifierResponseSchema`, `formatUserMessage` (module-private). This is the **only** gate where the Local class lives in a *different* module from the prompt/schema (`LocalVerifier` → `verifier.ts`; prompt/schema → `anthropic-verifier.ts`), so here you must `export` those three. The resulting `verifier.ts → anthropic-verifier.ts` edge is **type-only** at runtime (`anthropic-verifier.ts` imports from `./verifier.js` via `import type`, erased at compile) — no runtime cycle, so the export approach is safe; the relocate fallback (move the three into `verifier.ts`) is unlikely to be needed but remains available if the build flags a cycle.
 
 - [ ] **Step 1: Write failing test**
 
@@ -360,12 +362,12 @@ export class LocalVerifier implements Verifier {
 
 Run: `pnpm -C packages/core test -- run verify/local-verifier` → PASS. Also re-run anthropic verifier tests to confirm the export refactor didn't break them: `pnpm -C packages/core test -- run verify/anthropic`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Checkpoint (stage only — NO commit)**
 
 ```bash
 git add packages/core/src/verify/verifier.ts packages/core/src/verify/anthropic-verifier.ts packages/core/tests/verify/local-verifier.test.ts
-git commit -m "feat(core): LocalVerifier deep-verifier provider (Phase 30.1 T3)"
 ```
+Then: `node packages/core/bin/cadence.cjs build task T3 --status=DONE --notes "LocalVerifier + schema export"`
 
 ---
 
@@ -380,10 +382,11 @@ git commit -m "feat(core): LocalVerifier deep-verifier provider (Phase 30.1 T3)"
 
 **Template (apply per gate; read the module first to get exact names):**
 
-For gate module `G.ts` with interface `XVerifier`, result `XResult`, private `SYSTEM_PROMPT`, private `<Schema>`, private `formatUserMessage`, and `Anthropic<X>Verifier` early-return condition `<COND>`:
+For gate module `G.ts` with interface `XVerifier`, result `XResult`, private `SYSTEM_PROMPT`, private `<Schema>`, private `formatUserMessage`:
 
-1. `export` the module's `SYSTEM_PROMPT`, `<Schema>`, `formatUserMessage` (they already exist — currently private; just add `export`).
-2. Add:
+1. **No exports needed.** Unlike Task 3, the `Local<X>Verifier` is added into the **same module** as the prompt/schema, so it references `SYSTEM_PROMPT` / `<Schema>` / `formatUserMessage` directly as module-private symbols. Do NOT add `export` to them and do NOT re-apply Task 3's cross-module export refactor here.
+2. **Early-return: mirror the gate's `Anthropic<X>Verifier` faithfully.** Read that class. If it has an empty-input short-circuit, replicate the exact same condition + empty result shape. **If it has none, the `Local<X>Verifier` has none either** (always calls the model) — do not invent one. Confirmed: `code-review.ts` short-circuits `files.length===0 && diff.trim()===''`; `per-task.ts` has **NO** early-return (it always calls the model — verify by reading it); `plan-review.ts` / `security-audit.ts` — read and replicate whatever each does (if any).
+3. Add:
 
 ```ts
 import { localChatJSON } from './local-client.js';
@@ -394,7 +397,8 @@ export class Local<X>Verifier implements XVerifier {
   readonly name = 'local';
   constructor(private readonly o: Local<X>VerifierOptions) {}
   async verify(input: XInput): Promise<XResult> {
-    if (<COND>) return { /* same empty shape Anthropic<X>Verifier returns */, provider: this.name, model: this.o.model };
+    // ONLY if Anthropic<X>Verifier has an early-return — same condition + shape:
+    // if (<COND>) return { /* empty shape */, provider: this.name, model: this.o.model };
     const parsed = await localChatJSON({
       baseURL: this.o.baseURL, model: this.o.model,
       system: SYSTEM_PROMPT, user: formatUserMessage(input), schema: <Schema>,
@@ -433,11 +437,11 @@ export class LocalCodeReviewVerifier implements CodeReviewVerifier {
 }
 ```
 
-- [ ] **Step 1:** Write `local-gates.test.ts` — one happy-path + one empty-input-no-network test per gate (4×2=8 cases, mirror Task 3's two tests with each gate's input/result shape). Reference tokens `AC-4`/`AC-5`.
+- [ ] **Step 1:** Write `local-gates.test.ts` — one happy-path test per gate (4 cases). Add an empty-input-no-network test **only for gates whose `Anthropic*Verifier` has an early-return** (code-review yes; plan-review/security-audit per what you find when reading them; **per-task: NO early-return → no such test**). So expect ~7 cases total, not 8 — do not write an empty-input test for `LocalPerTaskVerifier`. Reference tokens `AC-4`/`AC-5`.
 - [ ] **Step 2:** Run `pnpm -C packages/core test -- run verify/local-gates` → FAIL.
-- [ ] **Step 3:** Implement the 4 classes per template (read each module for exact schema/cond/mapping).
+- [ ] **Step 3:** Implement the 4 classes per template (read each module for exact schema + parsed→result mapping + whether an early-return exists).
 - [ ] **Step 4:** Run → PASS; re-run `pnpm -C packages/core test -- run verify` (all verify tests) → PASS.
-- [ ] **Step 5:** Commit `feat(core): Local{CodeReview,PerTask,PlanReview,SecurityAudit}Verifier (Phase 30.1 T4)`.
+- [ ] **Step 5: Checkpoint (stage only — NO commit)** — `git add` the 4 gate modules + `local-gates.test.ts`; then `node packages/core/bin/cadence.cjs build task T4 --status=DONE --notes "4 Local<Gate>Verifier classes"`.
 
 ---
 
@@ -491,7 +495,7 @@ if (provider === 'local') {
 (`<gate>` = `verifier|codeReview|perTaskVerifier|planReview|securityAudit`; message prefix matches the existing anthropic warn in that file.)
 
 - [ ] **Step 4:** Run `pnpm -C packages/core test -- run verify/local-factories` → PASS; then `pnpm -C packages/core build`.
-- [ ] **Step 5:** Commit `feat(core): local provider factory selection (Phase 30.1 T5)`.
+- [ ] **Step 5: Checkpoint (stage only — NO commit)** — `git add` the 5 factory files + `local-factories.test.ts`; then `node packages/core/bin/cadence.cjs build task T5 --status=DONE --notes "5 factory local branches"`.
 
 ---
 
@@ -501,7 +505,42 @@ if (provider === 'local') {
 
 - [ ] **Step 1:** README — new subsection under the verifier/gates docs: `local` provider, `CADENCE_LOCAL_BASE_URL` (e.g. `http://localhost:11434/v1`), `CADENCE_LOCAL_MODEL` (e.g. `qwen3-coder:30b`), per-gate `model` override, warn+mock fallback when unset. DESIGN.md — provider list + §10 punchlist entry (Phase 30.1). CHANGELOG `[Unreleased] ### Added` — local provider line.
 - [ ] **Step 2:** Run full suite: `pnpm turbo run test` → all green (core/types/testkit/host). If the documented `dispatcher.test.ts` parallel-timeout flake recurs, it is unrelated (Phase 29.5 raised its timeout; re-run isolated to confirm).
-- [ ] **Step 3:** Commit `docs: document local LLM provider (Phase 30.1 T6)`.
+- [ ] **Step 3: Checkpoint (stage only — NO commit)** — `git add README.md DESIGN.md CHANGELOG.md`; then `node packages/core/bin/cadence.cjs build task T6 --status=DONE --notes "docs + full suite green"`.
+
+---
+
+## Task 7: single feat commit + settle + settle commit (two-commit convention)
+
+**Files:** none new — consolidates Tasks 1–6.
+
+- [ ] **Step 1:** `git status --short` — confirm staged: types/config + tests, all `verify/*` source + tests, 5 factories, README/DESIGN/CHANGELOG. Confirm **nothing under `.cadence/` is staged** (it belongs to the settle commit).
+- [ ] **Step 2:** Single feat commit:
+
+```bash
+git commit -m "$(cat <<'EOF'
+feat(core+types): local LLM provider for all five gates (Phase 30.1)
+
+OpenAI-compatible /v1/chat/completions provider (Ollama et al.) via a
+shared localChatJSON client (tolerant JSON + one repair retry) and five
+Local<Gate>Verifier classes mirroring the Anthropic ones. Provider enum
+gains 'local' on all five gates; factories select it from
+CADENCE_LOCAL_BASE_URL/MODEL with warn+mock fallback. Defaults/presets
+unchanged — cadence's own loop stays mock.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+EOF
+)"
+```
+
+- [ ] **Step 3:** `node packages/core/bin/cadence.cjs settle run --auto` → expect `Settled 30-01` (coverage gate passes: tests reference AC-1..AC-6 under `packages/**`).
+- [ ] **Step 4:** Settle commit:
+
+```bash
+git add .cadence/phases/30-local-provider/ .cadence/STATE.md .cadence/state.json
+git commit -m "chore: settle Phase 30.1 — local LLM provider"
+```
+
+- [ ] **Step 5:** `git log --oneline -3` (verify feat+settle pair) and `node packages/core/bin/cadence.cjs progress` (loop IDLE). Push is **user-gated** — stop and ask.
 
 ---
 
@@ -509,7 +548,7 @@ if (provider === 'local') {
 
 - `provider: 'local'` accepted on all 5 gates; defaults/presets still `mock` (cadence loop unaffected).
 - `localChatJSON`: clean/fenced JSON parse, one repair retry, throw-on-fail naming base URL+model, non-2xx + network reject throw.
-- 5 `Local<Gate>Verifier` reuse each gate's existing prompt/schema, preserve empty-input early-return, stamp `provider:'local'`.
+- 5 `Local<Gate>Verifier` reuse each gate's existing prompt/schema, preserve the gate's empty-input early-return where its Anthropic sibling has one (per-task: none), stamp `provider:'local'`.
 - 5 factories select Local with env / fall back to mock+warn without.
 - Full turbo suite green. Docs updated.
 - Settled as a CADENCE phase (two-commit). **Then** Phase 29.2 runs on `local` (qwen3-coder:30b, Ollama) per the spec's follow-on.
@@ -519,6 +558,6 @@ if (provider === 'local') {
 - **AC-1:** `localChatJSON` returns schema-valid data from clean and fence/prose-wrapped model output.
 - **AC-2:** Malformed output triggers exactly one repair retry; success returns data, repeat failure throws a clear error.
 - **AC-3:** Non-2xx and network-reject both throw an error naming the base URL.
-- **AC-4:** Each `Local<Gate>Verifier` maps model output into the gate's result type with `provider:'local'`, and short-circuits empty input with no network call.
+- **AC-4:** Each `Local<Gate>Verifier` maps model output into the gate's result type with `provider:'local'`; it short-circuits empty input with no network call **iff its `Anthropic<Gate>Verifier` does** (faithful mirror — per-task has none).
 - **AC-5:** `Local<Gate>Verifier` reuses the gate module's existing system prompt + Zod schema (no duplicated/re-authored prompt or schema).
 - **AC-6:** Each `select<Gate>Verifier` returns the Local verifier when `provider:'local'` + env present, else mock with a stderr warning; defaults/presets remain `mock`.
