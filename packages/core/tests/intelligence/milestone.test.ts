@@ -330,6 +330,35 @@ describe('runProposeMilestones', () => {
   });
 });
 
+describe('runProposeMilestones — accept→re-propose invariant', () => {
+  it('re-propose after accept preserves the accepted record and does not re-propose its rec', async () => {
+    fx = await tempRepo({ initialized: true });
+    await seedRecs(fx.root, [mkRec({ id: 'rec-1', suggestedMilestoneId: 'keep' })]);
+    const T = new Date('2026-05-17T00:00:00.000Z');
+    await runProposeMilestones(fx.root, T);
+    const id = 'mil-grp-keep';
+
+    const acc = await runMilestoneTransition(fx.root, id, 'accept');
+    expect(acc.ok).toBe(true);
+    const afterAccept = await readMilestoneLedger(fx.root);
+    const accepted = afterAccept.milestones.find((m) => m.id === id)!;
+    expect(accepted.status).toBe('accepted');
+    const acceptedCreatedAt = accepted.createdAt;
+
+    // re-propose with the SAME ledger + a later clock
+    await runProposeMilestones(fx.root, new Date('2026-06-01T00:00:00.000Z'));
+    const after = await readMilestoneLedger(fx.root);
+
+    // exactly one milestone with this id, still accepted, createdAt unchanged
+    const matches = after.milestones.filter((m) => m.id === id);
+    expect(matches).toHaveLength(1);
+    expect(matches[0]!.status).toBe('accepted');
+    expect(matches[0]!.createdAt).toBe(acceptedCreatedAt);
+    // its rec was NOT re-proposed as a fresh proposed bucket
+    expect(after.milestones.filter((m) => m.status === 'proposed')).toHaveLength(0);
+  });
+});
+
 describe('runMilestoneTransition', () => {
   it('accept persists; illegal transition returns ok:false and does not write', async () => {
     fx = await tempRepo({ initialized: true });

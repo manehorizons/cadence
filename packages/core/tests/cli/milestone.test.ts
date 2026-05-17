@@ -125,4 +125,18 @@ describe('cadence milestone', () => {
     expect(r.stdout).toMatch(/## Proposed/);
     expect(r.stdout).toMatch(/None\./);
   });
+
+  it('corrupt milestones.json -> list exits 1 and does not silently reset it', async () => {
+    active = await tempRepo({ initialized: true });
+    const dir = join(active.root, '.cadence', 'intelligence');
+    await mkdir(dir, { recursive: true });
+    const garbage = '{ this is not valid json';
+    await writeFile(join(dir, 'milestones.json'), garbage);
+
+    const r = await run(['milestone', 'list'], active.root);
+    expect(r.code).toBe(1);
+    // file left untouched (no silent reset to an empty ledger)
+    const after = await readFile(join(dir, 'milestones.json'), 'utf8');
+    expect(after).toBe(garbage);
+  });
 });
