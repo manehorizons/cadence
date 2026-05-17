@@ -10,5 +10,6 @@ coverage/
 .idea/
 .vscode/
 .keel-cache/
+.worktrees/
 .claude/settings.local.json
 .codex/hooks.local.json
