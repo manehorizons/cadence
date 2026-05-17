@@ -70,3 +70,32 @@ export function scoreRecommendation(rec: Recommendation): ScoreResult {
   ];
   return { raw, score, terms };
 }
+
+export type Partition = {
+  ranked: Recommendation[];
+  parked: Recommendation[];
+  needsAttention: Recommendation[];
+  excludedCount: number;
+};
+
+export function partitionLedger(recs: Recommendation[]): Partition {
+  const ranked: Recommendation[] = [];
+  const parked: Recommendation[] = [];
+  const needsAttention: Recommendation[] = [];
+  let excludedCount = 0;
+  for (const rec of recs) {
+    if (rec.status === 'rejected' || rec.status === 'converted') {
+      excludedCount += 1;
+    } else if (
+      rec.decayState === 'superseded' ||
+      rec.decayState === 'contradicted'
+    ) {
+      needsAttention.push(rec);
+    } else if (rec.status === 'deferred') {
+      parked.push(rec);
+    } else {
+      ranked.push(rec);
+    }
+  }
+  return { ranked, parked, needsAttention, excludedCount };
+}
