@@ -180,10 +180,23 @@ Vitest, in-package.
   no stderr (unchanged behavior).
 - **Back-compat** `packages/types/tests/spec.test.ts` (extend): an
   acceptance criterion without `name` parses with `name === ''`; a
-  populated `name` round-trips.
-- **Regression:** existing `draft new` / spec-stage / draft-parser tests
-  pass **unchanged** (the byte-identical-when-no-spec contract). Run the
-  full `pnpm turbo run lint typecheck test build`.
+  populated `name` round-trips. Also lock the **populate path**:
+  `parseSpecMd` of a SPEC whose AC head is `### AC-1: <label>` yields
+  `acceptanceCriteria[0].name === '<label>'` (assert the new behavior, not
+  only the `.default('')` absence).
+- **One existing test MUST change (it is NOT "unchanged"):**
+  `packages/core/tests/parse/spec-parser.test.ts` asserts the parsed AC
+  array via an exact `.toEqual([{ id, given, when, then }])` against a
+  fixture whose AC head carries a name (`### AC-1: a`). Vitest `.toEqual`
+  is exact recursive equality — once `parseSpecMd` populates `name`, that
+  expectation must be updated to include the now-populated `name` (e.g.
+  `name: 'a'`). This is the **only** existing test that changes.
+- **Regression (genuinely unchanged):** existing `draft new` / spec-stage
+  / **draft-parser** / types-package tests pass **unchanged** — draft/plan
+  AC `name` stays `''` and those suites use `.toHaveLength`/field-probe
+  /`.not.toThrow()` assertions (never an exact AC deep-equality), and the
+  `renderDraftBody`-no-spec output is byte-identical. Run the full
+  `pnpm turbo run lint typecheck test build`.
 
 ## Acceptance criteria (for the DRAFT)
 
@@ -200,11 +213,14 @@ Vitest, in-package.
    → stderr `unparseable … — scaffolding empty` + empty scaffold; absent
    SPEC → empty scaffold, silent. `draft new` never refuses due to a SPEC;
    state transitions unchanged in every case.
-4. `AcceptanceCriterionZ` gains `name: z.string().default('')` (additive,
-   back-compat — old Spec/Draft/Plan files & all existing AC producers →
-   `name: ''`, zero behavior change); `parseSpecMd` populates `name` from
-   the AC head; no `state.json`/`config`/`gates/engine.ts` change, no new
-   flag/loop-position/anomaly.
+4. `AcceptanceCriterionZ` gains `name: z.string().default('')` (additive —
+   old Spec/Draft/Plan files & every existing **runtime** AC
+   producer/consumer → `name: ''`, no runtime behavior change);
+   `parseSpecMd` populates `name` from the AC head. Exactly one existing
+   test changes as a consequence — `spec-parser.test.ts`'s exact-`.toEqual`
+   AC expectation is updated to include the populated `name`; draft-parser
+   & types-package tests stay unchanged. No `state.json`/`config`/
+   `gates/engine.ts` change, no new flag/loop-position/anomaly.
 5. DESIGN (§10 punchlist item + the §4.1/Spec-stage note updated to record
    the auto-seed is now live, #1b no longer deferred), CHANGELOG (Added),
    ROADMAP (#1b ✓ delivered; #1 now fully delivered incl. #1b; v1.2
@@ -218,6 +234,10 @@ Vitest, in-package.
   back-compat (absent → `''`; populated round-trips).
 - `packages/core/src/parse/spec-parser.ts` — `parseAcceptanceCriteria`
   populates `name` from the existing head group 2.
+- `packages/core/tests/parse/spec-parser.test.ts` — update the exact
+  `.toEqual` AC expectation to include the now-populated `name` (**the
+  only existing test that changes**; draft-parser & types-package tests
+  stay unchanged).
 - `packages/core/src/parse/draft-scaffold.ts` — **new**: pure
   `renderDraftBody` (legacy literal lifted verbatim + the seeded branch).
 - `packages/core/src/cli/commands/draft.ts` — `draft new` probes the
@@ -233,7 +253,9 @@ Vitest, in-package.
 
 1. `packages/types`: `AcceptanceCriterionZ += name` (additive default);
    extend the spec/plan schema test for back-compat; build types.
-2. `spec-parser.ts`: capture the AC head name into `name`; build core.
+2. `spec-parser.ts`: capture the AC head name into `name`; update
+   `spec-parser.test.ts`'s exact `.toEqual` AC expectation to include the
+   populated `name` (the only existing test that changes); build core.
 3. `draft-scaffold.ts`: lift the legacy scaffold literal verbatim into pure
    `renderDraftBody`; add the seeded branch; pure unit test incl. the
    **byte-identical-when-no-spec** lock (TDD).
