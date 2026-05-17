@@ -1,0 +1,41 @@
+{
+  "draftId": "38-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AcceptanceCriterionZ += name (additive default ''); spec.test back-compat + populated round-trip (AC-4)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-17T01:59:29.633Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "spec-parser populates AC name from head[2]; updated the one exact-.toEqual spec-parser test (AC-4). DEVIATION: draft-parser.ts ALSO required the +name push — z.infer<AcceptanceCriterionZ> output makes name REQUIRED (Zod .default('') only optionalizes INPUT), so the statically-typed Draft['acceptanceCriteria'] literal won't tsc without it. Plan Boundary 'do not modify draft-parser' rested on a false premise; targeted one-line mirror of spec-parser; draft-parser tests green unchanged (field-probe style, no exact AC .toEqual)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-17T02:02:57.154Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "pure renderDraftBody (verbatim legacy lift + seeded branch) + frontmatterStatus; byte-identical lock + seed/empty-name/multi-AC/frontmatter unit tests TDD red->green (AC-1)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-17T02:04:15.381Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "draft new probes sibling same-id SPEC -> renderDraftBody seed/fallback (approved/PENDING/unparseable/absent); 4-path integration (AC-2/3); existing draft-parser+draft+convergence tests green unchanged. Test tweak: case-(g) asserts two substrings (ZodError.message is multi-line, single-line .* regex couldn't span it) - behavior matches plan/spec",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-17T02:07:38.911Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "DESIGN §10 item 39 + §4.1 Spec-stage note (#1b delivered); CHANGELOG Added; ROADMAP #1b ✓ + #1-line clause + sequence #6✓→#2✓→#1✓→#4✓→#1b✓ COMPLETE (AC-5)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-17T02:10:09.078Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "full pre-push gate 16/16 green (core 482 tests incl. draft-scaffold 6 + draft-new-seed 4 + existing regression unchanged); substantive feat commit",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-17T02:11:41.154Z"
+    }
+  }
+}
