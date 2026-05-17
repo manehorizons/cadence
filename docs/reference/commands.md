@@ -29,6 +29,7 @@ Two CLIs are documented here:
   - [recommendation](#recommendation)
   - [inspect](#inspect)
   - [recommend](#recommend)
+  - [milestone](#milestone)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -67,6 +68,7 @@ status
 recommendation
 inspect
 recommend
+milestone
 <!-- cadence:commands:end -->
 
 ---
@@ -670,6 +672,53 @@ status`/`progress` (execution loop) and `cadence inspect` (strategic status).
 **Exit codes** — exits non-zero only on a genuine failure (e.g. artifact
 write error). An empty ledger, a missing git repo, or a missing `.cadence/`
 backend degrades gracefully and still exits 0.
+
+---
+
+### milestone
+
+```
+Usage: cadence milestone [options] [command]
+
+Shape recommendations into milestone candidates (read-narrow; never transitions the loop)
+```
+
+**Subcommands**
+
+| Subcommand | Synopsis |
+|---|---|
+| `propose [--json]` | Cluster eligible recommendations into proposed milestone candidates |
+| `accept <id>` | Mark a proposed milestone accepted |
+| `defer <id>` | Defer a proposed or accepted milestone |
+| `list [--json]` | Show the current milestone ledger |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+`propose` reads the recommendation ledger **read-only** (it is backend-free —
+it never reads or writes `state.json` and never transitions the loop),
+clusters recommendations that are `accepted` and `ready-for-milestone`/
+`ready-for-cadence-spec` (excluding `superseded`/`contradicted`) by their
+`suggestedMilestoneId` (each ungrouped rec becomes its own singleton
+candidate), and attaches a deterministically-seeded scaffolded pre-mortem
+(facts-only: shared-file dependencies, doc-surface drift, low-confidence
+inputs — every other pre-mortem entry is left for a human to fill).
+Re-running `propose` regenerates only `proposed` records; `accepted`/
+`deferred`/`exported`/`closed` milestones and their recommendations are never
+clobbered or re-proposed. `accept`/`defer` enforce guarded status
+transitions.
+
+Writes:
+
+- `.cadence/intelligence/milestones.json`
+- `.cadence/intelligence/MILESTONES.md`
+
+With `--json`, the milestone ledger object is emitted to stdout instead of
+the rendered text. Distinct from CADENCE's own execution-layer
+`.cadence/MILESTONES.md`. SPEC export (`milestone export --to cadence`) is a
+later slice.
+
+**Exit codes** — exits non-zero only on a genuine failure (artifact write
+error, or an illegal/unknown-id `accept`/`defer`). An empty/absent
+recommendation ledger degrades gracefully and still exits 0.
 
 ---
 
