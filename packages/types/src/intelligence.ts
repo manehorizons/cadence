@@ -217,3 +217,60 @@ export const InspectionZ = z.object({
   flags: z.array(InspectionFlagZ),
 });
 export type Inspection = z.infer<typeof InspectionZ>;
+
+export const ScoreTermZ = z.object({
+  label: z.string().min(1),
+  value: z.number(),
+});
+export type ScoreTerm = z.infer<typeof ScoreTermZ>;
+
+export const RecommendationRankZ = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  raw: z.number(),
+  score: z.number().int().min(0).max(100),
+  status: RecommendationStatusZ,
+  readiness: RecommendationReadinessZ,
+  priority: RecommendationPriorityZ,
+  decayState: RecommendationDecayStateZ,
+  terms: z.array(ScoreTermZ),
+  suggestedBackendAction: z.string().optional(),
+});
+export type RecommendationRank = z.infer<typeof RecommendationRankZ>;
+
+export const RecommendationAdvisoryZ = z.object({
+  kind: z.enum(['finish-loop', 'top-recommendation', 'spec-new', 'empty']),
+  primary: z.string().min(1),
+  secondary: z.string().optional(),
+});
+export type RecommendationAdvisory = z.infer<typeof RecommendationAdvisoryZ>;
+
+export const RecommendationReportZ = z.object({
+  schemaVersion: z.literal(1),
+  generatedAt: z.string().datetime({ offset: true }),
+  ranked: z.array(RecommendationRankZ),
+  parked: z.array(
+    z.object({
+      id: z.string().min(1),
+      title: z.string().min(1),
+      status: RecommendationStatusZ,
+      readiness: RecommendationReadinessZ,
+    }),
+  ),
+  needsAttention: z.array(
+    z.object({
+      id: z.string().min(1),
+      title: z.string().min(1),
+      decayState: RecommendationDecayStateZ,
+    }),
+  ),
+  advisory: RecommendationAdvisoryZ,
+  totals: z.object({
+    total: z.number().int(),
+    ranked: z.number().int(),
+    parked: z.number().int(),
+    needsAttention: z.number().int(),
+    excluded: z.number().int(),
+  }),
+});
+export type RecommendationReport = z.infer<typeof RecommendationReportZ>;
