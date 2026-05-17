@@ -156,6 +156,7 @@ const MILESTONES_MD = 'MILESTONES.md';
 function milestonesPath(root: string): string {
   return join(intelligenceDir(root), MILESTONES_JSON);
 }
+
 function milestonesMdPath(root: string): string {
   return join(intelligenceDir(root), MILESTONES_MD);
 }
@@ -173,8 +174,9 @@ export async function writeMilestoneLedger(
   root: string,
   ledger: MilestoneLedger,
 ): Promise<void> {
-  await mkdir(intelligenceDir(root), { recursive: true });
+  const dir = intelligenceDir(root);
+  await mkdir(dir, { recursive: true });
   MilestoneLedgerZ.parse(ledger);
-  await atomicWriteJSON(milestonesPath(root), ledger);
-  await atomicWriteText(milestonesMdPath(root), renderMilestonesMd(ledger));
+  await atomicWriteJSON(join(dir, MILESTONES_JSON), ledger);
+  await atomicWriteText(join(dir, MILESTONES_MD), renderMilestonesMd(ledger));
 }
