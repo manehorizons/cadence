@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Recommendation } from '@cadence/types';
-import { scoreRecommendation, partitionLedger } from '../../src/intelligence/recommend.js';
+import type { BackendStatus, Recommendation } from '@cadence/types';
+import { scoreRecommendation, partitionLedger, buildAdvisory } from '../../src/intelligence/recommend.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {
@@ -126,5 +126,69 @@ describe('partitionLedger', () => {
     ]);
     expect(p.parked.map((r) => r.id)).toEqual(['a']);
     expect(p.ranked.map((r) => r.id).sort()).toEqual(['b', 'c']);
+  });
+});
+
+const idleBackend: BackendStatus = {
+  present: true,
+  kind: 'cadence',
+  loopPosition: 'IDLE',
+  activePhase: null,
+  activeDraft: null,
+  activeSpec: null,
+  tier: null,
+  legalActions: ['cadence draft new <phase> <num> --title=…'],
+};
+
+describe('buildAdvisory', () => {
+  it('finish-loop when a draft is in flight, surfacing the legal action + secondary', () => {
+    const a = buildAdvisory(
+      mkRec({ suggestedBackendAction: 'cadence milestone propose' }),
+      {
+        ...idleBackend,
+        loopPosition: 'DRAFT',
+        activeDraft: 'p-1-01',
+        legalActions: ['cadence build task T1'],
+      },
+      { needsAttention: 0 },
+    );
+    expect(a.kind).toBe('finish-loop');
+    expect(a.primary).toMatch(/cadence build task T1/);
+    expect(a.secondary).toBe('cadence milestone propose');
+  });
+
+  it('an inconsistent loop (DRAFT, no active draft) is treated as not-in-flight', () => {
+    const a = buildAdvisory(
+      mkRec({ readiness: 'ready-for-milestone' }),
+      { ...idleBackend, loopPosition: 'DRAFT', activeDraft: null },
+      { needsAttention: 0 },
+    );
+    expect(a.kind).not.toBe('finish-loop');
+    expect(a.kind).toBe('top-recommendation');
+  });
+
+  it('spec-new when the top item is ready for a CADENCE spec', () => {
+    const a = buildAdvisory(
+      mkRec({ readiness: 'ready-for-cadence-spec' }),
+      idleBackend,
+      { needsAttention: 0 },
+    );
+    expect(a).toEqual({ kind: 'spec-new', primary: 'cadence spec new' });
+  });
+
+  it('top-recommendation falls back to the default action when none suggested', () => {
+    const a = buildAdvisory(
+      mkRec({ readiness: 'ready-for-milestone', suggestedBackendAction: undefined }),
+      idleBackend,
+      { needsAttention: 0 },
+    );
+    expect(a).toEqual({ kind: 'top-recommendation', primary: 'cadence milestone propose' });
+  });
+
+  it('empty when no ranked items, noting needs-attention count', () => {
+    const a = buildAdvisory(null, idleBackend, { needsAttention: 2 });
+    expect(a.kind).toBe('empty');
+    expect(a.primary).toMatch(/cadence recommendation add/);
+    expect(a.primary).toMatch(/2 recommendation\(s\) need revalidation/);
   });
 });
