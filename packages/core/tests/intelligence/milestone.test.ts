@@ -288,7 +288,9 @@ describe('applyTransition', () => {
     const r1 = applyTransition(ledgerOf(mk('a', 'accepted')), 'a', 'accept', T);
     expect(r1).toEqual({ ok: false, error: 'cannot accept milestone in status accepted' });
     const r2 = applyTransition(ledgerOf(mk('a', 'exported')), 'a', 'defer', T);
-    expect(r2.ok).toBe(false);
+    expect(r2).toEqual({ ok: false, error: 'cannot defer milestone in status exported' });
+    const r4 = applyTransition(ledgerOf(mk('a', 'closed')), 'a', 'defer', T);
+    expect(r4).toEqual({ ok: false, error: 'cannot defer milestone in status closed' });
     const r3 = applyTransition(ledgerOf(mk('a', 'proposed')), 'zzz', 'accept', T);
     expect(r3).toEqual({ ok: false, error: 'milestone zzz not found' });
   });
