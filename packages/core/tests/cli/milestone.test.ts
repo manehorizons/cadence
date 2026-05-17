@@ -108,6 +108,16 @@ describe('cadence milestone', () => {
     expect(parsed.milestones[0].status).toBe('deferred');
   });
 
+  it('propose --json emits a parseable milestone ledger', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedRecs(active.root);
+    const r = await run(['milestone', 'propose', '--json'], active.root);
+    expect(r.code).toBe(0);
+    const parsed = JSON.parse(r.stdout);
+    expect(parsed.schemaVersion).toBe(1);
+    expect(parsed.milestones[0].id).toBe('mil-rec-rec-1');
+  });
+
   it('propose degrades cleanly with an empty ledger (exit 0)', async () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['milestone', 'propose'], active.root);
