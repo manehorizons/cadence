@@ -2,8 +2,12 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  EvidenceLedgerZ,
   RecommendationLedgerZ,
+  emptyEvidenceLedger,
   emptyRecommendationLedger,
+  type Evidence,
+  type EvidenceLedger,
   type Recommendation,
   type RecommendationLedger,
   type RecommendationPriority,
@@ -14,6 +18,7 @@ import { renderRecommendationsMd } from './render.js';
 
 const INTELLIGENCE_DIR = '.cadence/intelligence';
 const RECOMMENDATIONS_JSON = 'recommendations.json';
+const EVIDENCE_JSON = 'evidence.json';
 const RECOMMENDATIONS_MD = 'RECOMMENDATIONS.md';
 
 export type AddRecommendationInput = {
@@ -34,6 +39,10 @@ function recommendationsPath(root: string): string {
   return join(intelligenceDir(root), RECOMMENDATIONS_JSON);
 }
 
+function evidencePath(root: string): string {
+  return join(intelligenceDir(root), EVIDENCE_JSON);
+}
+
 function recommendationsMdPath(root: string): string {
   return join(intelligenceDir(root), RECOMMENDATIONS_MD);
 }
@@ -45,12 +54,25 @@ export async function readRecommendationLedger(root: string): Promise<Recommenda
   return RecommendationLedgerZ.parse(JSON.parse(raw));
 }
 
-async function writeRecommendationLedger(root: string, ledger: RecommendationLedger): Promise<void> {
+export async function readEvidenceLedger(root: string): Promise<EvidenceLedger> {
+  const path = evidencePath(root);
+  if (!existsSync(path)) return emptyEvidenceLedger();
+  const raw = await readFile(path, 'utf8');
+  return EvidenceLedgerZ.parse(JSON.parse(raw));
+}
+
+async function writeIntelligenceLedgers(
+  root: string,
+  ledger: RecommendationLedger,
+  evidenceLedger: EvidenceLedger,
+): Promise<void> {
   const dir = intelligenceDir(root);
   await mkdir(dir, { recursive: true });
   RecommendationLedgerZ.parse(ledger);
+  EvidenceLedgerZ.parse(evidenceLedger);
   await atomicWriteJSON(recommendationsPath(root), ledger);
-  await atomicWriteText(recommendationsMdPath(root), renderRecommendationsMd(ledger));
+  await atomicWriteJSON(evidencePath(root), evidenceLedger);
+  await atomicWriteText(recommendationsMdPath(root), renderRecommendationsMd(ledger, evidenceLedger));
 }
 
 function slugDate(now: Date): string {
@@ -68,15 +90,37 @@ function nextRecommendationId(ledger: RecommendationLedger, now: Date): string {
   return `${prefix}${String(max + 1).padStart(3, '0')}`;
 }
 
+function nextEvidenceId(ledger: EvidenceLedger, now: Date): string {
+  const prefix = `ev-${slugDate(now)}-`;
+  const max = ledger.evidence
+    .map((ev) => ev.id)
+    .filter((id) => id.startsWith(prefix))
+    .map((id) => Number.parseInt(id.slice(prefix.length), 10))
+    .filter((n) => Number.isFinite(n))
+    .reduce((a, b) => Math.max(a, b), 0);
+  return `${prefix}${String(max + 1).padStart(3, '0')}`;
+}
+
 export async function addRecommendation(
   root: string,
   input: AddRecommendationInput,
 ): Promise<Recommendation> {
   const ledger = await readRecommendationLedger(root);
+  const evidenceLedger = await readEvidenceLedger(root);
   const now = new Date();
   const ts = now.toISOString();
+  const recommendationId = nextRecommendationId(ledger, now);
+  const evidence: Evidence | null = input.evidenceSummary
+    ? {
+        id: nextEvidenceId(evidenceLedger, now),
+        recommendationId,
+        kind: 'note',
+        summary: input.evidenceSummary,
+        createdAt: ts,
+      }
+    : null;
   const rec: Recommendation = {
-    id: nextRecommendationId(ledger, now),
+    id: recommendationId,
     title: input.title,
     summary: input.summary,
     source: 'manual',
@@ -90,13 +134,14 @@ export async function addRecommendation(
     affectedAreas: input.affectedAreas,
     affectedFiles: input.affectedFiles,
     suggestedBackendAction: 'cadence milestone propose',
-    evidenceIds: [],
+    evidenceIds: evidence ? [evidence.id] : [],
     assumptionIds: [],
     decisionIds: [],
     createdAt: ts,
     updatedAt: ts,
   };
+  if (evidence) evidenceLedger.evidence.push(evidence);
   ledger.recommendations.push(rec);
-  await writeRecommendationLedger(root, ledger);
+  await writeIntelligenceLedgers(root, ledger, evidenceLedger);
   return rec;
 }

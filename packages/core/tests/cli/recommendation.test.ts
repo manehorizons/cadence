@@ -60,11 +60,20 @@ describe('cadence recommendation', () => {
     const parsed = JSON.parse(raw);
     expect(parsed.recommendations[0].title).toBe('Add milestone pre-mortems');
 
+    const evidenceRaw = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'evidence.json'),
+      'utf8',
+    );
+    const evidence = JSON.parse(evidenceRaw);
+    expect(evidence.evidence[0].summary).toBe('Approved Praxis design requires milestone pre-mortems.');
+    expect(parsed.recommendations[0].evidenceIds).toEqual([evidence.evidence[0].id]);
+
     const md = await readFile(
       join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md'),
       'utf8',
     );
     expect(md).toMatch(/Add milestone pre-mortems/);
+    expect(md).toMatch(/Approved Praxis design requires milestone pre-mortems\./);
   });
 
   it('lists recommendations', async () => {

@@ -34,6 +34,16 @@ describe('intelligence store', () => {
     expect(ledger.recommendations).toHaveLength(1);
     expect(ledger.recommendations[0]?.title).toBe('Add context packets');
 
+    const evidenceRaw = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'evidence.json'),
+      'utf8',
+    );
+    const evidence = JSON.parse(evidenceRaw);
+    expect(evidence.evidence).toHaveLength(1);
+    expect(evidence.evidence[0].summary).toBe('Requested during Praxis design.');
+    expect(evidence.evidence[0].recommendationId).toBe(rec.id);
+    expect(ledger.recommendations[0]?.evidenceIds).toEqual([evidence.evidence[0].id]);
+
     const rendered = await readFile(
       join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md'),
       'utf8',
@@ -41,5 +51,6 @@ describe('intelligence store', () => {
     expect(rendered).toMatch(/# CADENCE Recommendations/);
     expect(rendered).toMatch(/Add context packets/);
     expect(rendered).toMatch(/ready: raw-idea/);
+    expect(rendered).toMatch(/Requested during Praxis design\./);
   });
 });
