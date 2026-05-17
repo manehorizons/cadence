@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   InspectionZ,
   RecommendationLedgerZ,
+  RecommendationReportZ,
   RecommendationZ,
   emptyRecommendationLedger,
 } from '../src/intelligence.js';
@@ -96,6 +97,61 @@ describe('inspection schemas', () => {
     const r = InspectionZ.safeParse({
       ...validInspection,
       flags: [{ code: 'not-a-real-flag', severity: 'warn', message: 'x' }],
+    });
+    expect(r.success).toBe(false);
+  });
+});
+
+describe('recommendation report schema', () => {
+  const validReport = {
+    schemaVersion: 1 as const,
+    generatedAt: '2026-05-17T00:00:00.000Z',
+    ranked: [
+      {
+        id: 'rec-1',
+        title: 'do the thing',
+        raw: 32.3,
+        score: 83,
+        status: 'accepted' as const,
+        readiness: 'ready-for-milestone' as const,
+        priority: 'high' as const,
+        decayState: 'fresh' as const,
+        terms: [{ label: 'lev 7', value: 7 }],
+      },
+    ],
+    parked: [
+      { id: 'rec-2', title: 'later', status: 'deferred' as const, readiness: 'raw-idea' as const },
+    ],
+    needsAttention: [
+      { id: 'rec-3', title: 'rotten', decayState: 'contradicted' as const },
+    ],
+    advisory: { kind: 'top-recommendation' as const, primary: 'cadence milestone propose' },
+    totals: { total: 3, ranked: 1, parked: 1, needsAttention: 1, excluded: 0 },
+  };
+
+  it('accepts a valid report', () => {
+    const parsed = RecommendationReportZ.parse(validReport);
+    expect(parsed.schemaVersion).toBe(1);
+    expect(parsed.ranked).toHaveLength(1);
+  });
+
+  it('rejects a wrong schemaVersion', () => {
+    const r = RecommendationReportZ.safeParse({ ...validReport, schemaVersion: 2 });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects an unknown advisory kind', () => {
+    const r = RecommendationReportZ.safeParse({
+      ...validReport,
+      advisory: { kind: 'not-a-kind', primary: 'x' },
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects a score out of range', () => {
+    const r = RecommendationReportZ.safeParse({
+      ...validReport,
+      ranked: [{ ...validReport.ranked[0], score: 101 }],
     });
     expect(r.success).toBe(false);
   });
