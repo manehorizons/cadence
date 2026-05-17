@@ -29,6 +29,8 @@ const PRIORITY_PTS: Record<Recommendation['priority'], number> = {
   high: 5,
   critical: 8,
 };
+// Tight bounds given Zod field constraints: leverageScore/riskScore ∈ [0,10], confidence ∈ [0,1].
+// Update both when a status/readiness/decay/priority enum value is added with pts outside this range.
 const SCORE_MIN = -23;
 const SCORE_MAX = 44;
 
