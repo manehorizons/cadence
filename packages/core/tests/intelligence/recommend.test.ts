@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { BackendStatus, Recommendation } from '@cadence/types';
-import { scoreRecommendation, partitionLedger, buildAdvisory } from '../../src/intelligence/recommend.js';
+import { tempRepo, type Fixture } from '@cadence/testkit';
+import { addRecommendation } from '../../src/intelligence/store.js';
+import { scoreRecommendation, partitionLedger, buildAdvisory, synthesizeRecommendation, runRecommend } from '../../src/intelligence/recommend.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {
@@ -200,5 +204,79 @@ describe('buildAdvisory', () => {
     expect(a.kind).toBe('empty');
     expect(a.primary).toMatch(/cadence recommendation add/);
     expect(a.primary).toMatch(/2 recommendation\(s\) need revalidation/);
+  });
+});
+
+describe('synthesizeRecommendation', () => {
+  it('ranks by raw desc, tiebreak createdAt then id; assembles totals', () => {
+    const recs = [
+      mkRec({ id: 'low', leverageScore: 1, status: 'candidate', readiness: 'raw-idea' }),
+      mkRec({ id: 'hi', leverageScore: 9, status: 'accepted', readiness: 'ready-for-milestone' }),
+      mkRec({ id: 'rej', status: 'rejected' }),
+      mkRec({ id: 'def', status: 'deferred', decayState: 'fresh' }),
+      mkRec({ id: 'rot', status: 'candidate', decayState: 'contradicted' }),
+    ];
+    const report = synthesizeRecommendation(recs, idleBackend, new Date('2026-05-17T00:00:00.000Z'));
+    expect(report.schemaVersion).toBe(1);
+    expect(report.ranked.map((r) => r.id)).toEqual(['hi', 'low']);
+    expect(report.parked.map((r) => r.id)).toEqual(['def']);
+    expect(report.needsAttention.map((r) => r.id)).toEqual(['rot']);
+    expect(report.totals).toEqual({
+      total: 5, ranked: 2, parked: 1, needsAttention: 1, excluded: 1,
+    });
+    expect(report.advisory.kind).toBe('top-recommendation');
+  });
+
+  it('stable tiebreak: equal raw → createdAt asc then id asc', () => {
+    const a = mkRec({ id: 'b', createdAt: '2026-05-17T00:00:00.000Z' });
+    const b = mkRec({ id: 'a', createdAt: '2026-05-17T00:00:00.000Z' });
+    const c = mkRec({ id: 'z', createdAt: '2026-05-16T00:00:00.000Z' });
+    const report = synthesizeRecommendation([a, b, c], idleBackend, new Date());
+    expect(report.ranked.map((r) => r.id)).toEqual(['z', 'a', 'b']);
+  });
+});
+
+let activeRec: Fixture | null = null;
+afterEach(async () => {
+  if (activeRec) {
+    await activeRec.cleanup();
+    activeRec = null;
+  }
+});
+
+describe('runRecommend', () => {
+  it('writes recommend.json + RECOMMEND.md and returns the report', async () => {
+    activeRec = await tempRepo({ initialized: true, projectName: 'recommend-fix' });
+    await addRecommendation(activeRec.root, {
+      title: 'ship the thing',
+      summary: 'because',
+      priority: 'high',
+      readiness: 'ready-for-milestone',
+      affectedAreas: [],
+      affectedFiles: [],
+    });
+
+    const report = await runRecommend(activeRec.root);
+    expect(report.schemaVersion).toBe(1);
+    expect(report.ranked).toHaveLength(1);
+
+    const jsonRaw = await readFile(
+      join(activeRec.root, '.cadence', 'intelligence', 'recommend.json'),
+      'utf8',
+    );
+    expect(JSON.parse(jsonRaw).schemaVersion).toBe(1);
+
+    const md = await readFile(
+      join(activeRec.root, '.cadence', 'intelligence', 'RECOMMEND.md'),
+      'utf8',
+    );
+    expect(md).toMatch(/# CADENCE Recommended Next Moves/);
+  });
+
+  it('degrades cleanly on an empty ledger', async () => {
+    activeRec = await tempRepo({ initialized: true });
+    const report = await runRecommend(activeRec.root);
+    expect(report.ranked).toEqual([]);
+    expect(report.advisory.kind).toBe('empty');
   });
 });
