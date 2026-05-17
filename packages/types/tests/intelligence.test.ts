@@ -215,16 +215,24 @@ describe('intelligence milestone schema', () => {
     expect(m.exportTargets[0].backend).toBe('cadence');
   });
 
-  it('ledger rejects a wrong schemaVersion; empty helper is valid', () => {
+  it('ledger rejects a wrong schemaVersion', () => {
     const bad = MilestoneLedgerZ.safeParse({
       schemaVersion: 2,
       milestones: [],
     });
     expect(bad.success).toBe(false);
+  });
+
+  it('emptyMilestoneLedger is a valid versioned ledger', () => {
     const empty = emptyMilestoneLedger();
     expect(MilestoneLedgerZ.parse(empty)).toEqual({
       schemaVersion: 1,
       milestones: [],
     });
+  });
+
+  it('rejects an empty recommendation id', () => {
+    const r = IntelligenceMilestoneZ.safeParse({ ...validMilestone, recommendationIds: [''] });
+    expect(r.success).toBe(false);
   });
 });
