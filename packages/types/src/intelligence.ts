@@ -274,3 +274,49 @@ export const RecommendationReportZ = z.object({
   }),
 });
 export type RecommendationReport = z.infer<typeof RecommendationReportZ>;
+
+export const MilestoneStatusZ = z.enum([
+  'proposed',
+  'accepted',
+  'exported',
+  'deferred',
+  'closed',
+]);
+export type MilestoneStatus = z.infer<typeof MilestoneStatusZ>;
+
+export const MilestonePreMortemZ = z.object({
+  likelyFailureModes: z.array(z.string()),
+  hiddenDependencies: z.array(z.string()),
+  driftRisks: z.array(z.string()),
+  outOfScope: z.array(z.string()),
+});
+export type MilestonePreMortem = z.infer<typeof MilestonePreMortemZ>;
+
+export const IntelligenceMilestoneZ = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  objective: z.string().min(1),
+  status: MilestoneStatusZ,
+  recommendationIds: z.array(z.string()).min(1),
+  preMortem: MilestonePreMortemZ,
+  exportTargets: z.array(
+    z.object({
+      backend: z.literal('cadence'),
+      artifactPath: z.string(),
+      exportedAt: z.string().datetime({ offset: true }),
+    }),
+  ),
+  createdAt: z.string().datetime({ offset: true }),
+  updatedAt: z.string().datetime({ offset: true }),
+});
+export type IntelligenceMilestone = z.infer<typeof IntelligenceMilestoneZ>;
+
+export const MilestoneLedgerZ = z.object({
+  schemaVersion: z.literal(1),
+  milestones: z.array(IntelligenceMilestoneZ),
+});
+export type MilestoneLedger = z.infer<typeof MilestoneLedgerZ>;
+
+export function emptyMilestoneLedger(): MilestoneLedger {
+  return { schemaVersion: 1, milestones: [] };
+}

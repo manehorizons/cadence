@@ -5,6 +5,9 @@ import {
   RecommendationReportZ,
   RecommendationZ,
   emptyRecommendationLedger,
+  IntelligenceMilestoneZ,
+  MilestoneLedgerZ,
+  emptyMilestoneLedger,
 } from '../src/intelligence.js';
 
 describe('intelligence schemas', () => {
@@ -154,5 +157,74 @@ describe('recommendation report schema', () => {
       ranked: [{ ...validReport.ranked[0], score: 101 }],
     });
     expect(r.success).toBe(false);
+  });
+});
+
+describe('intelligence milestone schema', () => {
+  const validMilestone = {
+    id: 'mil-grp-auth',
+    name: 'auth hardening',
+    objective: 'Deliver 2 recommendation(s): a; b',
+    status: 'proposed' as const,
+    recommendationIds: ['rec-1', 'rec-2'],
+    preMortem: {
+      likelyFailureModes: [],
+      hiddenDependencies: [],
+      driftRisks: [],
+      outOfScope: [],
+    },
+    exportTargets: [],
+    createdAt: '2026-05-17T00:00:00.000Z',
+    updatedAt: '2026-05-17T00:00:00.000Z',
+  };
+
+  it('accepts a valid milestone', () => {
+    const m = IntelligenceMilestoneZ.parse(validMilestone);
+    expect(m.status).toBe('proposed');
+    expect(m.recommendationIds).toHaveLength(2);
+  });
+
+  it('rejects an empty recommendationIds array', () => {
+    const r = IntelligenceMilestoneZ.safeParse({
+      ...validMilestone,
+      recommendationIds: [],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects an unknown status', () => {
+    const r = IntelligenceMilestoneZ.safeParse({
+      ...validMilestone,
+      status: 'nope',
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('accepts an export target shape', () => {
+    const m = IntelligenceMilestoneZ.parse({
+      ...validMilestone,
+      status: 'exported' as const,
+      exportTargets: [
+        {
+          backend: 'cadence' as const,
+          artifactPath: '.cadence/phases/x/00-01-SPEC.md',
+          exportedAt: '2026-05-17T01:00:00.000Z',
+        },
+      ],
+    });
+    expect(m.exportTargets[0].backend).toBe('cadence');
+  });
+
+  it('ledger rejects a wrong schemaVersion; empty helper is valid', () => {
+    const bad = MilestoneLedgerZ.safeParse({
+      schemaVersion: 2,
+      milestones: [],
+    });
+    expect(bad.success).toBe(false);
+    const empty = emptyMilestoneLedger();
+    expect(MilestoneLedgerZ.parse(empty)).toEqual({
+      schemaVersion: 1,
+      milestones: [],
+    });
   });
 });
