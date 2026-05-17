@@ -357,12 +357,12 @@ Source: `docs/superpowers/2026-05-16-cadence-expansion-survey.md` (full weighing
 
 - **#6 Required-skill enforcement** — ✓ **delivered Phase 34.1** (closes open-question 23.4).
 - **#2 Review-convergence loop primitive** — ✓ **delivered Phase 35.1** (pure `nextConvergence`; `plan-review`@approve bounded with sidecar attempts + escalation; reused by #4).
-- **#1 brainstorm→spec stage** — ✓ **delivered Phase 36.1** (SPEC loop position + `cadence spec new/check/approve`; convergent spec-review reuses #2's `nextConvergence`; host-agnostic scaffold+validate). **SPEC→DRAFT content auto-seed deferred as #1b.**
+- **#1 brainstorm→spec stage** — ✓ **delivered Phase 36.1** (SPEC loop position + `cadence spec new/check/approve`; convergent spec-review reuses #2's `nextConvergence`; host-agnostic scaffold+validate). **SPEC→DRAFT content auto-seed delivered as #1b (Phase 38.1).**
 - **#4 Code-review convergence at settle** — ✓ **delivered Phase 37.1** (Phase 24.3 code-review@settle wrapped in the Phase 35.1 `nextConvergence`; `<id>-CODE-REVIEW.json` attempts + escalation; `--force`/`--allow-code-review-failure` contract preserved; the third `nextConvergence` attach-point).
-- **#1b SPEC→DRAFT auto-seed** — `cadence draft new` reads an approved `<id>-SPEC.md` to pre-fill objective/ACs (deferred from #1's minimal v1).
+- **#1b SPEC→DRAFT auto-seed** — ✓ **delivered Phase 38.1** (`draft new` reads the sibling same-id `APPROVED` SPEC → pre-fills DRAFT Objective + ACs via pure `renderDraftBody`; additive `AcceptanceCriterionZ.name`; byte-identical legacy fallback). Closes #1 fully.
 - **#3 `cadence build --subagent` / #5 `cadence research` stage — PARKED.** Both invert the host-agnostic-engine anchor (cadence is driven *by* an agent; it is not an agent/research orchestrator). Revisit ONLY if that anchor is reconsidered.
 
-Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ ; #1b deferred, #3/#5 parked (host-agnostic-anchor conflict). v1.2 feature-expansion COMPLETE.
+Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (host-agnostic-anchor conflict). v1.2 feature-expansion COMPLETE — no non-parked work remains.
 
 ---
 

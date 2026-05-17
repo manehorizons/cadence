@@ -28,4 +28,17 @@ describe('SpecZ (AC-2)', () => {
       SpecZ.parse({ ...valid, acceptanceCriteria: [{ id: 'AC-1', given: 'g', when: 'w' } as never] }),
     ).toThrow();
   });
+  it('AC-4: AC without name defaults to "" (back-compat)', () => {
+    const parsed = SpecZ.parse(valid);
+    expect(parsed.acceptanceCriteria[0]!.name).toBe('');
+  });
+  it('AC-4: a populated AC name round-trips', () => {
+    const parsed = SpecZ.parse({
+      ...valid,
+      acceptanceCriteria: [
+        { id: 'AC-1', name: 'convergence wrap', given: 'g', when: 'w', then: 't' },
+      ],
+    });
+    expect(parsed.acceptanceCriteria[0]!.name).toBe('convergence wrap');
+  });
 });

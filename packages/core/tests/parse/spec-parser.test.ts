@@ -34,7 +34,7 @@ describe('parseSpecMd (AC-2)', () => {
   it('AC-2: parses objective/AC/constraints/openQuestions', () => {
     const s = parseSpecMd(SPEC);
     expect(s.objective).toBe('Build the thing.');
-    expect(s.acceptanceCriteria).toEqual([{ id: 'AC-1', given: 'g', when: 'w', then: 't' }]);
+    expect(s.acceptanceCriteria).toEqual([{ id: 'AC-1', name: 'a', given: 'g', when: 'w', then: 't' }]);
     expect(s.constraints).toEqual(['no new deps', 'host-agnostic']);
     expect(s.openQuestions).toEqual(['which provider default?']);
     expect(s.status).toBe('PENDING');

@@ -31,10 +31,11 @@ function parseAcceptanceCriteria(section: string): Draft['acceptanceCriteria'] {
     const head = /^### (AC-\d+):\s*(.*)$/m.exec(block);
     if (!head) continue;
     const id = head[1]!;
+    const name = head[2]?.trim() ?? '';
     const given = /Given\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
     const when = /When\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
     const then = /Then\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
-    out.push({ id, given, when, then });
+    out.push({ id, name, given, when, then });
   }
   return out;
 }
