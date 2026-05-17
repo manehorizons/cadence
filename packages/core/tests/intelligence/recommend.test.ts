@@ -1,0 +1,94 @@
+import { describe, expect, it } from 'vitest';
+import type { Recommendation } from '@cadence/types';
+import { scoreRecommendation } from '../../src/intelligence/recommend.js';
+
+function mkRec(p: Partial<Recommendation> = {}): Recommendation {
+  return {
+    id: 'rec-x',
+    title: 't',
+    summary: 's',
+    source: 'manual',
+    status: 'candidate',
+    readiness: 'raw-idea',
+    priority: 'low',
+    leverageScore: 0,
+    riskScore: 0,
+    confidence: 0,
+    decayState: 'fresh',
+    affectedAreas: [],
+    affectedFiles: [],
+    evidenceIds: [],
+    assumptionIds: [],
+    decisionIds: [],
+    createdAt: '2026-05-17T00:00:00.000Z',
+    updatedAt: '2026-05-17T00:00:00.000Z',
+    ...p,
+  };
+}
+
+describe('scoreRecommendation', () => {
+  it('computes the spec worked example exactly (raw 32.3, score 83)', () => {
+    const r = scoreRecommendation(
+      mkRec({
+        leverageScore: 7,
+        confidence: 0.8,
+        riskScore: 3,
+        status: 'accepted',
+        readiness: 'ready-for-milestone',
+        decayState: 'fresh',
+        priority: 'high',
+      }),
+    );
+    expect(r.raw).toBe(32.3);
+    expect(r.score).toBe(83);
+    expect(r.terms.map((t) => t.label)).toEqual([
+      'lev 7',
+      'conf 0.80',
+      'risk 3',
+      'status accepted',
+      'ready ready-for-milestone',
+      'decay fresh',
+      'prio high',
+    ]);
+    expect(r.terms.find((t) => t.label === 'conf 0.80')?.value).toBe(4.8);
+    expect(r.terms.find((t) => t.label === 'risk 3')?.value).toBe(-1.5);
+  });
+
+  it('clamps the ranked-universe minimum to 0', () => {
+    const r = scoreRecommendation(
+      mkRec({
+        leverageScore: 0,
+        confidence: 0,
+        riskScore: 10,
+        status: 'candidate',
+        readiness: 'blocked',
+        decayState: 'stale',
+        priority: 'low',
+      }),
+    );
+    expect(r.raw).toBe(-23);
+    expect(r.score).toBe(0);
+  });
+
+  it('clamps the ranked-universe maximum to 100', () => {
+    const r = scoreRecommendation(
+      mkRec({
+        leverageScore: 10,
+        confidence: 1,
+        riskScore: 0,
+        status: 'accepted',
+        readiness: 'ready-for-cadence-spec',
+        decayState: 'fresh',
+        priority: 'critical',
+      }),
+    );
+    expect(r.raw).toBe(44);
+    expect(r.score).toBe(100);
+  });
+
+  it('applies each categorical penalty (stale and needs-revalidation sink)', () => {
+    const stale = scoreRecommendation(mkRec({ decayState: 'stale' }));
+    const fresh = scoreRecommendation(mkRec({ decayState: 'fresh' }));
+    expect(fresh.raw - stale.raw).toBe(10); // +4 − (−6)
+  });
+});
