@@ -1,5 +1,6 @@
 import type {
   IntelligenceMilestone,
+  MilestoneLedger,
   MilestonePreMortem,
   Recommendation,
   RecommendationReadiness,
@@ -159,4 +160,42 @@ export function clusterMilestones(
   }
 
   return [...survivors, ...fresh];
+}
+
+export type TransitionAction = 'accept' | 'defer';
+export type TransitionResult =
+  | { ok: true; ledger: MilestoneLedger }
+  | { ok: false; error: string };
+
+export function applyTransition(
+  ledger: MilestoneLedger,
+  id: string,
+  action: TransitionAction,
+  now: Date = new Date(),
+): TransitionResult {
+  const target = ledger.milestones.find((m) => m.id === id);
+  if (!target) return { ok: false, error: `milestone ${id} not found` };
+
+  const allowed: Record<TransitionAction, IntelligenceMilestone['status'][]> = {
+    accept: ['proposed'],
+    defer: ['proposed', 'accepted'],
+  };
+  if (!allowed[action].includes(target.status)) {
+    return {
+      ok: false,
+      error: `cannot ${action} milestone in status ${target.status}`,
+    };
+  }
+
+  const nextStatus: IntelligenceMilestone['status'] =
+    action === 'accept' ? 'accepted' : 'deferred';
+  const ledgerOut: MilestoneLedger = {
+    schemaVersion: 1,
+    milestones: ledger.milestones.map((m) =>
+      m.id === id
+        ? { ...m, status: nextStatus, updatedAt: now.toISOString() }
+        : m,
+    ),
+  };
+  return { ok: true, ledger: ledgerOut };
 }
