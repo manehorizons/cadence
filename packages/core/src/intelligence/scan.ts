@@ -37,6 +37,8 @@ async function scanGit(root: string): Promise<RepoScan['git']> {
     recentCommits: log.ok && log.out.length > 0 ? log.out.split('\n') : undefined,
   };
   if (counts.ok) {
+    // `git rev-list --left-right --count origin/main...HEAD` → "<left>\t<right>";
+    // left = commits only in origin/main (behind), right = commits only in HEAD (ahead).
     const [behindStr, aheadStr] = counts.out.split(/\s+/);
     const behind = Number.parseInt(behindStr ?? '', 10);
     const ahead = Number.parseInt(aheadStr ?? '', 10);
