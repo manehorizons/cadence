@@ -78,9 +78,9 @@ interface PraxisBackend {
 CADENCE impl:
 
 - `detect`: `.cadence/` exists and `state.json` is parseable.
-- `readStatus`: wrap `SimpleStateBackend.readState()` → loopPosition, activePhase, activeDraft, profile, tier. `StateCorruptError` is caught and surfaced as `stateError` (no throw).
+- `readStatus`: wrap `SimpleStateBackend.readState()` → `loopPosition`, `activePhase`, `activeDraft`, `tier`. **Sourcing note:** `tier` is on `CadenceState` (nullable); `profile` is **not** on state (it lives in `ConfigZ.profile` / optional per-phase plan override) — read it from config when cheap, else leave `profile` undefined (schema-optional). Do not look for `state.profile`. `StateCorruptError` is caught and surfaced as `stateError` (no throw).
 - `readArtifacts`: enumerate `.cadence/phases/**`; presence of ROADMAP/STATE/MILESTONES.
-- `listLegalActions`: reuse `nextAction(state)` from `progress.js` as the single source of loop-legal commands — does **not** re-implement loop rules.
+- `listLegalActions`: reuse `nextAction(state)` from `progress.js` as the single source of loop-legal commands — does **not** re-implement loop rules. **Adaptation note:** `nextAction` returns a single `{command, reason}` object, not a list; `listLegalActions` wraps it into a one-element array (`[action.command]`). The `string[]` shape is forward-compatible if the loop later exposes multiple legal commands.
 
 `renderSpecDraft`/`exportMilestone` are intentionally absent; added when the SPEC-export slice defines their real shape.
 
