@@ -143,6 +143,7 @@ Returns the **complete next milestone array** (not a delta):
    - `exportTargets` = `[]`
    - `createdAt` = the same-id existing **proposed** milestone's `createdAt` if present (carry-forward, no churn), else `now`; `updatedAt` = `now`
 5. Result = **(all non-`proposed` `existing` records, unchanged)** ++ **(freshly built proposed)**. Every prior `proposed` record is dropped (refresh-proposed semantics).
+6. **Id-collision guard (refines Decision #6/#7):** a freshly built bucket whose id equals the id of a surviving non-`proposed` milestone is **suppressed** (not emitted). Human-decided milestones own their id-space; a new eligible rec that sanitizes to an already-accepted/deferred/closed milestone's slug is simply not re-proposed under that taken id (it waits until that milestone is closed or the rec is re-labeled). This prevents a duplicate-id ledger. Discovered in code review during Slice 4a execution; **Slice 4b must preserve this invariant** (export must never resurrect a suppressed id).
 
 Determinism: same recommendation ledger + same `now` ⇒ byte-identical milestone array.
 
