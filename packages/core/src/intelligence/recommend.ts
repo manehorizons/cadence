@@ -1,9 +1,18 @@
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { RecommendationReportZ } from '@cadence/types';
 import type {
   BackendStatus,
   Recommendation,
   RecommendationAdvisory,
+  RecommendationRank,
+  RecommendationReport,
   ScoreTerm,
 } from '@cadence/types';
+import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
+import { intelligenceDir, readRecommendationLedger } from './store.js';
+import { cadenceBackend } from './backend/cadence.js';
+import { renderRecommendMd } from './render-recommend.js';
 
 const STATUS_PTS: Record<Recommendation['status'], number> = {
   candidate: 0,
@@ -145,4 +154,86 @@ export function buildAdvisory(
     primary += ` ${counts.needsAttention} recommendation(s) need revalidation (\`cadence inspect\`).`;
   }
   return { kind: 'empty', primary };
+}
+
+export function synthesizeRecommendation(
+  recs: Recommendation[],
+  backend: BackendStatus,
+  now: Date = new Date(),
+): RecommendationReport {
+  const { ranked, parked, needsAttention, excludedCount } =
+    partitionLedger(recs);
+
+  const scored = ranked
+    .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
+    .sort((a, b) => {
+      if (b.raw !== a.raw) return b.raw - a.raw;
+      if (a.rec.createdAt !== b.rec.createdAt) {
+        return a.rec.createdAt < b.rec.createdAt ? -1 : 1;
+      }
+      return a.rec.id < b.rec.id ? -1 : a.rec.id > b.rec.id ? 1 : 0;
+    });
+
+  const rankedOut: RecommendationRank[] = scored.map((s) => {
+    const rank: RecommendationRank = {
+      id: s.rec.id,
+      title: s.rec.title,
+      raw: s.raw,
+      score: s.score,
+      status: s.rec.status,
+      readiness: s.rec.readiness,
+      priority: s.rec.priority,
+      decayState: s.rec.decayState,
+      terms: s.terms,
+    };
+    if (s.rec.suggestedBackendAction) {
+      rank.suggestedBackendAction = s.rec.suggestedBackendAction;
+    }
+    return rank;
+  });
+
+  const [first] = scored;
+  const advisory = buildAdvisory(first ? first.rec : null, backend, {
+    needsAttention: needsAttention.length,
+  });
+
+  return RecommendationReportZ.parse({
+    schemaVersion: 1,
+    generatedAt: now.toISOString(),
+    ranked: rankedOut,
+    parked: parked.map((r) => ({
+      id: r.id,
+      title: r.title,
+      status: r.status,
+      readiness: r.readiness,
+    })),
+    needsAttention: needsAttention.map((r) => ({
+      id: r.id,
+      title: r.title,
+      decayState: r.decayState,
+    })),
+    advisory,
+    totals: {
+      total: recs.length,
+      ranked: rankedOut.length,
+      parked: parked.length,
+      needsAttention: needsAttention.length,
+      excluded: excludedCount,
+    },
+  });
+}
+
+export async function runRecommend(
+  root: string,
+  now: Date = new Date(),
+): Promise<RecommendationReport> {
+  const ledger = await readRecommendationLedger(root);
+  const backend = await cadenceBackend.readStatus(root);
+  const report = synthesizeRecommendation(ledger.recommendations, backend, now);
+
+  const dir = intelligenceDir(root);
+  await mkdir(dir, { recursive: true });
+  await atomicWriteJSON(join(dir, 'recommend.json'), report);
+  await atomicWriteText(join(dir, 'RECOMMEND.md'), renderRecommendMd(report));
+  return report;
 }
