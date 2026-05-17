@@ -116,6 +116,8 @@ Fixed documented bounds over the **ranked** universe: `MIN = -23` (numeric −5,
 display = clamp(round((raw - MIN) / (MAX - MIN) * 100), 0, 100)
 ```
 
+`round` is JS `Math.round` (round-half-up, the language default); this is pinned because the why-line example and table tests assert exact `display` values, and a banker's-rounding reimplementation would silently break them. Divisor `MAX - MIN = 67`.
+
 Sorting uses `raw` (not the rounded `display`, to avoid rounding ties); stable tiebreak: `createdAt` ascending, then `id` ascending.
 
 Each invocation returns `terms: ScoreTerm[]` — one entry per contributing factor (`{ label, value }`) — rendered verbatim in the per-item why-line, e.g.:
@@ -143,12 +145,15 @@ Loop-aware, read-only, never forces a transition (Q3 decision; parent #1 risk).
 
 - **Loop in-flight** — `backend.present === true` && `loopPosition` neither absent nor `IDLE` && (`activeDraft` || `activeSpec`):
   - primary = "Finish in-flight CADENCE loop work first." surfacing `backend.legalActions[0]` (if any) as plain text;
-  - secondary = top ranked item's `suggestedBackendAction` (if a ranked item exists).
+  - secondary = top ranked item's resolved action (see fallback below), if a ranked item exists.
+  - Note: a loop whose `loopPosition` is non-IDLE but whose corresponding active field is *missing* (e.g. `DRAFT` with no `activeDraft` — the Slice-2 `loop-state-inconsistent` condition) fails the `(activeDraft || activeSpec)` guard and is therefore treated as **not-in-flight**: an inconsistent loop should not block strategic advice. Deliberate.
 - **Loop idle / no backend** — top ranked item exists:
-  - primary = that item's `suggestedBackendAction`; if its `readiness === 'ready-for-cadence-spec'`, advise `cadence spec new` instead.
+  - primary = that item's resolved action; if its `readiness === 'ready-for-cadence-spec'`, advise `cadence spec new` instead.
 - **No ranked items at all**:
   - primary = "No actionable recommendations — add one with `cadence recommendation add`."
   - if needs-attention non-empty, append: "N recommendation(s) need revalidation (`cadence inspect`)."
+
+**Resolved action.** `suggestedBackendAction` is schema-optional on `Recommendation` (Slice-1 manual intake always sets `cadence milestone propose`, but other future intake paths may not). Wherever a branch above uses "resolved action", it is: the item's `suggestedBackendAction` if present, else the literal default `cadence milestone propose`. This guarantees `RecommendationAdvisoryZ.primary` (a required string) is never `undefined`. `secondary` is omitted entirely when there is no ranked item.
 
 The advisory only ever names commands already legal/applicable; it is text output, never an executed transition.
 
