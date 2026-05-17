@@ -59,7 +59,6 @@ export function seedPreMortem(recs: Recommendation[]): MilestonePreMortem {
   // low-confidence input
   for (const r of recs
     .filter((r) => r.confidence < 0.5)
-    .slice()
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
     likelyFailureModes.push(
       `Low-confidence input: ${r.id} (confidence ${r.confidence.toFixed(2)}) — assumption may be wrong.`,
