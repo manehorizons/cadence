@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { IntelligenceMilestone, Recommendation } from '@cadence/types';
-import { clusterMilestones, isEligible, seedPreMortem } from '../../src/intelligence/milestone.js';
+import type { IntelligenceMilestone, MilestoneLedger, Recommendation } from '@cadence/types';
+import { applyTransition, clusterMilestones, isEligible, seedPreMortem } from '../../src/intelligence/milestone.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {
@@ -243,5 +243,53 @@ describe('clusterMilestones', () => {
     );
     expect(out).toHaveLength(1);
     expect(out[0]!.objective).toBe('Deliver 4 recommendation(s): T1; T2; T3');
+  });
+});
+
+function ledgerOf(...ms: IntelligenceMilestone[]): MilestoneLedger {
+  return { schemaVersion: 1, milestones: ms };
+}
+function mk(id: string, status: IntelligenceMilestone['status']): IntelligenceMilestone {
+  return {
+    id,
+    name: id,
+    objective: 'o',
+    status,
+    recommendationIds: ['rec-1'],
+    preMortem: { likelyFailureModes: [], hiddenDependencies: [], driftRisks: [], outOfScope: [] },
+    exportTargets: [],
+    createdAt: '2026-05-01T00:00:00.000Z',
+    updatedAt: '2026-05-01T00:00:00.000Z',
+  };
+}
+
+describe('applyTransition', () => {
+  const T = new Date('2026-05-17T12:00:00.000Z');
+
+  it('accept: proposed -> accepted, bumps updatedAt, leaves others untouched', () => {
+    const led = ledgerOf(mk('a', 'proposed'), mk('b', 'deferred'));
+    const res = applyTransition(led, 'a', 'accept', T);
+    expect(res.ok).toBe(true);
+    if (!res.ok) throw new Error('unreachable');
+    const a = res.ledger.milestones.find((m) => m.id === 'a')!;
+    expect(a.status).toBe('accepted');
+    expect(a.updatedAt).toBe(T.toISOString());
+    expect(res.ledger.milestones.find((m) => m.id === 'b')!.status).toBe('deferred');
+    // original ledger not mutated
+    expect(led.milestones.find((m) => m.id === 'a')!.status).toBe('proposed');
+  });
+
+  it('defer: allowed from proposed and accepted', () => {
+    expect(applyTransition(ledgerOf(mk('a', 'proposed')), 'a', 'defer', T).ok).toBe(true);
+    expect(applyTransition(ledgerOf(mk('a', 'accepted')), 'a', 'defer', T).ok).toBe(true);
+  });
+
+  it('rejects illegal transitions and unknown ids', () => {
+    const r1 = applyTransition(ledgerOf(mk('a', 'accepted')), 'a', 'accept', T);
+    expect(r1).toEqual({ ok: false, error: 'cannot accept milestone in status accepted' });
+    const r2 = applyTransition(ledgerOf(mk('a', 'exported')), 'a', 'defer', T);
+    expect(r2.ok).toBe(false);
+    const r3 = applyTransition(ledgerOf(mk('a', 'proposed')), 'zzz', 'accept', T);
+    expect(r3).toEqual({ ok: false, error: 'milestone zzz not found' });
   });
 });
