@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  InspectionZ,
   RecommendationLedgerZ,
   RecommendationZ,
   emptyRecommendationLedger,
@@ -61,5 +62,41 @@ describe('intelligence schemas', () => {
     const ledger = emptyRecommendationLedger();
     expect(RecommendationLedgerZ.parse(ledger).schemaVersion).toBe(1);
     expect(ledger.recommendations).toEqual([]);
+  });
+});
+
+describe('inspection schemas', () => {
+  const validInspection = {
+    schemaVersion: 1 as const,
+    generatedAt: '2026-05-17T00:00:00.000Z',
+    repo: {
+      git: { available: false },
+      pkg: { scripts: {} },
+      docs: { readme: true, design: true, roadmap: true, changelog: true, docsDir: true },
+      surfaces: { turbo: true },
+      phases: { count: 0 },
+    },
+    backend: { present: false, kind: null, legalActions: [] },
+    ledger: { recommendations: 0, byDecay: {}, evidence: 0 },
+    flags: [],
+  };
+
+  it('accepts a valid inspection', () => {
+    const parsed = InspectionZ.parse(validInspection);
+    expect(parsed.schemaVersion).toBe(1);
+    expect(parsed.flags).toEqual([]);
+  });
+
+  it('rejects a wrong schemaVersion', () => {
+    const r = InspectionZ.safeParse({ ...validInspection, schemaVersion: 2 });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects an unknown flag code', () => {
+    const r = InspectionZ.safeParse({
+      ...validInspection,
+      flags: [{ code: 'not-a-real-flag', severity: 'warn', message: 'x' }],
+    });
+    expect(r.success).toBe(false);
   });
 });

@@ -133,3 +133,86 @@ export function emptyAssumptionLedger(): AssumptionLedger {
 export function emptyIntelligenceDecisionLedger(): IntelligenceDecisionLedger {
   return { schemaVersion: 1, decisions: [] };
 }
+
+export const RepoScanZ = z.object({
+  git: z.object({
+    available: z.boolean(),
+    branch: z.string().optional(),
+    dirty: z.boolean().optional(),
+    ahead: z.number().int().optional(),
+    behind: z.number().int().optional(),
+    recentCommits: z.array(z.string()).optional(),
+  }),
+  pkg: z.object({
+    name: z.string().optional(),
+    version: z.string().optional(),
+    workspaces: z.boolean().optional(),
+    scripts: z.object({
+      test: z.boolean().optional(),
+      build: z.boolean().optional(),
+      lint: z.boolean().optional(),
+      typecheck: z.boolean().optional(),
+    }),
+  }),
+  docs: z.object({
+    readme: z.boolean(),
+    design: z.boolean(),
+    roadmap: z.boolean(),
+    changelog: z.boolean(),
+    docsDir: z.boolean(),
+  }),
+  surfaces: z.object({ turbo: z.boolean() }),
+  phases: z.object({ count: z.number().int(), latestId: z.string().optional() }),
+});
+export type RepoScan = z.infer<typeof RepoScanZ>;
+
+export const BackendStatusZ = z.object({
+  present: z.boolean(),
+  kind: z.literal('cadence').nullable(),
+  loopPosition: z.string().optional(),
+  activePhase: z.string().nullable().optional(),
+  activeDraft: z.string().nullable().optional(),
+  profile: z.string().optional(),
+  tier: z.string().nullable().optional(),
+  legalActions: z.array(z.string()),
+  artifacts: z
+    .object({
+      phaseCount: z.number().int(),
+      roadmap: z.boolean(),
+      state: z.boolean(),
+      milestones: z.boolean(),
+    })
+    .optional(),
+  stateError: z.string().optional(),
+});
+export type BackendStatus = z.infer<typeof BackendStatusZ>;
+
+export const InspectionFlagCodeZ = z.enum([
+  'git-dirty-or-diverged',
+  'loop-state-inconsistent',
+  'ledger-decay',
+  'docs-missing',
+]);
+export type InspectionFlagCode = z.infer<typeof InspectionFlagCodeZ>;
+
+export const InspectionFlagZ = z.object({
+  code: InspectionFlagCodeZ,
+  severity: z.enum(['info', 'warn']),
+  message: z.string().min(1),
+  evidence: z.string().optional(),
+});
+export type InspectionFlag = z.infer<typeof InspectionFlagZ>;
+
+export const InspectionZ = z.object({
+  schemaVersion: z.literal(1),
+  generatedAt: z.string().datetime({ offset: true }),
+  repo: RepoScanZ,
+  backend: BackendStatusZ,
+  ledger: z.object({
+    recommendations: z.number().int(),
+    byDecay: z.record(z.string(), z.number().int()),
+    evidence: z.number().int(),
+  }),
+  flags: z.array(InspectionFlagZ),
+});
+export type Inspection = z.infer<typeof InspectionZ>;
