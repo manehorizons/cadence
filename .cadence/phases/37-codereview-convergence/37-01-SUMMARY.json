@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "draftId": "37-01",
+  "completedAt": "2026-05-17T00:57:00.888Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    },
+    {
+      "id": "AC-6",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "AnomalyTypeZ += code-review-unconverged (additive); anomaly schema test (AC-5)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "emitCodeReviewUnconverged (unconditional/no-throw, clone of emitPlanReviewUnconverged, draftId ctx)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "code-review@settle wrapped in nextConvergence (Plan->CodeReview port); <id>-CODE-REVIEW.json sidecar attempts/history; bypass-before-reloop ordering; --force+--allow contract preserved verbatim; 6-path integration incl. strict unconditional-anomaly + legacy->0 (AC-1/2/3/4); existing settle-code-review.test.ts green unchanged"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "DESIGN §10 item 38 + §4.1 code-review-convergence note; CHANGELOG Added + AnomalyType bump; ROADMAP #4 ✓ / sequence #6✓→#2✓→#1✓→#4✓ COMPLETE (AC-6)"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "full pre-push gate 16/16 green (core 472 tests incl. 6-path convergence + unchanged 5-path contract); substantive feat commit 93100d9"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
