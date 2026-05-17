@@ -27,6 +27,7 @@ Two CLIs are documented here:
   - [progress](#progress)
   - [status](#status)
   - [recommendation](#recommendation)
+  - [inspect](#inspect)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -63,6 +64,7 @@ settle
 progress
 status
 recommendation
+inspect
 <!-- cadence:commands:end -->
 
 ---
@@ -587,6 +589,43 @@ Prints recorded recommendations in a compact table.
 ```sh
 cadence recommendation list
 ```
+
+---
+
+### inspect
+
+```
+Usage: cadence inspect [options]
+
+Scan the project and synthesize strategic status (read-only)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+Scans the repository (git, package metadata, doc presence, build surfaces,
+phase artifacts), reads CADENCE loop state **read-only** (never mutates
+`state.json` or transitions the loop), folds in recommendation-ledger decay
+counts, and synthesizes a strategic status with up to four conservative flags
+(git dirty/diverged, loop-state inconsistency, ledger decay, missing docs).
+
+Writes:
+
+- `.cadence/intelligence/inspection.json`
+- `.cadence/intelligence/STRATEGY.md`
+
+With `--json`, the inspection object is emitted to stdout instead of the
+rendered text. This command is distinct from `cadence status`/`progress`,
+which report execution-loop position; `inspect` is the strategic layer.
+
+**Exit codes** — exits non-zero only on a genuine failure (e.g. artifact
+write error). A missing git repo or missing `.cadence/` backend degrades
+gracefully and still exits 0.
 
 ---
 
