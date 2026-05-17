@@ -1,4 +1,9 @@
-import type { Recommendation, ScoreTerm } from '@cadence/types';
+import type {
+  BackendStatus,
+  Recommendation,
+  RecommendationAdvisory,
+  ScoreTerm,
+} from '@cadence/types';
 
 const STATUS_PTS: Record<Recommendation['status'], number> = {
   candidate: 0,
@@ -98,4 +103,46 @@ export function partitionLedger(recs: Recommendation[]): Partition {
     }
   }
   return { ranked, parked, needsAttention, excludedCount };
+}
+
+function resolvedAction(rec: Recommendation): string {
+  return rec.suggestedBackendAction ?? 'cadence milestone propose';
+}
+
+export function buildAdvisory(
+  topRanked: Recommendation | null,
+  backend: BackendStatus,
+  counts: { needsAttention: number },
+): RecommendationAdvisory {
+  const inFlight =
+    backend.present === true &&
+    backend.loopPosition !== undefined &&
+    backend.loopPosition !== 'IDLE' &&
+    (Boolean(backend.activeDraft) || Boolean(backend.activeSpec));
+
+  if (inFlight) {
+    const legal = backend.legalActions[0];
+    const advisory: RecommendationAdvisory = {
+      kind: 'finish-loop',
+      primary: `Finish in-flight CADENCE loop work first${
+        legal ? ` — ${legal}` : ''
+      }.`,
+    };
+    if (topRanked) advisory.secondary = resolvedAction(topRanked);
+    return advisory;
+  }
+
+  if (topRanked) {
+    if (topRanked.readiness === 'ready-for-cadence-spec') {
+      return { kind: 'spec-new', primary: 'cadence spec new' };
+    }
+    return { kind: 'top-recommendation', primary: resolvedAction(topRanked) };
+  }
+
+  let primary =
+    'No actionable recommendations — add one with `cadence recommendation add`.';
+  if (counts.needsAttention > 0) {
+    primary += ` ${counts.needsAttention} recommendation(s) need revalidation (\`cadence inspect\`).`;
+  }
+  return { kind: 'empty', primary };
 }
