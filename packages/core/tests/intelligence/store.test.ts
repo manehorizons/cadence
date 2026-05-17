@@ -1,0 +1,45 @@
+import { describe, expect, it, afterEach } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tempRepo, type Fixture } from '@cadence/testkit';
+import {
+  addRecommendation,
+  readRecommendationLedger,
+} from '../../src/intelligence/store.js';
+
+let active: Fixture | null = null;
+afterEach(async () => {
+  if (active) {
+    await active.cleanup();
+    active = null;
+  }
+});
+
+describe('intelligence store', () => {
+  it('creates ledgers and rendered recommendations on first add', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'intel-store' });
+
+    const rec = await addRecommendation(active.root, {
+      title: 'Add context packets',
+      summary: 'Create compact context packets for future CADENCE phases.',
+      priority: 'high',
+      readiness: 'raw-idea',
+      affectedAreas: ['core'],
+      affectedFiles: ['packages/core/src/intelligence/store.ts'],
+      evidenceSummary: 'Requested during Praxis design.',
+    });
+
+    expect(rec.id).toMatch(/^rec-\d{8}-/);
+    const ledger = await readRecommendationLedger(active.root);
+    expect(ledger.recommendations).toHaveLength(1);
+    expect(ledger.recommendations[0]?.title).toBe('Add context packets');
+
+    const rendered = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md'),
+      'utf8',
+    );
+    expect(rendered).toMatch(/# CADENCE Recommendations/);
+    expect(rendered).toMatch(/Add context packets/);
+    expect(rendered).toMatch(/ready: raw-idea/);
+  });
+});
