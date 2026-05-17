@@ -4,6 +4,7 @@ import { ProfileZ } from './profile.js';
 
 export const AcceptanceCriterionZ = z.object({
   id: z.string().regex(/^AC-\d+$/),
+  name: z.string().default(''),
   given: z.string(),
   when: z.string(),
   then: z.string(),

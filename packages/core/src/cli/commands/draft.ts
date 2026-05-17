@@ -4,6 +4,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AnomalyEvent } from '@cadence/types';
 import { parseDraftMd } from '../../parse/draft-parser.js';
+import { parseSpecMd } from '../../parse/spec-parser.js';
+import { renderDraftBody, frontmatterStatus } from '../../parse/draft-scaffold.js';
 import { SimpleStateBackend } from '../../state/simple.js';
 import { coherenceCheck, type CoherenceIssue } from '../../coherence/check.js';
 import { atomicWriteText } from '../../state/atomic-write.js';
@@ -74,7 +76,32 @@ export function registerDraftCommand(program: Command): void {
           return;
         }
         await mkdir(dir, { recursive: true });
-        const body = `---\nphase: ${phase}\nid: ${id}\ntier: ${opts.tier}\nstatus: PENDING\n---\n\n# ${id} — ${opts.title}\n\n## Objective\n\n_(one sentence)_\n\n## Acceptance Criteria\n\n### AC-1: _(name)_\nGiven _(precondition)_\nWhen _(action)_\nThen _(outcome)_\n\n## Tasks\n\n### T1: _(task name)_\n- files: \`path/to/file.ts\`\n- action: _(what to do)_\n- verify: _(how to verify)_\n- done: AC-1\n\n## Boundaries\n\n- _(DO NOT change …)_\n`;
+        const specPath = join(dir, `${id}-SPEC.md`);
+        let body: string;
+        if (existsSync(specPath)) {
+          const rawSpec = await readFile(specPath, 'utf8');
+          if (frontmatterStatus(rawSpec) === 'APPROVED') {
+            try {
+              const spec = parseSpecMd(rawSpec);
+              body = renderDraftBody(phase, id, opts.tier, opts.title, spec);
+              console.log(
+                `draft new: seeded objective + ${spec.acceptanceCriteria.length} AC(s) from approved SPEC ${id}`,
+              );
+            } catch (err) {
+              process.stderr.write(
+                `draft new: SPEC ${id} APPROVED but unparseable (${err instanceof Error ? err.message : String(err)}) — scaffolding empty\n`,
+              );
+              body = renderDraftBody(phase, id, opts.tier, opts.title);
+            }
+          } else {
+            process.stderr.write(
+              `draft new: SPEC ${id} present but not APPROVED — scaffolding empty\n`,
+            );
+            body = renderDraftBody(phase, id, opts.tier, opts.title);
+          }
+        } else {
+          body = renderDraftBody(phase, id, opts.tier, opts.title);
+        }
         await writeFile(path, body);
 
         state.activePhase = phase;
