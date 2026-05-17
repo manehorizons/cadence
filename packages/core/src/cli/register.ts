@@ -13,6 +13,7 @@ import { registerProgressCommand } from './commands/progress.js';
 import { registerStatusCommand } from './commands/status.js';
 import { registerRecommendationCommand } from './commands/recommendation.js';
 import { registerInspectCommand } from './commands/inspect.js';
+import { registerRecommendCommand } from './commands/recommend.js';
 
 export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
@@ -29,4 +30,5 @@ export function registerAllCommands(program: Command): void {
   registerStatusCommand(program);
   registerRecommendationCommand(program);
   registerInspectCommand(program);
+  registerRecommendCommand(program);
 }
