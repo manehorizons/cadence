@@ -47,6 +47,7 @@ export const cadenceBackend: PraxisBackend = {
         loopPosition: state.loopPosition,
         activePhase: state.activePhase,
         activeDraft: state.activeDraft,
+        activeSpec: state.activeSpec,
         tier: state.tier,
         legalActions: [nextAction(state).command],
         artifacts: await this.readArtifacts(root),

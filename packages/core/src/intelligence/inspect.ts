@@ -45,19 +45,27 @@ export function synthesizeInspection(
     });
   }
 
+  const draftInconsistent =
+    backend.present === true &&
+    (backend.loopPosition === 'DRAFT' || backend.loopPosition === 'BUILD') &&
+    !backend.activeDraft;
+  const specInconsistent =
+    backend.present === true &&
+    backend.loopPosition === 'SPEC' &&
+    !backend.activeSpec;
   const loopInconsistent =
-    backend.stateError !== undefined ||
-    (backend.present &&
-      (backend.loopPosition === 'DRAFT' || backend.loopPosition === 'BUILD') &&
-      !backend.activeDraft);
+    backend.stateError !== undefined || draftInconsistent || specInconsistent;
   if (loopInconsistent) {
+    const evidence =
+      backend.stateError ??
+      `loopPosition=${backend.loopPosition ?? '(none)'} but no active ${
+        specInconsistent ? 'spec' : 'draft'
+      }`;
     flags.push({
       code: 'loop-state-inconsistent',
       severity: 'warn',
       message: 'CADENCE loop state is inconsistent or unreadable.',
-      evidence:
-        backend.stateError ??
-        `loopPosition=${backend.loopPosition ?? '(none)'} but no active draft`,
+      evidence,
     });
   }
 

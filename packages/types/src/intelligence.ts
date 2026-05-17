@@ -172,6 +172,7 @@ export const BackendStatusZ = z.object({
   loopPosition: z.string().optional(),
   activePhase: z.string().nullable().optional(),
   activeDraft: z.string().nullable().optional(),
+  activeSpec: z.string().nullable().optional(),
   profile: z.string().optional(),
   tier: z.string().nullable().optional(),
   legalActions: z.array(z.string()),
