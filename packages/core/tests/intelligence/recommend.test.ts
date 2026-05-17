@@ -88,7 +88,9 @@ describe('scoreRecommendation', () => {
 
   it('applies each categorical penalty (stale and needs-revalidation sink)', () => {
     const stale = scoreRecommendation(mkRec({ decayState: 'stale' }));
+    const nr = scoreRecommendation(mkRec({ decayState: 'needs-revalidation' }));
     const fresh = scoreRecommendation(mkRec({ decayState: 'fresh' }));
     expect(fresh.raw - stale.raw).toBe(10); // +4 − (−6)
+    expect(fresh.raw - nr.raw).toBe(9);     // +4 − (−5)
   });
 });
