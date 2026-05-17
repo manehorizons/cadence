@@ -43,3 +43,51 @@ export async function emitCodeReviewHigh(
     );
   }
 }
+
+/**
+ * Phase 37.1 — emits a single `code-review-unconverged` anomaly when
+ * code-review@settle fails to converge after maxAttempts. UNCONDITIONAL by
+ * design (mirrors emitPlanReviewUnconverged / emitSkillAuditMiss): code-review's
+ * gate cells include `strict×*`, which carry NO `anomaly-notify` gate — a hard
+ * human-escalation must still leave an audit trail, so the caller does NOT gate
+ * this on `anomaly-notify` (unlike the sibling `emitCodeReviewHigh`, whose
+ * Phase 24.3 `anomaly-notify` guard is preserved unchanged). Transport failure
+ * → one stderr warning, never throws (the settle refusal/exit is computed
+ * independently).
+ */
+export async function emitCodeReviewUnconverged(
+  notifier: ReturnType<typeof selectNotifier>,
+  ctx: {
+    draftId: string;
+    attempts: number;
+    maxAttempts: number;
+    findings: number;
+    provider: string;
+    model?: string;
+    bypassed?: boolean;
+  },
+): Promise<void> {
+  const event: AnomalyEvent = {
+    type: 'code-review-unconverged',
+    severity: 'error',
+    message: `code-review did not converge for ${ctx.draftId} after ${ctx.attempts}/${ctx.maxAttempts} attempts (${ctx.findings} finding(s))`,
+    context: {
+      draftId: ctx.draftId,
+      attempts: ctx.attempts,
+      maxAttempts: ctx.maxAttempts,
+      findings: ctx.findings,
+      provider: ctx.provider,
+      ...(ctx.model !== undefined ? { model: ctx.model } : {}),
+      ...(ctx.bypassed !== undefined ? { bypassed: ctx.bypassed } : {}),
+    },
+    ts: new Date().toISOString(),
+  };
+  try {
+    await notifier.notify([event]);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    process.stderr.write(
+      `cadence-notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
+    );
+  }
+}
