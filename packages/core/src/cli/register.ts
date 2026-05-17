@@ -12,6 +12,7 @@ import { registerSettleCommand } from './commands/settle.js';
 import { registerProgressCommand } from './commands/progress.js';
 import { registerStatusCommand } from './commands/status.js';
 import { registerRecommendationCommand } from './commands/recommendation.js';
+import { registerInspectCommand } from './commands/inspect.js';
 
 export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
@@ -27,4 +28,5 @@ export function registerAllCommands(program: Command): void {
   registerProgressCommand(program);
   registerStatusCommand(program);
   registerRecommendationCommand(program);
+  registerInspectCommand(program);
 }
