@@ -51,7 +51,9 @@ export function registerMilestoneCommand(program: Command): void {
             process.exitCode = 1;
             return;
           }
-          console.log(`milestone ${id} → ${action === 'accept' ? 'accepted' : 'deferred'}`);
+          process.stdout.write(
+            `milestone ${id} → ${action === 'accept' ? 'accepted' : 'deferred'}\n`,
+          );
         } catch (err) {
           process.stderr.write(
             `milestone ${action} failed: ${err instanceof Error ? err.message : String(err)}\n`,
