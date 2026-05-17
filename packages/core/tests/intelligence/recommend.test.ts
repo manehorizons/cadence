@@ -157,6 +157,16 @@ describe('buildAdvisory', () => {
     expect(a.secondary).toBe('cadence milestone propose');
   });
 
+  it('finish-loop with no topRanked has no secondary', () => {
+    const a = buildAdvisory(
+      null,
+      { ...idleBackend, loopPosition: 'DRAFT', activeDraft: 'p-1-01', legalActions: ['cadence build task T1'] },
+      { needsAttention: 0 },
+    );
+    expect(a.kind).toBe('finish-loop');
+    expect(a.secondary).toBeUndefined();
+  });
+
   it('an inconsistent loop (DRAFT, no active draft) is treated as not-in-flight', () => {
     const a = buildAdvisory(
       mkRec({ readiness: 'ready-for-milestone' }),
