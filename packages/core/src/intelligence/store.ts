@@ -3,11 +3,14 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   EvidenceLedgerZ,
+  MilestoneLedgerZ,
   RecommendationLedgerZ,
   emptyEvidenceLedger,
+  emptyMilestoneLedger,
   emptyRecommendationLedger,
   type Evidence,
   type EvidenceLedger,
+  type MilestoneLedger,
   type Recommendation,
   type RecommendationLedger,
   type RecommendationPriority,
@@ -15,6 +18,7 @@ import {
 } from '@cadence/types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { renderRecommendationsMd } from './render.js';
+import { renderMilestonesMd } from './render-milestone.js';
 
 const INTELLIGENCE_DIR = '.cadence/intelligence';
 const RECOMMENDATIONS_JSON = 'recommendations.json';
@@ -144,4 +148,33 @@ export async function addRecommendation(
   ledger.recommendations.push(rec);
   await writeIntelligenceLedgers(root, ledger, evidenceLedger);
   return rec;
+}
+
+const MILESTONES_JSON = 'milestones.json';
+const MILESTONES_MD = 'MILESTONES.md';
+
+function milestonesPath(root: string): string {
+  return join(intelligenceDir(root), MILESTONES_JSON);
+}
+function milestonesMdPath(root: string): string {
+  return join(intelligenceDir(root), MILESTONES_MD);
+}
+
+export async function readMilestoneLedger(
+  root: string,
+): Promise<MilestoneLedger> {
+  const path = milestonesPath(root);
+  if (!existsSync(path)) return emptyMilestoneLedger();
+  const raw = await readFile(path, 'utf8');
+  return MilestoneLedgerZ.parse(JSON.parse(raw));
+}
+
+export async function writeMilestoneLedger(
+  root: string,
+  ledger: MilestoneLedger,
+): Promise<void> {
+  await mkdir(intelligenceDir(root), { recursive: true });
+  MilestoneLedgerZ.parse(ledger);
+  await atomicWriteJSON(milestonesPath(root), ledger);
+  await atomicWriteText(milestonesMdPath(root), renderMilestonesMd(ledger));
 }
