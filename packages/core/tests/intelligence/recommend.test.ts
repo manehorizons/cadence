@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Recommendation } from '@cadence/types';
-import { scoreRecommendation } from '../../src/intelligence/recommend.js';
+import { scoreRecommendation, partitionLedger } from '../../src/intelligence/recommend.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {
@@ -92,5 +92,39 @@ describe('scoreRecommendation', () => {
     const fresh = scoreRecommendation(mkRec({ decayState: 'fresh' }));
     expect(fresh.raw - stale.raw).toBe(10); // +4 − (−6)
     expect(fresh.raw - nr.raw).toBe(9);     // +4 − (−5)
+  });
+});
+
+describe('partitionLedger', () => {
+  it('excludes rejected and converted (count only)', () => {
+    const p = partitionLedger([
+      mkRec({ id: 'a', status: 'rejected' }),
+      mkRec({ id: 'b', status: 'converted' }),
+      mkRec({ id: 'c', status: 'candidate' }),
+    ]);
+    expect(p.excludedCount).toBe(2);
+    expect(p.ranked.map((r) => r.id)).toEqual(['c']);
+    expect(p.parked).toEqual([]);
+    expect(p.needsAttention).toEqual([]);
+  });
+
+  it('routes superseded/contradicted to needs-attention, overriding deferred', () => {
+    const p = partitionLedger([
+      mkRec({ id: 'a', status: 'deferred', decayState: 'contradicted' }),
+      mkRec({ id: 'b', status: 'candidate', decayState: 'superseded' }),
+    ]);
+    expect(p.needsAttention.map((r) => r.id).sort()).toEqual(['a', 'b']);
+    expect(p.parked).toEqual([]);
+    expect(p.ranked).toEqual([]);
+  });
+
+  it('parks plain deferred and ranks candidate/accepted (stale still ranked)', () => {
+    const p = partitionLedger([
+      mkRec({ id: 'a', status: 'deferred', decayState: 'fresh' }),
+      mkRec({ id: 'b', status: 'candidate', decayState: 'stale' }),
+      mkRec({ id: 'c', status: 'accepted', decayState: 'fresh' }),
+    ]);
+    expect(p.parked.map((r) => r.id)).toEqual(['a']);
+    expect(p.ranked.map((r) => r.id).sort()).toEqual(['b', 'c']);
   });
 });
