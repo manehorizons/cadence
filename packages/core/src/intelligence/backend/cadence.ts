@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { BackendStatus } from '@cadence/types';
 import { SimpleStateBackend } from '../../state/simple.js';
@@ -66,7 +67,6 @@ export const cadenceBackend: PraxisBackend = {
     const phasesDir = join(d, 'phases');
     let phaseCount = 0;
     if (existsSync(phasesDir)) {
-      const { readdir } = await import('node:fs/promises');
       try {
         const entries = await readdir(phasesDir, { withFileTypes: true });
         phaseCount = entries.filter((e) => e.isDirectory()).length;
