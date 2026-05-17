@@ -693,14 +693,16 @@ Shape recommendations into milestone candidates (read-narrow; never transitions 
 | `list [--json]` | Show the current milestone ledger |
 
 **Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
-`propose` reads the recommendation ledger **read-only** (it is backend-free —
+`propose` reads the recommendation ledger **read-narrow** (it is backend-free —
 it never reads or writes `state.json` and never transitions the loop),
 clusters recommendations that are `accepted` and `ready-for-milestone`/
 `ready-for-cadence-spec` (excluding `superseded`/`contradicted`) by their
 `suggestedMilestoneId` (each ungrouped rec becomes its own singleton
 candidate), and attaches a deterministically-seeded scaffolded pre-mortem
 (facts-only: shared-file dependencies, doc-surface drift, low-confidence
-inputs — every other pre-mortem entry is left for a human to fill).
+inputs); pre-mortem entries not covered by a deterministic seed — and
+`outOfScope` always — are left empty with placeholder prompts in the rendered
+`MILESTONES.md` for a human to fill.
 Re-running `propose` regenerates only `proposed` records; `accepted`/
 `deferred`/`exported`/`closed` milestones and their recommendations are never
 clobbered or re-proposed. `accept`/`defer` enforce guarded status
@@ -711,7 +713,7 @@ Writes:
 - `.cadence/intelligence/milestones.json`
 - `.cadence/intelligence/MILESTONES.md`
 
-With `--json`, the milestone ledger object is emitted to stdout instead of
+With `--json` (on `propose` and `list`), the milestone ledger object is emitted to stdout instead of
 the rendered text. Distinct from CADENCE's own execution-layer
 `.cadence/MILESTONES.md`. SPEC export (`milestone export --to cadence`) is a
 later slice.
