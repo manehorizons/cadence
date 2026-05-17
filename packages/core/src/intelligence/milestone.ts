@@ -5,6 +5,11 @@ import type {
   Recommendation,
   RecommendationReadiness,
 } from '@cadence/types';
+import {
+  readMilestoneLedger,
+  readRecommendationLedger,
+  writeMilestoneLedger,
+} from './store.js';
 
 const ELIGIBLE_READINESS = new Set<RecommendationReadiness>([
   'ready-for-milestone',
@@ -198,4 +203,30 @@ export function applyTransition(
     ),
   };
   return { ok: true, ledger: ledgerOut };
+}
+
+export async function runProposeMilestones(
+  root: string,
+  now: Date = new Date(),
+): Promise<MilestoneLedger> {
+  const recs = (await readRecommendationLedger(root)).recommendations;
+  const existing = await readMilestoneLedger(root);
+  const next: MilestoneLedger = {
+    schemaVersion: 1,
+    milestones: clusterMilestones(recs, existing.milestones, now),
+  };
+  await writeMilestoneLedger(root, next);
+  return next;
+}
+
+export async function runMilestoneTransition(
+  root: string,
+  id: string,
+  action: TransitionAction,
+): Promise<TransitionResult> {
+  const ledger = await readMilestoneLedger(root);
+  const res = applyTransition(ledger, id, action, new Date());
+  if (!res.ok) return res;
+  await writeMilestoneLedger(root, res.ledger);
+  return res;
 }

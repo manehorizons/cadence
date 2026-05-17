@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, afterEach } from 'vitest';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { IntelligenceMilestone, MilestoneLedger, Recommendation } from '@cadence/types';
-import { applyTransition, clusterMilestones, isEligible, seedPreMortem } from '../../src/intelligence/milestone.js';
+import { applyTransition, clusterMilestones, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition } from '../../src/intelligence/milestone.js';
+import { readMilestoneLedger } from '../../src/intelligence/store.js';
+import { tempRepo, type Fixture } from '@cadence/testkit';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {
@@ -262,6 +266,94 @@ function mk(id: string, status: IntelligenceMilestone['status']): IntelligenceMi
     updatedAt: '2026-05-01T00:00:00.000Z',
   };
 }
+
+async function seedRecs(root: string, recs: Recommendation[]): Promise<void> {
+  const dir = join(root, '.cadence', 'intelligence');
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    join(dir, 'recommendations.json'),
+    JSON.stringify({ schemaVersion: 1, recommendations: recs }, null, 2),
+  );
+}
+
+let fx: Fixture | null = null;
+afterEach(async () => {
+  if (fx) {
+    await fx.cleanup();
+    fx = null;
+  }
+});
+
+describe('runProposeMilestones', () => {
+  it('clusters eligible recs and writes milestones.json + MILESTONES.md', async () => {
+    fx = await tempRepo({ initialized: true });
+    await seedRecs(fx.root, [
+      mkRec({ id: 'rec-1', title: 'A', suggestedMilestoneId: 'grp' }),
+      mkRec({ id: 'rec-2', status: 'candidate' }), // ineligible
+    ]);
+    const led = await runProposeMilestones(fx.root, new Date('2026-05-17T00:00:00.000Z'));
+    expect(led.milestones.map((m) => m.id)).toEqual(['mil-grp-grp']);
+
+    const jsonRaw = await readFile(
+      join(fx.root, '.cadence', 'intelligence', 'milestones.json'),
+      'utf8',
+    );
+    expect(JSON.parse(jsonRaw).milestones).toHaveLength(1);
+    const md = await readFile(
+      join(fx.root, '.cadence', 'intelligence', 'MILESTONES.md'),
+      'utf8',
+    );
+    expect(md).toMatch(/### mil-grp-grp — grp/);
+  });
+
+  it('re-propose on an unchanged ledger is byte-identical', async () => {
+    fx = await tempRepo({ initialized: true });
+    await seedRecs(fx.root, [mkRec({ id: 'rec-1' })]);
+    const T = new Date('2026-05-17T00:00:00.000Z');
+    await runProposeMilestones(fx.root, T);
+    const first = await readFile(
+      join(fx.root, '.cadence', 'intelligence', 'milestones.json'),
+      'utf8',
+    );
+    await runProposeMilestones(fx.root, T);
+    const second = await readFile(
+      join(fx.root, '.cadence', 'intelligence', 'milestones.json'),
+      'utf8',
+    );
+    expect(second).toBe(first);
+  });
+
+  it('empty / absent recommendation ledger -> empty milestones, still writes', async () => {
+    fx = await tempRepo({ initialized: true });
+    const led = await runProposeMilestones(fx.root);
+    expect(led.milestones).toEqual([]);
+  });
+});
+
+describe('runMilestoneTransition', () => {
+  it('accept persists; illegal transition returns ok:false and does not write', async () => {
+    fx = await tempRepo({ initialized: true });
+    await seedRecs(fx.root, [mkRec({ id: 'rec-1' })]);
+    await runProposeMilestones(fx.root, new Date('2026-05-17T00:00:00.000Z'));
+    const id = 'mil-rec-rec-1';
+
+    const ok = await runMilestoneTransition(fx.root, id, 'accept');
+    expect(ok.ok).toBe(true);
+    expect((await readMilestoneLedger(fx.root)).milestones[0].status).toBe(
+      'accepted',
+    );
+
+    const bad = await runMilestoneTransition(fx.root, id, 'accept');
+    expect(bad.ok).toBe(false);
+    // unchanged on disk
+    expect((await readMilestoneLedger(fx.root)).milestones[0].status).toBe(
+      'accepted',
+    );
+
+    const missing = await runMilestoneTransition(fx.root, 'nope', 'defer');
+    expect(missing).toEqual({ ok: false, error: 'milestone nope not found' });
+  });
+});
 
 describe('applyTransition', () => {
   const T = new Date('2026-05-17T12:00:00.000Z');

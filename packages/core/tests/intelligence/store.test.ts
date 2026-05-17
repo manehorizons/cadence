@@ -5,6 +5,8 @@ import { tempRepo, type Fixture } from '@cadence/testkit';
 import {
   addRecommendation,
   readRecommendationLedger,
+  readMilestoneLedger,
+  writeMilestoneLedger,
 } from '../../src/intelligence/store.js';
 
 let active: Fixture | null = null;
@@ -13,6 +15,45 @@ afterEach(async () => {
     await active.cleanup();
     active = null;
   }
+});
+
+describe('milestone ledger IO', () => {
+  it('absent file -> empty ledger; round-trips + writes MILESTONES.md', async () => {
+    const fx = await tempRepo({ initialized: true });
+    try {
+      expect(await readMilestoneLedger(fx.root)).toEqual({
+        schemaVersion: 1,
+        milestones: [],
+      });
+
+      await writeMilestoneLedger(fx.root, {
+        schemaVersion: 1,
+        milestones: [
+          {
+            id: 'mil-rec-rec-1',
+            name: 'X',
+            objective: 'o',
+            status: 'proposed',
+            recommendationIds: ['rec-1'],
+            preMortem: { likelyFailureModes: [], hiddenDependencies: [], driftRisks: [], outOfScope: [] },
+            exportTargets: [],
+            createdAt: '2026-05-17T00:00:00.000Z',
+            updatedAt: '2026-05-17T00:00:00.000Z',
+          },
+        ],
+      });
+
+      const back = await readMilestoneLedger(fx.root);
+      expect(back.milestones[0].id).toBe('mil-rec-rec-1');
+      const md = await readFile(
+        join(fx.root, '.cadence', 'intelligence', 'MILESTONES.md'),
+        'utf8',
+      );
+      expect(md).toMatch(/# CADENCE Milestone Candidates/);
+    } finally {
+      await fx.cleanup();
+    }
+  });
 });
 
 describe('intelligence store', () => {
