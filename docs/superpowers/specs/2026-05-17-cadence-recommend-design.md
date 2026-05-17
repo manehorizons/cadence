@@ -123,7 +123,7 @@ Sorting uses `raw` (not the rounded `display`, to avoid rounding ties); stable t
 Each invocation returns `terms: ScoreTerm[]` — one entry per contributing factor (`{ label, value }`) — rendered verbatim in the per-item why-line, e.g.:
 
 ```
-lev 7 → +7.0 · conf .80 → +4.8 · risk 3 → −1.5 · status accepted +6 · ready ready-for-milestone +7 · decay fresh +4 · prio high +5 ⇒ raw 32.3 (score 82)
+lev 7 → +7.0 · conf .80 → +4.8 · risk 3 → −1.5 · status accepted +6 · ready ready-for-milestone +7 · decay fresh +4 · prio high +5 ⇒ raw 32.3 (score 83)
 ```
 
 **Boundary note (deliberate, documented).** The parent design's "considers … CADENCE state, recent project activity" clause is satisfied at the **advisory layer**, not inside the scalar. Keeping the scalar a pure function of the recommendation alone makes it exhaustively table-testable and keeps ranking reproducible regardless of repo/loop state. This is an explicit scope decision, not an omission.
