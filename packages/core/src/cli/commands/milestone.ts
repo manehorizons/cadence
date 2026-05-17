@@ -1,0 +1,83 @@
+import type { Command } from 'commander';
+import {
+  runMilestoneTransition,
+  runProposeMilestones,
+} from '../../intelligence/milestone.js';
+import { readMilestoneLedger } from '../../intelligence/store.js';
+import { renderMilestonesMd } from '../../intelligence/render-milestone.js';
+
+export function registerMilestoneCommand(program: Command): void {
+  const cmd = program
+    .command('milestone')
+    .description(
+      'Shape recommendations into milestone candidates (read-narrow; never transitions the loop)',
+    );
+
+  cmd
+    .command('propose')
+    .description(
+      'Cluster eligible recommendations into proposed milestone candidates',
+    )
+    .option('--json', 'emit machine-readable JSON instead of rendered text')
+    .action(async (opts: { json?: boolean }) => {
+      try {
+        const ledger = await runProposeMilestones(process.cwd());
+        if (opts.json) {
+          process.stdout.write(JSON.stringify(ledger) + '\n');
+        } else {
+          process.stdout.write(renderMilestonesMd(ledger));
+        }
+      } catch (err) {
+        process.stderr.write(
+          `milestone propose failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  for (const action of ['accept', 'defer'] as const) {
+    cmd
+      .command(`${action} <id>`)
+      .description(
+        action === 'accept'
+          ? 'Mark a proposed milestone accepted'
+          : 'Defer a proposed or accepted milestone',
+      )
+      .action(async (id: string) => {
+        try {
+          const res = await runMilestoneTransition(process.cwd(), id, action);
+          if (!res.ok) {
+            process.stderr.write(`milestone ${action} refused: ${res.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          console.log(`milestone ${id} → ${action === 'accept' ? 'accepted' : 'deferred'}`);
+        } catch (err) {
+          process.stderr.write(
+            `milestone ${action} failed: ${err instanceof Error ? err.message : String(err)}\n`,
+          );
+          process.exitCode = 1;
+        }
+      });
+  }
+
+  cmd
+    .command('list')
+    .description('Show the current milestone ledger')
+    .option('--json', 'emit machine-readable JSON instead of rendered text')
+    .action(async (opts: { json?: boolean }) => {
+      try {
+        const ledger = await readMilestoneLedger(process.cwd());
+        if (opts.json) {
+          process.stdout.write(JSON.stringify(ledger) + '\n');
+        } else {
+          process.stdout.write(renderMilestonesMd(ledger));
+        }
+      } catch (err) {
+        process.stderr.write(
+          `milestone list failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+}

@@ -14,6 +14,7 @@ import { registerStatusCommand } from './commands/status.js';
 import { registerRecommendationCommand } from './commands/recommendation.js';
 import { registerInspectCommand } from './commands/inspect.js';
 import { registerRecommendCommand } from './commands/recommend.js';
+import { registerMilestoneCommand } from './commands/milestone.js';
 
 export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
@@ -31,4 +32,5 @@ export function registerAllCommands(program: Command): void {
   registerRecommendationCommand(program);
   registerInspectCommand(program);
   registerRecommendCommand(program);
+  registerMilestoneCommand(program);
 }
