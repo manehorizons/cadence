@@ -83,6 +83,12 @@ unchanged). `pass = highFindings.length === 0`.
 }
 ```
 
+**Conscious count semantics:** `findingsCount` / top-level `findings` record
+the **HIGH count** (`highs.length`), NOT total findings of all severities —
+deliberately, because the convergence boolean is HIGH-only (the 35.1 source
+records total `res.findings.length`; this is an intentional, self-consistent
+divergence). The new test asserts HIGH-count; pick this once and keep it.
+
 Read at the code-review gate: prior `attempts` (number) → `attemptsSoFar`;
 absent/corrupt/legacy-without-`attempts` → `attemptsSoFar = 0` (identical
 back-compat rule to plan-review). `history` append-only. Path:
@@ -100,20 +106,36 @@ CodeReview port of the shipped `draft.ts` Phase 35.1 block). When
 2. read prior sidecar `attemptsSoFar`/`history`.
 3. `maxAttempts = cadenceConfig?.convergence?.maxAttempts ?? 3`;
    `nv = nextConvergence(pass, attemptsSoFar, maxAttempts)`;
-   `bypassed = !pass && opts.allowCodeReviewFailure === true`.
+   `bypassed = !pass && (opts.allowCodeReviewFailure === true || opts.force === true)`.
+   **Explicit decision (preserve the Phase 24.3 contract — do NOT narrow it):**
+   today's code-review block bypasses HIGH on `--force` **OR**
+   `--allow-code-review-failure` (settle.ts ~`bypassed = opts.force === true
+   || opts.allowCodeReviewFailure === true`), and the proceed-line text
+   branches on which flag. The convergence port **keeps both** as bypass
+   triggers and **keeps the existing branching proceed-line verbatim**
+   (`code-review: --force set; proceeding past N HIGH finding(s).` vs
+   `code-review: --allow-code-review-failure set; proceeding past N HIGH
+   finding(s).`) — no dead branch, no silent `--force` narrowing (a narrowing
+   would be an undocumented behavior change and risks the very
+   contract-regression this spec exists to prevent). The Phase 35.1 source
+   has no `--force` notion only because plan-review@approve has no `--force`;
+   settle does, so the port must retain it.
 4. persist `<id>-CODE-REVIEW.json` (shape above; `converged = pass`,
    `attempts = nv.verdict==='pass' ? attemptsSoFar : nv.attempt`).
 5. branch (identical control flow to the shipped plan-review block):
    - **pass** → continue settle (existing behavior; `SUMMARY.codeReview`
      still recorded from `result.findings` as today).
-   - **`!pass` + `opts.allowCodeReviewFailure`** → print findings (existing
-     format); emit `code-review-high` (existing `emitCodeReviewHigh`,
-     `bypassed:true`); if `nv.verdict==='escalate'` also emit the new
-     `code-review-unconverged` (`bypassed:true`); print
-     `code-review: --allow-code-review-failure set; proceeding past N HIGH
-     finding(s).` (the existing Phase 24.3 line — keep verbatim so the
-     existing test's regex still matches); record `SUMMARY.codeReview`;
-     **continue settle**. (Preserves the Phase 24.3 contract.)
+   - **`!pass` + bypass (`--force` OR `--allow-code-review-failure`)** →
+     print findings (existing format); emit `code-review-high` (existing
+     `emitCodeReviewHigh`, `bypassed:true`); if `nv.verdict==='escalate'`
+     also emit the new `code-review-unconverged` (`bypassed:true`); print
+     the **existing Phase 24.3 branching proceed-line verbatim** —
+     `code-review: --force set; proceeding past N HIGH finding(s).` when
+     `opts.force`, else `code-review: --allow-code-review-failure set;
+     proceeding past N HIGH finding(s).` (keep both arms exactly so the
+     existing AC-5 regex `/--allow-code-review-failure set; proceeding past
+     1 HIGH/` still matches); record `SUMMARY.codeReview`; **continue
+     settle**. (Preserves the Phase 24.3 contract incl. `--force`.)
    - **`!pass`, no flag, `reloop`** → emit `code-review-high` (existing);
      print each finding (existing format) + `code-review: attempt
      N/MAX did not pass — fix the flagged code and re-run \`cadence settle
@@ -204,11 +226,13 @@ Vitest, in-package; no re-test of `nextConvergence` (Phase 35.1 owns it).
 3. escalate at `config.convergence.maxAttempts`: distinct human-decision
    message + new **unconditional** `code-review-unconverged` anomaly +
    hard-refuse unless `--allow-code-review-failure`.
-4. `--allow-code-review-failure` bypasses ANY fail (reloop OR escalate) →
-   settle proceeds, `SUMMARY.codeReview` recorded, `code-review-high`
-   (`bypassed:true`) emitted, `bypassed:true` in sidecar history, the
-   verbatim "proceeding past N HIGH finding(s)" line printed — **existing
-   `settle-code-review.test.ts` AC-4/5/6 stay green** (Phase 24.3 contract).
+4. Bypass (`--force` OR `--allow-code-review-failure`) past ANY fail (reloop
+   OR escalate) → settle proceeds, `SUMMARY.codeReview` recorded,
+   `code-review-high` (`bypassed:true`) emitted, `bypassed:true` in sidecar
+   history, the existing **branching** "—{force|allow} set; proceeding past
+   N HIGH finding(s)" line printed verbatim — **existing
+   `settle-code-review.test.ts` AC-4/5/6 stay green; `--force` keeps
+   bypassing code-review (Phase 24.3 contract NOT narrowed)**.
 5. `AnomalyTypeZ` additive `code-review-unconverged` (+ `emitCodeReviewUnconverged`
    unconditional/no-throw in `notify/code-review.ts`); no new config (reuse
    `config.convergence.maxAttempts`); no `gates/engine.ts` / `state.json`
