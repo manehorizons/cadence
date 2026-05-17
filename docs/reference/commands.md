@@ -28,6 +28,7 @@ Two CLIs are documented here:
   - [status](#status)
   - [recommendation](#recommendation)
   - [inspect](#inspect)
+  - [recommend](#recommend)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -65,6 +66,7 @@ progress
 status
 recommendation
 inspect
+recommend
 <!-- cadence:commands:end -->
 
 ---
@@ -626,6 +628,48 @@ which report execution-loop position; `inspect` is the strategic layer.
 **Exit codes** — exits non-zero only on a genuine failure (e.g. artifact
 write error). A missing git repo or missing `.cadence/` backend degrades
 gracefully and still exits 0.
+
+---
+
+### recommend
+
+```
+Usage: cadence recommend [options]
+
+Rank actionable strategic recommendations and advise the next move (read-only)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+Reads the recommendation ledger and CADENCE loop state **read-only** (never
+mutates `state.json` or transitions the loop), then: partitions the ledger
+(rejected/converted excluded; superseded/contradicted surfaced as
+needs-attention; deferred parked; candidate/accepted ranked), scores each
+ranked recommendation with a transparent additive 0–100 model whose every
+term is shown in a per-item why-line, and derives one loop-aware next-action
+advisory (a loop in flight yields a finish-first advisory; otherwise the top
+recommendation's action, or `cadence spec new` when it is ready for a CADENCE
+spec).
+
+Writes:
+
+- `.cadence/intelligence/recommend.json`
+- `.cadence/intelligence/RECOMMEND.md`
+
+With `--json`, the report object is emitted to stdout instead of the
+rendered text. The advisory only ever names already-legal commands as text;
+it never executes or forces a loop transition. Distinct from `cadence
+status`/`progress` (execution loop) and `cadence inspect` (strategic status).
+
+**Exit codes** — exits non-zero only on a genuine failure (e.g. artifact
+write error). An empty ledger, a missing git repo, or a missing `.cadence/`
+backend degrades gracefully and still exits 0.
 
 ---
 
