@@ -1,20 +1,15 @@
 import type {
   IntelligenceMilestone,
   MilestoneLedger,
+  MilestonePreMortem,
 } from '@cadence/types';
 
-const PROMPTS: Record<keyof IntelligenceMilestone['preMortem'], string> = {
-  likelyFailureModes: '_(why might this fail?)_',
-  hiddenDependencies: '_(what must already be true?)_',
-  driftRisks: '_(what docs/specs will drift?)_',
-  outOfScope: '_(what is explicitly NOT in this milestone?)_',
-};
-const PM_ORDER: Array<[keyof IntelligenceMilestone['preMortem'], string]> = [
-  ['likelyFailureModes', 'likely failure modes'],
-  ['hiddenDependencies', 'hidden dependencies'],
-  ['driftRisks', 'drift risks'],
-  ['outOfScope', 'out of scope'],
-];
+const PM_SECTIONS = [
+  ['likelyFailureModes', 'likely failure modes', '_(why might this fail?)_'],
+  ['hiddenDependencies', 'hidden dependencies', '_(what must already be true?)_'],
+  ['driftRisks', 'drift risks', '_(what docs/specs will drift?)_'],
+  ['outOfScope', 'out of scope', '_(what is explicitly NOT in this milestone?)_'],
+] as const satisfies ReadonlyArray<[keyof MilestonePreMortem, string, string]>;
 
 function byId(a: IntelligenceMilestone, b: IntelligenceMilestone): number {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
@@ -27,11 +22,11 @@ function detailBlock(m: IntelligenceMilestone, lines: string[]): void {
   lines.push(`- status: ${m.status}`);
   lines.push(`- recommendations: ${m.recommendationIds.join(', ')}`);
   lines.push('- pre-mortem:');
-  for (const [key, label] of PM_ORDER) {
+  for (const [key, label, prompt] of PM_SECTIONS) {
     lines.push(`  - ${label}:`);
     const entries = m.preMortem[key];
     if (entries.length === 0) {
-      lines.push(`    - ${PROMPTS[key]}`);
+      lines.push(`    - ${prompt}`);
     } else {
       for (const e of entries) lines.push(`    - ${e}`);
     }

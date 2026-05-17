@@ -74,11 +74,23 @@ describe('renderMilestonesMd', () => {
           ],
         }),
         mk({ id: 'mil-c', status: 'closed' }),
+        mk({ id: 'mil-acc', name: 'Acc', status: 'accepted' }),
+        mk({ id: 'mil-z-prop', name: 'Zprop', status: 'proposed' }),
+        mk({ id: 'mil-a-prop', name: 'Aprop', status: 'proposed' }),
+        mk({ id: 'mil-noexp', name: 'NoExp', status: 'exported', exportTargets: [] }),
       ),
     );
     const deferred = md.slice(md.indexOf('## Deferred'), md.indexOf('## Exported'));
     expect(deferred.indexOf('mil-a')).toBeLessThan(deferred.indexOf('mil-b'));
     expect(md).toMatch(/- mil-x — mil-x → \.cadence\/phases\/p\/00-01-SPEC\.md/);
     expect(md).toMatch(/## Closed\n\n- mil-c — mil-c/);
+    // Accepted renders a detail block (same path as Proposed)
+    expect(md).toMatch(/## Accepted\n\n### mil-acc — Acc/);
+    // Proposed detail section is id-sorted (mil-a-prop before mil-z-prop)
+    const proposed = md.slice(md.indexOf('## Proposed'), md.indexOf('## Accepted'));
+    expect(proposed.indexOf('mil-a-prop')).toBeLessThan(proposed.indexOf('mil-z-prop'));
+    // Exported with empty exportTargets renders no arrow
+    expect(md).toMatch(/- mil-noexp — NoExp\n/);
+    expect(md).not.toMatch(/mil-noexp — NoExp →/);
   });
 });
