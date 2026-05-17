@@ -63,6 +63,26 @@ describe('synthesizeInspection', () => {
     expect(i.flags.map((f) => f.code)).toContain('loop-state-inconsistent');
   });
 
+  it('flags loop-state inconsistency (SPEC with no active spec)', () => {
+    const i = synthesizeInspection(
+      cleanScan,
+      { ...cleanBackend, loopPosition: 'SPEC', activeSpec: null, legalActions: [] },
+      { recommendations: 0, byDecay: {}, evidence: 0 },
+      NOW,
+    );
+    expect(i.flags.map((f) => f.code)).toContain('loop-state-inconsistent');
+  });
+
+  it('does not flag a well-formed SPEC position (active spec present)', () => {
+    const i = synthesizeInspection(
+      cleanScan,
+      { ...cleanBackend, loopPosition: 'SPEC', activeSpec: '36-01', legalActions: [] },
+      { recommendations: 0, byDecay: {}, evidence: 0 },
+      NOW,
+    );
+    expect(i.flags.map((f) => f.code)).not.toContain('loop-state-inconsistent');
+  });
+
   it('flags a stateError', () => {
     const i = synthesizeInspection(
       cleanScan,

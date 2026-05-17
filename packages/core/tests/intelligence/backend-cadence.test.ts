@@ -22,6 +22,7 @@ describe('cadenceBackend', () => {
     expect(status.present).toBe(true);
     expect(status.kind).toBe('cadence');
     expect(status.loopPosition).toBe('IDLE');
+    expect(status.activeSpec).toBeNull();
     expect(status.tier).toBeNull();
     expect(status.stateError).toBeUndefined();
 
