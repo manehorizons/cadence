@@ -7,3 +7,4 @@ export * from './summary.js';
 export * from './host.js';
 export * from './profile.js';
 export * from './anomaly.js';
+export * from './intelligence.js';
