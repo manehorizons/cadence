@@ -69,6 +69,8 @@ export function seedPreMortem(recs: Recommendation[]): MilestonePreMortem {
   return { likelyFailureModes, hiddenDependencies, driftRisks, outOfScope: [] };
 }
 
+const MAX_OBJECTIVE_TITLES = 3;
+
 function sanitize(s: string): string {
   return s
     .trim()
@@ -81,6 +83,12 @@ function bySortedId<T extends { id: string }>(a: T, b: T): number {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
+/**
+ * Deterministic for a fixed `now` ONLY when `existing` is the unmodified prior output
+ * (the survivor block preserves `existing` order). `rawName` for a grouped bucket is the
+ * first-seen `suggestedMilestoneId` among recs sanitizing to the same slug; callers should
+ * normalize labels upstream if canonical casing matters.
+ */
 export function clusterMilestones(
   recs: Recommendation[],
   existing: IntelligenceMilestone[],
@@ -89,6 +97,7 @@ export function clusterMilestones(
   const ts = now.toISOString();
 
   const survivors = existing.filter((m) => m.status !== 'proposed');
+  const survivorIds = new Set(survivors.map((m) => m.id));
   const claimed = new Set<string>();
   for (const m of survivors) {
     for (const id of m.recommendationIds) claimed.add(id);
@@ -115,6 +124,7 @@ export function clusterMilestones(
 
   const fresh: IntelligenceMilestone[] = [];
   for (const id of [...buckets.keys()].sort()) {
+    if (survivorIds.has(id)) continue;
     const b = buckets.get(id)!;
     const sorted = [...b.recs].sort((x, y) =>
       x.createdAt !== y.createdAt
@@ -131,7 +141,7 @@ export function clusterMilestones(
     const name = grouped ? b.rawName! : head.title;
     const objective = grouped
       ? `Deliver ${sorted.length} recommendation(s): ${sorted
-          .slice(0, 3)
+          .slice(0, MAX_OBJECTIVE_TITLES)
           .map((r) => r.title)
           .join('; ')}`
       : head.summary;

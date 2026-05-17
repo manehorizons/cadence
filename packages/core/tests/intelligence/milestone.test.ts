@@ -203,4 +203,45 @@ describe('clusterMilestones', () => {
   it('empty input -> empty output', () => {
     expect(clusterMilestones([], [], NOW)).toEqual([]);
   });
+
+  it('does NOT emit a fresh bucket that collides with a non-proposed survivor id', () => {
+    const existing: IntelligenceMilestone[] = [
+      {
+        id: 'mil-grp-auth-work',
+        name: 'Auth Work',
+        objective: 'kept',
+        status: 'accepted',
+        recommendationIds: ['rec-old'],
+        preMortem: { likelyFailureModes: [], hiddenDependencies: [], driftRisks: [], outOfScope: [] },
+        exportTargets: [],
+        createdAt: '2026-05-01T00:00:00.000Z',
+        updatedAt: '2026-05-01T00:00:00.000Z',
+      },
+    ];
+    const out = clusterMilestones(
+      [mkRec({ id: 'rec-new', suggestedMilestoneId: 'Auth Work' })],
+      existing,
+      NOW,
+    );
+    // exactly one milestone with this id, and it is the untouched accepted survivor
+    expect(out.filter((m) => m.id === 'mil-grp-auth-work')).toHaveLength(1);
+    const keep = out.find((m) => m.id === 'mil-grp-auth-work')!;
+    expect(keep.status).toBe('accepted');
+    expect(keep.recommendationIds).toEqual(['rec-old']);
+  });
+
+  it('truncates grouped objective to the first 3 titles', () => {
+    const out = clusterMilestones(
+      [
+        mkRec({ id: 'r1', title: 'T1', suggestedMilestoneId: 'g', createdAt: '2026-05-01T00:00:00.000Z' }),
+        mkRec({ id: 'r2', title: 'T2', suggestedMilestoneId: 'g', createdAt: '2026-05-02T00:00:00.000Z' }),
+        mkRec({ id: 'r3', title: 'T3', suggestedMilestoneId: 'g', createdAt: '2026-05-03T00:00:00.000Z' }),
+        mkRec({ id: 'r4', title: 'T4', suggestedMilestoneId: 'g', createdAt: '2026-05-04T00:00:00.000Z' }),
+      ],
+      [],
+      NOW,
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0]!.objective).toBe('Deliver 4 recommendation(s): T1; T2; T3');
+  });
 });
