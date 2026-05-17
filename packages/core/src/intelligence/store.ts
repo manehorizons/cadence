@@ -157,9 +157,6 @@ function milestonesPath(root: string): string {
   return join(intelligenceDir(root), MILESTONES_JSON);
 }
 
-function milestonesMdPath(root: string): string {
-  return join(intelligenceDir(root), MILESTONES_MD);
-}
 
 export async function readMilestoneLedger(
   root: string,
