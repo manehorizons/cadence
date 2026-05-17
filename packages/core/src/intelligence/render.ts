@@ -1,6 +1,9 @@
-import type { RecommendationLedger } from '@cadence/types';
+import type { EvidenceLedger, RecommendationLedger } from '@cadence/types';
 
-export function renderRecommendationsMd(ledger: RecommendationLedger): string {
+export function renderRecommendationsMd(
+  ledger: RecommendationLedger,
+  evidenceLedger: EvidenceLedger,
+): string {
   const lines: string[] = [
     '# CADENCE Recommendations',
     '',
@@ -14,6 +17,8 @@ export function renderRecommendationsMd(ledger: RecommendationLedger): string {
   }
 
   for (const rec of ledger.recommendations) {
+    const evidence = evidenceLedger.evidence.filter((ev) => rec.evidenceIds.includes(ev.id));
+
     lines.push(`## ${rec.id} — ${rec.title}`);
     lines.push('');
     lines.push(`- status: ${rec.status}`);
@@ -25,6 +30,7 @@ export function renderRecommendationsMd(ledger: RecommendationLedger): string {
     lines.push(`- decay: ${rec.decayState}`);
     if (rec.affectedAreas.length > 0) lines.push(`- areas: ${rec.affectedAreas.join(', ')}`);
     if (rec.affectedFiles.length > 0) lines.push(`- files: ${rec.affectedFiles.join(', ')}`);
+    for (const ev of evidence) lines.push(`- evidence: ${ev.summary}`);
     if (rec.suggestedBackendAction) lines.push(`- next: ${rec.suggestedBackendAction}`);
     lines.push('');
     lines.push(rec.summary);

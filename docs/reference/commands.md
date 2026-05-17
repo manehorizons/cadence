@@ -577,6 +577,7 @@ cadence recommendation add \
 Writes:
 
 - `.cadence/intelligence/recommendations.json`
+- `.cadence/intelligence/evidence.json` when `--evidence` is provided
 - `.cadence/intelligence/RECOMMENDATIONS.md`
 
 #### recommendation list
