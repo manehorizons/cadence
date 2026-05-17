@@ -297,7 +297,7 @@ export const IntelligenceMilestoneZ = z.object({
   name: z.string().min(1),
   objective: z.string().min(1),
   status: MilestoneStatusZ,
-  recommendationIds: z.array(z.string()).min(1),
+  recommendationIds: z.array(z.string().min(1)).min(1),
   preMortem: MilestonePreMortemZ,
   exportTargets: z.array(
     z.object({
