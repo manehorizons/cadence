@@ -26,6 +26,7 @@ Two CLIs are documented here:
   - [settle](#settle)
   - [progress](#progress)
   - [status](#status)
+  - [recommendation](#recommendation)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -61,6 +62,7 @@ needs-context
 settle
 progress
 status
+recommendation
 <!-- cadence:commands:end -->
 
 ---
@@ -542,6 +544,48 @@ List recorded anomaly events from .cadence/anomalies.log
 events. Anomalies are recorded whenever a bypass flag (`--force`,
 `--allow-*`) is used, or when the verifier detects a problem. The `--follow`
 flag tails the log in real time; it requires a TTY.
+
+---
+
+### recommendation
+
+```
+Usage: cadence recommendation [options] [command]
+
+Manage CADENCE strategic-intelligence recommendations
+```
+
+Manage CADENCE strategic-intelligence recommendations. Recommendations are
+stored under `.cadence/intelligence/` and are not execution state; they become
+execution input only after a later milestone/SPEC export step.
+
+#### recommendation add
+
+Adds a manual recommendation.
+
+```sh
+cadence recommendation add \
+  --title "Add milestone pre-mortems" \
+  --summary "Capture likely failure modes before milestone export." \
+  --priority high \
+  --readiness ready-for-milestone \
+  --area core \
+  --file packages/core/src/intelligence/store.ts \
+  --evidence "Approved Praxis design requires milestone pre-mortems."
+```
+
+Writes:
+
+- `.cadence/intelligence/recommendations.json`
+- `.cadence/intelligence/RECOMMENDATIONS.md`
+
+#### recommendation list
+
+Prints recorded recommendations in a compact table.
+
+```sh
+cadence recommendation list
+```
 
 ---
 
