@@ -1,4 +1,4 @@
-import type { RecommendationLedger } from './store.js';
+import type { RecommendationLedger } from '@cadence/types';
 
 export function renderRecommendationsMd(ledger: RecommendationLedger): string {
   const lines: string[] = [
