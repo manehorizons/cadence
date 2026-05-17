@@ -59,7 +59,9 @@ describe('renderRecommendMd', () => {
     });
     expect(md).toMatch(/No actionable recommendations\./);
     expect(md).toMatch(/## Ranked/);
-    expect(md).toMatch(/None\./);
+    expect(md).toMatch(/## Parked \(deferred\)\n\nNone\./);
+    expect(md).toMatch(/## Needs attention \(superseded \/ contradicted\)\n\nNone\./);
+    expect(md).toMatch(/total 0 · ranked 0 · parked 0 · needs-attention 0 · excluded 0/);
   });
 
   it('renders the finish-loop advisory secondary', () => {
