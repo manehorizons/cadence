@@ -31,6 +31,7 @@ describe('renderStrategyMd', () => {
     const md = renderStrategyMd(base);
     expect(md).toMatch(/^# CADENCE Strategic Status/m);
     expect(md).toMatch(/loop: IDLE/);
+    expect(md).toMatch(/artifacts: phases 2/);
     expect(md).toMatch(/recommendations: 3/);
     expect(md).toMatch(/No flags raised\./);
   });

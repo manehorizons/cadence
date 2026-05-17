@@ -40,6 +40,11 @@ export function renderStrategyMd(inspection: Inspection): string {
     lines.push(`- active phase: ${backend.activePhase ?? '(none)'}`);
     lines.push(`- active draft: ${backend.activeDraft ?? '(none)'}`);
     lines.push(`- tier: ${backend.tier ?? '(none)'}`);
+    if (backend.artifacts) {
+      lines.push(
+        `- artifacts: phases ${backend.artifacts.phaseCount}, ROADMAP ${backend.artifacts.roadmap ? 'yes' : 'no'}, STATE ${backend.artifacts.state ? 'yes' : 'no'}, MILESTONES ${backend.artifacts.milestones ? 'yes' : 'no'}`,
+      );
+    }
     if (backend.legalActions.length > 0) {
       lines.push(`- next legal action: ${backend.legalActions[0]}`);
     }
