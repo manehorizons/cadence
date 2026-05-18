@@ -1,5 +1,5 @@
 import { describe, expect, it, afterEach } from 'vitest';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@cadence/testkit';
 import {
@@ -7,6 +7,8 @@ import {
   readRecommendationLedger,
   readMilestoneLedger,
   writeMilestoneLedger,
+  readAssumptionLedger,
+  readIntelligenceDecisionLedger,
 } from '../../src/intelligence/store.js';
 
 let active: Fixture | null = null;
@@ -50,6 +52,67 @@ describe('milestone ledger IO', () => {
         'utf8',
       );
       expect(md).toMatch(/# CADENCE Milestone Candidates/);
+    } finally {
+      await fx.cleanup();
+    }
+  });
+});
+
+describe('assumption + decision ledger readers', () => {
+  it('absent files -> empty ledgers', async () => {
+    const fx = await tempRepo({ initialized: true });
+    try {
+      expect(await readAssumptionLedger(fx.root)).toEqual({
+        schemaVersion: 1,
+        assumptions: [],
+      });
+      expect(await readIntelligenceDecisionLedger(fx.root)).toEqual({
+        schemaVersion: 1,
+        decisions: [],
+      });
+    } finally {
+      await fx.cleanup();
+    }
+  });
+
+  it('reads + Zod-validates present files', async () => {
+    const fx = await tempRepo({ initialized: true });
+    try {
+      const dir = join(fx.root, '.cadence', 'intelligence');
+      await mkdir(dir, { recursive: true });
+      await writeFile(
+        join(dir, 'assumptions.json'),
+        JSON.stringify({
+          schemaVersion: 1,
+          assumptions: [
+            {
+              id: 'as-1',
+              recommendationId: 'rec-1',
+              text: 'db is reachable',
+              status: 'open',
+              createdAt: '2026-05-18T00:00:00.000Z',
+            },
+          ],
+        }),
+      );
+      await writeFile(
+        join(dir, 'decisions.json'),
+        JSON.stringify({
+          schemaVersion: 1,
+          decisions: [
+            {
+              id: 'dec-1',
+              title: 'use approach A',
+              rationale: 'cheapest path',
+              decidedAt: '2026-05-18T00:00:00.000Z',
+            },
+          ],
+        }),
+      );
+      expect((await readAssumptionLedger(fx.root)).assumptions[0]!.id).toBe('as-1');
+      expect((await readIntelligenceDecisionLedger(fx.root)).decisions[0]!.title).toBe(
+        'use approach A',
+      );
     } finally {
       await fx.cleanup();
     }
