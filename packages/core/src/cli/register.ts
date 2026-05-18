@@ -15,6 +15,7 @@ import { registerRecommendationCommand } from './commands/recommendation.js';
 import { registerInspectCommand } from './commands/inspect.js';
 import { registerRecommendCommand } from './commands/recommend.js';
 import { registerMilestoneCommand } from './commands/milestone.js';
+import { registerContextCommand } from './commands/context.js';
 
 export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
@@ -33,4 +34,5 @@ export function registerAllCommands(program: Command): void {
   registerInspectCommand(program);
   registerRecommendCommand(program);
   registerMilestoneCommand(program);
+  registerContextCommand(program);
 }
