@@ -159,7 +159,7 @@ cadence milestone export <id> --to cadence
 - Milestone id not found → `refused: milestone <id> not found`, exit 1, no write.
 - Status not `accepted` (proposed/deferred/exported/closed) → `refused: cannot export milestone in status <s>`, exit 1, no write (re-export of `exported` is thus refused — terminal).
 - Staged-SPEC write throws → ledger NOT mutated, propagate `failed:` exit 1 (no partial state).
-- Ledger write throws AFTER SPEC written → staged file orphaned, milestone stays `accepted`; re-export refused so not auto-recoverable — **residual risk accepted** (same derived-artifact tolerance class as 4a's json/md write window); error surfaced, operator deletes the orphan manually.
+- Ledger write throws AFTER SPEC written → staged file orphaned, but the milestone is **still `accepted`** (the very write that would flip it to `exported` is the one that failed). Re-export is therefore still *allowed*, and a re-run **self-heals**: it atomically overwrites the orphan (`mkdir {recursive}` + `atomicWriteText`) and completes the ledger flip. **Residual risk is mild and auto-recoverable** (same derived-artifact tolerance class as 4a's json/md window); error surfaced, no manual cleanup required. (Verified against the implemented ordering during the Slice-4b holistic review.)
 - Absent recommendation ledger / unresolved rec ids → ACs still emitted (name = bare id); no throw.
 
 ## Testing (per CADENCE test idioms)
