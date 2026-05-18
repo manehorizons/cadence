@@ -276,6 +276,8 @@ export async function runMilestoneExport(
         ? {
             ...m,
             status: 'exported',
+            // Single-element: schema allows multiple backends but only 'cadence'
+            // exists today and re-export is refused, so overwrite is safe for now.
             exportTargets: [
               { backend: 'cadence', artifactPath: relPath, exportedAt: ts },
             ],
