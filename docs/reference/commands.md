@@ -707,7 +707,12 @@ inputs); pre-mortem entries not covered by a deterministic seed — and
 Re-running `propose` regenerates only `proposed` records; `accepted`/
 `deferred`/`exported`/`closed` milestones and their recommendations are never
 clobbered or re-proposed. `accept`/`defer` enforce guarded status
-transitions. `export <id> --to cadence` renders a deterministic CADENCE SPEC scaffold from an `accepted` milestone's own facts, writes it to `.cadence/intelligence/exports/<id>/SPEC.md`, records an `exportTarget`, and flips the milestone to `exported`; it **never** runs `cadence spec new`, allocates a loop id, or writes `state.json` — the staged SPEC is promoted manually by the operator. Export is refused for an unknown backend, unknown id, or any status other than `accepted` (re-export of an already-`exported` milestone is refused).
+transitions. `export <id> --to cadence` renders a deterministic CADENCE SPEC scaffold from an `accepted`
+milestone's own facts, writes it to `.cadence/intelligence/exports/<id>/SPEC.md`, records an
+`exportTarget`, and flips the milestone to `exported`; it **never** runs `cadence spec new`,
+allocates a loop id, or writes `state.json` — the staged SPEC is promoted manually by the
+operator. Export is refused for an unknown backend, unknown id, or any status other than
+`accepted` (re-export of an already-`exported` milestone is refused).
 
 Writes:
 
@@ -717,11 +722,10 @@ Writes:
 
 With `--json` (on `propose` and `list`), the milestone ledger object is emitted to stdout instead of
 the rendered text. Distinct from CADENCE's own execution-layer
-`.cadence/MILESTONES.md`. SPEC export (`milestone export --to cadence`) is a
-later slice.
+`.cadence/MILESTONES.md`.
 
 **Exit codes** — exits non-zero only on a genuine failure (artifact write
-error, or an illegal/unknown-id `accept`/`defer`). An empty/absent
+error, or an illegal/unknown-id `accept`/`defer`, or an unknown-backend/unknown-id/non-accepted `export`). An empty/absent
 recommendation ledger degrades gracefully and still exits 0.
 
 ---
