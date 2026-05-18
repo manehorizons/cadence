@@ -53,7 +53,7 @@ describe('synthesizeContextPacket', () => {
     const recs: Recommendation[] = [];
     for (let i = 0; i < 9; i++) {
       recs.push(
-        mkRec({ id: `rec-${i}`, status: 'candidate', leverageScore: i, createdAt: `2026-05-1${i}T00:00:00.000Z` }),
+        mkRec({ id: `rec-${i}`, status: 'candidate', leverageScore: i, createdAt: `2026-05-${String(i + 1).padStart(2, '0')}T00:00:00.000Z` }),
       );
     }
     recs.push(mkRec({ id: 'rec-rej', status: 'rejected', leverageScore: 99 }));
