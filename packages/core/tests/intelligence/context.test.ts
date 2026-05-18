@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type {
   Assumption,
   BackendStatus,
@@ -7,7 +9,8 @@ import type {
   Recommendation,
 } from '@cadence/types';
 import { ContextPacketZ } from '@cadence/types';
-import { synthesizeContextPacket } from '../../src/intelligence/context.js';
+import { tempRepo, type Fixture } from '@cadence/testkit';
+import { synthesizeContextPacket, runContext } from '../../src/intelligence/context.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {
@@ -188,5 +191,39 @@ describe('synthesizeContextPacket', () => {
     expect(p.loop.present).toBe(true);
     expect(p.loop.stateError).toBe('corrupt state.json');
     expect(p.loop.nextAction).toBeUndefined();
+  });
+});
+
+let active: Fixture | null = null;
+afterEach(async () => {
+  if (active) {
+    await active.cleanup();
+    active = null;
+  }
+});
+
+describe('runContext', () => {
+  it('writes context/<scope>.{json,md} and returns the packet', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'ctx' });
+    const packet = await runContext(active.root, 'phase', new Date('2026-05-18T00:00:00.000Z'));
+    expect(packet.scope).toBe('phase');
+
+    const jsonRaw = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'context', 'phase.json'),
+      'utf8',
+    );
+    expect(() => ContextPacketZ.parse(JSON.parse(jsonRaw))).not.toThrow();
+
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'context', 'phase.md'),
+      'utf8',
+    );
+    expect(md).toMatch(/# CADENCE Context Packet — phase/);
+  });
+
+  it('degrades cleanly with no .cadence backend', async () => {
+    active = await tempRepo({ initialized: false });
+    const packet = await runContext(active.root, 'handoff');
+    expect(packet.loop.present).toBe(false);
   });
 });

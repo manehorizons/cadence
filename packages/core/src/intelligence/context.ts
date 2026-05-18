@@ -1,3 +1,5 @@
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import type {
   Assumption,
   BackendStatus,
@@ -9,7 +11,17 @@ import type {
   Recommendation,
 } from '@cadence/types';
 import { ContextPacketZ } from '@cadence/types';
+import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { partitionLedger, scoreRecommendation } from './recommend.js';
+import {
+  intelligenceDir,
+  readRecommendationLedger,
+  readEvidenceLedger,
+  readAssumptionLedger,
+  readIntelligenceDecisionLedger,
+} from './store.js';
+import { cadenceBackend } from './backend/cadence.js';
+import { renderContextMd } from './render-context.js';
 
 const TOP_N_PHASE = 7;
 const TOP_N_HANDOFF = 5;
@@ -140,4 +152,36 @@ export function synthesizeContextPacket(
       recommendationsOmitted,
     },
   });
+}
+
+export async function runContext(
+  root: string,
+  scope: ContextScope,
+  now: Date = new Date(),
+): Promise<ContextPacket> {
+  const [recLedger, evLedger, asLedger, decLedger, backend] = await Promise.all([
+    readRecommendationLedger(root),
+    readEvidenceLedger(root),
+    readAssumptionLedger(root),
+    readIntelligenceDecisionLedger(root),
+    cadenceBackend.readStatus(root),
+  ]);
+
+  const packet = synthesizeContextPacket(
+    scope,
+    {
+      recommendations: recLedger.recommendations,
+      evidence: evLedger.evidence,
+      assumptions: asLedger.assumptions,
+      decisions: decLedger.decisions,
+      backend,
+    },
+    now,
+  );
+
+  const dir = join(intelligenceDir(root), 'context');
+  await mkdir(dir, { recursive: true });
+  await atomicWriteJSON(join(dir, `${scope}.json`), packet);
+  await atomicWriteText(join(dir, `${scope}.md`), renderContextMd(packet));
+  return packet;
 }
