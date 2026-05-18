@@ -78,6 +78,8 @@ export function synthesizeContextPacket(
       status: 'open' as const,
     }));
 
+  // Untied decisions (no recommendationId) have no rec linkage, so they cannot use inScope;
+  // phase keeps only decisions tied to a selected rec, handoff keeps all.
   const decisions = sources.decisions
     .filter((d) =>
       scope === 'handoff'
