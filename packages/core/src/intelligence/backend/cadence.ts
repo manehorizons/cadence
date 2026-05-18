@@ -29,6 +29,12 @@ export interface PraxisBackend {
   ): string;
 }
 
+/** Collapse CR/LF (and surrounding runs) to a single space so milestone-derived
+ *  free text cannot break the emitted SPEC's frontmatter / bullet structure. */
+function oneLine(s: string): string {
+  return s.replace(/\s*[\r\n]+\s*/g, ' ').trim();
+}
+
 function cadenceDir(root: string): string {
   return join(root, '.cadence');
 }
@@ -102,27 +108,27 @@ export const cadenceBackend: PraxisBackend = {
   ): string {
     const lines: string[] = [
       '---',
-      `phase: ${milestone.id}`,
+      `phase: ${oneLine(milestone.id)}`,
       'id: 00-00',
       'status: PENDING',
       '---',
       '',
-      `# 00-00 — ${milestone.name}`,
+      `# 00-00 — ${oneLine(milestone.name)}`,
       '',
       '> **STAGED EXPORT — NOT YET IN THE LOOP.** Praxis wrote this from milestone',
-      `> \`${milestone.id}\`. To promote: run \`cadence spec new <phase> <num>\``,
+      `> \`${oneLine(milestone.id)}\`. To promote: run \`cadence spec new <phase> <num>\``,
       '> (allocates the real NN-NN id + moves the loop IDLE→SPEC), then replace',
       '> the scaffold body with this content and re-id the frontmatter.',
       '',
       '## Objective',
       '',
-      milestone.objective,
+      oneLine(milestone.objective),
       '',
       '## Acceptance Criteria',
       '',
     ];
     recs.forEach((r, i) => {
-      lines.push(`### AC-${i + 1}: ${r.title || r.id}`);
+      lines.push(`### AC-${i + 1}: ${oneLine(r.title || r.id)}`);
       lines.push('Given _(precondition)_');
       lines.push('When _(action)_');
       lines.push('Then _(outcome)_');
@@ -134,7 +140,7 @@ export const cadenceBackend: PraxisBackend = {
       ...milestone.preMortem.outOfScope,
     ];
     if (constraints.length === 0) lines.push('- _(constraint)_');
-    else for (const c of constraints) lines.push(`- ${c}`);
+    else for (const c of constraints) lines.push(`- ${oneLine(c)}`);
     lines.push('');
     lines.push('## Open Questions', '');
     const questions = [
@@ -142,7 +148,7 @@ export const cadenceBackend: PraxisBackend = {
       ...milestone.preMortem.likelyFailureModes,
     ];
     if (questions.length === 0) lines.push('- _(question)_');
-    else for (const q of questions) lines.push(`- ${q}`);
+    else for (const q of questions) lines.push(`- ${oneLine(q)}`);
     lines.push('');
     return lines.join('\n');
   },
