@@ -2,14 +2,20 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  AssumptionLedgerZ,
   EvidenceLedgerZ,
+  IntelligenceDecisionLedgerZ,
   MilestoneLedgerZ,
   RecommendationLedgerZ,
+  emptyAssumptionLedger,
   emptyEvidenceLedger,
+  emptyIntelligenceDecisionLedger,
   emptyMilestoneLedger,
   emptyRecommendationLedger,
+  type AssumptionLedger,
   type Evidence,
   type EvidenceLedger,
+  type IntelligenceDecisionLedger,
   type MilestoneLedger,
   type Recommendation,
   type RecommendationLedger,
@@ -24,6 +30,8 @@ const INTELLIGENCE_DIR = '.cadence/intelligence';
 const RECOMMENDATIONS_JSON = 'recommendations.json';
 const EVIDENCE_JSON = 'evidence.json';
 const RECOMMENDATIONS_MD = 'RECOMMENDATIONS.md';
+const ASSUMPTIONS_JSON = 'assumptions.json';
+const DECISIONS_JSON = 'decisions.json';
 
 export type AddRecommendationInput = {
   title: string;
@@ -47,6 +55,14 @@ function evidencePath(root: string): string {
   return join(intelligenceDir(root), EVIDENCE_JSON);
 }
 
+function assumptionsPath(root: string): string {
+  return join(intelligenceDir(root), ASSUMPTIONS_JSON);
+}
+
+function decisionsPath(root: string): string {
+  return join(intelligenceDir(root), DECISIONS_JSON);
+}
+
 function recommendationsMdPath(root: string): string {
   return join(intelligenceDir(root), RECOMMENDATIONS_MD);
 }
@@ -63,6 +79,22 @@ export async function readEvidenceLedger(root: string): Promise<EvidenceLedger> 
   if (!existsSync(path)) return emptyEvidenceLedger();
   const raw = await readFile(path, 'utf8');
   return EvidenceLedgerZ.parse(JSON.parse(raw));
+}
+
+export async function readAssumptionLedger(root: string): Promise<AssumptionLedger> {
+  const path = assumptionsPath(root);
+  if (!existsSync(path)) return emptyAssumptionLedger();
+  const raw = await readFile(path, 'utf8');
+  return AssumptionLedgerZ.parse(JSON.parse(raw));
+}
+
+export async function readIntelligenceDecisionLedger(
+  root: string,
+): Promise<IntelligenceDecisionLedger> {
+  const path = decisionsPath(root);
+  if (!existsSync(path)) return emptyIntelligenceDecisionLedger();
+  const raw = await readFile(path, 'utf8');
+  return IntelligenceDecisionLedgerZ.parse(JSON.parse(raw));
 }
 
 async function writeIntelligenceLedgers(
