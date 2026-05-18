@@ -166,6 +166,7 @@ describe('cadence milestone', () => {
 
     const ok = await run(['milestone', 'export', 'mil-grp-x', '--to', 'cadence'], active.root);
     expect(ok.code).toBe(0);
+    expect(ok.stderr).toBe('');
     expect(ok.stdout).toMatch(/milestone mil-grp-x → exported/);
     expect(ok.stdout).toMatch(/staged SPEC: \.cadence\/intelligence\/exports\/mil-grp-x\/SPEC\.md/);
     expect(ok.stdout).toMatch(/cadence spec new/);
@@ -182,5 +183,6 @@ describe('cadence milestone', () => {
 
     const noTo = await run(['milestone', 'export', 'mil-grp-x'], active.root);
     expect(noTo.code).toBe(1);
+    expect(noTo.stderr).toMatch(/required option.*--to/);
   });
 });
