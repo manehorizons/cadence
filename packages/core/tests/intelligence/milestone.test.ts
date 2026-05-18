@@ -2,7 +2,7 @@ import { describe, expect, it, afterEach } from 'vitest';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { IntelligenceMilestone, MilestoneLedger, Recommendation } from '@cadence/types';
-import { applyTransition, clusterMilestones, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition } from '../../src/intelligence/milestone.js';
+import { applyTransition, clusterMilestones, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport } from '../../src/intelligence/milestone.js';
 import { readMilestoneLedger } from '../../src/intelligence/store.js';
 import { tempRepo, type Fixture } from '@cadence/testkit';
 
@@ -414,5 +414,99 @@ describe('applyTransition', () => {
     expect(r4).toEqual({ ok: false, error: 'cannot defer milestone in status closed' });
     const r3 = applyTransition(ledgerOf(mk('a', 'proposed')), 'zzz', 'accept', T);
     expect(r3).toEqual({ ok: false, error: 'milestone zzz not found' });
+  });
+});
+
+async function seedMilestones(root: string, ms: IntelligenceMilestone[]): Promise<void> {
+  const dir = join(root, '.cadence', 'intelligence');
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    join(dir, 'milestones.json'),
+    JSON.stringify({ schemaVersion: 1, milestones: ms }, null, 2),
+  );
+}
+function mkMs(p: Partial<IntelligenceMilestone> & { id: string }): IntelligenceMilestone {
+  return {
+    name: p.id,
+    objective: 'do the thing',
+    status: 'accepted',
+    recommendationIds: ['rec-1'],
+    preMortem: { likelyFailureModes: [], hiddenDependencies: [], driftRisks: [], outOfScope: [] },
+    exportTargets: [],
+    createdAt: '2026-05-17T00:00:00.000Z',
+    updatedAt: '2026-05-17T00:00:00.000Z',
+    ...p,
+  };
+}
+
+describe('runMilestoneExport', () => {
+  it('exports an accepted milestone: staged SPEC + exported status + exportTarget', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedRecs(t.root, [mkRec({ id: 'rec-1', title: 'Ship it' })]);
+      await seedMilestones(t.root, [mkMs({ id: 'mil-grp-x', name: 'X', recommendationIds: ['rec-1'] })]);
+
+      const res = await runMilestoneExport(t.root, 'mil-grp-x', new Date('2026-05-17T09:00:00.000Z'));
+      expect(res.ok).toBe(true);
+      if (!res.ok) throw new Error('unreachable');
+      expect(res.artifactPath).toBe('.cadence/intelligence/exports/mil-grp-x/SPEC.md');
+
+      const spec = await readFile(join(t.root, res.artifactPath), 'utf8');
+      expect(spec).toMatch(/# 00-00 — X/);
+      expect(spec).toMatch(/### AC-1: Ship it/);
+
+      const led = await readMilestoneLedger(t.root);
+      const m = led.milestones.find((x) => x.id === 'mil-grp-x')!;
+      expect(m.status).toBe('exported');
+      expect(m.exportTargets).toEqual([
+        { backend: 'cadence', artifactPath: '.cadence/intelligence/exports/mil-grp-x/SPEC.md', exportedAt: '2026-05-17T09:00:00.000Z' },
+      ]);
+      expect(m.updatedAt).toBe('2026-05-17T09:00:00.000Z');
+      const md = await readFile(join(t.root, '.cadence', 'intelligence', 'MILESTONES.md'), 'utf8');
+      expect(md).toMatch(/## Exported\n\n- mil-grp-x — X → \.cadence\/intelligence\/exports\/mil-grp-x\/SPEC\.md/);
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it('tolerates an unresolved rec id (AC name = bare id)', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedMilestones(t.root, [mkMs({ id: 'mil-a', recommendationIds: ['rec-missing'] })]);
+      const res = await runMilestoneExport(t.root, 'mil-a', new Date('2026-05-17T09:00:00.000Z'));
+      expect(res.ok).toBe(true);
+      if (!res.ok) throw new Error('unreachable');
+      const spec = await readFile(join(t.root, res.artifactPath), 'utf8');
+      expect(spec).toMatch(/### AC-1: rec-missing/);
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it('refuses unknown id and non-accepted status without writing', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedMilestones(t.root, [mkMs({ id: 'mil-p', status: 'proposed' })]);
+      const miss = await runMilestoneExport(t.root, 'nope');
+      expect(miss).toEqual({ ok: false, error: 'milestone nope not found' });
+      const bad = await runMilestoneExport(t.root, 'mil-p');
+      expect(bad).toEqual({ ok: false, error: 'cannot export milestone in status proposed' });
+      const led = await readMilestoneLedger(t.root);
+      expect(led.milestones[0]!.status).toBe('proposed');
+      await expect(readFile(join(t.root, '.cadence', 'intelligence', 'exports', 'mil-p', 'SPEC.md'), 'utf8')).rejects.toThrow();
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it('refuses re-export of an already-exported milestone', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedMilestones(t.root, [mkMs({ id: 'mil-e', status: 'exported' })]);
+      const res = await runMilestoneExport(t.root, 'mil-e');
+      expect(res).toEqual({ ok: false, error: 'cannot export milestone in status exported' });
+    } finally {
+      await t.cleanup();
+    }
   });
 });

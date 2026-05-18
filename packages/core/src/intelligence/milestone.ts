@@ -1,3 +1,5 @@
+import { mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import type {
   IntelligenceMilestone,
   MilestoneLedger,
@@ -10,6 +12,8 @@ import {
   readRecommendationLedger,
   writeMilestoneLedger,
 } from './store.js';
+import { atomicWriteText } from '../state/atomic-write.js';
+import { cadenceBackend } from './backend/cadence.js';
 
 const ELIGIBLE_READINESS = new Set<RecommendationReadiness>([
   'ready-for-milestone',
@@ -229,4 +233,57 @@ export async function runMilestoneTransition(
   if (!res.ok) return res;
   await writeMilestoneLedger(root, res.ledger);
   return res;
+}
+
+export type ExportResult =
+  | { ok: true; ledger: MilestoneLedger; artifactPath: string }
+  | { ok: false; error: string };
+
+export async function runMilestoneExport(
+  root: string,
+  id: string,
+  now: Date = new Date(),
+): Promise<ExportResult> {
+  const ledger = await readMilestoneLedger(root);
+  const target = ledger.milestones.find((m) => m.id === id);
+  if (!target) return { ok: false, error: `milestone ${id} not found` };
+  if (target.status !== 'accepted') {
+    return {
+      ok: false,
+      error: `cannot export milestone in status ${target.status}`,
+    };
+  }
+
+  const allRecs = (await readRecommendationLedger(root)).recommendations;
+  const byId = new Map(allRecs.map((r) => [r.id, r]));
+  const recs = target.recommendationIds.map((rid) => {
+    const r = byId.get(rid);
+    return r ? { id: r.id, title: r.title } : { id: rid, title: rid };
+  });
+
+  const spec = cadenceBackend.renderSpecDraft(target, recs);
+
+  const relPath = `.cadence/intelligence/exports/${target.id}/SPEC.md`;
+  const absPath = join(root, relPath);
+  await mkdir(dirname(absPath), { recursive: true });
+  await atomicWriteText(absPath, spec);
+
+  const ts = now.toISOString();
+  const next: MilestoneLedger = {
+    schemaVersion: 1,
+    milestones: ledger.milestones.map((m) =>
+      m.id === id
+        ? {
+            ...m,
+            status: 'exported',
+            exportTargets: [
+              { backend: 'cadence', artifactPath: relPath, exportedAt: ts },
+            ],
+            updatedAt: ts,
+          }
+        : m,
+    ),
+  };
+  await writeMilestoneLedger(root, next);
+  return { ok: true, ledger: next, artifactPath: relPath };
 }
