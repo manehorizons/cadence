@@ -88,7 +88,7 @@ export async function runContext(
 
 ### `cli/register.ts` — new top-level command
 
-`cadence context <scope>` with `<scope>` constrained to `choices(['phase','handoff'])` (Commander → invalid scope exits 2, stderr-clean). Default: print `renderContextMd(packet)` to stdout. `--json`: print `JSON.stringify(packet)` to stdout instead. `failed:` idiom on throw (exit 1). The packet files are always written regardless of `--json`.
+`cadence context <scope>` — `<scope>` is a Commander positional validated **manually** via `ContextScopeZ.safeParse(scope)` (this codebase deliberately does not use Commander `.choices()`; manual validation gives the exit-2 + clean single-line stderr contract). Invalid scope → one stderr line + `process.exitCode = 2`, no writes. Default: print `renderContextMd(packet)` to stdout. `--json`: print `JSON.stringify(packet)` to stdout instead. `failed:` idiom on throw (exit 1). The packet files are always written regardless of `--json`.
 
 ## Data Model (`@cadence/types`, additive)
 
@@ -174,7 +174,7 @@ Compactness is **structural**, not a budget: ranked-only, `open`-only assumption
 
 ```
 cadence context <scope> [--json]
-→ scope ∉ {phase,handoff} → Commander rejects, exit 2, stderr-clean
+→ ContextScopeZ.safeParse(scope) fails → one stderr line + exit 2, no writes
 → runContext(cwd, scope):
   → readRecommendationLedger / readEvidenceLedger /
     readAssumptionLedger / readIntelligenceDecisionLedger   [IO read, empty-if-absent]
