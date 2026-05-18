@@ -690,6 +690,7 @@ Shape recommendations into milestone candidates (read-narrow; never transitions 
 | `propose [--json]` | Cluster eligible recommendations into proposed milestone candidates |
 | `accept <id>` | Mark a proposed milestone accepted |
 | `defer <id>` | Defer a proposed or accepted milestone |
+| `export <id> --to cadence` | Export an accepted milestone to a staged CADENCE SPEC draft |
 | `list [--json]` | Show the current milestone ledger |
 
 **Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
@@ -706,12 +707,13 @@ inputs); pre-mortem entries not covered by a deterministic seed — and
 Re-running `propose` regenerates only `proposed` records; `accepted`/
 `deferred`/`exported`/`closed` milestones and their recommendations are never
 clobbered or re-proposed. `accept`/`defer` enforce guarded status
-transitions.
+transitions. `export <id> --to cadence` renders a deterministic CADENCE SPEC scaffold from an `accepted` milestone's own facts, writes it to `.cadence/intelligence/exports/<id>/SPEC.md`, records an `exportTarget`, and flips the milestone to `exported`; it **never** runs `cadence spec new`, allocates a loop id, or writes `state.json` — the staged SPEC is promoted manually by the operator. Export is refused for an unknown backend, unknown id, or any status other than `accepted` (re-export of an already-`exported` milestone is refused).
 
 Writes:
 
 - `.cadence/intelligence/milestones.json`
 - `.cadence/intelligence/MILESTONES.md`
+- `.cadence/intelligence/exports/<id>/SPEC.md` (on `export`)
 
 With `--json` (on `propose` and `list`), the milestone ledger object is emitted to stdout instead of
 the rendered text. Distinct from CADENCE's own execution-layer
