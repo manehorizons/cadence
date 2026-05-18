@@ -225,5 +225,15 @@ describe('runContext', () => {
     active = await tempRepo({ initialized: false });
     const packet = await runContext(active.root, 'handoff');
     expect(packet.loop.present).toBe(false);
+    const jsonRaw = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'context', 'handoff.json'),
+      'utf8',
+    );
+    expect(() => ContextPacketZ.parse(JSON.parse(jsonRaw))).not.toThrow();
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'context', 'handoff.md'),
+      'utf8',
+    );
+    expect(md).toMatch(/# CADENCE Context Packet — handoff/);
   });
 });

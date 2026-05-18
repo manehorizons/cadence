@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@cadence/testkit';
+import { ContextPacketZ } from '@cadence/types';
 
 const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
@@ -53,6 +54,7 @@ describe('cadence context', () => {
     const parsed = JSON.parse(r.stdout);
     expect(parsed.schemaVersion).toBe(1);
     expect(parsed.scope).toBe('handoff');
+    expect(() => ContextPacketZ.parse(parsed)).not.toThrow();
   });
 
   it('rejects an invalid scope with exit 2 and a clean message', async () => {
