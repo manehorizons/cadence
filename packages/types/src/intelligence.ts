@@ -320,3 +320,64 @@ export type MilestoneLedger = z.infer<typeof MilestoneLedgerZ>;
 export function emptyMilestoneLedger(): MilestoneLedger {
   return { schemaVersion: 1, milestones: [] };
 }
+
+export const ContextScopeZ = z.enum(['phase', 'handoff']);
+export type ContextScope = z.infer<typeof ContextScopeZ>;
+
+export const ContextRecZ = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  score: z.number().int(),
+  status: RecommendationStatusZ,
+  readiness: RecommendationReadinessZ,
+  priority: RecommendationPriorityZ,
+  suggestedBackendAction: z.string().optional(),
+});
+export type ContextRec = z.infer<typeof ContextRecZ>;
+
+export const ContextPacketZ = z.object({
+  schemaVersion: z.literal(1),
+  scope: ContextScopeZ,
+  generatedAt: z.string().datetime({ offset: true }),
+  loop: z.object({
+    present: z.boolean(),
+    loopPosition: z.string().optional(),
+    activePhase: z.string().nullable().optional(),
+    activeDraft: z.string().nullable().optional(),
+    activeSpec: z.string().nullable().optional(),
+    tier: z.string().nullable().optional(),
+    nextAction: z.string().optional(),
+    stateError: z.string().optional(),
+  }),
+  recommendations: z.array(ContextRecZ),
+  assumptions: z.array(
+    z.object({
+      id: z.string().min(1),
+      recommendationId: z.string().min(1),
+      text: z.string().min(1),
+      status: z.literal('open'),
+    }),
+  ),
+  decisions: z.array(
+    z.object({
+      id: z.string().min(1),
+      title: z.string().min(1),
+      rationale: z.string().min(1),
+      recommendationId: z.string().optional(),
+    }),
+  ),
+  files: z.array(
+    z.object({
+      path: z.string().min(1),
+      why: z.string().min(1),
+    }),
+  ),
+  totals: z.object({
+    recommendations: z.number().int(),
+    assumptions: z.number().int(),
+    decisions: z.number().int(),
+    files: z.number().int(),
+    recommendationsOmitted: z.number().int(),
+  }),
+});
+export type ContextPacket = z.infer<typeof ContextPacketZ>;

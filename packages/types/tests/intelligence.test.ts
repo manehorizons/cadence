@@ -8,6 +8,7 @@ import {
   IntelligenceMilestoneZ,
   MilestoneLedgerZ,
   emptyMilestoneLedger,
+  ContextPacketZ,
 } from '../src/intelligence.js';
 
 describe('intelligence schemas', () => {
@@ -234,5 +235,57 @@ describe('intelligence milestone schema', () => {
   it('rejects an empty recommendation id', () => {
     const r = IntelligenceMilestoneZ.safeParse({ ...validMilestone, recommendationIds: [''] });
     expect(r.success).toBe(false);
+  });
+});
+
+describe('ContextPacketZ', () => {
+  const valid = {
+    schemaVersion: 1 as const,
+    scope: 'phase' as const,
+    generatedAt: '2026-05-18T00:00:00.000Z',
+    loop: { present: false },
+    recommendations: [
+      {
+        id: 'rec-1',
+        title: 'do the thing',
+        score: 83,
+        status: 'accepted' as const,
+        readiness: 'ready-for-milestone' as const,
+        priority: 'high' as const,
+        suggestedBackendAction: 'cadence milestone propose',
+      },
+    ],
+    assumptions: [
+      { id: 'as-1', recommendationId: 'rec-1', text: 'x holds', status: 'open' as const },
+    ],
+    decisions: [
+      { id: 'dec-1', title: 'use approach A', rationale: 'cheapest', recommendationId: 'rec-1' },
+    ],
+    files: [{ path: 'src/a.ts', why: 'affected by rec-1 do the thing' }],
+    totals: {
+      recommendations: 1,
+      assumptions: 1,
+      decisions: 1,
+      files: 1,
+      recommendationsOmitted: 0,
+    },
+  };
+
+  it('accepts a valid packet and both scopes', () => {
+    expect(ContextPacketZ.parse(valid).scope).toBe('phase');
+    expect(ContextPacketZ.parse({ ...valid, scope: 'handoff' }).scope).toBe('handoff');
+  });
+
+  it('rejects an unknown scope', () => {
+    expect(() => ContextPacketZ.parse({ ...valid, scope: 'review' })).toThrow();
+  });
+
+  it('rejects an assumption whose status is not open', () => {
+    expect(() =>
+      ContextPacketZ.parse({
+        ...valid,
+        assumptions: [{ id: 'as-2', recommendationId: 'rec-1', text: 'y', status: 'validated' }],
+      }),
+    ).toThrow();
   });
 });
