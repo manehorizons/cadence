@@ -107,6 +107,34 @@ describe('cadenceBackend.renderSpecDraft', () => {
     expect(md).toMatch(/## Open Questions\n\n- _\(question\)_\n/);
   });
 
+  it('collapses newlines in milestone-derived strings so the round-trip stays clean', () => {
+    const md = cadenceBackend.renderSpecDraft(
+      mkMilestone({
+        name: 'Multi\nline name',
+        objective: 'obj line 1\nobj line 2',
+        preMortem: {
+          likelyFailureModes: [],
+          hiddenDependencies: ['dep\nwith newline'],
+          driftRisks: [],
+          outOfScope: [],
+        },
+      }),
+      [{ id: 'rec-1', title: 'title\nwith newline' }],
+    );
+    // frontmatter intact (no injected lines), H1 single line
+    expect(md.startsWith('---\nphase: mil-grp-auth\nid: 00-00\nstatus: PENDING\n---\n')).toBe(true);
+    expect(md).toMatch(/# 00-00 — Multi line name\n/);
+    const spec = parseSpecMd(md);
+    expect(spec.id).toBe('00-00');
+    expect(spec.objective).toBe('obj line 1 obj line 2');
+    expect(spec.acceptanceCriteria).toHaveLength(1);
+    expect(spec.acceptanceCriteria[0]!.name).toBe('title with newline');
+    // driftRisks + outOfScope empty → placeholder bullet; parseBulletList keeps it
+    expect(spec.constraints).toEqual(['_(constraint)_']);
+    // hiddenDependencies has one entry (collapsed), likelyFailureModes empty
+    expect(spec.openQuestions).toEqual(['dep with newline']);
+  });
+
   it('round-trips through the real parseSpecMd and stays cadence-spec-check valid', () => {
     const md = cadenceBackend.renderSpecDraft(mkMilestone(), [
       { id: 'rec-1', title: 'First' },
