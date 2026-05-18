@@ -166,7 +166,7 @@ Shared pipeline: `partitionLedger(recommendations)` → take **`ranked` only** (
 | `decisions` | decisions whose `recommendationId` ∈ selected rec ids (or untied decisions excluded) | **all** recorded decisions (full decision trail) |
 | `files` | dedup union of selected recs' `affectedFiles` + their evidence `path` | dedup union over **all** ranked recs' `affectedFiles` + evidence `path` |
 
-`files[].why` is a one-line provenance string (e.g. `` `affected by rec-… <title>` `` or `` `evidence ev-…` ``), `oneLine()`-collapsed. Dedup by `path`, first provenance wins, stable order (first appearance).
+`Evidence.path` is `z.string().optional()` — evidence entries with no `path` contribute nothing to the files union (skipped, not an empty-string entry). `files[].why` is a one-line provenance string (e.g. `` `affected by rec-… <title>` `` or `` `evidence ev-…` ``), newline-collapsed (see §Error Handling on `oneLine`). Dedup by `path`, first provenance wins, stable order (first appearance).
 
 Compactness is **structural**, not a budget: ranked-only, `open`-only assumptions, capped `N`, file *references* not contents. No char/token cap, no truncation algorithm. Empty sources → empty arrays; the renderer prints `_(none)_`, never fabricated content.
 
@@ -193,7 +193,7 @@ cadence context <scope> [--json]
 - **Read-only:** never writes `state.json`/`STATE.md`, never transitions the loop, never `spec new`. Writes confined to `.cadence/intelligence/context/`.
 - **Graceful degrade:** no backend (`.cadence/state.json` absent) → `cadenceBackend.readStatus` returns `{present:false}`; packet still emits from ledgers with `loop.present=false`. A `stateError` (corrupt state) is surfaced into `loop.stateError`, never thrown (mirrors `cadenceBackend.readStatus`'s catch).
 - **Absent ledgers** → empty arrays via the `existsSync→empty*Ledger()` idiom (existing two readers + the two new ones).
-- **Free-text safety:** `oneLine()` (the Slice-4b helper idiom) wraps every ledger-derived string interpolated into the Markdown packet (rec titles, assumption text, decision title/rationale, `files[].why`) so a newline cannot break packet structure.
+- **Free-text safety:** every ledger-derived string interpolated into the Markdown packet (rec titles, assumption text, decision title/rationale, `files[].why`) is newline-collapsed via a `oneLine(s) = s.replace(/\s*[\r\n]+\s*/g,' ').trim()` so a newline cannot break packet structure. **Note: the Slice-4b `oneLine` is module-private to `backend/cadence.ts` (not exported, not reused).** The plan must consciously pick one: (a) a small private `oneLine` local to `render-context.ts` (matches the current per-module convention; cheapest), or (b) extract `oneLine` to a shared module and have both `backend/cadence.ts` and `render-context.ts` import it (DRY but touches a shipped file). Recommendation: (a) — keep the slice's blast radius minimal, mirror the existing per-module-private pattern.
 - **Strict TS:** `noUncheckedIndexedAccess` → any `arr[0]` access guarded `const head = arr[0]!` (carried gotcha).
 - **Honest-empty (residual, by design, not a gap):** the standalone `assumptions.json` / `decisions.json` ledgers have **no intake command yet** (no producer on this branch). The two new readers + the policy are wired correctly and future-proof; until an intake slice lands, those packet sections render `_(none)_`. This is faithful (no fabrication), documented here so spec review does not flag it as missing functionality. Assumptions/decisions are also reachable today only as `assumptionIds`/`decisionIds` on recommendations — the MVP does not resolve those into the packet (kept simple; revisit when intake exists).
 
@@ -230,6 +230,7 @@ Plan-doc-first (design + plan committed before feat commits), then per-task `fea
 | 6 | One parameterised synth + one render | per-scope synth/render pair; render-time-only view | smallest, one-synth-per-slice precedent, cheapest to extend to review/agent |
 | 7 | Add two thin ledger readers to `store.ts` | resolve assumption/decision ids off recommendations | mirrors existing readers; future-proof for an intake slice; MVP stays simple |
 | 8 | Reuse `partitionLedger`/`scoreRecommendation` from `recommend.ts` | re-derive ranking locally | single source of truth for ranking; no drift between `recommend` and `context` |
+| 9 | Private `oneLine` local to `render-context.ts` | extract a shared `oneLine` module; import the existing one (not exported) | Slice-4b `oneLine` is module-private; matching the per-module convention keeps blast radius minimal (no shipped-file edit) |
 
 ## Follow-On (not in this slice)
 
