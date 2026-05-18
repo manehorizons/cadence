@@ -1,7 +1,11 @@
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { BackendStatus } from '@cadence/types';
+import type {
+  BackendStatus,
+  IntelligenceMilestone,
+  Recommendation,
+} from '@cadence/types';
 import { SimpleStateBackend } from '../../state/simple.js';
 import { nextAction } from '../../progress.js';
 
@@ -19,6 +23,10 @@ export interface PraxisBackend {
   readStatus(root: string): Promise<BackendStatus>;
   readArtifacts(root: string): Promise<BackendArtifacts>;
   listLegalActions(root: string): Promise<string[]>;
+  renderSpecDraft(
+    milestone: IntelligenceMilestone,
+    recs: ReadonlyArray<Pick<Recommendation, 'id' | 'title'>>,
+  ): string;
 }
 
 function cadenceDir(root: string): string {
@@ -86,5 +94,56 @@ export const cadenceBackend: PraxisBackend = {
   async listLegalActions(root: string): Promise<string[]> {
     const status = await this.readStatus(root);
     return status.legalActions;
+  },
+
+  renderSpecDraft(
+    milestone: IntelligenceMilestone,
+    recs: ReadonlyArray<Pick<Recommendation, 'id' | 'title'>>,
+  ): string {
+    const lines: string[] = [
+      '---',
+      `phase: ${milestone.id}`,
+      'id: 00-00',
+      'status: PENDING',
+      '---',
+      '',
+      `# 00-00 — ${milestone.name}`,
+      '',
+      '> **STAGED EXPORT — NOT YET IN THE LOOP.** Praxis wrote this from milestone',
+      `> \`${milestone.id}\`. To promote: run \`cadence spec new <phase> <num>\``,
+      '> (allocates the real NN-NN id + moves the loop IDLE→SPEC), then replace',
+      '> the scaffold body with this content and re-id the frontmatter.',
+      '',
+      '## Objective',
+      '',
+      milestone.objective,
+      '',
+      '## Acceptance Criteria',
+      '',
+    ];
+    recs.forEach((r, i) => {
+      lines.push(`### AC-${i + 1}: ${r.title || r.id}`);
+      lines.push('Given _(precondition)_');
+      lines.push('When _(action)_');
+      lines.push('Then _(outcome)_');
+      lines.push('');
+    });
+    lines.push('## Constraints', '');
+    const constraints = [
+      ...milestone.preMortem.driftRisks,
+      ...milestone.preMortem.outOfScope,
+    ];
+    if (constraints.length === 0) lines.push('- _(constraint)_');
+    else for (const c of constraints) lines.push(`- ${c}`);
+    lines.push('');
+    lines.push('## Open Questions', '');
+    const questions = [
+      ...milestone.preMortem.hiddenDependencies,
+      ...milestone.preMortem.likelyFailureModes,
+    ];
+    if (questions.length === 0) lines.push('- _(question)_');
+    else for (const q of questions) lines.push(`- ${q}`);
+    lines.push('');
+    return lines.join('\n');
   },
 };
