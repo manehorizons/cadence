@@ -30,6 +30,7 @@ Two CLIs are documented here:
   - [inspect](#inspect)
   - [recommend](#recommend)
   - [milestone](#milestone)
+  - [context](#context)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -69,6 +70,7 @@ recommendation
 inspect
 recommend
 milestone
+context
 <!-- cadence:commands:end -->
 
 ---
@@ -727,6 +729,46 @@ the rendered text. Distinct from CADENCE's own execution-layer
 **Exit codes** — exits non-zero only on a genuine failure (artifact write
 error, or an illegal/unknown-id `accept`/`defer`, or an unknown-backend/unknown-id/non-accepted `export`). An empty/absent
 recommendation ledger degrades gracefully and still exits 0.
+
+---
+
+### context
+
+```
+Usage: cadence context <scope> [options]
+
+Emit a compact, read-only context packet (scope: phase | handoff)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+Reads the recommendation, evidence, assumption, and decision ledgers plus
+CADENCE loop state **read-only** (never mutates `state.json` or transitions
+the loop); emits a bounded context packet for the given scope — `phase`
+(context a downstream CADENCE phase carries) or `handoff` (state to resume
+across a session/agent handoff). Compactness is bounded-by-construction:
+only ranked recommendations (top 7 for `phase`, top 5 for `handoff`), only
+open assumptions, and file references not contents. `phase` scopes
+assumptions, decisions, and files to the selected recommendations while
+`handoff` carries the broader trail; both share the read-only loop block.
+
+Writes:
+
+- `.cadence/intelligence/context/<scope>.json`
+- `.cadence/intelligence/context/<scope>.md`
+
+With `--json`, the packet object is emitted to stdout instead of the
+rendered Markdown. An unknown scope exits 2 with a clean message.
+
+**Exit codes** — exits 2 for an invalid scope; exits 1 only on a genuine
+failure (e.g. artifact write error). An empty ledger, a missing git repo,
+or a missing `.cadence/` backend degrades gracefully and still exits 0.
 
 ---
 
