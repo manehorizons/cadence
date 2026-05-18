@@ -139,4 +139,48 @@ describe('cadence milestone', () => {
     const after = await readFile(join(dir, 'milestones.json'), 'utf8');
     expect(after).toBe(garbage);
   });
+
+  it('export --to cadence stages a SPEC for an accepted milestone', async () => {
+    active = await tempRepo({ initialized: true });
+    const dir = join(active.root, '.cadence', 'intelligence');
+    await mkdir(dir, { recursive: true });
+    await writeFile(
+      join(dir, 'recommendations.json'),
+      JSON.stringify({ schemaVersion: 1, recommendations: [{
+        id: 'rec-1', title: 'Ship it', summary: 's', source: 'manual',
+        status: 'accepted', readiness: 'ready-for-milestone', priority: 'high',
+        leverageScore: 5, riskScore: 2, confidence: 0.8, decayState: 'fresh',
+        affectedAreas: [], affectedFiles: [], evidenceIds: [], assumptionIds: [],
+        decisionIds: [], createdAt: '2026-05-17T00:00:00.000Z', updatedAt: '2026-05-17T00:00:00.000Z',
+      }] }, null, 2),
+    );
+    await writeFile(
+      join(dir, 'milestones.json'),
+      JSON.stringify({ schemaVersion: 1, milestones: [{
+        id: 'mil-grp-x', name: 'X', objective: 'do it', status: 'accepted',
+        recommendationIds: ['rec-1'],
+        preMortem: { likelyFailureModes: [], hiddenDependencies: [], driftRisks: [], outOfScope: [] },
+        exportTargets: [], createdAt: '2026-05-17T00:00:00.000Z', updatedAt: '2026-05-17T00:00:00.000Z',
+      }] }, null, 2),
+    );
+
+    const ok = await run(['milestone', 'export', 'mil-grp-x', '--to', 'cadence'], active.root);
+    expect(ok.code).toBe(0);
+    expect(ok.stdout).toMatch(/milestone mil-grp-x → exported/);
+    expect(ok.stdout).toMatch(/staged SPEC: \.cadence\/intelligence\/exports\/mil-grp-x\/SPEC\.md/);
+    expect(ok.stdout).toMatch(/cadence spec new/);
+    const spec = await readFile(join(active.root, '.cadence', 'intelligence', 'exports', 'mil-grp-x', 'SPEC.md'), 'utf8');
+    expect(spec).toMatch(/### AC-1: Ship it/);
+
+    const bogus = await run(['milestone', 'export', 'mil-grp-x', '--to', 'bogus'], active.root);
+    expect(bogus.code).toBe(1);
+    expect(bogus.stderr).toMatch(/unknown backend "bogus"/);
+
+    const again = await run(['milestone', 'export', 'mil-grp-x', '--to', 'cadence'], active.root);
+    expect(again.code).toBe(1);
+    expect(again.stderr).toMatch(/cannot export milestone in status exported/);
+
+    const noTo = await run(['milestone', 'export', 'mil-grp-x'], active.root);
+    expect(noTo.code).toBe(1);
+  });
 });

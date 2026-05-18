@@ -1,5 +1,6 @@
 import type { Command } from 'commander';
 import {
+  runMilestoneExport,
   runMilestoneTransition,
   runProposeMilestones,
 } from '../../intelligence/milestone.js';
@@ -62,6 +63,38 @@ export function registerMilestoneCommand(program: Command): void {
         }
       });
   }
+
+  cmd
+    .command('export <id>')
+    .description('Export an accepted milestone to a staged CADENCE SPEC draft')
+    .requiredOption('--to <backend>', 'target backend (only "cadence")')
+    .action(async (id: string, opts: { to: string }) => {
+      try {
+        if (opts.to !== 'cadence') {
+          process.stderr.write(
+            `milestone export refused: unknown backend "${opts.to}" (only "cadence")\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        const res = await runMilestoneExport(process.cwd(), id);
+        if (!res.ok) {
+          process.stderr.write(`milestone export refused: ${res.error}\n`);
+          process.exitCode = 1;
+          return;
+        }
+        process.stdout.write(
+          `milestone ${id} → exported\n` +
+            `staged SPEC: ${res.artifactPath}\n` +
+            `promote with: cadence spec new <phase> <num>  (then paste + re-id)\n`,
+        );
+      } catch (err) {
+        process.stderr.write(
+          `milestone export failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
 
   cmd
     .command('list')
