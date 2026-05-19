@@ -143,6 +143,8 @@ function mkMilestone(p: Partial<IntelligenceMilestone> & { id: string }): Intell
   };
 }
 
+// NOTE: mkRec defaults evidenceIds:[] which trips F-new-4 (overestimated value).
+// Goldens NOT testing F-new-4 pass evidenceIds:['e1'] to silence it — do not remove.
 describe('deepenPreMortem', () => {
   it('retains the 3 4a rules via shared helpers', () => {
     const m = mkMilestone({ id: 'm', recommendationIds: ['a', 'b'] });
