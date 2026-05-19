@@ -198,6 +198,6 @@ Plan-doc-first (design + plan committed before feat commits), then per-task `fea
 
 ## Follow-On (not in this slice)
 
-- Context packets (`cadence context <scope>`); milestone pre-mortems as a first-class command.
+- ~~Context packets (`cadence context <scope>`); milestone pre-mortems as a first-class command.~~ — both shipped: context packets in Slice 5 (`docs/superpowers/specs/2026-05-17-cadence-context-packets-design.md`), milestone pre-mortems in Slice 6 (`docs/superpowers/specs/2026-05-18-cadence-milestone-premortem-design.md`).
 - A promotion helper that scripts `spec new` + paste (still operator-initiated; explicitly NOT auto-transition).
 - Multi-backend `renderSpecDraft` once a second backend exists.
