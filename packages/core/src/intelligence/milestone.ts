@@ -11,6 +11,7 @@ import type {
   RecommendationStatus,
 } from '@cadence/types';
 import {
+  readAssumptionLedger,
   readMilestoneLedger,
   readRecommendationLedger,
   writeMilestoneLedger,
@@ -391,4 +392,38 @@ export async function runMilestoneExport(
   };
   await writeMilestoneLedger(root, next);
   return { ok: true, ledger: next, artifactPath: relPath };
+}
+
+export type PreMortemResult =
+  | { ok: true; ledger: MilestoneLedger }
+  | { ok: false; error: string };
+
+export async function runMilestonePreMortem(
+  root: string,
+  id: string,
+  now: Date = new Date(),
+): Promise<PreMortemResult> {
+  const ledger = await readMilestoneLedger(root);
+  const target = ledger.milestones.find((m) => m.id === id);
+  if (!target) return { ok: false, error: `milestone ${id} not found` };
+  if (target.status !== 'proposed' && target.status !== 'accepted') {
+    return {
+      ok: false,
+      error: `cannot pre-mortem milestone in status ${target.status}`,
+    };
+  }
+
+  const recs = (await readRecommendationLedger(root)).recommendations;
+  const assumptions = (await readAssumptionLedger(root)).assumptions;
+  const preMortem = deepenPreMortem(target, recs, assumptions, now);
+
+  const ts = now.toISOString();
+  const next: MilestoneLedger = {
+    schemaVersion: 1,
+    milestones: ledger.milestones.map((m) =>
+      m.id === id ? { ...m, preMortem, updatedAt: ts } : m,
+    ),
+  };
+  await writeMilestoneLedger(root, next);
+  return { ok: true, ledger: next };
 }
