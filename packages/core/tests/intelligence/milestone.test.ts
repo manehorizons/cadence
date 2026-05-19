@@ -2,7 +2,7 @@ import { describe, expect, it, afterEach } from 'vitest';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Assumption, IntelligenceMilestone, MilestoneLedger, Recommendation } from '@cadence/types';
-import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport } from '../../src/intelligence/milestone.js';
+import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport, runMilestonePreMortem } from '../../src/intelligence/milestone.js';
 import { readMilestoneLedger } from '../../src/intelligence/store.js';
 import { tempRepo, type Fixture } from '@cadence/testkit';
 
@@ -677,6 +677,105 @@ describe('runMilestoneExport', () => {
       await seedMilestones(t.root, [mkMs({ id: 'mil-e', status: 'exported' })]);
       const res = await runMilestoneExport(t.root, 'mil-e');
       expect(res).toEqual({ ok: false, error: 'cannot export milestone in status exported' });
+    } finally {
+      await t.cleanup();
+    }
+  });
+});
+
+describe('runMilestonePreMortem', () => {
+  it('refreshes preMortem in-place for an accepted milestone, bumps updatedAt, re-renders MD, preserves outOfScope, leaves others untouched', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedRecs(t.root, [mkRec({ id: 'rec-1', decayState: 'superseded', confidence: 0.9, evidenceIds: ['e1'] })]);
+      await seedMilestones(t.root, [
+        mkMs({ id: 'mil-a', status: 'accepted', recommendationIds: ['rec-1'],
+          preMortem: { likelyFailureModes: [], hiddenDependencies: [], driftRisks: [], outOfScope: ['keep me'] } }),
+        mkMs({ id: 'mil-other', status: 'proposed', recommendationIds: ['rec-1'] }),
+      ]);
+      const res = await runMilestonePreMortem(t.root, 'mil-a', new Date('2026-05-18T09:00:00.000Z'));
+      expect(res.ok).toBe(true);
+      if (!res.ok) throw new Error('unreachable');
+      const led = await readMilestoneLedger(t.root);
+      const m = led.milestones.find((x) => x.id === 'mil-a')!;
+      expect(m.preMortem.likelyFailureModes).toEqual([
+        'Decayed input: rec-1 (superseded) — milestone rests on a recommendation that has drifted since propose.',
+      ]);
+      expect(m.preMortem.outOfScope).toEqual(['keep me']);
+      expect(m.updatedAt).toBe('2026-05-18T09:00:00.000Z');
+      const other = led.milestones.find((x) => x.id === 'mil-other')!;
+      expect(other.updatedAt).toBe('2026-05-17T00:00:00.000Z');
+      const md = await readFile(join(t.root, '.cadence', 'intelligence', 'MILESTONES.md'), 'utf8');
+      expect(md).toMatch(/Decayed input: rec-1 \(superseded\)/);
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it('works on a proposed milestone', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedRecs(t.root, [mkRec({ id: 'rec-1', confidence: 0.1 })]);
+      await seedMilestones(t.root, [mkMs({ id: 'mil-p', status: 'proposed', recommendationIds: ['rec-1'] })]);
+      const res = await runMilestonePreMortem(t.root, 'mil-p', new Date('2026-05-18T09:00:00.000Z'));
+      expect(res.ok).toBe(true);
+      const m = (await readMilestoneLedger(t.root)).milestones[0]!;
+      expect(m.preMortem.likelyFailureModes).toContain(
+        'Low-confidence input: rec-1 (confidence 0.10) — assumption may be wrong.',
+      );
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it('idempotent: same ledger + same now → identical milestones.json', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedRecs(t.root, [mkRec({ id: 'rec-1', decayState: 'stale', confidence: 0.9 })]);
+      await seedMilestones(t.root, [mkMs({ id: 'mil-a', status: 'accepted', recommendationIds: ['rec-1'] })]);
+      const NOW = new Date('2026-05-18T09:00:00.000Z');
+      await runMilestonePreMortem(t.root, 'mil-a', NOW);
+      const first = await readFile(join(t.root, '.cadence', 'intelligence', 'milestones.json'), 'utf8');
+      await runMilestonePreMortem(t.root, 'mil-a', NOW);
+      const second = await readFile(join(t.root, '.cadence', 'intelligence', 'milestones.json'), 'utf8');
+      expect(second).toBe(first);
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it('refuses unknown id / exported / deferred / closed without writing', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedMilestones(t.root, [
+        mkMs({ id: 'mil-e', status: 'exported' }),
+        mkMs({ id: 'mil-d', status: 'deferred' }),
+        mkMs({ id: 'mil-c', status: 'closed' }),
+      ]);
+      expect(await runMilestonePreMortem(t.root, 'nope')).toEqual({ ok: false, error: 'milestone nope not found' });
+      expect(await runMilestonePreMortem(t.root, 'mil-e')).toEqual({ ok: false, error: 'cannot pre-mortem milestone in status exported' });
+      expect(await runMilestonePreMortem(t.root, 'mil-d')).toEqual({ ok: false, error: 'cannot pre-mortem milestone in status deferred' });
+      expect(await runMilestonePreMortem(t.root, 'mil-c')).toEqual({ ok: false, error: 'cannot pre-mortem milestone in status closed' });
+      const led = await readMilestoneLedger(t.root);
+      expect(led.milestones.map((m) => m.updatedAt)).toEqual([
+        '2026-05-17T00:00:00.000Z', '2026-05-17T00:00:00.000Z', '2026-05-17T00:00:00.000Z',
+      ]);
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it('tolerates absent rec/assumption ledgers (all members → Missing input)', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedMilestones(t.root, [mkMs({ id: 'mil-a', status: 'accepted', recommendationIds: ['rec-1', 'rec-2'] })]);
+      const res = await runMilestonePreMortem(t.root, 'mil-a', new Date('2026-05-18T09:00:00.000Z'));
+      expect(res.ok).toBe(true);
+      const m = (await readMilestoneLedger(t.root)).milestones[0]!;
+      expect(m.preMortem.likelyFailureModes).toEqual([
+        'Missing input: rec-1 — member recommendation no longer in ledger (scope erosion).',
+        'Missing input: rec-2 — member recommendation no longer in ledger (scope erosion).',
+      ]);
     } finally {
       await t.cleanup();
     }
