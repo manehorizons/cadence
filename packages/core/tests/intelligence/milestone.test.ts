@@ -220,6 +220,24 @@ describe('deepenPreMortem', () => {
     ]);
   });
 
+  it('F-new-4 boundary: lev<=3 & risk>=7 inclusive; just-outside does not fire', () => {
+    const out = deepenPreMortem(
+      mkMilestone({ id: 'm', recommendationIds: ['on', 'lev-out', 'risk-out'] }),
+      [
+        // exact boundary lev=3, risk=7 → fires (<=, >= inclusive)
+        mkRec({ id: 'on', leverageScore: 3, riskScore: 7, evidenceIds: ['e1'], confidence: 0.9 }),
+        // lev just above threshold (4) → AND branch false; has evidence so OR branch false → no line
+        mkRec({ id: 'lev-out', leverageScore: 4, riskScore: 7, evidenceIds: ['e1'], confidence: 0.9 }),
+        // risk just below threshold (6) → AND branch false; has evidence → no line
+        mkRec({ id: 'risk-out', leverageScore: 3, riskScore: 6, evidenceIds: ['e1'], confidence: 0.9 }),
+      ],
+      [],
+    );
+    expect(out.likelyFailureModes).toEqual([
+      'Overestimated value: on (leverage 3, risk 7, evidence 1) — claimed value may be overstated.',
+    ]);
+  });
+
   it('family-blocked order, each block id-sorted', () => {
     const out = deepenPreMortem(
       mkMilestone({ id: 'm', recommendationIds: ['z', 'y'] }),
