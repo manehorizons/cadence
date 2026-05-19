@@ -140,6 +140,37 @@ describe('cadence milestone', () => {
     expect(after).toBe(garbage);
   });
 
+  it('premortem refreshes an accepted milestone and --json emits the ledger', async () => {
+    const t = await tempRepo({ initialized: true });
+    active = t;
+    await seedRecs(t.root); // rec-1, accepted, ready-for-milestone
+    expect((await run(['milestone', 'propose'], t.root)).code).toBe(0);
+    // discover the real id — the propose test proves it is 'mil-rec-rec-1' but we read
+    // the live ledger to stay robust against any future id-derivation changes
+    const list = JSON.parse((await run(['milestone', 'list', '--json'], t.root)).stdout);
+    const mid = list.milestones[0].id;
+    expect((await run(['milestone', 'accept', mid], t.root)).code).toBe(0);
+
+    const j = await run(['milestone', 'premortem', mid, '--json'], t.root);
+    expect(j.code).toBe(0);
+    const ledger = JSON.parse(j.stdout);
+    expect(ledger.schemaVersion).toBe(1);
+    const m = ledger.milestones.find((x: { id: string }) => x.id === mid);
+    expect(m.preMortem).toBeDefined();
+
+    const plain = await run(['milestone', 'premortem', mid], t.root);
+    expect(plain.code).toBe(0);
+    expect(plain.stdout).toContain(`milestone ${mid} → pre-mortem refreshed`);
+  });
+
+  it('premortem refuses an unknown id (exit 1, stderr)', async () => {
+    const t = await tempRepo({ initialized: true });
+    active = t;
+    const miss = await run(['milestone', 'premortem', 'nope'], t.root);
+    expect(miss.code).toBe(1);
+    expect(miss.stderr).toContain('milestone premortem refused: milestone nope not found');
+  });
+
   it('export --to cadence stages a SPEC for an accepted milestone', async () => {
     active = await tempRepo({ initialized: true });
     const dir = join(active.root, '.cadence', 'intelligence');
