@@ -1,11 +1,14 @@
 import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type {
+  Assumption,
   IntelligenceMilestone,
   MilestoneLedger,
   MilestonePreMortem,
   Recommendation,
+  RecommendationDecayState,
   RecommendationReadiness,
+  RecommendationStatus,
 } from '@cadence/types';
 import {
   readMilestoneLedger,
@@ -78,6 +81,104 @@ export function seedPreMortem(recs: Recommendation[]): MilestonePreMortem {
     hiddenDependencies: sharedFileDeps(recs),
     driftRisks: docDriftRisk(recs),
     outOfScope: [],
+  };
+}
+
+const LEV_LOW = 3;
+const RISK_HIGH = 7;
+
+const oneLine = (s: string): string => s.replace(/\s*[\r\n]+\s*/g, ' ').trim();
+const byIdAsc = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+const DECAYED_STATES = new Set<RecommendationDecayState>([
+  'superseded',
+  'contradicted',
+  'stale',
+  'needs-revalidation',
+]);
+const ERODED_STATUS = new Set<RecommendationStatus>(['rejected', 'deferred']);
+const ERODED_READINESS = new Set<RecommendationReadiness>([
+  'blocked',
+  'needs-evidence',
+  'needs-decision',
+]);
+
+export function deepenPreMortem(
+  milestone: IntelligenceMilestone,
+  recs: ReadonlyArray<Recommendation>,
+  assumptions: ReadonlyArray<Assumption>,
+  _now: Date = new Date(),
+): MilestonePreMortem {
+  const byId = new Map(recs.map((r) => [r.id, r]));
+  const members: Recommendation[] = [];
+  const missingIds: string[] = [];
+  for (const rid of milestone.recommendationIds) {
+    const r = byId.get(rid);
+    if (r) members.push(r);
+    else missingIds.push(rid);
+  }
+  const sorted = [...members].sort((a, b) => byIdAsc(a.id, b.id));
+
+  const openByRec = new Map<string, number>();
+  for (const a of assumptions) {
+    if (a.status === 'open') {
+      openByRec.set(a.recommendationId, (openByRec.get(a.recommendationId) ?? 0) + 1);
+    }
+  }
+
+  const lowConf = sorted
+    .filter((r) => r.confidence < 0.5)
+    .map(
+      (r) =>
+        `Low-confidence input: ${oneLine(r.id)} (confidence ${r.confidence.toFixed(2)}) — assumption may be wrong.`,
+    );
+  const decayed = sorted
+    .filter((r) => DECAYED_STATES.has(r.decayState))
+    .map(
+      (r) =>
+        `Decayed input: ${oneLine(r.id)} (${r.decayState}) — milestone rests on a recommendation that has drifted since propose.`,
+    );
+  const eroded = sorted
+    .filter((r) => ERODED_STATUS.has(r.status) || ERODED_READINESS.has(r.readiness))
+    .map(
+      (r) =>
+        `Eroded input: ${oneLine(r.id)} (status ${r.status}, readiness ${r.readiness}) — no longer cleanly milestone-ready.`,
+    );
+  const unvalidated = sorted
+    .filter((r) => (openByRec.get(r.id) ?? 0) > 0)
+    .map(
+      (r) =>
+        `Unvalidated assumptions: ${oneLine(r.id)} rests on ${openByRec.get(r.id) ?? 0} open assumption(s).`,
+    );
+  const overestimated = sorted
+    .filter(
+      (r) =>
+        (r.leverageScore <= LEV_LOW && r.riskScore >= RISK_HIGH) ||
+        r.evidenceIds.length === 0,
+    )
+    .map(
+      (r) =>
+        `Overestimated value: ${oneLine(r.id)} (leverage ${String(r.leverageScore)}, risk ${String(r.riskScore)}, evidence ${String(r.evidenceIds.length)}) — claimed value may be overstated.`,
+    );
+  const missing = [...missingIds]
+    .sort(byIdAsc)
+    .map(
+      (rid) =>
+        `Missing input: ${oneLine(rid)} — member recommendation no longer in ledger (scope erosion).`,
+    );
+
+  return {
+    likelyFailureModes: [
+      ...lowConf,
+      ...decayed,
+      ...eroded,
+      ...unvalidated,
+      ...overestimated,
+      ...missing,
+    ],
+    hiddenDependencies: sharedFileDeps(members),
+    driftRisks: docDriftRisk(members),
+    outOfScope: milestone.preMortem.outOfScope,
   };
 }
 

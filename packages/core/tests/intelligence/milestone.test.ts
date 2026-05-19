@@ -1,8 +1,8 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { IntelligenceMilestone, MilestoneLedger, Recommendation } from '@cadence/types';
-import { applyTransition, clusterMilestones, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport } from '../../src/intelligence/milestone.js';
+import type { Assumption, IntelligenceMilestone, MilestoneLedger, Recommendation } from '@cadence/types';
+import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport } from '../../src/intelligence/milestone.js';
 import { readMilestoneLedger } from '../../src/intelligence/store.js';
 import { tempRepo, type Fixture } from '@cadence/testkit';
 
@@ -116,6 +116,157 @@ describe('seedPreMortem', () => {
       driftRisks: ['Milestone touches documentation surfaces — spec/doc drift risk.'],
       outOfScope: [],
     });
+  });
+});
+
+function mkA(p: Partial<Assumption> & { recommendationId: string }): Assumption {
+  return {
+    id: 'a-1',
+    text: 't',
+    status: 'open',
+    createdAt: '2026-05-17T00:00:00.000Z',
+    ...p,
+  };
+}
+
+function mkMilestone(p: Partial<IntelligenceMilestone> & { id: string }): IntelligenceMilestone {
+  return {
+    name: p.id,
+    objective: 'do the thing',
+    status: 'accepted',
+    recommendationIds: ['rec-1'],
+    preMortem: { likelyFailureModes: [], hiddenDependencies: [], driftRisks: [], outOfScope: [] },
+    exportTargets: [],
+    createdAt: '2026-05-17T00:00:00.000Z',
+    updatedAt: '2026-05-17T00:00:00.000Z',
+    ...p,
+  };
+}
+
+describe('deepenPreMortem', () => {
+  it('retains the 3 4a rules via shared helpers', () => {
+    const m = mkMilestone({ id: 'm', recommendationIds: ['a', 'b'] });
+    const out = deepenPreMortem(
+      m,
+      [
+        mkRec({ id: 'a', confidence: 0.3, affectedFiles: ['src/x.ts'] }),
+        mkRec({ id: 'b', confidence: 0.9, affectedFiles: ['src/x.ts', 'docs/y.md'] }),
+      ],
+      [],
+    );
+    expect(out.hiddenDependencies).toEqual([
+      'Shared file src/x.ts edited by a, b — ordering/coordination dependency.',
+    ]);
+    expect(out.driftRisks).toEqual([
+      'Milestone touches documentation surfaces — spec/doc drift risk.',
+    ]);
+    expect(out.likelyFailureModes).toContain(
+      'Low-confidence input: a (confidence 0.30) — assumption may be wrong.',
+    );
+  });
+
+  it('F-new-1 decay/staleness', () => {
+    const out = deepenPreMortem(
+      mkMilestone({ id: 'm', recommendationIds: ['a'] }),
+      [mkRec({ id: 'a', decayState: 'superseded', evidenceIds: ['e1'] })],
+      [],
+    );
+    expect(out.likelyFailureModes).toEqual([
+      'Decayed input: a (superseded) — milestone rests on a recommendation that has drifted since propose.',
+    ]);
+  });
+
+  it('F-new-2 erosion + missing-member, distinct prefixes', () => {
+    const out = deepenPreMortem(
+      mkMilestone({ id: 'm', recommendationIds: ['a', 'gone'] }),
+      [mkRec({ id: 'a', status: 'rejected', readiness: 'blocked', evidenceIds: ['e1'] })],
+      [],
+    );
+    expect(out.likelyFailureModes).toEqual([
+      'Eroded input: a (status rejected, readiness blocked) — no longer cleanly milestone-ready.',
+      'Missing input: gone — member recommendation no longer in ledger (scope erosion).',
+    ]);
+  });
+
+  it('F-new-3 open assumptions counted per member', () => {
+    const out = deepenPreMortem(
+      mkMilestone({ id: 'm', recommendationIds: ['a'] }),
+      [mkRec({ id: 'a', evidenceIds: ['e1'] })],
+      [
+        mkA({ id: 'a1', recommendationId: 'a', status: 'open' }),
+        mkA({ id: 'a2', recommendationId: 'a', status: 'open' }),
+        mkA({ id: 'a3', recommendationId: 'a', status: 'validated' }),
+      ],
+    );
+    expect(out.likelyFailureModes).toEqual([
+      'Unvalidated assumptions: a rests on 2 open assumption(s).',
+    ]);
+  });
+
+  it('F-new-4 overestimated value: lev<=3 & risk>=7, OR zero evidence', () => {
+    const out = deepenPreMortem(
+      mkMilestone({ id: 'm', recommendationIds: ['a', 'b'] }),
+      [
+        mkRec({ id: 'a', leverageScore: 2, riskScore: 8, evidenceIds: ['e1'], confidence: 0.9 }),
+        mkRec({ id: 'b', leverageScore: 9, riskScore: 1, evidenceIds: [], confidence: 0.9 }),
+      ],
+      [],
+    );
+    expect(out.likelyFailureModes).toEqual([
+      'Overestimated value: a (leverage 2, risk 8, evidence 1) — claimed value may be overstated.',
+      'Overestimated value: b (leverage 9, risk 1, evidence 0) — claimed value may be overstated.',
+    ]);
+  });
+
+  it('family-blocked order, each block id-sorted', () => {
+    const out = deepenPreMortem(
+      mkMilestone({ id: 'm', recommendationIds: ['z', 'y'] }),
+      [
+        mkRec({ id: 'z', confidence: 0.1, decayState: 'stale', evidenceIds: ['e1'] }),
+        mkRec({ id: 'y', confidence: 0.1, decayState: 'stale', evidenceIds: ['e1'] }),
+      ],
+      [],
+    );
+    expect(out.likelyFailureModes).toEqual([
+      'Low-confidence input: y (confidence 0.10) — assumption may be wrong.',
+      'Low-confidence input: z (confidence 0.10) — assumption may be wrong.',
+      'Decayed input: y (stale) — milestone rests on a recommendation that has drifted since propose.',
+      'Decayed input: z (stale) — milestone rests on a recommendation that has drifted since propose.',
+    ]);
+  });
+
+  it('drop-stale: a no-longer-true risk disappears on rebuild', () => {
+    const m = mkMilestone({ id: 'm', recommendationIds: ['a'] });
+    const decayed = deepenPreMortem(m, [mkRec({ id: 'a', decayState: 'stale', confidence: 0.9, evidenceIds: ['e1'] })], []);
+    expect(decayed.likelyFailureModes).toHaveLength(1);
+    const healed = deepenPreMortem(m, [mkRec({ id: 'a', decayState: 'fresh', confidence: 0.9, evidenceIds: ['e1'] })], []);
+    expect(healed.likelyFailureModes).toEqual([]);
+  });
+
+  it('outOfScope preserved verbatim, never written', () => {
+    const m = mkMilestone({ id: 'm', recommendationIds: ['a'], preMortem: {
+      likelyFailureModes: ['stale'], hiddenDependencies: [], driftRisks: [], outOfScope: ['operator boundary'],
+    } });
+    const out = deepenPreMortem(m, [mkRec({ id: 'a' })], []);
+    expect(out.outOfScope).toEqual(['operator boundary']);
+  });
+
+  it('oneLine collapses newlines in interpolated id', () => {
+    const out = deepenPreMortem(
+      mkMilestone({ id: 'm', recommendationIds: ['a\nb'] }),
+      [mkRec({ id: 'a\nb', decayState: 'stale', evidenceIds: ['e1'] })],
+      [],
+    );
+    expect(out.likelyFailureModes[0]).toBe(
+      'Decayed input: a b (stale) — milestone rests on a recommendation that has drifted since propose.',
+    );
+  });
+
+  it('deterministic + input order independent', () => {
+    const m = mkMilestone({ id: 'm', recommendationIds: ['a', 'b'] });
+    const recsA = [mkRec({ id: 'a', decayState: 'stale' }), mkRec({ id: 'b', decayState: 'stale' })];
+    const recsB = [mkRec({ id: 'b', decayState: 'stale' }), mkRec({ id: 'a', decayState: 'stale' })];
+    expect(deepenPreMortem(m, recsA, [])).toEqual(deepenPreMortem(m, recsB, []));
   });
 });
 
