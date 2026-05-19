@@ -693,6 +693,7 @@ Shape recommendations into milestone candidates (read-narrow; never transitions 
 | `accept <id>` | Mark a proposed milestone accepted |
 | `defer <id>` | Defer a proposed or accepted milestone |
 | `export <id> --to cadence` | Export an accepted milestone to a staged CADENCE SPEC draft |
+| `premortem <id> [--json]` | Recompute the deterministic pre-mortem for a `proposed`/`accepted` milestone in place (refuses other statuses) |
 | `list [--json]` | Show the current milestone ledger |
 
 **Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
@@ -709,7 +710,14 @@ inputs); pre-mortem entries not covered by a deterministic seed — and
 Re-running `propose` regenerates only `proposed` records; `accepted`/
 `deferred`/`exported`/`closed` milestones and their recommendations are never
 clobbered or re-proposed. `accept`/`defer` enforce guarded status
-transitions. `export <id> --to cadence` renders a deterministic CADENCE SPEC scaffold from an `accepted`
+transitions. `premortem <id>` re-runs a deepened deterministic pre-mortem
+(decay/erosion/open-assumption/overestimated-value signals) for one
+`proposed`/`accepted` milestone against the **current** recommendation and
+assumption ledgers, replaces that milestone's derived pre-mortem dimensions
+in place, bumps its `updatedAt`, and re-renders `MILESTONES.md`; the
+operator-owned `outOfScope` field is preserved verbatim and never derived.
+It is refused for an unknown id or any status other than `proposed`/
+`accepted`. `export <id> --to cadence` renders a deterministic CADENCE SPEC scaffold from an `accepted`
 milestone's own facts, writes it to `.cadence/intelligence/exports/<id>/SPEC.md`, records an
 `exportTarget`, and flips the milestone to `exported`; it **never** runs `cadence spec new`,
 allocates a loop id, or writes `state.json` — the staged SPEC is promoted manually by the
@@ -722,12 +730,12 @@ Writes:
 - `.cadence/intelligence/MILESTONES.md`
 - `.cadence/intelligence/exports/<id>/SPEC.md` (on `export`)
 
-With `--json` (on `propose` and `list`), the milestone ledger object is emitted to stdout instead of
+With `--json` (on `propose`, `premortem`, and `list`), the milestone ledger object is emitted to stdout instead of
 the rendered text. Distinct from CADENCE's own execution-layer
 `.cadence/MILESTONES.md`.
 
 **Exit codes** — exits non-zero only on a genuine failure (artifact write
-error, or an illegal/unknown-id `accept`/`defer`, or an unknown-backend/unknown-id/non-accepted `export`). An empty/absent
+error, or an illegal/unknown-id `accept`/`defer`, or an unknown-backend/unknown-id/non-accepted `export`, or an unknown-id/non-`proposed`/`accepted` `premortem`). An empty/absent
 recommendation ledger degrades gracefully and still exits 0.
 
 ---
