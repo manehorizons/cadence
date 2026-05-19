@@ -98,6 +98,25 @@ describe('seedPreMortem', () => {
   it('outOfScope is always empty', () => {
     expect(seedPreMortem([mkRec({ affectedAreas: ['docs'] })]).outOfScope).toEqual([]);
   });
+
+  it('byte-stable across the helper extraction (frozen 4a contract)', () => {
+    const out = seedPreMortem([
+      mkRec({ id: 'b', confidence: 0.2, affectedFiles: ['src/x.ts'] }),
+      mkRec({ id: 'a', confidence: 0.49, affectedFiles: ['src/x.ts', 'docs/y.md'] }),
+      mkRec({ id: 'c' }),
+    ]);
+    expect(out).toEqual({
+      likelyFailureModes: [
+        'Low-confidence input: a (confidence 0.49) — assumption may be wrong.',
+        'Low-confidence input: b (confidence 0.20) — assumption may be wrong.',
+      ],
+      hiddenDependencies: [
+        'Shared file src/x.ts edited by a, b — ordering/coordination dependency.',
+      ],
+      driftRisks: ['Milestone touches documentation surfaces — spec/doc drift risk.'],
+      outOfScope: [],
+    });
+  });
 });
 
 const NOW = new Date('2026-05-17T12:00:00.000Z');
