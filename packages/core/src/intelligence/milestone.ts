@@ -73,6 +73,8 @@ export function seedPreMortem(recs: Recommendation[]): MilestonePreMortem {
   for (const r of recs
     .filter((r) => r.confidence < 0.5)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
+    // Raw r.id (NOT oneLine) is intentional — seedPreMortem is the byte-frozen 4a
+    // propose-time contract; do NOT route this through oneLine/a shared helper.
     likelyFailureModes.push(
       `Low-confidence input: ${r.id} (confidence ${r.confidence.toFixed(2)}) — assumption may be wrong.`,
     );
