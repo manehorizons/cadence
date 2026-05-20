@@ -194,6 +194,207 @@ describe('synthesizeContextPacket', () => {
   });
 });
 
+describe('synthesizeContextPacket — review scope (Slice 7)', () => {
+  function mkAs(p: Partial<Assumption> = {}): Assumption {
+    return {
+      id: 'as-x',
+      recommendationId: 'rec-x',
+      text: 't',
+      status: 'open',
+      createdAt: '2026-05-18T00:00:00.000Z',
+      ...p,
+    };
+  }
+  function mkDec(p: Partial<IntelligenceDecision> = {}): IntelligenceDecision {
+    return {
+      id: 'dec-x',
+      title: 't',
+      rationale: 'r',
+      decidedAt: '2026-05-18T00:00:00.000Z',
+      ...p,
+    };
+  }
+
+  it('selects TOP_N_REVIEW=5 ranked recs (sorted score desc, createdAt asc, id asc)', () => {
+    // 8 ranked candidates with deterministic scores via leverageScore (the only
+    // free input to scoreRecommendation that varies here). Status=candidate, the
+    // other contributors are fixed in mkRec defaults so `raw` = leverageScore.
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', leverageScore: 9, createdAt: '2026-05-02T00:00:00.000Z' }),
+      mkRec({ id: 'r2', leverageScore: 7, createdAt: '2026-05-03T00:00:00.000Z' }),
+      mkRec({ id: 'r3', leverageScore: 9, createdAt: '2026-05-01T00:00:00.000Z' }),
+      mkRec({ id: 'r4', leverageScore: 5, createdAt: '2026-05-04T00:00:00.000Z' }),
+      mkRec({ id: 'r5', leverageScore: 8, createdAt: '2026-05-05T00:00:00.000Z' }),
+      mkRec({ id: 'r6', leverageScore: 3, createdAt: '2026-05-06T00:00:00.000Z' }),
+      mkRec({ id: 'r7', leverageScore: 2, createdAt: '2026-05-07T00:00:00.000Z' }),
+      mkRec({ id: 'r8', leverageScore: 1, createdAt: '2026-05-08T00:00:00.000Z' }),
+    ];
+    const packet = synthesizeContextPacket(
+      'review',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(packet.recommendations).toHaveLength(5);
+    // r3 (9, 05-01) > r1 (9, 05-02) > r5 (8) > r2 (7) > r4 (5); r6/r7/r8 omitted.
+    expect(packet.recommendations.map((r) => r.id)).toEqual(['r3', 'r1', 'r5', 'r2', 'r4']);
+    expect(packet.totals.recommendationsOmitted).toBe(3);
+  });
+
+  it('emits needsAttention bucket (rescored + sorted; no TOP_N cap)', () => {
+    // 3 ranked + 7 needsAttention (superseded/contradicted).
+    const ranked: Recommendation[] = [
+      mkRec({ id: 'r1', leverageScore: 5 }),
+      mkRec({ id: 'r2', leverageScore: 4 }),
+      mkRec({ id: 'r3', leverageScore: 3 }),
+    ];
+    const attn: Recommendation[] = [
+      mkRec({ id: 'a1', leverageScore: 9, decayState: 'superseded', createdAt: '2026-05-02T00:00:00.000Z' }),
+      mkRec({ id: 'a2', leverageScore: 9, decayState: 'contradicted', createdAt: '2026-05-01T00:00:00.000Z' }),
+      mkRec({ id: 'a3', leverageScore: 7, decayState: 'superseded' }),
+      mkRec({ id: 'a4', leverageScore: 6, decayState: 'contradicted' }),
+      mkRec({ id: 'a5', leverageScore: 5, decayState: 'superseded' }),
+      mkRec({ id: 'a6', leverageScore: 4, decayState: 'contradicted' }),
+      mkRec({ id: 'a7', leverageScore: 3, decayState: 'superseded' }),
+    ];
+    const packet = synthesizeContextPacket(
+      'review',
+      {
+        recommendations: [...ranked, ...attn],
+        evidence: [],
+        assumptions: [],
+        decisions: [],
+        backend: noBackend,
+      },
+      NOW,
+    );
+    expect(packet.needsAttention).toBeDefined();
+    expect(packet.needsAttention).toHaveLength(7);
+    // First two tie on raw=9; createdAt asc breaks the tie → a2 then a1.
+    expect(packet.needsAttention!.map((r) => r.id)).toEqual([
+      'a2', 'a1', 'a3', 'a4', 'a5', 'a6', 'a7',
+    ]);
+    // Verify scores are sorted descending.
+    const scores = packet.needsAttention!.map((r) => r.score);
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
+  });
+
+  it('emits needsAttention: [] (always present for review, even when empty)', () => {
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', leverageScore: 5 }),
+    ];
+    const packet = synthesizeContextPacket(
+      'review',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(packet.needsAttention).toBeDefined();
+    expect(packet.needsAttention).toEqual([]);
+  });
+
+  it('does NOT emit needsAttention for phase or handoff scopes', () => {
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', leverageScore: 5 }),
+      mkRec({ id: 'a1', leverageScore: 9, decayState: 'superseded' }),
+    ];
+    const phase = synthesizeContextPacket(
+      'phase',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(phase.needsAttention).toBeUndefined();
+    const handoff = synthesizeContextPacket(
+      'handoff',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(handoff.needsAttention).toBeUndefined();
+  });
+
+  it('includes ALL open assumptions (broad — reviewer audits all)', () => {
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', leverageScore: 5 }),
+    ];
+    const assumptions: Assumption[] = [
+      mkAs({ id: 'a1', recommendationId: 'r1', text: 'open tied to selected' }),
+      mkAs({ id: 'a2', recommendationId: 'r-unselected', text: 'open tied to UNselected' }),
+      mkAs({ id: 'a3', recommendationId: 'r-attn', text: 'open tied to attn' }),
+      mkAs({ id: 'a4', recommendationId: 'r1', text: 'closed', status: 'validated' }),
+    ];
+    const packet = synthesizeContextPacket(
+      'review',
+      { recommendations: recs, evidence: [], assumptions, decisions: [], backend: noBackend },
+      NOW,
+    );
+    // All OPEN assumptions, regardless of which rec they tie to.
+    expect(packet.assumptions.map((a) => a.id).sort()).toEqual(['a1', 'a2', 'a3']);
+  });
+
+  it('includes ALL decisions (tied + untied) — reviewer audits rationale', () => {
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', leverageScore: 5 }),
+    ];
+    const decisions: IntelligenceDecision[] = [
+      mkDec({ id: 'd1', recommendationId: 'r1', title: 'tied selected' }),
+      mkDec({ id: 'd2', recommendationId: 'r-other', title: 'tied unselected' }),
+      mkDec({ id: 'd3', title: 'untied' }),
+    ];
+    const packet = synthesizeContextPacket(
+      'review',
+      { recommendations: recs, evidence: [], assumptions: [], decisions, backend: noBackend },
+      NOW,
+    );
+    expect(packet.decisions.map((d) => d.id).sort()).toEqual(['d1', 'd2', 'd3']);
+  });
+
+  it('files = dedup affectedFiles ∪ evidence paths from (selected ∪ needsAttention)', () => {
+    const recs: Recommendation[] = [
+      mkRec({
+        id: 'r-sel',
+        leverageScore: 5,
+        affectedFiles: ['src/sel.ts', 'src/shared.ts'],
+      }),
+      mkRec({
+        id: 'r-attn',
+        leverageScore: 9,
+        decayState: 'superseded',
+        affectedFiles: ['src/attn.ts', 'src/shared.ts'],
+      }),
+      mkRec({
+        id: 'r-other-attn',
+        leverageScore: 8,
+        decayState: 'contradicted',
+        affectedFiles: ['src/other.ts'],
+      }),
+    ];
+    const evidence: Evidence[] = [
+      { id: 'ev-sel', recommendationId: 'r-sel', kind: 'file', summary: 's', path: 'src/ev-sel.ts', createdAt: NOW.toISOString() },
+      { id: 'ev-attn', recommendationId: 'r-attn', kind: 'file', summary: 's', path: 'src/ev-attn.ts', createdAt: NOW.toISOString() },
+      { id: 'ev-unrelated', recommendationId: 'r-not-in-packet', kind: 'file', summary: 's', path: 'src/ev-skip.ts', createdAt: NOW.toISOString() },
+    ];
+    const packet = synthesizeContextPacket(
+      'review',
+      { recommendations: recs, evidence, assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    const paths = packet.files.map((f) => f.path);
+    // Both selected-rec affectedFiles AND attn-rec affectedFiles present, deduped.
+    expect(paths).toContain('src/sel.ts');
+    expect(paths).toContain('src/shared.ts');
+    expect(paths).toContain('src/attn.ts');
+    expect(paths).toContain('src/other.ts');
+    expect(paths).toContain('src/ev-sel.ts');
+    expect(paths).toContain('src/ev-attn.ts');
+    // shared.ts appears once (dedup).
+    expect(paths.filter((p) => p === 'src/shared.ts')).toHaveLength(1);
+    // Evidence whose rec is not in packet must be excluded.
+    expect(paths).not.toContain('src/ev-skip.ts');
+    // Every why is oneLine'd (no newlines).
+    for (const f of packet.files) {
+      expect(f.why).not.toMatch(/[\r\n]/);
+    }
+  });
+});
+
 let active: Fixture | null = null;
 afterEach(async () => {
   if (active) {

@@ -25,6 +25,7 @@ import { renderContextMd } from './render-context.js';
 
 const TOP_N_PHASE = 7;
 const TOP_N_HANDOFF = 5;
+const TOP_N_REVIEW = 5; // Slice 7 — review scope ranked rec cap
 
 /** Collapse CR/LF runs to a single space so ledger free text cannot break the
  *  Markdown packet structure. Module-private by design: the Slice-4b oneLine is
@@ -46,7 +47,7 @@ export function synthesizeContextPacket(
   sources: ContextSources,
   now: Date = new Date(),
 ): ContextPacket {
-  const { ranked } = partitionLedger(sources.recommendations);
+  const { ranked, needsAttention: attnBucket } = partitionLedger(sources.recommendations);
 
   const scored = ranked
     .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
@@ -58,7 +59,11 @@ export function synthesizeContextPacket(
       return a.rec.id < b.rec.id ? -1 : a.rec.id > b.rec.id ? 1 : 0;
     });
 
-  const n = scope === 'phase' ? TOP_N_PHASE : TOP_N_HANDOFF;
+  const n =
+    scope === 'phase' ? TOP_N_PHASE :
+    scope === 'review' ? TOP_N_REVIEW :
+    // 'agent' still falls through to TOP_N_HANDOFF; Task 3 widens this.
+    TOP_N_HANDOFF;
   const selected = scored.slice(0, n);
   const recommendationsOmitted = Math.max(0, scored.length - n);
 
@@ -77,9 +82,39 @@ export function synthesizeContextPacket(
     return rec;
   });
 
+  // needsAttention bucket — review scope only. Rescored + sorted (score desc,
+  // createdAt asc, id asc); no TOP_N cap. Always present (possibly []) for
+  // review; absent for other scopes (Decision-Log #7).
+  const needsAttention: ContextRec[] | undefined =
+    scope === 'review'
+      ? attnBucket
+          .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
+          .sort((a, b) => {
+            if (b.raw !== a.raw) return b.raw - a.raw;
+            if (a.rec.createdAt !== b.rec.createdAt) {
+              return a.rec.createdAt < b.rec.createdAt ? -1 : 1;
+            }
+            return a.rec.id < b.rec.id ? -1 : a.rec.id > b.rec.id ? 1 : 0;
+          })
+          .map((s): ContextRec => {
+            const out: ContextRec = {
+              id: s.rec.id,
+              title: oneLine(s.rec.title),
+              score: s.score,
+              status: s.rec.status,
+              readiness: s.rec.readiness,
+              priority: s.rec.priority,
+            };
+            if (s.rec.suggestedBackendAction) {
+              out.suggestedBackendAction = oneLine(s.rec.suggestedBackendAction);
+            }
+            return out;
+          })
+      : undefined;
+
   const selectedIds = new Set(selected.map((s) => s.rec.id));
   const inScope = (recommendationId: string): boolean =>
-    scope === 'handoff' || selectedIds.has(recommendationId);
+    scope === 'handoff' || scope === 'review' || selectedIds.has(recommendationId);
 
   const assumptions = sources.assumptions
     .filter((a) => a.status === 'open' && inScope(a.recommendationId))
@@ -94,7 +129,7 @@ export function synthesizeContextPacket(
   // phase keeps only decisions tied to a selected rec, handoff keeps all.
   const decisions = sources.decisions
     .filter((d) =>
-      scope === 'handoff'
+      (scope === 'handoff' || scope === 'review')
         ? true
         : d.recommendationId !== undefined && selectedIds.has(d.recommendationId),
     )
@@ -108,7 +143,15 @@ export function synthesizeContextPacket(
       return out;
     });
 
-  const fileRecs = scope === 'handoff' ? scored.map((s) => s.rec) : selected.map((s) => s.rec);
+  let fileRecs: Recommendation[];
+  if (scope === 'handoff') {
+    fileRecs = scored.map((s) => s.rec);
+  } else if (scope === 'review') {
+    // selected ranked recs + every needsAttention rec
+    fileRecs = [...selected.map((s) => s.rec), ...attnBucket];
+  } else {
+    fileRecs = selected.map((s) => s.rec);
+  }
   const fileRecIds = new Set(fileRecs.map((r) => r.id));
   const filesByPath = new Map<string, string>();
   const addFile = (path: string, why: string): void => {
@@ -144,6 +187,7 @@ export function synthesizeContextPacket(
     assumptions,
     decisions,
     files,
+    ...(needsAttention !== undefined ? { needsAttention } : {}),
     totals: {
       recommendations: recommendations.length,
       assumptions: assumptions.length,
