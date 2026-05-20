@@ -212,7 +212,7 @@ Full output structure — **header + blockquote always emitted**, in both empty 
 
 ```
 
-Per-entry heading uses `text` (the assumption statement IS the natural heading; `id` precedes for stability/grep). Em-dash `—` (U+2014) matches Slice-1's heading shape.
+Per-entry heading uses `text` (the assumption statement IS the natural heading; `id` precedes for stability/grep). Em-dash `—` (U+2014) matches Slice-1's heading shape. Every per-entry block ends with a trailing blank `lines.push('')` (mirrors Slice-1 `render.ts:35-37`) so consecutive entries are separated by a double-newline on `join('\n')`.
 
 ### `renderDecisionsMd(ledger): string`
 
@@ -235,7 +235,7 @@ ${d.rationale}
 
 ```
 
-`rationale` is the body paragraph (symmetric with Slice-1's `rec.summary` body). The `- recommendation:` bullet line is emitted ONLY when `d.recommendationId` is present; absent for untied decisions.
+`rationale` is the body paragraph (symmetric with Slice-1's `rec.summary` body). The `- recommendation:` bullet line is emitted ONLY when `d.recommendationId` is present; absent for untied decisions. Every per-entry block ends with a trailing blank `lines.push('')` (Slice-1 precedent).
 
 ### Ordering
 
@@ -371,7 +371,7 @@ Both mirror Slice 1's `recommendation list` shape verbatim: compact one-line-per
 | AC | Statement | Linked test surface |
 |---|---|---|
 | AC-1 | `addAssumption(root, {recommendationId, text})` allocates id `as-<YYYYMMDD>-001`, sets `status='open'`, `createdAt=ISO now`, appends to ledger, persists `assumptions.json` + `ASSUMPTIONS.md`; counter increments monotone per-day per-ledger (3 sequential adds same day → `001`/`002`/`003`). | `tests/intelligence/store-assumption.test.ts` |
-| AC-2 | `addAssumption` refuses unknown `recommendationId` with `Error("unknown recommendation \"<id>\"")`; ledger file remains absent (or byte-equal if pre-existing); no `ASSUMPTIONS.md` write. | `tests/intelligence/store-assumption.test.ts` |
+| AC-2 | `addAssumption` refuses unknown `recommendationId` with `Error("unknown recommendation \"<id>\"")`. Pre-condition snapshot (taken before the call) of `assumptions.json` + `ASSUMPTIONS.md` is byte-equal to post-condition snapshot (i.e. when the files didn't exist pre-call they still don't; when they did, their contents are unchanged). No `ASSUMPTIONS.md` write of any kind. | `tests/intelligence/store-assumption.test.ts` |
 | AC-3 | `addIntelligenceDecision(root, {title, rationale})` (no `--rec`) allocates id `dec-<YYYYMMDD>-001`, OMITS `recommendationId` field entirely (not `undefined`), sets `decidedAt=ISO now`, persists `decisions.json` + `DECISIONS.md`. | `tests/intelligence/store-decision.test.ts` |
 | AC-4 | `addIntelligenceDecision` WITH `recommendationId` refuses unknown id (same shape as AC-2); WITH known id, persists with the field present. | `tests/intelligence/store-decision.test.ts` |
 | AC-5 | `renderAssumptionsMd` ALWAYS emits the `# CADENCE Assumptions` header + `> Generated from \`.cadence/intelligence/assumptions.json\`.` blockquote envelope (mirrors Slice-1 `renderRecommendationsMd` shape). Non-empty ledger appends per-entry block: `## ${id} — ${text}` heading + `- recommendation:` / `- status:` / `- recorded:` bullets in insertion order. Empty ledger appends `No assumptions recorded.` (header + blockquote still present). | `tests/intelligence/render-assumption.test.ts` |
