@@ -211,7 +211,7 @@ renderContextMd(packet):
 | Assumption / decision ledger absent | Honest-empty (Slice-5 precedent — documented "no intake yet" gap; the same gap holds for these new scopes) |
 | `ContextPacketZ.parse` fails | Throws — synth is the schema contract enforcer; a parse failure is a real bug, not a runtime condition |
 | `mkdir` / `atomicWrite` fails (disk / perm) | Throws unchanged — same surface as Slice 5; operator-visible |
-| Invalid scope from CLI | `ContextScopeZ.safeParse` (existing Slice-5 path) → exit 2 with `_zod`-formatted error on stderr; no Commander `.choices()` |
+| Invalid scope from CLI | `ContextScopeZ.safeParse` (existing Slice-5 path) → `process.exitCode = 2` with hand-written stderr line `context: invalid scope "<scope>" (expected: phase \| handoff \| review \| agent)\n` (no `_zod` formatting, no Commander `.choices()`); see AC-7 for the authoritative exact format |
 | Zero ready recs for `agent` | `recommendations: []`, `totals.recommendations: 0`; render emits `_(none)_`; not a refusal |
 | `state.activePhase` null (fresh project, no phase ever started) | `loop.activePhase` ∈ null/absent; review/agent selection unaffected (status-based, not phase-based) |
 | Empty `needsAttention` bucket for `review` | `needsAttention: []` (field present); render emits `## Needs Attention` then `_(none)_` |
