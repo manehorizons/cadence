@@ -16,7 +16,7 @@
 
 - **`cadence assumption add --rec <id> --text "..."`** allocates `as-<YYYYMMDD>-<NNN>`, persists `assumptions.json` + `ASSUMPTIONS.md`, refuses unknown `recommendationId` at intake.
 - **`cadence decision add [--rec <id>] --title "..." --rationale "..."`** allocates `dec-<YYYYMMDD>-<NNN>`, persists `decisions.json` + `DECISIONS.md`. `--rec` is optional (decisions can be untied per `IntelligenceDecisionZ` schema); when present, FK-checked same as assumption.
-- **`cadence assumption list` / `cadence decision list`** read the respective ledger and dump the rendered Markdown to stdout.
+- **`cadence assumption list` / `cadence decision list`** read the respective ledger and write a compact one-line-per-entry summary to stdout (mirrors Slice 1's `recommendation list` shape verbatim — `${rec.id}  ${rec.priority}  ${rec.readiness}  ${rec.title}\n`). NOT a full Markdown dump. The `.md` artifact is regenerated only by `add`.
 
 Status transitions (`validate`/`reject` for assumptions) deferred to a follow-up slice, mirroring Slice 1's deferral of `recommendation accept/defer/reject` until Slice 3.
 
@@ -71,7 +71,7 @@ Five new files, three modified files. Zero `@cadence/types` changes.
 ### MODIFIED files
 
 - `packages/core/src/intelligence/store.ts`:
-  - + `ASSUMPTIONS_JSON = 'assumptions.json'`, `ASSUMPTIONS_MD = 'ASSUMPTIONS.md'`, `DECISIONS_JSON = 'decisions.json'`, `DECISIONS_MD = 'DECISIONS.md'` constants (mirror `RECOMMENDATIONS_MD = 'RECOMMENDATIONS.md'`).
+  - + `ASSUMPTIONS_MD = 'ASSUMPTIONS.md'` and `DECISIONS_MD = 'DECISIONS.md'` constants. **`ASSUMPTIONS_JSON` / `DECISIONS_JSON` + `assumptionsPath()` / `decisionsPath()` helpers already exist at `store.ts` lines 33-34 + 58-64** (added when the Slice-5 readers landed) — REUSE them; DO NOT redeclare. Add new `assumptionsMdPath(root)` / `decisionsMdPath(root)` helpers mirroring the existing `recommendationsMdPath(root)` at line 66.
   - + `nextAssumptionId(ledger, now): string` — prefix `as-`, mirror of `nextRecommendationId`.
   - + `nextIntelligenceDecisionId(ledger, now): string` — prefix `dec-`, same shape.
   - + `writeAssumptionLedger(root, ledger): Promise<void>` — atomic JSON + atomic `ASSUMPTIONS.md` render.
@@ -83,7 +83,7 @@ Five new files, three modified files. Zero `@cadence/types` changes.
 - `docs/reference/commands.md`:
   - + `### assumption` section (mirror `### recommendation` shape).
   - + `### decision` section.
-  - Auto-marker region (`<!-- cadence:commands:begin/end -->`) regenerated to list `assumption` + `decision` as top-level commands.
+  - Auto-marker region (`<!-- cadence:commands:start/end -->`) regenerated to list `assumption` + `decision` as top-level commands.
 
 ### Untouched
 
@@ -168,13 +168,25 @@ FK check happens INSIDE the writer (`addAssumption` / `addIntelligenceDecision`)
 ### Path constants (in `store.ts`)
 
 ```ts
-const ASSUMPTIONS_JSON = 'assumptions.json';
-const ASSUMPTIONS_MD   = 'ASSUMPTIONS.md';
-const DECISIONS_JSON   = 'decisions.json';
-const DECISIONS_MD     = 'DECISIONS.md';
+// EXISTING (do not redeclare):
+//   const ASSUMPTIONS_JSON = 'assumptions.json';                  // line 33
+//   const DECISIONS_JSON   = 'decisions.json';                    // line 34
+//   function assumptionsPath(root): string                         // line 58
+//   function decisionsPath(root): string                           // line 62
+//
+// NEW (add):
+const ASSUMPTIONS_MD = 'ASSUMPTIONS.md';
+const DECISIONS_MD   = 'DECISIONS.md';
+
+function assumptionsMdPath(root: string): string {
+  return join(intelligenceDir(root), ASSUMPTIONS_MD);
+}
+function decisionsMdPath(root: string): string {
+  return join(intelligenceDir(root), DECISIONS_MD);
+}
 ```
 
-All under `.cadence/intelligence/` (via `intelligenceDir(root)`).
+All under `.cadence/intelligence/` (via existing `intelligenceDir(root)`).
 
 ## Render Policy
 
@@ -182,9 +194,16 @@ Both render modules mirror Slice-1's `renderRecommendationsMd` idiom (`lines: st
 
 ### `renderAssumptionsMd(ledger): string`
 
-Empty ledger → `No assumptions recorded.`. Otherwise, per entry:
+Full output structure — **header + blockquote always emitted**, in both empty and non-empty cases (mirrors Slice-1 `renderRecommendationsMd` at `render.ts` lines 7-12 verbatim):
 
 ```
+# CADENCE Assumptions
+
+> Generated from `.cadence/intelligence/assumptions.json`.
+
+[ empty case appends: "No assumptions recorded." + blank line ]
+[ non-empty case appends one per-entry block per assumption: ]
+
 ## ${a.id} — ${a.text}
 
 - recommendation: ${a.recommendationId}
@@ -193,23 +212,30 @@ Empty ledger → `No assumptions recorded.`. Otherwise, per entry:
 
 ```
 
-Heading uses `text` (the assumption statement IS the natural heading; `id` precedes for stability/grep). Em-dash `—` (U+2014) matches Slice-1's heading shape.
+Per-entry heading uses `text` (the assumption statement IS the natural heading; `id` precedes for stability/grep). Em-dash `—` (U+2014) matches Slice-1's heading shape.
 
 ### `renderDecisionsMd(ledger): string`
 
-Empty ledger → `No decisions recorded.`. Otherwise, per entry:
+Same envelope (header + blockquote always emitted):
 
 ```
+# CADENCE Decisions
+
+> Generated from `.cadence/intelligence/decisions.json`.
+
+[ empty case appends: "No decisions recorded." + blank line ]
+[ non-empty case appends one per-entry block: ]
+
 ## ${d.id} — ${d.title}
 
-- recommendation: ${d.recommendationId}     # only when defined (decision's --rec is optional)
+- recommendation: ${d.recommendationId}     # ONLY emitted when defined (decision's --rec is optional)
 - decided: ${d.decidedAt}
 
 ${d.rationale}
 
 ```
 
-`rationale` is the body paragraph (symmetric with Slice-1's `rec.summary` body).
+`rationale` is the body paragraph (symmetric with Slice-1's `rec.summary` body). The `- recommendation:` bullet line is emitted ONLY when `d.recommendationId` is present; absent for untied decisions.
 
 ### Ordering
 
@@ -279,24 +305,45 @@ const out: IntelligenceDecision = {
 if (input.recommendationId !== undefined) out.recommendationId = input.recommendationId;
 ```
 
-### `cadence assumption list` / `cadence decision list`
+### `cadence assumption list`
 
 ```
 CLI action:
   ├─ try {
-  │    const ledger = await read<Subject>Ledger(process.cwd());
-  │    if (ledger.<entries>.length === 0) {
-  │      process.stdout.write('No <subject>s recorded.\n');
+  │    const ledger = await readAssumptionLedger(process.cwd());
+  │    if (ledger.assumptions.length === 0) {
+  │      process.stdout.write('No assumptions recorded.\n');
   │      return;
   │    }
-  │    process.stdout.write(render<Subject>sMd(ledger));
+  │    for (const a of ledger.assumptions) {
+  │      process.stdout.write(`${a.id}  ${a.status}  ${a.recommendationId}  ${a.text}\n`);
+  │    }
   │  } catch (err) {
-  │    process.stderr.write(`<subject> list failed: ${err.message}\n`);
+  │    process.stderr.write(`assumption list failed: ${err.message}\n`);
   │    process.exitCode = 1;
   │  }
 ```
 
-Mirrors Slice 1's `recommendation list` verbatim. Render is STDOUT-only on `list`; the `.md` artifact is regenerated only on `add` (no `list`-side side effects).
+### `cadence decision list`
+
+```
+CLI action:
+  ├─ try {
+  │    const ledger = await readIntelligenceDecisionLedger(process.cwd());
+  │    if (ledger.decisions.length === 0) {
+  │      process.stdout.write('No decisions recorded.\n');
+  │      return;
+  │    }
+  │    for (const d of ledger.decisions) {
+  │      process.stdout.write(`${d.id}  ${d.recommendationId ?? '—'}  ${d.title}\n`);
+  │    }
+  │  } catch (err) {
+  │    process.stderr.write(`decision list failed: ${err.message}\n`);
+  │    process.exitCode = 1;
+  │  }
+```
+
+Both mirror Slice 1's `recommendation list` shape verbatim: compact one-line-per-entry summary written directly to stdout via a `for` loop — NOT the full Markdown renderer. Untied decisions (no `recommendationId`) print the em-dash placeholder `—` in the rec column. The `.md` artifacts (`ASSUMPTIONS.md` / `DECISIONS.md`) are regenerated only by `add` (no `list`-side side effects).
 
 ## Error Handling
 
@@ -327,11 +374,11 @@ Mirrors Slice 1's `recommendation list` verbatim. Render is STDOUT-only on `list
 | AC-2 | `addAssumption` refuses unknown `recommendationId` with `Error("unknown recommendation \"<id>\"")`; ledger file remains absent (or byte-equal if pre-existing); no `ASSUMPTIONS.md` write. | `tests/intelligence/store-assumption.test.ts` |
 | AC-3 | `addIntelligenceDecision(root, {title, rationale})` (no `--rec`) allocates id `dec-<YYYYMMDD>-001`, OMITS `recommendationId` field entirely (not `undefined`), sets `decidedAt=ISO now`, persists `decisions.json` + `DECISIONS.md`. | `tests/intelligence/store-decision.test.ts` |
 | AC-4 | `addIntelligenceDecision` WITH `recommendationId` refuses unknown id (same shape as AC-2); WITH known id, persists with the field present. | `tests/intelligence/store-decision.test.ts` |
-| AC-5 | `renderAssumptionsMd` emits `# CADENCE Assumptions` header + per-entry `## ${id} — ${text}` heading + `- recommendation:` / `- status:` / `- recorded:` bullets in insertion order. Empty ledger → `No assumptions recorded.` | `tests/intelligence/render-assumption.test.ts` |
-| AC-6 | `renderDecisionsMd` emits `# CADENCE Decisions` header + per-entry `## ${id} — ${title}` heading + `- recommendation:` line ONLY when present + `- decided:` bullet + body paragraph (`rationale`). Empty ledger → `No decisions recorded.` | `tests/intelligence/render-decision.test.ts` |
+| AC-5 | `renderAssumptionsMd` ALWAYS emits the `# CADENCE Assumptions` header + `> Generated from \`.cadence/intelligence/assumptions.json\`.` blockquote envelope (mirrors Slice-1 `renderRecommendationsMd` shape). Non-empty ledger appends per-entry block: `## ${id} — ${text}` heading + `- recommendation:` / `- status:` / `- recorded:` bullets in insertion order. Empty ledger appends `No assumptions recorded.` (header + blockquote still present). | `tests/intelligence/render-assumption.test.ts` |
+| AC-6 | `renderDecisionsMd` ALWAYS emits the `# CADENCE Decisions` header + `> Generated from \`.cadence/intelligence/decisions.json\`.` blockquote envelope. Non-empty ledger appends per-entry block: `## ${id} — ${title}` heading + `- recommendation:` line (ONLY when `recommendationId` present) + `- decided:` bullet + body paragraph (`rationale`). Empty ledger appends `No decisions recorded.` | `tests/intelligence/render-decision.test.ts` |
 | AC-7 | CLI `cadence assumption add --rec <id> --text "..."` succeeds (exit 0, stdout `Added <id>: <text>\nNext: cadence assumption list\n`); missing `--rec` or `--text` → commander usage error + non-zero exit; unknown rec → `process.exitCode = 1`, stderr `assumption add failed: unknown recommendation "<id>"\n`. | `tests/cli/assumption.test.ts` (spawned-CLI) |
-| AC-8 | CLI `cadence assumption list` reads ledger, prints `renderAssumptionsMd(...)` to stdout (or `No assumptions recorded.\n` when empty). | `tests/cli/assumption.test.ts` |
-| AC-9 | CLI `cadence decision add [--rec <id>] --title "..." --rationale "..."` symmetric (with `--rec` optional; FK-check only when provided; same error+success shapes); `cadence decision list` symmetric. | `tests/cli/decision.test.ts` |
+| AC-8 | CLI `cadence assumption list` reads ledger and writes one line per entry to stdout: `${a.id}  ${a.status}  ${a.recommendationId}  ${a.text}\n` (Slice-1 compact-list shape; NOT the full Markdown renderer). Empty ledger → `No assumptions recorded.\n`. | `tests/cli/assumption.test.ts` |
+| AC-9 | CLI `cadence decision add [--rec <id>] --title "..." --rationale "..."` symmetric (with `--rec` optional; FK-check only when provided; same error+success shapes). `cadence decision list` writes one line per entry: `${d.id}  ${d.recommendationId ?? '—'}  ${d.title}\n` (em-dash placeholder for untied decisions). Empty ledger → `No decisions recorded.\n`. | `tests/cli/decision.test.ts` |
 | AC-10 | Phase-31.1 cli-reference drift guard passes after regenerating `docs/reference/commands.md` `<!-- cadence:commands -->` auto-marker region: `tests/docs/cli-reference.test.ts` finds both `assumption` and `decision` as top-level commands. | `tests/docs/cli-reference.test.ts` |
 | AC-11 | Slice-5/7 context packets DENSIFY automatically once intake exists. Integration test: add 2 assumptions + 1 decision against an existing rec, then call `synthesizeContextPacket('handoff', ...)` and assert `packet.assumptions.length === 2` and `packet.decisions.length === 1`. No changes to `context.ts`/`render-context.ts` required for this to pass. | `tests/intelligence/context.test.ts` (extend existing block) |
 
@@ -382,7 +429,7 @@ The slice succeeds if:
 5. **Decision's `--rec` is optional, assumption's is required** — schema-driven (`AssumptionZ.recommendationId` is `z.string().min(1)`; `IntelligenceDecisionZ.recommendationId` is `z.string().optional()`). An untied decision (no rec) is a valid project-level architectural decision; an assumption without a recommendation has nothing to be an assumption ABOUT.
 6. **ID scheme `as-<YYYYMMDD>-<NNN>` / `dec-<YYYYMMDD>-<NNN>`** — mirrors `rec-` and `ev-` exactly. Same `slugDate(now)` helper. Counter scoped per-ledger per-day, not global.
 7. **`status` hardcoded `'open'` at add time** — no `--status` option in `add`. Status transitions ship via dedicated subcommands in a future slice (point 3).
-8. **Render artifact written on add, NOT on list** — `list` is read-only (mirrors Slice 1's `recommendation list`). Add re-renders the .md from the full ledger after every append (not append-MD-only, which would diverge from the JSON).
+8. **`list` is compact one-line-per-entry, NOT the full Markdown renderer** — Slice-1 `recommendation list` (`packages/core/src/cli/commands/recommendation.ts` lines 73-94) verifiably uses a tight loop `process.stdout.write(\`${rec.id}  ${rec.priority}  ${rec.readiness}  ${rec.title}\n\`)`, not `renderRecommendationsMd`. Mirroring that shape keeps the terminal output scannable. The full Markdown artifact (`ASSUMPTIONS.md` / `DECISIONS.md`) is regenerated only by `add` — `list` is read-only with NO write side effects. Untied decisions print the em-dash placeholder `—` in the rec column for the column to stay aligned.
 9. **No bucket-by-status render** — both shapes are flat. `## Open / ## Validated / ## Rejected` sections wait until the transitions slice exists (otherwise the `## Validated` / `## Rejected` sections are dead until status moves off `'open'`).
 10. **`recommendationId` field omitted (not `undefined`) on untied decisions** — exact-optional pattern (matches Slice-4b/5/6/7 precedent for optional fields persisted to JSON). The schema's `.optional()` allows both absent and `undefined`; absent is preferred for clean JSON.
 11. **No `@cadence/types` schema change in this slice** — every type this slice persists already exists (Slice-1-era). The slice is purely additive new files + small `store.ts` additions + CLI registration.
