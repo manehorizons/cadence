@@ -7,14 +7,14 @@ export function registerContextCommand(program: Command): void {
   program
     .command('context <scope>')
     .description(
-      'Emit a compact, read-only context packet (scope: phase | handoff)',
+      'Emit a compact, read-only context packet (scope: phase | handoff | review | agent)',
     )
     .option('--json', 'emit machine-readable JSON instead of rendered text')
     .action(async (scope: string, opts: { json?: boolean }) => {
       const parsed = ContextScopeZ.safeParse(scope);
       if (!parsed.success) {
         process.stderr.write(
-          `context: invalid scope "${scope}" (expected: phase | handoff)\n`,
+          `context: invalid scope "${scope}" (expected: phase | handoff | review | agent)\n`,
         );
         process.exitCode = 2;
         return;
