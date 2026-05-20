@@ -34,6 +34,34 @@ function oneLine(s: string): string {
   return s.replace(/\s*[\r\n]+\s*/g, ' ').trim();
 }
 
+/** Shared comparator for scored recommendations: score desc, then createdAt asc,
+ *  then id asc. Module-private; recommend.ts has its own analogous comparator
+ *  (out of scope for this extraction). */
+function compareScored<T extends { rec: Recommendation; raw: number }>(a: T, b: T): number {
+  if (b.raw !== a.raw) return b.raw - a.raw;
+  if (a.rec.createdAt !== b.rec.createdAt) {
+    return a.rec.createdAt < b.rec.createdAt ? -1 : 1;
+  }
+  return a.rec.id < b.rec.id ? -1 : a.rec.id > b.rec.id ? 1 : 0;
+}
+
+/** Project a scored Recommendation into the ContextPacket's ContextRec shape.
+ *  Module-private; mirrors the oneLine convention. */
+function toContextRec(rec: Recommendation, score: number): ContextRec {
+  const out: ContextRec = {
+    id: rec.id,
+    title: oneLine(rec.title),
+    score,
+    status: rec.status,
+    readiness: rec.readiness,
+    priority: rec.priority,
+  };
+  if (rec.suggestedBackendAction) {
+    out.suggestedBackendAction = oneLine(rec.suggestedBackendAction);
+  }
+  return out;
+}
+
 export type ContextSources = {
   recommendations: Recommendation[];
   evidence: Evidence[];
@@ -51,13 +79,7 @@ export function synthesizeContextPacket(
 
   const scored = ranked
     .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
-    .sort((a, b) => {
-      if (b.raw !== a.raw) return b.raw - a.raw;
-      if (a.rec.createdAt !== b.rec.createdAt) {
-        return a.rec.createdAt < b.rec.createdAt ? -1 : 1;
-      }
-      return a.rec.id < b.rec.id ? -1 : a.rec.id > b.rec.id ? 1 : 0;
-    });
+    .sort(compareScored);
 
   const n =
     scope === 'phase' ? TOP_N_PHASE :
@@ -67,20 +89,7 @@ export function synthesizeContextPacket(
   const selected = scored.slice(0, n);
   const recommendationsOmitted = Math.max(0, scored.length - n);
 
-  const recommendations: ContextRec[] = selected.map((s) => {
-    const rec: ContextRec = {
-      id: s.rec.id,
-      title: oneLine(s.rec.title),
-      score: s.score,
-      status: s.rec.status,
-      readiness: s.rec.readiness,
-      priority: s.rec.priority,
-    };
-    if (s.rec.suggestedBackendAction) {
-      rec.suggestedBackendAction = oneLine(s.rec.suggestedBackendAction);
-    }
-    return rec;
-  });
+  const recommendations: ContextRec[] = selected.map((s) => toContextRec(s.rec, s.score));
 
   // needsAttention bucket — review scope only. Rescored + sorted (score desc,
   // createdAt asc, id asc); no TOP_N cap. Always present (possibly []) for
@@ -89,27 +98,8 @@ export function synthesizeContextPacket(
     scope === 'review'
       ? attnBucket
           .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
-          .sort((a, b) => {
-            if (b.raw !== a.raw) return b.raw - a.raw;
-            if (a.rec.createdAt !== b.rec.createdAt) {
-              return a.rec.createdAt < b.rec.createdAt ? -1 : 1;
-            }
-            return a.rec.id < b.rec.id ? -1 : a.rec.id > b.rec.id ? 1 : 0;
-          })
-          .map((s): ContextRec => {
-            const out: ContextRec = {
-              id: s.rec.id,
-              title: oneLine(s.rec.title),
-              score: s.score,
-              status: s.rec.status,
-              readiness: s.rec.readiness,
-              priority: s.rec.priority,
-            };
-            if (s.rec.suggestedBackendAction) {
-              out.suggestedBackendAction = oneLine(s.rec.suggestedBackendAction);
-            }
-            return out;
-          })
+          .sort(compareScored)
+          .map((s) => toContextRec(s.rec, s.score))
       : undefined;
 
   const selectedIds = new Set(selected.map((s) => s.rec.id));
