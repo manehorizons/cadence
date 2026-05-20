@@ -72,3 +72,67 @@ describe('cadence context', () => {
     expect(r.stdout).toMatch(/no CADENCE backend detected/);
   });
 });
+
+describe('cadence context review|agent (Slice 7)', () => {
+  it('cadence context review writes review.json + review.md and prints MD to stdout', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'ctx-cli-review' });
+    const r = await run(['context', 'review'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/^# CADENCE Context Packet — review/m);
+    const jsonRaw = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'context', 'review.json'),
+      'utf8',
+    );
+    const packet = ContextPacketZ.parse(JSON.parse(jsonRaw));
+    expect(packet.scope).toBe('review');
+    expect(packet.needsAttention).toBeDefined();
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'context', 'review.md'),
+      'utf8',
+    );
+    expect(md).toMatch(/## Needs Attention/);
+  });
+
+  it('cadence context agent writes agent.json + agent.md and prints MD to stdout', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'ctx-cli-agent' });
+    const r = await run(['context', 'agent'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/^# CADENCE Context Packet — agent/m);
+    const jsonRaw = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'context', 'agent.json'),
+      'utf8',
+    );
+    const packet = ContextPacketZ.parse(JSON.parse(jsonRaw));
+    expect(packet.scope).toBe('agent');
+    expect('needsAttention' in packet).toBe(false);
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'context', 'agent.md'),
+      'utf8',
+    );
+    expect(md).not.toMatch(/- next action:/);
+    expect(md).not.toMatch(/- state error:/);
+  });
+
+  it('cadence context review --json prints JSON to stdout instead of MD', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'ctx-cli-review-json' });
+    const r = await run(['context', 'review', '--json'], active.root);
+    expect(r.code).toBe(0);
+    const packet = JSON.parse(r.stdout);
+    expect(packet.scope).toBe('review');
+    expect(packet.needsAttention).toBeDefined();
+  });
+
+  it('invalid scope: process.exitCode = 2; stderr lists all four scopes', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'ctx-cli-bogus' });
+    const r = await run(['context', 'bogus'], active.root);
+    expect(r.code).toBe(2);
+    expect(r.stderr).toMatch(/invalid scope "bogus"/);
+    expect(r.stderr).toMatch(/expected: phase \| handoff \| review \| agent/);
+  });
+
+  it('--help mentions all four scopes via .description() tail', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'ctx-cli-help' });
+    const r = await run(['context', '--help'], active.root);
+    expect(r.stdout).toMatch(/scope:\s+phase\s+\|\s+handoff\s+\|\s+review\s+\|\s+agent/);
+  });
+});
