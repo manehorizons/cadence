@@ -395,6 +395,203 @@ describe('synthesizeContextPacket — review scope (Slice 7)', () => {
   });
 });
 
+// Slice-7 fixture-neutralization audit (Slice-6 meta-lesson applied):
+//   the `agent` filter keys off rec.status + rec.readiness. Every fixture in this
+//   block sets BOTH explicitly — never relying on mkRec defaults
+//   (status='candidate', readiness='raw-idea' at the time of writing, which
+//   happen to EXCLUDE-by-default; a future bump could silently flip that). The
+//   boundary test below pins both halves of the filter so exact-array toEqual
+//   goldens stay deterministic regardless of default churn.
+describe('synthesizeContextPacket — agent scope (Slice 7)', () => {
+  function mkAs(p: Partial<Assumption> = {}): Assumption {
+    return {
+      id: 'as-x',
+      recommendationId: 'rec-x',
+      text: 't',
+      status: 'open',
+      createdAt: '2026-05-18T00:00:00.000Z',
+      ...p,
+    };
+  }
+  function mkDec(p: Partial<IntelligenceDecision> = {}): IntelligenceDecision {
+    return {
+      id: 'dec-x',
+      title: 't',
+      rationale: 'r',
+      decidedAt: '2026-05-18T00:00:00.000Z',
+      ...p,
+    };
+  }
+  function mkEv(p: Partial<Evidence> = {}): Evidence {
+    return {
+      id: 'ev-x',
+      recommendationId: 'rec-x',
+      kind: 'note',
+      summary: 's',
+      createdAt: '2026-05-18T00:00:00.000Z',
+      ...p,
+    };
+  }
+
+  it('selects TOP_N_AGENT=3 from ranked ∩ accepted ∩ ready-*', () => {
+    // Scoring: raw = leverageScore + STATUS_PTS[status] + READINESS_PTS[readiness] + DECAY_PTS[fresh=4]
+    //   STATUS_PTS: accepted=6, candidate=0; READINESS_PTS: ready-for-milestone=7,
+    //   ready-for-cadence-spec=10, needs-evidence=1, raw-idea=0.
+    // r1: 10+6+7+4=27 (1st); r2: 6+6+10+4=26 (2nd); r3: 8+6+7+4=25 (3rd);
+    // r4: 7+6+7+4=24 (4th — filtered IN by isAgentReady but TOP_N=3 caps it out);
+    // r5: 10+6+1+4=21 (filtered OUT — needs-evidence not ready);
+    // r6: 10+0+7+4=21 (filtered OUT — candidate not accepted).
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', status: 'accepted',  readiness: 'ready-for-milestone',     leverageScore: 10 }),
+      mkRec({ id: 'r2', status: 'accepted',  readiness: 'ready-for-cadence-spec',  leverageScore: 6  }),
+      mkRec({ id: 'r3', status: 'accepted',  readiness: 'ready-for-milestone',     leverageScore: 8  }),
+      mkRec({ id: 'r4', status: 'accepted',  readiness: 'ready-for-milestone',     leverageScore: 7  }),
+      mkRec({ id: 'r5', status: 'accepted',  readiness: 'needs-evidence',          leverageScore: 10 }),
+      mkRec({ id: 'r6', status: 'candidate', readiness: 'ready-for-milestone',     leverageScore: 10 }),
+    ];
+    const packet = synthesizeContextPacket(
+      'agent',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(packet.recommendations.map((r) => r.id)).toEqual(['r1', 'r2', 'r3']);
+    expect(packet.totals.recommendationsOmitted).toBe(1); // r4 ready-but-uncapped
+  });
+
+  it('boundary: includes ready-for-milestone AND ready-for-cadence-spec; excludes others', () => {
+    // Pin both halves of the filter: same status, varying readiness.
+    const recs: Recommendation[] = [
+      mkRec({ id: 'inc-mil',  status: 'accepted', readiness: 'ready-for-milestone',    leverageScore: 5 }),
+      mkRec({ id: 'inc-spec', status: 'accepted', readiness: 'ready-for-cadence-spec', leverageScore: 5 }),
+      mkRec({ id: 'ex-need',  status: 'accepted', readiness: 'needs-evidence',         leverageScore: 5 }),
+      mkRec({ id: 'ex-blkd',  status: 'accepted', readiness: 'blocked',                leverageScore: 5 }),
+      mkRec({ id: 'ex-raw',   status: 'accepted', readiness: 'raw-idea',               leverageScore: 5 }),
+      mkRec({ id: 'ex-dec',   status: 'accepted', readiness: 'needs-decision',         leverageScore: 5 }),
+    ];
+    const packet = synthesizeContextPacket(
+      'agent',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(packet.recommendations.map((r) => r.id).sort()).toEqual(['inc-mil', 'inc-spec']);
+  });
+
+  it('assumptions = open ∧ tied to selected (top-3) recs', () => {
+    // 4 ready-accepted recs (r1..r4); TOP_N_AGENT=3 → r4 is filtered out by cap.
+    // Equal leverageScore + same readiness → tie broken by createdAt asc.
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5, createdAt: '2026-05-01T00:00:00.000Z' }),
+      mkRec({ id: 'r2', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5, createdAt: '2026-05-02T00:00:00.000Z' }),
+      mkRec({ id: 'r3', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5, createdAt: '2026-05-03T00:00:00.000Z' }),
+      mkRec({ id: 'r4', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5, createdAt: '2026-05-04T00:00:00.000Z' }),
+    ];
+    const assumptions: Assumption[] = [
+      mkAs({ id: 'as-tied-1', recommendationId: 'r1', text: 'open tied to selected' }),
+      mkAs({ id: 'as-tied-2', recommendationId: 'r3', text: 'open tied to selected' }),
+      mkAs({ id: 'as-untied-r4', recommendationId: 'r4', text: 'open tied to UNselected (capped out)' }),
+      mkAs({ id: 'as-foreign',   recommendationId: 'r-foreign', text: 'open tied to non-existent' }),
+      mkAs({ id: 'as-closed',    recommendationId: 'r1', text: 'closed', status: 'validated' }),
+    ];
+    const packet = synthesizeContextPacket(
+      'agent',
+      { recommendations: recs, evidence: [], assumptions, decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(packet.assumptions.map((a) => a.id).sort()).toEqual(['as-tied-1', 'as-tied-2']);
+  });
+
+  it('decisions = tied to selected (top-3) recs only', () => {
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5, createdAt: '2026-05-01T00:00:00.000Z' }),
+      mkRec({ id: 'r2', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5, createdAt: '2026-05-02T00:00:00.000Z' }),
+      mkRec({ id: 'r3', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5, createdAt: '2026-05-03T00:00:00.000Z' }),
+      mkRec({ id: 'r4', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5, createdAt: '2026-05-04T00:00:00.000Z' }),
+    ];
+    const decisions: IntelligenceDecision[] = [
+      mkDec({ id: 'd-tied-r1', recommendationId: 'r1', title: 'tied selected' }),
+      mkDec({ id: 'd-tied-r4', recommendationId: 'r4', title: 'tied capped-out' }),
+      mkDec({ id: 'd-untied',  title: 'untied' }),
+    ];
+    const packet = synthesizeContextPacket(
+      'agent',
+      { recommendations: recs, evidence: [], assumptions: [], decisions, backend: noBackend },
+      NOW,
+    );
+    expect(packet.decisions.map((d) => d.id)).toEqual(['d-tied-r1']);
+  });
+
+  it('files = from selected (top-3) recs only (no needsAttention contribution)', () => {
+    // 3 selected ready-accepted recs + 1 needsAttention rec (superseded).
+    // needsAttention is NOT a contributing source for agent files (unlike review).
+    const recs: Recommendation[] = [
+      mkRec({ id: 'r1', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5,
+        affectedFiles: ['src/r1.ts', 'src/shared.ts'],
+        createdAt: '2026-05-01T00:00:00.000Z' }),
+      mkRec({ id: 'r2', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5,
+        affectedFiles: ['src/r2.ts', 'src/shared.ts'],
+        createdAt: '2026-05-02T00:00:00.000Z' }),
+      mkRec({ id: 'r3', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5,
+        affectedFiles: ['src/r3.ts'],
+        createdAt: '2026-05-03T00:00:00.000Z' }),
+      mkRec({ id: 'r-attn', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 9,
+        decayState: 'superseded',
+        affectedFiles: ['src/attn.ts'],
+        createdAt: '2026-05-04T00:00:00.000Z' }),
+    ];
+    const evidence: Evidence[] = [
+      mkEv({ id: 'ev-r1',   recommendationId: 'r1',     kind: 'file', path: 'src/ev-r1.ts' }),
+      mkEv({ id: 'ev-attn', recommendationId: 'r-attn', kind: 'file', path: 'src/ev-attn.ts' }),
+    ];
+    const packet = synthesizeContextPacket(
+      'agent',
+      { recommendations: recs, evidence, assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    const paths = packet.files.map((f) => f.path);
+    // Only selected (top-3 ranked) rec files + their evidence paths.
+    expect(paths).toContain('src/r1.ts');
+    expect(paths).toContain('src/r2.ts');
+    expect(paths).toContain('src/r3.ts');
+    expect(paths).toContain('src/shared.ts');
+    expect(paths).toContain('src/ev-r1.ts');
+    // shared.ts deduped.
+    expect(paths.filter((p) => p === 'src/shared.ts')).toHaveLength(1);
+    // needsAttention rec's files MUST be excluded (agent ≠ review).
+    expect(paths).not.toContain('src/attn.ts');
+    expect(paths).not.toContain('src/ev-attn.ts');
+  });
+
+  it('emits empty packet honestly when no recs match (no throw)', () => {
+    const recs: Recommendation[] = [
+      mkRec({ id: 'a', status: 'accepted',  readiness: 'needs-evidence',      leverageScore: 5 }),
+      mkRec({ id: 'b', status: 'candidate', readiness: 'ready-for-milestone', leverageScore: 5 }),
+    ];
+    const packet = synthesizeContextPacket(
+      'agent',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(packet.recommendations).toEqual([]);
+    expect(packet.totals.recommendations).toBe(0);
+    expect(packet.needsAttention).toBeUndefined();
+  });
+
+  it('never emits needsAttention field for agent scope', () => {
+    const recs: Recommendation[] = [
+      // Ranked + agent-ready.
+      mkRec({ id: 'r1', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 5 }),
+      // partition→needsAttention (superseded). Filtered out of ranked by partitionLedger.
+      mkRec({ id: 'a1', status: 'accepted', readiness: 'ready-for-milestone', leverageScore: 9, decayState: 'superseded' }),
+    ];
+    const packet = synthesizeContextPacket(
+      'agent',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect('needsAttention' in packet).toBe(false);
+  });
+});
+
 let active: Fixture | null = null;
 afterEach(async () => {
   if (active) {
