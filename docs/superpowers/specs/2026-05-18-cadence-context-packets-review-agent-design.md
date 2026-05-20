@@ -79,17 +79,24 @@ const TOP_N_REVIEW  = 5;   // new
 const TOP_N_AGENT   = 3;   // new
 ```
 
-`partitionLedger` already returns `{ ranked, needsAttention, parked, excluded }`. `review` consumes the `needsAttention` bucket directly (rescored + sorted), so no new pure helper is added.
+`partitionLedger` already returns `{ ranked, parked, needsAttention, excludedCount }` (`excludedCount` is a number, not an array). The Flow pseudocode partial-destructures `{ ranked, needsAttention }`; `review` consumes the `needsAttention` bucket directly (rescored + sorted), so no new pure helper is added.
 
 ### `packages/core/src/intelligence/render-context.ts`
 
 Two new render branches keyed off `packet.scope`. No new files.
 
+### Lightly touched
+
+- `cli/commands/context.ts` — TWO hardcoded user-facing strings updated to list the four scopes (argument parsing and control flow UNCHANGED; `ContextScopeZ.safeParse` accepts the expanded enum on its own):
+  - `.description('Emit a compact, read-only context packet (scope: phase | handoff | review | agent)')` (was `phase | handoff`)
+  - invalid-scope stderr: `context: invalid scope "<scope>" (expected: phase | handoff | review | agent)\n` (was `expected: phase | handoff`)
+  - Existing CLI test at `packages/core/tests/cli/context.test.ts:64` matches `/invalid scope "bogus"/` (does not pin the "expected: …" tail) → safe to extend the expected-list without breaking it; a new positive assertion pins the new tail.
+
 ### Untouched
 
 - `intelligence/store.ts` — Slice 5 readers cover the new scopes' needs.
 - `intelligence/backend/cadence.ts` — `state.activePhase` is sticky-after-settle; no new field.
-- `cli/commands/context.ts` — Slice 5's `ContextScopeZ.safeParse` accepts the expanded enum with no code change. Argument parsing untouched.
+- `cli/commands/context.ts` action body, `safeParse` parsing, exit codes, JSON branch — only the two strings above change.
 - `cli/register.ts` — no top-level CLI change → Phase-31.1 cli-reference drift guard untripped.
 
 ## Data Model
@@ -223,10 +230,10 @@ renderContextMd(packet):
 | AC-1 | Types: `ContextScopeZ.parse('review')` and `ContextScopeZ.parse('agent')` succeed; unknown scope rejected. `ContextPacketZ` accepts and round-trips optional `needsAttention: ContextRec[]`. | `packages/types/src/intelligence.test.ts` (extend Slice-5 block) |
 | AC-2 | Synth `review`: TOP_N_REVIEW=5 ranked recs (rescored, sorted score↓, createdAt↑, id↑); `needsAttention` = full partition bucket (rescored + sorted; no TOP_N); open assumptions = ALL; decisions = ALL; files = dedup of `affectedFiles` ∪ evidence paths from selected ∪ needsAttention recs. | `packages/core/src/intelligence/context.test.ts` |
 | AC-3 | Synth `agent`: selected = ranked ∩ `status='accepted'` ∩ `readiness ∈ {ready-for-milestone, ready-for-cadence-spec}`, slice(0,3); assumptions = open ∧ tied-to-selected; decisions = tied-to-selected; files = from selected recs only. | `context.test.ts` |
-| AC-4 | Render: `review` scope emits `## Needs Attention` section (rows for entries; `_(none)_` when empty). `agent` scope render OMITS `nextAction` and `stateError` lines from .md; JSON retains both. | `render-context.test.ts` |
+| AC-4 | Render: `review` scope emits `## Needs Attention` section — ALL `packet.needsAttention` entries rendered, no TOP_N cap (mirrors synth-side; if synth gives N rows, render emits N rows); `_(none)_` when empty. `agent` scope render OMITS `nextAction` and `stateError` lines from .md; JSON retains both. | `render-context.test.ts` |
 | AC-5 | Regression: `phase` + `handoff` JSON+MD bytes are stable (existing fixtures and goldens untouched after this slice). Explicit guard test asserts the absence of the `needsAttention` key in `phase`/`handoff`/`agent` JSON. | `context.test.ts` + `render-context.test.ts` |
 | AC-6 | Graceful: backend `present:false` → loop block degrades, both new scopes succeed; null `state.activePhase` → both scopes succeed; zero ready recs for `agent` → `recommendations: []`, `totals.recommendations: 0`, no throw. | `context.test.ts` |
-| AC-7 | IO + CLI: `runContext` writes `.cadence/intelligence/context/{review,agent}.{json,md}` (atomic); CLI `cadence context review|agent` prints the .md to stdout; invalid scope → exit 2 with `_zod` error (Slice-5 path — regression check). | `cli/context.test.ts` (spawned-CLI idiom) |
+| AC-7 | IO + CLI: `runContext` writes `.cadence/intelligence/context/{review,agent}.{json,md}` (atomic); CLI `cadence context review` and `cadence context agent` print the .md to stdout (and `--json` prints JSON); invalid scope → `process.exitCode = 2` with stderr line `context: invalid scope "<scope>" (expected: phase | handoff | review | agent)\n` (extends the Slice-5 hand-written message to the four-scope list); CLI `--help` output mentions all four scopes via the updated `.description(...)` string. | `cli/context.test.ts` (spawned-CLI idiom) |
 
 ## Testing (per CADENCE test idioms)
 
