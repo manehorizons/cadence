@@ -745,7 +745,7 @@ recommendation ledger degrades gracefully and still exits 0.
 ```
 Usage: cadence context <scope> [options]
 
-Emit a compact, read-only context packet (scope: phase | handoff)
+Emit a compact, read-only context packet (scope: phase | handoff | review | agent)
 ```
 
 **Options**
@@ -758,12 +758,19 @@ Emit a compact, read-only context packet (scope: phase | handoff)
 **Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
 Reads the recommendation, evidence, assumption, and decision ledgers plus
 CADENCE loop state **read-only** (never mutates `state.json` or transitions
-the loop); emits a bounded context packet for the given scope — `phase`
-(context a downstream CADENCE phase carries) or `handoff` (state to resume
-across a session/agent handoff). Compactness is bounded-by-construction:
-only ranked recommendations (top 7 for `phase`, top 5 for `handoff`), only
-open assumptions, and file references not contents. `phase` scopes
-assumptions, decisions, and files to the selected recommendations while
+the loop); emits a bounded context packet for the given scope —
+`phase` (forward-looking context a downstream CADENCE phase carries),
+`handoff` (broad cross-session resume trail),
+`review` (backward-looking audit packet with a surfaced needsAttention bucket of
+  superseded/contradicted recs; assumptions + decisions surfaced in full so a
+  reviewer audits all rationale), or
+`agent` (subagent dispatch brief; top-3 ranked recs filtered to status=accepted ∩
+  readiness ∈ {ready-for-milestone, ready-for-cadence-spec}; loop block in Markdown
+  omits nextAction + stateError, JSON retains them).
+Compactness is bounded-by-construction: only ranked recommendations (top 7 for
+`phase`, top 5 for `handoff`, top 5 for `review`, top 3 (dispatchable subset)
+for `agent`), only open assumptions, and file references not contents. `phase`
+scopes assumptions, decisions, and files to the selected recommendations while
 `handoff` carries the broader trail; both share the read-only loop block.
 
 Writes:
