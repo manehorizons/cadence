@@ -1295,8 +1295,10 @@ Replace with strike + annotate (mirror Slice 6/7 pattern):
 Also grep for other forward-refs that may exist in Slice-5 design:
 
 ```bash
-grep -rn "intake command\|intake.*assumption\|assumption.*intake" docs/superpowers/specs/ | grep -v 2026-05-20-cadence-assumption-decision-intake-design
+grep -rn -i "intake" docs/superpowers/specs/ | grep -v 2026-05-20-cadence-assumption-decision-intake-design
 ```
+
+(Broader case-insensitive `intake` net plus the slice-name negative filter — narrower phrasings like `"assumption.*intake"` could miss phrasings like "decision intake" or "intake of assumptions".)
 
 Reconcile every hit with the same strike + annotate pattern.
 
