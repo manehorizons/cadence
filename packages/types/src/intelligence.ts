@@ -321,7 +321,7 @@ export function emptyMilestoneLedger(): MilestoneLedger {
   return { schemaVersion: 1, milestones: [] };
 }
 
-export const ContextScopeZ = z.enum(['phase', 'handoff']);
+export const ContextScopeZ = z.enum(['phase', 'handoff', 'review', 'agent']);
 export type ContextScope = z.infer<typeof ContextScopeZ>;
 
 export const ContextRecZ = z.object({
@@ -372,6 +372,7 @@ export const ContextPacketZ = z.object({
       why: z.string().min(1),
     }),
   ),
+  needsAttention: z.array(ContextRecZ).optional(),
   totals: z.object({
     recommendations: z.number().int(),
     assumptions: z.number().int(),
