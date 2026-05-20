@@ -171,13 +171,20 @@ pnpm --filter @cadence/core test -- --run intelligence/store-assumption
 
 Expected: `addAssumption is not a function` (or similar) — function doesn't exist yet.
 
-- [ ] **Step 4: Implement in `store.ts`**
+- [ ] **Step 4: Implement in `store.ts` (Task-1 final policy stated directly)**
 
-Add the path constants AFTER existing line 34 (`const DECISIONS_JSON = 'decisions.json';`):
+This task ships THREE artifacts together (the writer depends on the renderer, so they must land in the same commit to keep `pnpm turbo run build` + lint green between Tasks 1 and 2):
+
+1. `packages/core/src/intelligence/render-assumption.ts` (NEW file — module shown below).
+2. `packages/core/src/intelligence/store.ts` additions: `ASSUMPTIONS_MD` constant, `assumptionsMdPath` helper, `nextAssumptionId` allocator, `AddAssumptionInput` type, `writeAssumptionLedger`, `addAssumption`.
+3. Test file `tests/intelligence/store-assumption.test.ts`.
+
+**Task 1 does NOT declare `DECISIONS_MD` / `decisionsMdPath` / `nextIntelligenceDecisionId`** — those land in Task 2 alongside their use site (avoids the Slice-4a class `no-unused-vars` lint regression).
+
+Add the path constant AFTER existing line 34 (`const DECISIONS_JSON = 'decisions.json';`):
 
 ```ts
 const ASSUMPTIONS_MD = 'ASSUMPTIONS.md';
-const DECISIONS_MD = 'DECISIONS.md';
 ```
 
 Add `assumptionsMdPath` AFTER existing `decisionsPath` at line 64:
@@ -186,13 +193,9 @@ Add `assumptionsMdPath` AFTER existing `decisionsPath` at line 64:
 function assumptionsMdPath(root: string): string {
   return join(intelligenceDir(root), ASSUMPTIONS_MD);
 }
-
-function decisionsMdPath(root: string): string {
-  return join(intelligenceDir(root), DECISIONS_MD);
-}
 ```
 
-Add ID-allocation helpers (mirror `nextRecommendationId` shape). Place them AFTER `nextEvidenceId`:
+Add the ID allocator (mirror `nextRecommendationId` shape). Place AFTER `nextEvidenceId`:
 
 ```ts
 function nextAssumptionId(ledger: AssumptionLedger, now: Date): string {
@@ -205,31 +208,22 @@ function nextAssumptionId(ledger: AssumptionLedger, now: Date): string {
     .reduce((a, b) => Math.max(a, b), 0);
   return `${prefix}${String(max + 1).padStart(3, '0')}`;
 }
-
-function nextIntelligenceDecisionId(
-  ledger: IntelligenceDecisionLedger,
-  now: Date,
-): string {
-  const prefix = `dec-${slugDate(now)}-`;
-  const max = ledger.decisions
-    .map((d) => d.id)
-    .filter((id) => id.startsWith(prefix))
-    .map((id) => Number.parseInt(id.slice(prefix.length), 10))
-    .filter((n) => Number.isFinite(n))
-    .reduce((a, b) => Math.max(a, b), 0);
-  return `${prefix}${String(max + 1).padStart(3, '0')}`;
-}
 ```
 
-Add the writer-level helpers. Place them after the existing reader cluster (lines 84-99). Import `renderAssumptionsMd` from the new module — it doesn't exist yet, so this will fail typecheck until Task 3. To work around for Task 1 alone, you can inline a minimal stub render here that gets replaced in Task 3, OR (preferred) declare the import + do not run typecheck-only checks until Task 3 is also in flight. **Choose: defer the `writeAssumptionLedger` and `addAssumption` code to land alongside the render module in Task 3?** No — that would make Task 1 not test the writer. Instead, **inline a minimal stub renderer call here that Task 3 will replace**:
+**Ensure named-type import is present.** Verified `store.ts` lines 4-24 currently import `type AssumptionLedger` and `type IntelligenceDecisionLedger` but NOT bare `Assumption` / `IntelligenceDecision`. Add `Assumption` to the named-type import block at lines 4-24:
 
-Actually simplest fix: write `renderAssumptionsMd` AS PART OF THIS TASK (small enough — 18 lines), keep it module-private at the top of `store.ts` for now, and Task 3 will EXTRACT it to its own module + add the render tests. This avoids a typecheck red between tasks.
+```ts
+import {
+  // ... existing entries ...
+  type Assumption,           // ADD this line (Task 1)
+  type AssumptionLedger,
+  // ... existing entries ...
+} from '@cadence/types';
+```
 
-Wait — that complicates Task 3. Easier path: **land the render module in Task 1 too** (it's tiny). Pivot:
+(Task 2 will add `type IntelligenceDecision` similarly.)
 
-**Revised Step 4 — add the render module first:**
-
-Create `packages/core/src/intelligence/render-assumption.ts` (since the writer needs to call it):
+Now create `packages/core/src/intelligence/render-assumption.ts`:
 
 ```ts
 import type { AssumptionLedger } from '@cadence/types';
@@ -303,9 +297,7 @@ export async function addAssumption(
 }
 ```
 
-Ensure `mkdir` is imported from `node:fs/promises`; `atomicWriteJSON` / `atomicWriteText` from `../state/atomic-write.js`; `AssumptionLedgerZ` + `Assumption` from `@cadence/types`. Inspect `store.ts`'s existing top-of-file imports — most of these are already there from Slice 1.
-
-Type-annotate `AssumptionLedgerZ` import IF NOT already present. Slice 5 added `readAssumptionLedger` so `AssumptionLedgerZ` is likely already imported; confirm.
+Verified state of `store.ts` imports as of `da17ce3`: `mkdir` from `node:fs/promises` ✓, `atomicWriteJSON` + `atomicWriteText` from `../state/atomic-write.js` ✓, `AssumptionLedgerZ` ✓, `type AssumptionLedger` ✓ (Slice-5-era). Only addition needed: `type Assumption` (called out in the import-block edit above).
 
 - [ ] **Step 5: Run tests — verify GREEN**
 
@@ -321,9 +313,7 @@ All 3 tests pass.
 pnpm turbo run lint typecheck test build
 ```
 
-Expected: 16/16 successful. If lint fails for `no-unused-vars` on `DECISIONS_MD` (declared but not yet used — Task 2 uses it), tactical option: declare BOTH constants here but defer `DECISIONS_MD` declaration to Task 2 so the lint stays green. **Pick: declare ONLY `ASSUMPTIONS_MD` in this task; Task 2 declares `DECISIONS_MD`.**
-
-Revise Step 4 to declare ONLY `ASSUMPTIONS_MD` + `assumptionsMdPath` here. `DECISIONS_MD` + `decisionsMdPath` land in Task 2.
+Expected: 16/16 successful. Step 4 above pre-emptively defers `DECISIONS_MD` declaration to Task 2 (alongside its first use site), so this task should not introduce any `no-unused-vars` lint regression.
 
 - [ ] **Step 7: Commit**
 
@@ -535,7 +525,18 @@ export async function addIntelligenceDecision(
 
 Note the explicit `if (input.recommendationId !== undefined) out.recommendationId = ...` — this OMITS the field entirely when undefined (exact-optional pattern), required by AC-3.
 
-`IntelligenceDecisionLedgerZ`, `IntelligenceDecision` imports: confirm presence at top of `store.ts`; add if needed.
+**Add named-type import.** Verified `store.ts` lines 4-24 (as of post-Task-1) import `IntelligenceDecisionLedgerZ` ✓ and `type IntelligenceDecisionLedger` ✓ (Slice-5-era) but NOT bare `IntelligenceDecision`. Add it to the named-type import block at lines 4-24:
+
+```ts
+import {
+  // ... existing entries ...
+  type IntelligenceDecision,    // ADD this line (Task 2)
+  type IntelligenceDecisionLedger,
+  // ... existing entries ...
+} from '@cadence/types';
+```
+
+Without this addition, the `Promise<IntelligenceDecision>` and `const out: IntelligenceDecision = ...` annotations in this task will fail typecheck with "Cannot find name 'IntelligenceDecision'".
 
 - [ ] **Step 5: Run — verify GREEN**
 
@@ -1153,20 +1154,44 @@ EOF
 grep -n "cadence:commands" docs/reference/commands.md
 ```
 
-Confirms `<!-- cadence:commands:start -->` at line 56 and `<!-- cadence:commands:end -->` at line 74. The block lists all top-level commands.
+Confirms `<!-- cadence:commands:start -->` at line 56 and `<!-- cadence:commands:end -->` at line 74. The block format is **bare command names, one per line, in REGISTRATION order** — NO bullets, NO markdown links. The Phase-31.1 drift guard at `packages/core/tests/docs/cli-reference.test.ts` does an exact set-equality between the trimmed non-empty non-`<!--` lines and the registered Commander command names; any decoration (`-`, `[...]`, `(#...)`) breaks the equality and fails the test.
 
-Two top-level commands are net-new this slice: `assumption`, `decision`. Add bullet entries (insertion order = alphabetical-by-command in the existing list — confirm placement against current alphabetical ordering by reading lines 56-74):
+Current contents of the marker block (lines 57-73):
 
-```markdown
-  - [assumption](#assumption)
-  - [decision](#decision)
+```
+config
+init
+draft
+spec
+hook
+build
+done
+block
+needs-context
+settle
+progress
+status
+recommendation
+inspect
+recommend
+milestone
+context
 ```
 
-Place each in the alphabetically correct position (after any existing entries that sort before, before any that sort after).
+Append two new bare lines at the END of the block (matching registration order — Tasks 4 + 5 wire `assumption` then `decision` at the end of `registerAllCommands`, so the order in the marker block should be `... context\nassumption\ndecision`):
+
+```
+...
+context
+assumption
+decision
+```
+
+Final block (between the unchanged `:start` and `:end` markers) is 19 lines, one per registered top-level command.
 
 - [ ] **Step 2: Add `### assumption` and `### decision` sections to `commands.md`**
 
-Place both in alphabetical order relative to existing top-level `###` sections. Use this exact template (mirror Slice-1's `### recommendation` section shape):
+Place both AFTER the existing `### context` section (registration order — matches how the marker block in Step 1 lists them, and how `registerAllCommands` wires them). Add `### assumption` first, then `### decision`. Use this exact template (mirror Slice-1's `### recommendation` section shape):
 
 ```markdown
 ### assumption
