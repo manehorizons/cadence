@@ -190,7 +190,7 @@ EOF
 
 **Files:**
 - Modify: `packages/core/src/intelligence/context.ts`
-- Modify: `packages/core/src/intelligence/context.test.ts` (or actual Slice-5 synth test file — confirm path)
+- Modify: `packages/core/tests/intelligence/context.test.ts`
 
 - [ ] **Step 1: Confirm Slice-5 synth test file path**
 
@@ -447,7 +447,7 @@ EOF
 
 **Files:**
 - Modify: `packages/core/src/intelligence/context.ts`
-- Modify: `packages/core/src/intelligence/context.test.ts`
+- Modify: `packages/core/tests/intelligence/context.test.ts`
 
 - [ ] **Step 1: Write failing tests for the `agent` branch**
 
@@ -607,7 +607,7 @@ EOF
 ## Task 4: Byte-stability regression guard for `phase` + `handoff`
 
 **Files:**
-- Modify: `packages/core/src/intelligence/context.test.ts` (test-only commit)
+- Modify: `packages/core/tests/intelligence/context.test.ts` (test-only commit)
 
 This is AC-5. No production code changes. Guards Tasks 2 + 3 against accidental drift in the frozen scopes.
 
