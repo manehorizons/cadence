@@ -9,6 +9,7 @@ import {
   MilestoneLedgerZ,
   emptyMilestoneLedger,
   ContextPacketZ,
+  ContextScopeZ,
 } from '../src/intelligence.js';
 
 describe('intelligence schemas', () => {
@@ -277,7 +278,7 @@ describe('ContextPacketZ', () => {
   });
 
   it('rejects an unknown scope', () => {
-    expect(() => ContextPacketZ.parse({ ...valid, scope: 'review' })).toThrow();
+    expect(() => ContextPacketZ.parse({ ...valid, scope: 'bogus' })).toThrow();
   });
 
   it('rejects an assumption whose status is not open', () => {
@@ -287,5 +288,60 @@ describe('ContextPacketZ', () => {
         assumptions: [{ id: 'as-2', recommendationId: 'rec-1', text: 'y', status: 'validated' }],
       }),
     ).toThrow();
+  });
+});
+
+describe('ContextScopeZ (Slice 7)', () => {
+  it.each(['phase', 'handoff', 'review', 'agent'] as const)(
+    'accepts scope %s',
+    (s) => {
+      expect(ContextScopeZ.parse(s)).toBe(s);
+    },
+  );
+
+  it('rejects unknown scope', () => {
+    expect(ContextScopeZ.safeParse('bogus').success).toBe(false);
+  });
+});
+
+describe('ContextPacketZ.needsAttention (Slice 7)', () => {
+  const basePacket = {
+    schemaVersion: 1 as const,
+    scope: 'review' as const,
+    generatedAt: '2026-05-18T00:00:00.000Z',
+    loop: { present: false },
+    recommendations: [],
+    assumptions: [],
+    decisions: [],
+    files: [],
+    totals: {
+      recommendations: 0,
+      assumptions: 0,
+      decisions: 0,
+      files: 0,
+      recommendationsOmitted: 0,
+    },
+  };
+
+  it('round-trips with optional needsAttention array', () => {
+    const withAttn = {
+      ...basePacket,
+      needsAttention: [
+        {
+          id: 'r1',
+          title: 'rotted rec',
+          score: 50,
+          status: 'candidate' as const,
+          readiness: 'needs-evidence' as const,
+          priority: 'medium' as const,
+        },
+      ],
+    };
+    expect(ContextPacketZ.parse(withAttn).needsAttention).toHaveLength(1);
+  });
+
+  it('round-trips without needsAttention (other scopes omit)', () => {
+    const parsed = ContextPacketZ.parse(basePacket);
+    expect(parsed.needsAttention).toBeUndefined();
   });
 });
