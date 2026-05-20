@@ -479,6 +479,24 @@ Import the new render module:
 import { renderDecisionsMd } from './render-decision.js';
 ```
 
+Add the ID allocator (symmetric to `nextAssumptionId` from Task 1). Place AFTER `nextAssumptionId`:
+
+```ts
+function nextIntelligenceDecisionId(
+  ledger: IntelligenceDecisionLedger,
+  now: Date,
+): string {
+  const prefix = `dec-${slugDate(now)}-`;
+  const max = ledger.decisions
+    .map((d) => d.id)
+    .filter((id) => id.startsWith(prefix))
+    .map((id) => Number.parseInt(id.slice(prefix.length), 10))
+    .filter((n) => Number.isFinite(n))
+    .reduce((a, b) => Math.max(a, b), 0);
+  return `${prefix}${String(max + 1).padStart(3, '0')}`;
+}
+```
+
 Add writer:
 
 ```ts
@@ -868,13 +886,13 @@ export function registerAssumptionCommand(program: Command): void {
 
 - [ ] **Step 4: Register in `register.ts`**
 
-Add import (alphabetical-ish near `registerRecommendationCommand`):
+Add import at the END of the existing import block (registration-order convention; `register.ts` is NOT alphabetical):
 
 ```ts
 import { registerAssumptionCommand } from './commands/assumption.js';
 ```
 
-Add call inside `registerAllCommands(program)`:
+Add call at the END of `registerAllCommands(program)` (matches the marker-block append order in Task 7):
 
 ```ts
 registerAssumptionCommand(program);
