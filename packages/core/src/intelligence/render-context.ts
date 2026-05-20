@@ -19,8 +19,10 @@ export function renderContextMd(packet: ContextPacket): string {
     lines.push(
       `- active: phase ${packet.loop.activePhase ?? '—'} · draft ${packet.loop.activeDraft ?? '—'} · spec ${packet.loop.activeSpec ?? '—'} · tier ${packet.loop.tier ?? '—'}`,
     );
-    if (packet.loop.nextAction) lines.push(`- next action: ${packet.loop.nextAction}`);
-    if (packet.loop.stateError) lines.push(`- state error: ${packet.loop.stateError}`);
+    if (packet.scope !== 'agent' && packet.loop.nextAction)
+      lines.push(`- next action: ${packet.loop.nextAction}`);
+    if (packet.scope !== 'agent' && packet.loop.stateError)
+      lines.push(`- state error: ${packet.loop.stateError}`);
   }
   lines.push('');
 
@@ -69,6 +71,25 @@ export function renderContextMd(packet: ContextPacket): string {
     }
   }
   lines.push('');
+
+  if (packet.scope === 'review') {
+    lines.push('## Needs Attention', '');
+    const attn = packet.needsAttention ?? [];
+    if (attn.length === 0) {
+      lines.push('_(none)_');
+    } else {
+      for (const r of attn) {
+        lines.push(`### ${r.id} — ${r.title}`);
+        lines.push('');
+        lines.push(
+          `- score: ${r.score}/100 · status: ${r.status} · ready: ${r.readiness} · priority: ${r.priority}`,
+        );
+        if (r.suggestedBackendAction) lines.push(`- next: ${r.suggestedBackendAction}`);
+        lines.push('');
+      }
+    }
+    lines.push('');
+  }
 
   lines.push('## Totals', '');
   lines.push(
