@@ -26,6 +26,19 @@ import { renderContextMd } from './render-context.js';
 const TOP_N_PHASE = 7;
 const TOP_N_HANDOFF = 5;
 const TOP_N_REVIEW = 5; // Slice 7 — review scope ranked rec cap
+const TOP_N_AGENT = 3; // Slice 7 — agent scope cap over filtered ready-accepted bucket
+
+/** Agent scope rec gate: ledger-ranked rec must be reviewer-accepted AND
+ *  signed-off as ready for execution (milestone proposal or spec authoring).
+ *  Module-private; mirrors the per-module-private convention used by oneLine
+ *  and compareScored. */
+function isAgentReady(rec: Recommendation): boolean {
+  return (
+    rec.status === 'accepted' &&
+    (rec.readiness === 'ready-for-milestone' ||
+      rec.readiness === 'ready-for-cadence-spec')
+  );
+}
 
 /** Collapse CR/LF runs to a single space so ledger free text cannot break the
  *  Markdown packet structure. Module-private by design: the Slice-4b oneLine is
@@ -81,13 +94,22 @@ export function synthesizeContextPacket(
     .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
     .sort(compareScored);
 
-  const n =
-    scope === 'phase' ? TOP_N_PHASE :
-    scope === 'review' ? TOP_N_REVIEW :
-    // 'agent' still falls through to TOP_N_HANDOFF; Task 3 widens this.
-    TOP_N_HANDOFF;
-  const selected = scored.slice(0, n);
-  const recommendationsOmitted = Math.max(0, scored.length - n);
+  let selected: typeof scored;
+  let recommendationsOmitted: number;
+
+  if (scope === 'agent') {
+    // Agent scope filters first (status+readiness gate), then caps.
+    const ready = scored.filter((s) => isAgentReady(s.rec));
+    selected = ready.slice(0, TOP_N_AGENT);
+    recommendationsOmitted = Math.max(0, ready.length - TOP_N_AGENT);
+  } else {
+    const n =
+      scope === 'phase' ? TOP_N_PHASE :
+      scope === 'review' ? TOP_N_REVIEW :
+      /* handoff */ TOP_N_HANDOFF;
+    selected = scored.slice(0, n);
+    recommendationsOmitted = Math.max(0, scored.length - n);
+  }
 
   const recommendations: ContextRec[] = selected.map((s) => toContextRec(s.rec, s.score));
 
