@@ -592,6 +592,118 @@ describe('synthesizeContextPacket — agent scope (Slice 7)', () => {
   });
 });
 
+// AC-5 (Slice 7 design doc): byte-stability regression guard for the frozen
+// phase + handoff scopes. Intentionally redundant with the per-scope
+// needsAttention-absence assertions in the review (Slice 7) and agent (Slice 7)
+// describe blocks — belt-and-suspenders per Decision-Log #7. Lives in a
+// dedicated block so a future maintainer grep'ing for "AC-5" lands here.
+describe('byte-stability regression — phase + handoff frozen (Slice 7 / AC-5)', () => {
+  // Deterministic fixture: 3 ranked recs (scores 48 / 45 / 42 — see score
+  // table in recommend.ts), 1 evidence, 1 open assumption, 1 decision, 2
+  // affectedFile contributions, plus one superseded rec to confirm the frozen
+  // scopes never expose needsAttention.
+  const fixedNow = new Date('2026-05-18T00:00:00.000Z');
+  const isoNow = '2026-05-18T00:00:00.000Z';
+  const sources = {
+    recommendations: [
+      mkRec({ id: 'rec-a', leverageScore: 5, affectedFiles: ['src/a.ts'] }),
+      mkRec({ id: 'rec-b', leverageScore: 3 }),
+      mkRec({ id: 'rec-c', leverageScore: 1 }),
+      // partition → needsAttention (superseded); MUST NOT leak into phase/handoff.
+      mkRec({ id: 'rec-attn', leverageScore: 9, decayState: 'superseded' as const }),
+    ],
+    evidence: [
+      { id: 'ev-1', recommendationId: 'rec-a', kind: 'file' as const, summary: 'e', path: 'src/b.ts', createdAt: isoNow },
+    ],
+    assumptions: [
+      { id: 'as-1', recommendationId: 'rec-a', text: 'open one', status: 'open' as const, createdAt: isoNow },
+    ],
+    decisions: [
+      { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r', decidedAt: isoNow },
+    ],
+    backend: noBackend,
+  };
+
+  it('phase JSON has no needsAttention key (regression: Slice 7 must not pollute frozen scopes)', () => {
+    const packet = synthesizeContextPacket('phase', sources, fixedNow);
+    expect('needsAttention' in packet).toBe(false);
+  });
+
+  it('handoff JSON has no needsAttention key', () => {
+    const packet = synthesizeContextPacket('handoff', sources, fixedNow);
+    expect('needsAttention' in packet).toBe(false);
+  });
+
+  it('agent JSON has no needsAttention key', () => {
+    const packet = synthesizeContextPacket('agent', sources, fixedNow);
+    expect('needsAttention' in packet).toBe(false);
+  });
+
+  it('phase packet matches frozen golden (full byte-equality)', () => {
+    const packet = synthesizeContextPacket('phase', sources, fixedNow);
+    expect(packet).toEqual({
+      schemaVersion: 1,
+      scope: 'phase',
+      generatedAt: isoNow,
+      loop: { present: false },
+      recommendations: [
+        { id: 'rec-a', title: 't', score: 48, status: 'candidate', readiness: 'raw-idea', priority: 'low' },
+        { id: 'rec-b', title: 't', score: 45, status: 'candidate', readiness: 'raw-idea', priority: 'low' },
+        { id: 'rec-c', title: 't', score: 42, status: 'candidate', readiness: 'raw-idea', priority: 'low' },
+      ],
+      assumptions: [
+        { id: 'as-1', recommendationId: 'rec-a', text: 'open one', status: 'open' },
+      ],
+      decisions: [
+        { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r' },
+      ],
+      files: [
+        { path: 'src/a.ts', why: 'affected by rec-a t' },
+        { path: 'src/b.ts', why: 'evidence ev-1' },
+      ],
+      totals: {
+        recommendations: 3,
+        assumptions: 1,
+        decisions: 1,
+        files: 2,
+        recommendationsOmitted: 0,
+      },
+    });
+  });
+
+  it('handoff packet matches frozen golden (full byte-equality)', () => {
+    const packet = synthesizeContextPacket('handoff', sources, fixedNow);
+    expect(packet).toEqual({
+      schemaVersion: 1,
+      scope: 'handoff',
+      generatedAt: isoNow,
+      loop: { present: false },
+      recommendations: [
+        { id: 'rec-a', title: 't', score: 48, status: 'candidate', readiness: 'raw-idea', priority: 'low' },
+        { id: 'rec-b', title: 't', score: 45, status: 'candidate', readiness: 'raw-idea', priority: 'low' },
+        { id: 'rec-c', title: 't', score: 42, status: 'candidate', readiness: 'raw-idea', priority: 'low' },
+      ],
+      assumptions: [
+        { id: 'as-1', recommendationId: 'rec-a', text: 'open one', status: 'open' },
+      ],
+      decisions: [
+        { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r' },
+      ],
+      files: [
+        { path: 'src/a.ts', why: 'affected by rec-a t' },
+        { path: 'src/b.ts', why: 'evidence ev-1' },
+      ],
+      totals: {
+        recommendations: 3,
+        assumptions: 1,
+        decisions: 1,
+        files: 2,
+        recommendationsOmitted: 0,
+      },
+    });
+  });
+});
+
 let active: Fixture | null = null;
 afterEach(async () => {
   if (active) {
