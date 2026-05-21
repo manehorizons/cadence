@@ -10,6 +10,7 @@ import type {
 } from '@cadence/types';
 import {
   addAssumption,
+  addIntelligenceDecision,
   addRecommendation,
   deriveRecommendationLinks,
   readRecommendationLedger,
@@ -310,6 +311,36 @@ describe('addAssumption backfill (Slice 11 / AC-6)', () => {
     const a2 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A2' });
     const after = await readRecommendationLedger(active.root);
     expect(after.recommendations[0]!.assumptionIds).toEqual([a1.id, a2.id]);
+  });
+});
+
+describe('addIntelligenceDecision backfill (Slice 11 / AC-7 + AC-8)', () => {
+  it('AC-7: tied decision updates rec.decisionIds', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice11' });
+    const rec = await addRecommendation(active.root, {
+      title: 'host', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const d = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D1', rationale: 'r',
+    });
+    const after = await readRecommendationLedger(active.root);
+    expect(after.recommendations[0]!.decisionIds).toEqual([d.id]);
+  });
+
+  it('AC-8: untied decision leaves recommendations.json byte-equal', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice11' });
+    await addRecommendation(active.root, {
+      title: 'host', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const before = await readFile(recPath, 'utf8');
+    await addIntelligenceDecision(active.root, {
+      title: 'untied', rationale: 'r',
+    });
+    const afterBytes = await readFile(recPath, 'utf8');
+    expect(afterBytes).toBe(before);
   });
 });
 
