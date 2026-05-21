@@ -127,7 +127,7 @@ describe('runAssumptionTransition no-write-on-failure (AC-4)', () => {
     expect(existsSync(mdPath)).toBe(false);
   });
 
-  it.skip('successful transition writes via writeAssumptionLedger (JSON + MD) — unskip after Task 2 bucket render lands', async () => {
+  it('successful transition writes via writeAssumptionLedger (JSON + MD)', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice9' });
     const { assumptionId } = await seedRecAndAssumption(active.root);
     const res = await runAssumptionTransition(active.root, assumptionId, 'validate');
