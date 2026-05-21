@@ -3,10 +3,12 @@ import type { IntelligenceDecision } from '@cadence/types';
 import {
   addIntelligenceDecision,
   readIntelligenceDecisionLedger,
+  readRecommendationLedger,
   runDecisionTransition,
   type AddIntelligenceDecisionInput,
   type DecisionTransitionAction,
 } from '../../intelligence/store.js';
+import { renderDecisionDetail } from '../../intelligence/render-decision-detail.js';
 
 const DECISION_TRANSITION_DESCRIPTIONS: Record<DecisionTransitionAction, string> = {
   supersede: 'Mark an active decision superseded',
@@ -47,6 +49,36 @@ export function registerDecisionCommand(program: Command): void {
       } catch (err) {
         process.stderr.write(
           `decision add failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
+    .command('show <id>')
+    .description('Show a single decision with its tied recommendation cross-ref')
+    .action(async (id: string) => {
+      try {
+        const decLedger = await readIntelligenceDecisionLedger(process.cwd());
+        const dec = decLedger.decisions.find((d) => d.id === id);
+        if (!dec) {
+          process.stderr.write(`decision ${id} not found\n`);
+          process.exitCode = 1;
+          return;
+        }
+        let rec = undefined;
+        if (dec.recommendationId) {
+          const recLedger = await readRecommendationLedger(process.cwd());
+          rec = recLedger.recommendations.find(
+            (r) => r.id === dec.recommendationId,
+          );
+        }
+        const md = renderDecisionDetail(dec, rec);
+        process.stdout.write(md);
+        if (!md.endsWith('\n')) process.stdout.write('\n');
+      } catch (err) {
+        process.stderr.write(
+          `decision show failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
         process.exitCode = 1;
       }

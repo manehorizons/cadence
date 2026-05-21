@@ -3,9 +3,11 @@ import type { Assumption } from '@cadence/types';
 import {
   addAssumption,
   readAssumptionLedger,
+  readRecommendationLedger,
   runAssumptionTransition,
   type AssumptionTransitionAction,
 } from '../../intelligence/store.js';
+import { renderAssumptionDetail } from '../../intelligence/render-assumption-detail.js';
 
 const ASSUMPTION_TRANSITION_DESCRIPTIONS: Record<
   AssumptionTransitionAction,
@@ -46,6 +48,33 @@ export function registerAssumptionCommand(program: Command): void {
       } catch (err) {
         process.stderr.write(
           `assumption add failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
+    .command('show <id>')
+    .description('Show a single assumption with its tied recommendation cross-ref')
+    .action(async (id: string) => {
+      try {
+        const asLedger = await readAssumptionLedger(process.cwd());
+        const as = asLedger.assumptions.find((a) => a.id === id);
+        if (!as) {
+          process.stderr.write(`assumption ${id} not found\n`);
+          process.exitCode = 1;
+          return;
+        }
+        const recLedger = await readRecommendationLedger(process.cwd());
+        const rec = recLedger.recommendations.find(
+          (r) => r.id === as.recommendationId,
+        );
+        const md = renderAssumptionDetail(as, rec);
+        process.stdout.write(md);
+        if (!md.endsWith('\n')) process.stdout.write('\n');
+      } catch (err) {
+        process.stderr.write(
+          `assumption show failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
         process.exitCode = 1;
       }
