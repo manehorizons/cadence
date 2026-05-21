@@ -5,9 +5,13 @@ import {
 } from '@cadence/types';
 import {
   addRecommendation,
+  readAssumptionLedger,
+  readEvidenceLedger,
+  readIntelligenceDecisionLedger,
   readRecommendationLedger,
   type AddRecommendationInput,
 } from '../../intelligence/store.js';
+import { renderRecommendationDetail } from '../../intelligence/render-recommendation-detail.js';
 
 function csv(value: string | undefined): string[] {
   if (!value) return [];
@@ -64,6 +68,54 @@ export function registerRecommendationCommand(program: Command): void {
         } catch (err) {
           process.stderr.write(
             `recommendation add failed: ${err instanceof Error ? err.message : String(err)}\n`,
+          );
+          process.exitCode = 1;
+        }
+      },
+    );
+
+  cmd
+    .command('show <id>')
+    .description('Show a single recommendation with all linked assumptions, decisions, and evidence')
+    .option('--open-assumptions-only', 'Filter assumptions to status=open only', false)
+    .option('--active-decisions-only', 'Filter decisions to status=active only', false)
+    .action(
+      async (
+        id: string,
+        opts: { openAssumptionsOnly?: boolean; activeDecisionsOnly?: boolean },
+      ) => {
+        try {
+          const recLedger = await readRecommendationLedger(process.cwd());
+          const rec = recLedger.recommendations.find((r) => r.id === id);
+          if (!rec) {
+            process.stderr.write(`recommendation ${id} not found\n`);
+            process.exitCode = 1;
+            return;
+          }
+          const evLedger = await readEvidenceLedger(process.cwd());
+          const asLedger = await readAssumptionLedger(process.cwd());
+          const decLedger = await readIntelligenceDecisionLedger(process.cwd());
+          const evLinked = evLedger.evidence.filter((e) =>
+            rec.evidenceIds.includes(e.id),
+          );
+          const asLinked = asLedger.assumptions.filter((a) =>
+            rec.assumptionIds.includes(a.id),
+          );
+          const decLinked = decLedger.decisions.filter((d) =>
+            rec.decisionIds.includes(d.id),
+          );
+          const renderOpts: {
+            openAssumptionsOnly?: boolean;
+            activeDecisionsOnly?: boolean;
+          } = {};
+          if (opts.openAssumptionsOnly) renderOpts.openAssumptionsOnly = true;
+          if (opts.activeDecisionsOnly) renderOpts.activeDecisionsOnly = true;
+          const md = renderRecommendationDetail(rec, evLinked, asLinked, decLinked, renderOpts);
+          process.stdout.write(md);
+          if (!md.endsWith('\n')) process.stdout.write('\n');
+        } catch (err) {
+          process.stderr.write(
+            `recommendation show failed: ${err instanceof Error ? err.message : String(err)}\n`,
           );
           process.exitCode = 1;
         }
