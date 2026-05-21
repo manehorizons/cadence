@@ -199,6 +199,6 @@ Plan-doc-first (this design + the implementation plan committed before any feat 
 ## Follow-On (not in this slice)
 
 - ~~Context-packet `review`/`agent` scopes (cheap follow-on on the existing `ContextScopeZ` enum/switch).~~ — shipped in Slice 7 ([`2026-05-18-cadence-context-packets-review-agent-design.md`](2026-05-18-cadence-context-packets-review-agent-design.md)).
-- Resolve `assumptionIds`/`decisionIds` off recs once an assumption/decision intake command exists (would also let an intake-fed pre-mortem deepen further).
+- ~~Resolve `assumptionIds`/`decisionIds` off recs once an assumption/decision intake command exists (would also let an intake-fed pre-mortem deepen further).~~ **Backfill writer SHIPPED Slice 11** — see [`2026-05-20-cadence-rec-link-backfill-design.md`](2026-05-20-cadence-rec-link-backfill-design.md). F-new-3 already cross-refs `AssumptionLedger` directly so deepening was always available; the rec-side arrays are now populated for any future consumer that prefers the rec-view.
 - Optional later `--deep` LLM augmentation of the pre-mortem (explicitly parked; only if a generative pre-mortem is ever justified).
 - Operator-initiated promotion helper / multi-backend `renderSpecDraft` / context size-budget mode (carried from prior slices).

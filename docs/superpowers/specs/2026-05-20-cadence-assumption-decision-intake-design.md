@@ -418,7 +418,7 @@ The slice succeeds if:
 4. No `state.json` / `STATE.md` / `cadence spec new` / loop transition touched (boundary audit).
 5. Branch HEAD pushes clean through pre-push to `origin/praxis-intelligence-ledger`; PR #9 stays draft + unmerged.
 6. Slice-7 design's Follow-On entry "An assumption / decision intake command" reconciled (strike + annotate, mirror Slice-6/7 pattern).
-7. Slice-5 design's Follow-On entry "Resolving `assumptionIds`/`decisionIds` off recommendations once an assumption/decision intake command exists" remains open (this slice does NOT auto-backfill those arrays — that's a future slice).
+7. ~~Slice-5 design's Follow-On entry "Resolving `assumptionIds`/`decisionIds` off recommendations once an assumption/decision intake command exists" remains open (this slice does NOT auto-backfill those arrays — that's a future slice).~~ **SHIPPED Slice 11** — see [`2026-05-20-cadence-rec-link-backfill-design.md`](2026-05-20-cadence-rec-link-backfill-design.md). Auto-backfill via `deriveRecommendationLinks` now runs in `addAssumption` and `addIntelligenceDecision`.
 
 ## Decision Log
 
@@ -439,7 +439,7 @@ The slice succeeds if:
 ## Follow-On (not in this slice)
 
 - ~~**Assumption status transitions** (`cadence assumption validate <id>` / `cadence assumption reject <id>`). Highest-priority follow-on; closes the asymmetry between Slice-3's recommendation lifecycle and this slice's assumption stub. Render gets bucket sections at that point.~~ — shipped in Slice 9 ([`2026-05-20-cadence-assumption-transitions-design.md`](2026-05-20-cadence-assumption-transitions-design.md)).
-- **Auto-backfill `assumptionIds[]` / `decisionIds[]` on the Recommendation type** when an intake `add` is called with `--rec`. Currently those arrays stay operator-managed; auto-backfill closes the Slice 5 / 7 design's "resolving `assumptionIds`/`decisionIds` off recs once an intake command exists" follow-on.
+- ~~**Auto-backfill `assumptionIds[]` / `decisionIds[]` on the Recommendation type** when an intake `add` is called with `--rec`. Currently those arrays stay operator-managed; auto-backfill closes the Slice 5 / 7 design's "resolving `assumptionIds`/`decisionIds` off recs once an intake command exists" follow-on.~~ **SHIPPED Slice 11** — see [`2026-05-20-cadence-rec-link-backfill-design.md`](2026-05-20-cadence-rec-link-backfill-design.md).
 - **Update / delete commands** for either subject (`cadence assumption update <id> --text "..."`, `cadence decision update <id>`, delete). Append-only is the MVP discipline.
 - **Filter options on `list`** (`--status open|validated|rejected` for assumption, `--rec <id>` for both, `--since <iso>`, `--limit N`).
 - **An intake-fed pre-mortem refresh** — once `assumptionIds[]` resolution is automatic, Slice 6's `deepenPreMortem` family F-new-3 (open-assumptions) densifies further.

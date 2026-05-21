@@ -236,5 +236,5 @@ Plan-doc-first (design + plan committed before feat commits), then per-task `fea
 
 - ~~`review` and `agent` scopes (new policy branches on the existing enum/switch).~~ — shipped in Slice 7 ([`2026-05-18-cadence-context-packets-review-agent-design.md`](2026-05-18-cadence-context-packets-review-agent-design.md)).
 - ~~Milestone pre-mortems as a first-class command.~~ — shipped in Slice 6 (`docs/superpowers/specs/2026-05-18-cadence-milestone-premortem-design.md`).
-- Resolving `assumptionIds`/`decisionIds` off recommendations once an assumption/decision intake command exists.
+- ~~Resolving `assumptionIds`/`decisionIds` off recommendations once an assumption/decision intake command exists.~~ **Backfill writer SHIPPED Slice 11** — see [`2026-05-20-cadence-rec-link-backfill-design.md`](2026-05-20-cadence-rec-link-backfill-design.md). (Packet resolver CONSUMER-side is still a separate future slice — packets cross-ref via `Assumption.recommendationId` today, not via `rec.assumptionIds`.)
 - A size-budget / truncation mode if real packets ever overflow practical limits.
