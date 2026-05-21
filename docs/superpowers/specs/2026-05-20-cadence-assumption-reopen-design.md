@@ -305,7 +305,7 @@ The slice succeeds if:
 ## Follow-On (not in this slice)
 
 - **`cadence decision` status field + transitions.** Decision has no status field today; would be a `@cadence/types` schema additive change.
-- **Auto-backfill `assumptionIds[]`/`decisionIds[]` arrays on Recommendation** (Slice-5/6 forward-ref still open).
+- ~~**Auto-backfill `assumptionIds[]`/`decisionIds[]` arrays on Recommendation** (Slice-5/6 forward-ref still open).~~ **SHIPPED Slice 11** — see [`2026-05-20-cadence-rec-link-backfill-design.md`](2026-05-20-cadence-rec-link-backfill-design.md).
 - **Update / delete commands** for assumption text editing.
 - **Filter options on `list`** (`--status open|validated|rejected`).
 - **`--note <text>` option on transitions** (schema additive: `lastNote?: string`).
