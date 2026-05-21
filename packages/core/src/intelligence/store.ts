@@ -252,6 +252,10 @@ export async function addAssumption(
   };
   asLedger.assumptions.push(a);
   await writeAssumptionLedger(root, asLedger);
+  const decLedger = await readIntelligenceDecisionLedger(root);
+  const evLedger = await readEvidenceLedger(root);
+  const derivedRec = deriveRecommendationLinks(recLedger, asLedger, decLedger);
+  await writeIntelligenceLedgers(root, derivedRec, evLedger);
   return a;
 }
 
@@ -315,6 +319,25 @@ export async function runAssumptionTransition(
   if (!res.ok) return res;
   await writeAssumptionLedger(root, res.ledger);
   return res;
+}
+
+export function deriveRecommendationLinks(
+  recLedger: RecommendationLedger,
+  asLedger: AssumptionLedger,
+  decLedger: IntelligenceDecisionLedger,
+): RecommendationLedger {
+  return {
+    schemaVersion: 1,
+    recommendations: recLedger.recommendations.map((r) => ({
+      ...r,
+      assumptionIds: asLedger.assumptions
+        .filter((a) => a.recommendationId === r.id)
+        .map((a) => a.id),
+      decisionIds: decLedger.decisions
+        .filter((d) => d.recommendationId === r.id)
+        .map((d) => d.id),
+    })),
+  };
 }
 
 export type AddIntelligenceDecisionInput = {
