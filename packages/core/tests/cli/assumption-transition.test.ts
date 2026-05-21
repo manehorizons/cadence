@@ -115,3 +115,59 @@ describe('cadence assumption reject (AC-8)', () => {
     );
   });
 });
+
+describe('cadence assumption reopen (Slice 10 / AC-5)', () => {
+  it('validated → open: exit 0, success line, JSON + MD reflect new status', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice10' });
+    const id = await seedRecAndAssumption(active.root);
+    const v = await run(['assumption', 'validate', id], active.root);
+    expect(v.code).toBe(0);
+    const r = await run(['assumption', 'reopen', id], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(`assumption ${id} → open\n`);
+    const json = JSON.parse(
+      await readFile(join(active.root, '.cadence/intelligence/assumptions.json'), 'utf8'),
+    );
+    expect(json.assumptions[0].status).toBe('open');
+    const md = await readFile(
+      join(active.root, '.cadence/intelligence/ASSUMPTIONS.md'),
+      'utf8',
+    );
+    expect(md).toMatch(/## Open[\s\S]*?### as-/);
+    expect(md).toMatch(/## Validated[\s\S]*?_\(none\)_/);
+  });
+
+  it('rejected → open: exit 0, MD reflects bucket move', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice10' });
+    const id = await seedRecAndAssumption(active.root);
+    await run(['assumption', 'reject', id], active.root);
+    const r = await run(['assumption', 'reopen', id], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(`assumption ${id} → open\n`);
+    const md = await readFile(
+      join(active.root, '.cadence/intelligence/ASSUMPTIONS.md'),
+      'utf8',
+    );
+    expect(md).toMatch(/## Open[\s\S]*?### as-/);
+    expect(md).toMatch(/## Rejected[\s\S]*?_\(none\)_/);
+  });
+
+  it('open status → exit 1, stderr `refused: cannot reopen ... open`', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice10' });
+    const id = await seedRecAndAssumption(active.root);
+    const r = await run(['assumption', 'reopen', id], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toBe(
+      'assumption reopen refused: cannot reopen assumption in status open\n',
+    );
+  });
+
+  it('unknown id → exit 1, stderr `refused: ... not found`', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice10' });
+    const r = await run(['assumption', 'reopen', 'as-bogus'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toBe(
+      'assumption reopen refused: assumption as-bogus not found\n',
+    );
+  });
+});
