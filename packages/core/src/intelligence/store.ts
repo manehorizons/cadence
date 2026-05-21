@@ -388,6 +388,69 @@ export async function addIntelligenceDecision(
   return out;
 }
 
+export type DecisionTransitionAction = 'supersede' | 'rescind' | 'reactivate';
+
+export type DecisionTransitionResult =
+  | { ok: true; ledger: IntelligenceDecisionLedger }
+  | { ok: false; error: string };
+
+const DECISION_TRANSITION_ALLOWED: Record<
+  DecisionTransitionAction,
+  IntelligenceDecision['status'][]
+> = {
+  supersede: ['active'],
+  rescind: ['active'],
+  reactivate: ['superseded', 'rescinded'],
+};
+
+const DECISION_TRANSITION_NEXT: Record<
+  DecisionTransitionAction,
+  IntelligenceDecision['status']
+> = {
+  supersede: 'superseded',
+  rescind: 'rescinded',
+  reactivate: 'active',
+};
+
+export function applyDecisionTransition(
+  ledger: IntelligenceDecisionLedger,
+  id: string,
+  action: DecisionTransitionAction,
+  _now?: Date,
+): DecisionTransitionResult {
+  const target = ledger.decisions.find((d) => d.id === id);
+  if (!target) return { ok: false, error: `decision ${id} not found` };
+
+  if (!DECISION_TRANSITION_ALLOWED[action].includes(target.status)) {
+    return {
+      ok: false,
+      error: `cannot ${action} decision in status ${target.status}`,
+    };
+  }
+
+  const nextStatus: IntelligenceDecision['status'] =
+    DECISION_TRANSITION_NEXT[action];
+  const ledgerOut: IntelligenceDecisionLedger = {
+    schemaVersion: 1,
+    decisions: ledger.decisions.map((d) =>
+      d.id === id ? { ...d, status: nextStatus } : d,
+    ),
+  };
+  return { ok: true, ledger: ledgerOut };
+}
+
+export async function runDecisionTransition(
+  root: string,
+  id: string,
+  action: DecisionTransitionAction,
+): Promise<DecisionTransitionResult> {
+  const ledger = await readIntelligenceDecisionLedger(root);
+  const res = applyDecisionTransition(ledger, id, action, new Date());
+  if (!res.ok) return res;
+  await writeIntelligenceDecisionLedger(root, res.ledger);
+  return res;
+}
+
 const MILESTONES_JSON = 'milestones.json';
 const MILESTONES_MD = 'MILESTONES.md';
 
