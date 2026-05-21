@@ -231,7 +231,7 @@ The slice succeeds if:
 2. **No backfill triggered by assumption transitions.** `validate`/`reject`/`reopen` flip status only; the `recommendationId` link is invariant under transition. Adding a derive call inside `runAssumptionTransition` would do nothing observable. Keeps the transition path lean.
 3. **Untied decisions skip the rec write entirely.** When `input.recommendationId === undefined`, no rec can be updated (no link). `addIntelligenceDecision` writes only the decision ledger — recommendation ledger byte-equal. Avoids gratuitous rewrites and unnecessary `RECOMMENDATIONS.md` re-renders.
 4. **Two-step write order: subject first, rec last.** asLedger/decLedger write happens BEFORE recLedger write. Rationale: the worst recoverable failure mode is "assumption exists but rec doesn't know" — the next add self-heals via re-derivation. The reverse order ("rec references nonexistent assumption") would be worse (dangling pointer; Slice-5 packet rendering would still cross-ref by `recommendationId` so the symptom would be cosmetic, but the invariant "every id in `rec.assumptionIds` exists in `asLedger`" is more valuable).
-5. **No `RECOMMENDATIONS.md` render extension.** `render.ts` does not currently surface `assumptionIds`/`decisionIds`. Adding that surface is a future consumer slice (e.g., "show assumption + decision counts inline on each rec entry"). This slice owns the WRITER only.
+5. **No `RECOMMENDATIONS.md` render extension.** `render.ts` does not currently surface `assumptionIds`/`decisionIds`. Adding that surface is a future consumer slice (e.g., "show assumption + decision counts inline on each rec entry"). This slice owns the WRITER only. **— SHIPPED Slice 12** as inline-ids form (see [rec-md-render-links design](2026-05-20-cadence-rec-md-render-links-design.md)).
 6. **No `@cadence/types` schema change.** Confirmed: `RecommendationZ.assumptionIds = z.array(z.string())` and `decisionIds = z.array(z.string())` since Slice 1. Slice 11 simply populates fields that have always existed.
 7. **No `cadence intelligence reconcile` standalone command.** Self-heal on next add covers the realistic path. A standalone reconcile would be a one-shot admin tool; defer until an operator hits a real need for "I edited the JSON by hand and want to force a rebuild RIGHT NOW without adding a new entry."
 8. **Strict read-only boundary preserved.** No `state.json`/`STATE.md`/`cadence spec new`/loop transition. The slice writes only inside `.cadence/intelligence/`.
@@ -243,7 +243,7 @@ The slice succeeds if:
 ## Follow-On (not in this slice)
 
 - **`cadence intelligence reconcile`** standalone admin command (operator-initiated full re-derive without adding a new entry).
-- **`RECOMMENDATIONS.md` render extension** to display `assumptionIds[].length` / `decisionIds[].length` counts (or inline list) on each rec.
+- ~~**`RECOMMENDATIONS.md` render extension** to display `assumptionIds[].length` / `decisionIds[].length` counts (or inline list) on each rec.~~ **SHIPPED Slice 12** — inline-ids form chosen; see [rec-md-render-links design](2026-05-20-cadence-rec-md-render-links-design.md).
 - **`cadence decision` status field + transitions** (decisions still have no status field — Slice-10 Follow-On).
 - **Rec↔phase linkage** (`IntelligenceMilestone.exportTargets` → promoted SPEC.md → phase; would let `review` packet filter recs by phase membership).
 - **Removal/deletion** commands for either subject.
