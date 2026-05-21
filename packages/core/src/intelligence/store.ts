@@ -12,6 +12,7 @@ import {
   emptyIntelligenceDecisionLedger,
   emptyMilestoneLedger,
   emptyRecommendationLedger,
+  type Assumption,
   type AssumptionLedger,
   type Evidence,
   type EvidenceLedger,
@@ -25,6 +26,7 @@ import {
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { renderRecommendationsMd } from './render.js';
 import { renderMilestonesMd } from './render-milestone.js';
+import { renderAssumptionsMd } from './render-assumption.js';
 
 const INTELLIGENCE_DIR = '.cadence/intelligence';
 const RECOMMENDATIONS_JSON = 'recommendations.json';
@@ -32,6 +34,7 @@ const EVIDENCE_JSON = 'evidence.json';
 const RECOMMENDATIONS_MD = 'RECOMMENDATIONS.md';
 const ASSUMPTIONS_JSON = 'assumptions.json';
 const DECISIONS_JSON = 'decisions.json';
+const ASSUMPTIONS_MD = 'ASSUMPTIONS.md';
 
 export type AddRecommendationInput = {
   title: string;
@@ -65,6 +68,10 @@ function decisionsPath(root: string): string {
 
 function recommendationsMdPath(root: string): string {
   return join(intelligenceDir(root), RECOMMENDATIONS_MD);
+}
+
+function assumptionsMdPath(root: string): string {
+  return join(intelligenceDir(root), ASSUMPTIONS_MD);
 }
 
 export async function readRecommendationLedger(root: string): Promise<RecommendationLedger> {
@@ -137,6 +144,17 @@ function nextEvidenceId(ledger: EvidenceLedger, now: Date): string {
   return `${prefix}${String(max + 1).padStart(3, '0')}`;
 }
 
+function nextAssumptionId(ledger: AssumptionLedger, now: Date): string {
+  const prefix = `as-${slugDate(now)}-`;
+  const max = ledger.assumptions
+    .map((a) => a.id)
+    .filter((id) => id.startsWith(prefix))
+    .map((id) => Number.parseInt(id.slice(prefix.length), 10))
+    .filter((n) => Number.isFinite(n))
+    .reduce((a, b) => Math.max(a, b), 0);
+  return `${prefix}${String(max + 1).padStart(3, '0')}`;
+}
+
 export async function addRecommendation(
   root: string,
   input: AddRecommendationInput,
@@ -180,6 +198,40 @@ export async function addRecommendation(
   ledger.recommendations.push(rec);
   await writeIntelligenceLedgers(root, ledger, evidenceLedger);
   return rec;
+}
+
+export type AddAssumptionInput = {
+  recommendationId: string;
+  text: string;
+};
+
+async function writeAssumptionLedger(root: string, ledger: AssumptionLedger): Promise<void> {
+  AssumptionLedgerZ.parse(ledger);
+  await mkdir(intelligenceDir(root), { recursive: true });
+  await atomicWriteJSON(assumptionsPath(root), ledger);
+  await atomicWriteText(assumptionsMdPath(root), renderAssumptionsMd(ledger));
+}
+
+export async function addAssumption(
+  root: string,
+  input: AddAssumptionInput,
+): Promise<Assumption> {
+  const recLedger = await readRecommendationLedger(root);
+  if (!recLedger.recommendations.some((r) => r.id === input.recommendationId)) {
+    throw new Error(`unknown recommendation "${input.recommendationId}"`);
+  }
+  const asLedger = await readAssumptionLedger(root);
+  const now = new Date();
+  const a: Assumption = {
+    id: nextAssumptionId(asLedger, now),
+    recommendationId: input.recommendationId,
+    text: input.text,
+    status: 'open',
+    createdAt: now.toISOString(),
+  };
+  asLedger.assumptions.push(a);
+  await writeAssumptionLedger(root, asLedger);
+  return a;
 }
 
 const MILESTONES_JSON = 'milestones.json';
