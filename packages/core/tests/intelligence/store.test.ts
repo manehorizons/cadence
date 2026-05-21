@@ -408,3 +408,57 @@ describe('rec link backfill FK refusal preserved (Slice 11 / AC-11)', () => {
     await expect(readFile(asPath, 'utf8')).rejects.toThrow();
   });
 });
+
+describe('rec MD link surfacing (Slice 12 / AC-6)', () => {
+  it('addAssumption populates `- assumptions:` bullet under rec heading in RECOMMENDATIONS.md', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice12' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a = await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md'),
+      'utf8',
+    );
+    expect(md).toMatch(new RegExp(`## ${rec.id}[\\s\\S]*?- assumptions: ${a.id}`));
+    expect(md).not.toMatch(/- decisions:/);
+  });
+
+  it('addIntelligenceDecision (tied) populates `- decisions:` bullet under rec heading', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice12' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const d = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id,
+      title: 'D1',
+      rationale: 'r',
+    });
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md'),
+      'utf8',
+    );
+    expect(md).toMatch(new RegExp(`## ${rec.id}[\\s\\S]*?- decisions: ${d.id}`));
+    expect(md).not.toMatch(/- assumptions:/);
+  });
+
+  it('addIntelligenceDecision (untied) leaves RECOMMENDATIONS.md without `- decisions:`', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice12' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await addIntelligenceDecision(active.root, {
+      title: 'untied',
+      rationale: 'r',
+    });
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md'),
+      'utf8',
+    );
+    expect(md).toMatch(new RegExp(`## ${rec.id}`));
+    expect(md).not.toMatch(/- decisions:/);
+  });
+});
