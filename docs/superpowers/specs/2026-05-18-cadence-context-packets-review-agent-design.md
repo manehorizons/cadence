@@ -288,7 +288,7 @@ The slice succeeds if:
 ## Follow-On (not in this slice)
 
 - Rec↔phase linkage (`IntelligenceMilestone.exportTargets` → promoted SPEC.md → phase). Would let `review` filter recs by phase membership, not just status. Requires promotion tracking design.
-- An assumption / decision intake command — would densify both new scopes' assumptions/decisions sections (Slice 5's documented gap applies here verbatim).
+- ~~An assumption / decision intake command — would densify both new scopes' assumptions/decisions sections (Slice 5's documented gap applies here verbatim).~~ — shipped in Slice 8 ([`2026-05-20-cadence-assumption-decision-intake-design.md`](2026-05-20-cadence-assumption-decision-intake-design.md)).
 - A per-rec arg for `cadence context agent <rec-id>` — would let an operator dispatch a subagent against an explicit rec rather than the top-3 ranked.
 - A size-budget / truncation mode if real packets ever overflow practical limits.
 - Auto-dispatch / subagent routing — explicitly the parent design's deferred risk; out of slice forever until CADENCE's packaging is proven well-fitted.

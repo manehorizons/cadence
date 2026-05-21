@@ -789,6 +789,63 @@ or a missing `.cadence/` backend degrades gracefully and still exits 0.
 
 ---
 
+### assumption
+
+```
+Usage: cadence assumption [options] [command]
+
+Manage CADENCE strategic-intelligence assumptions
+```
+
+**Subcommands**
+
+| Subcommand | Description |
+|---|---|
+| `add` | Add a manual assumption tied to a recommendation |
+| `list` | List recorded assumptions |
+
+**`add` options**
+
+| Option | Description |
+|---|---|
+| `--rec <id>` | Recommendation id this assumption belongs to (required) |
+| `--text <text>` | Assumption statement (required) |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis). Refuses unknown `--rec` with exit 1 + clean stderr. New assumptions land with `status='open'`. Writes `.cadence/intelligence/assumptions.json` + `.cadence/intelligence/ASSUMPTIONS.md` atomically on every add. `list` writes a compact one-line-per-entry summary to stdout (`${id}  ${status}  ${recommendationId}  ${text}`). Status-transition subcommands (`validate` / `reject`) ship in a follow-up slice.
+
+**Exit codes** — `add`: exits 1 on unknown rec id or any artifact write error; usage error from commander on missing required option. `list`: exits 0 even on empty ledger (prints `No assumptions recorded.`).
+
+---
+
+### decision
+
+```
+Usage: cadence decision [options] [command]
+
+Manage CADENCE strategic-intelligence decisions
+```
+
+**Subcommands**
+
+| Subcommand | Description |
+|---|---|
+| `add` | Record an architectural decision (optionally tied to a recommendation) |
+| `list` | List recorded decisions |
+
+**`add` options**
+
+| Option | Description |
+|---|---|
+| `--rec <id>` | Recommendation id this decision belongs to (optional) |
+| `--title <title>` | Short decision title (required) |
+| `--rationale <text>` | Decision rationale (required) |
+
+**Behavior** — `--rec` is optional; FK-checked only when provided. Untied decisions are valid (architectural decisions that don't tie to a specific recommendation). The persisted entity OMITS the `recommendationId` field entirely on untied decisions (exact-optional pattern). Writes `.cadence/intelligence/decisions.json` + `.cadence/intelligence/DECISIONS.md` on every add. `list` writes one line per entry (`${id}  ${recommendationId ?? '—'}  ${title}`); untied decisions show the em-dash placeholder in the rec column.
+
+**Exit codes** — same shape as `assumption`.
+
+---
+
 ## cadence-host-claude-code
 
 ```
