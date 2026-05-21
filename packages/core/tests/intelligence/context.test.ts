@@ -130,8 +130,8 @@ describe('synthesizeContextPacket', () => {
   it('phase decisions tie to selected recs; handoff carries all decisions', () => {
     const recs = [mkRec({ id: 'rec-a', status: 'candidate', leverageScore: 5 })];
     const decisions: IntelligenceDecision[] = [
-      { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r', decidedAt: NOW.toISOString() },
-      { id: 'dec-2', title: 'untied', rationale: 'r', decidedAt: NOW.toISOString() },
+      { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r', status: 'active', decidedAt: NOW.toISOString() },
+      { id: 'dec-2', title: 'untied', rationale: 'r', status: 'active', decidedAt: NOW.toISOString() },
     ];
     const phase = synthesizeContextPacket(
       'phase',
@@ -216,6 +216,7 @@ describe('synthesizeContextPacket — review scope (Slice 7)', () => {
       id: 'dec-x',
       title: 't',
       rationale: 'r',
+      status: 'active',
       decidedAt: '2026-05-18T00:00:00.000Z',
       ...p,
     };
@@ -424,6 +425,7 @@ describe('synthesizeContextPacket — agent scope (Slice 7)', () => {
       id: 'dec-x',
       title: 't',
       rationale: 'r',
+      status: 'active',
       decidedAt: '2026-05-18T00:00:00.000Z',
       ...p,
     };
@@ -625,7 +627,7 @@ describe('byte-stability regression — phase + handoff frozen (Slice 7 / AC-5)'
       { id: 'as-1', recommendationId: 'rec-a', text: 'open one', status: 'open' as const, createdAt: isoNow },
     ],
     decisions: [
-      { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r', decidedAt: isoNow },
+      { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r', status: 'active', decidedAt: isoNow },
     ],
     backend: noBackend,
   };
@@ -661,7 +663,7 @@ describe('byte-stability regression — phase + handoff frozen (Slice 7 / AC-5)'
         { id: 'as-1', recommendationId: 'rec-a', text: 'open one', status: 'open' },
       ],
       decisions: [
-        { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r' },
+        { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r', status: 'active' },
       ],
       files: [
         { path: 'src/a.ts', why: 'affected by rec-a t' },
@@ -693,7 +695,7 @@ describe('byte-stability regression — phase + handoff frozen (Slice 7 / AC-5)'
         { id: 'as-1', recommendationId: 'rec-a', text: 'open one', status: 'open' },
       ],
       decisions: [
-        { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r' },
+        { id: 'dec-1', recommendationId: 'rec-a', title: 'tied', rationale: 'r', status: 'active' },
       ],
       files: [
         { path: 'src/a.ts', why: 'affected by rec-a t' },

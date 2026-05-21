@@ -140,16 +140,19 @@ export function synthesizeContextPacket(
   // Untied decisions (no recommendationId) have no rec linkage, so they cannot use inScope;
   // phase keeps only decisions tied to a selected rec, handoff keeps all.
   const decisions = sources.decisions
-    .filter((d) =>
-      (scope === 'handoff' || scope === 'review')
-        ? true
-        : d.recommendationId !== undefined && selectedIds.has(d.recommendationId),
+    .filter(
+      (d) =>
+        d.status === 'active' &&
+        ((scope === 'handoff' || scope === 'review')
+          ? true
+          : d.recommendationId !== undefined && selectedIds.has(d.recommendationId)),
     )
     .map((d) => {
       const out: ContextPacket['decisions'][number] = {
         id: d.id,
         title: oneLine(d.title),
         rationale: oneLine(d.rationale),
+        status: 'active' as const,
       };
       if (d.recommendationId !== undefined) out.recommendationId = d.recommendationId;
       return out;

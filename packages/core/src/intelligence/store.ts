@@ -373,6 +373,7 @@ export async function addIntelligenceDecision(
     id: nextIntelligenceDecisionId(decLedger, now),
     title: input.title,
     rationale: input.rationale,
+    status: 'active',
     decidedAt: now.toISOString(),
   };
   if (input.recommendationId !== undefined) out.recommendationId = input.recommendationId;
