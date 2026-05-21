@@ -18,6 +18,7 @@ import {
   writeMilestoneLedger,
   readAssumptionLedger,
   readIntelligenceDecisionLedger,
+  runDecisionTransition,
 } from '../../src/intelligence/store.js';
 
 let active: Fixture | null = null;
@@ -406,6 +407,62 @@ describe('rec link backfill FK refusal preserved (Slice 11 / AC-11)', () => {
     expect(await readFile(recPath, 'utf8')).toBe(before);
     // assumptions.json never created
     await expect(readFile(asPath, 'utf8')).rejects.toThrow();
+  });
+});
+
+describe('decision status field (Slice 13 / AC-10 + AC-13 + AC-14)', () => {
+  it('AC-10: legacy decisions.json (no status field) parses with Zod default active', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice13' });
+    const path = join(active.root, '.cadence/intelligence/decisions.json');
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(
+      path,
+      JSON.stringify({
+        schemaVersion: 1,
+        decisions: [
+          {
+            id: 'dec-legacy-001',
+            title: 'old',
+            rationale: 'r',
+            decidedAt: '2026-05-15T00:00:00.000Z',
+            // NO status field — pre-Slice-13 shape
+          },
+        ],
+      }),
+    );
+    const ledger = await readIntelligenceDecisionLedger(active.root);
+    expect(ledger.decisions[0]!.status).toBe('active');
+  });
+
+  it('AC-14: addIntelligenceDecision populates status=active on both tied + untied entries', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice13' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const tied = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'T', rationale: 'r',
+    });
+    expect(tied.status).toBe('active');
+    const untied = await addIntelligenceDecision(active.root, { title: 'U', rationale: 'r' });
+    expect(untied.status).toBe('active');
+  });
+
+  it('AC-13: Slice-12 `- decisions:` bullet renders even when decision is superseded (status-agnostic link arrays)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice13' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const d = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D', rationale: 'r',
+    });
+    await runDecisionTransition(active.root, d.id, 'supersede');
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md'),
+      'utf8',
+    );
+    expect(md).toMatch(new RegExp(`## ${rec.id}[\\s\\S]*?- decisions: ${d.id}`));
   });
 });
 
