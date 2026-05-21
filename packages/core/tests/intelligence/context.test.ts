@@ -15,6 +15,7 @@ import {
   addAssumption,
   addIntelligenceDecision,
   addRecommendation,
+  runAssumptionTransition,
 } from '../../src/intelligence/store.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
@@ -784,5 +785,33 @@ describe('Slice-5/7 packets densify on intake (Slice 8 AC-11)', () => {
     const after = await runContext(active.root, 'handoff', new Date('2026-05-20T00:00:00.000Z'));
     expect(after.assumptions).toHaveLength(2);
     expect(after.decisions).toHaveLength(1);
+  });
+
+  it('Slice 9 AC-11: validated assumption disappears from handoff packet assumptions[]', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice9' });
+    const rec = await addRecommendation(active.root, {
+      title: 'seed', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a1 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A2' });
+    // Pre-transition: handoff packet has 2 assumptions
+    const before = await runContext(
+      active.root,
+      'handoff',
+      new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(before.assumptions).toHaveLength(2);
+    // Validate one
+    const res = await runAssumptionTransition(active.root, a1.id, 'validate');
+    expect(res.ok).toBe(true);
+    // Post-transition: handoff packet has 1 (validated one is gone via Slice-5 status==='open' filter)
+    const after = await runContext(
+      active.root,
+      'handoff',
+      new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(after.assumptions).toHaveLength(1);
+    expect(after.assumptions[0]!.text).toBe('A2');
   });
 });
