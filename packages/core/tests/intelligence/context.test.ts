@@ -11,6 +11,11 @@ import type {
 import { ContextPacketZ } from '@cadence/types';
 import { tempRepo, type Fixture } from '@cadence/testkit';
 import { synthesizeContextPacket, runContext } from '../../src/intelligence/context.js';
+import {
+  addAssumption,
+  addIntelligenceDecision,
+  addRecommendation,
+} from '../../src/intelligence/store.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {
@@ -745,5 +750,39 @@ describe('runContext', () => {
       'utf8',
     );
     expect(md).toMatch(/# CADENCE Context Packet — handoff/);
+  });
+});
+
+describe('Slice-5/7 packets densify on intake (Slice 8 AC-11)', () => {
+  it('handoff scope: 2 assumptions + 1 decision appear after intake; no context.ts/render-context.ts change needed', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice8' });
+    const rec = await addRecommendation(active.root, {
+      title: 'seed', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    // Pre-intake: handoff packet has zero assumptions + zero decisions
+    const before = synthesizeContextPacket(
+      'handoff',
+      {
+        recommendations: [rec],
+        evidence: [],
+        assumptions: [],
+        decisions: [],
+        backend: { present: false, kind: null, legalActions: [] },
+      },
+      new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(before.assumptions).toHaveLength(0);
+    expect(before.decisions).toHaveLength(0);
+    // Run intake writers
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A2' });
+    await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D1', rationale: 'r',
+    });
+    // runContext reads the ledgers we just populated
+    const after = await runContext(active.root, 'handoff', new Date('2026-05-20T00:00:00.000Z'));
+    expect(after.assumptions).toHaveLength(2);
+    expect(after.decisions).toHaveLength(1);
   });
 });
