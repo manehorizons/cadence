@@ -255,11 +255,29 @@ export async function addAssumption(
   return a;
 }
 
-export type AssumptionTransitionAction = 'validate' | 'reject';
+export type AssumptionTransitionAction = 'validate' | 'reject' | 'reopen';
 
 export type AssumptionTransitionResult =
   | { ok: true; ledger: AssumptionLedger }
   | { ok: false; error: string };
+
+const ASSUMPTION_TRANSITION_ALLOWED: Record<
+  AssumptionTransitionAction,
+  Assumption['status'][]
+> = {
+  validate: ['open'],
+  reject: ['open'],
+  reopen: ['validated', 'rejected'],
+};
+
+const ASSUMPTION_TRANSITION_NEXT: Record<
+  AssumptionTransitionAction,
+  Assumption['status']
+> = {
+  validate: 'validated',
+  reject: 'rejected',
+  reopen: 'open',
+};
 
 export function applyAssumptionTransition(
   ledger: AssumptionLedger,
@@ -270,19 +288,14 @@ export function applyAssumptionTransition(
   const target = ledger.assumptions.find((a) => a.id === id);
   if (!target) return { ok: false, error: `assumption ${id} not found` };
 
-  const ALLOWED: Record<AssumptionTransitionAction, Assumption['status'][]> = {
-    validate: ['open'],
-    reject: ['open'],
-  };
-  if (!ALLOWED[action].includes(target.status)) {
+  if (!ASSUMPTION_TRANSITION_ALLOWED[action].includes(target.status)) {
     return {
       ok: false,
       error: `cannot ${action} assumption in status ${target.status}`,
     };
   }
 
-  const nextStatus: Assumption['status'] =
-    action === 'validate' ? 'validated' : 'rejected';
+  const nextStatus: Assumption['status'] = ASSUMPTION_TRANSITION_NEXT[action];
   const ledgerOut: AssumptionLedger = {
     schemaVersion: 1,
     assumptions: ledger.assumptions.map((a) =>
