@@ -45,7 +45,7 @@ Strict read-only outside the assumption ledger. Re-affirmed:
 - A `--note <text>` option carrying rationale alongside the flip. Schema would need `lastNote?: string`; out of scope.
 - `updatedAt` timestamp field. Status flip alone is the record; git log captures temporal info if needed.
 - Bulk transitions (`cadence assumption reopen --all-rec <recId>`).
-- Status-transition commands for `cadence decision` (decisions have no status field; separate follow-on).
+- ~~Status-transition commands for `cadence decision` (decisions have no status field; separate follow-on).~~ **SHIPPED Slice 13** — see [decision status + transitions design](2026-05-20-cadence-decision-status-transitions-design.md).
 - Any `@cadence/types` schema change.
 - A `state.json` / loop transition / `cadence spec new` side effect of any kind.
 - Auto-dispatch / subagent routing (parent design's forever-deferred risk).
@@ -304,7 +304,7 @@ The slice succeeds if:
 
 ## Follow-On (not in this slice)
 
-- **`cadence decision` status field + transitions.** Decision has no status field today; would be a `@cadence/types` schema additive change.
+- ~~**`cadence decision` status field + transitions.** Decision has no status field today; would be a `@cadence/types` schema additive change.~~ **SHIPPED Slice 13** — see [decision status + transitions design](2026-05-20-cadence-decision-status-transitions-design.md).
 - ~~**Auto-backfill `assumptionIds[]`/`decisionIds[]` arrays on Recommendation** (Slice-5/6 forward-ref still open).~~ **SHIPPED Slice 11** — see [`2026-05-20-cadence-rec-link-backfill-design.md`](2026-05-20-cadence-rec-link-backfill-design.md).
 - **Update / delete commands** for assumption text editing.
 - **Filter options on `list`** (`--status open|validated|rejected`).
