@@ -519,3 +519,53 @@ describe('rec MD link surfacing (Slice 12 / AC-6)', () => {
     expect(md).not.toMatch(/- decisions:/);
   });
 });
+
+describe('rec MD status-aware bullets (Slice 15)', () => {
+  it('AC-7: addAssumption populates `- assumptions: <id> (open)` on rec MD', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice15' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a = await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const md = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md'),
+      'utf8',
+    );
+    expect(md).toMatch(new RegExp(`## ${rec.id}[\\s\\S]*?- assumptions: ${a.id} \\(open\\)`));
+  });
+
+  it('AC-8: runAssumptionTransition flips status in rec MD bullet (open → validated)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice15' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a = await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const mdPath = join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md');
+    const before = await readFile(mdPath, 'utf8');
+    expect(before).toMatch(new RegExp(`- assumptions: ${a.id} \\(open\\)`));
+    // validate via runAssumptionTransition (use direct import)
+    const { runAssumptionTransition } = await import('../../src/intelligence/store.js');
+    await runAssumptionTransition(active.root, a.id, 'validate');
+    const after = await readFile(mdPath, 'utf8');
+    expect(after).toMatch(new RegExp(`- assumptions: ${a.id} \\(validated\\)`));
+  });
+
+  it('AC-9: runDecisionTransition flips status in rec MD bullet (active → superseded)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice15' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const d = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D', rationale: 'r',
+    });
+    const mdPath = join(active.root, '.cadence', 'intelligence', 'RECOMMENDATIONS.md');
+    const before = await readFile(mdPath, 'utf8');
+    expect(before).toMatch(new RegExp(`- decisions: ${d.id} \\(active\\)`));
+    await runDecisionTransition(active.root, d.id, 'supersede');
+    const after = await readFile(mdPath, 'utf8');
+    expect(after).toMatch(new RegExp(`- decisions: ${d.id} \\(superseded\\)`));
+  });
+});
