@@ -80,7 +80,7 @@ describe('cadence decision (Slice 8)', () => {
     await run(['decision', 'add', '--title', 'untied title', '--rationale', 'r'], active.root);
     const r = await run(['decision', 'list'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(new RegExp(`dec-\\d{8}-001\\s+—\\s+untied title`));
+    expect(r.stdout).toMatch(new RegExp(`dec-\\d{8}-001\\s+active\\s+—\\s+untied title`));
   });
 
   it('list: tied entry shows recId in rec column', async () => {
@@ -92,6 +92,6 @@ describe('cadence decision (Slice 8)', () => {
     await run(['decision', 'add', '--rec', rec.id, '--title', 'tied title', '--rationale', 'r'], active.root);
     const r = await run(['decision', 'list'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(new RegExp(`dec-\\d{8}-001\\s+${rec.id}\\s+tied title`));
+    expect(r.stdout).toMatch(new RegExp(`dec-\\d{8}-001\\s+active\\s+${rec.id}\\s+tied title`));
   });
 });
