@@ -244,7 +244,7 @@ The slice succeeds if:
 
 - **`cadence intelligence reconcile`** standalone admin command (operator-initiated full re-derive without adding a new entry).
 - ~~**`RECOMMENDATIONS.md` render extension** to display `assumptionIds[].length` / `decisionIds[].length` counts (or inline list) on each rec.~~ **SHIPPED Slice 12** — inline-ids form chosen; see [rec-md-render-links design](2026-05-20-cadence-rec-md-render-links-design.md).
-- **`cadence decision` status field + transitions** (decisions still have no status field — Slice-10 Follow-On).
+- ~~**`cadence decision` status field + transitions** (decisions still have no status field — Slice-10 Follow-On).~~ **SHIPPED Slice 13** — see [decision status + transitions design](2026-05-20-cadence-decision-status-transitions-design.md).
 - **Rec↔phase linkage** (`IntelligenceMilestone.exportTargets` → promoted SPEC.md → phase; would let `review` packet filter recs by phase membership).
 - **Removal/deletion** commands for either subject.
 - **Filter options on `list`** (`--status`, `--rec`, `--since`, `--limit`).
