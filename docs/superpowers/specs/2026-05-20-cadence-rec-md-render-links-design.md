@@ -197,7 +197,7 @@ The slice succeeds if:
 - **`cadence intelligence reconcile`** standalone admin command (Slice-11 Follow-On).
 - **`rec↔phase` linkage.** Biggest remaining scope.
 - ~~**`cadence recommendation show <id>`** CLI surface — would benefit from inline assumption+decision text, but needs its own design.~~ **SHIPPED Slice 14** — see [recommendation show design](2026-05-20-cadence-recommendation-show-design.md). Inline assumption+decision per-entry shape rendered; status filtering via `--open-assumptions-only` / `--active-decisions-only`.
-- **Status-aware variant of the link bullets** (e.g. `- assumptions: as-1 (open), as-2 (validated)`) — defer until operator feedback proves the bare-id form is too thin.
+- ~~**Status-aware variant of the link bullets** (e.g. `- assumptions: as-1 (open), as-2 (validated)`) — defer until operator feedback proves the bare-id form is too thin.~~ **SHIPPED Slice 15** — see [rec-md-status-bullets design](2026-05-20-cadence-rec-md-status-bullets-design.md). Transitions also propagate into the rec MD now.
 - **Count summarisation** (e.g. `- assumptions: 3 (1 open / 2 validated)`) — defer; see above.
 - **`renderRecommendMd` (cadence recommendation list) link surfacing** — separate report surface; separate slice.
 - **Auto-dispatch / subagent routing** — forever-deferred per parent design.
