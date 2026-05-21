@@ -260,7 +260,7 @@ describe('ContextPacketZ', () => {
       { id: 'as-1', recommendationId: 'rec-1', text: 'x holds', status: 'open' as const },
     ],
     decisions: [
-      { id: 'dec-1', title: 'use approach A', rationale: 'cheapest', recommendationId: 'rec-1' },
+      { id: 'dec-1', title: 'use approach A', rationale: 'cheapest', recommendationId: 'rec-1', status: 'active' as const },
     ],
     files: [{ path: 'src/a.ts', why: 'affected by rec-1 do the thing' }],
     totals: {

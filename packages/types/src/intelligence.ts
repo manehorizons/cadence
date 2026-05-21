@@ -90,6 +90,7 @@ export const IntelligenceDecisionZ = z.object({
   recommendationId: z.string().optional(),
   title: z.string().min(1),
   rationale: z.string().min(1),
+  status: z.enum(['active', 'superseded', 'rescinded']).default('active'),
   decidedAt: z.string().datetime({ offset: true }),
 });
 export type IntelligenceDecision = z.infer<typeof IntelligenceDecisionZ>;
@@ -364,6 +365,7 @@ export const ContextPacketZ = z.object({
       title: z.string().min(1),
       rationale: z.string().min(1),
       recommendationId: z.string().optional(),
+      status: z.literal('active'),
     }),
   ),
   files: z.array(
