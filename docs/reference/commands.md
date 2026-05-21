@@ -805,6 +805,7 @@ Manage CADENCE strategic-intelligence assumptions
 | `list` | List recorded assumptions |
 | `validate <id>` | Mark an open assumption validated |
 | `reject <id>` | Mark an open assumption rejected |
+| `reopen <id>` | Reopen a validated or rejected assumption |
 
 **`add` options**
 
@@ -813,7 +814,7 @@ Manage CADENCE strategic-intelligence assumptions
 | `--rec <id>` | Recommendation id this assumption belongs to (required) |
 | `--text <text>` | Assumption statement (required) |
 
-**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis). Refuses unknown `--rec` with exit 1 + clean stderr. New assumptions land with `status='open'`. Writes `.cadence/intelligence/assumptions.json` + `.cadence/intelligence/ASSUMPTIONS.md` atomically on every add. `list` writes a compact one-line-per-entry summary to stdout (`${id}  ${status}  ${recommendationId}  ${text}`). Status-transition subcommands: `validate <id>` and `reject <id>` flip an open assumption to validated/rejected respectively. Strict allowed-status: both transitions only from `'open'`. Refused with `cannot <action> assumption in status <s>` on wrong source or `assumption <id> not found` on unknown id; no write side effects on refusal. Render groups assumptions into 3 always-emit `## Open` / `## Validated` / `## Rejected` sections under `ASSUMPTIONS.md`.
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis). Refuses unknown `--rec` with exit 1 + clean stderr. New assumptions land with `status='open'`. Writes `.cadence/intelligence/assumptions.json` + `.cadence/intelligence/ASSUMPTIONS.md` atomically on every add. `list` writes a compact one-line-per-entry summary to stdout (`${id}  ${status}  ${recommendationId}  ${text}`). Status-transition subcommands: `validate <id>` flips `open → validated`, `reject <id>` flips `open → rejected`, `reopen <id>` flips `validated | rejected → open` (completing the status matrix; Slice 10). Allowed-status guard is strict per verb: `validate`/`reject` only from `'open'`; `reopen` only from `'validated'` or `'rejected'`. Refused with `cannot <action> assumption in status <s>` on wrong source or `assumption <id> not found` on unknown id; no write side effects on refusal. Render groups assumptions into 3 always-emit `## Open` / `## Validated` / `## Rejected` sections under `ASSUMPTIONS.md` — a reopened entry simply re-renders back under `## Open`.
 
 **Exit codes** — `add`: exits 1 on unknown rec id or any artifact write error; usage error from commander on missing required option. `list`: exits 0 even on empty ledger (prints `No assumptions recorded.`).
 

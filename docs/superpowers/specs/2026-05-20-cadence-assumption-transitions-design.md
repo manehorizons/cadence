@@ -18,7 +18,7 @@
 - **`cadence assumption reject <id>`** symmetric — `'open'` → `'rejected'`.
 - **`renderAssumptionsMd`** now bucket-rendered. Empty buckets emit `_(none)_`. Structure stable regardless of ledger contents (Slice-7 needsAttention always-emit precedent).
 
-It does **not** add `reopen` or any other transition (out-of-MVP; manual JSON edit OR future slice), change `@cadence/types` schemas, modify the `cadence assumption add|list` subcommands shipped Slice 8, touch `cadence decision` (decision has no status field), modify `context.ts` / `render-context.ts` (Slice-5's `status === 'open'` filter does the right thing automatically), add `--note` option or `lastNote` field, add `updatedAt` field, transition the loop, read file contents, or perform a fresh fs/git scan.
+It does **not** add `reopen` or any other transition (out-of-MVP; manual JSON edit OR future slice — **`reopen` SHIPPED Slice 10, see [`2026-05-20-cadence-assumption-reopen-design.md`](2026-05-20-cadence-assumption-reopen-design.md)**), change `@cadence/types` schemas, modify the `cadence assumption add|list` subcommands shipped Slice 8, touch `cadence decision` (decision has no status field), modify `context.ts` / `render-context.ts` (Slice-5's `status === 'open'` filter does the right thing automatically), add `--note` option or `lastNote` field, add `updatedAt` field, transition the loop, read file contents, or perform a fresh fs/git scan.
 
 ## Product Boundary (parent design's #1 risk: do not rebuild / drive the loop)
 
@@ -43,7 +43,7 @@ Strict read-only outside the assumption ledger. Re-affirmed:
 
 ### Out of scope (later / parked)
 
-- A `cadence assumption reopen <id>` transition (rejected/validated → open). Override path via direct JSON edit for now; future slice.
+- ~~A `cadence assumption reopen <id>` transition (rejected/validated → open). Override path via direct JSON edit for now; future slice.~~ **SHIPPED Slice 10** — see [`2026-05-20-cadence-assumption-reopen-design.md`](2026-05-20-cadence-assumption-reopen-design.md). `ALLOWED.reopen=['validated','rejected']`, target `'open'`; refused from `'open'` source.
 - An update/edit command (`cadence assumption update <id> --text "..."`).
 - A `--note <text>` option carrying rationale alongside the flip. Schema would need `lastNote?: string`; out of scope.
 - `updatedAt` timestamp field. Status flip alone is the record; git log of `assumptions.json` captures temporal information if needed.
@@ -123,7 +123,7 @@ const ALLOWED: Record<AssumptionTransitionAction, Assumption['status'][]> = {
 };
 ```
 
-Strict (per brainstorm Q2): both transitions only from `'open'`. Override path = manual JSON edit OR future `reopen` slice. No way to silently flip already-decided state.
+Strict (per brainstorm Q2): both transitions only from `'open'`. Override path = manual JSON edit OR future `reopen` slice (**SHIPPED Slice 10** — `ALLOWED` map extended with `reopen: ['validated', 'rejected']` and `nextStatus` ternary replaced by `NEXT` map). No way to silently flip already-decided state.
 
 ### `applyAssumptionTransition` algorithm
 
@@ -366,7 +366,7 @@ The slice succeeds if:
 ## Decision Log
 
 1. **Single coherent slice: transitions + render buckets bundled.** Closes Slice-8 § Decision Log #9 (bucket render — explicitly deferred to "the transitions slice") AND Slice-8 § Follow-On "Assumption status transitions" in one slice. Bundling makes sense because buckets are dead until transitions exist; shipping them separately would either render empty `## Validated` / `## Rejected` sections forever (premature) OR ship a hidden `'validated'` state nothing can produce.
-2. **Strict allowed-status: both transitions only from `'open'`.** Matches Slice-4a milestone-accept strictness (`['proposed']` only). Override path = manual JSON edit OR future `reopen` slice. No way to silently flip already-decided state. Refused with `cannot <action> assumption in status <s>`. Idempotent same-status refused (mirrors milestone-accept-from-accepted refusing).
+2. **Strict allowed-status: both transitions only from `'open'`.** Matches Slice-4a milestone-accept strictness (`['proposed']` only). Override path = manual JSON edit OR future `reopen` slice (**SHIPPED Slice 10**). No way to silently flip already-decided state. Refused with `cannot <action> assumption in status <s>`. Idempotent same-status refused (mirrors milestone-accept-from-accepted refusing).
 3. **Slice-8 render test gets a deliberate rewrite.** The existing `non-empty: per-entry block in insertion order with bullets` test asserts `## as-...` H2 heading and `- status: open` bullet — both shape-changed by this slice. Updated to assert `### as-...` H3 heading + entry-under-`## Open` section + absence of `- status:` bullet. Acknowledged as test-rewrite-by-design, not a regression. Without this, the slice's done-bar fails.
 4. **No `@cadence/types` schema change.** No `updatedAt`, no `lastNote`. Status flip alone is the record; git log of `assumptions.json` captures temporal information if needed. Matches Slice-1/Slice-8 minimalism.
 5. **`now` parameter on `applyAssumptionTransition` kept in the signature but unused.** Mirrors `applyTransition` (milestone) at `milestone.ts:289` for shape symmetry and future-proofing (if a future slice adds `updatedAt`, callers already pass `now`). No-op today.
@@ -382,7 +382,7 @@ The slice succeeds if:
 
 ## Follow-On (not in this slice)
 
-- **`cadence assumption reopen <id>`** transition (rejected/validated → open). Currently override path = manual JSON edit.
+- ~~**`cadence assumption reopen <id>`** transition (rejected/validated → open). Currently override path = manual JSON edit.~~ **SHIPPED Slice 10** — see [`2026-05-20-cadence-assumption-reopen-design.md`](2026-05-20-cadence-assumption-reopen-design.md).
 - **`cadence decision` status field + transitions.** Decision has no status field today; would be a `@cadence/types` schema additive change.
 - **Auto-backfill `assumptionIds[]`/`decisionIds[]` arrays on Recommendation** (Slice-5/6 forward-ref still open; intake-fed pre-mortem deepening per Slice-6 F-new-3 family).
 - **Update / delete commands** for either subject.
