@@ -1,9 +1,17 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { tempRepo, type Fixture } from '@cadence/testkit';
+import type {
+  AssumptionLedger,
+  IntelligenceDecisionLedger,
+  Recommendation,
+  RecommendationLedger,
+} from '@cadence/types';
 import {
+  addAssumption,
   addRecommendation,
+  deriveRecommendationLinks,
   readRecommendationLedger,
   readMilestoneLedger,
   writeMilestoneLedger,
@@ -156,5 +164,216 @@ describe('intelligence store', () => {
     expect(rendered).toMatch(/Add context packets/);
     expect(rendered).toMatch(/ready: raw-idea/);
     expect(rendered).toMatch(/Requested during Praxis design\./);
+  });
+});
+
+function mkRec(id: string): Recommendation {
+  return {
+    id,
+    title: `t-${id}`,
+    summary: `s-${id}`,
+    source: 'manual',
+    status: 'candidate',
+    readiness: 'raw-idea',
+    priority: 'medium',
+    leverageScore: 5,
+    riskScore: 5,
+    confidence: 0.5,
+    decayState: 'fresh',
+    affectedAreas: [],
+    affectedFiles: [],
+    evidenceIds: [],
+    assumptionIds: [],
+    decisionIds: [],
+    createdAt: '2026-05-20T00:00:00.000Z',
+    updatedAt: '2026-05-20T00:00:00.000Z',
+  };
+}
+
+function mkRecLedger(recs: Recommendation[]): RecommendationLedger {
+  return { schemaVersion: 1, recommendations: recs };
+}
+
+function mkAsLedger(items: AssumptionLedger['assumptions']): AssumptionLedger {
+  return { schemaVersion: 1, assumptions: items };
+}
+
+function mkDecLedger(
+  items: IntelligenceDecisionLedger['decisions'],
+): IntelligenceDecisionLedger {
+  return { schemaVersion: 1, decisions: items };
+}
+
+describe('deriveRecommendationLinks (Slice 11)', () => {
+  it('AC-1: empty inputs → empty recommendations array', () => {
+    const r = deriveRecommendationLinks(mkRecLedger([]), mkAsLedger([]), mkDecLedger([]));
+    expect(r).toEqual({ schemaVersion: 1, recommendations: [] });
+  });
+
+  it('AC-2: single rec + tied assumption populates assumptionIds', () => {
+    const rec = mkRec('rec-1');
+    const out = deriveRecommendationLinks(
+      mkRecLedger([rec]),
+      mkAsLedger([
+        {
+          id: 'as-1',
+          recommendationId: 'rec-1',
+          text: 't',
+          status: 'open',
+          createdAt: '2026-05-20T00:00:00.000Z',
+        },
+      ]),
+      mkDecLedger([]),
+    );
+    expect(out.recommendations[0]).toEqual({ ...rec, assumptionIds: ['as-1'], decisionIds: [] });
+  });
+
+  it('AC-3: multi-rec disambiguation; insertion order preserved per rec', () => {
+    const a = mkRec('rec-a');
+    const b = mkRec('rec-b');
+    const out = deriveRecommendationLinks(
+      mkRecLedger([a, b]),
+      mkAsLedger([
+        { id: 'as-1', recommendationId: 'rec-a', text: 'x', status: 'open', createdAt: '2026-05-20T00:00:00.000Z' },
+        { id: 'as-2', recommendationId: 'rec-b', text: 'y', status: 'open', createdAt: '2026-05-20T01:00:00.000Z' },
+        { id: 'as-3', recommendationId: 'rec-a', text: 'z', status: 'open', createdAt: '2026-05-20T02:00:00.000Z' },
+      ]),
+      mkDecLedger([]),
+    );
+    expect(out.recommendations[0]!.assumptionIds).toEqual(['as-1', 'as-3']);
+    expect(out.recommendations[1]!.assumptionIds).toEqual(['as-2']);
+  });
+
+  it('AC-4: untied decision is skipped (no rec gets it in decisionIds)', () => {
+    const a = mkRec('rec-a');
+    const b = mkRec('rec-b');
+    const out = deriveRecommendationLinks(
+      mkRecLedger([a, b]),
+      mkAsLedger([]),
+      mkDecLedger([
+        { id: 'dec-1', title: 'tied', rationale: 'r', recommendationId: 'rec-a', decidedAt: '2026-05-20T00:00:00.000Z' },
+        { id: 'dec-2', title: 'untied', rationale: 'r', decidedAt: '2026-05-20T01:00:00.000Z' },
+      ]),
+    );
+    expect(out.recommendations[0]!.decisionIds).toEqual(['dec-1']);
+    expect(out.recommendations[1]!.decisionIds).toEqual([]);
+  });
+
+  it('AC-5: idempotent — second derive equals first', () => {
+    const rec = mkRec('rec-1');
+    const as = mkAsLedger([
+      { id: 'as-1', recommendationId: 'rec-1', text: 't', status: 'open', createdAt: '2026-05-20T00:00:00.000Z' },
+    ]);
+    const dec = mkDecLedger([
+      { id: 'dec-1', title: 't', rationale: 'r', recommendationId: 'rec-1', decidedAt: '2026-05-20T00:00:00.000Z' },
+    ]);
+    const once = deriveRecommendationLinks(mkRecLedger([rec]), as, dec);
+    const twice = deriveRecommendationLinks(once, as, dec);
+    expect(twice).toEqual(once);
+  });
+
+  it('preserves non-target fields verbatim on every rec', () => {
+    const rec: Recommendation = {
+      ...mkRec('rec-1'),
+      suggestedMilestoneId: 'mil-1',
+      suggestedBackendAction: 'cadence milestone propose',
+      evidenceIds: ['ev-x'],
+    };
+    const out = deriveRecommendationLinks(mkRecLedger([rec]), mkAsLedger([]), mkDecLedger([]));
+    expect(out.recommendations[0]).toEqual({ ...rec, assumptionIds: [], decisionIds: [] });
+  });
+});
+
+describe('addAssumption backfill (Slice 11 / AC-6)', () => {
+  it('updates rec.assumptionIds after addAssumption', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice11' });
+    const rec = await addRecommendation(active.root, {
+      title: 'host', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a = await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
+    const after = await readRecommendationLedger(active.root);
+    const target = after.recommendations.find((r) => r.id === rec.id)!;
+    expect(target.assumptionIds).toEqual([a.id]);
+    // Non-target fields preserved
+    expect(target.title).toBe('host');
+    expect(target.evidenceIds).toEqual([]);
+  });
+
+  it('multi-assumption add accumulates ids in insertion order', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice11' });
+    const rec = await addRecommendation(active.root, {
+      title: 'host', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a1 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
+    const a2 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A2' });
+    const after = await readRecommendationLedger(active.root);
+    expect(after.recommendations[0]!.assumptionIds).toEqual([a1.id, a2.id]);
+  });
+});
+
+describe('rec link backfill retroactive self-heal (Slice 11 / AC-9)', () => {
+  it('pre-existing assumption picked up on next addAssumption against ANY rec', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice11' });
+    const r1 = await addRecommendation(active.root, {
+      title: 'r1', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const r2 = await addRecommendation(active.root, {
+      title: 'r2', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    // Manually write an orphan assumption tied to r1 (simulates pre-Slice-11 / direct JSON edit)
+    const asPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    await mkdir(dirname(asPath), { recursive: true });
+    await writeFile(
+      asPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        assumptions: [
+          {
+            id: 'as-19990101-001',
+            recommendationId: r1.id,
+            text: 'pre-Slice-11 orphan',
+            status: 'open',
+            createdAt: '1999-01-01T00:00:00.000Z',
+          },
+        ],
+      }),
+    );
+    const before = await readRecommendationLedger(active.root);
+    expect(before.recommendations.find((r) => r.id === r1.id)!.assumptionIds).toEqual([]);
+    // Trigger any addAssumption — derives from full ledger
+    const fresh = await addAssumption(active.root, {
+      recommendationId: r2.id,
+      text: 'fresh',
+    });
+    const after = await readRecommendationLedger(active.root);
+    expect(after.recommendations.find((r) => r.id === r1.id)!.assumptionIds).toEqual([
+      'as-19990101-001',
+    ]);
+    expect(after.recommendations.find((r) => r.id === r2.id)!.assumptionIds).toEqual([
+      fresh.id,
+    ]);
+  });
+});
+
+describe('rec link backfill FK refusal preserved (Slice 11 / AC-11)', () => {
+  it('addAssumption with unknown rec — no write on any ledger', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice11' });
+    await addRecommendation(active.root, {
+      title: 'r1', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const asPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const before = await readFile(recPath, 'utf8');
+    await expect(
+      addAssumption(active.root, { recommendationId: 'rec-bogus', text: 'x' }),
+    ).rejects.toThrow(/unknown recommendation/);
+    expect(await readFile(recPath, 'utf8')).toBe(before);
+    // assumptions.json never created
+    await expect(readFile(asPath, 'utf8')).rejects.toThrow();
   });
 });
