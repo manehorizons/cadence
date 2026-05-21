@@ -1,9 +1,29 @@
 import type { Command } from 'commander';
+import type { Assumption } from '@cadence/types';
 import {
   addAssumption,
   readAssumptionLedger,
   runAssumptionTransition,
+  type AssumptionTransitionAction,
 } from '../../intelligence/store.js';
+
+const ASSUMPTION_TRANSITION_DESCRIPTIONS: Record<
+  AssumptionTransitionAction,
+  string
+> = {
+  validate: 'Mark an open assumption validated',
+  reject: 'Mark an open assumption rejected',
+  reopen: 'Reopen a validated or rejected assumption',
+};
+
+const ASSUMPTION_TRANSITION_PAST: Record<
+  AssumptionTransitionAction,
+  Assumption['status']
+> = {
+  validate: 'validated',
+  reject: 'rejected',
+  reopen: 'open',
+};
 
 export function registerAssumptionCommand(program: Command): void {
   const cmd = program
@@ -52,14 +72,10 @@ export function registerAssumptionCommand(program: Command): void {
       }
     });
 
-  for (const action of ['validate', 'reject'] as const) {
+  for (const action of ['validate', 'reject', 'reopen'] as const) {
     cmd
       .command(`${action} <id>`)
-      .description(
-        action === 'validate'
-          ? 'Mark an open assumption validated'
-          : 'Mark an open assumption rejected',
-      )
+      .description(ASSUMPTION_TRANSITION_DESCRIPTIONS[action])
       .action(async (id: string) => {
         try {
           const res = await runAssumptionTransition(process.cwd(), id, action);
@@ -69,7 +85,7 @@ export function registerAssumptionCommand(program: Command): void {
             return;
           }
           process.stdout.write(
-            `assumption ${id} → ${action === 'validate' ? 'validated' : 'rejected'}\n`,
+            `assumption ${id} → ${ASSUMPTION_TRANSITION_PAST[action]}\n`,
           );
         } catch (err) {
           process.stderr.write(
