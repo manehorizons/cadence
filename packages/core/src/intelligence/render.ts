@@ -1,8 +1,15 @@
-import type { EvidenceLedger, RecommendationLedger } from '@cadence/types';
+import type {
+  AssumptionLedger,
+  EvidenceLedger,
+  IntelligenceDecisionLedger,
+  RecommendationLedger,
+} from '@cadence/types';
 
 export function renderRecommendationsMd(
   ledger: RecommendationLedger,
   evidenceLedger: EvidenceLedger,
+  asLedger?: AssumptionLedger,
+  decLedger?: IntelligenceDecisionLedger,
 ): string {
   const lines: string[] = [
     '# CADENCE Recommendations',
@@ -15,6 +22,13 @@ export function renderRecommendationsMd(
     lines.push('No recommendations recorded.', '');
     return lines.join('\n');
   }
+
+  const asStatusById = asLedger
+    ? new Map(asLedger.assumptions.map((a) => [a.id, a.status] as const))
+    : undefined;
+  const decStatusById = decLedger
+    ? new Map(decLedger.decisions.map((d) => [d.id, d.status] as const))
+    : undefined;
 
   for (const rec of ledger.recommendations) {
     const evidence = evidenceLedger.evidence.filter((ev) => rec.evidenceIds.includes(ev.id));
@@ -30,8 +44,20 @@ export function renderRecommendationsMd(
     lines.push(`- decay: ${rec.decayState}`);
     if (rec.affectedAreas.length > 0) lines.push(`- areas: ${rec.affectedAreas.join(', ')}`);
     if (rec.affectedFiles.length > 0) lines.push(`- files: ${rec.affectedFiles.join(', ')}`);
-    if (rec.assumptionIds.length > 0) lines.push(`- assumptions: ${rec.assumptionIds.join(', ')}`);
-    if (rec.decisionIds.length > 0) lines.push(`- decisions: ${rec.decisionIds.join(', ')}`);
+    if (rec.assumptionIds.length > 0) {
+      const items = rec.assumptionIds.map((id) => {
+        const status = asStatusById?.get(id);
+        return status !== undefined ? `${id} (${status})` : id;
+      });
+      lines.push(`- assumptions: ${items.join(', ')}`);
+    }
+    if (rec.decisionIds.length > 0) {
+      const items = rec.decisionIds.map((id) => {
+        const status = decStatusById?.get(id);
+        return status !== undefined ? `${id} (${status})` : id;
+      });
+      lines.push(`- decisions: ${items.join(', ')}`);
+    }
     for (const ev of evidence) lines.push(`- evidence: ${ev.summary}`);
     if (rec.suggestedBackendAction) lines.push(`- next: ${rec.suggestedBackendAction}`);
     lines.push('');

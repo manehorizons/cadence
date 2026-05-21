@@ -122,7 +122,13 @@ async function writeIntelligenceLedgers(
   EvidenceLedgerZ.parse(evidenceLedger);
   await atomicWriteJSON(recommendationsPath(root), ledger);
   await atomicWriteJSON(evidencePath(root), evidenceLedger);
-  await atomicWriteText(recommendationsMdPath(root), renderRecommendationsMd(ledger, evidenceLedger));
+  // Read sibling ledgers so the rec MD renders status-annotated link bullets (Slice 15).
+  const asLedger = await readAssumptionLedger(root);
+  const decLedger = await readIntelligenceDecisionLedger(root);
+  await atomicWriteText(
+    recommendationsMdPath(root),
+    renderRecommendationsMd(ledger, evidenceLedger, asLedger, decLedger),
+  );
 }
 
 function slugDate(now: Date): string {
@@ -318,7 +324,21 @@ export async function runAssumptionTransition(
   const res = applyAssumptionTransition(ledger, id, action, new Date());
   if (!res.ok) return res;
   await writeAssumptionLedger(root, res.ledger);
+  // Slice 15: propagate status change into RECOMMENDATIONS.md annotated bullets.
+  await rerenderRecommendationsMdIfPresent(root);
   return res;
+}
+
+async function rerenderRecommendationsMdIfPresent(root: string): Promise<void> {
+  if (!existsSync(recommendationsPath(root))) return;
+  const recLedger = await readRecommendationLedger(root);
+  const evLedger = await readEvidenceLedger(root);
+  const asLedger = await readAssumptionLedger(root);
+  const decLedger = await readIntelligenceDecisionLedger(root);
+  await atomicWriteText(
+    recommendationsMdPath(root),
+    renderRecommendationsMd(recLedger, evLedger, asLedger, decLedger),
+  );
 }
 
 export function deriveRecommendationLinks(
@@ -448,6 +468,8 @@ export async function runDecisionTransition(
   const res = applyDecisionTransition(ledger, id, action, new Date());
   if (!res.ok) return res;
   await writeIntelligenceDecisionLedger(root, res.ledger);
+  // Slice 15: propagate status change into RECOMMENDATIONS.md annotated bullets.
+  await rerenderRecommendationsMdIfPresent(root);
   return res;
 }
 
