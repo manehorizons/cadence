@@ -360,8 +360,9 @@ export async function addIntelligenceDecision(
   root: string,
   input: AddIntelligenceDecisionInput,
 ): Promise<IntelligenceDecision> {
+  let recLedger: RecommendationLedger | null = null;
   if (input.recommendationId !== undefined) {
-    const recLedger = await readRecommendationLedger(root);
+    recLedger = await readRecommendationLedger(root);
     if (!recLedger.recommendations.some((r) => r.id === input.recommendationId)) {
       throw new Error(`unknown recommendation "${input.recommendationId}"`);
     }
@@ -377,6 +378,12 @@ export async function addIntelligenceDecision(
   if (input.recommendationId !== undefined) out.recommendationId = input.recommendationId;
   decLedger.decisions.push(out);
   await writeIntelligenceDecisionLedger(root, decLedger);
+  if (input.recommendationId !== undefined && recLedger !== null) {
+    const asLedger = await readAssumptionLedger(root);
+    const evLedger = await readEvidenceLedger(root);
+    const derivedRec = deriveRecommendationLinks(recLedger, asLedger, decLedger);
+    await writeIntelligenceLedgers(root, derivedRec, evLedger);
+  }
   return out;
 }
 
