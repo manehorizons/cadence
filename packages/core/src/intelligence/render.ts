@@ -30,6 +30,8 @@ export function renderRecommendationsMd(
     lines.push(`- decay: ${rec.decayState}`);
     if (rec.affectedAreas.length > 0) lines.push(`- areas: ${rec.affectedAreas.join(', ')}`);
     if (rec.affectedFiles.length > 0) lines.push(`- files: ${rec.affectedFiles.join(', ')}`);
+    if (rec.assumptionIds.length > 0) lines.push(`- assumptions: ${rec.assumptionIds.join(', ')}`);
+    if (rec.decisionIds.length > 0) lines.push(`- decisions: ${rec.decisionIds.join(', ')}`);
     for (const ev of evidence) lines.push(`- evidence: ${ev.summary}`);
     if (rec.suggestedBackendAction) lines.push(`- next: ${rec.suggestedBackendAction}`);
     lines.push('');
