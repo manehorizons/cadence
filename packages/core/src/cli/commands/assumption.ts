@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import {
   addAssumption,
   readAssumptionLedger,
+  runAssumptionTransition,
 } from '../../intelligence/store.js';
 
 export function registerAssumptionCommand(program: Command): void {
@@ -50,4 +51,32 @@ export function registerAssumptionCommand(program: Command): void {
         process.exitCode = 1;
       }
     });
+
+  for (const action of ['validate', 'reject'] as const) {
+    cmd
+      .command(`${action} <id>`)
+      .description(
+        action === 'validate'
+          ? 'Mark an open assumption validated'
+          : 'Mark an open assumption rejected',
+      )
+      .action(async (id: string) => {
+        try {
+          const res = await runAssumptionTransition(process.cwd(), id, action);
+          if (!res.ok) {
+            process.stderr.write(`assumption ${action} refused: ${res.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          process.stdout.write(
+            `assumption ${id} → ${action === 'validate' ? 'validated' : 'rejected'}\n`,
+          );
+        } catch (err) {
+          process.stderr.write(
+            `assumption ${action} failed: ${err instanceof Error ? err.message : String(err)}\n`,
+          );
+          process.exitCode = 1;
+        }
+      });
+  }
 }
