@@ -481,7 +481,7 @@ The slice succeeds if:
 - **Filter options on `list`** (`--status active|superseded|rescinded`).
 - **`cadence intelligence reconcile`** standalone admin command (Slice-11 Follow-On still open).
 - **Rec↔phase linkage** — still open from Slice 7+ designs.
-- **`cadence recommendation show <id>`** CLI deep-dive — would benefit from active-only filtering of linked decisions; needs separate design.
+- ~~**`cadence recommendation show <id>`** CLI deep-dive — would benefit from active-only filtering of linked decisions; needs separate design.~~ **SHIPPED Slice 14** — see [recommendation show design](2026-05-20-cadence-recommendation-show-design.md). `--active-decisions-only` flag delivered.
 - **Status-aware variant of Slice-12 `- decisions:` MD bullet** (e.g. `- decisions: dec-1 (active), dec-2 (superseded)`).
 - **`update`/`delete`** commands for either subject.
 - **Auto-dispatch / subagent routing** — forever-deferred per parent design.
