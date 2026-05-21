@@ -46,7 +46,8 @@ describe('addAssumption (Slice 8)', () => {
     expect(parsed.assumptions[0]!.id).toBe(a.id);
     const md = await readFile(join(active.root, '.cadence/intelligence/ASSUMPTIONS.md'), 'utf8');
     expect(md).toMatch(/^# CADENCE Assumptions/m);
-    expect(md).toMatch(new RegExp(`## ${a.id} — db reachable`));
+    expect(md).toMatch(new RegExp(`### ${a.id} — db reachable`));
+    expect(md).toMatch(/^## Open$/m);
   });
 
   it('counter increments monotone per-day per-ledger (001 → 002 → 003)', async () => {
