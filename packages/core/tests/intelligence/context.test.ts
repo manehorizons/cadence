@@ -16,6 +16,7 @@ import {
   addIntelligenceDecision,
   addRecommendation,
   runAssumptionTransition,
+  runDecisionTransition,
 } from '../../src/intelligence/store.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
@@ -852,5 +853,61 @@ describe('Slice-5/7 packets densify on intake (Slice 8 AC-11)', () => {
     );
     expect(after.assumptions).toHaveLength(2);
     expect(after.assumptions.map((a) => a.text).sort()).toEqual(['A1', 'A2']);
+  });
+
+  it('Slice 13 AC-11: supersede/reactivate cycle removes/re-admits decision in handoff packet', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice13' });
+    const rec = await addRecommendation(active.root, {
+      title: 'seed', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const d1 = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D1', rationale: 'r',
+    });
+    await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D2', rationale: 'r',
+    });
+    // Pre: handoff packet has 2 decisions
+    const before = await runContext(
+      active.root, 'handoff', new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(before.decisions).toHaveLength(2);
+    // Supersede d1 → drops to 1
+    const sup = await runDecisionTransition(active.root, d1.id, 'supersede');
+    expect(sup.ok).toBe(true);
+    const mid = await runContext(
+      active.root, 'handoff', new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(mid.decisions).toHaveLength(1);
+    expect(mid.decisions[0]!.title).toBe('D2');
+    // Reactivate d1 → rises back to 2 (Slice-13 status==='active' filter re-admits it)
+    const reAct = await runDecisionTransition(active.root, d1.id, 'reactivate');
+    expect(reAct.ok).toBe(true);
+    const after = await runContext(
+      active.root, 'handoff', new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(after.decisions).toHaveLength(2);
+    expect(after.decisions.map((d) => d.title).sort()).toEqual(['D1', 'D2']);
+  });
+
+  it('Slice 13 AC-11: rescind also removes decision from packets; symmetric reactivate', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice13' });
+    const rec = await addRecommendation(active.root, {
+      title: 'seed', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const d = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'X', rationale: 'r',
+    });
+    await runDecisionTransition(active.root, d.id, 'rescind');
+    const mid = await runContext(
+      active.root, 'handoff', new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(mid.decisions).toHaveLength(0);
+    await runDecisionTransition(active.root, d.id, 'reactivate');
+    const after = await runContext(
+      active.root, 'handoff', new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(after.decisions).toHaveLength(1);
   });
 });
