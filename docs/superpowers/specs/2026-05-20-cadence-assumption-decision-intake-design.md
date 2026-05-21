@@ -18,7 +18,7 @@
 - **`cadence decision add [--rec <id>] --title "..." --rationale "..."`** allocates `dec-<YYYYMMDD>-<NNN>`, persists `decisions.json` + `DECISIONS.md`. `--rec` is optional (decisions can be untied per `IntelligenceDecisionZ` schema); when present, FK-checked same as assumption.
 - **`cadence assumption list` / `cadence decision list`** read the respective ledger and write a compact one-line-per-entry summary to stdout (mirrors Slice 1's `recommendation list` shape verbatim — `${rec.id}  ${rec.priority}  ${rec.readiness}  ${rec.title}\n`). NOT a full Markdown dump. The `.md` artifact is regenerated only by `add`.
 
-Status transitions (`validate`/`reject` for assumptions) deferred to a follow-up slice, mirroring Slice 1's deferral of `recommendation accept/defer/reject` until Slice 3.
+Status transitions (`validate`/`reject` for assumptions) ~~deferred to a follow-up slice~~ — shipped in Slice 9 ([`2026-05-20-cadence-assumption-transitions-design.md`](2026-05-20-cadence-assumption-transitions-design.md)), mirroring Slice 1's deferral of `recommendation accept/defer/reject` until Slice 3.
 
 It does **not** add status-transition commands, modify any `@cadence/types` schema (schemas are pre-existing from Slice-1 era), modify `context.ts` / `render-context.ts` (Slice 5 readers already wired — packets densify automatically), build any UI surface beyond the CLI, transition the loop, read file *contents* (only ledger JSON), or perform a fresh fs/git scan.
 
