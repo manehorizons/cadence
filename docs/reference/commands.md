@@ -72,6 +72,7 @@ recommend
 milestone
 context
 assumption
+decision
 <!-- cadence:commands:end -->
 
 ---

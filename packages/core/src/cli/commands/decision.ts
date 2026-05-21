@@ -1,0 +1,57 @@
+import type { Command } from 'commander';
+import {
+  addIntelligenceDecision,
+  readIntelligenceDecisionLedger,
+  type AddIntelligenceDecisionInput,
+} from '../../intelligence/store.js';
+
+export function registerDecisionCommand(program: Command): void {
+  const cmd = program
+    .command('decision')
+    .description('Manage CADENCE strategic-intelligence decisions');
+
+  cmd
+    .command('add')
+    .description('Record an architectural decision (optionally tied to a recommendation)')
+    .option('--rec <id>', 'Recommendation id this decision belongs to (optional)')
+    .requiredOption('--title <title>', 'Short decision title')
+    .requiredOption('--rationale <text>', 'Decision rationale')
+    .action(async (opts: { rec?: string; title: string; rationale: string }) => {
+      try {
+        const input: AddIntelligenceDecisionInput = {
+          title: opts.title,
+          rationale: opts.rationale,
+        };
+        if (opts.rec) input.recommendationId = opts.rec;
+        const d = await addIntelligenceDecision(process.cwd(), input);
+        process.stdout.write(`Added ${d.id}: ${d.title}\n`);
+        process.stdout.write(`Next: cadence decision list\n`);
+      } catch (err) {
+        process.stderr.write(
+          `decision add failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
+    .command('list')
+    .description('List recorded decisions')
+    .action(async () => {
+      try {
+        const ledger = await readIntelligenceDecisionLedger(process.cwd());
+        if (ledger.decisions.length === 0) {
+          process.stdout.write('No decisions recorded.\n');
+          return;
+        }
+        for (const d of ledger.decisions) {
+          process.stdout.write(`${d.id}  ${d.recommendationId ?? '—'}  ${d.title}\n`);
+        }
+      } catch (err) {
+        process.stderr.write(
+          `decision list failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+}
