@@ -814,4 +814,41 @@ describe('Slice-5/7 packets densify on intake (Slice 8 AC-11)', () => {
     expect(after.assumptions).toHaveLength(1);
     expect(after.assumptions[0]!.text).toBe('A2');
   });
+
+  it('Slice 10 AC-6: reopened assumption re-enters handoff packet assumptions[]', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice10' });
+    const rec = await addRecommendation(active.root, {
+      title: 'seed', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a1 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A2' });
+    // Pre: 2 open assumptions
+    const before = await runContext(
+      active.root,
+      'handoff',
+      new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(before.assumptions).toHaveLength(2);
+    // Validate a1 → drops to 1
+    const v = await runAssumptionTransition(active.root, a1.id, 'validate');
+    expect(v.ok).toBe(true);
+    const mid = await runContext(
+      active.root,
+      'handoff',
+      new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(mid.assumptions).toHaveLength(1);
+    expect(mid.assumptions[0]!.text).toBe('A2');
+    // Reopen a1 → rises back to 2 (Slice-5 status==='open' filter re-admits it)
+    const r = await runAssumptionTransition(active.root, a1.id, 'reopen');
+    expect(r.ok).toBe(true);
+    const after = await runContext(
+      active.root,
+      'handoff',
+      new Date('2026-05-20T00:00:00.000Z'),
+    );
+    expect(after.assumptions).toHaveLength(2);
+    expect(after.assumptions.map((a) => a.text).sort()).toEqual(['A1', 'A2']);
+  });
 });
