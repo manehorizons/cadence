@@ -71,6 +71,7 @@ inspect
 recommend
 milestone
 context
+assumption
 <!-- cadence:commands:end -->
 
 ---
