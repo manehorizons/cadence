@@ -206,7 +206,7 @@ Three commits.
 ## Follow-On
 
 - ~~**`cadence intelligence stats`** — counts + status breakdown per ledger.~~ **SHIPPED Slice 18** — see [intelligence stats design](2026-05-20-cadence-intelligence-stats-design.md). Aggregate + `--by-rec` modes.
-- **`cadence intelligence audit`** — surface broken links (rec references missing assumption/decision id).
+- ~~**`cadence intelligence audit`** — surface broken links (rec references missing assumption/decision id).~~ **SHIPPED Slice 19** — see [intelligence audit design](2026-05-20-cadence-intelligence-audit-design.md). Six finding kinds + remediation block + `--quiet`.
 - **`--dry-run`** on reconcile.
 - **`--json`** output.
 - **`supersededBy <id>`** field on decision (separate slice).
