@@ -73,6 +73,7 @@ milestone
 context
 assumption
 decision
+intelligence
 <!-- cadence:commands:end -->
 
 ---
@@ -846,6 +847,26 @@ Manage CADENCE strategic-intelligence decisions
 **Behavior** — `--rec` is optional; FK-checked only when provided. Untied decisions are valid (architectural decisions that don't tie to a specific recommendation). The persisted entity OMITS the `recommendationId` field entirely on untied decisions (exact-optional pattern). Writes `.cadence/intelligence/decisions.json` + `.cadence/intelligence/DECISIONS.md` on every add. `list` writes one line per entry (`${id}  ${recommendationId ?? '—'}  ${title}`); untied decisions show the em-dash placeholder in the rec column.
 
 **Exit codes** — same shape as `assumption`.
+
+---
+
+### intelligence
+
+```
+Usage: cadence intelligence [options] [command]
+
+CADENCE strategic-intelligence admin utilities
+```
+
+**Subcommands**
+
+| Subcommand | Description |
+|---|---|
+| `reconcile` | Re-derive recommendation link arrays and re-render all intelligence MD files |
+
+**Behavior** — operator-initiated force re-derive across the strategic-intelligence layer. Reads `.cadence/intelligence/{recommendations,evidence,assumptions,decisions}.json`, recomputes `Recommendation.assumptionIds[]` / `decisionIds[]` via the same `deriveRecommendationLinks` helper Slice-11 wires into intake, and atomically writes `recommendations.json` (with re-derived links) plus all three MD files (`RECOMMENDATIONS.md` with Slice-15 status-annotated bullets; `ASSUMPTIONS.md` + `DECISIONS.md` with Slice-9/13 bucket-partitioned sections). Useful when the operator hand-edits a subject ledger and wants the rec link arrays + MD renders refreshed without doing a throwaway intake. `assumptions.json` + `decisions.json` are NOT rewritten (operator source of truth). Idempotent: a second run is byte-equal. On an empty workspace (no intelligence ledgers present) → exit 0 with `No intelligence ledgers present.\n`.
+
+**Exit codes** — `reconcile`: exits 0 even on empty ledger set; exits 1 on any disk/permission/parse error.
 
 ---
 
