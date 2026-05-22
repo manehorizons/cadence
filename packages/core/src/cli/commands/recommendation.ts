@@ -155,8 +155,9 @@ export function registerRecommendationCommand(program: Command): void {
     .description('List recorded recommendations')
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
+    .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -179,6 +180,14 @@ export function registerRecommendationCommand(program: Command): void {
           }
           entries = entries.filter((r) => r.status === parsed.data);
         }
+        if (opts.filterText !== undefined) {
+          const needle = opts.filterText.toLowerCase();
+          entries = entries.filter(
+            (r) =>
+              r.title.toLowerCase().includes(needle) ||
+              r.summary.toLowerCase().includes(needle),
+          );
+        }
         if (opts.limit !== undefined) {
           const n = Number(opts.limit);
           if (!Number.isInteger(n) || n < 1) {
@@ -197,6 +206,7 @@ export function registerRecommendationCommand(program: Command): void {
         if (entries.length === 0) {
           const filterDims: string[] = [];
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
+          if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
           const msg = filterDims.length > 0
             ? `No recommendations matching ${filterDims.join(', ')} recorded.\n`
             : 'No recommendations recorded.\n';

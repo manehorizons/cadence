@@ -187,4 +187,31 @@ describe('cadence recommendation', () => {
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toHaveLength(1);
   });
+
+  it('Slice 25 AC-1+AC-4: --filter-text matches title (case-insensitive)', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'Postgres migration', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'Redis cache', '--summary', 's'], active.root);
+    const r = await run(['recommendation', 'list', '--filter-text', 'POSTGRES', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('Postgres migration');
+  });
+
+  it('Slice 25 AC-1: --filter-text matches summary', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 'mentions postgres in body'], active.root);
+    const r = await run(['recommendation', 'list', '--filter-text', 'postgres', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toHaveLength(1);
+  });
+
+  it('Slice 25 AC-6: empty after text filter → message includes text dim', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const r = await run(['recommendation', 'list', '--filter-text', 'nonexistent'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe('No recommendations matching text="nonexistent" recorded.\n');
+  });
 });

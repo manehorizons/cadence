@@ -100,8 +100,9 @@ export function registerAssumptionCommand(program: Command): void {
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
+    .option('--filter-text <substr>', 'Case-insensitive substring search on text')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -127,6 +128,10 @@ export function registerAssumptionCommand(program: Command): void {
         if (opts.filterRec !== undefined) {
           entries = entries.filter((a) => a.recommendationId === opts.filterRec);
         }
+        if (opts.filterText !== undefined) {
+          const needle = opts.filterText.toLowerCase();
+          entries = entries.filter((a) => a.text.toLowerCase().includes(needle));
+        }
         if (opts.limit !== undefined) {
           const n = Number(opts.limit);
           if (!Number.isInteger(n) || n < 1) {
@@ -146,6 +151,7 @@ export function registerAssumptionCommand(program: Command): void {
           const filterDims: string[] = [];
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
           if (opts.filterRec) filterDims.push(`rec=${opts.filterRec}`);
+          if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
           const msg = filterDims.length > 0
             ? `No assumptions matching ${filterDims.join(', ')} recorded.\n`
             : 'No assumptions recorded.\n';
