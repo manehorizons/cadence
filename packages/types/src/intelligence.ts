@@ -92,6 +92,7 @@ export const IntelligenceDecisionZ = z.object({
   rationale: z.string().min(1),
   status: z.enum(['active', 'superseded', 'rescinded']).default('active'),
   decidedAt: z.string().datetime({ offset: true }),
+  supersededBy: z.string().optional(),
 });
 export type IntelligenceDecision = z.infer<typeof IntelligenceDecisionZ>;
 

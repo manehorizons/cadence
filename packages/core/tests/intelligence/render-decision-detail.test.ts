@@ -84,4 +84,26 @@ describe('renderDecisionDetail (Slice 16)', () => {
     const md = renderDecisionDetail(mkDec({ status: 'superseded' }), mkRec());
     expect(md).toMatch(/- status: superseded/);
   });
+
+  it('Slice 28: supersededBy bullet appears when set and ledger contains target', () => {
+    const dec = mkDec({ status: 'superseded', supersededBy: 'dec-2' });
+    const ledger = {
+      schemaVersion: 1 as const,
+      decisions: [dec, mkDec({ id: 'dec-2', title: 'D2' })],
+    };
+    const md = renderDecisionDetail(dec, mkRec(), ledger);
+    expect(md).toMatch(/- superseded-by: dec-2$/m);
+  });
+
+  it('Slice 28: supersededBy bullet absent when field unset', () => {
+    const md = renderDecisionDetail(mkDec(), mkRec());
+    expect(md).not.toMatch(/- superseded-by:/);
+  });
+
+  it('Slice 28 AC-11: supersededBy unknown id → (not found) fallback', () => {
+    const dec = mkDec({ status: 'superseded', supersededBy: 'dec-bogus' });
+    const ledger = { schemaVersion: 1 as const, decisions: [dec] };
+    const md = renderDecisionDetail(dec, mkRec(), ledger);
+    expect(md).toMatch(/- superseded-by: dec-bogus \(not found\)/);
+  });
 });

@@ -432,10 +432,30 @@ const DECISION_TRANSITION_NEXT: Record<
   reactivate: 'active',
 };
 
+function walkSupersededByChain(
+  ledger: IntelligenceDecisionLedger,
+  startId: string,
+  forbid: string,
+): { ok: true; chain: string[] } | { ok: false; chain: string[] } {
+  const chain: string[] = [];
+  const seen = new Set<string>();
+  let cursor: string | undefined = startId;
+  while (cursor) {
+    if (cursor === forbid) return { ok: false, chain };
+    if (seen.has(cursor)) return { ok: true, chain };
+    seen.add(cursor);
+    chain.push(cursor);
+    const node = ledger.decisions.find((d) => d.id === cursor);
+    cursor = node?.supersededBy;
+  }
+  return { ok: true, chain };
+}
+
 export function applyDecisionTransition(
   ledger: IntelligenceDecisionLedger,
   id: string,
   action: DecisionTransitionAction,
+  by?: string,
   _now?: Date,
 ): DecisionTransitionResult {
   const target = ledger.decisions.find((d) => d.id === id);
@@ -448,13 +468,43 @@ export function applyDecisionTransition(
     };
   }
 
+  if (action === 'supersede' && by !== undefined) {
+    if (by === id) {
+      return {
+        ok: false,
+        error: 'cannot supersede: decision cannot supersede itself',
+      };
+    }
+    const replacement = ledger.decisions.find((d) => d.id === by);
+    if (!replacement) {
+      return {
+        ok: false,
+        error: `cannot supersede: decision ${by} not found`,
+      };
+    }
+    const walk = walkSupersededByChain(ledger, by, id);
+    if (!walk.ok) {
+      return {
+        ok: false,
+        error: `cannot supersede: would create cycle (${[...walk.chain, id].join(' → ')})`,
+      };
+    }
+  }
+
   const nextStatus: IntelligenceDecision['status'] =
     DECISION_TRANSITION_NEXT[action];
   const ledgerOut: IntelligenceDecisionLedger = {
     schemaVersion: 1,
-    decisions: ledger.decisions.map((d) =>
-      d.id === id ? { ...d, status: nextStatus } : d,
-    ),
+    decisions: ledger.decisions.map((d) => {
+      if (d.id !== id) return d;
+      const updated: IntelligenceDecision = { ...d, status: nextStatus };
+      if (action === 'supersede') {
+        if (by !== undefined) updated.supersededBy = by;
+      } else if (action === 'reactivate') {
+        delete updated.supersededBy;
+      }
+      return updated;
+    }),
   };
   return { ok: true, ledger: ledgerOut };
 }
@@ -463,9 +513,10 @@ export async function runDecisionTransition(
   root: string,
   id: string,
   action: DecisionTransitionAction,
+  by?: string,
 ): Promise<DecisionTransitionResult> {
   const ledger = await readIntelligenceDecisionLedger(root);
-  const res = applyDecisionTransition(ledger, id, action, new Date());
+  const res = applyDecisionTransition(ledger, id, action, by, new Date());
   if (!res.ok) return res;
   await writeIntelligenceDecisionLedger(root, res.ledger);
   // Slice 15: propagate status change into RECOMMENDATIONS.md annotated bullets.
