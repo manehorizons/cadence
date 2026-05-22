@@ -476,6 +476,43 @@ export async function runDecisionTransition(
 const MILESTONES_JSON = 'milestones.json';
 const MILESTONES_MD = 'MILESTONES.md';
 
+export type IntelligenceReconcileResult = {
+  present: boolean;
+  recommendations: number;
+  assumptions: number;
+  decisions: number;
+};
+
+export async function runIntelligenceReconcile(
+  root: string,
+): Promise<IntelligenceReconcileResult> {
+  const recExists = existsSync(recommendationsPath(root));
+  const evExists = existsSync(evidencePath(root));
+  const asExists = existsSync(assumptionsPath(root));
+  const decExists = existsSync(decisionsPath(root));
+  if (!recExists && !evExists && !asExists && !decExists) {
+    return { present: false, recommendations: 0, assumptions: 0, decisions: 0 };
+  }
+  const recLedger = await readRecommendationLedger(root);
+  const evLedger = await readEvidenceLedger(root);
+  const asLedger = await readAssumptionLedger(root);
+  const decLedger = await readIntelligenceDecisionLedger(root);
+  // Re-derive rec link arrays from current subject ledgers (idempotent if already correct).
+  const derivedRec = deriveRecommendationLinks(recLedger, asLedger, decLedger);
+  // writeIntelligenceLedgers handles atomic JSON + RECOMMENDATIONS.md re-render (Slice 15 annotated form).
+  await writeIntelligenceLedgers(root, derivedRec, evLedger);
+  // Re-render subject MDs from current ledgers (source-of-truth JSON untouched).
+  await mkdir(intelligenceDir(root), { recursive: true });
+  await atomicWriteText(assumptionsMdPath(root), renderAssumptionsMd(asLedger));
+  await atomicWriteText(decisionsMdPath(root), renderDecisionsMd(decLedger));
+  return {
+    present: true,
+    recommendations: derivedRec.recommendations.length,
+    assumptions: asLedger.assumptions.length,
+    decisions: decLedger.decisions.length,
+  };
+}
+
 function milestonesPath(root: string): string {
   return join(intelligenceDir(root), MILESTONES_JSON);
 }
