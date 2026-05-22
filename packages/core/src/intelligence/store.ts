@@ -630,6 +630,96 @@ export function computeIntelligenceStats(
   };
 }
 
+export type IntelligenceAuditFinding =
+  | { kind: 'broken-assumption-link'; recId: string; assumptionId: string }
+  | { kind: 'broken-decision-link'; recId: string; decisionId: string }
+  | { kind: 'broken-evidence-link'; recId: string; evidenceId: string }
+  | { kind: 'orphan-assumption'; assumptionId: string; missingRecId: string }
+  | { kind: 'orphan-decision'; decisionId: string; missingRecId: string }
+  | { kind: 'orphan-evidence'; evidenceId: string; missingRecId: string };
+
+export type IntelligenceAuditReport = {
+  findings: IntelligenceAuditFinding[];
+  byKind: Record<IntelligenceAuditFinding['kind'], IntelligenceAuditFinding[]>;
+};
+
+const AUDIT_KINDS = [
+  'broken-assumption-link',
+  'broken-decision-link',
+  'broken-evidence-link',
+  'orphan-assumption',
+  'orphan-decision',
+  'orphan-evidence',
+] as const;
+
+export function computeIntelligenceAudit(
+  recLedger: RecommendationLedger,
+  evLedger: EvidenceLedger,
+  asLedger: AssumptionLedger,
+  decLedger: IntelligenceDecisionLedger,
+): IntelligenceAuditReport {
+  const findings: IntelligenceAuditFinding[] = [];
+  const recIds = new Set(recLedger.recommendations.map((r) => r.id));
+  const evIds = new Set(evLedger.evidence.map((e) => e.id));
+  const asIds = new Set(asLedger.assumptions.map((a) => a.id));
+  const decIds = new Set(decLedger.decisions.map((d) => d.id));
+
+  for (const r of recLedger.recommendations) {
+    for (const id of r.assumptionIds) {
+      if (!asIds.has(id)) {
+        findings.push({ kind: 'broken-assumption-link', recId: r.id, assumptionId: id });
+      }
+    }
+    for (const id of r.decisionIds) {
+      if (!decIds.has(id)) {
+        findings.push({ kind: 'broken-decision-link', recId: r.id, decisionId: id });
+      }
+    }
+    for (const id of r.evidenceIds) {
+      if (!evIds.has(id)) {
+        findings.push({ kind: 'broken-evidence-link', recId: r.id, evidenceId: id });
+      }
+    }
+  }
+
+  for (const a of asLedger.assumptions) {
+    if (!recIds.has(a.recommendationId)) {
+      findings.push({
+        kind: 'orphan-assumption',
+        assumptionId: a.id,
+        missingRecId: a.recommendationId,
+      });
+    }
+  }
+
+  for (const d of decLedger.decisions) {
+    if (d.recommendationId !== undefined && !recIds.has(d.recommendationId)) {
+      findings.push({
+        kind: 'orphan-decision',
+        decisionId: d.id,
+        missingRecId: d.recommendationId,
+      });
+    }
+  }
+
+  for (const ev of evLedger.evidence) {
+    if (!recIds.has(ev.recommendationId)) {
+      findings.push({
+        kind: 'orphan-evidence',
+        evidenceId: ev.id,
+        missingRecId: ev.recommendationId,
+      });
+    }
+  }
+
+  const byKind = Object.fromEntries(
+    AUDIT_KINDS.map((k) => [k, [] as IntelligenceAuditFinding[]]),
+  ) as Record<IntelligenceAuditFinding['kind'], IntelligenceAuditFinding[]>;
+  for (const f of findings) byKind[f.kind].push(f);
+
+  return { findings, byKind };
+}
+
 export type IntelligenceReconcileResult = {
   present: boolean;
   recommendations: number;
