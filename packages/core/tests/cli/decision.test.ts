@@ -215,4 +215,31 @@ describe('cadence decision (Slice 8)', () => {
     expect(r.stderr).toBe('');
     expect(r.stdout).toBe('No decisions matching rec=rec-bogus recorded.\n');
   });
+
+  it('Slice 24 AC-1+3: --limit 2 with combined filters', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice24' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['D1', 'D2', 'D3']) {
+      await run(['decision', 'add', '--rec', rec.id, '--title', t, '--rationale', 'r'], active.root);
+    }
+    const r = await run(
+      ['decision', 'list', '--filter-rec', rec.id, '--filter-status', 'active', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    expect(arr[0].title).toBe('D1');
+    expect(arr[1].title).toBe('D2');
+  });
+
+  it('Slice 24 AC-5: --limit abc → exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice24' });
+    const r = await run(['decision', 'list', '--limit', 'abc'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/invalid limit: abc/);
+  });
 });

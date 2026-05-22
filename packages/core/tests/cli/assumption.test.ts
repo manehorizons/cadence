@@ -209,4 +209,28 @@ describe('cadence assumption (Slice 8)', () => {
     expect(r.stderr).toBe('');
     expect(r.stdout).toBe('No assumptions matching rec=rec-bogus recorded.\n');
   });
+
+  it('Slice 24 AC-1+3: --limit 1 after filters → only 1 entry', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice24' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['A1', 'A2', 'A3']) {
+      await run(['assumption', 'add', '--rec', rec.id, '--text', t], active.root);
+    }
+    const r = await run(
+      ['assumption', 'list', '--filter-rec', rec.id, '--limit', '1', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toHaveLength(1);
+  });
+
+  it('Slice 24 AC-4: --limit 0 → exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice24' });
+    const r = await run(['assumption', 'list', '--limit', '0'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/invalid limit: 0/);
+  });
 });

@@ -155,7 +155,8 @@ export function registerRecommendationCommand(program: Command): void {
     .description('List recorded recommendations')
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
-    .action(async (opts: { format?: string; filterStatus?: string }) => {
+    .option('--limit <n>', 'Cap output to first N entries (after filters)')
+    .action(async (opts: { format?: string; filterStatus?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -177,6 +178,17 @@ export function registerRecommendationCommand(program: Command): void {
             return;
           }
           entries = entries.filter((r) => r.status === parsed.data);
+        }
+        if (opts.limit !== undefined) {
+          const n = Number(opts.limit);
+          if (!Number.isInteger(n) || n < 1) {
+            process.stderr.write(
+              `recommendation list failed: invalid limit: ${opts.limit}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.slice(0, n);
         }
         if (format === 'json') {
           process.stdout.write(JSON.stringify(entries, null, 2) + '\n');

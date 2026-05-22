@@ -157,4 +157,34 @@ describe('cadence recommendation', () => {
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual([]);
   });
+
+  it('Slice 24 AC-1+AC-2: --limit 2 caps output (terminal + JSON)', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const t of ['A', 'B', 'C']) {
+      await run(['recommendation', 'add', '--title', t, '--summary', 's'], active.root);
+    }
+    const term = await run(['recommendation', 'list', '--limit', '2'], active.root);
+    expect(term.code).toBe(0);
+    expect(term.stdout.trim().split('\n')).toHaveLength(2);
+    const json = await run(['recommendation', 'list', '--limit', '2', '--format', 'json'], active.root);
+    expect(json.code).toBe(0);
+    expect(JSON.parse(json.stdout)).toHaveLength(2);
+  });
+
+  it('Slice 24 AC-4+5: invalid --limit → exit 1', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const value of ['0', '-1', 'abc', '1.5']) {
+      const r = await run(['recommendation', 'list', '--limit', value], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stderr).toMatch(new RegExp(`invalid limit: ${value.replace(/[-.]/g, '\\$&')}`));
+    }
+  });
+
+  it('Slice 24 AC-6: --limit > total → returns all', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const r = await run(['recommendation', 'list', '--limit', '100', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toHaveLength(1);
+  });
 });
