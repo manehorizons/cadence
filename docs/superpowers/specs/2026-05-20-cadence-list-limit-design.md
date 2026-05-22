@@ -126,7 +126,7 @@ Three commits.
 - **`--offset <n>`** / **`--skip <n>`** for pagination.
 - **`--reverse`** for reverse-chronological output.
 - **Sort flags** (`--sort-by created|status|...`).
-- **`--filter-text <substr>`** body-text search.
+- ~~**`--filter-text <substr>`** body-text search.~~ **SHIPPED Slice 25** — see [list-filter-text design](2026-05-20-cadence-list-filter-text-design.md). Case-insensitive substring match.
 - **Multi-status filter**.
 - **`supersededBy <id>`** decision field.
 - **Rec↔phase linkage** — biggest remaining scope.
