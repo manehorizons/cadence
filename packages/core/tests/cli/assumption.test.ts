@@ -110,4 +110,45 @@ describe('cadence assumption (Slice 8)', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/unsupported format: yaml/);
   });
+
+  it('Slice 22 AC-2: --filter-status open → only open entries; validated filtered out', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice22' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A1'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A2'], active.root);
+    // Validate the second so only A1 stays open
+    const list1 = await run(['assumption', 'list', '--format', 'json'], active.root);
+    const arr = JSON.parse(list1.stdout);
+    const a2Id = arr[1].id;
+    await run(['assumption', 'validate', a2Id], active.root);
+    const r = await run(['assumption', 'list', '--filter-status', 'open'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/A1/);
+    expect(r.stdout).not.toMatch(/A2/);
+  });
+
+  it('Slice 22 AC-4: invalid --filter-status → exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice22' });
+    const r = await run(['assumption', 'list', '--filter-status', 'bogus'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/invalid status: bogus/);
+  });
+
+  it('Slice 22 AC-6: --filter-status + --format json → filtered array', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice22' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--filter-status', 'validated', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
 });

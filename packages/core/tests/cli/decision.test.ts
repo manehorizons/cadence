@@ -128,4 +128,37 @@ describe('cadence decision (Slice 8)', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/unsupported format: xml/);
   });
+
+  it('Slice 22 AC-3: --filter-status active → only active; superseded filtered out', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice22' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'D1', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'D2', '--rationale', 'r'], active.root);
+    const list1 = await run(['decision', 'list', '--format', 'json'], active.root);
+    const arr = JSON.parse(list1.stdout);
+    const d2Id = arr[1].id;
+    await run(['decision', 'supersede', d2Id], active.root);
+    const r = await run(['decision', 'list', '--filter-status', 'active'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/D1/);
+    expect(r.stdout).not.toMatch(/D2/);
+  });
+
+  it('Slice 22 AC-4: invalid --filter-status → exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice22' });
+    const r = await run(['decision', 'list', '--filter-status', 'bogus'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/invalid status: bogus/);
+  });
+
+  it('Slice 22 AC-5: empty after filter + terminal → status-aware message', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice22' });
+    await run(['decision', 'add', '--title', 'D', '--rationale', 'r'], active.root);
+    const r = await run(['decision', 'list', '--filter-status', 'rescinded'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe('No decisions with status=rescinded recorded.\n');
+  });
 });

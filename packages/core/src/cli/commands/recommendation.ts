@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import {
   RecommendationPriorityZ,
   RecommendationReadinessZ,
+  RecommendationStatusZ,
 } from '@cadence/types';
 import {
   addRecommendation,
@@ -153,7 +154,8 @@ export function registerRecommendationCommand(program: Command): void {
     .command('list')
     .description('List recorded recommendations')
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
-    .action(async (opts: { format?: string }) => {
+    .option('--filter-status <status>', 'Filter to only entries with this status')
+    .action(async (opts: { format?: string; filterStatus?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -164,15 +166,30 @@ export function registerRecommendationCommand(program: Command): void {
           return;
         }
         const ledger = await readRecommendationLedger(process.cwd());
+        let entries = ledger.recommendations;
+        if (opts.filterStatus !== undefined) {
+          const parsed = RecommendationStatusZ.safeParse(opts.filterStatus);
+          if (!parsed.success) {
+            process.stderr.write(
+              `recommendation list failed: invalid status: ${opts.filterStatus}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.filter((r) => r.status === parsed.data);
+        }
         if (format === 'json') {
-          process.stdout.write(JSON.stringify(ledger.recommendations, null, 2) + '\n');
+          process.stdout.write(JSON.stringify(entries, null, 2) + '\n');
           return;
         }
-        if (ledger.recommendations.length === 0) {
-          process.stdout.write('No recommendations recorded.\n');
+        if (entries.length === 0) {
+          const msg = opts.filterStatus
+            ? `No recommendations with status=${opts.filterStatus} recorded.\n`
+            : 'No recommendations recorded.\n';
+          process.stdout.write(msg);
           return;
         }
-        for (const rec of ledger.recommendations) {
+        for (const rec of entries) {
           process.stdout.write(
             `${rec.id}  ${rec.priority}  ${rec.readiness}  ${rec.title}\n`,
           );

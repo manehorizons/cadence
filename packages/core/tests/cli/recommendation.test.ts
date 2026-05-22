@@ -120,4 +120,41 @@ describe('cadence recommendation', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/unsupported format: bogus/);
   });
+
+  it('Slice 22 AC-1: --filter-status candidate → only candidate entries (terminal)', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    // Both are 'candidate' by default; filter should include both
+    const r = await run(['recommendation', 'list', '--filter-status', 'candidate'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/rec-\d{8}-001/);
+    expect(r.stdout).toMatch(/rec-\d{8}-002/);
+  });
+
+  it('Slice 22 AC-4: invalid --filter-status → exit 1 + stderr `invalid status`', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['recommendation', 'list', '--filter-status', 'bogus'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/invalid status: bogus/);
+  });
+
+  it('Slice 22 AC-5: empty after filter + terminal → status-aware message', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const r = await run(['recommendation', 'list', '--filter-status', 'accepted'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe('No recommendations with status=accepted recorded.\n');
+  });
+
+  it('Slice 22 AC-6+AC-8: --filter-status + --format json → filtered JSON array', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--filter-status', 'accepted', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
 });

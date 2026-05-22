@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import type { Assumption } from '@cadence/types';
+import { type Assumption, AssumptionZ } from '@cadence/types';
 import {
   addAssumption,
   readAssumptionLedger,
@@ -98,7 +98,8 @@ export function registerAssumptionCommand(program: Command): void {
     .command('list')
     .description('List recorded assumptions')
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
-    .action(async (opts: { format?: string }) => {
+    .option('--filter-status <status>', 'Filter to only entries with this status')
+    .action(async (opts: { format?: string; filterStatus?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -109,15 +110,30 @@ export function registerAssumptionCommand(program: Command): void {
           return;
         }
         const ledger = await readAssumptionLedger(process.cwd());
+        let entries = ledger.assumptions;
+        if (opts.filterStatus !== undefined) {
+          const parsed = AssumptionZ.shape.status.safeParse(opts.filterStatus);
+          if (!parsed.success) {
+            process.stderr.write(
+              `assumption list failed: invalid status: ${opts.filterStatus}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.filter((a) => a.status === parsed.data);
+        }
         if (format === 'json') {
-          process.stdout.write(JSON.stringify(ledger.assumptions, null, 2) + '\n');
+          process.stdout.write(JSON.stringify(entries, null, 2) + '\n');
           return;
         }
-        if (ledger.assumptions.length === 0) {
-          process.stdout.write('No assumptions recorded.\n');
+        if (entries.length === 0) {
+          const msg = opts.filterStatus
+            ? `No assumptions with status=${opts.filterStatus} recorded.\n`
+            : 'No assumptions recorded.\n';
+          process.stdout.write(msg);
           return;
         }
-        for (const a of ledger.assumptions) {
+        for (const a of entries) {
           process.stdout.write(`${a.id}  ${a.status}  ${a.recommendationId}  ${a.text}\n`);
         }
       } catch (err) {
