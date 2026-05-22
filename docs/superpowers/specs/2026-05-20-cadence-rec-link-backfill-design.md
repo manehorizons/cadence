@@ -38,7 +38,7 @@ Strict read-only outside the three intelligence ledgers re-affirmed:
 
 ### Out of scope (later / parked)
 
-- A `cadence intelligence reconcile` standalone command (operator-initiated full re-derive without adding a new entry). Self-heal on next add covers the realistic path.
+- ~~A `cadence intelligence reconcile` standalone command (operator-initiated full re-derive without adding a new entry). Self-heal on next add covers the realistic path.~~ **SHIPPED Slice 17** — see [intelligence reconcile design](2026-05-20-cadence-intelligence-reconcile-design.md).
 - Backfill triggered by `assumption validate`/`reject`/`reopen` (transitions don't change membership — `recommendationId` is invariant under transition).
 - Removal/deletion of assumptions/decisions (not shipped at any layer yet; nothing to backfill on removal).
 - Reverse direction: editing a rec to drop an assumption (would require severing the assumption's `recommendationId` — schema-additive change, out of scope).
@@ -242,7 +242,7 @@ The slice succeeds if:
 
 ## Follow-On (not in this slice)
 
-- **`cadence intelligence reconcile`** standalone admin command (operator-initiated full re-derive without adding a new entry).
+- ~~**`cadence intelligence reconcile`** standalone admin command (operator-initiated full re-derive without adding a new entry).~~ **SHIPPED Slice 17**.
 - ~~**`RECOMMENDATIONS.md` render extension** to display `assumptionIds[].length` / `decisionIds[].length` counts (or inline list) on each rec.~~ **SHIPPED Slice 12** — inline-ids form chosen; see [rec-md-render-links design](2026-05-20-cadence-rec-md-render-links-design.md).
 - ~~**`cadence decision` status field + transitions** (decisions still have no status field — Slice-10 Follow-On).~~ **SHIPPED Slice 13** — see [decision status + transitions design](2026-05-20-cadence-decision-status-transitions-design.md).
 - **Rec↔phase linkage** (`IntelligenceMilestone.exportTargets` → promoted SPEC.md → phase; would let `review` packet filter recs by phase membership).

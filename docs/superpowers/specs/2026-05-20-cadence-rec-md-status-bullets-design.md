@@ -215,7 +215,7 @@ Four commits.
 ## Follow-On (not in this slice)
 
 - **`supersededBy <id>`** field on decision + graph rendering.
-- **`cadence intelligence reconcile`** standalone admin command (Slice-11 § Follow-On still open).
+- ~~**`cadence intelligence reconcile`** standalone admin command (Slice-11 § Follow-On still open).~~ **SHIPPED Slice 17**.
 - **Rec↔phase linkage** display.
 - **`cadence assumption show <id>` / `cadence decision show <id>`** parallels of Slice 14.
 - **`--format json`** on `cadence recommendation show`.
