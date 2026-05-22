@@ -103,7 +103,8 @@ export function registerDecisionCommand(program: Command): void {
     .description('List recorded decisions')
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
-    .action(async (opts: { format?: string; filterStatus?: string }) => {
+    .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -126,13 +127,19 @@ export function registerDecisionCommand(program: Command): void {
           }
           entries = entries.filter((d) => d.status === parsed.data);
         }
+        if (opts.filterRec !== undefined) {
+          entries = entries.filter((d) => d.recommendationId === opts.filterRec);
+        }
         if (format === 'json') {
           process.stdout.write(JSON.stringify(entries, null, 2) + '\n');
           return;
         }
         if (entries.length === 0) {
-          const msg = opts.filterStatus
-            ? `No decisions with status=${opts.filterStatus} recorded.\n`
+          const filterDims: string[] = [];
+          if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
+          if (opts.filterRec) filterDims.push(`rec=${opts.filterRec}`);
+          const msg = filterDims.length > 0
+            ? `No decisions matching ${filterDims.join(', ')} recorded.\n`
             : 'No decisions recorded.\n';
           process.stdout.write(msg);
           return;

@@ -151,4 +151,62 @@ describe('cadence assumption (Slice 8)', () => {
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual([]);
   });
+
+  it('Slice 23 AC-1: --filter-rec → only entries tied to specified rec', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice23' });
+    const r1 = await addRecommendation(active.root, {
+      title: 'first', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const r2 = await addRecommendation(active.root, {
+      title: 'second', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', r1.id, '--text', 'A-r1'], active.root);
+    await run(['assumption', 'add', '--rec', r2.id, '--text', 'A-r2'], active.root);
+    const r = await run(['assumption', 'list', '--filter-rec', r1.id], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/A-r1/);
+    expect(r.stdout).not.toMatch(/A-r2/);
+  });
+
+  it('Slice 23 AC-3+4: --filter-rec + --filter-status + --format json → AND filter', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice23' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A1'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--filter-rec', rec.id, '--filter-status', 'open', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].text).toBe('A1');
+  });
+
+  it('Slice 23 AC-5: empty after combined filters → message reflects both dimensions', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice23' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--filter-rec', rec.id, '--filter-status', 'validated'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(`No assumptions matching status=validated, rec=${rec.id} recorded.\n`);
+  });
+
+  it('Slice 23 AC-6: unknown rec id → empty result, exit 0, no stderr', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice23' });
+    const r = await run(['assumption', 'list', '--filter-rec', 'rec-bogus'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toBe('No assumptions matching rec=rec-bogus recorded.\n');
+  });
 });

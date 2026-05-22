@@ -159,6 +159,60 @@ describe('cadence decision (Slice 8)', () => {
     await run(['decision', 'add', '--title', 'D', '--rationale', 'r'], active.root);
     const r = await run(['decision', 'list', '--filter-status', 'rescinded'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toBe('No decisions with status=rescinded recorded.\n');
+    expect(r.stdout).toBe('No decisions matching status=rescinded recorded.\n');
+  });
+
+  it('Slice 23 AC-2: --filter-rec → only tied decisions; untied EXCLUDED', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice23' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'tied', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'untied', '--rationale', 'r'], active.root);
+    const r = await run(['decision', 'list', '--filter-rec', rec.id], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/tied/);
+    expect(r.stdout).not.toMatch(/untied/);
+  });
+
+  it('Slice 23 AC-3+4: --filter-rec + --filter-status + --format json → AND filter', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice23' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'D1', '--rationale', 'r'], active.root);
+    const r = await run(
+      ['decision', 'list', '--filter-rec', rec.id, '--filter-status', 'active', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('D1');
+  });
+
+  it('Slice 23 AC-5: empty after combined filters → message reflects both', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice23' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'D', '--rationale', 'r'], active.root);
+    const r = await run(
+      ['decision', 'list', '--filter-rec', rec.id, '--filter-status', 'rescinded'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(`No decisions matching status=rescinded, rec=${rec.id} recorded.\n`);
+  });
+
+  it('Slice 23 AC-6: unknown rec id → empty result, exit 0', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice23' });
+    const r = await run(['decision', 'list', '--filter-rec', 'rec-bogus'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toBe('No decisions matching rec=rec-bogus recorded.\n');
   });
 });

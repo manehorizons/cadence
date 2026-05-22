@@ -183,8 +183,10 @@ export function registerRecommendationCommand(program: Command): void {
           return;
         }
         if (entries.length === 0) {
-          const msg = opts.filterStatus
-            ? `No recommendations with status=${opts.filterStatus} recorded.\n`
+          const filterDims: string[] = [];
+          if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
+          const msg = filterDims.length > 0
+            ? `No recommendations matching ${filterDims.join(', ')} recorded.\n`
             : 'No recommendations recorded.\n';
           process.stdout.write(msg);
           return;

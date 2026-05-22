@@ -144,7 +144,7 @@ describe('cadence recommendation', () => {
     await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
     const r = await run(['recommendation', 'list', '--filter-status', 'accepted'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toBe('No recommendations with status=accepted recorded.\n');
+    expect(r.stdout).toBe('No recommendations matching status=accepted recorded.\n');
   });
 
   it('Slice 22 AC-6+AC-8: --filter-status + --format json → filtered JSON array', async () => {
