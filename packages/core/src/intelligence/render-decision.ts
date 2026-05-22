@@ -34,6 +34,11 @@ export function renderDecisionsMd(ledger: IntelligenceDecisionLedger): string {
       lines.push('');
       if (d.recommendationId) lines.push(`- recommendation: ${d.recommendationId}`);
       lines.push(`- decided: ${d.decidedAt}`);
+      if (d.supersededBy) {
+        const exists = ledger.decisions.some((x) => x.id === d.supersededBy);
+        const suffix = exists ? '' : ' (not found)';
+        lines.push(`- superseded-by: ${d.supersededBy}${suffix}`);
+      }
       lines.push('');
       lines.push(d.rationale);
       lines.push('');

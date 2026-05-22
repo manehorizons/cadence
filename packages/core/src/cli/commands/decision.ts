@@ -87,7 +87,7 @@ export function registerDecisionCommand(program: Command): void {
           process.stdout.write(JSON.stringify(envelope, null, 2) + '\n');
           return;
         }
-        const md = renderDecisionDetail(dec, rec);
+        const md = renderDecisionDetail(dec, rec, decLedger);
         process.stdout.write(md);
         if (!md.endsWith('\n')) process.stdout.write('\n');
       } catch (err) {
@@ -196,7 +196,31 @@ export function registerDecisionCommand(program: Command): void {
       }
     });
 
-  for (const action of ['supersede', 'rescind', 'reactivate'] as const) {
+  cmd
+    .command('supersede <id>')
+    .description(DECISION_TRANSITION_DESCRIPTIONS.supersede)
+    .option('--by <newId>', 'Decision that supersedes this one (optional FK)')
+    .action(async (id: string, opts: { by?: string }) => {
+      try {
+        const res = await runDecisionTransition(process.cwd(), id, 'supersede', opts.by);
+        if (!res.ok) {
+          process.stderr.write(`decision supersede refused: ${res.error}\n`);
+          process.exitCode = 1;
+          return;
+        }
+        const suffix = opts.by ? ` (by ${opts.by})` : '';
+        process.stdout.write(
+          `decision ${id} → ${DECISION_TRANSITION_PAST.supersede}${suffix}\n`,
+        );
+      } catch (err) {
+        process.stderr.write(
+          `decision supersede failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  for (const action of ['rescind', 'reactivate'] as const) {
     cmd
       .command(`${action} <id>`)
       .description(DECISION_TRANSITION_DESCRIPTIONS[action])

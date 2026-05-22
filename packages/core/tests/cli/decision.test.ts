@@ -350,4 +350,100 @@ describe('cadence decision (Slice 8)', () => {
     const arr = JSON.parse(r.stdout);
     expect(arr.map((x: { title: string }) => x.title)).toEqual(['D3', 'D2', 'D1']);
   });
+
+  it('Slice 28 AC-1: supersede without --by behaves as Slice 13 (no supersededBy field persisted)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice28' });
+    const add = await run(['decision', 'add', '--title', 'D1', '--rationale', 'r'], active.root);
+    expect(add.code).toBe(0);
+    const idMatch = add.stdout.match(/Added (dec-\S+):/);
+    if (!idMatch) throw new Error(`no id in: ${add.stdout}`);
+    const id = idMatch[1];
+    const r = await run(['decision', 'supersede', id!], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(`decision ${id} → superseded\n`);
+    const show = await run(['decision', 'show', id!, '--format', 'json'], active.root);
+    const envelope = JSON.parse(show.stdout);
+    expect(envelope.decision.status).toBe('superseded');
+    expect('supersededBy' in envelope.decision).toBe(false);
+  });
+
+  it('Slice 28 AC-2+AC-9: supersede --by <newId> persists supersededBy + show JSON envelope carries it', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice28' });
+    const a1 = await run(['decision', 'add', '--title', 'D1', '--rationale', 'r'], active.root);
+    const a2 = await run(['decision', 'add', '--title', 'D2', '--rationale', 'r'], active.root);
+    const id1 = a1.stdout.match(/Added (dec-\S+):/)?.[1];
+    const id2 = a2.stdout.match(/Added (dec-\S+):/)?.[1];
+    if (!id1 || !id2) throw new Error('no ids');
+    const r = await run(['decision', 'supersede', id1, '--by', id2], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(`decision ${id1} → superseded (by ${id2})\n`);
+    const show = await run(['decision', 'show', id1, '--format', 'json'], active.root);
+    const envelope = JSON.parse(show.stdout);
+    expect(envelope.decision.supersededBy).toBe(id2);
+  });
+
+  it('Slice 28 AC-3: --by self-ref refused; no side effects', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice28' });
+    const a = await run(['decision', 'add', '--title', 'D', '--rationale', 'r'], active.root);
+    const id = a.stdout.match(/Added (dec-\S+):/)?.[1];
+    if (!id) throw new Error('no id');
+    const r = await run(['decision', 'supersede', id, '--by', id], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/decision supersede refused: cannot supersede: decision cannot supersede itself/);
+    const show = await run(['decision', 'show', id, '--format', 'json'], active.root);
+    expect(JSON.parse(show.stdout).decision.status).toBe('active');
+  });
+
+  it('Slice 28 AC-4: --by unknown id refused', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice28' });
+    const a = await run(['decision', 'add', '--title', 'D', '--rationale', 'r'], active.root);
+    const id = a.stdout.match(/Added (dec-\S+):/)?.[1];
+    if (!id) throw new Error('no id');
+    const r = await run(['decision', 'supersede', id, '--by', 'dec-bogus'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/decision supersede refused: cannot supersede: decision dec-bogus not found/);
+  });
+
+  it('Slice 28 AC-5: cycle (dec-A → dec-B, supersede dec-B --by dec-A) refused', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice28' });
+    const a1 = await run(['decision', 'add', '--title', 'D1', '--rationale', 'r'], active.root);
+    const a2 = await run(['decision', 'add', '--title', 'D2', '--rationale', 'r'], active.root);
+    const id1 = a1.stdout.match(/Added (dec-\S+):/)?.[1];
+    const id2 = a2.stdout.match(/Added (dec-\S+):/)?.[1];
+    if (!id1 || !id2) throw new Error('no ids');
+    await run(['decision', 'supersede', id1, '--by', id2], active.root);
+    const r = await run(['decision', 'supersede', id2, '--by', id1], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(new RegExp(`would create cycle \\(${id1} → ${id2}\\)`));
+  });
+
+  it('Slice 28 AC-7: reactivate clears supersededBy', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice28' });
+    const a1 = await run(['decision', 'add', '--title', 'D1', '--rationale', 'r'], active.root);
+    const a2 = await run(['decision', 'add', '--title', 'D2', '--rationale', 'r'], active.root);
+    const id1 = a1.stdout.match(/Added (dec-\S+):/)?.[1];
+    const id2 = a2.stdout.match(/Added (dec-\S+):/)?.[1];
+    if (!id1 || !id2) throw new Error('no ids');
+    await run(['decision', 'supersede', id1, '--by', id2], active.root);
+    const reAct = await run(['decision', 'reactivate', id1], active.root);
+    expect(reAct.code).toBe(0);
+    const show = await run(['decision', 'show', id1, '--format', 'json'], active.root);
+    const envelope = JSON.parse(show.stdout);
+    expect(envelope.decision.status).toBe('active');
+    expect('supersededBy' in envelope.decision).toBe(false);
+  });
+
+  it('Slice 28 AC-12: DECISIONS.md re-render after --by supersede contains the new bullet', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice28' });
+    const a1 = await run(['decision', 'add', '--title', 'D1', '--rationale', 'r'], active.root);
+    const a2 = await run(['decision', 'add', '--title', 'D2', '--rationale', 'r'], active.root);
+    const id1 = a1.stdout.match(/Added (dec-\S+):/)?.[1];
+    const id2 = a2.stdout.match(/Added (dec-\S+):/)?.[1];
+    if (!id1 || !id2) throw new Error('no ids');
+    await run(['decision', 'supersede', id1, '--by', id2], active.root);
+    const md = await import('node:fs/promises').then((m) =>
+      m.readFile(`${active!.root}/.cadence/intelligence/DECISIONS.md`, 'utf8'),
+    );
+    expect(md).toMatch(new RegExp(`- superseded-by: ${id2}$`, 'm'));
+  });
 });

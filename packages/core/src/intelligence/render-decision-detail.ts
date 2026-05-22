@@ -1,8 +1,13 @@
-import type { IntelligenceDecision, Recommendation } from '@cadence/types';
+import type {
+  IntelligenceDecision,
+  IntelligenceDecisionLedger,
+  Recommendation,
+} from '@cadence/types';
 
 export function renderDecisionDetail(
   dec: IntelligenceDecision,
   rec?: Recommendation,
+  decLedger?: IntelligenceDecisionLedger,
 ): string {
   const lines: string[] = [];
   lines.push(`# ${dec.id} — ${dec.title}`);
@@ -14,6 +19,11 @@ export function renderDecisionDetail(
     lines.push(`- recommendation: ${dec.recommendationId} (rec not found)`);
   }
   lines.push(`- decided: ${dec.decidedAt}`);
+  if (dec.supersededBy) {
+    const exists = decLedger?.decisions.some((x) => x.id === dec.supersededBy) ?? true;
+    const suffix = exists ? '' : ' (not found)';
+    lines.push(`- superseded-by: ${dec.supersededBy}${suffix}`);
+  }
   lines.push('');
   lines.push(dec.rationale);
   lines.push('');

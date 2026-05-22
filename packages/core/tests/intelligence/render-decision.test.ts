@@ -124,4 +124,38 @@ describe('renderDecisionsMd (Slice 8 + Slice 13 / AC-5 + AC-6)', () => {
     expect(d2Idx).toBeGreaterThan(-1);
     expect(d1Idx).toBeGreaterThan(d2Idx);
   });
+
+  it('Slice 28 AC-8: superseded entry with supersededBy renders - superseded-by bullet', () => {
+    const ledger: IntelligenceDecisionLedger = {
+      schemaVersion: 1,
+      decisions: [
+        { id: 'dec-1', title: 'old', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-2' },
+        { id: 'dec-2', title: 'new', rationale: 'r', status: 'active', decidedAt: '2026-05-20T01:00:00.000Z' },
+      ],
+    };
+    const md = renderDecisionsMd(ledger);
+    expect(md).toMatch(/- superseded-by: dec-2$/m);
+  });
+
+  it('Slice 28 AC-11: supersededBy unknown id renders (not found) fallback', () => {
+    const ledger: IntelligenceDecisionLedger = {
+      schemaVersion: 1,
+      decisions: [
+        { id: 'dec-1', title: 'old', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-bogus' },
+      ],
+    };
+    const md = renderDecisionsMd(ledger);
+    expect(md).toMatch(/- superseded-by: dec-bogus \(not found\)/);
+  });
+
+  it('Slice 28: superseded entry without supersededBy renders without the bullet', () => {
+    const ledger: IntelligenceDecisionLedger = {
+      schemaVersion: 1,
+      decisions: [
+        { id: 'dec-1', title: 'old', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z' },
+      ],
+    };
+    const md = renderDecisionsMd(ledger);
+    expect(md).not.toMatch(/- superseded-by:/);
+  });
 });
