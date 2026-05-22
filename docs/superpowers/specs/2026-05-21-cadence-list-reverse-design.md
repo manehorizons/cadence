@@ -135,7 +135,7 @@ Three commits.
 - **Per-field selection** (`--filter-text-in title,text`).
 - **Multi-status filter**.
 - **`--include-untied`** decision list.
-- **`supersededBy <id>`** decision field.
+- ~~**`supersededBy <id>`** decision field.~~ **SHIPPED Slice 28** — see [decision-supersededby design](2026-05-21-cadence-decision-supersededby-design.md). Optional `--by <newId>` on supersede; FK + self-ref + cycle checks; reactivate clears.
 - **Bulk transitions** (`cadence assumption validate --all-rec <recId>`).
 - **Rec↔phase linkage** — biggest remaining scope.
 - **Auto-dispatch / subagent routing** — forever-deferred.
