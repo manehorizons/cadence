@@ -863,10 +863,19 @@ CADENCE strategic-intelligence admin utilities
 | Subcommand | Description |
 |---|---|
 | `reconcile` | Re-derive recommendation link arrays and re-render all intelligence MD files |
+| `stats [--by-rec]` | Read-only summary counts across all 4 intelligence ledgers (or per-rec breakdown) |
+
+**`stats` options**
+
+| Option | Description |
+|---|---|
+| `--by-rec` | Markdown-table per-rec breakdown instead of aggregate view |
 
 **Behavior** — operator-initiated force re-derive across the strategic-intelligence layer. Reads `.cadence/intelligence/{recommendations,evidence,assumptions,decisions}.json`, recomputes `Recommendation.assumptionIds[]` / `decisionIds[]` via the same `deriveRecommendationLinks` helper Slice-11 wires into intake, and atomically writes `recommendations.json` (with re-derived links) plus all three MD files (`RECOMMENDATIONS.md` with Slice-15 status-annotated bullets; `ASSUMPTIONS.md` + `DECISIONS.md` with Slice-9/13 bucket-partitioned sections). Useful when the operator hand-edits a subject ledger and wants the rec link arrays + MD renders refreshed without doing a throwaway intake. `assumptions.json` + `decisions.json` are NOT rewritten (operator source of truth). Idempotent: a second run is byte-equal. On an empty workspace (no intelligence ledgers present) → exit 0 with `No intelligence ledgers present.\n`.
 
-**Exit codes** — `reconcile`: exits 0 even on empty ledger set; exits 1 on any disk/permission/parse error.
+**`stats`** — read-only aggregation across all 4 intelligence ledgers. Aggregate mode prints 5 sections (Recommendations / Evidence / Assumptions / Decisions / Links) with counts partitioned by every enum value (zeros explicit; diff-stable). `--by-rec` prints a markdown table with one row per recommendation showing status + per-status linked-assumption + per-status linked-decision + evidence counts. Titles >40 chars truncated with `…`. Broken-link counts surface drift between rec link arrays and subject ledgers without enumeration (see future `audit` for per-link enumeration). Strict read-only.
+
+**Exit codes** — `reconcile`: exits 0 even on empty ledger set; exits 1 on any disk/permission/parse error. `stats`: same; exits 0 even on empty ledger set.
 
 ---
 
