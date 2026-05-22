@@ -134,7 +134,7 @@ Three commits.
 ## Follow-On
 
 - ~~**`--offset <n>`** / **`--skip <n>`** for pagination.~~ **SHIPPED Slice 26** (this slice).
-- **`--reverse`** for reverse-chronological output.
+- ~~**`--reverse`** for reverse-chronological output.~~ **SHIPPED Slice 27** — see [list-reverse design](2026-05-21-cadence-list-reverse-design.md). Boolean flag; applied between filters and offset/limit.
 - **Sort flags** (`--sort-by created|status|...`).
 - **`--filter-regex <pattern>`** for power users.
 - **`--filter-text-exact`** for case-sensitive match.
