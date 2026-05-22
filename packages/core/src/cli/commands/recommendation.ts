@@ -152,9 +152,22 @@ export function registerRecommendationCommand(program: Command): void {
   cmd
     .command('list')
     .description('List recorded recommendations')
-    .action(async () => {
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
+    .action(async (opts: { format?: string }) => {
       try {
+        const format = opts.format ?? 'terminal';
+        if (format !== 'terminal' && format !== 'json') {
+          process.stderr.write(
+            `recommendation list failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         const ledger = await readRecommendationLedger(process.cwd());
+        if (format === 'json') {
+          process.stdout.write(JSON.stringify(ledger.recommendations, null, 2) + '\n');
+          return;
+        }
         if (ledger.recommendations.length === 0) {
           process.stdout.write('No recommendations recorded.\n');
           return;

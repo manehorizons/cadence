@@ -94,4 +94,38 @@ describe('cadence decision (Slice 8)', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toMatch(new RegExp(`dec-\\d{8}-001\\s+active\\s+${rec.id}\\s+tied title`));
   });
+
+  it('Slice 21 AC-3: list --format json → array of IntelligenceDecision (tied + untied)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice21' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'tied', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'untied', '--rationale', 'r'], active.root);
+    const r = await run(['decision', 'list', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(Array.isArray(arr)).toBe(true);
+    expect(arr).toHaveLength(2);
+    expect(arr[0].title).toBe('tied');
+    expect(arr[0].recommendationId).toBe(rec.id);
+    expect(arr[0].status).toBe('active');
+    expect(arr[1].title).toBe('untied');
+    expect(arr[1].recommendationId).toBeUndefined();
+  });
+
+  it('Slice 21 AC-4: empty ledger + --format json → []', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice21' });
+    const r = await run(['decision', 'list', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
+
+  it('Slice 21 AC-5: invalid --format → exit 1 + stderr', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice21' });
+    const r = await run(['decision', 'list', '--format', 'xml'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/unsupported format: xml/);
+  });
 });

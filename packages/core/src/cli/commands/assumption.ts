@@ -97,9 +97,22 @@ export function registerAssumptionCommand(program: Command): void {
   cmd
     .command('list')
     .description('List recorded assumptions')
-    .action(async () => {
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
+    .action(async (opts: { format?: string }) => {
       try {
+        const format = opts.format ?? 'terminal';
+        if (format !== 'terminal' && format !== 'json') {
+          process.stderr.write(
+            `assumption list failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         const ledger = await readAssumptionLedger(process.cwd());
+        if (format === 'json') {
+          process.stdout.write(JSON.stringify(ledger.assumptions, null, 2) + '\n');
+          return;
+        }
         if (ledger.assumptions.length === 0) {
           process.stdout.write('No assumptions recorded.\n');
           return;

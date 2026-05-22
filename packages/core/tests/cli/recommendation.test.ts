@@ -93,4 +93,31 @@ describe('cadence recommendation', () => {
     expect(r.stdout).toMatch(/rec-\d{8}-001/);
     expect(r.stdout).toMatch(/Add context packets/);
   });
+
+  it('Slice 21 AC-1: list --format json → array of Recommendation', async () => {
+    active = await tempRepo({ initialized: true });
+    await run([
+      'recommendation', 'add', '--title', 'A', '--summary', 's',
+    ], active.root);
+    const r = await run(['recommendation', 'list', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(Array.isArray(arr)).toBe(true);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('A');
+  });
+
+  it('Slice 21 AC-4: empty ledger + --format json → []', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['recommendation', 'list', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
+
+  it('Slice 21 AC-5: invalid --format → exit 1 + stderr', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['recommendation', 'list', '--format', 'bogus'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/unsupported format: bogus/);
+  });
 });

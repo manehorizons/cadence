@@ -101,9 +101,22 @@ export function registerDecisionCommand(program: Command): void {
   cmd
     .command('list')
     .description('List recorded decisions')
-    .action(async () => {
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
+    .action(async (opts: { format?: string }) => {
       try {
+        const format = opts.format ?? 'terminal';
+        if (format !== 'terminal' && format !== 'json') {
+          process.stderr.write(
+            `decision list failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         const ledger = await readIntelligenceDecisionLedger(process.cwd());
+        if (format === 'json') {
+          process.stdout.write(JSON.stringify(ledger.decisions, null, 2) + '\n');
+          return;
+        }
         if (ledger.decisions.length === 0) {
           process.stdout.write('No decisions recorded.\n');
           return;
