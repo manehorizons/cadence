@@ -105,9 +105,10 @@ export function registerDecisionCommand(program: Command): void {
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or rationale')
+    .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -140,6 +141,9 @@ export function registerDecisionCommand(program: Command): void {
               d.title.toLowerCase().includes(needle) ||
               d.rationale.toLowerCase().includes(needle),
           );
+        }
+        if (opts.reverse) {
+          entries = entries.slice().reverse();
         }
         if (opts.offset !== undefined) {
           const n = Number(opts.offset);
