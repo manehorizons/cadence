@@ -151,7 +151,7 @@ Three commits.
 ## Follow-On
 
 - **Multi-status filter** (`--filter-status open,validated`).
-- **`--filter-rec <recId>`** on assumption/decision lists.
+- ~~**`--filter-rec <recId>`** on assumption/decision lists.~~ **SHIPPED Slice 23** — see [list-filter-rec design](2026-05-20-cadence-list-filter-rec-design.md). Combines with `--filter-status` via AND semantics.
 - **`--filter-text <substr>`** for body-text search.
 - **`--limit <n>`** for paginated output.
 - **`--format json-compact`** for pipe consumers.
