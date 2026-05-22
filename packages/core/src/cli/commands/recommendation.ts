@@ -156,9 +156,10 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary')
+    .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -188,6 +189,9 @@ export function registerRecommendationCommand(program: Command): void {
               r.title.toLowerCase().includes(needle) ||
               r.summary.toLowerCase().includes(needle),
           );
+        }
+        if (opts.reverse) {
+          entries = entries.slice().reverse();
         }
         if (opts.offset !== undefined) {
           const n = Number(opts.offset);

@@ -311,4 +311,43 @@ describe('cadence decision (Slice 8)', () => {
     expect(json.code).toBe(0);
     expect(JSON.parse(json.stdout)).toEqual([]);
   });
+
+  it('Slice 27 AC-1+AC-2: --reverse reverses entry order', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice27' });
+    for (const t of ['D1', 'D2', 'D3']) {
+      await run(['decision', 'add', '--title', t, '--rationale', 'r'], active.root);
+    }
+    const r = await run(['decision', 'list', '--reverse', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['D3', 'D2', 'D1']);
+  });
+
+  it('Slice 27 AC-3: --reverse --offset 1 --limit 2 → reverse, then page', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice27' });
+    for (const t of ['D1', 'D2', 'D3', 'D4']) {
+      await run(['decision', 'add', '--title', t, '--rationale', 'r'], active.root);
+    }
+    const r = await run(
+      ['decision', 'list', '--reverse', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['D3', 'D2']);
+  });
+
+  it('Slice 27 AC-4: --filter-status + --reverse → filter, reverse subset', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice27' });
+    for (const t of ['D1', 'D2', 'D3']) {
+      await run(['decision', 'add', '--title', t, '--rationale', 'r'], active.root);
+    }
+    const r = await run(
+      ['decision', 'list', '--filter-status', 'active', '--reverse', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['D3', 'D2', 'D1']);
+  });
 });

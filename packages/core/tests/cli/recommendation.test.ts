@@ -277,4 +277,59 @@ describe('cadence recommendation', () => {
     expect(json.code).toBe(0);
     expect(JSON.parse(json.stdout)).toEqual([]);
   });
+
+  it('Slice 27 AC-1+AC-2: --reverse reverses entry order (terminal + JSON)', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const t of ['A', 'B', 'C']) {
+      await run(['recommendation', 'add', '--title', t, '--summary', 's'], active.root);
+    }
+    const term = await run(['recommendation', 'list', '--reverse'], active.root);
+    expect(term.code).toBe(0);
+    const lines = term.stdout.trim().split('\n');
+    expect(lines[0]).toMatch(/ C$/);
+    expect(lines[2]).toMatch(/ A$/);
+    const json = await run(['recommendation', 'list', '--reverse', '--format', 'json'], active.root);
+    expect(json.code).toBe(0);
+    const arr = JSON.parse(json.stdout);
+    expect(arr.map((r: { title: string }) => r.title)).toEqual(['C', 'B', 'A']);
+  });
+
+  it('Slice 27 AC-3: --reverse --offset 1 --limit 2 → reverse first, then page', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const t of ['A', 'B', 'C', 'D', 'E']) {
+      await run(['recommendation', 'add', '--title', t, '--summary', 's'], active.root);
+    }
+    const r = await run(
+      ['recommendation', 'list', '--reverse', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['D', 'C']);
+  });
+
+  it('Slice 27 AC-4: --filter-text + --reverse → filter, then reverse subset', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'Postgres a', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'Redis', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'Postgres b', '--summary', 's'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--filter-text', 'postgres', '--reverse', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['Postgres b', 'Postgres a']);
+  });
+
+  it('Slice 27 AC-6: empty-after-filter message UNCHANGED by --reverse', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--filter-text', 'nonexistent', '--reverse'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe('No recommendations matching text="nonexistent" recorded.\n');
+  });
 });

@@ -348,4 +348,55 @@ describe('cadence assumption (Slice 8)', () => {
     expect(term.code).toBe(0);
     expect(term.stdout).toBe('No assumptions matching offset=10 recorded.\n');
   });
+
+  it('Slice 27 AC-1+AC-2: --reverse reverses entry order', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice27' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['A', 'B', 'C']) {
+      await run(['assumption', 'add', '--rec', rec.id, '--text', t], active.root);
+    }
+    const r = await run(['assumption', 'list', '--reverse', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { text: string }) => x.text)).toEqual(['C', 'B', 'A']);
+  });
+
+  it('Slice 27 AC-3: --reverse --offset 1 --limit 2 → reverse, then page', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice27' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['A', 'B', 'C', 'D']) {
+      await run(['assumption', 'add', '--rec', rec.id, '--text', t], active.root);
+    }
+    const r = await run(
+      ['assumption', 'list', '--reverse', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { text: string }) => x.text)).toEqual(['C', 'B']);
+  });
+
+  it('Slice 27 AC-4: --filter-rec + --reverse → filter, reverse subset', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice27' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['X', 'Y', 'Z']) {
+      await run(['assumption', 'add', '--rec', rec.id, '--text', t], active.root);
+    }
+    const r = await run(
+      ['assumption', 'list', '--filter-rec', rec.id, '--reverse', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { text: string }) => x.text)).toEqual(['Z', 'Y', 'X']);
+  });
 });
