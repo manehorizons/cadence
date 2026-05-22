@@ -242,4 +242,26 @@ describe('cadence decision (Slice 8)', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/invalid limit: abc/);
   });
+
+  it('Slice 25 AC-3: --filter-text matches title OR rationale', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice25' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'Use Postgres', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'Other', '--rationale', 'mentions postgres in body'], active.root);
+    await run(['decision', 'add', '--rec', rec.id, '--title', 'Unrelated', '--rationale', 'redis'], active.root);
+    const r = await run(['decision', 'list', '--filter-text', 'postgres', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toHaveLength(2);
+  });
+
+  it('Slice 25 AC-6: empty after text + status → message includes both dims', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice25' });
+    await run(['decision', 'add', '--title', 'D', '--rationale', 'r'], active.root);
+    const r = await run(['decision', 'list', '--filter-text', 'nonexistent', '--filter-status', 'active'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe('No decisions matching status=active, text="nonexistent" recorded.\n');
+  });
 });

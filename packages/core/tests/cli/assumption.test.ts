@@ -233,4 +233,52 @@ describe('cadence assumption (Slice 8)', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/invalid limit: 0/);
   });
+
+  it('Slice 25 AC-2+AC-4: --filter-text matches assumption.text case-insensitive', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice25' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'postgres holds latency'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'redis cache works'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--filter-text', 'POSTGRES', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].text).toBe('postgres holds latency');
+  });
+
+  it('Slice 25 AC-5: combine --filter-text + --filter-status + --limit', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice25' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['postgres a', 'postgres b', 'redis c']) {
+      await run(['assumption', 'add', '--rec', rec.id, '--text', t], active.root);
+    }
+    const r = await run(
+      ['assumption', 'list', '--filter-text', 'postgres', '--filter-status', 'open', '--limit', '1', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toHaveLength(1);
+  });
+
+  it('Slice 25 AC-7: empty `--filter-text ""` matches all', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice25' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'B'], active.root);
+    const r = await run(['assumption', 'list', '--filter-text', '', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toHaveLength(2);
+  });
 });
