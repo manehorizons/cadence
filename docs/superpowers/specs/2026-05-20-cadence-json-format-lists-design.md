@@ -134,7 +134,7 @@ Three commits.
 
 ## Follow-On
 
-- **`--filter-status`** and other filter flags on list commands.
+- ~~**`--filter-status`** and other filter flags on list commands.~~ **`--filter-status` SHIPPED Slice 22** — see [list-filter-status design](2026-05-20-cadence-list-filter-status-design.md). Other filters still deferred.
 - **`--format json-compact`** for piped consumers.
 - **`--format json` on write surfaces** (add/transition).
 - **NDJSON streaming** for very large ledgers.
