@@ -205,7 +205,7 @@ Four commits.
 ## Follow-On
 
 - **`--format json-compact`** for stream-pipe consumers.
-- **`--format json` on list commands** (`recommendation list`, `assumption list`, `decision list`).
+- ~~**`--format json` on list commands** (`recommendation list`, `assumption list`, `decision list`).~~ **SHIPPED Slice 21** — see [json-format-lists design](2026-05-20-cadence-json-format-lists-design.md).
 - **JSON schemas** (`*.schema.json`) for envelope documentation.
 - **NDJSON** streaming for very large ledgers (if needed).
 - **`--format json` on write surfaces** (add/transition).
