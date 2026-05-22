@@ -866,6 +866,12 @@ CADENCE strategic-intelligence admin utilities
 | `stats [--by-rec]` | Read-only summary counts across all 4 intelligence ledgers (or per-rec breakdown) |
 | `audit [--quiet]` | Enumerate integrity issues (broken links + orphan subjects). Exit 1 on findings unless `--quiet`. |
 
+**`stats` + `audit` shared options**
+
+| Option | Description |
+|---|---|
+| `--format <terminal\|json>` | Output format. Default `terminal` (markdown). `json` emits pretty-printed JSON envelope; empty workspace → JSON `null`. |
+
 **`stats` options**
 
 | Option | Description |
