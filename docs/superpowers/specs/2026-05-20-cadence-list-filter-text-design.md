@@ -138,7 +138,7 @@ Three commits.
 - **`--filter-regex <pattern>`** for power users.
 - **`--filter-text-exact`** for case-sensitive match.
 - **Per-field selection** (`--filter-text-in title,text`).
-- **`--offset <n>`** pagination.
+- ~~**`--offset <n>`** pagination.~~ **SHIPPED Slice 26** — see [list-offset design](2026-05-21-cadence-list-offset-design.md). Non-negative integer; applied after filters, before `--limit`.
 - **`--reverse`** + sort flags.
 - **`--include-untied`** decision list.
 - **`supersededBy <id>`** decision field.

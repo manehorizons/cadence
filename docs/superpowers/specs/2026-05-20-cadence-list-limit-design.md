@@ -123,7 +123,7 @@ Three commits.
 
 ## Follow-On
 
-- **`--offset <n>`** / **`--skip <n>`** for pagination.
+- ~~**`--offset <n>`** / **`--skip <n>`** for pagination.~~ **SHIPPED Slice 26** — see [list-offset design](2026-05-21-cadence-list-offset-design.md). Non-negative integer (vs `--limit`'s positive-integer); applied between filters and `--limit`.
 - **`--reverse`** for reverse-chronological output.
 - **Sort flags** (`--sort-by created|status|...`).
 - ~~**`--filter-text <substr>`** body-text search.~~ **SHIPPED Slice 25** — see [list-filter-text design](2026-05-20-cadence-list-filter-text-design.md). Case-insensitive substring match.
