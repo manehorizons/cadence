@@ -100,7 +100,8 @@ export function registerAssumptionCommand(program: Command): void {
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string }) => {
+    .option('--limit <n>', 'Cap output to first N entries (after filters)')
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -125,6 +126,17 @@ export function registerAssumptionCommand(program: Command): void {
         }
         if (opts.filterRec !== undefined) {
           entries = entries.filter((a) => a.recommendationId === opts.filterRec);
+        }
+        if (opts.limit !== undefined) {
+          const n = Number(opts.limit);
+          if (!Number.isInteger(n) || n < 1) {
+            process.stderr.write(
+              `assumption list failed: invalid limit: ${opts.limit}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.slice(0, n);
         }
         if (format === 'json') {
           process.stdout.write(JSON.stringify(entries, null, 2) + '\n');
