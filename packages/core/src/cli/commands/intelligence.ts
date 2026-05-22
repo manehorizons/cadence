@@ -48,12 +48,25 @@ export function registerIntelligenceCommand(program: Command): void {
     .command('stats')
     .description('Summary counts across all 4 intelligence ledgers')
     .option('--by-rec', 'Per-rec breakdown table instead of aggregate view', false)
-    .action(async (opts: { byRec?: boolean }) => {
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
+    .action(async (opts: { byRec?: boolean; format?: string }) => {
       try {
+        const format = opts.format ?? 'terminal';
+        if (format !== 'terminal' && format !== 'json') {
+          process.stderr.write(
+            `intelligence stats failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         const root = process.cwd();
         const intelDir = join(root, '.cadence', 'intelligence');
         if (!existsSync(intelDir)) {
-          process.stdout.write('No intelligence ledgers present.\n');
+          if (format === 'json') {
+            process.stdout.write('null\n');
+          } else {
+            process.stdout.write('No intelligence ledgers present.\n');
+          }
           return;
         }
         const recLedger = await readRecommendationLedger(root);
@@ -66,7 +79,11 @@ export function registerIntelligenceCommand(program: Command): void {
           asLedger.assumptions.length === 0 &&
           decLedger.decisions.length === 0
         ) {
-          process.stdout.write('No intelligence ledgers present.\n');
+          if (format === 'json') {
+            process.stdout.write('null\n');
+          } else {
+            process.stdout.write('No intelligence ledgers present.\n');
+          }
           return;
         }
         const stats = computeIntelligenceStats(
@@ -75,6 +92,10 @@ export function registerIntelligenceCommand(program: Command): void {
           asLedger,
           decLedger,
         );
+        if (format === 'json') {
+          process.stdout.write(JSON.stringify(stats, null, 2) + '\n');
+          return;
+        }
         const renderOpts: { byRec?: boolean } = {};
         if (opts.byRec) renderOpts.byRec = true;
         const md = renderIntelligenceStats(stats, renderOpts);
@@ -94,12 +115,25 @@ export function registerIntelligenceCommand(program: Command): void {
       'Enumerate integrity issues (broken links + orphan subjects) across the intelligence layer',
     )
     .option('--quiet', 'Exit 0 even when findings are present (script-friendly)', false)
-    .action(async (opts: { quiet?: boolean }) => {
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
+    .action(async (opts: { quiet?: boolean; format?: string }) => {
       try {
+        const format = opts.format ?? 'terminal';
+        if (format !== 'terminal' && format !== 'json') {
+          process.stderr.write(
+            `intelligence audit failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         const root = process.cwd();
         const intelDir = join(root, '.cadence', 'intelligence');
         if (!existsSync(intelDir)) {
-          process.stdout.write('No intelligence ledgers present.\n');
+          if (format === 'json') {
+            process.stdout.write('null\n');
+          } else {
+            process.stdout.write('No intelligence ledgers present.\n');
+          }
           return;
         }
         const recLedger = await readRecommendationLedger(root);
@@ -112,7 +146,11 @@ export function registerIntelligenceCommand(program: Command): void {
           asLedger.assumptions.length === 0 &&
           decLedger.decisions.length === 0
         ) {
-          process.stdout.write('No intelligence ledgers present.\n');
+          if (format === 'json') {
+            process.stdout.write('null\n');
+          } else {
+            process.stdout.write('No intelligence ledgers present.\n');
+          }
           return;
         }
         const report = computeIntelligenceAudit(
@@ -121,9 +159,13 @@ export function registerIntelligenceCommand(program: Command): void {
           asLedger,
           decLedger,
         );
-        const md = renderIntelligenceAudit(report);
-        process.stdout.write(md);
-        if (!md.endsWith('\n')) process.stdout.write('\n');
+        if (format === 'json') {
+          process.stdout.write(JSON.stringify(report, null, 2) + '\n');
+        } else {
+          const md = renderIntelligenceAudit(report);
+          process.stdout.write(md);
+          if (!md.endsWith('\n')) process.stdout.write('\n');
+        }
         if (report.findings.length > 0 && !opts.quiet) {
           process.exitCode = 1;
         }

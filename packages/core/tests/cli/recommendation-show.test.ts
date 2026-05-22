@@ -171,6 +171,76 @@ describe('cadence recommendation show (Slice 14)', () => {
     }
   });
 
+  it('AC-1: --format json → exit 0, stdout parses to envelope with all 5 keys', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a = await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const d = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D', rationale: 'r',
+    });
+    const r = await run(
+      ['recommendation', 'show', rec.id, '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const env = JSON.parse(r.stdout);
+    expect(env.recommendation.id).toBe(rec.id);
+    expect(env.linkedAssumptions).toHaveLength(1);
+    expect(env.linkedAssumptions[0].id).toBe(a.id);
+    expect(env.linkedDecisions).toHaveLength(1);
+    expect(env.linkedDecisions[0].id).toBe(d.id);
+    expect(env.linkedEvidence).toEqual([]);
+    expect(env.filters).toEqual({
+      openAssumptionsOnly: false,
+      activeDecisionsOnly: false,
+    });
+  });
+
+  it('AC-2: filter flags reflected in envelope; linked arrays PRE-filter', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a1 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
+    const a2 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A2' });
+    // validate a2 so it's no longer open
+    const { runAssumptionTransition } = await import('../../src/intelligence/store.js');
+    await runAssumptionTransition(active.root, a2.id, 'validate');
+    const r = await run(
+      ['recommendation', 'show', rec.id, '--format', 'json', '--open-assumptions-only', '--active-decisions-only'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const env = JSON.parse(r.stdout);
+    expect(env.filters.openAssumptionsOnly).toBe(true);
+    expect(env.filters.activeDecisionsOnly).toBe(true);
+    // PRE-filter: both assumptions in envelope (consumer applies filter downstream)
+    expect(env.linkedAssumptions.map((a: { id: string }) => a.id).sort()).toEqual([a1.id, a2.id].sort());
+  });
+
+  it('AC-8: invalid --format → exit 1 + stderr', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const r = await run(['recommendation', 'show', rec.id, '--format', 'bogus'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/unsupported format: bogus/);
+  });
+
+  it('AC-9: unknown id with --format json → exit 1, stderr, no stdout JSON', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const r = await run(['recommendation', 'show', 'rec-bogus', '--format', 'json'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toBe('recommendation rec-bogus not found\n');
+    expect(r.stdout).toBe('');
+  });
+
   it('missing <id> arg → commander usage error + non-zero exit', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice14' });
     const r = await run(['recommendation', 'show'], active.root);

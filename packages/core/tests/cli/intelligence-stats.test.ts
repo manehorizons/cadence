@@ -98,6 +98,37 @@ describe('cadence intelligence stats (Slice 18)', () => {
     expect(r.stdout).toBe('No intelligence ledgers present.\n');
   });
 
+  it('AC-5: --format json populated → exit 0, JSON parses to IntelligenceStats shape', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const r = await run(['intelligence', 'stats', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const stats = JSON.parse(r.stdout);
+    expect(stats.recommendations.total).toBe(1);
+    expect(stats.assumptions.total).toBe(1);
+    expect(stats.assumptions.byStatus.open).toBe(1);
+    expect(stats.links.brokenAssumptionLinks).toBe(0);
+    expect(stats.perRec).toHaveLength(1);
+  });
+
+  it('AC-5: --format json empty workspace → JSON null', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const r = await run(['intelligence', 'stats', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toBeNull();
+  });
+
+  it('AC-8: invalid --format → exit 1 + stderr', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const r = await run(['intelligence', 'stats', '--format', 'xml'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/unsupported format: xml/);
+  });
+
   it('AC-12: strict read-only — `.cadence/intelligence/` byte-equal before and after', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice18' });
     const rec = await addRecommendation(active.root, {

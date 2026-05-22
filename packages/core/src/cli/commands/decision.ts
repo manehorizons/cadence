@@ -57,8 +57,17 @@ export function registerDecisionCommand(program: Command): void {
   cmd
     .command('show <id>')
     .description('Show a single decision with its tied recommendation cross-ref')
-    .action(async (id: string) => {
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
+    .action(async (id: string, opts: { format?: string }) => {
       try {
+        const format = opts.format ?? 'terminal';
+        if (format !== 'terminal' && format !== 'json') {
+          process.stderr.write(
+            `decision show failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         const decLedger = await readIntelligenceDecisionLedger(process.cwd());
         const dec = decLedger.decisions.find((d) => d.id === id);
         if (!dec) {
@@ -72,6 +81,11 @@ export function registerDecisionCommand(program: Command): void {
           rec = recLedger.recommendations.find(
             (r) => r.id === dec.recommendationId,
           );
+        }
+        if (format === 'json') {
+          const envelope = { decision: dec, recommendation: rec ?? null };
+          process.stdout.write(JSON.stringify(envelope, null, 2) + '\n');
+          return;
         }
         const md = renderDecisionDetail(dec, rec);
         process.stdout.write(md);

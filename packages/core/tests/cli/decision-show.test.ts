@@ -115,6 +115,40 @@ describe('cadence decision show (Slice 16)', () => {
     }
   });
 
+  it('AC-4: --format json (tied) → envelope { decision, recommendation }', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const d = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D', rationale: 'r',
+    });
+    const r = await run(['decision', 'show', d.id, '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const env = JSON.parse(r.stdout);
+    expect(env.decision.id).toBe(d.id);
+    expect(env.recommendation.id).toBe(rec.id);
+  });
+
+  it('AC-4: --format json (untied) → recommendation: null', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const d = await addIntelligenceDecision(active.root, { title: 'untied', rationale: 'r' });
+    const r = await run(['decision', 'show', d.id, '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const env = JSON.parse(r.stdout);
+    expect(env.decision.id).toBe(d.id);
+    expect(env.recommendation).toBeNull();
+  });
+
+  it('AC-8: invalid --format → exit 1 + stderr', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const d = await addIntelligenceDecision(active.root, { title: 'x', rationale: 'r' });
+    const r = await run(['decision', 'show', d.id, '--format', 'yaml'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/unsupported format: yaml/);
+  });
+
   it('missing <id> arg → commander usage error', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice16' });
     const r = await run(['decision', 'show'], active.root);
