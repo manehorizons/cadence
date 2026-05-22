@@ -123,6 +123,81 @@ describe('cadence intelligence audit (Slice 19)', () => {
     expect(r.stdout).toBe('No intelligence ledgers present.\n');
   });
 
+  it('AC-6: --format json clean populated → JSON report with empty findings array', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const r = await run(['intelligence', 'audit', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const report = JSON.parse(r.stdout);
+    expect(report.findings).toEqual([]);
+    expect(report.byKind['broken-assumption-link']).toEqual([]);
+  });
+
+  it('AC-6: --format json with findings → exit 1, JSON report includes findings', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const asPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const asJson = JSON.parse(await readFile(asPath, 'utf8'));
+    asJson.assumptions.push({
+      id: 'as-orphan-001',
+      recommendationId: 'rec-missing',
+      text: 'orphan',
+      status: 'open',
+      createdAt: '2026-05-20T00:00:00.000Z',
+    });
+    await writeFile(asPath, JSON.stringify(asJson));
+    const r = await run(['intelligence', 'audit', '--format', 'json'], active.root);
+    expect(r.code).toBe(1);
+    const report = JSON.parse(r.stdout);
+    expect(report.findings).toHaveLength(1);
+    expect(report.findings[0].kind).toBe('orphan-assumption');
+  });
+
+  it('AC-6: --format json --quiet with findings → exit 0', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const asPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const asJson = JSON.parse(await readFile(asPath, 'utf8'));
+    asJson.assumptions.push({
+      id: 'as-orphan-001',
+      recommendationId: 'rec-missing',
+      text: 'orphan',
+      status: 'open',
+      createdAt: '2026-05-20T00:00:00.000Z',
+    });
+    await writeFile(asPath, JSON.stringify(asJson));
+    const r = await run(['intelligence', 'audit', '--format', 'json', '--quiet'], active.root);
+    expect(r.code).toBe(0);
+    const report = JSON.parse(r.stdout);
+    expect(report.findings).toHaveLength(1);
+  });
+
+  it('AC-6: --format json empty workspace → JSON null', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const r = await run(['intelligence', 'audit', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toBeNull();
+  });
+
+  it('AC-8: invalid --format → exit 1 + stderr', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const r = await run(['intelligence', 'audit', '--format', 'csv'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/unsupported format: csv/);
+  });
+
   it('AC-15: strict read-only — `.cadence/intelligence/` byte-equal before and after', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice19' });
     const rec = await addRecommendation(active.root, {

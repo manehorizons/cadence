@@ -79,12 +79,25 @@ export function registerRecommendationCommand(program: Command): void {
     .description('Show a single recommendation with all linked assumptions, decisions, and evidence')
     .option('--open-assumptions-only', 'Filter assumptions to status=open only', false)
     .option('--active-decisions-only', 'Filter decisions to status=active only', false)
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .action(
       async (
         id: string,
-        opts: { openAssumptionsOnly?: boolean; activeDecisionsOnly?: boolean },
+        opts: {
+          openAssumptionsOnly?: boolean;
+          activeDecisionsOnly?: boolean;
+          format?: string;
+        },
       ) => {
         try {
+          const format = opts.format ?? 'terminal';
+          if (format !== 'terminal' && format !== 'json') {
+            process.stderr.write(
+              `recommendation show failed: unsupported format: ${format}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
           const recLedger = await readRecommendationLedger(process.cwd());
           const rec = recLedger.recommendations.find((r) => r.id === id);
           if (!rec) {
@@ -104,6 +117,20 @@ export function registerRecommendationCommand(program: Command): void {
           const decLinked = decLedger.decisions.filter((d) =>
             rec.decisionIds.includes(d.id),
           );
+          if (format === 'json') {
+            const envelope = {
+              recommendation: rec,
+              linkedEvidence: evLinked,
+              linkedAssumptions: asLinked,
+              linkedDecisions: decLinked,
+              filters: {
+                openAssumptionsOnly: Boolean(opts.openAssumptionsOnly),
+                activeDecisionsOnly: Boolean(opts.activeDecisionsOnly),
+              },
+            };
+            process.stdout.write(JSON.stringify(envelope, null, 2) + '\n');
+            return;
+          }
           const renderOpts: {
             openAssumptionsOnly?: boolean;
             activeDecisionsOnly?: boolean;

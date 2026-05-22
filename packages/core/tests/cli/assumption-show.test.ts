@@ -96,6 +96,52 @@ describe('cadence assumption show (Slice 16)', () => {
     }
   });
 
+  it('AC-3: --format json → envelope { assumption, recommendation }', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 'do thing', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a = await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const r = await run(['assumption', 'show', a.id, '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const env = JSON.parse(r.stdout);
+    expect(env.assumption.id).toBe(a.id);
+    expect(env.recommendation.id).toBe(rec.id);
+  });
+
+  it('AC-3: --format json with tied-but-missing rec → recommendation: null', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a = await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    // Manually delete the rec from JSON to simulate orphan
+    const recPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const { readFile, writeFile } = await import('node:fs/promises');
+    const recJson = JSON.parse(await readFile(recPath, 'utf8'));
+    recJson.recommendations = [];
+    await writeFile(recPath, JSON.stringify(recJson));
+    const r = await run(['assumption', 'show', a.id, '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const env = JSON.parse(r.stdout);
+    expect(env.assumption.id).toBe(a.id);
+    expect(env.recommendation).toBeNull();
+  });
+
+  it('AC-8: invalid --format → exit 1 + stderr', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice20' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const a = await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const r = await run(['assumption', 'show', a.id, '--format', 'bogus'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/unsupported format: bogus/);
+  });
+
   it('missing <id> arg → commander usage error', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice16' });
     const r = await run(['assumption', 'show'], active.root);

@@ -56,8 +56,17 @@ export function registerAssumptionCommand(program: Command): void {
   cmd
     .command('show <id>')
     .description('Show a single assumption with its tied recommendation cross-ref')
-    .action(async (id: string) => {
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
+    .action(async (id: string, opts: { format?: string }) => {
       try {
+        const format = opts.format ?? 'terminal';
+        if (format !== 'terminal' && format !== 'json') {
+          process.stderr.write(
+            `assumption show failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         const asLedger = await readAssumptionLedger(process.cwd());
         const as = asLedger.assumptions.find((a) => a.id === id);
         if (!as) {
@@ -69,6 +78,11 @@ export function registerAssumptionCommand(program: Command): void {
         const rec = recLedger.recommendations.find(
           (r) => r.id === as.recommendationId,
         );
+        if (format === 'json') {
+          const envelope = { assumption: as, recommendation: rec ?? null };
+          process.stdout.write(JSON.stringify(envelope, null, 2) + '\n');
+          return;
+        }
         const md = renderAssumptionDetail(as, rec);
         process.stdout.write(md);
         if (!md.endsWith('\n')) process.stdout.write('\n');
