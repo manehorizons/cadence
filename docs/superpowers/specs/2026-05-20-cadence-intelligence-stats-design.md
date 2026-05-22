@@ -228,7 +228,7 @@ Three commits.
 ## Follow-On
 
 - ~~**`cadence intelligence audit`** — enumerate broken links with full id paths + remediation hints.~~ **SHIPPED Slice 19** — see [intelligence audit design](2026-05-20-cadence-intelligence-audit-design.md). Also enumerates orphan subjects (not just broken links).
-- **`--format json`** on `stats`.
+- ~~**`--format json`** on `stats`.~~ **SHIPPED Slice 20** — see [json-format design](2026-05-20-cadence-json-format-design.md).
 - **`--filter-status <status>`** for narrowed reports.
 - **Histograms / sparklines** for over-time tracking (would need a snapshot mechanism).
 - **`supersededBy <id>`** field + graph rendering.

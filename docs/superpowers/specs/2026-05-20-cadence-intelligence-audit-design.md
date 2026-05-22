@@ -235,7 +235,7 @@ Three commits.
 
 ## Follow-On
 
-- **`--format json`** on audit + stats + show commands.
+- ~~**`--format json`** on audit + stats + show commands.~~ **SHIPPED Slice 20** — see [json-format design](2026-05-20-cadence-json-format-design.md).
 - **`--fix` for broken links** (orphan fixes still require operator decision).
 - **Per-finding severity classifications.**
 - **`updatedAt` staleness warnings.**

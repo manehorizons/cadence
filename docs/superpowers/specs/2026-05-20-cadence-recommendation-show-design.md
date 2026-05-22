@@ -256,7 +256,7 @@ The slice succeeds if:
 
 ## Follow-On (not in this slice)
 
-- **`cadence recommendation show --format json`** machine-readable output.
+- ~~**`cadence recommendation show --format json`** machine-readable output.~~ **SHIPPED Slice 20** — see [json-format design](2026-05-20-cadence-json-format-design.md).
 - **`cadence recommendation show --to <path>`** markdown file-write variant.
 - ~~**`cadence assumption show <id>` / `cadence decision show <id>`** parallel deep-dive surfaces.~~ **SHIPPED Slice 16** — see [assumption/decision show design](2026-05-20-cadence-assumption-decision-show-design.md).
 - **`--filter` combinations** (`--evidence-after`, `--rec-status accepted`).
