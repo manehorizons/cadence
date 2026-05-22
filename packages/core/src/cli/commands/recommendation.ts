@@ -156,8 +156,9 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary')
+    .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -188,6 +189,17 @@ export function registerRecommendationCommand(program: Command): void {
               r.summary.toLowerCase().includes(needle),
           );
         }
+        if (opts.offset !== undefined) {
+          const n = Number(opts.offset);
+          if (!Number.isInteger(n) || n < 0) {
+            process.stderr.write(
+              `recommendation list failed: invalid offset: ${opts.offset}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.slice(n);
+        }
         if (opts.limit !== undefined) {
           const n = Number(opts.limit);
           if (!Number.isInteger(n) || n < 1) {
@@ -207,6 +219,7 @@ export function registerRecommendationCommand(program: Command): void {
           const filterDims: string[] = [];
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
+          if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0
             ? `No recommendations matching ${filterDims.join(', ')} recorded.\n`
             : 'No recommendations recorded.\n';

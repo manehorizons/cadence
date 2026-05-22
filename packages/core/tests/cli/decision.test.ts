@@ -264,4 +264,51 @@ describe('cadence decision (Slice 8)', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toBe('No decisions matching status=active, text="nonexistent" recorded.\n');
   });
+
+  it('Slice 26 AC-1+AC-3: --offset 1 --limit 2 returns entries [1..3]', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice26' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['D1', 'D2', 'D3', 'D4']) {
+      await run(['decision', 'add', '--rec', rec.id, '--title', t, '--rationale', 'r'], active.root);
+    }
+    const r = await run(
+      ['decision', 'list', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    expect(arr[0].title).toBe('D2');
+    expect(arr[1].title).toBe('D3');
+  });
+
+  it('Slice 26 AC-5: --offset 0 → no-op', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice26' });
+    await run(['decision', 'add', '--title', 'D1', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'D2', '--rationale', 'r'], active.root);
+    const r = await run(['decision', 'list', '--offset', '0', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toHaveLength(2);
+  });
+
+  it('Slice 26 AC-6: invalid --offset → exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice26' });
+    const r = await run(['decision', 'list', '--offset', 'abc'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/invalid offset: abc/);
+  });
+
+  it('Slice 26 AC-7: --offset > total → empty + message includes offset dim', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice26' });
+    await run(['decision', 'add', '--title', 'D', '--rationale', 'r'], active.root);
+    const term = await run(['decision', 'list', '--offset', '10'], active.root);
+    expect(term.code).toBe(0);
+    expect(term.stdout).toBe('No decisions matching offset=10 recorded.\n');
+    const json = await run(['decision', 'list', '--offset', '10', '--format', 'json'], active.root);
+    expect(json.code).toBe(0);
+    expect(JSON.parse(json.stdout)).toEqual([]);
+  });
 });

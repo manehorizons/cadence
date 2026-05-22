@@ -214,4 +214,67 @@ describe('cadence recommendation', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toBe('No recommendations matching text="nonexistent" recorded.\n');
   });
+
+  it('Slice 26 AC-1+AC-2: --offset 2 skips first 2 (terminal + JSON)', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const t of ['A', 'B', 'C', 'D', 'E']) {
+      await run(['recommendation', 'add', '--title', t, '--summary', 's'], active.root);
+    }
+    const term = await run(['recommendation', 'list', '--offset', '2'], active.root);
+    expect(term.code).toBe(0);
+    const lines = term.stdout.trim().split('\n');
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toMatch(/ C$/);
+    const json = await run(['recommendation', 'list', '--offset', '2', '--format', 'json'], active.root);
+    expect(json.code).toBe(0);
+    const arr = JSON.parse(json.stdout);
+    expect(arr).toHaveLength(3);
+    expect(arr[0].title).toBe('C');
+  });
+
+  it('Slice 26 AC-3: --offset 1 --limit 2 returns entries [1..3]', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const t of ['A', 'B', 'C', 'D', 'E']) {
+      await run(['recommendation', 'add', '--title', t, '--summary', 's'], active.root);
+    }
+    const r = await run(
+      ['recommendation', 'list', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    expect(arr[0].title).toBe('B');
+    expect(arr[1].title).toBe('C');
+  });
+
+  it('Slice 26 AC-5: --offset 0 → no-op (returns full set)', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const t of ['A', 'B']) {
+      await run(['recommendation', 'add', '--title', t, '--summary', 's'], active.root);
+    }
+    const r = await run(['recommendation', 'list', '--offset', '0', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toHaveLength(2);
+  });
+
+  it('Slice 26 AC-6: invalid --offset → exit 1', async () => {
+    active = await tempRepo({ initialized: true });
+    for (const value of ['-1', 'abc', '1.5']) {
+      const r = await run(['recommendation', 'list', '--offset', value], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stderr).toMatch(new RegExp(`invalid offset: ${value.replace(/[-.]/g, '\\$&')}`));
+    }
+  });
+
+  it('Slice 26 AC-7: --offset > total → empty + message includes offset dim', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const term = await run(['recommendation', 'list', '--offset', '10'], active.root);
+    expect(term.code).toBe(0);
+    expect(term.stdout).toBe('No recommendations matching offset=10 recorded.\n');
+    const json = await run(['recommendation', 'list', '--offset', '10', '--format', 'json'], active.root);
+    expect(json.code).toBe(0);
+    expect(JSON.parse(json.stdout)).toEqual([]);
+  });
 });

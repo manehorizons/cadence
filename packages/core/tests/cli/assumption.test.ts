@@ -281,4 +281,71 @@ describe('cadence assumption (Slice 8)', () => {
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toHaveLength(2);
   });
+
+  it('Slice 26 AC-1+AC-3: --offset 1 --limit 2 returns entries [1..3]', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice26' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['A', 'B', 'C', 'D']) {
+      await run(['assumption', 'add', '--rec', rec.id, '--text', t], active.root);
+    }
+    const r = await run(
+      ['assumption', 'list', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    expect(arr[0].text).toBe('B');
+    expect(arr[1].text).toBe('C');
+  });
+
+  it('Slice 26 AC-4: filter-status + filter-rec + offset + limit (all combined)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice26' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    for (const t of ['A', 'B', 'C']) {
+      await run(['assumption', 'add', '--rec', rec.id, '--text', t], active.root);
+    }
+    const r = await run(
+      [
+        'assumption', 'list',
+        '--filter-status', 'open',
+        '--filter-rec', rec.id,
+        '--offset', '1',
+        '--limit', '1',
+        '--format', 'json',
+      ],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].text).toBe('B');
+  });
+
+  it('Slice 26 AC-6: invalid --offset → exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice26' });
+    for (const value of ['-1', 'abc', '1.5']) {
+      const r = await run(['assumption', 'list', '--offset', value], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stderr).toMatch(new RegExp(`invalid offset: ${value.replace(/[-.]/g, '\\$&')}`));
+    }
+  });
+
+  it('Slice 26 AC-7: --offset > total → empty + message includes offset dim', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice26' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    const term = await run(['assumption', 'list', '--offset', '10'], active.root);
+    expect(term.code).toBe(0);
+    expect(term.stdout).toBe('No assumptions matching offset=10 recorded.\n');
+  });
 });

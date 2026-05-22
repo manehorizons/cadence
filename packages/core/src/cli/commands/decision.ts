@@ -105,8 +105,9 @@ export function registerDecisionCommand(program: Command): void {
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or rationale')
+    .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -140,6 +141,17 @@ export function registerDecisionCommand(program: Command): void {
               d.rationale.toLowerCase().includes(needle),
           );
         }
+        if (opts.offset !== undefined) {
+          const n = Number(opts.offset);
+          if (!Number.isInteger(n) || n < 0) {
+            process.stderr.write(
+              `decision list failed: invalid offset: ${opts.offset}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.slice(n);
+        }
         if (opts.limit !== undefined) {
           const n = Number(opts.limit);
           if (!Number.isInteger(n) || n < 1) {
@@ -160,6 +172,7 @@ export function registerDecisionCommand(program: Command): void {
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
           if (opts.filterRec) filterDims.push(`rec=${opts.filterRec}`);
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
+          if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0
             ? `No decisions matching ${filterDims.join(', ')} recorded.\n`
             : 'No decisions recorded.\n';
