@@ -80,4 +80,34 @@ describe('cadence assumption (Slice 8)', () => {
     expect(r.stdout).toMatch(new RegExp(`as-\\d{8}-002\\s+open\\s+${rec.id}\\s+A2`));
     expect(r.stdout).not.toMatch(/^# CADENCE Assumptions/m);
   });
+
+  it('Slice 21 AC-2: list --format json → array of Assumption', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice21' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    const r = await run(['assumption', 'list', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(Array.isArray(arr)).toBe(true);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].text).toBe('A');
+    expect(arr[0].status).toBe('open');
+  });
+
+  it('Slice 21 AC-4: empty ledger + --format json → []', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice21' });
+    const r = await run(['assumption', 'list', '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
+
+  it('Slice 21 AC-5: invalid --format → exit 1 + stderr', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice21' });
+    const r = await run(['assumption', 'list', '--format', 'yaml'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/unsupported format: yaml/);
+  });
 });
