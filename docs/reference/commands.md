@@ -864,6 +864,7 @@ CADENCE strategic-intelligence admin utilities
 |---|---|
 | `reconcile` | Re-derive recommendation link arrays and re-render all intelligence MD files |
 | `stats [--by-rec]` | Read-only summary counts across all 4 intelligence ledgers (or per-rec breakdown) |
+| `audit [--quiet]` | Enumerate integrity issues (broken links + orphan subjects). Exit 1 on findings unless `--quiet`. |
 
 **`stats` options**
 
@@ -875,7 +876,9 @@ CADENCE strategic-intelligence admin utilities
 
 **`stats`** — read-only aggregation across all 4 intelligence ledgers. Aggregate mode prints 5 sections (Recommendations / Evidence / Assumptions / Decisions / Links) with counts partitioned by every enum value (zeros explicit; diff-stable). `--by-rec` prints a markdown table with one row per recommendation showing status + per-status linked-assumption + per-status linked-decision + evidence counts. Titles >40 chars truncated with `…`. Broken-link counts surface drift between rec link arrays and subject ledgers without enumeration (see future `audit` for per-link enumeration). Strict read-only.
 
-**Exit codes** — `reconcile`: exits 0 even on empty ledger set; exits 1 on any disk/permission/parse error. `stats`: same; exits 0 even on empty ledger set.
+**`audit`** — read-only integrity enumeration across the 4 intelligence ledgers. Surfaces six finding kinds: broken assumption/decision/evidence links (rec references missing subject id) + orphan assumption/decision/evidence (subject's `recommendationId` references missing rec). Untied decisions are NOT orphans (Slice-8 contract). Clean → `Audit clean: no integrity issues.\n` exit 0. Findings present → markdown sections per finding kind + Remediation block, exit 1 (unless `--quiet`). `--quiet` always exits 0 (script-friendly). No auto-fix — use `cadence intelligence reconcile` to repair broken link arrays; orphan subjects require operator decision (restore rec or remove/re-tag).
+
+**Exit codes** — `reconcile`: exits 0 even on empty ledger set; exits 1 on any disk/permission/parse error. `stats`: same; exits 0 even on empty ledger set. `audit`: exit 0 on clean or empty ledgers; exit 1 on findings unless `--quiet`; exit 1 on any disk/permission/parse error.
 
 ---
 
