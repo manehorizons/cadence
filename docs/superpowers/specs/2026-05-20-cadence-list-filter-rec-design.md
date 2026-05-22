@@ -143,7 +143,7 @@ Three commits.
 - **Multi-rec filter** (`--filter-rec rec-A,rec-B`).
 - **`--include-untied`** on decision list when `--filter-rec` set.
 - **`--filter-text <substr>`** body-text search.
-- **`--limit <n>`** pagination.
+- ~~**`--limit <n>`** pagination.~~ **`--limit` SHIPPED Slice 24** — see [list-limit design](2026-05-20-cadence-list-limit-design.md). Offset/skip still deferred.
 - **`supersededBy <id>`** decision field.
 - **Rec↔phase linkage** — biggest remaining scope.
 - **Auto-dispatch / subagent routing** — forever-deferred.
