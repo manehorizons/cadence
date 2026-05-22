@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import type { IntelligenceDecision } from '@cadence/types';
+import { type IntelligenceDecision, IntelligenceDecisionZ } from '@cadence/types';
 import {
   addIntelligenceDecision,
   readIntelligenceDecisionLedger,
@@ -102,7 +102,8 @@ export function registerDecisionCommand(program: Command): void {
     .command('list')
     .description('List recorded decisions')
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
-    .action(async (opts: { format?: string }) => {
+    .option('--filter-status <status>', 'Filter to only entries with this status')
+    .action(async (opts: { format?: string; filterStatus?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -113,15 +114,30 @@ export function registerDecisionCommand(program: Command): void {
           return;
         }
         const ledger = await readIntelligenceDecisionLedger(process.cwd());
+        let entries = ledger.decisions;
+        if (opts.filterStatus !== undefined) {
+          const parsed = IntelligenceDecisionZ.shape.status.safeParse(opts.filterStatus);
+          if (!parsed.success) {
+            process.stderr.write(
+              `decision list failed: invalid status: ${opts.filterStatus}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.filter((d) => d.status === parsed.data);
+        }
         if (format === 'json') {
-          process.stdout.write(JSON.stringify(ledger.decisions, null, 2) + '\n');
+          process.stdout.write(JSON.stringify(entries, null, 2) + '\n');
           return;
         }
-        if (ledger.decisions.length === 0) {
-          process.stdout.write('No decisions recorded.\n');
+        if (entries.length === 0) {
+          const msg = opts.filterStatus
+            ? `No decisions with status=${opts.filterStatus} recorded.\n`
+            : 'No decisions recorded.\n';
+          process.stdout.write(msg);
           return;
         }
-        for (const d of ledger.decisions) {
+        for (const d of entries) {
           process.stdout.write(
             `${d.id}  ${d.status}  ${d.recommendationId ?? '—'}  ${d.title}\n`,
           );
