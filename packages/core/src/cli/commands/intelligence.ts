@@ -1,5 +1,15 @@
 import type { Command } from 'commander';
-import { runIntelligenceReconcile } from '../../intelligence/store.js';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  computeIntelligenceStats,
+  readAssumptionLedger,
+  readEvidenceLedger,
+  readIntelligenceDecisionLedger,
+  readRecommendationLedger,
+  runIntelligenceReconcile,
+} from '../../intelligence/store.js';
+import { renderIntelligenceStats } from '../../intelligence/render-intelligence-stats.js';
 
 export function registerIntelligenceCommand(program: Command): void {
   const cmd = program
@@ -27,6 +37,50 @@ export function registerIntelligenceCommand(program: Command): void {
       } catch (err) {
         process.stderr.write(
           `intelligence reconcile failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
+    .command('stats')
+    .description('Summary counts across all 4 intelligence ledgers')
+    .option('--by-rec', 'Per-rec breakdown table instead of aggregate view', false)
+    .action(async (opts: { byRec?: boolean }) => {
+      try {
+        const root = process.cwd();
+        const intelDir = join(root, '.cadence', 'intelligence');
+        if (!existsSync(intelDir)) {
+          process.stdout.write('No intelligence ledgers present.\n');
+          return;
+        }
+        const recLedger = await readRecommendationLedger(root);
+        const evLedger = await readEvidenceLedger(root);
+        const asLedger = await readAssumptionLedger(root);
+        const decLedger = await readIntelligenceDecisionLedger(root);
+        if (
+          recLedger.recommendations.length === 0 &&
+          evLedger.evidence.length === 0 &&
+          asLedger.assumptions.length === 0 &&
+          decLedger.decisions.length === 0
+        ) {
+          process.stdout.write('No intelligence ledgers present.\n');
+          return;
+        }
+        const stats = computeIntelligenceStats(
+          recLedger,
+          evLedger,
+          asLedger,
+          decLedger,
+        );
+        const renderOpts: { byRec?: boolean } = {};
+        if (opts.byRec) renderOpts.byRec = true;
+        const md = renderIntelligenceStats(stats, renderOpts);
+        process.stdout.write(md);
+        if (!md.endsWith('\n')) process.stdout.write('\n');
+      } catch (err) {
+        process.stderr.write(
+          `intelligence stats failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
         process.exitCode = 1;
       }
