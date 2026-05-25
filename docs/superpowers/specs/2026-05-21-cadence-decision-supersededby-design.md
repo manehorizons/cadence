@@ -266,7 +266,7 @@ Three commits.
 ## Follow-On
 
 - ~~**`supersededBy <id>`** decision field.~~ **SHIPPED Slice 28** (this slice).
-- **`cadence decision graph <id>`** viewer (forward + backward chain traversal; ASCII tree).
+- ~~**`cadence decision graph <id>`** viewer (forward + backward chain traversal; ASCII tree).~~ **SHIPPED Slice 29** (two-section ASCII; `## Supersedes` transitive bullets + `## Superseded by` arrow chain; `--format json` envelope; cycle and missing-id markers).
 - **`intelligence audit` dimension for stale supersededBy refs** and superseded-without-link soft hints.
 - **Bidirectional reverse-link backfill** (`Decision.supersedes: dec-X[]` array on the replacement — derived, not user-input; like Slice 11 `assumptionIds`/`decisionIds` backfill pattern).
 - **`--sort-by <field>`** stable sort with multi-key (Slice 27 follow-on).
