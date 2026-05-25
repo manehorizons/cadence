@@ -130,7 +130,7 @@ Three commits.
 
 - ~~**`--reverse`** for reverse-chronological output.~~ **SHIPPED Slice 27** (this slice).
 - **Sort flags** (`--sort-by created|status|...`) with stable-sort + multi-key support.
-- **`--filter-regex <pattern>`** for power users.
+- ~~**`--filter-regex <pattern>`** for power users.~~ **SHIPPED Slice 33** — see [list-filter-regex design](2026-05-25-cadence-list-filter-regex-design.md).
 - **`--filter-text-exact`** for case-sensitive match.
 - **Per-field selection** (`--filter-text-in title,text`).
 - **Multi-status filter**.
