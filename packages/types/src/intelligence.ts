@@ -85,6 +85,10 @@ export const AssumptionZ = z.object({
 });
 export type Assumption = z.infer<typeof AssumptionZ>;
 
+// Slice 31: `supersedes` is a derived inverse-link array. Always present
+// (default []), recomputed on every write via deriveDecisionInverseLinks.
+// Operators never set this directly; the supersession edge is owned by
+// `supersededBy` (Slice 28).
 export const IntelligenceDecisionZ = z.object({
   id: z.string().min(1),
   recommendationId: z.string().optional(),
@@ -93,6 +97,7 @@ export const IntelligenceDecisionZ = z.object({
   status: z.enum(['active', 'superseded', 'rescinded']).default('active'),
   decidedAt: z.string().datetime({ offset: true }),
   supersededBy: z.string().optional(),
+  supersedes: z.array(z.string()).default([]),
 });
 export type IntelligenceDecision = z.infer<typeof IntelligenceDecisionZ>;
 

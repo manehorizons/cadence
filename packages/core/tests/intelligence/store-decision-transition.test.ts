@@ -74,8 +74,12 @@ describe('applyDecisionTransition (Slice 13 / AC-1)', () => {
       rationale: 'r1',
       status: 'superseded',
       decidedAt: '2026-05-20T00:00:00.000Z',
+      supersedes: [],
     });
-    expect(res.ledger.decisions[1]).toBe(ledger.decisions[1]);
+    // Slice 31: derive runs at the end of applyDecisionTransition; even the
+    // unchanged decision is wrapped via `{ ...d, supersedes: [...] }`, so
+    // referential identity isn't preserved. Compare by value instead.
+    expect(res.ledger.decisions[1]).toEqual({ ...ledger.decisions[1], supersedes: [] });
   });
 
   it('rescind: active → rescinded', () => {
@@ -279,5 +283,45 @@ describe('applyDecisionTransition --by (Slice 28)', () => {
     if (!res.ok) throw new Error('expected ok');
     expect(res.ledger.decisions[0]!.status).toBe('active');
     expect('supersededBy' in res.ledger.decisions[0]!).toBe(false);
+  });
+
+  describe('Slice 31: supersedes inverse-link derivation', () => {
+    it('AC-8: supersede --by D2 on D1 → D2.supersedes contains D1', () => {
+      const ledger = mkLedger([
+        { id: 'dec-1', title: 'D1', rationale: 'r', status: 'active', decidedAt: '2026-05-20T00:00:00.000Z' },
+        { id: 'dec-2', title: 'D2', rationale: 'r', status: 'active', decidedAt: '2026-05-20T01:00:00.000Z' },
+      ]);
+      const res = applyDecisionTransition(ledger, 'dec-1', 'supersede', 'dec-2');
+      expect(res.ok).toBe(true);
+      if (!res.ok) throw new Error('expected ok');
+      expect(res.ledger.decisions[0]?.supersededBy).toBe('dec-2');
+      expect(res.ledger.decisions[1]?.supersedes).toEqual(['dec-1']);
+    });
+
+    it('AC-9: reactivate D1 (was superseded by D2) → D2.supersedes no longer contains D1', () => {
+      // Pre-state mirrors what derive would have produced: D2.supersedes=[D1].
+      const ledger = mkLedger([
+        { id: 'dec-1', title: 'D1', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-2', supersedes: [] },
+        { id: 'dec-2', title: 'D2', rationale: 'r', status: 'active', decidedAt: '2026-05-20T01:00:00.000Z', supersedes: ['dec-1'] },
+      ]);
+      const res = applyDecisionTransition(ledger, 'dec-1', 'reactivate');
+      expect(res.ok).toBe(true);
+      if (!res.ok) throw new Error('expected ok');
+      expect('supersededBy' in res.ledger.decisions[0]!).toBe(false);
+      expect(res.ledger.decisions[1]?.supersedes).toEqual([]);
+    });
+
+    it('AC-8: converging supersession (D1→D3 then D2→D3) → D3.supersedes=[D1, D2]', () => {
+      const ledger = mkLedger([
+        { id: 'dec-1', title: 'D1', rationale: 'r', status: 'active', decidedAt: '2026-05-20T00:00:00.000Z' },
+        { id: 'dec-2', title: 'D2', rationale: 'r', status: 'active', decidedAt: '2026-05-20T01:00:00.000Z' },
+        { id: 'dec-3', title: 'D3', rationale: 'r', status: 'active', decidedAt: '2026-05-20T02:00:00.000Z' },
+      ]);
+      const first = applyDecisionTransition(ledger, 'dec-1', 'supersede', 'dec-3');
+      if (!first.ok) throw new Error('expected ok');
+      const second = applyDecisionTransition(first.ledger, 'dec-2', 'supersede', 'dec-3');
+      if (!second.ok) throw new Error('expected ok');
+      expect(second.ledger.decisions[2]?.supersedes).toEqual(['dec-1', 'dec-2']);
+    });
   });
 });

@@ -10,6 +10,7 @@ import {
   emptyMilestoneLedger,
   ContextPacketZ,
   ContextScopeZ,
+  IntelligenceDecisionZ,
 } from '../src/intelligence.js';
 
 describe('intelligence schemas', () => {
@@ -343,5 +344,18 @@ describe('ContextPacketZ.needsAttention (Slice 7)', () => {
   it('round-trips without needsAttention (other scopes omit)', () => {
     const parsed = ContextPacketZ.parse(basePacket);
     expect(parsed.needsAttention).toBeUndefined();
+  });
+
+  it('Slice 31 AC-1: IntelligenceDecisionZ.parse on pre-Slice-31 fixture defaults supersedes to []', () => {
+    const preSlice31 = {
+      id: 'dec-20260101-001',
+      title: 'old fixture',
+      rationale: 'predates Slice 31',
+      status: 'active',
+      decidedAt: '2026-01-01T00:00:00.000Z',
+      // no `supersedes` key
+    };
+    const parsed = IntelligenceDecisionZ.parse(preSlice31);
+    expect(parsed.supersedes).toEqual([]);
   });
 });
