@@ -142,11 +142,12 @@ export function registerDecisionCommand(program: Command): void {
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
+    .option('--include-untied', 'When combined with --filter-rec, also include decisions with no recommendationId')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or rationale')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; includeUntied?: boolean; filterText?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -170,7 +171,13 @@ export function registerDecisionCommand(program: Command): void {
           entries = entries.filter((d) => d.status === parsed.data);
         }
         if (opts.filterRec !== undefined) {
-          entries = entries.filter((d) => d.recommendationId === opts.filterRec);
+          // Slice 32: --include-untied softens the rec predicate to
+          // "rec=X OR untied" rather than introducing a new filter stage.
+          entries = entries.filter(
+            (d) =>
+              d.recommendationId === opts.filterRec ||
+              (opts.includeUntied === true && d.recommendationId === undefined),
+          );
         }
         if (opts.filterText !== undefined) {
           const needle = opts.filterText.toLowerCase();
@@ -213,6 +220,7 @@ export function registerDecisionCommand(program: Command): void {
           const filterDims: string[] = [];
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
           if (opts.filterRec) filterDims.push(`rec=${opts.filterRec}`);
+          if (opts.filterRec && opts.includeUntied) filterDims.push('untied=incl');
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0
