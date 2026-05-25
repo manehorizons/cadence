@@ -10,11 +10,11 @@
 
 ## Summary
 
-**Slice 33** adds a new `--filter-regex <pattern>` flag to all three list commands (`recommendation list`, `assumption list`, `decision list`). The pattern is compiled as a JavaScript `RegExp` and tested via `.test()` against the same multi-field text scope `--filter-text` searches (per-subject: rec → title + summary; assumption → text; decision → title + rationale). Power-user variant: case-sensitive by default (regex norm); operators use inline `(?i)` for case-insensitive. Mutually exclusive with `--filter-text`. Invalid patterns refuse with exit 1.
+**Slice 33** adds a new `--filter-regex <pattern>` flag to all three list commands (`recommendation list`, `assumption list`, `decision list`). The pattern is compiled as a JavaScript `RegExp` and tested via `.test()` against the same multi-field text scope `--filter-text` searches (per-subject: rec → title + summary; assumption → text; decision → title + rationale). Power-user variant: always case-sensitive (Node's V8 regex engine does not support inline modifier groups like `(?i)` or `(?i:...)` — TC39 regexp-modifiers is Stage 3, not yet shipped). Operators wanting case-insensitive matching use character classes (`[Cc]ycle`). Mutually exclusive with `--filter-text`. Invalid patterns refuse with exit 1.
 
 - **One new flag** on all three list commands.
 - **Multi-field scope** matches `--filter-text` per subject — same fields, different match algorithm.
-- **Case-sensitive by default** (standard regex norm); inline `(?i)` enables case-insensitive.
+- **Always case-sensitive.** No inline-flag support in V8 today. Operators use character classes (`[Cc]ycle`) for one-off insensitivity; a future `--filter-regex-flags <flags>` channel is a clean follow-on if real use cases warrant.
 - **Mutually exclusive with `--filter-text`**: both set → exit 1 + stderr `cannot combine --filter-text and --filter-regex`.
 - **Invalid pattern**: exit 1 + stderr `invalid regex: <message>` (preserving Node's `SyntaxError` message).
 - **Apply order**: same stage as `--filter-text` (status → rec → text-or-regex → reverse → offset → limit).
@@ -137,7 +137,7 @@ Quotes match the existing `text="..."` style. The empty-result message reads e.g
 | (no flags) | all entries |
 | `--filter-text Foo` | entries where text scope matches `Foo` (case-insensitive substring) |
 | `--filter-regex ^Foo` | entries where text scope matches `/^Foo/` (case-sensitive) |
-| `--filter-regex '(?i)foo'` | entries where text scope matches `/foo/i` |
+| `--filter-regex '[Ff]oo'` | entries where text scope matches `Foo` or `foo` (char-class workaround for case-insensitive) |
 | `--filter-text Foo --filter-regex Bar` | exit 1 + stderr (mutually exclusive) |
 | `--filter-regex '['` | exit 1 + stderr (invalid regex) |
 
@@ -145,8 +145,8 @@ Quotes match the existing `text="..."` style. The empty-result message reads e.g
 
 | AC | Statement | Linked test |
 |---|---|---|
-| AC-1 | `decision list --filter-regex '^Cycle'` returns only decisions whose title or rationale starts with `Cycle`. Case-sensitive default. | CLI test |
-| AC-2 | `decision list --filter-regex '(?i)foo'` returns case-insensitive matches. | CLI test |
+| AC-1 | `decision list --filter-regex '^Cycle'` returns only decisions whose title or rationale starts with `Cycle`. Case-sensitive (no JS regex inline-flag support). | CLI test |
+| AC-2 | `decision list --filter-regex '[Cc]ycle'` (char-class workaround) returns case-insensitive matches. | CLI test |
 | AC-3 | `assumption list --filter-regex 'race condition'` returns assumptions whose `text` field matches the pattern. | CLI test |
 | AC-4 | `recommendation list --filter-regex '^Add'` returns recs whose title or summary matches. | CLI test |
 | AC-5 | `--filter-text X --filter-regex Y` → exit 1 + stderr `<cmd> list failed: cannot combine --filter-text and --filter-regex`. No stdout. | CLI test |
@@ -189,7 +189,7 @@ Three commits, per Praxis convention.
 ## Decision Log
 
 1. **Mutually exclusive with `--filter-text`.** Both flags occupy the same pipeline stage and same semantic slot (text search). Allowing both would require an AND/OR convention that isn't obvious. Refusing the combination keeps the invocation clear; power users who need composition can express it via lookaheads in the regex itself (`(?=p1)(?=p2)`).
-2. **Case-sensitive by default.** Standard regex convention. Operators who want case-insensitivity use inline `(?i)`. Differs from `--filter-text`'s case-insensitive default — but that's the precise distinction the flag exists to make. The flag's name `--filter-regex` (not `--filter-regex-cs`) signals regex semantics; regex semantics include case-sensitivity by default.
+2. **Always case-sensitive (no inline-flag channel).** Node's V8 regex engine does not support inline modifier groups: neither `(?i)foo` (PCRE-style applies-to-rest) nor `(?i:foo)` (TC39 regexp-modifiers, Stage 3) compiles today. Confirmed against Node 20.20. Adding case-insensitivity via a flags channel (`--filter-regex-flags`) is out of scope for this slice — would double the invocation surface for one use case. Operators wanting case-insensitive matching today use character classes (`[Cc]ycle`, `[Ff]oo`); the design names this as a clean follow-on slice if real use cases warrant a flags channel.
 3. **Multi-field scope matches `--filter-text`.** Each subject's text scope is the same fields the existing substring filter searches. Operators reaching for `--filter-regex` typically want the same scope but a different match algorithm. Anchor in the pattern for narrower scope (`^...$`).
 4. **Invalid pattern refuses, doesn't fallback.** Silently treating an invalid pattern as a no-op or as literal-text would be surprising. Operators get an immediate signal.
 5. **No `--filter-regex-flags` option channel.** Inline `(?i)`, `(?m)`, `(?s)` cover the common cases. Adding a flags channel doubles the invocation surface for marginal gain.
@@ -199,6 +199,7 @@ Three commits, per Praxis convention.
 
 ## Follow-On
 
+- **`--filter-regex-flags <flags>`** (case-insensitive, multiline, dotall): channel for the standard JS regex flag set. If operators frequently want `--filter-regex 'foo' --filter-regex-flags i` instead of `[Ff]oo`, ship it. Cheap.
 - **`--filter-text-exact`** (case-sensitive substring): cheap if asked. Today: `--filter-regex '\\bFoo\\b'` or `'^Foo$'` covers it.
 - **`--filter-text-in <field-list>`** (per-field selection): if operators want title-only.
 - **`--sort-by <field>`** stable sort with multi-key (Slice 27 follow-on; biggest remaining list-shaping item).

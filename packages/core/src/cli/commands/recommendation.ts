@@ -156,10 +156,11 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary')
+    .option('--filter-regex <pattern>', 'Power-user regex filter on title or summary (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterRegex?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -182,6 +183,13 @@ export function registerRecommendationCommand(program: Command): void {
           }
           entries = entries.filter((r) => r.status === parsed.data);
         }
+        if (opts.filterText !== undefined && opts.filterRegex !== undefined) {
+          process.stderr.write(
+            `recommendation list failed: cannot combine --filter-text and --filter-regex\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         if (opts.filterText !== undefined) {
           const needle = opts.filterText.toLowerCase();
           entries = entries.filter(
@@ -189,6 +197,19 @@ export function registerRecommendationCommand(program: Command): void {
               r.title.toLowerCase().includes(needle) ||
               r.summary.toLowerCase().includes(needle),
           );
+        }
+        if (opts.filterRegex !== undefined) {
+          let regex: RegExp;
+          try {
+            regex = new RegExp(opts.filterRegex);
+          } catch (err) {
+            process.stderr.write(
+              `recommendation list failed: invalid regex: ${err instanceof Error ? err.message : String(err)}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.filter((r) => regex.test(r.title) || regex.test(r.summary));
         }
         if (opts.reverse) {
           entries = entries.slice().reverse();
@@ -223,6 +244,7 @@ export function registerRecommendationCommand(program: Command): void {
           const filterDims: string[] = [];
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
+          if (opts.filterRegex !== undefined) filterDims.push(`regex="${opts.filterRegex}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0
             ? `No recommendations matching ${filterDims.join(', ')} recorded.\n`

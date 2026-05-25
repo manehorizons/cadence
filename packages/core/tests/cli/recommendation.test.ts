@@ -332,4 +332,18 @@ describe('cadence recommendation', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toBe('No recommendations matching text="nonexistent" recorded.\n');
   });
+
+  it('Slice 33 AC-4: --filter-regex matches on title or summary', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['recommendation', 'add', '--title', 'Add auth', '--summary', 'JWT-based'], active.root);
+    await run(['recommendation', 'add', '--title', 'Remove cache', '--summary', 'unused'], active.root);
+    await run(['recommendation', 'add', '--title', 'Add metrics', '--summary', 'prometheus'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--filter-regex', '^Add', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { title: string }) => x.title).sort()).toEqual(['Add auth', 'Add metrics']);
+  });
 });

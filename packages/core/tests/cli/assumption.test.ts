@@ -399,4 +399,23 @@ describe('cadence assumption (Slice 8)', () => {
     const arr = JSON.parse(r.stdout);
     expect(arr.map((x: { text: string }) => x.text)).toEqual(['Z', 'Y', 'X']);
   });
+
+  it('Slice 33 AC-3: --filter-regex matches on text field', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice33' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'race condition in handler'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'memory leak'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'race condition in writer'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--filter-regex', 'race condition', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    expect(arr.every((a: { text: string }) => /race condition/.test(a.text))).toBe(true);
+  });
 });
