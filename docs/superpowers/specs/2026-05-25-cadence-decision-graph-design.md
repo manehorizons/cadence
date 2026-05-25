@@ -413,7 +413,7 @@ Three commits, per Praxis convention.
 ## Follow-On
 
 - ~~**`intelligence audit` integrity dim for `supersededBy`** — stale references + superseded-without-link soft hints. Reuses `walkSupersededByChain`.~~ **PARTIALLY SHIPPED Slice 30** (stale-supersededby finding kind enumerable from `cadence intelligence audit`; same drift the graph viewer surfaces visually as `(not found)`). Soft hint deferred — would contradict Slice-28 DL #1's optional-by-design `--by`.
-- **Bidirectional `Decision.supersedes: dec-X[]` derived backfill** — mirror Slice 11's `assumptionIds`/`decisionIds` pattern; would let `decision show` surface the inverse link without re-walking the ledger.
+- ~~**Bidirectional `Decision.supersedes: dec-X[]` derived backfill** — mirror Slice 11's `assumptionIds`/`decisionIds` pattern; would let `decision show` surface the inverse link without re-walking the ledger.~~ **SHIPPED Slice 31** (`deriveDecisionInverseLinks` wired into add/transition/reconcile; `decision show` surfaces the bullet). Slice 29 graph viewer NOT optimized to use the new field — current inverse-lookup works on any ledger; using `supersedes[]` directly would couple correctness to field consistency.
 - **`docs/reference/commands.md` reconciliation** — sweep the entire `decision` subcommand table (Slice 13/16/26/27/28/29 cumulative drift).
 - **Rec↔phase linkage** — biggest remaining scope (handoff candidate #1; needs upstream design).
 - **Bulk transitions** (`cadence assumption validate --all-rec <recId>`).

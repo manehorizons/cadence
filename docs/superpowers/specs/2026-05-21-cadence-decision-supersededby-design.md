@@ -268,7 +268,7 @@ Three commits.
 - ~~**`supersededBy <id>`** decision field.~~ **SHIPPED Slice 28** (this slice).
 - ~~**`cadence decision graph <id>`** viewer (forward + backward chain traversal; ASCII tree).~~ **SHIPPED Slice 29** (two-section ASCII; `## Supersedes` transitive bullets + `## Superseded by` arrow chain; `--format json` envelope; cycle and missing-id markers).
 - ~~**`intelligence audit` dimension for stale supersededBy refs** and superseded-without-link soft hints.~~ **PARTIALLY SHIPPED Slice 30** (stale-supersededby finding kind + Remediation hint pointing at `cadence decision reactivate <id>` as the clear-path). The superseded-without-link soft hint remains deferred — would contradict Slice-28 DL #1's optional-by-design `--by`.
-- **Bidirectional reverse-link backfill** (`Decision.supersedes: dec-X[]` array on the replacement — derived, not user-input; like Slice 11 `assumptionIds`/`decisionIds` backfill pattern).
+- ~~**Bidirectional reverse-link backfill** (`Decision.supersedes: dec-X[]` array on the replacement — derived, not user-input; like Slice 11 `assumptionIds`/`decisionIds` backfill pattern).~~ **SHIPPED Slice 31** (`supersedes: string[]` always-present derived field; `deriveDecisionInverseLinks` helper wired into add/transition/reconcile; `decision show` surfaces the bullet; mirrors Slice 11 pattern exactly).
 - **`--sort-by <field>`** stable sort with multi-key (Slice 27 follow-on).
 - **Bulk transitions** (`cadence assumption validate --all-rec <recId>`).
 - **Rec↔phase linkage** — biggest remaining scope.
