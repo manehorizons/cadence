@@ -141,7 +141,7 @@ Three commits.
 
 - **Validate rec id against ledger** (with hint suggestion on unknown).
 - **Multi-rec filter** (`--filter-rec rec-A,rec-B`).
-- **`--include-untied`** on decision list when `--filter-rec` set.
+- ~~**`--include-untied`** on decision list when `--filter-rec` set.~~ **SHIPPED Slice 32** — see [decision-list-include-untied design](2026-05-25-cadence-decision-list-include-untied-design.md).
 - **`--filter-text <substr>`** body-text search.
 - ~~**`--limit <n>`** pagination.~~ **`--limit` SHIPPED Slice 24** — see [list-limit design](2026-05-20-cadence-list-limit-design.md). Offset/skip still deferred.
 - **`supersededBy <id>`** decision field.
