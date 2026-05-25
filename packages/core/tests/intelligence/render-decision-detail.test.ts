@@ -10,6 +10,7 @@ function mkDec(p: Partial<IntelligenceDecision> = {}): IntelligenceDecision {
     rationale: 'the rationale paragraph',
     status: 'active',
     decidedAt: '2026-05-20T00:00:00.000Z',
+    supersedes: [],
     ...p,
   };
 }
@@ -55,6 +56,7 @@ describe('renderDecisionDetail (Slice 16)', () => {
       rationale: 'r',
       status: 'active',
       decidedAt: '2026-05-20T00:00:00.000Z',
+      supersedes: [],
     };
     const md = renderDecisionDetail(untied);
     expect(md).toMatch(/# dec-2 — untied/);
@@ -105,5 +107,34 @@ describe('renderDecisionDetail (Slice 16)', () => {
     const ledger = { schemaVersion: 1 as const, decisions: [dec] };
     const md = renderDecisionDetail(dec, mkRec(), ledger);
     expect(md).toMatch(/- superseded-by: dec-bogus \(not found\)/);
+  });
+
+  it('Slice 31 AC-11: supersedes bullet appears when array non-empty', () => {
+    const d2 = mkDec({ id: 'dec-2', title: 'D2' });
+    const dec = mkDec({ supersedes: ['dec-2'] });
+    const ledger = { schemaVersion: 1 as const, decisions: [dec, d2] };
+    const md = renderDecisionDetail(dec, mkRec(), ledger);
+    expect(md).toMatch(/- supersedes: dec-2$/m);
+  });
+
+  it('Slice 31 AC-11: supersedes lists multiple ids comma-separated', () => {
+    const d2 = mkDec({ id: 'dec-2', title: 'D2' });
+    const d3 = mkDec({ id: 'dec-3', title: 'D3' });
+    const dec = mkDec({ supersedes: ['dec-2', 'dec-3'] });
+    const ledger = { schemaVersion: 1 as const, decisions: [dec, d2, d3] };
+    const md = renderDecisionDetail(dec, mkRec(), ledger);
+    expect(md).toMatch(/- supersedes: dec-2, dec-3$/m);
+  });
+
+  it('Slice 31 AC-12: supersedes bullet absent when array empty', () => {
+    const md = renderDecisionDetail(mkDec({ supersedes: [] }), mkRec());
+    expect(md).not.toMatch(/- supersedes:/);
+  });
+
+  it('Slice 31 AC-14: supersedes unknown id → (not found) fallback', () => {
+    const dec = mkDec({ supersedes: ['dec-missing'] });
+    const ledger = { schemaVersion: 1 as const, decisions: [dec] };
+    const md = renderDecisionDetail(dec, mkRec(), ledger);
+    expect(md).toMatch(/- supersedes: dec-missing \(not found\)/);
   });
 });

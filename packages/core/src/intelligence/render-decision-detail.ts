@@ -24,6 +24,13 @@ export function renderDecisionDetail(
     const suffix = exists ? '' : ' (not found)';
     lines.push(`- superseded-by: ${dec.supersededBy}${suffix}`);
   }
+  if (dec.supersedes.length > 0) {
+    const parts = dec.supersedes.map((id) => {
+      const exists = decLedger?.decisions.some((x) => x.id === id) ?? true;
+      return exists ? id : `${id} (not found)`;
+    });
+    lines.push(`- supersedes: ${parts.join(', ')}`);
+  }
   lines.push('');
   lines.push(dec.rationale);
   lines.push('');

@@ -389,16 +389,26 @@ export async function addIntelligenceDecision(
   }
   const decLedger = await readIntelligenceDecisionLedger(root);
   const now = new Date();
+  // Construct in schema-declaration order so the persisted JSON property
+  // order matches what `IntelligenceDecisionLedgerZ.parse(...)` would produce
+  // on reconcile. Keeps byte-equality between addIntelligenceDecision writes
+  // and reconcile writes (relied on by Slice-17 AC-6).
   const out: IntelligenceDecision = {
     id: nextIntelligenceDecisionId(decLedger, now),
+    ...(input.recommendationId !== undefined ? { recommendationId: input.recommendationId } : {}),
     title: input.title,
     rationale: input.rationale,
     status: 'active',
     decidedAt: now.toISOString(),
+    supersedes: [],
   };
-  if (input.recommendationId !== undefined) out.recommendationId = input.recommendationId;
   decLedger.decisions.push(out);
-  await writeIntelligenceDecisionLedger(root, decLedger);
+  // Slice 31: re-derive supersedes arrays across the whole ledger. New
+  // decisions can't be referenced by older ones yet, but pre-Slice-31
+  // ledgers being loaded for the first time benefit from the field
+  // being populated explicitly on write.
+  const derivedDec = deriveDecisionInverseLinks(decLedger);
+  await writeIntelligenceDecisionLedger(root, derivedDec);
   if (input.recommendationId !== undefined && recLedger !== null) {
     const asLedger = await readAssumptionLedger(root);
     const evLedger = await readEvidenceLedger(root);
@@ -449,6 +459,24 @@ function walkSupersededByChain(
     cursor = node?.supersededBy;
   }
   return { ok: true, chain };
+}
+
+// Slice 31: pure helper. For every decision D in the ledger, recompute
+// D.supersedes from current supersededBy values — the inverse-link of
+// Slice 28's edge. Mirrors Slice 11's deriveRecommendationLinks shape
+// but operates within one ledger. Idempotent.
+export function deriveDecisionInverseLinks(
+  ledger: IntelligenceDecisionLedger,
+): IntelligenceDecisionLedger {
+  return {
+    schemaVersion: 1,
+    decisions: ledger.decisions.map((d) => ({
+      ...d,
+      supersedes: ledger.decisions
+        .filter((other) => other.supersededBy === d.id)
+        .map((other) => other.id),
+    })),
+  };
 }
 
 export function applyDecisionTransition(
@@ -506,7 +534,10 @@ export function applyDecisionTransition(
       return updated;
     }),
   };
-  return { ok: true, ledger: ledgerOut };
+  // Slice 31: re-derive supersedes arrays so the returned ledger is fully
+  // consistent (target's supersededBy update propagates to the replacement's
+  // supersedes array, and reactivate-cleared targets drop out).
+  return { ok: true, ledger: deriveDecisionInverseLinks(ledgerOut) };
 }
 
 export async function runDecisionTransition(
@@ -807,17 +838,22 @@ export async function runIntelligenceReconcile(
   const decLedger = await readIntelligenceDecisionLedger(root);
   // Re-derive rec link arrays from current subject ledgers (idempotent if already correct).
   const derivedRec = deriveRecommendationLinks(recLedger, asLedger, decLedger);
+  // Slice 31: re-derive decision inverse-links (supersedes arrays) from
+  // current supersededBy values. Idempotent. Operator's "force re-derive"
+  // command fixes any drift introduced by manual JSON edits.
+  const derivedDec = deriveDecisionInverseLinks(decLedger);
   // writeIntelligenceLedgers handles atomic JSON + RECOMMENDATIONS.md re-render (Slice 15 annotated form).
   await writeIntelligenceLedgers(root, derivedRec, evLedger);
+  await writeIntelligenceDecisionLedger(root, derivedDec);
   // Re-render subject MDs from current ledgers (source-of-truth JSON untouched).
   await mkdir(intelligenceDir(root), { recursive: true });
   await atomicWriteText(assumptionsMdPath(root), renderAssumptionsMd(asLedger));
-  await atomicWriteText(decisionsMdPath(root), renderDecisionsMd(decLedger));
+  await atomicWriteText(decisionsMdPath(root), renderDecisionsMd(derivedDec));
   return {
     present: true,
     recommendations: derivedRec.recommendations.length,
     assumptions: asLedger.assumptions.length,
-    decisions: decLedger.decisions.length,
+    decisions: derivedDec.decisions.length,
   };
 }
 

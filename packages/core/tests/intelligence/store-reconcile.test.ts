@@ -142,6 +142,43 @@ describe('runIntelligenceReconcile (Slice 17)', () => {
     const decBefore = await readFile(decPath, 'utf8');
     await runIntelligenceReconcile(active.root);
     expect(await readFile(asPath, 'utf8')).toBe(asBefore);
+    // Slice 31: reconcile now writes decisions.json (to re-derive supersedes
+    // arrays). On a ledger that's already canonical (every supersedes array
+    // matches the derivation), byte-equality holds.
     expect(await readFile(decPath, 'utf8')).toBe(decBefore);
+  });
+
+  it('Slice 31 AC-10: manually-stale `supersedes` array fixed by reconcile', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice31' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const d1 = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D1', rationale: 'r',
+    });
+    const d2 = await addIntelligenceDecision(active.root, {
+      recommendationId: rec.id, title: 'D2', rationale: 'r',
+    });
+    // Wire the supersededBy edge manually but break the inverse: D2.supersedes
+    // ends up wrong (contains an id that doesn't actually reference D2).
+    const decPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const raw = JSON.parse(await readFile(decPath, 'utf8'));
+    for (const dec of raw.decisions) {
+      if (dec.id === d1.id) {
+        dec.status = 'superseded';
+        dec.supersededBy = d2.id;
+      }
+      if (dec.id === d2.id) {
+        dec.supersedes = ['dec-9']; // bogus — dec-9 doesn't reference d2
+      }
+    }
+    await writeFile(decPath, JSON.stringify(raw, null, 2) + '\n', 'utf8');
+    await runIntelligenceReconcile(active.root);
+    const after = JSON.parse(await readFile(decPath, 'utf8'));
+    const d1After = after.decisions.find((d: { id: string }) => d.id === d1.id);
+    const d2After = after.decisions.find((d: { id: string }) => d.id === d2.id);
+    expect(d1After.supersedes).toEqual([]);
+    expect(d2After.supersedes).toEqual([d1.id]);
   });
 });

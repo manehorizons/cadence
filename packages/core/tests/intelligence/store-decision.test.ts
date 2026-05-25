@@ -69,4 +69,24 @@ describe('addIntelligenceDecision (Slice 8)', () => {
     ).rejects.toThrow('unknown recommendation "rec-bogus"');
     expect(existsSync(jsonPath)).toBe(false);
   });
+
+  it('Slice 31 AC-7: new decisions return with supersedes: [] and persist it on every decision', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice31' });
+    const recId = await seedRec(active.root);
+    const d1 = await addIntelligenceDecision(active.root, {
+      recommendationId: recId, title: 'D1', rationale: 'r',
+    });
+    expect(d1.supersedes).toEqual([]);
+    const d2 = await addIntelligenceDecision(active.root, {
+      title: 'D2 untied', rationale: 'r',
+    });
+    expect(d2.supersedes).toEqual([]);
+    // Both decisions are persisted with the field populated.
+    const jsonPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const raw = IntelligenceDecisionLedgerZ.parse(JSON.parse(await readFile(jsonPath, 'utf8')));
+    expect(raw.decisions).toHaveLength(2);
+    for (const dec of raw.decisions) {
+      expect(dec.supersedes).toEqual([]);
+    }
+  });
 });

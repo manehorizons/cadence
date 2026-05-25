@@ -141,6 +141,15 @@ describe('cadence decision show (Slice 16)', () => {
     expect(env.recommendation).toBeNull();
   });
 
+  it('Slice 31 AC-13: --format json envelope decision.supersedes is present array (default empty)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice31' });
+    const d = await addIntelligenceDecision(active.root, { title: 'x', rationale: 'r' });
+    const r = await run(['decision', 'show', d.id, '--format', 'json'], active.root);
+    expect(r.code).toBe(0);
+    const env = JSON.parse(r.stdout);
+    expect(env.decision.supersedes).toEqual([]);
+  });
+
   it('AC-8: invalid --format → exit 1 + stderr', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice20' });
     const d = await addIntelligenceDecision(active.root, { title: 'x', rationale: 'r' });
