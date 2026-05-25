@@ -135,7 +135,7 @@ Three commits.
 
 ## Follow-On
 
-- **`--filter-regex <pattern>`** for power users.
+- ~~**`--filter-regex <pattern>`** for power users.~~ **SHIPPED Slice 33** — see [list-filter-regex design](2026-05-25-cadence-list-filter-regex-design.md). Multi-field scope mirrors --filter-text; mutually exclusive with it; always case-sensitive (V8 doesn't support inline `(?i)` — use `[Cc]ycle` char-class workaround).
 - **`--filter-text-exact`** for case-sensitive match.
 - **Per-field selection** (`--filter-text-in title,text`).
 - ~~**`--offset <n>`** pagination.~~ **SHIPPED Slice 26** — see [list-offset design](2026-05-21-cadence-list-offset-design.md). Non-negative integer; applied after filters, before `--limit`.
