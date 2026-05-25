@@ -557,4 +557,100 @@ describe('cadence decision (Slice 8)', () => {
       expect(r.stdout).not.toMatch(/untied-active/);
     });
   });
+
+  describe('Slice 33: --filter-regex', () => {
+    it('Slice 33 AC-1: --filter-regex matches anchored pattern case-sensitively', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice33' });
+      await run(['decision', 'add', '--title', 'Cycle detection added', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'cycle handling extended', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'Other thing', '--rationale', 'had cycle reference'], active.root);
+      const r = await run(
+        ['decision', 'list', '--filter-regex', '^Cycle', '--format', 'json'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      const arr = JSON.parse(r.stdout);
+      // Anchored ^Cycle (case-sensitive): matches "Cycle detection added" by title only.
+      // "cycle handling extended" excluded (lowercase c at title start).
+      // "Other thing" / "had cycle reference" excluded (title doesn't start with Cycle; rationale's "cycle" is lowercase and mid-text).
+      expect(arr).toHaveLength(1);
+      expect(arr[0].title).toBe('Cycle detection added');
+    });
+
+    it('Slice 33 AC-2: character-class workaround for case-insensitive match', async () => {
+      // JS regex (V8) does not support inline modifier groups (?i)/(?i:...) today.
+      // The documented workaround is character classes — verifying it works.
+      active = await tempRepo({ initialized: true, projectName: 'slice33' });
+      await run(['decision', 'add', '--title', 'Cycle one', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'cycle two', '--rationale', 'r'], active.root);
+      const r = await run(
+        ['decision', 'list', '--filter-regex', '[Cc]ycle', '--format', 'json'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      const arr = JSON.parse(r.stdout);
+      expect(arr).toHaveLength(2);
+    });
+
+    it('Slice 33 AC-5: --filter-text + --filter-regex → exit 1 + mutual-exclusion error', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice33' });
+      await run(['decision', 'add', '--title', 'x', '--rationale', 'r'], active.root);
+      const r = await run(
+        ['decision', 'list', '--filter-text', 'foo', '--filter-regex', 'bar'],
+        active.root,
+      );
+      expect(r.code).toBe(1);
+      expect(r.stderr).toContain('cannot combine --filter-text and --filter-regex');
+      expect(r.stdout).toBe('');
+    });
+
+    it('Slice 33 AC-6: invalid regex → exit 1 + invalid-regex stderr', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice33' });
+      await run(['decision', 'add', '--title', 'x', '--rationale', 'r'], active.root);
+      const r = await run(
+        ['decision', 'list', '--filter-regex', '['],
+        active.root,
+      );
+      expect(r.code).toBe(1);
+      expect(r.stderr).toContain('invalid regex:');
+      expect(r.stdout).toBe('');
+    });
+
+    it('Slice 33 AC-7+9: --filter-regex composes with --filter-status + --reverse + --limit', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice33' });
+      const a1 = await run(['decision', 'add', '--title', 'auth-A', '--rationale', 'r'], active.root);
+      const a2 = await run(['decision', 'add', '--title', 'auth-B', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'other', '--rationale', 'r'], active.root);
+      const id1 = a1.stdout.match(/Added (dec-\S+):/)?.[1];
+      const id2 = a2.stdout.match(/Added (dec-\S+):/)?.[1];
+      if (!id1 || !id2) throw new Error('no ids');
+      await run(['decision', 'rescind', id1], active.root);
+      // auth-A is now rescinded; auth-B is active; other is active.
+      // Filter active + regex ^auth → auth-B only. Reverse + limit 1 should still give auth-B.
+      const r = await run(
+        ['decision', 'list',
+          '--filter-status', 'active',
+          '--filter-regex', '^auth',
+          '--reverse',
+          '--limit', '1',
+          '--format', 'json'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      const arr = JSON.parse(r.stdout);
+      expect(arr).toHaveLength(1);
+      expect(arr[0].title).toBe('auth-B');
+    });
+
+    it('Slice 33 AC-8: empty result with --filter-regex includes regex="..." dim', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice33' });
+      await run(['decision', 'add', '--title', 'x', '--rationale', 'r'], active.root);
+      const r = await run(
+        ['decision', 'list', '--filter-regex', 'nonexistent'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      expect(r.stdout).toBe('No decisions matching regex="nonexistent" recorded.\n');
+    });
+  });
 });

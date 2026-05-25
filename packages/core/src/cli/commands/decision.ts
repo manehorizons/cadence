@@ -144,10 +144,11 @@ export function registerDecisionCommand(program: Command): void {
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
     .option('--include-untied', 'When combined with --filter-rec, also include decisions with no recommendationId')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or rationale')
+    .option('--filter-regex <pattern>', 'Power-user regex filter on title or rationale (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; includeUntied?: boolean; filterText?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; includeUntied?: boolean; filterText?: string; filterRegex?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -179,6 +180,13 @@ export function registerDecisionCommand(program: Command): void {
               (opts.includeUntied === true && d.recommendationId === undefined),
           );
         }
+        if (opts.filterText !== undefined && opts.filterRegex !== undefined) {
+          process.stderr.write(
+            `decision list failed: cannot combine --filter-text and --filter-regex\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         if (opts.filterText !== undefined) {
           const needle = opts.filterText.toLowerCase();
           entries = entries.filter(
@@ -186,6 +194,19 @@ export function registerDecisionCommand(program: Command): void {
               d.title.toLowerCase().includes(needle) ||
               d.rationale.toLowerCase().includes(needle),
           );
+        }
+        if (opts.filterRegex !== undefined) {
+          let regex: RegExp;
+          try {
+            regex = new RegExp(opts.filterRegex);
+          } catch (err) {
+            process.stderr.write(
+              `decision list failed: invalid regex: ${err instanceof Error ? err.message : String(err)}\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          entries = entries.filter((d) => regex.test(d.title) || regex.test(d.rationale));
         }
         if (opts.reverse) {
           entries = entries.slice().reverse();
@@ -222,6 +243,7 @@ export function registerDecisionCommand(program: Command): void {
           if (opts.filterRec) filterDims.push(`rec=${opts.filterRec}`);
           if (opts.filterRec && opts.includeUntied) filterDims.push('untied=incl');
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
+          if (opts.filterRegex !== undefined) filterDims.push(`regex="${opts.filterRegex}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0
             ? `No decisions matching ${filterDims.join(', ')} recorded.\n`
