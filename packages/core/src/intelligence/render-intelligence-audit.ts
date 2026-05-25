@@ -10,6 +10,7 @@ const SECTION_HEADERS: Record<IntelligenceAuditFinding['kind'], string> = {
   'orphan-assumption': 'Orphan Assumptions',
   'orphan-decision': 'Orphan Decisions',
   'orphan-evidence': 'Orphan Evidence',
+  'stale-supersededby': 'Stale supersededBy Refs',
 };
 
 const SECTION_ORDER: IntelligenceAuditFinding['kind'][] = [
@@ -19,6 +20,7 @@ const SECTION_ORDER: IntelligenceAuditFinding['kind'][] = [
   'orphan-assumption',
   'orphan-decision',
   'orphan-evidence',
+  'stale-supersededby',
 ];
 
 function renderFindingLine(f: IntelligenceAuditFinding): string {
@@ -35,6 +37,8 @@ function renderFindingLine(f: IntelligenceAuditFinding): string {
       return `- ${f.decisionId} references missing rec: ${f.missingRecId}`;
     case 'orphan-evidence':
       return `- ${f.evidenceId} references missing rec: ${f.missingRecId}`;
+    case 'stale-supersededby':
+      return `- ${f.decisionId} supersededBy missing decision: ${f.missingTargetId}`;
   }
 }
 
@@ -64,6 +68,9 @@ export function renderIntelligenceAudit(report: IntelligenceAuditReport): string
   );
   lines.push(
     '- For orphan subjects: manually inspect; either restore the missing recommendation or remove/re-tag the subject. `reconcile` does NOT auto-remove orphans (operator decision).',
+  );
+  lines.push(
+    '- For stale supersededBy refs: restore the missing decision, OR run `cadence decision reactivate <id>` to clear the dangling `supersededBy` edge (reactivate clears the field per Slice 28).',
   );
   lines.push('');
 
