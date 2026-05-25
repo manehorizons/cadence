@@ -9,6 +9,8 @@ import {
   type DecisionTransitionAction,
 } from '../../intelligence/store.js';
 import { renderDecisionDetail } from '../../intelligence/render-decision-detail.js';
+import { buildDecisionGraph } from '../../intelligence/graph-decision.js';
+import { renderDecisionGraph } from '../../intelligence/render-decision-graph.js';
 
 const DECISION_TRANSITION_DESCRIPTIONS: Record<DecisionTransitionAction, string> = {
   supersede: 'Mark an active decision superseded',
@@ -93,6 +95,42 @@ export function registerDecisionCommand(program: Command): void {
       } catch (err) {
         process.stderr.write(
           `decision show failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
+    .command('graph <id>')
+    .description('Show the supersession chain (ancestors + descendants) for a decision')
+    .option('--format <format>', 'Output format: terminal | json', 'terminal')
+    .action(async (id: string, opts: { format?: string }) => {
+      try {
+        const format = opts.format ?? 'terminal';
+        if (format !== 'terminal' && format !== 'json') {
+          process.stderr.write(
+            `decision graph failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        const decLedger = await readIntelligenceDecisionLedger(process.cwd());
+        const res = buildDecisionGraph(decLedger, id);
+        if (!res.ok) {
+          process.stderr.write(`decision graph failed: ${res.error}\n`);
+          process.exitCode = 1;
+          return;
+        }
+        if (format === 'json') {
+          process.stdout.write(JSON.stringify(res.graph, null, 2) + '\n');
+          return;
+        }
+        const md = renderDecisionGraph(res.graph);
+        process.stdout.write(md);
+        if (!md.endsWith('\n')) process.stdout.write('\n');
+      } catch (err) {
+        process.stderr.write(
+          `decision graph failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
         process.exitCode = 1;
       }
