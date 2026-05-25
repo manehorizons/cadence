@@ -446,4 +446,115 @@ describe('cadence decision (Slice 8)', () => {
     );
     expect(md).toMatch(new RegExp(`- superseded-by: ${id2}$`, 'm'));
   });
+
+  describe('Slice 32: --include-untied', () => {
+    it('AC-1: --filter-rec X --include-untied returns tied-to-X + untied', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice32' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await run(['decision', 'add', '--rec', rec.id, '--title', 'tied-X', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'untied-1', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'untied-2', '--rationale', 'r'], active.root);
+      const r = await run(
+        ['decision', 'list', '--filter-rec', rec.id, '--include-untied'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      expect(r.stdout).toMatch(/tied-X/);
+      expect(r.stdout).toMatch(/untied-1/);
+      expect(r.stdout).toMatch(/untied-2/);
+    });
+
+    it('AC-3: --include-untied alone (no --filter-rec) is a no-op — returns all decisions', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice32' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await run(['decision', 'add', '--rec', rec.id, '--title', 'tied', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'untied', '--rationale', 'r'], active.root);
+      const withFlag = await run(['decision', 'list', '--include-untied'], active.root);
+      const without = await run(['decision', 'list'], active.root);
+      expect(withFlag.code).toBe(0);
+      expect(without.code).toBe(0);
+      expect(withFlag.stdout).toBe(without.stdout);
+    });
+
+    it('AC-4: empty-result with both flags includes `untied=incl` dim', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice32' });
+      // No decisions exist at all; filterDims should reflect both flags.
+      const r = await run(
+        ['decision', 'list', '--filter-rec', 'rec-bogus', '--include-untied'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      expect(r.stdout).toBe('No decisions matching rec=rec-bogus, untied=incl recorded.\n');
+    });
+
+    it('AC-5: --format json composes — both tied and untied entries in JSON', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice32' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await run(['decision', 'add', '--rec', rec.id, '--title', 'tied', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'untied', '--rationale', 'r'], active.root);
+      const r = await run(
+        ['decision', 'list', '--filter-rec', rec.id, '--include-untied', '--format', 'json'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      const arr = JSON.parse(r.stdout);
+      expect(arr).toHaveLength(2);
+      expect(arr.map((d: { title: string }) => d.title).sort()).toEqual(['tied', 'untied']);
+    });
+
+    it('AC-6: composes with --limit (applied after expanded rec filter)', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice32' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await run(['decision', 'add', '--rec', rec.id, '--title', 'tied', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'untied-1', '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'untied-2', '--rationale', 'r'], active.root);
+      const r = await run(
+        ['decision', 'list', '--filter-rec', rec.id, '--include-untied', '--limit', '2'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      // 3 entries match the expanded rec filter; --limit 2 caps to 2 (ledger insertion order).
+      const lines = r.stdout.trim().split('\n').filter((l) => l.length > 0);
+      expect(lines).toHaveLength(2);
+      expect(lines[0]).toMatch(/tied/);
+      expect(lines[1]).toMatch(/untied-1/);
+    });
+
+    it('AC-7: composes with --filter-status (status narrowing still applies on union)', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice32' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await run(['decision', 'add', '--rec', rec.id, '--title', 'tied-active', '--rationale', 'r'], active.root);
+      const a2 = await run(['decision', 'add', '--title', 'untied-active', '--rationale', 'r'], active.root);
+      const id2 = a2.stdout.match(/Added (dec-\S+):/)?.[1];
+      if (!id2) throw new Error('no id');
+      // Rescind untied-active so its status differs.
+      await run(['decision', 'rescind', id2], active.root);
+      const r = await run(
+        [
+          'decision', 'list',
+          '--filter-rec', rec.id, '--include-untied',
+          '--filter-status', 'active',
+        ],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      expect(r.stdout).toMatch(/tied-active/);
+      expect(r.stdout).not.toMatch(/untied-active/);
+    });
+  });
 });
