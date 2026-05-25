@@ -385,3 +385,27 @@ export const ContextPacketZ = z.object({
   }),
 });
 export type ContextPacket = z.infer<typeof ContextPacketZ>;
+
+// Slice 29: `cadence decision graph <id>` output shapes.
+// Pure output types — no Zod schemas (these are not persisted).
+//
+// `cycle: true` is exact-optional: set only when the walker truncated
+// because the node had already been visited on the current path.
+// `missingId` appears only on forward (descendant) links where the
+// `supersededBy` field references an id absent from the ledger.
+
+export type DecisionAncestor = {
+  decision: IntelligenceDecision;
+  ancestors: DecisionAncestor[];
+  cycle?: true;
+};
+
+export type DecisionDescendant =
+  | { decision: IntelligenceDecision; cycle?: true }
+  | { missingId: string };
+
+export type DecisionGraph = {
+  decision: IntelligenceDecision;
+  ancestors: DecisionAncestor[];
+  descendants: DecisionDescendant[];
+};
