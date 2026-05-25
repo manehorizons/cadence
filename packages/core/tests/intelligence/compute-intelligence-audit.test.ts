@@ -156,4 +156,83 @@ describe('computeIntelligenceAudit (Slice 19)', () => {
       'orphan-evidence',
     ]);
   });
+
+  describe('Slice 30: stale-supersededby', () => {
+    it('AC-1: no decisions with supersededBy → no stale-supersededby findings', () => {
+      const decL: IntelligenceDecisionLedger = {
+        schemaVersion: 1,
+        decisions: [
+          { id: 'dec-1', title: 'a', rationale: 'r', status: 'active', decidedAt: '2026-05-20T00:00:00.000Z' },
+        ],
+      };
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, decL);
+      expect(r.byKind['stale-supersededby']).toEqual([]);
+    });
+
+    it('AC-1: valid supersededBy ref → no finding', () => {
+      const decL: IntelligenceDecisionLedger = {
+        schemaVersion: 1,
+        decisions: [
+          { id: 'dec-1', title: 'a', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-2' },
+          { id: 'dec-2', title: 'b', rationale: 'r', status: 'active', decidedAt: '2026-05-20T00:00:00.000Z' },
+        ],
+      };
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, decL);
+      expect(r.byKind['stale-supersededby']).toEqual([]);
+    });
+
+    it('AC-2: stale supersededBy ref → one finding with subject id + missing target id', () => {
+      const decL: IntelligenceDecisionLedger = {
+        schemaVersion: 1,
+        decisions: [
+          { id: 'dec-1', title: 'a', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-missing' },
+        ],
+      };
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, decL);
+      expect(r.byKind['stale-supersededby']).toHaveLength(1);
+      expect(r.byKind['stale-supersededby'][0]).toEqual({
+        kind: 'stale-supersededby',
+        decisionId: 'dec-1',
+        missingTargetId: 'dec-missing',
+      });
+    });
+
+    it('AC-3: multiple stale refs → one finding per stale ref', () => {
+      const decL: IntelligenceDecisionLedger = {
+        schemaVersion: 1,
+        decisions: [
+          { id: 'dec-1', title: 'a', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-x' },
+          { id: 'dec-2', title: 'b', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-y' },
+        ],
+      };
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, decL);
+      expect(r.byKind['stale-supersededby']).toHaveLength(2);
+      expect(r.byKind['stale-supersededby'].map((f) => f.kind === 'stale-supersededby' ? f.missingTargetId : '')).toEqual(['dec-x', 'dec-y']);
+    });
+
+    it('AC-4: mixed clean + stale → only stale ones surface', () => {
+      const decL: IntelligenceDecisionLedger = {
+        schemaVersion: 1,
+        decisions: [
+          { id: 'dec-1', title: 'a', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-2' }, // valid
+          { id: 'dec-2', title: 'b', rationale: 'r', status: 'active', decidedAt: '2026-05-20T00:00:00.000Z' },
+          { id: 'dec-3', title: 'c', rationale: 'r', status: 'superseded', decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-missing' }, // stale
+        ],
+      };
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, decL);
+      expect(r.byKind['stale-supersededby']).toHaveLength(1);
+      const finding = r.byKind['stale-supersededby'][0];
+      expect(finding?.kind).toBe('stale-supersededby');
+      if (finding?.kind === 'stale-supersededby') {
+        expect(finding.decisionId).toBe('dec-3');
+        expect(finding.missingTargetId).toBe('dec-missing');
+      }
+    });
+
+    it('AC-9: byKind initialization includes stale-supersededby (empty array on clean ledger)', () => {
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, emptyDec);
+      expect(r.byKind).toHaveProperty('stale-supersededby');
+      expect(r.byKind['stale-supersededby']).toEqual([]);
+    });
+  });
 });

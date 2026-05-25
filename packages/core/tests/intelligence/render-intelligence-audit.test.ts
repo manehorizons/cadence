@@ -13,6 +13,7 @@ function mkReport(findings: IntelligenceAuditFinding[]): IntelligenceAuditReport
     'orphan-assumption': [] as IntelligenceAuditFinding[],
     'orphan-decision': [] as IntelligenceAuditFinding[],
     'orphan-evidence': [] as IntelligenceAuditFinding[],
+    'stale-supersededby': [] as IntelligenceAuditFinding[],
   };
   for (const f of findings) byKind[f.kind].push(f);
   return { findings, byKind };
@@ -75,5 +76,55 @@ describe('renderIntelligenceAudit (Slice 19)', () => {
     expect(brokenAs).toBeLessThan(brokenEv);
     expect(brokenEv).toBeLessThan(orphanAs);
     expect(orphanAs).toBeLessThan(orphanDec);
+  });
+
+  describe('Slice 30: stale-supersededby section', () => {
+    it('AC-5: report with only stale-supersededby findings renders the new section with one bullet per finding', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'stale-supersededby', decisionId: 'dec-1', missingTargetId: 'dec-x' },
+          { kind: 'stale-supersededby', decisionId: 'dec-2', missingTargetId: 'dec-y' },
+        ]),
+      );
+      expect(md).toMatch(/^# CADENCE Intelligence Audit/);
+      expect(md).toMatch(/Found 2 integrity issue\(s\)/);
+      expect(md).toMatch(/## Stale supersededBy Refs \(2\)/);
+      expect(md).toMatch(/- dec-1 supersededBy missing decision: dec-x/);
+      expect(md).toMatch(/- dec-2 supersededBy missing decision: dec-y/);
+    });
+
+    it('AC-6: remediation block contains the reactivate clear-path bullet', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'stale-supersededby', decisionId: 'dec-1', missingTargetId: 'dec-x' },
+        ]),
+      );
+      expect(md).toMatch(/## Remediation/);
+      expect(md).toMatch(/cadence decision reactivate <id>/);
+      expect(md).toMatch(/clear the dangling `supersededBy` edge/);
+    });
+
+    it('AC-7: clean audit unchanged (no stale-supersededby in zero-finding output)', () => {
+      const md = renderIntelligenceAudit(mkReport([]));
+      expect(md).toBe('Audit clean: no integrity issues.\n');
+    });
+
+    it('AC-8: mixed-kind report places Stale supersededBy Refs LAST (just before Remediation)', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'stale-supersededby', decisionId: 'dec-1', missingTargetId: 'dec-x' },
+          { kind: 'broken-decision-link', recId: 'rec-1', decisionId: 'dec-missing' },
+          { kind: 'orphan-evidence', evidenceId: 'ev-1', missingRecId: 'rec-gone' },
+        ]),
+      );
+      const brokenDec = md.indexOf('## Broken Decision Links');
+      const orphanEv = md.indexOf('## Orphan Evidence');
+      const stale = md.indexOf('## Stale supersededBy Refs');
+      const remediation = md.indexOf('## Remediation');
+      expect(brokenDec).toBeGreaterThan(-1);
+      expect(brokenDec).toBeLessThan(orphanEv);
+      expect(orphanEv).toBeLessThan(stale);
+      expect(stale).toBeLessThan(remediation);
+    });
   });
 });

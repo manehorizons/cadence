@@ -687,7 +687,8 @@ export type IntelligenceAuditFinding =
   | { kind: 'broken-evidence-link'; recId: string; evidenceId: string }
   | { kind: 'orphan-assumption'; assumptionId: string; missingRecId: string }
   | { kind: 'orphan-decision'; decisionId: string; missingRecId: string }
-  | { kind: 'orphan-evidence'; evidenceId: string; missingRecId: string };
+  | { kind: 'orphan-evidence'; evidenceId: string; missingRecId: string }
+  | { kind: 'stale-supersededby'; decisionId: string; missingTargetId: string };
 
 export type IntelligenceAuditReport = {
   findings: IntelligenceAuditFinding[];
@@ -701,6 +702,7 @@ const AUDIT_KINDS = [
   'orphan-assumption',
   'orphan-decision',
   'orphan-evidence',
+  'stale-supersededby',
 ] as const;
 
 export function computeIntelligenceAudit(
@@ -759,6 +761,17 @@ export function computeIntelligenceAudit(
         kind: 'orphan-evidence',
         evidenceId: ev.id,
         missingRecId: ev.recommendationId,
+      });
+    }
+  }
+
+  // Slice 30: stale supersededBy refs (decision.supersededBy points to a missing decision id).
+  for (const d of decLedger.decisions) {
+    if (d.supersededBy !== undefined && !decIds.has(d.supersededBy)) {
+      findings.push({
+        kind: 'stale-supersededby',
+        decisionId: d.id,
+        missingTargetId: d.supersededBy,
       });
     }
   }
