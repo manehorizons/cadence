@@ -24,8 +24,6 @@ Phases 1–11 under the KEEL name. Host-codex archived to `keel-codex-archive` t
 - **Phase 21.1** — auto × complex soft cap (M2 shipped).
 - **Phase 22.1** — Release ceremony.
 
-## Planned
-
 ### v0.4.0 — Cheap gates + telemetry truth
 - **Phase 23.1** — DRAFT-read mtime gate.
 - **Phase 23.2** — coherence-warn anomaly emission.
@@ -49,8 +47,55 @@ Phases 1–11 under the KEEL name. Host-codex archived to `keel-codex-archive` t
 ### v0.8.0 — CI
 - **Phase 27.1** — GitHub Actions tests-on-PR (Node 20 + 22 matrix).
 
-### v1.0.0 — Feature-complete
+### v1.0.0 — Feature-complete (2026-05-15)
 - **Phase 28.1** — Cut v1.0.0 release. DESIGN.md §4.1 gate universe fully shipped.
+
+### v1.1 milestone work (delivered, NOT separately tagged — see v1.1.0 below for the tagged release)
+The v1.1 milestone bundle (Phases 29.x → 33.1) shipped reversibly but was never cut as its own tag. See ROADMAP.md §v1.1.0 sections for the substance.
+- **Phase 29.x** — Shakedown (foreign-repo dogfood, expensive-gate live exercise, TTY exercise, remediation).
+- **Phase 30.1 / 33.1** — Publish pipeline (reversible proof via ephemeral verdaccio; metadata hardened on 3 publishable packages; `@cadence/testkit` → private).
+- **Phase 31.1** — User-facing docs (`docs/` guide + CLI-reference drift guard).
+- **Phase 32.1** — Test infra (shared `vitest.shared.ts`, `tempRepo` rmdir retry; reverted per-test band-aids).
+- **Phase 32.2** — Lint registration.
+- **Phase 34.1** — Required-skill gate (resolves the deferred 23.4 question).
+- **Phase 35** — Review-convergence primitive.
+- **Phase 36** — `spec` stage (pre-DRAFT IDLE→SPEC).
+- **Phase 37** — Codereview convergence.
+- **Phase 38** — `spec-draft` autoseed.
+
+### v1.1.0 — Praxis: strategic-intelligence layer (2026-05-26)
+The first post-v1.0 named tag. 225 commits across 33 numbered slices on `praxis-intelligence-ledger`; merged to main as commit `e34be04`, tagged `v1.1.0`. Praxis sits ABOVE the CADENCE loop — the engine stays Praxis-unaware (no `state.json`/`STATE.md` touch, no phase-side metadata, no loop transition changes). Architecture: Approach A loose coupling, locked in Slice 34's upstream design doc.
+
+Praxis used a different planning surface (`docs/superpowers/specs/`) than the CADENCE-engine `.cadence/phases/` indexed elsewhere in this file. Slice numbering is internal to the Praxis branch.
+
+- **Slices 4–18** — Ledger surfaces: recommendation/assumption/decision/evidence add+list+show; bucket-partitioned MD renders; transition matrices (validate/reject/reopen on assumptions; supersede/rescind/reactivate on decisions); status-annotated link bullets in `RECOMMENDATIONS.md`.
+- **Slices 19–22** — Intelligence admin: `cadence intelligence reconcile/stats/audit` with 6 baseline finding kinds (broken-link + orphan-subject).
+- **Slices 23–27** — List ergonomics round one: `--filter-status`, `--filter-rec`, `--filter-text`, `--limit`, `--offset`, `--reverse` on all three list commands.
+- **Slice 28** — `Decision.supersededBy` FK with cycle detection (`decision supersede --by`).
+- **Slice 29** — `cadence decision graph <id>` ASCII viewer.
+- **Slice 30** — `intelligence audit` stale-supersededby finding kind.
+- **Slice 31** — `Decision.supersedes` derived inverse-link backfill.
+- **Slices 32–33** — List ergonomics round two: `--include-untied` (decision only), `--filter-regex`.
+- **Slice 34** — Upstream design doc for rec↔phase linkage (no code; design slice).
+- **Slice 34.1** — `cadence recommendation convert <recId> --to-phase <phaseId>` transition + `convertedToPhaseId` schema field + detail-render bullet.
+- **Slice 34.2** — `intelligence audit` stale-converted-phase finding kind (8th audit kind).
+
+Test count: `@cadence/core` 1034, `@cadence/types` 124 (up from ~620 and 80 at v1.0.0 respectively).
+
+Deferred to v1.2+: Slice 34.3 (`--from-rec` ergonomic on `spec new`), Slice 34.4 (`--filter-converted-to` reverse-lookup), `--sort-by`, `--filter-text-exact`, `--filter-regex-flags`, `--filter-kind` on audit, graph-viewer optimization.
+
+## Planned (v1.2+)
+
+Two named v1.2 tracks (independent — pick either or stack):
+
+### v1.2.0 — Public release (named; not started)
+The irreversible counterpart to v1.1's reversible publish proof. First decision: repo-visibility (public vs private) — npm provenance requires public source; making the repo public exposes all `.cadence/` history. Until that decision, the real `npm publish` + provenance + `release.yml` work is parked. Scope detailed in ROADMAP.md §v1.2.0 Public release.
+
+### v1.2.0 — Feature expansion (superpowers-inspired) — COMPLETE
+Per ROADMAP entry-point note: #6 → #2 → #1 → #4 → #1b shipped; #3/#5 parked (host-agnostic-anchor conflict). v1.2 feature-expansion track has no non-parked work remaining; the residue rolls into v1.3 or later named milestones.
+
+### v1.3 — Architecture deepening (parked)
+Branch `parking/roadmap-v1.3-arch-deepening` at commit `a050083` holds the work-in-progress for an architecture-deepening track. Awaits cherry-pick onto a fresh branch off the new main when picked up.
 
 ## Post-v1.0 (not scheduled)
 
