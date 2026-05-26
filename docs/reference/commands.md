@@ -599,6 +599,48 @@ Prints recorded recommendations in a compact table.
 cadence recommendation list
 ```
 
+#### recommendation convert
+
+Records the fact that a recommendation was implemented as a CADENCE phase.
+The flag-name and shape of this transition was settled in
+[`2026-05-25-cadence-rec-phase-linkage-design.md`](../superpowers/specs/2026-05-25-cadence-rec-phase-linkage-design.md)
+(Praxis Slice 34) — terminal (no `unconvert`), 1:1 cardinality, strict FK
+on the phase directory.
+
+```sh
+cadence recommendation convert <recId> --to-phase <phaseId>
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--to-phase <phaseId>` | Phase id; must exist under `.cadence/phases/`. Required. |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+The phase directory `.cadence/phases/<phaseId>/` must exist at convert
+time (strict FK; mirrors Slice 28's `--by` pattern). Allowed from
+`candidate` or `accepted`; refused from `deferred`, `rejected`, and
+`converted` (re-convert refused naturally — `'converted'` isn't an
+allowed source). On success, the rec ledger gets
+`status='converted'` + `convertedToPhaseId=<phaseId>` + bumped
+`updatedAt`; `RECOMMENDATIONS.md` re-renders so the Slice 15 status
+bullet flips to `- status: converted`. The detail view from
+`cadence recommendation show <recId>` gains a
+`- converted-to-phase: <phaseId>` bullet right after `- status:`.
+
+**Exit codes**
+
+- `0` — converted, ledger updated.
+- `1` — refused (phase dir missing, rec missing, or rec is in a
+  non-convertible status). Refusal goes to stderr prefixed
+  `recommendation convert refused:`; no ledger mutation on refusal.
+
+**Drift** — if the phase directory is later deleted, the rec ledger's
+`convertedToPhaseId` becomes a stale reference. Detection is deferred
+to Slice 34.2's `intelligence audit` `stale-converted-phase` finding
+kind (separate slice).
+
 ---
 
 ### inspect
