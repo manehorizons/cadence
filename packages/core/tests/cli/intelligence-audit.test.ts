@@ -214,4 +214,87 @@ describe('cadence intelligence audit (Slice 19)', () => {
       expect(after.get(name)).toBe(content);
     }
   });
+
+  describe('Slice 34.2: stale-converted-phase end-to-end', () => {
+    it('rec converted to existing phase + phase dir present → clean audit (exit 0)', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice34_2' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await mkdir(join(active.root, '.cadence/phases/34.1-rec-phase-linkage'), { recursive: true });
+      const cv = await run(
+        ['recommendation', 'convert', rec.id, '--to-phase', '34.1-rec-phase-linkage'],
+        active.root,
+      );
+      expect(cv.code).toBe(0);
+      const r = await run(['intelligence', 'audit'], active.root);
+      expect(r.code).toBe(0);
+      expect(r.stdout).toBe('Audit clean: no integrity issues.\n');
+    });
+
+    it('rec converted to phase + phase dir deleted → exit 1 + stale-converted-phase section', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice34_2' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await mkdir(join(active.root, '.cadence/phases/34.1-x'), { recursive: true });
+      const cv = await run(
+        ['recommendation', 'convert', rec.id, '--to-phase', '34.1-x'],
+        active.root,
+      );
+      expect(cv.code).toBe(0);
+      // Simulate phase deletion by overwriting the rec ledger with a missing-phase ref.
+      // (rmdir on the just-created dir would also work; this is just less fragile under fs caching.)
+      const recPath = join(active.root, '.cadence/intelligence/recommendations.json');
+      const ledger = JSON.parse(await readFile(recPath, 'utf8'));
+      ledger.recommendations[0].convertedToPhaseId = 'deleted-phase';
+      await writeFile(recPath, JSON.stringify(ledger), 'utf8');
+      const r = await run(['intelligence', 'audit'], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toMatch(/## Stale converted-to-phase Refs \(1\)/);
+      expect(r.stdout).toMatch(new RegExp(`- ${rec.id} convertedToPhaseId missing phase: deleted-phase`));
+    });
+
+    it('JSON envelope carries stale-converted-phase finding', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice34_2' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      // Hand-edit rec to have a bogus convertedToPhaseId (skip the convert command for brevity).
+      const recPath = join(active.root, '.cadence/intelligence/recommendations.json');
+      const ledger = JSON.parse(await readFile(recPath, 'utf8'));
+      ledger.recommendations[0].status = 'converted';
+      ledger.recommendations[0].convertedToPhaseId = 'ghost-phase';
+      await writeFile(recPath, JSON.stringify(ledger), 'utf8');
+      const r = await run(['intelligence', 'audit', '--format', 'json'], active.root);
+      expect(r.code).toBe(1);
+      const report = JSON.parse(r.stdout);
+      expect(report.byKind['stale-converted-phase']).toHaveLength(1);
+      expect(report.byKind['stale-converted-phase'][0]).toEqual({
+        kind: 'stale-converted-phase',
+        recommendationId: rec.id,
+        missingPhaseId: 'ghost-phase',
+      });
+    });
+
+    it('missing .cadence/phases dir is benign — converted refs surface as stale (correct default)', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice34_2' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      // Plant a converted ref without ever creating .cadence/phases/ at all.
+      const recPath = join(active.root, '.cadence/intelligence/recommendations.json');
+      const ledger = JSON.parse(await readFile(recPath, 'utf8'));
+      ledger.recommendations[0].status = 'converted';
+      ledger.recommendations[0].convertedToPhaseId = '99-never-created';
+      await writeFile(recPath, JSON.stringify(ledger), 'utf8');
+      const r = await run(['intelligence', 'audit'], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toMatch(/## Stale converted-to-phase Refs \(1\)/);
+    });
+  });
 });

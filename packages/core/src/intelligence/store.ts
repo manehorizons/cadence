@@ -803,7 +803,8 @@ export type IntelligenceAuditFinding =
   | { kind: 'orphan-assumption'; assumptionId: string; missingRecId: string }
   | { kind: 'orphan-decision'; decisionId: string; missingRecId: string }
   | { kind: 'orphan-evidence'; evidenceId: string; missingRecId: string }
-  | { kind: 'stale-supersededby'; decisionId: string; missingTargetId: string };
+  | { kind: 'stale-supersededby'; decisionId: string; missingTargetId: string }
+  | { kind: 'stale-converted-phase'; recommendationId: string; missingPhaseId: string };
 
 export type IntelligenceAuditReport = {
   findings: IntelligenceAuditFinding[];
@@ -818,6 +819,7 @@ const AUDIT_KINDS = [
   'orphan-decision',
   'orphan-evidence',
   'stale-supersededby',
+  'stale-converted-phase',
 ] as const;
 
 export function computeIntelligenceAudit(
@@ -825,6 +827,7 @@ export function computeIntelligenceAudit(
   evLedger: EvidenceLedger,
   asLedger: AssumptionLedger,
   decLedger: IntelligenceDecisionLedger,
+  existingPhaseIds: Set<string> = new Set(),
 ): IntelligenceAuditReport {
   const findings: IntelligenceAuditFinding[] = [];
   const recIds = new Set(recLedger.recommendations.map((r) => r.id));
@@ -887,6 +890,19 @@ export function computeIntelligenceAudit(
         kind: 'stale-supersededby',
         decisionId: d.id,
         missingTargetId: d.supersededBy,
+      });
+    }
+  }
+
+  // Slice 34.2: stale convertedToPhaseId refs (rec converted to a phase that
+  // no longer exists on disk). Phase existence is a filesystem fact; the
+  // caller pre-computes the set so `computeIntelligenceAudit` stays pure-sync.
+  for (const r of recLedger.recommendations) {
+    if (r.convertedToPhaseId !== undefined && !existingPhaseIds.has(r.convertedToPhaseId)) {
+      findings.push({
+        kind: 'stale-converted-phase',
+        recommendationId: r.id,
+        missingPhaseId: r.convertedToPhaseId,
       });
     }
   }
