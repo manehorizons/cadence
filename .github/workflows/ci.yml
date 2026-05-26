@@ -6,14 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# Dev-time CI runs on a single self-hosted Linux runner (Node 20 only)
+# to avoid GitHub-hosted Actions minutes. The full multi-OS × Node 20+22
+# matrix (against GitHub-hosted runners) returns at the v1.2 public-
+# release milestone — restore the previous strategy block before tagging.
 jobs:
   test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node: [20, 22]
-    runs-on: ${{ matrix.os }}
+    runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -21,7 +20,7 @@ jobs:
           version: 9.12.0
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 20
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
@@ -29,18 +28,18 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
 
-  # Single stable status context for branch protection. The `test` matrix
-  # produces six per-cell checks (`test (ubuntu-latest, 20)` …) whose names
-  # are brittle to require directly; gate on this aggregator instead.
+  # Single stable status context for branch protection. Kept even with a
+  # single `test` job so the required-check name stays `ci-success`
+  # across the dev-time → release-time matrix change.
   ci-success:
     if: always()
     needs: [test]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     steps:
-      - name: Fail if any matrix job did not succeed
+      - name: Fail if the test job did not succeed
         run: |
           if [ "${{ needs.test.result }}" != "success" ]; then
-            echo "test matrix result: ${{ needs.test.result }}"
+            echo "test job result: ${{ needs.test.result }}"
             exit 1
           fi
-          echo "all test matrix cells succeeded"
+          echo "test job succeeded"
