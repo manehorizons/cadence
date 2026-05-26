@@ -14,3 +14,8 @@ coverage/
 .claude/settings.local.json
 .codex/hooks.local.json
 graphify-out/
+
+# Session artifacts from /handoff + /resume flows. The active HANDOFF.md
+# is tracked; rolling backups and consumed-archive renames are not.
+HANDOFF.md.bak
+HANDOFF.md.resumed-*
