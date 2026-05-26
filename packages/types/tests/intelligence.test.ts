@@ -70,6 +70,55 @@ describe('intelligence schemas', () => {
     expect(RecommendationLedgerZ.parse(ledger).schemaVersion).toBe(1);
     expect(ledger.recommendations).toEqual([]);
   });
+
+  it('Slice 34.1: round-trips an optional convertedToPhaseId', () => {
+    const parsed = RecommendationZ.parse({
+      id: 'rec-20260525-001',
+      title: 'do the thing',
+      summary: 's',
+      source: 'manual',
+      status: 'converted',
+      readiness: 'ready-for-cadence-spec',
+      priority: 'high',
+      leverageScore: 8,
+      riskScore: 3,
+      confidence: 0.8,
+      decayState: 'fresh',
+      affectedAreas: [],
+      affectedFiles: [],
+      evidenceIds: [],
+      assumptionIds: [],
+      decisionIds: [],
+      convertedToPhaseId: '34.1-rec-phase-linkage',
+      createdAt: '2026-05-25T00:00:00.000Z',
+      updatedAt: '2026-05-25T01:00:00.000Z',
+    });
+    expect(parsed.convertedToPhaseId).toBe('34.1-rec-phase-linkage');
+  });
+
+  it('Slice 34.1: parses a pre-Slice-34.1 fixture (convertedToPhaseId absent ⇒ undefined)', () => {
+    const parsed = RecommendationZ.parse({
+      id: 'rec-20260101-001',
+      title: 'predates Slice 34.1',
+      summary: 's',
+      source: 'manual',
+      status: 'candidate',
+      readiness: 'raw-idea',
+      priority: 'medium',
+      leverageScore: 5,
+      riskScore: 5,
+      confidence: 0.5,
+      decayState: 'fresh',
+      affectedAreas: [],
+      affectedFiles: [],
+      evidenceIds: [],
+      assumptionIds: [],
+      decisionIds: [],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(parsed.convertedToPhaseId).toBeUndefined();
+  });
 });
 
 describe('inspection schemas', () => {

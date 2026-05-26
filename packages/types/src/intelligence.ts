@@ -60,6 +60,9 @@ export const RecommendationZ = z.object({
   evidenceIds: z.array(z.string()),
   assumptionIds: z.array(z.string()),
   decisionIds: z.array(z.string()),
+  // Slice 34.1: exact-optional FK to the CADENCE phase this rec was converted
+  // into. Set only by `cadence recommendation convert`; never auto-derived.
+  convertedToPhaseId: z.string().optional(),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
 });

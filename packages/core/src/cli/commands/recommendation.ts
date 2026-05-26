@@ -10,6 +10,7 @@ import {
   readEvidenceLedger,
   readIntelligenceDecisionLedger,
   readRecommendationLedger,
+  runRecommendationTransition,
   type AddRecommendationInput,
 } from '../../intelligence/store.js';
 import { renderRecommendationDetail } from '../../intelligence/render-recommendation-detail.js';
@@ -260,6 +261,34 @@ export function registerRecommendationCommand(program: Command): void {
       } catch (err) {
         process.stderr.write(
           `recommendation list failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
+    .command('convert <recId>')
+    .description('Convert a recommendation into a CADENCE phase (Praxis Slice 34.1)')
+    .requiredOption('--to-phase <phaseId>', 'Phase id; must exist under .cadence/phases/')
+    .action(async (recId: string, opts: { toPhase: string }) => {
+      try {
+        const res = await runRecommendationTransition(
+          process.cwd(),
+          recId,
+          'convert',
+          opts.toPhase,
+        );
+        if (!res.ok) {
+          process.stderr.write(`recommendation convert refused: ${res.error}\n`);
+          process.exitCode = 1;
+          return;
+        }
+        process.stdout.write(
+          `recommendation ${recId} → converted (to ${opts.toPhase})\n`,
+        );
+      } catch (err) {
+        process.stderr.write(
+          `recommendation convert failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
         process.exitCode = 1;
       }
