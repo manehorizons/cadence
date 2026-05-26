@@ -23,6 +23,10 @@ export function renderRecommendationDetail(
   lines.push(`# ${rec.id} — ${rec.title}`);
   lines.push('');
   lines.push(`- status: ${rec.status}`);
+  if (rec.convertedToPhaseId !== undefined) {
+    // Slice 34.1: render-time field only; no disk check (drift is the audit dim's job).
+    lines.push(`- converted-to-phase: ${rec.convertedToPhaseId}`);
+  }
   lines.push(`- ready: ${rec.readiness}`);
   lines.push(`- priority: ${rec.priority}`);
   lines.push(`- leverage: ${rec.leverageScore}/10`);

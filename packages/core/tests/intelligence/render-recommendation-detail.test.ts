@@ -197,3 +197,41 @@ describe('renderRecommendationDetail (Slice 14)', () => {
     expect(decIdx).toBeLessThan(evIdx);
   });
 });
+
+describe('renderRecommendationDetail (Slice 34.1: convertedToPhaseId bullet)', () => {
+  it('renders `- converted-to-phase: <phaseId>` when field is set', () => {
+    const md = renderRecommendationDetail(
+      mkRec({ status: 'converted', convertedToPhaseId: '34.1-rec-phase-linkage' }),
+      [], [], [],
+    );
+    expect(md).toMatch(/- converted-to-phase: 34\.1-rec-phase-linkage/);
+  });
+
+  it('omits the bullet when field is undefined', () => {
+    const md = renderRecommendationDetail(mkRec(), [], [], []);
+    expect(md).not.toMatch(/converted-to-phase/);
+  });
+
+  it('bullet position: between `- status:` and `- ready:` (close to status)', () => {
+    const md = renderRecommendationDetail(
+      mkRec({ status: 'converted', convertedToPhaseId: '34.1-x' }),
+      [], [], [],
+    );
+    const statusIdx = md.indexOf('- status:');
+    const convIdx = md.indexOf('- converted-to-phase:');
+    const readyIdx = md.indexOf('- ready:');
+    expect(statusIdx).toBeGreaterThan(-1);
+    expect(convIdx).toBeGreaterThan(statusIdx);
+    expect(readyIdx).toBeGreaterThan(convIdx);
+  });
+
+  it('does NOT do a (not found) annotation — render is disk-free (Decision Log §7)', () => {
+    // Even if the phase id is bogus, render does NOT annotate. Drift is the audit dim's job.
+    const md = renderRecommendationDetail(
+      mkRec({ status: 'converted', convertedToPhaseId: 'totally-made-up' }),
+      [], [], [],
+    );
+    expect(md).toMatch(/- converted-to-phase: totally-made-up/);
+    expect(md).not.toMatch(/\(not found\)/);
+  });
+});
