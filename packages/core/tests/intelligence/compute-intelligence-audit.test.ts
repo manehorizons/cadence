@@ -235,4 +235,121 @@ describe('computeIntelligenceAudit (Slice 19)', () => {
       expect(r.byKind['stale-supersededby']).toEqual([]);
     });
   });
+
+  describe('Slice 34.2: stale-converted-phase finding kind', () => {
+    it('clean ledger (no convertedToPhaseId anywhere) → no findings', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [mkRec({ id: 'rec-1' })],
+      };
+      const r = computeIntelligenceAudit(recL, emptyEv, emptyAs, emptyDec, new Set());
+      expect(r.byKind['stale-converted-phase']).toEqual([]);
+    });
+
+    it('rec.convertedToPhaseId present + phase id IN existingPhaseIds → no finding', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [
+          mkRec({
+            id: 'rec-1',
+            status: 'converted',
+            convertedToPhaseId: '34.1-rec-phase-linkage',
+          }),
+        ],
+      };
+      const r = computeIntelligenceAudit(
+        recL, emptyEv, emptyAs, emptyDec,
+        new Set(['34.1-rec-phase-linkage']),
+      );
+      expect(r.byKind['stale-converted-phase']).toEqual([]);
+    });
+
+    it('rec.convertedToPhaseId present + phase id NOT in set → one finding', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [
+          mkRec({
+            id: 'rec-1',
+            status: 'converted',
+            convertedToPhaseId: 'deleted-phase',
+          }),
+        ],
+      };
+      const r = computeIntelligenceAudit(
+        recL, emptyEv, emptyAs, emptyDec,
+        new Set(['some-other-phase']),
+      );
+      expect(r.byKind['stale-converted-phase']).toHaveLength(1);
+      const f = r.byKind['stale-converted-phase'][0];
+      expect(f).toEqual({
+        kind: 'stale-converted-phase',
+        recommendationId: 'rec-1',
+        missingPhaseId: 'deleted-phase',
+      });
+    });
+
+    it('multiple stale refs surface one finding each', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [
+          mkRec({ id: 'rec-1', status: 'converted', convertedToPhaseId: 'phase-A' }),
+          mkRec({ id: 'rec-2', status: 'converted', convertedToPhaseId: 'phase-B' }),
+          mkRec({ id: 'rec-3', status: 'converted', convertedToPhaseId: 'phase-A' }), // dup target
+        ],
+      };
+      const r = computeIntelligenceAudit(
+        recL, emptyEv, emptyAs, emptyDec,
+        new Set(), // none exist
+      );
+      expect(r.byKind['stale-converted-phase']).toHaveLength(3);
+    });
+
+    it('rec WITHOUT convertedToPhaseId is ignored even when set is empty (no false positives)', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [mkRec({ id: 'rec-1', status: 'candidate' })],
+      };
+      const r = computeIntelligenceAudit(recL, emptyEv, emptyAs, emptyDec, new Set());
+      expect(r.byKind['stale-converted-phase']).toEqual([]);
+    });
+
+    it('byKind initialization includes stale-converted-phase (empty array on clean ledger)', () => {
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, emptyDec);
+      expect(r.byKind).toHaveProperty('stale-converted-phase');
+      expect(r.byKind['stale-converted-phase']).toEqual([]);
+    });
+
+    it('pre-Slice-34.2 callers (4-arg signature) still work — existingPhaseIds defaults to empty set', () => {
+      // A rec with convertedToPhaseId but 4-arg call → all converted refs surface as stale
+      // (correct default: without phase-existence info, can't claim refs are valid).
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [
+          mkRec({ id: 'rec-1', status: 'converted', convertedToPhaseId: '34.1-x' }),
+        ],
+      };
+      const r = computeIntelligenceAudit(recL, emptyEv, emptyAs, emptyDec);
+      expect(r.byKind['stale-converted-phase']).toHaveLength(1);
+    });
+
+    it('mixed-kind report: stale-converted-phase + stale-supersededby coexist', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [
+          mkRec({ id: 'rec-1', status: 'converted', convertedToPhaseId: 'missing-phase' }),
+        ],
+      };
+      const decL: IntelligenceDecisionLedger = {
+        schemaVersion: 1,
+        decisions: [
+          { id: 'dec-1', title: 't', rationale: 'r', status: 'superseded',
+            decidedAt: '2026-05-20T00:00:00.000Z', supersededBy: 'dec-missing' },
+        ],
+      };
+      const r = computeIntelligenceAudit(recL, emptyEv, emptyAs, decL, new Set());
+      expect(r.byKind['stale-converted-phase']).toHaveLength(1);
+      expect(r.byKind['stale-supersededby']).toHaveLength(1);
+      expect(r.findings).toHaveLength(2);
+    });
+  });
 });

@@ -14,6 +14,7 @@ function mkReport(findings: IntelligenceAuditFinding[]): IntelligenceAuditReport
     'orphan-decision': [] as IntelligenceAuditFinding[],
     'orphan-evidence': [] as IntelligenceAuditFinding[],
     'stale-supersededby': [] as IntelligenceAuditFinding[],
+    'stale-converted-phase': [] as IntelligenceAuditFinding[],
   };
   for (const f of findings) byKind[f.kind].push(f);
   return { findings, byKind };
@@ -125,6 +126,53 @@ describe('renderIntelligenceAudit (Slice 19)', () => {
       expect(brokenDec).toBeLessThan(orphanEv);
       expect(orphanEv).toBeLessThan(stale);
       expect(stale).toBeLessThan(remediation);
+    });
+  });
+
+  describe('Slice 34.2: stale-converted-phase section', () => {
+    it('renders new `## Stale converted-to-phase Refs (N)` section with one bullet per finding', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'stale-converted-phase', recommendationId: 'rec-1', missingPhaseId: 'phase-A' },
+          { kind: 'stale-converted-phase', recommendationId: 'rec-2', missingPhaseId: 'phase-B' },
+        ]),
+      );
+      expect(md).toMatch(/## Stale converted-to-phase Refs \(2\)/);
+      expect(md).toMatch(/- rec-1 convertedToPhaseId missing phase: phase-A/);
+      expect(md).toMatch(/- rec-2 convertedToPhaseId missing phase: phase-B/);
+    });
+
+    it('remediation block names hand-edit + reconcile as the clear-path', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'stale-converted-phase', recommendationId: 'rec-1', missingPhaseId: 'phase-A' },
+        ]),
+      );
+      expect(md).toMatch(/For stale converted-to-phase refs/);
+      expect(md).toMatch(/verify the phase id is correct/);
+      expect(md).toMatch(/cadence intelligence reconcile/);
+    });
+
+    it('clean audit unchanged (no stale-converted-phase mention in zero-finding output)', () => {
+      const md = renderIntelligenceAudit(mkReport([]));
+      expect(md).toBe('Audit clean: no integrity issues.\n');
+    });
+
+    it('mixed-kind: stale-converted-phase renders LAST (after stale-supersededby, before Remediation)', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'stale-converted-phase', recommendationId: 'rec-1', missingPhaseId: 'phase-A' },
+          { kind: 'stale-supersededby', decisionId: 'dec-1', missingTargetId: 'dec-x' },
+          { kind: 'broken-decision-link', recId: 'rec-1', decisionId: 'dec-missing' },
+        ]),
+      );
+      const brokenDec = md.indexOf('## Broken Decision Links');
+      const stale = md.indexOf('## Stale supersededBy Refs');
+      const converted = md.indexOf('## Stale converted-to-phase Refs');
+      const remediation = md.indexOf('## Remediation');
+      expect(brokenDec).toBeLessThan(stale);
+      expect(stale).toBeLessThan(converted);
+      expect(converted).toBeLessThan(remediation);
     });
   });
 });

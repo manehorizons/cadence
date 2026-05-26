@@ -11,6 +11,7 @@ const SECTION_HEADERS: Record<IntelligenceAuditFinding['kind'], string> = {
   'orphan-decision': 'Orphan Decisions',
   'orphan-evidence': 'Orphan Evidence',
   'stale-supersededby': 'Stale supersededBy Refs',
+  'stale-converted-phase': 'Stale converted-to-phase Refs',
 };
 
 const SECTION_ORDER: IntelligenceAuditFinding['kind'][] = [
@@ -21,6 +22,7 @@ const SECTION_ORDER: IntelligenceAuditFinding['kind'][] = [
   'orphan-decision',
   'orphan-evidence',
   'stale-supersededby',
+  'stale-converted-phase',
 ];
 
 function renderFindingLine(f: IntelligenceAuditFinding): string {
@@ -39,6 +41,8 @@ function renderFindingLine(f: IntelligenceAuditFinding): string {
       return `- ${f.evidenceId} references missing rec: ${f.missingRecId}`;
     case 'stale-supersededby':
       return `- ${f.decisionId} supersededBy missing decision: ${f.missingTargetId}`;
+    case 'stale-converted-phase':
+      return `- ${f.recommendationId} convertedToPhaseId missing phase: ${f.missingPhaseId}`;
   }
 }
 
@@ -71,6 +75,9 @@ export function renderIntelligenceAudit(report: IntelligenceAuditReport): string
   );
   lines.push(
     '- For stale supersededBy refs: restore the missing decision, OR run `cadence decision reactivate <id>` to clear the dangling `supersededBy` edge (reactivate clears the field per Slice 28).',
+  );
+  lines.push(
+    '- For stale converted-to-phase refs: verify the phase id is correct (typo?), OR hand-edit the rec to clear `convertedToPhaseId` then run `cadence intelligence reconcile`.',
   );
   lines.push('');
 

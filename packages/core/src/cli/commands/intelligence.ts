@@ -1,5 +1,6 @@
 import type { Command } from 'commander';
 import { existsSync } from 'node:fs';
+import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   computeIntelligenceAudit,
@@ -153,11 +154,25 @@ export function registerIntelligenceCommand(program: Command): void {
           }
           return;
         }
+        // Slice 34.2: pre-compute set of existing phase dirs so
+        // computeIntelligenceAudit stays pure-sync. Missing .cadence/phases dir
+        // is benign (empty set → all converted refs surface as stale, which is
+        // the correct signal when no phases exist).
+        let existingPhaseIds: Set<string>;
+        try {
+          const entries = await readdir(join(root, '.cadence/phases'), { withFileTypes: true });
+          existingPhaseIds = new Set(
+            entries.filter((e) => e.isDirectory()).map((e) => e.name),
+          );
+        } catch {
+          existingPhaseIds = new Set();
+        }
         const report = computeIntelligenceAudit(
           recLedger,
           evLedger,
           asLedger,
           decLedger,
+          existingPhaseIds,
         );
         if (format === 'json') {
           process.stdout.write(JSON.stringify(report, null, 2) + '\n');
