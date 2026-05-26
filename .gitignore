@@ -13,3 +13,4 @@ coverage/
 .worktrees/
 .claude/settings.local.json
 .codex/hooks.local.json
+graphify-out/

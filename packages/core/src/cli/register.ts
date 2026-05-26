@@ -11,6 +11,14 @@ import { registerNeedsContextCommand } from './commands/needs-context.js';
 import { registerSettleCommand } from './commands/settle.js';
 import { registerProgressCommand } from './commands/progress.js';
 import { registerStatusCommand } from './commands/status.js';
+import { registerRecommendationCommand } from './commands/recommendation.js';
+import { registerInspectCommand } from './commands/inspect.js';
+import { registerRecommendCommand } from './commands/recommend.js';
+import { registerMilestoneCommand } from './commands/milestone.js';
+import { registerContextCommand } from './commands/context.js';
+import { registerAssumptionCommand } from './commands/assumption.js';
+import { registerDecisionCommand } from './commands/decision.js';
+import { registerIntelligenceCommand } from './commands/intelligence.js';
 
 export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
@@ -25,4 +33,12 @@ export function registerAllCommands(program: Command): void {
   registerSettleCommand(program);
   registerProgressCommand(program);
   registerStatusCommand(program);
+  registerRecommendationCommand(program);
+  registerInspectCommand(program);
+  registerRecommendCommand(program);
+  registerMilestoneCommand(program);
+  registerContextCommand(program);
+  registerAssumptionCommand(program);
+  registerDecisionCommand(program);
+  registerIntelligenceCommand(program);
 }

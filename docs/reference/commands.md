@@ -26,6 +26,11 @@ Two CLIs are documented here:
   - [settle](#settle)
   - [progress](#progress)
   - [status](#status)
+  - [recommendation](#recommendation)
+  - [inspect](#inspect)
+  - [recommend](#recommend)
+  - [milestone](#milestone)
+  - [context](#context)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -61,6 +66,14 @@ needs-context
 settle
 progress
 status
+recommendation
+inspect
+recommend
+milestone
+context
+assumption
+decision
+intelligence
 <!-- cadence:commands:end -->
 
 ---
@@ -542,6 +555,378 @@ List recorded anomaly events from .cadence/anomalies.log
 events. Anomalies are recorded whenever a bypass flag (`--force`,
 `--allow-*`) is used, or when the verifier detects a problem. The `--follow`
 flag tails the log in real time; it requires a TTY.
+
+---
+
+### recommendation
+
+```
+Usage: cadence recommendation [options] [command]
+
+Manage CADENCE strategic-intelligence recommendations
+```
+
+Manage CADENCE strategic-intelligence recommendations. Recommendations are
+stored under `.cadence/intelligence/` and are not execution state; they become
+execution input only after a later milestone/SPEC export step.
+
+#### recommendation add
+
+Adds a manual recommendation.
+
+```sh
+cadence recommendation add \
+  --title "Add milestone pre-mortems" \
+  --summary "Capture likely failure modes before milestone export." \
+  --priority high \
+  --readiness ready-for-milestone \
+  --area core \
+  --file packages/core/src/intelligence/store.ts \
+  --evidence "Approved Praxis design requires milestone pre-mortems."
+```
+
+Writes:
+
+- `.cadence/intelligence/recommendations.json`
+- `.cadence/intelligence/evidence.json` when `--evidence` is provided
+- `.cadence/intelligence/RECOMMENDATIONS.md`
+
+#### recommendation list
+
+Prints recorded recommendations in a compact table.
+
+```sh
+cadence recommendation list
+```
+
+#### recommendation convert
+
+Records the fact that a recommendation was implemented as a CADENCE phase.
+The flag-name and shape of this transition was settled in
+[`2026-05-25-cadence-rec-phase-linkage-design.md`](../superpowers/specs/2026-05-25-cadence-rec-phase-linkage-design.md)
+(Praxis Slice 34) — terminal (no `unconvert`), 1:1 cardinality, strict FK
+on the phase directory.
+
+```sh
+cadence recommendation convert <recId> --to-phase <phaseId>
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--to-phase <phaseId>` | Phase id; must exist under `.cadence/phases/`. Required. |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+The phase directory `.cadence/phases/<phaseId>/` must exist at convert
+time (strict FK; mirrors Slice 28's `--by` pattern). Allowed from
+`candidate` or `accepted`; refused from `deferred`, `rejected`, and
+`converted` (re-convert refused naturally — `'converted'` isn't an
+allowed source). On success, the rec ledger gets
+`status='converted'` + `convertedToPhaseId=<phaseId>` + bumped
+`updatedAt`; `RECOMMENDATIONS.md` re-renders so the Slice 15 status
+bullet flips to `- status: converted`. The detail view from
+`cadence recommendation show <recId>` gains a
+`- converted-to-phase: <phaseId>` bullet right after `- status:`.
+
+**Exit codes**
+
+- `0` — converted, ledger updated.
+- `1` — refused (phase dir missing, rec missing, or rec is in a
+  non-convertible status). Refusal goes to stderr prefixed
+  `recommendation convert refused:`; no ledger mutation on refusal.
+
+**Drift** — if the phase directory is later deleted, the rec ledger's
+`convertedToPhaseId` becomes a stale reference. Detection is deferred
+to Slice 34.2's `intelligence audit` `stale-converted-phase` finding
+kind (separate slice).
+
+---
+
+### inspect
+
+```
+Usage: cadence inspect [options]
+
+Scan the project and synthesize strategic status (read-only)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+Scans the repository (git, package metadata, doc presence, build surfaces,
+phase artifacts), reads CADENCE loop state **read-only** (never mutates
+`state.json` or transitions the loop), folds in recommendation-ledger decay
+counts, and synthesizes a strategic status with up to four conservative flags
+(git dirty/diverged, loop-state inconsistency, ledger decay, missing docs).
+
+Writes:
+
+- `.cadence/intelligence/inspection.json`
+- `.cadence/intelligence/STRATEGY.md`
+
+With `--json`, the inspection object is emitted to stdout instead of the
+rendered text. This command is distinct from `cadence status`/`progress`,
+which report execution-loop position; `inspect` is the strategic layer.
+
+**Exit codes** — exits non-zero only on a genuine failure (e.g. artifact
+write error). A missing git repo or missing `.cadence/` backend degrades
+gracefully and still exits 0.
+
+---
+
+### recommend
+
+```
+Usage: cadence recommend [options]
+
+Rank actionable strategic recommendations and advise the next move (read-only)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+Reads the recommendation ledger and CADENCE loop state **read-only** (never
+mutates `state.json` or transitions the loop), then: partitions the ledger
+(rejected/converted excluded; superseded/contradicted surfaced as
+needs-attention; deferred parked; candidate/accepted ranked), scores each
+ranked recommendation with a transparent additive 0–100 model whose every
+term is shown in a per-item why-line, and derives one loop-aware next-action
+advisory (a loop in flight yields a finish-first advisory; otherwise the top
+recommendation's action, or `cadence spec new` when it is ready for a CADENCE
+spec).
+
+Writes:
+
+- `.cadence/intelligence/recommend.json`
+- `.cadence/intelligence/RECOMMEND.md`
+
+With `--json`, the report object is emitted to stdout instead of the
+rendered text. The advisory only ever names already-legal commands as text;
+it never executes or forces a loop transition. Distinct from `cadence
+status`/`progress` (execution loop) and `cadence inspect` (strategic status).
+
+**Exit codes** — exits non-zero only on a genuine failure (e.g. artifact
+write error). An empty ledger, a missing git repo, or a missing `.cadence/`
+backend degrades gracefully and still exits 0.
+
+---
+
+### milestone
+
+```
+Usage: cadence milestone [options] [command]
+
+Shape recommendations into milestone candidates (read-narrow; never transitions the loop)
+```
+
+**Subcommands**
+
+| Subcommand | Synopsis |
+|---|---|
+| `propose [--json]` | Cluster eligible recommendations into proposed milestone candidates |
+| `accept <id>` | Mark a proposed milestone accepted |
+| `defer <id>` | Defer a proposed or accepted milestone |
+| `export <id> --to cadence` | Export an accepted milestone to a staged CADENCE SPEC draft |
+| `premortem <id> [--json]` | Recompute the deterministic pre-mortem for a `proposed`/`accepted` milestone in place (refuses other statuses) |
+| `list [--json]` | Show the current milestone ledger |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+`propose` reads the recommendation ledger **read-narrow** (it is backend-free —
+it never reads or writes `state.json` and never transitions the loop),
+clusters recommendations that are `accepted` and `ready-for-milestone`/
+`ready-for-cadence-spec` (excluding `superseded`/`contradicted`) by their
+`suggestedMilestoneId` (each ungrouped rec becomes its own singleton
+candidate), and attaches a deterministically-seeded scaffolded pre-mortem
+(facts-only: shared-file dependencies, doc-surface drift, low-confidence
+inputs); pre-mortem entries not covered by a deterministic seed — and
+`outOfScope` always — are left empty with placeholder prompts in the rendered
+`MILESTONES.md` for a human to fill.
+Re-running `propose` regenerates only `proposed` records; `accepted`/
+`deferred`/`exported`/`closed` milestones and their recommendations are never
+clobbered or re-proposed. `accept`/`defer` enforce guarded status
+transitions. `premortem <id>` re-runs a deepened deterministic pre-mortem
+(decay/erosion/open-assumption/overestimated-value signals) for one
+`proposed`/`accepted` milestone against the **current** recommendation and
+assumption ledgers, replaces that milestone's derived pre-mortem dimensions
+in place, bumps its `updatedAt`, and re-renders `MILESTONES.md`; the
+operator-owned `outOfScope` field is preserved verbatim and never derived.
+It is refused for an unknown id or any status other than `proposed`/
+`accepted`. `export <id> --to cadence` renders a deterministic CADENCE SPEC scaffold from an `accepted`
+milestone's own facts, writes it to `.cadence/intelligence/exports/<id>/SPEC.md`, records an
+`exportTarget`, and flips the milestone to `exported`; it **never** runs `cadence spec new`,
+allocates a loop id, or writes `state.json` — the staged SPEC is promoted manually by the
+operator. Export is refused for an unknown backend, unknown id, or any status other than
+`accepted` (re-export of an already-`exported` milestone is refused).
+
+Writes:
+
+- `.cadence/intelligence/milestones.json`
+- `.cadence/intelligence/MILESTONES.md`
+- `.cadence/intelligence/exports/<id>/SPEC.md` (on `export`)
+
+With `--json` (on `propose`, `premortem`, and `list`), the milestone ledger object is emitted to stdout instead of
+the rendered text. Distinct from CADENCE's own execution-layer
+`.cadence/MILESTONES.md`.
+
+**Exit codes** — exits non-zero only on a genuine failure (artifact write
+error, or an illegal/unknown-id `accept`/`defer`, or an unknown-backend/unknown-id/non-accepted `export`, or an unknown-id/non-`proposed`/`accepted` `premortem`). An empty/absent
+recommendation ledger degrades gracefully and still exits 0.
+
+---
+
+### context
+
+```
+Usage: cadence context <scope> [options]
+
+Emit a compact, read-only context packet (scope: phase | handoff | review | agent)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
+Reads the recommendation, evidence, assumption, and decision ledgers plus
+CADENCE loop state **read-only** (never mutates `state.json` or transitions
+the loop); emits a bounded context packet for the given scope —
+`phase` (forward-looking context a downstream CADENCE phase carries),
+`handoff` (broad cross-session resume trail),
+`review` (backward-looking audit packet with a surfaced needsAttention bucket of
+  superseded/contradicted recs; assumptions + decisions surfaced in full so a
+  reviewer audits all rationale), or
+`agent` (subagent dispatch brief; top-3 ranked recs filtered to status=accepted ∩
+  readiness ∈ {ready-for-milestone, ready-for-cadence-spec}; loop block in Markdown
+  omits nextAction + stateError, JSON retains them).
+Compactness is bounded-by-construction: only ranked recommendations (top 7 for
+`phase`, top 5 for `handoff`, top 5 for `review`, top 3 (dispatchable subset)
+for `agent`), only open assumptions, and file references not contents. `phase`
+scopes assumptions, decisions, and files to the selected recommendations while
+`handoff` carries the broader trail; both share the read-only loop block.
+
+Writes:
+
+- `.cadence/intelligence/context/<scope>.json`
+- `.cadence/intelligence/context/<scope>.md`
+
+With `--json`, the packet object is emitted to stdout instead of the
+rendered Markdown. An unknown scope exits 2 with a clean message.
+
+**Exit codes** — exits 2 for an invalid scope; exits 1 only on a genuine
+failure (e.g. artifact write error). An empty ledger, a missing git repo,
+or a missing `.cadence/` backend degrades gracefully and still exits 0.
+
+---
+
+### assumption
+
+```
+Usage: cadence assumption [options] [command]
+
+Manage CADENCE strategic-intelligence assumptions
+```
+
+**Subcommands**
+
+| Subcommand | Description |
+|---|---|
+| `add` | Add a manual assumption tied to a recommendation |
+| `list` | List recorded assumptions |
+| `validate <id>` | Mark an open assumption validated |
+| `reject <id>` | Mark an open assumption rejected |
+| `reopen <id>` | Reopen a validated or rejected assumption |
+
+**`add` options**
+
+| Option | Description |
+|---|---|
+| `--rec <id>` | Recommendation id this assumption belongs to (required) |
+| `--text <text>` | Assumption statement (required) |
+
+**Behavior** — part of the CADENCE strategic-intelligence layer (Praxis). Refuses unknown `--rec` with exit 1 + clean stderr. New assumptions land with `status='open'`. Writes `.cadence/intelligence/assumptions.json` + `.cadence/intelligence/ASSUMPTIONS.md` atomically on every add. `list` writes a compact one-line-per-entry summary to stdout (`${id}  ${status}  ${recommendationId}  ${text}`). Status-transition subcommands: `validate <id>` flips `open → validated`, `reject <id>` flips `open → rejected`, `reopen <id>` flips `validated | rejected → open` (completing the status matrix; Slice 10). Allowed-status guard is strict per verb: `validate`/`reject` only from `'open'`; `reopen` only from `'validated'` or `'rejected'`. Refused with `cannot <action> assumption in status <s>` on wrong source or `assumption <id> not found` on unknown id; no write side effects on refusal. Render groups assumptions into 3 always-emit `## Open` / `## Validated` / `## Rejected` sections under `ASSUMPTIONS.md` — a reopened entry simply re-renders back under `## Open`.
+
+**Exit codes** — `add`: exits 1 on unknown rec id or any artifact write error; usage error from commander on missing required option. `list`: exits 0 even on empty ledger (prints `No assumptions recorded.`).
+
+---
+
+### decision
+
+```
+Usage: cadence decision [options] [command]
+
+Manage CADENCE strategic-intelligence decisions
+```
+
+**Subcommands**
+
+| Subcommand | Description |
+|---|---|
+| `add` | Record an architectural decision (optionally tied to a recommendation) |
+| `list` | List recorded decisions |
+
+**`add` options**
+
+| Option | Description |
+|---|---|
+| `--rec <id>` | Recommendation id this decision belongs to (optional) |
+| `--title <title>` | Short decision title (required) |
+| `--rationale <text>` | Decision rationale (required) |
+
+**Behavior** — `--rec` is optional; FK-checked only when provided. Untied decisions are valid (architectural decisions that don't tie to a specific recommendation). The persisted entity OMITS the `recommendationId` field entirely on untied decisions (exact-optional pattern). Writes `.cadence/intelligence/decisions.json` + `.cadence/intelligence/DECISIONS.md` on every add. `list` writes one line per entry (`${id}  ${recommendationId ?? '—'}  ${title}`); untied decisions show the em-dash placeholder in the rec column.
+
+**Exit codes** — same shape as `assumption`.
+
+---
+
+### intelligence
+
+```
+Usage: cadence intelligence [options] [command]
+
+CADENCE strategic-intelligence admin utilities
+```
+
+**Subcommands**
+
+| Subcommand | Description |
+|---|---|
+| `reconcile` | Re-derive recommendation link arrays and re-render all intelligence MD files |
+| `stats [--by-rec]` | Read-only summary counts across all 4 intelligence ledgers (or per-rec breakdown) |
+| `audit [--quiet]` | Enumerate integrity issues (broken links + orphan subjects). Exit 1 on findings unless `--quiet`. |
+
+**`stats` + `audit` shared options**
+
+| Option | Description |
+|---|---|
+| `--format <terminal\|json>` | Output format. Default `terminal` (markdown). `json` emits pretty-printed JSON envelope; empty workspace → JSON `null`. |
+
+**`stats` options**
+
+| Option | Description |
+|---|---|
+| `--by-rec` | Markdown-table per-rec breakdown instead of aggregate view |
+
+**Behavior** — operator-initiated force re-derive across the strategic-intelligence layer. Reads `.cadence/intelligence/{recommendations,evidence,assumptions,decisions}.json`, recomputes `Recommendation.assumptionIds[]` / `decisionIds[]` via the same `deriveRecommendationLinks` helper Slice-11 wires into intake, and atomically writes `recommendations.json` (with re-derived links) plus all three MD files (`RECOMMENDATIONS.md` with Slice-15 status-annotated bullets; `ASSUMPTIONS.md` + `DECISIONS.md` with Slice-9/13 bucket-partitioned sections). Useful when the operator hand-edits a subject ledger and wants the rec link arrays + MD renders refreshed without doing a throwaway intake. `assumptions.json` + `decisions.json` are NOT rewritten (operator source of truth). Idempotent: a second run is byte-equal. On an empty workspace (no intelligence ledgers present) → exit 0 with `No intelligence ledgers present.\n`.
+
+**`stats`** — read-only aggregation across all 4 intelligence ledgers. Aggregate mode prints 5 sections (Recommendations / Evidence / Assumptions / Decisions / Links) with counts partitioned by every enum value (zeros explicit; diff-stable). `--by-rec` prints a markdown table with one row per recommendation showing status + per-status linked-assumption + per-status linked-decision + evidence counts. Titles >40 chars truncated with `…`. Broken-link counts surface drift between rec link arrays and subject ledgers without enumeration (see future `audit` for per-link enumeration). Strict read-only.
+
+**`audit`** — read-only integrity enumeration across the 4 intelligence ledgers. Surfaces eight finding kinds: broken assumption/decision/evidence links (rec references missing subject id), orphan assumption/decision/evidence (subject's `recommendationId` references missing rec), stale `supersededBy` refs (Slice 30 — decision's `supersededBy` points to a missing decision id), and stale `convertedToPhaseId` refs (Slice 34.2 — rec's `convertedToPhaseId` points to a phase directory absent from `.cadence/phases/`). Untied decisions are NOT orphans (Slice-8 contract). Clean → `Audit clean: no integrity issues.\n` exit 0. Findings present → markdown sections per finding kind in `SECTION_ORDER` (broken links, orphans, stale-supersededby, stale-converted-phase) + Remediation block, exit 1 (unless `--quiet`). `--quiet` always exits 0 (script-friendly). The `stale-converted-phase` dim reads `.cadence/phases/` once before computation; a missing `.cadence/phases/` directory is benign (treated as the empty set — every converted rec then surfaces as stale, which is the correct signal when no phases exist). No auto-fix — `cadence intelligence reconcile` repairs broken link arrays only; orphan subjects, stale-supersededby refs, and stale-converted-phase refs each require operator decision (restore the missing referent, hand-edit to clear the field, or — for stale-supersededby — run `cadence decision reactivate <id>` which clears the field per Slice 28).
+
+**Exit codes** — `reconcile`: exits 0 even on empty ledger set; exits 1 on any disk/permission/parse error. `stats`: same; exits 0 even on empty ledger set. `audit`: exit 0 on clean or empty ledgers; exit 1 on findings unless `--quiet`; exit 1 on any disk/permission/parse error.
 
 ---
 
