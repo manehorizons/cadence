@@ -177,6 +177,7 @@ Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 |---|---|---|
 | `--title <t>` | `"Untitled"` | Draft title |
 | `--tier <t>` | `"standard"` | Tier: `quick-fix \| standard \| complex` |
+| `--from-rec <recId>` | — | Praxis recommendation id. On success, the rec is auto-converted to this phase via the Slice 34.1 transition helper. Symmetric semantics with `cadence spec new --from-rec`. Composes with the existing SPEC-seeded draft body: an approved SPEC plus `--from-rec` produces a SPEC-seeded DRAFT.md AND records the rec→phase link in one operator action. |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — creates `.cadence/phases/<phase>/<num>/DRAFT.md` pre-populated
@@ -263,6 +264,13 @@ anthropic / local via `config.specReview`) — it tracks attempts in a
 (default 3) failing reviews, hard-escalates with a `spec-review-unconverged`
 anomaly. On pass it returns the loop to `IDLE` (so `cadence draft new`
 proceeds). `cadence draft new` refuses while a spec is active.
+
+**Options (`spec new`)**
+
+| Option | Description |
+|---|---|
+| `--title <t>` | Spec title (defaults to "Untitled"). |
+| `--from-rec <recId>` | Praxis recommendation id. On success, the rec is auto-converted to this phase via the Slice 34.1 transition helper (status flips to `converted`, `convertedToPhaseId` records the link). Pre-flight: rec must exist with status `candidate` or `accepted`; otherwise refuses before any fs writes. If the chained convert fails after scaffold succeeded (race), stderr explains how to recover with `recommendation convert`. |
 
 **Options (`spec approve`)**
 
