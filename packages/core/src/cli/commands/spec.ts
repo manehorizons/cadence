@@ -11,6 +11,10 @@ import { selectNotifier } from '../../notify/factory.js';
 import { selectSpecReviewVerifier } from '../../verify/spec-review-factory.js';
 import { nextConvergence } from '../../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../../notify/spec-review.js';
+import {
+  readRecommendationLedger,
+  runRecommendationTransition,
+} from '../../intelligence/store.js';
 
 /**
  * Phase 36.1 — the pre-DRAFT SPEC stage. `spec new` (IDLE→SPEC) scaffolds a
@@ -26,46 +30,98 @@ export function registerSpecCommand(program: Command): void {
     .command('new <phase> <num>')
     .description('Scaffold a new SPEC.md under .cadence/phases/<phase>/ (IDLE→SPEC)')
     .option('--title <t>', 'Spec title', 'Untitled')
-    .action(async (phase: string, num: string, opts: { title: string }) => {
-      try {
-        const cwd = process.cwd();
-        const backend = new SimpleStateBackend(cwd);
-        const state = await backend.readState();
-        if (state.loopPosition !== 'IDLE') {
+    .option('--from-rec <recId>', 'Praxis recommendation id; on success the rec is auto-converted to this phase (Slice 34.3)')
+    .action(
+      async (
+        phase: string,
+        num: string,
+        opts: { title: string; fromRec?: string },
+      ) => {
+        try {
+          const cwd = process.cwd();
+          const backend = new SimpleStateBackend(cwd);
+          const state = await backend.readState();
+          if (state.loopPosition !== 'IDLE') {
+            process.stderr.write(
+              `spec new refused: loopPosition is ${state.loopPosition}, not IDLE. ` +
+                `Approve/settle/discard the active unit first.\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          // Slice 34.3 — pre-flight the rec BEFORE any fs writes so we never
+          // scaffold a phase for a missing or unconvertible rec.
+          if (opts.fromRec !== undefined) {
+            const recLedger = await readRecommendationLedger(cwd);
+            const rec = recLedger.recommendations.find((r) => r.id === opts.fromRec);
+            if (!rec) {
+              process.stderr.write(
+                `spec new refused: recommendation ${opts.fromRec} not found\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+            if (rec.status !== 'candidate' && rec.status !== 'accepted') {
+              process.stderr.write(
+                `spec new refused: cannot convert recommendation in status ${rec.status}\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+          }
+          const dir = join(cwd, '.cadence', 'phases', phase);
+          const padded = num.padStart(2, '0');
+          const id = `${phase.slice(0, 2)}-${padded}`;
+          const path = join(dir, `${id}-SPEC.md`);
+          if (existsSync(path)) {
+            process.stderr.write(`SPEC already exists: ${path}\n`);
+            process.exitCode = 2;
+            return;
+          }
+          await mkdir(dir, { recursive: true });
+          const body = `---\nphase: ${phase}\nid: ${id}\nstatus: PENDING\n---\n\n# ${id} — ${opts.title}\n\n## Objective\n\n_(one sentence)_\n\n## Acceptance Criteria\n\n### AC-1: _(name)_\nGiven _(precondition)_\nWhen _(action)_\nThen _(outcome)_\n\n## Constraints\n\n- _(constraint)_\n\n## Open Questions\n\n- _(question)_\n`;
+          await writeFile(path, body);
+
+          state.activePhase = phase;
+          state.activeSpec = id;
+          state.loopPosition = 'SPEC';
+          await backend.writeState(state);
+          await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
+
+          console.log(`Created ${path}`);
+
+          // Slice 34.3 — chained convert. Phase dir now exists, so the
+          // existing FK check inside runRecommendationTransition will pass.
+          // If the convert fails (race with another terminal mutating the
+          // rec status), the scaffold is already on disk — print a clear
+          // recovery hint and exit non-zero.
+          if (opts.fromRec !== undefined) {
+            const convertRes = await runRecommendationTransition(
+              cwd,
+              opts.fromRec,
+              'convert',
+              phase,
+            );
+            if (!convertRes.ok) {
+              process.stderr.write(
+                `spec new: scaffold succeeded but convert failed: ${convertRes.error}. ` +
+                  `Run \`cadence recommendation convert ${opts.fromRec} --to-phase ${phase}\` to retry.\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+            console.log(
+              `recommendation ${opts.fromRec} → converted (to ${phase})`,
+            );
+          }
+        } catch (err) {
           process.stderr.write(
-            `spec new refused: loopPosition is ${state.loopPosition}, not IDLE. ` +
-              `Approve/settle/discard the active unit first.\n`,
+            `spec new failed: ${err instanceof Error ? err.message : String(err)}\n`,
           );
           process.exitCode = 1;
-          return;
         }
-        const dir = join(cwd, '.cadence', 'phases', phase);
-        const padded = num.padStart(2, '0');
-        const id = `${phase.slice(0, 2)}-${padded}`;
-        const path = join(dir, `${id}-SPEC.md`);
-        if (existsSync(path)) {
-          process.stderr.write(`SPEC already exists: ${path}\n`);
-          process.exitCode = 2;
-          return;
-        }
-        await mkdir(dir, { recursive: true });
-        const body = `---\nphase: ${phase}\nid: ${id}\nstatus: PENDING\n---\n\n# ${id} — ${opts.title}\n\n## Objective\n\n_(one sentence)_\n\n## Acceptance Criteria\n\n### AC-1: _(name)_\nGiven _(precondition)_\nWhen _(action)_\nThen _(outcome)_\n\n## Constraints\n\n- _(constraint)_\n\n## Open Questions\n\n- _(question)_\n`;
-        await writeFile(path, body);
-
-        state.activePhase = phase;
-        state.activeSpec = id;
-        state.loopPosition = 'SPEC';
-        await backend.writeState(state);
-        await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
-
-        console.log(`Created ${path}`);
-      } catch (err) {
-        process.stderr.write(
-          `spec new failed: ${err instanceof Error ? err.message : String(err)}\n`,
-        );
-        process.exitCode = 1;
-      }
-    });
+      },
+    );
 
   cmd
     .command('check <path>')
