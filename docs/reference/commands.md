@@ -607,6 +607,15 @@ Prints recorded recommendations in a compact table.
 cadence recommendation list
 ```
 
+**Options**
+
+| Option | Description |
+|---|---|
+| `--filter-status <status>` | Filter to only entries with this status. |
+| `--filter-text <substr>` | Case-insensitive substring search on title or summary. Mutually exclusive with `--filter-regex`. |
+| `--filter-regex <pattern>` | Power-user regex filter on title or summary (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text`. |
+| `--filter-converted-to <phaseId>` | Reverse-lookup filter: returns only recommendations whose `convertedToPhaseId` equals `<phaseId>`. Implies `status=converted` because only converted recs populate the field. Empty-result message uses `converted-to="<phaseId>"`. Pairs with `cadence spec new --from-rec` / `draft new --from-rec` (Slice 34.3) — operators converting a rec one direction can ask the reverse question via this filter. |
+
 #### recommendation convert
 
 Records the fact that a recommendation was implemented as a CADENCE phase.
