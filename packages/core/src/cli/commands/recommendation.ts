@@ -158,10 +158,11 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary')
     .option('--filter-regex <pattern>', 'Power-user regex filter on title or summary (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text.')
+    .option('--filter-converted-to <phaseId>', 'Reverse-lookup filter: only recommendations with convertedToPhaseId equal to <phaseId>. Implies status=converted (Slice 34.4).')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterRegex?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterRegex?: string; filterConvertedTo?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -212,6 +213,9 @@ export function registerRecommendationCommand(program: Command): void {
           }
           entries = entries.filter((r) => regex.test(r.title) || regex.test(r.summary));
         }
+        if (opts.filterConvertedTo !== undefined) {
+          entries = entries.filter((r) => r.convertedToPhaseId === opts.filterConvertedTo);
+        }
         if (opts.reverse) {
           entries = entries.slice().reverse();
         }
@@ -246,6 +250,7 @@ export function registerRecommendationCommand(program: Command): void {
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
           if (opts.filterRegex !== undefined) filterDims.push(`regex="${opts.filterRegex}"`);
+          if (opts.filterConvertedTo !== undefined) filterDims.push(`converted-to="${opts.filterConvertedTo}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0
             ? `No recommendations matching ${filterDims.join(', ')} recorded.\n`

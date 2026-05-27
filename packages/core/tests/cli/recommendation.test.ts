@@ -346,4 +346,109 @@ describe('cadence recommendation', () => {
     const arr = JSON.parse(r.stdout);
     expect(arr.map((x: { title: string }) => x.title).sort()).toEqual(['Add auth', 'Add metrics']);
   });
+
+  it('Slice 34.4 AC-1: --filter-converted-to <phaseId> returns only recs converted to that phase', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice34_4_happy' });
+    // Seed three recs.
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    // Directly mark rec[0] converted→34.4-x and rec[2] converted→34.4-y via
+    // ledger edit (the public converter has FK + state requirements that are
+    // overkill for this fixture; the same edit-the-ledger pattern is used by
+    // Slice 34.3's invalid-status tests).
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[0].status = 'converted';
+    ledger.recommendations[0].convertedToPhaseId = '34.4-x';
+    ledger.recommendations[2].status = 'converted';
+    ledger.recommendations[2].convertedToPhaseId = '34.4-y';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-converted-to', '34.4-x', '--format', 'json'],
+      active.root,
+    );
+
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('A');
+    expect(arr[0].convertedToPhaseId).toBe('34.4-x');
+  });
+
+  it('Slice 34.4 AC-2: empty result includes converted-to="<phaseId>" dim', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice34_4_empty' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    // No converted recs at all.
+    const r = await run(
+      ['recommendation', 'list', '--filter-converted-to', '99-z'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe('No recommendations matching converted-to="99-z" recorded.\n');
+  });
+
+  it('Slice 34.4 AC-3: candidate/accepted/deferred/rejected recs are excluded (only matches when convertedToPhaseId equals)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice34_4_status' });
+    // Seed four recs.
+    await run(['recommendation', 'add', '--title', 'cand', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'acc', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'def', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'conv', '--summary', 's'], active.root);
+    // Mutate: leave [0] as candidate, [1] accepted, [2] deferred, [3] converted→34.4-target
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[1].status = 'accepted';
+    ledger.recommendations[2].status = 'deferred';
+    ledger.recommendations[3].status = 'converted';
+    ledger.recommendations[3].convertedToPhaseId = '34.4-target';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-converted-to', '34.4-target', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('conv');
+  });
+
+  it('Slice 34.4 AC-4: --filter-converted-to + --reverse → filter then reverse subset', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice34_4_reverse' });
+    // Seed three recs, all converted to the same phase.
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    for (const rec of ledger.recommendations) {
+      rec.status = 'converted';
+      rec.convertedToPhaseId = '34.4-shared';
+    }
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-converted-to', '34.4-shared', '--reverse', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['C', 'B', 'A']);
+  });
+
+  it('Slice 34.4 AC-5: JSON format with no matches returns []', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice34_4_json_empty' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--filter-converted-to', 'never-existed', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
 });
