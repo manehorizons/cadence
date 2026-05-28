@@ -615,6 +615,7 @@ cadence recommendation list
 | `--filter-text <substr>` | Case-insensitive substring search on title or summary. Mutually exclusive with `--filter-regex`. |
 | `--filter-regex <pattern>` | Power-user regex filter on title or summary (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text`. |
 | `--filter-converted-to <phaseId>` | Reverse-lookup filter: returns only recommendations whose `convertedToPhaseId` equals `<phaseId>`. Implies `status=converted` because only converted recs populate the field. Empty-result message uses `converted-to="<phaseId>"`. Pairs with `cadence spec new --from-rec` / `draft new --from-rec` (Slice 34.3) — operators converting a rec one direction can ask the reverse question via this filter. |
+| `--sort-by <key>` | Sort by a single key, optionally suffixed with `:desc`. Default direction is ascending. Allowed keys: `created`, `updated`, `priority` (low<medium<high<critical), `status` (lifecycle order: candidate<accepted<deferred<rejected<converted), `title`, `leverage` (numeric 0–10), `risk` (numeric 0–10), `confidence` (numeric 0–1), `decay` (fresh<aging<stale<superseded<contradicted<needs-revalidation). Pipeline applies after filters, before `--reverse`/`--offset`/`--limit`. Composes with `--reverse`; `--sort-by X --reverse` ≡ `--sort-by X:desc`. (Slice 35) |
 
 #### recommendation convert
 
@@ -878,6 +879,20 @@ Manage CADENCE strategic-intelligence assumptions
 
 **Exit codes** — `add`: exits 1 on unknown rec id or any artifact write error; usage error from commander on missing required option. `list`: exits 0 even on empty ledger (prints `No assumptions recorded.`).
 
+**`list` options**
+
+| Option | Description |
+|---|---|
+| `--format <format>` | Output format: `terminal` (default) or `json`. |
+| `--filter-status <status>` | Filter to only entries with this status (`open` / `validated` / `rejected`). |
+| `--filter-rec <recId>` | Filter to only entries tied to this recommendation. |
+| `--filter-text <substr>` | Case-insensitive substring search on `text`. Mutually exclusive with `--filter-regex`. |
+| `--filter-regex <pattern>` | Power-user regex filter on `text` (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text`. |
+| `--sort-by <key>` | Sort by a single key, optionally suffixed with `:desc`. Default direction is ascending. Allowed keys: `created`, `status` (open<validated<rejected), `text`, `rec` (recommendationId). Composes with `--reverse`. (Slice 35) |
+| `--reverse` | Reverse the entry order (after filters, before offset/limit). |
+| `--offset <n>` | Skip the first N entries after filters. |
+| `--limit <n>` | Cap output to first N entries after filters. |
+
 ---
 
 ### decision
@@ -906,6 +921,21 @@ Manage CADENCE strategic-intelligence decisions
 **Behavior** — `--rec` is optional; FK-checked only when provided. Untied decisions are valid (architectural decisions that don't tie to a specific recommendation). The persisted entity OMITS the `recommendationId` field entirely on untied decisions (exact-optional pattern). Writes `.cadence/intelligence/decisions.json` + `.cadence/intelligence/DECISIONS.md` on every add. `list` writes one line per entry (`${id}  ${recommendationId ?? '—'}  ${title}`); untied decisions show the em-dash placeholder in the rec column.
 
 **Exit codes** — same shape as `assumption`.
+
+**`list` options**
+
+| Option | Description |
+|---|---|
+| `--format <format>` | Output format: `terminal` (default) or `json`. |
+| `--filter-status <status>` | Filter to only entries with this status (`active` / `superseded` / `rescinded`). |
+| `--filter-rec <recId>` | Filter to only entries tied to this recommendation. |
+| `--include-untied` | When combined with `--filter-rec`, also include decisions with no `recommendationId`. |
+| `--filter-text <substr>` | Case-insensitive substring search on title or rationale. Mutually exclusive with `--filter-regex`. |
+| `--filter-regex <pattern>` | Power-user regex filter on title or rationale (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text`. |
+| `--sort-by <key>` | Sort by a single key, optionally suffixed with `:desc`. Default direction is ascending. Allowed keys: `decided`, `status` (active<superseded<rescinded), `title`, `rec` (recommendationId; untied decisions sort last in asc, first in desc). Composes with `--reverse`. (Slice 35) |
+| `--reverse` | Reverse the entry order (after filters, before offset/limit). |
+| `--offset <n>` | Skip the first N entries after filters. |
+| `--limit <n>` | Cap output to first N entries after filters. |
 
 ---
 
