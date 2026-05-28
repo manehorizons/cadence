@@ -612,8 +612,9 @@ cadence recommendation list
 | Option | Description |
 |---|---|
 | `--filter-status <status>` | Filter to only entries with this status. |
-| `--filter-text <substr>` | Case-insensitive substring search on title or summary. Mutually exclusive with `--filter-regex`. |
-| `--filter-regex <pattern>` | Power-user regex filter on title or summary (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text`. |
+| `--filter-text <substr>` | Case-insensitive substring search on title or summary. Mutually exclusive with `--filter-text-exact` and `--filter-regex`. |
+| `--filter-text-exact <str>` | Case-insensitive whole-field equality match on title or summary. The entire scoped field must equal the literal (case-insensitive); substring matches do NOT match. Surrounding whitespace in the literal is significant (no trim). Mutually exclusive with `--filter-text` and `--filter-regex`. Empty literal returns exit 1. (Slice 36) |
+| `--filter-regex <pattern>` | Power-user regex filter on title or summary (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text` and `--filter-text-exact`. |
 | `--filter-converted-to <phaseId>` | Reverse-lookup filter: returns only recommendations whose `convertedToPhaseId` equals `<phaseId>`. Implies `status=converted` because only converted recs populate the field. Empty-result message uses `converted-to="<phaseId>"`. Pairs with `cadence spec new --from-rec` / `draft new --from-rec` (Slice 34.3) — operators converting a rec one direction can ask the reverse question via this filter. |
 | `--sort-by <key>` | Sort by a single key, optionally suffixed with `:desc`. Default direction is ascending. Allowed keys: `created`, `updated`, `priority` (low<medium<high<critical), `status` (lifecycle order: candidate<accepted<deferred<rejected<converted), `title`, `leverage` (numeric 0–10), `risk` (numeric 0–10), `confidence` (numeric 0–1), `decay` (fresh<aging<stale<superseded<contradicted<needs-revalidation). Pipeline applies after filters, before `--reverse`/`--offset`/`--limit`. Composes with `--reverse`; `--sort-by X --reverse` ≡ `--sort-by X:desc`. (Slice 35) |
 
@@ -886,8 +887,9 @@ Manage CADENCE strategic-intelligence assumptions
 | `--format <format>` | Output format: `terminal` (default) or `json`. |
 | `--filter-status <status>` | Filter to only entries with this status (`open` / `validated` / `rejected`). |
 | `--filter-rec <recId>` | Filter to only entries tied to this recommendation. |
-| `--filter-text <substr>` | Case-insensitive substring search on `text`. Mutually exclusive with `--filter-regex`. |
-| `--filter-regex <pattern>` | Power-user regex filter on `text` (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text`. |
+| `--filter-text <substr>` | Case-insensitive substring search on `text`. Mutually exclusive with `--filter-text-exact` and `--filter-regex`. |
+| `--filter-text-exact <str>` | Case-insensitive whole-field equality match on `text`. The entire scoped field must equal the literal (case-insensitive); substring matches do NOT match. Surrounding whitespace in the literal is significant (no trim). Mutually exclusive with `--filter-text` and `--filter-regex`. Empty literal returns exit 1. (Slice 36) |
+| `--filter-regex <pattern>` | Power-user regex filter on `text` (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text` and `--filter-text-exact`. |
 | `--sort-by <key>` | Sort by a single key, optionally suffixed with `:desc`. Default direction is ascending. Allowed keys: `created`, `status` (open<validated<rejected), `text`, `rec` (recommendationId). Composes with `--reverse`. (Slice 35) |
 | `--reverse` | Reverse the entry order (after filters, before offset/limit). |
 | `--offset <n>` | Skip the first N entries after filters. |
@@ -930,8 +932,9 @@ Manage CADENCE strategic-intelligence decisions
 | `--filter-status <status>` | Filter to only entries with this status (`active` / `superseded` / `rescinded`). |
 | `--filter-rec <recId>` | Filter to only entries tied to this recommendation. |
 | `--include-untied` | When combined with `--filter-rec`, also include decisions with no `recommendationId`. |
-| `--filter-text <substr>` | Case-insensitive substring search on title or rationale. Mutually exclusive with `--filter-regex`. |
-| `--filter-regex <pattern>` | Power-user regex filter on title or rationale (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text`. |
+| `--filter-text <substr>` | Case-insensitive substring search on title or rationale. Mutually exclusive with `--filter-text-exact` and `--filter-regex`. |
+| `--filter-text-exact <str>` | Case-insensitive whole-field equality match on title or rationale. The entire scoped field must equal the literal (case-insensitive); substring matches do NOT match. Surrounding whitespace in the literal is significant (no trim). Mutually exclusive with `--filter-text` and `--filter-regex`. Empty literal returns exit 1. (Slice 36) |
+| `--filter-regex <pattern>` | Power-user regex filter on title or rationale (always case-sensitive; use character classes like `[Cc]ycle` for case-insensitive). Mutually exclusive with `--filter-text` and `--filter-text-exact`. |
 | `--sort-by <key>` | Sort by a single key, optionally suffixed with `:desc`. Default direction is ascending. Allowed keys: `decided`, `status` (active<superseded<rescinded), `title`, `rec` (recommendationId; untied decisions sort last in asc, first in desc). Composes with `--reverse`. (Slice 35) |
 | `--reverse` | Reverse the entry order (after filters, before offset/limit). |
 | `--offset <n>` | Skip the first N entries after filters. |
