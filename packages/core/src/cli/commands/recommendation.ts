@@ -1,5 +1,7 @@
 import type { Command } from 'commander';
 import {
+  type Recommendation,
+  RecommendationDecayStateZ,
   RecommendationPriorityZ,
   RecommendationReadinessZ,
   RecommendationStatusZ,
@@ -21,6 +23,68 @@ function csv(value: string | undefined): string[] {
     .split(',')
     .map((v) => v.trim())
     .filter((v) => v.length > 0);
+}
+
+type SortDir = 'asc' | 'desc';
+type ParsedSort = { key: string; dir: SortDir } | { error: string };
+
+function parseSortBy(raw: string): ParsedSort {
+  if (raw.length === 0) return { error: '--sort-by requires a key' };
+  const colon = raw.indexOf(':');
+  if (colon === -1) return { key: raw, dir: 'asc' };
+  const key = raw.slice(0, colon);
+  const dirRaw = raw.slice(colon + 1);
+  if (key.length === 0) return { error: '--sort-by requires a key' };
+  if (dirRaw !== 'asc' && dirRaw !== 'desc') {
+    return { error: `invalid sort direction: '${dirRaw}' (use 'asc' or 'desc')` };
+  }
+  return { key, dir: dirRaw };
+}
+
+const REC_SORT_KEYS = new Set([
+  'created',
+  'updated',
+  'priority',
+  'status',
+  'title',
+  'leverage',
+  'risk',
+  'confidence',
+  'decay',
+]);
+
+function compareRec(a: Recommendation, b: Recommendation, key: string): number {
+  switch (key) {
+    case 'created':
+      return a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
+    case 'updated':
+      return a.updatedAt < b.updatedAt ? -1 : a.updatedAt > b.updatedAt ? 1 : 0;
+    case 'title':
+      return a.title < b.title ? -1 : a.title > b.title ? 1 : 0;
+    case 'leverage':
+      return a.leverageScore - b.leverageScore;
+    case 'risk':
+      return a.riskScore - b.riskScore;
+    case 'confidence':
+      return a.confidence - b.confidence;
+    case 'priority':
+      return (
+        RecommendationPriorityZ.options.indexOf(a.priority) -
+        RecommendationPriorityZ.options.indexOf(b.priority)
+      );
+    case 'status':
+      return (
+        RecommendationStatusZ.options.indexOf(a.status) -
+        RecommendationStatusZ.options.indexOf(b.status)
+      );
+    case 'decay':
+      return (
+        RecommendationDecayStateZ.options.indexOf(a.decayState) -
+        RecommendationDecayStateZ.options.indexOf(b.decayState)
+      );
+    default:
+      return 0;
+  }
 }
 
 export function registerRecommendationCommand(program: Command): void {
@@ -159,10 +223,11 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary')
     .option('--filter-regex <pattern>', 'Power-user regex filter on title or summary (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text.')
     .option('--filter-converted-to <phaseId>', 'Reverse-lookup filter: only recommendations with convertedToPhaseId equal to <phaseId>. Implies status=converted (Slice 34.4).')
+    .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: created, updated, priority, status, title, leverage, risk, confidence, decay.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterRegex?: string; filterConvertedTo?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterRegex?: string; filterConvertedTo?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -215,6 +280,27 @@ export function registerRecommendationCommand(program: Command): void {
         }
         if (opts.filterConvertedTo !== undefined) {
           entries = entries.filter((r) => r.convertedToPhaseId === opts.filterConvertedTo);
+        }
+        if (opts.sortBy !== undefined) {
+          const parsed = parseSortBy(opts.sortBy);
+          if ('error' in parsed) {
+            process.stderr.write(`recommendation list failed: ${parsed.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          if (!REC_SORT_KEYS.has(parsed.key)) {
+            const allowed = [...REC_SORT_KEYS].join(', ');
+            process.stderr.write(
+              `recommendation list failed: invalid sort key: ${parsed.key} (allowed: ${allowed})\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          const sortKey = parsed.key;
+          const dir = parsed.dir;
+          entries = entries.slice().sort((a, b) =>
+            dir === 'desc' ? -compareRec(a, b, sortKey) : compareRec(a, b, sortKey),
+          );
         }
         if (opts.reverse) {
           entries = entries.slice().reverse();

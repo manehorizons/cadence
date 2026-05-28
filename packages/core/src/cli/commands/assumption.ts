@@ -9,6 +9,49 @@ import {
 } from '../../intelligence/store.js';
 import { renderAssumptionDetail } from '../../intelligence/render-assumption-detail.js';
 
+type SortDir = 'asc' | 'desc';
+type ParsedSort = { key: string; dir: SortDir } | { error: string };
+
+function parseSortBy(raw: string): ParsedSort {
+  if (raw.length === 0) return { error: '--sort-by requires a key' };
+  const colon = raw.indexOf(':');
+  if (colon === -1) return { key: raw, dir: 'asc' };
+  const key = raw.slice(0, colon);
+  const dirRaw = raw.slice(colon + 1);
+  if (key.length === 0) return { error: '--sort-by requires a key' };
+  if (dirRaw !== 'asc' && dirRaw !== 'desc') {
+    return { error: `invalid sort direction: '${dirRaw}' (use 'asc' or 'desc')` };
+  }
+  return { key, dir: dirRaw };
+}
+
+const ASN_SORT_KEYS = new Set(['created', 'status', 'text', 'rec']);
+
+const ASN_STATUS_ORDER: ReadonlyArray<Assumption['status']> = [
+  'open',
+  'validated',
+  'rejected',
+];
+
+function compareAsn(a: Assumption, b: Assumption, key: string): number {
+  switch (key) {
+    case 'created':
+      return a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
+    case 'text':
+      return a.text < b.text ? -1 : a.text > b.text ? 1 : 0;
+    case 'rec':
+      return a.recommendationId < b.recommendationId
+        ? -1
+        : a.recommendationId > b.recommendationId
+        ? 1
+        : 0;
+    case 'status':
+      return ASN_STATUS_ORDER.indexOf(a.status) - ASN_STATUS_ORDER.indexOf(b.status);
+    default:
+      return 0;
+  }
+}
+
 const ASSUMPTION_TRANSITION_DESCRIPTIONS: Record<
   AssumptionTransitionAction,
   string
@@ -102,10 +145,11 @@ export function registerAssumptionCommand(program: Command): void {
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
     .option('--filter-text <substr>', 'Case-insensitive substring search on text')
     .option('--filter-regex <pattern>', 'Power-user regex filter on text (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text.')
+    .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: created, status, text, rec.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; filterRegex?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; filterRegex?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -154,6 +198,27 @@ export function registerAssumptionCommand(program: Command): void {
             return;
           }
           entries = entries.filter((a) => regex.test(a.text));
+        }
+        if (opts.sortBy !== undefined) {
+          const parsed = parseSortBy(opts.sortBy);
+          if ('error' in parsed) {
+            process.stderr.write(`assumption list failed: ${parsed.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          if (!ASN_SORT_KEYS.has(parsed.key)) {
+            const allowed = [...ASN_SORT_KEYS].join(', ');
+            process.stderr.write(
+              `assumption list failed: invalid sort key: ${parsed.key} (allowed: ${allowed})\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          const sortKey = parsed.key;
+          const dir = parsed.dir;
+          entries = entries.slice().sort((a, b) =>
+            dir === 'desc' ? -compareAsn(a, b, sortKey) : compareAsn(a, b, sortKey),
+          );
         }
         if (opts.reverse) {
           entries = entries.slice().reverse();

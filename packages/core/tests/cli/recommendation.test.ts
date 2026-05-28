@@ -451,4 +451,243 @@ describe('cadence recommendation', () => {
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual([]);
   });
+
+  it('Slice 35 AC-sort-1 (rec): --sort-by created returns entries by createdAt ascending', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort1' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[0].createdAt = '2024-01-03T00:00:00+00:00';
+    ledger.recommendations[1].createdAt = '2024-01-01T00:00:00+00:00';
+    ledger.recommendations[2].createdAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'created', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['B', 'C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-2 (rec): --sort-by created:desc returns entries by createdAt descending', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort2' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[0].createdAt = '2024-01-03T00:00:00+00:00';
+    ledger.recommendations[1].createdAt = '2024-01-01T00:00:00+00:00';
+    ledger.recommendations[2].createdAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'created:desc', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['A', 'C', 'B']);
+  });
+
+  it('Slice 35 AC-sort-3 (rec): --sort-by priority orders by Zod enum declaration (low<medium<high<critical)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort3' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's', '--priority', 'critical'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's', '--priority', 'low'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's', '--priority', 'high'], active.root);
+    await run(['recommendation', 'add', '--title', 'D', '--summary', 's', '--priority', 'medium'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'priority', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['B', 'D', 'C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-4 (rec): stable tie-break preserves insertion order for equal-key entries', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort4' });
+    // Three recs all with priority=medium (the default).
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'priority', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    // All equal keys → insertion order preserved.
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['A', 'B', 'C']);
+  });
+
+  it('Slice 35 AC-sort-5 (rec): sort applies after --filter-status (filtered subset only)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort5' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    // Mark [0] and [2] as accepted; leave [1] as candidate.
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[0].status = 'accepted';
+    ledger.recommendations[0].createdAt = '2024-01-02T00:00:00+00:00';
+    ledger.recommendations[2].status = 'accepted';
+    ledger.recommendations[2].createdAt = '2024-01-01T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-status', 'accepted', '--sort-by', 'created', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    // Only the two accepted recs returned, in chronological order.
+    expect(arr).toHaveLength(2);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-6 (rec): --sort-by <key> --reverse equals --sort-by <key>:desc', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort6' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[0].createdAt = '2024-01-03T00:00:00+00:00';
+    ledger.recommendations[1].createdAt = '2024-01-01T00:00:00+00:00';
+    ledger.recommendations[2].createdAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const a = await run(
+      ['recommendation', 'list', '--sort-by', 'created', '--reverse', '--format', 'json'],
+      active.root,
+    );
+    const b = await run(
+      ['recommendation', 'list', '--sort-by', 'created:desc', '--format', 'json'],
+      active.root,
+    );
+    expect(a.code).toBe(0);
+    expect(b.code).toBe(0);
+    expect(a.stdout).toBe(b.stdout);
+  });
+
+  it('Slice 35 AC-sort-7 (rec): --sort-by composes with --offset and --limit (pagination on sorted output)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort7' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'D', '--summary', 's'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[0].createdAt = '2024-01-04T00:00:00+00:00';
+    ledger.recommendations[1].createdAt = '2024-01-02T00:00:00+00:00';
+    ledger.recommendations[2].createdAt = '2024-01-01T00:00:00+00:00';
+    ledger.recommendations[3].createdAt = '2024-01-03T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'created', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    // Asc by created: [C(Jan 1), B(Jan 2), D(Jan 3), A(Jan 4)]. offset 1 → skip C. limit 2 → take [B, D].
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['B', 'D']);
+  });
+
+  it('Slice 35 AC-sort-8 (rec): --format json emits sorted array', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort8' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's', '--priority', 'low'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's', '--priority', 'critical'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'priority:desc', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    // Critical first.
+    expect(arr[0].title).toBe('B');
+    expect(arr[1].title).toBe('A');
+  });
+
+  it('Slice 35 AC-sort-9 (rec): invalid key errors with allowed-list message and exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort9' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'foo'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'recommendation list failed: invalid sort key: foo (allowed: created, updated, priority, status, title, leverage, risk, confidence, decay)\n',
+    );
+  });
+
+  it('Slice 35 AC-sort-10 (rec): malformed direction errors with use-asc-or-desc message and exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_sort10' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'created:xyz'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      "recommendation list failed: invalid sort direction: 'xyz' (use 'asc' or 'desc')\n",
+    );
+  });
+
+  it('Slice 35 AC-sort-rec-1: --sort-by leverage uses numeric compare (not lexicographic)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_lev' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    // Picked so numeric and lexicographic orders differ:
+    //   numeric asc:  2, 9, 10  → B, C, A
+    //   lexicographic asc on string("10") < string("2") < string("9") → A, B, C
+    ledger.recommendations[0].leverageScore = 10;
+    ledger.recommendations[1].leverageScore = 2;
+    ledger.recommendations[2].leverageScore = 9;
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'leverage', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['B', 'C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-rec-2: --sort-by decay orders by Zod enum declaration (fresh<aging<stale<superseded<contradicted<needs-revalidation)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_rec_decay' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'B', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'C', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'D', '--summary', 's'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[0].decayState = 'stale';
+    ledger.recommendations[1].decayState = 'fresh';
+    ledger.recommendations[2].decayState = 'needs-revalidation';
+    ledger.recommendations[3].decayState = 'aging';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--sort-by', 'decay', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    // Enum order: fresh, aging, stale, ..., needs-revalidation → B, D, A, C.
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['B', 'D', 'A', 'C']);
+  });
 });

@@ -27,6 +27,53 @@ const DECISION_TRANSITION_PAST: Record<
   reactivate: 'active',
 };
 
+type SortDir = 'asc' | 'desc';
+type ParsedSort = { key: string; dir: SortDir } | { error: string };
+
+function parseSortBy(raw: string): ParsedSort {
+  if (raw.length === 0) return { error: '--sort-by requires a key' };
+  const colon = raw.indexOf(':');
+  if (colon === -1) return { key: raw, dir: 'asc' };
+  const key = raw.slice(0, colon);
+  const dirRaw = raw.slice(colon + 1);
+  if (key.length === 0) return { error: '--sort-by requires a key' };
+  if (dirRaw !== 'asc' && dirRaw !== 'desc') {
+    return { error: `invalid sort direction: '${dirRaw}' (use 'asc' or 'desc')` };
+  }
+  return { key, dir: dirRaw };
+}
+
+const DEC_SORT_KEYS = new Set(['decided', 'status', 'title', 'rec']);
+
+const DEC_STATUS_ORDER: ReadonlyArray<IntelligenceDecision['status']> = [
+  'active',
+  'superseded',
+  'rescinded',
+];
+
+function compareDec(a: IntelligenceDecision, b: IntelligenceDecision, key: string): number {
+  switch (key) {
+    case 'decided':
+      return a.decidedAt < b.decidedAt ? -1 : a.decidedAt > b.decidedAt ? 1 : 0;
+    case 'title':
+      return a.title < b.title ? -1 : a.title > b.title ? 1 : 0;
+    case 'status':
+      return DEC_STATUS_ORDER.indexOf(a.status) - DEC_STATUS_ORDER.indexOf(b.status);
+    case 'rec': {
+      const aHas = a.recommendationId !== undefined;
+      const bHas = b.recommendationId !== undefined;
+      if (!aHas && !bHas) return 0;
+      if (!aHas) return 1;
+      if (!bHas) return -1;
+      const ar = a.recommendationId as string;
+      const br = b.recommendationId as string;
+      return ar < br ? -1 : ar > br ? 1 : 0;
+    }
+    default:
+      return 0;
+  }
+}
+
 export function registerDecisionCommand(program: Command): void {
   const cmd = program
     .command('decision')
@@ -145,10 +192,11 @@ export function registerDecisionCommand(program: Command): void {
     .option('--include-untied', 'When combined with --filter-rec, also include decisions with no recommendationId')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or rationale')
     .option('--filter-regex <pattern>', 'Power-user regex filter on title or rationale (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text.')
+    .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: decided, status, title, rec.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; includeUntied?: boolean; filterText?: string; filterRegex?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; includeUntied?: boolean; filterText?: string; filterRegex?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -207,6 +255,27 @@ export function registerDecisionCommand(program: Command): void {
             return;
           }
           entries = entries.filter((d) => regex.test(d.title) || regex.test(d.rationale));
+        }
+        if (opts.sortBy !== undefined) {
+          const parsed = parseSortBy(opts.sortBy);
+          if ('error' in parsed) {
+            process.stderr.write(`decision list failed: ${parsed.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          if (!DEC_SORT_KEYS.has(parsed.key)) {
+            const allowed = [...DEC_SORT_KEYS].join(', ');
+            process.stderr.write(
+              `decision list failed: invalid sort key: ${parsed.key} (allowed: ${allowed})\n`,
+            );
+            process.exitCode = 1;
+            return;
+          }
+          const sortKey = parsed.key;
+          const dir = parsed.dir;
+          entries = entries.slice().sort((a, b) =>
+            dir === 'desc' ? -compareDec(a, b, sortKey) : compareDec(a, b, sortKey),
+          );
         }
         if (opts.reverse) {
           entries = entries.slice().reverse();

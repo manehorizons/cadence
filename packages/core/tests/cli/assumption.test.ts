@@ -418,4 +418,237 @@ describe('cadence assumption (Slice 8)', () => {
     expect(arr).toHaveLength(2);
     expect(arr.every((a: { text: string }) => /race condition/.test(a.text))).toBe(true);
   });
+
+  it('Slice 35 AC-sort-1 (asn): --sort-by created returns entries by createdAt ascending', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort1' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'B'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'C'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.assumptions[0].createdAt = '2024-01-03T00:00:00+00:00';
+    ledger.assumptions[1].createdAt = '2024-01-01T00:00:00+00:00';
+    ledger.assumptions[2].createdAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['assumption', 'list', '--sort-by', 'created', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { text: string }) => x.text)).toEqual(['B', 'C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-2 (asn): --sort-by created:desc returns entries by createdAt descending', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort2' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'B'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'C'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.assumptions[0].createdAt = '2024-01-03T00:00:00+00:00';
+    ledger.assumptions[1].createdAt = '2024-01-01T00:00:00+00:00';
+    ledger.assumptions[2].createdAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['assumption', 'list', '--sort-by', 'created:desc', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { text: string }) => x.text)).toEqual(['A', 'C', 'B']);
+  });
+
+  it('Slice 35 AC-sort-3 (asn): --sort-by status orders by Zod enum declaration (open<validated<rejected)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort3' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'B'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'C'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.assumptions[0].status = 'rejected';
+    ledger.assumptions[1].status = 'open';
+    ledger.assumptions[2].status = 'validated';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['assumption', 'list', '--sort-by', 'status', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    // open < validated < rejected → B, C, A.
+    expect(JSON.parse(r.stdout).map((x: { text: string }) => x.text)).toEqual(['B', 'C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-4 (asn): stable tie-break preserves insertion order for equal-key entries', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort4' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    // Three assumptions, all status=open (default).
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'B'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'C'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--sort-by', 'status', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { text: string }) => x.text)).toEqual(['A', 'B', 'C']);
+  });
+
+  it('Slice 35 AC-sort-5 (asn): sort applies after --filter-status (filtered subset only)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort5' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'B'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'C'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.assumptions[0].status = 'validated';
+    ledger.assumptions[0].createdAt = '2024-01-02T00:00:00+00:00';
+    ledger.assumptions[2].status = 'validated';
+    ledger.assumptions[2].createdAt = '2024-01-01T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['assumption', 'list', '--filter-status', 'validated', '--sort-by', 'created', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    expect(arr.map((x: { text: string }) => x.text)).toEqual(['C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-6 (asn): --sort-by <key> --reverse equals --sort-by <key>:desc', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort6' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'B'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'C'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.assumptions[0].createdAt = '2024-01-03T00:00:00+00:00';
+    ledger.assumptions[1].createdAt = '2024-01-01T00:00:00+00:00';
+    ledger.assumptions[2].createdAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const a = await run(
+      ['assumption', 'list', '--sort-by', 'created', '--reverse', '--format', 'json'],
+      active.root,
+    );
+    const b = await run(
+      ['assumption', 'list', '--sort-by', 'created:desc', '--format', 'json'],
+      active.root,
+    );
+    expect(a.code).toBe(0);
+    expect(b.code).toBe(0);
+    expect(a.stdout).toBe(b.stdout);
+  });
+
+  it('Slice 35 AC-sort-7 (asn): --sort-by composes with --offset and --limit', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort7' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'B'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'C'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'D'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.assumptions[0].createdAt = '2024-01-04T00:00:00+00:00';
+    ledger.assumptions[1].createdAt = '2024-01-02T00:00:00+00:00';
+    ledger.assumptions[2].createdAt = '2024-01-01T00:00:00+00:00';
+    ledger.assumptions[3].createdAt = '2024-01-03T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['assumption', 'list', '--sort-by', 'created', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { text: string }) => x.text)).toEqual(['B', 'D']);
+  });
+
+  it('Slice 35 AC-sort-8 (asn): --format json emits sorted array', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort8' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'banana'], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'apple'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--sort-by', 'text', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr[0].text).toBe('apple');
+    expect(arr[1].text).toBe('banana');
+  });
+
+  it('Slice 35 AC-sort-9 (asn): invalid key errors with allowed-list message and exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort9' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--sort-by', 'foo'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'assumption list failed: invalid sort key: foo (allowed: created, status, text, rec)\n',
+    );
+  });
+
+  it('Slice 35 AC-sort-10 (asn): malformed direction errors with use-asc-or-desc message and exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort10' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'A'], active.root);
+    const r = await run(
+      ['assumption', 'list', '--sort-by', 'created:xyz'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      "assumption list failed: invalid sort direction: 'xyz' (use 'asc' or 'desc')\n",
+    );
+  });
 });

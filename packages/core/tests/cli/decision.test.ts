@@ -653,4 +653,241 @@ describe('cadence decision (Slice 8)', () => {
       expect(r.stdout).toBe('No decisions matching regex="nonexistent" recorded.\n');
     });
   });
+
+  it('Slice 35 AC-sort-1 (dec): --sort-by decided returns entries by decidedAt ascending', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort1' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'B', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'C', '--rationale', 'r'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.decisions[0].decidedAt = '2024-01-03T00:00:00+00:00';
+    ledger.decisions[1].decidedAt = '2024-01-01T00:00:00+00:00';
+    ledger.decisions[2].decidedAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['decision', 'list', '--sort-by', 'decided', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['B', 'C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-2 (dec): --sort-by decided:desc returns entries by decidedAt descending', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort2' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'B', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'C', '--rationale', 'r'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.decisions[0].decidedAt = '2024-01-03T00:00:00+00:00';
+    ledger.decisions[1].decidedAt = '2024-01-01T00:00:00+00:00';
+    ledger.decisions[2].decidedAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['decision', 'list', '--sort-by', 'decided:desc', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['A', 'C', 'B']);
+  });
+
+  it('Slice 35 AC-sort-3 (dec): --sort-by status orders by Zod enum declaration (active<superseded<rescinded)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort3' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'B', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'C', '--rationale', 'r'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.decisions[0].status = 'rescinded';
+    ledger.decisions[1].status = 'active';
+    ledger.decisions[2].status = 'superseded';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['decision', 'list', '--sort-by', 'status', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    // active < superseded < rescinded → B, C, A.
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['B', 'C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-4 (dec): stable tie-break preserves insertion order for equal-key entries', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort4' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'B', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'C', '--rationale', 'r'], active.root);
+    // All status=active by default.
+    const r = await run(
+      ['decision', 'list', '--sort-by', 'status', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['A', 'B', 'C']);
+  });
+
+  it('Slice 35 AC-sort-5 (dec): sort applies after --filter-status (filtered subset only)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort5' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'B', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'C', '--rationale', 'r'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.decisions[0].status = 'superseded';
+    ledger.decisions[0].decidedAt = '2024-01-02T00:00:00+00:00';
+    ledger.decisions[2].status = 'superseded';
+    ledger.decisions[2].decidedAt = '2024-01-01T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['decision', 'list', '--filter-status', 'superseded', '--sort-by', 'decided', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    expect(arr.map((x: { title: string }) => x.title)).toEqual(['C', 'A']);
+  });
+
+  it('Slice 35 AC-sort-6 (dec): --sort-by <key> --reverse equals --sort-by <key>:desc', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort6' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'B', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'C', '--rationale', 'r'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.decisions[0].decidedAt = '2024-01-03T00:00:00+00:00';
+    ledger.decisions[1].decidedAt = '2024-01-01T00:00:00+00:00';
+    ledger.decisions[2].decidedAt = '2024-01-02T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const a = await run(
+      ['decision', 'list', '--sort-by', 'decided', '--reverse', '--format', 'json'],
+      active.root,
+    );
+    const b = await run(
+      ['decision', 'list', '--sort-by', 'decided:desc', '--format', 'json'],
+      active.root,
+    );
+    expect(a.code).toBe(0);
+    expect(b.code).toBe(0);
+    expect(a.stdout).toBe(b.stdout);
+  });
+
+  it('Slice 35 AC-sort-7 (dec): --sort-by composes with --offset and --limit', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort7' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'B', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'C', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'D', '--rationale', 'r'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.decisions[0].decidedAt = '2024-01-04T00:00:00+00:00';
+    ledger.decisions[1].decidedAt = '2024-01-02T00:00:00+00:00';
+    ledger.decisions[2].decidedAt = '2024-01-01T00:00:00+00:00';
+    ledger.decisions[3].decidedAt = '2024-01-03T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['decision', 'list', '--sort-by', 'decided', '--offset', '1', '--limit', '2', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).map((x: { title: string }) => x.title)).toEqual(['B', 'D']);
+  });
+
+  it('Slice 35 AC-sort-8 (dec): --format json emits sorted array', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort8' });
+    await run(['decision', 'add', '--title', 'banana', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'apple', '--rationale', 'r'], active.root);
+    const r = await run(
+      ['decision', 'list', '--sort-by', 'title', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr[0].title).toBe('apple');
+    expect(arr[1].title).toBe('banana');
+  });
+
+  it('Slice 35 AC-sort-9 (dec): invalid key errors with allowed-list message and exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort9' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    const r = await run(
+      ['decision', 'list', '--sort-by', 'foo'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'decision list failed: invalid sort key: foo (allowed: decided, status, title, rec)\n',
+    );
+  });
+
+  it('Slice 35 AC-sort-10 (dec): malformed direction errors with use-asc-or-desc message and exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_sort10' });
+    await run(['decision', 'add', '--title', 'A', '--rationale', 'r'], active.root);
+    const r = await run(
+      ['decision', 'list', '--sort-by', 'decided:xyz'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      "decision list failed: invalid sort direction: 'xyz' (use 'asc' or 'desc')\n",
+    );
+  });
+
+  it('Slice 35 AC-sort-dec-1: --sort-by rec sorts defined rec first (asc by id), undefined last; :desc flips', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice35_dec_rec' });
+    // Seed one rec to tie against.
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    // Three decisions: two tied (one to rec, one to a synthetic id sorted earlier), one untied.
+    await run(['decision', 'add', '--title', 'tied-z', '--rationale', 'r', '--rec', rec.id], active.root);
+    await run(['decision', 'add', '--title', 'untied', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--title', 'tied-a', '--rationale', 'r', '--rec', rec.id], active.root);
+    // Mutate the second tied entry's recommendationId to a string that sorts BEFORE rec.id.
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    const lowId = 'rec-00000000-000';
+    ledger.decisions[2].recommendationId = lowId;
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    // Asc: tied-a (lowId) first, then tied-z (rec.id which is rec-<today>-001), then untied last.
+    const asc = await run(
+      ['decision', 'list', '--sort-by', 'rec', '--format', 'json'],
+      active.root,
+    );
+    expect(asc.code).toBe(0);
+    expect(JSON.parse(asc.stdout).map((x: { title: string }) => x.title)).toEqual([
+      'tied-a',
+      'tied-z',
+      'untied',
+    ]);
+
+    // Desc: untied first, then tied-z, then tied-a.
+    const desc = await run(
+      ['decision', 'list', '--sort-by', 'rec:desc', '--format', 'json'],
+      active.root,
+    );
+    expect(desc.code).toBe(0);
+    expect(JSON.parse(desc.stdout).map((x: { title: string }) => x.title)).toEqual([
+      'untied',
+      'tied-z',
+      'tied-a',
+    ]);
+  });
 });
