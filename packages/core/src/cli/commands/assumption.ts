@@ -143,13 +143,14 @@ export function registerAssumptionCommand(program: Command): void {
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
-    .option('--filter-text <substr>', 'Case-insensitive substring search on text')
-    .option('--filter-regex <pattern>', 'Power-user regex filter on text (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text.')
+    .option('--filter-text <substr>', 'Case-insensitive substring search on text. Mutually exclusive with --filter-text-exact and --filter-regex.')
+    .option('--filter-text-exact <str>', 'Case-insensitive whole-field equality match on text. Mutually exclusive with --filter-text and --filter-regex.')
+    .option('--filter-regex <pattern>', 'Power-user regex filter on text (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text and --filter-text-exact.')
     .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: created, status, text, rec.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; filterRegex?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; filterTextExact?: string; filterRegex?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -175,6 +176,27 @@ export function registerAssumptionCommand(program: Command): void {
         if (opts.filterRec !== undefined) {
           entries = entries.filter((a) => a.recommendationId === opts.filterRec);
         }
+        if (opts.filterTextExact === '') {
+          process.stderr.write(
+            `assumption list failed: --filter-text-exact requires a non-empty value\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        if (opts.filterTextExact !== undefined && opts.filterText !== undefined) {
+          process.stderr.write(
+            `assumption list failed: cannot combine --filter-text-exact with --filter-text\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        if (opts.filterTextExact !== undefined && opts.filterRegex !== undefined) {
+          process.stderr.write(
+            `assumption list failed: cannot combine --filter-text-exact with --filter-regex\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
         if (opts.filterText !== undefined && opts.filterRegex !== undefined) {
           process.stderr.write(
             `assumption list failed: cannot combine --filter-text and --filter-regex\n`,
@@ -198,6 +220,10 @@ export function registerAssumptionCommand(program: Command): void {
             return;
           }
           entries = entries.filter((a) => regex.test(a.text));
+        }
+        if (opts.filterTextExact !== undefined) {
+          const needle = opts.filterTextExact.toLowerCase();
+          entries = entries.filter((a) => a.text.toLowerCase() === needle);
         }
         if (opts.sortBy !== undefined) {
           const parsed = parseSortBy(opts.sortBy);
@@ -254,6 +280,7 @@ export function registerAssumptionCommand(program: Command): void {
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
           if (opts.filterRec) filterDims.push(`rec=${opts.filterRec}`);
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
+          if (opts.filterTextExact !== undefined) filterDims.push(`text-exact="${opts.filterTextExact}"`);
           if (opts.filterRegex !== undefined) filterDims.push(`regex="${opts.filterRegex}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0

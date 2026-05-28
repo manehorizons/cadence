@@ -890,4 +890,233 @@ describe('cadence decision (Slice 8)', () => {
       'tied-a',
     ]);
   });
+
+  it('Slice 36 AC-exact-1 (dec): --filter-text-exact returns only entries whose scoped field equals the literal', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact1' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'Adopt token bucket', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--rec', recId, '--title', 'Adopt token bucket strategy', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--rec', recId, '--title', 'Token bucket adoption', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', 'Adopt token bucket', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('Adopt token bucket');
+  });
+
+  it('Slice 36 AC-exact-2 (dec): --filter-text-exact is case-insensitive', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact2' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'Adopt token bucket', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', 'ADOPT TOKEN BUCKET', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('Adopt token bucket');
+  });
+
+  it('Slice 36 AC-exact-3 (dec): equality not substring', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact3' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'Adopt token bucket strategy', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', 'Adopt token bucket', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
+
+  it('Slice 36 AC-exact-4 (dec): empty literal refuses with exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact4' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'A', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', ''],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'decision list failed: --filter-text-exact requires a non-empty value\n',
+    );
+  });
+
+  it('Slice 36 AC-exact-5 (dec): mutex with --filter-text', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact5' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'A', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', 'foo', '--filter-text', 'bar'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'decision list failed: cannot combine --filter-text-exact with --filter-text\n',
+    );
+  });
+
+  it('Slice 36 AC-exact-6 (dec): mutex with --filter-regex', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact6' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'A', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', 'foo', '--filter-regex', '^bar$'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'decision list failed: cannot combine --filter-text-exact with --filter-regex\n',
+    );
+  });
+
+  it('Slice 36 AC-exact-7 (dec): no trim — surrounding whitespace significant', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact7' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'foo', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', ' foo ', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
+
+  it('Slice 36 AC-exact-8 (dec): empty result includes text-exact="..." in filterDims', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact8' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'A', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', 'no-such-title'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(
+      'No decisions matching text-exact="no-such-title" recorded.\n',
+    );
+  });
+
+  it('Slice 36 AC-exact-9 (dec): composes with --filter-status and --sort-by', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact9' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'Same title', '--rationale', 'A'], active.root);
+    await run(['decision', 'add', '--rec', recId, '--title', 'Same title', '--rationale', 'B'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.decisions[0].status = 'active';
+    ledger.decisions[0].decidedAt = '2024-01-02T00:00:00+00:00';
+    ledger.decisions[1].status = 'superseded';
+    ledger.decisions[1].decidedAt = '2024-01-01T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      [
+        'decision', 'list',
+        '--filter-text-exact', 'Same title',
+        '--filter-status', 'active',
+        '--sort-by', 'decided',
+        '--format', 'json',
+      ],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].rationale).toBe('A');
+  });
+
+  it('Slice 36 AC-exact-10 (dec): --format json emits matched entries as JSON array', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_exact10' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'X', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--rec', recId, '--title', 'Y', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', 'X', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('X');
+    expect(Array.isArray(arr)).toBe(true);
+  });
+
+  it('Slice 36 AC-exact-dec-1: matches when only rationale (not title) equals the literal', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_dec_rationale' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'A', '--rationale', 'Token bucket'], active.root);
+    await run(['decision', 'add', '--rec', recId, '--title', 'B', '--rationale', 'Different rationale'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-text-exact', 'Token bucket', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('A');
+    expect(arr[0].rationale).toBe('Token bucket');
+  });
 });

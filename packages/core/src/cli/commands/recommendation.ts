@@ -220,14 +220,15 @@ export function registerRecommendationCommand(program: Command): void {
     .description('List recorded recommendations')
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .option('--filter-status <status>', 'Filter to only entries with this status')
-    .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary')
-    .option('--filter-regex <pattern>', 'Power-user regex filter on title or summary (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text.')
+    .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary. Mutually exclusive with --filter-text-exact and --filter-regex.')
+    .option('--filter-text-exact <str>', 'Case-insensitive whole-field equality match on title or summary. Mutually exclusive with --filter-text and --filter-regex.')
+    .option('--filter-regex <pattern>', 'Power-user regex filter on title or summary (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text and --filter-text-exact.')
     .option('--filter-converted-to <phaseId>', 'Reverse-lookup filter: only recommendations with convertedToPhaseId equal to <phaseId>. Implies status=converted (Slice 34.4).')
     .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: created, updated, priority, status, title, leverage, risk, confidence, decay.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterRegex?: string; filterConvertedTo?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterTextExact?: string; filterRegex?: string; filterConvertedTo?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -249,6 +250,27 @@ export function registerRecommendationCommand(program: Command): void {
             return;
           }
           entries = entries.filter((r) => r.status === parsed.data);
+        }
+        if (opts.filterTextExact === '') {
+          process.stderr.write(
+            `recommendation list failed: --filter-text-exact requires a non-empty value\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        if (opts.filterTextExact !== undefined && opts.filterText !== undefined) {
+          process.stderr.write(
+            `recommendation list failed: cannot combine --filter-text-exact with --filter-text\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        if (opts.filterTextExact !== undefined && opts.filterRegex !== undefined) {
+          process.stderr.write(
+            `recommendation list failed: cannot combine --filter-text-exact with --filter-regex\n`,
+          );
+          process.exitCode = 1;
+          return;
         }
         if (opts.filterText !== undefined && opts.filterRegex !== undefined) {
           process.stderr.write(
@@ -277,6 +299,14 @@ export function registerRecommendationCommand(program: Command): void {
             return;
           }
           entries = entries.filter((r) => regex.test(r.title) || regex.test(r.summary));
+        }
+        if (opts.filterTextExact !== undefined) {
+          const needle = opts.filterTextExact.toLowerCase();
+          entries = entries.filter(
+            (r) =>
+              r.title.toLowerCase() === needle ||
+              r.summary.toLowerCase() === needle,
+          );
         }
         if (opts.filterConvertedTo !== undefined) {
           entries = entries.filter((r) => r.convertedToPhaseId === opts.filterConvertedTo);
@@ -335,6 +365,7 @@ export function registerRecommendationCommand(program: Command): void {
           const filterDims: string[] = [];
           if (opts.filterStatus) filterDims.push(`status=${opts.filterStatus}`);
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
+          if (opts.filterTextExact !== undefined) filterDims.push(`text-exact="${opts.filterTextExact}"`);
           if (opts.filterRegex !== undefined) filterDims.push(`regex="${opts.filterRegex}"`);
           if (opts.filterConvertedTo !== undefined) filterDims.push(`converted-to="${opts.filterConvertedTo}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);

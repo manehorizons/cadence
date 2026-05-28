@@ -651,4 +651,212 @@ describe('cadence assumption (Slice 8)', () => {
       "assumption list failed: invalid sort direction: 'xyz' (use 'asc' or 'desc')\n",
     );
   });
+
+  it('Slice 36 AC-exact-1 (asn): --filter-text-exact returns only entries whose text equals the literal', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact1' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Rate limit will handle bursts'], active.root);
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Rate limit will handle bursts gracefully'], active.root);
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Bursts will be rare'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', 'Rate limit will handle bursts', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].text).toBe('Rate limit will handle bursts');
+  });
+
+  it('Slice 36 AC-exact-2 (asn): --filter-text-exact is case-insensitive', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact2' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Rate limit will handle bursts'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', 'RATE LIMIT WILL HANDLE BURSTS', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].text).toBe('Rate limit will handle bursts');
+  });
+
+  it('Slice 36 AC-exact-3 (asn): equality not substring', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact3' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Rate limit will handle bursts gracefully'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', 'Rate limit will handle bursts', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
+
+  it('Slice 36 AC-exact-4 (asn): empty literal refuses with exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact4' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'foo'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', ''],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'assumption list failed: --filter-text-exact requires a non-empty value\n',
+    );
+  });
+
+  it('Slice 36 AC-exact-5 (asn): mutex with --filter-text', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact5' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'foo'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', 'foo', '--filter-text', 'bar'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'assumption list failed: cannot combine --filter-text-exact with --filter-text\n',
+    );
+  });
+
+  it('Slice 36 AC-exact-6 (asn): mutex with --filter-regex', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact6' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'foo'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', 'foo', '--filter-regex', '^bar$'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'assumption list failed: cannot combine --filter-text-exact with --filter-regex\n',
+    );
+  });
+
+  it('Slice 36 AC-exact-7 (asn): no trim — surrounding whitespace significant', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact7' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'foo'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', ' foo ', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual([]);
+  });
+
+  it('Slice 36 AC-exact-8 (asn): empty result includes text-exact="..." in filterDims', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact8' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'foo'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', 'no-such-text'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(
+      'No assumptions matching text-exact="no-such-text" recorded.\n',
+    );
+  });
+
+  it('Slice 36 AC-exact-9 (asn): composes with --filter-status and --sort-by', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact9' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Same text'], active.root);
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Same text'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.assumptions[0].status = 'validated';
+    ledger.assumptions[0].createdAt = '2024-01-02T00:00:00+00:00';
+    ledger.assumptions[1].status = 'open';
+    ledger.assumptions[1].createdAt = '2024-01-01T00:00:00+00:00';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      [
+        'assumption', 'list',
+        '--filter-text-exact', 'Same text',
+        '--filter-status', 'validated',
+        '--sort-by', 'created',
+        '--format', 'json',
+      ],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].status).toBe('validated');
+  });
+
+  it('Slice 36 AC-exact-10 (asn): --format json emits matched entries as JSON array', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice36_asn_exact10' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'X'], active.root);
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Y'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-text-exact', 'X', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].text).toBe('X');
+    expect(Array.isArray(arr)).toBe(true);
+  });
 });
