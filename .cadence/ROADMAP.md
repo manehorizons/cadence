@@ -528,7 +528,7 @@ Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (ho
 - `packages/core/src/cli/commands/settle.ts` — replace the hand-wired gate sequence with `runGates(ctx, gateSet)`.
 - `packages/core/tests/gates/registry.test.ts` (new) — registry totality (every non-`anomaly-notify` `Gate` member has an entry, enforced at type level) + ordering preserved.
 
-**ACs.** (1) `GATE_REGISTRY` is total over `Gate` minus `anomaly-notify` — missing an entry is a compile error (exhaustive `Record`). (2) Settle dispatches by iterating `effectiveGateSet().gates`; no gate name is hardcoded in settle's control flow. (3) Firing order matches the pre-44.1 sequence (snapshot-tested) — `engine.ts` ordering is now authoritative. (4) Adding a future gate = add an enum member + a registry entry; settle is untouched. (5) Behavior bit-identical at the CLI surface.
+**ACs.** (1) `GATE_REGISTRY` is total over `Gate` minus `anomaly-notify` — missing an entry is a compile error (exhaustive `Record`). (2) Settle dispatches by walking a canonical **`GATE_ORDER: Gate[]`** constant intersected with `effectiveGateSet().gates`; no gate name is hardcoded in settle's control flow. (3) Firing order matches the pre-44.1 execution sequence (snapshot-tested). **Note (39.1 design, 2026-05-29):** matrix order (`[...ALWAYS_FIRE, ...deltas]`) ≠ execution order (settle runs deep-verify before code-review, draft-read before coverage), and the *first* refusing gate owns stderr+exit — so a `GATE_ORDER` constant is required; iterating `gateSet.gates` in array order is NOT behavior-preserving. (4) Adding a future gate = add an enum member + a `GATE_ORDER` entry + a registry entry; settle is untouched. (5) Behavior bit-identical at the CLI surface.
 
 ---
 
