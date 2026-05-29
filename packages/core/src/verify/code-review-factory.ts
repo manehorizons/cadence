@@ -5,57 +5,22 @@ import {
   MockCodeReviewVerifier,
   type CodeReviewVerifier,
 } from './code-review.js';
+import {
+  createVerifierFactory,
+  type VerifierSelectOptions,
+} from './verifier-factory.js';
 
-export interface SelectCodeReviewVerifierOptions {
-  /** Override `config.codeReview.provider`. */
-  override?: 'mock' | 'anthropic' | 'local';
-  /** Test seam: stand in for `process.env`. */
-  env?: NodeJS.ProcessEnv;
-  /** Test seam: emit warnings somewhere other than `process.stderr`. */
-  warn?: (message: string) => void;
-}
+/** @deprecated alias of `VerifierSelectOptions` (kept for API stability). */
+export type SelectCodeReviewVerifierOptions = VerifierSelectOptions;
 
-/**
- * Picks the code-review verifier given config + env. Falls back to mock
- * when the Anthropic provider is requested but `ANTHROPIC_API_KEY` is
- * missing — with a stderr warning so the caller knows the downgrade
- * happened. Mirrors `selectVerifier` (Phase 15) / `selectPerTaskVerifier`
- * (Phase 24.2).
- */
-export function selectCodeReviewVerifier(
-  config: Pick<CadenceConfig, 'codeReview'> | null,
-  opts: SelectCodeReviewVerifierOptions = {},
-): CodeReviewVerifier {
-  const provider =
-    opts.override ?? config?.codeReview?.provider ?? 'mock';
-  const env = opts.env ?? process.env;
-  const warn = opts.warn ?? ((m: string) => process.stderr.write(m + '\n'));
-
-  if (provider === 'anthropic') {
-    if (!env.ANTHROPIC_API_KEY) {
-      warn(
-        'code-review: anthropic provider requested but ANTHROPIC_API_KEY is unset — falling back to mock provider.',
-      );
-      return new MockCodeReviewVerifier();
-    }
-    const model = config?.codeReview?.model;
-    return new AnthropicCodeReviewVerifier({
-      apiKey: env.ANTHROPIC_API_KEY,
-      ...(model ? { model } : {}),
-    });
-  }
-
-  if (provider === 'local') {
-    const baseURL = env.CADENCE_LOCAL_BASE_URL;
-    const model = config?.codeReview?.model ?? env.CADENCE_LOCAL_MODEL;
-    if (!baseURL || !model) {
-      warn(
-        'code-review: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.',
-      );
-      return new MockCodeReviewVerifier();
-    }
-    return new LocalCodeReviewVerifier({ baseURL, model });
-  }
-
-  return new MockCodeReviewVerifier();
-}
+/** Picks the code-review verifier given config + env (Phase 24.3). */
+export const selectCodeReviewVerifier = createVerifierFactory<
+  Pick<CadenceConfig, 'codeReview'>,
+  CodeReviewVerifier
+>({
+  label: 'code-review',
+  read: (c) => c?.codeReview,
+  mock: () => new MockCodeReviewVerifier(),
+  anthropic: (o) => new AnthropicCodeReviewVerifier(o),
+  local: (o) => new LocalCodeReviewVerifier(o),
+});

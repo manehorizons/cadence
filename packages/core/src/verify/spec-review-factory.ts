@@ -5,54 +5,22 @@ import {
   MockSpecReviewVerifier,
   type SpecReviewVerifier,
 } from './spec-review.js';
+import {
+  createVerifierFactory,
+  type VerifierSelectOptions,
+} from './verifier-factory.js';
 
-export interface SelectSpecReviewVerifierOptions {
-  /** Override `config.specReview.provider`. */
-  override?: 'mock' | 'anthropic' | 'local';
-  /** Test seam: stand in for `process.env`. */
-  env?: NodeJS.ProcessEnv;
-  /** Test seam: emit warnings somewhere other than `process.stderr`. */
-  warn?: (message: string) => void;
-}
+/** @deprecated alias of `VerifierSelectOptions` (kept for API stability). */
+export type SelectSpecReviewVerifierOptions = VerifierSelectOptions;
 
-/**
- * Picks the spec-review verifier given config + env. Falls back to mock when
- * the requested provider's prerequisites are missing — with a stderr warning.
- * Structural clone of `selectPlanReviewVerifier` (Phase 25.1).
- */
-export function selectSpecReviewVerifier(
-  config: Pick<CadenceConfig, 'specReview'> | null,
-  opts: SelectSpecReviewVerifierOptions = {},
-): SpecReviewVerifier {
-  const provider = opts.override ?? config?.specReview?.provider ?? 'mock';
-  const env = opts.env ?? process.env;
-  const warn = opts.warn ?? ((m: string) => process.stderr.write(m + '\n'));
-
-  if (provider === 'anthropic') {
-    if (!env.ANTHROPIC_API_KEY) {
-      warn(
-        'spec-review: anthropic provider requested but ANTHROPIC_API_KEY is unset — falling back to mock provider.',
-      );
-      return new MockSpecReviewVerifier();
-    }
-    const model = config?.specReview?.model;
-    return new AnthropicSpecReviewVerifier({
-      apiKey: env.ANTHROPIC_API_KEY,
-      ...(model ? { model } : {}),
-    });
-  }
-
-  if (provider === 'local') {
-    const baseURL = env.CADENCE_LOCAL_BASE_URL;
-    const model = config?.specReview?.model ?? env.CADENCE_LOCAL_MODEL;
-    if (!baseURL || !model) {
-      warn(
-        'spec-review: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.',
-      );
-      return new MockSpecReviewVerifier();
-    }
-    return new LocalSpecReviewVerifier({ baseURL, model });
-  }
-
-  return new MockSpecReviewVerifier();
-}
+/** Picks the spec-review verifier given config + env (Phase 25.x). */
+export const selectSpecReviewVerifier = createVerifierFactory<
+  Pick<CadenceConfig, 'specReview'>,
+  SpecReviewVerifier
+>({
+  label: 'spec-review',
+  read: (c) => c?.specReview,
+  mock: () => new MockSpecReviewVerifier(),
+  anthropic: (o) => new AnthropicSpecReviewVerifier(o),
+  local: (o) => new LocalSpecReviewVerifier(o),
+});
