@@ -19,6 +19,10 @@ import type {
   CodeReviewResult,
   Finding as CodeReviewFinding,
 } from '../verify/code-review.js';
+import type {
+  SecurityAuditInput,
+  SecurityAuditResult,
+} from '../verify/security-audit.js';
 
 /** Canonical PROGRESS.json shape settle reads. settle.ts imports this (and
  *  AcResult below) rather than redefining them locally. */
@@ -51,6 +55,8 @@ export interface VerifierPorts {
   readonly deep: { verify(input: VerifyInput): Promise<VerifyResult> };
   /** Code-review verifier (Phase 39.4), lazily `selectCodeReviewVerifier`. */
   readonly codeReview: { verify(input: CodeReviewInput): Promise<CodeReviewResult> };
+  /** Security-audit verifier (Phase 39.5), lazily `selectSecurityAuditVerifier`. */
+  readonly securityAudit: { verify(input: SecurityAuditInput): Promise<SecurityAuditResult> };
 }
 
 /**
@@ -132,6 +138,7 @@ export interface SettleOpts {
   readonly allowFailingBuild?: boolean;
   readonly interactive?: boolean;
   readonly allowCodeReviewFailure?: boolean;
+  readonly allowSecurityAuditFailure?: boolean;
 }
 
 /** Everything a gate may read. Built once, before the gate loop. Readonly. */

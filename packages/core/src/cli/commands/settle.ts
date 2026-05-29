@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import type { Summary, Finding } from '@cadence/types';
+import type { Summary } from '@cadence/types';
 import { TaskStatusZ } from '@cadence/types';
 import { parseDraftMd } from '../../parse/draft-parser.js';
 import { renderSummaryMd } from '../../parse/summary-writer.js';
@@ -24,6 +24,7 @@ import { runStructuralVerifierGate } from '../../gates/structural-verifier.js';
 import { runBuildTestGate } from '../../gates/build-test-must-pass.js';
 import { runInteractiveGate } from '../../gates/interactive.js';
 import { runCodeReviewGate } from '../../gates/code-review.js';
+import { runSecurityAuditGate } from '../../gates/security-audit.js';
 import {
   mergeInto,
   type SettleContext,
@@ -186,6 +187,7 @@ export function registerSettleCommand(program: Command): void {
         // deep-verify never fires. Defer it to keep settle bit-identical.
         let deepVerifierMemo: ReturnType<typeof selectVerifier> | undefined;
         let codeReviewVerifierMemo: ReturnType<typeof selectCodeReviewVerifier> | undefined;
+        let securityAuditVerifierMemo: ReturnType<typeof selectSecurityAuditVerifier> | undefined;
         let diffMemo: string | undefined;
         const codeReviewSidecarPath = join(
           cwd,
@@ -224,6 +226,9 @@ export function registerSettleCommand(program: Command): void {
               : {}),
             ...(opts.allowCodeReviewFailure !== undefined
               ? { allowCodeReviewFailure: opts.allowCodeReviewFailure }
+              : {}),
+            ...(opts.allowSecurityAuditFailure !== undefined
+              ? { allowSecurityAuditFailure: opts.allowSecurityAuditFailure }
               : {}),
           },
           explicitIds,
@@ -264,6 +269,14 @@ export function registerSettleCommand(program: Command): void {
                   codeReviewVerifierMemo = selectCodeReviewVerifier(cadenceConfig);
                 }
                 return codeReviewVerifierMemo.verify(input);
+              },
+            },
+            securityAudit: {
+              verify: (input) => {
+                if (!securityAuditVerifierMemo) {
+                  securityAuditVerifierMemo = selectSecurityAuditVerifier(cadenceConfig);
+                }
+                return securityAuditVerifierMemo.verify(input);
               },
             },
           },
@@ -410,65 +423,18 @@ export function registerSettleCommand(program: Command): void {
         }
         const codeReviewFindings = acc.codeReview;
 
-        // Phase 25.2 — security-audit verifier gate. The final, most
-        // expensive gate. Fires when `'security-audit'` is in the effective
-        // gate set (strict×complex only). Runs an OWASP-aware pass over
-        // `git diff HEAD -- <files>` for the union of touched files, after
-        // code-review and before SUMMARY assembly. CRITICAL findings refuse
-        // settle unless `--force` / `--allow-security-audit-failure`. All
-        // findings (any severity) land on SUMMARY.securityAudit.
-        let securityAuditFindings: Finding[] | undefined;
+        // Phase 25.2 security-audit gate — extracted to gates/security-audit.ts
+        // (Phase 39.5). The final, most expensive gate; reaches git + the
+        // auditor only through ctx ports. Produces SUMMARY.securityAudit.
         if (gateSet.gates.includes('security-audit')) {
-          const touched = Array.from(
-            new Set(draft.tasks.flatMap((t) => t.files)),
-          );
-          const diff = collectDiffForCodeReview(cwd, touched);
-          const auditor = selectSecurityAuditVerifier(cadenceConfig);
-          try {
-            const result = await auditor.verify({ files: touched, diff });
-            securityAuditFindings = result.findings;
-            const criticals = result.findings.filter(
-              (f) => f.severity === 'critical',
-            );
-            const bypassed =
-              opts.force === true ||
-              opts.allowSecurityAuditFailure === true;
-            if (criticals.length > 0) {
-              for (const c of criticals) {
-                process.stderr.write(
-                  `security-audit: ${c.line !== undefined ? `${c.line} ` : ''}critical — ${c.message}\n`,
-                );
-              }
-              if (!bypassed) {
-                process.stderr.write(
-                  `settle run refused: security-audit reported ${criticals.length} CRITICAL finding(s). ` +
-                    'Pass --allow-security-audit-failure to record them and settle anyway, or --force to bypass.\n',
-                );
-                process.exitCode = 1;
-                return;
-              }
-              const flag =
-                opts.force === true
-                  ? '--force'
-                  : '--allow-security-audit-failure';
-              process.stderr.write(
-                `security-audit: ${flag} set; proceeding past ${criticals.length} CRITICAL finding(s).\n`,
-              );
-            }
-          } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
-            process.stderr.write(
-              `security-audit: verifier failed — ${message}. Pass --allow-security-audit-failure to continue.\n`,
-            );
-            if (
-              opts.allowSecurityAuditFailure !== true &&
-              opts.force !== true
-            ) {
-              process.exitCode = 1;
-              return;
-            }
+          const res = await runSecurityAuditGate(ctx);
+          mergeInto(acc, res);
+          if (res.outcome === 'refuse') {
+            process.exitCode = 1;
+            return;
           }
         }
+        const securityAuditFindings = acc.securityAudit;
 
         // ACs covered by an explicit `--ac` OR an interactive verdict are
         // excluded from auto-derivation refusal (the user verdicted them).
