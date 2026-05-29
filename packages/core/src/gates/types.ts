@@ -113,7 +113,8 @@ export type GateImpl = (ctx: SettleContext) => Promise<GateResult>;
 /** Shallow-merge a GateResult's contribution into the accumulator. */
 export function mergeInto(acc: SettleAccumulator, res: GateResult): void {
   if (res.summaryPatch) {
-    const { flags: _ignore, ...rest } = res.summaryPatch;
+    const rest: Partial<SettleAccumulator> = { ...res.summaryPatch };
+    delete rest.flags;
     Object.assign(acc, rest);
   }
   if (res.flags) {

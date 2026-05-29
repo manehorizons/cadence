@@ -14,14 +14,12 @@ import { LoopViolationError } from '../../errors.js';
 import { deriveAcResults, type ProgressFile } from '../../status.js';
 import { loadConfig } from '../../config/loader.js';
 import { effectiveGateSet } from '../../gates/engine.js';
-import { scanTestCoverage, uncoveredAcs } from '../../verify/coverage.js';
+import { scanTestCoverage } from '../../verify/coverage.js';
 import { selectVerifier } from '../../verify/factory.js';
-import type {
-  VerifyAc,
-  VerifyInput,
-  VerifyTestRef,
-} from '../../verify/verifier.js';
-import type { DeepVerdict } from '@cadence/types';
+import type { VerifyTestRef } from '../../verify/verifier.js';
+import { runCoverageGate } from '../../gates/coverage.js';
+import { runDeepVerifyGate } from '../../gates/deep-verify.js';
+import { mergeInto, type SettleContext, type SettleAccumulator } from '../../gates/types.js';
 import { walkAcsInteractively, type InteractiveVerdict } from '../../verify/interactive.js';
 import { ScriptedPrompter, StdinPrompter, type Prompter } from '../../verify/prompter.js';
 import { selectNotifier } from '../../notify/factory.js';
@@ -193,41 +191,56 @@ export function registerSettleCommand(program: Command): void {
           }
         }
 
-        const coverageBypassed =
-          gateSet.gates.includes('test-coverage') === true &&
-          opts.allowMissingCoverage === true;
-        let verifierFailure: { message: string; provider?: string } | undefined;
-        if (
-          gateSet.gates.includes('test-coverage') &&
-          !opts.allowMissingCoverage &&
-          opts.auto !== false // gate applies to --auto path; legacy --ac-only flow unaffected
-        ) {
-          const globs = cadenceConfig?.verification?.testGlobs;
-          const coverage = await scanTestCoverage(
-            cwd,
-            globs ? { globs } : {},
-          );
-          const acIds = draft.acceptanceCriteria.map((a) => a.id);
-          const unmet = uncoveredAcs(
-            acIds.filter((id) => !explicitIds.has(id)),
-            coverage,
-          );
-          if (unmet.length > 0 && !opts.force) {
-            const globsLabel =
-              cadenceConfig?.verification?.testGlobs?.join(', ') ?? '(defaults)';
-            for (const id of unmet) {
-              process.stderr.write(
-                `coverage: ${id} has no linked test (searched: ${globsLabel})\n`,
-              );
+        const touchedFiles = Array.from(
+          new Set(draft.tasks.flatMap((t) => t.files)),
+        );
+        let coverageMemo: Promise<Map<string, VerifyTestRef[]>> | undefined;
+        const ctx: SettleContext = {
+          cwd,
+          state,
+          draft,
+          progress,
+          config: cadenceConfig,
+          gateSet,
+          opts: {
+            ...(opts.force !== undefined ? { force: opts.force } : {}),
+            ...(opts.auto !== undefined ? { auto: opts.auto } : {}),
+            ...(opts.deep !== undefined ? { deep: opts.deep } : {}),
+            ...(opts.allowMissingCoverage !== undefined
+              ? { allowMissingCoverage: opts.allowMissingCoverage }
+              : {}),
+            ...(opts.allowVerifierFailure !== undefined
+              ? { allowVerifierFailure: opts.allowVerifierFailure }
+              : {}),
+          },
+          explicitIds,
+          touchedFiles,
+          coverage: () => {
+            if (!coverageMemo) {
+              const globs = cadenceConfig?.verification?.testGlobs;
+              coverageMemo = scanTestCoverage(cwd, globs ? { globs } : {});
             }
-            process.stderr.write(
-              'settle run refused: each AC needs at least one test that references its id (e.g. AC-1 in a describe/it). ' +
-                'Pass --allow-missing-coverage to bypass, or --force to settle anyway.\n',
-            );
+            return coverageMemo;
+          },
+          verifiers: { deep: selectVerifier(cadenceConfig) },
+          emit: {
+            anomalies: async (events) => {
+              void events;
+            },
+          },
+          io: { err: (s) => process.stderr.write(s) },
+        };
+        const acc: SettleAccumulator = { flags: {} };
+
+        if (gateSet.gates.includes('test-coverage')) {
+          const res = await runCoverageGate(ctx);
+          mergeInto(acc, res);
+          if (res.outcome === 'refuse') {
             process.exitCode = 1;
             return;
           }
         }
+        const coverageBypassed = acc.flags.coverageBypassed === true;
 
         // Interactive walker (Phase 16) — fires on --interactive OR when
         // 'interactive-verdict' is in the gate set (strict profile). User verdicts
@@ -307,101 +320,16 @@ export function registerSettleCommand(program: Command): void {
         // Deep verifier (Phase 15) — fires on explicit --deep OR when 'deep-verify' is
         // in the gate set (e.g. standard × complex). Records per-AC verdicts; refuses
         // on failed verdicts for non-overridden ACs unless --force is set.
-        let deepVerify: Record<string, DeepVerdict> | undefined;
-        const deepRequested =
-          opts.deep === true || gateSet.gates.includes('deep-verify');
-        if (deepRequested && opts.auto !== false) {
-          const verifier = selectVerifier(cadenceConfig);
-          const acs: VerifyAc[] = draft.acceptanceCriteria.map((a) => ({
-            id: a.id,
-            given: a.given,
-            when: a.when,
-            then: a.then,
-          }));
-          const coverageGlobs = cadenceConfig?.verification?.testGlobs;
-          const coverageForVerifier = await scanTestCoverage(
-            cwd,
-            coverageGlobs ? { globs: coverageGlobs } : {},
-          );
-          const testsForVerifier: Record<string, VerifyTestRef[]> = {};
-          for (const [id, refs] of coverageForVerifier) {
-            testsForVerifier[id] = refs;
-          }
-          const touchedFiles = Array.from(
-            new Set(draft.tasks.flatMap((t) => t.files)),
-          );
-          const verifyInput: VerifyInput = {
-            acs,
-            tests: testsForVerifier,
-            diff: '',
-            files: touchedFiles,
-          };
-          try {
-            const result = await verifier.verify(verifyInput);
-            deepVerify = {};
-            for (const ac of acs) {
-              const v = result.verdicts[ac.id];
-              if (v) {
-                deepVerify[ac.id] = {
-                  pass: v.pass,
-                  reason: v.reason,
-                  provider: result.provider,
-                  ...(result.model ? { model: result.model } : {}),
-                };
-              }
-            }
-            const offenders = acs
-              .map((a) => a.id)
-              .filter(
-                (id) =>
-                  !explicitIds.has(id) &&
-                  deepVerify![id] !== undefined &&
-                  deepVerify![id]!.pass === false,
-              );
-            if (offenders.length > 0 && !opts.force) {
-              for (const id of offenders) {
-                process.stderr.write(
-                  `deep-verify: ${id} failed — ${deepVerify[id]!.reason} (provider: ${result.provider})\n`,
-                );
-              }
-              process.stderr.write(
-                'settle run --deep refused: the independent verifier rejected one or more ACs. ' +
-                  'Pass --force to settle anyway, or address the gaps.\n',
-              );
-              process.exitCode = 1;
-              return;
-            }
-          } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
-            if (opts.allowVerifierFailure) {
-              process.stderr.write(
-                `deep-verify: verifier failed (${message}); --allow-verifier-failure set, treating all ACs as pass=false.\n`,
-              );
-              const failedProvider =
-                cadenceConfig?.verifier?.provider ?? 'mock';
-              const failedModel = cadenceConfig?.verifier?.model;
-              deepVerify = {};
-              for (const ac of acs) {
-                deepVerify[ac.id] = {
-                  pass: false,
-                  reason: `verifier failed: ${message}`,
-                  provider: failedProvider,
-                  ...(failedModel ? { model: failedModel } : {}),
-                };
-              }
-              verifierFailure = {
-                message,
-                provider: failedProvider,
-              };
-            } else {
-              process.stderr.write(
-                `deep-verify: verifier failed — ${message}. Pass --allow-verifier-failure to continue.\n`,
-              );
-              process.exitCode = 1;
-              return;
-            }
+        {
+          const res = await runDeepVerifyGate(ctx);
+          mergeInto(acc, res);
+          if (res.outcome === 'refuse') {
+            process.exitCode = 1;
+            return;
           }
         }
+        const deepVerify = acc.deepVerify;
+        const verifierFailure = acc.flags.verifierFailure;
 
         // Phase 24.3 — code-review verifier gate. Fires when `'code-review'`
         // is in the effective gate set. Runs against `git diff HEAD --
