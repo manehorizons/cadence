@@ -28,21 +28,21 @@ Phases 1–11 under the KEEL name. Host-codex archived to `keel-codex-archive` t
 - **Phase 23.1** — DRAFT-read mtime gate.
 - **Phase 23.2** — coherence-warn anomaly emission.
 - **Phase 23.3** — loop-violation anomaly emission.
-- **Phase 23.4** — skillAudit wiring + real tokenUtilization.
+- **Phase 23.4** — skillAudit wiring (invoked tracking).
 
 ### v0.5.0 — Medium gates
 - **Phase 24.1** — Manual approve gate (interactive Y/N).
-- **Phase 24.2** — Per-task verifier agent.
-- **Phase 24.3** — code-review verifier agent.
+- **Phase 24.2** — Per-task verifier gate.
+- **Phase 24.3** — Code-review verifier gate.
 
 ### v0.6.0 — Expensive gates
-- **Phase 25.1** — plan-review verifier agent.
-- **Phase 25.2** — security-audit verifier agent.
+- **Phase 25.1** — plan-review verifier gate.
+- **Phase 25.2** — security-audit verifier gate.
 
 ### v0.7.0 — Operator ergonomics
 - **Phase 26.1** — `cadence init` UX polish.
 - **Phase 26.2** — CLAUDE.md scaffold.
-- **Phase 26.3** — `status anomalies --tail --follow`.
+- **Phase 26.3** — `status anomalies --tail/--follow`.
 
 ### v0.8.0 — CI
 - **Phase 27.1** — GitHub Actions tests-on-PR (Node 20 + 22 matrix).
@@ -84,24 +84,41 @@ Test count: `@cadence/core` 1034, `@cadence/types` 124 (up from ~620 and 80 at v
 
 Deferred to v1.2+: Slice 34.3 (`--from-rec` ergonomic on `spec new`), Slice 34.4 (`--filter-converted-to` reverse-lookup), `--sort-by`, `--filter-text-exact`, `--filter-regex-flags`, `--filter-kind` on audit, graph-viewer optimization.
 
-## Planned (v1.2+)
-
-Two named v1.2 tracks (independent — pick either or stack):
-
-### v1.2.0 — Public release (named; not started)
-The irreversible counterpart to v1.1's reversible publish proof. First decision: repo-visibility (public vs private) — npm provenance requires public source; making the repo public exposes all `.cadence/` history. Until that decision, the real `npm publish` + provenance + `release.yml` work is parked. Scope detailed in ROADMAP.md §v1.2.0 Public release.
+## Planned
 
 ### v1.2.0 — Feature expansion (superpowers-inspired) — COMPLETE
 Per ROADMAP entry-point note: #6 → #2 → #1 → #4 → #1b shipped; #3/#5 parked (host-agnostic-anchor conflict). v1.2 feature-expansion track has no non-parked work remaining; the residue rolls into v1.3 or later named milestones.
 
-### v1.3 — Architecture deepening (parked)
-Branch `parking/roadmap-v1.3-arch-deepening` at commit `a050083` holds the work-in-progress for an architecture-deepening track. Awaits cherry-pick onto a fresh branch off the new main when picked up.
+### v1.3.0 — Architecture deepening
+Source: `/tmp/architecture-review-20260525-103233.html` (6-candidate review run on 2026-05-25 against `praxis-intelligence-ledger` branch via the `improve-codebase-architecture` skill). Theme: pull policy out of CLI commands into reusable deep modules; collapse adapter farms into one generic factory; close half-leaking seams. No new user-facing features.
+
+- **Phase 39.1** — Lift coverage gate out of `settle.ts`.
+- **Phase 39.2** — Lift deep-verify gate out of `settle.ts`.
+- **Phase 39.3** — Lift interactive AC-walker out of `settle.ts`.
+- **Phase 39.4** — Lift code-review gate (+ convergence sidecar) out of `settle.ts`.
+- **Phase 39.5** — Lift security-audit gate out of `settle.ts`.
+- **Phase 39.6** — Lift skill-audit gate out of `settle.ts`.
+- **Phase 39.7** — Lift draft + build command gates (`approve`, `plan-review`, `coherence`, `per-task-verify`).
+- **Phase 40.1** — Verifier factory consolidation (6 factories → 1 generic + 6 thin bindings).
+- **Phase 41.1** — Backend `commit(state)` seam (closes the 23-call-site two-step).
+- **Phase 42.1** — `emitUnconverged` notify spine (3 emitters → 1 spine + 3 payloads).
+- **Phase 43.1** — Drain gate logic from `handlePreToolEdit` (depends on 39.x).
+
+### v1.4.0 — Public release (deferred, named; renumbered from v1.2.0 on 2026-05-25)
+- Real public-npm publish of `@cadence/{core,types,host-claude-code}`.
+- npm provenance (gated on a conscious repo-visibility decision).
+- `.github/workflows/release.yml` gated on `ci-success`.
+- changesets adoption (or hand-rolled release runbook).
+- `@cadence/testkit` publish-vs-private re-decision.
 
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction (Codex / Aider / OpenCode).
-- Release automation (changesets / np / auto-publish on tag).
 - Continuity-runtime direct integration (currently abstract via webhook).
 - DESIGN.md §4.4 softCap tightening (notification-target cap once continuity-runtime ships).
 - Performance benchmarks of the gate stack.
 - Structured logging / OpenTelemetry export.
+- Server-side CI enforcement (currently client-side only via `.githooks/pre-push`).
+- Backlog parking lot file (`.cadence/BACKLOG.md` or similar).
+- Deferred open questions: 23.1 follow-ups, 24.3 timing, 26.2 CLAUDE.md content.
+- Intelligence module internal seams (architecture review 2026-05-25 candidate #6 — *speculative*). Trigger: first markdown-render change touching ≥ 4 files in `packages/core/src/intelligence/`.

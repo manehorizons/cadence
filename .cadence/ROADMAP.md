@@ -333,12 +333,13 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 - **Backlog parking lot.** No `.cadence/` backlog file exists; stand one up (`gsd-add-backlog`-style) so ideas have a home.
 - **Deferred open questions.** 23.1, 24.3, 26.2 — real product decisions, a phase each when picked up. (24.2 may be folded in if 29.2/29.3 surface it.) (23.4 resolved — Phase 34.1.)
 - **Test infra.** ✓ **Pulled forward into v1.1 — delivered as Phase 32.1** (shared `vitest.shared.ts` base: `testTimeout`/`hookTimeout`/`maxForks`; `tempRepo` rmdir retry; 29.5/30.2 per-test band-aids reverted). The deferral boundary was deliberately broken: the flake was costing a blocking pre-push failure + a remediation phase roughly every push (3rd recurrence at Phase 31.1).
+- **Intelligence module internal seams** (architecture review 2026-05-25 candidate #6 — *speculative, monitor*). Today: 16+ files, 2,971 LoC under `packages/core/src/intelligence/`, no internal seams. Future seams (when pain arrives): `ledger` (read/write/id-gen/supersede) · `render` (markdown spine + per-kind shapes) · `scan/recommend` (read-only views) · `cli surface` — three internal modules, one external interface. **Trigger condition (do NOT refactor speculatively):** the first time a markdown-render change requires editing ≥4 files in `intelligence/`. Until then, leave alone.
 
 ---
 
-## v1.2.0 — Public release (deferred, named)
+## v1.4.0 — Public release (deferred, named)
 
-**Status:** named & scoped, NOT started. This is the irreversible remainder consciously split out of Phase 30.1 (v1.1 proved the path reversibly; v1.2 takes the irreversible action).
+**Status:** named & scoped, NOT started. This is the irreversible remainder consciously split out of Phase 30.1 (v1.1 proved the path reversibly; v1.4 takes the irreversible action). **Renumbered from v1.2.0 on 2026-05-25** to sit *after* the architecture-deepening milestone (v1.3.0) — tighten interfaces before they harden in the public API.
 
 **Scope.**
 - **Real public-npm publish** of `@cadence/{core,types,host-claude-code}` (metadata already hardened in 33.1 — `publishConfig.access:public` set; needs `npm login` / a publish token).
@@ -366,4 +367,144 @@ Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (ho
 
 ---
 
-Entry point next session: two named v1.2 tracks — **Public release** (first gate: the repo-visibility decision; provenance + public-from-private hinge on it) and **Feature expansion** (#6 ✓ done; **#2 review-convergence primitive is next**). All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) is shipped; v1.2 #6 (required-skill gate, Phase 34.1) is shipped.
+## v1.3.0 — Architecture deepening
+
+**Theme:** Interface tightening. Pull policy out of CLI commands into reusable deep modules; collapse adapter farms into one generic factory; close half-leaking seams. No new user-facing features.
+
+**Source.** `/tmp/architecture-review-20260525-103233.html` — 6-candidate review run against the `praxis-intelligence-ledger` branch on 2026-05-25 using the `improve-codebase-architecture` skill. Top recommendation: candidate #2 (lift the gate engine out of CLI commands) — it unlocks #3 and #5 "almost for free." Candidate #6 (intelligence/ internal seams) is **parked** in the Deferred section above with an explicit trigger condition.
+
+**Anchor decisions** (set 2026-05-25):
+- v1.3 sits **before** v1.4 Public release — tighten interfaces before they harden in the public API surface.
+- **Sequencing:** Phase 39.x (gate extraction) first; 40.1 / 41.1 / 42.1 independent; 43.1 last (depends on the gate-module pattern from 39.x).
+- **Deletion-test discipline.** Every phase passes: delete the command/handler that triggered the gate, and the gate logic is still discoverable + reusable from the new module.
+- **Bit-identical contract.** No phase changes user-visible behavior. Golden transcripts / snapshot tests anchor each extraction.
+
+### Phase 39.1 — Lift the coverage gate out of settle.ts
+
+**Objective.** Pull the inline test-coverage gate from `cli/commands/settle.ts` (currently 900 LoC, gate inlined) into `core/src/gates/coverage.ts` exposing `runCoverageGate(ctx: SettleContext): Promise<GateResult>`. Settle builds context and routes; no policy stays inline.
+
+**Files.**
+- `packages/core/src/gates/coverage.ts` (new).
+- `packages/core/src/gates/types.ts` (new) — `SettleContext`, `GateResult` shared with subsequent 39.x phases.
+- `packages/core/src/cli/commands/settle.ts` — replace inline block with `runCoverageGate(ctx)`.
+- `packages/core/tests/gates/coverage.test.ts` (new) — tests target the gate directly, not the CLI surface.
+
+**ACs.** (1) `runCoverageGate(ctx)` is the single home for coverage-gate logic. (2) `settle.ts` no longer references `verification.testGlobs` or coverage parsing directly. (3) Gate test reaches every branch without standing up the CLI stack. (4) Settle-time behavior bit-identical to pre-extraction (transcript-snapshot test). (5) `settle.ts` net LoC drops by the inline block's size + framing.
+
+### Phase 39.2 — Lift the deep-verify gate out of settle.ts
+
+**Objective.** Same pattern as 39.1 for the Phase 15 `--deep` verifier gate. `gates/deep-verify.ts` exposing `runDeepVerifyGate(ctx)`.
+
+**Files.**
+- `packages/core/src/gates/deep-verify.ts` (new).
+- `packages/core/src/cli/commands/settle.ts`.
+- `packages/core/tests/gates/deep-verify.test.ts` (new).
+
+**ACs.** (1) Gate lives in its own module. (2) Settle.ts routes only. (3) Tests target gate. (4) Behavior bit-identical. (5) Verifier-factory wiring stays intact (verifier injected via `SettleContext`).
+
+### Phase 39.3 — Lift the interactive AC-walker out of settle.ts
+
+**Objective.** Pull the Phase 16 `--interactive` per-AC walker (StdinPrompter / ScriptedPrompter / non-TTY refusal) into `gates/interactive.ts` exposing `runInteractiveGate(ctx)`.
+
+**Files.**
+- `packages/core/src/gates/interactive.ts` (new).
+- `packages/core/src/cli/commands/settle.ts`.
+- `packages/core/tests/gates/interactive.test.ts` (new) — drives via `CADENCE_PROMPTER_SCRIPT` seam.
+
+**ACs.** (1) Walker is one module; prompter still injectable. (2) Settle routes only. (3) Non-TTY refusal preserved. (4) Per-AC `pass/fail/skip + note` semantics preserved. (5) Behavior bit-identical.
+
+### Phase 39.4 — Lift the code-review gate (+ convergence sidecar) out of settle.ts
+
+**Objective.** Pull the Phase 24.3 code-review verifier gate **and** its Phase 37.1 convergence sidecar into one module: `gates/code-review.ts`. The convergence-sidecar centralization is the bonus win the architecture review called out for this phase.
+
+**Files.**
+- `packages/core/src/gates/code-review.ts` (new) — `runCodeReviewGate(ctx)` calls the verifier, drives the `nextConvergence` loop, writes the `<id>-CODE-REVIEW.json` sidecar, emits convergence anomalies.
+- `packages/core/src/cli/commands/settle.ts`.
+- `packages/core/tests/gates/code-review.test.ts` (new).
+
+**ACs.** (1) Gate + sidecar live in one module. (2) Phase 35.1 `nextConvergence` primitive consumed without modification. (3) `--allow-code-review-failure` and `--force` contracts preserved. (4) Settle.ts routes only. (5) Sidecar attempts + escalation behavior bit-identical to Phase 37.1 baseline (snapshot-tested).
+
+### Phase 39.5 — Lift the security-audit gate out of settle.ts
+
+**Objective.** Pull the Phase 25.2 security-audit verifier gate into `gates/security-audit.ts`.
+
+**Files.**
+- `packages/core/src/gates/security-audit.ts` (new).
+- `packages/core/src/cli/commands/settle.ts`.
+- `packages/core/tests/gates/security-audit.test.ts` (new).
+
+**ACs.** (1) Gate is one module. (2) `--allow-security-audit-failure` / `--force` preserved. (3) `Summary.securityAudit` recording stays. (4) CRITICAL refusal preserved. (5) Behavior bit-identical.
+
+### Phase 39.6 — Lift the skill-audit gate out of settle.ts
+
+**Objective.** Pull the Phase 34.1 required-skill enforcement (skill-audit-miss anomaly + `--allow-skill-audit-miss` bypass) into `gates/skill-audit.ts`.
+
+**Files.**
+- `packages/core/src/gates/skill-audit.ts` (new).
+- `packages/core/src/cli/commands/settle.ts`.
+- `packages/core/tests/gates/skill-audit.test.ts` (new).
+
+**ACs.** (1) Gate is one module. (2) DRAFT frontmatter `requiredSkills` ∪ `config.skillAudit.required` union semantics preserved. (3) `--allow-skill-audit-miss` bypass preserved. (4) `state.skillAudit.invoked[]` source-of-truth unchanged. (5) Behavior bit-identical.
+
+### Phase 39.7 — Lift the draft + build command gates
+
+**Objective.** With settle.ts now a router, do the same for `draft.ts` (456 LoC) and `build.ts` (274 LoC). Draft holds the approve, plan-review (+ Phase 35.1 convergence sidecar), and coherence gates; build holds per-task-verify (Phase 24.2). One phase covers both because each gate is small in isolation.
+
+**Files.**
+- `packages/core/src/gates/{approve, plan-review, coherence, per-task-verify}.ts` (new).
+- `packages/core/src/cli/commands/{draft, build}.ts` — shrink to routers.
+- `packages/core/tests/gates/{approve, plan-review, coherence, per-task-verify}.test.ts` (new per gate).
+
+**ACs.** (1) Four new gate modules exist. (2) `draft.ts` drops under 200 LoC. (3) `build.ts` drops under 150 LoC. (4) Plan-review convergence sidecar preserved (`nextConvergence` consumed unchanged). (5) Phase 24.1, 24.2, 25.1 contracts all preserved. (6) Behavior bit-identical at the CLI surface (transcript snapshots).
+
+### Phase 40.1 — Verifier factory consolidation
+
+**Objective.** (Architecture review candidate #1.) Six factory files under `packages/core/src/verify/` (`factory.ts`, `code-review-factory.ts`, `plan-review-factory.ts`, `spec-review-factory.ts`, `per-task-factory.ts`, `security-audit-factory.ts` — ~355 LoC total) repeat one selection algorithm with a `mock | anthropic | local` switch and identical fallback warnings. Collapse into one generic `createVerifierFactory<P, V>(spec)` plus six ~10-line bindings.
+
+**Files.**
+- `packages/core/src/verify/factory-generic.ts` (new) — `createVerifierFactory<P, V>(spec)` owns the provider switch, anthropic-key fallback, local-url fallback, and warn injection.
+- `packages/core/src/verify/{verifier, code-review, plan-review, spec-review, per-task, security-audit}-factory.ts` — shrink to thin bindings.
+- `packages/core/tests/verify/factory-generic.test.ts` (new) — fallback / warn rules tested once.
+
+**ACs.** (1) Generic factory exists; six bindings each ≤ 15 LoC. (2) Fallback-warning rule lives in exactly one place. (3) Adding a seventh verifier type costs ≤ 10 lines + a spec. (4) Behavior bit-identical at every consumer call site. (5) No factory file remains over 20 LoC.
+
+### Phase 41.1 — Backend `commit(state)` seam
+
+**Objective.** (Architecture review candidate #3.) Backend interface is too narrow: ~23 call sites across `cli/commands/`, `hooks/handlers.ts`, `intelligence/`, `init/`, `build/`, `config/` pair `backend.writeState(state)` with a manual `renderStateMd(state)` + `atomicWriteText(STATE.md, …)`. Forgetting the second step = stale `STATE.md`. Add `backend.commit(state)` that writes both artefacts; demote `writeState` to package-internal.
+
+**Files.**
+- `packages/core/src/state/backend.ts` — add `commit(state): Promise<void>` to the `Backend` interface; implement in `SimpleBackend`.
+- `packages/core/src/state/simple.ts`.
+- All ~23 call sites — swap the two-step pattern for `commit(state)`.
+- `packages/core/tests/state/commit.test.ts` (new) — both artefacts written atomically.
+
+**ACs.** (1) `backend.commit(state)` writes `state.json` and `STATE.md` together. (2) No caller outside `state/` imports `renderStateMd` directly. (3) `writeState` is no longer in the public `Backend` interface (or is clearly marked internal). (4) A new state-derived artefact can be added by changing one method. (5) Whole class of stale-STATE.md bugs gone — no two-step path remains for callers to omit.
+
+### Phase 42.1 — `emitUnconverged` notify spine
+
+**Objective.** (Architecture review candidate #4.) Three convergence emitters under `packages/core/src/notify/` (`plan-review.ts`, `spec-review.ts`, `code-review.ts` — ~48 LoC each) share an identical try / notify / stderr-degrade spine; ~70 % is duplication. Extract `emitUnconverged(notifier, kind, payload)`; the three sites supply only the payload.
+
+**Files.**
+- `packages/core/src/notify/emit-unconverged.ts` (new) — the spine: try, notify, degrade-on-throw, ts-stamp.
+- `packages/core/src/notify/{plan-review, spec-review, code-review}.ts` — shrink to payload builders.
+- `packages/core/tests/notify/emit-unconverged.test.ts` (new) — spine tested once.
+
+**ACs.** (1) `emitUnconverged` is the single home for the transport contract. (2) Each of the three emitters becomes ≤ 8 LoC (payload + call). (3) Stderr-degrade behavior identical across all three kinds (centrally tested). (4) Adding a fourth convergence emitter costs ≤ 4 LoC. (5) Notifier injection seam unchanged.
+
+### Phase 43.1 — Drain gate logic from `handlePreToolEdit`
+
+**Objective.** (Architecture review candidate #5.) The `handlePreToolEdit` handler in `hooks/handlers.ts` inlines five layers (parse DRAFT, walk files vs. `task.files`, decide boundary, build `AnomalyEvent`, notify with stderr fallback). Same intent as the settle-time boundary detection in `collectAnomalies`, but distinct code. Extract `gates/boundary.ts` with `runBoundaryGate(ctx)`; both `handlePreToolEdit` and the settle-time collector call it.
+
+**Depends on.** 39.1–39.7 (gate-module pattern established) and ideally 41.1 (commit seam).
+
+**Files.**
+- `packages/core/src/gates/boundary.ts` (new).
+- `packages/core/src/hooks/handlers.ts` — `handlePreToolEdit` returns to dispatch + return shape.
+- `packages/core/src/cli/commands/settle.ts` (or wherever `collectAnomalies` lives) — replace inline boundary check with `runBoundaryGate(ctx)`.
+- `packages/core/tests/gates/boundary.test.ts` (new) — tests target the gate, not the hook.
+
+**ACs.** (1) Boundary detection lives in one module. (2) Hook handler and settle-time path both call it — one rule, two emission points. (3) Hook handler shrinks to dispatch + gate + return. (4) Tests target the gate, not the hook. (5) Behavior bit-identical at both call sites.
+
+---
+
+Entry point next session: three named tracks — **v1.3.0 Architecture deepening** (NEW, sequenced first; start with **Phase 39.1 coverage gate** to establish the `SettleContext` / `GateResult` shapes the rest of 39.x consumes), **v1.4.0 Public release** (renumbered from v1.2.0; gated on the repo-visibility decision), and **v1.2.0 Feature expansion** (COMPLETE — no non-parked work). All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) and v1.2 feature expansion (34.1–38.1) are shipped.
