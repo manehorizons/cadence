@@ -19,7 +19,13 @@ import { selectVerifier } from '../../verify/factory.js';
 import type { VerifyTestRef } from '../../verify/verifier.js';
 import { runCoverageGate } from '../../gates/coverage.js';
 import { runDeepVerifyGate } from '../../gates/deep-verify.js';
-import { mergeInto, type SettleContext, type SettleAccumulator } from '../../gates/types.js';
+import {
+  mergeInto,
+  type SettleContext,
+  type SettleAccumulator,
+  type ProgressJson,
+  type AcResult,
+} from '../../gates/types.js';
 import { walkAcsInteractively, type InteractiveVerdict } from '../../verify/interactive.js';
 import { ScriptedPrompter, StdinPrompter, type Prompter } from '../../verify/prompter.js';
 import { selectNotifier } from '../../notify/factory.js';
@@ -31,17 +37,6 @@ import { nextConvergence } from '../../verify/converge.js';
 import { emitSkillAuditMiss } from '../../notify/skill-audit.js';
 import { missingSkills } from '../../verify/skill-match.js';
 import { selectSecurityAuditVerifier } from '../../verify/security-audit-factory.js';
-
-interface ProgressJson {
-  draftId: string;
-  tasks: Record<string, { status: string; notes: string; touchedFiles: string[]; updatedAt: string }>;
-}
-
-interface AcResult {
-  id: string;
-  pass: boolean;
-  note?: string;
-}
 
 function parseAcArg(arg: string): AcResult {
   const eqIdx = arg.indexOf('=');
@@ -195,6 +190,12 @@ export function registerSettleCommand(program: Command): void {
           new Set(draft.tasks.flatMap((t) => t.files)),
         );
         let coverageMemo: Promise<Map<string, VerifyTestRef[]>> | undefined;
+        // Lazily select the deep verifier on first use. selectVerifier emits a
+        // stderr fallback warning when a non-mock provider lacks credentials;
+        // the pre-extraction code only ran it inside the deep-verify block, so
+        // selecting eagerly here would surface that warning on runs where
+        // deep-verify never fires. Defer it to keep settle bit-identical.
+        let deepVerifierMemo: ReturnType<typeof selectVerifier> | undefined;
         const ctx: SettleContext = {
           cwd,
           state,
@@ -222,7 +223,16 @@ export function registerSettleCommand(program: Command): void {
             }
             return coverageMemo;
           },
-          verifiers: { deep: selectVerifier(cadenceConfig) },
+          verifiers: {
+            deep: {
+              verify: (input) => {
+                if (!deepVerifierMemo) {
+                  deepVerifierMemo = selectVerifier(cadenceConfig);
+                }
+                return deepVerifierMemo.verify(input);
+              },
+            },
+          },
           emit: {
             anomalies: async (events) => {
               void events;

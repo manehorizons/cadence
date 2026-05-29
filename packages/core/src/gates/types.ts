@@ -14,8 +14,8 @@ import type {
 } from '../verify/verifier.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
 
-/** Canonical PROGRESS.json shape settle reads. settle.ts's local copy of this
- *  (and of AcResult) is removed in favour of these in Phase 39.1 Task 4. */
+/** Canonical PROGRESS.json shape settle reads. settle.ts imports this (and
+ *  AcResult below) rather than redefining them locally. */
 export interface ProgressJson {
   draftId: string;
   tasks: Record<

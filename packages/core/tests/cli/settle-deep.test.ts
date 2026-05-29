@@ -211,4 +211,42 @@ describe('settle --deep (Phase 15)', () => {
     );
     expect(summary.deepVerify).toBeUndefined();
   });
+
+  // Phase 39.1 AC-7 (bit-identical): the ctx verifier port selects lazily.
+  // selectVerifier emits a "falling back to mock" warning when a non-mock
+  // provider lacks credentials. Pre-extraction, selection ran only inside the
+  // deep-verify block, so a settle where deep-verify never fires stayed silent.
+  // Guards against regressing to eager selection in the ctx build.
+  it('does NOT select the verifier (no fallback warning) when deep-verify does not fire (AC-7)', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfgPath = join(active.root, '.cadence/config.json');
+    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+    cfg.verifier = { provider: 'anthropic' }; // no key (run sets ANTHROPIC_API_KEY='')
+    await writeFile(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    await seedCoverageTest(active.root, ['AC-1']);
+    // No --deep, default profile/tier excludes deep-verify → gate must not select.
+    const r = await run(['settle', 'run', '--auto'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).not.toContain('falling back to mock');
+  });
+
+  // Phase 39.1 AC-7: the contrast — when --deep fires, the gate reads the port,
+  // which selects the verifier and surfaces the fallback warning. Proves the
+  // lazy port fires on use (selection deferred, not dropped).
+  it('DOES select the verifier (fallback warning) when --deep fires (AC-7)', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfgPath = join(active.root, '.cadence/config.json');
+    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+    cfg.verifier = { provider: 'anthropic' };
+    await writeFile(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    await seedCoverageTest(active.root, ['AC-1']);
+    const r = await run(['settle', 'run', '--auto', '--deep'], active.root);
+    expect(r.stderr).toContain('falling back to mock');
+  });
 });
