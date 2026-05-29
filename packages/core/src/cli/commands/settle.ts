@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import type { Summary, Finding } from '@cadence/types';
 import { TaskStatusZ } from '@cadence/types';
@@ -19,6 +19,9 @@ import { selectVerifier } from '../../verify/factory.js';
 import type { VerifyTestRef } from '../../verify/verifier.js';
 import { runCoverageGate } from '../../gates/coverage.js';
 import { runDeepVerifyGate } from '../../gates/deep-verify.js';
+import { runDraftReadGate } from '../../gates/draft-read.js';
+import { runStructuralVerifierGate } from '../../gates/structural-verifier.js';
+import { runBuildTestGate } from '../../gates/build-test-must-pass.js';
 import {
   mergeInto,
   type SettleContext,
@@ -87,6 +90,14 @@ export function registerSettleCommand(program: Command): void {
       "skip the DRAFT-read mtime gate even if the DRAFT.md was edited after approve",
     )
     .option(
+      '--allow-open-tasks',
+      'skip the structural-verifier gate even if a task is still PENDING / IN_PROGRESS (Phase 39.2)',
+    )
+    .option(
+      '--allow-failing-build',
+      'do not refuse on a non-zero verification.testCommand exit; settle anyway (Phase 39.2)',
+    )
+    .option(
       '--allow-code-review-failure',
       'do not refuse on HIGH-severity code-review findings; record them in SUMMARY and emit anomalies anyway (Phase 24.3)',
     )
@@ -107,6 +118,8 @@ export function registerSettleCommand(program: Command): void {
         deep?: boolean;
         allowAutoComplex?: boolean;
         allowStaleDraft?: boolean;
+        allowOpenTasks?: boolean;
+        allowFailingBuild?: boolean;
         allowVerifierFailure?: boolean;
         allowCodeReviewFailure?: boolean;
         allowSecurityAuditFailure?: boolean;
@@ -161,35 +174,11 @@ export function registerSettleCommand(program: Command): void {
           );
         }
 
-        // Phase 23.1 — DRAFT-read mtime gate. Fires when 'draft-read' is in
-        // the effective gate set AND state has a draftReadAt baseline AND
-        // the DRAFT.md mtime is strictly newer than that baseline.
-        if (
-          gateSet.gates.includes('draft-read') &&
-          state.draftReadAt !== null
-        ) {
-          const { stat } = await import('node:fs/promises');
-          const draftStat = await stat(draftPath);
-          const mtimeMs = draftStat.mtime.getTime();
-          const baselineMs = Date.parse(state.draftReadAt);
-          if (mtimeMs > baselineMs) {
-            if (!opts.allowStaleDraft) {
-              process.stderr.write(
-                `settle run refused: DRAFT.md was edited after approve (mtime ${draftStat.mtime.toISOString()} > draftReadAt ${state.draftReadAt}). Re-read it then re-approve, or pass --allow-stale-draft to override.\n`,
-              );
-              process.exitCode = 1;
-              return;
-            }
-            process.stderr.write(
-              'settle: --allow-stale-draft set; proceeding past draft-read gate (DRAFT.md mtime newer than draftReadAt).\n',
-            );
-          }
-        }
-
         const touchedFiles = Array.from(
           new Set(draft.tasks.flatMap((t) => t.files)),
         );
         let coverageMemo: Promise<Map<string, VerifyTestRef[]>> | undefined;
+        let draftMtimeMemo: Promise<number | null> | undefined;
         // Lazily select the deep verifier on first use. selectVerifier emits a
         // stderr fallback warning when a non-mock provider lacks credentials;
         // the pre-extraction code only ran it inside the deep-verify block, so
@@ -213,6 +202,15 @@ export function registerSettleCommand(program: Command): void {
             ...(opts.allowVerifierFailure !== undefined
               ? { allowVerifierFailure: opts.allowVerifierFailure }
               : {}),
+            ...(opts.allowStaleDraft !== undefined
+              ? { allowStaleDraft: opts.allowStaleDraft }
+              : {}),
+            ...(opts.allowOpenTasks !== undefined
+              ? { allowOpenTasks: opts.allowOpenTasks }
+              : {}),
+            ...(opts.allowFailingBuild !== undefined
+              ? { allowFailingBuild: opts.allowFailingBuild }
+              : {}),
           },
           explicitIds,
           touchedFiles,
@@ -222,6 +220,14 @@ export function registerSettleCommand(program: Command): void {
               coverageMemo = scanTestCoverage(cwd, globs ? { globs } : {});
             }
             return coverageMemo;
+          },
+          draftMtimeMs: () => {
+            if (!draftMtimeMemo) {
+              draftMtimeMemo = stat(draftPath)
+                .then((s) => s.mtime.getTime())
+                .catch(() => null);
+            }
+            return draftMtimeMemo;
           },
           verifiers: {
             deep: {
@@ -238,9 +244,53 @@ export function registerSettleCommand(program: Command): void {
               void events;
             },
           },
+          runner: {
+            test: async () => {
+              const command = cadenceConfig?.verification?.testCommand;
+              if (!command) return { ran: false, ok: true };
+              try {
+                execSync(command, { cwd, stdio: 'ignore' });
+                return { ran: true, ok: true, exitCode: 0, command };
+              } catch (e) {
+                const status = (e as { status?: number }).status;
+                const exitCode = typeof status === 'number' ? status : 1;
+                return { ran: true, ok: false, exitCode, command };
+              }
+            },
+          },
           io: { err: (s) => process.stderr.write(s) },
         };
         const acc: SettleAccumulator = { flags: {} };
+
+        // Phase 39.2 — three enum gates routed through the contract, in
+        // execution order: draft-read (cheap, was inline) → structural-verifier
+        // (always-fire) → build-test-must-pass (always-fire), all before the
+        // coverage gate. Each is membership-guarded (registry-ready for 44.1)
+        // and follows the 39.1 refuse-and-halt keystone.
+        if (gateSet.gates.includes('draft-read')) {
+          const res = await runDraftReadGate(ctx);
+          mergeInto(acc, res);
+          if (res.outcome === 'refuse') {
+            process.exitCode = 1;
+            return;
+          }
+        }
+        if (gateSet.gates.includes('structural-verifier')) {
+          const res = await runStructuralVerifierGate(ctx);
+          mergeInto(acc, res);
+          if (res.outcome === 'refuse') {
+            process.exitCode = 1;
+            return;
+          }
+        }
+        if (gateSet.gates.includes('build-test-must-pass')) {
+          const res = await runBuildTestGate(ctx);
+          mergeInto(acc, res);
+          if (res.outcome === 'refuse') {
+            process.exitCode = 1;
+            return;
+          }
+        }
 
         if (gateSet.gates.includes('test-coverage')) {
           const res = await runCoverageGate(ctx);

@@ -75,6 +75,13 @@ export const CadenceConfigZ = z.object({
        * Default scans the workspace `packages/**\/*.test.ts(x)`.
        */
       testGlobs: z.array(z.string()).default(['packages/**/*.test.ts', 'packages/**/*.test.tsx']),
+      /**
+       * Shell command the `build-test-must-pass` gate runs at settle time
+       * (Phase 39.2). When set, settle runs it and refuses on a non-zero exit
+       * unless `--allow-failing-build` / `--force`. When absent, the gate is
+       * evaluated but cannot enforce — it passes with a one-time note.
+       */
+      testCommand: z.string().optional(),
     })
     .default({ testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'] }),
   verifier: z

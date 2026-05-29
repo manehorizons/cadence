@@ -170,11 +170,11 @@ by cost band. Gate names are the canonical strings from `GateZ` in
 
 These run on every phase regardless of profile or tier.
 
-| Gate | What it checks |
-|---|---|
-| `coherence-check` | DRAFT frontmatter consistency — tier vs task/file counts, AC format, loop position |
-| `structural-verifier` | All tasks are in a terminal state (DONE / BLOCKED / NEEDS\_CONTEXT); no dangling open tasks |
-| `build-test-must-pass` | The test suite (`pnpm test` or equivalent) must be green before settle completes |
+| Gate | What it checks | Bypass flag |
+|---|---|---|
+| `coherence-check` | DRAFT frontmatter consistency — tier vs task/file counts, AC format, loop position | — |
+| `structural-verifier` | All tasks are in a terminal state (DONE / DONE\_WITH\_CONCERNS / NEEDS\_CONTEXT / BLOCKED); a `PENDING`/`IN_PROGRESS` task refuses settle (wired Phase 39.2) | `--allow-open-tasks` or `--force` (on `settle run`) |
+| `build-test-must-pass` | When `verification.testCommand` is configured, settle runs it and refuses on a non-zero exit (wired Phase 39.2). With no `testCommand` set, the gate is evaluated but cannot enforce — it passes silently | `--allow-failing-build` or `--force` (on `settle run`) |
 
 ### Delta gates
 

@@ -414,6 +414,13 @@ Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (ho
 
 **ACs.** (1) Three new gate modules conform to the 39.1 `GateImpl` shape. (2) `settle.ts` and `draft.ts` route only for these gates — no inline policy. (3) The `gateSet.gates.includes('draft-read')` guard semantics (mtime baseline + `--allow-stale-draft`) preserved. (4) Tests target gates, not the CLI. (5) Behavior bit-identical. (6) Every `Gate` enum member except `anomaly-notify` now has a discrete `gates/*.ts` module.
 
+**As built (2026-05-29) — bit-identical anchor amended (operator decision).** AC #5 was found false at plan time: only `draft-read` had inline enforcement; `structural-verifier` and `build-test-must-pass` were `ALWAYS_FIRE` enum members with **zero in-engine enforcement** (decorative — see the v0.6-era "matrix no longer decorative" v1.0 anchor that was never actually satisfied for these two). Rather than document them as external exceptions, the operator chose to **wire them for real**, consciously trading this phase's bit-identical guarantee to make the matrix load-bearing:
+- `draft-read` → `gates/draft-read.ts`: verbatim extraction, **bit-identical** (transcript-anchored). AC #3/#5 hold for it.
+- `structural-verifier` → `gates/structural-verifier.ts`: **new refusal** on `PENDING`/`IN_PROGRESS` tasks (terminal = DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED). Bypass `--allow-open-tasks` / `--force`.
+- `build-test-must-pass` → `gates/build-test-must-pass.ts`: **new refusal** on a non-zero `verification.testCommand` exit, via an injected `RunnerPort`. Config-gated — unset `testCommand` ⇒ passes silently (preserves bit-identical for existing green settles, AC-7). Bypass `--allow-failing-build` / `--force`.
+
+AC #2 deviation: `draft.ts` was **not** touched — these gates have no `draft.ts` enforcement site (they fire at settle). Net result still satisfies AC #6: 5 enum gates now have `gates/*.ts` modules (coverage, deep-verify, draft-read, structural-verifier, build-test-must-pass); `anomaly-notify` is the exception; the remaining 7 await 39.3–39.7. Design + plan: `docs/superpowers/{specs,plans}/2026-05-29-*39.2*`.
+
 ### Phase 39.3 — Lift the interactive AC-walker out of settle.ts
 
 **Objective.** Pull the Phase 16 `--interactive` per-AC walker (StdinPrompter / ScriptedPrompter / non-TTY refusal) into `gates/interactive.ts` exposing `runInteractiveGate(ctx)`.

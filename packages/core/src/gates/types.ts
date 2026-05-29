@@ -54,6 +54,27 @@ export interface EmitPort {
   anomalies(events: AnomalyEvent[]): Promise<void>;
 }
 
+/**
+ * Result of the build-test-must-pass runner (Phase 39.2). `ran:false` means no
+ * `verification.testCommand` is configured — the gate passes with a note rather
+ * than guessing a command. `ok` is meaningful only when `ran === true`.
+ */
+export interface TestRunResult {
+  readonly ran: boolean;
+  readonly ok: boolean;
+  readonly exitCode?: number;
+  readonly command?: string;
+}
+
+/**
+ * Subprocess collaborator for the build-test-must-pass gate (Phase 39.2).
+ * Injected so the gate (and its tests) never spawn a real process; settle
+ * builds it from `config.verification.testCommand`.
+ */
+export interface RunnerPort {
+  test(): Promise<TestRunResult>;
+}
+
 /** The subset of `settle run` flags gates read. Grows as gates are extracted. */
 export interface SettleOpts {
   readonly force?: boolean;
@@ -61,6 +82,9 @@ export interface SettleOpts {
   readonly deep?: boolean;
   readonly allowMissingCoverage?: boolean;
   readonly allowVerifierFailure?: boolean;
+  readonly allowStaleDraft?: boolean;
+  readonly allowOpenTasks?: boolean;
+  readonly allowFailingBuild?: boolean;
 }
 
 /** Everything a gate may read. Built once, before the gate loop. Readonly. */
@@ -77,8 +101,12 @@ export interface SettleContext {
   /** Shared, lazily-evaluated test-coverage scan; memoized so it runs at most
    *  once per settle (the inline gates scan it independently today). */
   coverage(): Promise<Map<string, VerifyTestRef[]>>;
+  /** Memoized DRAFT.md mtime in ms (Phase 39.2, for the draft-read gate);
+   *  `null` when there is no DRAFT or the stat fails. */
+  draftMtimeMs(): Promise<number | null>;
   readonly verifiers: VerifierPorts;
   readonly emit: EmitPort;
+  readonly runner: RunnerPort;
   readonly io: IoPort;
 }
 

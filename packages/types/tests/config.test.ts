@@ -58,6 +58,20 @@ describe('CadenceConfigZ', () => {
     expect(parsed.verification.testGlobs).toEqual(['apps/**/*.spec.ts']);
   });
 
+  it('accepts an optional verification.testCommand for build-test-must-pass (Phase 39.2)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verification: { testGlobs: ['packages/**/*.test.ts'], testCommand: 'pnpm test' },
+    });
+    expect(parsed.verification.testCommand).toBe('pnpm test');
+  });
+
+  it('leaves verification.testCommand undefined when absent (back-compat, Phase 39.2)', () => {
+    const { verification: _drop, ...withoutVerify } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutVerify);
+    expect(parsed.verification.testCommand).toBeUndefined();
+  });
+
   it('rejects non-string entries in verification.testGlobs', () => {
     expect(() =>
       CadenceConfigZ.parse({

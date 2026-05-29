@@ -91,7 +91,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 
 | Cost | Gate |
 |---|---|
-| Free (always fire) | Coherence check · structural verifier · build/test must pass |
+| Free (always fire) | Coherence check · structural verifier **(enforcement wired Phase 39.2)** · build/test must pass **(enforcement wired Phase 39.2; config-gated on `verification.testCommand`)** |
 | Cheap | DRAFT-read mtime check **(Phase 23.1)** · test-coverage proof per AC **(Phase 14)** · anomaly notify **(Phase 17)** |
 | Medium | Approve gate (manual click) **(Phase 24.1)** · per-task verify **(Phase 24.2)** · code review agent **(Phase 24.3)** |
 | Expensive | Independent verifier agent (`--deep`) · interactive AC verdict (`--interactive`) · plan review **(Phase 25.1)** · security audit **(Phase 25.2)** |
