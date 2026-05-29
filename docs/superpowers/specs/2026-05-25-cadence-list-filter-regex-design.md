@@ -199,7 +199,7 @@ Three commits, per Praxis convention.
 
 ## Follow-On
 
-- **`--filter-regex-flags <flags>`** (case-insensitive, multiline, dotall): channel for the standard JS regex flag set. If operators frequently want `--filter-regex 'foo' --filter-regex-flags i` instead of `[Ff]oo`, ship it. Cheap.
+- ~~**`--filter-regex-flags <flags>`** (case-insensitive, multiline, dotall): channel for the standard JS regex flag set. If operators frequently want `--filter-regex 'foo' --filter-regex-flags i` instead of `[Ff]oo`, ship it. Cheap.~~ **Shipped Slice 37** (2026-05-28): see `docs/superpowers/specs/2026-05-27-cadence-list-filter-regex-flags-design.md`.
 - **`--filter-text-exact`** (case-sensitive substring): cheap if asked. Today: `--filter-regex '\\bFoo\\b'` or `'^Foo$'` covers it.
 - **`--filter-text-in <field-list>`** (per-field selection): if operators want title-only.
 - **`--sort-by <field>`** stable sort with multi-key (Slice 27 follow-on; biggest remaining list-shaping item).
