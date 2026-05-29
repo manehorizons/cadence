@@ -22,6 +22,7 @@ import { runDeepVerifyGate } from '../../gates/deep-verify.js';
 import { runDraftReadGate } from '../../gates/draft-read.js';
 import { runStructuralVerifierGate } from '../../gates/structural-verifier.js';
 import { runBuildTestGate } from '../../gates/build-test-must-pass.js';
+import { runInteractiveGate } from '../../gates/interactive.js';
 import {
   mergeInto,
   type SettleContext,
@@ -29,8 +30,7 @@ import {
   type ProgressJson,
   type AcResult,
 } from '../../gates/types.js';
-import { walkAcsInteractively, type InteractiveVerdict } from '../../verify/interactive.js';
-import { ScriptedPrompter, StdinPrompter, type Prompter } from '../../verify/prompter.js';
+import { ScriptedPrompter, StdinPrompter } from '../../verify/prompter.js';
 import { selectNotifier } from '../../notify/factory.js';
 import { collectAnomalies } from '../../notify/collect.js';
 import { emitLoopViolation } from '../../notify/loop-violation.js';
@@ -211,6 +211,9 @@ export function registerSettleCommand(program: Command): void {
             ...(opts.allowFailingBuild !== undefined
               ? { allowFailingBuild: opts.allowFailingBuild }
               : {}),
+            ...(opts.interactive !== undefined
+              ? { interactive: opts.interactive }
+              : {}),
           },
           explicitIds,
           touchedFiles,
@@ -258,6 +261,19 @@ export function registerSettleCommand(program: Command): void {
               }
             },
           },
+          prompter: {
+            create: () => {
+              // Test seam: CADENCE_PROMPTER_SCRIPT (newline-separated answers)
+              // drives the walker without a real TTY. Else StdinPrompter, which
+              // throws on a non-TTY (the gate turns that into a refusal).
+              const scripted = process.env.CADENCE_PROMPTER_SCRIPT;
+              if (scripted !== undefined) {
+                const answers = scripted.split('\n').filter((s) => s.length > 0 || s === '');
+                return new ScriptedPrompter(answers);
+              }
+              return new StdinPrompter();
+            },
+          },
           io: { err: (s) => process.stderr.write(s) },
         };
         const acc: SettleAccumulator = { flags: {} };
@@ -302,80 +318,23 @@ export function registerSettleCommand(program: Command): void {
         }
         const coverageBypassed = acc.flags.coverageBypassed === true;
 
-        // Interactive walker (Phase 16) — fires on --interactive OR when
-        // 'interactive-verdict' is in the gate set (strict profile). User verdicts
-        // override structural/coverage/deep verdicts for matching ACs.
-        // --no-interactive (commander auto-flag) sets `interactive: false` to opt out.
-        let interactiveVerify: Record<string, InteractiveVerdict> | undefined;
+        // Interactive walker (Phase 16) — extracted to gates/interactive.ts
+        // (Phase 39.3). Fires on --interactive OR membership('interactive-verdict');
+        // skipped under --auto=false. `interactiveRequested` is also read by the
+        // AC-merge finalizer below, so it stays a settle local (pure derivation).
         const interactiveRequested =
           opts.interactive === true ||
           (opts.interactive !== false &&
             gateSet.gates.includes('interactive-verdict'));
-        if (interactiveRequested && opts.auto !== false) {
-          // Test seam: CADENCE_PROMPTER_SCRIPT env var (newline-separated answers)
-          // lets integration tests drive the walker without a real TTY.
-          let prompter: Prompter;
-          const scripted = process.env.CADENCE_PROMPTER_SCRIPT;
-          if (scripted !== undefined) {
-            const answers = scripted.split('\n').filter((s) => s.length > 0 || s === '');
-            prompter = new ScriptedPrompter(answers);
-          } else {
-            try {
-              prompter = new StdinPrompter();
-            } catch (err) {
-              process.stderr.write(
-                `interactive: ${err instanceof Error ? err.message : String(err)}\n`,
-              );
-              process.exitCode = 1;
-              return;
-            }
-          }
-          try {
-            const coverageGlobs = cadenceConfig?.verification?.testGlobs;
-            const coverageForWalker = await scanTestCoverage(
-              cwd,
-              coverageGlobs ? { globs: coverageGlobs } : {},
-            );
-            const testsForWalker: Record<string, VerifyTestRef[]> = {};
-            for (const [id, refs] of coverageForWalker) {
-              testsForWalker[id] = refs;
-            }
-            const touchedFiles = Array.from(
-              new Set(draft.tasks.flatMap((t) => t.files)),
-            );
-            interactiveVerify = await walkAcsInteractively(
-              {
-                acs: draft.acceptanceCriteria.map((a) => ({
-                  id: a.id,
-                  given: a.given,
-                  when: a.when,
-                  then: a.then,
-                })),
-                tests: testsForWalker,
-                files: touchedFiles,
-              },
-              prompter,
-            );
-          } finally {
-            await prompter.close?.();
-          }
-          // Refuse on any non-overridden 'fail' verdict unless --force.
-          const failing = Object.entries(interactiveVerify).filter(
-            ([id, v]) => v.verdict === 'fail' && !explicitIds.has(id),
-          );
-          if (failing.length > 0 && !opts.force) {
-            for (const [id, v] of failing) {
-              process.stderr.write(
-                `interactive: ${id} fail${v.note ? ` — ${v.note}` : ''}\n`,
-              );
-            }
-            process.stderr.write(
-              'settle run --interactive refused: one or more ACs verdicted as fail. Pass --force to settle anyway.\n',
-            );
+        {
+          const res = await runInteractiveGate(ctx);
+          mergeInto(acc, res);
+          if (res.outcome === 'refuse') {
             process.exitCode = 1;
             return;
           }
         }
+        const interactiveVerify = acc.interactiveVerify;
 
         // Deep verifier (Phase 15) — fires on explicit --deep OR when 'deep-verify' is
         // in the gate set (e.g. standard × complex). Records per-AC verdicts; refuses

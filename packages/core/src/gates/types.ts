@@ -13,6 +13,7 @@ import type {
   VerifyTestRef,
 } from '../verify/verifier.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
+import type { Prompter } from '../verify/prompter.js';
 
 /** Canonical PROGRESS.json shape settle reads. settle.ts imports this (and
  *  AcResult below) rather than redefining them locally. */
@@ -75,6 +76,16 @@ export interface RunnerPort {
   test(): Promise<TestRunResult>;
 }
 
+/**
+ * Prompter collaborator for the interactive-verdict gate (Phase 39.3).
+ * `create()` builds the prompter (scripted via CADENCE_PROMPTER_SCRIPT, else
+ * StdinPrompter) and may throw on a non-TTY — the gate turns that throw into a
+ * refusal. The env/TTY construction policy lives in the settle-side adapter.
+ */
+export interface PrompterPort {
+  create(): Prompter;
+}
+
 /** The subset of `settle run` flags gates read. Grows as gates are extracted. */
 export interface SettleOpts {
   readonly force?: boolean;
@@ -85,6 +96,7 @@ export interface SettleOpts {
   readonly allowStaleDraft?: boolean;
   readonly allowOpenTasks?: boolean;
   readonly allowFailingBuild?: boolean;
+  readonly interactive?: boolean;
 }
 
 /** Everything a gate may read. Built once, before the gate loop. Readonly. */
@@ -107,6 +119,7 @@ export interface SettleContext {
   readonly verifiers: VerifierPorts;
   readonly emit: EmitPort;
   readonly runner: RunnerPort;
+  readonly prompter: PrompterPort;
   readonly io: IoPort;
 }
 
