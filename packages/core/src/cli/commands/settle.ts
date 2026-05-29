@@ -23,6 +23,7 @@ import { runDraftReadGate } from '../../gates/draft-read.js';
 import { runStructuralVerifierGate } from '../../gates/structural-verifier.js';
 import { runBuildTestGate } from '../../gates/build-test-must-pass.js';
 import { runInteractiveGate } from '../../gates/interactive.js';
+import { runCodeReviewGate } from '../../gates/code-review.js';
 import {
   mergeInto,
   type SettleContext,
@@ -36,7 +37,6 @@ import { collectAnomalies } from '../../notify/collect.js';
 import { emitLoopViolation } from '../../notify/loop-violation.js';
 import { selectCodeReviewVerifier } from '../../verify/code-review-factory.js';
 import { emitCodeReviewHigh, emitCodeReviewUnconverged } from '../../notify/code-review.js';
-import { nextConvergence } from '../../verify/converge.js';
 import { emitSkillAuditMiss } from '../../notify/skill-audit.js';
 import { missingSkills } from '../../verify/skill-match.js';
 import { selectSecurityAuditVerifier } from '../../verify/security-audit-factory.js';
@@ -185,6 +185,14 @@ export function registerSettleCommand(program: Command): void {
         // selecting eagerly here would surface that warning on runs where
         // deep-verify never fires. Defer it to keep settle bit-identical.
         let deepVerifierMemo: ReturnType<typeof selectVerifier> | undefined;
+        let codeReviewVerifierMemo: ReturnType<typeof selectCodeReviewVerifier> | undefined;
+        let diffMemo: string | undefined;
+        const codeReviewSidecarPath = join(
+          cwd,
+          '.cadence/phases',
+          state.activePhase,
+          `${state.activeDraft}-CODE-REVIEW.json`,
+        );
         const ctx: SettleContext = {
           cwd,
           state,
@@ -214,6 +222,9 @@ export function registerSettleCommand(program: Command): void {
             ...(opts.interactive !== undefined
               ? { interactive: opts.interactive }
               : {}),
+            ...(opts.allowCodeReviewFailure !== undefined
+              ? { allowCodeReviewFailure: opts.allowCodeReviewFailure }
+              : {}),
           },
           explicitIds,
           touchedFiles,
@@ -232,6 +243,12 @@ export function registerSettleCommand(program: Command): void {
             }
             return draftMtimeMemo;
           },
+          diff: () => {
+            if (diffMemo === undefined) {
+              diffMemo = collectDiffForCodeReview(cwd, touchedFiles);
+            }
+            return diffMemo;
+          },
           verifiers: {
             deep: {
               verify: (input) => {
@@ -241,11 +258,23 @@ export function registerSettleCommand(program: Command): void {
                 return deepVerifierMemo.verify(input);
               },
             },
+            codeReview: {
+              verify: (input) => {
+                if (!codeReviewVerifierMemo) {
+                  codeReviewVerifierMemo = selectCodeReviewVerifier(cadenceConfig);
+                }
+                return codeReviewVerifierMemo.verify(input);
+              },
+            },
           },
           emit: {
             anomalies: async (events) => {
               void events;
             },
+            codeReviewHigh: (findings, info) =>
+              emitCodeReviewHigh(selectNotifier(cadenceConfig), findings, info),
+            codeReviewUnconverged: (info) =>
+              emitCodeReviewUnconverged(selectNotifier(cadenceConfig), info),
           },
           runner: {
             test: async () => {
@@ -273,6 +302,24 @@ export function registerSettleCommand(program: Command): void {
               }
               return new StdinPrompter();
             },
+          },
+          codeReviewSidecar: {
+            read: async () => {
+              // Absent / corrupt / legacy-without-`attempts` → {0, []}.
+              if (!existsSync(codeReviewSidecarPath)) {
+                return { attemptsSoFar: 0, history: [] };
+              }
+              try {
+                const prior = JSON.parse(await readFile(codeReviewSidecarPath, 'utf8'));
+                return {
+                  attemptsSoFar: typeof prior.attempts === 'number' ? prior.attempts : 0,
+                  history: Array.isArray(prior.history) ? prior.history : [],
+                };
+              } catch {
+                return { attemptsSoFar: 0, history: [] };
+              }
+            },
+            write: (text) => atomicWriteText(codeReviewSidecarPath, text),
           },
           io: { err: (s) => process.stderr.write(s) },
         };
@@ -350,198 +397,18 @@ export function registerSettleCommand(program: Command): void {
         const deepVerify = acc.deepVerify;
         const verifierFailure = acc.flags.verifierFailure;
 
-        // Phase 24.3 — code-review verifier gate. Fires when `'code-review'`
-        // is in the effective gate set. Runs against `git diff HEAD --
-        // <files>` for the union of touched files across all tasks. HIGH
-        // findings refuse settle unless `--force` or
-        // `--allow-code-review-failure`. All findings (including bypassed
-        // HIGHs) land on SUMMARY.codeReview. `code-review-high` anomalies
-        // dispatch via the Phase 17 notifier when the anomaly gate is also
-        // in the set.
-        let codeReviewFindings: Record<string, Finding[]> | undefined;
+        // Phase 24.3 code-review gate + Phase 37.1 convergence — extracted to
+        // gates/code-review.ts (Phase 39.4). Reaches git / reviewer / notifier /
+        // sidecar only through ctx ports. Produces SUMMARY.codeReview.
         if (gateSet.gates.includes('code-review')) {
-          const touched = Array.from(
-            new Set(draft.tasks.flatMap((t) => t.files)),
-          );
-          const diff = collectDiffForCodeReview(cwd, touched);
-          const reviewer = selectCodeReviewVerifier(cadenceConfig);
-          try {
-            const result = await reviewer.verify({ files: touched, diff });
-            codeReviewFindings = result.findings;
-            const highs = collectHighFindings(result.findings);
-            // Phase 37.1 — code-review@settle is a bounded convergence loop
-            // (Plan→CodeReview port of the shipped Phase 35.1 draft.ts block).
-            // pass := no HIGH finding (the gate's existing refuse condition;
-            // MEDIUM/LOW never refuse). nextConvergence + sidecar own the loop;
-            // the fix between attempts is external (host edits the code).
-            const pass = highs.length === 0;
-            const sidecarPath = join(
-              cwd,
-              '.cadence/phases',
-              state.activePhase,
-              `${state.activeDraft}-CODE-REVIEW.json`,
-            );
-            // Prior attempts. Absent / corrupt / legacy-without-`attempts`
-            // → attemptsSoFar = 0 (identical back-compat rule to plan-review).
-            let attemptsSoFar = 0;
-            let history: unknown[] = [];
-            if (existsSync(sidecarPath)) {
-              try {
-                const prior = JSON.parse(await readFile(sidecarPath, 'utf8'));
-                if (typeof prior.attempts === 'number') {
-                  attemptsSoFar = prior.attempts;
-                }
-                if (Array.isArray(prior.history)) history = prior.history;
-              } catch {
-                /* corrupt/legacy → treat as fresh (attemptsSoFar 0) */
-              }
-            }
-
-            const maxAttempts = cadenceConfig?.convergence?.maxAttempts ?? 3;
-            const nv = nextConvergence(pass, attemptsSoFar, maxAttempts);
-            const now = new Date().toISOString();
-            // Phase 24.3 contract preserved (NOT narrowed): --force OR
-            // --allow-code-review-failure bypasses ANY failing code-review
-            // (reloop OR escalate). The convergence loop is the non-bypass path.
-            const bypassed =
-              !pass &&
-              (opts.allowCodeReviewFailure === true || opts.force === true);
-
-            history.push({
-              at: now,
-              pass,
-              // Conscious HIGH-count semantics (spec): findingsCount / top-level
-              // `findings` record highs.length, NOT total findings — because the
-              // convergence boolean is HIGH-only. Self-consistent divergence
-              // from the 35.1 source (which records total res.findings.length).
-              findingsCount: highs.length,
-              provider: result.provider,
-              ...(result.model ? { model: result.model } : {}),
-              verdict: nv.verdict,
-              ...(bypassed ? { bypassed: true } : {}),
-            });
-            await atomicWriteText(
-              sidecarPath,
-              JSON.stringify(
-                {
-                  draftId: state.activeDraft,
-                  converged: pass,
-                  attempts:
-                    nv.verdict === 'pass' ? attemptsSoFar : nv.attempt,
-                  maxAttempts,
-                  history,
-                  // legacy-style top-level fields for parity with the other
-                  // *-REVIEW.json sidecars:
-                  pass,
-                  provider: result.provider,
-                  ...(result.model ? { model: result.model } : {}),
-                  findings: highs.length,
-                  at: now,
-                },
-                null,
-                2,
-              ) + '\n',
-            );
-
-            if (!pass) {
-              for (const h of highs) {
-                process.stderr.write(
-                  `code-review: ${h.file}${h.line !== undefined ? `:${h.line}` : ''} high — ${h.message}\n`,
-                );
-              }
-              if (bypassed) {
-                // Phase 24.3 contract — branching proceed-line VERBATIM
-                // (`--force` arm kept so the contract is not silently
-                // narrowed) + code-review-high(bypassed:true) under the
-                // existing `anomaly-notify` guard, exactly as Phase 24.3.
-                const flag =
-                  opts.force === true
-                    ? '--force'
-                    : '--allow-code-review-failure';
-                process.stderr.write(
-                  `code-review: ${flag} set; proceeding past ${highs.length} HIGH finding(s).\n`,
-                );
-                if (gateSet.gates.includes('anomaly-notify')) {
-                  await emitCodeReviewHigh(
-                    selectNotifier(cadenceConfig),
-                    result.findings,
-                    { provider: result.provider, bypassed: true },
-                  );
-                }
-                if (nv.verdict === 'escalate') {
-                  await emitCodeReviewUnconverged(
-                    selectNotifier(cadenceConfig),
-                    {
-                      draftId: state.activeDraft,
-                      attempts: nv.attempt,
-                      maxAttempts,
-                      findings: highs.length,
-                      provider: result.provider,
-                      ...(result.model ? { model: result.model } : {}),
-                      bypassed: true,
-                    },
-                  );
-                }
-                // fall through → SUMMARY.codeReview recorded downstream
-                // (codeReviewFindings already set), exactly as Phase 24.3.
-              } else if (nv.verdict === 'reloop') {
-                if (gateSet.gates.includes('anomaly-notify')) {
-                  await emitCodeReviewHigh(
-                    selectNotifier(cadenceConfig),
-                    result.findings,
-                    { provider: result.provider, bypassed: false },
-                  );
-                }
-                process.stderr.write(
-                  `code-review: attempt ${nv.attempt}/${maxAttempts} did not pass — ` +
-                    'fix the flagged code and re-run `cadence settle run`, ' +
-                    'or pass --allow-code-review-failure to proceed anyway.\n',
-                );
-                process.exitCode = 1;
-                return;
-              } else {
-                // nv.verdict === 'escalate', no bypass flag → hard refuse.
-                if (gateSet.gates.includes('anomaly-notify')) {
-                  await emitCodeReviewHigh(
-                    selectNotifier(cadenceConfig),
-                    result.findings,
-                    { provider: result.provider, bypassed: false },
-                  );
-                }
-                await emitCodeReviewUnconverged(
-                  selectNotifier(cadenceConfig),
-                  {
-                    draftId: state.activeDraft,
-                    attempts: nv.attempt,
-                    maxAttempts,
-                    findings: highs.length,
-                    provider: result.provider,
-                    ...(result.model ? { model: result.model } : {}),
-                  },
-                );
-                process.stderr.write(
-                  'settle run refused: code-review did NOT converge after ' +
-                    `${maxAttempts} attempts — a human decision is required. ` +
-                    'Fix the flagged code, or pass --allow-code-review-failure ' +
-                    'to proceed anyway.\n',
-                );
-                process.exitCode = 1;
-                return;
-              }
-            }
-            // pass (converged) → no stderr; codeReviewFindings already set →
-            // SUMMARY.codeReview recorded downstream exactly as Phase 24.3.
-          } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
-            process.stderr.write(
-              `code-review: verifier failed — ${message}. Pass --allow-code-review-failure to continue.\n`,
-            );
-            if (opts.allowCodeReviewFailure !== true && opts.force !== true) {
-              process.exitCode = 1;
-              return;
-            }
+          const res = await runCodeReviewGate(ctx);
+          mergeInto(acc, res);
+          if (res.outcome === 'refuse') {
+            process.exitCode = 1;
+            return;
           }
         }
+        const codeReviewFindings = acc.codeReview;
 
         // Phase 25.2 — security-audit verifier gate. The final, most
         // expensive gate. Fires when `'security-audit'` is in the effective
@@ -827,21 +694,4 @@ function collectDiffForCodeReview(cwd: string, files: string[]): string {
 function shellQuote(arg: string): string {
   if (/^[A-Za-z0-9._/=:@+-]+$/.test(arg)) return arg;
   return `"${arg.replace(/(["\\$`])/g, '\\$1')}"`;
-}
-
-function collectHighFindings(
-  findings: Record<string, Finding[]>,
-): Array<{ file: string; line?: number; message: string }> {
-  const out: Array<{ file: string; line?: number; message: string }> = [];
-  for (const [file, list] of Object.entries(findings)) {
-    for (const f of list) {
-      if (f.severity !== 'high') continue;
-      out.push({
-        file,
-        ...(f.line !== undefined ? { line: f.line } : {}),
-        message: f.message,
-      });
-    }
-  }
-  return out;
 }

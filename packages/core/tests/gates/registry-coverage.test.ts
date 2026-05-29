@@ -18,6 +18,7 @@ const IMPLEMENTED: Gate[] = [
   'structural-verifier', // gates/structural-verifier.ts (39.2)
   'build-test-must-pass', // gates/build-test-must-pass.ts (39.2)
   'interactive-verdict', // gates/interactive.ts (39.3)
+  'code-review', // gates/code-review.ts (39.4)
 ];
 
 // The single non-GateImpl member: a cross-cutting emission toggle, not a
@@ -29,7 +30,6 @@ const PENDING: Gate[] = [
   'coherence-check',
   'approve',
   'per-task-verify',
-  'code-review',
   'plan-review',
   'security-audit',
 ];
@@ -46,11 +46,12 @@ describe('gate registry coverage (AC-9)', () => {
     expect(union.size).toBe(IMPLEMENTED.length + EXCEPTION.length + PENDING.length);
   });
 
-  it('39.2 + 39.3 bring implemented coverage to six gates', () => {
+  it('39.2–39.4 bring implemented coverage to seven gates', () => {
     expect(IMPLEMENTED).toContain('draft-read');
     expect(IMPLEMENTED).toContain('structural-verifier');
     expect(IMPLEMENTED).toContain('build-test-must-pass');
     expect(IMPLEMENTED).toContain('interactive-verdict');
-    expect(IMPLEMENTED).toHaveLength(6);
+    expect(IMPLEMENTED).toContain('code-review');
+    expect(IMPLEMENTED).toHaveLength(7);
   });
 });

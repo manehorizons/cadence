@@ -14,6 +14,11 @@ import type {
 } from '../verify/verifier.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
 import type { Prompter } from '../verify/prompter.js';
+import type {
+  CodeReviewInput,
+  CodeReviewResult,
+  Finding as CodeReviewFinding,
+} from '../verify/code-review.js';
 
 /** Canonical PROGRESS.json shape settle reads. settle.ts imports this (and
  *  AcResult below) rather than redefining them locally. */
@@ -44,6 +49,8 @@ export interface IoPort {
  */
 export interface VerifierPorts {
   readonly deep: { verify(input: VerifyInput): Promise<VerifyResult> };
+  /** Code-review verifier (Phase 39.4), lazily `selectCodeReviewVerifier`. */
+  readonly codeReview: { verify(input: CodeReviewInput): Promise<CodeReviewResult> };
 }
 
 /**
@@ -53,6 +60,33 @@ export interface VerifierPorts {
  */
 export interface EmitPort {
   anomalies(events: AnomalyEvent[]): Promise<void>;
+  /** code-review-high anomalies (Phase 39.4). Wraps emitCodeReviewHigh over the
+   *  selected notifier; the anomaly-notify membership guard is the gate's. */
+  codeReviewHigh(
+    findings: Record<string, CodeReviewFinding[]>,
+    info: { provider: string; bypassed: boolean },
+  ): Promise<void>;
+  /** code-review unconverged escalation anomaly (Phase 39.4). */
+  codeReviewUnconverged(info: {
+    draftId: string;
+    attempts: number;
+    maxAttempts: number;
+    findings: number;
+    provider: string;
+    model?: string;
+    bypassed?: boolean;
+  }): Promise<void>;
+}
+
+/**
+ * Convergence sidecar collaborator (Phase 39.4). The gate owns the JSON byte
+ * layout; the settle adapter owns the path + atomic write. `read()` yields the
+ * prior failing-attempt count + history (absent/corrupt/legacy → {0, []}).
+ * Reused by the 39.5 security-audit gate.
+ */
+export interface ConvergenceSidecar {
+  read(): Promise<{ attemptsSoFar: number; history: unknown[] }>;
+  write(text: string): Promise<void>;
 }
 
 /**
@@ -97,6 +131,7 @@ export interface SettleOpts {
   readonly allowOpenTasks?: boolean;
   readonly allowFailingBuild?: boolean;
   readonly interactive?: boolean;
+  readonly allowCodeReviewFailure?: boolean;
 }
 
 /** Everything a gate may read. Built once, before the gate loop. Readonly. */
@@ -116,10 +151,15 @@ export interface SettleContext {
   /** Memoized DRAFT.md mtime in ms (Phase 39.2, for the draft-read gate);
    *  `null` when there is no DRAFT or the stat fails. */
   draftMtimeMs(): Promise<number | null>;
+  /** Memoized `git diff --no-color HEAD -- <touchedFiles>` (Phase 39.4);
+   *  empty string on any error. Shared by code-review + security-audit gates. */
+  diff(): string;
   readonly verifiers: VerifierPorts;
   readonly emit: EmitPort;
   readonly runner: RunnerPort;
   readonly prompter: PrompterPort;
+  /** Code-review convergence sidecar (Phase 39.4). */
+  readonly codeReviewSidecar: ConvergenceSidecar;
   readonly io: IoPort;
 }
 
