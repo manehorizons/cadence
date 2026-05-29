@@ -209,7 +209,7 @@ export function registerDecisionCommand(program: Command): void {
     .option('--include-untied', 'When combined with --filter-rec, also include decisions with no recommendationId')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or rationale. Mutually exclusive with --filter-text-exact and --filter-regex.')
     .option('--filter-text-exact <str>', 'Case-insensitive whole-field equality match on title or rationale. Mutually exclusive with --filter-text and --filter-regex.')
-    .option('--filter-regex <pattern>', 'Power-user regex filter on title or rationale (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text and --filter-text-exact.')
+    .option('--filter-regex <pattern>', 'Power-user regex filter on title or rationale (always case-sensitive by default; use --filter-regex-flags for case-insensitive/multiline/dotAll, or character classes like [Cc]ycle for one-off case-insensitivity). Mutually exclusive with --filter-text and --filter-text-exact.')
     .option('--filter-regex-flags <flags>', 'RegExp flag letters to apply to --filter-regex. Allowed: i (case-insensitive), m (multiline ^/$), s (dotAll .), u (unicode). Requires --filter-regex.')
     .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: decided, status, title, rec.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
