@@ -1119,4 +1119,129 @@ describe('cadence decision (Slice 8)', () => {
     expect(arr[0].title).toBe('A');
     expect(arr[0].rationale).toBe('Token bucket');
   });
+
+  it('Slice 37 AC-flags-1 (dec): --filter-regex-flags "i" makes --filter-regex case-insensitive', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_dec_flags1' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'Cycle planning', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--rec', recId, '--title', 'cycle review', '--rationale', 'r'], active.root);
+    await run(['decision', 'add', '--rec', recId, '--title', 'Other', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-regex', '^cycle', '--filter-regex-flags', 'i', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    const titles = arr.map((d: { title: string }) => d.title).sort();
+    expect(titles).toEqual(['Cycle planning', 'cycle review']);
+  });
+
+  it('Slice 37 AC-flags-2 (dec): --filter-regex-flags "is" applies both case-insensitive AND dotAll', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_dec_flags2' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'Multi', '--rationale', 'placeholder'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/decisions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.decisions[0].rationale = 'foo\nBAR';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['decision', 'list', '--filter-regex', 'foo.bar', '--filter-regex-flags', 'is', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('Multi');
+  });
+
+  it('Slice 37 AC-flags-3 (dec): orphan use without --filter-regex refuses with exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_dec_flags3' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'A', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-regex-flags', 'i'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'decision list failed: --filter-regex-flags requires --filter-regex to also be set\n',
+    );
+  });
+
+  it('Slice 37 AC-flags-4 (dec): empty value refuses with exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_dec_flags4' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'A', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-regex', 'foo', '--filter-regex-flags', ''],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'decision list failed: --filter-regex-flags requires a non-empty value\n',
+    );
+  });
+
+  it('Slice 37 AC-flags-5 (dec): invalid flag letter refuses with exit 1, naming the letter', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_dec_flags5' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'A', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-regex', 'foo', '--filter-regex-flags', 'g'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      "decision list failed: invalid flag letter: 'g' (allowed: i, m, s, u)\n",
+    );
+  });
+
+  it('Slice 37 AC-flags-6 (dec): empty result includes both regex="..." AND regex-flags="..." in filterDims', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_dec_flags6' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['decision', 'add', '--rec', recId, '--title', 'Cycle planning', '--rationale', 'r'], active.root);
+
+    const r = await run(
+      ['decision', 'list', '--filter-regex', '^no-such-prefix', '--filter-regex-flags', 'i'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(
+      'No decisions matching regex="^no-such-prefix", regex-flags="i" recorded.\n',
+    );
+  });
 });

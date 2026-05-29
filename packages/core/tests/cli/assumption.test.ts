@@ -859,4 +859,128 @@ describe('cadence assumption (Slice 8)', () => {
     expect(arr[0].text).toBe('X');
     expect(Array.isArray(arr)).toBe(true);
   });
+
+  it('Slice 37 AC-flags-1 (asn): --filter-regex-flags "i" makes --filter-regex case-insensitive', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_asn_flags1' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Rate limit handles bursts'], active.root);
+    await run(['assumption', 'add', '--rec', recId, '--text', 'rate limit handles spikes'], active.root);
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Other'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-regex', '^rate', '--filter-regex-flags', 'i', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    const texts = arr.map((a: { text: string }) => a.text).sort();
+    expect(texts).toEqual(['Rate limit handles bursts', 'rate limit handles spikes']);
+  });
+
+  it('Slice 37 AC-flags-2 (asn): --filter-regex-flags "is" applies both case-insensitive AND dotAll', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_asn_flags2' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'placeholder'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/assumptions.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.assumptions[0].text = 'foo\nBAR';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['assumption', 'list', '--filter-regex', 'foo.bar', '--filter-regex-flags', 'is', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+  });
+
+  it('Slice 37 AC-flags-3 (asn): orphan use without --filter-regex refuses with exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_asn_flags3' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'foo'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-regex-flags', 'i'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'assumption list failed: --filter-regex-flags requires --filter-regex to also be set\n',
+    );
+  });
+
+  it('Slice 37 AC-flags-4 (asn): empty value refuses with exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_asn_flags4' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'foo'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-regex', 'foo', '--filter-regex-flags', ''],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'assumption list failed: --filter-regex-flags requires a non-empty value\n',
+    );
+  });
+
+  it('Slice 37 AC-flags-5 (asn): invalid flag letter refuses with exit 1, naming the letter', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_asn_flags5' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'foo'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-regex', 'foo', '--filter-regex-flags', 'g'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      "assumption list failed: invalid flag letter: 'g' (allowed: i, m, s, u)\n",
+    );
+  });
+
+  it('Slice 37 AC-flags-6 (asn): empty result includes both regex="..." AND regex-flags="..." in filterDims', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_asn_flags6' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const recId = rec.id;
+    await run(['assumption', 'add', '--rec', recId, '--text', 'Rate limit handles bursts'], active.root);
+
+    const r = await run(
+      ['assumption', 'list', '--filter-regex', '^no-such-prefix', '--filter-regex-flags', 'i'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(
+      'No assumptions matching regex="^no-such-prefix", regex-flags="i" recorded.\n',
+    );
+  });
 });

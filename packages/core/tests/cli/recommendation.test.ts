@@ -866,4 +866,114 @@ describe('cadence recommendation', () => {
     expect(arr[0].title).toBe('A');
     expect(arr[0].summary).toBe('Token bucket');
   });
+
+  it('Slice 37 AC-flags-1 (rec): --filter-regex-flags "i" makes --filter-regex case-insensitive', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_rec_flags1' });
+    await run(['recommendation', 'add', '--title', 'Cycle planning', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'cycle review', '--summary', 's'], active.root);
+    await run(['recommendation', 'add', '--title', 'Other', '--summary', 's'], active.root);
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-regex', '^cycle', '--filter-regex-flags', 'i', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(2);
+    const titles = arr.map((r: { title: string }) => r.title).sort();
+    expect(titles).toEqual(['Cycle planning', 'cycle review']);
+  });
+
+  it('Slice 37 AC-flags-2 (rec): --filter-regex-flags "is" applies both case-insensitive AND dotAll', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_rec_flags2' });
+    await run(['recommendation', 'add', '--title', 'Multi', '--summary', 'placeholder'], active.root);
+    const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+    const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+    ledger.recommendations[0].summary = 'foo\nBAR';
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-regex', 'foo.bar', '--filter-regex-flags', 'is', '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].title).toBe('Multi');
+  });
+
+  it('Slice 37 AC-flags-3 (rec): orphan use without --filter-regex refuses with exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_rec_flags3' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-regex-flags', 'i'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'recommendation list failed: --filter-regex-flags requires --filter-regex to also be set\n',
+    );
+  });
+
+  it('Slice 37 AC-flags-4 (rec): empty value refuses with exit 1', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_rec_flags4' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-regex', 'foo', '--filter-regex-flags', ''],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      'recommendation list failed: --filter-regex-flags requires a non-empty value\n',
+    );
+  });
+
+  it('Slice 37 AC-flags-5 (rec): invalid flag letter refuses with exit 1, naming the letter', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_rec_flags5' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-regex', 'foo', '--filter-regex-flags', 'g'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      "recommendation list failed: invalid flag letter: 'g' (allowed: i, m, s, u)\n",
+    );
+  });
+
+  it('Slice 37 AC-flags-6 (rec): empty result includes both regex="..." AND regex-flags="..." in filterDims', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_rec_flags6' });
+    await run(['recommendation', 'add', '--title', 'Cycle planning', '--summary', 's'], active.root);
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-regex', '^no-such-prefix', '--filter-regex-flags', 'i'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe(
+      'No recommendations matching regex="^no-such-prefix", regex-flags="i" recorded.\n',
+    );
+  });
+
+  it('Slice 37 AC-flags-rec-1: duplicate flag letter refuses with exit 1, naming the letter', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice37_rec_flags_rec1' });
+    await run(['recommendation', 'add', '--title', 'A', '--summary', 's'], active.root);
+
+    const r = await run(
+      ['recommendation', 'list', '--filter-regex', 'foo', '--filter-regex-flags', 'ii'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(
+      "recommendation list failed: duplicate flag letter: 'i'\n",
+    );
+  });
 });

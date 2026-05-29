@@ -25,6 +25,23 @@ function parseSortBy(raw: string): ParsedSort {
   return { key, dir: dirRaw };
 }
 
+const ALLOWED_REGEX_FLAGS = new Set(['i', 'm', 's', 'u']);
+
+function parseRegexFlags(raw: string): { flags: string } | { error: string } {
+  if (raw.length === 0) return { error: '--filter-regex-flags requires a non-empty value' };
+  const seen = new Set<string>();
+  for (const ch of raw) {
+    if (!ALLOWED_REGEX_FLAGS.has(ch)) {
+      return { error: `invalid flag letter: '${ch}' (allowed: i, m, s, u)` };
+    }
+    if (seen.has(ch)) {
+      return { error: `duplicate flag letter: '${ch}'` };
+    }
+    seen.add(ch);
+  }
+  return { flags: raw };
+}
+
 const ASN_SORT_KEYS = new Set(['created', 'status', 'text', 'rec']);
 
 const ASN_STATUS_ORDER: ReadonlyArray<Assumption['status']> = [
@@ -146,11 +163,12 @@ export function registerAssumptionCommand(program: Command): void {
     .option('--filter-text <substr>', 'Case-insensitive substring search on text. Mutually exclusive with --filter-text-exact and --filter-regex.')
     .option('--filter-text-exact <str>', 'Case-insensitive whole-field equality match on text. Mutually exclusive with --filter-text and --filter-regex.')
     .option('--filter-regex <pattern>', 'Power-user regex filter on text (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text and --filter-text-exact.')
+    .option('--filter-regex-flags <flags>', 'RegExp flag letters to apply to --filter-regex. Allowed: i (case-insensitive), m (multiline ^/$), s (dotAll .), u (unicode). Requires --filter-regex.')
     .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: created, status, text, rec.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; filterTextExact?: string; filterRegex?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterRec?: string; filterText?: string; filterTextExact?: string; filterRegex?: string; filterRegexFlags?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -208,10 +226,27 @@ export function registerAssumptionCommand(program: Command): void {
           const needle = opts.filterText.toLowerCase();
           entries = entries.filter((a) => a.text.toLowerCase().includes(needle));
         }
+        if (opts.filterRegexFlags !== undefined && opts.filterRegex === undefined) {
+          process.stderr.write(
+            `assumption list failed: --filter-regex-flags requires --filter-regex to also be set\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        let regexFlags: string | undefined;
+        if (opts.filterRegexFlags !== undefined) {
+          const parsed = parseRegexFlags(opts.filterRegexFlags);
+          if ('error' in parsed) {
+            process.stderr.write(`assumption list failed: ${parsed.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          regexFlags = parsed.flags;
+        }
         if (opts.filterRegex !== undefined) {
           let regex: RegExp;
           try {
-            regex = new RegExp(opts.filterRegex);
+            regex = new RegExp(opts.filterRegex, regexFlags);
           } catch (err) {
             process.stderr.write(
               `assumption list failed: invalid regex: ${err instanceof Error ? err.message : String(err)}\n`,
@@ -282,6 +317,7 @@ export function registerAssumptionCommand(program: Command): void {
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
           if (opts.filterTextExact !== undefined) filterDims.push(`text-exact="${opts.filterTextExact}"`);
           if (opts.filterRegex !== undefined) filterDims.push(`regex="${opts.filterRegex}"`);
+          if (opts.filterRegexFlags !== undefined) filterDims.push(`regex-flags="${opts.filterRegexFlags}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0
             ? `No assumptions matching ${filterDims.join(', ')} recorded.\n`

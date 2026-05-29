@@ -41,6 +41,23 @@ function parseSortBy(raw: string): ParsedSort {
   return { key, dir: dirRaw };
 }
 
+const ALLOWED_REGEX_FLAGS = new Set(['i', 'm', 's', 'u']);
+
+function parseRegexFlags(raw: string): { flags: string } | { error: string } {
+  if (raw.length === 0) return { error: '--filter-regex-flags requires a non-empty value' };
+  const seen = new Set<string>();
+  for (const ch of raw) {
+    if (!ALLOWED_REGEX_FLAGS.has(ch)) {
+      return { error: `invalid flag letter: '${ch}' (allowed: i, m, s, u)` };
+    }
+    if (seen.has(ch)) {
+      return { error: `duplicate flag letter: '${ch}'` };
+    }
+    seen.add(ch);
+  }
+  return { flags: raw };
+}
+
 const REC_SORT_KEYS = new Set([
   'created',
   'updated',
@@ -223,12 +240,13 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary. Mutually exclusive with --filter-text-exact and --filter-regex.')
     .option('--filter-text-exact <str>', 'Case-insensitive whole-field equality match on title or summary. Mutually exclusive with --filter-text and --filter-regex.')
     .option('--filter-regex <pattern>', 'Power-user regex filter on title or summary (always case-sensitive; use character classes like [Cc]ycle for case-insensitive). Mutually exclusive with --filter-text and --filter-text-exact.')
+    .option('--filter-regex-flags <flags>', 'RegExp flag letters to apply to --filter-regex. Allowed: i (case-insensitive), m (multiline ^/$), s (dotAll .), u (unicode). Requires --filter-regex.')
     .option('--filter-converted-to <phaseId>', 'Reverse-lookup filter: only recommendations with convertedToPhaseId equal to <phaseId>. Implies status=converted (Slice 34.4).')
     .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: created, updated, priority, status, title, leverage, risk, confidence, decay.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterTextExact?: string; filterRegex?: string; filterConvertedTo?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterTextExact?: string; filterRegex?: string; filterRegexFlags?: string; filterConvertedTo?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -287,10 +305,27 @@ export function registerRecommendationCommand(program: Command): void {
               r.summary.toLowerCase().includes(needle),
           );
         }
+        if (opts.filterRegexFlags !== undefined && opts.filterRegex === undefined) {
+          process.stderr.write(
+            `recommendation list failed: --filter-regex-flags requires --filter-regex to also be set\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        let regexFlags: string | undefined;
+        if (opts.filterRegexFlags !== undefined) {
+          const parsed = parseRegexFlags(opts.filterRegexFlags);
+          if ('error' in parsed) {
+            process.stderr.write(`recommendation list failed: ${parsed.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          regexFlags = parsed.flags;
+        }
         if (opts.filterRegex !== undefined) {
           let regex: RegExp;
           try {
-            regex = new RegExp(opts.filterRegex);
+            regex = new RegExp(opts.filterRegex, regexFlags);
           } catch (err) {
             process.stderr.write(
               `recommendation list failed: invalid regex: ${err instanceof Error ? err.message : String(err)}\n`,
@@ -367,6 +402,7 @@ export function registerRecommendationCommand(program: Command): void {
           if (opts.filterText !== undefined) filterDims.push(`text="${opts.filterText}"`);
           if (opts.filterTextExact !== undefined) filterDims.push(`text-exact="${opts.filterTextExact}"`);
           if (opts.filterRegex !== undefined) filterDims.push(`regex="${opts.filterRegex}"`);
+          if (opts.filterRegexFlags !== undefined) filterDims.push(`regex-flags="${opts.filterRegexFlags}"`);
           if (opts.filterConvertedTo !== undefined) filterDims.push(`converted-to="${opts.filterConvertedTo}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
           const msg = filterDims.length > 0
