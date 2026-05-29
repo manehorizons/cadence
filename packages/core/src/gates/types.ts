@@ -203,10 +203,16 @@ export interface SettleAccumulator {
   flags: GateFlags;
 }
 
-/** A gate's entire contribution. No shared mutable state. */
-export interface GateResult {
+/**
+ * A gate's entire contribution. No shared mutable state. `P` is the producer
+ * accumulator the `summaryPatch` targets — defaults to `SettleAccumulator` so
+ * settle gates and `mergeInto` are unchanged. The draft/build surfaces (Phase
+ * 39.7) parameterize `P` with their own product type (e.g. `BuildProducts`)
+ * while keeping the shared `{ outcome, summaryPatch?, flags? }` shape.
+ */
+export interface GateResult<P = SettleAccumulator> {
   readonly outcome: 'pass' | 'refuse';
-  readonly summaryPatch?: Partial<SettleAccumulator>;
+  readonly summaryPatch?: Partial<P>;
   readonly flags?: GateFlags;
 }
 

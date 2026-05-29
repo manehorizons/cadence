@@ -10,7 +10,11 @@ import { GateZ, type Gate } from '@cadence/types';
  * choice — so no gate is ever silently dropped from the future 44.1 registry.
  */
 
-// Gates with a discrete GateImpl module under packages/core/src/gates/.
+// Gates with a discrete module under packages/core/src/gates/. NOTE: the
+// settle gates are settle `GateImpl`s; the draft/build gates (39.7) carry
+// `DraftGateImpl`/`BuildGateImpl` types — distinct, since they fire on other
+// surfaces. "IMPLEMENTED" here means "has a discrete gates/*.ts module"; the
+// 44.1 settle-registry subset is a further refinement (see 39.7 design doc).
 const IMPLEMENTED: Gate[] = [
   'test-coverage', // gates/coverage.ts (39.1)
   'deep-verify', // gates/deep-verify.ts (39.1)
@@ -20,19 +24,18 @@ const IMPLEMENTED: Gate[] = [
   'interactive-verdict', // gates/interactive.ts (39.3)
   'code-review', // gates/code-review.ts (39.4)
   'security-audit', // gates/security-audit.ts (39.5)
+  'coherence-check', // gates/coherence.ts (39.7)
+  'approve', // gates/approve.ts (39.7)
+  'plan-review', // gates/plan-review.ts (39.7)
+  'per-task-verify', // gates/per-task-verify.ts (39.7)
 ];
 
 // The single non-GateImpl member: a cross-cutting emission toggle, not a
 // producer gate (39.1 Decision Log). Never a registry entry.
 const EXCEPTION: Gate[] = ['anomaly-notify'];
 
-// Still inline in settle.ts/draft.ts; extracted by 39.3–39.7.
-const PENDING: Gate[] = [
-  'coherence-check',
-  'approve',
-  'per-task-verify',
-  'plan-review',
-];
+// All enum gates now have a discrete module (39.7 completed the extraction).
+const PENDING: Gate[] = [];
 
 describe('gate registry coverage (AC-9)', () => {
   it('buckets every Gate enum member exactly once', () => {
@@ -46,13 +49,12 @@ describe('gate registry coverage (AC-9)', () => {
     expect(union.size).toBe(IMPLEMENTED.length + EXCEPTION.length + PENDING.length);
   });
 
-  it('39.2–39.5 bring implemented coverage to eight gates', () => {
-    expect(IMPLEMENTED).toContain('draft-read');
-    expect(IMPLEMENTED).toContain('structural-verifier');
-    expect(IMPLEMENTED).toContain('build-test-must-pass');
-    expect(IMPLEMENTED).toContain('interactive-verdict');
-    expect(IMPLEMENTED).toContain('code-review');
-    expect(IMPLEMENTED).toContain('security-audit');
-    expect(IMPLEMENTED).toHaveLength(8);
+  it('39.7 brings implemented coverage to twelve gates (every enum gate but anomaly-notify)', () => {
+    expect(IMPLEMENTED).toContain('coherence-check');
+    expect(IMPLEMENTED).toContain('approve');
+    expect(IMPLEMENTED).toContain('plan-review');
+    expect(IMPLEMENTED).toContain('per-task-verify');
+    expect(IMPLEMENTED).toHaveLength(12);
+    expect(PENDING).toHaveLength(0);
   });
 });
