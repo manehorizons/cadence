@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Phase 39.1 AC-7: bit-identical gate refusal transcripts > coverage gate: refusal stderr is bit-identical after extraction (AC-7) 1`] = `
+"coverage: AC-1 has no linked test (searched: packages/**/*.test.ts, packages/**/*.test.tsx)
+settle run refused: each AC needs at least one test that references its id (e.g. AC-1 in a describe/it). Pass --allow-missing-coverage to bypass, or --force to settle anyway.
+"
+`;
+
+exports[`Phase 39.1 AC-7: bit-identical gate refusal transcripts > deep-verify gate: refusal stderr is bit-identical after extraction (AC-7) 1`] = `
+"deep-verify: AC-1 failed — no linked test found (provider: mock)
+settle run --deep refused: the independent verifier rejected one or more ACs. Pass --force to settle anyway, or address the gaps.
+"
+`;
