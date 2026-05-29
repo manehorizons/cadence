@@ -82,6 +82,18 @@ export interface EmitPort {
     model?: string;
     bypassed?: boolean;
   }): Promise<void>;
+  /** skill-audit-miss anomaly (Phase 39.6 — checks/skill-audit). Wraps
+   *  emitSkillAuditMiss over the selected notifier. UNCONDITIONAL — NOT under the
+   *  anomaly-notify guard (a strict phase failing the requirement must still
+   *  leave an audit trail). */
+  skillAuditMiss(payload: {
+    required: string[];
+    invoked: string[];
+    missing: string[];
+    severity: 'warn' | 'error';
+    bypassed?: boolean;
+    unenforceable?: boolean;
+  }): Promise<void>;
 }
 
 /**
@@ -139,6 +151,8 @@ export interface SettleOpts {
   readonly interactive?: boolean;
   readonly allowCodeReviewFailure?: boolean;
   readonly allowSecurityAuditFailure?: boolean;
+  /** --allow-skill-audit-miss (Phase 39.6, skill-audit check). */
+  readonly allowSkillAuditMiss?: boolean;
 }
 
 /** Everything a gate may read. Built once, before the gate loop. Readonly. */

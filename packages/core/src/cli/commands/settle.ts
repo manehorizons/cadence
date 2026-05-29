@@ -25,6 +25,7 @@ import { runBuildTestGate } from '../../gates/build-test-must-pass.js';
 import { runInteractiveGate } from '../../gates/interactive.js';
 import { runCodeReviewGate } from '../../gates/code-review.js';
 import { runSecurityAuditGate } from '../../gates/security-audit.js';
+import { runSkillAuditCheck } from '../../checks/skill-audit.js';
 import {
   mergeInto,
   type SettleContext,
@@ -39,7 +40,6 @@ import { emitLoopViolation } from '../../notify/loop-violation.js';
 import { selectCodeReviewVerifier } from '../../verify/code-review-factory.js';
 import { emitCodeReviewHigh, emitCodeReviewUnconverged } from '../../notify/code-review.js';
 import { emitSkillAuditMiss } from '../../notify/skill-audit.js';
-import { missingSkills } from '../../verify/skill-match.js';
 import { selectSecurityAuditVerifier } from '../../verify/security-audit-factory.js';
 
 function parseAcArg(arg: string): AcResult {
@@ -230,6 +230,9 @@ export function registerSettleCommand(program: Command): void {
             ...(opts.allowSecurityAuditFailure !== undefined
               ? { allowSecurityAuditFailure: opts.allowSecurityAuditFailure }
               : {}),
+            ...(opts.allowSkillAuditMiss !== undefined
+              ? { allowSkillAuditMiss: opts.allowSkillAuditMiss }
+              : {}),
           },
           explicitIds,
           touchedFiles,
@@ -288,6 +291,8 @@ export function registerSettleCommand(program: Command): void {
               emitCodeReviewHigh(selectNotifier(cadenceConfig), findings, info),
             codeReviewUnconverged: (info) =>
               emitCodeReviewUnconverged(selectNotifier(cadenceConfig), info),
+            skillAuditMiss: (payload) =>
+              emitSkillAuditMiss(selectNotifier(cadenceConfig), payload),
           },
           runner: {
             test: async () => {
@@ -534,60 +539,20 @@ export function registerSettleCommand(program: Command): void {
           }
         }
 
-        // Required-skill enforcement (Phase 34.1 — ROADMAP 23.4). NOT a
-        // gates/engine.ts matrix cell: declaring skills IS the opt-in.
-        // cadenceConfig is `… | null` (null when loadConfig failed) — every
-        // deref is optional-chained, mirroring this file's other cadenceConfig?.
-        // sites. Deliberate null-config behavior: still compute+record the
-        // effective required (so SUMMARY stays truthful) but SKIP enforcement
-        // when config didn't load (cannot read telemetry reliably; never
-        // false-refuse on a degraded-config path — same never-false-refuse
-        // principle as the telemetry-off case).
+        // Required-skill enforcement (Phase 34.1 — ROADMAP 23.4). A checks/
+        // anomaly check, NOT a gates/engine.ts matrix cell (declaring skills IS
+        // the opt-in) — dispatched explicitly here, OUTSIDE the Phase 44.1
+        // registry. The check returns the effective required set; settle records
+        // it on state.skillAudit.required (truthful SUMMARY) on every non-refuse
+        // path — including the null-config / empty / telemetry-off skips. A
+        // refuse halts settle before SUMMARY, unchanged.
         {
-          const effectiveRequired = [
-            ...new Set([
-              ...(cadenceConfig?.skillAudit?.required ?? []),
-              ...(draft.requiredSkills ?? []),
-            ]),
-          ];
-          if (effectiveRequired.length > 0 && cadenceConfig) {
-            const invoked = state.skillAudit.invoked;
-            if (!cadenceConfig.telemetry.skillInvocations) {
-              await emitSkillAuditMiss(selectNotifier(cadenceConfig), {
-                required: effectiveRequired,
-                invoked,
-                missing: effectiveRequired,
-                severity: 'warn',
-                unenforceable: true,
-              });
-            } else {
-              const missing = missingSkills(effectiveRequired, invoked);
-              if (missing.length > 0) {
-                const bypass = opts.allowSkillAuditMiss === true;
-                await emitSkillAuditMiss(selectNotifier(cadenceConfig), {
-                  required: effectiveRequired,
-                  invoked,
-                  missing,
-                  severity: bypass ? 'warn' : 'error',
-                  ...(bypass ? { bypassed: true } : {}),
-                });
-                if (!bypass) {
-                  process.stderr.write(
-                    `settle run refused: required skill(s) not invoked: ${missing.join(', ')}. ` +
-                      `Invoke them, or pass --allow-skill-audit-miss to override.\n`,
-                  );
-                  process.exitCode = 1;
-                  return;
-                }
-                process.stderr.write(
-                  `skill-audit: --allow-skill-audit-miss set; proceeding past ${missing.length} missing skill(s).\n`,
-                );
-              }
-            }
+          const res = await runSkillAuditCheck(ctx);
+          if (res.outcome === 'refuse') {
+            process.exitCode = 1;
+            return;
           }
-          // Make Summary.skillAudit.required truthful (was always []) —
-          // recorded even on the null-config skip path.
-          state.skillAudit.required = effectiveRequired;
+          state.skillAudit.required = res.effectiveRequired;
         }
 
         const summary: Summary = {
