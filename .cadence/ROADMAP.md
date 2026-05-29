@@ -379,28 +379,40 @@ Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (ho
 - **Deletion-test discipline.** Every phase passes: delete the command/handler that triggered the gate, and the gate logic is still discoverable + reusable from the new module.
 - **Bit-identical contract.** No phase changes user-visible behavior. Golden transcripts / snapshot tests anchor each extraction.
 
-### Phase 39.1 — Lift the coverage gate out of settle.ts
+**Pressure-test revisions** (set 2026-05-29 — code-grounded review of the roadmap against `gates/engine.ts`, `settle.ts`, the `Gate` enum in `packages/types/src/profile.ts`, and the verify/notify dirs):
+- **Registry endgame, hybrid-sequenced.** `gates/engine.ts` already computes the ordered `effectiveGateSet().gates: Gate[]`, and `settle.ts` already guards each inline block with `gateSet.gates.includes(<gate>)` — the engine's gate set is *already partially load-bearing*. 39.x extracts gates as hand-wired `runXGate(ctx)` calls (low blast radius), but **39.1 designs a registry-ready, uniform `GateImpl(ctx) => Promise<GateResult>` shape**. A new **Phase 44.1** then converts the hand-wired calls into an engine-driven `Record<Gate, GateImpl>` registry that `settle` drives by iterating `effectiveGateSet().gates`. This makes `gatesFor` load-bearing (one source of truth for which gates fire *and* in what order) instead of advisory. Consistent with 40.1/42.1's consolidate-the-duplication philosophy, deferred so the per-phase extractions stay mechanical.
+- **Total registry over the `Gate` enum.** The enum has 13 members; the original roadmap extracted only 9 and left `structural-verifier`, `build-test-must-pass`, `draft-read`, `anomaly-notify` inline. **Phase 39.2** (freed up — deep-verify moved into 39.1) extracts the first three as discrete gate impls so the registry is *total*. **`anomaly-notify` is the deliberate exception** — it is not a discrete gate but a cross-cutting emission toggle threaded through other gates' blocks (`settle.ts:517,541,734`, plus `build.ts`, `hooks/handlers.ts`); it stays a `ctx.shouldNotify` flag the other impls consult, **not** a registry entry. Net registry = 12 discrete impls + 1 modifier flag.
+- **Non-gates move out of `gates/`.** `skill-audit` (39.6) and `boundary` (43.1) are **not** in the `Gate` enum — they are anomaly checks, not profile×tier gates. They relocate to a new **`packages/core/src/checks/`** namespace and stay *outside* the registry. Keeps `gates/` coherent: one decision engine + 12 enum-gate impls.
+- **Ports decouple the consolidations.** Gates depend on injected collaborators carried by `SettleContext` — a **verifier port** (already implied by 39.2) and an **emit port** (`ctx.emitUnconverged`). 39.4/39.7 wire to the emit *port*, so 40.1 (verifier factory) and 42.1 (emit spine) consolidate *behind* the ports — invisible to the gates. This makes "40.1/41.1/42.1 independent" actually true and removes the 42.1-vs-39.4/39.7 double-touch churn.
+- **De-risk 39.1.** 39.1 extracts **two** gates (coverage **and** deep-verify) to validate the `SettleContext`/`GateResult`/`GateImpl` shape against real variety before six more phases commit to it.
+- **Estimate corrections.** `draft.ts` is **506 LoC** (roadmap said 456). 41.1's "~23 call sites" is closer to **~13 `renderStateMd` references across ~7 files**, and the interface is named **`StateBackend`** (not `Backend`). ACs updated to real numbers below.
 
-**Objective.** Pull the inline test-coverage gate from `cli/commands/settle.ts` (currently 900 LoC, gate inlined) into `core/src/gates/coverage.ts` exposing `runCoverageGate(ctx: SettleContext): Promise<GateResult>`. Settle builds context and routes; no policy stays inline.
+### Phase 39.1 — Lift the coverage + deep-verify gates out of settle.ts (shape-defining phase)
+
+**Objective.** Pull **two** inline gates from `cli/commands/settle.ts` (currently 900 LoC, gates inlined in one ~800-line command action) into `core/src/gates/` — the test-coverage gate and the `--deep` verifier gate — and in doing so **define the shared `SettleContext` / `GateResult` / `GateImpl` contract** the rest of v1.3 consumes. Two gates (not one) so the shape is validated against real variety — a pure-policy gate (coverage) and a port-consuming gate (deep-verify needs an injected verifier) — before six more phases commit to it. Settle builds context and routes; no policy stays inline.
+
+**Registry-ready shape (load-bearing for Phase 44.1).** `GateImpl` is `(ctx: SettleContext) => Promise<GateResult>` — uniform across every gate, so 44.1 can drop the modules into a `Record<Gate, GateImpl>` registry with no re-extraction. `SettleContext` carries **injected collaborator ports**: a `verifier` port and an `emitUnconverged` port (so 40.1/42.1 consolidate behind them), plus `shouldNotify` (the `anomaly-notify` toggle — see Pressure-test revisions). `GateResult` is a uniform `{ outcome, anomalies?, summaryPatch? }` shape, not gate-specific returns.
 
 **Files.**
 - `packages/core/src/gates/coverage.ts` (new).
-- `packages/core/src/gates/types.ts` (new) — `SettleContext`, `GateResult` shared with subsequent 39.x phases.
-- `packages/core/src/cli/commands/settle.ts` — replace inline block with `runCoverageGate(ctx)`.
-- `packages/core/tests/gates/coverage.test.ts` (new) — tests target the gate directly, not the CLI surface.
+- `packages/core/src/gates/deep-verify.ts` (new — moved up from old 39.2).
+- `packages/core/src/gates/types.ts` (new) — `SettleContext`, `GateResult`, `GateImpl`, and the port interfaces (`VerifierPort`, `EmitPort`), shared with all subsequent 39.x phases.
+- `packages/core/src/cli/commands/settle.ts` — replace both inline blocks with `runCoverageGate(ctx)` / `runDeepVerifyGate(ctx)`.
+- `packages/core/tests/gates/{coverage,deep-verify}.test.ts` (new) — tests target the gates directly, not the CLI surface.
 
-**ACs.** (1) `runCoverageGate(ctx)` is the single home for coverage-gate logic. (2) `settle.ts` no longer references `verification.testGlobs` or coverage parsing directly. (3) Gate test reaches every branch without standing up the CLI stack. (4) Settle-time behavior bit-identical to pre-extraction (transcript-snapshot test). (5) `settle.ts` net LoC drops by the inline block's size + framing.
+**ACs.** (1) `runCoverageGate(ctx)` and `runDeepVerifyGate(ctx)` are the single homes for their gate logic. (2) `GateImpl` shape is uniform across both and registry-ready (validated by both gates conforming without per-gate casts). (3) `settle.ts` no longer references `verification.testGlobs` or coverage/deep-verify parsing directly. (4) Gate tests reach every branch without standing up the CLI stack. (5) Verifier reaches deep-verify via the `ctx.verifier` port, not a direct factory import. (6) Settle-time behavior bit-identical to pre-extraction (transcript-snapshot test). (7) `settle.ts` net LoC drops by both inline blocks' size + framing.
 
-### Phase 39.2 — Lift the deep-verify gate out of settle.ts
+### Phase 39.2 — Lift the remaining always-fire / cheap enum gates (registry completion)
 
-**Objective.** Same pattern as 39.1 for the Phase 15 `--deep` verifier gate. `gates/deep-verify.ts` exposing `runDeepVerifyGate(ctx)`.
+**Objective.** (Pressure-test addition — *total registry over the enum*.) The original roadmap left four `Gate`-enum members inline. This phase extracts the three that are discrete checks — `structural-verifier`, `build-test-must-pass`, `draft-read` (the Phase 23.1 DRAFT-read mtime gate at `settle.ts:171`) — into `gates/{structural-verifier,build-test,draft-read}.ts`, conforming to the `GateImpl` shape from 39.1. After this, every enum gate except `anomaly-notify` has a discrete module, so Phase 44.1's registry can be *total*. `anomaly-notify` is intentionally NOT extracted — it is a cross-cutting `ctx.shouldNotify` emission toggle, not a discrete gate.
 
 **Files.**
-- `packages/core/src/gates/deep-verify.ts` (new).
-- `packages/core/src/cli/commands/settle.ts`.
-- `packages/core/tests/gates/deep-verify.test.ts` (new).
+- `packages/core/src/gates/{structural-verifier,build-test,draft-read}.ts` (new).
+- `packages/core/src/cli/commands/settle.ts` — replace the three inline blocks with gate calls.
+- `packages/core/src/cli/commands/draft.ts` — these three also appear in draft's path; route there too.
+- `packages/core/tests/gates/{structural-verifier,build-test,draft-read}.test.ts` (new).
 
-**ACs.** (1) Gate lives in its own module. (2) Settle.ts routes only. (3) Tests target gate. (4) Behavior bit-identical. (5) Verifier-factory wiring stays intact (verifier injected via `SettleContext`).
+**ACs.** (1) Three new gate modules conform to the 39.1 `GateImpl` shape. (2) `settle.ts` and `draft.ts` route only for these gates — no inline policy. (3) The `gateSet.gates.includes('draft-read')` guard semantics (mtime baseline + `--allow-stale-draft`) preserved. (4) Tests target gates, not the CLI. (5) Behavior bit-identical. (6) Every `Gate` enum member except `anomaly-notify` now has a discrete `gates/*.ts` module.
 
 ### Phase 39.3 — Lift the interactive AC-walker out of settle.ts
 
@@ -418,11 +430,11 @@ Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (ho
 **Objective.** Pull the Phase 24.3 code-review verifier gate **and** its Phase 37.1 convergence sidecar into one module: `gates/code-review.ts`. The convergence-sidecar centralization is the bonus win the architecture review called out for this phase.
 
 **Files.**
-- `packages/core/src/gates/code-review.ts` (new) — `runCodeReviewGate(ctx)` calls the verifier, drives the `nextConvergence` loop, writes the `<id>-CODE-REVIEW.json` sidecar, emits convergence anomalies.
+- `packages/core/src/gates/code-review.ts` (new) — `runCodeReviewGate(ctx)` calls the verifier **via `ctx.verifier`**, drives the `nextConvergence` loop, writes the `<id>-CODE-REVIEW.json` sidecar, emits convergence anomalies **via `ctx.emitUnconverged`** (the port — not a direct `notify/code-review.ts` import).
 - `packages/core/src/cli/commands/settle.ts`.
 - `packages/core/tests/gates/code-review.test.ts` (new).
 
-**ACs.** (1) Gate + sidecar live in one module. (2) Phase 35.1 `nextConvergence` primitive consumed without modification. (3) `--allow-code-review-failure` and `--force` contracts preserved. (4) Settle.ts routes only. (5) Sidecar attempts + escalation behavior bit-identical to Phase 37.1 baseline (snapshot-tested).
+**ACs.** (1) Gate + sidecar live in one module. (2) Phase 35.1 `nextConvergence` primitive consumed without modification. (3) `--allow-code-review-failure` and `--force` contracts preserved. (4) Settle.ts routes only. (5) Sidecar attempts + escalation behavior bit-identical to Phase 37.1 baseline (snapshot-tested). (6) Convergence anomalies emitted through `ctx.emitUnconverged`, so 42.1's spine swap is invisible here (no re-touch).
 
 ### Phase 39.5 — Lift the security-audit gate out of settle.ts
 
@@ -435,27 +447,27 @@ Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (ho
 
 **ACs.** (1) Gate is one module. (2) `--allow-security-audit-failure` / `--force` preserved. (3) `Summary.securityAudit` recording stays. (4) CRITICAL refusal preserved. (5) Behavior bit-identical.
 
-### Phase 39.6 — Lift the skill-audit gate out of settle.ts
+### Phase 39.6 — Lift the skill-audit check out of settle.ts (into `checks/`, not `gates/`)
 
-**Objective.** Pull the Phase 34.1 required-skill enforcement (skill-audit-miss anomaly + `--allow-skill-audit-miss` bypass) into `gates/skill-audit.ts`.
+**Objective.** Pull the Phase 34.1 required-skill enforcement (skill-audit-miss anomaly + `--allow-skill-audit-miss` bypass) into `checks/skill-audit.ts`. **Note (pressure-test):** `skill-audit` is **not** a member of the `Gate` enum — it's an anomaly check, not a profile×tier gate — so it lives in the new `packages/core/src/checks/` namespace and stays *outside* the Phase 44.1 registry. It may still reuse the `GateResult` shape for a uniform return, but it is dispatched explicitly, not via the gate set.
 
 **Files.**
-- `packages/core/src/gates/skill-audit.ts` (new).
+- `packages/core/src/checks/skill-audit.ts` (new).
 - `packages/core/src/cli/commands/settle.ts`.
-- `packages/core/tests/gates/skill-audit.test.ts` (new).
+- `packages/core/tests/checks/skill-audit.test.ts` (new).
 
-**ACs.** (1) Gate is one module. (2) DRAFT frontmatter `requiredSkills` ∪ `config.skillAudit.required` union semantics preserved. (3) `--allow-skill-audit-miss` bypass preserved. (4) `state.skillAudit.invoked[]` source-of-truth unchanged. (5) Behavior bit-identical.
+**ACs.** (1) Check is one module under `checks/`. (2) DRAFT frontmatter `requiredSkills` ∪ `config.skillAudit.required` union semantics preserved. (3) `--allow-skill-audit-miss` bypass preserved. (4) `state.skillAudit.invoked[]` source-of-truth unchanged. (5) Behavior bit-identical. (6) `checks/` is not referenced by `gates/engine.ts` or the registry — dispatched explicitly from settle.
 
 ### Phase 39.7 — Lift the draft + build command gates
 
-**Objective.** With settle.ts now a router, do the same for `draft.ts` (456 LoC) and `build.ts` (274 LoC). Draft holds the approve, plan-review (+ Phase 35.1 convergence sidecar), and coherence gates; build holds per-task-verify (Phase 24.2). One phase covers both because each gate is small in isolation.
+**Objective.** With settle.ts now a router, do the same for `draft.ts` (**506 LoC** as of 2026-05-29) and `build.ts` (274 LoC). Draft holds the approve, plan-review (+ Phase 35.1 convergence sidecar), and coherence gates; build holds per-task-verify (Phase 24.2). One phase covers both because each gate is small in isolation. Plan-review's convergence emission goes through `ctx.emitUnconverged` (the port), same as 39.4.
 
 **Files.**
 - `packages/core/src/gates/{approve, plan-review, coherence, per-task-verify}.ts` (new).
 - `packages/core/src/cli/commands/{draft, build}.ts` — shrink to routers.
 - `packages/core/tests/gates/{approve, plan-review, coherence, per-task-verify}.test.ts` (new per gate).
 
-**ACs.** (1) Four new gate modules exist. (2) `draft.ts` drops under 200 LoC. (3) `build.ts` drops under 150 LoC. (4) Plan-review convergence sidecar preserved (`nextConvergence` consumed unchanged). (5) Phase 24.1, 24.2, 25.1 contracts all preserved. (6) Behavior bit-identical at the CLI surface (transcript snapshots).
+**ACs.** (1) Four new gate modules exist, conforming to the 39.1 `GateImpl` shape. (2) `draft.ts` drops under 200 LoC (a steeper cut than first scoped — it's 506, not 456). (3) `build.ts` drops under 150 LoC. (4) Plan-review convergence sidecar preserved (`nextConvergence` consumed unchanged), emitted via `ctx.emitUnconverged`. (5) Phase 24.1, 24.2, 25.1 contracts all preserved. (6) Behavior bit-identical at the CLI surface (transcript snapshots).
 
 ### Phase 40.1 — Verifier factory consolidation
 
@@ -470,19 +482,19 @@ Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (ho
 
 ### Phase 41.1 — Backend `commit(state)` seam
 
-**Objective.** (Architecture review candidate #3.) Backend interface is too narrow: ~23 call sites across `cli/commands/`, `hooks/handlers.ts`, `intelligence/`, `init/`, `build/`, `config/` pair `backend.writeState(state)` with a manual `renderStateMd(state)` + `atomicWriteText(STATE.md, …)`. Forgetting the second step = stale `STATE.md`. Add `backend.commit(state)` that writes both artefacts; demote `writeState` to package-internal.
+**Objective.** (Architecture review candidate #3.) The `StateBackend` interface (`state/backend.ts:3` — note: named `StateBackend`, not `Backend`) is too narrow: **~13 `renderStateMd` references across ~7 files** (`cli/commands/{settle,draft,init,spec}.ts`, `hooks/handlers.ts`, `build/record.ts`) pair `backend.writeState(state)` with a manual `renderStateMd(state)` + `atomicWriteText(STATE.md, …)`. Forgetting the second step = stale `STATE.md`. Add `backend.commit(state)` that writes both artefacts; demote `writeState` to package-internal.
 
 **Files.**
-- `packages/core/src/state/backend.ts` — add `commit(state): Promise<void>` to the `Backend` interface; implement in `SimpleBackend`.
+- `packages/core/src/state/backend.ts` — add `commit(state): Promise<void>` to the `StateBackend` interface; implement in `SimpleBackend`.
 - `packages/core/src/state/simple.ts`.
-- All ~23 call sites — swap the two-step pattern for `commit(state)`.
+- All two-step call sites (~13 across ~7 files) — swap the two-step pattern for `commit(state)`.
 - `packages/core/tests/state/commit.test.ts` (new) — both artefacts written atomically.
 
-**ACs.** (1) `backend.commit(state)` writes `state.json` and `STATE.md` together. (2) No caller outside `state/` imports `renderStateMd` directly. (3) `writeState` is no longer in the public `Backend` interface (or is clearly marked internal). (4) A new state-derived artefact can be added by changing one method. (5) Whole class of stale-STATE.md bugs gone — no two-step path remains for callers to omit.
+**ACs.** (1) `backend.commit(state)` writes `state.json` and `STATE.md` together. (2) No caller outside `state/` imports `renderStateMd` directly. (3) `writeState` is no longer in the public `StateBackend` interface (or is clearly marked internal). (4) A new state-derived artefact can be added by changing one method. (5) Whole class of stale-STATE.md bugs gone — no two-step path remains for callers to omit.
 
 ### Phase 42.1 — `emitUnconverged` notify spine
 
-**Objective.** (Architecture review candidate #4.) Three convergence emitters under `packages/core/src/notify/` (`plan-review.ts`, `spec-review.ts`, `code-review.ts` — ~48 LoC each) share an identical try / notify / stderr-degrade spine; ~70 % is duplication. Extract `emitUnconverged(notifier, kind, payload)`; the three sites supply only the payload.
+**Objective.** (Architecture review candidate #4.) Three convergence emitters under `packages/core/src/notify/` (`plan-review.ts`, `spec-review.ts`, `code-review.ts` — ~48 LoC each) share an identical try / notify / stderr-degrade spine; ~70 % is duplication. Extract `emitUnconverged(notifier, kind, payload)`; the three sites supply only the payload. **Decoupled by design (pressure-test):** 39.4/39.7 already consume convergence emission through the `ctx.emitUnconverged` port, so this phase is a pure internal swap *behind* the port — the extracted gates need no re-touch, and 42.1 is genuinely order-independent w.r.t. 39.x.
 
 **Files.**
 - `packages/core/src/notify/emit-unconverged.ts` (new) — the spine: try, notify, degrade-on-throw, ts-stamp.
@@ -491,20 +503,33 @@ Sequence: #6 ✓ → #2 ✓ → #1 ✓ → #4 ✓ → #1b ✓ ; #3/#5 parked (ho
 
 **ACs.** (1) `emitUnconverged` is the single home for the transport contract. (2) Each of the three emitters becomes ≤ 8 LoC (payload + call). (3) Stderr-degrade behavior identical across all three kinds (centrally tested). (4) Adding a fourth convergence emitter costs ≤ 4 LoC. (5) Notifier injection seam unchanged.
 
-### Phase 43.1 — Drain gate logic from `handlePreToolEdit`
+### Phase 43.1 — Drain boundary-check logic from `handlePreToolEdit` (into `checks/`)
 
-**Objective.** (Architecture review candidate #5.) The `handlePreToolEdit` handler in `hooks/handlers.ts` inlines five layers (parse DRAFT, walk files vs. `task.files`, decide boundary, build `AnomalyEvent`, notify with stderr fallback). Same intent as the settle-time boundary detection in `collectAnomalies`, but distinct code. Extract `gates/boundary.ts` with `runBoundaryGate(ctx)`; both `handlePreToolEdit` and the settle-time collector call it.
+**Objective.** (Architecture review candidate #5.) The `handlePreToolEdit` handler in `hooks/handlers.ts` inlines five layers (parse DRAFT, walk files vs. `task.files`, decide boundary, build `AnomalyEvent`, notify with stderr fallback). Same intent as the settle-time boundary detection in `collectAnomalies`, but distinct code. Extract `checks/boundary.ts` with `runBoundaryCheck(ctx)`; both `handlePreToolEdit` and the settle-time collector call it. **Note (pressure-test):** boundary is **not** in the `Gate` enum — it's a hook-time + settle-time anomaly check — so it lives in `checks/` alongside skill-audit (39.6), *outside* the Phase 44.1 registry.
 
-**Depends on.** 39.1–39.7 (gate-module pattern established) and ideally 41.1 (commit seam).
+**Depends on.** 39.1–39.7 (the `GateResult`/port pattern + `checks/` namespace established) and ideally 41.1 (commit seam).
 
 **Files.**
-- `packages/core/src/gates/boundary.ts` (new).
+- `packages/core/src/checks/boundary.ts` (new).
 - `packages/core/src/hooks/handlers.ts` — `handlePreToolEdit` returns to dispatch + return shape.
-- `packages/core/src/cli/commands/settle.ts` (or wherever `collectAnomalies` lives) — replace inline boundary check with `runBoundaryGate(ctx)`.
-- `packages/core/tests/gates/boundary.test.ts` (new) — tests target the gate, not the hook.
+- `packages/core/src/cli/commands/settle.ts` (or wherever `collectAnomalies` lives) — replace inline boundary check with `runBoundaryCheck(ctx)`.
+- `packages/core/tests/checks/boundary.test.ts` (new) — tests target the check, not the hook.
 
-**ACs.** (1) Boundary detection lives in one module. (2) Hook handler and settle-time path both call it — one rule, two emission points. (3) Hook handler shrinks to dispatch + gate + return. (4) Tests target the gate, not the hook. (5) Behavior bit-identical at both call sites.
+**ACs.** (1) Boundary detection lives in one module under `checks/`. (2) Hook handler and settle-time path both call it — one rule, two emission points. (3) Hook handler shrinks to dispatch + check + return. (4) Tests target the check, not the hook. (5) Behavior bit-identical at both call sites.
+
+### Phase 44.1 — Engine-driven gate registry (the hybrid endgame)
+
+**Objective.** (Pressure-test addition — *registry endgame*.) With every enum gate now a discrete `GateImpl` module (39.1–39.7 + 39.2), convert settle's hand-wired `if (gateSet.gates.includes(X)) { runXGate(ctx) }` sequence into a single engine-driven dispatch: a `Record<Gate, GateImpl>` registry that settle drives by **iterating `effectiveGateSet(state, config, draft).gates`**. This makes `gates/engine.ts` load-bearing at runtime — *one* source of truth for both *which* gates fire and *in what order* — instead of the order living redundantly in settle's call sequence. `anomaly-notify` stays a `ctx.shouldNotify` flag consulted inside the impls (not a registry entry); `checks/` modules (skill-audit, boundary) stay explicitly dispatched, outside the registry.
+
+**Depends on.** 39.1–39.7 + 39.2 (all 12 discrete enum-gate impls must exist and share the `GateImpl` shape).
+
+**Files.**
+- `packages/core/src/gates/registry.ts` (new) — `const GATE_REGISTRY: Record<Gate, GateImpl>` + a `runGates(ctx, gateSet)` driver that iterates `gateSet.gates` in order.
+- `packages/core/src/cli/commands/settle.ts` — replace the hand-wired gate sequence with `runGates(ctx, gateSet)`.
+- `packages/core/tests/gates/registry.test.ts` (new) — registry totality (every non-`anomaly-notify` `Gate` member has an entry, enforced at type level) + ordering preserved.
+
+**ACs.** (1) `GATE_REGISTRY` is total over `Gate` minus `anomaly-notify` — missing an entry is a compile error (exhaustive `Record`). (2) Settle dispatches by iterating `effectiveGateSet().gates`; no gate name is hardcoded in settle's control flow. (3) Firing order matches the pre-44.1 sequence (snapshot-tested) — `engine.ts` ordering is now authoritative. (4) Adding a future gate = add an enum member + a registry entry; settle is untouched. (5) Behavior bit-identical at the CLI surface.
 
 ---
 
-Entry point next session: three named tracks — **v1.3.0 Architecture deepening** (NEW, sequenced first; start with **Phase 39.1 coverage gate** to establish the `SettleContext` / `GateResult` shapes the rest of 39.x consumes), **v1.4.0 Public release** (renumbered from v1.2.0; gated on the repo-visibility decision), and **v1.2.0 Feature expansion** (COMPLETE — no non-parked work). All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) and v1.2 feature expansion (34.1–38.1) are shipped.
+Entry point next session: three named tracks — **v1.3.0 Architecture deepening** (NEW, sequenced first; start with **Phase 39.1** — extract coverage **+ deep-verify** together to lock the registry-ready `SettleContext` / `GateResult` / `GateImpl` shape + the verifier/emit ports that the rest of 39.x consumes; then 39.2 completes enum coverage, 39.3–39.7 extract the rest, 40.1/41.1/42.1 consolidate behind the ports in any order, 43.1 + the `checks/` relocations, and **44.1 flips to the engine-driven registry** last), **v1.4.0 Public release** (renumbered from v1.2.0; gated on the repo-visibility decision), and **v1.2.0 Feature expansion** (COMPLETE — no non-parked work). All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) and v1.2 feature expansion (34.1–38.1) are shipped.

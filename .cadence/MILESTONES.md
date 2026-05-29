@@ -90,19 +90,20 @@ Deferred to v1.2+: Slice 34.3 (`--from-rec` ergonomic on `spec new`), Slice 34.4
 Per ROADMAP entry-point note: #6 → #2 → #1 → #4 → #1b shipped; #3/#5 parked (host-agnostic-anchor conflict). v1.2 feature-expansion track has no non-parked work remaining; the residue rolls into v1.3 or later named milestones.
 
 ### v1.3.0 — Architecture deepening
-Source: `/tmp/architecture-review-20260525-103233.html` (6-candidate review run on 2026-05-25 against `praxis-intelligence-ledger` branch via the `improve-codebase-architecture` skill). Theme: pull policy out of CLI commands into reusable deep modules; collapse adapter farms into one generic factory; close half-leaking seams. No new user-facing features.
+Source: `/tmp/architecture-review-20260525-103233.html` (6-candidate review run on 2026-05-25 against `praxis-intelligence-ledger` branch via the `improve-codebase-architecture` skill); **pressure-tested + revised 2026-05-29** (registry endgame, total enum coverage, `checks/` split, ctx ports — see ROADMAP.md anchor decisions). Theme: pull policy out of CLI commands into reusable deep modules; collapse adapter farms into one generic factory; close half-leaking seams. No new user-facing features.
 
-- **Phase 39.1** — Lift coverage gate out of `settle.ts`.
-- **Phase 39.2** — Lift deep-verify gate out of `settle.ts`.
+- **Phase 39.1** — Lift coverage **+ deep-verify** gates out of `settle.ts`; define the registry-ready `SettleContext`/`GateResult`/`GateImpl` shape + verifier/emit ports (shape-defining).
+- **Phase 39.2** — Lift the remaining enum gates (`structural-verifier`, `build-test-must-pass`, `draft-read`) for total registry coverage; `anomaly-notify` stays a `ctx.shouldNotify` flag.
 - **Phase 39.3** — Lift interactive AC-walker out of `settle.ts`.
-- **Phase 39.4** — Lift code-review gate (+ convergence sidecar) out of `settle.ts`.
+- **Phase 39.4** — Lift code-review gate (+ convergence sidecar) out of `settle.ts`; emit via `ctx.emitUnconverged`.
 - **Phase 39.5** — Lift security-audit gate out of `settle.ts`.
-- **Phase 39.6** — Lift skill-audit gate out of `settle.ts`.
-- **Phase 39.7** — Lift draft + build command gates (`approve`, `plan-review`, `coherence`, `per-task-verify`).
-- **Phase 40.1** — Verifier factory consolidation (6 factories → 1 generic + 6 thin bindings).
-- **Phase 41.1** — Backend `commit(state)` seam (closes the 23-call-site two-step).
-- **Phase 42.1** — `emitUnconverged` notify spine (3 emitters → 1 spine + 3 payloads).
-- **Phase 43.1** — Drain gate logic from `handlePreToolEdit` (depends on 39.x).
+- **Phase 39.6** — Lift skill-audit **check** into `checks/` (not a `Gate` enum member; outside the registry).
+- **Phase 39.7** — Lift draft + build command gates (`approve`, `plan-review`, `coherence`, `per-task-verify`); `draft.ts` is 506 LoC.
+- **Phase 40.1** — Verifier factory consolidation (6 factories → 1 generic + 6 thin bindings); behind the `ctx.verifier` port.
+- **Phase 41.1** — `StateBackend.commit(state)` seam (closes the ~13-site two-step across ~7 files).
+- **Phase 42.1** — `emitUnconverged` notify spine (3 emitters → 1 spine + 3 payloads); pure swap behind the `ctx.emitUnconverged` port.
+- **Phase 43.1** — Drain boundary **check** from `handlePreToolEdit` into `checks/` (depends on 39.x).
+- **Phase 44.1** — Engine-driven gate registry: settle dispatches by iterating `effectiveGateSet().gates` over an exhaustive `Record<Gate, GateImpl>` (depends on all enum-gate impls).
 
 ### v1.4.0 — Public release (deferred, named; renumbered from v1.2.0 on 2026-05-25)
 - Real public-npm publish of `@cadence/{core,types,host-claude-code}`.
