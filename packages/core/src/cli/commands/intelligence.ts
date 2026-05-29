@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
+  AUDIT_KINDS,
   computeIntelligenceAudit,
   computeIntelligenceStats,
   readAssumptionLedger,
@@ -10,6 +11,8 @@ import {
   readIntelligenceDecisionLedger,
   readRecommendationLedger,
   runIntelligenceReconcile,
+  type AuditKind,
+  type IntelligenceAuditReport,
 } from '../../intelligence/store.js';
 import { renderIntelligenceStats } from '../../intelligence/render-intelligence-stats.js';
 import { renderIntelligenceAudit } from '../../intelligence/render-intelligence-audit.js';
@@ -117,12 +120,26 @@ export function registerIntelligenceCommand(program: Command): void {
     )
     .option('--quiet', 'Exit 0 even when findings are present (script-friendly)', false)
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
-    .action(async (opts: { quiet?: boolean; format?: string }) => {
+    .option(
+      '--filter-kind <kind>',
+      `Filter audit findings to a single finding kind. Allowed: ${AUDIT_KINDS.join(', ')}.`,
+    )
+    .action(async (opts: { quiet?: boolean; format?: string; filterKind?: string }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
           process.stderr.write(
             `intelligence audit failed: unsupported format: ${format}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        if (
+          opts.filterKind !== undefined &&
+          !(AUDIT_KINDS as readonly string[]).includes(opts.filterKind)
+        ) {
+          process.stderr.write(
+            `intelligence audit failed: invalid kind: '${opts.filterKind}' (allowed: ${AUDIT_KINDS.join(', ')})\n`,
           );
           process.exitCode = 1;
           return;
@@ -174,14 +191,27 @@ export function registerIntelligenceCommand(program: Command): void {
           decLedger,
           existingPhaseIds,
         );
+        const filterKind = opts.filterKind as AuditKind | undefined;
+        const view: IntelligenceAuditReport =
+          filterKind === undefined
+            ? report
+            : {
+                findings: report.byKind[filterKind],
+                byKind: Object.fromEntries(
+                  AUDIT_KINDS.map((k) => [k, k === filterKind ? report.byKind[k] : []]),
+                ) as IntelligenceAuditReport['byKind'],
+              };
         if (format === 'json') {
-          process.stdout.write(JSON.stringify(report, null, 2) + '\n');
+          process.stdout.write(JSON.stringify(view, null, 2) + '\n');
         } else {
-          const md = renderIntelligenceAudit(report);
+          const md = renderIntelligenceAudit(
+            view,
+            filterKind === undefined ? undefined : { filterKind },
+          );
           process.stdout.write(md);
           if (!md.endsWith('\n')) process.stdout.write('\n');
         }
-        if (report.findings.length > 0 && !opts.quiet) {
+        if (view.findings.length > 0 && !opts.quiet) {
           process.exitCode = 1;
         }
       } catch (err) {

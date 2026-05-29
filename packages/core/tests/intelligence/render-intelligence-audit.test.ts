@@ -175,4 +175,52 @@ describe('renderIntelligenceAudit (Slice 19)', () => {
       expect(converted).toBeLessThan(remediation);
     });
   });
+
+  describe('Slice 38: --filter-kind tailored render', () => {
+    it('AC-kind-2 (render): empty report + filterKind → kind-echoed empty message', () => {
+      const md = renderIntelligenceAudit(mkReport([]), { filterKind: 'orphan-decision' });
+      expect(md).toBe('No intelligence audit findings of kind "orphan-decision".\n');
+    });
+
+    it('AC-kind-1 (render): non-empty filtered → kind-echoed header + only that section', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'orphan-decision', decisionId: 'dec-1', missingRecId: 'rec-gone' },
+        ]),
+        { filterKind: 'orphan-decision' },
+      );
+      expect(md).toMatch(/Found 1 integrity issue\(s\) of kind "orphan-decision":/);
+      expect(md).toMatch(/## Orphan Decisions \(1\)/);
+      expect(md).toMatch(/- dec-1 references missing rec: rec-gone/);
+    });
+
+    it('AC-kind-6 (render): filtered Remediation shows ONLY the relevant family bullet', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'orphan-decision', decisionId: 'dec-1', missingRecId: 'rec-gone' },
+        ]),
+        { filterKind: 'orphan-decision' },
+      );
+      expect(md).toMatch(/## Remediation/);
+      expect(md).toMatch(/For orphan subjects:/);
+      expect(md).not.toMatch(/For broken rec→subject links:/);
+      expect(md).not.toMatch(/cadence decision reactivate <id>/);
+      expect(md).not.toMatch(/For stale converted-to-phase refs:/);
+    });
+
+    it('AC-kind-7 (render): omitting filterKind is byte-identical to the legacy call', () => {
+      const findings: IntelligenceAuditFinding[] = [
+        { kind: 'broken-assumption-link', recId: 'rec-1', assumptionId: 'as-missing' },
+        { kind: 'stale-supersededby', decisionId: 'dec-1', missingTargetId: 'dec-x' },
+      ];
+      expect(renderIntelligenceAudit(mkReport(findings))).toBe(
+        renderIntelligenceAudit(mkReport(findings), {}),
+      );
+      const md = renderIntelligenceAudit(mkReport(findings));
+      expect(md).toMatch(/For broken rec→subject links:/);
+      expect(md).toMatch(/For orphan subjects:/);
+      expect(md).toMatch(/cadence decision reactivate <id>/);
+      expect(md).toMatch(/For stale converted-to-phase refs:/);
+    });
+  });
 });

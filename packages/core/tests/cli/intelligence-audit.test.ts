@@ -297,4 +297,106 @@ describe('cadence intelligence audit (Slice 19)', () => {
       expect(r.stdout).toMatch(/## Stale converted-to-phase Refs \(1\)/);
     });
   });
+
+  describe('Slice 38: --filter-kind', () => {
+    async function plantOrphanAssumption(root: string): Promise<void> {
+      const rec = await addRecommendation(root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await addAssumption(root, { recommendationId: rec.id, text: 'A' });
+      const asPath = join(root, '.cadence/intelligence/assumptions.json');
+      const asJson = JSON.parse(await readFile(asPath, 'utf8'));
+      asJson.assumptions.push({
+        id: 'as-orphan-001',
+        recommendationId: 'rec-missing',
+        text: 'orphan',
+        status: 'open',
+        createdAt: '2026-05-20T00:00:00.000Z',
+      });
+      await writeFile(asPath, JSON.stringify(asJson));
+    }
+
+    it('AC-kind-1: --filter-kind matching → only that section, kind-echoed header, exit 1', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice38' });
+      await plantOrphanAssumption(active.root);
+      const r = await run(['intelligence', 'audit', '--filter-kind', 'orphan-assumption'], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toMatch(/Found 1 integrity issue\(s\) of kind "orphan-assumption":/);
+      expect(r.stdout).toMatch(/## Orphan Assumptions \(1\)/);
+      expect(r.stdout).toMatch(/as-orphan-001 references missing rec: rec-missing/);
+    });
+
+    it('AC-kind-2: --filter-kind with zero of that kind (others present) → echo + exit 0', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice38' });
+      await plantOrphanAssumption(active.root);
+      const r = await run(['intelligence', 'audit', '--filter-kind', 'orphan-decision'], active.root);
+      expect(r.code).toBe(0);
+      expect(r.stdout).toBe('No intelligence audit findings of kind "orphan-decision".\n');
+    });
+
+    it('AC-kind-3: --filter-kind matching + --quiet → exit 0, still prints the section', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice38' });
+      await plantOrphanAssumption(active.root);
+      const r = await run(
+        ['intelligence', 'audit', '--filter-kind', 'orphan-assumption', '--quiet'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      expect(r.stdout).toMatch(/Found 1 integrity issue\(s\) of kind "orphan-assumption":/);
+    });
+
+    it('AC-kind-4: --filter-kind + --format json → type-stable narrowed report', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice38' });
+      await plantOrphanAssumption(active.root);
+      const r = await run(
+        ['intelligence', 'audit', '--filter-kind', 'orphan-assumption', '--format', 'json'],
+        active.root,
+      );
+      expect(r.code).toBe(1);
+      const report = JSON.parse(r.stdout);
+      expect(report.findings).toHaveLength(1);
+      expect(report.findings[0].kind).toBe('orphan-assumption');
+      expect(Object.keys(report.byKind)).toHaveLength(8);
+      expect(report.byKind['orphan-assumption']).toHaveLength(1);
+      expect(report.byKind['broken-assumption-link']).toEqual([]);
+      expect(report.byKind['stale-supersededby']).toEqual([]);
+    });
+
+    it('AC-kind-4b: --filter-kind with zero of that kind + --format json → empty narrowed report (not null, not text)', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice38' });
+      await plantOrphanAssumption(active.root);
+      const r = await run(
+        ['intelligence', 'audit', '--filter-kind', 'orphan-decision', '--format', 'json'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      const report = JSON.parse(r.stdout); // must be valid JSON, not the text echo
+      expect(report).not.toBeNull();
+      expect(report.findings).toEqual([]);
+      expect(Object.keys(report.byKind)).toHaveLength(8);
+      expect(report.byKind['orphan-decision']).toEqual([]);
+      expect(report.byKind['orphan-assumption']).toEqual([]);
+    });
+
+    it('AC-kind-5: invalid --filter-kind → exit 1 + allowlist error, no ledgers needed', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice38' });
+      const r = await run(['intelligence', 'audit', '--filter-kind', 'bogus'], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toBe('');
+      expect(r.stderr).toBe(
+        "intelligence audit failed: invalid kind: 'bogus' (allowed: broken-assumption-link, broken-decision-link, broken-evidence-link, orphan-assumption, orphan-decision, orphan-evidence, stale-supersededby, stale-converted-phase)\n",
+      );
+    });
+
+    it('AC-kind-6: filtered terminal Remediation shows ONLY the relevant family bullet', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'slice38' });
+      await plantOrphanAssumption(active.root);
+      const r = await run(['intelligence', 'audit', '--filter-kind', 'orphan-assumption'], active.root);
+      expect(r.stdout).toMatch(/For orphan subjects:/);
+      expect(r.stdout).not.toMatch(/For broken rec→subject links:/);
+      expect(r.stdout).not.toMatch(/cadence decision reactivate <id>/);
+      expect(r.stdout).not.toMatch(/For stale converted-to-phase refs:/);
+    });
+  });
 });

@@ -811,7 +811,7 @@ export type IntelligenceAuditReport = {
   byKind: Record<IntelligenceAuditFinding['kind'], IntelligenceAuditFinding[]>;
 };
 
-const AUDIT_KINDS = [
+export const AUDIT_KINDS = [
   'broken-assumption-link',
   'broken-decision-link',
   'broken-evidence-link',
@@ -821,6 +821,8 @@ const AUDIT_KINDS = [
   'stale-supersededby',
   'stale-converted-phase',
 ] as const;
+
+export type AuditKind = (typeof AUDIT_KINDS)[number];
 
 export function computeIntelligenceAudit(
   recLedger: RecommendationLedger,
