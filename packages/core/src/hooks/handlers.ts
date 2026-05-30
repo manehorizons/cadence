@@ -1,4 +1,4 @@
-import type { HookContext, CadenceConfig, CadenceState, AnomalyEvent } from '@cadence/types';
+import type { HookContext, CadenceConfig, CadenceState } from '@cadence/types';
 import type { SimpleStateBackend } from '../state/simple.js';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { effectiveGateSet } from '../gates/engine.js';
 import { selectNotifier } from '../notify/factory.js';
+import { runBoundaryCheck } from '../checks/boundary.js';
 
 export interface HookResult {
   ok: boolean;
@@ -59,19 +60,16 @@ export async function handlePreToolEdit(
       if (existsSync(draftPath)) {
         try {
           const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
-          const allowed = new Set(draft.tasks.flatMap((t) => t.files));
-          const outsiders = rawFiles.filter((p) => !allowed.has(p));
-          if (outsiders.length > 0) {
+          const now = new Date().toISOString();
+          const events = runBoundaryCheck({
+            declaredFiles: draft.tasks.flatMap((t) => t.files),
+            touchedFiles: rawFiles,
+            stamp: () => now,
+            extraContext: { source: 'hook.preToolEdit' },
+          });
+          if (events.length > 0) {
             const gateSet = effectiveGateSet(state, config, draft);
             if (gateSet.gates.includes('anomaly-notify')) {
-              const now = new Date().toISOString();
-              const events: AnomalyEvent[] = outsiders.map((file) => ({
-                type: 'files-outside-boundary' as const,
-                severity: 'warn' as const,
-                message: `${file} touched but not declared in any task's files:`,
-                context: { file, source: 'hook.preToolEdit' },
-                ts: now,
-              }));
               const notifier = selectNotifier(config);
               try {
                 await notifier.notify(events);

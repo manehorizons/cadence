@@ -5,6 +5,7 @@ import type {
 } from '@cadence/types';
 import type { ProgressFile } from '../status.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
+import { runBoundaryCheck } from '../checks/boundary.js';
 
 export interface CollectAnomaliesContext {
   draft: Draft;
@@ -86,23 +87,19 @@ export function collectAnomalies(
   }
 
   // files-outside-boundary — one event per touched file that is not in any
-  // task's declared `files:` list.
-  const declared = new Set(ctx.draft.tasks.flatMap((t) => t.files));
+  // task's declared `files:` list. Detection shared with the PreToolEdit hook
+  // via checks/boundary (Phase 43.1); the deduped Set keeps settle's behavior.
   const touched = new Set<string>();
   for (const entry of Object.values(ctx.progress.tasks)) {
     for (const f of entry.touchedFiles ?? []) touched.add(f);
   }
-  for (const file of touched) {
-    if (!declared.has(file)) {
-      events.push({
-        type: 'files-outside-boundary',
-        severity: 'warn',
-        message: `${file} touched but not declared in any task's files:`,
-        context: { file },
-        ts: stamp(),
-      });
-    }
-  }
+  events.push(
+    ...runBoundaryCheck({
+      declaredFiles: ctx.draft.tasks.flatMap((t) => t.files),
+      touchedFiles: touched,
+      stamp,
+    }),
+  );
 
   // verifier-failure — emitted when the deep verifier transport itself blew up.
   if (ctx.verifierFailure) {
