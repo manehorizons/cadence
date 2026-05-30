@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @cadence/host-claude-code hook"
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
           }
         ],
         "_managedBy": "cadence"
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @cadence/host-claude-code hook"
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
           }
         ],
         "_managedBy": "cadence"
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @cadence/host-claude-code hook"
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
           }
         ],
         "_managedBy": "cadence"
@@ -40,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @cadence/host-claude-code hook"
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
           }
         ],
         "_managedBy": "cadence"
@@ -51,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @cadence/host-claude-code hook"
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
           }
         ],
         "_managedBy": "cadence"
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx @cadence/host-claude-code hook"
+            "command": "node packages/host-claude-code/bin/cadence-host-claude-code.cjs hook --cadence \"node packages/core/bin/cadence.cjs\""
           }
         ],
         "_managedBy": "cadence"
