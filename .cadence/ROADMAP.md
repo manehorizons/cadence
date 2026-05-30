@@ -352,6 +352,22 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 
 ---
 
+## v1.5.0 — Multi-host (deferred, named)
+
+**Status:** named & scoped, NOT started. Added 2026-05-30. Sequenced **after** v1.4 Public release — going public is what surfaces real demand for a second host (which tool, from actual users), and a published host-agnostic CLI + a documented adapter contract is the thing third parties build against. Additive (engine unchanged) → minor bump, consistent with DESIGN's "multi-host is a v1.x/v2 concern."
+
+**Reverses, deliberately, the Phase 11 archive (D5 / D9 / F3).** v1 collapsed dual-host as premature (YAGNI) — `packages/host-codex/` removed from main, the `HostCapabilities` abstraction folded back into Claude-Code-specific code, prior state preserved at the `keel-codex-archive` tag. This milestone is the "re-add later as a fresh phase if needed" escape hatch that decision left open, opened **only now that the single-host loop is solid and the engine is proven in public use**. The host-agnostic-engine anchor is **not** inverted: adapters keep translating a host's lifecycle into the abstract events the core dispatcher already speaks (`packages/host-claude-code/src/event-map.ts` — `SessionStart→session-start`, `PreToolUse→pre-tool-edit`, …); the engine stays host-unaware.
+
+**Scope.**
+- **Re-introduce a host-adapter contract** — the leaner successor to the collapsed `HostCapabilities`, derived from what `host-claude-code` *actually* needs (event map + payload extraction + install/shim/locate-self), not speculative capability flags. Prior art lives at the `keel-codex-archive` tag.
+- **First second adapter** — a new `@cadence/host-<tool>` package mirroring `host-claude-code` (lifecycle → abstract events + an installer). **Target chosen by post-public user pull** (Codex / Gemini / Aider / OpenCode — do not pick speculatively).
+- **Generalize the testkit mock host** so adapter tests don't hard-code Claude Code semantics.
+- **"Write your own adapter" doc** — publish the abstract-event contract + a worked example so third parties can add hosts without core changes.
+
+**Depends on.** v1.4 (public release) + a concrete second-host demand signal. **Activation gate:** do NOT start speculatively. The original anti-goal ("no multi-host complexity before single-host is solid") is now satisfied; the remaining guard is "no second adapter without a real user for it." Pick the first target tool from actual post-publish demand, then scope it into phases.
+
+---
+
 ## v1.2.0 — Feature expansion (superpowers-inspired)
 
 Source: `docs/superpowers/2026-05-16-cadence-expansion-survey.md` (full weighing of 6 candidates). CADENCE ships DRAFT→BUILD→SETTLE; this milestone closes the gap toward the full idea→shipped arc that superpowers covers manually today.
