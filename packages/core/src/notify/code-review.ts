@@ -1,6 +1,7 @@
 import type { AnomalyEvent } from '@cadence/types';
 import type { Finding } from '../verify/code-review.js';
 import type { selectNotifier } from './factory.js';
+import { emitUnconverged } from './emit-unconverged.js';
 
 /**
  * Phase 24.3 — emits one `code-review-high` anomaly per HIGH finding via
@@ -53,9 +54,10 @@ export async function emitCodeReviewHigh(
  * this on `anomaly-notify` (unlike the sibling `emitCodeReviewHigh`, whose
  * Phase 24.3 `anomaly-notify` guard is preserved unchanged). Transport failure
  * → one stderr warning, never throws (the settle refusal/exit is computed
- * independently).
+ * independently). Phase 42.1 — transport/ts-stamp/degrade live in the shared
+ * `emitUnconverged` spine; this is now just the payload builder.
  */
-export async function emitCodeReviewUnconverged(
+export function emitCodeReviewUnconverged(
   notifier: ReturnType<typeof selectNotifier>,
   ctx: {
     draftId: string;
@@ -67,27 +69,6 @@ export async function emitCodeReviewUnconverged(
     bypassed?: boolean;
   },
 ): Promise<void> {
-  const event: AnomalyEvent = {
-    type: 'code-review-unconverged',
-    severity: 'error',
-    message: `code-review did not converge for ${ctx.draftId} after ${ctx.attempts}/${ctx.maxAttempts} attempts (${ctx.findings} finding(s))`,
-    context: {
-      draftId: ctx.draftId,
-      attempts: ctx.attempts,
-      maxAttempts: ctx.maxAttempts,
-      findings: ctx.findings,
-      provider: ctx.provider,
-      ...(ctx.model !== undefined ? { model: ctx.model } : {}),
-      ...(ctx.bypassed !== undefined ? { bypassed: ctx.bypassed } : {}),
-    },
-    ts: new Date().toISOString(),
-  };
-  try {
-    await notifier.notify([event]);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(
-      `cadence-notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
-    );
-  }
+  const { draftId, ...rest } = ctx;
+  return emitUnconverged(notifier, 'code-review', { entityId: draftId, ...rest });
 }

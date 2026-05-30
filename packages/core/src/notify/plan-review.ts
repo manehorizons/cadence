@@ -1,5 +1,5 @@
-import type { AnomalyEvent } from '@cadence/types';
 import type { selectNotifier } from './factory.js';
+import { emitUnconverged } from './emit-unconverged.js';
 
 /**
  * Phase 35.1 — emits a single `plan-review-unconverged` anomaly when
@@ -7,10 +7,10 @@ import type { selectNotifier } from './factory.js';
  * (mirrors emitSkillAuditMiss): plan-review fires only `strict×complex`, and
  * strict cells carry NO `anomaly-notify` gate — a hard human-escalation must
  * still leave an audit trail, so the caller does NOT gate this on
- * `anomaly-notify`. Transport failure → one stderr warning, never throws
- * (the approve refusal/exit is computed independently).
+ * `anomaly-notify`. Phase 42.1 — transport/ts-stamp/degrade live in the shared
+ * `emitUnconverged` spine; this is now just the payload builder.
  */
-export async function emitPlanReviewUnconverged(
+export function emitPlanReviewUnconverged(
   notifier: ReturnType<typeof selectNotifier>,
   ctx: {
     draftId: string;
@@ -22,27 +22,6 @@ export async function emitPlanReviewUnconverged(
     bypassed?: boolean;
   },
 ): Promise<void> {
-  const event: AnomalyEvent = {
-    type: 'plan-review-unconverged',
-    severity: 'error',
-    message: `plan-review did not converge for ${ctx.draftId} after ${ctx.attempts}/${ctx.maxAttempts} attempts (${ctx.findings} finding(s))`,
-    context: {
-      draftId: ctx.draftId,
-      attempts: ctx.attempts,
-      maxAttempts: ctx.maxAttempts,
-      findings: ctx.findings,
-      provider: ctx.provider,
-      ...(ctx.model !== undefined ? { model: ctx.model } : {}),
-      ...(ctx.bypassed !== undefined ? { bypassed: ctx.bypassed } : {}),
-    },
-    ts: new Date().toISOString(),
-  };
-  try {
-    await notifier.notify([event]);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(
-      `cadence-notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
-    );
-  }
+  const { draftId, ...rest } = ctx;
+  return emitUnconverged(notifier, 'plan-review', { entityId: draftId, ...rest });
 }
