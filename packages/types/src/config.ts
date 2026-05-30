@@ -167,7 +167,7 @@ export const CadenceConfigZ = z.object({
       webhook: z
         .object({
           url: z.string().url(),
-          headers: z.record(z.string()).optional(),
+          headers: z.record(z.string(), z.string()).optional(),
           timeoutMs: z.number().int().positive().optional(),
         })
         .optional(),
