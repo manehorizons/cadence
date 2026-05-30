@@ -47,7 +47,7 @@ changes are needed. It is ideal for:
 To confirm a gate is using mock, run:
 
 ```sh
-node packages/core/bin/cadence.cjs config get verifier.provider
+cadence config get verifier.provider
 ```
 
 If it prints nothing or `mock`, mock is active.
@@ -60,7 +60,7 @@ Set the environment variable and configure the gate:
 
 ```sh
 export ANTHROPIC_API_KEY=sk-ant-...
-node packages/core/bin/cadence.cjs config set verifier.provider anthropic
+cadence config set verifier.provider anthropic
 ```
 
 The Anthropic provider uses `messages.parse` with a `zodOutputFormat`-backed
@@ -71,10 +71,10 @@ within a session benefit from prompt caching.
 Default model used when no per-gate `model` override is set: `claude-sonnet-4-6`
 (from `AnthropicVerifier` in `packages/core/src/verify/anthropic-verifier.ts`).
 
-To use a different model for a specific gate:
+To use a larger (Opus) model for a specific gate:
 
 ```sh
-node packages/core/bin/cadence.cjs config set verifier.model claude-opus-4-5
+cadence config set verifier.model claude-opus-4-6
 ```
 
 **Fallback behavior:** if `ANTHROPIC_API_KEY` is unset when `provider:
@@ -109,7 +109,7 @@ Minimal setup:
 ```sh
 export CADENCE_LOCAL_BASE_URL=http://localhost:11434/v1
 export CADENCE_LOCAL_MODEL=llama3.2
-node packages/core/bin/cadence.cjs config set verifier.provider local
+cadence config set verifier.provider local
 ```
 
 The client POSTs to `${CADENCE_LOCAL_BASE_URL}/chat/completions` with
@@ -127,8 +127,8 @@ model for a specific gate, set it in config — the config value takes precedenc
 
 ```sh
 # Use a faster model for per-task checks, a stronger one for code-review
-node packages/core/bin/cadence.cjs config set perTaskVerifier.model mistral-nemo
-node packages/core/bin/cadence.cjs config set codeReview.model llama3.3
+cadence config set perTaskVerifier.model mistral-nemo
+cadence config set codeReview.model llama3.3
 ```
 
 Resolution order per gate: `config.<gate>.model` → `CADENCE_LOCAL_MODEL`.
@@ -163,29 +163,30 @@ JSON directly.
 | `code-review` | `codeReview` | `packages/core/src/verify/code-review-factory.ts` |
 | `plan-review` | `planReview` | `packages/core/src/verify/plan-review-factory.ts` |
 | `security-audit` | `securityAudit` | `packages/core/src/verify/security-audit-factory.ts` |
+| `spec-review` | `specReview` | `packages/core/src/verify/spec-review-factory.ts` |
 
 Example: run the deep verifier on Anthropic, per-task checks on a local model,
 and leave everything else on mock:
 
 ```sh
-node packages/core/bin/cadence.cjs config set verifier.provider anthropic
-node packages/core/bin/cadence.cjs config set perTaskVerifier.provider local
-node packages/core/bin/cadence.cjs config set perTaskVerifier.model mistral-nemo
+cadence config set verifier.provider anthropic
+cadence config set perTaskVerifier.provider local
+cadence config set perTaskVerifier.model mistral-nemo
 ```
 
 Verify the resulting config:
 
 ```sh
-node packages/core/bin/cadence.cjs config get verifier.provider
-node packages/core/bin/cadence.cjs config get perTaskVerifier.provider
-node packages/core/bin/cadence.cjs config get perTaskVerifier.model
+cadence config get verifier.provider
+cadence config get perTaskVerifier.provider
+cadence config get perTaskVerifier.model
 ```
 
 Run `config doctor` to surface any inconsistencies (e.g. provider set but
 required env var absent):
 
 ```sh
-node packages/core/bin/cadence.cjs config doctor
+cadence config doctor
 ```
 
 ---
@@ -204,10 +205,16 @@ reference for provider-using gates:
 | `code-review` | `codeReview` | `settle run` (in cells that include it) |
 | `plan-review` | `planReview` | `draft approve` (in cells that include it) |
 | `security-audit` | `securityAudit` | `settle run` after code-review (in cells that include it) |
+| `spec-review` | `specReview` | `spec approve` (always, whenever the pre-DRAFT spec stage is used) |
 
 "Cells that include it" refers to the profile × tier intersection — e.g.
 `per-task-verify` fires in `strict × standard` and `strict × complex` but not
 in `auto` or `quick-fix` rows. See the gate matrix for the full picture.
+
+`spec-review` is the exception: it is not a gate-matrix cell. It runs
+unconditionally at `cadence spec approve` — opting into the pre-DRAFT spec
+stage *is* the opt-in. Bypass a failing/unconverged spec-review with
+`--allow-spec-review-failure`.
 
 ---
 

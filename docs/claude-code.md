@@ -11,10 +11,9 @@ CADENCE to Claude Code. It installs two integration surfaces into your project:
 The agent then drives the same CADENCE engine it would via the CLI — through
 the same `cadence hook <event>` dispatch path — without any special API surface.
 
-> **Dogfood note:** `@manehorizons/cadence-host-claude-code` is not yet published to npm.
-> All examples below use the local build:
-> `node packages/host-claude-code/dist/cli.js <cmd>` (after building the
-> package). The `--local` flag automates the path resolution for this case.
+> **Install:** the adapter ships as `@manehorizons/cadence-host-claude-code`. Run
+> it with `npx @manehorizons/cadence-host-claude-code install` (or install it
+> globally for the `cadence-host-claude-code` command used below).
 
 ---
 

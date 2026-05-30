@@ -7,11 +7,6 @@ For the *why* behind the loop and the gate model, read
 [docs/concepts.md](concepts.md) first. For exhaustive flag references, see
 [docs/cli.md](cli.md) and [docs/reference/commands.md](reference/commands.md).
 
-> **Not yet published.** `@manehorizons/cadence-core` is not yet on npm, so `npx
-> @manehorizons/cadence-core` will 404. Use the local-dogfood invocation shown throughout
-> this guide. Once the package is published, replace the long `node …/…/…`
-> prefix with `cadence`.
-
 ---
 
 ## Table of contents
@@ -31,26 +26,14 @@ For the *why* behind the loop and the gate model, read
 
 ## Prerequisites
 
-- Node.js 18+
-- A built CADENCE checkout (run `pnpm -C packages/core build` if needed)
-- The CLI entry point: `packages/core/bin/cadence.cjs`
-
-Throughout this guide, substitute your actual cadence checkout path for
-`<cadence>`. For example:
+- **Node.js ≥ 20**
+- The CADENCE CLI installed globally:
 
 ```sh
-# Adapt this to wherever you cloned CADENCE:
-CADENCE=~/projects/cadence
+npm install -g @manehorizons/cadence-core
 ```
 
-All commands below use a shell alias for brevity:
-
-```sh
-alias cadence="node $CADENCE/packages/core/bin/cadence.cjs"
-```
-
-If you prefer not to set an alias, replace every `cadence` below with
-`node $CADENCE/packages/core/bin/cadence.cjs`.
+This gives you the `cadence` command used throughout this guide.
 
 ---
 
@@ -389,7 +372,7 @@ and slash commands:
 > **Not yet published.** Use the local build:
 
 ```sh
-node $CADENCE/packages/host-claude-code/bin/cadence-host-claude-code.cjs install --local
+cadence-host-claude-code install --local
 ```
 
 Output:

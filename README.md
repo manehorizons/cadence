@@ -10,21 +10,30 @@ The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE
 
 The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and nine slash commands. One engine, two surfaces: the CLI for terminals, the adapter for Claude Code.
 
-## Quickstart (local install)
+## Quickstart
 
-> **Not yet published — local install for now.** `@manehorizons/cadence-core` is not on npm; `npx @manehorizons/cadence-core` is not yet available. Use the local-dogfood invocation below. Build first with `pnpm -C packages/core build`. The publish path is proven and reversible (Phase 30.1: verdaccio + dry-run); the actual public release is a tracked **v1.4 "Public release"** milestone (see `.cadence/ROADMAP.md`).
+Install the CLI globally (requires Node ≥ 20):
 
 ```sh
-# Adapt this path to your CADENCE checkout:
-CADENCE=~/projects/cadence
+npm install -g @manehorizons/cadence-core
+```
 
-mkdir ~/projects/my-app && cd ~/projects/my-app
-node $CADENCE/packages/core/bin/cadence.cjs init --name "my-app"
-node $CADENCE/packages/core/bin/cadence.cjs draft new 01-foundation 01 --title "First phase"
+Then run one full loop in any project:
+
+```sh
+mkdir my-app && cd my-app
+cadence init --name "my-app"
+cadence draft new 01-foundation 01 --title "First phase"
 # fill .cadence/phases/01-foundation/01-01-DRAFT.md
-node $CADENCE/packages/core/bin/cadence.cjs draft approve 01-foundation 01
-node $CADENCE/packages/core/bin/cadence.cjs build task T1 --status=DONE
-node $CADENCE/packages/core/bin/cadence.cjs settle run --auto
+cadence draft approve 01-foundation 01
+cadence build task T1 --status=DONE
+cadence settle run --auto
+```
+
+Driving CADENCE from **Claude Code**? Wire the adapter into a project:
+
+```sh
+npx @manehorizons/cadence-host-claude-code install
 ```
 
 > **Heads-up (mature repos):** on a repo with ≥20 commits the suggested gate profile is `standard`, which puts `draft approve` behind an interactive prompt. In non-TTY contexts (CI, agents) `cadence draft approve` then **refuses** unless you pass `--no-approve`.
@@ -45,7 +54,7 @@ See **[docs/README.md](./docs/README.md)** for the complete user guide:
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs `lint → typecheck → test → build` on every PR and push to `main`. (The full multi-OS × Node 20 + 22 matrix is restored at the v1.4 public-release milestone.)
+`.github/workflows/ci.yml` runs `lint → typecheck → test → build` on every PR and push to `main`, across Node 20 + 22 on Ubuntu.
 
 **Enforcing the gate.** A tracked hook `.githooks/pre-push` (wired via `git config core.hooksPath .githooks`) runs the full `pnpm turbo run lint typecheck test build` before any push that updates `main` and aborts on failure. Bypass deliberately with `git push --no-verify`.
 

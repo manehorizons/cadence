@@ -12,7 +12,7 @@ achieved by letting you choose which quality gates fire for each phase of work.
 
 ## Table of contents
 
-- [The loop](#the-loop)
+- [The loop](#the-loop) (incl. the optional [SPEC](#spec-optional) stage)
 - [Two-commit convention](#two-commit-convention)
 - [Profiles × tiers](#profiles--tiers)
 - [The gate universe](#the-gate-universe)
@@ -22,11 +22,31 @@ achieved by letting you choose which quality gates fire for each phase of work.
 
 ## The loop
 
-Every unit of work in CADENCE moves through three loop positions:
+Every unit of work in CADENCE moves through three core loop positions, with an
+optional pre-DRAFT **SPEC** stage:
 
 ```
-IDLE → DRAFT → BUILD → SETTLE → IDLE
+IDLE → [SPEC] → DRAFT → BUILD → SETTLE → IDLE
 ```
+
+### SPEC (optional)
+
+SPEC is an opt-in stage that runs *before* DRAFT. When you want to lock down
+*what* a phase delivers before planning *how*, `cadence spec new` (IDLE→SPEC)
+scaffolds a `<id>-SPEC.md` — an objective, acceptance criteria, constraints, and
+open questions. You (or the AI) author it; `cadence spec check` is a read-only
+structural sanity check (objective present + ≥1 AC).
+
+`cadence spec approve` runs a **convergent spec-review gate** (described in the
+gate universe below) and, on pass, marks the spec `APPROVED` and returns to IDLE
+so the normal `draft new` proceeds. When an approved SPEC of the same id is
+present, `cadence draft new` seeds the DRAFT's objective and acceptance criteria
+from it rather than scaffolding an empty draft.
+
+If you skip SPEC, the loop starts at DRAFT exactly as before — nothing requires
+a spec.
+
+**Phase artifact:** `.cadence/phases/<phase>/<id>-SPEC.md`
 
 ### DRAFT
 
@@ -203,6 +223,24 @@ These run on every phase regardless of profile or tier.
 | `plan-review` | AI plan-review agent runs at `cadence draft approve` (strict × complex only); `pass=false` refuses approve | `--allow-plan-review-failure` (on `draft approve`) |
 | `security-audit` | AI security-audit agent runs at `cadence settle run` after code-review (strict × complex only); CRITICAL findings refuse settle | `--allow-security-audit-failure` or `--force` (on `settle run`) |
 
+### Stage-scoped gates (outside the profile × tier matrix)
+
+The 13 gates above are the profile × tier universe. A few **stage-scoped**,
+provider-backed review gates fire at a specific loop transition regardless of
+the active cell — they are deliberately *not* matrix cells because the stage
+itself (or the relevant tier) is the opt-in. `plan-review` (above) is one such
+gate; `spec-review` is the other.
+
+| Gate | When it fires | Bypass flag |
+|---|---|---|
+| `spec-review` | Convergent AI spec-review runs at `cadence spec approve`; `pass=false` re-loops up to `convergence.maxAttempts`, then refuses approve | `--allow-spec-review-failure` (on `spec approve`) |
+
+`spec-review` reuses the same convergence primitive as `plan-review` and is
+configured per provider in `.cadence/config.json` under the `specReview` key
+(providers `mock` / `anthropic` / `local`, with an optional `model` override).
+Because the SPEC stage is itself optional, `spec-review` never fires unless you
+choose to run `cadence spec approve`.
+
 ### Gate bypass reference summary
 
 | Flag | Command | Gate bypassed |
@@ -213,6 +251,7 @@ These run on every phase regardless of profile or tier.
 | `--allow-per-task-failure` | `build task` | `per-task-verify` |
 | `--allow-code-review-failure` | `settle run` | `code-review` |
 | `--allow-plan-review-failure` | `draft approve` | `plan-review` |
+| `--allow-spec-review-failure` | `spec approve` | `spec-review` |
 | `--allow-security-audit-failure` | `settle run` | `security-audit` |
 | `--allow-verifier-failure` | `settle run` | `deep-verify` transport errors |
 | `--force` | `settle run` | `deep-verify` / `interactive-verdict` / `code-review` / `security-audit` (all at once) |

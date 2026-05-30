@@ -19,6 +19,8 @@ This page documents every field in the CADENCE configuration file. For conceptua
 - [telemetry](#telemetry)
 - [tier](#tier)
 - [verification](#verification)
+- [skillAudit](#skillaudit)
+- [convergence](#convergence)
 - [Gate provider blocks](#gate-provider-blocks)
 - [notify](#notify)
 - [Presets](#presets)
@@ -47,7 +49,7 @@ Controls subagent dispatch thresholds.
 
 | Field | Type | Constraints | Default | Description |
 |---|---|---|---|---|
-| `subagentPolicy.contextBudgetThreshold` | `number` | `0.3` – `0.95` | `0.7` | Fraction of the context window consumed before CADENCE considers spawning a subagent (0.0–1.0). |
+| `subagentPolicy.contextBudgetThreshold` | `number` | `0.3` – `0.95` | `0.7` | Fraction of the context window consumed before CADENCE considers spawning a subagent (0.3–0.95). |
 | `subagentPolicy.largeTaskTokens` | `integer` (positive) | — | `8000` | Token count above which a task is classified as "large" and may be routed to a subagent. |
 | `subagentPolicy.mechanicalBatchMin` | `integer` (positive) | — | `3` | Minimum number of mechanical tasks required before CADENCE batches them into a single subagent dispatch. |
 
@@ -131,12 +133,33 @@ Boundary definitions for each tier. The coherence-check gate validates DRAFT fro
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `verification.testGlobs` | `string[]` | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` | Glob patterns the test-coverage scanner walks when checking AC coverage. Supports `**` and `*`. Set by `cadence init` based on repo layout — see [cadence init behavior](#cadence-init-behavior). |
+| `verification.testCommand` | `string` (optional) | — | Shell command the `build-test-must-pass` gate runs at `cadence settle run`. When set, settle runs it and refuses on a non-zero exit unless `--allow-failing-build` / `--force`. When absent, the gate is evaluated but cannot enforce — it passes with a one-time note. |
+
+---
+
+## skillAudit
+
+Drives the skill-audit check, which enforces that declared required skills were actually invoked during a phase. Declaring required skills (here or via a DRAFT's `requiredSkills`) is the opt-in — the check is inert when the effective required set is empty.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `skillAudit.required` | `string[]` | `[]` | Skill IDs that must be invoked before a phase settles. At `cadence settle run`, this set is unioned with the DRAFT's `requiredSkills`; if any are missing from telemetry, settle refuses unless `--allow-skill-audit-miss` is passed. Enforcement is skipped (with a `skill-audit-miss` warning) when `telemetry.skillInvocations` is `false`. |
+
+---
+
+## convergence
+
+Bounds the convergent review loops (spec-review and plan-review).
+
+| Field | Type | Constraints | Default | Description |
+|---|---|---|---|---|
+| `convergence.maxAttempts` | `integer` (positive) | — | `3` | Maximum review attempts before a convergent gate (`spec-review`, `plan-review`) gives up and requires a human decision. After `maxAttempts` non-passing attempts, the gate refuses unless the relevant `--allow-*-failure` flag is set. |
 
 ---
 
 ## Gate provider blocks
 
-Five gates delegate to an AI verifier. Each block has the same shape:
+Six gates delegate to an AI verifier. Each block has the same shape:
 
 ```jsonc
 {
@@ -147,13 +170,14 @@ Five gates delegate to an AI verifier. Each block has the same shape:
 
 | Field | Gate it controls | When the gate fires |
 |---|---|---|
+| `specReview` | `spec-review` | `cadence spec approve` (always runs at this step); convergent loop bounded by `convergence.maxAttempts`; non-passing/unconverged refuses approve unless `--allow-spec-review-failure` |
 | `verifier` | `deep-verify` | `cadence settle run` (when gate is in the active set) |
 | `perTaskVerifier` | `per-task-verify` | `cadence build task <id> --status=DONE` (when gate is in the active set: `strict × standard` or `strict × complex`) |
 | `codeReview` | `code-review` | `cadence settle run` (when gate is in the active set); HIGH findings refuse settle unless `--allow-code-review-failure` / `--force` |
 | `planReview` | `plan-review` | `cadence draft approve` (`strict × complex` only); `pass=false` refuses approve unless `--allow-plan-review-failure` |
 | `securityAudit` | `security-audit` | `cadence settle run` after code-review (`strict × complex` only); CRITICAL findings refuse settle unless `--allow-security-audit-failure` / `--force` |
 
-All five blocks default to `{ "provider": "mock" }`. Provider options:
+All six blocks default to `{ "provider": "mock" }`. Provider options:
 
 | Provider | Description | Requires |
 |---|---|---|

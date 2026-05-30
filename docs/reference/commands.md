@@ -481,8 +481,11 @@ Generate SUMMARY.md + JSON and return to IDLE
 | `--no-interactive` | Bypass the interactive-verdict gate even if the active profile would enforce it |
 | `--allow-auto-complex` | Override DESIGN.md §4 M2 soft cap: settle an `auto × complex` draft anyway |
 | `--allow-stale-draft` | Skip the DRAFT-read mtime gate even if the DRAFT.md was edited after approve |
+| `--allow-open-tasks` | Skip the structural-verifier gate even if a task is still PENDING / IN_PROGRESS (Phase 39.2) |
+| `--allow-failing-build` | Do not refuse on a non-zero `verification.testCommand` exit; settle anyway (Phase 39.2) |
 | `--allow-code-review-failure` | Do not refuse on HIGH-severity code-review findings; record them in SUMMARY and emit anomalies anyway (Phase 24.3) |
 | `--allow-security-audit-failure` | Do not refuse on CRITICAL security-audit findings; record them in SUMMARY and settle anyway (Phase 25.2) |
+| `--allow-skill-audit-miss` | Do not refuse when required skills were not invoked; emit a warn anomaly (`bypassed:true`) and settle anyway (Phase 34.1) |
 | `-h, --help` | Display help for command |
 
 **Behavior** — runs all configured settle-time gates (coverage, verifier,
@@ -593,6 +596,18 @@ cadence recommendation add \
   --evidence "Approved Praxis design requires milestone pre-mortems."
 ```
 
+**Options**
+
+| Option | Description |
+|---|---|
+| `--title <title>` | Recommendation title. |
+| `--summary <summary>` | Recommendation summary. |
+| `--priority <priority>` | `low \| medium \| high \| critical` (default: `medium`). |
+| `--readiness <readiness>` | `raw-idea \| needs-evidence \| needs-decision \| ready-for-milestone \| ready-for-cadence-spec \| blocked` (default: `raw-idea`). |
+| `--area <areas>` | Comma-separated affected areas. |
+| `--file <files>` | Comma-separated affected file paths. |
+| `--evidence <summary>` | Short evidence note. |
+
 Writes:
 
 - `.cadence/intelligence/recommendations.json`
@@ -611,6 +626,7 @@ cadence recommendation list
 
 | Option | Description |
 |---|---|
+| `--format <format>` | Output format: `terminal` (default) or `json`. |
 | `--filter-status <status>` | Filter to only entries with this status. |
 | `--filter-text <substr>` | Case-insensitive substring search on title or summary. Mutually exclusive with `--filter-text-exact` and `--filter-regex`. |
 | `--filter-text-exact <str>` | Case-insensitive whole-field equality match on title or summary. The entire scoped field must equal the literal (case-insensitive); substring matches do NOT match. Surrounding whitespace in the literal is significant (no trim). Mutually exclusive with `--filter-text` and `--filter-regex`. Empty literal returns exit 1. (Slice 36) |
@@ -618,6 +634,32 @@ cadence recommendation list
 | `--filter-regex-flags <flags>` | RegExp flag letters to apply to `--filter-regex`. Allowed: `i` (case-insensitive), `m` (multiline `^/$`), `s` (dotAll `.`), `u` (unicode). Letter-string grammar mirrors JS RegExp's native second argument (`'is'` applies both). Requires `--filter-regex` to also be set (orphan use returns exit 1). Empty value, duplicate letters, and invalid letters all return exit 1 with the specific letter named. (Slice 37) |
 | `--filter-converted-to <phaseId>` | Reverse-lookup filter: returns only recommendations whose `convertedToPhaseId` equals `<phaseId>`. Implies `status=converted` because only converted recs populate the field. Empty-result message uses `converted-to="<phaseId>"`. Pairs with `cadence spec new --from-rec` / `draft new --from-rec` (Slice 34.3) — operators converting a rec one direction can ask the reverse question via this filter. |
 | `--sort-by <key>` | Sort by a single key, optionally suffixed with `:desc`. Default direction is ascending. Allowed keys: `created`, `updated`, `priority` (low<medium<high<critical), `status` (lifecycle order: candidate<accepted<deferred<rejected<converted), `title`, `leverage` (numeric 0–10), `risk` (numeric 0–10), `confidence` (numeric 0–1), `decay` (fresh<aging<stale<superseded<contradicted<needs-revalidation). Pipeline applies after filters, before `--reverse`/`--offset`/`--limit`. Composes with `--reverse`; `--sort-by X --reverse` ≡ `--sort-by X:desc`. (Slice 35) |
+| `--reverse` | Reverse the entry order (after filters, before offset/limit). |
+| `--offset <n>` | Skip the first N entries (after filters). |
+| `--limit <n>` | Cap output to first N entries (after filters). |
+
+#### recommendation show
+
+Shows a single recommendation with all linked assumptions, decisions, and
+evidence.
+
+```sh
+cadence recommendation show <id>
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `<id>` | Recommendation id to display. |
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--open-assumptions-only` | Filter assumptions to `status=open` only (default: `false`). |
+| `--active-decisions-only` | Filter decisions to `status=active` only (default: `false`). |
+| `--format <format>` | Output format: `terminal` (default) or `json`. |
 
 #### recommendation convert
 
@@ -863,6 +905,7 @@ Manage CADENCE strategic-intelligence assumptions
 | Subcommand | Description |
 |---|---|
 | `add` | Add a manual assumption tied to a recommendation |
+| `show <id>` | Show a single assumption with its tied recommendation cross-ref |
 | `list` | List recorded assumptions |
 | `validate <id>` | Mark an open assumption validated |
 | `reject <id>` | Mark an open assumption rejected |
@@ -910,7 +953,12 @@ Manage CADENCE strategic-intelligence decisions
 | Subcommand | Description |
 |---|---|
 | `add` | Record an architectural decision (optionally tied to a recommendation) |
+| `show <id>` | Show a single decision with its tied recommendation cross-ref |
+| `graph <id>` | Show the supersession chain (ancestors + descendants) for a decision |
 | `list` | List recorded decisions |
+| `supersede <id>` | Mark an active decision superseded |
+| `rescind <id>` | Mark an active decision rescinded |
+| `reactivate <id>` | Reactivate a superseded or rescinded decision |
 
 **`add` options**
 
