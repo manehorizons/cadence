@@ -23,3 +23,7 @@ docs/superpowers/
 # is tracked; rolling backups and consumed-archive renames are not.
 HANDOFF.md.bak
 HANDOFF.md.resumed-*
+
+# Local-only reference docs (architecture reviews, scratch notes). Kept on
+# disk for the operator; never published.
+.local/
