@@ -5,7 +5,7 @@ import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { presets, emptyState, type Profile } from '@cadence/types';
 import { atomicWriteJSON } from '../../state/atomic-write.js';
-import { renderStateMd } from '../../render/state-md.js';
+import { SimpleStateBackend } from '../../state/simple.js';
 import {
   mergeManagedBlock,
   type MergeMode,
@@ -265,7 +265,8 @@ export function registerInitCommand(program: Command): void {
         await mkdir(join(cadenceDir, 'archive'), { recursive: true });
         await atomicWriteJSON(join(cadenceDir, 'config.json'), cfg);
         const state = emptyState(name);
-        await atomicWriteJSON(join(cadenceDir, 'state.json'), state);
+        // Phase 41.1 — one write path: commit() writes state.json + STATE.md.
+        await new SimpleStateBackend(cwd).commit(state);
         await writeFile(
           join(cadenceDir, 'PROJECT.md'),
           `# ${name}\n\n> CADENCE project. See .cadence/ROADMAP.md for phases.\n`,
@@ -276,7 +277,6 @@ export function registerInitCommand(program: Command): void {
           join(cadenceDir, 'SPECIAL-FLOWS.md'),
           '# Special Flows\n\n_(none yet)_\n',
         );
-        await writeFile(join(cadenceDir, 'STATE.md'), renderStateMd(state));
         await writeClaudeMd(cwd, {
           projectName: name,
           gateProfile,

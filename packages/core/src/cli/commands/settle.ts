@@ -9,7 +9,6 @@ import { parseDraftMd } from '../../parse/draft-parser.js';
 import { renderSummaryMd } from '../../parse/summary-writer.js';
 import { SimpleStateBackend } from '../../state/simple.js';
 import { atomicWriteJSON, atomicWriteText } from '../../state/atomic-write.js';
-import { renderStateMd } from '../../render/state-md.js';
 import { LoopViolationError } from '../../errors.js';
 import { deriveAcResults, type ProgressFile } from '../../status.js';
 import { loadConfig } from '../../config/loader.js';
@@ -588,8 +587,7 @@ export function registerSettleCommand(program: Command): void {
         state.activeTask = null;
         state.loopPosition = 'IDLE';
         state.tier = null;
-        await backend.writeState(state);
-        await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
+        await backend.commit(state);
         console.log(`Settled ${draftId}`);
       } catch (err) {
         process.stderr.write(`settle run failed: ${err instanceof Error ? err.message : String(err)}\n`);

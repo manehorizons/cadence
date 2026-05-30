@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { parseSpecMd } from '../../parse/spec-parser.js';
 import { SimpleStateBackend } from '../../state/simple.js';
 import { atomicWriteText } from '../../state/atomic-write.js';
-import { renderStateMd } from '../../render/state-md.js';
 import { loadConfig } from '../../config/loader.js';
 import { selectNotifier } from '../../notify/factory.js';
 import { selectSpecReviewVerifier } from '../../verify/spec-review-factory.js';
@@ -85,8 +84,7 @@ export function registerSpecCommand(program: Command): void {
           state.activePhase = phase;
           state.activeSpec = id;
           state.loopPosition = 'SPEC';
-          await backend.writeState(state);
-          await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
+          await backend.commit(state);
 
           console.log(`Created ${path}`);
 
@@ -296,8 +294,7 @@ export function registerSpecCommand(program: Command): void {
           );
           state.loopPosition = 'IDLE';
           state.activeSpec = null;
-          await backend.writeState(state);
-          await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
+          await backend.commit(state);
           console.log(`Approved spec ${id}; loopPosition=IDLE`);
         } catch (err) {
           process.stderr.write(

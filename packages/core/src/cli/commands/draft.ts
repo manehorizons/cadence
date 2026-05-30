@@ -5,8 +5,6 @@ import { join } from 'node:path';
 import { parseDraftMd } from '../../parse/draft-parser.js';
 import { coherenceCheck } from '../../coherence/check.js';
 import { SimpleStateBackend } from '../../state/simple.js';
-import { atomicWriteText } from '../../state/atomic-write.js';
-import { renderStateMd } from '../../render/state-md.js';
 import { loadConfig } from '../../config/loader.js';
 import { effectiveGateSet } from '../../gates/engine.js';
 import { buildDraftContext } from '../../gates/draft-context.js';
@@ -134,8 +132,7 @@ export function registerDraftCommand(program: Command): void {
           if (!state.openDrafts.some((d) => d.id === id)) {
             state.openDrafts.push({ id, since: new Date().toISOString() });
           }
-          await backend.writeState(state);
-          await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
+          await backend.commit(state);
           console.log(`Approved ${id}; loopPosition=BUILD`);
         } catch (err) {
           process.stderr.write(`draft approve failed: ${err instanceof Error ? err.message : String(err)}\n`);

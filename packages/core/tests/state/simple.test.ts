@@ -17,13 +17,13 @@ describe('SimpleStateBackend', () => {
     expect(state.loopPosition).toBe('IDLE');
   });
 
-  it('round-trips writeState → readState', async () => {
+  it('round-trips commit → readState', async () => {
     active = await tempRepo({ initialized: true });
     const backend = new SimpleStateBackend(active.root);
     const s = emptyState('zz');
     s.loopPosition = 'DRAFT';
     s.activeDraft = '01-01';
-    await backend.writeState(s);
+    await backend.commit(s);
     const after = await backend.readState();
     expect(after.loopPosition).toBe('DRAFT');
     expect(after.activeDraft).toBe('01-01');

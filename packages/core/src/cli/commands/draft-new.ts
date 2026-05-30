@@ -5,8 +5,6 @@ import { join } from 'node:path';
 import { parseSpecMd } from '../../parse/spec-parser.js';
 import { renderDraftBody, frontmatterStatus } from '../../parse/draft-scaffold.js';
 import { SimpleStateBackend } from '../../state/simple.js';
-import { atomicWriteText } from '../../state/atomic-write.js';
-import { renderStateMd } from '../../render/state-md.js';
 import {
   readRecommendationLedger,
   runRecommendationTransition,
@@ -100,8 +98,7 @@ export function registerDraftNew(cmd: Command): void {
         if (!state.openDrafts.some((d) => d.id === id)) {
           state.openDrafts.push({ id, since: new Date().toISOString() });
         }
-        await backend.writeState(state);
-        await atomicWriteText(join(cwd, '.cadence', 'STATE.md'), renderStateMd(state));
+        await backend.commit(state);
 
         console.log(`Created ${path}`);
 

@@ -1,7 +1,5 @@
 import type { HookContext, CadenceConfig, CadenceState, AnomalyEvent } from '@cadence/types';
 import type { SimpleStateBackend } from '../state/simple.js';
-import { atomicWriteText } from '../state/atomic-write.js';
-import { renderStateMd } from '../render/state-md.js';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -36,11 +34,7 @@ export async function handleUserPrompt(
 ): Promise<HookResult> {
   if (config.telemetry.tokenUtilization) {
     state.session.tokenUtilization = Math.min(1, state.session.tokenUtilization + 0.01);
-    await backend.writeState(state);
-    await atomicWriteText(
-      join(await backend.resolveStateDir(), 'STATE.md'),
-      renderStateMd(state),
-    );
+    await backend.commit(state);
   }
   return { ok: true };
 }
@@ -116,7 +110,7 @@ export async function handlePostToolEdit(
       state.activeTask.touchedFiles = Array.from(
         new Set([...state.activeTask.touchedFiles, ...raw.files]),
       );
-      await backend.writeState(state);
+      await backend.commit(state);
     }
   }
   return { ok: true };
@@ -144,7 +138,7 @@ export async function handleSubagentResult(
   backend: SimpleStateBackend,
 ): Promise<HookResult> {
   state.session.subagentSpawns += 1;
-  await backend.writeState(state);
+  await backend.commit(state);
   return { ok: true };
 }
 
@@ -170,6 +164,6 @@ export async function handleSkillInvoke(
   while (state.skillAudit.invoked.length > SKILL_AUDIT_CAP) {
     state.skillAudit.invoked.shift();
   }
-  await backend.writeState(state);
+  await backend.commit(state);
   return { ok: true };
 }

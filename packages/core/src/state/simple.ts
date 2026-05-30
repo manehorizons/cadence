@@ -3,7 +3,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { CadenceStateZ, type CadenceState } from '@cadence/types';
 import { StateCorruptError } from '../errors.js';
-import { atomicWriteJSON } from './atomic-write.js';
+import { atomicWriteJSON, atomicWriteText } from './atomic-write.js';
+import { renderStateMd } from '../render/state-md.js';
 import type { StateBackend } from './backend.js';
 
 export class SimpleStateBackend implements StateBackend {
@@ -34,7 +35,21 @@ export class SimpleStateBackend implements StateBackend {
     return result.data;
   }
 
-  async writeState(state: CadenceState): Promise<void> {
+  /**
+   * Write `state.json` AND the derived `STATE.md` together (Phase 41.1). The
+   * single public write path — callers can no longer write one without the
+   * other, killing the stale-STATE.md class.
+   */
+  async commit(state: CadenceState): Promise<void> {
+    await this.writeState(state);
+    await atomicWriteText(
+      join(await this.resolveStateDir(), 'STATE.md'),
+      renderStateMd(state),
+    );
+  }
+
+  /** Internal `state.json` primitive (Phase 41.1: private — use `commit`). */
+  private async writeState(state: CadenceState): Promise<void> {
     const dir = await this.resolveStateDir();
     if (!existsSync(dir)) {
       await mkdir(dir, { recursive: true });

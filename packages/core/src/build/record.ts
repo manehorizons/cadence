@@ -71,5 +71,6 @@ export async function recordTaskOutcome(
   };
   await atomicWriteJSON(progPath, progress);
   state.activeTask = { id: taskId, status, touchedFiles: [] };
-  await backend.writeState(state);
+  // Phase 41.1 — commit() also refreshes STATE.md (was stale after build task).
+  await backend.commit(state);
 }
