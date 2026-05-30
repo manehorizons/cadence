@@ -1,4 +1,4 @@
-import type { AnomalyEvent } from '@cadence/types';
+import type { AnomalyEvent } from '@manehorizons/cadence-types';
 
 /**
  * Transport for anomaly events emitted by settle (Phase 17).

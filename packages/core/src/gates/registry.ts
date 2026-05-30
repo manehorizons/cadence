@@ -1,4 +1,4 @@
-import type { Gate } from '@cadence/types';
+import type { Gate } from '@manehorizons/cadence-types';
 import type { GateImpl, GateResult, SettleAccumulator, SettleContext } from './types.js';
 import { mergeInto } from './types.js';
 import { runDraftReadGate } from './draft-read.js';

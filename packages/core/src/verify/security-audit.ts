@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
-import type { Finding } from '@cadence/types';
+import type { Finding } from '@manehorizons/cadence-types';
 import { localChatJSON } from './local-client.js';
 
 /**

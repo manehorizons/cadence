@@ -6,7 +6,7 @@ export type Profile = z.infer<typeof ProfileZ>;
 /**
  * Universe of gate names CADENCE understands. The matrix in
  * DESIGN.md Section 4.1 enumerates each gate's cost class; the engine in
- * `@cadence/core/gates/engine.ts` decides which fire per (tier × profile).
+ * `@manehorizons/cadence-core/gates/engine.ts` decides which fire per (tier × profile).
  */
 export const GateZ = z.enum([
   // Free — always fire

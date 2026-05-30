@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { CadenceConfigZ, defaultConfig, type CadenceConfig } from '@cadence/types';
+import { CadenceConfigZ, defaultConfig, type CadenceConfig } from '@manehorizons/cadence-types';
 import { ConfigInvalidError } from '../errors.js';
 import { atomicWriteJSON } from '../state/atomic-write.js';
 

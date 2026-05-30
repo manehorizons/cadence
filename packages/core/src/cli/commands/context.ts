@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { ContextScopeZ } from '@cadence/types';
+import { ContextScopeZ } from '@manehorizons/cadence-types';
 import { runContext } from '../../intelligence/context.js';
 import { renderContextMd } from '../../intelligence/render-context.js';
 

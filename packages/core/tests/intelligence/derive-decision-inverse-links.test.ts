@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IntelligenceDecisionLedger } from '@cadence/types';
+import type { IntelligenceDecisionLedger } from '@manehorizons/cadence-types';
 import { deriveDecisionInverseLinks } from '../../src/intelligence/store.js';
 
 function mkLedger(

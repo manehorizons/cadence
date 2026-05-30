@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Assumption, Recommendation } from '@cadence/types';
+import type { Assumption, Recommendation } from '@manehorizons/cadence-types';
 import { renderAssumptionDetail } from '../../src/intelligence/render-assumption-detail.js';
 
 function mkAs(p: Partial<Assumption> = {}): Assumption {

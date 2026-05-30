@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 
 // AC-1..AC-5 (Phase 21.1) — auto × complex soft cap (DESIGN.md §4 M2).
 

@@ -4,7 +4,7 @@ import type {
   Evidence,
   IntelligenceDecision,
   Recommendation,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import { renderRecommendationDetail } from '../../src/intelligence/render-recommendation-detail.js';
 
 function mkRec(overrides: Partial<Recommendation> = {}): Recommendation {

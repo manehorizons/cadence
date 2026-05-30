@@ -1,5 +1,5 @@
 {
-  "name": "@cadence/types",
+  "name": "@manehorizons/cadence-types",
   "version": "1.0.0",
   "description": "Zod schemas and TypeScript types for CADENCE — the pure data layer shared across every CADENCE package.",
   "license": "MIT",

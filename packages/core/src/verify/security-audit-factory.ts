@@ -1,4 +1,4 @@
-import type { CadenceConfig } from '@cadence/types';
+import type { CadenceConfig } from '@manehorizons/cadence-types';
 import {
   AnthropicSecurityAuditVerifier,
   LocalSecurityAuditVerifier,

@@ -30,13 +30,13 @@ pnpm typecheck            # tsc --noEmit, all packages
 pnpm lint                 # eslint, all packages
 
 # Single-package work:
-pnpm --filter @cadence/core test
-pnpm --filter @cadence/core build
-pnpm --filter @cadence/host-claude-code typecheck
+pnpm --filter @manehorizons/cadence-core test
+pnpm --filter @manehorizons/cadence-core build
+pnpm --filter @manehorizons/cadence-host-claude-code typecheck
 
 # Run a single test file or grep test name:
-pnpm --filter @cadence/core test -- path/to/file.test.ts
-pnpm --filter @cadence/core test -- -t "name fragment"
+pnpm --filter @manehorizons/cadence-core test -- path/to/file.test.ts
+pnpm --filter @manehorizons/cadence-core test -- -t "name fragment"
 ```
 
 Node `>=20` is required. `package.json` pins `pnpm@9.12.0`.
@@ -61,10 +61,10 @@ Two-surface, four-package design. Source of truth for everything below is in
 
 | Package | Role |
 |---|---|
-| `@cadence/core` | The engine. CLI (`cadence` binary), DRAFT→BUILD→SETTLE state machine, all gates, parsers, renderers. This is where ~all logic lives. |
-| `@cadence/types` | Zod schemas + TypeScript types. Pure data layer — no logic, no I/O. Imported by every other package. |
-| `@cadence/host-claude-code` | The Claude Code adapter. Installs lifecycle hooks + nine slash commands; shims abstract events to the core dispatcher. `cadence-host-claude-code install` writes into a consumer's `.claude/`. |
-| `@cadence/testkit` | `private` (dev-only). Mock host + ephemeral-repo fixture + assertions used by every package's tests. Never published to npm. |
+| `@manehorizons/cadence-core` | The engine. CLI (`cadence` binary), DRAFT→BUILD→SETTLE state machine, all gates, parsers, renderers. This is where ~all logic lives. |
+| `@manehorizons/cadence-types` | Zod schemas + TypeScript types. Pure data layer — no logic, no I/O. Imported by every other package. |
+| `@manehorizons/cadence-host-claude-code` | The Claude Code adapter. Installs lifecycle hooks + nine slash commands; shims abstract events to the core dispatcher. `cadence-host-claude-code install` writes into a consumer's `.claude/`. |
+| `@manehorizons/cadence-testkit` | `private` (dev-only). Mock host + ephemeral-repo fixture + assertions used by every package's tests. Never published to npm. |
 
 Three packages publish to npm (`access: public`): `core`, `types`,
 `host-claude-code`. `testkit` is intentionally private. The publish path is
@@ -126,7 +126,7 @@ operator; CADENCE does not enforce it via hook.
 
 `CONTRIBUTING.md` is explicit: every new feature starts with a failing test.
 Tests live in `packages/<pkg>/tests/` (mirrors `src/` structure). Use
-`@cadence/testkit` for ephemeral-repo fixtures rather than rolling your own.
+`@manehorizons/cadence-testkit` for ephemeral-repo fixtures rather than rolling your own.
 
 ### Test ↔ AC linkage
 

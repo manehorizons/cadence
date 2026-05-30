@@ -1,5 +1,5 @@
 {
-  "name": "@cadence/core",
+  "name": "@manehorizons/cadence-core",
   "version": "1.0.0",
   "description": "CADENCE engine — the DRAFT→BUILD→SETTLE loop, configurable quality gates, and the host-agnostic `cadence` CLI for AI-assisted development.",
   "license": "MIT",
@@ -41,12 +41,12 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
-    "@cadence/types": "workspace:*",
+    "@manehorizons/cadence-types": "workspace:*",
     "commander": "^13.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@cadence/testkit": "workspace:*",
+    "@manehorizons/cadence-testkit": "workspace:*",
     "vitest": "^2.1.0"
   }
 }

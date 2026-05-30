@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Inspection } from '@cadence/types';
+import type { Inspection } from '@manehorizons/cadence-types';
 import { renderStrategyMd } from '../../src/intelligence/render-inspection.js';
 
 const base: Inspection = {

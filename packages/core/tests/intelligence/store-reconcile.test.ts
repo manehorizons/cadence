@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import {
   addAssumption,
   addIntelligenceDecision,

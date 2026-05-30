@@ -8,7 +8,7 @@ import type {
   Profile,
   TaskStatus,
   Tier,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import { nextAction, type NextAction } from './progress.js';
 import { parseDraftMd } from './parse/draft-parser.js';
 import { SimpleStateBackend } from './state/simple.js';

@@ -2,7 +2,7 @@ import type {
   IntelligenceDecision,
   IntelligenceDecisionLedger,
   Recommendation,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 
 export function renderDecisionDetail(
   dec: IntelligenceDecision,

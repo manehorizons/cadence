@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { readFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { SimpleStateBackend } from '../../src/state/simple.js';
 import { renderStateMd } from '../../src/render/state-md.js';
-import { CadenceStateZ } from '@cadence/types';
+import { CadenceStateZ } from '@manehorizons/cadence-types';
 
 let active: Fixture | null = null;
 

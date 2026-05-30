@@ -4,7 +4,7 @@ import type {
   DecisionDescendant,
   DecisionGraph,
   IntelligenceDecision,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import { renderDecisionGraph } from '../../src/intelligence/render-decision-graph.js';
 
 function mkDec(p: Partial<IntelligenceDecision> = {}): IntelligenceDecision {

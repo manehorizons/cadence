@@ -1,4 +1,4 @@
-import type { AbstractEvent } from '@cadence/types';
+import type { AbstractEvent } from '@manehorizons/cadence-types';
 import { extractPayload, mapEvent } from './event-map.js';
 
 export interface RouteResult {

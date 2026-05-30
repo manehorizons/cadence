@@ -1,4 +1,4 @@
-import type { Draft, CadenceState } from '@cadence/types';
+import type { Draft, CadenceState } from '@manehorizons/cadence-types';
 
 export interface CoherenceIssue {
   severity: 'warn' | 'block';

@@ -2,7 +2,7 @@ import type {
   DecisionAncestor,
   DecisionDescendant,
   DecisionGraph,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 
 function renderAncestorBullets(nodes: DecisionAncestor[], depth: number): string[] {
   const lines: string[] = [];

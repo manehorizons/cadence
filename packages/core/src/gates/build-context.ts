@@ -5,7 +5,7 @@ import type {
   CadenceState,
   Draft,
   GateSet,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import { selectNotifier } from '../notify/factory.js';
 import { selectPerTaskVerifier } from '../verify/per-task-factory.js';
 import type { BuildGateContext, BuildGateOpts } from './build-types.js';

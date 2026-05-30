@@ -1,4 +1,4 @@
-import type { Tier, CadenceConfig } from '@cadence/types';
+import type { Tier, CadenceConfig } from '@manehorizons/cadence-types';
 
 export interface DraftSignals {
   tasks: { files: string[] }[];

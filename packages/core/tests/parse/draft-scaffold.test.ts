@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderDraftBody, frontmatterStatus } from '../../src/parse/draft-scaffold.js';
-import type { Spec } from '@cadence/types';
+import type { Spec } from '@manehorizons/cadence-types';
 
 // Verbatim pre-#1b scaffold (draft.ts:77) for phase='p' id='99-01' tier='standard' title='T'.
 const LEGACY =

@@ -1,4 +1,4 @@
-import type { IntelligenceDecision, IntelligenceDecisionLedger } from '@cadence/types';
+import type { IntelligenceDecision, IntelligenceDecisionLedger } from '@manehorizons/cadence-types';
 
 export function renderDecisionsMd(ledger: IntelligenceDecisionLedger): string {
   const lines: string[] = [

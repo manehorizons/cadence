@@ -23,7 +23,7 @@ import {
   type RecommendationLedger,
   type RecommendationPriority,
   type RecommendationReadiness,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { renderRecommendationsMd } from './render.js';
 import { renderMilestonesMd } from './render-milestone.js';

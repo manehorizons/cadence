@@ -1,5 +1,5 @@
 {
-  "name": "@cadence/host-claude-code",
+  "name": "@manehorizons/cadence-host-claude-code",
   "version": "1.0.0",
   "description": "Claude Code adapter for CADENCE — installs lifecycle hooks and slash commands that drive the CADENCE engine from inside Claude Code.",
   "license": "MIT",
@@ -37,11 +37,11 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@cadence/types": "workspace:*",
+    "@manehorizons/cadence-types": "workspace:*",
     "commander": "^13.0.0"
   },
   "devDependencies": {
-    "@cadence/testkit": "workspace:*",
+    "@manehorizons/cadence-testkit": "workspace:*",
     "vitest": "^2.1.0"
   }
 }

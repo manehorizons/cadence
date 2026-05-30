@@ -2,7 +2,7 @@ import type {
   IntelligenceMilestone,
   MilestoneLedger,
   MilestonePreMortem,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 
 const PM_SECTIONS = [
   ['likelyFailureModes', 'likely failure modes', '_(why might this fail?)_'],

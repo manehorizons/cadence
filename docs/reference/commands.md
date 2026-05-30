@@ -7,8 +7,8 @@ configuration fields and presets, see [docs/reference/config.md](config.md).
 
 Two CLIs are documented here:
 
-- **`cadence`** — the core CLI (`@cadence/core`)
-- **`cadence-host-claude-code`** — the Claude Code host adapter (`@cadence/host-claude-code`)
+- **`cadence`** — the core CLI (`@manehorizons/cadence-core`)
+- **`cadence-host-claude-code`** — the Claude Code host adapter (`@manehorizons/cadence-host-claude-code`)
 
 ---
 
@@ -1015,8 +1015,8 @@ Write Claude Code hook entries and slash commands into the project
 | Option | Default | Description |
 |---|---|---|
 | `--cwd <dir>` | (current working directory) | Project root |
-| `--command <cmd>` | `"npx @cadence/host-claude-code"` | Base command for the shim |
-| `--cadence <cmd>` | `"npx @cadence/core"` | Base command the shim uses to invoke core |
+| `--command <cmd>` | `"npx @manehorizons/cadence-host-claude-code"` | Base command for the shim |
+| `--cadence <cmd>` | `"npx @manehorizons/cadence-core"` | Base command the shim uses to invoke core |
 | `--settings <path>` | `".claude/settings.json"` | Settings file path relative to `cwd` |
 | `--no-hooks` | — | Skip writing hooks to `settings.json` |
 | `--no-commands` | — | Skip writing slash commands to `.claude/commands/` |
@@ -1046,7 +1046,7 @@ Shim invoked by Claude Code hooks: translates stdin and calls cadence hook <even
 
 | Option | Default | Description |
 |---|---|---|
-| `--cadence <cmd>` | `"npx @cadence/core"` | Base command to invoke core |
+| `--cadence <cmd>` | `"npx @manehorizons/cadence-core"` | Base command to invoke core |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — this command is invoked by Claude Code at hook time (e.g.

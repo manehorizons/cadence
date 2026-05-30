@@ -1,4 +1,4 @@
-import type { CadenceState } from '@cadence/types';
+import type { CadenceState } from '@manehorizons/cadence-types';
 
 export function renderStateMd(state: CadenceState): string {
   const lines = [

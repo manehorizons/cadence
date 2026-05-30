@@ -1,6 +1,6 @@
 # Claude Code Host Adapter How-To
 
-The `@cadence/host-claude-code` package is the **host adapter** that connects
+The `@manehorizons/cadence-host-claude-code` package is the **host adapter** that connects
 CADENCE to Claude Code. It installs two integration surfaces into your project:
 
 - **Hooks** — entries in `.claude/settings.json` that fire the CADENCE shim on
@@ -11,7 +11,7 @@ CADENCE to Claude Code. It installs two integration surfaces into your project:
 The agent then drives the same CADENCE engine it would via the CLI — through
 the same `cadence hook <event>` dispatch path — without any special API surface.
 
-> **Dogfood note:** `@cadence/host-claude-code` is not yet published to npm.
+> **Dogfood note:** `@manehorizons/cadence-host-claude-code` is not yet published to npm.
 > All examples below use the local build:
 > `node packages/host-claude-code/dist/cli.js <cmd>` (after building the
 > package). The `--local` flag automates the path resolution for this case.
@@ -56,9 +56,9 @@ Write Claude Code hook entries and slash commands into the project
 Options:
   --cwd <dir>        project root (default: current working directory)
   --command <cmd>    base command for the shim
-                     (default: "npx @cadence/host-claude-code")
+                     (default: "npx @manehorizons/cadence-host-claude-code")
   --cadence <cmd>    base command the shim uses to invoke core
-                     (default: "npx @cadence/core")
+                     (default: "npx @manehorizons/cadence-core")
   --settings <path>  settings file path relative to cwd
                      (default: ".claude/settings.json")
   --no-hooks         skip writing hooks to settings.json
@@ -89,7 +89,7 @@ node packages/host-claude-code/dist/cli.js install --local --settings .claude/se
 
 ```sh
 node packages/host-claude-code/dist/cli.js install \
-  --command "npx @cadence/host-claude-code" \
+  --command "npx @manehorizons/cadence-host-claude-code" \
   --cadence "node /absolute/path/to/cadence.cjs"
 ```
 

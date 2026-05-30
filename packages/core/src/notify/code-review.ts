@@ -1,4 +1,4 @@
-import type { AnomalyEvent } from '@cadence/types';
+import type { AnomalyEvent } from '@manehorizons/cadence-types';
 import type { Finding } from '../verify/code-review.js';
 import type { selectNotifier } from './factory.js';
 import { emitUnconverged } from './emit-unconverged.js';

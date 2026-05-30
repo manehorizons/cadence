@@ -7,7 +7,7 @@ import type {
   CadenceState,
   Draft,
   GateSet,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import { coherenceCheck, type CoherenceResult } from '../coherence/check.js';
 import { atomicWriteText } from '../state/atomic-write.js';
 import { selectNotifier } from '../notify/factory.js';

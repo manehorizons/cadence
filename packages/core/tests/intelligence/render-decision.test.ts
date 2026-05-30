@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IntelligenceDecisionLedger } from '@cadence/types';
+import type { IntelligenceDecisionLedger } from '@manehorizons/cadence-types';
 import { renderDecisionsMd } from '../../src/intelligence/render-decision.js';
 
 describe('renderDecisionsMd (Slice 8 + Slice 13 / AC-5 + AC-6)', () => {

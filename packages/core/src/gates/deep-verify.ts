@@ -1,4 +1,4 @@
-import type { DeepVerdict } from '@cadence/types';
+import type { DeepVerdict } from '@manehorizons/cadence-types';
 import type { VerifyAc, VerifyInput, VerifyTestRef } from '../verify/verifier.js';
 import type { GateImpl, GateFlags, GateResult } from './types.js';
 

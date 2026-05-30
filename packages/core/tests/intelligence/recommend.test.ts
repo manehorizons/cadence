@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { BackendStatus, Recommendation } from '@cadence/types';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+import type { BackendStatus, Recommendation } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { addRecommendation } from '../../src/intelligence/store.js';
 import { scoreRecommendation, partitionLedger, buildAdvisory, synthesizeRecommendation, runRecommend } from '../../src/intelligence/recommend.js';
 

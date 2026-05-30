@@ -12,7 +12,7 @@ The **`cadence-host-claude-code install`** adapter wires the same engine into Cl
 
 ## Quickstart (local install)
 
-> **Not yet published — local install for now.** `@cadence/core` is not on npm; `npx @cadence/core` is not yet available. Use the local-dogfood invocation below. Build first with `pnpm -C packages/core build`. The publish path is proven and reversible (Phase 30.1: verdaccio + dry-run); the actual public release is a tracked **v1.4 "Public release"** milestone (see `.cadence/ROADMAP.md`).
+> **Not yet published — local install for now.** `@manehorizons/cadence-core` is not on npm; `npx @manehorizons/cadence-core` is not yet available. Use the local-dogfood invocation below. Build first with `pnpm -C packages/core build`. The publish path is proven and reversible (Phase 30.1: verdaccio + dry-run); the actual public release is a tracked **v1.4 "Public release"** milestone (see `.cadence/ROADMAP.md`).
 
 ```sh
 # Adapt this path to your CADENCE checkout:

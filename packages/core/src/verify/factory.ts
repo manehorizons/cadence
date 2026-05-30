@@ -1,4 +1,4 @@
-import type { CadenceConfig } from '@cadence/types';
+import type { CadenceConfig } from '@manehorizons/cadence-types';
 import { AnthropicVerifier } from './anthropic-verifier.js';
 import { MockVerifier } from './mock-verifier.js';
 import { LocalVerifier, type Verifier } from './verifier.js';

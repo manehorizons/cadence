@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mkdtemp, readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { AnomalyEvent } from '@cadence/types';
+import type { AnomalyEvent } from '@manehorizons/cadence-types';
 import { NullNotifier } from '../../src/notify/null.js';
 import { StderrNotifier } from '../../src/notify/stderr.js';
 import { FileNotifier } from '../../src/notify/file.js';

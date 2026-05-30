@@ -7,7 +7,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 
 const CADENCE_CLI = join(
   dirname(fileURLToPath(import.meta.url)),

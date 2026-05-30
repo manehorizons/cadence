@@ -3,7 +3,7 @@ import { readFile } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { atomicWriteJSON } from '../../src/state/atomic-write.js';
 
 const readFileP = promisify(readFile);

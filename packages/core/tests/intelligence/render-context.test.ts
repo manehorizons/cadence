@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ContextPacket } from '@cadence/types';
+import type { ContextPacket } from '@manehorizons/cadence-types';
 import { renderContextMd } from '../../src/intelligence/render-context.js';
 
 const full: ContextPacket = {

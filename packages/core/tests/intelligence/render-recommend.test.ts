@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { RecommendationReport } from '@cadence/types';
+import type { RecommendationReport } from '@manehorizons/cadence-types';
 import { renderRecommendMd } from '../../src/intelligence/render-recommend.js';
 
 const base: RecommendationReport = {

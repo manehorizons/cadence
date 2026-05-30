@@ -1,4 +1,4 @@
-import type { AbstractEvent, HookContext, HostCapabilities } from '@cadence/types';
+import type { AbstractEvent, HookContext, HostCapabilities } from '@manehorizons/cadence-types';
 
 const FULL_HOOKS: AbstractEvent[] = [
   'session-start',

@@ -1,4 +1,4 @@
-import type { Finding } from '@cadence/types';
+import type { Finding } from '@manehorizons/cadence-types';
 import { nextConvergence } from '../verify/converge.js';
 import type { GateImpl, GateResult } from './types.js';
 

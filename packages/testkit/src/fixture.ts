@@ -1,7 +1,7 @@
 import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultConfig, emptyState } from '@cadence/types';
+import { defaultConfig, emptyState } from '@manehorizons/cadence-types';
 
 export interface Fixture {
   root: string;

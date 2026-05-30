@@ -3,8 +3,8 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
-import type { AnomalyEvent } from '@cadence/types';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import type { AnomalyEvent } from '@manehorizons/cadence-types';
 import {
   parseAnomalyLines,
   tailSelect,

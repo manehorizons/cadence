@@ -9,7 +9,7 @@ import type {
   RecommendationDecayState,
   RecommendationReadiness,
   RecommendationStatus,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import {
   readAssumptionLedger,
   readMilestoneLedger,

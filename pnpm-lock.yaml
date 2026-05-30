@@ -44,7 +44,7 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.96.0
         version: 0.96.0(zod@3.25.76)
-      '@cadence/types':
+      '@manehorizons/cadence-types':
         specifier: workspace:*
         version: link:../types
       commander:
@@ -54,7 +54,7 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
     devDependencies:
-      '@cadence/testkit':
+      '@manehorizons/cadence-testkit':
         specifier: workspace:*
         version: link:../testkit
       vitest:
@@ -63,14 +63,14 @@ importers:
 
   packages/host-claude-code:
     dependencies:
-      '@cadence/types':
+      '@manehorizons/cadence-types':
         specifier: workspace:*
         version: link:../types
       commander:
         specifier: ^13.0.0
         version: 13.1.0
     devDependencies:
-      '@cadence/testkit':
+      '@manehorizons/cadence-testkit':
         specifier: workspace:*
         version: link:../testkit
       vitest:
@@ -79,7 +79,7 @@ importers:
 
   packages/testkit:
     dependencies:
-      '@cadence/types':
+      '@manehorizons/cadence-types':
         specifier: workspace:*
         version: link:../types
     devDependencies:

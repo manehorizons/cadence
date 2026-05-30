@@ -3,7 +3,7 @@
  * Uses an injected transport so no real network calls are made.
  */
 import { describe, it, expect } from 'vitest';
-import type { Draft } from '@cadence/types';
+import type { Draft } from '@manehorizons/cadence-types';
 import {
   LocalCodeReviewVerifier,
 } from '../../src/verify/code-review.js';

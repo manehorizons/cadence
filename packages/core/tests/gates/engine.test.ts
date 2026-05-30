@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Profile, Tier } from '@cadence/types';
+import type { Profile, Tier } from '@manehorizons/cadence-types';
 import { effectiveGateSet, effectiveProfile, gatesFor } from '../../src/gates/engine.js';
 
 const ALWAYS = ['coherence-check', 'structural-verifier', 'build-test-must-pass'] as const;

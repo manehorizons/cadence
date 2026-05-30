@@ -7,9 +7,9 @@ import type {
   Evidence,
   IntelligenceDecision,
   Recommendation,
-} from '@cadence/types';
-import { ContextPacketZ } from '@cadence/types';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+} from '@manehorizons/cadence-types';
+import { ContextPacketZ } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { synthesizeContextPacket, runContext } from '../../src/intelligence/context.js';
 import {
   addAssumption,

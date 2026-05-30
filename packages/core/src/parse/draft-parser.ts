@@ -1,4 +1,4 @@
-import { DraftZ, type Draft } from '@cadence/types';
+import { DraftZ, type Draft } from '@manehorizons/cadence-types';
 import { CadenceError } from '../errors.js';
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n/;

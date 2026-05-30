@@ -3,7 +3,7 @@ import type {
   DecisionDescendant,
   DecisionGraph,
   IntelligenceDecisionLedger,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 
 // Internal: transitive backward walk via inverse-supersededBy lookup.
 // `seen` carries every ancestor id already on the current path so we can

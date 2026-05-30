@@ -1,13 +1,13 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import type {
   AssumptionLedger,
   IntelligenceDecisionLedger,
   Recommendation,
   RecommendationLedger,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import {
   addAssumption,
   addIntelligenceDecision,

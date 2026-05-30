@@ -1,4 +1,4 @@
-import type { Summary } from '@cadence/types';
+import type { Summary } from '@manehorizons/cadence-types';
 
 export function renderSummaryMd(s: Summary): string {
   const lines: string[] = [

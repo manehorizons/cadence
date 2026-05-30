@@ -1,4 +1,4 @@
-import type { AnomalyEvent } from '@cadence/types';
+import type { AnomalyEvent } from '@manehorizons/cadence-types';
 
 /** The single line both emission points use for a stray file. */
 export const boundaryMessage = (file: string): string =>

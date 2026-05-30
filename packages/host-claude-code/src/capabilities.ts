@@ -1,4 +1,4 @@
-import type { HostCapabilities } from '@cadence/types';
+import type { HostCapabilities } from '@manehorizons/cadence-types';
 
 export const claudeCodeCapabilities: HostCapabilities = {
   hooks: [

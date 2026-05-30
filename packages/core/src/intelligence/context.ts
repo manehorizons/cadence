@@ -9,8 +9,8 @@ import type {
   Evidence,
   IntelligenceDecision,
   Recommendation,
-} from '@cadence/types';
-import { ContextPacketZ } from '@cadence/types';
+} from '@manehorizons/cadence-types';
+import { ContextPacketZ } from '@manehorizons/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { partitionLedger, scoreRecommendation } from './recommend.js';
 import {

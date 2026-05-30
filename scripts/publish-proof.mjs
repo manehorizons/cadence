@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Reversible publish proof: ephemeral verdaccio -> real pnpm publish of the 3
-// publishable @cadence/* packages -> clean-dir install -> assert no
+// publishable @manehorizons/cadence-* packages -> clean-dir install -> assert no
 // workspace: leak + both bins run -> unconditional Windows-safe teardown.
 // NO non-localhost registry is contacted for *publish* (transitive deps proxy
 // npmjs for *install* only).
@@ -43,7 +43,7 @@ uplinks:
   npmjs:
     url: https://registry.npmjs.org/
 packages:
-  '@cadence/*':
+  '@manehorizons/cadence-*':
     access: $all
     publish: $all
     unpublish: $all
@@ -60,7 +60,7 @@ log: { type: stdout, format: pretty, level: warn }
 // userconfig token lives in an OS-temp dir — NEVER written into the repo
 // (no repo-root .npmrc artifact to leak/commit on interrupt).
 const npmrc = join(tmp('vc-rc-'), '.npmrc');
-writeFileSync(npmrc, `@cadence:registry=${REG}\n//localhost:4873/:_authToken=publishproof\n`);
+writeFileSync(npmrc, `@manehorizons:registry=${REG}\n//localhost:4873/:_authToken=publishproof\n`);
 
 let vc;
 try {
@@ -82,19 +82,19 @@ try {
   const pubEnv = { ...process.env, npm_config_userconfig: npmrc, npm_config_registry: REG };
   for (const p of PKGS) {
     must(run('pnpm', ['publish', '--registry', REG, '--no-git-checks', '--no-provenance'],
-      { cwd: join(REPO, 'packages', p), env: pubEnv }), `publish @cadence/${p}`);
+      { cwd: join(REPO, 'packages', p), env: pubEnv }), `publish @manehorizons/cadence-${p}`);
   }
 
   const proj = tmp('vc-proj-');
   must(run('npm', ['init', '-y'], { cwd: proj }), 'npm init');
-  must(run('npm', ['i', '@cadence/core', '@cadence/host-claude-code', '--registry', REG], { cwd: proj }),
-    'clean install @cadence/core + host');
-  const scoped = join(proj, 'node_modules', '@cadence');
+  must(run('npm', ['i', '@manehorizons/cadence-core', '@manehorizons/cadence-host-claude-code', '--registry', REG], { cwd: proj }),
+    'clean install @manehorizons/cadence-core + host');
+  const scoped = join(proj, 'node_modules', '@manehorizons');
   for (const name of readdirSync(scoped)) {
     const pj = JSON.parse(readFileSync(join(scoped, name, 'package.json'), 'utf8'));
     for (const [d, v] of Object.entries({ ...pj.dependencies })) {
-      if (d.startsWith('@cadence/') && /workspace:/.test(String(v))) {
-        throw new Error(`workspace: leak in @cadence/${name} -> ${d}@${v}`);
+      if (d.startsWith('@manehorizons/cadence-') && /workspace:/.test(String(v))) {
+        throw new Error(`workspace: leak in @manehorizons/cadence-${name} -> ${d}@${v}`);
       }
     }
   }

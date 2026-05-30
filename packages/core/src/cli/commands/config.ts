@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { loadConfig, writeConfig } from '../../config/loader.js';
-import { CadenceConfigZ } from '@cadence/types';
+import { CadenceConfigZ } from '@manehorizons/cadence-types';
 
 function getPath(obj: Record<string, unknown>, path: string[]): unknown {
   let cur: unknown = obj;

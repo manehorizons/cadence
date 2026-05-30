@@ -12,7 +12,7 @@ pnpm test
 
 CADENCE itself is built with TDD. Every new feature starts with a failing test, then implementation, then commit.
 
-- Run a single package: `pnpm --filter @cadence/core test`
+- Run a single package: `pnpm --filter @manehorizons/cadence-core test`
 - Build everything: `pnpm build`
 - Type-check: `pnpm typecheck`
 - Lint: `pnpm lint`

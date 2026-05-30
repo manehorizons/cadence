@@ -5,7 +5,7 @@ import {
   RecommendationPriorityZ,
   RecommendationReadinessZ,
   RecommendationStatusZ,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import {
   addRecommendation,
   readAssumptionLedger,

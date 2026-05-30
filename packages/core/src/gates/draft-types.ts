@@ -4,7 +4,7 @@ import type {
   CadenceState,
   Draft,
   GateSet,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import type { CoherenceResult } from '../coherence/check.js';
 import type { PlanReviewInput, PlanReviewResult } from '../verify/plan-review.js';
 import type { Prompter } from '../verify/prompter.js';

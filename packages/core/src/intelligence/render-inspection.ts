@@ -1,4 +1,4 @@
-import type { Inspection } from '@cadence/types';
+import type { Inspection } from '@manehorizons/cadence-types';
 
 export function renderStrategyMd(inspection: Inspection): string {
   const { repo, backend, ledger, flags } = inspection;

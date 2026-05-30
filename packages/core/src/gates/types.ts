@@ -6,7 +6,7 @@ import type {
   Draft,
   Finding,
   GateSet,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import type {
   VerifyInput,
   VerifyResult,

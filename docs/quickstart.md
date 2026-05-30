@@ -7,8 +7,8 @@ For the *why* behind the loop and the gate model, read
 [docs/concepts.md](concepts.md) first. For exhaustive flag references, see
 [docs/cli.md](cli.md) and [docs/reference/commands.md](reference/commands.md).
 
-> **Not yet published.** `@cadence/core` is not yet on npm, so `npx
-> @cadence/core` will 404. Use the local-dogfood invocation shown throughout
+> **Not yet published.** `@manehorizons/cadence-core` is not yet on npm, so `npx
+> @manehorizons/cadence-core` will 404. Use the local-dogfood invocation shown throughout
 > this guide. Once the package is published, replace the long `node …/…/…`
 > prefix with `cadence`.
 

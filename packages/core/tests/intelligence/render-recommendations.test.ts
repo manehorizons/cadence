@@ -5,7 +5,7 @@ import type {
   IntelligenceDecisionLedger,
   Recommendation,
   RecommendationLedger,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import { renderRecommendationsMd } from '../../src/intelligence/render.js';
 
 const emptyEv: EvidenceLedger = { schemaVersion: 1, evidence: [] };

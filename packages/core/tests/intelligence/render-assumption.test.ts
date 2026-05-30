@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { AssumptionLedger } from '@cadence/types';
+import type { AssumptionLedger } from '@manehorizons/cadence-types';
 import { renderAssumptionsMd } from '../../src/intelligence/render-assumption.js';
 
 describe('renderAssumptionsMd (Slice 8)', () => {

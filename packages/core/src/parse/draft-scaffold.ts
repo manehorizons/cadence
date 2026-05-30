@@ -1,4 +1,4 @@
-import type { Spec } from '@cadence/types';
+import type { Spec } from '@manehorizons/cadence-types';
 
 /**
  * Phase 38.1 (#1b) — pure DRAFT.md body renderer. The `spec`-absent branch is

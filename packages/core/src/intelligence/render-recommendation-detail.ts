@@ -3,7 +3,7 @@ import type {
   Evidence,
   IntelligenceDecision,
   Recommendation,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 
 export type RenderRecommendationDetailOptions = {
   openAssumptionsOnly?: boolean;

@@ -6,7 +6,7 @@ import type {
   GateSet,
   Profile,
   Tier,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 
 /**
  * Gates that always fire regardless of (tier × profile). Free per DESIGN.md

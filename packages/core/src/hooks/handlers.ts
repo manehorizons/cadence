@@ -1,4 +1,4 @@
-import type { HookContext, CadenceConfig, CadenceState } from '@cadence/types';
+import type { HookContext, CadenceConfig, CadenceState } from '@manehorizons/cadence-types';
 import type { SimpleStateBackend } from '../state/simple.js';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';

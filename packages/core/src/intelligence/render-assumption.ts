@@ -1,4 +1,4 @@
-import type { Assumption, AssumptionLedger } from '@cadence/types';
+import type { Assumption, AssumptionLedger } from '@manehorizons/cadence-types';
 
 export function renderAssumptionsMd(ledger: AssumptionLedger): string {
   const lines: string[] = [

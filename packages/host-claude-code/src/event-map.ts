@@ -1,4 +1,4 @@
-import type { AbstractEvent } from '@cadence/types';
+import type { AbstractEvent } from '@manehorizons/cadence-types';
 
 export const EDIT_TOOL_MATCHER = 'Edit|Write|MultiEdit|NotebookEdit';
 export const SKILL_TOOL_MATCHER = 'Skill';

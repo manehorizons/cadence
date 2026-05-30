@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { RecommendationReportZ } from '@cadence/types';
+import { RecommendationReportZ } from '@manehorizons/cadence-types';
 import type {
   BackendStatus,
   Recommendation,
@@ -8,7 +8,7 @@ import type {
   RecommendationRank,
   RecommendationReport,
   ScoreTerm,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { intelligenceDir, readRecommendationLedger } from './store.js';
 import { cadenceBackend } from './backend/cadence.js';

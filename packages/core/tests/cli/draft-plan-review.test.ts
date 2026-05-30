@@ -3,7 +3,7 @@ import { spawn, execSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 
 const CADENCE_CLI = join(
   dirname(fileURLToPath(import.meta.url)),

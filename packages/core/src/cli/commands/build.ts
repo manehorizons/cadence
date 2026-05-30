@@ -2,7 +2,7 @@ import type { Command } from 'commander';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { TaskStatusZ, type Draft } from '@cadence/types';
+import { TaskStatusZ, type Draft } from '@manehorizons/cadence-types';
 import {
   recordTaskOutcome,
   type PerTaskVerifyRecord,

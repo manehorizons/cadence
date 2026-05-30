@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@cadence/testkit';
-import { emptyState } from '@cadence/types';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { emptyState } from '@manehorizons/cadence-types';
 import { SimpleStateBackend } from '../../src/state/simple.js';
 import { StateCorruptError } from '../../src/errors.js';
 

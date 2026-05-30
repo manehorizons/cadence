@@ -1,4 +1,4 @@
-import type { RecommendationReport } from '@cadence/types';
+import type { RecommendationReport } from '@manehorizons/cadence-types';
 
 export function renderRecommendMd(report: RecommendationReport): string {
   const lines: string[] = [

@@ -1,6 +1,6 @@
 import { describe, expect, it, afterEach } from 'vitest';
-import { tempRepo, type Fixture } from '@cadence/testkit';
-import { RepoScanZ } from '@cadence/types';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { RepoScanZ } from '@manehorizons/cadence-types';
 import { scanRepo } from '../../src/intelligence/scan.js';
 
 let active: Fixture | null = null;

@@ -7,7 +7,7 @@ familiar — if not, read [docs/concepts.md](concepts.md) first.
 For the exhaustive option lists (every flag and its default), see
 [docs/reference/commands.md](reference/commands.md).
 
-> **Dogfood note:** `@cadence/core` is not yet published to npm. All examples
+> **Dogfood note:** `@manehorizons/cadence-core` is not yet published to npm. All examples
 > below use the local build invocation style:
 > `node packages/core/bin/cadence.cjs <cmd>` (or `dist/cli/index.js` after a
 > full build). Once published, replace that prefix with `cadence`.

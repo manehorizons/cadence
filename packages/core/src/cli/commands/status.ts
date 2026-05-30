@@ -8,7 +8,7 @@ import {
   closeSync,
 } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
-import { AnomalyEventZ, AnomalyTypeZ, type AnomalyEvent, type AnomalyType } from '@cadence/types';
+import { AnomalyEventZ, AnomalyTypeZ, type AnomalyEvent, type AnomalyType } from '@manehorizons/cadence-types';
 import { loadStatus, renderStatus } from '../../status.js';
 import { loadConfig } from '../../config/loader.js';
 

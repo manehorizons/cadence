@@ -3,7 +3,7 @@ import type {
   CadenceState,
   Draft,
   GateSet,
-} from '@cadence/types';
+} from '@manehorizons/cadence-types';
 import type { PerTaskInput, PerTaskResult } from '../verify/per-task.js';
 import type { PerTaskVerifyRecord } from '../build/record.js';
 import type { GateResult, IoPort } from './types.js';

@@ -1,4 +1,4 @@
-# @cadence/core
+# @manehorizons/cadence-core
 
 The CADENCE CLI engine — the `cadence` command (draft → build → settle loop, gates, telemetry).
 
