@@ -36,7 +36,7 @@ export const AnomalyEventZ = z.object({
   /** One-line human-readable description. */
   message: z.string(),
   /** Type-specific free-form payload. */
-  context: z.record(z.unknown()),
+  context: z.record(z.string(), z.unknown()),
   /**
    * Wall-clock when the event was constructed. ISO8601 with offset
    * (e.g., `"2026-05-14T22:30:00.000Z"`). Emitters stamp via

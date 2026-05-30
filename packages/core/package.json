@@ -43,7 +43,7 @@
     "@anthropic-ai/sdk": "^0.96.0",
     "@manehorizons/cadence-types": "workspace:*",
     "commander": "^13.0.0",
-    "zod": "^3.23.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@manehorizons/cadence-testkit": "workspace:*",
