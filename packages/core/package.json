@@ -1,7 +1,23 @@
 {
   "name": "@cadence/core",
   "version": "1.0.0",
+  "description": "CADENCE engine — the DRAFT→BUILD→SETTLE loop, configurable quality gates, and the host-agnostic `cadence` CLI for AI-assisted development.",
   "license": "MIT",
+  "author": "Thomas Powers",
+  "homepage": "https://github.com/manehorizons/cadence#readme",
+  "bugs": "https://github.com/manehorizons/cadence/issues",
+  "keywords": [
+    "cadence",
+    "ai",
+    "llm",
+    "agents",
+    "code-review",
+    "quality-gates",
+    "tdd",
+    "workflow",
+    "claude",
+    "cli"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

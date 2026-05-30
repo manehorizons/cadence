@@ -7,9 +7,11 @@ on:
     branches: [main]
 
 # Dev-time CI runs on a single self-hosted Linux runner (Node 20 only)
-# to avoid GitHub-hosted Actions minutes. The full multi-OS × Node 20+22
-# matrix (against GitHub-hosted runners) returns at the v1.2 public-
-# release milestone — restore the previous strategy block before tagging.
+# to avoid GitHub-hosted Actions minutes on the private repo. The full
+# multi-OS × Node 20+22 matrix (against GitHub-hosted runners) returns at
+# the v1.4 public-release milestone — restore the previous strategy block
+# AND deregister the self-hosted runner before/at going public, since a
+# self-hosted runner on a public repo lets fork PRs execute code on it.
 jobs:
   test:
     runs-on: [self-hosted, linux]

@@ -1,0 +1,54 @@
+name: Bug report
+description: Report something in CADENCE that is broken or behaves unexpectedly.
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please do **not** report security
+        vulnerabilities here — see [SECURITY.md](../../SECURITY.md) for private
+        reporting.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including what you expected instead.
+      placeholder: "`cadence settle run --auto` exits 1 with ... but I expected ..."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands you ran, in order.
+      placeholder: |
+        1. cadence init --name demo
+        2. cadence draft new 01-foundation 01 --title "..."
+        3. cadence settle run --auto
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: surface
+    attributes:
+      label: Surface
+      description: CLI, the Claude Code adapter, or both?
+      placeholder: "CLI"
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: "Output of `node --version`, your OS, and the `@cadence/*` versions (or commit SHA if running from source)."
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Command output, stack traces, or `.cadence/` artifacts. Redact anything sensitive.
+      render: shell
+    validations:
+      required: false

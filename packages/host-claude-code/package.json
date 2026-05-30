@@ -1,7 +1,20 @@
 {
   "name": "@cadence/host-claude-code",
   "version": "1.0.0",
+  "description": "Claude Code adapter for CADENCE — installs lifecycle hooks and slash commands that drive the CADENCE engine from inside Claude Code.",
   "license": "MIT",
+  "author": "Thomas Powers",
+  "homepage": "https://github.com/manehorizons/cadence#readme",
+  "bugs": "https://github.com/manehorizons/cadence/issues",
+  "keywords": [
+    "cadence",
+    "claude",
+    "claude-code",
+    "ai",
+    "agents",
+    "hooks",
+    "slash-commands"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

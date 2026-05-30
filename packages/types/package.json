@@ -1,7 +1,18 @@
 {
   "name": "@cadence/types",
   "version": "1.0.0",
+  "description": "Zod schemas and TypeScript types for CADENCE — the pure data layer shared across every CADENCE package.",
   "license": "MIT",
+  "author": "Thomas Powers",
+  "homepage": "https://github.com/manehorizons/cadence#readme",
+  "bugs": "https://github.com/manehorizons/cadence/issues",
+  "keywords": [
+    "cadence",
+    "zod",
+    "types",
+    "schema",
+    "typescript"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
