@@ -50,9 +50,9 @@ branch protection, so this is the enforcement layer. Bypass with
 `git push --no-verify` only when you mean it.
 
 The same four-command pipeline runs in `.github/workflows/ci.yml` on every
-PR + push, on GitHub-hosted runners across Node 20 + 22 on Ubuntu and macOS.
-(A Windows leg is deferred pending a fix for a Windows-only test-harness
-flush race — see the `ci.yml` comment.)
+PR + push, on GitHub-hosted Ubuntu runners across Node 20 + 22. (macOS and
+Windows legs are deferred pending a cross-platform test-harness fix — see the
+`ci.yml` comment.)
 
 ## Architecture
 

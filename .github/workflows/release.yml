@@ -31,8 +31,12 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Gate (lint, typecheck, test, build)
-        run: pnpm turbo run lint typecheck test build
+      # Build first: the host-claude-code integration tests spawn the *built*
+      # core CLI by path, so dist must exist before `test` runs (a single
+      # `turbo run test build` races them).
+      - run: pnpm build
+      - name: Gate (typecheck, lint, test)
+        run: pnpm turbo run typecheck lint test
       - name: Publish to npm (provenance)
         if: ${{ inputs.dry_run == false }}
         run: pnpm -r publish --access public --provenance --no-git-checks
