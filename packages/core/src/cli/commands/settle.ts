@@ -16,19 +16,10 @@ import { effectiveGateSet } from '../../gates/engine.js';
 import { scanTestCoverage } from '../../verify/coverage.js';
 import { selectVerifier } from '../../verify/factory.js';
 import type { VerifyTestRef } from '../../verify/verifier.js';
-import { runCoverageGate } from '../../gates/coverage.js';
-import { runDeepVerifyGate } from '../../gates/deep-verify.js';
-import { runDraftReadGate } from '../../gates/draft-read.js';
-import { runStructuralVerifierGate } from '../../gates/structural-verifier.js';
-import { runBuildTestGate } from '../../gates/build-test-must-pass.js';
-import { runInteractiveGate } from '../../gates/interactive.js';
-import { runCodeReviewGate } from '../../gates/code-review.js';
-import { runSecurityAuditGate } from '../../gates/security-audit.js';
+import { runSettleGates } from '../../gates/registry.js';
 import { runSkillAuditCheck } from '../../checks/skill-audit.js';
 import {
-  mergeInto,
   type SettleContext,
-  type SettleAccumulator,
   type ProgressJson,
   type AcResult,
 } from '../../gates/types.js';
@@ -340,104 +331,31 @@ export function registerSettleCommand(program: Command): void {
           },
           io: { err: (s) => process.stderr.write(s) },
         };
-        const acc: SettleAccumulator = { flags: {} };
-
-        // Phase 39.2 — three enum gates routed through the contract, in
-        // execution order: draft-read (cheap, was inline) → structural-verifier
-        // (always-fire) → build-test-must-pass (always-fire), all before the
-        // coverage gate. Each is membership-guarded (registry-ready for 44.1)
-        // and follows the 39.1 refuse-and-halt keystone.
-        if (gateSet.gates.includes('draft-read')) {
-          const res = await runDraftReadGate(ctx);
-          mergeInto(acc, res);
-          if (res.outcome === 'refuse') {
-            process.exitCode = 1;
-            return;
-          }
-        }
-        if (gateSet.gates.includes('structural-verifier')) {
-          const res = await runStructuralVerifierGate(ctx);
-          mergeInto(acc, res);
-          if (res.outcome === 'refuse') {
-            process.exitCode = 1;
-            return;
-          }
-        }
-        if (gateSet.gates.includes('build-test-must-pass')) {
-          const res = await runBuildTestGate(ctx);
-          mergeInto(acc, res);
-          if (res.outcome === 'refuse') {
-            process.exitCode = 1;
-            return;
-          }
-        }
-
-        if (gateSet.gates.includes('test-coverage')) {
-          const res = await runCoverageGate(ctx);
-          mergeInto(acc, res);
-          if (res.outcome === 'refuse') {
-            process.exitCode = 1;
-            return;
-          }
+        // Phase 44.1 — the settle gate sequence is now engine-driven: the
+        // registry's GATE_ORDER (≠ matrix order) drives dispatch, each gate
+        // membership-guarded (or self-guarded for deep-verify/interactive-verdict),
+        // first-refuse halts. Replaces the former hand-wired if-includes ladder;
+        // bit-identical. checks/ modules (skill-audit, boundary) + anomaly-notify
+        // stay explicitly dispatched below, outside the registry.
+        const { acc, refused } = await runSettleGates(ctx);
+        if (refused) {
+          process.exitCode = 1;
+          return;
         }
         const coverageBypassed = acc.flags.coverageBypassed === true;
 
-        // Interactive walker (Phase 16) — extracted to gates/interactive.ts
-        // (Phase 39.3). Fires on --interactive OR membership('interactive-verdict');
-        // skipped under --auto=false. `interactiveRequested` is also read by the
-        // AC-merge finalizer below, so it stays a settle local (pure derivation).
+        // `interactiveRequested` is read by the AC-merge finalizer below (not by
+        // gate dispatch), so it stays a settle local — the documented seam
+        // between the interactive gate and the finalizer. Mirrors the gate's own
+        // --interactive OR membership('interactive-verdict') trigger.
         const interactiveRequested =
           opts.interactive === true ||
           (opts.interactive !== false &&
             gateSet.gates.includes('interactive-verdict'));
-        {
-          const res = await runInteractiveGate(ctx);
-          mergeInto(acc, res);
-          if (res.outcome === 'refuse') {
-            process.exitCode = 1;
-            return;
-          }
-        }
         const interactiveVerify = acc.interactiveVerify;
-
-        // Deep verifier (Phase 15) — fires on explicit --deep OR when 'deep-verify' is
-        // in the gate set (e.g. standard × complex). Records per-AC verdicts; refuses
-        // on failed verdicts for non-overridden ACs unless --force is set.
-        {
-          const res = await runDeepVerifyGate(ctx);
-          mergeInto(acc, res);
-          if (res.outcome === 'refuse') {
-            process.exitCode = 1;
-            return;
-          }
-        }
         const deepVerify = acc.deepVerify;
         const verifierFailure = acc.flags.verifierFailure;
-
-        // Phase 24.3 code-review gate + Phase 37.1 convergence — extracted to
-        // gates/code-review.ts (Phase 39.4). Reaches git / reviewer / notifier /
-        // sidecar only through ctx ports. Produces SUMMARY.codeReview.
-        if (gateSet.gates.includes('code-review')) {
-          const res = await runCodeReviewGate(ctx);
-          mergeInto(acc, res);
-          if (res.outcome === 'refuse') {
-            process.exitCode = 1;
-            return;
-          }
-        }
         const codeReviewFindings = acc.codeReview;
-
-        // Phase 25.2 security-audit gate — extracted to gates/security-audit.ts
-        // (Phase 39.5). The final, most expensive gate; reaches git + the
-        // auditor only through ctx ports. Produces SUMMARY.securityAudit.
-        if (gateSet.gates.includes('security-audit')) {
-          const res = await runSecurityAuditGate(ctx);
-          mergeInto(acc, res);
-          if (res.outcome === 'refuse') {
-            process.exitCode = 1;
-            return;
-          }
-        }
         const securityAuditFindings = acc.securityAudit;
 
         // ACs covered by an explicit `--ac` OR an interactive verdict are
