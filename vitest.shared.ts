@@ -4,8 +4,7 @@ import { defineConfig } from 'vitest/config';
 // package. Per-package vitest.config.ts files mergeConfig() this and add only
 // their own `include` (root also adds `coverage`). Raising the timeout here
 // and capping forks is the root-cause fix for the recurring full-turbo
-// parallel-load flake — see
-// docs/superpowers/specs/2026-05-16-testinfra-flake-design.md.
+// parallel-load flake.
 export default defineConfig({
   test: {
     globals: false,

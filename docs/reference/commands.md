@@ -622,10 +622,8 @@ cadence recommendation list
 #### recommendation convert
 
 Records the fact that a recommendation was implemented as a CADENCE phase.
-The flag-name and shape of this transition was settled in
-[`2026-05-25-cadence-rec-phase-linkage-design.md`](../superpowers/specs/2026-05-25-cadence-rec-phase-linkage-design.md)
-(Praxis Slice 34) — terminal (no `unconvert`), 1:1 cardinality, strict FK
-on the phase directory.
+The flag-name and shape of this transition was settled in Praxis Slice 34 —
+terminal (no `unconvert`), 1:1 cardinality, strict FK on the phase directory.
 
 ```sh
 cadence recommendation convert <recId> --to-phase <phaseId>

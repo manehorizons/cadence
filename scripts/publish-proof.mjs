@@ -3,7 +3,7 @@
 // publishable @cadence/* packages -> clean-dir install -> assert no
 // workspace: leak + both bins run -> unconditional Windows-safe teardown.
 // NO non-localhost registry is contacted for *publish* (transitive deps proxy
-// npmjs for *install* only). Spec: docs/superpowers/specs/2026-05-16-publish-pipeline-design.md
+// npmjs for *install* only).
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync, readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
