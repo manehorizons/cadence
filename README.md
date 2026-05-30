@@ -45,7 +45,7 @@ See **[docs/README.md](./docs/README.md)** for the complete user guide:
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs `lint → typecheck → test → build` on every PR and push to `main`, across Node 20 + 22 on Ubuntu, Windows, and macOS.
+`.github/workflows/ci.yml` runs `lint → typecheck → test → build` on every PR and push to `main`. (The full multi-OS × Node 20 + 22 matrix is restored at the v1.4 public-release milestone.)
 
 **Enforcing the gate.** A tracked hook `.githooks/pre-push` (wired via `git config core.hooksPath .githooks`) runs the full `pnpm turbo run lint typecheck test build` before any push that updates `main` and aborts on failure. Bypass deliberately with `git push --no-verify`.
 

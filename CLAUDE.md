@@ -50,7 +50,10 @@ branch protection, so this is the enforcement layer. Bypass with
 `git push --no-verify` only when you mean it.
 
 The same four-command pipeline runs in `.github/workflows/ci.yml` on every
-PR + push, across Node 20+22 × {Ubuntu, Windows, macOS}.
+PR + push — currently on a single self-hosted Linux runner (Node 20) to avoid
+metered Actions minutes on the private repo. The full Node 20+22 ×
+{Ubuntu, Windows, macOS} matrix on GitHub-hosted runners is restored at the
+v1.4 public-release milestone.
 
 ## Architecture
 
@@ -69,7 +72,7 @@ Two-surface, four-package design. Source of truth for everything below is in
 Three packages publish to npm (`access: public`): `core`, `types`,
 `host-claude-code`. `testkit` is intentionally private. The publish path is
 proven reversibly via `scripts/publish-proof.mjs` (ephemeral verdaccio); the
-real public release is parked for a v1.2 milestone (`.cadence/ROADMAP.md`).
+real public release is parked for the v1.4 milestone (`.cadence/ROADMAP.md`).
 
 ### Two-surface model
 
