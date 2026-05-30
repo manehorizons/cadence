@@ -102,3 +102,14 @@ describe('cadence-host-claude-code install', () => {
     );
   });
 });
+
+describe('cadence-host-claude-code --version', () => {
+  it('reports the version from package.json (guards against hardcoded drift)', async () => {
+    const pkg = JSON.parse(await readFile(join(__dirname, '../package.json'), 'utf8')) as {
+      version: string;
+    };
+    const r = await run(['--version']);
+    expect(r.code).toBe(0);
+    expect(r.stdout.trim()).toBe(pkg.version);
+  });
+});

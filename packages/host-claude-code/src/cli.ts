@@ -1,15 +1,24 @@
 import { Command } from 'commander';
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { installHooks, type InstallOptions } from './install.js';
 import { installCommands, type InstallCommandsOptions } from './install-commands.js';
 import { routeHookEvent } from './shim.js';
+
+// Read the real version from package.json so `--version` never drifts.
+// Resolves dist/cli.js → ../package.json.
+const pkg = JSON.parse(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../package.json'), 'utf8'),
+) as { version: string };
 
 const program = new Command();
 
 program
   .name('cadence-host-claude-code')
   .description('Claude Code host adapter for CADENCE')
-  .version('0.2.0-rc.1');
+  .version(pkg.version);
 
 program
   .command('install')
