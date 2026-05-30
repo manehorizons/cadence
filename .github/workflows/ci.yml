@@ -6,15 +6,19 @@ on:
   pull_request:
     branches: [main]
 
-# Dev-time CI runs on a single self-hosted Linux runner (Node 20 only)
-# to avoid GitHub-hosted Actions minutes on the private repo. The full
-# multi-OS × Node 20+22 matrix (against GitHub-hosted runners) returns at
-# the v1.4 public-release milestone — restore the previous strategy block
-# AND deregister the self-hosted runner before/at going public, since a
-# self-hosted runner on a public repo lets fork PRs execute code on it.
+# CI runs the full gate on GitHub-hosted runners across Node 20 + 22 on Ubuntu
+# and macOS. A windows-latest leg is intentionally deferred: three Slice-34.4
+# recommendation tests hit a Windows-only writeFile→spawn flush race in the
+# test harness (a test-harness artifact, not a product bug). Restore a Windows
+# leg once that race is fixed and verified green.
 jobs:
   test:
-    runs-on: [self-hosted, linux]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [20, 22]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -22,7 +26,7 @@ jobs:
           version: 9.12.0
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: ${{ matrix.node }}
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
@@ -30,13 +34,12 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
 
-  # Single stable status context for branch protection. Kept even with a
-  # single `test` job so the required-check name stays `ci-success`
-  # across the dev-time → release-time matrix change.
+  # Single stable status context for branch protection. Kept as its own job so
+  # the required-check name stays `ci-success` independent of the matrix shape.
   ci-success:
     if: always()
     needs: [test]
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     steps:
       - name: Fail if the test job did not succeed
         run: |
