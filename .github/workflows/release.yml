@@ -1,0 +1,44 @@
+name: Release
+
+# Manual, deliberate publish. Trigger from the Actions tab → "Run workflow".
+# Runs the full gate, then publishes the three public packages to npm with
+# provenance. Provenance requires: a public repo + id-token:write (OIDC) +
+# the publish running inside this workflow. The private @manehorizons/cadence-testkit
+# is skipped automatically by `pnpm -r publish` (it has "private": true).
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (pack + validate, do not publish)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance attestation
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Gate (lint, typecheck, test, build)
+        run: pnpm turbo run lint typecheck test build
+      - name: Publish to npm (provenance)
+        if: ${{ inputs.dry_run == false }}
+        run: pnpm -r publish --access public --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+      - name: Dry run (pack only, no publish)
+        if: ${{ inputs.dry_run == true }}
+        run: pnpm -r publish --access public --no-git-checks --dry-run
