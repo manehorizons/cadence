@@ -1,0 +1,14 @@
+# Canonical author/committer identity for this repository.
+#
+# A .mailmap folds commits made under variant names/emails into one display
+# identity for `git shortlog`, `git log --use-mailmap`, `git blame`, and
+# GitHub's contributor graph — without rewriting history.
+#
+# The history was normalized to this identity on 2026-05-30 (a one-time
+# rewrite of pre-public commits). These entries guard against future drift
+# (e.g. a new machine with a different `git config user.name`).
+#
+# Format: Canonical Name <canonical@email>  [Commit Name] <commit@email>
+Thomas Powers <manehorizons@gmail.com> <manehorizons@gmail.com>
+Thomas Powers <manehorizons@gmail.com> nullrook <manehorizons@gmail.com>
+Thomas Powers <manehorizons@gmail.com> Mane Horizons <manehorizons@gmail.com>
