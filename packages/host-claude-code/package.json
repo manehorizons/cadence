@@ -22,7 +22,7 @@
     ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
   },
   "bin": { "cadence-host-claude-code": "./bin/cadence-host-claude-code.cjs" },
-  "files": ["dist", "bin"],
+  "files": ["dist", "bin", "!dist/tsconfig.tsbuildinfo"],
   "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
@@ -37,6 +37,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "@manehorizons/cadence-core": "workspace:*",
     "@manehorizons/cadence-types": "workspace:*",
     "commander": "^13.0.0"
   },

@@ -63,6 +63,9 @@ importers:
 
   packages/host-claude-code:
     dependencies:
+      '@manehorizons/cadence-core':
+        specifier: workspace:*
+        version: link:../core
       '@manehorizons/cadence-types':
         specifier: workspace:*
         version: link:../types

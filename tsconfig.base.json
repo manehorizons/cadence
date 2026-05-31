@@ -16,7 +16,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "tsBuildInfoFile": "${configDir}/dist/tsconfig.tsbuildinfo"
   },
   "exclude": ["node_modules", "dist", "**/*.test.ts", "tests"]
 }
