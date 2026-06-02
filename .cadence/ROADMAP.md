@@ -555,4 +555,10 @@ AC #2 deviation: `draft.ts` was **not** touched — these gates have no `draft.t
 
 ---
 
-Entry point next session: three named tracks — **v1.3.0 Architecture deepening** (NEW, sequenced first; start with **Phase 39.1** — extract coverage **+ deep-verify** together to lock the registry-ready `SettleContext` / `GateResult` / `GateImpl` shape + the verifier/emit ports that the rest of 39.x consumes; then 39.2 completes enum coverage, 39.3–39.7 extract the rest, 40.1/41.1/42.1 consolidate behind the ports in any order, 43.1 + the `checks/` relocations, and **44.1 flips to the engine-driven registry** last), **v1.4.0 Public release** (renumbered from v1.2.0; gated on the repo-visibility decision), and **v1.2.0 Feature expansion** (COMPLETE — no non-parked work). All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) and v1.2 feature expansion (34.1–38.1) are shipped.
+Entry point next session — **reconciled 2026-06-01** (this entry was badly stale: it said "start with Phase 39.1" when all of 39.1–44.1 had already shipped):
+
+- **v1.2.0 Feature expansion** — ✓ SHIPPED (34.1–38.1).
+- **v1.3.0 Architecture deepening** — ✓ SHIPPED. All of 39.1–44.1 landed on `main` 2026-05-29 (paired `docs(planning)` + `feat(core)` commits, full gate green at each); the registry endgame (44.1) is live in `settle.ts`. These shipped through the superpowers workflow **without the CADENCE settle ceremony**; the `.cadence/phases/39–44` artifacts were **backfilled 2026-06-01** (see `.cadence/RECONCILIATION-2026-06-01.md`).
+- **v1.4.0 Public release** — ⚠️ PARTIALLY DELIVERED, out of band. Repo is public and `@manehorizons/cadence-*@1.1.1` published to npm 2026-05-30 (it bundled v1.2 + v1.3). **Real next work:** version-hygiene + provenance — the npm `1.1.1` artifact does not match the git `v1.1.1` tag; fix-forward on the next release, do not churn the existing publish. Then changesets + the testkit publish/private re-decision. See MILESTONES.md §v1.4.0.
+
+All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) is shipped.

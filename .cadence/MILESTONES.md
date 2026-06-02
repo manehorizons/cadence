@@ -84,12 +84,12 @@ Test count: `@cadence/core` 1034, `@cadence/types` 124 (up from ~620 and 80 at v
 
 Deferred to v1.2+: Slice 34.3 (`--from-rec` ergonomic on `spec new`), Slice 34.4 (`--filter-converted-to` reverse-lookup), `--sort-by`, `--filter-text-exact`, `--filter-regex-flags`, `--filter-kind` on audit, graph-viewer optimization.
 
-## Planned
+### v1.2.0 — Feature expansion (superpowers-inspired) (2026-05-17; COMPLETE)
+Per ROADMAP entry-point note: #6 → #2 → #1 → #4 → #1b shipped; #3/#5 parked (host-agnostic-anchor conflict). v1.2 feature-expansion track has no non-parked work remaining. The constituent phases (34.1, 35, 36, 37, 38) are also indexed in the "v1.1 milestone work" block above; this entry records the v1.2 feature-expansion track as a whole. Never cut as its own npm tag — folded into the 2026-05-30 publish (see v1.4.0 note).
 
-### v1.2.0 — Feature expansion (superpowers-inspired) — COMPLETE
-Per ROADMAP entry-point note: #6 → #2 → #1 → #4 → #1b shipped; #3/#5 parked (host-agnostic-anchor conflict). v1.2 feature-expansion track has no non-parked work remaining; the residue rolls into v1.3 or later named milestones.
+### v1.3.0 — Architecture deepening (2026-05-29; artifacts backfilled 2026-06-01)
+**Status: ✓ Delivered.** All twelve phases below shipped on `main` as paired `docs(planning)` + `feat(core)` commits on 2026-05-29 (full turbo gate green at every commit). They were built through the superpowers design→plan→feat workflow and **never run through CADENCE's own settle ceremony** — so the `.cadence/phases/39–44` artifacts were **reconstructed retroactively on 2026-06-01** from the commits (each SUMMARY carries a backfill marker). The code rode into the 2026-05-30 npm `1.1.1` publish. See `.cadence/RECONCILIATION-2026-06-01.md`.
 
-### v1.3.0 — Architecture deepening
 Source: `/tmp/architecture-review-20260525-103233.html` (6-candidate review run on 2026-05-25 against `praxis-intelligence-ledger` branch via the `improve-codebase-architecture` skill); **pressure-tested + revised 2026-05-29** (registry endgame, total enum coverage, `checks/` split, ctx ports — see ROADMAP.md anchor decisions). Theme: pull policy out of CLI commands into reusable deep modules; collapse adapter farms into one generic factory; close half-leaking seams. No new user-facing features.
 
 - **Phase 39.1** — Lift coverage **+ deep-verify** gates out of `settle.ts`; define the registry-ready `SettleContext`/`GateResult`/`GateImpl` shape + verifier/emit ports (shape-defining).
@@ -105,12 +105,15 @@ Source: `/tmp/architecture-review-20260525-103233.html` (6-candidate review run 
 - **Phase 43.1** — Drain boundary **check** from `handlePreToolEdit` into `checks/` (depends on 39.x).
 - **Phase 44.1** — Engine-driven gate registry: settle dispatches by iterating `effectiveGateSet().gates` over an exhaustive `Record<Gate, GateImpl>` (depends on all enum-gate impls).
 
-### v1.4.0 — Public release (deferred, named; renumbered from v1.2.0 on 2026-05-25)
-- Real public-npm publish of `@cadence/{core,types,host-claude-code}`.
-- npm provenance (gated on a conscious repo-visibility decision).
-- `.github/workflows/release.yml` gated on `ci-success`.
-- changesets adoption (or hand-rolled release runbook).
-- `@cadence/testkit` publish-vs-private re-decision.
+## Planned
+
+### v1.4.0 — Public release (PARTIALLY DELIVERED 2026-05-30; renumbered from v1.2.0 on 2026-05-25)
+The irreversible action was taken **ahead of plan and out of band**: the repo is public and `@manehorizons/cadence-{core,types,host-claude-code}@1.1.1` was published to npm on **2026-05-30** (scope renamed `@cadence/*` → `@manehorizons/cadence-*` first; the old scope was never published, so no consumer broke). What that publish contained: everything on `main` as of 05-30 — the v1.2 feature expansion **and** the v1.3 architecture deepening. Outstanding (the milestone is NOT closed):
+- ✓ Real public-npm publish — **done 2026-05-30** (under `@manehorizons/*`).
+- ⚠️ **Version hygiene** — the npm `1.1.1` artifact ≠ the git `v1.1.1` tag (`eed08ec`, 05-27, old scope, no arch code). A breaking rename + a major internal refactor shipped under a reused patch version with no matching git tag. **Fix forward** (decided 2026-06-01): next release gets a correct version bump + a git tag matching the published commit + provenance. Do not retroactively churn the existing 1.1.1.
+- ☐ npm provenance — `release.yml` exists (`61b3021`) but the 05-30 publish carried no `gitHead`/provenance.
+- ☐ changesets adoption (or a hand-rolled release runbook).
+- ☐ `@manehorizons/cadence-testkit` publish-vs-private re-decision (currently private).
 
 ## Post-v1.0 (not scheduled)
 
