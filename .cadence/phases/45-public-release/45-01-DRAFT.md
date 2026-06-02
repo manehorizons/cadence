@@ -88,7 +88,7 @@ commit, and `@manehorizons/cadence-testkit` is confirmed absent from the publish
 
 ### T5: publish 1.4.0 + tag + testkit-private proof
 - files: `package.json`
-- action: renew/confirm `NPM_TOKEN`; run the changesets release (or `release.yml`) to publish `1.4.0` with provenance; cut annotated `git tag v1.4.0` at the published commit; inspect the publish to prove testkit is excluded
+- action: confirm `NPM_TOKEN` is configured (valid through 2026-12-31); run the changesets release (or `release.yml`) to publish `1.4.0` with provenance; cut annotated `git tag v1.4.0` at the published commit; inspect the publish to prove testkit is excluded
 - verify: `npm view @manehorizons/cadence-core version` == `1.4.0` (provenance attached); `git tag` lists `v1.4.0`; `npm view @manehorizons/cadence-testkit` 404s
 - done: AC-5
 
@@ -97,4 +97,4 @@ commit, and `@manehorizons/cadence-testkit` is confirmed absent from the publish
 - DO NOT retroactively churn the existing published `1.1.1` — fix-forward only (decided 2026-06-01).
 - DO NOT publish `@manehorizons/cadence-testkit` — it stays `private` (decided 2026-06-02).
 - DO NOT bump to `2.0.0` — `1.4.0` is the chosen target; document the zod break in the changelog instead.
-- DO NOT start execution until `NPM_TOKEN` is renewed (the prior token is expiring) — T5 is the irreversible step.
+- T5 is the irreversible step (publishing `1.4.0` to npm cannot be cleanly undone) — treat it as the point of no return. (`NPM_TOKEN` is valid through 2026-12-31; no renewal needed — the earlier "expiring token" note was a stale handoff claim.)
