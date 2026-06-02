@@ -1,0 +1,23 @@
+{
+  "draftId": "43-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "tests/checks/boundary.test.ts (red): exact files-outside-boundary event shape, no-internal-dedup/order-preserved contract, extraContext merge after file, per-event stamp(), and message (AC-1, AC-4)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-30T00:18:42.000Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "added checks/boundary.ts (runBoundaryCheck + boundaryMessage, +52 LoC); handlePreToolEdit delegates (raw ctx.raw.files + source:'hook.preToolEdit' + single ts, AnomalyEvent import dropped); collectAnomalies delegates (deduped Set + per-event ts). One rule, two emission points; emission stays at each site (AC-1, AC-2, AC-3)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-30T00:18:42.000Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "full pnpm turbo run lint typecheck test build gate green; hooks/handlers-anomaly + notify/collect + cli/status-anomalies suites pass unchanged — bit-identical confirmed at both call sites (AC-5) [backfilled from 9e1290f]",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-30T00:18:42.000Z"
+    }
+  }
+}

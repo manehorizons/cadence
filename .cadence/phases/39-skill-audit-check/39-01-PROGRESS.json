@@ -1,0 +1,29 @@
+{
+  "draftId": "39-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "gates/types.ts += EmitPort.skillAuditMiss port + SettleOpts.allowSkillAuditMiss; payload mirrors emitSkillAuditMiss (required/invoked/missing, severity, optional bypassed/unenforceable) (AC-1, AC-6)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T22:48:26.000Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "new checks/skill-audit.ts (76 LoC) runSkillAuditCheck(ctx) -> { outcome, effectiveRequired }; verbatim dedup(config ∪ draft) union, null-config skip, telemetry-off unenforceable warn, shortfall refuse/bypass branches; 137-LoC fake-ctx test with emit spy, TDD red->green (AC-2, AC-3, AC-4, AC-6)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T22:48:26.000Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "settle.ts: skillAuditMiss emit adapter; threaded allowSkillAuditMiss into ctx.opts; replaced the inline ~34-line block with explicit runSkillAuditCheck(ctx) dispatch (refuse -> exitCode=1; return, else state.skillAudit.required = res.effectiveRequired); dropped unused missingSkills import, kept emitSkillAuditMiss for the adapter; settle.ts net -71/+? (AC-1, AC-5)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T22:48:26.000Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "full pre-push gate green; existing tests/cli/settle-skill-audit E2E suite passes unchanged (bit-identical proof); registry coverage stays 8/13 (skill-audit not a Gate enum member); substantive feat commit 7632483 [backfilled from 7632483]",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T22:48:26.000Z"
+    }
+  }
+}

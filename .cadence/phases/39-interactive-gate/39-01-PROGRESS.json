@@ -1,0 +1,35 @@
+{
+  "draftId": "39-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added the PrompterPort { create(): Prompter } port (Prompter imported from verify/prompter.js), SettleContext.prompter, and SettleOpts.interactive to gates/types.ts (AC-3)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T20:25:59Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "gates/interactive.ts (runInteractiveGate): fires on --interactive OR interactive-verdict membership, walks ACs via the prompter port, uses ctx.coverage() (no third scan), refuses on non-overridden fail verdicts unless --force, emits interactiveVerify via summaryPatch, and turns a create() throw into a refusal; all branches TDD'd via a ScriptedPrompter through the port (AC-2, AC-3, AC-4)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T20:25:59Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "settle.ts wiring: replaced the inline walker block with the interactiveRequested local + runInteractiveGate(ctx) + mergeInto + refuse-halt; CADENCE_PROMPTER_SCRIPT env seam + StdinPrompter TTY-refusal moved into the settle prompter adapter; threaded opts.interactive; removed the now-unused walkAcsInteractively/InteractiveVerdict imports (AC-1, AC-5)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T20:25:59Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "registry-coverage test flips interactive-verdict to IMPLEMENTED (6 of 13; anomaly-notify exception; 6 pending for 39.4-39.7) (AC-6)",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T20:25:59Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Full pnpm turbo run lint typecheck test build green; the existing settle-interactive E2E suite (9 tests) passes unchanged as the bit-identical proof; substantive feat commit (AC-5, AC-6) [backfilled from 32a2391]",
+      "touchedFiles": [],
+      "updatedAt": "2026-05-29T20:25:59Z"
+    }
+  }
+}

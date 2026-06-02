@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-02T01:43:16.032Z",
+  "ranked": [
+    {
+      "id": "rec-20260602-001",
+      "title": "Rename 'cadence init --profile' flag to '--preset'",
+      "raw": 22.7,
+      "score": 68,
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready ready-for-cadence-spec",
+          "value": 10
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    }
+  ],
+  "parked": [],
+  "needsAttention": [],
+  "advisory": {
+    "kind": "spec-new",
+    "primary": "cadence spec new"
+  },
+  "totals": {
+    "total": 1,
+    "ranked": 1,
+    "parked": 0,
+    "needsAttention": 0,
+    "excluded": 0
+  }
+}

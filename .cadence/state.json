@@ -4,7 +4,7 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "38-spec-draft-autoseed",
+  "activePhase": "44-gate-registry",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
@@ -14,9 +14,9 @@
   "decisions": [],
   "deferred": [],
   "session": {
-    "tokenUtilization": 0,
+    "tokenUtilization": 0.38000000000000017,
     "lastHandoff": null,
-    "subagentSpawns": 0
+    "subagentSpawns": 38
   },
   "skillAudit": {
     "required": [],

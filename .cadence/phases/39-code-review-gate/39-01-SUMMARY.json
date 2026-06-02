@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "draftId": "39-01",
+  "completedAt": "2026-05-29T20:38:00Z",
+  "acResults": [
+    { "id": "AC-1", "pass": true },
+    { "id": "AC-2", "pass": true },
+    { "id": "AC-3", "pass": true },
+    { "id": "AC-4", "pass": true },
+    { "id": "AC-5", "pass": true },
+    { "id": "AC-6", "pass": true }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "types.ts += VerifierPorts.codeReview, EmitPort.codeReviewHigh/codeReviewUnconverged, ConvergenceSidecar, SettleContext.diff + codeReviewSidecar, SettleOpts.allowCodeReviewFailure; imports CodeReviewInput/CodeReviewResult from ../verify/code-review.js (AC-2)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "gates/code-review.ts ports the block verbatim against ctx.diff()/ctx.verifiers.codeReview/ctx.codeReviewSidecar/ctx.emit.*; collectHighFindings moved in (HIGH-only convergence preserved); fake-port tests cover no-HIGH pass, reloop, escalate, both bypass arms, verifier-throw, anomaly-notify on/off (AC-1, AC-3, AC-4)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "settle.ts builds the four adapters (lazy codeReview verifier memo like deep; memoized diff; sidecar read/write over .cadence/phases/<phase>/<draft>-CODE-REVIEW.json + atomicWriteText; emit wrappers); inline block replaced with runCodeReviewGate(ctx) + merge + bridge codeReviewFindings; allowCodeReviewFailure threaded into SettleOpts; settle.ts -210 lines (AC-1, AC-5)"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "registry-coverage flips code-review -> IMPLEMENTED (7 of 13; anomaly-notify exception; 5 pending for 39.5/39.7) (AC-6)"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "full pre-push gate green; settle-code-review + settle-codereview-convergence E2E (15 tests: reloop/escalate/bypass/legacy/--force) pass unchanged = bit-identical proof; feat commit 57e9635 [backfilled from 57e9635]"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

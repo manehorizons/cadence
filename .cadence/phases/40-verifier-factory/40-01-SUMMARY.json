@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "draftId": "40-01",
+  "completedAt": "2026-05-29T23:39:44.000Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Created verify/verifier-factory.ts: generic createVerifierFactory<C, V>(spec) + VerifierSelectOptions / VerifierProvider / VerifierFactorySpec. One algorithm; spec.label interpolated into the two warn strings byte-identical to the originals. 7 new generic-algorithm tests (mock default, override, anthropic-missing-key fallback, local-missing-baseURL/model fallback, model precedence, env seams, warn strings) against a fake verifier family (AC-1, AC-2)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Rewrote the six verify/*-factory.ts as ~26-line thin bindings (label, read accessor c => c?.slice, mock/anthropic/local ctors). Each keeps its selectX export + Pick<CadenceConfig,K> signature (factory generic over C so the Pick-literal test calls still compile) and re-exports its Select*VerifierOptions as a back-compat alias. selectX became const arrows — call sites unaffected. model admits | undefined so exactOptionalPropertyTypes config slices assign directly. factory.test.ts + local-factories.test.ts pass unchanged (bit-identical proof) (AC-3, AC-5)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Full pnpm turbo run lint typecheck test build gate green; every verifier consumer (gates, settle, draft/build adapters) compiles and passes. Net LoC 355 -> 234. Pure refactor, bit-identical behavior (AC-4) [backfilled from 3f51887]"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
