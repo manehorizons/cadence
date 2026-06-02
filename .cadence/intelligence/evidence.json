@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "evidence": [
+    {
+      "id": "ev-20260602-001",
+      "recommendationId": "rec-20260602-001",
+      "kind": "note",
+      "summary": "CONTEXT.md Flagged ambiguities: 'cadence init --profile sets a preset, not a profile'",
+      "createdAt": "2026-06-02T01:17:46.143Z"
+    }
+  ]
+}
