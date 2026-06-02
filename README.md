@@ -4,6 +4,14 @@
 
 **Coordinated AI-Driven Engineering with Notifications and Customizable Execution** — a plan/build/settle framework for AI-assisted development with configurable quality gates.
 
+## See it catch a bug
+
+CADENCE's headline move: it refuses to "settle" work an AI already marked **DONE** when the declared acceptance criteria don't actually pass. Below, the always-fire `build-test-must-pass` gate blocks a plausible lost-penny bug in a bill-splitter — `$100.00` split 3 ways summing to `$99.99`:
+
+![CADENCE refusing to settle a failing build](https://raw.githubusercontent.com/manehorizons/cadence-demo-billsplit/main/billsplit.gif)
+
+Real git history, the full refuse → fix → pass arc, and reproduce-it-yourself steps live in the demo repo: **[cadence-demo-billsplit →](https://github.com/manehorizons/cadence-demo-billsplit)**
+
 ## Two-surface model
 
 The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. It is completely host-agnostic.
