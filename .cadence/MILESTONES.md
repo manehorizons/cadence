@@ -118,13 +118,14 @@ Source: `/tmp/architecture-review-20260525-103233.html` (6-candidate review run 
 
 ## Planned
 
-### v1.4.0 — Public release (PARTIALLY DELIVERED 2026-05-30; renumbered from v1.2.0 on 2026-05-25)
-The irreversible action was taken **ahead of plan and out of band**: the repo is public and `@manehorizons/cadence-{core,types,host-claude-code}@1.1.1` was published to npm on **2026-05-30** (scope renamed `@cadence/*` → `@manehorizons/cadence-*` first; the old scope was never published, so no consumer broke). What that publish contained: everything on `main` as of 05-30 — the v1.2 feature expansion **and** the v1.3 architecture deepening. Outstanding (the milestone is NOT closed):
-- ✓ Real public-npm publish — **done 2026-05-30** (under `@manehorizons/*`).
-- ⚠️ **Version hygiene** — the npm `1.1.1` artifact ≠ the git `v1.1.1` tag (`eed08ec`, 05-27, old scope, no arch code). A breaking rename + a major internal refactor shipped under a reused patch version with no matching git tag. **Fix forward** (decided 2026-06-01): next release gets a correct version bump + a git tag matching the published commit + provenance. Do not retroactively churn the existing 1.1.1.
-- ☐ npm provenance — `release.yml` exists (`61b3021`) but the 05-30 publish carried no `gitHead`/provenance.
-- ☐ changesets adoption (or a hand-rolled release runbook).
-- ☐ `@manehorizons/cadence-testkit` publish-vs-private re-decision (currently private).
+### v1.4.0 — Public release (DELIVERED 2026-06-02; renumbered from v1.2.0 on 2026-05-25)
+The first publish happened ahead of plan and out of band on **2026-05-30** (repo public + `@manehorizons/cadence-{core,types,host-claude-code}@1.1.1`; scope renamed `@cadence/*` → `@manehorizons/cadence-*` first, old scope never published so no consumer broke). The version-hygiene remainder closed **2026-06-02** via phase `45-public-release` (DRAFT 45-01). All items done:
+- ✓ Real public-npm publish — `@manehorizons/cadence-{core,types,host-claude-code}@1.4.0` published 2026-06-02 via `release.yml` CI.
+- ✓ **Version hygiene** — bumped `1.1.1 → 1.4.0` (first published version matching `main`); annotated git tag `v1.4.0` cut at the published commit (`fbbcf91`). The earlier `1.1.1` was left as-is (fix-forward, not churned).
+- ✓ npm provenance — published with `--provenance` (OIDC in `release.yml`); `slsa.dev/provenance/v1` attestation confirmed on npm.
+- ✓ changesets adoption — `@changesets/cli` + `.changeset/config.json` (access public, testkit ignored) for future releases.
+- ✓ `@manehorizons/cadence-testkit` — re-decided: **stays private** (no external demand yet).
+- Note: zod `^3 → ^4` shipped as a public-API-affecting dependency change, documented in CHANGELOG `[1.4.0]`.
 
 ## Post-v1.0 (not scheduled)
 

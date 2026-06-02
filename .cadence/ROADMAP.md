@@ -337,18 +337,19 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 
 ---
 
-## v1.4.0 — Public release (PARTIALLY DELIVERED 2026-05-30)
+## v1.4.0 — Public release (DELIVERED 2026-06-02)
 
-**Status:** the irreversible action was taken **ahead of plan, out of band** — the repo is public and `@manehorizons/cadence-{core,types,host-claude-code}@1.1.1` was published to npm on 2026-05-30. The milestone is **NOT closed**: the version-hygiene remainder (a correct version bump so the published version reflects the shipped v1.3 code, a matching git tag, provenance, changesets, and the testkit re-decision) is the real open work. **Renumbered from v1.2.0 on 2026-05-25** to sit *after* the architecture-deepening milestone (v1.3.0) — tighten interfaces before they harden in the public API. See MILESTONES.md for the delivered/outstanding checklist.
+**Status:** **closed 2026-06-02** via phase `45-public-release` (DRAFT 45-01). The first publish happened out of band on 2026-05-30 (repo public + npm `1.1.1`); the version-hygiene remainder is now done. **Renumbered from v1.2.0 on 2026-05-25** to sit *after* the architecture-deepening milestone (v1.3.0). See MILESTONES.md for the full delivered checklist.
 
-**Scope.**
-- **Real public-npm publish** of `@manehorizons/cadence-{core,types,host-claude-code}` — ✓ **done 2026-05-30** at 1.1.1 (metadata hardened in 33.1; scope renamed from `@cadence/*` first). Remaining: a correct version bump so the published version reflects the shipped v1.3 code.
-- **npm provenance** — the source repo (`manehorizons/cadence`) is now **public** (the repo-visibility decision was taken; the 2026-05-30 publish predated provenance wiring), so provenance is unblocked — wire it on the next release. (Public history exposes all `.cadence/` records; accepted.)
-- **`.github/workflows/release.yml`** gated on the existing `ci-success` context.
-- **changesets** adoption (versioning + changelog automation) — or a documented hand-rolled release runbook.
-- **Re-decide `@manehorizons/cadence-testkit`**: stays `private`, or gets published if external adopters need the fixtures.
+**Delivered.**
+- ✓ **Public-npm publish** of `@manehorizons/cadence-{core,types,host-claude-code}@1.4.0` (2026-06-02, via `release.yml` CI). testkit stays private.
+- ✓ **Version hygiene** — `1.1.1 → 1.4.0` (first published version matching `main`); annotated git tag `v1.4.0` at the published commit (`fbbcf91`). Earlier `1.1.1` left as-is (fix-forward).
+- ✓ **npm provenance** — `--provenance` via OIDC in `release.yml`; `slsa.dev/provenance/v1` attestation confirmed on npm.
+- ✓ **changesets** adopted (`@changesets/cli` + `.changeset/config.json`, access public, testkit ignored) for future releases.
+- ✓ **`@manehorizons/cadence-testkit`** re-decided: stays `private`.
+- Note: zod `^3 → ^4` shipped as a public-API-affecting dep change, documented in CHANGELOG `[1.4.0]`.
 
-**Depends on.** Phase 30.1 (✓ done — reversible proof). The repo-visibility decision is resolved (repo is public).
+**Depended on.** Phase 30.1 (reversible proof) + the repo-visibility decision (resolved — repo public).
 
 ---
 
