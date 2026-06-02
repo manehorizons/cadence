@@ -329,7 +329,7 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 
 ## Deferred to v1.2+ (not in v1.1 scope)
 
-- **Server-side CI enforcement.** Today `main` is gated only client-side (`.githooks/pre-push`) — GitHub Free + private repos get no branch protection/rulesets. If repo goes public/Pro: require the existing `ci-success` context via `gh api … rulesets` and retire the hook. Else: a `scripts/setup` / `postinstall` to auto-wire `core.hooksPath`.
+- **Server-side CI enforcement.** The repo is now **public** and a server-side `ci-success` required check is active (a push to `main` reported it as *expected*, though still admin-bypassable). Remaining: fully require it (no bypass) and retire the client-side `.githooks/pre-push` hook — or keep the hook as belt-and-suspenders. (History: while private on GitHub Free, only the client-side hook gated `main`.)
 - **Backlog parking lot.** No `.cadence/` backlog file exists; stand one up (`gsd-add-backlog`-style) so ideas have a home.
 - **Deferred open questions.** 23.1, 24.3, 26.2 — real product decisions, a phase each when picked up. (24.2 may be folded in if 29.2/29.3 surface it.) (23.4 resolved — Phase 34.1.)
 - **Test infra.** ✓ **Pulled forward into v1.1 — delivered as Phase 32.1** (shared `vitest.shared.ts` base: `testTimeout`/`hookTimeout`/`maxForks`; `tempRepo` rmdir retry; 29.5/30.2 per-test band-aids reverted). The deferral boundary was deliberately broken: the flake was costing a blocking pre-push failure + a remediation phase roughly every push (3rd recurrence at Phase 31.1).
@@ -337,18 +337,18 @@ Revisit only if: a second host returns (multi-host coordination), the team grows
 
 ---
 
-## v1.4.0 — Public release (deferred, named)
+## v1.4.0 — Public release (PARTIALLY DELIVERED 2026-05-30)
 
-**Status:** named & scoped, NOT started. This is the irreversible remainder consciously split out of Phase 30.1 (v1.1 proved the path reversibly; v1.4 takes the irreversible action). **Renumbered from v1.2.0 on 2026-05-25** to sit *after* the architecture-deepening milestone (v1.3.0) — tighten interfaces before they harden in the public API.
+**Status:** the irreversible action was taken **ahead of plan, out of band** — the repo is public and `@manehorizons/cadence-{core,types,host-claude-code}@1.1.1` was published to npm on 2026-05-30. The milestone is **NOT closed**: the version-hygiene remainder (a correct version bump so the published version reflects the shipped v1.3 code, a matching git tag, provenance, changesets, and the testkit re-decision) is the real open work. **Renumbered from v1.2.0 on 2026-05-25** to sit *after* the architecture-deepening milestone (v1.3.0) — tighten interfaces before they harden in the public API. See MILESTONES.md for the delivered/outstanding checklist.
 
 **Scope.**
-- **Real public-npm publish** of `@cadence/{core,types,host-claude-code}` (metadata already hardened in 33.1 — `publishConfig.access:public` set; needs `npm login` / a publish token).
-- **npm provenance** — *gated on a conscious repo-visibility decision*: provenance attestation requires the source repo (`manehorizons/cadence`, currently **private**) be **public**; making it public exposes all `.cadence/` history. Decide explicitly before enabling.
+- **Real public-npm publish** of `@manehorizons/cadence-{core,types,host-claude-code}` — ✓ **done 2026-05-30** at 1.1.1 (metadata hardened in 33.1; scope renamed from `@cadence/*` first). Remaining: a correct version bump so the published version reflects the shipped v1.3 code.
+- **npm provenance** — the source repo (`manehorizons/cadence`) is now **public** (the repo-visibility decision was taken; the 2026-05-30 publish predated provenance wiring), so provenance is unblocked — wire it on the next release. (Public history exposes all `.cadence/` records; accepted.)
 - **`.github/workflows/release.yml`** gated on the existing `ci-success` context.
 - **changesets** adoption (versioning + changelog automation) — or a documented hand-rolled release runbook.
-- **Re-decide `@cadence/testkit`**: stays `private`, or gets published if external adopters need the fixtures.
+- **Re-decide `@manehorizons/cadence-testkit`**: stays `private`, or gets published if external adopters need the fixtures.
 
-**Depends on.** Phase 30.1 (✓ done — reversible proof) + the repo-visibility decision.
+**Depends on.** Phase 30.1 (✓ done — reversible proof). The repo-visibility decision is resolved (repo is public).
 
 ---
 
