@@ -17,6 +17,7 @@ achieved by letting you choose which quality gates fire for each phase of work.
 - [Profiles × tiers](#profiles--tiers)
 - [The gate universe](#the-gate-universe)
 - [Providers](#providers)
+- [The Praxis layer](#the-praxis-layer) — strategic intelligence that feeds the loop
 
 ---
 
@@ -278,6 +279,126 @@ optional `model` override.
 
 Provider selection, fallback behavior, and per-gate configuration are covered
 in detail in [docs/providers.md](providers.md).
+
+---
+
+## The Praxis layer
+
+Everything above is the **execution loop** — the cycle that does the work and
+mutates loop state. CADENCE has a second, independent layer: **Praxis**, the
+strategic-intelligence layer that decides *what is worth doing* and feeds the
+loop, without ever touching loop state.
+
+The two layers are deliberately decoupled. Praxis is **read-narrow**: it reads
+the repo and the loop's state but writes only its own records. The loop never
+reads or writes Praxis. They meet at exactly one seam, described at the end of
+this section.
+
+All Praxis records live under `.cadence/intelligence/` as versioned JSON, each
+with an auto-generated Markdown render for humans.
+
+### The ledger
+
+The **intelligence ledger** is the persistent home for Praxis records — five
+versioned subject ledgers, plus derived outputs:
+
+| File | Holds |
+|---|---|
+| `recommendations.json` → `RECOMMENDATIONS.md` | Recommendations |
+| `evidence.json` | Evidence (no Markdown render) |
+| `assumptions.json` → `ASSUMPTIONS.md` | Assumptions |
+| `decisions.json` → `DECISIONS.md` | Decisions |
+| `milestones.json` → `MILESTONES.md` | Milestones |
+| `recommend.json` → `RECOMMEND.md` | The latest recommend report (derived) |
+| `inspection.json` → `STRATEGY.md` | The latest inspection (derived) |
+| `context/<scope>.{json,md}` | Context packets |
+
+### Recommendation
+
+A **recommendation** (rec) is the central Praxis record: a scored, free-floating
+change candidate. It carries three orthogonal lifecycle facets:
+
+- **status** — `candidate` → `accepted` → then `deferred` | `rejected` |
+  `converted`. The operator-driven disposition.
+- **readiness** — a maturity gate: `raw-idea` → `needs-evidence` →
+  `needs-decision` → `ready-for-milestone` → `ready-for-cadence-spec`, or
+  `blocked`. How close the idea is to being actionable.
+- **decay state** — *auto-derived* truth/time erosion: `fresh`, `aging`,
+  `stale`, `superseded` (a newer rec contradicts it), `contradicted` (a tied
+  assumption was rejected or a tied decision rescinded), `needs-revalidation`.
+
+A rec is also scored (priority, leverage, risk, confidence) — those scores drive
+the recommend report's ranking.
+
+### Evidence, assumptions, decisions
+
+Recs are backed and constrained by three tied record types:
+
+- **Evidence** — backing material, of kind `file` / `command` /
+  `cadence-artifact` / `note`. Always tied to a rec.
+- **Assumption** — a stated belief that constrains a rec's validity. Always
+  tied to a rec. Lifecycle: `open` → `validated` | `rejected` (reopenable).
+  Rejecting an assumption can push its rec's decay state to `contradicted`.
+- **Decision** — an architectural choice, *optionally* tied to a rec (untied
+  decisions are valid). Decisions form a **supersession graph**: `active` →
+  `superseded` (replaced by a newer decision) | `rescinded` (invalidated with
+  no replacement), and back via `reactivate`. `cadence decision graph <id>`
+  walks the chain.
+
+### Milestone
+
+A **milestone** clusters one or more `ready-for-milestone` /
+`ready-for-cadence-spec` recs destined for a single CADENCE phase. Lifecycle:
+`proposed` (clustered automatically; ephemeral) → `accepted` (persisted) →
+`exported` (a SPEC scaffold staged) | `deferred` | `closed`.
+
+Each milestone carries an operator-owned **pre-mortem** — likely failure modes,
+hidden dependencies, drift risks, and explicit out-of-scope — that is never
+auto-derived. `cadence milestone export <id> --to cadence` renders a
+deterministic SPEC scaffold from the milestone's facts and stages it under
+`exports/`; it does **not** run `cadence spec new` and never allocates a loop
+id. Staging and entering the loop stay separate, deliberate steps.
+
+### Reading the ledger: recommend, inspect, context packets
+
+Three read-only views turn the ledger into something actionable:
+
+- `cadence recommend` produces the **recommend report** — partitions the ledger
+  (excludes rejected/converted; surfaces superseded/contradicted as
+  `needsAttention`; parks deferred; ranks the rest with a transparent 0–100
+  score) and derives a loop-aware **advisory**: `finish-loop` (a phase is in
+  flight), `top-recommendation`, `spec-new` (top rec is ready for a spec), or
+  `empty`.
+- `cadence inspect` produces the **inspection** — a strategic health scan over
+  git, loop state, and ledger decay, raising flags (`git-dirty-or-diverged`,
+  `loop-state-inconsistent`, `ledger-decay`, `docs-missing`). It is distinct
+  from `status` / `progress`, which report execution-layer state.
+- `cadence context <scope>` produces a **context packet** — a bounded, read-only
+  snapshot for one of four scopes: `phase` (forward-looking context a slice
+  carries), `handoff` (cross-session resume trail), `review` (backward-looking
+  audit with a `needsAttention` bucket), `agent` (a trimmed subagent dispatch
+  brief).
+
+### The seam — how Praxis feeds the loop
+
+Praxis is strategic input; the loop is execution. They connect on exactly one
+path, in one direction at a time:
+
+```
+rec (readiness → ready-for-cadence-spec)
+  → cluster into a milestone
+    → milestone export  ⟶  SPEC scaffold        [Praxis → loop]
+      → SPEC → DRAFT → BUILD → SETTLE            (one or more slices)
+        → recommendation convert --to-phase  ⟶  rec status = converted   [loop → Praxis]
+```
+
+Praxis never writes loop state; the loop never writes the ledger. The only
+coupling is the staged SPEC scaffold (Praxis → loop) and the terminal convert
+link (loop → Praxis). `convert` is one-way — there is no unconvert.
+
+> **Terminology:** this guide and the codebase use precise names for these
+> concepts — see the project glossary, [`CONTEXT.md`](../CONTEXT.md), for the
+> canonical term for each (and the aliases to avoid).
 
 ---
 
