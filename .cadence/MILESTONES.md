@@ -82,7 +82,18 @@ Praxis used a different planning surface (`docs/superpowers/specs/`) than the CA
 
 Test count: `@cadence/core` 1034, `@cadence/types` 124 (up from ~620 and 80 at v1.0.0 respectively).
 
-Deferred to v1.2+: Slice 34.3 (`--from-rec` ergonomic on `spec new`), Slice 34.4 (`--filter-converted-to` reverse-lookup), `--sort-by`, `--filter-text-exact`, `--filter-regex-flags`, `--filter-kind` on audit, graph-viewer optimization.
+Deferred at v1.1.0 — disposition (reconciled 2026-06-01): Slices 34.3, 34.4, 35 (`--sort-by`), 36 (`--filter-text-exact`), 37 (`--filter-regex-flags`), 38 (`--filter-kind` on audit) **all shipped** (see the v1.1.1 section below). Only graph-viewer optimization (Slice 39) was **not done** — closed as won't-do (`311426a`).
+
+### v1.1.1 — Praxis polish (2026-05-27 tag; Slices 37–38 land just after)
+Six post-v1.1.0 Praxis polish slices on the three list commands + the rec→phase promotion flow. **Recorded on the Praxis surface** (`docs/superpowers/{specs,plans}/`) — Praxis slices do not use `.cadence/phases/` (per the v1.1.0 note above). All shipped to `main` with full design + plan + feat + docs commits; folded into the public npm `1.1.1` publish (2026-05-30). The git tag `v1.1.1` (`eed08ec`, 05-27) covers Slices 34.3/34.4/35/36; Slices 37–38 landed 05-27→05-28 just after the tag.
+
+- **Slice 34.3** — `cadence spec/draft new --from-rec <recId>` one-shot rec→phase promotion.
+- **Slice 34.4** — `cadence recommendation list --filter-converted-to <phaseId>` reverse-lookup.
+- **Slice 35** — `--sort-by <key>[:desc]` on the three list commands (17 sortable keys).
+- **Slice 36** — `--filter-text-exact <str>` whole-field equality on the list commands.
+- **Slice 37** — `--filter-regex-flags` on the list commands (after the v1.1.1 tag).
+- **Slice 38** — `--filter-kind` on `intelligence audit` (after the v1.1.1 tag).
+- **Slice 39** (graph-viewer optimization) — **won't-do**, closed `311426a`. (Distinct from CADENCE-engine *Phase* 39 / gate extraction.)
 
 ### v1.2.0 — Feature expansion (superpowers-inspired) (2026-05-17; COMPLETE)
 Per ROADMAP entry-point note: #6 → #2 → #1 → #4 → #1b shipped; #3/#5 parked (host-agnostic-anchor conflict). v1.2 feature-expansion track has no non-parked work remaining. The constituent phases (34.1, 35, 36, 37, 38) are also indexed in the "v1.1 milestone work" block above; this entry records the v1.2 feature-expansion track as a whole. Never cut as its own npm tag — folded into the 2026-05-30 publish (see v1.4.0 note).

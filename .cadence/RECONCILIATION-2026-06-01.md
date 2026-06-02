@@ -63,10 +63,13 @@ build) was green on `main` at reconciliation time (FULL TURBO, 16/16).
 ## Follow-ups still open
 
 - **Version-hygiene release** (the v1.4.0 "real next work" — see MILESTONES §v1.4.0).
-- **Praxis filter-flag slices** (the Praxis "Slice 37/38" work — `--filter-regex-flags`,
-  `--filter-kind`) shipped on `main` post-1.1.1 on the Praxis numbering scheme;
-  they were not part of this 39–44 backfill. Confirm whether they need their own
-  records.
+- ~~**Praxis filter-flag slices**~~ — RESOLVED 2026-06-01. Checked Slices 34.3–38
+  (incl. 37 `--filter-regex-flags`, 38 `--filter-kind`). They shipped on the
+  Praxis record surface (`docs/superpowers/{specs,plans}/`), which is **complete**
+  — Praxis slices do not use `.cadence/phases/`, so no artifact backfill was
+  needed. The only gap was MILESTONES: a stale "Deferred to v1.2+" line (all of
+  34.3–38 had shipped) and a missing v1.1.1 section. Both fixed; Slice 39
+  graph-viewer confirmed won't-do.
 - **Process guard (optional).** Decide whether to add a guard so a milestone
   can't ship without settling, or consciously keep the operator-owned model and
   rely on discipline. (`rec-20260602-001` already tracks a separate CLI fix.)
