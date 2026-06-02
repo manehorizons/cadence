@@ -1,0 +1,37 @@
+{
+  "draftId": "45-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "changesets adopted: @changesets/cli, .changeset/config.json (access public, testkit ignored), scripts",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-02T18:29:14.604Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "all 4 packages bumped 1.1.1->1.4.0; build green; pnpm -r publish --dry-run validates 1.4.0 shape (testkit skipped)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-02T18:30:05.935Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "already satisfied: release.yml (2026-05-30) has id-token:write + pnpm -r publish --provenance + NPM_CONFIG_PROVENANCE; inline gate (build+typecheck+lint+test) instead of needs:ci-success",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-02T18:30:06.084Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "CHANGELOG [1.4.0] section dated 2026-06-02 with prominent zod ^3->^4 breaking-deps callout + version-drift reconciliation note; docs install lines verified",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/CHANGELOG.md"
+      ],
+      "updatedAt": "2026-06-02T18:31:33.498Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "published @manehorizons/cadence-{core,types,host-claude-code}@1.4.0 via release.yml CI with provenance (slsa v1); testkit 404 (private); annotated tag v1.4.0 at fbbcf91",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-02T18:42:22.700Z"
+    }
+  }
+}

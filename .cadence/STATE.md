@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 44-gate-registry
+**Active phase:** 45-public-release
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
-- Token utilization: 38%
-- Subagent spawns this session: 38
+- Token utilization: 67%
+- Subagent spawns this session: 58
 - Last handoff: (none)
 
 ## Counts
