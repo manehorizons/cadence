@@ -369,7 +369,7 @@ for the full rationale.
 If you use Claude Code as your AI editor, install the host adapter to get hooks
 and slash commands:
 
-> **Not yet published.** Use the local build:
+> **Published on npm.** `npx @manehorizons/cadence-host-claude-code install` works directly; or use the local build for dogfood/monorepo work:
 
 ```sh
 cadence-host-claude-code install --local

@@ -45,8 +45,8 @@ Node `>=20` is required. `package.json` pins `pnpm@9.12.0`.
 
 `.githooks/pre-push` is wired via `git config core.hooksPath .githooks` and
 runs `pnpm turbo run lint typecheck test build` before any push that updates
-`refs/heads/main`, aborting on failure. GitHub Free private repos have no
-branch protection, so this is the enforcement layer. Bypass with
+`refs/heads/main`, aborting on failure. GitHub Free repos have no branch
+protection on this tier, so this is the enforcement layer. Bypass with
 `git push --no-verify` only when you mean it.
 
 The same four-command pipeline runs in `.github/workflows/ci.yml` on every
@@ -69,9 +69,11 @@ Two-surface, four-package design. Source of truth for everything below is in
 | `@manehorizons/cadence-testkit` | `private` (dev-only). Mock host + ephemeral-repo fixture + assertions used by every package's tests. Never published to npm. |
 
 Three packages publish to npm (`access: public`): `core`, `types`,
-`host-claude-code`. `testkit` is intentionally private. The publish path is
-proven reversibly via `scripts/publish-proof.mjs` (ephemeral verdaccio); the
-real public release is parked for the v1.4 milestone (`.cadence/ROADMAP.md`).
+`host-claude-code`. `testkit` is intentionally private. The publish path was
+proven reversibly via `scripts/publish-proof.mjs` (ephemeral verdaccio) and
+first shipped to npm on 2026-05-30 at 1.1.1; the version-hygiene remainder
+(a correct version bump + a matching git tag + provenance) is tracked as the
+v1.4 milestone (`.cadence/ROADMAP.md`).
 
 ### Two-surface model
 
@@ -92,7 +94,7 @@ event names the core dispatcher understands. See
 
 ### The loop and its artifacts
 
-`IDLE → DRAFT → BUILD → SETTLE → IDLE`. Per-phase artifacts live in
+`IDLE → SPEC → DRAFT → BUILD → SETTLE → IDLE` (SPEC is optional). Per-phase artifacts live in
 `.cadence/phases/<phase>/<id>-{DRAFT,PROGRESS,SUMMARY,PLAN-REVIEW,...}.{md,json}`.
 Two state files are regenerated on every state write:
 

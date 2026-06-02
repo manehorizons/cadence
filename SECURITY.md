@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-CADENCE is pre-1.0 on npm and under active development. Security fixes land on
+CADENCE is published on npm (1.x) and under active development. Security fixes land on
 `main` and ship in the next release. Only the latest published version of each
 package (`@manehorizons/cadence-core`, `@manehorizons/cadence-types`, `@manehorizons/cadence-host-claude-code`) is
 supported — please upgrade before reporting.

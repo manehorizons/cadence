@@ -180,7 +180,7 @@ Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 | `--from-rec <recId>` | — | Praxis recommendation id. On success, the rec is auto-converted to this phase via the Slice 34.1 transition helper. Symmetric semantics with `cadence spec new --from-rec`. Composes with the existing SPEC-seeded draft body: an approved SPEC plus `--from-rec` produces a SPEC-seeded DRAFT.md AND records the rec→phase link in one operator action. |
 | `-h, --help` | — | Display help for command |
 
-**Behavior** — creates `.cadence/phases/<phase>/<num>/DRAFT.md` pre-populated
+**Behavior** — creates `.cadence/phases/<phase>/<id>-DRAFT.md` pre-populated
 with the tier-appropriate template. The tier affects which gates fire at
 `settle run` time. See
 [docs/concepts.md — Profiles × tiers](../concepts.md#profiles--tiers).
@@ -490,7 +490,7 @@ Generate SUMMARY.md + JSON and return to IDLE
 
 **Behavior** — runs all configured settle-time gates (coverage, verifier,
 code-review, security-audit, interactive-verdict), records AC outcomes, writes
-`.cadence/phases/<phase>/<num>/SUMMARY.md` and the corresponding JSON, and
+`.cadence/phases/<phase>/<id>-SUMMARY.md` and the corresponding JSON, and
 transitions `state.json` back to IDLE.
 
 AC verdicts may be supplied explicitly with `--ac`, derived automatically from
