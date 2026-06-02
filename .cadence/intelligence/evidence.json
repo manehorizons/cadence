@@ -7,6 +7,20 @@
       "kind": "note",
       "summary": "CONTEXT.md Flagged ambiguities: 'cadence init --profile sets a preset, not a profile'",
       "createdAt": "2026-06-02T01:17:46.143Z"
+    },
+    {
+      "id": "ev-20260602-002",
+      "recommendationId": "rec-20260602-002",
+      "kind": "note",
+      "summary": "Design agreed in /resume /cadence-scout design session 2026-06-02; full design in docs/superpowers/specs/2026-06-02-cadence-scout-design.md (Option A). Sibling: deferred Option-B grouping rec.",
+      "createdAt": "2026-06-02T03:46:58.701Z"
+    },
+    {
+      "id": "ev-20260602-003",
+      "recommendationId": "rec-20260602-003",
+      "kind": "note",
+      "summary": "Explicitly deferred in /cadence-scout design session 2026-06-02 (chose 'A now, B as follow-up rec'). Sibling of rec-20260602-002. See docs/superpowers/specs/2026-06-02-cadence-scout-design.md.",
+      "createdAt": "2026-06-02T03:47:06.457Z"
     }
   ]
 }

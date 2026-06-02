@@ -27,6 +27,64 @@
       "decisionIds": [],
       "createdAt": "2026-06-02T01:17:46.143Z",
       "updatedAt": "2026-06-02T01:17:46.143Z"
+    },
+    {
+      "id": "rec-20260602-002",
+      "title": "Add /cadence-scout host slash command (ideation dialogue → recs)",
+      "summary": "A tenth Claude Code slash command (prompt template, installed by cadence-host-claude-code) that runs a CADENCE-aware divergent→convergent ideation dialogue and lands survivors as Praxis recommendations via existing 'cadence recommendation add'. Named scout (not brainstorm) — it is the opposite end of the superpowers brainstorming skill: divergent candidate generation into the ranked ledger, never design→plan. Zero core-engine change, no new gate/loop position/record type. Fills the gap of an in-tool structured ideation dialogue that today forces leaving the tool and hand-entering results.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "host-claude-code",
+        "praxis"
+      ],
+      "affectedFiles": [
+        "packages/host-claude-code/src",
+        "docs/superpowers/specs/2026-06-02-cadence-scout-design.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260602-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-02T03:46:58.701Z",
+      "updatedAt": "2026-06-02T03:46:58.701Z"
+    },
+    {
+      "id": "rec-20260602-003",
+      "title": "[Deferred] First-class scout-session grouping on recommendations",
+      "summary": "Option B from the /cadence-scout design: add an optional scoutId/sourceSessionId to the recommendation schema (cadence-types) + a --scout-id flag, surfaced as a cluster in 'cadence recommend', so the N recs from one /cadence-scout session are queryable as a set. Deferred: spends a permanent schema surface for unproven traceability need and overlaps the existing generic evidence mechanism. Clean additive follow-up if the need appears.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "praxis",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/types/src",
+        "packages/core/src"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260602-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-02T03:47:06.457Z",
+      "updatedAt": "2026-06-02T03:47:06.457Z"
     }
   ]
 }
