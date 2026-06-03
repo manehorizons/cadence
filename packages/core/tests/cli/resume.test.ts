@@ -1,0 +1,48 @@
+// packages/core/tests/cli/resume.test.ts
+import { afterEach, describe, expect, it } from 'vitest';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { join, dirname } from 'node:path';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+
+const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
+function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
+  return new Promise((resolve) => {
+    const p = spawn(process.execPath, [CLI, ...args], { cwd });
+    let stdout = '', stderr = '';
+    p.stdout.on('data', (d) => (stdout += d.toString()));
+    p.stderr.on('data', (d) => (stderr += d.toString()));
+    p.on('exit', (code) => resolve({ stdout, stderr, code: code ?? 0 }));
+  });
+}
+let active: Fixture | null = null;
+afterEach(async () => { if (active) { await active.cleanup(); active = null; } });
+
+describe('cadence resume', () => {
+  it('AC-24: with no handoff, prints a hint and exits 0', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['resume'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/no handoff found/i);
+    expect(r.stdout).toMatch(/cadence handoff/);
+  });
+
+  it('AC-25: replays the freshest doc', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['handoff', '--label', 'cli'], active.root);
+    const r = await run(['resume'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/# Session Handoff/);
+    expect(r.stdout).toMatch(/SESSION-\d{4}-\d{2}-\d{2}-cli\.md/);
+  });
+
+  it('AC-26: --json emits a parseable ResumeResult', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['handoff'], active.root);
+    const r = await run(['resume', '--json'], active.root);
+    expect(r.code).toBe(0);
+    const parsed = JSON.parse(r.stdout);
+    expect(parsed.found).toBe(true);
+    expect(parsed.context.scope).toBe('handoff');
+  });
+});
