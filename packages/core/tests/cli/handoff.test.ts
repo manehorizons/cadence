@@ -1,7 +1,6 @@
 // packages/core/tests/cli/handoff.test.ts
 import { afterEach, describe, expect, it } from 'vitest';
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
