@@ -16,16 +16,17 @@ const CI_YML = join(
   'ci.yml',
 );
 
-// AC-3 (phase 49) — the gate runs on ubuntu + macOS. This guard fails loudly
-// if a future edit silently drops the macOS leg back to ubuntu-only. The
-// windows-latest leg is deliberately deferred (Windows-only timeout + EBUSY
-// harness issues — see the ci.yml comment), so it is NOT asserted here yet.
+// AC-3 (phase 50) — the gate runs on all three OSes again. macOS was unblocked
+// in phase 49 (realpath) and windows in phase 50 (platform-aware timeouts +
+// best-effort temp cleanup). This guard fails loudly if a future edit silently
+// drops a leg.
 describe('CI workflow OS matrix', () => {
   const yml = readFileSync(CI_YML, 'utf8');
 
-  it('runs the test job on ubuntu and macOS (AC-3)', () => {
+  it('runs the test job on ubuntu, macOS, and windows (AC-3)', () => {
     expect(yml).toContain('ubuntu-latest');
     expect(yml).toContain('macos-latest');
+    expect(yml).toContain('windows-latest');
   });
 
   it('keeps fail-fast disabled so one OS leg cannot cancel the others (AC-3)', () => {
