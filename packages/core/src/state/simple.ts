@@ -2,7 +2,7 @@ import { readFile, mkdir, rename } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { CadenceStateZ, type CadenceState } from '@manehorizons/cadence-types';
-import { StateCorruptError } from '../errors.js';
+import { StateCorruptError, NotInitializedError } from '../errors.js';
 import { atomicWriteJSON, atomicWriteText } from './atomic-write.js';
 import { renderStateMd } from '../render/state-md.js';
 import type { StateBackend } from './backend.js';
@@ -16,6 +16,9 @@ export class SimpleStateBackend implements StateBackend {
 
   async readState(): Promise<CadenceState> {
     const path = join(await this.resolveStateDir(), 'state.json');
+    if (!existsSync(path)) {
+      throw new NotInitializedError();
+    }
     let raw: string;
     try {
       raw = await readFile(path, 'utf8');

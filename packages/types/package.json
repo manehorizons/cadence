@@ -1,6 +1,9 @@
 {
   "name": "@manehorizons/cadence-types",
   "version": "1.5.0",
+  "engines": {
+    "node": ">=20"
+  },
   "description": "Zod schemas and TypeScript types for CADENCE — the pure data layer shared across every CADENCE package.",
   "license": "MIT",
   "author": "Thomas Powers",

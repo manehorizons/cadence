@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CadenceError, StateCorruptError, ConfigInvalidError, LoopViolationError } from '../src/errors.js';
+import { CadenceError, StateCorruptError, NotInitializedError, ConfigInvalidError, LoopViolationError } from '../src/errors.js';
 
 describe('errors', () => {
   it('CadenceError carries a code', () => {
@@ -11,6 +11,14 @@ describe('errors', () => {
   it('StateCorruptError code is STATE_CORRUPT', () => {
     const e = new StateCorruptError('bad');
     expect(e.code).toBe('STATE_CORRUPT');
+  });
+
+  // AC-1 — distinct not-initialized error
+  it('NotInitializedError carries NOT_INITIALIZED code and names cadence init', () => {
+    const e = new NotInitializedError();
+    expect(e.code).toBe('NOT_INITIALIZED');
+    expect(e.name).toBe('NotInitializedError');
+    expect(e.message).toMatch(/cadence init/);
   });
 
   it('ConfigInvalidError code is CONFIG_INVALID', () => {

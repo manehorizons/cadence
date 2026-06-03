@@ -27,14 +27,14 @@ loop. Do not freelance multi-step work; run it through the loop.
 
 - **Project:** ${opts.projectName}
 - **Config preset:** ${opts.preset}
-- **Gate profile:** ${opts.gateProfile} (gates scale with profile × tier — see DESIGN.md §4)
+- **Gate profile:** ${opts.gateProfile} (gates scale with profile × tier — see https://github.com/manehorizons/cadence/blob/main/docs/concepts.md)
 
 ### Where state lives
 
 - \`.cadence/ROADMAP.md\` — phases and milestones
 - \`.cadence/STATE.md\` — current loop position, active draft/phase (derived; do not hand-edit)
 - \`.cadence/phases/<phase>/\` — per-phase DRAFT / PROGRESS / SUMMARY
-- \`DESIGN.md\` — architecture + the gate universe; project \`README.md\` — usage
+- \`README.md\` — this project's usage; CADENCE concepts + the gate universe: https://github.com/manehorizons/cadence/blob/main/docs/concepts.md
 
 ### The loop
 

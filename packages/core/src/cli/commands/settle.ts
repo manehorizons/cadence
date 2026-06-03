@@ -15,6 +15,10 @@ import { loadConfig } from '../../config/loader.js';
 import { effectiveGateSet } from '../../gates/engine.js';
 import { scanTestCoverage } from '../../verify/coverage.js';
 import { selectVerifier } from '../../verify/factory.js';
+import {
+  resolveEffectiveProvider,
+  MOCK_FALLBACK_BANNER,
+} from '../../verify/verifier-factory.js';
 import type { VerifyTestRef } from '../../verify/verifier.js';
 import { runSettleGates } from '../../gates/registry.js';
 import { runSkillAuditCheck } from '../../checks/skill-audit.js';
@@ -148,6 +152,20 @@ export function registerSettleCommand(program: Command): void {
           cadenceConfig = null;
         }
         const gateSet = effectiveGateSet(state, cadenceConfig, draft);
+
+        // Onboarding hardening (phase 48): --deep asks for real verification.
+        // If the effective verifier provider is `mock` (the shipped default —
+        // `cadence init` writes verifier.provider='mock'), the verdicts are
+        // deterministic fakes. Warn loudly so the operator isn't handed false
+        // confidence. A configured real provider that downgrades to mock for a
+        // missing key already prints the factory's own "falling back to mock"
+        // warning, so that path is left to the factory.
+        if (
+          opts.deep &&
+          resolveEffectiveProvider(cadenceConfig?.verifier).provider === 'mock'
+        ) {
+          process.stderr.write(MOCK_FALLBACK_BANNER + '\n');
+        }
 
         // DESIGN.md §4 M2 — soft cap on auto × complex. Refuse here, before
         // any coverage / interactive / deep work, so wasted effort is avoided.
