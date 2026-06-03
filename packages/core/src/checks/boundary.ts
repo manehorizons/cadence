@@ -1,3 +1,4 @@
+import { isAbsolute, relative } from 'node:path';
 import type { AnomalyEvent } from '@manehorizons/cadence-types';
 
 /** The single line both emission points use for a stray file. */
@@ -23,6 +24,15 @@ export interface BoundaryCheckInput {
    * `{ source: 'hook.preToolEdit' }`; settle supplies none).
    */
   extraContext?: Record<string, unknown>;
+  /**
+   * Phase 47 — repo root for path normalization. When set, declared + touched
+   * paths are relativized to this root (and `\\`→`/`) before the boundary
+   * comparison, so an ABSOLUTE touched path (recorded by the PreToolUse hook)
+   * matches a RELATIVE DRAFT `files:` declaration. Comparison-only: the
+   * ORIGINAL touched path is still what gets emitted. Omit to keep exact-string
+   * matching (back-compat — settle/hook supply it; unit callers may not).
+   */
+  root?: string;
 }
 
 /**
@@ -36,10 +46,17 @@ export interface BoundaryCheckInput {
  * skill-audit (39.6), OUTSIDE the Phase 44.1 registry.
  */
 export function runBoundaryCheck(input: BoundaryCheckInput): AnomalyEvent[] {
-  const declared = new Set(input.declaredFiles);
+  const { root } = input;
+  // Normalize for COMPARISON only — relativize absolute paths to `root`, unify
+  // separators. The original (untransformed) path is what the event carries.
+  const norm = (p: string): string => {
+    const rel = root && isAbsolute(p) ? relative(root, p) : p;
+    return rel.split('\\').join('/');
+  };
+  const declared = new Set([...input.declaredFiles].map(norm));
   const events: AnomalyEvent[] = [];
   for (const file of input.touchedFiles) {
-    if (declared.has(file)) continue;
+    if (declared.has(norm(file))) continue;
     events.push({
       type: 'files-outside-boundary',
       severity: 'warn',

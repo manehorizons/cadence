@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 45-public-release
+**Active phase:** 47-boundary-path-fix
 **Active draft:** (none)
 **Tier:** (n/a)
 

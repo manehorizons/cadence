@@ -439,6 +439,7 @@ export function registerSettleCommand(program: Command): void {
             progress,
             coverageBypassed,
             force: opts.force === true,
+            root: cwd,
             ...(deepVerify ? { deepVerify } : {}),
             ...(interactiveVerify ? { interactiveVerify } : {}),
             ...(verifierFailure ? { verifierFailure } : {}),
