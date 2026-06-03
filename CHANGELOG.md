@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.5.0] - unreleased
+
+> On `main`, not yet published to npm. Publish via the `Release` workflow (`workflow_dispatch`, `dry_run=false`), then cut tag `v1.5.0`. Per-package bumps managed by changesets.
+
+### Added
+
+- **`cadence handoff [label]`** — scaffolds `.cadence/handoff/SESSION-<YYYY-MM-DD>[-<label>].md` with machine facts pre-filled (loop state, read-only git facts, and the `cadence context handoff` intelligence packet) plus empty narrative sections. Flags: `--label`, `--force`, `--no-stamp`, `--no-git`, `--json`. By default stamps `state.session.lastHandoff`. (Phase `46-handoff-resume`.)
+- **`cadence resume`** — read-only replay of the freshest SESSION doc alongside a freshly recomputed live context packet, with a drift note when the doc's loop position diverges from live state. Mutates nothing.
+- **`/cadence-handoff` + `/cadence-resume`** host slash commands installed by `cadence-host-claude-code install` (host command count 9 → 11).
+
+### Fixed
+
+- **`files-outside-boundary` false positives** — `runBoundaryCheck` now normalizes absolute touched paths to repo-relative before comparing against the DRAFT's relative `files:` declarations (optional `root`, threaded from settle and the PreToolEdit hook). (Phase `47-boundary-path-fix`.)
+
 ## [1.4.0] - 2026-06-02
 
 > **BREAKING (dependencies): `zod` upgraded `^3 → ^4`.** `@manehorizons/cadence-types` exports its Zod schemas, so consumers that import them must be on Zod 4. The npm `1.1.1` artifact shipped Zod 3; `1.4.0` is the first published version on Zod 4. (No external adopters were affected at release time.)

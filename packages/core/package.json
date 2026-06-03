@@ -1,6 +1,6 @@
 {
   "name": "@manehorizons/cadence-core",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "CADENCE engine — the DRAFT→BUILD→SETTLE loop, configurable quality gates, and the host-agnostic `cadence` CLI for AI-assisted development.",
   "license": "MIT",
   "author": "Thomas Powers",
@@ -22,11 +22,22 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
-  "bin": { "cadence": "./bin/cadence.cjs" },
-  "files": ["dist", "bin", "!dist/tsconfig.tsbuildinfo"],
-  "publishConfig": { "access": "public" },
+  "bin": {
+    "cadence": "./bin/cadence.cjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "!dist/tsconfig.tsbuildinfo"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/manehorizons/cadence.git",

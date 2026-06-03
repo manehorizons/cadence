@@ -127,6 +127,12 @@ The first publish happened ahead of plan and out of band on **2026-05-30** (repo
 - ✓ `@manehorizons/cadence-testkit` — re-decided: **stays private** (no external demand yet).
 - Note: zod `^3 → ^4` shipped as a public-API-affecting dependency change, documented in CHANGELOG `[1.4.0]`.
 
+### v1.5.0 — Session continuity (ON `main`, UNRELEASED as of 2026-06-03)
+First feature release after the v1.4.0 version-hygiene publish. Merged to `main`; `package.json` for the three public packages bumped `1.4.0 → 1.5.0` via changesets; **not yet published to npm** (publish = run `release.yml` `workflow_dispatch` with `dry_run=false`, then cut tag `v1.5.0`).
+- ✓ **`cadence handoff` / `cadence resume`** — session-continuity commands, built through CADENCE's own loop as phase `46-handoff-resume` (27 ACs). `handoff` scaffolds `.cadence/handoff/SESSION-<date>.md` with loop state, read-only git facts, and the context-handoff packet pre-filled; `resume` is a read-only replay of the freshest handoff + live context. Adds `/cadence-handoff` + `/cadence-resume` host slash commands (host command count 9 → 11). `readGitFacts` is core's first read-only git shell-out.
+- ✓ **Boundary-check path normalization** — phase `47-boundary-path-fix`. `runBoundaryCheck` gains an optional `root`; absolute touched paths are relativized before comparison against relative DRAFT `files:` declarations, eliminating `files-outside-boundary` false positives (surfaced dogfooding phase 46).
+- PRs #13 (boundary fix) and #14 (handoff/resume) merged 2026-06-03; full gate green; CHANGELOG `[1.5.0]`.
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction (Codex / Aider / OpenCode).
