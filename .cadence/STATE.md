@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 48-onboarding-hardening
+**Active phase:** 49-cross-platform-ci
 **Active draft:** (none)
 **Tier:** (n/a)
 

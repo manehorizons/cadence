@@ -1,0 +1,23 @@
+{
+  "draftId": "49-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "realpath the testkit mkdtemp root so fixture.root is OS-canonical (macOS /tmp→/private/tmp); invariant test added",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-03T20:51:44.891Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "renameWithRetry now injectable (test rename + backoffMs) + renameBackoffBudgetMs; base 15→25ms (1375ms budget) for Windows handle race; happy path unchanged",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-03T20:51:45.040Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "ci.yml matrix os:[ubuntu,macos,windows]×node:[20,22]; deferral comment replaced; ci-matrix.test.ts guard added; ci-success aggregate intact",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-03T20:51:45.195Z"
+    }
+  }
+}
