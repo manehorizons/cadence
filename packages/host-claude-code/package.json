@@ -1,6 +1,6 @@
 {
   "name": "@manehorizons/cadence-host-claude-code",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Claude Code adapter for CADENCE — installs lifecycle hooks and slash commands that drive the CADENCE engine from inside Claude Code.",
   "license": "MIT",
   "author": "Thomas Powers",
@@ -19,11 +19,22 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
-  "bin": { "cadence-host-claude-code": "./bin/cadence-host-claude-code.cjs" },
-  "files": ["dist", "bin", "!dist/tsconfig.tsbuildinfo"],
-  "publishConfig": { "access": "public" },
+  "bin": {
+    "cadence-host-claude-code": "./bin/cadence-host-claude-code.cjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "!dist/tsconfig.tsbuildinfo"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/manehorizons/cadence.git",
