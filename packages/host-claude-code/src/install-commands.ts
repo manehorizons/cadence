@@ -88,6 +88,19 @@ const COMMANDS: CommandSpec[] = [
     cli: 'needs-context $ARGUMENTS',
     trailing: 'Supply the missing context, then re-run the task.',
   },
+  {
+    name: 'cadence-handoff',
+    description: 'Scaffold a SESSION handoff doc with machine facts pre-filled',
+    argumentHint: '[label]',
+    cli: 'handoff $ARGUMENTS',
+    trailing: 'Open the new SESSION doc and fill the narrative sections (TL;DR, what landed, gotchas, next action).',
+  },
+  {
+    name: 'cadence-resume',
+    description: 'Replay the freshest session handoff + live context (read-only)',
+    cli: 'resume',
+    trailing: 'Read the replayed handoff and continue from the documented next action.',
+  },
 ];
 
 function renderFile(spec: CommandSpec, cadenceCommand: string): string {
