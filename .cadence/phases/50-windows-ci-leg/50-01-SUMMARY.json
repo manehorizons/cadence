@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "draftId": "50-01",
+  "completedAt": "2026-06-03T21:32:08.873Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "platform-aware timeout in vitest.shared.ts (win32 60s, else 20s); security-audit describe override win32 90s/else 30s"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "fixture cleanup best-effort: rm budget 10/200ms, swallow final failure on win32 only (else throws)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "temp _windows-probe.yml: windows-only fast lane running the 3 affected files; removed in T4"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "windows-latest re-enabled in ci.yml matrix; _windows-probe.yml deleted; ci-matrix.test.ts asserts all 3 OSes; comment updated"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

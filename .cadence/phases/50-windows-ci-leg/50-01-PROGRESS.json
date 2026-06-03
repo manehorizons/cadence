@@ -1,0 +1,32 @@
+{
+  "draftId": "50-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "platform-aware timeout in vitest.shared.ts (win32 60s, else 20s); security-audit describe override win32 90s/else 30s",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-03T21:27:51.346Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "fixture cleanup best-effort: rm budget 10/200ms, swallow final failure on win32 only (else throws)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-03T21:27:51.507Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "temp _windows-probe.yml: windows-only fast lane running the 3 affected files; removed in T4",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-03T21:27:51.666Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "windows-latest re-enabled in ci.yml matrix; _windows-probe.yml deleted; ci-matrix.test.ts asserts all 3 OSes; comment updated",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.github/workflows/ci.yml",
+        "/home/thomas/projects/cadence/packages/core/tests/docs/ci-matrix.test.ts"
+      ],
+      "updatedAt": "2026-06-03T21:31:18.807Z"
+    }
+  }
+}
