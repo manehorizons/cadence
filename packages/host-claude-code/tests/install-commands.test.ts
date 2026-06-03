@@ -17,7 +17,7 @@ async function tempDir(): Promise<string> {
 }
 
 describe('installCommands', () => {
-  it('writes 9 cadence-*.md files under .claude/commands/', async () => {
+  it('writes 11 cadence-*.md files under .claude/commands/', async () => {
     const root = await tempDir();
     await installCommands(root);
     const entries = await readdir(join(root, '.claude/commands'));
@@ -28,10 +28,22 @@ describe('installCommands', () => {
       'cadence-check.md',
       'cadence-done.md',
       'cadence-draft.md',
+      'cadence-handoff.md',
       'cadence-needs-context.md',
       'cadence-progress.md',
+      'cadence-resume.md',
       'cadence-settle.md',
     ]);
+  });
+
+  it('AC-27: handoff/resume wrappers bind to the right CLI invocation', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+    const handoff = await readFile(join(root, '.claude/commands/cadence-handoff.md'), 'utf8');
+    expect(handoff).toMatch(/^!cadence handoff \$ARGUMENTS\s*$/m);
+    expect(handoff).toMatch(/<!-- managed-by: cadence -->/);
+    const resume = await readFile(join(root, '.claude/commands/cadence-resume.md'), 'utf8');
+    expect(resume).toMatch(/^!cadence resume\s*$/m);
   });
 
   it('shortcut verbs (done/block/needs-context) bind to the right CLI invocation', async () => {

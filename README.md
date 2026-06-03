@@ -18,7 +18,7 @@ So Cadence isn't GSD-lite. It keeps the quality gates — they re-check your acc
 
 The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. It is completely host-agnostic.
 
-The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and nine slash commands. One engine, two surfaces: the CLI for terminals, the adapter for Claude Code.
+The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and eleven slash commands. One engine, two surfaces: the CLI for terminals, the adapter for Claude Code.
 
 ## How it compares
 
