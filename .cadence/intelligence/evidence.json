@@ -28,6 +28,13 @@
       "kind": "note",
       "summary": "Design agreed in /resume session 2026-06-02 (pivoted from the /cadence-scout discussion: scout's markdown surface is too thin to show gates working, so a code-bearing demo project was chosen instead). Full storyboard in docs/superpowers/specs/2026-06-02-cadence-demo-billsplit-design.md.",
       "createdAt": "2026-06-02T04:41:02.370Z"
+    },
+    {
+      "id": "ev-20260603-001",
+      "recommendationId": "rec-20260603-001",
+      "kind": "note",
+      "summary": "PR #19 CI run 26912393990: macos-latest 20/22 green, ubuntu green; windows-latest 20/22 failed with 20s/30s timeouts + EBUSY rmdir on temp cleanup.",
+      "createdAt": "2026-06-03T21:05:40.744Z"
     }
   ]
 }

@@ -14,7 +14,7 @@
   "decisions": [],
   "deferred": [],
   "session": {
-    "tokenUtilization": 0.7400000000000004,
+    "tokenUtilization": 0.7500000000000004,
     "lastHandoff": "SESSION-2026-06-03.md",
     "subagentSpawns": 67
   },

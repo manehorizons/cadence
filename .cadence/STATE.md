@@ -9,7 +9,7 @@
 **Tier:** (n/a)
 
 ## Telemetry
-- Token utilization: 74%
+- Token utilization: 75%
 - Subagent spawns this session: 67
 - Last handoff: SESSION-2026-06-03.md
 

@@ -114,6 +114,39 @@
       "decisionIds": [],
       "createdAt": "2026-06-02T04:41:02.370Z",
       "updatedAt": "2026-06-02T17:28:01.000Z"
+    },
+    {
+      "id": "rec-20260603-001",
+      "title": "Enable windows-latest CI leg (timeout + EBUSY harness fixes)",
+      "summary": "Phase 49 unblocked macOS via realpath but deferred Windows. Enabling windows-latest surfaced Windows-only test-harness issues: (1) settle-security-audit.test.ts AC-4 and dispatcher.test.ts 'skill-invoke caps at 100 entries' exceed the vitest timeout on Windows runners (CLI-spawn + git + 100 atomic writes are slower there); (2) temp-dir cleanup hits EBUSY (rmdir, open handle) past the fixture's rm retry budget (maxRetries:5/retryDelay:100). Fix: raise fixture cleanup retry budget for EBUSY; address the slow Windows tests without per-test timeout band-aids (CLAUDE.md rule) — likely a Windows-aware global timeout or reducing per-test CLI-spawn count; consider an injectable renameWithRetry for testability. Then add windows-latest back to the ci.yml matrix + the ci-matrix.test.ts guard.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "ci",
+        "testkit",
+        "reliability"
+      ],
+      "affectedFiles": [
+        "packages/testkit/src/fixture.ts",
+        "packages/core/tests/cli/settle-security-audit.test.ts",
+        "packages/core/tests/hooks/dispatcher.test.ts",
+        ".github/workflows/ci.yml",
+        "vitest.shared.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260603-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-03T21:05:40.744Z",
+      "updatedAt": "2026-06-03T21:05:40.744Z"
     }
   ]
 }
