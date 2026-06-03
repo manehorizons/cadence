@@ -105,6 +105,19 @@ describe('collectAnomalies (AC-3)', () => {
     expect(files.sort()).toEqual(['other.ts', 'stray.ts']);
   });
 
+  it('AC-4: with root, absolute touchedFiles matching relative declared files emit zero boundary anomalies', () => {
+    const ROOT = '/home/u/repo';
+    const progress: ProgressFile = {
+      draftId: '17-01',
+      tasks: {
+        T1: { ...baseProgress.tasks.T1!, touchedFiles: [`${ROOT}/a.ts`] },
+        T2: { ...baseProgress.tasks.T2!, touchedFiles: [`${ROOT}/b.ts`] },
+      },
+    };
+    const events = collectAnomalies(ctx({ progress, root: ROOT }));
+    expect(events.filter((e) => e.type === 'files-outside-boundary')).toEqual([]);
+  });
+
   it('emits verifier-failure when transport failed', () => {
     const events = collectAnomalies(
       ctx({ verifierFailure: { message: 'ECONNRESET', provider: 'anthropic' } }),

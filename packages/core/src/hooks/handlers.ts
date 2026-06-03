@@ -66,6 +66,7 @@ export async function handlePreToolEdit(
             touchedFiles: rawFiles,
             stamp: () => now,
             extraContext: { source: 'hook.preToolEdit' },
+            root: ctx.cwd,
           });
           if (events.length > 0) {
             const gateSet = effectiveGateSet(state, config, draft);
