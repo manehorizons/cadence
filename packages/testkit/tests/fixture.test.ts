@@ -39,11 +39,19 @@ describe('tempRepo', () => {
     expect(existsSync(join(active.root, '.cadence/config.json'))).toBe(true);
   });
 
-  it('cleanup() removes the temp dir', async () => {
+  it('cleanup() removes the temp dir (AC-2)', async () => {
     active = await tempRepo();
     const path = active.root;
     await active.cleanup();
     active = null;
     expect(existsSync(path)).toBe(false);
+  });
+
+  it('cleanup() resolves (does not throw) on the happy path (AC-2)', async () => {
+    // The win32 best-effort swallow path (EBUSY on a held handle) is exercised
+    // on the windows-latest CI leg; here we lock the off-Windows contract that
+    // a normal cleanup completes without throwing.
+    const fx = await tempRepo({ initialized: true });
+    await expect(fx.cleanup()).resolves.toBeUndefined();
   });
 });

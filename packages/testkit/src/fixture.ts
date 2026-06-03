@@ -35,7 +35,17 @@ export async function tempRepo(opts: FixtureOptions = {}): Promise<Fixture> {
   }
   return {
     root,
-    cleanup: async () =>
-      rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }),
+    // Windows can keep a transient handle open on the temp root (a spawned
+    // child, antivirus, the indexer) past the rm retry budget, surfacing as
+    // EBUSY/ENOTEMPTY on rmdir. Temp roots are GC'd by the OS, so on win32
+    // cleanup is best-effort — swallow a final failure rather than fail the
+    // test that already passed. Off Windows a cleanup failure still throws.
+    cleanup: async () => {
+      try {
+        await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+      } catch (err) {
+        if (process.platform !== 'win32') throw err;
+      }
+    },
   };
 }
