@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightTypeDoc, { typeDocSidebarGroup } from 'starlight-typedoc';
 
 // GitHub project-pages base. Centralized here; a custom-domain swap is a
 // two-line change (set site to the domain, base to '/').
@@ -12,6 +13,20 @@ export default defineConfig({
   base: BASE,
   integrations: [
     starlight({
+      plugins: [
+        starlightTypeDoc({
+          entryPoints: [
+            '../packages/types/src/index.ts',
+            '../packages/host-claude-code/src/index.ts',
+          ],
+          tsconfig: './tsconfig.typedoc.json',
+          output: 'api',
+          sidebar: { label: 'API', collapsed: true },
+          typeDoc: {
+            entryPointStrategy: 'resolve',
+          },
+        }),
+      ],
       title: 'CADENCE',
       description:
         'A draft/build/settle framework for AI-assisted development with configurable quality gates.',
@@ -46,6 +61,7 @@ export default defineConfig({
           { label: 'Triage labels', slug: 'contributing/triage-labels' },
           { label: 'Domain docs', slug: 'contributing/domain' },
         ]},
+        typeDocSidebarGroup,
       ],
     }),
   ],
