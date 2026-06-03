@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 46-handoff-resume
+**Active phase:** 47-boundary-path-fix
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
-- Token utilization: 93%
-- Subagent spawns this session: 92
+- Token utilization: 67%
+- Subagent spawns this session: 58
 - Last handoff: (none)
 
 ## Counts

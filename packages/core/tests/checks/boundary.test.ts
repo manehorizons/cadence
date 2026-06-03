@@ -82,4 +82,40 @@ describe('runBoundaryCheck (Phase 43.1)', () => {
       "foo.ts touched but not declared in any task's files:",
     );
   });
+
+  // Phase 47 — absolute-vs-relative path normalization (root supplied).
+  const ROOT = '/home/u/repo';
+
+  it('AC-1: with root, an absolute touched path matching a relative declared file emits nothing', () => {
+    const events = runBoundaryCheck({
+      root: ROOT,
+      declaredFiles: ['packages/core/src/x.ts'],
+      touchedFiles: [`${ROOT}/packages/core/src/x.ts`],
+      stamp: stampFixed,
+    });
+    expect(events).toEqual([]);
+  });
+
+  it('AC-2: with NO root, exact-string matching is preserved (back-compat)', () => {
+    const events = runBoundaryCheck({
+      declaredFiles: ['a.ts', 'b.ts'],
+      touchedFiles: ['a.ts', 'stray.ts'],
+      stamp: stampFixed,
+    });
+    expect(events).toHaveLength(1);
+    expect(events[0]!.context.file).toBe('stray.ts');
+  });
+
+  it('AC-3: with root, a genuine stray still flags and emits the ORIGINAL absolute path', () => {
+    const stray = `${ROOT}/packages/core/src/stray.ts`;
+    const events = runBoundaryCheck({
+      root: ROOT,
+      declaredFiles: ['packages/core/src/x.ts'],
+      touchedFiles: [stray],
+      stamp: stampFixed,
+    });
+    expect(events).toHaveLength(1);
+    expect(events[0]!.context.file).toBe(stray);
+    expect(events[0]!.message).toBe(boundaryMessage(stray));
+  });
 });

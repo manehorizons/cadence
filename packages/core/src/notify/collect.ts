@@ -20,6 +20,13 @@ export interface CollectAnomaliesContext {
   interactiveVerify?: Record<string, InteractiveVerdict> | undefined;
   /** Populated when the deep verifier transport itself failed (network/parse/etc). */
   verifierFailure?: { message: string; provider?: string } | undefined;
+  /**
+   * Phase 47 — repo root, forwarded to the boundary check so absolute
+   * `touchedFiles` (recorded by the PreToolUse hook) are relativized before
+   * comparison against the DRAFT's relative `files:` declarations. Optional:
+   * when omitted, the boundary check falls back to exact-string matching.
+   */
+  root?: string | undefined;
 }
 
 function parseAcRefs(done: string): string[] {
@@ -98,6 +105,7 @@ export function collectAnomalies(
       declaredFiles: ctx.draft.tasks.flatMap((t) => t.files),
       touchedFiles: touched,
       stamp,
+      ...(ctx.root !== undefined ? { root: ctx.root } : {}),
     }),
   );
 
