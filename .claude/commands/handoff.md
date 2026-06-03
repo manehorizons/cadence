@@ -71,22 +71,30 @@ Update only docs that the session's work actually changed or made stale. Do not 
 
 Respect project conventions: plan-doc-first, two-commit-per-phase, no `.synth/`-branded artifacts in production.
 
-## Step 4 — Write/update the SESSION handoff doc
+## Step 4 — Scaffold the SESSION handoff doc with `cadence handoff`, then fill the narrative
 
-Path: `.cadence/handoff/SESSION-<YYYY-MM-DD>[-<context-label>].md`
-(today's date; append the `$ARGUMENTS` label or a derived one). If a file for today + this context already exists, **update it in place** rather than spawning a near-duplicate; if today's work is a distinct thread, use a distinct label.
+Don't hand-roll the doc — **scaffold it with the engine command**, which pre-fills the error-prone machine facts (stale shas / wrong branch / wrong loop position are the classic handoff defects). Then you only write the judgment.
 
-Match the established house structure (see prior files in `.cadence/handoff/` for the exact shape — emulate the most recent one). Required sections:
+```
+cadence handoff <context-label>
+# dogfood from source: node packages/core/bin/cadence.cjs handoff <context-label>
+```
 
-1. **Title line** — `# Session Handoff — <date> (<context>)`, and a one-line "Continues `<prev SESSION file>`" link when applicable.
-2. **TL;DR for the next session** — 4–6 bullets: where things stand, the single most important next action, loop/branch state, any hard gate or blocker. The next LLM should be able to act from the TL;DR alone.
-3. **What landed this session** — concrete, with commit shas and phase/slice ids. Tables welcome for findings.
-4. **State on handoff** — branch, clean/dirty tree, loop position, active phase/slice, origin sync (ahead/behind + sha), PR state, gate result from Step 1. Be exact.
-5. **Carry-forward gotchas** — machine paths, build/bootstrap quirks, pre-push full-gate, anything that will bite a fresh checkout. Additive to prior handoff's list (reference it, don't blindly recopy).
-6. **Conventions reaffirmed / decisions** — anything decided this session that constrains future work.
-7. **Quick resume commands** — a copy-pasteable block that gets the next session from fresh clone → oriented (pull, hooks path, install+build, progress, read the right ROADMAP/spec slice, the explicit next command).
+This writes `.cadence/handoff/SESSION-<YYYY-MM-DD>[-<context-label>].md` (today's date + the `$ARGUMENTS` label or a derived one) and, by default, stamps `state.session.lastHandoff` so the next session's `cadence resume` finds it. Re-running for the same day+label is **refused** unless you pass `--force` (it won't silently clobber your narrative) — for a narrative-only touch-up, edit the file directly instead; use `--force` only to regenerate the machine facts; use a distinct `--label` for a genuinely separate thread.
 
-The doc is for an LLM with **no memory of this session** — write it self-contained. Prefer precise over breezy.
+What the command **pre-fills** (verify, don't retype):
+- **Frontmatter** — loop snapshot, read-only git facts (branch/dirty/ahead-behind/head), context-packet path.
+- **State on handoff** — branch, clean/dirty, ahead/behind, HEAD + recent commits, `git diff --stat`, loop position · active phase · tier.
+- **CADENCE context** — top recommendations, open assumptions, active decisions, files in play (from `cadence context handoff`).
+- **Empty narrative stubs** — `TL;DR`, `What landed this session`, `Carry-forward gotchas`, `Next action`.
+
+Then **fill the narrative stubs** (the next LLM should be able to act from the `TL;DR` alone; put commit shas + phase/slice ids in `What landed`; gate result from Step 1 belongs in `TL;DR`/`Next action`), and **append the sections the engine template does not emit**:
+
+- A one-line **"Continues `<prev SESSION file>`"** link under the title when applicable.
+- **Conventions reaffirmed / decisions** — anything decided this session that constrains future work.
+- **Quick resume commands** — a copy-pasteable block: pull, `git config core.hooksPath .githooks`, install+build, `cadence progress`, the right ROADMAP/spec slice, the explicit next command.
+
+The doc is for an LLM with **no memory of this session** — keep it self-contained and precise over breezy.
 
 ## Step 5 — Commit & push
 
