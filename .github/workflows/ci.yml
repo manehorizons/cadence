@@ -6,17 +6,23 @@ on:
   pull_request:
     branches: [main]
 
-# CI runs the full gate on ubuntu + macOS + windows across Node 20 + 22.
-# The test harness resolves temp paths portably (testkit realpath's the
-# mkdtemp root; atomic-write rename retries with headroom for the Windows
-# handle race), so all three OS legs run green. fail-fast is off so one OS
-# leg's failure never cancels the others.
+# CI runs the full gate on ubuntu + macOS across Node 20 + 22. The macOS leg
+# was unblocked by realpath'ing the testkit mkdtemp root (phase 49) — without
+# it, a child spawned with cwd=root reports /private/tmp while tests read back
+# at /tmp. fail-fast is off so one OS leg's failure never cancels the others.
+#
+# The windows-latest leg is still deferred: enabling it surfaced Windows-only
+# test-harness issues distinct from the macOS path bug — `settle-security-audit`
+# and `dispatcher` (100-write cap) tests exceed the vitest timeout on Windows
+# runners, and temp-dir cleanup hits EBUSY (open handle) past the fixture's rm
+# retry budget. That work is tracked as a follow-up (see the recommendation
+# ledger) rather than band-aided with per-test timeout bumps here.
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         node: [20, 22]
     runs-on: ${{ matrix.os }}
     steps:
