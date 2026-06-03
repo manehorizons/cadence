@@ -6,19 +6,25 @@ on:
   pull_request:
     branches: [main]
 
-# CI runs the full gate on GitHub-hosted Ubuntu runners across Node 20 + 22.
-# macOS and Windows legs are deferred pending a cross-platform test-harness
-# fix: several tests assert absolute temp paths that the OS rewrites
-# (macOS /tmp→/private/tmp realpath; a Windows writeFile→spawn flush race) —
-# test-harness artifacts, not product bugs. Re-add those legs once the harness
-# resolves temp paths portably and they're verified green.
+# CI runs the full gate on ubuntu + macOS across Node 20 + 22. The macOS leg
+# was unblocked by realpath'ing the testkit mkdtemp root (phase 49) — without
+# it, a child spawned with cwd=root reports /private/tmp while tests read back
+# at /tmp. fail-fast is off so one OS leg's failure never cancels the others.
+#
+# The windows-latest leg is still deferred: enabling it surfaced Windows-only
+# test-harness issues distinct from the macOS path bug — `settle-security-audit`
+# and `dispatcher` (100-write cap) tests exceed the vitest timeout on Windows
+# runners, and temp-dir cleanup hits EBUSY (open handle) past the fixture's rm
+# retry budget. That work is tracked as a follow-up (see the recommendation
+# ledger) rather than band-aided with per-test timeout bumps here.
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest]
         node: [20, 22]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6

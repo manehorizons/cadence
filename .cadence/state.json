@@ -4,17 +4,17 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "48-onboarding-hardening",
+  "activePhase": "49-cross-platform-ci",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-03T19:12:12.762Z",
+  "draftReadAt": "2026-06-03T20:41:31.253Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
-    "tokenUtilization": 0.7400000000000004,
+    "tokenUtilization": 0.7500000000000004,
     "lastHandoff": "SESSION-2026-06-03.md",
     "subagentSpawns": 67
   },

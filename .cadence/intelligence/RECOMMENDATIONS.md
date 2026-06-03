@@ -65,3 +65,19 @@ Option B from the /cadence-scout design: add an optional scoutId/sourceSessionId
 - next: cadence milestone propose
 
 A standalone, cloneable demo repo (cadence-demo-billsplit) whose job is the 3-minute money shot: CADENCE's always-fire build-test-must-pass gate REFUSES to settle a plausible bug the AI already marked DONE. Subject = a bill-splitter CLI (pure TS, relatable). The trap is lost remainder cents ($100/3 sums to $99.99 under naive total/people rounding); AC-2 requires sum(shares)===total. Hero gate is deterministic/offline (failing test under default mock provider) so anyone cloning reproduces the refusal; --deep AI verifier is an optional bonus beat. Separate repo (not examples/ inside the meta-repo) to avoid nested .cadence collisions. ✓ BUILT & PUBLISHED 2026-06-02: public repo manehorizons/cadence-demo-billsplit (GIF + asciinema + real DRAFT→BUILD→SETTLE loop history).
+
+## rec-20260603-001 — Enable windows-latest CI leg (timeout + EBUSY harness fixes)
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: ci, testkit, reliability
+- files: packages/testkit/src/fixture.ts, packages/core/tests/cli/settle-security-audit.test.ts, packages/core/tests/hooks/dispatcher.test.ts, .github/workflows/ci.yml, vitest.shared.ts
+- evidence: PR #19 CI run 26912393990: macos-latest 20/22 green, ubuntu green; windows-latest 20/22 failed with 20s/30s timeouts + EBUSY rmdir on temp cleanup.
+- next: cadence milestone propose
+
+Phase 49 unblocked macOS via realpath but deferred Windows. Enabling windows-latest surfaced Windows-only test-harness issues: (1) settle-security-audit.test.ts AC-4 and dispatcher.test.ts 'skill-invoke caps at 100 entries' exceed the vitest timeout on Windows runners (CLI-spawn + git + 100 atomic writes are slower there); (2) temp-dir cleanup hits EBUSY (rmdir, open handle) past the fixture's rm retry budget (maxRetries:5/retryDelay:100). Fix: raise fixture cleanup retry budget for EBUSY; address the slow Windows tests without per-test timeout band-aids (CLAUDE.md rule) — likely a Windows-aware global timeout or reducing per-test CLI-spawn count; consider an injectable renameWithRetry for testability. Then add windows-latest back to the ci.yml matrix + the ci-matrix.test.ts guard.

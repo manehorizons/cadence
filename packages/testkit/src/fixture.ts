@@ -1,4 +1,4 @@
-import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, mkdir, writeFile, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { defaultConfig, emptyState } from '@manehorizons/cadence-types';
@@ -14,7 +14,11 @@ export interface FixtureOptions {
 }
 
 export async function tempRepo(opts: FixtureOptions = {}): Promise<Fixture> {
-  const root = await mkdtemp(join(tmpdir(), 'cadence-test-'));
+  // realpath the mkdtemp result so the root is OS-canonical: on macOS
+  // tmpdir() is /tmp (a symlink to /private/tmp), so a child spawned with
+  // cwd=root reports the resolved path and tests reading back at `root` would
+  // otherwise mismatch. No-op where tmpdir is already canonical (Linux).
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'cadence-test-')));
   if (opts.initialized) {
     const cadenceDir = join(root, '.cadence');
     await mkdir(join(cadenceDir, 'phases'), { recursive: true });
