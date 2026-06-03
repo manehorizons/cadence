@@ -1,6 +1,7 @@
 export type CadenceErrorCode =
   | 'GENERIC'
   | 'STATE_CORRUPT'
+  | 'NOT_INITIALIZED'
   | 'CONFIG_INVALID'
   | 'LOOP_VIOLATION'
   | 'COHERENCE_FAILED'
@@ -19,6 +20,15 @@ export class StateCorruptError extends CadenceError {
   constructor(message: string) {
     super(message, 'STATE_CORRUPT');
     this.name = 'StateCorruptError';
+  }
+}
+
+export class NotInitializedError extends CadenceError {
+  constructor(
+    message = 'CADENCE not initialized here — run `cadence init` to get started.',
+  ) {
+    super(message, 'NOT_INITIALIZED');
+    this.name = 'NotInitializedError';
   }
 }
 

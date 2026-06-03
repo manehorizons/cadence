@@ -1,6 +1,9 @@
 {
   "name": "@manehorizons/cadence-core",
   "version": "1.5.0",
+  "engines": {
+    "node": ">=20"
+  },
   "description": "CADENCE engine — the DRAFT→BUILD→SETTLE loop, configurable quality gates, and the host-agnostic `cadence` CLI for AI-assisted development.",
   "license": "MIT",
   "author": "Thomas Powers",

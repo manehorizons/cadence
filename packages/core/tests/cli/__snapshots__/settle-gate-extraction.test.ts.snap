@@ -7,7 +7,16 @@ settle run refused: each AC needs at least one test that references its id (e.g.
 `;
 
 exports[`Phase 39.1 AC-7: bit-identical gate refusal transcripts > deep-verify gate: refusal stderr is bit-identical after extraction (AC-7) 1`] = `
-"deep-verify: AC-1 failed — no linked test found (provider: mock)
+"
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  ⚠  MOCK verification — results are NOT real.                     │
+  │     No verifier provider is configured, so --deep used the        │
+  │     deterministic mock. Set ANTHROPIC_API_KEY (or configure a     │
+  │     provider) for genuine verification.                           │
+  └─────────────────────────────────────────────────────────────────┘
+  https://github.com/manehorizons/cadence/blob/main/docs/providers.md
+
+deep-verify: AC-1 failed — no linked test found (provider: mock)
 settle run --deep refused: the independent verifier rejected one or more ACs. Pass --force to settle anyway, or address the gaps.
 "
 `;

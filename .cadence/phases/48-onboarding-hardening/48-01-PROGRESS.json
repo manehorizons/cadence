@@ -1,0 +1,52 @@
+{
+  "draftId": "48-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "NotInitializedError + readState existsSync guard; corrupt state unchanged",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-03T19:14:01.981Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "checkNodeMajor guard in cli/index.ts + bin shim; engines>=20 on 3 published packages",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/node-guard.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/node-guard.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/index.ts",
+        "/home/thomas/projects/cadence/packages/core/bin/cadence.cjs"
+      ],
+      "updatedAt": "2026-06-03T19:15:24.101Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "resolveEffectiveProvider+MOCK_FALLBACK_BANNER; settle warns on --deep when effective provider is mock (corrected from defaulted: default config ships provider=mock)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/verify/effective-provider.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/verify/verifier-factory.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/settle.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-mock-banner.test.ts",
+        "/home/thomas/projects/cadence/.cadence/phases/48-onboarding-hardening/48-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-06-03T19:20:07.737Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "CLAUDE.md template links to docs/concepts.md URL; no DESIGN.md refs",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/init-claude-md.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/init/claude-md-template.ts"
+      ],
+      "updatedAt": "2026-06-03T19:20:59.567Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "README heads-up expanded to auto/standard/strict + heuristic; doc-contract test added",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/docs/readme-profiles.test.ts",
+        "/home/thomas/projects/cadence/README.md"
+      ],
+      "updatedAt": "2026-06-03T19:21:38.576Z"
+    }
+  }
+}

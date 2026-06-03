@@ -4,6 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { Command } from 'commander';
 import { registerAllCommands } from './register.js';
+import { checkNodeMajor } from './node-guard.js';
+
+const nodeCheck = checkNodeMajor(process.versions.node);
+if (!nodeCheck.ok) {
+  console.error(nodeCheck.message);
+  process.exit(1);
+}
 
 // Read the real version from package.json so `--version` never drifts.
 // Resolves dist/cli/index.js → ../../package.json (present in the published

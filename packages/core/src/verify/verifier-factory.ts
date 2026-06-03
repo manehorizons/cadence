@@ -37,6 +37,36 @@ export interface VerifierFactorySpec<C, V> {
  * and a model (`slice.model ?? CADENCE_LOCAL_MODEL`); a missing prerequisite
  * falls back to `mock` with one stderr warning so the caller knows it downgraded.
  */
+/**
+ * Mirrors the selection algorithm's first line without building a verifier or
+ * touching env: `provider = override ?? slice.provider ?? 'mock'`. `defaulted`
+ * is true only when the provider fell through to `'mock'` with no explicit
+ * choice — that is the silent-false-confidence case worth warning about. An
+ * explicit `mock` (config or override) is NOT defaulted.
+ */
+export function resolveEffectiveProvider(
+  slice: { provider?: VerifierProvider } | undefined,
+  opts: { override?: VerifierProvider } = {},
+): { provider: VerifierProvider; defaulted: boolean } {
+  const provider = opts.override ?? slice?.provider ?? 'mock';
+  const defaulted =
+    opts.override === undefined && slice?.provider === undefined;
+  return { provider, defaulted };
+}
+
+/** Prominent stderr banner for the silent mock-default case under real verify. */
+export const MOCK_FALLBACK_BANNER = [
+  '',
+  '  ┌─────────────────────────────────────────────────────────────────┐',
+  '  │  ⚠  MOCK verification — results are NOT real.                     │',
+  '  │     No verifier provider is configured, so --deep used the        │',
+  '  │     deterministic mock. Set ANTHROPIC_API_KEY (or configure a     │',
+  '  │     provider) for genuine verification.                           │',
+  '  └─────────────────────────────────────────────────────────────────┘',
+  '  https://github.com/manehorizons/cadence/blob/main/docs/providers.md',
+  '',
+].join('\n');
+
 export function createVerifierFactory<C, V>(
   spec: VerifierFactorySpec<C, V>,
 ): (config: C | null, opts?: VerifierSelectOptions) => V {

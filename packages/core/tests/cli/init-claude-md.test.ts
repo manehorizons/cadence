@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import {
   mergeManagedBlock,
+  renderManagedBlock,
   MANAGED_START,
   MANAGED_END,
 } from '../../src/init/claude-md-template.js';
@@ -65,6 +66,16 @@ describe('mergeManagedBlock (AC-2/AC-3 unit)', () => {
     const r = mergeManagedBlock(existing, opts);
     expect(r.mode).toBe('preserved');
     expect(r.content).toBe(existing);
+  });
+
+  // AC-4 (phase 48) — consumer repos never receive DESIGN.md, so the scaffolded
+  // CLAUDE.md must not point at it; it links to the published concepts doc.
+  it('contains no dead DESIGN.md reference and links to concepts.md (AC-4)', () => {
+    const block = renderManagedBlock(opts);
+    expect(block).not.toMatch(/DESIGN\.md/);
+    expect(block).toMatch(
+      /github\.com\/manehorizons\/cadence\/blob\/main\/docs\/concepts\.md/,
+    );
   });
 });
 

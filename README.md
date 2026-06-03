@@ -64,7 +64,9 @@ Driving CADENCE from **Claude Code**? Wire the adapter into a project:
 npx @manehorizons/cadence-host-claude-code install
 ```
 
-> **Heads-up (mature repos):** on a repo with ≥20 commits the suggested gate profile is `standard`, which puts `draft approve` behind an interactive prompt. In non-TTY contexts (CI, agents) `cadence draft approve` then **refuses** unless you pass `--no-approve`.
+> **Heads-up — gate profiles and `approve`:** `cadence init` suggests a gate profile from repo maturity — a repo with **≥20 commits** gets `standard`, a younger repo gets `auto` (override with `--gate-profile`). The profile sets how strict `draft approve` is:
+> - **`auto`** — `approve` runs non-interactively (good for solo and agent loops).
+> - **`standard` / `strict`** — `approve` is gated behind an **interactive prompt**. In non-TTY contexts (CI, agents) it **refuses** unless you pass `--no-approve`.
 
 > **`--local` writes machine-absolute paths — do not commit it.** `cadence-host-claude-code install --local` bakes absolute paths to *this machine's* workspace into the settings file. Add the settings file (e.g. `.claude/settings.local.json`) to `.gitignore`; other clones/machines cannot resolve those paths.
 

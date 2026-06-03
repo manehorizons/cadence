@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { emptyState } from '@manehorizons/cadence-types';
 import { SimpleStateBackend } from '../../src/state/simple.js';
-import { StateCorruptError } from '../../src/errors.js';
+import { StateCorruptError, NotInitializedError } from '../../src/errors.js';
 
 let active: Fixture | null = null;
 afterEach(async () => { if (active) { await active.cleanup(); active = null; } });
@@ -27,6 +27,14 @@ describe('SimpleStateBackend', () => {
     const after = await backend.readState();
     expect(after.loopPosition).toBe('DRAFT');
     expect(after.activeDraft).toBe('01-01');
+  });
+
+  // AC-1 — missing .cadence/ is "not initialized", not "corrupt"
+  it('throws NotInitializedError when .cadence/ is absent', async () => {
+    active = await tempRepo(); // bare repo, no .cadence/
+    const backend = new SimpleStateBackend(active.root);
+    await expect(backend.readState()).rejects.toBeInstanceOf(NotInitializedError);
+    await expect(backend.readState()).rejects.toThrow(/cadence init/);
   });
 
   it('throws StateCorruptError on invalid JSON', async () => {
