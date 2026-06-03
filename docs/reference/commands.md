@@ -73,6 +73,8 @@ inspect
 recommend
 milestone
 context
+handoff
+resume
 assumption
 decision
 intelligence
