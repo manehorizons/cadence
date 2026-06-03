@@ -19,8 +19,34 @@ export default defineConfig({
         { icon: 'github', label: 'GitHub', href: 'https://github.com/manehorizons/cadence' },
       ],
       customCss: ['./src/styles/theme.css'],
-      // Sidebar is filled in Task 2 once synced pages exist.
-      sidebar: [],
+      sidebar: [
+        { label: 'Start Here', items: [
+          { label: 'Install & overview', slug: 'start/install' },
+          { label: 'Quickstart', slug: 'start/quickstart' },
+          { label: 'User guide', slug: 'start/user-guide' },
+        ]},
+        { label: 'Concepts', items: [
+          { label: 'The loop & gates', slug: 'concepts' },
+          { label: 'Design decisions', slug: 'concepts/design' },
+        ]},
+        { label: 'Guides', items: [
+          { label: 'Claude Code adapter', slug: 'guides/claude-code' },
+          { label: 'Verifier providers', slug: 'guides/providers' },
+          { label: 'CLI usage', slug: 'guides/cli' },
+        ]},
+        { label: 'Reference', items: [
+          { label: 'Commands', slug: 'reference/commands' },
+          { label: 'Config', slug: 'reference/config' },
+        ]},
+        { label: 'Contributing', items: [
+          { label: 'Contributing', slug: 'contributing' },
+          { label: 'Code of conduct', slug: 'contributing/code-of-conduct' },
+          { label: 'Security', slug: 'contributing/security' },
+          { label: 'Issue tracker', slug: 'contributing/issue-tracker' },
+          { label: 'Triage labels', slug: 'contributing/triage-labels' },
+          { label: 'Domain docs', slug: 'contributing/domain' },
+        ]},
+      ],
     }),
   ],
 });
