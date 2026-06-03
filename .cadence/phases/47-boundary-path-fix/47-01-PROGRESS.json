@@ -1,0 +1,22 @@
+{
+  "draftId": "47-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-03T16:42:41.827Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/notify/collect.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/notify/collect.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/settle.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/handlers.ts"
+      ],
+      "updatedAt": "2026-06-03T16:44:01.128Z"
+    }
+  }
+}
