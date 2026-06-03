@@ -50,22 +50,6 @@ A tenth Claude Code slash command (prompt template, installed by cadence-host-cl
 
 Option B from the /cadence-scout design: add an optional scoutId/sourceSessionId to the recommendation schema (cadence-types) + a --scout-id flag, surfaced as a cluster in 'cadence recommend', so the N recs from one /cadence-scout session are queryable as a set. Deferred: spends a permanent schema surface for unproven traceability need and overlaps the existing generic evidence mechanism. Clean additive follow-up if the need appears.
 
-## rec-20260602-004 — Build cadence-demo-billsplit — GitHub demo showing a gate refusing a bug
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs, marketing, demo
-- files: docs/superpowers/specs/2026-06-02-cadence-demo-billsplit-design.md
-- evidence: Design agreed in /resume session 2026-06-02 (pivoted from the /cadence-scout discussion: scout's markdown surface is too thin to show gates working, so a code-bearing demo project was chosen instead). Full storyboard in docs/superpowers/specs/2026-06-02-cadence-demo-billsplit-design.md.
-- next: cadence milestone propose
-
-A standalone, cloneable demo repo (cadence-demo-billsplit) whose job is the 3-minute money shot: CADENCE's always-fire build-test-must-pass gate REFUSES to settle a plausible bug the AI already marked DONE. Subject = a bill-splitter CLI (pure TS, relatable). The trap is lost remainder cents ($100/3 sums to $99.99 under naive total/people rounding); AC-2 requires sum(shares)===total. Hero gate is deterministic/offline (failing test under default mock provider) so anyone cloning reproduces the refusal; --deep AI verifier is an optional bonus beat. Separate repo (not examples/ inside the meta-repo) to avoid nested .cadence collisions. ✓ BUILT & PUBLISHED 2026-06-02: public repo manehorizons/cadence-demo-billsplit (GIF + asciinema + real DRAFT→BUILD→SETTLE loop history).
-
 ## rec-20260603-001 — Enable windows-latest CI leg (timeout + EBUSY harness fixes)
 
 - status: converted
