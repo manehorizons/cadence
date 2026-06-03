@@ -120,7 +120,7 @@
       "title": "Enable windows-latest CI leg (timeout + EBUSY harness fixes)",
       "summary": "Phase 49 unblocked macOS via realpath but deferred Windows. Enabling windows-latest surfaced Windows-only test-harness issues: (1) settle-security-audit.test.ts AC-4 and dispatcher.test.ts 'skill-invoke caps at 100 entries' exceed the vitest timeout on Windows runners (CLI-spawn + git + 100 atomic writes are slower there); (2) temp-dir cleanup hits EBUSY (rmdir, open handle) past the fixture's rm retry budget (maxRetries:5/retryDelay:100). Fix: raise fixture cleanup retry budget for EBUSY; address the slow Windows tests without per-test timeout band-aids (CLAUDE.md rule) — likely a Windows-aware global timeout or reducing per-test CLI-spawn count; consider an injectable renameWithRetry for testability. Then add windows-latest back to the ci.yml matrix + the ci-matrix.test.ts guard.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
@@ -146,7 +146,8 @@
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-06-03T21:05:40.744Z",
-      "updatedAt": "2026-06-03T21:05:40.744Z"
+      "updatedAt": "2026-06-03T21:43:16.540Z",
+      "convertedToPhaseId": "50-windows-ci-leg"
     }
   ]
 }

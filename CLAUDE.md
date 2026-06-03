@@ -50,11 +50,10 @@ protection on this tier, so this is the enforcement layer. Bypass with
 `git push --no-verify` only when you mean it.
 
 The same four-command pipeline runs in `.github/workflows/ci.yml` on every
-PR + push, on GitHub-hosted Ubuntu + macOS runners across Node 20 + 22 (the
-macOS leg was unblocked in phase 49 by realpath'ing the testkit temp root).
-The Windows leg is still deferred over Windows-only test-harness issues
-(timeouts + temp-cleanup `EBUSY`) — see the `ci.yml` comment and
-`rec-20260603-001`.
+PR + push, on GitHub-hosted Ubuntu + macOS + Windows runners across Node 20 +
+22 — all three OS legs (macOS unblocked in phase 49 by realpath'ing the testkit
+temp root; Windows in phase 50 via platform-aware test timeouts in
+`vitest.shared.ts` + best-effort temp cleanup).
 
 ## Architecture
 
