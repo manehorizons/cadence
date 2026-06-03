@@ -27,3 +27,8 @@ HANDOFF.md.resumed-*
 # Local-only reference docs (architecture reviews, scratch notes). Kept on
 # disk for the operator; never published.
 .local/
+
+# Local launch-prep materials (editorial, pegged to a release; regenerated as
+# needed). Kept on disk for the operator; never published.
+LAUNCH-NUMBERS.md
+docs/CADENCE-LAUNCH-HANDOFF.md
