@@ -74,9 +74,12 @@ proven reversibly via `scripts/publish-proof.mjs` (ephemeral verdaccio), first
 shipped to npm on 2026-05-30 at `1.1.1`, then republished as `1.4.0` on
 2026-06-02 — the version-hygiene release: a version bump matching `main`, an
 annotated `v1.4.0` git tag, and npm provenance via OIDC (v1.4 milestone
-DELIVERED). The latest published version is **`1.5.0`** (2026-06-03, tag
-`v1.5.0` + provenance) — session continuity (`cadence handoff`/`resume`) plus a
-boundary-check fix. Releases are cut with
+DELIVERED). `1.5.0` (2026-06-03, tag `v1.5.0` + provenance) added session
+continuity (`cadence handoff`/`resume`) plus a boundary-check fix. The latest
+published version is **`1.5.1`** (2026-06-03, tag `v1.5.1` + provenance) — the
+onboarding-hardening patch (phase 48): a distinct `NotInitializedError`, a Node
+`>=20` floor with a fast-fail guard, a loud mock-fallback banner under
+`settle --deep`, and two scaffold/doc fixes. Releases are cut with
 [changesets](https://github.com/changesets/changesets) and the manual `Release`
 workflow (`.github/workflows/release.yml`, `workflow_dispatch`).
 
