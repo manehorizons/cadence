@@ -4,9 +4,9 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
-## [1.5.0] - unreleased
+## [1.5.0] - 2026-06-03
 
-> On `main`, not yet published to npm. Publish via the `Release` workflow (`workflow_dispatch`, `dry_run=false`), then cut tag `v1.5.0`. Per-package bumps managed by changesets.
+> Published to npm 2026-06-03 via the `Release` workflow (provenance), tag `v1.5.0`. Per-package bumps managed by changesets.
 
 ### Added
 
