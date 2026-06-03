@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
+import { realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '../src/fixture.js';
 
@@ -25,6 +26,17 @@ describe('tempRepo', () => {
     expect(cfg.schemaVersion).toBe(1);
     const state = JSON.parse(readFileSync(join(active.root, '.cadence/state.json'), 'utf8'));
     expect(state.project.name).toBe('myproj');
+  });
+
+  it('returns a canonical (realpath-resolved) root (AC-1)', async () => {
+    // On macOS, mkdtemp(tmpdir()) yields /tmp/... while a spawned child's
+    // process.cwd() reports the realpath'd /private/tmp/... — tests that read
+    // back files at fixture.root then mismatch. The fixture must hand out the
+    // OS-canonical path so root === realpath(root) on every platform.
+    active = await tempRepo({ initialized: true });
+    expect(active.root).toBe(await realpath(active.root));
+    // Scaffolding still lands under the canonical root.
+    expect(existsSync(join(active.root, '.cadence/config.json'))).toBe(true);
   });
 
   it('cleanup() removes the temp dir', async () => {

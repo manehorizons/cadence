@@ -6,19 +6,19 @@ on:
   pull_request:
     branches: [main]
 
-# CI runs the full gate on GitHub-hosted Ubuntu runners across Node 20 + 22.
-# macOS and Windows legs are deferred pending a cross-platform test-harness
-# fix: several tests assert absolute temp paths that the OS rewrites
-# (macOS /tmp→/private/tmp realpath; a Windows writeFile→spawn flush race) —
-# test-harness artifacts, not product bugs. Re-add those legs once the harness
-# resolves temp paths portably and they're verified green.
+# CI runs the full gate on ubuntu + macOS + windows across Node 20 + 22.
+# The test harness resolves temp paths portably (testkit realpath's the
+# mkdtemp root; atomic-write rename retries with headroom for the Windows
+# handle race), so all three OS legs run green. fail-fast is off so one OS
+# leg's failure never cancels the others.
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         node: [20, 22]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
