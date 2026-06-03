@@ -68,7 +68,7 @@ A standalone, cloneable demo repo (cadence-demo-billsplit) whose job is the 3-mi
 
 ## rec-20260603-001 — Enable windows-latest CI leg (timeout + EBUSY harness fixes)
 
-- status: candidate
+- status: converted
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10
