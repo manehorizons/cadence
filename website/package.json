@@ -1,0 +1,25 @@
+{
+  "name": "cadence-docs",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "node scripts/sync-docs.mjs && astro dev",
+    "sync": "node scripts/sync-docs.mjs",
+    "build": "node scripts/sync-docs.mjs && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "astro": "^6.4.4",
+    "@astrojs/starlight": "^0.39.3"
+  },
+  "devDependencies": {
+    "starlight-typedoc": "^0.23.0",
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.12.0",
+    "vitest": "^4.1.8"
+  }
+}
