@@ -31,6 +31,8 @@ Two CLIs are documented here:
   - [recommend](#recommend)
   - [milestone](#milestone)
   - [context](#context)
+  - [handoff](#handoff)
+  - [resume](#resume)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -889,6 +891,79 @@ rendered Markdown. An unknown scope exits 2 with a clean message.
 **Exit codes** — exits 2 for an invalid scope; exits 1 only on a genuine
 failure (e.g. artifact write error). An empty ledger, a missing git repo,
 or a missing `.cadence/` backend degrades gracefully and still exits 0.
+
+---
+
+### handoff
+
+```
+Usage: cadence handoff [options] [label]
+
+Scaffold a SESSION handoff doc in .cadence/handoff/ with machine facts pre-filled
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `[label]` | Optional context label, appended to the filename (alternative to `--label`) |
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--label <s>` | Context label (alternative to the positional arg) |
+| `--force` | Overwrite an existing same-day SESSION doc instead of refusing |
+| `--no-stamp` | Do not write `state.session.lastHandoff` (leaves `state.json` unchanged) |
+| `--no-git` | Skip the read-only git facts section |
+| `--json` | Emit machine-readable JSON instead of a summary |
+| `-h, --help` | Display help for command |
+
+**Behavior** — writes `.cadence/handoff/SESSION-<YYYY-MM-DD>[-<label>].md`. The
+doc has two zones: a **machine-filled** zone (loop position, read-only git facts,
+and the `cadence context handoff` intelligence packet — correct by construction,
+labeled "verify, don't retype") and an empty **narrative** zone (TL;DR, what
+landed, gotchas, next action) for a human to fill in. Generating the doc also
+refreshes `.cadence/intelligence/context/handoff.{json,md}` as a side effect of
+`cadence context handoff`. By default the command stamps
+`state.session.lastHandoff` with the new filename (so `cadence resume` finds it
+reliably); `--no-stamp` skips that single state write. When git is unavailable
+(non-repo or git missing), the git section renders as `unavailable` and the
+command still succeeds — git facts are best-effort, never a hard dependency.
+
+**Exit codes** — exits 2 when the target file already exists and `--force` was
+not passed (never silently overwrites a human's narrative); exits non-zero on
+other genuine failures (e.g. `.cadence/` not initialized).
+
+---
+
+### resume
+
+```
+Usage: cadence resume [options]
+
+Replay the freshest .cadence/handoff/ SESSION doc + live context (read-only)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — read-only; mutates nothing (a test asserts `state.json` is
+byte-unchanged across a `resume`). Locates the freshest SESSION doc — preferring
+the `state.session.lastHandoff` pointer when its file exists, otherwise globbing
+`.cadence/handoff/SESSION-*.md` ranked by frontmatter `generated_at` — and emits
+it verbatim alongside a freshly recomputed live `cadence context handoff` packet
+(authoritative if the machine facts have drifted since the doc was written). If
+the doc's recorded loop position differs from live state, it prints a one-line
+drift note (e.g. `⚠ handoff written at BUILD; live state now IDLE`).
+
+**Exit codes** — exits 0 when no handoff is found, printing an informational
+message with a `cadence handoff` hint (an empty handoff dir is not an error);
+exits non-zero only on a genuine failure.
 
 ---
 

@@ -103,6 +103,20 @@ The `.cadence/shakedown/` directory is used for hand-crafted exercise notes
 (e.g. live gate exercises, TTY verification reports). It is not managed by the
 engine.
 
+### Session continuity (handoff / resume)
+
+`cadence handoff` and `cadence resume` are loop-**adjacent** — a continuity
+capability, *not* a loop phase. Machine state (loop position, active draft,
+tasks, decisions) already persists in `state.json` and survives session
+restarts, so a fresh session never needs that state "restored." What gets lost
+between sessions is the **narrative**: what landed and why, what is half-done,
+the gotchas, the next-action reasoning. `cadence handoff` captures that narrative
+in a `.cadence/handoff/SESSION-<date>.md` doc with the machine facts pre-filled
+(so they are never stale or wrong), and `cadence resume` replays the freshest
+doc read-only alongside live state. See
+[docs/reference/commands.md — handoff](reference/commands.md#handoff) and
+[resume](reference/commands.md#resume).
+
 ---
 
 ## Two-commit convention
