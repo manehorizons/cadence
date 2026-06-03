@@ -43,7 +43,7 @@ Two CLIs are documented here:
 ```
 Usage: cadence [options] [command]
 
-CADENCE — Coordinated AI-Driven Engineering with Notifications and Customizable Execution
+CADENCE — a draft/build/settle framework for AI-assisted development with configurable quality gates
 ```
 
 **Global options**

@@ -1,11 +1,11 @@
 # Project Design — CADENCE
 
-> **Name:** CADENCE — *Coordinated AI-Driven Engineering with Notifications and Customizable Execution*. Locked as of Phase 12 / `v0.2.0-rc.1` (2026-05-14). Backronym is refinable; the word CADENCE itself is the keeper. Historical KEEL phase artifacts under `.keel/phases/` remain by design (transition narrative).
+> **Name:** CADENCE — named for the rhythm of its core DRAFT → BUILD → SETTLE loop. Locked as of Phase 12 / `v0.2.0-rc.1` (2026-05-14). The backronym *"Coordinated AI-Driven Engineering with Notifications and Customizable Execution"* was retired 2026-06-02 as a forced fit (it over-billed the minor `anomaly-notify` feature); the word CADENCE itself is the keeper. Historical KEEL phase artifacts under `.keel/phases/` remain by design (transition narrative).
 
 > Living design document. Captures intent, decisions, deferrals.
-> Lives at repo root, **outside** `.keel/`, so the tool isn't planning itself with itself.
+> Lives at repo root, **outside** `.cadence/`, so the tool isn't planning itself with itself.
 
-**Last updated:** 2026-05-14
+**Last updated:** 2026-06-02
 
 ---
 
@@ -13,7 +13,7 @@
 
 A **customizable, AI-assisted development framework** that lets a user dial in how much they want to drive vs. how much the AI drives — without giving up the quality gates that make AI-generated work trustworthy.
 
-Inspired by GSD (Get Shit Done) and PAUL (Plan-Apply-Unify Loop). Intended as a **faster, more efficient, more customizable** alternative to GSD — *not* a lighter one. The gates exist; the user picks which ones fire.
+Inspired by GSD (Get Shit Done). Intended as a **faster, more efficient, more customizable** alternative to GSD — *not* a lighter one. The gates exist; the user picks which ones fire.
 
 ## 2. What this project is NOT
 
@@ -34,7 +34,7 @@ Three modes, user-selected per project or per phase:
 | **standard** | Major-step gating. | DRAFT approve · settle verify |
 | **auto** | Hands-off; the AI drives. | None by default — but anomalies pause + notify |
 
-Today's KEEL behavior = `auto` without the notify part. That gap is the highest-priority bug.
+KEEL's original behavior was `auto` without the notify part — closing that gap was the first priority, shipped as `anomaly-notify` (Phase 17).
 
 ### 3.2 Behavioral verification (hybrid)
 
@@ -134,7 +134,7 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 | D3 | Behavioral verification mandatory, hybrid design | Structural-only is unacceptable |
 | D4 | Anomaly-notify required for auto profile | Hands-off ≠ unsupervised |
 | D5 | v1 = Claude Code only; Codex deprecates | Dual-host abstraction was premature |
-| D6 | Top-level planning doc (this file) lives outside `.keel/` | Avoid using KEEL to plan KEEL's rewrite |
+| D6 | Top-level planning doc (this file) lives outside `.cadence/` | Avoid the tool planning its own rewrite with itself |
 | D7 | Name = **CADENCE** | Locked; backronym refinable |
 | D8 | Tier × profile matrix locked (Section 4) | M1–M4 settled |
 | D9 | Codex disposition = archive + collapse | Tag preserves; main stays clean; HostCapabilities collapsed |
@@ -160,7 +160,13 @@ Two axes: **tier** (phase size) × **profile** (user-involvement). Verification 
 
 ## 8. Name — LOCKED: CADENCE
 
-### 8.1 Current backronym (placeholder, refinable)
+### 8.1 Retired backronym (dropped 2026-06-02)
+
+The launch placeholder backronym, kept here as a record. It is no longer used
+in the README, `docs/`, or the `cadence --help` banner — it over-billed
+*Notifications* (the minor `anomaly-notify` safety floor) relative to its real
+weight, so it was dropped as a forced fit. The word CADENCE — the rhythm of the
+loop — stands on its own (see §8.2).
 
 **CADENCE** — **C**oordinated **A**I-**D**riven **E**ngineering with **N**otifications and **C**ustomizable **E**xecution
 

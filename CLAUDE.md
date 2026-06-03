@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-CADENCE is a plan/build/settle framework for AI-assisted development with
+CADENCE is a draft/build/settle framework for AI-assisted development with
 configurable quality gates. It is a **meta-tool**: it scaffolds and runs the
 DRAFT→BUILD→SETTLE loop on consumer projects, **and uses that same loop on
 itself**. The `.cadence/` directory at the repo root is not example data —

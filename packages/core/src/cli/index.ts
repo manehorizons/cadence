@@ -15,7 +15,7 @@ const pkg = JSON.parse(
 const program = new Command();
 program
   .name('cadence')
-  .description('CADENCE — Coordinated AI-Driven Engineering with Notifications and Customizable Execution')
+  .description('CADENCE — a draft/build/settle framework for AI-assisted development with configurable quality gates')
   .version(pkg.version);
 
 registerAllCommands(program);

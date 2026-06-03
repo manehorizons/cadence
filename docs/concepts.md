@@ -3,10 +3,10 @@
 This page is the conceptual spine of the CADENCE user guide. Everything else
 in `docs/` builds on the vocabulary defined here.
 
-**CADENCE** — *Coordinated AI-Driven Engineering with Notifications and
-Customizable Execution* — is a plan/build/settle framework for AI-assisted
-development. The goal is GSD-grade discipline with far less wall-clock cost,
-achieved by letting you choose which quality gates fire for each phase of work.
+**CADENCE** — named for the rhythm of its core DRAFT → BUILD → SETTLE loop — is
+a draft/build/settle framework for AI-assisted development. The goal is GSD-grade
+discipline with far less wall-clock cost, achieved by letting you choose which
+quality gates fire for each phase of work.
 
 ---
 

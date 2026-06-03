@@ -1,6 +1,6 @@
 # CADENCE User Guide
 
-**CADENCE** is a plan/build/settle framework for AI-assisted development that brings GSD-grade discipline to iterative work with configurable quality gates at each phase.
+**CADENCE** is a draft/build/settle framework for AI-assisted development that brings GSD-grade discipline to iterative work with configurable quality gates at each phase.
 
 ## Two-surface model
 
