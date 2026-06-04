@@ -21,6 +21,7 @@ For the *why* behind the loop and the gate model, read
 - [Step 7 — Settle the phase](#step-7--settle-the-phase)
 - [Step 8 — Two-commit wrap-up](#step-8--two-commit-wrap-up)
 - [Claude Code surface](#claude-code-surface)
+- [MCP surface](#mcp-surface)
 
 ---
 
@@ -425,6 +426,30 @@ CADENCE, see [docs/claude-code.md](claude-code.md).
 
 ---
 
+## MCP surface
+
+Not on Claude Code? Any MCP-capable host (Claude Desktop, Cursor, other agents)
+can drive the same loop over [MCP](https://modelcontextprotocol.io) — no bespoke
+adapter. It's a local subprocess, not a service: the host launches
+`cadence mcp serve` over stdio, scoped to your repo.
+
+Point your host at the command (for a global install, `command: "cadence"`):
+
+```jsonc
+// .mcp.json (Claude Code) or your host's MCP config
+{ "mcpServers": { "cadence": { "command": "cadence", "args": ["mcp", "serve"] } } }
+```
+
+The host then has 10 tools — `cadence_progress`/`status`/`recommend` (read) and
+`cadence_draft_new`/`draft_check`/`draft_approve`/`build_task`/`settle`/
+`spec_new`/`spec_approve` (write) — that run the exact same loop you ran by hand
+above. Command-boundary gates (coherence, the settle gate stack, spec-review)
+run just as on the CLI; **ambient edit-time gates require host hooks and are not
+available over MCP** — for those, use the Claude Code adapter. Full setup and the
+tool table: [docs/mcp.md](mcp.md).
+
+---
+
 ## What's next
 
 | Topic | Where to go |
@@ -432,6 +457,7 @@ CADENCE, see [docs/claude-code.md](claude-code.md).
 | Concepts: the loop, profiles, tiers, gate matrix | [docs/concepts.md](concepts.md) |
 | Every CLI command and flag | [docs/cli.md](cli.md) |
 | Claude Code host adapter in depth | [docs/claude-code.md](claude-code.md) |
+| Drive the loop from any MCP host | [docs/mcp.md](mcp.md) |
 | LLM provider setup (for `--deep` verify) | [docs/providers.md](providers.md) |
 | Config file reference | [docs/reference/config.md](reference/config.md) |
 | Command reference (all flags) | [docs/reference/commands.md](reference/commands.md) |
