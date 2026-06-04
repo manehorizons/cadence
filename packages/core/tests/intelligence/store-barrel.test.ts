@@ -13,6 +13,7 @@
 //   recommendations, assumptions, decisions, stats, audit, reconcile,
 //   milestones) — exercised transitively here via the barrel.
 import { describe, expect, it, afterEach } from 'vitest';
+import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import * as store from '../../src/intelligence/store.js';
 import {
@@ -112,7 +113,9 @@ describe('intelligence/store barrel (phase 54)', () => {
       evidenceSummary: '985 LOC single file',
     });
     expect(rec.id).toMatch(/^rec-\d{8}-\d{3}$/);
-    expect(intelligenceDir(root)).toContain('.cadence/intelligence');
+    // Platform-agnostic: build the expected path with join so the assertion
+    // holds on Windows (backslash separators) as well as POSIX.
+    expect(intelligenceDir(root)).toBe(join(root, '.cadence', 'intelligence'));
 
     const recLedger = await readRecommendationLedger(root);
     const evLedger = await readEvidenceLedger(root);
