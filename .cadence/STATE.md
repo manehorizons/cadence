@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 54-intelligence-store-split
+**Active phase:** 55-intelligence-store-deep-imports
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
-- Token utilization: 88%
-- Subagent spawns this session: 95
-- Last handoff: SESSION-2026-06-04-v1.6.0-shipped.md
+- Token utilization: 95%
+- Subagent spawns this session: 99
+- Last handoff: SESSION-2026-06-04-phase-54-store-split-shipped.md
 
 ## Counts
 - Open drafts: 0
