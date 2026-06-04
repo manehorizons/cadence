@@ -2,19 +2,23 @@ name: Release
 
 # Manual, deliberate publish. Trigger from the Actions tab → "Run workflow".
 # Runs the full gate, then publishes the three public packages to npm with
-# provenance. Provenance requires: a public repo + id-token:write (OIDC) +
-# the publish running inside this workflow. The private @manehorizons/cadence-testkit
-# is skipped automatically by `pnpm -r publish` (it has "private": true).
+# provenance and pushes the matching `v<version>` tag. Provenance requires: a
+# public repo + id-token:write (OIDC) + the publish running inside this
+# workflow. The private @manehorizons/cadence-testkit is skipped automatically
+# by `pnpm -r publish` (it has "private": true).
+#
+# `dry_run` defaults to FALSE: a plain "Run workflow" publishes. Tick the box to
+# pack + validate without publishing or tagging (the final pre-publish check).
 on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run (pack + validate, do not publish)'
+        description: 'Dry run (pack + validate; do NOT publish or tag)'
         type: boolean
-        default: true
+        default: false
 
 permissions:
-  contents: read
+  contents: write # push the release tag
   id-token: write # required for npm provenance attestation
 
 jobs:
@@ -43,6 +47,22 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
+      - name: Tag the release (v<version>)
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          set -euo pipefail
+          # The three public packages are versioned in lockstep; core is the
+          # canonical source of the release version.
+          version="v$(node -p "require('./packages/core/package.json').version")"
+          if git ls-remote --tags origin "refs/tags/${version}" | grep -q "${version}"; then
+            echo "Tag ${version} already exists on origin — skipping (idempotent re-run)."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${version}" -m "${version} — released via the Release workflow"
+          git push origin "${version}"
+          echo "Pushed annotated tag ${version}."
       - name: Dry run (pack only, no publish)
         if: ${{ inputs.dry_run == true }}
         run: pnpm -r publish --access public --no-git-checks --dry-run
