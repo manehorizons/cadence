@@ -9,8 +9,9 @@ import {
 } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { AnomalyEventZ, AnomalyTypeZ, type AnomalyEvent, type AnomalyType } from '@manehorizons/cadence-types';
-import { loadStatus, renderStatus } from '../../status.js';
 import { loadConfig } from '../../config/loader.js';
+import { statusService } from '../../services/status.js';
+import { processIO } from '../../services/io.js';
 
 const DEFAULT_LOG = '.cadence/anomalies.log';
 
@@ -23,19 +24,12 @@ export function registerStatusCommand(program: Command): void {
     .option('--json', 'emit machine-readable JSON instead of rendered text')
     .action(async (opts: { json?: boolean }) => {
       // Default action — runs only when no subcommand is given.
-      try {
-        const report = await loadStatus(process.cwd());
-        if (opts.json) {
-          process.stdout.write(JSON.stringify(report) + '\n');
-        } else {
-          process.stdout.write(renderStatus(report));
-        }
-      } catch (err) {
-        process.stderr.write(
-          `status failed: ${err instanceof Error ? err.message : String(err)}\n`,
-        );
-        process.exitCode = 1;
-      }
+      const { exitCode } = await statusService(
+        process.cwd(),
+        opts.json ? { json: true } : {},
+        processIO(),
+      );
+      if (exitCode) process.exitCode = exitCode;
     });
 
   cmd
