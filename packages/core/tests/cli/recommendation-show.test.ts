@@ -4,13 +4,15 @@ import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import {
   addAssumption,
-  addIntelligenceDecision,
-  addRecommendation,
   runAssumptionTransition,
+} from '../../src/intelligence/store/assumptions.js';
+import {
+  addIntelligenceDecision,
   runDecisionTransition,
-} from '../../src/intelligence/store.js';
+} from '../../src/intelligence/store/decisions.js';
 
 const CADENCE_CLI = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -208,7 +210,7 @@ describe('cadence recommendation show (Slice 14)', () => {
     const a1 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
     const a2 = await addAssumption(active.root, { recommendationId: rec.id, text: 'A2' });
     // validate a2 so it's no longer open
-    const { runAssumptionTransition } = await import('../../src/intelligence/store.js');
+    const { runAssumptionTransition } = await import('../../src/intelligence/store/assumptions.js');
     await runAssumptionTransition(active.root, a2.id, 'validate');
     const r = await run(
       ['recommendation', 'show', rec.id, '--format', 'json', '--open-assumptions-only', '--active-decisions-only'],

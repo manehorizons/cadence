@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type {
   IntelligenceAuditFinding,
   IntelligenceAuditReport,
-} from '../../src/intelligence/store.js';
+} from '../../src/intelligence/store/audit.js';
 import { renderIntelligenceAudit } from '../../src/intelligence/render-intelligence-audit.js';
 
 function mkReport(findings: IntelligenceAuditFinding[]): IntelligenceAuditReport {

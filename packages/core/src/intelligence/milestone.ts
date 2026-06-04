@@ -12,10 +12,12 @@ import type {
 } from '@manehorizons/cadence-types';
 import {
   readAssumptionLedger,
-  readMilestoneLedger,
   readRecommendationLedger,
+} from './store/io.js';
+import {
+  readMilestoneLedger,
   writeMilestoneLedger,
-} from './store.js';
+} from './store/milestones.js';
 import { atomicWriteText } from '../state/atomic-write.js';
 import { cadenceBackend } from './backend/cadence.js';
 

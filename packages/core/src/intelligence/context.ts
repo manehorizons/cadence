@@ -13,13 +13,13 @@ import type {
 import { ContextPacketZ } from '@manehorizons/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { partitionLedger, scoreRecommendation } from './recommend.js';
+import { intelligenceDir } from './store/paths.js';
 import {
-  intelligenceDir,
-  readRecommendationLedger,
-  readEvidenceLedger,
   readAssumptionLedger,
+  readEvidenceLedger,
   readIntelligenceDecisionLedger,
-} from './store.js';
+  readRecommendationLedger,
+} from './store/io.js';
 import { cadenceBackend } from './backend/cadence.js';
 import { renderContextMd } from './render-context.js';
 

@@ -8,11 +8,11 @@ import {
   type RepoScan,
 } from '@manehorizons/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
+import { intelligenceDir } from './store/paths.js';
 import {
-  intelligenceDir,
   readEvidenceLedger,
   readRecommendationLedger,
-} from './store.js';
+} from './store/io.js';
 import { scanRepo } from './scan.js';
 import { cadenceBackend } from './backend/cadence.js';
 import { renderStrategyMd } from './render-inspection.js';

@@ -3,13 +3,11 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import {
-  addAssumption,
-  addIntelligenceDecision,
-  addRecommendation,
-  readRecommendationLedger,
-  runIntelligenceReconcile,
-} from '../../src/intelligence/store.js';
+import { readRecommendationLedger } from '../../src/intelligence/store/io.js';
+import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
+import { addAssumption } from '../../src/intelligence/store/assumptions.js';
+import { addIntelligenceDecision } from '../../src/intelligence/store/decisions.js';
+import { runIntelligenceReconcile } from '../../src/intelligence/store/reconcile.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {

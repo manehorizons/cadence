@@ -2,7 +2,7 @@ import type {
   AuditKind,
   IntelligenceAuditFinding,
   IntelligenceAuditReport,
-} from './store.js';
+} from './store/audit.js';
 
 const SECTION_HEADERS: Record<IntelligenceAuditFinding['kind'], string> = {
   'broken-assumption-link': 'Broken Assumption Links',

@@ -4,10 +4,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { IntelligenceDecisionLedgerZ } from '@manehorizons/cadence-types';
-import {
-  addIntelligenceDecision,
-  addRecommendation,
-} from '../../src/intelligence/store.js';
+import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
+import { addIntelligenceDecision } from '../../src/intelligence/store/decisions.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {

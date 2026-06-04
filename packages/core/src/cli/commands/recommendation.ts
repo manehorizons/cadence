@@ -7,14 +7,16 @@ import {
   RecommendationStatusZ,
 } from '@manehorizons/cadence-types';
 import {
-  addRecommendation,
   readAssumptionLedger,
   readEvidenceLedger,
   readIntelligenceDecisionLedger,
   readRecommendationLedger,
+} from '../../intelligence/store/io.js';
+import {
+  addRecommendation,
   runRecommendationTransition,
   type AddRecommendationInput,
-} from '../../intelligence/store.js';
+} from '../../intelligence/store/recommendations.js';
 import { renderRecommendationDetail } from '../../intelligence/render-recommendation-detail.js';
 
 function csv(value: string | undefined): string[] {

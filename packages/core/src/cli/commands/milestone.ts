@@ -5,7 +5,7 @@ import {
   runMilestoneTransition,
   runProposeMilestones,
 } from '../../intelligence/milestone.js';
-import { readMilestoneLedger } from '../../intelligence/store.js';
+import { readMilestoneLedger } from '../../intelligence/store/milestones.js';
 import { renderMilestonesMd } from '../../intelligence/render-milestone.js';
 
 export function registerMilestoneCommand(program: Command): void {

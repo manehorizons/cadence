@@ -1,13 +1,15 @@
 import type { Command } from 'commander';
 import { type IntelligenceDecision, IntelligenceDecisionZ } from '@manehorizons/cadence-types';
 import {
-  addIntelligenceDecision,
   readIntelligenceDecisionLedger,
   readRecommendationLedger,
+} from '../../intelligence/store/io.js';
+import {
+  addIntelligenceDecision,
   runDecisionTransition,
   type AddIntelligenceDecisionInput,
   type DecisionTransitionAction,
-} from '../../intelligence/store.js';
+} from '../../intelligence/store/decisions.js';
 import { renderDecisionDetail } from '../../intelligence/render-decision-detail.js';
 import { buildDecisionGraph } from '../../intelligence/graph-decision.js';
 import { renderDecisionGraph } from '../../intelligence/render-decision-graph.js';

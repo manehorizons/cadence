@@ -1,0 +1,29 @@
+{
+  "draftId": "55-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Migrated 13 src files (7 cli/commands/* + 6 intelligence/ siblings importing via ./store.js — siblings missed in initial survey, caught by typecheck gate)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T16:38:25.879Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Migrated 29 test files + 2 dynamic await import() repointed to store/assumptions.js",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T16:38:26.044Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "git rm store.ts + store-barrel.test.ts; AC-1 grep clean",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T16:38:26.205Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "lint+typecheck+test+build all green; 1326 tests pass (1329 minus 3 barrel cases)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T16:38:26.370Z"
+    }
+  }
+}

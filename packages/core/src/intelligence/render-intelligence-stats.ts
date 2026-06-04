@@ -1,4 +1,4 @@
-import type { IntelligenceStats } from './store.js';
+import type { IntelligenceStats } from './store/stats.js';
 
 export type RenderIntelligenceStatsOptions = {
   byRec?: boolean;

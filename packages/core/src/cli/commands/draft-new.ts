@@ -5,10 +5,8 @@ import { join } from 'node:path';
 import { parseSpecMd } from '../../parse/spec-parser.js';
 import { renderDraftBody, frontmatterStatus } from '../../parse/draft-scaffold.js';
 import { SimpleStateBackend } from '../../state/simple.js';
-import {
-  readRecommendationLedger,
-  runRecommendationTransition,
-} from '../../intelligence/store.js';
+import { readRecommendationLedger } from '../../intelligence/store/io.js';
+import { runRecommendationTransition } from '../../intelligence/store/recommendations.js';
 
 /** Registers `draft new <phase> <num>` on the parent `draft` command. */
 export function registerDraftNew(cmd: Command): void {

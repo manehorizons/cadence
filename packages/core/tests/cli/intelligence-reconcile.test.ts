@@ -3,10 +3,8 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import {
-  addAssumption,
-  addRecommendation,
-} from '../../src/intelligence/store.js';
+import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
+import { addAssumption } from '../../src/intelligence/store/assumptions.js';
 
 const CADENCE_CLI = join(
   dirname(fileURLToPath(import.meta.url)),

@@ -10,10 +10,8 @@ import { selectNotifier } from '../../notify/factory.js';
 import { selectSpecReviewVerifier } from '../../verify/spec-review-factory.js';
 import { nextConvergence } from '../../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../../notify/spec-review.js';
-import {
-  readRecommendationLedger,
-  runRecommendationTransition,
-} from '../../intelligence/store.js';
+import { readRecommendationLedger } from '../../intelligence/store/io.js';
+import { runRecommendationTransition } from '../../intelligence/store/recommendations.js';
 
 /**
  * Phase 36.1 — the pre-DRAFT SPEC stage. `spec new` (IDLE→SPEC) scaffolds a
