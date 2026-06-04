@@ -4,6 +4,39 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-06-04
+
+> Published to npm 2026-06-04 via the `Release` workflow (provenance), tag `v1.6.0`. Per-package bumps managed by changesets.
+
+### Added
+
+- **`cadence init --preset <preset>`** — new primary flag selecting a config preset (`solo | team | production`). (Phase `52-preset-flag-rename`.)
+- **`/cadence-scout`** — twelfth Claude Code slash command installed by `cadence-host-claude-code` (host command count 11 → 12): a divergent→convergent ideation dialogue that lands survivors as Praxis recommendations via `cadence recommendation add`, then hands back to the rec → milestone → SPEC seam. Host-side only — zero core-engine change, no new gate / loop position / record type. (Phase `53-cadence-scout`.)
+- **Documentation portal** — a standalone Astro + Starlight site at <https://manehorizons.github.io/cadence/>, built from the canonical docs plus typedoc API docs and deployed via `.github/workflows/docs.yml`. (Phase `51-docs-portal`.)
+- **Cross-platform CI** — the `CI` workflow now runs on Ubuntu + macOS + Windows across Node 20 + 22. (Phases `49-cross-platform-ci`, `50-windows-ci-leg`.)
+
+### Deprecated
+
+- **`cadence init --profile`** — now a deprecated alias for `--preset`. It still works (applies the preset) but emits a one-line stderr notice. The name was a misnomer: it sets a config preset, not a gate profile (which is `--gate-profile`). (Phase `52-preset-flag-rename`.)
+
+### Fixed
+
+- **Intermittent `windows-latest` CI timeouts** — seven heavy CLI-spawning test suites carried inline `{ timeout: 30_000 }` overrides that shadowed the platform-aware 60s win32 global in `vitest.shared.ts`. Removed so every heavy test inherits the single source of truth (60s on Windows, 20s elsewhere).
+
+## [1.5.1] - 2026-06-03
+
+> Published to npm 2026-06-03 via the `Release` workflow (provenance), tag `v1.5.1`. The onboarding-hardening patch (Phase `48-onboarding-hardening`).
+
+### Added
+
+- **`NotInitializedError`** — a distinct error raised when a command runs outside an initialized `.cadence/` project, replacing the prior generic failure.
+- **Node `>=20` floor** with a fast-fail guard that exits with a clear message on older runtimes.
+- **Loud mock-fallback banner** under `settle --deep` when the verifier falls back to the deterministic mock provider, so a silent downgrade is never mistaken for a real verification.
+
+### Fixed
+
+- Two scaffold/doc fixes surfaced by the onboarding shakedown.
+
 ## [1.5.0] - 2026-06-03
 
 > Published to npm 2026-06-03 via the `Release` workflow (provenance), tag `v1.5.0`. Per-package bumps managed by changesets.

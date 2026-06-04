@@ -133,6 +133,14 @@ First feature release after the v1.4.0 version-hygiene publish. `@manehorizons/c
 - ✓ **Boundary-check path normalization** — phase `47-boundary-path-fix`. `runBoundaryCheck` gains an optional `root`; absolute touched paths are relativized before comparison against relative DRAFT `files:` declarations, eliminating `files-outside-boundary` false positives (surfaced dogfooding phase 46).
 - PRs #13 (boundary fix) and #14 (handoff/resume) merged 2026-06-03; full gate green; CHANGELOG `[1.5.0]`.
 
+### v1.6.0 — Ergonomics + ideation (release prepped 2026-06-04)
+Bundles the work that landed on `main` after the `1.5.1` onboarding patch. Version bumped `1.5.1 → 1.6.0` (lockstep across the three published packages) via changesets; publish + annotated tag `v1.6.0` are cut by the manual `Release` workflow on merge of the release-prep PR.
+- ✓ **`/cadence-scout`** — twelfth host slash command (count 11 → 12): a divergent→convergent ideation dialogue that lands survivors as Praxis recs via `cadence recommendation add`. Host-side only, zero core change. Phase `53-cadence-scout`, PR #26.
+- ✓ **`cadence init --preset`** rename — `--profile` demoted to a deprecated still-working alias. Phase `52-preset-flag-rename`, PR #24.
+- ✓ **Cross-platform CI complete** — Ubuntu + macOS + Windows × Node 20/22. Phases `49-cross-platform-ci` / `50-windows-ci-leg`; the residual `windows-latest` timeout-shadowing flake fixed in PR #25.
+- ✓ **Documentation portal** — Astro + Starlight site live at <https://manehorizons.github.io/cadence/>. Phase `51-docs-portal`, PRs #22/#23.
+- CHANGELOG `[1.6.0]` (and a backfilled `[1.5.1]`).
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction (Codex / Aider / OpenCode).
