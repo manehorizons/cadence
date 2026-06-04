@@ -1,8 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtemp, readFile, readdir, rm, writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { installCommands } from '../src/install-commands.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let cleanup: Array<() => Promise<void>> = [];
 afterEach(async () => {
@@ -17,7 +20,7 @@ async function tempDir(): Promise<string> {
 }
 
 describe('installCommands', () => {
-  it('writes 11 cadence-*.md files under .claude/commands/', async () => {
+  it('AC-1: writes 12 cadence-*.md files under .claude/commands/', async () => {
     const root = await tempDir();
     await installCommands(root);
     const entries = await readdir(join(root, '.claude/commands'));
@@ -32,8 +35,71 @@ describe('installCommands', () => {
       'cadence-needs-context.md',
       'cadence-progress.md',
       'cadence-resume.md',
+      'cadence-scout.md',
       'cadence-settle.md',
     ]);
+  });
+
+  it('AC-1+AC-3: cadence-scout is tagged managed with valid frontmatter', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+    const scout = await readFile(
+      join(root, '.claude/commands/cadence-scout.md'),
+      'utf8',
+    );
+    expect(scout).toMatch(/<!-- managed-by: cadence -->/);
+    expect(scout).toMatch(/^---\n/);
+    expect(scout).toMatch(/description: .*(ideation|scout|recommendation)/i);
+    expect(scout).toMatch(/argument-hint: \[topic\]/);
+    expect(scout).toMatch(/allowed-tools: Bash\(cadence:\*\), Read/);
+  });
+
+  it('AC-2: scout body encodes the orient→diverge→converge→land contract', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+    const scout = await readFile(
+      join(root, '.claude/commands/cadence-scout.md'),
+      'utf8',
+    );
+    // Orients off the ranked ledger.
+    expect(scout).toMatch(/^!cadence recommend\s*$/m);
+    // Divergent→convergent dialogue language.
+    expect(scout).toMatch(/diverge/i);
+    expect(scout).toMatch(/converge/i);
+    // Lands survivors via the existing rec CRUD with provenance evidence.
+    expect(scout).toMatch(/cadence recommendation add/);
+    expect(scout).toMatch(/--evidence/);
+    // Must NOT pretend to be a loop driver.
+    expect(scout).not.toMatch(/draft new|draft approve|settle run/);
+  });
+
+  it('AC-3: a user-overridden cadence-scout.md survives re-install', async () => {
+    const root = await tempDir();
+    await mkdir(join(root, '.claude/commands'), { recursive: true });
+    await writeFile(
+      join(root, '.claude/commands/cadence-scout.md'),
+      '---\ndescription: my override\n---\nhand-rolled scout\n',
+    );
+    await installCommands(root);
+    const scout = await readFile(
+      join(root, '.claude/commands/cadence-scout.md'),
+      'utf8',
+    );
+    expect(scout).toMatch(/hand-rolled scout/);
+    expect(scout).not.toMatch(/managed-by: cadence/);
+  });
+
+  it('AC-4: docs announce /cadence-scout and its Praxis hand-off', async () => {
+    const concepts = await readFile(
+      join(__dirname, '../../../docs/concepts.md'),
+      'utf8',
+    );
+    const commands = await readFile(
+      join(__dirname, '../../../docs/reference/commands.md'),
+      'utf8',
+    );
+    expect(concepts).toMatch(/\/cadence-scout/);
+    expect(commands).toMatch(/\/cadence-scout/);
   });
 
   it('AC-27: handoff/resume wrappers bind to the right CLI invocation', async () => {

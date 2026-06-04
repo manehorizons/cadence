@@ -410,6 +410,16 @@ Praxis never writes loop state; the loop never writes the ledger. The only
 coupling is the staged SPEC scaffold (Praxis → loop) and the terminal convert
 link (loop → Praxis). `convert` is one-way — there is no unconvert.
 
+### Scouting recs into the ledger
+
+Recommendations enter the ledger one at a time via `cadence recommendation add`.
+To *generate and triage many candidates at once* for a fuzzy problem, the Claude
+Code host installs **`/cadence-scout`** — a divergent→convergent ideation
+dialogue that lands the survivors as recs (with provenance evidence) and then
+hands you back to `cadence recommend` and the seam above. Scout is host-side
+only: it produces ordinary Praxis records and never drives the loop, allocates a
+loop id, or runs a gate.
+
 > **Terminology:** this guide and the codebase use precise names for these
 > concepts — see the project glossary, [`CONTEXT.md`](https://github.com/manehorizons/cadence/blob/main/CONTEXT.md), for the
 > canonical term for each (and the aliases to avoid).

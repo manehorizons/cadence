@@ -1157,6 +1157,13 @@ Write Claude Code hook entries and slash commands into the project
 it substitutes `npx` invocations with absolute paths to the local build
 outputs.
 
+Most installed slash commands are thin wrappers over a single `cadence`
+subcommand (`/cadence-draft`, `/cadence-approve`, `/cadence-settle`, …). The
+exception is **`/cadence-scout`** — a divergent→convergent ideation dialogue
+that turns a fuzzy problem into ranked **Praxis recommendations** via
+`cadence recommendation add`. Scout feeds the rec → milestone → SPEC ledger; it
+never drives the loop, allocates a loop id, or runs a gate.
+
 **Exit codes** — exits non-zero if `--cwd` does not contain an initialized
 `.cadence/` directory, or if the settings file cannot be parsed.
 
