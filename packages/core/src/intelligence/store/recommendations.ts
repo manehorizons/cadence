@@ -8,6 +8,7 @@ import {
   type RecommendationLedger,
   type RecommendationPriority,
   type RecommendationReadiness,
+  type RecommendationStatus,
 } from '@manehorizons/cadence-types';
 import { nextEvidenceId, nextRecommendationId } from './ids.js';
 import {
@@ -141,6 +142,68 @@ export function applyRecommendationTransition(
   return { ok: true, ledger: ledgerOut };
 }
 
+// Phase 57: promote a recommendation's status and/or readiness — the missing
+// link that makes `milestone propose` reachable for manual recs. Independent of
+// `convert`: it never sets `convertedToPhaseId` and refuses `converted` (that
+// transition is owned by `convert`, which sets the phase FK) and terminal recs.
+export interface RecommendationPromotionChanges {
+  status?: RecommendationStatus;
+  readiness?: RecommendationReadiness;
+}
+
+/** Statuses an operator may promote *from*. `converted`/`rejected` are terminal. */
+const PROMOTABLE_FROM: ReadonlySet<RecommendationStatus> = new Set([
+  'candidate',
+  'accepted',
+  'deferred',
+]);
+
+export function applyRecommendationPromotion(
+  ledger: RecommendationLedger,
+  id: string,
+  changes: RecommendationPromotionChanges,
+  now: Date,
+): RecommendationTransitionResult {
+  const target = ledger.recommendations.find((r) => r.id === id);
+  if (!target) return { ok: false, error: `recommendation ${id} not found` };
+  if (changes.status === undefined && changes.readiness === undefined) {
+    return {
+      ok: false,
+      error: 'nothing to promote: provide --status and/or --readiness',
+    };
+  }
+  if (changes.status === 'converted') {
+    return {
+      ok: false,
+      error:
+        'cannot promote to converted — use `cadence recommendation convert` (it sets the phase link)',
+    };
+  }
+  if (!PROMOTABLE_FROM.has(target.status)) {
+    return {
+      ok: false,
+      error: `cannot promote recommendation in terminal status ${target.status}`,
+    };
+  }
+  const updatedAt = now.toISOString();
+  const ledgerOut: RecommendationLedger = {
+    schemaVersion: 1,
+    recommendations: ledger.recommendations.map((r) =>
+      r.id === id
+        ? {
+            ...r,
+            ...(changes.status !== undefined ? { status: changes.status } : {}),
+            ...(changes.readiness !== undefined
+              ? { readiness: changes.readiness }
+              : {}),
+            updatedAt,
+          }
+        : r,
+    ),
+  };
+  return { ok: true, ledger: ledgerOut };
+}
+
 // Slice 34.1: existence check for `.cadence/phases/<phaseId>/` lives in the
 // I/O wrapper deliberately — keeps the pure helper disk-free (per Slice 34
 // Decision Log §10 + §11 architectural principle).
@@ -169,6 +232,19 @@ export async function runRecommendationTransition(
   if (!res.ok) return res;
   // writeIntelligenceLedgers handles atomic JSON + RECOMMENDATIONS.md re-render
   // (Slice 15 annotated form), so we don't need a separate rerender call.
+  const evidenceLedger = await readEvidenceLedger(root);
+  await writeIntelligenceLedgers(root, res.ledger, evidenceLedger);
+  return res;
+}
+
+export async function runRecommendationPromotion(
+  root: string,
+  id: string,
+  changes: RecommendationPromotionChanges,
+): Promise<RecommendationTransitionResult> {
+  const ledger = await readRecommendationLedger(root);
+  const res = applyRecommendationPromotion(ledger, id, changes, new Date());
+  if (!res.ok) return res;
   const evidenceLedger = await readEvidenceLedger(root);
   await writeIntelligenceLedgers(root, res.ledger, evidenceLedger);
   return res;

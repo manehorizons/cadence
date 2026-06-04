@@ -1,6 +1,7 @@
 import type { Command } from 'commander';
 import {
   type Recommendation,
+  type RecommendationStatus,
   RecommendationDecayStateZ,
   RecommendationPriorityZ,
   RecommendationReadinessZ,
@@ -15,9 +16,15 @@ import {
 import {
   addRecommendation,
   runRecommendationTransition,
+  runRecommendationPromotion,
   type AddRecommendationInput,
+  type RecommendationPromotionChanges,
 } from '../../intelligence/store/recommendations.js';
 import { renderRecommendationDetail } from '../../intelligence/render-recommendation-detail.js';
+
+// Statuses settable via `promote`. `converted` is excluded — owned by `convert`.
+const PROMOTE_STATUSES: RecommendationStatus[] =
+  RecommendationStatusZ.options.filter((s) => s !== 'converted');
 
 function csv(value: string | undefined): string[] {
   if (!value) return [];
@@ -453,4 +460,72 @@ export function registerRecommendationCommand(program: Command): void {
         process.exitCode = 1;
       }
     });
+
+  cmd
+    .command('promote <recId>')
+    .description(
+      'Advance a recommendation’s status and/or readiness (makes `milestone propose` reachable)',
+    )
+    .option('--status <status>', `New status. One of: ${PROMOTE_STATUSES.join(' | ')}`)
+    .option(
+      '--readiness <readiness>',
+      `New readiness. One of: ${RecommendationReadinessZ.options.join(' | ')}`,
+    )
+    .action(
+      async (recId: string, opts: { status?: string; readiness?: string }) => {
+        try {
+          const changes: RecommendationPromotionChanges = {};
+          if (opts.status !== undefined) {
+            if (!PROMOTE_STATUSES.includes(opts.status as RecommendationStatus)) {
+              process.stderr.write(
+                `recommendation promote: invalid --status "${opts.status}". Allowed: ${PROMOTE_STATUSES.join(' | ')}\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+            changes.status = opts.status as RecommendationStatus;
+          }
+          if (opts.readiness !== undefined) {
+            const parsed = RecommendationReadinessZ.safeParse(opts.readiness);
+            if (!parsed.success) {
+              process.stderr.write(
+                `recommendation promote: invalid --readiness "${opts.readiness}". Allowed: ${RecommendationReadinessZ.options.join(' | ')}\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+            changes.readiness = parsed.data;
+          }
+          if (changes.status === undefined && changes.readiness === undefined) {
+            process.stderr.write(
+              'recommendation promote: provide --status and/or --readiness\n',
+            );
+            process.exitCode = 1;
+            return;
+          }
+          const res = await runRecommendationPromotion(
+            process.cwd(),
+            recId,
+            changes,
+          );
+          if (!res.ok) {
+            process.stderr.write(`recommendation promote refused: ${res.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          const parts = [
+            changes.status ? `status=${changes.status}` : null,
+            changes.readiness ? `readiness=${changes.readiness}` : null,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          process.stdout.write(`recommendation ${recId} promoted (${parts})\n`);
+        } catch (err) {
+          process.stderr.write(
+            `recommendation promote failed: ${err instanceof Error ? err.message : String(err)}\n`,
+          );
+          process.exitCode = 1;
+        }
+      },
+    );
 }

@@ -755,6 +755,41 @@ kind (separate slice).
 
 ---
 
+#### recommendation promote
+
+Advances a recommendation's `status` and/or `readiness` so the
+[`milestone propose`](#milestone) pipeline becomes reachable for
+manually-added recommendations (which `add` creates as `candidate` /
+`needs-evidence`). Independent of `convert`: it never sets
+`convertedToPhaseId`.
+
+```sh
+cadence recommendation promote <recId> --status accepted --readiness ready-for-milestone
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--status <status>` | New status: `candidate`, `accepted`, `deferred`, or `rejected`. (`converted` is rejected — that transition is owned by [`recommendation convert`](#recommendation-convert).) |
+| `--readiness <readiness>` | New readiness: `raw-idea`, `needs-evidence`, `needs-decision`, `ready-for-milestone`, `ready-for-cadence-spec`, or `blocked`. |
+
+**Behavior** — at least one of `--status` / `--readiness` is required.
+Status and readiness are independent axes (no forced monotonic
+progression). Refused for recommendations in a terminal status
+(`converted`, `rejected`). On success the ledger is persisted (atomic
+JSON + `RECOMMENDATIONS.md` re-render) with a bumped `updatedAt`. To make
+a rec milestone-eligible, set both `--status accepted` and
+`--readiness ready-for-milestone` (or `ready-for-cadence-spec`).
+
+**Exit codes**
+
+- `0` — promoted, ledger updated.
+- `1` — refused (no flags, invalid enum value, unknown id, or terminal
+  status). Refusal goes to stderr; no ledger mutation on refusal.
+
+---
+
 ### inspect
 
 ```
