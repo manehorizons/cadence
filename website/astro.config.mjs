@@ -24,6 +24,7 @@ export default defineConfig({
           sidebar: { label: 'API', collapsed: true },
           typeDoc: {
             entryPointStrategy: 'resolve',
+            entryFileName: 'index',
           },
         }),
       ],
