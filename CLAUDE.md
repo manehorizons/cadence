@@ -77,10 +77,16 @@ shipped to npm on 2026-05-30 at `1.1.1`, then republished as `1.4.0` on
 annotated `v1.4.0` git tag, and npm provenance via OIDC (v1.4 milestone
 DELIVERED). `1.5.0` (2026-06-03, tag `v1.5.0` + provenance) added session
 continuity (`cadence handoff`/`resume`) plus a boundary-check fix. The latest
-published version is **`1.5.1`** (2026-06-03, tag `v1.5.1` + provenance) — the
-onboarding-hardening patch (phase 48): a distinct `NotInitializedError`, a Node
-`>=20` floor with a fast-fail guard, a loud mock-fallback banner under
-`settle --deep`, and two scaffold/doc fixes. Releases are cut with
+version published to npm is **`1.5.1`** (2026-06-03, tag `v1.5.1` + provenance) —
+the onboarding-hardening patch (phase 48): a distinct `NotInitializedError`, a
+Node `>=20` floor with a fast-fail guard, a loud mock-fallback banner under
+`settle --deep`, and two scaffold/doc fixes. **`1.6.0`** is prepped (2026-06-04):
+changesets bump the three packages `1.5.1 → 1.6.0` for the `cadence init
+--preset` flag rename (phase 52, `--profile` kept as a deprecated alias) and the
+`/cadence-scout` host slash command (phase 53), bundling the cross-platform-CI
+completion (phases 49/50) and the docs portal (phase 51); the npm publish +
+annotated `v1.6.0` tag are cut by the manual `Release` workflow on merge of the
+release-prep PR. Releases are cut with
 [changesets](https://github.com/changesets/changesets) and the manual `Release`
 workflow (`.github/workflows/release.yml`, `workflow_dispatch`).
 

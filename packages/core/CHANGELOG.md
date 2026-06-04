@@ -1,5 +1,26 @@
 # @manehorizons/cadence-core
 
+## 1.6.0
+
+### Minor Changes
+
+- v1.6.0 — preset flag rename + `/cadence-scout`
+  - **`cadence init --preset`** is the new primary flag for selecting a config
+    preset (`solo | team | production`); `--profile` lives on as a deprecated,
+    still-working alias that emits a one-line stderr notice. The old name was a
+    misnomer — it set a preset, not a gate profile (`--gate-profile`). (Phase
+    `52-preset-flag-rename`.)
+  - **`/cadence-scout`** — a twelfth Claude Code slash command installed by
+    `cadence-host-claude-code`: a divergent→convergent ideation dialogue that
+    lands survivors as Praxis recommendations via `cadence recommendation add`.
+    Host-side only; zero core-engine change, no new gate / loop position / record
+    type. (Phase `53-cadence-scout`.)
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-types@1.6.0
+
 ## 1.5.1
 
 ### Patch Changes
