@@ -173,7 +173,11 @@ export function registerInitCommand(program: Command): void {
     .command('init')
     .description('Scaffold a new .cadence/ directory in the current working tree')
     .option('--name <project>', 'Project name (prompted when omitted)')
-    .option('--profile <preset>', 'Config preset: solo | team | production', 'team')
+    .option('--preset <preset>', 'Config preset: solo | team | production (default: team)')
+    .option(
+      '--profile <preset>',
+      'Deprecated alias for --preset (kept for back-compat)',
+    )
     .option(
       '--gate-profile <p>',
       'Gate profile: strict | standard | auto (suggested from git history when omitted)',
@@ -185,12 +189,23 @@ export function registerInitCommand(program: Command): void {
     .action(
       async (opts: {
         name?: string;
-        profile: 'solo' | 'team' | 'production';
+        preset?: 'solo' | 'team' | 'production';
+        profile?: 'solo' | 'team' | 'production';
         gateProfile?: string;
         claudeMd?: boolean;
       }) => {
         const cwd = process.cwd();
         const cadenceDir = join(cwd, '.cadence');
+
+        // rec-20260602-001: --profile was a misnomer (it sets a config preset,
+        // not a gate profile). --preset is the primary flag; --profile lives on
+        // as a deprecated alias. New flag wins; default is `team`.
+        if (opts.profile !== undefined && opts.preset === undefined) {
+          console.error(
+            '--profile is deprecated; use --preset (the flag selects a config preset, not a gate profile).',
+          );
+        }
+        const preset = opts.preset ?? opts.profile ?? 'team';
 
         // Phase 26.2 — standalone --claude-md: do NOT refuse on an existing
         // .cadence/ and do NOT scaffold; just regenerate the managed block.
@@ -208,7 +223,7 @@ export function registerInitCommand(program: Command): void {
           const mode = await writeClaudeMd(cwd, {
             projectName: src.name,
             gateProfile: src.gateProfile,
-            preset: opts.profile,
+            preset,
           });
           if (mode === 'preserved') {
             console.error(
@@ -224,9 +239,9 @@ export function registerInitCommand(program: Command): void {
           console.error('.cadence/ already initialized in this directory');
           process.exit(2);
         }
-        const presetCfg = presets[opts.profile];
+        const presetCfg = presets[preset];
         if (!presetCfg) {
-          console.error(`Unknown profile: ${opts.profile}`);
+          console.error(`Unknown preset: ${preset}`);
           process.exit(2);
         }
 
@@ -280,12 +295,12 @@ export function registerInitCommand(program: Command): void {
         await writeClaudeMd(cwd, {
           projectName: name,
           gateProfile,
-          preset: opts.profile,
+          preset,
         });
 
         // Legacy line — retained for back-compat ahead of the summary block.
         console.log(
-          `Initialized CADENCE in ${cadenceDir} (profile=${opts.profile})`,
+          `Initialized CADENCE in ${cadenceDir} (profile=${preset})`,
         );
         console.log('');
         console.log(`  CADENCE initialized`);
@@ -293,7 +308,7 @@ export function registerInitCommand(program: Command): void {
         console.log(`  project       ${name}`);
         console.log(`  location      ${cadenceDir}`);
         console.log(
-          `  preset        ${opts.profile}  (config preset — workflow defaults: solo|team|production)`,
+          `  preset        ${preset}  (config preset — workflow defaults: solo|team|production)`,
         );
         console.log(
           `  gate profile  ${gateProfile}  (gate strictness: strict|standard|auto)`,

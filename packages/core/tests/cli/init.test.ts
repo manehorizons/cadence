@@ -116,6 +116,67 @@ describe('cadence init', () => {
   });
 });
 
+describe('cadence init — --preset flag rename (rec-20260602-001)', () => {
+  it('AC-1: --preset selects the config preset with no deprecation notice', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo', '--preset=solo'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.loopEnforcement).toBe('reminder');
+    expect(r.stderr).not.toMatch(/deprecated/i);
+  });
+
+  it('AC-2: --profile still applies the preset AND warns it is deprecated', async () => {
+    active = await tempRepo();
+    const r = await run(
+      ['init', '--name=demo', '--profile=production'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.loopEnforcement).toBe('strict');
+    expect(cfg.hooks.preToolUseBuildGate).toBe(true);
+    expect(r.stderr).toMatch(/--profile.*deprecated.*--preset/i);
+  });
+
+  it('AC-3: --preset wins when both flags are passed', async () => {
+    active = await tempRepo();
+    const r = await run(
+      ['init', '--name=demo', '--preset=production', '--profile=solo'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.loopEnforcement).toBe('strict');
+  });
+
+  it('AC-3: preset defaults to team when neither flag is passed', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.loopEnforcement).toBe('soft');
+    expect(r.stderr).not.toMatch(/deprecated/i);
+  });
+
+  it('AC-4: commands.md documents --preset as primary and --profile as deprecated', () => {
+    const doc = readFileSync(
+      join(__dirname, '../../../../docs/reference/commands.md'),
+      'utf8',
+    );
+    expect(doc).toMatch(/`--preset <preset>`/);
+    expect(doc).toMatch(/`--profile <preset>`.*[Dd]eprecated/);
+  });
+});
+
 describe('cadence init — F2 layout-detected testGlobs', () => {
   it('AC-1: monorepo (packages/ present) keeps the workspace testGlobs', async () => {
     active = await tempRepo();

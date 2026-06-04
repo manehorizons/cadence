@@ -4,7 +4,7 @@
 
 ## rec-20260602-001 — Rename 'cadence init --profile' flag to '--preset'
 
-- status: candidate
+- status: converted
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10

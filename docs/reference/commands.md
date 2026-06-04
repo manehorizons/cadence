@@ -127,15 +127,18 @@ Scaffold a new .cadence/ directory in the current working tree
 | Option | Default | Description |
 |---|---|---|
 | `--name <project>` | (prompted) | Project name |
-| `--profile <preset>` | `"team"` | Config preset: `solo \| team \| production` |
+| `--preset <preset>` | `"team"` | Config preset: `solo \| team \| production` |
+| `--profile <preset>` | — | **Deprecated** alias for `--preset` (kept for back-compat; emits a notice) |
 | `--gate-profile <p>` | (suggested from git history) | Gate profile: `strict \| standard \| auto` |
 | `--claude-md` | — | Only (re)generate the managed CLAUDE.md block at the repo root; allowed on an already-initialized project |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — writes `.cadence/config.json`, `.cadence/state.json`,
 `.cadence/PROJECT.md`, and a managed block in the repo-root `CLAUDE.md`. The
-`--profile` flag selects a config preset; `--gate-profile` sets which quality
-gates fire by default. When `--gate-profile` is omitted, CADENCE analyses git
+`--preset` flag selects a config preset; `--gate-profile` sets which quality
+gates fire by default. (`--profile` is a deprecated alias for `--preset`,
+retained for back-compat — it was a misnomer, since it sets a preset, not a gate
+profile.) When `--gate-profile` is omitted, CADENCE analyses git
 history to suggest a value. When `--name` is omitted and the session is
 interactive, CADENCE prompts for it.
 
