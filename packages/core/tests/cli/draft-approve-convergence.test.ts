@@ -101,7 +101,7 @@ async function sidecar(root: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(join(root, SIDECAR), 'utf8'));
 }
 
-describe('cadence draft approve — plan-review convergence (Phase 35.1)', { timeout: 30_000 }, () => {
+describe('cadence draft approve — plan-review convergence (Phase 35.1)', () => {
   it('AC-1: well-formed plan converges first try → BUILD, sidecar converged', async () => {
     active = await tempRepo({ initialized: true });
     await arrange(active.root, true);

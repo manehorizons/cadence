@@ -107,7 +107,7 @@ async function loopPosition(root: string): Promise<string> {
   return state.loopPosition;
 }
 
-describe('cadence draft approve (Phase 25.1 — plan-review gate)', { timeout: 30_000 }, () => {
+describe('cadence draft approve (Phase 25.1 — plan-review gate)', () => {
   it('AC-4: refuses approve on a failing plan under strict×complex', async () => {
     active = await tempRepo({ initialized: true });
     await initGitRepo(active.root);

@@ -102,7 +102,7 @@ async function strictScaffold(
   await seedAcCoverage(root, 'AC-1');
 }
 
-describe('cadence settle run (Phase 37.1 — code-review convergence)', { timeout: 60_000 }, () => {
+describe('cadence settle run (Phase 37.1 — code-review convergence)', () => {
   it('AC-1: clean diff converges — settle proceeds, sidecar converged:true', async () => {
     active = await tempRepo({ initialized: true });
     await strictScaffold(active.root, CLEAN_SRC);

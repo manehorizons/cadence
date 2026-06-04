@@ -94,7 +94,7 @@ async function sidecar(root: string): Promise<Record<string, unknown>> {
 }
 const APPROVE = ['spec', 'approve', '36-x', '01'];
 
-describe('cadence spec stage (Phase 36.1)', { timeout: 30_000 }, () => {
+describe('cadence spec stage (Phase 36.1)', () => {
   it('AC-1 (a): spec new from IDLE → SPEC.md + loopPosition SPEC + activeSpec', async () => {
     active = await tempRepo({ initialized: true });
     await arrange(active.root);

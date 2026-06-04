@@ -68,7 +68,7 @@ async function seedAcCoverage(root: string, acId: string): Promise<void> {
   await writeFile(p, `// covers ${acId}\n`, 'utf8');
 }
 
-describe('cadence settle run (Phase 24.3 — code-review verifier gate)', { timeout: 30_000 }, () => {
+describe('cadence settle run (Phase 24.3 — code-review verifier gate)', () => {
   it('AC-4: refuses on HIGH findings (console.log diff)', async () => {
     active = await tempRepo({ initialized: true });
     await initGitRepo(active.root);
