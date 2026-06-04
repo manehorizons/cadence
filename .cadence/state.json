@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "50-windows-ci-leg",
+  "activePhase": "51-docs-portal",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-03T21:25:21.968Z",
+  "draftReadAt": "2026-06-03T22:59:19.863Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
-    "tokenUtilization": 0.7700000000000005,
-    "lastHandoff": "SESSION-2026-06-03.md",
-    "subagentSpawns": 68
+    "tokenUtilization": 0.8300000000000005,
+    "lastHandoff": "SESSION-2026-06-03-cross-platform-ci-complete.md",
+    "subagentSpawns": 90
   },
   "skillAudit": {
     "required": [],

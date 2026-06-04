@@ -1,0 +1,40 @@
+---
+title: CADENCE
+description: A draft/build/settle framework for AI-assisted development with configurable quality gates.
+template: splash
+hero:
+  tagline: The DRAFT → BUILD → SETTLE loop, with quality gates that refuse to settle broken work.
+  image:
+    html: '<img src="https://raw.githubusercontent.com/manehorizons/cadence-demo-billsplit/main/billsplit.gif" alt="CADENCE refusing to settle a failing build" />'
+  actions:
+    - text: Quickstart
+      link: /cadence/start/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: See the demo repo
+      link: https://github.com/manehorizons/cadence-demo-billsplit
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+CADENCE scaffolds and runs the **DRAFT → BUILD → SETTLE** loop on your project —
+and uses that same loop on itself. Quality gates are configurable per profile and
+tier, and the always-fire build/test gate will refuse to close a phase whose tests
+do not pass, even when the AI marked the task done.
+
+<CardGrid>
+  <Card title="Start here" icon="rocket">
+    [Install](/cadence/start/install/) · [Quickstart](/cadence/start/quickstart/)
+  </Card>
+  <Card title="Understand the loop" icon="open-book">
+    [Concepts](/cadence/concepts/) — profiles × tiers and the full gate matrix.
+  </Card>
+  <Card title="Reference" icon="setting">
+    [Commands](/cadence/reference/commands/) · [Config](/cadence/reference/config/)
+  </Card>
+  <Card title="API" icon="seti:typescript">
+    Generated [API docs](/cadence/api/) for the published packages.
+  </Card>
+</CardGrid>

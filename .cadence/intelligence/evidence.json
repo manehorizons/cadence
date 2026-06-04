@@ -23,13 +23,6 @@
       "createdAt": "2026-06-02T03:47:06.457Z"
     },
     {
-      "id": "ev-20260602-004",
-      "recommendationId": "rec-20260602-004",
-      "kind": "note",
-      "summary": "Design agreed in /resume session 2026-06-02 (pivoted from the /cadence-scout discussion: scout's markdown surface is too thin to show gates working, so a code-bearing demo project was chosen instead). Full storyboard in docs/superpowers/specs/2026-06-02-cadence-demo-billsplit-design.md.",
-      "createdAt": "2026-06-02T04:41:02.370Z"
-    },
-    {
       "id": "ev-20260603-001",
       "recommendationId": "rec-20260603-001",
       "kind": "note",

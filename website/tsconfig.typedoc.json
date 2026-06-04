@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true
+  },
+  "include": [
+    "../packages/types/src/**/*.ts",
+    "../packages/host-claude-code/src/**/*.ts"
+  ]
+}

@@ -1,0 +1,11 @@
+/* CADENCE accent — calm teal/green to echo the "settle" gate passing. */
+:root {
+  --sl-color-accent-low: #0d2b28;
+  --sl-color-accent: #1f9e8f;
+  --sl-color-accent-high: #b8ece4;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #cdeee8;
+  --sl-color-accent: #11796c;
+  --sl-color-accent-high: #0b3d37;
+}

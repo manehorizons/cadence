@@ -411,7 +411,7 @@ coupling is the staged SPEC scaffold (Praxis → loop) and the terminal convert
 link (loop → Praxis). `convert` is one-way — there is no unconvert.
 
 > **Terminology:** this guide and the codebase use precise names for these
-> concepts — see the project glossary, [`CONTEXT.md`](../CONTEXT.md), for the
+> concepts — see the project glossary, [`CONTEXT.md`](https://github.com/manehorizons/cadence/blob/main/CONTEXT.md), for the
 > canonical term for each (and the aliases to avoid).
 
 ---
