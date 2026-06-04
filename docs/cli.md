@@ -308,6 +308,27 @@ The full list of config fields and presets is in
 
 ---
 
+## mcp serve — drive the loop from an MCP host
+
+Run the engine as a local [MCP](https://modelcontextprotocol.io) server over
+stdio, so any MCP-capable host (Claude Desktop, Cursor, agents) can call the loop
+as tools:
+
+```sh
+cadence mcp serve            # operate on the current working directory
+cadence mcp serve --repo /path/to/project
+```
+
+It's a local subprocess, not a network service — the host launches it and talks
+over stdin/stdout. It advertises 10 tools wrapping the same commands documented
+above (`cadence_progress`/`status`/`recommend` read; `cadence_draft_new`/
+`draft_check`/`draft_approve`/`build_task`/`settle`/`spec_new`/`spec_approve`
+write). Command-boundary gates run exactly as on the CLI; ambient edit-time gates
+require host hooks and are not available over MCP. Setup and the full tool table:
+[docs/mcp.md](mcp.md).
+
+---
+
 ## Two-commit convention in practice
 
 A completed phase produces exactly two commits. Here is what that looks like
@@ -343,4 +364,5 @@ For the conceptual rationale, see
 *See also: [docs/concepts.md](concepts.md) — loop, gates, profiles, tiers |
 [docs/reference/commands.md](reference/commands.md) — exhaustive option lists |
 [docs/claude-code.md](claude-code.md) — Claude Code host adapter how-to |
+[docs/mcp.md](mcp.md) — drive the loop from any MCP host |
 [docs/providers.md](providers.md) — provider setup*

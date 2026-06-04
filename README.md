@@ -14,11 +14,13 @@ Cadence grew out of working with **GSD (Get Shit Done)** — a planning framewor
 
 So Cadence isn't GSD-lite. It keeps the quality gates — they re-check your acceptance criteria and refuse to settle unverified work — but lets you choose which gates fire for a given change. A complex, risky change gets the full battery; a one-line fix doesn't pay for it. Same rigor, far less drag.
 
-## Two-surface model
+## Three-surface model
 
-The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. It is completely host-agnostic.
+One engine, three ways to drive it:
 
-The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and eleven slash commands. One engine, two surfaces: the CLI for terminals, the adapter for Claude Code.
+- The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. Completely host-agnostic.
+- The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and eleven slash commands — the only surface that adds *ambient* edit-time gates (boundary checks, anomaly detection as you edit).
+- **`cadence mcp serve`** exposes the engine as a local [MCP](https://modelcontextprotocol.io) server over stdio, so any MCP-capable host (Claude Desktop, Cursor, other agents) can drive the loop with no bespoke adapter. It covers the imperative loop (command-boundary gates run; ambient edit-time gates need host hooks). See **[MCP server](./docs/mcp.md)**.
 
 ## How it compares
 
@@ -64,6 +66,13 @@ Driving CADENCE from **Claude Code**? Wire the adapter into a project:
 npx @manehorizons/cadence-host-claude-code install
 ```
 
+Driving it from **another MCP host** (Claude Desktop, Cursor, an agent)? Point the host at the MCP server — no adapter needed:
+
+```jsonc
+// .mcp.json
+{ "mcpServers": { "cadence": { "command": "cadence", "args": ["mcp", "serve"] } } }
+```
+
 > **Heads-up — gate profiles and `approve`:** `cadence init` suggests a gate profile from repo maturity — a repo with **≥20 commits** gets `standard`, a younger repo gets `auto` (override with `--gate-profile`). The profile sets how strict `draft approve` is:
 > - **`auto`** — `approve` runs non-interactively (good for solo and agent loops).
 > - **`standard` / `strict`** — `approve` is gated behind an **interactive prompt**. In non-TTY contexts (CI, agents) it **refuses** unless you pass `--no-approve`.
@@ -78,6 +87,7 @@ See **[docs/README.md](./docs/README.md)** for the complete user guide:
 - [Concepts](./docs/concepts.md) — the loop, gates, profiles, and two-commit convention
 - [CLI guide](./docs/cli.md) — all subcommands and flags
 - [Claude Code integration](./docs/claude-code.md) — hooks and slash commands
+- [MCP server](./docs/mcp.md) — drive the loop from any MCP host (`cadence mcp serve`)
 - [Providers](./docs/providers.md) — OpenAI, Claude, Ollama, and custom LLMs
 - [Command reference](./docs/reference/commands.md) — exhaustive CLI reference
 - [Config reference](./docs/reference/config.md) — full `.cadence/` config schema

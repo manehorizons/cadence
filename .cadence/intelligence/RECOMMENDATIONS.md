@@ -68,7 +68,7 @@ Phase 49 unblocked macOS via realpath but deferred Windows. Enabling windows-lat
 
 ## rec-20260604-001 — Expose CADENCE as an MCP server surface
 
-- status: candidate
+- status: converted
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10

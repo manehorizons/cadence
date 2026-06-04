@@ -80,6 +80,7 @@ assumption
 decision
 intelligence
 doctor
+mcp
 <!-- cadence:commands:end -->
 
 ---
@@ -1186,6 +1187,50 @@ CADENCE strategic-intelligence admin utilities
 **`audit`** — read-only integrity enumeration across the 4 intelligence ledgers. Surfaces eight finding kinds: broken assumption/decision/evidence links (rec references missing subject id), orphan assumption/decision/evidence (subject's `recommendationId` references missing rec), stale `supersededBy` refs (Slice 30 — decision's `supersededBy` points to a missing decision id), and stale `convertedToPhaseId` refs (Slice 34.2 — rec's `convertedToPhaseId` points to a phase directory absent from `.cadence/phases/`). Untied decisions are NOT orphans (Slice-8 contract). Clean → `Audit clean: no integrity issues.\n` exit 0. Findings present → markdown sections per finding kind in `SECTION_ORDER` (broken links, orphans, stale-supersededby, stale-converted-phase) + Remediation block, exit 1 (unless `--quiet`). `--quiet` always exits 0 (script-friendly). The `stale-converted-phase` dim reads `.cadence/phases/` once before computation; a missing `.cadence/phases/` directory is benign (treated as the empty set — every converted rec then surfaces as stale, which is the correct signal when no phases exist). No auto-fix — `cadence intelligence reconcile` repairs broken link arrays only; orphan subjects, stale-supersededby refs, and stale-converted-phase refs each require operator decision (restore the missing referent, hand-edit to clear the field, or — for stale-supersededby — run `cadence decision reactivate <id>` which clears the field per Slice 28). `--filter-kind <kind>` narrows the report to a single finding kind (one of the eight: `broken-assumption-link`, `broken-decision-link`, `broken-evidence-link`, `orphan-assumption`, `orphan-decision`, `orphan-evidence`, `stale-supersededby`, `stale-converted-phase`); an unknown kind refuses with exit 1 naming the allowed set (validated before any ledger read). Under a filter the header echoes the kind (`Found N integrity issue(s) of kind "<kind>":`), only the matching section renders, the Remediation block shows only the relevant family hint, and an empty filtered result prints `No intelligence audit findings of kind "<kind>".` (exit 0; JSON emits the narrowed report — all eight `byKind` keys present, only the filtered kind populated). Filtering composes with `--quiet` (the filtered findings drive the exit code). (Slice 38)
 
 **Exit codes** — `reconcile`: exits 0 even on empty ledger set; exits 1 on any disk/permission/parse error. `stats`: same; exits 0 even on empty ledger set. `audit`: exit 0 on clean or empty ledgers; exit 1 on findings unless `--quiet`; exit 1 on any disk/permission/parse error.
+
+---
+
+### mcp
+
+```
+Usage: cadence mcp [options] [command]
+
+Model Context Protocol surface
+```
+
+**Subcommands**
+
+| Subcommand | Description |
+|---|---|
+| `serve [--repo <path>]` | Run the CADENCE MCP server over stdio so any MCP host can drive the loop |
+
+**`serve` options**
+
+| Option | Description |
+|---|---|
+| `--repo <path>` | Repo root to operate on (default: current working directory) |
+| `-h, --help` | Display help for command |
+
+**Behavior** — starts a local [Model Context Protocol](https://modelcontextprotocol.io)
+server on **stdio** (a third surface alongside the CLI and the Claude Code hook
+adapter). An MCP-capable host (Claude Desktop, Cursor, other agents) launches it
+as a child process and drives the DRAFT→BUILD→SETTLE loop through a curated tool
+set. It is **not** a network service — there is no daemon, URL, or auth; the
+server operates on the `.cadence/` of `--repo` (or the launch cwd), exactly like
+the CLI. See **[Driving CADENCE over MCP](../mcp.md)** for setup and the full
+tool list.
+
+The server advertises 10 tools that wrap the same engine the CLI does:
+`cadence_progress`, `cadence_status`, `cadence_recommend` (read);
+`cadence_draft_new`, `cadence_draft_check`, `cadence_draft_approve`,
+`cadence_build_task`, `cadence_settle`, `cadence_spec_new`,
+`cadence_spec_approve` (write). Command-boundary gates (coherence, the settle
+gate stack, spec-review) run exactly as they do from the CLI; **ambient
+edit-time gates require host hooks and are not available over MCP**. The MCP SDK
+is lazy-loaded — ordinary CLI commands never pay its load cost.
+
+**Exit codes** — runs until stdin closes (the host owns the lifecycle). Exits
+non-zero only on a startup failure.
 
 ---
 

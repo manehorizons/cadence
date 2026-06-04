@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
-import { runRecommend } from '../../intelligence/recommend.js';
-import { renderRecommendMd } from '../../intelligence/render-recommend.js';
+import { recommendService } from '../../services/recommend.js';
+import { processIO } from '../../services/io.js';
 
 export function registerRecommendCommand(program: Command): void {
   program
@@ -10,18 +10,11 @@ export function registerRecommendCommand(program: Command): void {
     )
     .option('--json', 'emit machine-readable JSON instead of rendered text')
     .action(async (opts: { json?: boolean }) => {
-      try {
-        const report = await runRecommend(process.cwd());
-        if (opts.json) {
-          process.stdout.write(JSON.stringify(report) + '\n');
-        } else {
-          process.stdout.write(renderRecommendMd(report));
-        }
-      } catch (err) {
-        process.stderr.write(
-          `recommend failed: ${err instanceof Error ? err.message : String(err)}\n`,
-        );
-        process.exitCode = 1;
-      }
+      const { exitCode } = await recommendService(
+        process.cwd(),
+        opts.json ? { json: true } : {},
+        processIO(),
+      );
+      if (exitCode) process.exitCode = exitCode;
     });
 }
