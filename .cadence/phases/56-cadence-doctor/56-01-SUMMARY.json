@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "draftId": "56-01",
+  "completedAt": "2026-06-04T20:15:31.951Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    },
+    {
+      "id": "AC-6",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "report model + runDoctor + node/initialized/state checks; 3 tests green (AC-1, AC-2)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "git-hooks, host-hooks, host-commands checks; 7 tests green (AC-6 + applicability)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "doctor CLI command + --json + exit codes + register; 5 CLI tests green (AC-3,4,5)"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "documented cadence doctor in docs/reference/commands.md + TOC"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

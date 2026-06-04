@@ -1,0 +1,38 @@
+{
+  "draftId": "56-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "report model + runDoctor + node/initialized/state checks; 3 tests green (AC-1, AC-2)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T20:07:51.898Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "git-hooks, host-hooks, host-commands checks; 7 tests green (AC-6 + applicability)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/doctor/host-checks.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/doctor/run.ts"
+      ],
+      "updatedAt": "2026-06-04T20:10:15.980Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "doctor CLI command + --json + exit codes + register; 5 CLI tests green (AC-3,4,5)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/doctor.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/doctor.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/register.ts"
+      ],
+      "updatedAt": "2026-06-04T20:11:48.408Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "documented cadence doctor in docs/reference/commands.md + TOC",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-06-04T20:13:03.112Z"
+    }
+  }
+}
