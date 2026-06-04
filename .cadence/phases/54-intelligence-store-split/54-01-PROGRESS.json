@@ -1,0 +1,29 @@
+{
+  "draftId": "54-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "paths.ts, ids.ts, io.ts extracted from store.ts",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T15:22:14.578Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "recommendations/assumptions/decisions/stats/audit/reconcile/milestones modules extracted",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T15:22:14.740Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "store.ts now a 59-LOC re-export barrel, 0 function defs",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T15:22:14.920Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "store-barrel.test.ts: surface + no-leak + cross-module path; 1329/1329 suite green unchanged",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T15:22:15.075Z"
+    }
+  }
+}
