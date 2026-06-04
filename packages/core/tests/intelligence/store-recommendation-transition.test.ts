@@ -4,12 +4,12 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import type { Recommendation, RecommendationLedger } from '@manehorizons/cadence-types';
+import { readRecommendationLedger } from '../../src/intelligence/store/io.js';
 import {
   addRecommendation,
   applyRecommendationTransition,
-  readRecommendationLedger,
   runRecommendationTransition,
-} from '../../src/intelligence/store.js';
+} from '../../src/intelligence/store/recommendations.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {

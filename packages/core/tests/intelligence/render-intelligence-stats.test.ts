@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IntelligenceStats } from '../../src/intelligence/store.js';
+import type { IntelligenceStats } from '../../src/intelligence/store/stats.js';
 import { renderIntelligenceStats } from '../../src/intelligence/render-intelligence-stats.js';
 
 function mkZeroStats(): IntelligenceStats {

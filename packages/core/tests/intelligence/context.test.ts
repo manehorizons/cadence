@@ -11,13 +11,15 @@ import type {
 import { ContextPacketZ } from '@manehorizons/cadence-types';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { synthesizeContextPacket, runContext } from '../../src/intelligence/context.js';
+import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import {
   addAssumption,
-  addIntelligenceDecision,
-  addRecommendation,
   runAssumptionTransition,
+} from '../../src/intelligence/store/assumptions.js';
+import {
+  addIntelligenceDecision,
   runDecisionTransition,
-} from '../../src/intelligence/store.js';
+} from '../../src/intelligence/store/decisions.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {

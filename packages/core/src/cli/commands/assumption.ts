@@ -1,12 +1,14 @@
 import type { Command } from 'commander';
 import { type Assumption, AssumptionZ } from '@manehorizons/cadence-types';
 import {
-  addAssumption,
   readAssumptionLedger,
   readRecommendationLedger,
+} from '../../intelligence/store/io.js';
+import {
+  addAssumption,
   runAssumptionTransition,
   type AssumptionTransitionAction,
-} from '../../intelligence/store.js';
+} from '../../intelligence/store/assumptions.js';
 import { renderAssumptionDetail } from '../../intelligence/render-assumption-detail.js';
 
 type SortDir = 'asc' | 'desc';

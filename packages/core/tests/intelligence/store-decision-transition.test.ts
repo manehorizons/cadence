@@ -4,13 +4,13 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import type { IntelligenceDecisionLedger } from '@manehorizons/cadence-types';
+import { readIntelligenceDecisionLedger } from '../../src/intelligence/store/io.js';
+import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import {
   addIntelligenceDecision,
-  addRecommendation,
   applyDecisionTransition,
-  readIntelligenceDecisionLedger,
   runDecisionTransition,
-} from '../../src/intelligence/store.js';
+} from '../../src/intelligence/store/decisions.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {

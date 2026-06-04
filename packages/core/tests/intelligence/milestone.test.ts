@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Assumption, IntelligenceMilestone, MilestoneLedger, Recommendation } from '@manehorizons/cadence-types';
 import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport, runMilestonePreMortem } from '../../src/intelligence/milestone.js';
-import { readMilestoneLedger } from '../../src/intelligence/store.js';
+import { readMilestoneLedger } from '../../src/intelligence/store/milestones.js';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {

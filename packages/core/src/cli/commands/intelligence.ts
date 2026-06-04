@@ -3,17 +3,19 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
-  AUDIT_KINDS,
-  computeIntelligenceAudit,
-  computeIntelligenceStats,
   readAssumptionLedger,
   readEvidenceLedger,
   readIntelligenceDecisionLedger,
   readRecommendationLedger,
-  runIntelligenceReconcile,
+} from '../../intelligence/store/io.js';
+import { computeIntelligenceStats } from '../../intelligence/store/stats.js';
+import {
+  AUDIT_KINDS,
+  computeIntelligenceAudit,
   type AuditKind,
   type IntelligenceAuditReport,
-} from '../../intelligence/store.js';
+} from '../../intelligence/store/audit.js';
+import { runIntelligenceReconcile } from '../../intelligence/store/reconcile.js';
 import { renderIntelligenceStats } from '../../intelligence/render-intelligence-stats.js';
 import { renderIntelligenceAudit } from '../../intelligence/render-intelligence-audit.js';
 

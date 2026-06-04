@@ -10,7 +10,8 @@ import type {
   ScoreTerm,
 } from '@manehorizons/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
-import { intelligenceDir, readRecommendationLedger } from './store.js';
+import { intelligenceDir } from './store/paths.js';
+import { readRecommendationLedger } from './store/io.js';
 import { cadenceBackend } from './backend/cadence.js';
 import { renderRecommendMd } from './render-recommend.js';
 

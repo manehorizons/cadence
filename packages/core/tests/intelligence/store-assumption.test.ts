@@ -4,11 +4,9 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { AssumptionLedgerZ } from '@manehorizons/cadence-types';
-import {
-  addAssumption,
-  addRecommendation,
-  readAssumptionLedger,
-} from '../../src/intelligence/store.js';
+import { readAssumptionLedger } from '../../src/intelligence/store/io.js';
+import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
+import { addAssumption } from '../../src/intelligence/store/assumptions.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {

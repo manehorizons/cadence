@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { IntelligenceDecisionLedger } from '@manehorizons/cadence-types';
-import { deriveDecisionInverseLinks } from '../../src/intelligence/store.js';
+import { deriveDecisionInverseLinks } from '../../src/intelligence/store/decisions.js';
 
 function mkLedger(
   items: IntelligenceDecisionLedger['decisions'],

@@ -9,17 +9,23 @@ import type {
   RecommendationLedger,
 } from '@manehorizons/cadence-types';
 import {
-  addAssumption,
-  addIntelligenceDecision,
-  addRecommendation,
-  deriveRecommendationLinks,
-  readRecommendationLedger,
-  readMilestoneLedger,
-  writeMilestoneLedger,
   readAssumptionLedger,
   readIntelligenceDecisionLedger,
+  readRecommendationLedger,
+} from '../../src/intelligence/store/io.js';
+import {
+  addRecommendation,
+  deriveRecommendationLinks,
+} from '../../src/intelligence/store/recommendations.js';
+import { addAssumption } from '../../src/intelligence/store/assumptions.js';
+import {
+  addIntelligenceDecision,
   runDecisionTransition,
-} from '../../src/intelligence/store.js';
+} from '../../src/intelligence/store/decisions.js';
+import {
+  readMilestoneLedger,
+  writeMilestoneLedger,
+} from '../../src/intelligence/store/milestones.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {
@@ -546,7 +552,7 @@ describe('rec MD status-aware bullets (Slice 15)', () => {
     const before = await readFile(mdPath, 'utf8');
     expect(before).toMatch(new RegExp(`- assumptions: ${a.id} \\(open\\)`));
     // validate via runAssumptionTransition (use direct import)
-    const { runAssumptionTransition } = await import('../../src/intelligence/store.js');
+    const { runAssumptionTransition } = await import('../../src/intelligence/store/assumptions.js');
     await runAssumptionTransition(active.root, a.id, 'validate');
     const after = await readFile(mdPath, 'utf8');
     expect(after).toMatch(new RegExp(`- assumptions: ${a.id} \\(validated\\)`));

@@ -6,7 +6,7 @@ import type {
   Recommendation,
   RecommendationLedger,
 } from '@manehorizons/cadence-types';
-import { computeIntelligenceStats } from '../../src/intelligence/store.js';
+import { computeIntelligenceStats } from '../../src/intelligence/store/stats.js';
 
 function mkRec(overrides: Partial<Recommendation> = {}): Recommendation {
   return {

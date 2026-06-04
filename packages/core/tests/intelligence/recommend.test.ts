@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { BackendStatus, Recommendation } from '@manehorizons/cadence-types';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { addRecommendation } from '../../src/intelligence/store.js';
+import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import { scoreRecommendation, partitionLedger, buildAdvisory, synthesizeRecommendation, runRecommend } from '../../src/intelligence/recommend.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
