@@ -6,6 +6,6 @@ allowed-tools: Bash(cadence:*), Read
 
 <!-- managed-by: cadence -->
 
-!node C:\Users\digit\Documents\Projects\cadence\packages\core\dist\cli\index.js block $ARGUMENTS
+!cadence block $ARGUMENTS
 
 Record the blocker, then unblock or escalate before settling.

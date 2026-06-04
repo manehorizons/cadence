@@ -6,6 +6,6 @@ allowed-tools: Bash(cadence:*), Read
 
 <!-- managed-by: cadence -->
 
-!node C:\Users\digit\Documents\Projects\cadence\packages\core\dist\cli\index.js draft new $ARGUMENTS
+!cadence draft new $ARGUMENTS
 
 Open the new DRAFT.md and fill in summary, ACs, and tasks.

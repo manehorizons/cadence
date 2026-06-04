@@ -58,11 +58,25 @@ program
         }
         process.stdout.write('Start a new Claude Code session to activate.\n');
         if (opts.local) {
-          process.stderr.write(
-            `warning: --local wrote machine-absolute paths into ${opts.settings}. ` +
-              'Do NOT commit it — add it to .gitignore; other clones/machines ' +
-              'cannot resolve these paths. Re-run install per machine instead.\n',
-          );
+          // --local bakes machine-absolute paths into EVERY surface it writes —
+          // both the hooks (settings.json) and the slash commands
+          // (.claude/commands/cadence-*.md). Name each surface that was actually
+          // written so none gets committed by accident. The command files were
+          // the silent offender before this enumeration existed: the warning
+          // named only settings.json, so machine-absolute command files were
+          // committed unflagged and broke on every other clone/machine.
+          const surfaces: string[] = [];
+          if (opts.hooks) surfaces.push(opts.settings);
+          if (opts.commands) surfaces.push('.claude/commands/cadence-*.md');
+          if (surfaces.length > 0) {
+            process.stderr.write(
+              `warning: --local wrote machine-absolute paths into ${surfaces.join(' and ')}. ` +
+                'Do NOT commit them — they cannot be resolved on other clones or ' +
+                'machines. Add them to .gitignore and re-run `install --local` per ' +
+                'machine, or run plain `install` (no --local) to write the portable ' +
+                '`cadence` form that is safe to commit.\n',
+            );
+          }
         }
       } catch (err) {
         process.stderr.write(
