@@ -6,7 +6,7 @@
       "title": "Rename 'cadence init --profile' flag to '--preset'",
       "summary": "The init --profile flag takes solo|team|production (a PRESET), while the domain profile is set via --gate-profile — actively misleading (flag named 'profile' does not set the profile). Rename the flag to --preset, keeping --profile as a deprecated alias. Design settled in the 2026-06-01 CONTEXT.md grilling session; needs a test (TDD), docs/reference/commands.md update, and the two-commit settle.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -26,7 +26,8 @@
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-06-02T01:17:46.143Z",
-      "updatedAt": "2026-06-02T01:17:46.143Z"
+      "updatedAt": "2026-06-04T01:46:21.549Z",
+      "convertedToPhaseId": "52-preset-flag-rename"
     },
     {
       "id": "rec-20260602-002",
@@ -116,9 +117,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "50-windows-ci-leg",
       "createdAt": "2026-06-03T21:05:40.744Z",
-      "updatedAt": "2026-06-03T21:43:16.540Z",
-      "convertedToPhaseId": "50-windows-ci-leg"
+      "updatedAt": "2026-06-03T21:43:16.540Z"
     }
   ]
 }
