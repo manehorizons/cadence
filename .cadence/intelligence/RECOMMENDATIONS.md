@@ -20,7 +20,7 @@ The init --profile flag takes solo|team|production (a PRESET), while the domain 
 
 ## rec-20260602-002 — Add /cadence-scout host slash command (ideation dialogue → recs)
 
-- status: candidate
+- status: converted
 - ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
