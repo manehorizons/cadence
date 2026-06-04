@@ -85,6 +85,32 @@ describe('cadence-host-claude-code install', () => {
     expect(r.stderr).toMatch(/\.gitignore/);
   });
 
+  it('--local warning names BOTH machine-path surfaces (settings + commands)', async () => {
+    // Regression: the warning used to name only settings.json, so the
+    // machine-absolute slash-command files got committed unflagged.
+    const root = await tempDir();
+    const r = await run(['install', '--cwd', root, '--local']);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/\.claude\/settings\.json/);
+    expect(r.stderr).toMatch(/\.claude\/commands/);
+  });
+
+  it('--local --no-hooks warns about commands only (not settings)', async () => {
+    const root = await tempDir();
+    const r = await run(['install', '--cwd', root, '--local', '--no-hooks']);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/\.claude\/commands/);
+    expect(r.stderr).not.toMatch(/\.claude\/settings\.json/);
+  });
+
+  it('--local --no-commands warns about settings only (not commands)', async () => {
+    const root = await tempDir();
+    const r = await run(['install', '--cwd', root, '--local', '--no-commands']);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/\.claude\/settings\.json/);
+    expect(r.stderr).not.toMatch(/\.claude\/commands/);
+  });
+
   it('AC-1: plain install (no --local) emits no such warning', async () => {
     const root = await tempDir();
     const r = await run(['install', '--cwd', root]);

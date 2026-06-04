@@ -10,6 +10,13 @@ export interface InstallCommandsOptions {
   /**
    * Use the absolute path to the local workspace core CLI instead of the
    * `cadence` shorthand. Intended for monorepo dogfood before publishing.
+   *
+   * WARNING: the resulting `.claude/commands/cadence-*.md` files embed a
+   * MACHINE-ABSOLUTE path and must NOT be committed — they break on every
+   * other clone/machine. The committed form must be the portable default
+   * (`cadence …`, written when `local` is omitted). The CLI emits a stderr
+   * warning naming this surface; see `docs/claude-code.md` § "The --local
+   * warning".
    */
   local?: boolean;
 }

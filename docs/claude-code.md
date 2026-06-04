@@ -42,8 +42,14 @@ After install, start a new Claude Code session to activate the hooks.
 
 The `--local` flag is the recommended approach for monorepo / dogfood setups: it
 resolves the absolute paths of the local workspace builds and writes them into
-the settings and command files so that Claude Code can find the shim and core
-CLI without them being on `PATH`.
+**both** the settings file and the slash-command files so that Claude Code can
+find the shim and core CLI without them being on `PATH`.
+
+> ⚠️ **`--local` output is machine-local — never commit it.** It bakes absolute
+> paths into `.claude/settings.json` *and* `.claude/commands/cadence-*.md`; both
+> break on any other clone or machine. The form that belongs in version control
+> is the **portable default** (`cadence …`), written when you run `install`
+> **without** `--local`. See [The --local warning](#the---local-warning).
 
 ### Options reference
 
@@ -94,17 +100,25 @@ node packages/host-claude-code/dist/cli.js install \
 
 ### The --local warning
 
-When `--local` is passed, `install` emits a stderr warning:
+When `--local` is passed, `install` emits a stderr warning naming **every
+surface it wrote** machine-absolute paths into — both the settings file and the
+slash-command files (each is listed only when actually written, so `--no-hooks`
+/ `--no-commands` narrow the list):
 
 ```
-warning: --local wrote machine-absolute paths into .claude/settings.json.
-Do NOT commit it — add it to .gitignore; other clones/machines cannot resolve
-these paths. Re-run install per machine instead.
+warning: --local wrote machine-absolute paths into .claude/settings.json and
+.claude/commands/cadence-*.md. Do NOT commit them — they cannot be resolved on
+other clones or machines. Add them to .gitignore and re-run `install --local`
+per machine, or run plain `install` (no --local) to write the portable
+`cadence` form that is safe to commit.
 ```
 
-This is a current-behavior carry-forward. Machine-absolute paths embedded in
-`settings.json` are not portable: every developer (and CI runner) must run
-`install --local` themselves after cloning. See
+Machine-absolute paths are not portable: every developer (and CI runner) must
+run `install --local` themselves after cloning — *or* the repo commits the
+portable default form (plain `install`) and nobody runs `--local` at all. The
+slash-command files are the easy-to-miss surface here: the warning used to name
+only `settings.json`, which is how machine-absolute `cadence-*.md` files once
+got committed and broke `/cadence-*` on every other machine. See
 [Gitignore guidance](#gitignore-guidance) below.
 
 ---
@@ -143,15 +157,16 @@ engine.
 
 ---
 
-## The 9 slash commands
+## The 12 slash commands
 
-`install` writes **9 slash commands** into `.claude/commands/`. Each file is
+`install` writes **12 slash commands** into `.claude/commands/`. Each file is
 tagged with `<!-- managed-by: cadence -->` so re-running install replaces them.
 If you remove that marker, install leaves the file untouched (treating it as
 user-customized).
 
 Source of truth: the `COMMANDS` array in
-`packages/host-claude-code/src/install-commands.ts`.
+`packages/host-claude-code/src/install-commands.ts` (the authoritative count —
+keep this section in sync with it).
 
 | Slash command | Engine command invoked | Purpose |
 |---|---|---|
@@ -164,9 +179,15 @@ Source of truth: the `COMMANDS` array in
 | `/cadence-done` | `cadence done $ARGUMENTS` | Mark a task DONE |
 | `/cadence-block` | `cadence block $ARGUMENTS` | Mark a task BLOCKED |
 | `/cadence-needs-context` | `cadence needs-context $ARGUMENTS` | Mark a task NEEDS_CONTEXT |
+| `/cadence-handoff` | `cadence handoff $ARGUMENTS` | Scaffold a SESSION handoff doc with machine facts pre-filled |
+| `/cadence-resume` | `cadence resume` | Replay the freshest session handoff + live context (read-only) |
+| `/cadence-scout` | `cadence recommend` | Divergent→convergent ideation dialogue that lands survivors as Praxis recommendations |
 
 Each command file's frontmatter sets `allowed-tools: Bash(cadence:*), Read`,
-limiting tool use to CADENCE-namespaced bash invocations and file reads.
+limiting tool use to CADENCE-namespaced bash invocations and file reads. The
+run-line is the portable `!cadence <subcommand>` form (resolved via `PATH`);
+under `--local` it becomes an absolute `!node /abs/.../cli/index.js <subcommand>`
+that must not be committed (see [The --local warning](#the---local-warning)).
 
 **Example usage in Claude Code:**
 
@@ -216,8 +237,11 @@ Source: `packages/host-claude-code/src/capabilities.ts`.
 
 ## Gitignore guidance
 
-When using `--local`, the generated `settings.json` (or `settings.local.json`
-if you used `--settings`) contains machine-absolute paths that are not portable.
+When using `--local`, **two** surfaces get machine-absolute paths that are not
+portable: the settings file (`settings.json`, or `settings.local.json` if you
+used `--settings`) **and** the slash-command files
+(`.claude/commands/cadence-*.md`). Both must be kept out of version control in
+that form.
 
 Recommended `.gitignore` entries for local-mode installs:
 
@@ -226,18 +250,31 @@ Recommended `.gitignore` entries for local-mode installs:
 .claude/settings.local.json
 ```
 
+For the slash commands, prefer **not** taking the `--local` form into git at
+all: commit the portable default (plain `install`, run-line `!cadence …`) and
+let each machine rely on `cadence` being on `PATH`. Only gitignore
+`.claude/commands/` if your repo genuinely needs per-machine command files
+(unusual — the portable form works for everyone with the CLI installed).
+
+> This repo (CADENCE dogfooding itself) commits the **portable** `.claude/commands/`
+> on purpose. They are regenerated with plain `install` — never `--local`. If you
+> ever see an absolute path in a committed `cadence-*.md`, it was a stray
+> `--local` run: regenerate with `node packages/host-claude-code/dist/cli.js
+> install --no-hooks` to restore the portable form.
+
 If you used the default `--settings .claude/settings.json` path but your team
 members each need their own local paths, consider switching to
 `--settings .claude/settings.local.json` so the committed `settings.json`
 remains portable (or empty) and local overrides stay gitignored.
 
-Each developer and each CI machine must run:
+Each developer and each CI machine that opts into `--local` must run:
 
 ```sh
 node packages/host-claude-code/dist/cli.js install --local
 ```
 
 after cloning, to regenerate the machine-absolute paths for that environment.
+Teams that commit the portable default form skip this entirely.
 
 ---
 
