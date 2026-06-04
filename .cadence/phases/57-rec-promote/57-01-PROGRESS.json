@@ -1,0 +1,27 @@
+{
+  "draftId": "57-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "applyRecommendationPromotion pure helper; 9 tests green (AC-1,2,4,6,7)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T20:36:55.862Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "runRecommendationPromotion + recommendation promote CLI w/ enum validation; CLI tests green (AC-5,AC-4,AC-1,AC-2)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/intelligence/store/recommendations.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/recommendation.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/recommendation-promote.test.ts"
+      ],
+      "updatedAt": "2026-06-04T20:39:42.432Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "e2e: promoted rec → milestone propose clusters it (AC-3)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-04T20:39:42.589Z"
+    }
+  }
+}

@@ -113,7 +113,7 @@ A 'cadence doctor' subcommand that checks a project's setup health: hooks wired 
 
 ## rec-20260604-004 — Recommendation promotion CLI — make milestone propose reachable
 
-- status: candidate
+- status: converted
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10

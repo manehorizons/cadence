@@ -205,7 +205,7 @@
       "title": "Recommendation promotion CLI — make milestone propose reachable",
       "summary": "Add CLI to advance a recommendation's status (candidate → accepted) and readiness (→ needs-decision/ready-for-milestone/ready-for-cadence-spec). Today the only rec status transition is 'convert' (→ converted), and readiness is write-once at 'add' time — so 'cadence milestone propose', which requires status=accepted AND readiness∈{ready-for-milestone,ready-for-cadence-spec}, can never be fed a manually-added rec. The whole milestone-clustering → accept → export-to-SPEC pipeline is unreachable from the CLI for manual recs.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -224,7 +224,8 @@
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-06-04T20:03:07.258Z",
-      "updatedAt": "2026-06-04T20:03:07.258Z"
+      "updatedAt": "2026-06-04T20:32:31.746Z",
+      "convertedToPhaseId": "57-rec-promote"
     }
   ]
 }

@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 55-intelligence-store-deep-imports
+**Active phase:** 57-rec-promote
 **Active draft:** (none)
 **Tier:** (n/a)
 
