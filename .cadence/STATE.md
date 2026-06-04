@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 52-preset-flag-rename
+**Active phase:** 53-cadence-scout
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
-- Token utilization: 85%
-- Subagent spawns this session: 92
+- Token utilization: 86%
+- Subagent spawns this session: 93
 - Last handoff: SESSION-2026-06-04-docs-portal-shipped.md
 
 ## Counts

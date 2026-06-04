@@ -22,6 +22,12 @@ interface CommandSpec {
   argumentHint?: string;
   cli: string; // suffix appended to cadenceCommand; may include $ARGUMENTS
   trailing?: string;
+  /**
+   * Multi-line prompt body rendered after the auto-run `!`-orient line. Used by
+   * dialogue commands (e.g. cadence-scout) that are a prompt template rather
+   * than a thin CLI shell-out. Thin commands leave this unset.
+   */
+  body?: string;
 }
 
 const COMMANDS: CommandSpec[] = [
@@ -101,6 +107,37 @@ const COMMANDS: CommandSpec[] = [
     cli: 'resume',
     trailing: 'Read the replayed handoff and continue from the documented next action.',
   },
+  {
+    name: 'cadence-scout',
+    description:
+      'Divergent→convergent ideation dialogue that lands survivors as Praxis recommendations',
+    argumentHint: '[topic]',
+    cli: 'recommend',
+    body: [
+      'You are running **CADENCE scout** — a divergent→convergent ideation',
+      'dialogue that turns a fuzzy problem into ranked Praxis recommendations.',
+      'Scout never drives the loop: it generates candidate directions and lands',
+      'them in the recommendation ledger. It allocates no loop id, runs no gate,',
+      'and never changes loop state.',
+      '',
+      '**Topic:** $ARGUMENTS — if empty, ask the user what space to scout.',
+      '',
+      'The ranked recommendations above (`!cadence recommend`) are your',
+      "orientation: don't re-propose work already captured or in flight.",
+      '',
+      '1. **Diverge.** Generate many candidate directions for the topic —',
+      '   breadth first, no commitment, no filtering yet. Aim wide.',
+      '2. **Converge.** Triage *with the user* down to the few worth keeping;',
+      '   drop duplicates of existing recs and merge near-duplicates.',
+      '3. **Land.** For each survivor run:',
+      '   `cadence recommendation add --title "<title>" --readiness raw-idea',
+      '   --evidence "Generated in /cadence-scout session on <topic>, <date>;',
+      '   siblings: <other rec ids>"` — use `--readiness needs-evidence` when the',
+      '   candidate is already well-formed.',
+      '4. **Hand back.** Point the user at `cadence recommend` to re-rank, then',
+      '   the existing rec → milestone → SPEC export path. Scout stops here.',
+    ].join('\n'),
+  },
 ];
 
 function renderFile(spec: CommandSpec, cadenceCommand: string): string {
@@ -117,6 +154,7 @@ function renderFile(spec: CommandSpec, cadenceCommand: string): string {
     `!${cadenceCommand} ${spec.cli}`.trimEnd(),
     '',
   ];
+  if (spec.body) lines.push(spec.body, '');
   if (spec.trailing) lines.push(spec.trailing, '');
   return lines.join('\n');
 }

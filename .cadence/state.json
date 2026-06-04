@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "52-preset-flag-rename",
+  "activePhase": "53-cadence-scout",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-04T01:47:31.863Z",
+  "draftReadAt": "2026-06-04T02:52:07.739Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
-    "tokenUtilization": 0.8500000000000005,
+    "tokenUtilization": 0.8600000000000005,
     "lastHandoff": "SESSION-2026-06-04-docs-portal-shipped.md",
-    "subagentSpawns": 92
+    "subagentSpawns": 93
   },
   "skillAudit": {
     "required": [],

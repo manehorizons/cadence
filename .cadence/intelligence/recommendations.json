@@ -25,16 +25,16 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "52-preset-flag-rename",
       "createdAt": "2026-06-02T01:17:46.143Z",
-      "updatedAt": "2026-06-04T01:46:21.549Z",
-      "convertedToPhaseId": "52-preset-flag-rename"
+      "updatedAt": "2026-06-04T01:46:21.549Z"
     },
     {
       "id": "rec-20260602-002",
       "title": "Add /cadence-scout host slash command (ideation dialogue → recs)",
       "summary": "A tenth Claude Code slash command (prompt template, installed by cadence-host-claude-code) that runs a CADENCE-aware divergent→convergent ideation dialogue and lands survivors as Praxis recommendations via existing 'cadence recommendation add'. Named scout (not brainstorm) — it is the opposite end of the superpowers brainstorming skill: divergent candidate generation into the ranked ledger, never design→plan. Zero core-engine change, no new gate/loop position/record type. Fills the gap of an in-tool structured ideation dialogue that today forces leaving the tool and hand-entering results.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
@@ -56,7 +56,8 @@
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-06-02T03:46:58.701Z",
-      "updatedAt": "2026-06-02T03:46:58.701Z"
+      "updatedAt": "2026-06-04T02:50:47.112Z",
+      "convertedToPhaseId": "53-cadence-scout"
     },
     {
       "id": "rec-20260602-003",
