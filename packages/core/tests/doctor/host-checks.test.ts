@@ -1,0 +1,125 @@
+import { describe, it, expect, afterEach } from 'vitest';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { runDoctor } from '../../src/doctor/run.js';
+
+const ENV = { nodeVersion: 'v20.11.0', platform: 'linux' as const };
+
+let active: Fixture | null = null;
+afterEach(async () => {
+  if (active) {
+    await active.cleanup();
+    active = null;
+  }
+});
+
+async function writeCommand(
+  root: string,
+  name: string,
+  runLine: string,
+): Promise<void> {
+  const dir = join(root, '.claude', 'commands');
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    join(dir, name),
+    `---\ndescription: x\nallowed-tools: Bash(cadence:*), Read\n---\n\n<!-- managed-by: cadence -->\n\n${runLine}\n`,
+  );
+}
+
+describe('runDoctor — setup + host checks', () => {
+  it('AC-6: non-portable run-line → host-commands warning naming the file', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeCommand(
+      active.root,
+      'cadence-progress.md',
+      '!node C:\\Users\\x\\dist\\cli\\index.js progress',
+    );
+    const report = await runDoctor(active.root, ENV);
+    const hc = report.checks.find((c) => c.name === 'host-commands');
+    expect(hc?.severity).toBe('warning');
+    expect(hc?.detail).toMatch(/cadence-progress\.md/);
+    expect(hc?.remediation).toMatch(/--local/);
+    expect(report.ok).toBe(true); // a warning must not fail the report
+  });
+
+  it('AC-6: portable run-lines → host-commands ok', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeCommand(active.root, 'cadence-progress.md', '!cadence progress');
+    await writeCommand(
+      active.root,
+      'cadence-draft.md',
+      '!cadence draft new $ARGUMENTS',
+    );
+    const report = await runDoctor(active.root, ENV);
+    expect(
+      report.checks.find((c) => c.name === 'host-commands')?.severity,
+    ).toBe('ok');
+  });
+
+  it('git-hooks: .git present without core.hooksPath → warning', async () => {
+    active = await tempRepo({ initialized: true });
+    await mkdir(join(active.root, '.git'), { recursive: true });
+    await writeFile(
+      join(active.root, '.git', 'config'),
+      '[core]\n\trepositoryformatversion = 0\n',
+    );
+    const report = await runDoctor(active.root, ENV);
+    expect(report.checks.find((c) => c.name === 'git-hooks')?.severity).toBe(
+      'warning',
+    );
+    expect(report.ok).toBe(true);
+  });
+
+  it('git-hooks: core.hooksPath=.githooks → ok', async () => {
+    active = await tempRepo({ initialized: true });
+    await mkdir(join(active.root, '.git'), { recursive: true });
+    await writeFile(
+      join(active.root, '.git', 'config'),
+      '[core]\n\trepositoryformatversion = 0\n\thooksPath = .githooks\n',
+    );
+    const report = await runDoctor(active.root, ENV);
+    expect(report.checks.find((c) => c.name === 'git-hooks')?.severity).toBe(
+      'ok',
+    );
+  });
+
+  it('no .git / no .claude → git-hooks, host-hooks, host-commands all ok (n/a)', async () => {
+    active = await tempRepo({ initialized: true });
+    const report = await runDoctor(active.root, ENV);
+    for (const n of ['git-hooks', 'host-hooks', 'host-commands']) {
+      expect(report.checks.find((c) => c.name === n)?.severity).toBe('ok');
+    }
+    expect(report.ok).toBe(true);
+  });
+
+  it('host-hooks: settings.json without managed entries → warning', async () => {
+    active = await tempRepo({ initialized: true });
+    await mkdir(join(active.root, '.claude'), { recursive: true });
+    await writeFile(
+      join(active.root, '.claude', 'settings.json'),
+      JSON.stringify({ hooks: {} }),
+    );
+    const report = await runDoctor(active.root, ENV);
+    expect(report.checks.find((c) => c.name === 'host-hooks')?.severity).toBe(
+      'warning',
+    );
+  });
+
+  it('host-hooks: settings.json with a _managedBy cadence entry → ok', async () => {
+    active = await tempRepo({ initialized: true });
+    await mkdir(join(active.root, '.claude'), { recursive: true });
+    await writeFile(
+      join(active.root, '.claude', 'settings.json'),
+      JSON.stringify({
+        hooks: {
+          Stop: [{ _managedBy: 'cadence', hooks: [{ type: 'command', command: 'x' }] }],
+        },
+      }),
+    );
+    const report = await runDoctor(active.root, ENV);
+    expect(report.checks.find((c) => c.name === 'host-hooks')?.severity).toBe(
+      'ok',
+    );
+  });
+});
