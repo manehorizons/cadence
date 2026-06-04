@@ -13,6 +13,17 @@ on:
       - 'CODE_OF_CONDUCT.md'
       - 'packages/*/src/**'
       - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'DESIGN.md'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'packages/*/src/**'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -20,8 +31,9 @@ permissions:
   pages: write
   id-token: write
 
+# Scope by ref so a PR build can't cancel an in-flight main deploy.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -35,6 +47,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # The API docs are generated from packages/*/src via typedoc, which must
+      # resolve those packages' imports: external deps (e.g. zod) need the
+      # monorepo installed at the repo root, and cross-package imports (e.g.
+      # @manehorizons/cadence-types) resolve via each package's built
+      # dist/*.d.ts — so install AND build the workspace before the site build.
+      # The isolated website install alone is not enough.
+      - name: Install monorepo deps (for typedoc source resolution)
+        run: pnpm install --frozen-lockfile
+      - name: Build packages (typedoc resolves @manehorizons/* via built declarations)
+        run: pnpm build
       - name: Install (website)
         working-directory: website
         run: pnpm install --frozen-lockfile
@@ -51,6 +73,8 @@ jobs:
 
   deploy:
     needs: build
+    # Build runs on PRs (validation), but only main/dispatch deploys to Pages.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
