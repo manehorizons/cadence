@@ -84,7 +84,7 @@ When e
 Then f
 `;
 
-describe('cadence draft new (Phase 38.1 — SPEC→DRAFT auto-seed)', { timeout: 60_000 }, () => {
+describe('cadence draft new (Phase 38.1 — SPEC→DRAFT auto-seed)', () => {
   it('AC-2: approved same-id SPEC → DRAFT seeded + stdout notice', async () => {
     active = await tempRepo({ initialized: true });
     await initGitRepo(active.root);

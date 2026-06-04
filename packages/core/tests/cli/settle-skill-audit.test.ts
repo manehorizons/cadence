@@ -86,7 +86,7 @@ const summaryPath = (root: string) =>
   join(root, '.cadence/phases/01-foundation/01-01-SUMMARY.json');
 const logPath = (root: string) => join(root, '.cadence/anomalies.log');
 
-describe('cadence settle run — required-skill gate (Phase 34.1)', { timeout: 30_000 }, () => {
+describe('cadence settle run — required-skill gate (Phase 34.1)', () => {
   it('AC-3/AC-4 (a): effective-empty → inert pass, no anomaly', async () => {
     active = await tempRepo({ initialized: true });
     await arrange(active.root);
