@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-02T01:43:16.032Z",
+  "generatedAt": "2026-06-04T19:32:18.522Z",
   "ranked": [
     {
-      "id": "rec-20260602-001",
-      "title": "Rename 'cadence init --profile' flag to '--preset'",
-      "raw": 22.7,
-      "score": 68,
+      "id": "rec-20260604-003",
+      "title": "cadence doctor — diagnose project setup",
+      "raw": 13.7,
+      "score": 55,
       "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
+      "readiness": "needs-evidence",
       "priority": "medium",
       "decayState": "fresh",
       "terms": [
@@ -29,8 +29,8 @@
           "value": 0
         },
         {
-          "label": "ready ready-for-cadence-spec",
-          "value": 10
+          "label": "ready needs-evidence",
+          "value": 1
         },
         {
           "label": "decay fresh",
@@ -42,19 +42,142 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260604-001",
+      "title": "Expose CADENCE as an MCP server surface",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260604-002",
+      "title": "Host-adapter authoring guide + stable capabilities contract",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260602-003",
+      "title": "[Deferred] First-class scout-session grouping on recommendations",
+      "raw": 10.7,
+      "score": 50,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
     }
   ],
   "parked": [],
   "needsAttention": [],
   "advisory": {
-    "kind": "spec-new",
-    "primary": "cadence spec new"
+    "kind": "top-recommendation",
+    "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 1,
-    "ranked": 1,
+    "total": 7,
+    "ranked": 4,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 0
+    "excluded": 3
   }
 }

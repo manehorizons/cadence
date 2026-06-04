@@ -26,6 +26,7 @@ Two CLIs are documented here:
   - [settle](#settle)
   - [progress](#progress)
   - [status](#status)
+  - [doctor](#doctor)
   - [recommendation](#recommendation)
   - [inspect](#inspect)
   - [recommend](#recommend)
@@ -78,6 +79,7 @@ resume
 assumption
 decision
 intelligence
+doctor
 <!-- cadence:commands:end -->
 
 ---
@@ -573,6 +575,49 @@ List recorded anomaly events from .cadence/anomalies.log
 events. Anomalies are recorded whenever a bypass flag (`--force`,
 `--allow-*`) is used, or when the verifier detects a problem. The `--follow`
 flag tails the log in real time; it requires a TTY.
+
+---
+
+### doctor
+
+```
+Usage: cadence doctor [options]
+
+Diagnose this project’s CADENCE setup and report problems
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — runs a set of deterministic, offline health checks on the
+project's CADENCE setup and reports each as `ok` / `warning` / `error` with a
+one-line detail and (for problems) a remediation hint. Pure filesystem + config
+inspection: no network, no AI verifier, no host process spawn, and it never
+touches loop state. **Report-only** — it diagnoses and points at the fix; it
+does not auto-repair.
+
+v1 check set:
+
+| Check | What it verifies | Fail severity |
+|---|---|---|
+| `node` | Node major ≥ 20 (the `engines` floor) | error |
+| `initialized` | `.cadence/` exists and `config.json` is valid | error |
+| `state` | `state.json` parses; `STATE.md` (derived view) present | error / warning |
+| `git-hooks` | *(git repos)* `core.hooksPath` resolves to `.githooks` (the pre-push gate) | warning |
+| `host-hooks` | *(if `.claude/settings.json`)* CADENCE-managed hook entries present | warning |
+| `host-commands` | *(if `.claude/commands/`)* every managed `cadence-*.md` run-line is portable (no machine-absolute path) | warning |
+
+Host checks run only when the relevant files exist; their absence is not a
+problem.
+
+**Exit codes** — `0` when no `error`-severity problem exists (warnings do not
+fail), `1` otherwise. Safe to use as a CI gate: `cadence doctor` will fail the
+job only on hard errors. With `--json`, stdout is a single object
+`{ ok, checks: [{ name, status, severity, detail, remediation }] }`.
 
 ---
 

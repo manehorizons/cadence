@@ -55,9 +55,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "53-cadence-scout",
       "createdAt": "2026-06-02T03:46:58.701Z",
-      "updatedAt": "2026-06-04T02:50:47.112Z",
-      "convertedToPhaseId": "53-cadence-scout"
+      "updatedAt": "2026-06-04T02:50:47.112Z"
     },
     {
       "id": "rec-20260602-003",
@@ -121,6 +121,110 @@
       "convertedToPhaseId": "50-windows-ci-leg",
       "createdAt": "2026-06-03T21:05:40.744Z",
       "updatedAt": "2026-06-03T21:43:16.540Z"
+    },
+    {
+      "id": "rec-20260604-001",
+      "title": "Expose CADENCE as an MCP server surface",
+      "summary": "Ship an MCP server that exposes the DRAFT→BUILD→SETTLE loop as MCP tools, so any MCP-capable agent (Claude Desktop/Code, Cursor, etc.) can drive CADENCE without a bespoke per-host adapter. Could reframe the whole multi-host question — one surface instead of N adapters.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packages/core",
+        "packages/host-claude-code"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260604-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-04T19:31:58.130Z",
+      "updatedAt": "2026-06-04T19:31:58.130Z"
+    },
+    {
+      "id": "rec-20260604-002",
+      "title": "Host-adapter authoring guide + stable capabilities contract",
+      "summary": "Document the host-adapter contract (event-map, shim, capabilities) and publish an authoring guide so the community can write adapters (Codex, Cursor, Copilot CLI) instead of the maintainer building each. Force-multiplier: scales the ecosystem without solo effort. Codex host was started then archived (phases 02→11), so the contract exists implicitly — this makes it explicit and reusable.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "packages/host-claude-code"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260604-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-04T19:32:11.371Z",
+      "updatedAt": "2026-06-04T19:32:11.371Z"
+    },
+    {
+      "id": "rec-20260604-003",
+      "title": "cadence doctor — diagnose project setup",
+      "summary": "A 'cadence doctor' subcommand that checks a project's setup health: hooks wired into settings.json, hooksPath configured, Node >=20, config schema valid, and slash-command run-lines portable (no machine-absolute paths). Surfaces silent misconfig that otherwise looks like CADENCE being broken.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packages/core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260604-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "56-cadence-doctor",
+      "createdAt": "2026-06-04T19:32:11.537Z",
+      "updatedAt": "2026-06-04T19:53:54.212Z"
+    },
+    {
+      "id": "rec-20260604-004",
+      "title": "Recommendation promotion CLI — make milestone propose reachable",
+      "summary": "Add CLI to advance a recommendation's status (candidate → accepted) and readiness (→ needs-decision/ready-for-milestone/ready-for-cadence-spec). Today the only rec status transition is 'convert' (→ converted), and readiness is write-once at 'add' time — so 'cadence milestone propose', which requires status=accepted AND readiness∈{ready-for-milestone,ready-for-cadence-spec}, can never be fed a manually-added rec. The whole milestone-clustering → accept → export-to-SPEC pipeline is unreachable from the CLI for manual recs.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packages/core",
+        "packages/types"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260604-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-04T20:03:07.258Z",
+      "updatedAt": "2026-06-04T20:03:07.258Z"
     }
   ]
 }
