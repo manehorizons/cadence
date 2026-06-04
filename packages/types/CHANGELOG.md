@@ -1,5 +1,49 @@
 # @manehorizons/cadence-types
 
+## 1.7.0
+
+### Minor Changes
+
+- d478355: Add `cadence doctor` — diagnose a project's CADENCE setup (phase 56).
+
+  A new deterministic, offline, report-only command that health-checks a project
+  and reports each finding as `ok`/`warning`/`error` with a remediation hint:
+  Node floor, `.cadence/` + config validity, state-file integrity, the
+  `.githooks` pre-push gate (`core.hooksPath`), Claude Code managed hooks, and —
+  the check this directly earned — slash-command run-line portability (no
+  machine-absolute paths). Human output by default, `--json` for scripting/CI;
+  exits non-zero only on `error`-severity findings so it is usable as a CI gate.
+  `cadence-types` and `cadence-host-claude-code` are bumped only to keep the three
+  public packages in lockstep; neither changed.
+
+- 05d6ea4: Add `cadence recommendation promote` — advance a recommendation's status and/or
+  readiness (phase 57).
+
+  Closes the gap where `milestone propose` (which requires `status=accepted` +
+  `readiness∈{ready-for-milestone,ready-for-cadence-spec}`) was unreachable for
+  manually-added recommendations: `convert` was the only status transition and
+  `readiness` was write-once at `add`. `recommendation promote <id>
+[--status <s>] [--readiness <r>]` sets either/both, validated against the
+  status/readiness enums. It is independent of `convert` — it never sets
+  `convertedToPhaseId` and refuses `--status converted` and terminal
+  (`converted`/`rejected`) recs. `cadence-types` and `cadence-host-claude-code`
+  are bumped only to keep the three public packages in lockstep; neither changed.
+
+### Patch Changes
+
+- b3c4008: Fix the `install --local` warning so it names **every** surface it wrote
+  machine-absolute paths into — not just `settings.json`.
+
+  Previously the warning mentioned only `.claude/settings.json`, so the slash
+  commands written to `.claude/commands/cadence-*.md` under `--local` were a
+  silent offender: their absolute `node <abs>/cli/index.js` paths could be
+  committed unflagged and then failed to resolve on every other clone or machine.
+  The warning now enumerates each surface actually written (settings file and/or
+  command files, narrowed by `--no-hooks` / `--no-commands`) and points at the
+  portable plain-`install` form that is safe to commit. Docs (`docs/claude-code.md`)
+  updated to match. `cadence-core` and `cadence-types` are bumped only to keep the
+  three public packages in lockstep; neither changed.
+
 ## 1.6.1
 
 ### Patch Changes
