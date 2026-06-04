@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 57-rec-promote
+**Active phase:** 58-mcp-server
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
-- Token utilization: 95%
-- Subagent spawns this session: 99
-- Last handoff: SESSION-2026-06-04-phase-54-store-split-shipped.md
+- Token utilization: 100%
+- Subagent spawns this session: 105
+- Last handoff: SESSION-2026-06-04-v1.7.0-shipped.md
 
 ## Counts
 - Open drafts: 0

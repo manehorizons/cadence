@@ -127,7 +127,7 @@
       "title": "Expose CADENCE as an MCP server surface",
       "summary": "Ship an MCP server that exposes the DRAFT→BUILD→SETTLE loop as MCP tools, so any MCP-capable agent (Claude Desktop/Code, Cursor, etc.) can drive CADENCE without a bespoke per-host adapter. Could reframe the whole multi-host question — one surface instead of N adapters.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -146,7 +146,8 @@
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-06-04T19:31:58.130Z",
-      "updatedAt": "2026-06-04T19:31:58.130Z"
+      "updatedAt": "2026-06-04T22:36:03.931Z",
+      "convertedToPhaseId": "58-mcp-server"
     },
     {
       "id": "rec-20260604-002",
@@ -223,9 +224,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "57-rec-promote",
       "createdAt": "2026-06-04T20:03:07.258Z",
-      "updatedAt": "2026-06-04T20:32:31.746Z",
-      "convertedToPhaseId": "57-rec-promote"
+      "updatedAt": "2026-06-04T20:32:31.746Z"
     }
   ]
 }

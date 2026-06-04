@@ -1,48 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-04T19:32:18.522Z",
+  "generatedAt": "2026-06-04T21:59:24.842Z",
   "ranked": [
-    {
-      "id": "rec-20260604-003",
-      "title": "cadence doctor — diagnose project setup",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
     {
       "id": "rec-20260604-001",
       "title": "Expose CADENCE as an MCP server surface",
@@ -174,10 +133,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 7,
-    "ranked": 4,
+    "total": 8,
+    "ranked": 3,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 3
+    "excluded": 5
   }
 }
