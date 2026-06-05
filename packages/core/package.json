@@ -54,7 +54,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.96.0",
+    "@anthropic-ai/sdk": "^0.100.1",
     "@manehorizons/cadence-types": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^13.0.0",
