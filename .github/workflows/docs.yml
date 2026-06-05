@@ -60,7 +60,7 @@ jobs:
       - name: Install (website)
         working-directory: website
         run: pnpm install --frozen-lockfile
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - name: Test sync script
         working-directory: website
         run: pnpm test
