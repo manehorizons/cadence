@@ -104,13 +104,21 @@ completion (phases 49/50) and the docs portal (phase 51). Then: `1.6.1`
 (phase 57) + an `install --local` portability fix. `1.8.0` (2026-06-05) —
 `cadence mcp serve`, an MCP server surface (a third drive surface alongside CLI
 + Claude Code hooks; phase 58). `1.9.0` (2026-06-05) — drift-decides brief/full
-`cadence resume` (phase 59). The latest published version is **`1.10.0`**
-(2026-06-05, tag `v1.10.0` + provenance, PR #51, merge commit `9b85b5f`):
-changesets bumped the three packages `1.9.0 → 1.10.0` for the explicit, versioned
-**host-adapter contract** in `cadence-types` (phase 60: `HostAdapter`,
-`HostCapabilitiesZ`, `ADAPTER_CONTRACT_VERSION`, `ExtractedPayload`) +
-`claudeCodeAdapter` conformance, folding in the `commander` 13 → 14 bump (#49;
-commander pinned `^14` to hold the Node `>=20` floor). Releases are cut with
+`cadence resume` (phase 59). `1.10.0` (2026-06-05, tag `v1.10.0` + provenance,
+PR #51, merge commit `9b85b5f`) — changesets bumped the three packages
+`1.9.0 → 1.10.0` for the explicit, versioned **host-adapter contract** in
+`cadence-types` (phase 60: `HostAdapter`, `HostCapabilitiesZ`,
+`ADAPTER_CONTRACT_VERSION`, `ExtractedPayload`) + `claudeCodeAdapter`
+conformance, folding in the `commander` 13 → 14 bump (#49; commander pinned
+`^14` to hold the Node `>=20` floor). The latest published version is
+**`1.11.0`** (2026-06-05, tag `v1.11.0` + provenance): changesets bumped the
+three packages `1.10.0 → 1.11.0` for two adoption-layer features — **phase 61**
+first-class **scout-session grouping** (an optional `scoutId` on recommendations
++ `recommendation add --scout-id`, a `recommend --scout-id <id>` cluster filter,
+a `- scout:` render line, and `/cadence-scout` auto-minting a session id; PR #53)
+and **phase 62** the guided **first-loop nudge** in `cadence init` output (a
+numbered "Your first loop" block + `cadence progress` escape hatch; PR #54).
+Releases are cut with
 [changesets](https://github.com/changesets/changesets) and the manual `Release`
 workflow (`.github/workflows/release.yml`, `workflow_dispatch`).
 
