@@ -76,6 +76,28 @@ describe('cadence recommendation', () => {
     expect(md).toMatch(/Approved Praxis design requires milestone pre-mortems\./);
   });
 
+  it('AC-2: --scout-id persists scoutId on the recommendation', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'recommendation-scout-cli' });
+
+    const r = await run([
+      'recommendation', 'add',
+      '--title', 'scout survivor',
+      '--summary', 'landed by a scout session',
+      '--readiness', 'raw-idea',
+      '--scout-id', 'scout-20260605-1430',
+    ], active.root);
+
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+
+    const raw = await readFile(
+      join(active.root, '.cadence', 'intelligence', 'recommendations.json'),
+      'utf8',
+    );
+    const parsed = JSON.parse(raw);
+    expect(parsed.recommendations[0].scoutId).toBe('scout-20260605-1430');
+  });
+
   it('lists recommendations', async () => {
     active = await tempRepo({ initialized: true });
     await run([

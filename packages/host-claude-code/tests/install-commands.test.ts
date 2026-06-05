@@ -73,6 +73,21 @@ describe('installCommands', () => {
     expect(scout).not.toMatch(/draft new|draft approve|settle run/);
   });
 
+  it('AC-5 (phase 61): scout body mints a session id and passes --scout-id on each add', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+    const scout = await readFile(
+      join(root, '.claude/commands/cadence-scout.md'),
+      'utf8',
+    );
+    // Documents the scout-YYYYMMDD-HHMM convention...
+    expect(scout).toMatch(/scout-YYYYMMDD-HHMM/);
+    // ...and wires --scout-id into the landing command.
+    expect(scout).toMatch(/--scout-id/);
+    // The existing --evidence provenance note must remain.
+    expect(scout).toMatch(/--evidence/);
+  });
+
   it('AC-3: a user-overridden cadence-scout.md survives re-install', async () => {
     const root = await tempDir();
     await mkdir(join(root, '.claude/commands'), { recursive: true });

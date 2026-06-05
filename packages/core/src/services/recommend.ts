@@ -8,11 +8,15 @@ import type { CommandIO, CommandResult } from './io.js';
  */
 export async function recommendService(
   repoRoot: string,
-  args: { json?: boolean },
+  args: { json?: boolean; scoutId?: string },
   io: CommandIO,
 ): Promise<CommandResult> {
   try {
-    const report = await runRecommend(repoRoot);
+    const report = await runRecommend(
+      repoRoot,
+      undefined,
+      args.scoutId ? { scoutId: args.scoutId } : {},
+    );
     if (args.json) {
       io.out(JSON.stringify(report) + '\n');
     } else {

@@ -48,6 +48,16 @@ describe('renderRecommendMd', () => {
     expect(md).toMatch(/total 3 · ranked 1 · parked 1 · needs-attention 1 · excluded 0/);
   });
 
+  it('AC-3: renders a scout line for a ranked rec with a scoutId, none without', () => {
+    const withScout = renderRecommendMd({
+      ...base,
+      ranked: [{ ...base.ranked[0]!, scoutId: 'scout-20260605-1430' }],
+    });
+    expect(withScout).toMatch(/- scout: scout-20260605-1430/);
+    // the default base rec has no scoutId → no scout line
+    expect(renderRecommendMd(base)).not.toMatch(/- scout:/);
+  });
+
   it('renders the empty-ledger shape', () => {
     const md = renderRecommendMd({
       ...base,

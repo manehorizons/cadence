@@ -234,6 +234,33 @@ describe('synthesizeRecommendation', () => {
     const report = synthesizeRecommendation([a, b, c], idleBackend, new Date());
     expect(report.ranked.map((r) => r.id)).toEqual(['z', 'a', 'b']);
   });
+
+  it('AC-3: carries scoutId into the ranked item', () => {
+    const recs = [mkRec({ id: 'hi', leverageScore: 9, scoutId: 'scout-A' })];
+    const report = synthesizeRecommendation(recs, idleBackend, new Date());
+    expect(report.ranked[0]?.scoutId).toBe('scout-A');
+  });
+
+  it('AC-3: omits scoutId on the ranked item when the rec has none', () => {
+    const recs = [mkRec({ id: 'hi', leverageScore: 9 })];
+    const report = synthesizeRecommendation(recs, idleBackend, new Date());
+    expect(report.ranked[0]?.scoutId).toBeUndefined();
+  });
+
+  it('AC-4: scoutId filter narrows the report to one cluster, totals scoped', () => {
+    const recs = [
+      mkRec({ id: 'a1', leverageScore: 9, scoutId: 'scout-A' }),
+      mkRec({ id: 'a2', leverageScore: 8, scoutId: 'scout-A' }),
+      mkRec({ id: 'b1', leverageScore: 7, scoutId: 'scout-B' }),
+      mkRec({ id: 'none', leverageScore: 6 }),
+    ];
+    const report = synthesizeRecommendation(recs, idleBackend, new Date(), {
+      scoutId: 'scout-A',
+    });
+    expect(report.ranked.map((r) => r.id)).toEqual(['a1', 'a2']);
+    expect(report.totals.total).toBe(2);
+    expect(report.totals.ranked).toBe(2);
+  });
 });
 
 let activeRec: Fixture | null = null;

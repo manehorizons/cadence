@@ -173,6 +173,36 @@ describe('intelligence store', () => {
     expect(rendered).toMatch(/ready: raw-idea/);
     expect(rendered).toMatch(/Requested during Praxis design\./);
   });
+
+  it('AC-2: persists scoutId when supplied', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'intel-store-scout' });
+    const rec = await addRecommendation(active.root, {
+      title: 'scout survivor',
+      summary: 'landed by a scout session',
+      priority: 'low',
+      readiness: 'raw-idea',
+      affectedAreas: [],
+      affectedFiles: [],
+      scoutId: 'scout-20260605-1430',
+    });
+    expect(rec.scoutId).toBe('scout-20260605-1430');
+    const ledger = await readRecommendationLedger(active.root);
+    expect(ledger.recommendations[0]?.scoutId).toBe('scout-20260605-1430');
+  });
+
+  it('AC-2: scoutId key is absent when not supplied', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'intel-store-noscout' });
+    const rec = await addRecommendation(active.root, {
+      title: 'no scout',
+      summary: 'landed manually',
+      priority: 'low',
+      readiness: 'raw-idea',
+      affectedAreas: [],
+      affectedFiles: [],
+    });
+    expect(rec.scoutId).toBeUndefined();
+    expect('scoutId' in rec).toBe(false);
+  });
 });
 
 function mkRec(id: string): Recommendation {

@@ -63,6 +63,10 @@ export const RecommendationZ = z.object({
   // Slice 34.1: exact-optional FK to the CADENCE phase this rec was converted
   // into. Set only by `cadence recommendation convert`; never auto-derived.
   convertedToPhaseId: z.string().optional(),
+  // Phase 61: optional grouping key linking the N recs landed by one
+  // `/cadence-scout` session. Loose validation (non-empty string); the
+  // `scout-YYYYMMDD-HHMM` convention lives in the scout prompt + docs, not here.
+  scoutId: z.string().min(1).optional(),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
 });
@@ -245,6 +249,9 @@ export const RecommendationRankZ = z.object({
   decayState: RecommendationDecayStateZ,
   terms: z.array(ScoreTermZ),
   suggestedBackendAction: z.string().optional(),
+  // Phase 61: carried through from the recommendation so the report renderer
+  // can show a `scout:` line and the `--scout-id` filter can scope the view.
+  scoutId: z.string().min(1).optional(),
 });
 export type RecommendationRank = z.infer<typeof RecommendationRankZ>;
 

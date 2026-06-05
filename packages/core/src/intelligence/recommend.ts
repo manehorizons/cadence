@@ -161,9 +161,15 @@ export function synthesizeRecommendation(
   recs: Recommendation[],
   backend: BackendStatus,
   now: Date = new Date(),
+  filter: { scoutId?: string } = {},
 ): RecommendationReport {
+  // Phase 61: when a scoutId filter is set, scope the whole report to that
+  // cluster before partition so totals reflect the scoped set.
+  const scoped = filter.scoutId
+    ? recs.filter((r) => r.scoutId === filter.scoutId)
+    : recs;
   const { ranked, parked, needsAttention, excludedCount } =
-    partitionLedger(recs);
+    partitionLedger(scoped);
 
   const scored = ranked
     .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
@@ -190,6 +196,9 @@ export function synthesizeRecommendation(
     if (s.rec.suggestedBackendAction) {
       rank.suggestedBackendAction = s.rec.suggestedBackendAction;
     }
+    if (s.rec.scoutId) {
+      rank.scoutId = s.rec.scoutId;
+    }
     return rank;
   });
 
@@ -215,7 +224,7 @@ export function synthesizeRecommendation(
     })),
     advisory,
     totals: {
-      total: recs.length,
+      total: scoped.length,
       ranked: rankedOut.length,
       parked: parked.length,
       needsAttention: needsAttention.length,
@@ -227,10 +236,16 @@ export function synthesizeRecommendation(
 export async function runRecommend(
   root: string,
   now: Date = new Date(),
+  filter: { scoutId?: string } = {},
 ): Promise<RecommendationReport> {
   const ledger = await readRecommendationLedger(root);
   const backend = await cadenceBackend.readStatus(root);
-  const report = synthesizeRecommendation(ledger.recommendations, backend, now);
+  const report = synthesizeRecommendation(
+    ledger.recommendations,
+    backend,
+    now,
+    filter,
+  );
 
   const dir = intelligenceDir(root);
   await mkdir(dir, { recursive: true });

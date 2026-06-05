@@ -25,6 +25,7 @@ export type AddRecommendationInput = {
   affectedAreas: string[];
   affectedFiles: string[];
   evidenceSummary?: string;
+  scoutId?: string;
 };
 
 export async function addRecommendation(
@@ -66,6 +67,8 @@ export async function addRecommendation(
     createdAt: ts,
     updatedAt: ts,
   };
+  // Phase 61: exact-optional — only set the key when supplied.
+  if (input.scoutId) rec.scoutId = input.scoutId;
   if (evidence) evidenceLedger.evidence.push(evidence);
   ledger.recommendations.push(rec);
   await writeIntelligenceLedgers(root, ledger, evidenceLedger);

@@ -660,6 +660,7 @@ cadence recommendation add \
 | `--area <areas>` | Comma-separated affected areas. |
 | `--file <files>` | Comma-separated affected file paths. |
 | `--evidence <summary>` | Short evidence note. |
+| `--scout-id <id>` | Group this rec under a scout-session id so the recs from one `/cadence-scout` run are queryable as a cluster. Convention: `scout-YYYYMMDD-HHMM` (not enforced). |
 
 Writes:
 
@@ -841,6 +842,7 @@ Rank actionable strategic recommendations and advise the next move (read-only)
 | Option | Description |
 |---|---|
 | `--json` | Emit machine-readable JSON instead of rendered text |
+| `--scout-id <id>` | Narrow the report to one scout-session cluster (recs whose `scoutId` matches); totals reflect the scoped set. |
 | `-h, --help` | Display help for command |
 
 **Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
