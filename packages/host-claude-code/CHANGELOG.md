@@ -1,5 +1,21 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.9.0
+
+### Minor Changes
+
+- e95def0: `cadence resume` now defaults to brief output when live state matches the
+  handoff doc, and auto-promotes to full output (whole doc + live-context replay)
+  on drift. New `--full` / `--brief` flags force a mode; `--json` gains a `mode`
+  field and `context` is now nullable (null in brief mode, since the live-context
+  recompute is skipped).
+
+### Patch Changes
+
+- Updated dependencies [e95def0]
+  - @manehorizons/cadence-core@1.9.0
+  - @manehorizons/cadence-types@1.9.0
+
 ## 1.8.0
 
 ### Minor Changes
