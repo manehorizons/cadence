@@ -57,7 +57,7 @@
     "@anthropic-ai/sdk": "^0.100.1",
     "@manehorizons/cadence-types": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "commander": "^13.0.0",
+    "commander": "^14.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
