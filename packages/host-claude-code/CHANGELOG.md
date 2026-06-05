@@ -1,5 +1,29 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.11.0
+
+### Minor Changes
+
+- First-class scout-session grouping + guided first-loop onboarding nudge.
+  - **Phase 61 — scout-session grouping (`scoutId`).** An optional `scoutId` on
+    recommendations groups the N recs landed by one `/cadence-scout` session so
+    they are queryable as a set: a `--scout-id` flag on `cadence recommendation
+add`, a `recommend --scout-id <id>` cluster filter (scopes the report +
+    totals), a `- scout: <id>` render line, and `/cadence-scout` auto-minting a
+    `scout-YYYYMMDD-HHMM` session id. Additive — reports for recs without a
+    `scoutId` are unchanged. (`cadence-types`: optional `scoutId` on
+    `RecommendationZ` + `RecommendationRankZ`.)
+  - **Phase 62 — guided first-loop nudge in `cadence init`.** The end of `cadence
+init` now prints a numbered "Your first loop" block (draft new → edit →
+    approve → done → settle) plus a `cadence progress` escape hatch, replacing the
+    thin `Next: edit ROADMAP.md` line. Output-text only.
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.11.0
+  - @manehorizons/cadence-types@1.11.0
+
 ## 1.10.0
 
 ### Minor Changes
