@@ -24,6 +24,7 @@ import { registerIntelligenceCommand } from './commands/intelligence.js';
 import { registerDoctorCommand } from './commands/doctor.js';
 import { registerMcpCommand } from './commands/mcp.js';
 import { registerTutorialCommand } from './commands/tutorial.js';
+import { registerExplainCommand } from './commands/explain.js';
 
 export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
@@ -51,4 +52,5 @@ export function registerAllCommands(program: Command): void {
   registerDoctorCommand(program);
   registerMcpCommand(program);
   registerTutorialCommand(program);
+  registerExplainCommand(program);
 }

@@ -83,6 +83,7 @@ intelligence
 doctor
 mcp
 tutorial
+explain
 <!-- cadence:commands:end -->
 
 ---
@@ -1268,6 +1269,35 @@ a TTY it pauses between steps for the reader; with `--no-pause` (or any non-TTY
 stdin) it auto-advances to completion.
 
 **Exit codes** — `0` on a clean loop; non-zero if a composed step fails.
+
+---
+
+### explain
+
+```
+Usage: cadence explain [concept]
+
+Print an in-terminal explanation of a CADENCE concept
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `[concept]` | Concept to explain — `loop`, `gates`, `tiers`, or `profiles` (aliases `gate`/`tier`/`profile` and any casing resolve). Omit to list the available concepts. |
+
+**Behavior** — prints a curated, terminal-sized explanation of a core CADENCE
+concept so you can learn the model without leaving the terminal. The content is
+**embedded in the binary** (distilled from [docs/concepts.md](../concepts.md)),
+never read from disk at runtime, so it works identically from any install —
+including an `npx` one where the `docs/` tree is not shipped. Run bare
+(`cadence explain`) to list the concepts with one-line blurbs; an unrecognized
+name prints that list plus a nearest-match "did you mean …?" nudge. A coverage
+test (`tests/cli/explain.test.ts`, AC-5) guards that every advertised concept
+keeps non-empty content.
+
+**Exit codes** — `0` for a known concept or the bare list; `1` for an unknown
+concept (after printing the list + suggestion).
 
 ---
 
