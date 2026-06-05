@@ -85,9 +85,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "61-scout-session-grouping",
       "createdAt": "2026-06-02T03:47:06.457Z",
-      "updatedAt": "2026-06-05T16:00:20.321Z",
-      "convertedToPhaseId": "61-scout-session-grouping"
+      "updatedAt": "2026-06-05T16:00:20.321Z"
     },
     {
       "id": "rec-20260603-001",
@@ -229,6 +229,90 @@
       "convertedToPhaseId": "57-rec-promote",
       "createdAt": "2026-06-04T20:03:07.258Z",
       "updatedAt": "2026-06-04T20:32:31.746Z"
+    },
+    {
+      "id": "rec-20260605-001",
+      "title": "cadence tutorial — guided first-loop walkthrough",
+      "summary": "Interactive walkthrough that runs one toy DRAFT→BUILD→SETTLE loop end-to-end so a newcomer sees the loop in ~2 minutes. Reduces time-to-first-aha; largest build of the onboarding scout set.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "host-claude-code"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260605-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260605-1702",
+      "createdAt": "2026-06-05T17:15:37.220Z",
+      "updatedAt": "2026-06-05T17:15:37.220Z"
+    },
+    {
+      "id": "rec-20260605-002",
+      "title": "First-run 'what now?' nudge after cadence init",
+      "summary": "After 'cadence init', print the exact next loop commands (draft new → approve → ...) so the user is not left at a 'now what?' cliff. Tiny, high-ROI removal of the first-5-minutes drop-off.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260605-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260605-1702",
+      "createdAt": "2026-06-05T17:15:37.370Z",
+      "updatedAt": "2026-06-05T17:15:37.370Z"
+    },
+    {
+      "id": "rec-20260605-003",
+      "title": "cadence explain <concept> — in-CLI concept help",
+      "summary": "In-CLI help for loop / gates / tiers / profiles so users do not have to leave the terminal for docs. Reuses existing docs content; makes the tool self-teaching.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260605-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-05T17:15:37.528Z",
+      "updatedAt": "2026-06-05T17:15:37.528Z",
+      "scoutId": "scout-20260605-1702"
     }
   ]
 }
