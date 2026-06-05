@@ -110,15 +110,25 @@ PR #51, merge commit `9b85b5f`) — changesets bumped the three packages
 `cadence-types` (phase 60: `HostAdapter`, `HostCapabilitiesZ`,
 `ADAPTER_CONTRACT_VERSION`, `ExtractedPayload`) + `claudeCodeAdapter`
 conformance, folding in the `commander` 13 → 14 bump (#49; commander pinned
-`^14` to hold the Node `>=20` floor). The latest published version is
+`^14` to hold the Node `>=20` floor). Then
 **`1.11.0`** (2026-06-05, tag `v1.11.0` + provenance): changesets bumped the
 three packages `1.10.0 → 1.11.0` for two adoption-layer features — **phase 61**
 first-class **scout-session grouping** (an optional `scoutId` on recommendations
 + `recommendation add --scout-id`, a `recommend --scout-id <id>` cluster filter,
 a `- scout:` render line, and `/cadence-scout` auto-minting a session id; PR #53)
 and **phase 62** the guided **first-loop nudge** in `cadence init` output (a
-numbered "Your first loop" block + `cadence progress` escape hatch; PR #54).
-Releases are cut with
+numbered "Your first loop" block + `cadence progress` escape hatch; PR #54). The
+latest published version is **`1.12.0`** (2026-06-05, tag `v1.12.0` +
+provenance): changesets bumped the three packages `1.11.0 → 1.12.0` for two more
+adoption-layer **`cadence-core`** CLI features — **phase 63** **`cadence
+tutorial`** (runs one real DRAFT→BUILD→SETTLE loop in a throwaway sandbox,
+printing each step's command + the engine's actual output; the executable
+companion to `init`'s "Your first loop" block) and **phase 64** **`cadence
+explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
+with content embedded in the binary so it works from any install — bare lists
+the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
+`cadence-host-claude-code` carried version-alignment bumps only (no functional
+change). Releases are cut with
 [changesets](https://github.com/changesets/changesets) and the manual `Release`
 workflow (`.github/workflows/release.yml`, `workflow_dispatch`).
 

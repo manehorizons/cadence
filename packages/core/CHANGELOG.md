@@ -1,5 +1,29 @@
 # @manehorizons/cadence-core
 
+## 1.12.0
+
+### Minor Changes
+
+- Two adoption-layer CLI features land in `cadence-core`:
+  - **`cadence tutorial`** (phase 63) runs one real DRAFT→BUILD→SETTLE loop inside
+    a throwaway sandbox, printing each step's command and the engine's actual
+    output before cleaning up — the executable companion to the "Your first loop"
+    block in `cadence init`. Fully offline and side-effect free.
+  - **`cadence explain [concept]`** (phase 64) prints curated, terminal-sized
+    explanations of the core concepts (loop, gates, tiers, profiles) from content
+    embedded in the binary, so the model is self-teaching without leaving the
+    terminal or depending on the `docs/` tree being shipped. Bare invocation lists
+    the concepts; unknown names get a nearest-match did-you-mean nudge.
+
+  `cadence-types` and `cadence-host-claude-code` carry version-alignment bumps to
+  stay in lockstep with `cadence-core`; neither has a functional change in this
+  release.
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-types@1.12.0
+
 ## 1.11.0
 
 ### Minor Changes
