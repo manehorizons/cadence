@@ -36,7 +36,7 @@ A tenth Claude Code slash command (prompt template, installed by cadence-host-cl
 
 ## rec-20260602-003 — [Deferred] First-class scout-session grouping on recommendations
 
-- status: candidate
+- status: converted
 - ready: raw-idea
 - priority: low
 - leverage: 5/10

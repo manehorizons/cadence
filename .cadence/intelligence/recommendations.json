@@ -64,7 +64,7 @@
       "title": "[Deferred] First-class scout-session grouping on recommendations",
       "summary": "Option B from the /cadence-scout design: add an optional scoutId/sourceSessionId to the recommendation schema (cadence-types) + a --scout-id flag, surfaced as a cluster in 'cadence recommend', so the N recs from one /cadence-scout session are queryable as a set. Deferred: spends a permanent schema surface for unproven traceability need and overlaps the existing generic evidence mechanism. Clean additive follow-up if the need appears.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "raw-idea",
       "priority": "low",
       "leverageScore": 5,
@@ -86,7 +86,8 @@
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-06-02T03:47:06.457Z",
-      "updatedAt": "2026-06-02T03:47:06.457Z"
+      "updatedAt": "2026-06-05T16:00:20.321Z",
+      "convertedToPhaseId": "61-scout-session-grouping"
     },
     {
       "id": "rec-20260603-001",
@@ -172,9 +173,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "60-host-adapter-contract",
       "createdAt": "2026-06-04T19:32:11.371Z",
-      "updatedAt": "2026-06-05T03:48:25.423Z",
-      "convertedToPhaseId": "60-host-adapter-contract"
+      "updatedAt": "2026-06-05T03:48:25.423Z"
     },
     {
       "id": "rec-20260604-003",
