@@ -10,6 +10,11 @@ export function registerResumeCommand(program: Command): void {
     .option('--full', 'force full output (whole doc + live context replay)')
     .option('--brief', 'force brief output (key sections only, no context replay)')
     .action(async (opts: { json?: boolean; full?: boolean; brief?: boolean }) => {
+      if (opts.full && opts.brief) {
+        process.stderr.write('resume: --full and --brief are mutually exclusive\n');
+        process.exitCode = 1;
+        return;
+      }
       try {
         const mode = opts.full ? 'full' : opts.brief ? 'brief' : undefined;
         const res = await runResume(process.cwd(), mode ? { mode } : {});
