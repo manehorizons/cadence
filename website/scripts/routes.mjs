@@ -12,6 +12,7 @@ export const ROUTES = [
   { src: 'DESIGN.md',                 out: 'concepts/design',        group: 'Concepts',    label: 'Design decisions' },
   // Guides
   { src: 'docs/claude-code.md',       out: 'guides/claude-code',     group: 'Guides',      label: 'Claude Code adapter' },
+  { src: 'docs/host-adapters.md',     out: 'guides/host-adapters',   group: 'Guides',      label: 'Write your own adapter' },
   { src: 'docs/mcp.md',               out: 'guides/mcp',             group: 'Guides',      label: 'MCP server' },
   { src: 'docs/providers.md',         out: 'guides/providers',       group: 'Guides',      label: 'Verifier providers' },
   { src: 'docs/cli.md',               out: 'guides/cli',             group: 'Guides',      label: 'CLI usage' },

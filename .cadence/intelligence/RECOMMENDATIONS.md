@@ -83,7 +83,7 @@ Ship an MCP server that exposes the DRAFT→BUILD→SETTLE loop as MCP tools, so
 
 ## rec-20260604-002 — Host-adapter authoring guide + stable capabilities contract
 
-- status: candidate
+- status: converted
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10

@@ -1,4 +1,8 @@
-import type { AbstractEvent } from '@manehorizons/cadence-types';
+import type { AbstractEvent, ExtractedPayload } from '@manehorizons/cadence-types';
+
+// Re-exported for back-compat: the canonical definition now lives in
+// @manehorizons/cadence-types as part of the host-adapter contract.
+export type { ExtractedPayload };
 
 export const EDIT_TOOL_MATCHER = 'Edit|Write|MultiEdit|NotebookEdit';
 export const SKILL_TOOL_MATCHER = 'Skill';
@@ -23,11 +27,6 @@ export function mapEvent(claudeCodeEvent: string, toolName?: string): AbstractEv
 }
 
 const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
-
-export interface ExtractedPayload {
-  files?: string[];
-  skill?: string;
-}
 
 export function extractPayload(raw: unknown): ExtractedPayload | undefined {
   if (!raw || typeof raw !== 'object') return undefined;

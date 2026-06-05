@@ -13,6 +13,8 @@ One engine drives everything below; you reach it through three surfaces — the
 commands, the only surface with *ambient* edit-time gates), and an **MCP server**
 (`cadence mcp serve`, for any MCP host). The concepts here apply to all three.
 See [the user guide](README.md#three-surface-model) and [docs/mcp.md](mcp.md).
+The adapter shape itself is a versioned contract — see
+[Write your own adapter](host-adapters.md).
 
 ---
 
