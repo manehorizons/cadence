@@ -1,0 +1,29 @@
+{
+  "draftId": "63-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "sandbox lifecycle helper (withSandbox/scaffoldSandbox + finally cleanup)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T20:34:22.214Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "step runner composing draftNew/approve/recordTaskOutcome/settle services",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T20:34:22.355Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "--no-pause flag + TTY pause + registered in register.ts",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T20:34:22.500Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "tests/cli/tutorial.test.ts covering AC-1..AC-5; full gate green",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T20:34:22.647Z"
+    }
+  }
+}

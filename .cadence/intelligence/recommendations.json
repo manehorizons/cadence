@@ -235,7 +235,7 @@
       "title": "cadence tutorial — guided first-loop walkthrough",
       "summary": "Interactive walkthrough that runs one toy DRAFT→BUILD→SETTLE loop end-to-end so a newcomer sees the loop in ~2 minutes. Reduces time-to-first-aha; largest build of the onboarding scout set.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -256,7 +256,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.220Z",
-      "updatedAt": "2026-06-05T17:15:37.220Z"
+      "updatedAt": "2026-06-05T20:07:06.235Z",
+      "convertedToPhaseId": "63-cadence-tutorial"
     },
     {
       "id": "rec-20260605-002",
@@ -282,10 +283,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "62-first-run-nudge",
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.370Z",
-      "updatedAt": "2026-06-05T17:29:04.576Z",
-      "convertedToPhaseId": "62-first-run-nudge"
+      "updatedAt": "2026-06-05T17:29:04.576Z"
     },
     {
       "id": "rec-20260605-003",

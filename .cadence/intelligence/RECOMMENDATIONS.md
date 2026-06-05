@@ -128,7 +128,7 @@ Add CLI to advance a recommendation's status (candidate → accepted) and readin
 
 ## rec-20260605-001 — cadence tutorial — guided first-loop walkthrough
 
-- status: candidate
+- status: converted
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10

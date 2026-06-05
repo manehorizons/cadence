@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-06-05T17:15:44.705Z
+Generated at: 2026-06-05T20:04:28.430Z
 
 ## Advisory
 
@@ -11,14 +11,6 @@ Generated at: 2026-06-05T17:15:44.705Z
 ## Ranked
 
 ### rec-20260605-001 — cadence tutorial — guided first-loop walkthrough
-
-- score: 55/100 (raw 13.7)
-- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
-- scout: scout-20260605-1702
-- next: cadence milestone propose
-
-### rec-20260605-002 — First-run 'what now?' nudge after cadence init
 
 - score: 55/100 (raw 13.7)
 - status: candidate · ready: needs-evidence · priority: medium · decay: fresh
@@ -44,4 +36,4 @@ None.
 
 ## Totals
 
-- total 3 · ranked 3 · parked 0 · needs-attention 0 · excluded 0
+- total 11 · ranked 2 · parked 0 · needs-attention 0 · excluded 9
