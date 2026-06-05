@@ -34,6 +34,7 @@ Two CLIs are documented here:
   - [context](#context)
   - [handoff](#handoff)
   - [resume](#resume)
+  - [tutorial](#tutorial)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -81,6 +82,7 @@ decision
 intelligence
 doctor
 mcp
+tutorial
 <!-- cadence:commands:end -->
 
 ---
@@ -1233,6 +1235,39 @@ is lazy-loaded — ordinary CLI commands never pay its load cost.
 
 **Exit codes** — runs until stdin closes (the host owns the lifecycle). Exits
 non-zero only on a startup failure.
+
+---
+
+### tutorial
+
+```
+Usage: cadence tutorial [options]
+
+Run one real DRAFT→BUILD→SETTLE loop in a throwaway sandbox
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--no-pause` | Do not pause between steps (auto-advance; required for non-TTY runs — CI, pipes, agents) |
+| `-h, --help` | Display help for command |
+
+**Behavior** — the executable companion to the "Your first loop" block printed
+by [`init`](#init). Instead of *listing* the loop's commands, it *runs* them: it
+scaffolds a disposable `.cadence/` in a temp directory, drives
+draft → edit → approve → done → settle through the **real engine** (composing the
+same services the CLI does), prints each step's command and the engine's actual
+output, then removes the sandbox. Because it runs the real loop, the walkthrough
+can never drift from real behavior.
+
+It is fully **offline and side-effect free**: it uses the default mock verifier
+(no API key or network), never reads or writes the `.cadence/` of the current
+working directory, and always removes its temp sandbox — even if a step fails. In
+a TTY it pauses between steps for the reader; with `--no-pause` (or any non-TTY
+stdin) it auto-advances to completion.
+
+**Exit codes** — `0` on a clean loop; non-zero if a composed step fails.
 
 ---
 
