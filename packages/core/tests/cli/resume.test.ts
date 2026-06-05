@@ -27,22 +27,41 @@ describe('cadence resume', () => {
     expect(r.stdout).toMatch(/cadence handoff/);
   });
 
-  it('AC-25: replays the freshest doc', async () => {
+  it('AC-25: --full replays the whole freshest doc', async () => {
     active = await tempRepo({ initialized: true });
     await run(['handoff', '--label', 'cli'], active.root);
-    const r = await run(['resume'], active.root);
+    const r = await run(['resume', '--full'], active.root);
     expect(r.code).toBe(0);
     expect(r.stdout).toMatch(/# Session Handoff/);
     expect(r.stdout).toMatch(/SESSION-\d{4}-\d{2}-\d{2}-cli\.md/);
   });
 
-  it('AC-26: --json emits a parseable ResumeResult', async () => {
+  it('AC-26: --json --full emits a parseable ResumeResult with context', async () => {
     active = await tempRepo({ initialized: true });
     await run(['handoff'], active.root);
-    const r = await run(['resume', '--json'], active.root);
+    const r = await run(['resume', '--json', '--full'], active.root);
     expect(r.code).toBe(0);
     const parsed = JSON.parse(r.stdout);
     expect(parsed.found).toBe(true);
+    expect(parsed.mode).toBe('full');
     expect(parsed.context.scope).toBe('handoff');
+  });
+
+  it('AC-29: defaults to brief output with a full-mode pointer', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['handoff', '--label', 'cli'], active.root);
+    const r = await run(['resume'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('## Next action');
+    expect(r.stdout).not.toContain('## CADENCE context');
+    expect(r.stdout).toMatch(/cadence resume --full/);
+  });
+
+  it('AC-32: --json carries mode; context is null in brief', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['handoff'], active.root);
+    const brief = JSON.parse((await run(['resume', '--json'], active.root)).stdout);
+    expect(brief.mode).toBe('brief');
+    expect(brief.context).toBeNull();
   });
 });
