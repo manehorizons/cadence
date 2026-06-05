@@ -1,0 +1,54 @@
+{
+  "draftId": "59-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T01:06:02.921Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/handoff/brief.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/handoff/brief.ts"
+      ],
+      "updatedAt": "2026-06-05T01:10:32.081Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/handoff/run-resume.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/handoff/run-resume.ts"
+      ],
+      "updatedAt": "2026-06-05T01:16:36.647Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/resume.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/resume.ts"
+      ],
+      "updatedAt": "2026-06-05T01:22:12.747Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.changeset/resume-brief-mode.md"
+      ],
+      "updatedAt": "2026-06-05T01:22:59.000Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/.claude/skills/resume/SKILL.md"
+      ],
+      "updatedAt": "2026-06-05T01:24:02.641Z"
+    }
+  }
+}

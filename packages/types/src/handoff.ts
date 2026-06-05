@@ -42,10 +42,11 @@ export const ResumeResultZ = z.union([
     handoffPath: z.string(),
     generatedAt: z.string().nullable(),
     doc: z.string(),
-    context: ContextPacketZ,
+    context: ContextPacketZ.nullable(),
     drift: z
       .object({ docLoopPosition: z.string(), liveLoopPosition: z.string() })
       .nullable(),
+    mode: z.enum(['brief', 'full']),
   }),
 ]);
 export type ResumeResult = z.infer<typeof ResumeResultZ>;

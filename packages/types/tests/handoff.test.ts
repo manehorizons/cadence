@@ -29,3 +29,30 @@ describe('handoff types', () => {
     expect(() => ResumeResultZ.parse({ found: false })).not.toThrow();
   });
 });
+
+describe('ResumeResultZ — brief/full mode', () => {
+  it('AC-33: accepts a brief result with null context', () => {
+    const parsed = ResumeResultZ.safeParse({
+      found: true,
+      handoffPath: '.cadence/handoff/SESSION-2026-06-05.md',
+      generatedAt: '2026-06-05T00:00:00.000Z',
+      doc: '## Next action\n**Action:** go',
+      context: null,
+      drift: null,
+      mode: 'brief',
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it('AC-33: rejects a found result missing mode', () => {
+    const parsed = ResumeResultZ.safeParse({
+      found: true,
+      handoffPath: 'p',
+      generatedAt: null,
+      doc: 'd',
+      context: null,
+      drift: null,
+    });
+    expect(parsed.success).toBe(false);
+  });
+});
