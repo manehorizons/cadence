@@ -9,10 +9,14 @@ export function registerRecommendCommand(program: Command): void {
       'Rank actionable strategic recommendations and advise the next move (read-only)',
     )
     .option('--json', 'emit machine-readable JSON instead of rendered text')
-    .action(async (opts: { json?: boolean }) => {
+    .option('--scout-id <id>', 'narrow the report to one scout session cluster')
+    .action(async (opts: { json?: boolean; scoutId?: string }) => {
+      const args: { json?: boolean; scoutId?: string } = {};
+      if (opts.json) args.json = true;
+      if (opts.scoutId) args.scoutId = opts.scoutId;
       const { exitCode } = await recommendService(
         process.cwd(),
-        opts.json ? { json: true } : {},
+        args,
         processIO(),
       );
       if (exitCode) process.exitCode = exitCode;

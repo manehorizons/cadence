@@ -132,6 +132,10 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--area <areas>', 'Comma-separated affected areas')
     .option('--file <files>', 'Comma-separated affected file paths')
     .option('--evidence <summary>', 'Short evidence note')
+    .option(
+      '--scout-id <id>',
+      'Group this rec under a scout-session id (convention: scout-YYYYMMDD-HHMM)',
+    )
     .action(
       async (opts: {
         title: string;
@@ -141,6 +145,7 @@ export function registerRecommendationCommand(program: Command): void {
         area?: string;
         file?: string;
         evidence?: string;
+        scoutId?: string;
       }) => {
         try {
           const priority = RecommendationPriorityZ.parse(opts.priority);
@@ -154,6 +159,7 @@ export function registerRecommendationCommand(program: Command): void {
             affectedFiles: csv(opts.file),
           };
           if (opts.evidence) input.evidenceSummary = opts.evidence;
+          if (opts.scoutId) input.scoutId = opts.scoutId;
           const rec = await addRecommendation(process.cwd(), input);
           process.stdout.write(`Added ${rec.id}: ${rec.title}\n`);
           process.stdout.write(`Next: cadence recommendation list\n`);

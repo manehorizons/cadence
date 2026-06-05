@@ -1,0 +1,56 @@
+{
+  "draftId": "61-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T16:02:44.592Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/intelligence/store.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/recommendation.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/intelligence/store/recommendations.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/recommendation.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/intelligence/recommend.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/intelligence/render-recommend.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/intelligence/recommend.ts",
+        "/home/thomas/projects/cadence/packages/core/src/intelligence/render-recommend.ts",
+        "/home/thomas/projects/cadence/packages/core/src/services/recommend.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/recommend.ts"
+      ],
+      "updatedAt": "2026-06-05T16:06:49.152Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T16:06:49.337Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T16:06:49.498Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/host-claude-code/tests/install-commands.test.ts",
+        "/home/thomas/projects/cadence/packages/host-claude-code/src/install-commands.ts",
+        "/home/thomas/projects/cadence/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-06-05T16:08:05.902Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T16:08:06.090Z"
+    }
+  }
+}

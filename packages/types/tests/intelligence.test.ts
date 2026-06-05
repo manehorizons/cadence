@@ -119,6 +119,42 @@ describe('intelligence schemas', () => {
     });
     expect(parsed.convertedToPhaseId).toBeUndefined();
   });
+
+  const recBase = {
+    id: 'rec-20260605-001',
+    title: 'scout survivor',
+    summary: 's',
+    source: 'manual' as const,
+    status: 'candidate' as const,
+    readiness: 'raw-idea' as const,
+    priority: 'low' as const,
+    leverageScore: 5,
+    riskScore: 5,
+    confidence: 0.7,
+    decayState: 'fresh' as const,
+    affectedAreas: [],
+    affectedFiles: [],
+    evidenceIds: [],
+    assumptionIds: [],
+    decisionIds: [],
+    createdAt: '2026-06-05T00:00:00.000Z',
+    updatedAt: '2026-06-05T00:00:00.000Z',
+  };
+
+  it('AC-1: round-trips an optional scoutId', () => {
+    const parsed = RecommendationZ.parse({ ...recBase, scoutId: 'scout-20260605-1430' });
+    expect(parsed.scoutId).toBe('scout-20260605-1430');
+  });
+
+  it('AC-1: scoutId is absent when omitted (pre-phase-61 fixture)', () => {
+    const parsed = RecommendationZ.parse(recBase);
+    expect(parsed.scoutId).toBeUndefined();
+  });
+
+  it('AC-1: rejects an empty-string scoutId', () => {
+    const result = RecommendationZ.safeParse({ ...recBase, scoutId: '' });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('inspection schemas', () => {
@@ -209,6 +245,14 @@ describe('recommendation report schema', () => {
       ranked: [{ ...validReport.ranked[0], score: 101 }],
     });
     expect(r.success).toBe(false);
+  });
+
+  it('AC-1: a ranked item carries an optional scoutId', () => {
+    const parsed = RecommendationReportZ.parse({
+      ...validReport,
+      ranked: [{ ...validReport.ranked[0], scoutId: 'scout-20260605-1430' }],
+    });
+    expect(parsed.ranked[0]?.scoutId).toBe('scout-20260605-1430');
   });
 });
 

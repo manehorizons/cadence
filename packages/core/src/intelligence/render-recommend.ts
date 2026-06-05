@@ -32,6 +32,9 @@ export function renderRecommendMd(report: RecommendationReport): string {
         .map((t) => `${t.label} ${t.value >= 0 ? '+' : ''}${t.value}`)
         .join(' · ');
       lines.push(`- why: ${why} ⇒ raw ${r.raw} (score ${r.score})`);
+      if (r.scoutId) {
+        lines.push(`- scout: ${r.scoutId}`);
+      }
       if (r.suggestedBackendAction) {
         lines.push(`- next: ${r.suggestedBackendAction}`);
       }
