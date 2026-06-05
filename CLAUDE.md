@@ -50,6 +50,18 @@ Bypass with `git push --no-verify` only when you mean it. On the GitHub side,
 `main` carries a ruleset requiring the `ci-success` status check, so PR merges
 are gated on green CI (a flaky leg can block a merge until re-run).
 
+### The doc-sync gate
+
+A second, cheap git hook keeps the release narrative honest. `.githooks/pre-commit`
+fires only when a commit changes the canonical version
+(`packages/core/package.json`); if it did, **`CLAUDE.md` must mention the new
+version** or the commit is aborted (`.githooks/pre-push` re-checks this as a
+backstop for direct pushes to `main`). The shared, testable checker is
+`.githooks/check-doc-sync.sh` (pure: *(version, doc text) → pass/fail*), covered
+by `packages/core/tests/docs/doc-sync-hook.test.ts` — whose live-guard case also
+fails CI on every OS if a version bump ever lands with a stale `CLAUDE.md`.
+Bypass with `--no-verify` like the CI gate.
+
 The same four-command pipeline runs in `.github/workflows/ci.yml` on every
 PR + push, on GitHub-hosted Ubuntu + macOS + Windows runners across Node 20 +
 22 — all three OS legs (macOS unblocked in phase 49 by realpath'ing the testkit
@@ -81,12 +93,24 @@ continuity (`cadence handoff`/`resume`) plus a boundary-check fix. The
 **`1.5.1`** release (2026-06-03, tag `v1.5.1` + provenance) was
 the onboarding-hardening patch (phase 48): a distinct `NotInitializedError`, a
 Node `>=20` floor with a fast-fail guard, a loud mock-fallback banner under
-`settle --deep`, and two scaffold/doc fixes. The latest published version is
-**`1.6.0`** (2026-06-04, tag `v1.6.0` + provenance, published commit `dd3aa93`):
-changesets bumped the three packages `1.5.1 → 1.6.0` for the `cadence init
+`settle --deep`, and two scaffold/doc fixes. `1.6.0` (2026-06-04, commit
+`dd3aa93`) bumped the three packages `1.5.1 → 1.6.0` for the `cadence init
 --preset` flag rename (phase 52, `--profile` kept as a deprecated alias) and the
 `/cadence-scout` host slash command (phase 53), bundling the cross-platform-CI
-completion (phases 49/50) and the docs portal (phase 51). Releases are cut with
+completion (phases 49/50) and the docs portal (phase 51). Then: `1.6.1`
+(2026-06-04) — internal-only patch (intelligence/store god-module split, phase
+54; re-export barrel removal, phase 55; behavior-preserving). `1.7.0`
+(2026-06-04) — `cadence doctor` (phase 56) + `cadence recommendation promote`
+(phase 57) + an `install --local` portability fix. `1.8.0` (2026-06-05) —
+`cadence mcp serve`, an MCP server surface (a third drive surface alongside CLI
++ Claude Code hooks; phase 58). `1.9.0` (2026-06-05) — drift-decides brief/full
+`cadence resume` (phase 59). The latest published version is **`1.10.0`**
+(2026-06-05, tag `v1.10.0` + provenance, PR #51, merge commit `9b85b5f`):
+changesets bumped the three packages `1.9.0 → 1.10.0` for the explicit, versioned
+**host-adapter contract** in `cadence-types` (phase 60: `HostAdapter`,
+`HostCapabilitiesZ`, `ADAPTER_CONTRACT_VERSION`, `ExtractedPayload`) +
+`claudeCodeAdapter` conformance, folding in the `commander` 13 → 14 bump (#49;
+commander pinned `^14` to hold the Node `>=20` floor). Releases are cut with
 [changesets](https://github.com/changesets/changesets) and the manual `Release`
 workflow (`.github/workflows/release.yml`, `workflow_dispatch`).
 

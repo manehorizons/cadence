@@ -9,16 +9,43 @@ set -euo pipefail
 
 protected="refs/heads/main"
 gated=0
+push_sha=""
+remote_sha=""
 
 # stdin: <local ref> <local sha> <remote ref> <remote sha>
-while read -r _local_ref _local_sha remote_ref _remote_sha; do
+while read -r _local_ref local_sha remote_ref remote_ref_sha; do
   if [ "$remote_ref" = "$protected" ]; then
     gated=1
+    push_sha="$local_sha"
+    remote_sha="$remote_ref_sha"
   fi
 done
 
 if [ "$gated" -ne 1 ]; then
   exit 0
+fi
+
+# Doc-sync backstop (cheap; runs before the turbo gate). If this push changes
+# the canonical core version on main, the pushed CLAUDE.md must mention it.
+hook_dir="$(dirname "$0")"
+pkg="packages/core/package.json"
+ver_from() {
+  git show "$1" 2>/dev/null \
+    | grep -m1 -oE '"version"[[:space:]]*:[[:space:]]*"[^"]+"' \
+    | grep -oE '[0-9][^"[:space:]]*' || true
+}
+zero="0000000000000000000000000000000000000000"
+tip_ver="$(ver_from "${push_sha}:${pkg}")"
+remote_ver=""
+if [ -n "$remote_sha" ] && [ "$remote_sha" != "$zero" ]; then
+  remote_ver="$(ver_from "${remote_sha}:${pkg}")"
+fi
+if [ -n "$tip_ver" ] && [ "$tip_ver" != "$remote_ver" ]; then
+  echo "pre-push: core version ${remote_ver:-∅} → ${tip_ver} on main; checking CLAUDE.md…"
+  if ! git show "${push_sha}:CLAUDE.md" | "${hook_dir}/check-doc-sync.sh" "$tip_ver" "CLAUDE.md"; then
+    echo "pre-push: CLAUDE.md is stale — push to main aborted." >&2
+    exit 1
+  fi
 fi
 
 echo "pre-push: main is gated — running lint typecheck test build…"
