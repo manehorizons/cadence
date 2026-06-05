@@ -1,5 +1,24 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.10.0
+
+### Minor Changes
+
+- Explicit, versioned host-adapter contract. `@manehorizons/cadence-types` now
+  exports a first-class `HostAdapter` interface plus `HostCapabilitiesZ`,
+  `ADAPTER_CONTRACT_VERSION`, and `ExtractedPayload`, formalising what a host
+  integration must implement. `claudeCodeAdapter` in
+  `@manehorizons/cadence-host-claude-code` conforms to the contract, and the docs
+  portal gains a "write your own adapter" guide. Also bumps `commander` 13 → 14 in
+  `@manehorizons/cadence-core` (the engine floor stays Node `>=20`; commander is
+  pinned to `^14` deliberately).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.10.0
+  - @manehorizons/cadence-types@1.10.0
+
 ## 1.9.0
 
 ### Minor Changes
