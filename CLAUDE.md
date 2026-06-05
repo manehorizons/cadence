@@ -45,9 +45,10 @@ Node `>=20` is required. `package.json` pins `pnpm@9.12.0`.
 
 `.githooks/pre-push` is wired via `git config core.hooksPath .githooks` and
 runs `pnpm turbo run lint typecheck test build` before any push that updates
-`refs/heads/main`, aborting on failure. GitHub Free repos have no branch
-protection on this tier, so this is the enforcement layer. Bypass with
-`git push --no-verify` only when you mean it.
+`refs/heads/main`, aborting on failure — this is the local enforcement layer.
+Bypass with `git push --no-verify` only when you mean it. On the GitHub side,
+`main` carries a ruleset requiring the `ci-success` status check, so PR merges
+are gated on green CI (a flaky leg can block a merge until re-run).
 
 The same four-command pipeline runs in `.github/workflows/ci.yml` on every
 PR + push, on GitHub-hosted Ubuntu + macOS + Windows runners across Node 20 +
