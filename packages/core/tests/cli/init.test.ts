@@ -112,7 +112,20 @@ describe('cadence init', () => {
     expect(r.stdout).toMatch(/CADENCE initialized/);
     expect(r.stdout).toMatch(/project {2,}demo/);
     expect(r.stdout).toMatch(/gate profile {2,}standard/);
-    expect(r.stdout).toMatch(/Next: edit \.cadence\/ROADMAP\.md/);
+  });
+
+  it('AC-1+AC-2 (phase 62): prints the guided first-loop nudge', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo'], active.root);
+    expect(r.code).toBe(0);
+    // AC-1: a numbered first-loop sequence with the real first commands.
+    expect(r.stdout).toMatch(/Your first loop/);
+    expect(r.stdout).toMatch(/cadence draft new/);
+    expect(r.stdout).toMatch(/cadence draft approve/);
+    expect(r.stdout).toMatch(/cadence settle run/);
+    // AC-2: the `cadence progress` escape hatch + Docs pointer.
+    expect(r.stdout).toMatch(/cadence progress/);
+    expect(r.stdout).toMatch(/Docs:/);
   });
 });
 
