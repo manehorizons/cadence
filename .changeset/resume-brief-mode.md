@@ -1,6 +1,7 @@
 ---
 '@manehorizons/cadence-core': minor
 '@manehorizons/cadence-types': minor
+'@manehorizons/cadence-host-claude-code': patch
 ---
 
 `cadence resume` now defaults to brief output when live state matches the

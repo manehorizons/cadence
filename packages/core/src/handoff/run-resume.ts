@@ -22,7 +22,10 @@ export async function runResume(
     lastHandoff = state.session.lastHandoff;
     liveLoopPosition = state.loopPosition;
   } catch {
-    // no/corrupt state — fall back to globbing, no drift comparison
+    // No/corrupt state: fall back to globbing for the doc. With no live loop
+    // position we cannot compute drift, so `mode` resolves to 'brief' below —
+    // a corrupt state.json yields brief output with no drift warning. Pass
+    // --full to force the whole doc + live context in that case.
   }
 
   const located = await locateFreshestHandoff(root, lastHandoff);

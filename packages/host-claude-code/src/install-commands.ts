@@ -110,9 +110,10 @@ const COMMANDS: CommandSpec[] = [
   },
   {
     name: 'cadence-resume',
-    description: 'Replay the freshest session handoff + live context (read-only)',
+    description: 'Replay the freshest session handoff (brief by default; --full adds live context, read-only)',
     cli: 'resume',
-    trailing: 'Read the replayed handoff and continue from the documented next action.',
+    trailing:
+      'Read the replayed handoff and continue from the documented next action. Output is brief by default and auto-promotes to full on drift; run `cadence resume --full` for the whole doc + live context.',
   },
   {
     name: 'cadence-scout',
