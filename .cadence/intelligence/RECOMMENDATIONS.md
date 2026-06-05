@@ -160,7 +160,7 @@ After 'cadence init', print the exact next loop commands (draft new → approve 
 
 ## rec-20260605-003 — cadence explain <concept> — in-CLI concept help
 
-- status: candidate
+- status: converted
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10

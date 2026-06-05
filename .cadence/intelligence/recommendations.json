@@ -254,10 +254,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "63-cadence-tutorial",
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.220Z",
-      "updatedAt": "2026-06-05T20:07:06.235Z",
-      "convertedToPhaseId": "63-cadence-tutorial"
+      "updatedAt": "2026-06-05T20:07:06.235Z"
     },
     {
       "id": "rec-20260605-002",
@@ -293,7 +293,7 @@
       "title": "cadence explain <concept> — in-CLI concept help",
       "summary": "In-CLI help for loop / gates / tiers / profiles so users do not have to leave the terminal for docs. Reuses existing docs content; makes the tool self-teaching.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -314,7 +314,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.528Z",
-      "updatedAt": "2026-06-05T17:15:37.528Z"
+      "updatedAt": "2026-06-05T22:00:39.142Z",
+      "convertedToPhaseId": "64-explain"
     }
   ]
 }
