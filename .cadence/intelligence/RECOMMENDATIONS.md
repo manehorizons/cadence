@@ -144,7 +144,7 @@ Interactive walkthrough that runs one toy DRAFT→BUILD→SETTLE loop end-to-end
 
 ## rec-20260605-002 — First-run 'what now?' nudge after cadence init
 
-- status: candidate
+- status: converted
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10

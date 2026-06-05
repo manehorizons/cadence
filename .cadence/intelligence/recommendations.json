@@ -263,7 +263,7 @@
       "title": "First-run 'what now?' nudge after cadence init",
       "summary": "After 'cadence init', print the exact next loop commands (draft new → approve → ...) so the user is not left at a 'now what?' cliff. Tiny, high-ROI removal of the first-5-minutes drop-off.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -284,7 +284,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.370Z",
-      "updatedAt": "2026-06-05T17:15:37.370Z"
+      "updatedAt": "2026-06-05T17:29:04.576Z",
+      "convertedToPhaseId": "62-first-run-nudge"
     },
     {
       "id": "rec-20260605-003",
@@ -310,9 +311,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.528Z",
-      "updatedAt": "2026-06-05T17:15:37.528Z",
-      "scoutId": "scout-20260605-1702"
+      "updatedAt": "2026-06-05T17:15:37.528Z"
     }
   ]
 }
