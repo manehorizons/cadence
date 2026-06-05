@@ -1,15 +1,99 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-05T15:11:37.905Z",
+  "generatedAt": "2026-06-05T17:15:44.705Z",
   "ranked": [
     {
-      "id": "rec-20260602-003",
-      "title": "[Deferred] First-class scout-session grouping on recommendations",
-      "raw": 10.7,
-      "score": 50,
+      "id": "rec-20260605-001",
+      "title": "cadence tutorial — guided first-loop walkthrough",
+      "raw": 13.7,
+      "score": 55,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260605-1702"
+    },
+    {
+      "id": "rec-20260605-002",
+      "title": "First-run 'what now?' nudge after cadence init",
+      "raw": 13.7,
+      "score": 55,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260605-1702"
+    },
+    {
+      "id": "rec-20260605-003",
+      "title": "cadence explain <concept> — in-CLI concept help",
+      "raw": 12.7,
+      "score": 53,
       "status": "candidate",
       "readiness": "raw-idea",
-      "priority": "low",
+      "priority": "medium",
       "decayState": "fresh",
       "terms": [
         {
@@ -37,11 +121,12 @@
           "value": 4
         },
         {
-          "label": "prio low",
-          "value": 0
+          "label": "prio medium",
+          "value": 2
         }
       ],
-      "suggestedBackendAction": "cadence milestone propose"
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260605-1702"
     }
   ],
   "parked": [],
@@ -51,10 +136,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 8,
-    "ranked": 1,
+    "total": 3,
+    "ranked": 3,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 7
+    "excluded": 0
   }
 }

@@ -1,0 +1,17 @@
+{
+  "draftId": "62-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T17:30:31.392Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T17:30:31.548Z"
+    }
+  }
+}

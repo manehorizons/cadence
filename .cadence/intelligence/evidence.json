@@ -56,6 +56,27 @@
       "kind": "note",
       "summary": "Discovered 2026-06-04 while starting phase 56 from rec-20260604-003: 'cadence milestone propose' returned None because no rec can reach accepted/ready-for-milestone. isEligible() in intelligence/milestone.ts gates on those; store/recommendations.ts only defines the 'convert' transition. spec new --from-rec is the current workaround. Sibling/context: rec-20260604-003 (cadence doctor) surfaced it.",
       "createdAt": "2026-06-04T20:03:07.258Z"
+    },
+    {
+      "id": "ev-20260605-001",
+      "recommendationId": "rec-20260605-001",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on 'adoption & onboarding', 2026-06-05; grouped under scout-20260605-1702 (siblings: first-run nudge, cadence explain).",
+      "createdAt": "2026-06-05T17:15:37.220Z"
+    },
+    {
+      "id": "ev-20260605-002",
+      "recommendationId": "rec-20260605-002",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on 'adoption & onboarding', 2026-06-05; grouped under scout-20260605-1702 (siblings: cadence tutorial, cadence explain).",
+      "createdAt": "2026-06-05T17:15:37.370Z"
+    },
+    {
+      "id": "ev-20260605-003",
+      "recommendationId": "rec-20260605-003",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on 'adoption & onboarding', 2026-06-05; grouped under scout-20260605-1702 (siblings: cadence tutorial, first-run nudge).",
+      "createdAt": "2026-06-05T17:15:37.528Z"
     }
   ]
 }

@@ -320,10 +320,18 @@ export function registerInitCommand(program: Command): void {
         console.log(`                SPECIAL-FLOWS.md, STATE.md, CLAUDE.md`);
         console.log(`                phases/ handoff/ research/ archive/`);
         console.log('');
+        console.log(`  Your first loop`);
+        console.log(`  ───────────────`);
+        console.log(`  1. cadence draft new 01-first 01 --title "..."   scaffold a DRAFT`);
+        console.log(`  2. edit the DRAFT — objective, ACs, tasks`);
+        console.log(`  3. cadence draft approve 01-first 01             enter BUILD`);
+        console.log(`  4. cadence done T1                               record outcomes`);
+        console.log(`  5. cadence settle run --ac AC-1=pass             close the loop`);
+        console.log('');
         console.log(
-          `  Next: edit .cadence/ROADMAP.md, then \`cadence draft new\`.`,
+          `  Stuck? Run \`cadence progress\` anytime for the next action.`,
         );
-        console.log(`  Docs: see .cadence/ROADMAP.md and the project README.`);
+        console.log(`  Docs: .cadence/ROADMAP.md and the project README.`);
         if (gateProfile === 'standard' || gateProfile === 'strict') {
           console.log('');
           console.log(
