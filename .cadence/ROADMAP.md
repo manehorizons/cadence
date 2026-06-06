@@ -567,29 +567,36 @@ All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 d
 
 ---
 
-## Active milestone: v1.13.0 — Multi-host reach (Codex adapter)
+## v1.13.0 — Multi-host reach (Codex adapter) — ✓ SHIPPED 2026-06-06
 
-Decided 2026-06-05. First consumer of the phase-60 host-adapter contract: a new
-published package `@manehorizons/cadence-host-codex` that `satisfies HostAdapter`
-(contract v1) for the OpenAI Codex CLI. Full scope, rationale, and risks in
-MILESTONES.md §v1.13.0. Codex chosen for reach; its hook lifecycle is a near-clone
-of Claude Code's, so the shim's parsing/blocking largely carries over — the real
-new work is `extractPayload` over Codex's multi-file `apply_patch` and the
-install surface (`.codex/hooks.json` + command files).
+Published to npm with SLSA provenance; annotated tag `v1.13.0` (`cd775ce`) cut at
+the published commit. The first consumer of the phase-60 host-adapter contract: a
+**fourth published package**, `@manehorizons/cadence-host-codex`, that `satisfies
+HostAdapter` for the OpenAI Codex CLI — the contract held at **v1 unchanged** (a
+differently-shaped host conformed without a bump, the portability proof). Built
+across five phases, all settled + pushed:
 
-### Phase 65 — Codex adapter spike (IN PROGRESS)
+- **Phase 65 — Codex adapter spike** ✓ — resolved the unknowns (command surface,
+  `apply_patch` payload recoverability, non-TTY hook flow, event-map coverage);
+  go on contract v1.
+- **Phase 66 — adapter core** ✓ — package scaffold + `codexAdapter` with
+  `mapEvent` over Codex's near-1:1 lifecycle and `extractPayload` parsing Codex's
+  multi-file `apply_patch` envelope into `ExtractedPayload.files`.
+- **Phase 67 — install surface** ✓ — `cadence-host-codex install` writes project
+  `.codex/hooks.json` + **global** `~/.codex/prompts/` slash commands + the CLI.
+- **Phase 68 — hook shim** ✓ — `cadence-host-codex hook`, the runtime shim from
+  Codex's stdin-JSON lifecycle to the core dispatcher.
+- **Phase 69 — docs** ✓ — Codex worked example in `host-adapters.md` + package
+  README/LICENSE.
 
-**Objective.** De-risk the milestone before scaffolding the package: resolve the
-unknowns that could reshape later phases. Produce a written findings doc + a
-draft `codexCapabilities` descriptor (no production package yet).
+The other three public packages carried version-alignment bumps only. Full
+scope/rationale/risks in MILESTONES.md §v1.13.0.
 
-**Unknowns to resolve.** (1) Codex's command/slash surface — is there a
-`/cadence-progress`-equivalent, and how is it installed? (capabilities
-`slashCommands` + `skillSystem`). (2) The `apply_patch` `tool_input` payload
-shape — can edited paths be recovered, and does `ExtractedPayload` express it (or
-does the contract need v2)? (3) Non-TTY + hook trust/approval flow for an
-automated install. (4) Event-name → `AbstractEvent` map coverage vs the Claude
-reference.
+---
 
-**Output.** Spike findings (likely `.cadence/phases/65-codex-spike/`) + a
-go/no-go on contract v1 sufficiency, feeding the phase-66 package scaffold.
+## Active milestone: (none — pick the next one)
+
+v1.13 shipped 2026-06-06; loop is IDLE with no milestone in flight. Candidate next
+vectors (see MILESTONES.md §Future / Deferred): a **third host adapter** (OpenCode,
+the likely next; Aider ruled out — no hook system), MCP-surface deepening, or the
+**public launch** (launch assets staged local-only). Decide before drafting phase 1.

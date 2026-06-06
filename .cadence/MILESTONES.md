@@ -150,7 +150,14 @@ Bundles the work that landed on `main` after the `1.5.1` onboarding patch. `@man
 > nudge), `1.12.0` (`cadence tutorial` + `cadence explain`). Phases 56–64 form a
 > de-facto **adoption & onboarding** arc, now complete.
 
-### v1.13.0 — Multi-host reach: Codex adapter (PLANNED — active)
+### v1.13.0 — Multi-host reach: Codex adapter (DELIVERED 2026-06-06)
+**Outcome:** shipped to npm with provenance (tag `v1.13.0`, `cd775ce`) across phases
+65–69, all settled. The contract **held at v1 — no bump needed**: `ExtractedPayload`
+expressed Codex's multi-file `apply_patch` paths via `extractPayload`, so the
+"second consumer might force v2" risk resolved in v1's favor (the portability
+proof). The new package versioned in **lockstep at `1.13.0`** (not independent
+`0.1.0`); the other three public packages carried alignment bumps only.
+
 First consumer of the phase-60 host-adapter contract (`ADAPTER_CONTRACT_VERSION = 1`).
 Ships a second published package, `@manehorizons/cadence-host-codex`, that
 `satisfies HostAdapter` for the OpenAI **Codex CLI**. Codex's hook lifecycle is a
@@ -176,7 +183,7 @@ hook system.
 
 ## Post-v1.0 (not scheduled)
 
-- Multi-host adapter re-introduction — **Codex now scheduled as v1.13.0 (above)**; OpenCode (TS plugin host) the likely third adapter; Aider ruled out (no hook system).
+- Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**; OpenCode (TS plugin host) the likely third adapter; Aider ruled out (no hook system).
 - Continuity-runtime direct integration (currently abstract via webhook).
 - DESIGN.md §4.4 softCap tightening (notification-target cap once continuity-runtime ships).
 - Performance benchmarks of the gate stack.
