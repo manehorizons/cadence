@@ -1,61 +1,18 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-05T21:59:08.003Z",
-  "ranked": [
-    {
-      "id": "rec-20260605-003",
-      "title": "cadence explain <concept> — in-CLI concept help",
-      "raw": 12.7,
-      "score": 53,
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready raw-idea",
-          "value": 0
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260605-1702"
-    }
-  ],
+  "generatedAt": "2026-06-05T22:14:59.818Z",
+  "ranked": [],
   "parked": [],
   "needsAttention": [],
   "advisory": {
-    "kind": "top-recommendation",
-    "primary": "cadence milestone propose"
+    "kind": "empty",
+    "primary": "No actionable recommendations — add one with `cadence recommendation add`."
   },
   "totals": {
     "total": 11,
-    "ranked": 1,
+    "ranked": 0,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 10
+    "excluded": 11
   }
 }
