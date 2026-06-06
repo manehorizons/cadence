@@ -154,6 +154,38 @@ The reference assembly is `claudeCodeAdapter` in
 `packages/host-claude-code/tests/adapter-conformance.test.ts`. Use it as the
 end-to-end worked example.
 
+## Second worked example — Codex
+
+`codexAdapter` (`packages/host-codex/src/index.ts`) is the contract's second
+consumer, for the OpenAI **Codex CLI**. It was built specifically to prove the
+contract is not Claude-Code-shaped — and it conforms at the **same**
+`ADAPTER_CONTRACT_VERSION` with no bump. Three places it genuinely diverges from
+the reference are the instructive ones:
+
+1. **`extractPayload` over a multi-file patch.** Claude's edit tools hand the
+   adapter a single `tool_input.file_path`. Codex has one edit tool,
+   `apply_patch`, whose `tool_input` carries a patch *envelope* spanning many
+   files (`*** Add File:` / `*** Update File:` / `*** Delete File:` /
+   `*** Move to:`). The Codex adapter parses those markers into
+   `ExtractedPayload.files` — a differently-shaped host input normalizing to the
+   *same* core-facing payload. This is the portability proof in miniature.
+
+2. **Global command install.** The Claude adapter writes project-scoped
+   `.claude/commands/*.md`. Codex custom prompts have no project-level directory
+   yet, so `installCommands` writes **global** `~/.codex/prompts/cadence-*.md`
+   (honoring `$CODEX_HOME`) and the CLI warns that the prompts apply to every
+   project. `installHooks`, by contrast, stays project-scoped
+   (`.codex/hooks.json`). One adapter, two install scopes — the contract leaves
+   install-option shapes to the adapter for exactly this reason.
+
+3. **A near-1:1 event map.** Codex's hook lifecycle
+   (`SessionStart`/`PreToolUse`/`PostToolUse`/`Stop`/`SubagentStop`/`UserPromptSubmit`)
+   maps almost directly onto the same `AbstractEvent`s, and its stdin-JSON shape
+   and exit-`2`/`permissionDecision` blocking mirror Claude's — so the shim's
+   parsing and blocking logic carried over with little change.
+
+Conformance test: `packages/host-codex/tests/adapter-conformance.test.ts`.
+
 ## Where this fits
 
 An adapter is the only host-aware code in the system. Everything past
