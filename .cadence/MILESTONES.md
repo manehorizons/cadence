@@ -183,7 +183,7 @@ hook system.
 
 ## Post-v1.0 (not scheduled)
 
-- Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**; OpenCode (TS plugin host) the likely third adapter; Aider ruled out (no hook system).
+- Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.
 - Continuity-runtime direct integration (currently abstract via webhook).
 - DESIGN.md §4.4 softCap tightening (notification-target cap once continuity-runtime ships).
 - Performance benchmarks of the gate stack.

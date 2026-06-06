@@ -596,7 +596,10 @@ scope/rationale/risks in MILESTONES.md §v1.13.0.
 
 ## Active milestone: (none — pick the next one)
 
-v1.13 shipped 2026-06-06; loop is IDLE with no milestone in flight. Candidate next
-vectors (see MILESTONES.md §Future / Deferred): a **third host adapter** (OpenCode,
-the likely next; Aider ruled out — no hook system), MCP-surface deepening, or the
-**public launch** (launch assets staged local-only). Decide before drafting phase 1.
+v1.13 shipped 2026-06-06; loop is IDLE with no milestone in flight. **OpenCode was
+evaluated as the third host adapter and rejected 2026-06-06** (its plugin gating
+can't be made airtight — subagent/MCP edits bypass the pre-tool hook and there's
+no clean Stop; full rationale in MILESTONES.md §Post-v1.0). Remaining candidate
+vectors: **MCP-surface deepening**, **gate/verifier hardening**, or the **public
+launch** (launch assets staged local-only). No viable next host adapter today.
+Decide before drafting phase 1.
