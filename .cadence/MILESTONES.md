@@ -226,7 +226,23 @@ rewrite.
   size; whether to record a DESIGN.md decision (D-number) for "deep-verify reads the
   diff."
 
-### v1.15.0 — Verifier robustness (real providers, production-ready) (PLANNED)
+### v1.15.0 — Verifier robustness (real providers, production-ready) (DELIVERED 2026-06-06)
+**Outcome:** shipped across phases 72 (provider hardening — `anthropic`
+`verifier.timeoutMs`/`maxRetries` via the pure `buildAnthropicClientConfig` seam;
+`local` bearer auth from `CADENCE_LOCAL_API_KEY` + `verifier.localHeaders`) and 73
+(verifier selection + cost — `settle run --verifier <mock|anthropic|local>` with
+precedence flag > config > default `mock`, honest mock-fallback banner interaction, and
+optional token usage `{ inputTokens, outputTokens }` on `VerifyResult` →
+`deepVerifyMeta` → SUMMARY), both settled. All four published packages bumped
+`1.14.0 → 1.15.0` in lockstep. **Open questions resolved:** config fields named
+`timeoutMs`/`maxRetries` (mirroring `diffCapBytes`); `--verifier` lives on `settle run`
+only (no standalone `verify` command exists); **no new DESIGN.md D-number** — this is
+provider hardening + ergonomics around unchanged verdict logic, not a behavioral-contract
+change (D12 covered the meaning-changing diff-wiring). `maxRetries` left optional (SDK
+default holds when unset; explicit `0` disables). Dollar cost intentionally not derived
+(no price table). `cadence-types` carries the token-usage field; the host adapters are
+version-aligned only.
+
 Decided 2026-06-06, the natural follow-on to v1.14: now that `deep-verify` actually
 sends the diff, make the **real** providers (`anthropic`, `local`) dependable enough to
 trust in a settle gate, give the operator a way to pick one at the command line, and

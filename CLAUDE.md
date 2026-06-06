@@ -129,7 +129,26 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest published version is **`1.14.0`** (2026-06-06, tag `v1.14.0`
+change). The latest version is **`1.15.0`** (2026-06-06, tag `v1.15.0` +
+provenance): the **verifier-robustness** milestone (v1.15) — make the real
+verifier providers dependable in a settle gate, let the operator pick one at the
+command line, and make every run's token usage auditable; provider hardening +
+ergonomics around **unchanged** verdict logic, not a verifier rewrite (no new
+DESIGN.md D-number). Phase 72 (provider hardening): `anthropic` gains
+configurable `verifier.timeoutMs` + `verifier.maxRetries` (via the pure
+`buildAnthropicClientConfig` seam) so a transient 429/5xx/network blip retries
+before failing loud; `local` gains a bearer `Authorization` from
+`CADENCE_LOCAL_API_KEY` plus arbitrary `verifier.localHeaders` for token-gated
+OpenAI-compatible proxies (header values never logged). Phase 73 (selection +
+cost): `cadence settle run --verifier <mock|anthropic|local>` overrides the
+config-only provider selection (precedence **flag > config > default `mock`**,
+invalid values rejected at parse time, honest interaction with the v1.14
+mock-fallback banner), and optional token usage `{ inputTokens, outputTokens }`
+is captured on `VerifyResult` (Anthropic `.usage`; `local` when returned) and
+surfaced on `deepVerifyMeta`/SUMMARY — dollar cost intentionally not derived (no
+price table). Phase 74 = release (docs + changeset + lockstep bump). All four
+published packages bumped `1.14.0 → 1.15.0` in lockstep. Prior: **`1.14.0`**
+(2026-06-06, tag `v1.14.0`
 + provenance): the **verifier-correctness** milestone (v1.14) — the `deep-verify`
 gate now sends the AI verifier the **actual phase diff** (`git diff HEAD`, capped
 by the new `verifier.diffCapBytes` config, default 256KB, truncated with an
