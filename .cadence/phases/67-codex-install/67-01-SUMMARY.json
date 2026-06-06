@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "draftId": "67-01",
+  "completedAt": "2026-06-06T00:21:17.408Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": ""
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "deepVerify": {
+    "AC-1": {
+      "pass": true,
+      "reason": "mock: 104 linked tests (packages/types/tests/anomaly.test.ts:4)",
+      "provider": "mock"
+    },
+    "AC-2": {
+      "pass": true,
+      "reason": "mock: 77 linked tests (packages/types/tests/handoff.test.ts:28)",
+      "provider": "mock"
+    },
+    "AC-3": {
+      "pass": true,
+      "reason": "mock: 71 linked tests (packages/types/tests/host.test.ts:48)",
+      "provider": "mock"
+    },
+    "AC-4": {
+      "pass": true,
+      "reason": "mock: 66 linked tests (packages/types/tests/config.test.ts:44)",
+      "provider": "mock"
+    }
+  },
+  "codeReview": {}
+}
