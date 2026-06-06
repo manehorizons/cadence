@@ -1,0 +1,59 @@
+{
+  "name": "@manehorizons/cadence-host-codex",
+  "version": "1.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "description": "OpenAI Codex CLI adapter for CADENCE — installs lifecycle hooks and slash commands that drive the CADENCE engine from inside Codex.",
+  "license": "MIT",
+  "author": "Thomas Powers",
+  "homepage": "https://github.com/manehorizons/cadence#readme",
+  "bugs": "https://github.com/manehorizons/cadence/issues",
+  "keywords": [
+    "cadence",
+    "codex",
+    "openai-codex",
+    "ai",
+    "agents",
+    "hooks",
+    "slash-commands"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "bin",
+    "!dist/tsconfig.tsbuildinfo"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manehorizons/cadence.git",
+    "directory": "packages/host-codex"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@manehorizons/cadence-core": "workspace:*",
+    "@manehorizons/cadence-types": "workspace:*",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@manehorizons/cadence-testkit": "workspace:*",
+    "vitest": "^2.1.0"
+  }
+}

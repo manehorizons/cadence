@@ -86,6 +86,25 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.41)
 
+  packages/host-codex:
+    dependencies:
+      '@manehorizons/cadence-core':
+        specifier: workspace:*
+        version: link:../core
+      '@manehorizons/cadence-types':
+        specifier: workspace:*
+        version: link:../types
+      commander:
+        specifier: ^14.0.0
+        version: 14.0.3
+    devDependencies:
+      '@manehorizons/cadence-testkit':
+        specifier: workspace:*
+        version: link:../testkit
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.41)
+
   packages/testkit:
     dependencies:
       '@manehorizons/cadence-types':
