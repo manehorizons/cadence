@@ -70,7 +70,7 @@ temp root; Windows in phase 50 via platform-aware test timeouts in
 
 ## Architecture
 
-Two-surface, four-package design. Source of truth for everything below is in
+Two-surface, five-package design. Source of truth for everything below is in
 `pnpm-workspace.yaml` + each package's `package.json`.
 
 ### Packages
@@ -79,11 +79,12 @@ Two-surface, four-package design. Source of truth for everything below is in
 |---|---|
 | `@manehorizons/cadence-core` | The engine. CLI (`cadence` binary), DRAFT→BUILD→SETTLE state machine, all gates, parsers, renderers. This is where ~all logic lives. |
 | `@manehorizons/cadence-types` | Zod schemas + TypeScript types. Pure data layer — no logic, no I/O. Imported by every other package. |
-| `@manehorizons/cadence-host-claude-code` | The Claude Code adapter. Installs lifecycle hooks + nine slash commands; shims abstract events to the core dispatcher. `cadence-host-claude-code install` writes into a consumer's `.claude/`. |
+| `@manehorizons/cadence-host-claude-code` | The Claude Code adapter (reference `HostAdapter`). Installs lifecycle hooks + nine slash commands; shims abstract events to the core dispatcher. `cadence-host-claude-code install` writes into a consumer's `.claude/`. |
+| `@manehorizons/cadence-host-codex` | The OpenAI Codex CLI adapter (second `HostAdapter`, phase 60 contract). Installs project `.codex/hooks.json` + global `~/.codex/prompts/` slash commands; `cadence-host-codex hook` shims Codex's stdin-JSON lifecycle to the core dispatcher. Added v1.13.0 (phases 65–69). |
 | `@manehorizons/cadence-testkit` | `private` (dev-only). Mock host + ephemeral-repo fixture + assertions used by every package's tests. Never published to npm. |
 
-Three packages publish to npm (`access: public`): `core`, `types`,
-`host-claude-code`. `testkit` is intentionally private. The publish path was
+Four packages publish to npm (`access: public`): `core`, `types`,
+`host-claude-code`, `host-codex`. `testkit` is intentionally private. The publish path was
 proven reversibly via `scripts/publish-proof.mjs` (ephemeral verdaccio), first
 shipped to npm on 2026-05-30 at `1.1.1`, then republished as `1.4.0` on
 2026-06-02 — the version-hygiene release: a version bump matching `main`, an
@@ -117,8 +118,8 @@ first-class **scout-session grouping** (an optional `scoutId` on recommendations
 + `recommendation add --scout-id`, a `recommend --scout-id <id>` cluster filter,
 a `- scout:` render line, and `/cadence-scout` auto-minting a session id; PR #53)
 and **phase 62** the guided **first-loop nudge** in `cadence init` output (a
-numbered "Your first loop" block + `cadence progress` escape hatch; PR #54). The
-latest published version is **`1.12.0`** (2026-06-05, tag `v1.12.0` +
+numbered "Your first loop" block + `cadence progress` escape hatch; PR #54). Then
+**`1.12.0`** (2026-06-05, tag `v1.12.0` +
 provenance): changesets bumped the three packages `1.11.0 → 1.12.0` for two more
 adoption-layer **`cadence-core`** CLI features — **phase 63** **`cadence
 tutorial`** (runs one real DRAFT→BUILD→SETTLE loop in a throwaway sandbox,
@@ -128,7 +129,19 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). Releases are cut with
+change). The latest published version is **`1.13.0`** (2026-06-05, tag `v1.13.0`
++ provenance): the **multi-host reach** milestone (v1.13) — a **fourth** published
+package, **`@manehorizons/cadence-host-codex`**, the second consumer of the
+phase-60 host-adapter contract (`ADAPTER_CONTRACT_VERSION = 1`, **unchanged** — a
+differently-shaped host conformed without a contract bump). Built across phases
+65–69 (spike → adapter core → install surface → hook shim → docs): `codexAdapter
+satisfies HostAdapter` with `mapEvent` over Codex's near-1:1 lifecycle and
+`extractPayload` parsing Codex's multi-file `apply_patch` envelope into
+`ExtractedPayload.files`; `cadence-host-codex install` (project `.codex/hooks.json`
++ **global** `~/.codex/prompts/` slash commands) and `cadence-host-codex hook`
+(the runtime shim → core dispatcher). The other three packages carried
+version-alignment bumps only. Codex chosen over OpenCode for reach; Aider ruled
+out (no hook system). Releases are cut with
 [changesets](https://github.com/changesets/changesets) and the manual `Release`
 workflow (`.github/workflows/release.yml`, `workflow_dispatch`).
 
