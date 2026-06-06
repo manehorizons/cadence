@@ -78,7 +78,12 @@ describe('installHooks (AC-1)', () => {
     const root = await tempDir();
     await installHooks(root, { local: true });
     const cfg = await readHooks(root);
-    expect(cfg.hooks.SessionStart[0].hooks[0].command).toMatch(/--cadence "node \/.*core.*"/);
+    // Platform-aware: the local core path is OS-native (POSIX `/` or Windows
+    // `\` + drive letter), so match the `core/dist/cli/index.js` suffix with
+    // either separator rather than assuming a POSIX leading slash.
+    expect(cfg.hooks.SessionStart[0].hooks[0].command).toMatch(
+      /--cadence "node .+core[\\/]dist[\\/]cli[\\/]index\.js"/,
+    );
   });
 
   it('honors an explicit --command override', async () => {

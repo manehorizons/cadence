@@ -75,7 +75,9 @@ describe('installCommands (AC-2)', () => {
     const home = await tempDir();
     await installCommands(process.cwd(), { codexHome: home, local: true });
     const body = await readFile(join(home, 'prompts/cadence-progress.md'), 'utf8');
-    expect(body).toMatch(/node \/.*core.*progress/);
+    // Platform-aware: absolute core path is OS-native; don't assume a POSIX
+    // leading slash (`node .+core…` rules out the bare `cadence` command).
+    expect(body).toMatch(/node .+core.*progress/);
   });
 
   it('respects $CODEX_HOME when no override is given', async () => {
