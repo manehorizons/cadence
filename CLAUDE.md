@@ -129,7 +129,19 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest published version is **`1.13.0`** (2026-06-05, tag `v1.13.0`
+change). The latest published version is **`1.14.0`** (2026-06-06, tag `v1.14.0`
++ provenance): the **verifier-correctness** milestone (v1.14) — the `deep-verify`
+gate now sends the AI verifier the **actual phase diff** (`git diff HEAD`, capped
+by the new `verifier.diffCapBytes` config, default 256KB, truncated with an
+explicit marker) instead of `diff: ''`, so deep verification judges the
+implementation rather than test-linkage alone (DESIGN.md **D12**). Run-level
+`deepVerifyMeta` provenance (`diffProvided`/`diffBytes`/`truncated`/`filesCount`/
+`provider`/`model`) lands in the SUMMARY, and the mock-fallback banner now fires
+on the gate's real firing condition (`--deep` **or** gate-set membership), not
+just `--deep`, so a `standard × complex` settle never runs mock verification
+silently. Phases 70 (keystone diff wiring + `capDiff` + provenance) → 71 (banner
+honesty + docs + changeset); all four published packages bumped `1.13.0 → 1.14.0`
+in lockstep. Prior: **`1.13.0`** (2026-06-05, tag `v1.13.0`
 + provenance): the **multi-host reach** milestone (v1.13) — a **fourth** published
 package, **`@manehorizons/cadence-host-codex`**, the second consumer of the
 phase-60 host-adapter contract (`ADAPTER_CONTRACT_VERSION = 1`, **unchanged** — a

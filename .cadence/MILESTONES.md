@@ -181,9 +181,16 @@ hook system.
 - **Open:** Codex command-surface shape (main unknown — spike-first); versioning
   start for the new package (lockstep `1.13.0` vs independent `0.1.0`).
 
-### v1.14.0 — Verifier correctness: deep-verify sees the code (PLANNED — active)
-Decided 2026-06-06. **Keystone correctness fix:** the `deep-verify` gate currently
-sends `diff: ''` to the AI verifier (`packages/core/src/gates/deep-verify.ts:28`),
+### v1.14.0 — Verifier correctness: deep-verify sees the code (DELIVERED 2026-06-06)
+**Outcome:** shipped across phases 70 (keystone diff wiring + `capDiff` + `deepVerifyMeta`
+provenance) and 71 (banner honesty + diff-aware docs + changeset), both settled. All
+four published packages bumped `1.13.0 → 1.14.0` in lockstep. Two favorable deviations:
+the `ctx.diff()` memo already existed (Phase 39.4, shared with code-review) so the
+keystone was a wiring change, not new infra; and the `per-task` verifier was already
+diff-aware (no blind spot). DESIGN.md **D12** records the decision.
+
+Decided 2026-06-06. **Keystone correctness fix:** the `deep-verify` gate
+sent `diff: ''` to the AI verifier (`packages/core/src/gates/deep-verify.ts:28`),
 so "deep verification" judges ACs on test-linkage + filenames only — it is
 structurally blind to the implementation, even with a real `anthropic`/`local`
 provider whose own prompt demands it judge "the supplied diff." This milestone

@@ -594,41 +594,35 @@ scope/rationale/risks in MILESTONES.md §v1.13.0.
 
 ---
 
-## Active milestone: v1.14.0 — Verifier correctness (deep-verify sees the code)
+## v1.14.0 — Verifier correctness (deep-verify sees the code) — ✓ SHIPPED 2026-06-06
 
-Decided 2026-06-06 (after OpenCode was evaluated + rejected as the 3rd host adapter
-— rationale in MILESTONES.md §Post-v1.0). **Keystone correctness fix:** the
-`deep-verify` gate sends `diff: ''` to the AI verifier
-(`packages/core/src/gates/deep-verify.ts:28`), so "deep verification" judges ACs on
-test-linkage + filenames only and never sees the implementation — even with a real
-provider. This milestone wires the actual `git diff` into the gate (capped, with an
-honest truncation marker), records what the verifier saw (`deepVerifyMeta`
-provenance), and fixes the mock-fallback banner to fire whenever the gate runs in
-mock (not just on `--deep`). Sharp scope, tied to the "refuses to settle unverified
-work" promise. Full scope/rationale/risks in MILESTONES.md §v1.14.0.
+Decided 2026-06-06 (after OpenCode was rejected as the 3rd host adapter — rationale
+in MILESTONES.md §Post-v1.0). **Keystone correctness fix:** the `deep-verify` gate
+sent `diff: ''` to the AI verifier, so "deep verification" judged ACs on test-linkage
++ filenames only and never saw the implementation — even with a real provider. Both
+phases settled; all four published packages bumped `1.13.0 → 1.14.0` in lockstep.
 
-### Phase 70 — Diff wiring + cap + provenance (NEXT)
+- **Phase 70 — diff wiring + cap + provenance** ✓ — `deep-verify.ts` now feeds the
+  verifier the memoized `git diff HEAD` (shared with `code-review`) via the existing
+  `ctx.diff()` (Phase 39.4 — pre-existed, so the keystone was simpler than planned),
+  bounded by the new `verifier.diffCapBytes` config (default 256KB) + pure
+  `capDiff()` helper with an honest `[diff truncated: N of M bytes]` marker; run-level
+  `deepVerifyMeta` provenance written to the SUMMARY. (`per-task` verifier was already
+  diff-aware — no blind spot.)
+- **Phase 71 — banner honesty + docs + changeset** ✓ — mock-fallback banner re-gated
+  on the gate's real firing condition (`--deep` **or** gate-set membership); docs
+  (`concepts.md`, `config.md`, DESIGN.md **D12**) + doc-presence drift test; changeset
+  for the lockstep bump.
 
-**Objective.** Make the `deep-verify` gate send the real (capped) diff to the AI
-verifier, and record what it saw.
+Full scope/rationale in MILESTONES.md §v1.14.0.
 
-**Scope.** (1) Lazy `ctx.diff()` memo on the gate context (mirrors `ctx.coverage()`),
-`git diff HEAD -- <files>` computed once, shared with `code-review`. (2) Pure
-`capDiff(raw, capBytes)` helper + literal `[diff truncated: N of M bytes]` marker.
-(3) `verifier.diffCapBytes` config (Zod positive int, default `262144`). (4)
-`deepVerifyMeta` run-level provenance on the summary (new `cadence-types` type). (5)
-Wire `ctx.diff()` (capped) into `VerifyInput.diff` at `deep-verify.ts:28`. TDD:
-`capDiff` pure tests; gate asserts verifier now receives a non-empty diff +
-truncation path + provenance stamped. All offline (mock verifier).
+---
 
-**Output.** deep-verify that actually verifies code; provenance in SUMMARY.
+## Active milestone: (none — pick the next one)
 
-### Phase 71 — Banner honesty + docs + release
-
-**Objective.** Close the silent-mock gap and ship v1.14.0.
-
-**Scope.** Re-gate the mock-fallback banner on `opts.deep ||
-gateSet.includes('deep-verify')` (`settle.ts:107`); docs (`concepts.md` deep-verify
-now reads the diff, `config.md` `diffCapBytes`, DESIGN.md decision note + CLAUDE.md
-version mention for the doc-sync gate); changesets bump + Release workflow
-(v1.14.0, lockstep).
+v1.14 shipped 2026-06-06; loop IDLE, no milestone in flight. Prior candidate vectors
+(MILESTONES.md §Post-v1.0): **verifier robustness** (the deferred Anthropic
+retries/timeouts, `local` auth headers, a CLI `--verifier` flag, token/cost
+instrumentation — the natural follow-on to v1.14), MCP-surface deepening, observability
+(structured logging / OTel), or the **public launch** (assets staged local-only). No
+viable next host adapter today (OpenCode rejected; Aider has no hooks).
