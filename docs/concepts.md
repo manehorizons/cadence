@@ -241,7 +241,7 @@ These run on every phase regardless of profile or tier.
 
 | Gate | When it fires | Bypass flag |
 |---|---|---|
-| `deep-verify` | Independent AI verifier runs at settle (`--deep` or baked in for `standard × complex`); per-AC `pass=false` refuses settle | `--force` or `--allow-verifier-failure` for transport errors (on `settle run`) |
+| `deep-verify` | Independent AI verifier runs at settle (`--deep` or baked in for `standard × complex`); it is sent the actual phase diff (`git diff HEAD`, capped by `verifier.diffCapBytes`) plus the ACs and linked tests, so it judges the implementation, not just test-linkage; per-AC `pass=false` refuses settle | `--force` or `--allow-verifier-failure` for transport errors (on `settle run`) |
 | `interactive-verdict` | Human walks each AC at settle (`--interactive`); `fail` verdict refuses settle | `--no-interactive` to opt out; `--force` to settle past failures |
 | `plan-review` | AI plan-review agent runs at `cadence draft approve` (strict × complex only); `pass=false` refuses approve | `--allow-plan-review-failure` (on `draft approve`) |
 | `security-audit` | AI security-audit agent runs at `cadence settle run` after code-review (strict × complex only); CRITICAL findings refuse settle | `--allow-security-audit-failure` or `--force` (on `settle run`) |

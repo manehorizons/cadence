@@ -103,8 +103,15 @@ export async function settleService(
     }
     const gateSet = effectiveGateSet(state, cadenceConfig, draft);
 
+    // Phase 71: warn whenever the deep-verify gate will actually run in mock —
+    // i.e. on the gate's real firing condition, not just explicit --deep. A
+    // standard×complex settle runs deep-verify by membership; without this it
+    // would run mock verification silently.
+    const deepWillRun =
+      (opts.deep === true || gateSet.gates.includes('deep-verify')) &&
+      opts.auto !== false;
     if (
-      opts.deep &&
+      deepWillRun &&
       resolveEffectiveProvider(cadenceConfig?.verifier).provider === 'mock'
     ) {
       io.err(MOCK_FALLBACK_BANNER + '\n');

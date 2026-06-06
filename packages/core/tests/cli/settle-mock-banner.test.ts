@@ -37,6 +37,21 @@ async function seedBuild(root: string): Promise<void> {
   await run(['build', 'task', 'T1', '--status=DONE'], root);
 }
 
+/**
+ * Seed a standard×complex build so `deep-verify` lands in the effective gate
+ * set (standard profile avoids the auto×complex soft cap). Phase 71.
+ */
+async function seedComplexBuild(root: string): Promise<void> {
+  const cfgPath = join(root, '.cadence/config.json');
+  const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+  cfg.profile = 'standard';
+  await writeFile(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
+  await run(['draft', 'new', '02-complex', '02', '--title=Complex', '--tier=complex'], root);
+  // standard×complex adds the manual-approve gate; --no-approve bypasses it for non-TTY runs.
+  await run(['draft', 'approve', '02-complex', '02', '--no-approve'], root);
+  await run(['build', 'task', 'T1', '--status=DONE'], root);
+}
+
 let active: Fixture | null = null;
 afterEach(async () => {
   if (active) {
@@ -79,6 +94,35 @@ describe('settle run --deep mock-fallback banner', () => {
     await seedBuild(active.root);
     const r = await run(
       ['settle', 'run', '--auto', '--deep', '--allow-missing-coverage', '--force'],
+      active.root,
+    );
+    expect(r.stderr).not.toMatch(/MOCK verification/);
+  });
+
+  // AC-1 (Phase 71) — banner fires when deep-verify is in the gate set, no --deep
+  it('fires the banner on deep-verify gate-set membership without --deep (AC-1)', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedComplexBuild(active.root);
+    const r = await run(
+      ['settle', 'run', '--auto', '--allow-missing-coverage', '--force'],
+      active.root,
+    );
+    expect(r.stderr).toMatch(/MOCK verification/);
+  });
+
+  // AC-2 (Phase 71) — banner silent on membership when a real provider is set
+  it('stays silent on gate-set membership when a real provider is configured (AC-2)', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfgPath = join(active.root, '.cadence/config.json');
+    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+    cfg.profile = 'standard';
+    cfg.verifier = { provider: 'anthropic' };
+    await writeFile(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
+    await run(['draft', 'new', '02-complex', '02', '--title=Complex', '--tier=complex'], active.root);
+    await run(['draft', 'approve', '02-complex', '02', '--no-approve'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    const r = await run(
+      ['settle', 'run', '--auto', '--allow-missing-coverage', '--force'],
       active.root,
     );
     expect(r.stderr).not.toMatch(/MOCK verification/);

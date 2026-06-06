@@ -187,6 +187,14 @@ All six blocks default to `{ "provider": "mock" }`. Provider options:
 
 See [docs/concepts.md — Providers](../concepts.md#providers) for conceptual detail and [docs/providers.md](../providers.md) for setup instructions.
 
+### `verifier.diffCapBytes`
+
+The `verifier` block (the `deep-verify` gate) takes one extra field:
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `verifier.diffCapBytes` | `integer` (positive) | `262144` (256KB) | Byte budget for the unified `git diff` sent to the `deep-verify` verifier. `deep-verify` feeds the verifier the actual phase diff (`git diff HEAD` over the touched files) so it judges the implementation, not just test-linkage. A diff larger than this cap is truncated with an explicit `[diff truncated: N of M bytes]` marker, and the SUMMARY's `deepVerifyMeta` records `truncated: true` plus the original byte count. |
+
 ---
 
 ## notify
