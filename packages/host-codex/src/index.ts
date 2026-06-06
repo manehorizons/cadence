@@ -18,9 +18,10 @@ export type { InstallCommandsOptions } from './install-commands.js';
 /**
  * The OpenAI Codex CLI host adapter — the second consumer of the
  * {@link HostAdapter} contract (phase 60), proving it is not Claude-Code-shaped.
- * Phase 66 ships the pure core (capabilities + event translation + apply_patch
- * payload extraction); the install surface and shim follow in phases 67/68. The
- * `satisfies` check is the compile-time conformance proof.
+ * Capabilities + event translation + apply_patch payload extraction (phase 66)
+ * and the install surface — project `.codex/hooks.json` + global
+ * `~/.codex/prompts/` (phase 67) — are wired here; the `hook` shim follows in
+ * phase 68. The `satisfies` check is the compile-time conformance proof.
  */
 export const codexAdapter = {
   contractVersion: ADAPTER_CONTRACT_VERSION,
