@@ -93,8 +93,14 @@ export const CadenceConfigZ = z.object({
       provider: z.enum(['mock', 'anthropic', 'local']).default('mock'),
       /** Optional model override for the Anthropic provider. */
       model: z.string().optional(),
+      /**
+       * Byte budget for the unified diff sent to the `--deep` verifier
+       * (Phase 70). Oversized diffs are truncated with an explicit marker so
+       * the verifier knows it saw a partial picture. Default 256KB.
+       */
+      diffCapBytes: z.number().int().positive().default(262144),
     })
-    .default({ provider: 'mock' }),
+    .default({ provider: 'mock', diffCapBytes: 262144 }),
   perTaskVerifier: z
     .object({
       /**
@@ -216,7 +222,7 @@ export const defaultConfig: CadenceConfig = {
   verification: {
     testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
   },
-  verifier: { provider: 'mock' as const },
+  verifier: { provider: 'mock' as const, diffCapBytes: 262144 },
   perTaskVerifier: { provider: 'mock' as const },
   codeReview: { provider: 'mock' as const },
   planReview: { provider: 'mock' as const },

@@ -266,6 +266,7 @@ export async function settleService(
       (opts.interactive !== false && gateSet.gates.includes('interactive-verdict'));
     const interactiveVerify = acc.interactiveVerify;
     const deepVerify = acc.deepVerify;
+    const deepVerifyMeta = acc.deepVerifyMeta;
     const verifierFailure = acc.flags.verifierFailure;
     const codeReviewFindings = acc.codeReview;
     const securityAuditFindings = acc.securityAudit;
@@ -363,6 +364,7 @@ export async function settleService(
       deferred: [],
       skillAudit: state.skillAudit,
       ...(deepVerify ? { deepVerify } : {}),
+      ...(deepVerifyMeta ? { deepVerifyMeta } : {}),
       ...(interactiveVerify ? { interactiveVerify } : {}),
       ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
       ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),

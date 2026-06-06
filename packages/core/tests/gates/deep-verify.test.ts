@@ -1,14 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { runDeepVerifyGate } from '../../src/gates/deep-verify.js';
 import type { SettleContext } from '../../src/gates/types.js';
-import type { VerifyResult } from '../../src/verify/verifier.js';
+import type { VerifyInput, VerifyResult } from '../../src/verify/verifier.js';
 
 function ctx(over: {
-  verify: () => Promise<VerifyResult>;
+  verify: (input: VerifyInput) => Promise<VerifyResult>;
   opts?: SettleContext['opts'];
   explicitIds?: Set<string>;
   gates?: string[];
   errs?: string[];
+  diff?: string;
+  diffCapBytes?: number;
 }): SettleContext {
   const errs = over.errs ?? [];
   return {
@@ -19,12 +21,16 @@ function ctx(over: {
       tasks: [{ id: 'T1', files: ['a.ts'] }],
     } as never,
     progress: { draftId: 'd', tasks: {} },
-    config: null,
+    config:
+      over.diffCapBytes != null
+        ? ({ verifier: { provider: 'mock', diffCapBytes: over.diffCapBytes } } as never)
+        : null,
     gateSet: { gates: over.gates ?? ['deep-verify'], softCap: false },
     opts: over.opts ?? { deep: true },
     explicitIds: over.explicitIds ?? new Set<string>(),
     touchedFiles: ['a.ts'],
     coverage: async () => new Map(),
+    diff: () => over.diff ?? '',
     verifiers: { deep: { verify: over.verify } },
     emit: { anomalies: async () => {} },
     io: { err: (s: string) => errs.push(s) },
@@ -111,6 +117,103 @@ describe('runDeepVerifyGate', () => {
       ctx({ opts: { deep: true, auto: false }, verify: async () => { throw new Error('should not be called'); } }),
     );
     expect(res.outcome).toBe('pass');
+  });
+
+  // AC-1 (Phase 70): the gate sends the collected diff to the verifier
+  it('sends the collected diff to the verifier', async () => {
+    let seen: VerifyInput | undefined;
+    const res = await runDeepVerifyGate(
+      ctx({
+        diff: 'diff --git a/a.ts b/a.ts\n+real change',
+        verify: async (input) => {
+          seen = input;
+          return { verdicts: { 'AC-1': { pass: true, reason: 'ok' } }, provider: 'mock' };
+        },
+      }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(seen?.diff).toBe('diff --git a/a.ts b/a.ts\n+real change');
+  });
+
+  // AC-1 / AC-2 (Phase 70): an oversized diff is truncated before the verifier sees it
+  it('truncates an oversized diff before the verifier sees it', async () => {
+    let seen: VerifyInput | undefined;
+    await runDeepVerifyGate(
+      ctx({
+        diff: 'x'.repeat(100),
+        diffCapBytes: 40,
+        verify: async (input) => {
+          seen = input;
+          return { verdicts: { 'AC-1': { pass: true, reason: 'ok' } }, provider: 'mock' };
+        },
+      }),
+    );
+    expect(seen?.diff.startsWith('x'.repeat(40))).toBe(true);
+    expect(seen?.diff).toContain('[diff truncated: 40 of 100 bytes]');
+  });
+
+  // AC-4 (Phase 70): deepVerifyMeta provenance recorded on pass
+  it('records deepVerifyMeta provenance on pass', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({
+        diff: 'abc',
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: true, reason: 'ok' } },
+          provider: 'anthropic',
+          model: 'claude-sonnet-4-6',
+        }),
+      }),
+    );
+    expect(res.summaryPatch?.deepVerifyMeta).toEqual({
+      diffProvided: true,
+      diffBytes: 3,
+      truncated: false,
+      filesCount: 1,
+      provider: 'anthropic',
+      model: 'claude-sonnet-4-6',
+    });
+  });
+
+  // AC-4 (Phase 70): deepVerifyMeta present even when the gate refuses
+  it('records deepVerifyMeta even on refuse', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({
+        diff: 'abc',
+        verify: async () => ({ verdicts: { 'AC-1': { pass: false, reason: 'nope' } }, provider: 'mock' }),
+      }),
+    );
+    expect(res.outcome).toBe('refuse');
+    expect(res.summaryPatch?.deepVerifyMeta?.diffProvided).toBe(true);
+    expect(res.summaryPatch?.deepVerifyMeta?.provider).toBe('mock');
+  });
+
+  // AC-4 (Phase 70): diffProvided=false + truncated reflected when no diff collected
+  it('marks diffProvided=false when the diff is empty', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({
+        diff: '',
+        verify: async () => ({ verdicts: { 'AC-1': { pass: true, reason: 'ok' } }, provider: 'mock' }),
+      }),
+    );
+    expect(res.summaryPatch?.deepVerifyMeta?.diffProvided).toBe(false);
+    expect(res.summaryPatch?.deepVerifyMeta?.diffBytes).toBe(0);
+    expect(res.summaryPatch?.deepVerifyMeta?.truncated).toBe(false);
+  });
+
+  // AC-4 (Phase 70): provenance recorded on a degraded verifier failure too
+  it('records deepVerifyMeta on a degraded verifier failure', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({
+        diff: 'abc',
+        opts: { deep: true, allowVerifierFailure: true },
+        verify: async () => {
+          throw new Error('boom');
+        },
+      }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.summaryPatch?.deepVerifyMeta?.diffProvided).toBe(true);
+    expect(res.summaryPatch?.deepVerifyMeta?.provider).toBe('mock');
   });
 
   // AC-2: provider model is stamped onto each verdict when the result carries one

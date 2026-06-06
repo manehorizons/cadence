@@ -1,6 +1,10 @@
-import type { DeepVerdict } from '@manehorizons/cadence-types';
+import type { DeepVerdict, DeepVerifyMeta } from '@manehorizons/cadence-types';
 import type { VerifyAc, VerifyInput, VerifyTestRef } from '../verify/verifier.js';
+import { capDiff } from '../verify/cap-diff.js';
 import type { GateImpl, GateFlags, GateResult } from './types.js';
+
+/** Schema default for `verifier.diffCapBytes` (256KB); used when config is absent. */
+const DEFAULT_DIFF_CAP_BYTES = 262144;
 
 /**
  * Deep verifier gate (Phase 15). Extracted from settle.ts verbatim. Fires on
@@ -22,10 +26,27 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
   const coverageMap = await ctx.coverage();
   const tests: Record<string, VerifyTestRef[]> = {};
   for (const [id, refs] of coverageMap) tests[id] = refs;
+
+  // Phase 70: feed the verifier the real (capped) diff instead of '' — without
+  // it, deep verification judges ACs on test-linkage + filenames alone.
+  const capBytes = ctx.config?.verifier?.diffCapBytes ?? DEFAULT_DIFF_CAP_BYTES;
+  const cap = capDiff(ctx.diff(), capBytes);
+  const metaBase = {
+    diffProvided: cap.originalBytes > 0,
+    diffBytes: cap.originalBytes,
+    truncated: cap.truncated,
+    filesCount: ctx.touchedFiles.length,
+  };
+  const meta = (provider: string, model?: string): DeepVerifyMeta => ({
+    ...metaBase,
+    provider,
+    ...(model ? { model } : {}),
+  });
+
   const verifyInput: VerifyInput = {
     acs,
     tests,
-    diff: '',
+    diff: cap.diff,
     files: [...ctx.touchedFiles],
   };
 
@@ -61,9 +82,15 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
         'settle run --deep refused: the independent verifier rejected one or more ACs. ' +
           'Pass --force to settle anyway, or address the gaps.\n',
       );
-      return { outcome: 'refuse', summaryPatch: { deepVerify } };
+      return {
+        outcome: 'refuse',
+        summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model) },
+      };
     }
-    return { outcome: 'pass', summaryPatch: { deepVerify } };
+    return {
+      outcome: 'pass',
+      summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model) },
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (ctx.opts.allowVerifierFailure) {
@@ -82,7 +109,11 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
         };
       }
       const flags: GateFlags = { verifierFailure: { message, provider: failedProvider } };
-      return { outcome: 'pass', summaryPatch: { deepVerify }, flags };
+      return {
+        outcome: 'pass',
+        summaryPatch: { deepVerify, deepVerifyMeta: meta(failedProvider, failedModel) },
+        flags,
+      };
     }
     ctx.io.err(
       `deep-verify: verifier failed — ${message}. Pass --allow-verifier-failure to continue.\n`,

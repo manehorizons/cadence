@@ -128,6 +128,33 @@ describe('CadenceConfigZ', () => {
     expect(cfg.securityAudit.provider).toBe('local');
   });
 
+  // AC-3 (Phase 70) — verifier.diffCapBytes: back-compat default + bounds.
+  it('verifier.diffCapBytes defaults to 262144 when absent (AC-3)', () => {
+    const { verifier: _drop, ...withoutVerifier } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutVerifier);
+    expect(parsed.verifier.diffCapBytes).toBe(262144);
+  });
+
+  it('verifier.diffCapBytes round-trips an override (AC-3)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: { provider: 'anthropic', diffCapBytes: 1000 },
+    });
+    expect(parsed.verifier.diffCapBytes).toBe(1000);
+  });
+
+  it('rejects non-positive / non-int verifier.diffCapBytes (AC-3)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, verifier: { diffCapBytes: 0 } }),
+    ).toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, verifier: { diffCapBytes: -5 } }),
+    ).toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, verifier: { diffCapBytes: 1.5 } }),
+    ).toThrow();
+  });
+
   it('notify defaults to transport=stderr when absent', () => {
     const { notify: _drop, ...withoutNotify } = defaultConfig;
     const parsed = CadenceConfigZ.parse(withoutNotify);

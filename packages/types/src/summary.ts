@@ -10,6 +10,22 @@ export const DeepVerdictZ = z.object({
 export type DeepVerdict = z.infer<typeof DeepVerdictZ>;
 
 /**
+ * Phase 70: run-level provenance for a `--deep` verifier pass — records what
+ * the verifier was actually given, so a verdict is auditable. `diffProvided`
+ * is false only when no diff could be collected; `truncated` flags that the
+ * diff was clipped to `verifier.diffCapBytes` before the verifier saw it.
+ */
+export const DeepVerifyMetaZ = z.object({
+  diffProvided: z.boolean(),
+  diffBytes: z.number().int().nonnegative(),
+  truncated: z.boolean(),
+  filesCount: z.number().int().nonnegative(),
+  provider: z.string(),
+  model: z.string().optional(),
+});
+export type DeepVerifyMeta = z.infer<typeof DeepVerifyMetaZ>;
+
+/**
  * Per-file / per-diff finding. Introduced for code-review (Phase 24.3,
  * high/medium/low). Phase 25.2 added `critical` for the security-audit
  * gate — additive; code-review still only emits high/medium/low.
@@ -34,6 +50,8 @@ export const SummaryZ = z.object({
   skillAudit: z.object({ required: z.array(z.string()), invoked: z.array(z.string()) }),
   /** Phase 15: per-AC `--deep` verifier output. Present only when `--deep` ran. */
   deepVerify: z.record(z.string(), DeepVerdictZ).optional(),
+  /** Phase 70: run-level provenance for the `--deep` pass (what the verifier saw). */
+  deepVerifyMeta: DeepVerifyMetaZ.optional(),
   /** Phase 16: per-AC `--interactive` walker output. Present only when the walker ran. */
   interactiveVerify: z
     .record(

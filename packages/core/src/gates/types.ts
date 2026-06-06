@@ -3,6 +3,7 @@ import type {
   CadenceConfig,
   CadenceState,
   DeepVerdict,
+  DeepVerifyMeta,
   Draft,
   Finding,
   GateSet,
@@ -196,6 +197,8 @@ export interface GateFlags {
  */
 export interface SettleAccumulator {
   deepVerify?: Record<string, DeepVerdict>;
+  /** Phase 70: run-level provenance for the deep-verify pass. */
+  deepVerifyMeta?: DeepVerifyMeta;
   interactiveVerify?: Record<string, InteractiveVerdict>;
   codeReview?: Record<string, Finding[]>;
   securityAudit?: Finding[];
