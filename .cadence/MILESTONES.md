@@ -181,6 +181,44 @@ hook system.
 - **Open:** Codex command-surface shape (main unknown — spike-first); versioning
   start for the new package (lockstep `1.13.0` vs independent `0.1.0`).
 
+### v1.14.0 — Verifier correctness: deep-verify sees the code (PLANNED — active)
+Decided 2026-06-06. **Keystone correctness fix:** the `deep-verify` gate currently
+sends `diff: ''` to the AI verifier (`packages/core/src/gates/deep-verify.ts:28`),
+so "deep verification" judges ACs on test-linkage + filenames only — it is
+structurally blind to the implementation, even with a real `anthropic`/`local`
+provider whose own prompt demands it judge "the supplied diff." This milestone
+makes the gate actually verify code. Sharp scope; tied directly to the product's
+"refuses to settle unverified work" promise. The `anthropic`/`local` providers
+themselves are already fully implemented — this is a **wiring** fix, not a provider
+rewrite.
+- **Keystone:** add a lazy `ctx.diff()` memo to the gate context (mirrors
+  `ctx.coverage()`), running `git diff HEAD -- <files>` **once** and shared by
+  `code-review` (which collects its own diff today) + `deep-verify`; wire it into
+  the `VerifyInput.diff`.
+- **Cap + honest truncation:** pure helper `capDiff(raw, capBytes) →
+  { diff, truncated, originalBytes }` with a literal `[diff truncated: N of M bytes]`
+  marker; new config field `verifier.diffCapBytes` (Zod positive int, default
+  `262144` = 256KB).
+- **Provenance:** new run-level `deepVerifyMeta` on the settle summary
+  (`{ diffProvided, diffBytes, truncated, filesCount, provider, model }`, new type
+  in `cadence-types`) so every verdict is auditable — did the verifier see code,
+  how much, was it clipped.
+- **Banner honesty:** re-gate the mock-fallback banner (`settle.ts:107`) on the
+  gate's real firing condition (`opts.deep || gateSet.includes('deep-verify')`) so
+  a `standard×complex` settle no longer runs mock verification silently.
+- **Scope guards.** *In:* the `deep-verify` gate only. *Out (deferred to a later
+  robustness milestone):* Anthropic repair-retries/timeouts, local auth headers, a
+  CLI `--verifier` flag, token/cost instrumentation. *Verify during planning:*
+  whether the `per-task` verifier shares the same empty-diff blind spot — fold in
+  only if it reuses `ctx.diff()` trivially, else follow-up.
+- **Tentative phases:** `70` diff wiring + `capDiff` + config field + `deepVerifyMeta`
+  provenance + tests (core + types + config); `71` banner honesty + docs
+  (`concepts.md`, `config.md`, DESIGN.md decision note) + release (v1.14.0, lockstep
+  bumps — operator's call at release time).
+- **Open:** one-vs-two phase split (settle during planning); `diffCapBytes` default
+  size; whether to record a DESIGN.md decision (D-number) for "deep-verify reads the
+  diff."
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.

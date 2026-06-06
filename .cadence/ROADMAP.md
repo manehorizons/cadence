@@ -594,12 +594,41 @@ scope/rationale/risks in MILESTONES.md §v1.13.0.
 
 ---
 
-## Active milestone: (none — pick the next one)
+## Active milestone: v1.14.0 — Verifier correctness (deep-verify sees the code)
 
-v1.13 shipped 2026-06-06; loop is IDLE with no milestone in flight. **OpenCode was
-evaluated as the third host adapter and rejected 2026-06-06** (its plugin gating
-can't be made airtight — subagent/MCP edits bypass the pre-tool hook and there's
-no clean Stop; full rationale in MILESTONES.md §Post-v1.0). Remaining candidate
-vectors: **MCP-surface deepening**, **gate/verifier hardening**, or the **public
-launch** (launch assets staged local-only). No viable next host adapter today.
-Decide before drafting phase 1.
+Decided 2026-06-06 (after OpenCode was evaluated + rejected as the 3rd host adapter
+— rationale in MILESTONES.md §Post-v1.0). **Keystone correctness fix:** the
+`deep-verify` gate sends `diff: ''` to the AI verifier
+(`packages/core/src/gates/deep-verify.ts:28`), so "deep verification" judges ACs on
+test-linkage + filenames only and never sees the implementation — even with a real
+provider. This milestone wires the actual `git diff` into the gate (capped, with an
+honest truncation marker), records what the verifier saw (`deepVerifyMeta`
+provenance), and fixes the mock-fallback banner to fire whenever the gate runs in
+mock (not just on `--deep`). Sharp scope, tied to the "refuses to settle unverified
+work" promise. Full scope/rationale/risks in MILESTONES.md §v1.14.0.
+
+### Phase 70 — Diff wiring + cap + provenance (NEXT)
+
+**Objective.** Make the `deep-verify` gate send the real (capped) diff to the AI
+verifier, and record what it saw.
+
+**Scope.** (1) Lazy `ctx.diff()` memo on the gate context (mirrors `ctx.coverage()`),
+`git diff HEAD -- <files>` computed once, shared with `code-review`. (2) Pure
+`capDiff(raw, capBytes)` helper + literal `[diff truncated: N of M bytes]` marker.
+(3) `verifier.diffCapBytes` config (Zod positive int, default `262144`). (4)
+`deepVerifyMeta` run-level provenance on the summary (new `cadence-types` type). (5)
+Wire `ctx.diff()` (capped) into `VerifyInput.diff` at `deep-verify.ts:28`. TDD:
+`capDiff` pure tests; gate asserts verifier now receives a non-empty diff +
+truncation path + provenance stamped. All offline (mock verifier).
+
+**Output.** deep-verify that actually verifies code; provenance in SUMMARY.
+
+### Phase 71 — Banner honesty + docs + release
+
+**Objective.** Close the silent-mock gap and ship v1.14.0.
+
+**Scope.** Re-gate the mock-fallback banner on `opts.deep ||
+gateSet.includes('deep-verify')` (`settle.ts:107`); docs (`concepts.md` deep-verify
+now reads the diff, `config.md` `diffCapBytes`, DESIGN.md decision note + CLAUDE.md
+version mention for the doc-sync gate); changesets bump + Release workflow
+(v1.14.0, lockstep).
