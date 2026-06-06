@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 67-codex-install
+**Active phase:** 68-codex-shim
 **Active draft:** (none)
 **Tier:** (n/a)
 
