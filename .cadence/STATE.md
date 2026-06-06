@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 72-provider-hardening
+**Active phase:** 73-verifier-selection
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 161
-- Last handoff: SESSION-2026-06-06-v1.14-shipped.md
+- Subagent spawns this session: 164
+- Last handoff: SESSION-2026-06-06-phase-72-provider-hardening.md
 
 ## Counts
 - Open drafts: 0
