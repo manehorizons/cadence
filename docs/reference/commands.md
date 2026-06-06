@@ -489,6 +489,7 @@ Generate SUMMARY.md + JSON and return to IDLE
 | `--force` | Settle even when `--auto` detects blocked or pending ACs |
 | `--allow-missing-coverage` | Skip the test-coverage gate even if the active profile would enforce it |
 | `--deep` | Run the independent verifier agent against each AC (provider from `config.verifier`) |
+| `--verifier <provider>` | Override `config.verifier.provider` for the `deep-verify` gate: `mock`, `anthropic`, or `local`. Precedence is **flag > config > default `mock`**. An invalid value is rejected at parse time. The v1.14 mock-fallback banner honors the effective provider — an explicit `--verifier mock` still warns that results are not real. (Phase 73) |
 | `--allow-verifier-failure` | Do not refuse on verifier transport failures; record failure into SUMMARY and treat as `pass=false` |
 | `--interactive` | Walk each AC and prompt the user for a pass/fail/skip verdict (Phase 16) |
 | `--no-interactive` | Bypass the interactive-verdict gate even if the active profile would enforce it |

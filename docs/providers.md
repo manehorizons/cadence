@@ -18,9 +18,12 @@ For a conceptual overview of providers and the gate universe they serve, see
 - [anthropic — Anthropic API](#anthropic--anthropic-api)
 - [local — OpenAI-compatible endpoint](#local--openai-compatible-endpoint)
   - [Per-gate model override](#per-gate-model-override)
+  - [Auth — bearer token + custom headers](#auth--bearer-token--custom-headers)
   - [Warn + mock fallback](#warn--mock-fallback)
 - [Per-gate provider configuration](#per-gate-provider-configuration)
 - [Which gate fires in which cell](#which-gate-fires-in-which-cell)
+- [Selecting a provider at the command line (Phase 73)](#selecting-a-provider-at-the-command-line-phase-73)
+  - [Token usage in the SUMMARY](#token-usage-in-the-summary)
 - [Deep-verify prompt id-binding (Phase 29.7)](#deep-verify-prompt-id-binding-phase-297)
 
 ---
@@ -89,6 +92,19 @@ The same fallback applies to every gate (`per-task-verify`, `code-review`,
 `plan-review`, `security-audit`) — each emits a gate-prefixed version of the
 same warning.
 
+**Timeout + retries (deep-verify).** To make the `deep-verify` gate dependable
+when a settle depends on it, set a request timeout and a retry budget on the
+`verifier` block — a transient 429/5xx/network blip then retries before failing
+loud rather than failing fast:
+
+```sh
+cadence config set verifier.timeoutMs 60000   # per-request timeout (ms)
+cadence config set verifier.maxRetries 4       # 0 disables retries
+```
+
+Both are optional; omitting them keeps the Anthropic SDK defaults. They apply
+only to the top-level `verifier` slice (the `deep-verify` gate). (Phase 72)
+
 ---
 
 ## local — OpenAI-compatible endpoint
@@ -135,6 +151,27 @@ Resolution order per gate: `config.<gate>.model` → `CADENCE_LOCAL_MODEL`.
 
 `CADENCE_LOCAL_BASE_URL` is always required and has no per-gate config
 override; all gates share the same endpoint.
+
+### Auth — bearer token + custom headers
+
+If your endpoint is a token-gated OpenAI-compatible proxy or gateway, supply an
+API key via the environment; the `local` client sends it as an
+`Authorization: Bearer <key>` header:
+
+```sh
+export CADENCE_LOCAL_API_KEY=sk-proxy-...
+```
+
+For gateways that need other headers, set `verifier.localHeaders` (applies to
+the `deep-verify` gate). Custom headers are merged over the base `content-type`
+and can override the derived `Authorization`:
+
+```sh
+cadence config set verifier.localHeaders '{"X-Gateway-Tenant":"acme"}'
+```
+
+When neither is configured, only `content-type` is sent. Header values are
+secrets and are never logged. (Phase 72)
 
 ### Warn + mock fallback
 
@@ -215,6 +252,34 @@ in `auto` or `quick-fix` rows. See the gate matrix for the full picture.
 unconditionally at `cadence spec approve` — opting into the pre-DRAFT spec
 stage *is* the opt-in. Bypass a failing/unconverged spec-review with
 `--allow-spec-review-failure`.
+
+---
+
+## Selecting a provider at the command line (Phase 73)
+
+The `deep-verify` gate's provider is normally read from `config.verifier`. To
+override it for a single run — without editing config — pass `--verifier`:
+
+```sh
+cadence settle run --deep --verifier anthropic   # force the real provider once
+cadence settle run --deep --verifier mock        # force the offline stub once
+```
+
+Precedence is **flag > config > default `mock`**. An invalid value is rejected
+at parse time (it does not silently downgrade). The mock-fallback banner honors
+the *effective* provider, so an explicit `--verifier mock` still warns that the
+results are not real, and `--verifier anthropic` suppresses the banner only when
+the provider can actually be built (a missing `ANTHROPIC_API_KEY` still
+warn-falls-back to mock).
+
+### Token usage in the SUMMARY
+
+When the `deep-verify` gate runs against a real provider, the SUMMARY's
+`deepVerifyMeta` records the token usage the provider reported —
+`inputTokens` / `outputTokens` — from Anthropic's `usage` field, or from a
+`local` endpoint that returns an OpenAI-style `usage` block. Dollar cost is
+**not** derived (no built-in price table); compute it downstream from the token
+counts and your provider's rates if you need it.
 
 ---
 

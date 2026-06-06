@@ -187,13 +187,36 @@ All six blocks default to `{ "provider": "mock" }`. Provider options:
 
 See [docs/concepts.md — Providers](../concepts.md#providers) for conceptual detail and [docs/providers.md](../providers.md) for setup instructions.
 
-### `verifier.diffCapBytes`
+### `verifier` extra fields
 
-The `verifier` block (the `deep-verify` gate) takes one extra field:
+The `verifier` block (the `deep-verify` gate) takes extra fields beyond
+`provider` / `model`:
 
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `verifier.diffCapBytes` | `integer` (positive) | `262144` (256KB) | Byte budget for the unified `git diff` sent to the `deep-verify` verifier. `deep-verify` feeds the verifier the actual phase diff (`git diff HEAD` over the touched files) so it judges the implementation, not just test-linkage. A diff larger than this cap is truncated with an explicit `[diff truncated: N of M bytes]` marker, and the SUMMARY's `deepVerifyMeta` records `truncated: true` plus the original byte count. |
+| `verifier.timeoutMs` | `integer` (positive, optional) | — | **`anthropic` only.** Per-request timeout (ms) passed to the Anthropic client. Omitted → the SDK default holds. A transient blip in a settle gate then retries (see `maxRetries`) before failing loud. (Phase 72) |
+| `verifier.maxRetries` | `integer` (non-negative, optional) | — | **`anthropic` only.** Retry budget for transient (429/5xx/network) errors, passed to the Anthropic client. Omitted → the SDK default holds; an explicit `0` disables retries. (Phase 72) |
+| `verifier.localHeaders` | `Record<string, string>` (optional) | — | **`local` only.** Extra HTTP headers merged over the base `content-type` on every request to the OpenAI-compatible endpoint — e.g. a custom gateway header. Merged *under* the `Authorization` bearer derived from `CADENCE_LOCAL_API_KEY` (see below), which custom headers can override. Values are secrets and are never logged. (Phase 72) |
+
+These extra fields apply only to the top-level `verifier` slice (the
+`deep-verify` gate). The other five gate provider blocks share the selection +
+`model` shape but do not read the hardening fields.
+
+**Selecting the provider at the command line.** `cadence settle run --verifier
+<mock|anthropic|local>` overrides `verifier.provider` for one run (precedence
+**flag > config > default `mock`**). Token usage from a real provider is
+recorded on the SUMMARY's `deepVerifyMeta` (`inputTokens` / `outputTokens`);
+dollar cost is not derived. (Phase 73)
+
+#### Provider auth (environment)
+
+| Variable | Provider | Purpose |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | `anthropic` | API key; absent → warn + mock fallback. |
+| `CADENCE_LOCAL_BASE_URL` | `local` | Endpoint base URL; absent → warn + mock fallback. |
+| `CADENCE_LOCAL_MODEL` | `local` | Fallback model when `verifier.model` is unset. |
+| `CADENCE_LOCAL_API_KEY` | `local` | Optional. When set, sent as an `Authorization: Bearer <key>` header so token-gated OpenAI-compatible proxies work. Never logged. (Phase 72) |
 
 ---
 
