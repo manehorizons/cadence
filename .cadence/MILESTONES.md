@@ -141,9 +141,42 @@ Bundles the work that landed on `main` after the `1.5.1` onboarding patch. `@man
 - ✓ **Documentation portal** — Astro + Starlight site live at <https://manehorizons.github.io/cadence/>. Phase `51-docs-portal`, PRs #22/#23.
 - CHANGELOG `[1.6.0]` (and a backfilled `[1.5.1]`).
 
+> **Point releases v1.7.0–v1.12.0** (2026-06-04 → 06-05) shipped without separate
+> named-milestone entries here — each cut via changesets + `release.yml` with
+> provenance: `1.7.0` (`doctor` + `recommendation promote` + `install --local`
+> fix), `1.8.0` (`mcp serve`), `1.9.0` (drift-decided `resume`), `1.10.0`
+> (versioned **host-adapter contract** in `cadence-types`, phase 60 — the enabler
+> for the milestone below), `1.11.0` (scout-session grouping + `init` first-loop
+> nudge), `1.12.0` (`cadence tutorial` + `cadence explain`). Phases 56–64 form a
+> de-facto **adoption & onboarding** arc, now complete.
+
+### v1.13.0 — Multi-host reach: Codex adapter (PLANNED — active)
+First consumer of the phase-60 host-adapter contract (`ADAPTER_CONTRACT_VERSION = 1`).
+Ships a second published package, `@manehorizons/cadence-host-codex`, that
+`satisfies HostAdapter` for the OpenAI **Codex CLI**. Codex's hook lifecycle is a
+near-structural clone of Claude Code's (same stdin-JSON shape — `tool_name`,
+`tool_input`, `hook_event_name`, `cwd`; same exit-`2` / `permissionDecision:"deny"`
+blocking; even `CLAUDE_PLUGIN_ROOT` compatibility aliases), so most of the shim's
+parsing/blocking carries over. Codex chosen over OpenCode for reach (OpenAI's
+official CLI); OpenCode remains the natural third adapter. Aider ruled out — no
+hook system.
+- **Genuine contract stress-test:** Codex's `apply_patch` bundles a *multi-file*
+  patch, so `extractPayload` must parse it to recover edited paths (Claude gives
+  `file_path` directly). If `ExtractedPayload` can't express what Codex needs,
+  that legitimately forces `ADAPTER_CONTRACT_VERSION → 2` — the intended payoff of
+  a second consumer.
+- **Tentative phases:** `65` spike (confirm Codex command/slash surface +
+  `apply_patch` payload + non-TTY/trust flow → `codexCapabilities`); package
+  scaffold + `codexAdapter` + conformance test; install surface
+  (`cadence-host-codex install` → `.codex/hooks.json` + command files, relative
+  /`--local` discipline); shim wiring (Codex stdin-JSON → core dispatcher); docs
+  (`host-adapters.md` second worked example) + release (4th public package).
+- **Open:** Codex command-surface shape (main unknown — spike-first); versioning
+  start for the new package (lockstep `1.13.0` vs independent `0.1.0`).
+
 ## Post-v1.0 (not scheduled)
 
-- Multi-host adapter re-introduction (Codex / Aider / OpenCode).
+- Multi-host adapter re-introduction — **Codex now scheduled as v1.13.0 (above)**; OpenCode (TS plugin host) the likely third adapter; Aider ruled out (no hook system).
 - Continuity-runtime direct integration (currently abstract via webhook).
 - DESIGN.md §4.4 softCap tightening (notification-target cap once continuity-runtime ships).
 - Performance benchmarks of the gate stack.

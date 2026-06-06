@@ -564,3 +564,32 @@ Entry point next session — **reconciled 2026-06-01** (this entry was badly sta
 - **v1.5.0 Session continuity** — ✓ SHIPPED 2026-06-03. `cadence handoff`/`resume` + `/cadence-handoff`/`/cadence-resume` (phase `46-handoff-resume`) and the boundary-check path-normalization fix (phase `47-boundary-path-fix`). `@manehorizons/cadence-{core,types,host-claude-code}@1.5.0` published to npm via `release.yml` with provenance; annotated tag `v1.5.0` cut at the published commit. See MILESTONES.md §v1.5.0.
 
 All v1.1 work (29.x shakedown/remediation, 30.1 reversible publish proof, 31.1 docs, 32.1 test-infra, 32.2 lint, 33.1 publish) is shipped.
+
+---
+
+## Active milestone: v1.13.0 — Multi-host reach (Codex adapter)
+
+Decided 2026-06-05. First consumer of the phase-60 host-adapter contract: a new
+published package `@manehorizons/cadence-host-codex` that `satisfies HostAdapter`
+(contract v1) for the OpenAI Codex CLI. Full scope, rationale, and risks in
+MILESTONES.md §v1.13.0. Codex chosen for reach; its hook lifecycle is a near-clone
+of Claude Code's, so the shim's parsing/blocking largely carries over — the real
+new work is `extractPayload` over Codex's multi-file `apply_patch` and the
+install surface (`.codex/hooks.json` + command files).
+
+### Phase 65 — Codex adapter spike (IN PROGRESS)
+
+**Objective.** De-risk the milestone before scaffolding the package: resolve the
+unknowns that could reshape later phases. Produce a written findings doc + a
+draft `codexCapabilities` descriptor (no production package yet).
+
+**Unknowns to resolve.** (1) Codex's command/slash surface — is there a
+`/cadence-progress`-equivalent, and how is it installed? (capabilities
+`slashCommands` + `skillSystem`). (2) The `apply_patch` `tool_input` payload
+shape — can edited paths be recovered, and does `ExtractedPayload` express it (or
+does the contract need v2)? (3) Non-TTY + hook trust/approval flow for an
+automated install. (4) Event-name → `AbstractEvent` map coverage vs the Claude
+reference.
+
+**Output.** Spike findings (likely `.cadence/phases/65-codex-spike/`) + a
+go/no-go on contract v1 sufficiency, feeding the phase-66 package scaffold.
