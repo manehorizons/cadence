@@ -36,8 +36,30 @@ export interface AnthropicVerifierOptions {
   apiKey?: string;
   model?: string;
   maxTokens?: number;
+  /** Phase 72: request timeout (ms). Omitted → SDK default holds. */
+  timeout?: number;
+  /** Phase 72: retry budget for transient errors. Omitted → SDK default. */
+  maxRetries?: number;
   /** Inject a client for tests; production callers should omit this. */
   client?: Anthropic;
+}
+
+/**
+ * Phase 72: pure builder for the `Anthropic` client config — kept separate so
+ * the timeout/maxRetries threading is unit-testable without a live SDK. Omits
+ * keys that are undefined so the SDK's own defaults hold; preserves an explicit
+ * `maxRetries: 0` (disable retries) rather than dropping it.
+ */
+export function buildAnthropicClientConfig(opts: {
+  apiKey: string;
+  timeout?: number;
+  maxRetries?: number;
+}): { apiKey: string; timeout?: number; maxRetries?: number } {
+  return {
+    apiKey: opts.apiKey,
+    ...(opts.timeout !== undefined ? { timeout: opts.timeout } : {}),
+    ...(opts.maxRetries !== undefined ? { maxRetries: opts.maxRetries } : {}),
+  };
 }
 
 export class AnthropicVerifier implements Verifier {
@@ -56,7 +78,15 @@ export class AnthropicVerifier implements Verifier {
           'AnthropicVerifier requires an API key. Set ANTHROPIC_API_KEY or pass `apiKey` / `client`.',
         );
       }
-      this.client = new Anthropic({ apiKey });
+      this.client = new Anthropic(
+        buildAnthropicClientConfig({
+          apiKey,
+          ...(opts.timeout !== undefined ? { timeout: opts.timeout } : {}),
+          ...(opts.maxRetries !== undefined
+            ? { maxRetries: opts.maxRetries }
+            : {}),
+        }),
+      );
     }
     this.model = opts.model ?? DEFAULT_MODEL;
     this.maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;

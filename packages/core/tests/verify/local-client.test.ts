@@ -59,4 +59,46 @@ describe('localChatJSON', () => {
     const t = (async () => ({ ok: false, status: 500, json: async () => ({}) } as Response)) as unknown as typeof fetch;
     await expect(localChatJSON({ ...base, transport: t })).rejects.toThrow(/500/);
   });
+
+  // AC-2 (Phase 72) — auth + custom headers reach the outgoing request.
+  it('AC-2: sends Authorization + custom headers merged over content-type', async () => {
+    let seen: Record<string, string> | undefined;
+    const capture = (async (_url: string, init: RequestInit) => {
+      seen = init.headers as Record<string, string>;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: '{"ok":true}' } }] }),
+      } as Response;
+    }) as unknown as typeof fetch;
+
+    await localChatJSON({
+      ...base,
+      transport: capture,
+      headers: { Authorization: 'Bearer sk-local', 'x-tenant': 'acme' },
+    });
+
+    expect(seen).toMatchObject({
+      'content-type': 'application/json',
+      Authorization: 'Bearer sk-local',
+      'x-tenant': 'acme',
+    });
+  });
+
+  it('AC-2: sends only content-type when no headers configured', async () => {
+    let seen: Record<string, string> | undefined;
+    const capture = (async (_url: string, init: RequestInit) => {
+      seen = init.headers as Record<string, string>;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: '{"ok":true}' } }] }),
+      } as Response;
+    }) as unknown as typeof fetch;
+
+    await localChatJSON({ ...base, transport: capture });
+
+    expect(seen).toEqual({ 'content-type': 'application/json' });
+    expect(seen).not.toHaveProperty('Authorization');
+  });
 });

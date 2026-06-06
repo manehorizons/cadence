@@ -155,6 +155,55 @@ describe('CadenceConfigZ', () => {
     ).toThrow();
   });
 
+  // AC-3 (Phase 72) — verifier provider-hardening fields: back-compat + validation.
+  it('a v1.14-shaped verifier slice still validates with no new fields (AC-3)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: { provider: 'anthropic', diffCapBytes: 262144 },
+    });
+    expect(parsed.verifier.timeoutMs).toBeUndefined();
+    expect(parsed.verifier.maxRetries).toBeUndefined();
+    expect(parsed.verifier.localHeaders).toBeUndefined();
+  });
+
+  it('accepts verifier.timeoutMs + verifier.maxRetries + verifier.localHeaders (AC-3)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: {
+        provider: 'anthropic',
+        timeoutMs: 30_000,
+        maxRetries: 4,
+        localHeaders: { 'x-tenant': 'acme' },
+      },
+    });
+    expect(parsed.verifier.timeoutMs).toBe(30_000);
+    expect(parsed.verifier.maxRetries).toBe(4);
+    expect(parsed.verifier.localHeaders).toEqual({ 'x-tenant': 'acme' });
+  });
+
+  it('rejects non-positive/non-int timeoutMs and negative/non-int maxRetries (AC-3)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, verifier: { timeoutMs: 0 } }),
+    ).toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, verifier: { timeoutMs: 1.5 } }),
+    ).toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, verifier: { maxRetries: -1 } }),
+    ).toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, verifier: { maxRetries: 2.5 } }),
+    ).toThrow();
+  });
+
+  it('accepts maxRetries = 0 (no retries) (AC-3)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: { maxRetries: 0 },
+    });
+    expect(parsed.verifier.maxRetries).toBe(0);
+  });
+
   it('notify defaults to transport=stderr when absent', () => {
     const { notify: _drop, ...withoutNotify } = defaultConfig;
     const parsed = CadenceConfigZ.parse(withoutNotify);

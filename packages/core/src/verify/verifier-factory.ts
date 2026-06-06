@@ -18,15 +18,50 @@ export interface VerifierSelectOptions {
 export interface VerifierFactorySpec<C, V> {
   /** Warning-prefix label, e.g. `'code-review'`. */
   label: string;
-  /** Read this family's `{ provider, model }` slice off the config. `model`
-   *  admits `| undefined` so the (exactOptionalPropertyTypes) config slices
-   *  assign directly. */
-  read(
-    config: C | null,
-  ): { provider?: VerifierProvider; model?: string | undefined } | undefined;
+  /** Read this family's config slice. `model` and the Phase-72 hardening fields
+   *  admit `| undefined` so the (exactOptionalPropertyTypes) config slices
+   *  assign directly. Families without the hardening fields (everything but the
+   *  top-level `verifier` slice) simply return them as `undefined`. */
+  read(config: C | null):
+    | {
+        provider?: VerifierProvider;
+        model?: string | undefined;
+        /** Phase 72: anthropic request timeout (ms). */
+        timeoutMs?: number | undefined;
+        /** Phase 72: anthropic retry budget. */
+        maxRetries?: number | undefined;
+        /** Phase 72: extra headers for the local provider. */
+        localHeaders?: Record<string, string> | undefined;
+      }
+    | undefined;
   mock(): V;
-  anthropic(opts: { apiKey: string; model?: string }): V;
-  local(opts: { baseURL: string; model: string }): V;
+  anthropic(opts: {
+    apiKey: string;
+    model?: string;
+    timeout?: number;
+    maxRetries?: number;
+  }): V;
+  local(opts: {
+    baseURL: string;
+    model: string;
+    headers?: Record<string, string>;
+  }): V;
+}
+
+/**
+ * Phase 72: pure builder for the `local` provider's extra headers. Returns a
+ * bearer `Authorization` from `apiKey` merged under any `custom` headers (custom
+ * wins), or `undefined` when there is nothing to send so the caller can omit the
+ * key entirely. Header values are secrets — never log the result.
+ */
+export function buildLocalHeaders(
+  apiKey: string | undefined,
+  custom: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  const merged: Record<string, string> = {};
+  if (apiKey) merged.Authorization = `Bearer ${apiKey}`;
+  if (custom) Object.assign(merged, custom);
+  return Object.keys(merged).length > 0 ? merged : undefined;
 }
 
 /**
@@ -87,6 +122,10 @@ export function createVerifierFactory<C, V>(
       return spec.anthropic({
         apiKey: env.ANTHROPIC_API_KEY,
         ...(model ? { model } : {}),
+        ...(slice?.timeoutMs !== undefined ? { timeout: slice.timeoutMs } : {}),
+        ...(slice?.maxRetries !== undefined
+          ? { maxRetries: slice.maxRetries }
+          : {}),
       });
     }
 
@@ -99,7 +138,8 @@ export function createVerifierFactory<C, V>(
         );
         return spec.mock();
       }
-      return spec.local({ baseURL, model });
+      const headers = buildLocalHeaders(env.CADENCE_LOCAL_API_KEY, slice?.localHeaders);
+      return spec.local({ baseURL, model, ...(headers ? { headers } : {}) });
     }
 
     return spec.mock();

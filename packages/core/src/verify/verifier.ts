@@ -71,6 +71,8 @@ export interface LocalVerifierOptions {
   baseURL: string;
   model: string;
   transport?: typeof fetch;
+  /** Phase 72: extra HTTP headers (e.g. an Authorization bearer). Never logged. */
+  headers?: Record<string, string>;
 }
 
 export class LocalVerifier implements Verifier {
@@ -88,6 +90,7 @@ export class LocalVerifier implements Verifier {
       user: formatUserMessage(input),
       schema: VerifierResponseSchema,
       ...(this.o.transport ? { transport: this.o.transport } : {}),
+      ...(this.o.headers ? { headers: this.o.headers } : {}),
     });
     const verdicts: Record<string, AcVerdict> = {};
     for (const v of parsed.verdicts) verdicts[v.id] = { pass: v.pass, reason: v.reason };

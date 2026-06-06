@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   AnthropicVerifier,
+  buildAnthropicClientConfig,
   formatUserMessage,
 } from '../../src/verify/anthropic-verifier.js';
 import type { VerifyInput } from '../../src/verify/verifier.js';
@@ -129,5 +130,28 @@ describe('AnthropicVerifier (AC-2 + AC-5)', () => {
     // Should not throw — instantiates internal client lazily.
     const v = new AnthropicVerifier({ apiKey: 'sk-test-placeholder' });
     expect(v.name).toBe('anthropic');
+  });
+});
+
+describe('buildAnthropicClientConfig — timeout + maxRetries threading (AC-1, Phase 72)', () => {
+  it('threads timeout and maxRetries when supplied', () => {
+    const cfg = buildAnthropicClientConfig({
+      apiKey: 'k',
+      timeout: 30_000,
+      maxRetries: 4,
+    });
+    expect(cfg).toEqual({ apiKey: 'k', timeout: 30_000, maxRetries: 4 });
+  });
+
+  it('omits timeout/maxRetries when undefined so SDK defaults hold', () => {
+    const cfg = buildAnthropicClientConfig({ apiKey: 'k' });
+    expect(cfg).toEqual({ apiKey: 'k' });
+    expect('timeout' in cfg).toBe(false);
+    expect('maxRetries' in cfg).toBe(false);
+  });
+
+  it('keeps maxRetries=0 (explicit no-retry) rather than dropping it', () => {
+    const cfg = buildAnthropicClientConfig({ apiKey: 'k', maxRetries: 0 });
+    expect(cfg).toEqual({ apiKey: 'k', maxRetries: 0 });
   });
 });

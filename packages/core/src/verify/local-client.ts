@@ -9,6 +9,12 @@ export interface LocalChatJSONOptions<T> {
   /** Test seam; defaults to global fetch. */
   transport?: typeof fetch;
   maxTokens?: number;
+  /**
+   * Phase 72: extra HTTP headers merged over the base `content-type` — e.g. an
+   * `Authorization` bearer for a token-gated OpenAI-compatible proxy. Values are
+   * never logged.
+   */
+  headers?: Record<string, string>;
 }
 
 /** Extract a JSON object from model content: drop fences, slice first { … last }. */
@@ -29,7 +35,7 @@ async function callOnce(
   try {
     res = await fetchImpl(`${o.baseURL}/chat/completions`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...(o.headers ?? {}) },
       body: JSON.stringify({
         model: o.model,
         messages,

@@ -99,6 +99,25 @@ export const CadenceConfigZ = z.object({
        * the verifier knows it saw a partial picture. Default 256KB.
        */
       diffCapBytes: z.number().int().positive().default(262144),
+      /**
+       * Phase 72: request timeout (ms) for the `anthropic` provider. Omitted →
+       * the Anthropic SDK default holds. A transient slow call in a settle gate
+       * should time out and retry, not hang.
+       */
+      timeoutMs: z.number().int().positive().optional(),
+      /**
+       * Phase 72: retry budget for the `anthropic` provider on transient
+       * (429/5xx/network) errors. Omitted → the SDK default holds; `0` disables
+       * retries explicitly.
+       */
+      maxRetries: z.number().int().nonnegative().optional(),
+      /**
+       * Phase 72: extra HTTP headers for the `local` provider (e.g. an
+       * `Authorization` bearer for a token-gated OpenAI-compatible proxy).
+       * Merged over the base `content-type`. Prefer the `CADENCE_LOCAL_API_KEY`
+       * env var for the bearer; use this for arbitrary headers. Never logged.
+       */
+      localHeaders: z.record(z.string(), z.string()).optional(),
     })
     .default({ provider: 'mock', diffCapBytes: 262144 }),
   perTaskVerifier: z
