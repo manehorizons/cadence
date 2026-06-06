@@ -1,9 +1,11 @@
 import { Command } from 'commander';
+import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { installHooks, type InstallOptions } from './install.js';
 import { installCommands, resolveCodexHome, type InstallCommandsOptions } from './install-commands.js';
+import { routeHookEvent } from './shim.js';
 
 // Read the real version from package.json so `--version` never drifts.
 const pkg = JSON.parse(
@@ -79,7 +81,46 @@ program
     },
   );
 
-// NOTE: the `hook` shim subcommand is added in phase 68.
+program
+  .command('hook')
+  .description('Shim invoked by Codex hooks: translates stdin and calls cadence hook <event>')
+  .option('--cadence <cmd>', 'base command to invoke core (default: "npx @manehorizons/cadence-core")', 'npx @manehorizons/cadence-core')
+  .action(async (opts: { cadence: string }) => {
+    try {
+      let raw = '';
+      if (!process.stdin.isTTY) {
+        for await (const chunk of process.stdin) raw += chunk.toString();
+      }
+      const { abstractEvent, translatedStdin } = routeHookEvent(raw);
+      if (abstractEvent === null) return; // exit 0 silently for unmapped events
+      const [exe, ...baseArgs] = opts.cadence.split(/\s+/).filter(Boolean);
+      if (!exe) {
+        process.stderr.write('--cadence command is empty\n');
+        process.exitCode = 1;
+        return;
+      }
+      const child = spawn(exe, [...baseArgs, 'hook', abstractEvent], {
+        stdio: ['pipe', 'inherit', 'inherit'],
+        shell: process.platform === 'win32',
+      });
+      child.stdin.write(translatedStdin);
+      child.stdin.end();
+      await new Promise<void>((resolve) => {
+        child.on('exit', (code) => {
+          process.exitCode = code ?? 0;
+          resolve();
+        });
+        child.on('error', (err) => {
+          process.stderr.write(`shim spawn failed: ${err.message}\n`);
+          process.exitCode = 1;
+          resolve();
+        });
+      });
+    } catch (err) {
+      process.stderr.write(`hook shim failed: ${err instanceof Error ? err.message : String(err)}\n`);
+      process.exitCode = 1;
+    }
+  });
 
 program.parseAsync(process.argv).catch((err) => {
   process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`);

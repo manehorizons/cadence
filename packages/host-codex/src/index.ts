@@ -6,6 +6,8 @@ import { installCommands, type InstallCommandsOptions } from './install-commands
 
 export { mapEvent, extractPayload, EDIT_TOOL_MATCHER } from './event-map.js';
 export type { ExtractedPayload } from './event-map.js';
+export { routeHookEvent } from './shim.js';
+export type { RouteResult } from './shim.js';
 export { codexCapabilities } from './capabilities.js';
 export type { HostCapabilities } from '@manehorizons/cadence-types';
 export { ADAPTER_CONTRACT_VERSION } from '@manehorizons/cadence-types';
@@ -18,10 +20,11 @@ export type { InstallCommandsOptions } from './install-commands.js';
 /**
  * The OpenAI Codex CLI host adapter — the second consumer of the
  * {@link HostAdapter} contract (phase 60), proving it is not Claude-Code-shaped.
- * Capabilities + event translation + apply_patch payload extraction (phase 66)
- * and the install surface — project `.codex/hooks.json` + global
- * `~/.codex/prompts/` (phase 67) — are wired here; the `hook` shim follows in
- * phase 68. The `satisfies` check is the compile-time conformance proof.
+ * Capabilities + event translation + apply_patch payload extraction (phase 66),
+ * the install surface — project `.codex/hooks.json` + global `~/.codex/prompts/`
+ * (phase 67) — and the runtime `hook` shim (phase 68) are all wired here. Only
+ * the publish/docs remain (phase 69). The `satisfies` check is the compile-time
+ * conformance proof.
  */
 export const codexAdapter = {
   contractVersion: ADAPTER_CONTRACT_VERSION,
