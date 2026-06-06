@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "69-codex-docs",
+  "activePhase": "70-deep-verify-diff",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-06T00:31:05.778Z",
+  "draftReadAt": "2026-06-06T02:18:27.991Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-06-05-phase-63-tutorial-shipped.md",
-    "subagentSpawns": 147
+    "lastHandoff": "SESSION-2026-06-06-v1.13-codex-prepped-pre-publish.md",
+    "subagentSpawns": 155
   },
   "skillAudit": {
     "required": [],

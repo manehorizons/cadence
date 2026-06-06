@@ -1,0 +1,35 @@
+{
+  "draftId": "70-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "capDiff pure helper + 5 tests (byte-accurate cap, honest truncation marker)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T02:30:23.194Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "verifier.diffCapBytes (int positive, default 262144) + 3 config tests; mirrored in defaultConfig",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T02:30:23.341Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "DeepVerifyMetaZ + summary field + 5 tests; auto-exported via barrel",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T02:30:23.487Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "DEVIATION: ctx.diff() memo already existed (Phase 39.4, shared with code-review); no new memo needed — keystone simpler than planned",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T02:30:23.626Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "deep-verify.ts:28 diff:'' -> capDiff(ctx.diff()); deepVerifyMeta stamped on pass/refuse/failure paths; settle writes it to SUMMARY; 6 new gate tests. per-task verifier confirmed NOT blind (own ctx passes real diff)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T02:30:23.798Z"
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-06-05T22:14:59.818Z
+Generated at: 2026-06-06T01:38:29.309Z
 
 ## Advisory
 

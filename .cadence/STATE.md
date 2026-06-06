@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 69-codex-docs
+**Active phase:** 70-deep-verify-diff
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 147
-- Last handoff: SESSION-2026-06-05-phase-63-tutorial-shipped.md
+- Subagent spawns this session: 155
+- Last handoff: SESSION-2026-06-06-v1.13-codex-prepped-pre-publish.md
 
 ## Counts
 - Open drafts: 0
