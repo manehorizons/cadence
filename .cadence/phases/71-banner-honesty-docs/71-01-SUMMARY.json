@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "draftId": "71-01",
+  "completedAt": "2026-06-06T02:47:29.251Z",
+  "acResults": [],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "banner guard -> (opts.deep || gateSet includes deep-verify) && auto!==false && mock; mirrors deep-verify firing condition; 2 new banner tests (membership-fires, real-provider-silent)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "concepts.md (deep-verify reads capped diff), config.md (verifier.diffCapBytes default 262144), DESIGN.md D12 decision note; doc-presence drift test (3)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "changeset bumps all 4 published packages minor 1.13.0->1.14.0; changeset status confirms; version bump + publish deferred to operator release step"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
