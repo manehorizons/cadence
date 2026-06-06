@@ -1,0 +1,29 @@
+{
+  "draftId": "72-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "verifier.{timeoutMs,maxRetries,localHeaders} Zod fields; back-compat default preserved",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T03:57:29.184Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "buildAnthropicClientConfig pure seam; timeout/maxRetries threaded to Anthropic client, omitted when undefined, 0 preserved",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T03:57:29.325Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "headers option on LocalChatJSONOptions+LocalVerifier, merged over content-type; values never logged",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T03:57:29.469Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "buildLocalHeaders helper; factory threads timeoutMs/maxRetries to anthropic and CADENCE_LOCAL_API_KEY+localHeaders to local",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-06T03:57:29.645Z"
+    }
+  }
+}
