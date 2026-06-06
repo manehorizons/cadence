@@ -1,6 +1,18 @@
-import type { Command } from 'commander';
+import { InvalidArgumentError, type Command } from 'commander';
 import { settleService, type SettleArgs } from '../../services/settle.js';
 import { processIO } from '../../services/io.js';
+import type { VerifierProvider } from '../../verify/verifier-factory.js';
+
+/** Commander arg-parser for `--verifier`: reject anything outside the three
+ *  providers rather than silently downgrading (Phase 73 AC-3). */
+function parseVerifier(value: string): VerifierProvider {
+  if (value === 'mock' || value === 'anthropic' || value === 'local') {
+    return value;
+  }
+  throw new InvalidArgumentError(
+    `invalid --verifier "${value}" — expected one of: mock | anthropic | local`,
+  );
+}
 
 export function registerSettleCommand(program: Command): void {
   const cmd = program.command('settle').description('Close the loop');
@@ -18,6 +30,11 @@ export function registerSettleCommand(program: Command): void {
     .option(
       '--deep',
       'run the independent verifier agent against each AC (provider from config.verifier)',
+    )
+    .option(
+      '--verifier <provider>',
+      'override config.verifier.provider for the deep-verify gate (mock | anthropic | local); precedence flag > config > default mock',
+      parseVerifier,
     )
     .option(
       '--allow-verifier-failure',

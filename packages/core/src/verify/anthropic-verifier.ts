@@ -136,7 +136,19 @@ export class AnthropicVerifier implements Verifier {
       verdicts[v.id] = { pass: v.pass, reason: v.reason };
     }
 
-    return { verdicts, provider: this.name, model: this.model };
+    // Phase 73: surface token usage when the response carries it.
+    const u = response.usage;
+    const usage =
+      typeof u?.input_tokens === 'number' && typeof u.output_tokens === 'number'
+        ? { inputTokens: u.input_tokens, outputTokens: u.output_tokens }
+        : undefined;
+
+    return {
+      verdicts,
+      provider: this.name,
+      model: this.model,
+      ...(usage ? { usage } : {}),
+    };
   }
 }
 

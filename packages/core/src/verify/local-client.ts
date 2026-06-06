@@ -15,6 +15,12 @@ export interface LocalChatJSONOptions<T> {
    * never logged.
    */
   headers?: Record<string, string>;
+  /**
+   * Phase 73: invoked with mapped token usage whenever the endpoint returns a
+   * usage block (OpenAI-compatible `prompt_tokens`/`completion_tokens`). Not
+   * called when the endpoint omits usage. Last call wins across repair retries.
+   */
+  onUsage?: (usage: { inputTokens: number; outputTokens: number }) => void;
 }
 
 /** Extract a JSON object from model content: drop fences, slice first { … last }. */
@@ -54,7 +60,16 @@ async function callOnce(
   }
   const body = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
   };
+  const u = body.usage;
+  if (
+    o.onUsage &&
+    typeof u?.prompt_tokens === 'number' &&
+    typeof u.completion_tokens === 'number'
+  ) {
+    o.onUsage({ inputTokens: u.prompt_tokens, outputTokens: u.completion_tokens });
+  }
   return body.choices?.[0]?.message?.content ?? '';
 }
 

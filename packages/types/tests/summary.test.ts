@@ -53,6 +53,33 @@ describe('DeepVerifyMetaZ (AC-4)', () => {
       }),
     ).toThrow();
   });
+
+  // AC-5 (Phase 73): optional token usage, back-compatible with v1.14 records.
+  it('accepts optional token usage when present', () => {
+    const meta = DeepVerifyMetaZ.parse({
+      diffProvided: true,
+      diffBytes: 10,
+      truncated: false,
+      filesCount: 1,
+      provider: 'anthropic',
+      inputTokens: 123,
+      outputTokens: 45,
+    });
+    expect(meta.inputTokens).toBe(123);
+    expect(meta.outputTokens).toBe(45);
+  });
+
+  it('treats token usage as optional (v1.14 record still validates)', () => {
+    const meta = DeepVerifyMetaZ.parse({
+      diffProvided: true,
+      diffBytes: 10,
+      truncated: false,
+      filesCount: 1,
+      provider: 'mock',
+    });
+    expect(meta.inputTokens).toBeUndefined();
+    expect(meta.outputTokens).toBeUndefined();
+  });
 });
 
 describe('SummaryZ.deepVerifyMeta (AC-4)', () => {

@@ -110,6 +110,46 @@ describe('settle run --deep mock-fallback banner', () => {
     expect(r.stderr).toMatch(/MOCK verification/);
   });
 
+  // AC-3 (Phase 73) — invalid --verifier value is rejected, not downgraded
+  it('rejects an invalid --verifier value naming the valid ones (P73 AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedBuild(active.root);
+    const r = await run(
+      ['settle', 'run', '--auto', '--verifier', 'bogus', '--allow-missing-coverage', '--force'],
+      active.root,
+    );
+    expect(r.code).not.toBe(0);
+    expect(r.stderr).toMatch(/mock \| anthropic \| local/);
+  });
+
+  // AC-1/AC-2 (Phase 73) — --verifier mock overrides a real config provider and
+  // the banner honestly fires (explicit mock = results not real).
+  it('fires the banner when --verifier mock overrides a configured real provider (P73 AC-2)', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfgPath = join(active.root, '.cadence/config.json');
+    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+    cfg.verifier = { provider: 'anthropic' };
+    await writeFile(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
+    await seedBuild(active.root);
+    const r = await run(
+      ['settle', 'run', '--auto', '--deep', '--verifier', 'mock', '--allow-missing-coverage', '--force'],
+      active.root,
+    );
+    expect(r.stderr).toMatch(/MOCK verification/);
+  });
+
+  // AC-1/AC-2 (Phase 73) — --verifier anthropic overrides the silent mock default
+  // so the onboarding banner suppresses (effective provider is real).
+  it('suppresses the banner when --verifier anthropic overrides the mock default (P73 AC-1)', async () => {
+    active = await tempRepo({ initialized: true }); // default config: no verifier slice → mock default
+    await seedBuild(active.root);
+    const r = await run(
+      ['settle', 'run', '--auto', '--deep', '--verifier', 'anthropic', '--allow-missing-coverage', '--force'],
+      active.root,
+    );
+    expect(r.stderr).not.toMatch(/MOCK verification/);
+  });
+
   // AC-2 (Phase 71) — banner silent on membership when a real provider is set
   it('stays silent on gate-set membership when a real provider is configured (AC-2)', async () => {
     active = await tempRepo({ initialized: true });

@@ -133,6 +133,28 @@ describe('AnthropicVerifier (AC-2 + AC-5)', () => {
   });
 });
 
+describe('AnthropicVerifier token usage (AC-4, Phase 73)', () => {
+  it('captures input/output tokens from the API response usage', async () => {
+    const parse = vi.fn().mockResolvedValue({
+      parsed_output: { verdicts: [{ id: 'AC-1', pass: true, reason: 'ok' }] },
+      usage: { input_tokens: 123, output_tokens: 45 },
+    });
+    const client = { messages: { parse } } as unknown as Anthropic;
+    const v = new AnthropicVerifier({ client });
+    const r = await v.verify(baseInput);
+    expect(r.usage).toEqual({ inputTokens: 123, outputTokens: 45 });
+  });
+
+  it('omits usage when the response carries none', async () => {
+    const client = makeMockClient({
+      verdicts: [{ id: 'AC-1', pass: true, reason: 'ok' }],
+    });
+    const v = new AnthropicVerifier({ client });
+    const r = await v.verify(baseInput);
+    expect(r.usage).toBeUndefined();
+  });
+});
+
 describe('buildAnthropicClientConfig — timeout + maxRetries threading (AC-1, Phase 72)', () => {
   it('threads timeout and maxRetries when supplied', () => {
     const cfg = buildAnthropicClientConfig({

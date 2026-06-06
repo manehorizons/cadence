@@ -174,6 +174,38 @@ describe('runDeepVerifyGate', () => {
     });
   });
 
+  // AC-5 (Phase 73): token usage from the verifier reaches deepVerifyMeta
+  it('threads provider token usage into deepVerifyMeta', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({
+        diff: 'abc',
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: true, reason: 'ok' } },
+          provider: 'anthropic',
+          model: 'claude-sonnet-4-6',
+          usage: { inputTokens: 321, outputTokens: 99 },
+        }),
+      }),
+    );
+    expect(res.summaryPatch?.deepVerifyMeta?.inputTokens).toBe(321);
+    expect(res.summaryPatch?.deepVerifyMeta?.outputTokens).toBe(99);
+  });
+
+  // AC-5 (Phase 73): no usage from the verifier → meta omits token fields
+  it('omits token fields from deepVerifyMeta when the verifier reports none', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({
+        diff: 'abc',
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: true, reason: 'ok' } },
+          provider: 'mock',
+        }),
+      }),
+    );
+    expect(res.summaryPatch?.deepVerifyMeta?.inputTokens).toBeUndefined();
+    expect(res.summaryPatch?.deepVerifyMeta?.outputTokens).toBeUndefined();
+  });
+
   // AC-4 (Phase 70): deepVerifyMeta present even when the gate refuses
   it('records deepVerifyMeta even on refuse', async () => {
     const res = await runDeepVerifyGate(

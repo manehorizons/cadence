@@ -17,6 +17,7 @@ import { scanTestCoverage } from '../verify/coverage.js';
 import {
   resolveEffectiveProvider,
   MOCK_FALLBACK_BANNER,
+  type VerifierProvider,
 } from '../verify/verifier-factory.js';
 import type { VerifyTestRef } from '../verify/verifier.js';
 import { runSettleGates } from '../gates/registry.js';
@@ -51,6 +52,9 @@ export interface SettleArgs {
   allowSecurityAuditFailure?: boolean;
   allowSkillAuditMiss?: boolean;
   interactive?: boolean;
+  /** Phase 73: override config.verifier.provider for the deep-verify gate
+   *  (precedence flag > config > default mock). */
+  verifier?: VerifierProvider;
 }
 
 function parseAcArg(arg: string): AcResult {
@@ -110,9 +114,13 @@ export async function settleService(
     const deepWillRun =
       (opts.deep === true || gateSet.gates.includes('deep-verify')) &&
       opts.auto !== false;
+    // Phase 73: the `--verifier` override must reach the banner decision so it
+    // reflects the *effective* provider (explicit `mock` still warns).
+    const verifierOverride = opts.verifier ? { override: opts.verifier } : {};
     if (
       deepWillRun &&
-      resolveEffectiveProvider(cadenceConfig?.verifier).provider === 'mock'
+      resolveEffectiveProvider(cadenceConfig?.verifier, verifierOverride)
+        .provider === 'mock'
     ) {
       io.err(MOCK_FALLBACK_BANNER + '\n');
     }
@@ -186,7 +194,7 @@ export async function settleService(
         deep: {
           verify: (input) => {
             if (!deepVerifierMemo) {
-              deepVerifierMemo = selectVerifier(cadenceConfig);
+              deepVerifierMemo = selectVerifier(cadenceConfig, verifierOverride);
             }
             return deepVerifierMemo.verify(input);
           },

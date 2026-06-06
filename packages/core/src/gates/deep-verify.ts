@@ -37,10 +37,17 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
     truncated: cap.truncated,
     filesCount: ctx.touchedFiles.length,
   };
-  const meta = (provider: string, model?: string): DeepVerifyMeta => ({
+  const meta = (
+    provider: string,
+    model?: string,
+    usage?: { inputTokens: number; outputTokens: number },
+  ): DeepVerifyMeta => ({
     ...metaBase,
     provider,
     ...(model ? { model } : {}),
+    ...(usage
+      ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens }
+      : {}),
   });
 
   const verifyInput: VerifyInput = {
@@ -84,12 +91,12 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
       );
       return {
         outcome: 'refuse',
-        summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model) },
+        summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model, result.usage) },
       };
     }
     return {
       outcome: 'pass',
-      summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model) },
+      summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model, result.usage) },
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

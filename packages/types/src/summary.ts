@@ -22,6 +22,11 @@ export const DeepVerifyMetaZ = z.object({
   filesCount: z.number().int().nonnegative(),
   provider: z.string(),
   model: z.string().optional(),
+  /** Phase 73: token usage when a real provider reported it. Optional —
+   *  absent for `mock` and for v1.14-shaped records. Dollar cost is not
+   *  derived (no price table; v1.15 scope guard). */
+  inputTokens: z.number().int().nonnegative().optional(),
+  outputTokens: z.number().int().nonnegative().optional(),
 });
 export type DeepVerifyMeta = z.infer<typeof DeepVerifyMetaZ>;
 
