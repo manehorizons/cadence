@@ -618,11 +618,24 @@ Full scope/rationale in MILESTONES.md §v1.14.0.
 
 ---
 
-## Active milestone: (none — pick the next one)
+## Active milestone: v1.15.0 — Verifier robustness (real providers, production-ready)
 
-v1.14 shipped 2026-06-06; loop IDLE, no milestone in flight. Prior candidate vectors
-(MILESTONES.md §Post-v1.0): **verifier robustness** (the deferred Anthropic
-retries/timeouts, `local` auth headers, a CLI `--verifier` flag, token/cost
-instrumentation — the natural follow-on to v1.14), MCP-surface deepening, observability
-(structured logging / OTel), or the **public launch** (assets staged local-only). No
-viable next host adapter today (OpenCode rejected; Aider has no hooks).
+Chosen 2026-06-06 (the natural follow-on to v1.14, now that `deep-verify` actually sends
+the diff). Make the **real** providers dependable in a settle gate, let the operator pick
+one at the CLI, and make every run's token/cost auditable — the items deferred from
+v1.14's scope guard. Provider hardening + ergonomics, **not** a verifier rewrite. Three
+phases (operator-chosen grouped shape); full scope/rationale/scope-guards in
+MILESTONES.md §v1.15.0.
+
+- **Phase 72 — Provider hardening** — `anthropic` request `timeout` + `maxRetries`
+  (config-driven); `local` `Authorization`/custom headers for OpenAI-compatible proxies.
+  Tested via existing injected-client / transport seams; no live network.
+- **Phase 73 — Selection + cost visibility** — a CLI `--verifier <mock|anthropic|local>`
+  flag (flag > config > default `mock`); token/cost capture from the provider response
+  into `deepVerifyMeta`/SUMMARY (extend the v1.14 `cadence-types` type).
+- **Phase 74 — Release v1.15.0** — docs + changeset + lockstep `1.14.0 → 1.15.0` bump
+  across all four published packages, tag + provenance.
+
+Deferred candidate vectors (MILESTONES.md §Post-v1.0): MCP-surface deepening,
+observability (structured logging / OTel), the **public launch** (assets staged
+local-only). No viable next host adapter today (OpenCode rejected; Aider has no hooks).

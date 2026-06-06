@@ -226,6 +226,51 @@ rewrite.
   size; whether to record a DESIGN.md decision (D-number) for "deep-verify reads the
   diff."
 
+### v1.15.0 — Verifier robustness (real providers, production-ready) (PLANNED)
+Decided 2026-06-06, the natural follow-on to v1.14: now that `deep-verify` actually
+sends the diff, make the **real** providers (`anthropic`, `local`) dependable enough to
+trust in a settle gate, give the operator a way to pick one at the command line, and
+make every verifier run's token/cost auditable. These are the items explicitly deferred
+from v1.14's scope guard. **This is provider hardening + ergonomics, not a verifier
+rewrite** — the verdict logic is unchanged; we add resilience, auth, selection, and
+visibility around it. Three phases (operator-chosen grouped shape).
+
+- **Phase 72 — Provider hardening (config-driven).**
+  - `anthropic`: surface a request **`timeout`** and **`maxRetries`** on
+    `AnthropicVerifier` (today `anthropic-verifier.ts` sets neither — it relies on the
+    SDK default and rethrows wrapped `APIError`s), wired from new `verifier.*` config
+    fields (Zod). A transient 429/5xx/network blip in a settle gate should retry, then
+    fail loud, not fail fast.
+  - `local`: support an **`Authorization`/bearer header + arbitrary custom headers**
+    (today `local-client.ts` sends only `content-type` — no auth), so OpenAI-compatible
+    local proxies / gateways that require a token work. Sourced from config + env
+    (`CADENCE_LOCAL_API_KEY`-style), never logged.
+  - Tests via the existing injected-`client` (anthropic) and `transport` (local) seams;
+    no live network. Mirror the `verifier.diffCapBytes` config pattern from v1.14.
+- **Phase 73 — Verifier selection + cost visibility.**
+  - A CLI **`--verifier <mock|anthropic|local>`** flag overriding the config-only
+    provider selection (resolved today in `verifier-factory.ts`), on the settle/verify
+    surface; precedence flag > config > default `mock`. Honest interaction with the
+    v1.14 mock-fallback banner.
+  - **Token/cost instrumentation:** capture usage from the provider response
+    (Anthropic's `.usage` carries input/output tokens; `local` if the endpoint returns
+    it) into `VerifyResult` and surface it on `deepVerifyMeta`/SUMMARY
+    (`{ inputTokens, outputTokens, ... }`, extend the v1.14 type in `cadence-types`).
+    Cost is derived/optional — don't hardcode a price table that rots.
+- **Phase 74 — Release v1.15.0.** Docs (`config.md` new fields, `concepts.md`/provider
+  notes, DESIGN.md decision note if one is warranted), changeset, lockstep
+  `1.14.0 → 1.15.0` bump across all four published packages, tag + provenance.
+
+- **Scope guards.** *In:* `anthropic` + `local` provider resilience/auth, `--verifier`
+  selection, token/cost surfacing. *Out (later / not scheduled):* a price table for $
+  cost, structured-logging/OTel export (lives in Post-v1.0 observability), per-gate
+  verifier overrides, streaming. *Verify during planning:* whether the Anthropic SDK's
+  built-in retry already covers the transient case (if so, Phase 72's anthropic half is
+  just exposing `timeout`/`maxRetries` config, not new retry logic).
+- **Open:** config field names (`verifier.timeout` vs `verifier.requestTimeoutMs`);
+  whether `--verifier` belongs on `settle` only or also `verify`; whether token capture
+  warrants a DESIGN.md D-number; default `maxRetries` value.
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.
