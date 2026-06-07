@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { bufferIO } from '../services/io.js';
 import { TOOLS } from './tools.js';
+import { registerResources } from './resources.js';
 
 /**
  * Build the CADENCE MCP server (phase 58) — a third surface alongside the CLI
@@ -41,6 +42,8 @@ export function buildCadenceMcpServer(repoRoot: string, version: string): McpSer
       },
     );
   }
+
+  registerResources(server, repoRoot);
 
   return server;
 }
