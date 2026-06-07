@@ -342,17 +342,17 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "75-mcp-resources",
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.241Z",
-      "updatedAt": "2026-06-07T15:20:21.184Z",
-      "convertedToPhaseId": "75-mcp-resources"
+      "updatedAt": "2026-06-07T15:20:21.184Z"
     },
     {
       "id": "rec-20260607-002",
       "title": "MCP tool parity: handoff, resume, recommendation add/promote, doctor",
       "summary": "Add the proven-out excluded commands as MCP tools (+ service extraction). Enables scout->rec->promote + session continuity over MCP. Phase 76.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -373,7 +373,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.398Z",
-      "updatedAt": "2026-06-07T15:19:42.398Z"
+      "updatedAt": "2026-06-07T15:29:52.959Z",
+      "convertedToPhaseId": "76-mcp-tool-parity"
     },
     {
       "id": "rec-20260607-003",

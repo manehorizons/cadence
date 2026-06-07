@@ -192,7 +192,7 @@ resources/list+read+templates over a curated cadence:// table (state, roadmap, p
 
 ## rec-20260607-002 — MCP tool parity: handoff, resume, recommendation add/promote, doctor
 
-- status: candidate
+- status: converted
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
