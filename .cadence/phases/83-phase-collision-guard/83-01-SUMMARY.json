@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "draftId": "83-01",
+  "completedAt": "2026-06-07T23:23:45.151Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    },
+    {
+      "id": "AC-6",
+      "pass": true
+    },
+    {
+      "id": "AC-7",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Pure detectPhaseCollision + phaseNumber; 10 tests green"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "phaseGuard config block + default; 4 tests green"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "gatherOccupancy local+sibling+upstream, best-effort; 6 tests green w/ real git"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "shared assertNoPhaseCollision guard + spec/draft scaffold wiring + --allow-phase-collision flag; 13 tests green"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "settle backstop precondition (excludeSources local) + --allow-phase-collision; full turbo gate green 1519 tests"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
