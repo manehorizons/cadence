@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "draftId": "81-01",
+  "completedAt": "2026-06-07T19:09:55.924Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    },
+    {
+      "id": "AC-6",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "configureLoggerFromConfig helper"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "gate seam: runSettleGates child(seam:gate)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "hook seam: dispatcher + config wiring"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "verify seam: anthropic + local instrumentation"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "MCP serve config wiring + stdout-purity/default-off guard"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

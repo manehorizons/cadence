@@ -461,17 +461,17 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "80-logger-foundation",
       "scoutId": "scout-20260607-obs",
       "createdAt": "2026-06-07T18:41:51.719Z",
-      "updatedAt": "2026-06-07T18:41:59.457Z",
-      "convertedToPhaseId": "80-logger-foundation"
+      "updatedAt": "2026-06-07T18:41:59.457Z"
     },
     {
       "id": "rec-20260607-006",
       "title": "Phase 81 — instrument three seams + scoped console.* migration",
       "summary": "Wire gate decisions, hook/event dispatch, and verifier provider calls through the logger via bound child loggers; migrate only diagnostic/error console.* calls at those seams. Per-seam tests + stdout-purity test.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
@@ -494,7 +494,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260607-obs",
       "createdAt": "2026-06-07T18:41:51.887Z",
-      "updatedAt": "2026-06-07T18:41:51.887Z"
+      "updatedAt": "2026-06-07T19:00:54.213Z",
+      "convertedToPhaseId": "81-seam-instrumentation"
     },
     {
       "id": "rec-20260607-007",

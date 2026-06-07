@@ -255,7 +255,7 @@ Zero-dependency operator-debugging logger: LogLevel/LogRecord types in cadence-t
 
 ## rec-20260607-006 — Phase 81 — instrument three seams + scoped console.* migration
 
-- status: candidate
+- status: converted
 - ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
