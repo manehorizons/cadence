@@ -3,7 +3,11 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { gatherOccupancy } from '../../src/phases/occupancy.js';
+import {
+  gatherOccupancy,
+  normalizeWorktreePath,
+  isSameWorktree,
+} from '../../src/phases/occupancy.js';
 
 function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, {
@@ -28,6 +32,24 @@ async function initRepo(root: string): Promise<void> {
   git(root, ['add', '.']);
   git(root, ['commit', '-m', 'init']);
 }
+
+describe('worktree path self-identification (AC-3 — cross-platform)', () => {
+  // Regression: on Windows `git worktree list` emits forward-slash, possibly
+  // differently-cased paths while repoRoot is Node-built with backslashes — a
+  // raw `===` made the main worktree leak in as a phantom "sibling" of itself,
+  // false-firing the settle backstop on every settle. Parametrized by platform
+  // so the win32 behavior is asserted from Linux/macOS CI too.
+  it('AC-3: win32 — case-insensitive and separator-insensitive', () => {
+    expect(normalizeWorktreePath('C:\\Users\\X\\repo', 'win32')).toBe('c:/users/x/repo');
+    expect(isSameWorktree('C:/Users/X/repo', 'C:\\Users\\x\\repo\\', 'win32')).toBe(true);
+    expect(isSameWorktree('C:/Users/X/repo', 'C:/Users/X/other', 'win32')).toBe(false);
+  });
+
+  it('AC-3: posix — separator-normalized but case-sensitive', () => {
+    expect(isSameWorktree('/tmp/repo/', '/tmp/repo', 'linux')).toBe(true);
+    expect(isSameWorktree('/tmp/Repo', '/tmp/repo', 'linux')).toBe(false);
+  });
+});
 
 describe('gatherOccupancy (AC-2, AC-3)', () => {
   let parent: string;
