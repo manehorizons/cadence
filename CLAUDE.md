@@ -47,8 +47,13 @@ Node `>=20` is required. `package.json` pins `pnpm@9.12.0`.
 runs `pnpm turbo run lint typecheck test build` before any push that updates
 `refs/heads/main`, aborting on failure — this is the local enforcement layer.
 Bypass with `git push --no-verify` only when you mean it. On the GitHub side,
-`main` carries a ruleset requiring the `ci-success` status check, so PR merges
-are gated on green CI (a flaky leg can block a merge until re-run).
+`main` is branch-protected: the `ci-success` status check is required, and
+**admin enforcement is on (`enforce_admins`, since 2026-06-06)** — so the check
+applies to *everyone, including direct pushes by the repo owner*, not just PR
+merges. This closes the gap where a direct push to `main` could bypass
+`ci-success` (the hole that let an OS-specific CI red sit undetected for six
+phases). Land `main` changes via a branch + PR that goes green; a flaky leg can
+block a merge until re-run.
 
 ### The doc-sync gate
 

@@ -32,3 +32,6 @@ HANDOFF.md.resumed-*
 # needed). Kept on disk for the operator; never published.
 LAUNCH-NUMBERS.md
 docs/CADENCE-LAUNCH-HANDOFF.md
+ARCHITECTURE-BRIEF.md
+OBJECTION-FAQ.md
+launch/
