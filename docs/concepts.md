@@ -26,6 +26,8 @@ The adapter shape itself is a versioned contract — see
 - [The gate universe](#the-gate-universe)
 - [Providers](#providers)
 - [The Praxis layer](#the-praxis-layer) — strategic intelligence that feeds the loop
+- [Observability](#observability)
+- [Worktrees & the single-writer assumption](#worktrees--the-single-writer-assumption)
 
 ---
 
@@ -452,6 +454,41 @@ usage). Verifier auth headers and API keys are never logged. Persist a default
 with the [`logging` config block](reference/config.md#logging); env vars override
 it. This is operational logging — separate from the user-behavior `telemetry`
 (skill audit) above.
+
+---
+
+## Worktrees & the single-writer assumption
+
+CADENCE's loop state is **file-based and lives in the working tree** —
+`.cadence/state.json`, `STATE.md`, and `.cadence/phases/*` are tracked files. Git
+worktrees share one `.git` but each has its own working tree, so **each worktree
+holds its own private copy of `.cadence/`**. Phase numbers are operator-supplied,
+and the "next: N" surfaced by `progress`/`recommend` is just a read of the
+committed snapshot. The loop implicitly assumes a **single writer** to the
+phase-number space.
+
+Two worktrees branched from the same commit can therefore both conclude "phase N
+is next." If they use the same slug (`30-foo` in both), you get a real git
+conflict at merge — loud. If they use *different* slugs (`30-auth` vs `30-cache`),
+the directories don't textually conflict, so git **silently merges both in** —
+two phase 30s and a broken invariant, no conflict marker. That quiet case is the
+dangerous one. (`state.json` re-stamps on every read, so concurrent worktrees'
+copies diverge constantly — that file is inherently single-writer and must never
+be merged across loops.)
+
+The **phase-collision guard** (v1.18, default-on) makes this loud. The
+coordination primitive already exists: `git worktree list` enumerates every
+sibling worktree, and the upstream ref records already-merged phases — CADENCE
+just consults them. Before scaffolding (`spec new` / `draft new`) and again as a
+settle backstop, it refuses a phase number already claimed by a sibling worktree
+or `origin/<integrationRef>`, names the conflict, and suggests the next free
+number. It is best-effort: a non-git, offline, or single-worktree checkout
+degrades to exactly the pre-v1.18 behavior — the only hard failure is an actual
+collision. Tune or disable it via the
+[`phaseGuard` config block](reference/config.md#phaseguard); bypass one run with
+`--allow-phase-collision`. This is a *guard*, not an allocator: it does not
+reserve numbers ahead of time or auto-renumber — it observes ground truth and
+fails loud.
 
 ---
 

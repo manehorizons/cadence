@@ -134,7 +134,30 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.17.0`** (2026-06-07, tag `v1.17.0` pending):
+change). The latest version is **`1.18.0`** (2026-06-07, tag `v1.18.0`
+pending): the **worktree-safety** milestone (v1.18) — a **phase-collision
+guard** that stops two git worktrees from silently scaffolding the same phase
+number (DESIGN.md **§13**). CADENCE's loop state lives in the working tree and
+each worktree holds a private `.cadence/`, so two worktrees branched from one
+commit both conclude "phase N is next"; with different slugs (`30-auth` vs
+`30-cache`) git **silently merges both in** — two phase Ns, no conflict marker.
+The guard observes ground truth (`git worktree list` + `origin/<integrationRef>`
+— Approach A, *not* a reservation registry) and **refuses** to scaffold a number
+already claimed by a sibling worktree or upstream, naming the conflict and the
+next free number. **Phase 83 — the guard:** pure `detectPhaseCollision` +
+`phaseNumber` (leading-token key — `30-auth`/`30-cache` both → `30`) +
+best-effort `gatherOccupancy` (local + sibling + upstream; never throws) + shared
+`assertNoPhaseCollision` wired into `spec new`/`draft new` (local excluded — dir
+being created) and a `settleService` backstop (excludes the `local` source =
+self; self-exclusion is by **source**, not number, else a same-number sibling
+would be hidden) + `--allow-phase-collision` bypass (never bypasses the local
+same-dir `existsSync` refusal) + `phaseGuard { enabled (default true),
+integrationRef (default "main") }` config in `cadence-types`. **Phase 84 =
+release** (docs + DESIGN.md §13 + changeset). All four published packages bumped
+`1.17.0 → 1.18.0` in lockstep (`cadence-host-claude-code`/`cadence-host-codex`
+version-alignment only); a `cadence doctor` cross-worktree line, proactive
+next-free allocation, and lowest-gap numbering remain deferred. Prior:
+**`1.17.0`** (2026-06-07, tag `v1.17.0`):
 the **observability** milestone (v1.17) — a zero-dependency, additive,
 **default-off** structured operator-debugging logger for diagnosing CADENCE
 itself (the Post-v1.0 "structured logging" vector; DESIGN.md **§12**). Writes

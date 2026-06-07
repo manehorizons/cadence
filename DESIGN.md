@@ -302,3 +302,38 @@ Locked decisions:
 
 Deferred (still Post-v1.0): state-transition logging, OpenTelemetry / OTLP export (the logger leaves
 a clean extension point for an exporter without re-plumbing call sites), and an audit NDJSON sink.
+
+## 13. Worktree safety (phase-collision guard)
+
+CADENCE's loop state is file-based and lives in the working tree, and git worktrees each hold a
+private `.cadence/`. Two worktrees branched from one commit independently conclude "phase N is next";
+with different slugs (`30-auth` vs `30-cache`) git silently merges both in — two phase Ns, no
+conflict marker. Shipped in the v1.18 milestone (phases 83–84).
+
+Locked decisions:
+
+- **Observe ground truth, not a reservation registry (Approach A over B).** Phase-number uniqueness
+  is enforced by *observing* sibling worktrees (`git worktree list`) + the upstream ref
+  (`origin/<integrationRef>`), not by reserving numbers in a parallel allocation registry. The
+  worktree list IS the registry; the phase dirs ARE the claims. Rationale: no parallel state to drift
+  out of sync, and it degrades gracefully offline / in a non-git checkout. A reservation registry
+  (reserve a number before the dir exists) was considered and rejected as the wrong weight for the
+  problem — the scaffold guard + settle backstop cover the collision without it.
+- **Refuse + suggest, never auto-renumber.** On collision the guard fails loud, names what is taken
+  and where, and suggests the next free number (`max(observed) + 1`, monotonic — not lowest-gap). It
+  never silently changes the number you asked for. `--allow-phase-collision` bypasses per run.
+- **Scaffold-time primary, settle backstop secondary.** Refuse at `spec new` / `draft new` before
+  work begins; re-check at `settle run` to catch a scaffold-race. The backstop is a `settleService`
+  precondition, **not** a profile×tier gate-matrix cell — it is a cross-cutting safety check.
+- **Self is identified by source, not number.** The collision authority is the `sibling` + `upstream`
+  sources. The `local` source (this worktree's own dirs) is excluded from conflict matching — at
+  scaffold time the dir is being created; at settle the active phase *is* local. (Self and a genuine
+  same-number sibling share the number, so a number-based self-exclusion would also hide the sibling
+  — exclusion must be by source.) Local still feeds the `next free` computation.
+- **Best-effort, default-on, additive.** Any git/fs failure on a source contributes nothing and never
+  throws; the only hard failure is an actual detected collision. Pure `detectPhaseCollision` +
+  impure `gatherOccupancy` mirror the repo's pure-seam split. The existing local same-directory
+  `existsSync` refusal is untouched and is never bypassed by the flag.
+
+Deferred (clean additive follow-ups): a `cadence doctor` read-only cross-worktree phase-usage line;
+proactive next-free allocation in `progress`/`recommend`; lowest-gap (vs `max + 1`) numbering.

@@ -23,6 +23,8 @@ This page documents every field in the CADENCE configuration file. For conceptua
 - [convergence](#convergence)
 - [Gate provider blocks](#gate-provider-blocks)
 - [notify](#notify)
+- [logging](#logging)
+- [phaseGuard](#phaseguard)
 - [Presets](#presets)
 - [cadence init behavior](#cadence-init-behavior)
 
@@ -267,6 +269,37 @@ CADENCE_LOG_LEVEL=debug CADENCE_LOG_FORMAT=json cadence settle run --auto
 ```
 
 An invalid env value is ignored (falls through to config, then the default) rather than failing the command.
+
+---
+
+## phaseGuard
+
+Worktree-safety collision guard (v1.18). CADENCE's loop state lives in the working tree, and each
+git worktree holds its own private `.cadence/`. Two worktrees branched from the same commit can both
+conclude "phase N is next"; with different slugs (`30-auth` in one, `30-cache` in the other) git
+**silently merges both in** — two phase 30s, no conflict marker. The guard observes ground truth
+(`git worktree list` + the upstream integration ref) and **refuses** to scaffold a phase number
+already claimed by a sibling worktree or upstream, naming the conflict and the next free number, so
+the collision fails loud *before* wasted work. See [the worktree-concurrency note](../concepts.md#worktrees--the-single-writer-assumption).
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `phaseGuard.enabled` | `boolean` | `true` | Master switch. `false` disables the guard entirely (scaffolding behaves exactly as pre-v1.18). |
+| `phaseGuard.integrationRef` | `string` | `"main"` | The upstream ref checked for already-merged phases — `origin/<integrationRef>`. Retarget if your project integrates on a branch other than `main`. |
+
+The guard fires at **scaffold time** (`cadence spec new` / `cadence draft new`, before any file is
+created) and as a **settle backstop** (`cadence settle run`, catching a scaffold-race). It is
+**best-effort**: a non-git checkout, a missing `origin`, an offline run, or a configured
+`integrationRef` absent on the remote each degrade silently to "no extra data" — the only hard
+failure is an *actual detected collision*. Bypass a specific run with `--allow-phase-collision`
+(which never bypasses the existing local same-directory refusal).
+
+```bash
+# A sibling worktree already holds phase 30 — this refuses, suggesting 31:
+cadence draft new 30-cache 01
+# Proceed anyway (you know what you're doing):
+cadence draft new 30-cache 01 --allow-phase-collision
+```
 
 ---
 
