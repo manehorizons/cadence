@@ -4,12 +4,15 @@ import { join } from 'node:path';
 import { SimpleStateBackend } from '../state/simple.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
 import { runRecommendationTransition } from '../intelligence/store/recommendations.js';
+import { loadConfig } from '../config/loader.js';
+import { phaseNumber } from '../phases/collision.js';
+import { assertNoPhaseCollision } from '../phases/guard.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /** `cadence spec new <phase> <num>` — scaffold a SPEC.md (IDLE→SPEC). */
 export async function specNewService(
   repoRoot: string,
-  args: { phase: string; num: string; title?: string; fromRec?: string },
+  args: { phase: string; num: string; title?: string; fromRec?: string; allowPhaseCollision?: boolean },
   io: CommandIO,
 ): Promise<CommandResult> {
   const title = args.title ?? 'Untitled';
@@ -42,6 +45,26 @@ export async function specNewService(
     if (existsSync(path)) {
       io.err(`SPEC already exists: ${path}\n`);
       return { exitCode: 2 };
+    }
+    // Phase 83: worktree-collision guard — refuse a phase number already in use
+    // by a sibling worktree or upstream, before any file is created. Additive to
+    // the local `existsSync` refusal above; best-effort config load (defaults on
+    // failure). `--allow-phase-collision` bypasses this, never the existsSync.
+    const config = await loadConfig(repoRoot).catch(() => undefined);
+    if (config) {
+      const verdict = await assertNoPhaseCollision(repoRoot, phaseNumber(args.phase), {
+        config,
+        // Local is excluded from scaffold-time matching — the dir is being
+        // created, so a same-number local dir is self, not a collision. The
+        // collision authority is sibling worktrees + upstream. (Local still
+        // feeds `nextFree`.) The same-dir `existsSync` above guards local dups.
+        excludeSources: ['local'],
+        ...(args.allowPhaseCollision !== undefined ? { allow: args.allowPhaseCollision } : {}),
+      });
+      if (!verdict.ok) {
+        io.err(verdict.message);
+        return { exitCode: 1 };
+      }
     }
     await mkdir(dir, { recursive: true });
     const body = `---\nphase: ${args.phase}\nid: ${id}\nstatus: PENDING\n---\n\n# ${id} — ${title}\n\n## Objective\n\n_(one sentence)_\n\n## Acceptance Criteria\n\n### AC-1: _(name)_\nGiven _(precondition)_\nWhen _(action)_\nThen _(outcome)_\n\n## Constraints\n\n- _(constraint)_\n\n## Open Questions\n\n- _(question)_\n`;

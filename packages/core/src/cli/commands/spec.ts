@@ -20,7 +20,8 @@ export function registerSpecCommand(program: Command): void {
     .description('Scaffold a new SPEC.md under .cadence/phases/<phase>/ (IDLE→SPEC)')
     .option('--title <t>', 'Spec title', 'Untitled')
     .option('--from-rec <recId>', 'Praxis recommendation id; on success the rec is auto-converted to this phase (Slice 34.3)')
-    .action(async (phase: string, num: string, opts: { title: string; fromRec?: string }) => {
+    .option('--allow-phase-collision', 'bypass the worktree phase-collision guard (Phase 83); the local same-dir existsSync refusal still applies')
+    .action(async (phase: string, num: string, opts: { title: string; fromRec?: string; allowPhaseCollision?: boolean }) => {
       const { exitCode } = await specNewService(
         process.cwd(),
         {
@@ -28,6 +29,7 @@ export function registerSpecCommand(program: Command): void {
           num,
           title: opts.title,
           ...(opts.fromRec !== undefined ? { fromRec: opts.fromRec } : {}),
+          ...(opts.allowPhaseCollision !== undefined ? { allowPhaseCollision: opts.allowPhaseCollision } : {}),
         },
         processIO(),
       );

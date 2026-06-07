@@ -76,6 +76,10 @@ export function registerSettleCommand(program: Command): void {
       '--allow-skill-audit-miss',
       'do not refuse when required skills were not invoked; emit a warn anomaly (bypassed:true) and settle anyway (Phase 34.1)',
     )
+    .option(
+      '--allow-phase-collision',
+      'bypass the worktree phase-collision backstop (Phase 83): settle even if a sibling worktree or upstream claims this phase number',
+    )
     .action(async (opts: SettleArgs) => {
       const { exitCode } = await settleService(process.cwd(), opts, processIO());
       if (exitCode) process.exitCode = exitCode;

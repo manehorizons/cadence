@@ -387,3 +387,29 @@ describe('CadenceConfigZ', () => {
     ).toThrow();
   });
 });
+
+describe('phaseGuard config (AC-7)', () => {
+  it('AC-7: applies defaults { enabled: true, integrationRef: "main" } when omitted', () => {
+    const { phaseGuard: _drop, ...withoutGuard } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutGuard);
+    expect(parsed.phaseGuard).toEqual({ enabled: true, integrationRef: 'main' });
+  });
+
+  it('AC-7: round-trips enabled:false and a custom integrationRef', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      phaseGuard: { enabled: false, integrationRef: 'develop' },
+    });
+    expect(parsed.phaseGuard).toEqual({ enabled: false, integrationRef: 'develop' });
+  });
+
+  it('AC-7: defaultConfig includes the phaseGuard block', () => {
+    expect(defaultConfig.phaseGuard).toEqual({ enabled: true, integrationRef: 'main' });
+  });
+
+  it('AC-7: rejects a non-boolean enabled', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, phaseGuard: { enabled: 'yes' as never } }),
+    ).toThrow();
+  });
+});
