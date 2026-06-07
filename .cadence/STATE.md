@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 77-mcp-prompts
+**Active phase:** 78-mcp-install
 **Active draft:** (none)
 **Tier:** (n/a)
 

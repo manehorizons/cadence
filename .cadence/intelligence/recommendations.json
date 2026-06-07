@@ -402,17 +402,17 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "77-mcp-prompts",
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.546Z",
-      "updatedAt": "2026-06-07T15:47:46.021Z",
-      "convertedToPhaseId": "77-mcp-prompts"
+      "updatedAt": "2026-06-07T15:47:46.021Z"
     },
     {
       "id": "rec-20260607-004",
       "title": "Zero-config: cadence mcp install (writes/merges .mcp.json)",
       "summary": "New 'cadence mcp install [--print] [--client]' subcommand: non-destructive idempotent merge of project .mcp.json; --print snippet for Claude Desktop/Cursor. Phase 78.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -433,7 +433,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.690Z",
-      "updatedAt": "2026-06-07T15:19:42.690Z"
+      "updatedAt": "2026-06-07T15:56:15.073Z",
+      "convertedToPhaseId": "78-mcp-install"
     }
   ]
 }

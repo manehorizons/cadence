@@ -224,7 +224,7 @@ Extract canonical guidance/scout-dialogue text from host-claude-code into core/g
 
 ## rec-20260607-004 — Zero-config: cadence mcp install (writes/merges .mcp.json)
 
-- status: candidate
+- status: converted
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
