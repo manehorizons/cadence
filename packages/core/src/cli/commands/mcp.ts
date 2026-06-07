@@ -25,6 +25,14 @@ export function registerMcpCommand(program: Command): void {
     .option('--repo <path>', 'repo root to operate on (default: current working directory)')
     .action(async (opts: { repo?: string }) => {
       const repoRoot = opts.repo ? resolve(process.cwd(), opts.repo) : process.cwd();
+      // Configure the diagnostic logger from config.logging so a persistent
+      // logging block takes effect (Phase 81). Best-effort — the logger stays
+      // stderr-only, so it never collides with the stdio MCP protocol channel.
+      const { loadConfig } = await import('../../config/loader.js');
+      const { configureLoggerFromConfig } = await import('../../logging/logger.js');
+      await loadConfig(repoRoot)
+        .then((cfg) => configureLoggerFromConfig(cfg))
+        .catch(() => {});
       // Lazy-import the SDK + server so ordinary CLI commands never load the MCP
       // dependency (phase 58 AC-7). Both modules pull in @modelcontextprotocol/sdk.
       const [{ buildCadenceMcpServer }, { StdioServerTransport }] = await Promise.all([

@@ -1,4 +1,5 @@
 import type { ZodType } from 'zod/v4';
+import { getLogger } from '../logging/logger.js';
 
 export interface LocalChatJSONOptions<T> {
   baseURL: string;
@@ -37,7 +38,10 @@ async function callOnce(
   messages: Array<{ role: string; content: string }>,
 ): Promise<string> {
   const fetchImpl = o.transport ?? fetch;
+  // Header values (auth bearer etc.) are never logged — only the endpoint + model.
+  const log = getLogger().child({ seam: 'verify', provider: 'local' });
   let res: Response;
+  log.debug('verify request', { baseURL: o.baseURL, model: o.model });
   try {
     res = await fetchImpl(`${o.baseURL}/chat/completions`, {
       method: 'POST',
@@ -51,11 +55,13 @@ async function callOnce(
       }),
     });
   } catch (err) {
+    log.warn('verify error', { baseURL: o.baseURL, error: err instanceof Error ? err.name : 'unknown' });
     throw new Error(
       `local provider: request to ${o.baseURL} failed: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
   if (!res.ok) {
+    log.warn('verify error', { baseURL: o.baseURL, status: res.status });
     throw new Error(`local provider: ${o.baseURL} returned HTTP ${res.status}`);
   }
   const body = (await res.json()) as {
@@ -64,11 +70,15 @@ async function callOnce(
   };
   const u = body.usage;
   if (
-    o.onUsage &&
     typeof u?.prompt_tokens === 'number' &&
     typeof u.completion_tokens === 'number'
   ) {
-    o.onUsage({ inputTokens: u.prompt_tokens, outputTokens: u.completion_tokens });
+    log.debug('verify response', { inputTokens: u.prompt_tokens, outputTokens: u.completion_tokens });
+    if (o.onUsage) {
+      o.onUsage({ inputTokens: u.prompt_tokens, outputTokens: u.completion_tokens });
+    }
+  } else {
+    log.debug('verify response', {});
   }
   return body.choices?.[0]?.message?.content ?? '';
 }

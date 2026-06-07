@@ -1,4 +1,10 @@
-import type { EmitLevel, LogFormat, LogLevel, LogRecord } from '@manehorizons/cadence-types';
+import type {
+  CadenceConfig,
+  EmitLevel,
+  LogFormat,
+  LogLevel,
+  LogRecord,
+} from '@manehorizons/cadence-types';
 import { LOG_LEVEL_SEVERITY } from '@manehorizons/cadence-types';
 import { formatJson, formatPretty } from './format.js';
 import { resolveLogLevel, resolveLogFormat } from './resolve.js';
@@ -130,4 +136,20 @@ export function setLogger(logger: Logger): void {
 /** Clear the process-wide logger so the next {@link getLogger} rebuilds it. */
 export function resetLogger(): void {
   singleton = undefined;
+}
+
+/**
+ * Install the process-wide logger from `config.logging` (Phase 81). Called at
+ * the entrypoints where config is loaded (CLI settle, hook dispatch, MCP serve)
+ * so a persistent `logging` block takes effect. Env vars still win:
+ * {@link createLogger} resolves `CADENCE_LOG_LEVEL`/`CADENCE_LOG_FORMAT` over
+ * the config values passed here.
+ */
+export function configureLoggerFromConfig(config: Pick<CadenceConfig, 'logging'>): Logger {
+  const logger = createLogger({
+    configLevel: config.logging.level,
+    ...(config.logging.format !== undefined ? { configFormat: config.logging.format } : {}),
+  });
+  setLogger(logger);
+  return logger;
 }

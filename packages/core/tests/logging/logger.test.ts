@@ -1,10 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   Logger,
   createLogger,
   getLogger,
   setLogger,
   resetLogger,
+  configureLoggerFromConfig,
 } from '../../src/logging/logger.js';
 import type { LogLevel, LogFormat } from '@manehorizons/cadence-types';
 
@@ -111,5 +112,39 @@ describe('createLogger resolution + singleton', () => {
     getLogger().info('via singleton');
     expect(lines).toHaveLength(1);
     resetLogger();
+  });
+});
+
+describe('configureLoggerFromConfig (AC-4)', () => {
+  afterEach(() => resetLogger());
+
+  it('AC-4: installs the process logger at config.logging.level (no env override)', () => {
+    const errSpy = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+    const prev = process.env.CADENCE_LOG_LEVEL;
+    delete process.env.CADENCE_LOG_LEVEL;
+    try {
+      configureLoggerFromConfig({ logging: { level: 'debug' } });
+      getLogger().debug('x');
+      expect(errSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      errSpy.mockRestore();
+      if (prev !== undefined) process.env.CADENCE_LOG_LEVEL = prev;
+    }
+  });
+
+  it('AC-4: CADENCE_LOG_LEVEL env overrides config.logging.level', () => {
+    const errSpy = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+    const prev = process.env.CADENCE_LOG_LEVEL;
+    process.env.CADENCE_LOG_LEVEL = 'silent';
+    try {
+      configureLoggerFromConfig({ logging: { level: 'debug' } });
+      getLogger().debug('x');
+      getLogger().error('y');
+      expect(errSpy).not.toHaveBeenCalled();
+    } finally {
+      errSpy.mockRestore();
+      if (prev === undefined) delete process.env.CADENCE_LOG_LEVEL;
+      else process.env.CADENCE_LOG_LEVEL = prev;
+    }
   });
 });
