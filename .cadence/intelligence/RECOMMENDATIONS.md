@@ -237,3 +237,48 @@ Extract canonical guidance/scout-dialogue text from host-claude-code into core/g
 - next: cadence milestone propose
 
 New 'cadence mcp install [--print] [--client]' subcommand: non-destructive idempotent merge of project .mcp.json; --print snippet for Claude Desktop/Cursor. Phase 78.
+
+## rec-20260607-005 — Phase 80 — structured logger foundation
+
+- status: converted
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: logging, observability, cadence-core, cadence-types
+- evidence: Approved design 2026-06-07-observability-structured-logging-design.md; Post-v1.0 observability vector (MILESTONES.md)
+- next: cadence milestone propose
+
+Zero-dependency operator-debugging logger: LogLevel/LogRecord types in cadence-types, logger.ts + pure formatters in core, CADENCE_LOG_LEVEL/FORMAT env + config.logging block, stderr-only, default-off. Foundation only (no seam wiring or one trivial seam).
+
+## rec-20260607-006 — Phase 81 — instrument three seams + scoped console.* migration
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: logging, observability, gates, hooks, verify
+- evidence: Approved design 2026-06-07 §Instrumented seams
+- next: cadence milestone propose
+
+Wire gate decisions, hook/event dispatch, and verifier provider calls through the logger via bound child loggers; migrate only diagnostic/error console.* calls at those seams. Per-seam tests + stdout-purity test.
+
+## rec-20260607-007 — Phase 82 — observability docs + release v1.17.0
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, release, observability
+- evidence: Approved design 2026-06-07 §Phasing + §DESIGN.md & docs
+- next: cadence milestone propose
+
+Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md section), changeset, lockstep 1.16.0→1.17.0 bump across all four published packages, tag + provenance.

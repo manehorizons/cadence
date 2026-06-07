@@ -1,0 +1,26 @@
+{
+  "specId": "80-01",
+  "converged": true,
+  "attempts": 1,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-06-07T18:45:11.194Z",
+      "pass": false,
+      "findingsCount": 1,
+      "provider": "mock",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-06-07T18:45:41.870Z",
+      "pass": true,
+      "findingsCount": 0,
+      "provider": "mock",
+      "verdict": "pass"
+    }
+  ],
+  "pass": true,
+  "provider": "mock",
+  "findings": 0,
+  "at": "2026-06-07T18:45:41.870Z"
+}

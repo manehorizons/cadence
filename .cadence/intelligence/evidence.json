@@ -105,6 +105,27 @@
       "kind": "note",
       "summary": "v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.690Z"
+    },
+    {
+      "id": "ev-20260607-005",
+      "recommendationId": "rec-20260607-005",
+      "kind": "note",
+      "summary": "Approved design 2026-06-07-observability-structured-logging-design.md; Post-v1.0 observability vector (MILESTONES.md)",
+      "createdAt": "2026-06-07T18:41:51.719Z"
+    },
+    {
+      "id": "ev-20260607-006",
+      "recommendationId": "rec-20260607-006",
+      "kind": "note",
+      "summary": "Approved design 2026-06-07 §Instrumented seams",
+      "createdAt": "2026-06-07T18:41:51.887Z"
+    },
+    {
+      "id": "ev-20260607-007",
+      "recommendationId": "rec-20260607-007",
+      "kind": "note",
+      "summary": "Approved design 2026-06-07 §Phasing + §DESIGN.md & docs",
+      "createdAt": "2026-06-07T18:41:52.044Z"
     }
   ]
 }

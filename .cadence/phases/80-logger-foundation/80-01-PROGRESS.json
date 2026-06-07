@@ -1,0 +1,35 @@
+{
+  "draftId": "80-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "logging types in cadence-types + index export",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T18:53:28.972Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "pure formatters formatJson/formatPretty",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T18:53:36.053Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "logger runtime: gating, child, stderr-only sink",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T18:53:36.210Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "env>config>default level/format resolution",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T18:53:36.382Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "config.logging block in CadenceConfigZ",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T18:53:36.549Z"
+    }
+  }
+}
