@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ProfileZ } from './profile.js';
+import { LogLevelZ, LogFormatZ } from './logging.js';
 
 export const CadenceConfigZ = z.object({
   $schema: z.string().optional(),
@@ -202,6 +203,20 @@ export const CadenceConfigZ = z.object({
       { message: "notify.webhook.url is required when notify.transport === 'webhook'" },
     )
     .default({ transport: 'stderr' }),
+  /**
+   * Operational diagnostic logging (Phase 80, Post-v1.0 observability).
+   * Persistent default for the structured stderr logger. Env vars override
+   * these at runtime: `CADENCE_LOG_LEVEL` > `logging.level`, and
+   * `CADENCE_LOG_FORMAT` > `logging.format`. `format` omitted → the logger
+   * picks `pretty` on a TTY, else `json`. Default level `silent` = off.
+   * Distinct from `telemetry`/`skillAudit` (user-behavior tracking).
+   */
+  logging: z
+    .object({
+      level: LogLevelZ.default('silent'),
+      format: LogFormatZ.optional(),
+    })
+    .default({ level: 'silent' }),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -247,6 +262,7 @@ export const defaultConfig: CadenceConfig = {
   planReview: { provider: 'mock' as const },
   securityAudit: { provider: 'mock' as const },
   notify: { transport: 'stderr' as const },
+  logging: { level: 'silent' as const },
 };
 
 export const presets = {
