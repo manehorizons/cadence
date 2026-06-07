@@ -312,10 +312,126 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "64-explain",
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.528Z",
-      "updatedAt": "2026-06-05T22:00:39.142Z",
-      "convertedToPhaseId": "64-explain"
+      "updatedAt": "2026-06-05T22:00:39.142Z"
+    },
+    {
+      "id": "rec-20260607-001",
+      "title": "MCP Resources: expose .cadence/ artifacts under cadence:// (read-on-demand)",
+      "summary": "resources/list+read+templates over a curated cadence:// table (state, roadmap, project, recommendations, phase draft/summary). Read-on-demand, no subscriptions. Phase 75.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "mcp"
+      ],
+      "affectedFiles": [
+        "packages/core/src/mcp/resources.ts",
+        "packages/core/src/mcp/server.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260607-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260607-1019",
+      "createdAt": "2026-06-07T15:19:42.241Z",
+      "updatedAt": "2026-06-07T15:20:21.184Z",
+      "convertedToPhaseId": "75-mcp-resources"
+    },
+    {
+      "id": "rec-20260607-002",
+      "title": "MCP tool parity: handoff, resume, recommendation add/promote, doctor",
+      "summary": "Add the proven-out excluded commands as MCP tools (+ service extraction). Enables scout->rec->promote + session continuity over MCP. Phase 76.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "mcp"
+      ],
+      "affectedFiles": [
+        "packages/core/src/mcp/tools.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260607-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260607-1019",
+      "createdAt": "2026-06-07T15:19:42.398Z",
+      "updatedAt": "2026-06-07T15:19:42.398Z"
+    },
+    {
+      "id": "rec-20260607-003",
+      "title": "MCP Prompts + shared guidance extraction into core",
+      "summary": "Extract canonical guidance/scout-dialogue text from host-claude-code into core/guidance; expose prompts/list+get (scout, next, draft, settle). Single source of truth. Phase 77.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "mcp"
+      ],
+      "affectedFiles": [
+        "packages/core/src/mcp/prompts.ts",
+        "packages/core/src/guidance",
+        "packages/host-claude-code/src/install-commands.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260607-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260607-1019",
+      "createdAt": "2026-06-07T15:19:42.546Z",
+      "updatedAt": "2026-06-07T15:19:42.546Z"
+    },
+    {
+      "id": "rec-20260607-004",
+      "title": "Zero-config: cadence mcp install (writes/merges .mcp.json)",
+      "summary": "New 'cadence mcp install [--print] [--client]' subcommand: non-destructive idempotent merge of project .mcp.json; --print snippet for Claude Desktop/Cursor. Phase 78.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "mcp"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/mcp.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260607-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260607-1019",
+      "createdAt": "2026-06-07T15:19:42.690Z",
+      "updatedAt": "2026-06-07T15:19:42.690Z"
     }
   ]
 }

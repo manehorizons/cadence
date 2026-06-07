@@ -77,6 +77,34 @@
       "kind": "note",
       "summary": "Generated in /cadence-scout session on 'adoption & onboarding', 2026-06-05; grouped under scout-20260605-1702 (siblings: cadence tutorial, first-run nudge).",
       "createdAt": "2026-06-05T17:15:37.528Z"
+    },
+    {
+      "id": "ev-20260607-001",
+      "recommendationId": "rec-20260607-001",
+      "kind": "note",
+      "summary": "v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019",
+      "createdAt": "2026-06-07T15:19:42.241Z"
+    },
+    {
+      "id": "ev-20260607-002",
+      "recommendationId": "rec-20260607-002",
+      "kind": "note",
+      "summary": "v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019",
+      "createdAt": "2026-06-07T15:19:42.398Z"
+    },
+    {
+      "id": "ev-20260607-003",
+      "recommendationId": "rec-20260607-003",
+      "kind": "note",
+      "summary": "v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019",
+      "createdAt": "2026-06-07T15:19:42.546Z"
+    },
+    {
+      "id": "ev-20260607-004",
+      "recommendationId": "rec-20260607-004",
+      "kind": "note",
+      "summary": "v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019",
+      "createdAt": "2026-06-07T15:19:42.690Z"
     }
   ]
 }
