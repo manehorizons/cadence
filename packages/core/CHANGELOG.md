@@ -1,5 +1,31 @@
 # @manehorizons/cadence-core
 
+## 1.18.0
+
+### Minor Changes
+
+- v1.18 — worktree-safety: phase-collision guard.
+
+  CADENCE's loop state lives in the working tree and each git worktree holds a private `.cadence/`, so
+  two worktrees branched from the same commit can both scaffold "phase N" — and with different slugs
+  git silently merges both in. The new phase-collision guard observes ground truth (`git worktree list`
+  - `origin/<integrationRef>`) and refuses to scaffold a phase number already claimed by a sibling
+    worktree or upstream, naming the conflict and suggesting the next free number, so the collision fails
+    loud before wasted work.
+  * Fires at scaffold time (`cadence spec new` / `cadence draft new`) and as a `cadence settle run`
+    backstop. `--allow-phase-collision` bypasses per run (never bypasses the local same-dir refusal).
+  * New `phaseGuard { enabled (default true), integrationRef (default "main") }` config block.
+  * Best-effort: a non-git / offline / single-worktree checkout behaves exactly as before — the only
+    hard failure is an actual detected collision.
+
+  `cadence-types` adds the `phaseGuard` schema; `cadence-host-claude-code` and `cadence-host-codex`
+  carry version-alignment bumps only (no functional change).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-types@1.18.0
+
 ## 1.17.0
 
 ### Minor Changes

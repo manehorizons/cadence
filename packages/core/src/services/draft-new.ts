@@ -6,6 +6,9 @@ import { renderDraftBody, frontmatterStatus } from '../parse/draft-scaffold.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
 import { runRecommendationTransition } from '../intelligence/store/recommendations.js';
+import { loadConfig } from '../config/loader.js';
+import { phaseNumber } from '../phases/collision.js';
+import { assertNoPhaseCollision } from '../phases/guard.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -15,7 +18,7 @@ import type { CommandIO, CommandResult } from './io.js';
  */
 export async function draftNewService(
   repoRoot: string,
-  args: { phase: string; num: string; title?: string; tier?: string; fromRec?: string },
+  args: { phase: string; num: string; title?: string; tier?: string; fromRec?: string; allowPhaseCollision?: boolean },
   io: CommandIO,
 ): Promise<CommandResult> {
   const title = args.title ?? 'Untitled';
@@ -52,6 +55,23 @@ export async function draftNewService(
     if (existsSync(path)) {
       io.err(`DRAFT already exists: ${path}\n`);
       return { exitCode: 2 };
+    }
+    // Phase 83: worktree-collision guard (see spec-new.ts). Additive to the
+    // local `existsSync` refusal; `--allow-phase-collision` bypasses only this.
+    const config = await loadConfig(repoRoot).catch(() => undefined);
+    if (config) {
+      const verdict = await assertNoPhaseCollision(repoRoot, phaseNumber(args.phase), {
+        config,
+        // Local excluded from scaffold-time matching (see spec-new.ts): the
+        // normal spec→draft progression reuses the same local phase dir, which
+        // is self, not a collision. Authority = sibling worktrees + upstream.
+        excludeSources: ['local'],
+        ...(args.allowPhaseCollision !== undefined ? { allow: args.allowPhaseCollision } : {}),
+      });
+      if (!verdict.ok) {
+        io.err(verdict.message);
+        return { exitCode: 1 };
+      }
     }
     await mkdir(dir, { recursive: true });
     const specPath = join(dir, `${id}-SPEC.md`);

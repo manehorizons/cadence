@@ -204,6 +204,20 @@ export const CadenceConfigZ = z.object({
     )
     .default({ transport: 'stderr' }),
   /**
+   * Phase-collision guard (Phase 83, v1.18 worktree-safety). Refuses to
+   * scaffold a phase number already claimed by a sibling git worktree or by
+   * `origin/<integrationRef>`, so a cross-worktree collision fails loud before
+   * wasted work instead of silently dual-merging. Observes ground truth (the
+   * worktree list + upstream tree) — no reservation registry. `enabled: false`
+   * disables the guard entirely; omitting the block applies the defaults.
+   */
+  phaseGuard: z
+    .object({
+      enabled: z.boolean().default(true),
+      integrationRef: z.string().default('main'),
+    })
+    .default({ enabled: true, integrationRef: 'main' }),
+  /**
    * Operational diagnostic logging (Phase 80, Post-v1.0 observability).
    * Persistent default for the structured stderr logger. Env vars override
    * these at runtime: `CADENCE_LOG_LEVEL` > `logging.level`, and
@@ -262,6 +276,7 @@ export const defaultConfig: CadenceConfig = {
   planReview: { provider: 'mock' as const },
   securityAudit: { provider: 'mock' as const },
   notify: { transport: 'stderr' as const },
+  phaseGuard: { enabled: true, integrationRef: 'main' },
   logging: { level: 'silent' as const },
 };
 

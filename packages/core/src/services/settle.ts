@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import type { Summary } from '@manehorizons/cadence-types';
-import { TaskStatusZ } from '@manehorizons/cadence-types';
+import { TaskStatusZ, defaultConfig } from '@manehorizons/cadence-types';
+import { phaseNumber } from '../phases/collision.js';
+import { assertNoPhaseCollision } from '../phases/guard.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { renderSummaryMd } from '../parse/summary-writer.js';
 import { SimpleStateBackend } from '../state/simple.js';
@@ -51,6 +53,8 @@ export interface SettleArgs {
   allowCodeReviewFailure?: boolean;
   allowSecurityAuditFailure?: boolean;
   allowSkillAuditMiss?: boolean;
+  /** Phase 83: bypass the worktree phase-collision backstop. */
+  allowPhaseCollision?: boolean;
   interactive?: boolean;
   /** Phase 73: override config.verifier.provider for the deep-verify gate
    *  (precedence flag > config > default mock). */
@@ -105,6 +109,24 @@ export async function settleService(
     } catch {
       cadenceConfig = null;
     }
+
+    // Phase 83: worktree-collision backstop — re-check the active phase number
+    // against sibling worktrees + upstream only (the `local` source is self: the
+    // active phase dir lives in this worktree), catching the rare scaffold-race.
+    // A `settleService` precondition, NOT a gate-matrix gate.
+    // `--allow-phase-collision` bypasses.
+    {
+      const verdict = await assertNoPhaseCollision(cwd, phaseNumber(state.activePhase), {
+        config: cadenceConfig ?? defaultConfig,
+        excludeSources: ['local'],
+        ...(opts.allowPhaseCollision !== undefined ? { allow: opts.allowPhaseCollision } : {}),
+      });
+      if (!verdict.ok) {
+        io.err(verdict.message);
+        return { exitCode: 1 };
+      }
+    }
+
     const gateSet = effectiveGateSet(state, cadenceConfig, draft);
 
     // Phase 71: warn whenever the deep-verify gate will actually run in mock —
