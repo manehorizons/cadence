@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 76-mcp-tool-parity
+**Active phase:** 77-mcp-prompts
 **Active draft:** (none)
 **Tier:** (n/a)
 

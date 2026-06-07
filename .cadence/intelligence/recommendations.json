@@ -371,17 +371,17 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "76-mcp-tool-parity",
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.398Z",
-      "updatedAt": "2026-06-07T15:29:52.959Z",
-      "convertedToPhaseId": "76-mcp-tool-parity"
+      "updatedAt": "2026-06-07T15:29:52.959Z"
     },
     {
       "id": "rec-20260607-003",
       "title": "MCP Prompts + shared guidance extraction into core",
       "summary": "Extract canonical guidance/scout-dialogue text from host-claude-code into core/guidance; expose prompts/list+get (scout, next, draft, settle). Single source of truth. Phase 77.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -404,7 +404,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.546Z",
-      "updatedAt": "2026-06-07T15:19:42.546Z"
+      "updatedAt": "2026-06-07T15:47:46.021Z",
+      "convertedToPhaseId": "77-mcp-prompts"
     },
     {
       "id": "rec-20260607-004",

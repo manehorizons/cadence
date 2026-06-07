@@ -208,7 +208,7 @@ Add the proven-out excluded commands as MCP tools (+ service extraction). Enable
 
 ## rec-20260607-003 — MCP Prompts + shared guidance extraction into core
 
-- status: candidate
+- status: converted
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
