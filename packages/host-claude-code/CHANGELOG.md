@@ -1,5 +1,40 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.16.0
+
+### Minor Changes
+
+- MCP surface deepening (v1.16.0): grow the `cadence mcp serve` surface from a
+  thin tools-only slice into a full MCP integration, along four dimensions.
+  - **Resources (phase 75).** `.cadence/` artifacts are exposed read-on-demand
+    under a `cadence://` scheme — `state`, `state.json`, `roadmap`, `project`,
+    `recommendations`, plus templated `phase/{phase}/draft|summary`. No
+    subscriptions / file-watching; readers reuse the same bytes the CLI reads.
+  - **Tool parity (phase 76).** Five proven-out commands join the tool set:
+    `cadence_handoff`, `cadence_resume`, `cadence_recommendation_add`,
+    `cadence_recommendation_promote`, `cadence_doctor` — enabling session
+    continuity and the full scout → rec → promote path over MCP (15 tools total).
+  - **Prompts + shared guidance (phase 77).** The canonical command guidance and
+    the `cadence-scout` dialogue move into a shared `cadence-types` module
+    (`COMMAND_GUIDANCE` + `SCOUT_DIALOGUE`) — one source of truth for both the
+    Claude Code slash commands (rendered output byte-identical) and the new MCP
+    prompts (`cadence_scout`, `cadence_next`, `cadence_draft`, `cadence_settle`).
+  - **Zero-config (phase 78).** New `cadence mcp install [--print] [--client <c>]`
+    non-destructively writes/merges a project `.mcp.json` (idempotent; refuses to
+    clobber a malformed file); `--print` emits a snippet for other hosts.
+
+  `cadence-types` carries the shared guidance module; `cadence-host-claude-code`
+  re-sources its slash-command prose from it (byte-identical); `cadence-host-codex`
+  carries a version-alignment bump only. stdio-only and imperative-surface-only
+  still hold — ambient edit-time gates remain host-hook-only (DESIGN.md D11,
+  deepened additively, no new D-number).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.16.0
+  - @manehorizons/cadence-types@1.16.0
+
 ## 1.15.0
 
 ### Minor Changes
