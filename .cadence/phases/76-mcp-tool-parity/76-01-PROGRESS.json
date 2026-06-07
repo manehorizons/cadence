@@ -1,0 +1,29 @@
+{
+  "draftId": "76-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "services/handoff.ts, resume.ts, doctor.ts over runHandoff/runResume/runDoctor",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:38:21.532Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "services/recommendation-add.ts + recommendation-promote.ts; summary defaults to title (schema >=1)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:38:21.681Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "5 tools added to tools.ts (handoff/resume/recommendation_add/recommendation_promote/doctor)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:38:21.828Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "tests/mcp/tool-parity.test.ts 6 ACs green; updated mcp-server + resources tool-set assertions",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:38:21.984Z"
+    }
+  }
+}

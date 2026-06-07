@@ -173,3 +173,67 @@ After 'cadence init', print the exact next loop commands (draft new → approve 
 - next: cadence milestone propose
 
 In-CLI help for loop / gates / tiers / profiles so users do not have to leave the terminal for docs. Reuses existing docs content; makes the tool self-teaching.
+
+## rec-20260607-001 — MCP Resources: expose .cadence/ artifacts under cadence:// (read-on-demand)
+
+- status: converted
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: mcp
+- files: packages/core/src/mcp/resources.ts, packages/core/src/mcp/server.ts
+- evidence: v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019
+- next: cadence milestone propose
+
+resources/list+read+templates over a curated cadence:// table (state, roadmap, project, recommendations, phase draft/summary). Read-on-demand, no subscriptions. Phase 75.
+
+## rec-20260607-002 — MCP tool parity: handoff, resume, recommendation add/promote, doctor
+
+- status: converted
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: mcp
+- files: packages/core/src/mcp/tools.ts
+- evidence: v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019
+- next: cadence milestone propose
+
+Add the proven-out excluded commands as MCP tools (+ service extraction). Enables scout->rec->promote + session continuity over MCP. Phase 76.
+
+## rec-20260607-003 — MCP Prompts + shared guidance extraction into core
+
+- status: converted
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: mcp
+- files: packages/core/src/mcp/prompts.ts, packages/core/src/guidance, packages/host-claude-code/src/install-commands.ts
+- evidence: v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019
+- next: cadence milestone propose
+
+Extract canonical guidance/scout-dialogue text from host-claude-code into core/guidance; expose prompts/list+get (scout, next, draft, settle). Single source of truth. Phase 77.
+
+## rec-20260607-004 — Zero-config: cadence mcp install (writes/merges .mcp.json)
+
+- status: converted
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: mcp
+- files: packages/core/src/cli/commands/mcp.ts
+- evidence: v1.16 MCP-deepening design 2026-06-07 (docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md); deepens phase-58 MCP surface; siblings in scout-20260607-1019
+- next: cadence milestone propose
+
+New 'cadence mcp install [--print] [--client]' subcommand: non-destructive idempotent merge of project .mcp.json; --print snippet for Claude Desktop/Cursor. Phase 78.

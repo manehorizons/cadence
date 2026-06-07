@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallCommandsOptions {
@@ -37,120 +38,94 @@ interface CommandSpec {
   body?: string;
 }
 
+// Guidance prose (description/trailing) + the scout dialogue body now live in
+// the shared `@manehorizons/cadence-types` guidance module (phase 77) so the MCP
+// prompts and these slash commands share one source of truth. The host-specific
+// fields (cli, argumentHint) stay here. Rendered output is byte-identical —
+// guarded by tests/install-commands-parity.test.ts.
+const g = COMMAND_GUIDANCE;
 const COMMANDS: CommandSpec[] = [
   {
     name: 'cadence-progress',
-    description: "Show CADENCE's next suggested action",
+    description: g['cadence-progress'].description,
     cli: 'progress',
-    trailing: 'Read the output above and take the suggested next step.',
+    trailing: g['cadence-progress'].trailing,
   },
   {
     name: 'cadence-draft',
-    description: 'Scaffold a new DRAFT.md for a phase task',
+    description: g['cadence-draft'].description,
     argumentHint: '<phase-id> <task-num> [--title=<title>]',
     cli: 'draft new $ARGUMENTS',
-    trailing: 'Open the new DRAFT.md and fill in summary, ACs, and tasks.',
+    trailing: g['cadence-draft'].trailing,
   },
   {
     name: 'cadence-approve',
-    description: 'Approve a draft and enter BUILD',
+    description: g['cadence-approve'].description,
     argumentHint: '<phase-id> <task-num>',
     cli: 'draft approve $ARGUMENTS',
-    trailing: 'Loop is now in BUILD. Use /cadence-build to record task outcomes.',
+    trailing: g['cadence-approve'].trailing,
   },
   {
     name: 'cadence-check',
-    description: 'Run structural coherence check on a draft',
+    description: g['cadence-check'].description,
     argumentHint: '<phase-id> <task-num>',
     cli: 'draft check $ARGUMENTS',
-    trailing: 'Address any issues reported before approving the draft.',
+    trailing: g['cadence-check'].trailing,
   },
   {
     name: 'cadence-build',
-    description: 'Record outcome of a build task',
+    description: g['cadence-build'].description,
     argumentHint: '<task-id> --status=<PASS|FAIL|BLOCKED|ESCALATED>',
     cli: 'build task $ARGUMENTS',
-    trailing: 'Continue with the next task or run /cadence-settle when done.',
+    trailing: g['cadence-build'].trailing,
   },
   {
     name: 'cadence-settle',
-    description: 'Close the loop and write SUMMARY',
+    description: g['cadence-settle'].description,
     argumentHint: '[--ac AC-1=pass ...]',
     cli: 'settle run $ARGUMENTS',
-    trailing: 'Review SUMMARY.md; loop is back to IDLE.',
+    trailing: g['cadence-settle'].trailing,
   },
   {
     name: 'cadence-done',
-    description: 'Mark a task DONE (shortcut for build task --status=DONE)',
+    description: g['cadence-done'].description,
     argumentHint: '<task-id> [--notes=<n>]',
     cli: 'done $ARGUMENTS',
-    trailing: 'Continue with the next task or run /cadence-settle when done.',
+    trailing: g['cadence-done'].trailing,
   },
   {
     name: 'cadence-block',
-    description: 'Mark a task BLOCKED (shortcut for build task --status=BLOCKED)',
+    description: g['cadence-block'].description,
     argumentHint: '<task-id> [--notes=<n>]',
     cli: 'block $ARGUMENTS',
-    trailing: 'Record the blocker, then unblock or escalate before settling.',
+    trailing: g['cadence-block'].trailing,
   },
   {
     name: 'cadence-needs-context',
-    description:
-      'Mark a task NEEDS_CONTEXT (shortcut for build task --status=NEEDS_CONTEXT)',
+    description: g['cadence-needs-context'].description,
     argumentHint: '<task-id> [--notes=<n>]',
     cli: 'needs-context $ARGUMENTS',
-    trailing: 'Supply the missing context, then re-run the task.',
+    trailing: g['cadence-needs-context'].trailing,
   },
   {
     name: 'cadence-handoff',
-    description: 'Scaffold a SESSION handoff doc with machine facts pre-filled',
+    description: g['cadence-handoff'].description,
     argumentHint: '[label]',
     cli: 'handoff $ARGUMENTS',
-    trailing: 'Open the new SESSION doc and fill the narrative sections (TL;DR, what landed, gotchas, next action).',
+    trailing: g['cadence-handoff'].trailing,
   },
   {
     name: 'cadence-resume',
-    description: 'Replay the freshest session handoff (brief by default; --full adds live context, read-only)',
+    description: g['cadence-resume'].description,
     cli: 'resume',
-    trailing:
-      'Read the replayed handoff and continue from the documented next action. Output is brief by default and auto-promotes to full on drift; run `cadence resume --full` for the whole doc + live context.',
+    trailing: g['cadence-resume'].trailing,
   },
   {
     name: 'cadence-scout',
-    description:
-      'Divergent→convergent ideation dialogue that lands survivors as Praxis recommendations',
+    description: g['cadence-scout'].description,
     argumentHint: '[topic]',
     cli: 'recommend',
-    body: [
-      'You are running **CADENCE scout** — a divergent→convergent ideation',
-      'dialogue that turns a fuzzy problem into ranked Praxis recommendations.',
-      'Scout never drives the loop: it generates candidate directions and lands',
-      'them in the recommendation ledger. It allocates no loop id, runs no gate,',
-      'and never changes loop state.',
-      '',
-      '**Topic:** $ARGUMENTS — if empty, ask the user what space to scout.',
-      '',
-      'The ranked recommendations above (`!cadence recommend`) are your',
-      "orientation: don't re-propose work already captured or in flight.",
-      '',
-      'Before landing anything, mint **one** scout-session id for this run in the',
-      'form `scout-YYYYMMDD-HHMM` (use the current date + time). Pass it as',
-      '`--scout-id` on every rec you land so the whole session is queryable as a',
-      'cluster later via `cadence recommend --scout-id <id>`.',
-      '',
-      '1. **Diverge.** Generate many candidate directions for the topic —',
-      '   breadth first, no commitment, no filtering yet. Aim wide.',
-      '2. **Converge.** Triage *with the user* down to the few worth keeping;',
-      '   drop duplicates of existing recs and merge near-duplicates.',
-      '3. **Land.** For each survivor run:',
-      '   `cadence recommendation add --title "<title>" --readiness raw-idea',
-      '   --scout-id <scout-YYYYMMDD-HHMM>',
-      '   --evidence "Generated in /cadence-scout session on <topic>, <date>;',
-      '   siblings: <other rec ids>"` — use `--readiness needs-evidence` when the',
-      '   candidate is already well-formed.',
-      '4. **Hand back.** Point the user at `cadence recommend` to re-rank, then',
-      '   the existing rec → milestone → SPEC export path. Scout stops here.',
-    ].join('\n'),
+    body: SCOUT_DIALOGUE,
   },
 ];
 

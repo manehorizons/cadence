@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "draftId": "78-01",
+  "completedAt": "2026-06-07T15:59:54.282Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "mcp/install.ts pure: mergeMcpConfig/mcpSnippet/clientHint"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "installMcpConfig service: create/merge/idempotent/malformed-abort/print"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "cadence mcp install subcommand wired (--print/--client validated)"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "tests/mcp/install.test.ts: 7 tests, AC-1..4 green; CLI smoke-tested"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

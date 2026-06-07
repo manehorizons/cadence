@@ -10,6 +10,11 @@ import { buildTaskService } from '../services/build-task.js';
 import { settleService } from '../services/settle.js';
 import { specNewService } from '../services/spec-new.js';
 import { specApproveService } from '../services/spec-approve.js';
+import { handoffService } from '../services/handoff.js';
+import { resumeService } from '../services/resume.js';
+import { doctorService } from '../services/doctor.js';
+import { recommendationAddService } from '../services/recommendation-add.js';
+import { recommendationPromoteService } from '../services/recommendation-promote.js';
 
 /**
  * One curated CADENCE command exposed as an MCP tool (phase 58). `run` calls the
@@ -34,6 +39,19 @@ const isTrue = (v: unknown): boolean => v === true;
 
 const TIER = z.enum(['quick-fix', 'standard', 'complex']);
 const TASK_STATUS = z.enum(['DONE', 'DONE_WITH_CONCERNS', 'NEEDS_CONTEXT', 'BLOCKED']);
+const REC_PRIORITY = z.enum(['low', 'medium', 'high', 'critical']);
+const REC_READINESS = z.enum([
+  'raw-idea',
+  'needs-evidence',
+  'needs-decision',
+  'ready-for-milestone',
+  'ready-for-cadence-spec',
+  'blocked',
+]);
+const REC_STATUS = z.enum(['candidate', 'accepted', 'deferred', 'rejected']);
+
+const optStrArr = (v: unknown): string[] | undefined =>
+  Array.isArray(v) ? v.map(String) : undefined;
 
 export const TOOLS: ToolDef[] = [
   {
@@ -233,5 +251,103 @@ export const TOOLS: ToolDef[] = [
         },
         io,
       ),
+  },
+  {
+    name: 'cadence_handoff',
+    description:
+      'Scaffold a SESSION handoff doc in .cadence/handoff/ with machine facts pre-filled, so ' +
+      'another session can resume. Returns the written path. A same-day collision needs force.',
+    inputSchema: {
+      label: z.string().optional().describe('Context label appended to the filename'),
+      force: z.boolean().optional().describe('Overwrite an existing same-day SESSION doc'),
+      noStamp: z.boolean().optional().describe('Do not write state.session.lastHandoff'),
+      noGit: z.boolean().optional().describe('Skip read-only git facts'),
+    },
+    run: (repoRoot, args, io) =>
+      handoffService(
+        repoRoot,
+        {
+          ...(optStr(args.label) !== undefined ? { label: optStr(args.label)! } : {}),
+          ...(isTrue(args.force) ? { force: true } : {}),
+          ...(isTrue(args.noStamp) ? { noStamp: true } : {}),
+          ...(isTrue(args.noGit) ? { noGit: true } : {}),
+        },
+        io,
+      ),
+  },
+  {
+    name: 'cadence_resume',
+    description:
+      'Replay the freshest .cadence/handoff/ SESSION doc + live context (read-only). Output is ' +
+      'drift-decided (brief unless loop state drifted); force with mode=brief|full.',
+    inputSchema: {
+      mode: z.enum(['brief', 'full']).optional().describe('Force output mode (default: drift decides)'),
+    },
+    run: (repoRoot, args, io) =>
+      resumeService(
+        repoRoot,
+        optStr(args.mode) === 'brief' || optStr(args.mode) === 'full'
+          ? { mode: optStr(args.mode) as 'brief' | 'full' }
+          : {},
+        io,
+      ),
+  },
+  {
+    name: 'cadence_recommendation_add',
+    description:
+      'Add a strategic recommendation to the intelligence ledger (write). Together with ' +
+      'cadence_recommendation_promote this drives the scout → rec → promote path.',
+    inputSchema: {
+      title: z.string().describe('Recommendation title'),
+      summary: z.string().optional().describe('Recommendation summary'),
+      priority: REC_PRIORITY.optional().describe('Priority (default: medium)'),
+      readiness: REC_READINESS.optional().describe('Readiness (default: raw-idea)'),
+      areas: z.array(z.string()).optional().describe('Affected areas'),
+      files: z.array(z.string()).optional().describe('Affected file paths'),
+      evidence: z.string().optional().describe('Short evidence note'),
+      scoutId: z.string().optional().describe('Scout-session id (convention: scout-YYYYMMDD-HHMM)'),
+    },
+    run: (repoRoot, args, io) =>
+      recommendationAddService(
+        repoRoot,
+        {
+          title: str(args.title),
+          ...(optStr(args.summary) !== undefined ? { summary: optStr(args.summary)! } : {}),
+          ...(optStr(args.priority) !== undefined ? { priority: optStr(args.priority)! } : {}),
+          ...(optStr(args.readiness) !== undefined ? { readiness: optStr(args.readiness)! } : {}),
+          ...(optStrArr(args.areas) !== undefined ? { areas: optStrArr(args.areas)! } : {}),
+          ...(optStrArr(args.files) !== undefined ? { files: optStrArr(args.files)! } : {}),
+          ...(optStr(args.evidence) !== undefined ? { evidence: optStr(args.evidence)! } : {}),
+          ...(optStr(args.scoutId) !== undefined ? { scoutId: optStr(args.scoutId)! } : {}),
+        },
+        io,
+      ),
+  },
+  {
+    name: 'cadence_recommendation_promote',
+    description:
+      "Advance a recommendation's status and/or readiness (write). Makes `milestone propose` " +
+      'reachable. An unknown id or illegal transition fails cleanly.',
+    inputSchema: {
+      id: z.string().describe('Recommendation id, e.g. "rec-20260607-001"'),
+      status: REC_STATUS.optional().describe('New status'),
+      readiness: REC_READINESS.optional().describe('New readiness'),
+    },
+    run: (repoRoot, args, io) =>
+      recommendationPromoteService(
+        repoRoot,
+        {
+          id: str(args.id),
+          ...(optStr(args.status) !== undefined ? { status: optStr(args.status)! } : {}),
+          ...(optStr(args.readiness) !== undefined ? { readiness: optStr(args.readiness)! } : {}),
+        },
+        io,
+      ),
+  },
+  {
+    name: 'cadence_doctor',
+    description: 'Diagnose this project’s CADENCE setup and report problems (read-only).',
+    inputSchema: {},
+    run: (repoRoot, _args, io) => doctorService(repoRoot, io),
   },
 ];

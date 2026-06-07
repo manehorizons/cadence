@@ -134,7 +134,27 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.15.0`** (2026-06-06, tag `v1.15.0` +
+change). The latest version is **`1.16.0`** (2026-06-07, tag `v1.16.0` pending):
+the **MCP-surface-deepening** milestone (v1.16) — grow the `cadence mcp serve`
+surface from a thin tools-only slice into a full MCP integration along four
+dimensions. **Phase 75 — Resources:** `.cadence/` artifacts exposed read-on-demand
+under a `cadence://` scheme (`state`, `state.json`, `roadmap`, `project`,
+`recommendations`, + templated `phase/{phase}/draft|summary`); no
+subscriptions/file-watching. **Phase 76 — tool parity:** five proven-out commands
+join the set (`cadence_handoff`, `cadence_resume`, `cadence_recommendation_add`,
+`cadence_recommendation_promote`, `cadence_doctor`) → 15 tools, enabling session
+continuity + the scout→rec→promote path over MCP. **Phase 77 — Prompts + shared
+guidance:** the canonical command prose + the `cadence-scout` dialogue move into a
+shared **`cadence-types`** module (`COMMAND_GUIDANCE` + `SCOUT_DIALOGUE`) — one
+source of truth for both the Claude Code slash commands (rendered output
+**byte-identical**, golden-fixture–guarded) and the new MCP prompts
+(`cadence_scout`/`cadence_next`/`cadence_draft`/`cadence_settle`). **Phase 78 —
+zero-config:** `cadence mcp install [--print] [--client <c>]` non-destructively
+writes/merges a project `.mcp.json` (idempotent; refuses to clobber a malformed
+file; `--print` snippet for other hosts). Phase 79 = release. All four published
+packages bumped `1.15.0 → 1.16.0` in lockstep; DESIGN.md **D11** deepened
+additively (no new D-number; stdio-only + imperative-surface-only still hold).
+Then **`1.15.0`** (2026-06-06, tag `v1.15.0` +
 provenance): the **verifier-robustness** milestone (v1.15) — make the real
 verifier providers dependable in a settle gate, let the operator pick one at the
 command line, and make every run's token usage auditable; provider hardening +

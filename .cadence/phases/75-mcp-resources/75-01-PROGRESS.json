@@ -1,0 +1,29 @@
+{
+  "draftId": "75-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "STATIC_RESOURCES table + readers in resources.ts; recommendations via recommendService json seam",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:26:22.539Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "PHASE_TEMPLATES (draft/summary) via ResourceTemplate + readPhaseArtifact",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:26:22.696Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "registerResources wired into server.ts; resources capability declared; read errors degrade gracefully",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:26:22.857Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "tests/mcp/resources.test.ts: 5 ACs green via in-memory transport + testkit",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:26:23.002Z"
+    }
+  }
+}

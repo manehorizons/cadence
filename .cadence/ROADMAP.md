@@ -640,6 +640,36 @@ scope/rationale/scope-guards in MILESTONES.md §v1.15.0.
   `1.14.0 → 1.15.0` bump; **no new DESIGN.md D-number** (hardening + ergonomics, not a
   contract change). Tag + npm provenance via the manual `Release` workflow at publish.
 
-Deferred candidate vectors (MILESTONES.md §Post-v1.0): MCP-surface deepening,
-observability (structured logging / OTel), the **public launch** (assets staged
-local-only). No viable next host adapter today (OpenCode rejected; Aider has no hooks).
+Deferred candidate vectors (MILESTONES.md §Post-v1.0): observability (structured
+logging / OTel), the **public launch** (assets staged local-only). No viable next
+host adapter today (OpenCode rejected; Aider has no hooks).
+
+---
+
+## v1.16.0 — MCP surface deepening — ✓ SHIPPED 2026-06-07
+
+Chosen 2026-06-07 (the leading Post-v1.0 candidate). Grow `cadence mcp serve` from a
+thin tools-only slice (phase 58) into a full MCP integration along four dimensions —
+adding the two missing MCP primitives (Resources, Prompts), widening the tool set to
+the proven-out commands, and making setup paste-free. stdio-only and
+imperative-surface-only still hold; DESIGN.md **D11** deepened additively (no new
+D-number). All four published packages bumped `1.15.0 → 1.16.0` in lockstep. Design:
+`docs/superpowers/specs/2026-06-07-mcp-surface-deepening-design.md` (local-only).
+
+- **Phase 75 — Resources** ✓ — `.cadence/` artifacts read-on-demand under a
+  `cadence://` scheme (5 static + 2 templated phase resources); no subscriptions.
+- **Phase 76 — Tool parity** ✓ — `cadence_handoff`, `cadence_resume`,
+  `cadence_recommendation_add`, `cadence_recommendation_promote`, `cadence_doctor`
+  (15 tools total), over thin services reusing existing core `run*` functions.
+- **Phase 77 — Shared guidance + Prompts** ✓ — command prose + the scout dialogue
+  extracted to a shared `cadence-types` module (host slash-command output
+  byte-identical, golden-fixture–guarded); MCP prompts `cadence_scout` / `cadence_next`
+  / `cadence_draft` / `cadence_settle`.
+- **Phase 78 — Zero-config** ✓ — `cadence mcp install [--print] [--client <c>]`
+  non-destructively writes/merges `.mcp.json` (idempotent; refuses malformed clobber).
+- **Phase 79 — Release v1.16.0** ✓ — docs (`mcp.md`, `commands.md`), DESIGN.md D11
+  extension, changeset, lockstep `1.15.0 → 1.16.0` bump. Tag + npm provenance via the
+  manual `Release` workflow at publish.
+
+Deferred candidate vectors (MILESTONES.md §Post-v1.0): observability (structured
+logging / OTel), the **public launch** (assets staged local-only).

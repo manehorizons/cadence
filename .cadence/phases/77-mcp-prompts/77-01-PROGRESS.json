@@ -1,0 +1,35 @@
+{
+  "draftId": "77-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "types/src/guidance.ts: COMMAND_GUIDANCE + SCOUT_DIALOGUE, exported from types barrel",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:55:07.281Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "install-commands.ts re-sourced from shared module; byte-identical (parity test)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:55:07.439Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "mcp/prompts.ts: scout/next/draft/settle prompts over shared guidance",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:55:07.584Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "registerPrompts wired into server.ts; prompts capability declared",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:55:07.737Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "install-commands-parity.test.ts (golden fixtures) + prompts.test.ts; AC-1..4 green",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T15:55:07.881Z"
+    }
+  }
+}
