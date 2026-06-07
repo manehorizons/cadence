@@ -25,9 +25,25 @@ Setup is "install the package, then point your host at the command."
 npm i -g @manehorizons/cadence-core   # puts `cadence` on PATH
 ```
 
+### Easiest: `cadence mcp install`
+
+From your repo root, let CADENCE write the config for you:
+
+```bash
+cadence mcp install                   # write/merge .mcp.json (Claude Code) in this repo
+cadence mcp install --print           # just print the snippet (for Claude Desktop / Cursor)
+cadence mcp install --client cursor   # print + a path hint for that host
+```
+
+The default merge is **non-destructive and idempotent**: it preserves any
+existing `mcpServers` and only adds/updates the `cadence` entry, and it refuses
+to overwrite a malformed `.mcp.json`. Only Claude Code's `.mcp.json` is written;
+for other hosts `--print` gives you a snippet to paste. The manual setup for each
+host is below.
+
 ### Claude Code
 
-Add an `.mcp.json` at the repo root:
+Add an `.mcp.json` at the repo root (or run `cadence mcp install`):
 
 ```json
 {
@@ -60,7 +76,7 @@ the repo as the working directory (or pass `--repo <path>`).
 
 ## Tools
 
-The server advertises 10 tools that wrap the same engine the CLI uses. Each
+The server advertises 15 tools that wrap the same engine the CLI uses. Each
 returns both human-readable text and structured content.
 
 | Tool | Wraps | Kind |
@@ -68,6 +84,8 @@ returns both human-readable text and structured content.
 | `cadence_progress` | `cadence progress` | read — next suggested action |
 | `cadence_status` | `cadence status` | read — loop position, active phase/draft, AC results |
 | `cadence_recommend` | `cadence recommend` | read — ranked recommendations |
+| `cadence_doctor` | `cadence doctor` | read — project setup health |
+| `cadence_resume` | `cadence resume` | read — replay the freshest handoff |
 | `cadence_draft_new` | `cadence draft new` | write — scaffold a DRAFT (IDLE→DRAFT) |
 | `cadence_draft_check` | `cadence draft check` | write — coherence check (gate) |
 | `cadence_draft_approve` | `cadence draft approve` | write — DRAFT→BUILD |
@@ -75,9 +93,48 @@ returns both human-readable text and structured content.
 | `cadence_settle` | `cadence settle run` | write — close the loop, run gates, write SUMMARY |
 | `cadence_spec_new` | `cadence spec new` | write — scaffold a SPEC (IDLE→SPEC) |
 | `cadence_spec_approve` | `cadence spec approve` | write — spec-review gate, SPEC→IDLE |
+| `cadence_handoff` | `cadence handoff` | write — scaffold a SESSION handoff doc |
+| `cadence_recommendation_add` | `cadence recommendation add` | write — add a recommendation |
+| `cadence_recommendation_promote` | `cadence recommendation promote` | write — advance a recommendation |
 
-The CLI commands `init`, `config`, `doctor`, `install`, `handoff`, and `resume`
-are intentionally **not** exposed as tools.
+Together `cadence_recommendation_add` + `cadence_recommendation_promote` let a
+host run the full scout → recommendation → promote path over MCP. The CLI
+commands `init`, `config`, and `install` are intentionally **not** exposed as
+tools.
+
+## Resources
+
+The server exposes `.cadence/` artifacts as **read-on-demand** MCP resources
+under a `cadence://` scheme, so a host can pull loop context as data without
+spending a tool call. There are no subscriptions / change notifications — the
+host re-reads when it wants fresh data.
+
+| Resource URI | Content |
+|---|---|
+| `cadence://state` | `.cadence/STATE.md` (human view) |
+| `cadence://state.json` | `.cadence/state.json` (machine state) |
+| `cadence://roadmap` | `.cadence/ROADMAP.md` |
+| `cadence://project` | `.cadence/PROJECT.md` |
+| `cadence://recommendations` | the `cadence recommend --json` payload |
+| `cadence://phase/{phase}/draft` | a phase's `*-DRAFT.md` (templated) |
+| `cadence://phase/{phase}/summary` | a phase's `*-SUMMARY.md` (templated) |
+
+A read for a missing artifact returns a clean MCP error result; the server keeps
+serving.
+
+## Prompts
+
+The server exposes guided workflows as MCP **prompts**, sourced from the same
+canonical guidance the Claude Code slash commands use:
+
+| Prompt | Args | Role |
+|---|---|---|
+| `cadence_scout` | `topic` | the divergent→convergent ideation dialogue |
+| `cadence_next` | — | orient on the loop and take the next step |
+| `cadence_draft` | `phase`, `num` | guided drafting workflow |
+| `cadence_settle` | — | guided settle workflow |
+
+Prompts orient the conversation; the tools perform the actions.
 
 ## Gate semantics
 
@@ -109,8 +166,9 @@ remediation — e.g. *"CADENCE not initialized here — run `cadence init` to ge
 started."* The server stays up and keeps serving subsequent calls; a tool
 failure never crashes the transport.
 
-## Scope (v1)
+## Scope
 
-stdio only. A remote/shared CADENCE over HTTP transport is a possible additive
-follow-up but reopens auth and multi-tenancy questions deliberately out of scope
-here. See `DESIGN.md` decision **D11**.
+stdio only; resources are read-on-demand (no subscriptions / file-watching). A
+remote/shared CADENCE over HTTP transport is a possible additive follow-up but
+reopens auth and multi-tenancy questions deliberately out of scope here. See
+`DESIGN.md` decision **D11**.

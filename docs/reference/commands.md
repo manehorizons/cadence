@@ -1209,6 +1209,7 @@ Model Context Protocol surface
 | Subcommand | Description |
 |---|---|
 | `serve [--repo <path>]` | Run the CADENCE MCP server over stdio so any MCP host can drive the loop |
+| `install [--print] [--client <c>]` | Wire the MCP server into a host by writing/merging `.mcp.json` |
 
 **`serve` options**
 
@@ -1216,6 +1217,22 @@ Model Context Protocol surface
 |---|---|
 | `--repo <path>` | Repo root to operate on (default: current working directory) |
 | `-h, --help` | Display help for command |
+
+**`install` options**
+
+| Option | Description |
+|---|---|
+| `--repo <path>` | Repo root to operate on (default: current working directory) |
+| `--print` | Print the config snippet instead of writing a file |
+| `--client <client>` | Target host: `claude-code` \| `claude-desktop` \| `cursor` (default `claude-code`; non-claude-code is print-only) |
+| `-h, --help` | Display help for command |
+
+**`install` behavior** — by default writes/merges a project `.mcp.json` with the
+`cadence` server entry. The merge is **non-destructive and idempotent** (existing
+`mcpServers` and unknown top-level keys preserved; only the `cadence` key set)
+and **refuses to overwrite a malformed `.mcp.json`**. Only Claude Code's
+`.mcp.json` is written; `--print` (or `--client claude-desktop|cursor`) emits a
+paste-ready snippet plus a path hint and writes nothing.
 
 **Behavior** — starts a local [Model Context Protocol](https://modelcontextprotocol.io)
 server on **stdio** (a third surface alongside the CLI and the Claude Code hook
@@ -1226,14 +1243,18 @@ server operates on the `.cadence/` of `--repo` (or the launch cwd), exactly like
 the CLI. See **[Driving CADENCE over MCP](../mcp.md)** for setup and the full
 tool list.
 
-The server advertises 10 tools that wrap the same engine the CLI does:
-`cadence_progress`, `cadence_status`, `cadence_recommend` (read);
-`cadence_draft_new`, `cadence_draft_check`, `cadence_draft_approve`,
-`cadence_build_task`, `cadence_settle`, `cadence_spec_new`,
-`cadence_spec_approve` (write). Command-boundary gates (coherence, the settle
-gate stack, spec-review) run exactly as they do from the CLI; **ambient
-edit-time gates require host hooks and are not available over MCP**. The MCP SDK
-is lazy-loaded — ordinary CLI commands never pay its load cost.
+The server advertises 15 tools that wrap the same engine the CLI does:
+`cadence_progress`, `cadence_status`, `cadence_recommend`, `cadence_doctor`,
+`cadence_resume` (read); `cadence_draft_new`, `cadence_draft_check`,
+`cadence_draft_approve`, `cadence_build_task`, `cadence_settle`,
+`cadence_spec_new`, `cadence_spec_approve`, `cadence_handoff`,
+`cadence_recommendation_add`, `cadence_recommendation_promote` (write). It also
+exposes `.cadence/` artifacts as read-on-demand **resources** (`cadence://…`)
+and guided **prompts** (incl. `cadence_scout`). Command-boundary gates
+(coherence, the settle gate stack, spec-review) run exactly as they do from the
+CLI; **ambient edit-time gates require host hooks and are not available over
+MCP**. The MCP SDK is lazy-loaded — ordinary CLI commands never pay its load
+cost.
 
 **Exit codes** — runs until stdin closes (the host owns the lifecycle). Exits
 non-zero only on a startup failure.
