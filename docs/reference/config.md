@@ -235,6 +235,41 @@ Controls how CADENCE surfaces anomaly events. Only fires when the `anomaly-notif
 
 ---
 
+## logging
+
+Operational diagnostic logging for CADENCE itself (the structured logger). This is
+**distinct** from `telemetry`/`skillAudit`, which track user behavior — `logging` is operator-facing
+diagnostics for *why* CADENCE did something (which gate refused, which hook fired, what a verifier
+call did). It is **default-off** and writes **only to stderr**, so it never collides with `--json`
+output or the `cadence mcp serve` stdio protocol channel.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `logging.level` | `"silent" \| "error" \| "warn" \| "info" \| "debug" \| "trace"` | `"silent"` | Minimum severity emitted. `silent` emits nothing. Diagnostics are most useful at `debug`. |
+| `logging.format` | `"pretty" \| "json"` (optional) | — | Output format. When omitted, the logger picks `pretty` on a TTY (stderr) and `json` otherwise. |
+
+Instrumented seams (records carry a `seam` field): `gate` (settle gate decisions — skipped/passed/refused),
+`hook` (host lifecycle event dispatch), and `verify` (AI verifier provider calls — request/response/error,
+with token usage when present). Verifier auth headers and API keys are **never** logged.
+
+### Environment overrides
+
+Both fields can be overridden at runtime without editing `config.json` — **env wins over config**:
+
+| Variable | Overrides | Values |
+|---|---|---|
+| `CADENCE_LOG_LEVEL` | `logging.level` | `silent` \| `error` \| `warn` \| `info` \| `debug` \| `trace` |
+| `CADENCE_LOG_FORMAT` | `logging.format` | `pretty` \| `json` |
+
+```bash
+# Turn on debug diagnostics for a single command, JSON to stderr:
+CADENCE_LOG_LEVEL=debug CADENCE_LOG_FORMAT=json cadence settle run --auto
+```
+
+An invalid env value is ignored (falls through to config, then the default) rather than failing the command.
+
+---
+
 ## Presets
 
 `cadence init --profile <preset>` seeds `config.json` from one of three presets. The table shows only the fields that **differ** from `defaultConfig`; all other fields take the `defaultConfig` value.

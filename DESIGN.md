@@ -276,3 +276,29 @@ Three packages publish: `@manehorizons/cadence-core`, `@manehorizons/cadence-typ
 `tokenUtilization` real-signal wiring is deferred — host payload shape varies across Claude Code versions; a separate phase scopes the investigation. Current behavior: `handleUserPrompt` increments by `+0.01` per user-prompt event (proxy, not a real signal).
 
 `state.skillAudit.required[]` semantics (the list of skills the user *expects* to invoke each session, with a `skill-audit-miss` anomaly when one is absent at SessionStop) are also deferred.
+
+## 12. Observability (operational logging)
+
+Operational logging is **distinct** from §11 telemetry: telemetry tracks *user behavior*
+(`skillAudit`), whereas observability is *operator-facing diagnostics* for why CADENCE itself did
+something. Shipped in the v1.17 milestone (phases 80–82, the Post-v1.0 "structured logging" vector).
+
+Locked decisions:
+
+- **Zero runtime dependency.** A homegrown logger in `cadence-core` (`src/logging/`), with the
+  `LogLevel`/`LogFormat`/`LogRecord` types in `cadence-types`. No `pino`/`debug` — fits the lean-deps
+  + verifiable-claims bar and works identically across CLI, subprocess-hook, and MCP-stdio runtimes.
+- **Default-off.** Default level is `silent`; the logger emits nothing unless `CADENCE_LOG_LEVEL`
+  or `config.logging.level` raises it. Existing output and golden fixtures are unaffected by construction.
+- **stderr-only.** Records are written exclusively to stderr — load-bearing because `cadence mcp
+  serve` owns stdout as the MCP protocol channel and `--json` output must stay clean on stdout.
+- **Additive instrumentation.** Three seams emit via `getLogger().child({ seam })`: `gate` (settle
+  gate decisions), `hook` (lifecycle event dispatch), `verify` (AI verifier calls, incl. token
+  usage). No diagnostic `console.*` existed at these seams to migrate; the `host.ts`/`hook` context
+  payload remains the intentional stdout contract. Secret material (verifier auth headers, API keys,
+  webhook URLs) is never logged.
+- **Control precedence: env > config > default.** `CADENCE_LOG_LEVEL`/`CADENCE_LOG_FORMAT` override
+  `config.logging.{level,format}`, which override the `silent` / TTY-derived defaults.
+
+Deferred (still Post-v1.0): state-transition logging, OpenTelemetry / OTLP export (the logger leaves
+a clean extension point for an exporter without re-plumbing call sites), and an audit NDJSON sink.

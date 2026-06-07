@@ -434,6 +434,27 @@ loop id, or runs a gate.
 
 ---
 
+## Observability
+
+When you need to see *why* CADENCE did something — which gate refused, which
+lifecycle hook fired, what an AI verifier call did — turn on the structured
+diagnostic logger. It is **default-off** and writes **only to stderr**, so it
+never disturbs normal output, `--json`, or the `cadence mcp serve` protocol channel.
+
+```bash
+CADENCE_LOG_LEVEL=debug cadence settle run --auto   # one-off, human-readable to stderr
+CADENCE_LOG_LEVEL=debug CADENCE_LOG_FORMAT=json cadence mcp serve   # machine-readable
+```
+
+Records carry a `seam` tag: `gate` (settle gate skipped/passed/refused), `hook`
+(host event dispatch), and `verify` (verifier request/response/error, with token
+usage). Verifier auth headers and API keys are never logged. Persist a default
+with the [`logging` config block](reference/config.md#logging); env vars override
+it. This is operational logging — separate from the user-behavior `telemetry`
+(skill audit) above.
+
+---
+
 *Next: [docs/reference/config.md](reference/config.md) — full configuration
 reference | [docs/reference/commands.md](reference/commands.md) — command
 reference | [docs/cli.md](cli.md) — how-to guide*
