@@ -50,8 +50,14 @@ const EXPECTED_TOOLS = [
   'cadence_settle',
   'cadence_spec_new',
   'cadence_spec_approve',
+  // phase 76 — tool parity
+  'cadence_handoff',
+  'cadence_resume',
+  'cadence_recommendation_add',
+  'cadence_recommendation_promote',
+  'cadence_doctor',
 ];
-const EXCLUDED = ['cadence_init', 'cadence_config', 'cadence_doctor', 'cadence_install', 'cadence_handoff', 'cadence_resume'];
+const EXCLUDED = ['cadence_init', 'cadence_config', 'cadence_install'];
 
 let active: Fixture | null = null;
 afterEach(async () => {

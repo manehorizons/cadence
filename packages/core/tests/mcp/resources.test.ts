@@ -126,21 +126,22 @@ describe('MCP resources (phase 75)', () => {
     active = await tempRepo({ initialized: true, projectName: 'demo' });
     const { client, close } = await connect(active.root);
     try {
-      const { tools } = await client.listTools();
-      expect(tools.map((t) => t.name).sort()).toEqual(
-        [
-          'cadence_progress',
-          'cadence_status',
-          'cadence_recommend',
-          'cadence_draft_new',
-          'cadence_draft_check',
-          'cadence_draft_approve',
-          'cadence_build_task',
-          'cadence_settle',
-          'cadence_spec_new',
-          'cadence_spec_approve',
-        ].sort(),
-      );
+      const names = (await client.listTools()).tools.map((t) => t.name);
+      // the phase-58 curated tools remain advertised (no regression)
+      for (const t of [
+        'cadence_progress',
+        'cadence_status',
+        'cadence_recommend',
+        'cadence_draft_new',
+        'cadence_draft_check',
+        'cadence_draft_approve',
+        'cadence_build_task',
+        'cadence_settle',
+        'cadence_spec_new',
+        'cadence_spec_approve',
+      ]) {
+        expect(names).toContain(t);
+      }
       expect(client.getServerCapabilities()?.resources).toBeDefined();
     } finally {
       await close();
