@@ -351,4 +351,39 @@ describe('CadenceConfigZ', () => {
       CadenceConfigZ.parse({ ...defaultConfig, specReview: { provider: 'openai' as never } }),
     ).toThrow();
   });
+
+  // AC-7 (Phase 80) — config.logging: optional block, back-compat default.
+  it('logging defaults to level=silent when logging absent (back-compat) (AC-7)', () => {
+    const { logging: _drop, ...withoutLogging } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutLogging);
+    expect(parsed.logging.level).toBe('silent');
+    expect(parsed.logging.format).toBeUndefined();
+  });
+
+  it('logging round-trips level + format overrides (AC-7)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      logging: { level: 'debug', format: 'json' },
+    });
+    expect(parsed.logging.level).toBe('debug');
+    expect(parsed.logging.format).toBe('json');
+  });
+
+  it('logging.level defaults to silent when only format is given (AC-7)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      logging: { format: 'pretty' },
+    });
+    expect(parsed.logging.level).toBe('silent');
+    expect(parsed.logging.format).toBe('pretty');
+  });
+
+  it('rejects unknown logging.level and logging.format (AC-7)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, logging: { level: 'verbose' as never } }),
+    ).toThrow();
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, logging: { format: 'xml' as never } }),
+    ).toThrow();
+  });
 });

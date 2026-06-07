@@ -7,6 +7,7 @@ import type {
   VerifyInput,
   VerifyResult,
 } from './verifier.js';
+import { getLogger } from '../logging/logger.js';
 
 export const VerifierResponseSchema = z.object({
   verdicts: z.array(
@@ -93,11 +94,13 @@ export class AnthropicVerifier implements Verifier {
   }
 
   async verify(input: VerifyInput): Promise<VerifyResult> {
+    const log = getLogger().child({ seam: 'verify', provider: this.name, model: this.model });
     if (input.acs.length === 0) {
       return { verdicts: {}, provider: this.name, model: this.model };
     }
 
     const userMessage = formatUserMessage(input);
+    log.debug('verify request', { acs: input.acs.length });
     let response: Awaited<ReturnType<Anthropic['messages']['parse']>>;
     try {
       response = await this.client.messages.parse({
@@ -117,10 +120,12 @@ export class AnthropicVerifier implements Verifier {
       });
     } catch (err) {
       if (err instanceof Anthropic.APIError) {
+        log.warn('verify error', { status: err.status ?? 'unknown' });
         throw new Error(
           `AnthropicVerifier API error (${err.status ?? 'unknown'}): ${err.message}`,
         );
       }
+      log.warn('verify error', { error: err instanceof Error ? err.name : 'unknown' });
       throw err;
     }
 
@@ -142,6 +147,11 @@ export class AnthropicVerifier implements Verifier {
       typeof u?.input_tokens === 'number' && typeof u.output_tokens === 'number'
         ? { inputTokens: u.input_tokens, outputTokens: u.output_tokens }
         : undefined;
+
+    log.debug('verify response', {
+      verdicts: parsed.verdicts.length,
+      ...(usage ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens } : {}),
+    });
 
     return {
       verdicts,

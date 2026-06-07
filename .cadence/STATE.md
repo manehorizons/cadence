@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 78-mcp-install
+**Active phase:** 81-seam-instrumentation
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 181
-- Last handoff: SESSION-2026-06-07-launch-prep-ci-enforcement.md
+- Subagent spawns this session: 184
+- Last handoff: SESSION-2026-06-07-v1.16-mcp-shipped.md
 
 ## Counts
 - Open drafts: 0

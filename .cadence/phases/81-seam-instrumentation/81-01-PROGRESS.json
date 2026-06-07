@@ -1,0 +1,35 @@
+{
+  "draftId": "81-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "configureLoggerFromConfig helper",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T19:09:54.995Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "gate seam: runSettleGates child(seam:gate)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T19:09:55.153Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "hook seam: dispatcher + config wiring",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T19:09:55.324Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "verify seam: anthropic + local instrumentation",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T19:09:55.499Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "MCP serve config wiring + stdout-purity/default-off guard",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-07T19:09:55.678Z"
+    }
+  }
+}

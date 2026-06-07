@@ -134,7 +134,26 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.16.0`** (2026-06-07, tag `v1.16.0` pending):
+change). The latest version is **`1.17.0`** (2026-06-07, tag `v1.17.0` pending):
+the **observability** milestone (v1.17) — a zero-dependency, additive,
+**default-off** structured operator-debugging logger for diagnosing CADENCE
+itself (the Post-v1.0 "structured logging" vector; DESIGN.md **§12**). Writes
+**only to stderr** (never stdout — safe for `--json` and the `cadence mcp serve`
+protocol channel), gated by `CADENCE_LOG_LEVEL`/`CADENCE_LOG_FORMAT` env +
+optional `config.logging { level, format }` (precedence env > config > default
+`silent`). **Phase 80 — foundation:** `LogLevel`/`LogFormat`/`LogRecord` types in
+`cadence-types`; pure formatters + level-gating `Logger` (`.child({ seam })`,
+stderr-only sink) + env/config resolution in `cadence-core`. **Phase 81 —
+instrumentation:** three seams emit via `getLogger().child({ seam })` — `gate`
+(settle gate skipped/passed/refused), `hook` (lifecycle event dispatch), `verify`
+(anthropic/local request/response/error + token usage; auth headers/keys never
+logged); `configureLoggerFromConfig` wires `config.logging` at CLI settle, hook
+dispatch, and MCP serve. No diagnostic `console.*` existed at the seams to
+migrate; the hook context-payload `console.log` stays the stdout contract. **Phase
+82 = release** (docs + DESIGN.md §12 + changeset). All four published packages
+bumped `1.16.0 → 1.17.0` in lockstep; OTel/OTLP export + state-transition logging
+remain deferred (the logger leaves a clean extension point). Prior:
+**`1.16.0`** (2026-06-07, tag `v1.16.0`):
 the **MCP-surface-deepening** milestone (v1.16) — grow the `cadence mcp serve`
 surface from a thin tools-only slice into a full MCP integration along four
 dimensions. **Phase 75 — Resources:** `.cadence/` artifacts exposed read-on-demand

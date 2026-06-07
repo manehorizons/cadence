@@ -9,6 +9,7 @@ import { runInteractiveGate } from './interactive.js';
 import { runDeepVerifyGate } from './deep-verify.js';
 import { runCodeReviewGate } from './code-review.js';
 import { runSecurityAuditGate } from './security-audit.js';
+import { getLogger } from '../logging/logger.js';
 
 /**
  * The settle-dispatched gate subset (Phase 44.1). The four 39.7 gates
@@ -88,13 +89,21 @@ export async function runSettleGates(
 ): Promise<RunGatesResult> {
   const registry = deps.registry ?? GATE_REGISTRY;
   const order = deps.order ?? GATE_ORDER;
+  const log = getLogger().child({ seam: 'gate' });
   const acc: SettleAccumulator = { flags: {} };
   for (const gate of order) {
     const entry = registry[gate];
-    if (!entry.selfGuarded && !ctx.gateSet.gates.includes(gate)) continue;
+    if (!entry.selfGuarded && !ctx.gateSet.gates.includes(gate)) {
+      log.debug('gate skipped', { gate });
+      continue;
+    }
     const res: GateResult = await entry.impl(ctx);
     mergeInto(acc, res);
-    if (res.outcome === 'refuse') return { acc, refused: true };
+    if (res.outcome === 'refuse') {
+      log.warn('gate refused', { gate, outcome: res.outcome });
+      return { acc, refused: true };
+    }
+    log.debug('gate passed', { gate, outcome: res.outcome });
   }
   return { acc, refused: false };
 }

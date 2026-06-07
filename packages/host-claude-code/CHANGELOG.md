@@ -1,5 +1,28 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.17.0
+
+### Minor Changes
+
+- Observability: structured operator-debugging logger (v1.17)
+
+  Add a zero-dependency, additive, default-off structured logger for diagnosing CADENCE itself.
+  Writes only to stderr (never stdout — safe for `--json` and the `cadence mcp serve` protocol
+  channel), gated by `CADENCE_LOG_LEVEL`/`CADENCE_LOG_FORMAT` env vars and an optional
+  `config.logging { level, format }` block (precedence env > config > default `silent`).
+
+  Three seams are instrumented via context-bound child loggers: `gate` (settle gate
+  skipped/passed/refused decisions), `hook` (host lifecycle event dispatch), and `verify` (AI
+  verifier provider request/response/error, including token usage). Verifier auth headers and API
+  keys are never logged. `cadence-types` gains the pure `LogLevel`/`LogFormat`/`LogRecord` types;
+  `cadence-host-*` carry version-alignment bumps only (no functional change).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.17.0
+  - @manehorizons/cadence-types@1.17.0
+
 ## 1.16.0
 
 ### Minor Changes

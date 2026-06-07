@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "78-mcp-install",
+  "activePhase": "81-seam-instrumentation",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-07T15:57:20.214Z",
+  "draftReadAt": "2026-06-07T19:03:04.119Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-06-07-launch-prep-ci-enforcement.md",
-    "subagentSpawns": 181
+    "lastHandoff": "SESSION-2026-06-07-v1.16-mcp-shipped.md",
+    "subagentSpawns": 184
   },
   "skillAudit": {
     "required": [],

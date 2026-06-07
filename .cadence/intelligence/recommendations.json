@@ -431,10 +431,99 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "78-mcp-install",
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.690Z",
-      "updatedAt": "2026-06-07T15:56:15.073Z",
-      "convertedToPhaseId": "78-mcp-install"
+      "updatedAt": "2026-06-07T15:56:15.073Z"
+    },
+    {
+      "id": "rec-20260607-005",
+      "title": "Phase 80 — structured logger foundation",
+      "summary": "Zero-dependency operator-debugging logger: LogLevel/LogRecord types in cadence-types, logger.ts + pure formatters in core, CADENCE_LOG_LEVEL/FORMAT env + config.logging block, stderr-only, default-off. Foundation only (no seam wiring or one trivial seam).",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "logging",
+        "observability",
+        "cadence-core",
+        "cadence-types"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260607-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "80-logger-foundation",
+      "scoutId": "scout-20260607-obs",
+      "createdAt": "2026-06-07T18:41:51.719Z",
+      "updatedAt": "2026-06-07T18:41:59.457Z"
+    },
+    {
+      "id": "rec-20260607-006",
+      "title": "Phase 81 — instrument three seams + scoped console.* migration",
+      "summary": "Wire gate decisions, hook/event dispatch, and verifier provider calls through the logger via bound child loggers; migrate only diagnostic/error console.* calls at those seams. Per-seam tests + stdout-purity test.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "logging",
+        "observability",
+        "gates",
+        "hooks",
+        "verify"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260607-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260607-obs",
+      "createdAt": "2026-06-07T18:41:51.887Z",
+      "updatedAt": "2026-06-07T19:00:54.213Z",
+      "convertedToPhaseId": "81-seam-instrumentation"
+    },
+    {
+      "id": "rec-20260607-007",
+      "title": "Phase 82 — observability docs + release v1.17.0",
+      "summary": "Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md section), changeset, lockstep 1.16.0→1.17.0 bump across all four published packages, tag + provenance.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "release",
+        "observability"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260607-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260607-obs",
+      "createdAt": "2026-06-07T18:41:52.044Z",
+      "updatedAt": "2026-06-07T18:41:52.044Z"
     }
   ]
 }

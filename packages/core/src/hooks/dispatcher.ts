@@ -1,6 +1,7 @@
 import type { AbstractEvent, HookContext } from '@manehorizons/cadence-types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { loadConfig } from '../config/loader.js';
+import { getLogger, configureLoggerFromConfig } from '../logging/logger.js';
 import {
   handleSessionStart,
   handleUserPrompt,
@@ -19,6 +20,8 @@ export class HookDispatcher {
     const backend = new SimpleStateBackend(this.repoRoot);
     const state = await backend.readState();
     const config = await loadConfig(this.repoRoot);
+    configureLoggerFromConfig(config);
+    getLogger().child({ seam: 'hook' }).debug('dispatch', { event });
     switch (event) {
       case 'session-start':
         return handleSessionStart(ctx, state);
