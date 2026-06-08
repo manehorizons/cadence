@@ -24,6 +24,11 @@ docs/superpowers/
 HANDOFF.md.bak
 HANDOFF.md.resumed-*
 
+# Regenerable intelligence context packet (derived read-only view written by
+# `cadence resume`/`handoff`). Re-created on demand from live state — not a
+# tracked artifact, unlike the recommendation/milestone ledgers beside it.
+.cadence/intelligence/context/
+
 # Local-only reference docs (architecture reviews, scratch notes). Kept on
 # disk for the operator; never published.
 .local/
