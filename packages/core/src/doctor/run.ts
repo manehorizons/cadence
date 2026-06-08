@@ -3,6 +3,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
+import { gatherOccupancy } from '../phases/occupancy.js';
+import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
 import {
   pass,
   fail,
@@ -192,6 +194,90 @@ async function checkHostHooks(root: string): Promise<DoctorCheck> {
   );
 }
 
+/** Human label for where a cross-worktree claim was observed. */
+function whereClaimed(o: Occupancy): string {
+  return o.source === 'upstream' ? o.location : `worktree ${o.location}`;
+}
+
+/**
+ * Read-only cross-worktree phase-usage line (v1.19, phase 85). Reuses the v1.18
+ * `gatherOccupancy` collector + pure `detectPhaseCollision` to surface phase
+ * numbers claimed by sibling worktrees + the upstream integration ref, and warns
+ * when one collides with a local phase number — the silent-dual-merge
+ * precondition the v1.18 guard refuses at scaffold time. Best-effort: any
+ * failure degrades to `ok` (never throws), matching the guard's contract.
+ * The collector is injectable for deterministic, offline tests.
+ */
+export async function checkWorktreePhases(
+  root: string,
+  gather: (
+    repoRoot: string,
+    opts: { integrationRef: string },
+  ) => Promise<Occupancy[]> = gatherOccupancy,
+): Promise<DoctorCheck> {
+  try {
+    let integrationRef = 'main';
+    try {
+      integrationRef = (await loadConfig(root)).phaseGuard.integrationRef;
+    } catch {
+      /* config unreadable — fall back to the default ref */
+    }
+
+    const occupancies = await gather(root, { integrationRef });
+    const localNumbers = new Set(
+      occupancies.filter((o) => o.source === 'local').map((o) => o.number),
+    );
+    // Collisions are SIBLING-vs-local only — two live worktrees holding the same
+    // number is the silent-dual-merge risk. Upstream is the merged baseline: a
+    // local phase being present on origin/<ref> just means "merged", which is
+    // normal, so upstream is NOT matched here (that's the guard's scaffold-time
+    // concern). Upstream still feeds the suggested next free number below.
+    const siblings = occupancies.filter((o) => o.source === 'sibling');
+
+    if (siblings.length === 0) {
+      return pass(
+        'worktree-phases',
+        'No sibling worktrees with phase claims observed.',
+      );
+    }
+
+    const collisions = siblings.filter((o) => localNumbers.has(o.number));
+    if (collisions.length > 0) {
+      // nextFree is independent of target here (every observed number counts);
+      // target 0 yields max(observed)+1 over local + sibling + upstream —
+      // monotonic, lowest-gap was dropped.
+      const { nextFree } = detectPhaseCollision(0, occupancies);
+      const detail =
+        'phase number collision across worktrees: ' +
+        collisions
+          .map((c) => `${c.number} also claimed by ${whereClaimed(c)}`)
+          .join('; ') +
+        '.';
+      return fail(
+        'worktree-phases',
+        'warning',
+        detail,
+        `Renumber one side; the next free phase number is ${nextFree}.`,
+      );
+    }
+
+    const inventory = siblings
+      .map((o) => `${o.number} (${whereClaimed(o)})`)
+      .join(', ');
+    return pass(
+      'worktree-phases',
+      `Sibling worktree phase claims observed, none colliding with local: ${inventory}.`,
+    );
+  } catch {
+    // Best-effort: the collector should never throw, but if anything does,
+    // a diagnostic line must not break `doctor`.
+    return pass(
+      'worktree-phases',
+      'Cross-worktree phase usage not determinable (best-effort) — skipped.',
+    );
+  }
+}
+
 export async function runDoctor(
   root: string,
   env: DoctorEnv,
@@ -203,6 +289,7 @@ export async function runDoctor(
     await checkGitHooks(root),
     await checkHostHooks(root),
     await checkHostCommands(root),
+    await checkWorktreePhases(root),
   ];
   return rollup(checks);
 }
