@@ -5,13 +5,33 @@ export interface NextAction {
   reason: string;
 }
 
-export function nextAction(state: CadenceState): NextAction {
+/**
+ * Optional, occupancy-derived hints the impure service/CLI layer computes and
+ * passes in so `nextAction` can stay pure-over-state (no I/O). v1.19 phase 86.
+ */
+export interface NextActionHints {
+  /**
+   * The worktree-aware next free phase number (`max(observed)+1` over local +
+   * sibling + upstream), resolved best-effort by `resolveNextFreePhase`. When
+   * present, the IDLE suggestion substitutes it so the operator's first pick
+   * already clears sibling/upstream claims the v1.18 guard would refuse.
+   */
+  nextPhaseNumber?: number;
+}
+
+export function nextAction(state: CadenceState, hints?: NextActionHints): NextAction {
   switch (state.loopPosition) {
-    case 'IDLE':
+    case 'IDLE': {
+      const n = hints?.nextPhaseNumber;
+      const command =
+        n === undefined
+          ? 'cadence draft new <phase> <num> --title=…'
+          : `cadence draft new ${n}-<slug> ${n} --title=…`;
       return {
-        command: 'cadence draft new <phase> <num> --title=…',
+        command,
         reason: 'No active draft. Start the loop by drafting a new unit of work.',
       };
+    }
     case 'DRAFT': {
       const phase = state.activePhase ?? '<phase>';
       const num = state.activeDraft?.split('-')[1] ?? '<num>';

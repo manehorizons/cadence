@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-06-06T01:38:29.309Z
+Generated at: 2026-06-08T00:47:21.901Z
 
 ## Advisory
 
@@ -21,4 +21,4 @@ None.
 
 ## Totals
 
-- total 11 · ranked 0 · parked 0 · needs-attention 0 · excluded 11
+- total 18 · ranked 0 · parked 0 · needs-attention 0 · excluded 18

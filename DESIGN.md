@@ -335,5 +335,24 @@ Locked decisions:
   impure `gatherOccupancy` mirror the repo's pure-seam split. The existing local same-directory
   `existsSync` refusal is untouched and is never bypassed by the flag.
 
-Deferred (clean additive follow-ups): a `cadence doctor` read-only cross-worktree phase-usage line;
-proactive next-free allocation in `progress`/`recommend`; lowest-gap (vs `max + 1`) numbering.
+Polished in the v1.19 milestone (phases 85–87) — two of the three v1.18 follow-ups, shipped as
+pure additions on the same `gatherOccupancy` + `detectPhaseCollision` primitive:
+
+- **`cadence doctor` cross-worktree phase-usage line** (phase 85). A read-only `worktree-phases`
+  check surfaces phase numbers claimed by sibling worktrees and `warning`s when one collides with
+  a local number (the silent-dual-merge precondition), naming the conflict + the next free number.
+  Collisions are **sibling-vs-local only** — upstream is the merged baseline (every local phase is
+  also on `origin/<ref>` once merged), so it is not a standing warning, though it still feeds the
+  suggested next free number. Best-effort: degrades to `ok` offline / non-git.
+- **Proactive next-free allocation in `progress`/`recommend`** (phase 86). The IDLE "next" suggestion
+  fills in `max(observed) + 1` over local + sibling + upstream claims, so the operator's first pick
+  already clears what the guard would otherwise refuse. The pure `nextAction` takes the number as a
+  hint; the impure service layer resolves it best-effort and falls back to the literal placeholder
+  on any failure — it never blocks `progress`.
+
+**Lowest-gap (vs `max + 1`) numbering was evaluated and dropped** (not deferred). It would reverse
+the locked *"`max + 1`, monotonic — not lowest-gap"* decision above to solve no demonstrated problem:
+monotonic numbers stay chronological and never resurrect a number history intentionally skipped
+(`.keel/`, archived dirs). Even an opt-in `phaseGuard.numbering` knob was judged YAGNI — permanent
+config surface for a mode unlikely to be used. `nextFree` stays `max(observed) + 1`. If gap-reuse is
+ever genuinely wanted it remains a clean additive follow-up; dropping it now burns no bridge.

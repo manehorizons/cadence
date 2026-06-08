@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 83-phase-collision-guard
+**Active phase:** 87-release-v1.19.0
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 185
-- Last handoff: SESSION-2026-06-07-v1.16-mcp-shipped.md
+- Subagent spawns this session: 193
+- Last handoff: SESSION-2026-06-08-v1.19-phase-85-built-pre-settle.md
 
 ## Counts
 - Open drafts: 0

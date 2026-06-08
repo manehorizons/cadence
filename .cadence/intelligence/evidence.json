@@ -126,6 +126,13 @@
       "kind": "note",
       "summary": "Approved design 2026-06-07 §Phasing + §DESIGN.md & docs",
       "createdAt": "2026-06-07T18:41:52.044Z"
+    },
+    {
+      "id": "ev-20260608-001",
+      "recommendationId": "rec-20260608-001",
+      "kind": "note",
+      "summary": "30 SESSION docs accumulated by v1.19; manually pruned to 1 on 2026-06-08",
+      "createdAt": "2026-06-08T15:04:28.206Z"
     }
   ]
 }

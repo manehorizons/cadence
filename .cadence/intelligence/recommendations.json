@@ -492,17 +492,17 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "81-seam-instrumentation",
       "scoutId": "scout-20260607-obs",
       "createdAt": "2026-06-07T18:41:51.887Z",
-      "updatedAt": "2026-06-07T19:00:54.213Z",
-      "convertedToPhaseId": "81-seam-instrumentation"
+      "updatedAt": "2026-06-07T19:00:54.213Z"
     },
     {
       "id": "rec-20260607-007",
       "title": "Phase 82 — observability docs + release v1.17.0",
       "summary": "Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md section), changeset, lockstep 1.16.0→1.17.0 bump across all four published packages, tag + provenance.",
       "source": "manual",
-      "status": "candidate",
+      "status": "rejected",
       "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
@@ -523,7 +523,37 @@
       "decisionIds": [],
       "scoutId": "scout-20260607-obs",
       "createdAt": "2026-06-07T18:41:52.044Z",
-      "updatedAt": "2026-06-07T18:41:52.044Z"
+      "updatedAt": "2026-06-08T00:47:21.742Z"
+    },
+    {
+      "id": "rec-20260608-001",
+      "title": "Handoff retention policy — auto-prune stale SESSION docs",
+      "summary": "cadence handoff accumulates dated .cadence/handoff/SESSION-*.md docs indefinitely (30 had piled up by v1.19, manually pruned to 1). Add an opt-in retention policy that supersedes stale handoffs automatically. Design notes from 2026-06-08: (1) trigger at handoff-WRITE time, not settle — settle fires per-phase and would race the lastHandoff pointer mid-session; handoff is when a new doc obsoletes the prior. (2) Prefer retention-by-count (keep lastHandoff + most recent N) over merged-to-main detection — deterministic, offline, no git introspection. (3) Make it opt-in/configurable (handoff.retain knob, default off or generous), same posture as phaseGuard — the resume skill leans on the dated archive existing, so never silently destructive.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cadence-core",
+        "handoff",
+        "config"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/handoff.ts",
+        "packages/types/src/config.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260608-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-08T15:04:28.206Z",
+      "updatedAt": "2026-06-08T15:04:28.206Z"
     }
   ]
 }
