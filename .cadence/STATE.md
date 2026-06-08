@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 86-proactive-next-free
+**Active phase:** 87-release-v1.19.0
 **Active draft:** (none)
 **Tier:** (n/a)
 

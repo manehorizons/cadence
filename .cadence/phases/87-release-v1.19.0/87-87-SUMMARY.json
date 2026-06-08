@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "draftId": "87-87",
+  "completedAt": "2026-06-08T15:52:42.189Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "DESIGN.md §13 rewritten (doctor line + proactive alloc shipped; lowest-gap dropped); commands.md doctor table + progress behavior documented; CLAUDE.md v1.19.0 paragraph added + v1.18 deferred clause corrected; changeset created (4 packages minor)"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "pnpm changeset version → all 4 published packages 1.19.0 (testkit unbumped); full pipeline lint+typecheck+test+build green (20 tasks, 1539 tests); changeset consumed"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
