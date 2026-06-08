@@ -1,0 +1,17 @@
+{
+  "draftId": "86-86",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Red tests: occupancy-aware nextAction hint + resolveNextFreePhase + both service surfaces; AC-1..AC-3, offline via stub collector + seeded local phase dirs",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-08T15:40:14.676Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "nextAction(state,hints) pure hint param; resolveNextFreePhase best-effort resolver (mirrors doctor recipe); wired progressService + backend/cadence.ts readStatus, IDLE-guarded; 1539 tests green, typecheck+lint clean",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-08T15:40:14.852Z"
+    }
+  }
+}

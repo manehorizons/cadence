@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "85-doctor-worktree-line",
+  "activePhase": "86-proactive-next-free",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-08T02:15:28.566Z",
+  "draftReadAt": "2026-06-08T15:33:13.027Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-06-08-v1.19-phase-85-built-pre-settle.md",
-    "subagentSpawns": 190
+    "subagentSpawns": 193
   },
   "skillAudit": {
     "required": [],
