@@ -7,7 +7,8 @@ import type {
   Recommendation,
 } from '@manehorizons/cadence-types';
 import { SimpleStateBackend } from '../../state/simple.js';
-import { nextAction } from '../../progress.js';
+import { nextAction, type NextActionHints } from '../../progress.js';
+import { resolveNextFreePhase } from '../../phases/next-free.js';
 
 export type BackendDetection = { present: boolean; kind: 'cadence' | null };
 export type BackendArtifacts = {
@@ -55,6 +56,13 @@ export const cadenceBackend: PraxisBackend = {
     }
     try {
       const state = await new SimpleStateBackend(root).readState();
+      // Same occupancy-aware IDLE suggestion as `cadence progress` — best-effort,
+      // and only resolved at IDLE (the one position whose suggestion fills a num).
+      let hints: NextActionHints | undefined;
+      if (state.loopPosition === 'IDLE') {
+        const n = await resolveNextFreePhase(root);
+        if (n !== null) hints = { nextPhaseNumber: n };
+      }
       return {
         present: true,
         kind: 'cadence',
@@ -63,7 +71,7 @@ export const cadenceBackend: PraxisBackend = {
         activeDraft: state.activeDraft,
         activeSpec: state.activeSpec,
         tier: state.tier,
-        legalActions: [nextAction(state).command],
+        legalActions: [nextAction(state, hints).command],
         artifacts: await this.readArtifacts(root),
       };
     } catch (err) {
