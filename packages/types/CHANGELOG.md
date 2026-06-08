@@ -1,5 +1,18 @@
 # @manehorizons/cadence-types
 
+## 1.19.0
+
+### Minor Changes
+
+- v1.19 worktree-safety polish: surface cross-worktree phase usage proactively on the v1.18
+  collision primitive. `cadence doctor` gains a read-only `worktree-phases` check (warns when a
+  sibling worktree claims a local phase number, naming the conflict + next free number; best-effort,
+  sibling-vs-local only), and the IDLE `cadence draft new …` suggestion in `progress`/`recommend`
+  now fills in the next free number (`max(observed)+1` over local + sibling + upstream) instead of a
+  bare placeholder, so the first pick clears claims the guard would refuse. Lowest-gap numbering was
+  evaluated and dropped — `nextFree` stays monotonic `max+1`. `cadence-types`,
+  `cadence-host-claude-code`, and `cadence-host-codex` carry version-alignment bumps only.
+
 ## 1.18.0
 
 ### Minor Changes

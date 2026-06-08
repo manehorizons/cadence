@@ -134,8 +134,31 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.18.0`** (2026-06-07, tag `v1.18.0`
-pending): the **worktree-safety** milestone (v1.18) — a **phase-collision
+change). The latest version is **`1.19.0`** (2026-06-08, tag `v1.19.0`
+pending): the **worktree-safety-polish** milestone (v1.19) — two pure additions
+on the v1.18 collision primitive (`gatherOccupancy` + `detectPhaseCollision`),
+making cross-worktree phase usage **visible and proactive** instead of only
+guarded reactively (DESIGN.md **§13**). **Phase 85** — a read-only `cadence
+doctor` `worktree-phases` check: `ok` when no sibling worktree holds a colliding
+number (inventorying any non-colliding sibling/upstream claims), `warning`
+naming the conflict + next free number when a **sibling** collides with a local
+phase. Collisions are **sibling-vs-local only** — upstream (`origin/<ref>`) is
+the merged baseline, so a local phase also on it is normal, not a warning (it
+still feeds next-free); best-effort, degrades to `ok` offline. **Phase 86** —
+proactive next-free allocation: the IDLE `cadence draft new …` suggestion (in
+both `progress` and the recommend/Praxis backend) fills in `max(observed)+1`
+over local + sibling + upstream instead of a bare `<num>` placeholder, so the
+first pick already clears claims the guard would refuse. Pure `nextAction` takes
+the number as a hint; the impure service layer resolves it best-effort
+(`resolveNextFreePhase`) and falls back to the placeholder on any failure —
+never blocks `progress`. **Lowest-gap numbering was evaluated and DROPPED** (not
+deferred): it would reverse §13's locked monotonic `max+1` decision for no
+demonstrated need (even an opt-in knob judged YAGNI); `nextFree` stays
+`max(observed)+1`. **Phase 87 = release** (docs + DESIGN.md §13 + changeset).
+All four published packages bumped `1.18.0 → 1.19.0` in lockstep
+(`cadence-host-claude-code`/`cadence-host-codex` version-alignment only); no new
+DESIGN.md D-number (deepens §13). Prior: **`1.18.0`** (2026-06-07, tag `v1.18.0`):
+the **worktree-safety** milestone (v1.18) — a **phase-collision
 guard** that stops two git worktrees from silently scaffolding the same phase
 number (DESIGN.md **§13**). CADENCE's loop state lives in the working tree and
 each worktree holds a private `.cadence/`, so two worktrees branched from one
@@ -156,7 +179,8 @@ integrationRef (default "main") }` config in `cadence-types`. **Phase 84 =
 release** (docs + DESIGN.md §13 + changeset). All four published packages bumped
 `1.17.0 → 1.18.0` in lockstep (`cadence-host-claude-code`/`cadence-host-codex`
 version-alignment only); a `cadence doctor` cross-worktree line, proactive
-next-free allocation, and lowest-gap numbering remain deferred. Prior:
+next-free allocation, and lowest-gap numbering were left deferred (v1.19 then
+shipped the first two and dropped lowest-gap). Prior:
 **`1.17.0`** (2026-06-07, tag `v1.17.0`):
 the **observability** milestone (v1.17) — a zero-dependency, additive,
 **default-off** structured operator-debugging logger for diagnosing CADENCE

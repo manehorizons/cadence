@@ -532,6 +532,17 @@ Show single recommended next action
 action (e.g. "Run `cadence draft new`", "Record task T2"). Intended for
 quick orientation. For full loop context, use [`cadence status`](#status).
 
+**Proactive next-free phase number (v1.19)** — at `IDLE`, the suggested
+`cadence draft new …` no longer prints a bare `<num>` placeholder: it fills in
+the next free phase number, computed as `max(observed) + 1` over local phases
+plus any sibling-worktree and upstream claims (the same collision collector
+`cadence doctor`'s `worktree-phases` check uses). So your first pick already
+clears numbers a sibling worktree or upstream holds — no round-trip through the
+v1.18 guard's refusal. This is best-effort: in a non-git checkout, or if the
+occupancy read fails, `progress` falls back to the literal placeholder and never
+blocks. The same occupancy-aware suggestion surfaces in the recommend/Praxis
+backend's IDLE legal action.
+
 **Exit codes** — exits non-zero if `.cadence/` is missing or `state.json` is
 unreadable.
 
@@ -615,9 +626,20 @@ v1 check set:
 | `git-hooks` | *(git repos)* `core.hooksPath` resolves to `.githooks` (the pre-push gate) | warning |
 | `host-hooks` | *(if `.claude/settings.json`)* CADENCE-managed hook entries present | warning |
 | `host-commands` | *(if `.claude/commands/`)* every managed `cadence-*.md` run-line is portable (no machine-absolute path) | warning |
+| `worktree-phases` | *(v1.19)* no **sibling git worktree** claims a phase number equal to a local phase number (the silent-dual-merge precondition the v1.18 guard refuses at scaffold time) | warning |
 
 Host checks run only when the relevant files exist; their absence is not a
 problem.
+
+The `worktree-phases` check (v1.19, phase 85) reuses the v1.18 collision
+collector: it reports `ok` when no sibling worktree holds a colliding number
+(listing any non-colliding sibling/upstream claims as an inventory), and
+`warning` — naming the colliding number, where it is claimed, and the next free
+number — when a sibling collides with a local phase. Collisions are
+**sibling-vs-local only**: upstream (`origin/<integrationRef>`) is the merged
+baseline, so a local phase also appearing there is normal, not a warning (it
+still feeds the suggested next free number). Best-effort and offline: a
+non-git checkout or any git/fs failure degrades to `ok`, never throwing.
 
 **Exit codes** — `0` when no `error`-severity problem exists (warnings do not
 fail), `1` otherwise. Safe to use as a CI gate: `cadence doctor` will fail the
