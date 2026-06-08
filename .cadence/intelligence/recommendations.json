@@ -492,17 +492,17 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "81-seam-instrumentation",
       "scoutId": "scout-20260607-obs",
       "createdAt": "2026-06-07T18:41:51.887Z",
-      "updatedAt": "2026-06-07T19:00:54.213Z",
-      "convertedToPhaseId": "81-seam-instrumentation"
+      "updatedAt": "2026-06-07T19:00:54.213Z"
     },
     {
       "id": "rec-20260607-007",
       "title": "Phase 82 — observability docs + release v1.17.0",
       "summary": "Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md section), changeset, lockstep 1.16.0→1.17.0 bump across all four published packages, tag + provenance.",
       "source": "manual",
-      "status": "candidate",
+      "status": "rejected",
       "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
@@ -523,7 +523,7 @@
       "decisionIds": [],
       "scoutId": "scout-20260607-obs",
       "createdAt": "2026-06-07T18:41:52.044Z",
-      "updatedAt": "2026-06-07T18:41:52.044Z"
+      "updatedAt": "2026-06-08T00:47:21.742Z"
     }
   ]
 }

@@ -1,0 +1,17 @@
+{
+  "draftId": "85-85",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Red tests for worktree-phases doctor check (AC-1..AC-4), injected stub collector, offline+deterministic",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-08T02:19:34.728Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "checkWorktreePhases in doctor/run.ts; sibling-vs-local collisions only (upstream=merged baseline, feeds nextFree); wired into runDoctor; 1529 core tests green",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-08T02:19:34.904Z"
+    }
+  }
+}

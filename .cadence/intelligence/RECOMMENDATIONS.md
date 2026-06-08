@@ -270,7 +270,7 @@ Wire gate decisions, hook/event dispatch, and verifier provider calls through th
 
 ## rec-20260607-007 — Phase 82 — observability docs + release v1.17.0
 
-- status: candidate
+- status: rejected
 - ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
