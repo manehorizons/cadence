@@ -282,3 +282,19 @@ Wire gate decisions, hook/event dispatch, and verifier provider calls through th
 - next: cadence milestone propose
 
 Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md section), changeset, lockstep 1.16.0→1.17.0 bump across all four published packages, tag + provenance.
+
+## rec-20260608-001 — Handoff retention policy — auto-prune stale SESSION docs
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cadence-core, handoff, config
+- files: packages/core/src/services/handoff.ts, packages/types/src/config.ts
+- evidence: 30 SESSION docs accumulated by v1.19; manually pruned to 1 on 2026-06-08
+- next: cadence milestone propose
+
+cadence handoff accumulates dated .cadence/handoff/SESSION-*.md docs indefinitely (30 had piled up by v1.19, manually pruned to 1). Add an opt-in retention policy that supersedes stale handoffs automatically. Design notes from 2026-06-08: (1) trigger at handoff-WRITE time, not settle — settle fires per-phase and would race the lastHandoff pointer mid-session; handoff is when a new doc obsoletes the prior. (2) Prefer retention-by-count (keep lastHandoff + most recent N) over merged-to-main detection — deterministic, offline, no git introspection. (3) Make it opt-in/configurable (handoff.retain knob, default off or generous), same posture as phaseGuard — the resume skill leans on the dated archive existing, so never silently destructive.
