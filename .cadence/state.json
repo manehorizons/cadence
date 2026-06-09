@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "87-release-v1.19.0",
+  "activePhase": "88-handoff-retention-core",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-08T15:48:30.308Z",
+  "draftReadAt": "2026-06-09T02:28:12.487Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-06-08-v1.19-phase-85-built-pre-settle.md",
-    "subagentSpawns": 193
+    "subagentSpawns": 195
   },
   "skillAudit": {
     "required": [],

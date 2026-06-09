@@ -1,16 +1,58 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-08T00:47:21.901Z",
-  "ranked": [],
+  "generatedAt": "2026-06-09T01:24:13.057Z",
+  "ranked": [
+    {
+      "id": "rec-20260608-001",
+      "title": "Handoff retention policy — auto-prune stale SESSION docs",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    }
+  ],
   "parked": [],
   "needsAttention": [],
   "advisory": {
-    "kind": "empty",
-    "primary": "No actionable recommendations — add one with `cadence recommendation add`."
+    "kind": "top-recommendation",
+    "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 18,
-    "ranked": 0,
+    "total": 19,
+    "ranked": 1,
     "parked": 0,
     "needsAttention": 0,
     "excluded": 18

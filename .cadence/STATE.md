@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 87-release-v1.19.0
+**Active phase:** 88-handoff-retention-core
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 193
+- Subagent spawns this session: 195
 - Last handoff: SESSION-2026-06-08-v1.19-phase-85-built-pre-settle.md
 
 ## Counts
