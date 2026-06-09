@@ -303,6 +303,36 @@ cadence draft new 30-cache 01 --allow-phase-collision
 
 ---
 
+## handoff
+
+Handoff retention (v1.20). `cadence handoff` writes dated `SESSION-*.md` docs into `.cadence/handoff/`;
+left unmanaged they accumulate indefinitely. An **opt-in**, count-based retention policy prunes the
+stale ones at **handoff-write time** (not settle — settle fires per-phase and would race the
+`lastHandoff` pointer mid-session). Selection is deterministic and offline (lexicographic-descending
+by filename — the ISO date prefix sorts chronologically — no git introspection).
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `handoff.retain` | `integer >= 1` (optional) | *unset* | Keep the N most-recent `SESSION-*.md` docs and hard-delete the rest on each handoff write. **Unset disables pruning entirely** (current behavior). The just-written doc (the new `lastHandoff`) is always the newest, so it is never deleted. |
+
+Pruning is **best-effort and never silently destructive**: it only runs when `retain` is set, always
+keeps the active handoff, reports what it removed (`handoff: pruned N stale doc(s): …`), and a failure
+(unreadable config, `unlink` error) leaves the handoff intact rather than failing it. Because the
+behavior is opt-in and the dated archive that `cadence resume` relies on is preserved (the newest N),
+nothing the resume flow needs is destroyed.
+
+`cadence doctor` includes a read-only `handoff-retention` check: `ok` when the count is within the
+`retain` budget (or retention is set and the next write will self-heal the excess), and a `warning`
+only when retention is **unset** and at least 10 docs have piled up — suggesting a `handoff.retain`
+value to cap the growth.
+
+```jsonc
+// .cadence/config.json — keep the 10 most-recent session handoffs
+{ "handoff": { "retain": 10 } }
+```
+
+---
+
 ## Presets
 
 `cadence init --profile <preset>` seeds `config.json` from one of three presets. The table shows only the fields that **differ** from `defaultConfig`; all other fields take the `defaultConfig` value.

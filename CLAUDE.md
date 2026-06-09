@@ -134,7 +134,33 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.19.0`** (2026-06-08, tag `v1.19.0`
+change). The latest version is **`1.20.0`** (2026-06-08, tag `v1.20.0`
+pending): the **handoff-retention** milestone (v1.20) — opt-in, count-based
+pruning of dated `SESSION-*.md` handoff docs that previously accumulated
+indefinitely (30 had piled up by v1.19). Sourced from rec-20260608-001; deepens
+session-continuity additively (**no new DESIGN.md D-number**). **Phase 88 —
+core + wiring:** a `handoff.retain` config field in `cadence-types`
+(`int >= 1`, **unset = pruning disabled** — the safe, non-destructive default);
+a pure `selectPrunable(filenames, keep, current)` keeping the newest N by
+lexicographic-descending order (ISO date prefix ⇒ chronological; deterministic,
+offline, no git introspection) and **always** force-retaining the current
+`lastHandoff`; impure `pruneHandoffDir` wired into `runHandoff` **at
+handoff-write time** (not settle — settle fires per-phase and would race the
+`lastHandoff` pointer), **best-effort** (any failure leaves the handoff intact,
+`pruned` empty) and **reported** (`handoff: pruned N stale doc(s): …` on CLI +
+`handoffService`); `HandoffResult` gains `pruned: string[]`. Hard-delete (not
+archive — archiving just relocates the pile-up); never silently destructive
+because it is opt-in, keeps the newest N that `resume` relies on, and reports.
+**Phase 89 — visibility:** a read-only, best-effort `cadence doctor`
+`handoff-retention` check — `ok` within the retain budget (or set-and-over,
+since the next write self-heals), `warning` only when retention is **unset** and
+≥ 10 docs have accumulated (suggesting a `handoff.retain` value); degrades to
+`ok` on any error, never throws. **Phase 90 = release** (config.md `handoff`
+section + changeset). All four published packages bumped `1.19.0 → 1.20.0` in
+lockstep (`cadence-host-claude-code`/`cadence-host-codex` version-alignment
+only). A manual `cadence handoff prune` command, age-based/merged-to-main
+retention, and archive-instead-of-delete were all judged out of scope (YAGNI).
+Prior: **`1.19.0`** (2026-06-08, tag `v1.19.0`
 pending): the **worktree-safety-polish** milestone (v1.19) — two pure additions
 on the v1.18 collision primitive (`gatherOccupancy` + `detectPhaseCollision`),
 making cross-worktree phase usage **visible and proactive** instead of only

@@ -278,6 +278,65 @@ export async function checkWorktreePhases(
   }
 }
 
+/** Warn when this many SESSION docs accumulate with retention disabled. */
+const HANDOFF_WARN_THRESHOLD = 10;
+
+/**
+ * Make SESSION-doc accumulation visible (Phase 89, v1.20). Read-only and
+ * best-effort: counts `SESSION-*.md` under `.cadence/handoff/` against
+ * `config.handoff.retain`. With retention configured the docs self-heal on the
+ * next handoff write, so the check only *warns* when retention is unset and the
+ * archive has grown past the threshold. Never throws — a diagnostic must not
+ * break `doctor` (mirrors `worktree-phases`).
+ */
+export async function checkHandoffRetention(root: string): Promise<DoctorCheck> {
+  try {
+    const dir = join(root, '.cadence', 'handoff');
+    let count = 0;
+    if (existsSync(dir)) {
+      count = (await readdir(dir)).filter((n) => /^SESSION-.*\.md$/.test(n)).length;
+    }
+
+    let retain: number | undefined;
+    try {
+      retain = (await loadConfig(root)).handoff.retain;
+    } catch {
+      /* config unreadable — treat retention as unset */
+    }
+
+    if (retain !== undefined) {
+      if (count <= retain) {
+        return pass(
+          'handoff-retention',
+          `${count} handoff doc(s) within the retain budget of ${retain}.`,
+        );
+      }
+      return pass(
+        'handoff-retention',
+        `${count} handoff doc(s) exceed retain=${retain}; the next handoff write will prune ${count - retain}.`,
+      );
+    }
+
+    if (count >= HANDOFF_WARN_THRESHOLD) {
+      return fail(
+        'handoff-retention',
+        'warning',
+        `${count} handoff docs are accumulating under .cadence/handoff/ with retention disabled.`,
+        'Set handoff.retain (suggested 10) to auto-prune stale SESSION docs on handoff write.',
+      );
+    }
+    return pass(
+      'handoff-retention',
+      `${count} handoff doc(s); retention disabled (set handoff.retain to cap growth).`,
+    );
+  } catch {
+    return pass(
+      'handoff-retention',
+      'Handoff retention not determinable (best-effort) — skipped.',
+    );
+  }
+}
+
 export async function runDoctor(
   root: string,
   env: DoctorEnv,
@@ -290,6 +349,7 @@ export async function runDoctor(
     await checkHostHooks(root),
     await checkHostCommands(root),
     await checkWorktreePhases(root),
+    await checkHandoffRetention(root),
   ];
   return rollup(checks);
 }

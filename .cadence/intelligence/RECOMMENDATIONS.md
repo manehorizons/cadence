@@ -285,7 +285,7 @@ Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md se
 
 ## rec-20260608-001 — Handoff retention policy — auto-prune stale SESSION docs
 
-- status: candidate
+- status: converted
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10

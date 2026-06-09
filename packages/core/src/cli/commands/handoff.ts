@@ -32,6 +32,11 @@ export function registerHandoffCommand(program: Command): void {
             const stamp = res.stamped ? ' · stamped lastHandoff' : '';
             const git = res.gitAvailable ? '' : ' · git unavailable';
             process.stdout.write(`handoff: wrote ${res.path}${stamp}${git}\n`);
+            if (res.pruned.length > 0) {
+              process.stdout.write(
+                `handoff: pruned ${res.pruned.length} stale doc(s): ${res.pruned.join(', ')}\n`,
+              );
+            }
           }
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
