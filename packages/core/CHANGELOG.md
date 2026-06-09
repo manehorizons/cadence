@@ -1,5 +1,23 @@
 # @manehorizons/cadence-core
 
+## 1.20.0
+
+### Minor Changes
+
+- Handoff retention (v1.20): opt-in, count-based pruning of dated `SESSION-*.md`
+  handoff docs. A new `handoff.retain` config field keeps the N most-recent
+  session handoffs and hard-deletes the rest at handoff-write time
+  (deterministic, offline, best-effort — never fails a handoff, never silently
+  destroys the dated archive `resume` relies on). Unset = no pruning (current
+  behavior). A read-only `cadence doctor` `handoff-retention` check makes
+  unmanaged accumulation visible. `host-claude-code`/`host-codex` carry
+  version-alignment bumps only.
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-types@1.20.0
+
 ## 1.19.0
 
 ### Minor Changes
