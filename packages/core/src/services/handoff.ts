@@ -27,6 +27,9 @@ export async function handoffService(
   try {
     const res = await runHandoff(repoRoot, opts);
     io.out(`handoff: wrote ${res.path}\n`);
+    if (res.pruned.length > 0) {
+      io.out(`handoff: pruned ${res.pruned.length} stale doc(s): ${res.pruned.join(', ')}\n`);
+    }
     return { exitCode: 0, data: res };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

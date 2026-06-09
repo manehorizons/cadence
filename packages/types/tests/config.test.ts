@@ -413,3 +413,33 @@ describe('phaseGuard config (AC-7)', () => {
     ).toThrow();
   });
 });
+
+describe('handoff retention config (AC-1)', () => {
+  it('AC-1: applies an empty handoff block (retention disabled) when omitted', () => {
+    const { handoff: _drop, ...withoutHandoff } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutHandoff);
+    expect(parsed.handoff).toEqual({});
+    expect(parsed.handoff.retain).toBeUndefined();
+  });
+
+  it('AC-1: defaultConfig includes an empty handoff block', () => {
+    expect(defaultConfig.handoff).toEqual({});
+  });
+
+  it('AC-1: round-trips a positive integer retain', () => {
+    const parsed = CadenceConfigZ.parse({ ...defaultConfig, handoff: { retain: 10 } });
+    expect(parsed.handoff.retain).toBe(10);
+  });
+
+  it('AC-1: rejects retain below 1', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, handoff: { retain: 0 } }),
+    ).toThrow();
+  });
+
+  it('AC-1: rejects a non-integer retain', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, handoff: { retain: 1.5 } }),
+    ).toThrow();
+  });
+});

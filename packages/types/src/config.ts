@@ -231,6 +231,21 @@ export const CadenceConfigZ = z.object({
       format: LogFormatZ.optional(),
     })
     .default({ level: 'silent' }),
+  /**
+   * Handoff retention (Phase 88, v1.20). Opt-in, count-based pruning of dated
+   * `SESSION-*.md` docs under `.cadence/handoff/`, applied at handoff-write
+   * time (not settle — settle fires per-phase and would race the `lastHandoff`
+   * pointer). `retain: N` keeps the N most-recent docs (the just-written
+   * `lastHandoff` is always newest, so never deleted) and hard-deletes the
+   * rest, best-effort. Omitting `retain` (the default empty block) disables
+   * pruning entirely — same non-destructive-by-default posture the manual
+   * dated archive relies on.
+   */
+  handoff: z
+    .object({
+      retain: z.number().int().min(1).optional(),
+    })
+    .default({}),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -278,6 +293,7 @@ export const defaultConfig: CadenceConfig = {
   notify: { transport: 'stderr' as const },
   phaseGuard: { enabled: true, integrationRef: 'main' },
   logging: { level: 'silent' as const },
+  handoff: {},
 };
 
 export const presets = {
