@@ -287,6 +287,65 @@ visibility around it. Three phases (operator-chosen grouped shape).
   whether `--verifier` belongs on `settle` only or also `verify`; whether token capture
   warrants a DESIGN.md D-number; default `maxRetries` value.
 
+> **Doc note (2026-06-08):** detailed milestone scopes were not hand-maintained
+> in this file for **v1.16–v1.19** — those were tracked in CLAUDE.md prose +
+> per-phase DRAFT artifacts + DESIGN.md sections. The v1.20 entry below revives
+> the v1.15-style pre-ship scope; back-filling v1.16–v1.19 here is out of scope.
+
+### v1.20.0 — Handoff retention (PLANNED 2026-06-08)
+**Source:** rec-20260608-001 (filed 2026-06-08; 30 `SESSION-*.md` docs piled up
+by v1.19, manually pruned to 1, then to 0 on 2026-06-08). The only scored item in
+the live recommendation backlog, and a self-demonstrated need. Chosen as the v1.20
+milestone 2026-06-08 over OTel export / gate benchmarks / continuity-runtime — it
+fits the tight, additive v1.17–v1.19 polish cadence.
+
+**Thesis:** `cadence handoff` writes dated `SESSION-*.md` docs into `.cadence/handoff/`
+and never reaps them. Add an **opt-in, count-based** retention policy that prunes
+stale handoffs at **handoff-write time** (not settle — settle fires per-phase and
+would race the `lastHandoff` pointer mid-session). Deterministic + offline (no git
+introspection); **never silently destructive** (opt-in, keep-N, reported).
+
+**Locked decisions (rec notes + scoping dialogue 2026-06-08):**
+- **Trigger:** handoff-write time, after the existing write + `lastHandoff` stamp.
+- **Policy:** retention-by-count — `handoff.retain: N` keeps the N most-recent docs.
+- **Default:** **unset = no pruning** (opt-in; safest for a destructive feature —
+  unlike `phaseGuard` which defaults on but is non-destructive).
+- **Prune action:** **hard-delete** the oldest beyond N (the just-written
+  `lastHandoff` is always newest, so never deleted), **reported** on stdout.
+- **Pairing:** a read-only `cadence doctor` `handoff-retention` check (mirrors the
+  v1.18/v1.19 "active behavior + doctor visibility" house pattern).
+
+- **Phase 88 — Retention core + wiring.**
+  - `handoff` config block in `cadence-types` (`config.ts`): `retain?: z.number().int().min(1)`,
+    unset = disabled. No `enabled` flag — presence of `retain` is the opt-in. Mirror
+    the `phaseGuard`/`logging` schema shape.
+  - New pure `selectPrunable(filenames, keep, current)` (`handoff/retention.ts`) —
+    sorts `SESSION-*.md` lexicographic-descending (ISO date prefix ⇒ chronological at
+    day granularity; intra-day label ties alphabetical — deterministic), keeps newest
+    `keep`, **always** force-excludes `current` (= `lastHandoff`) as a belt-and-suspenders
+    invariant, returns the rest. I/O-free, unit-tested first (TDD).
+  - Wire into `run-handoff.ts`: after `atomicWriteText` + stamp, if resolved
+    `config.handoff.retain` set → list docs, `selectPrunable`, `unlink`. **Best-effort**
+    (any failure caught → soft note, never fails the handoff; same posture as
+    `gatherOccupancy`). `HandoffResult` gains `pruned: string[]`; CLI/service prints
+    `handoff: pruned N stale doc(s): …`.
+- **Phase 89 — Doctor check.** Read-only, best-effort `handoff-retention` check in
+  `doctor/run.ts` (registered in `runDoctor`). Counts `SESSION-*.md` vs `config.handoff.retain`:
+  retain set & count ≤ retain → **pass**; retain set & count > retain → **pass** w/ note
+  ("next handoff write prunes N−retain" — self-heals); retain **unset** & count ≥ **10**
+  (threshold) → **warning** suggesting `handoff.retain` (suggested 10); else **pass**.
+- **Phase 90 — Release v1.20.0.** Docs (`config.md` new `handoff.retain` field,
+  handoff/session-continuity note in `concepts.md`/commands), changeset, lockstep
+  `1.19.0 → 1.20.0` across all four published packages, tag + provenance.
+
+- **Scope guards.** *In:* count-based prune-on-write + config knob + reporting + the
+  doctor check. *Out (YAGNI):* manual `cadence handoff prune` command; age-based or
+  merged-to-main retention; archive-instead-of-delete (just relocates the pile-up).
+- **Open (resolve when each phase starts):** lexicographic-by-filename ordering vs
+  mtime for "most recent" (chose filename — deterministic, day-granular); doctor
+  warning threshold (10); whether DESIGN.md gets a note under session-continuity (no
+  new D-number expected — additive, like v1.19 deepening §13).
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.
