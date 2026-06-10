@@ -3,7 +3,7 @@ import { runExplain, CONCEPTS } from '../../src/cli/commands/explain.js';
 import { bufferIO } from '../../src/services/io.js';
 
 /** The concepts the command advertises in its list, in canonical form. */
-const CANONICAL = ['loop', 'gates', 'tiers', 'profiles'] as const;
+const CANONICAL = ['loop', 'gates', 'tiers', 'profiles', 'config'] as const;
 
 describe('cadence explain', () => {
   // AC-1: each named concept prints its explanation body and exits 0.
@@ -13,6 +13,7 @@ describe('cadence explain', () => {
       gates: /13 gates|always-fire/i,
       tiers: /quick-fix|standard|complex/i,
       profiles: /strict|standard|auto/i,
+      config: /cadence config explain/i,
     };
     for (const name of CANONICAL) {
       const io = bufferIO();
@@ -55,6 +56,8 @@ describe('cadence explain', () => {
       ['Profiles', /strict|auto/i],
       ['TIER', /quick-fix/i],
       ['profile', /strict|auto/i],
+      ['configuration', /cadence config explain/i],
+      ['Config', /cadence config explain/i],
     ];
     for (const [input, expected] of cases) {
       const io = bufferIO();
@@ -74,6 +77,31 @@ describe('cadence explain', () => {
     for (const [name, entry] of Object.entries(CONCEPTS)) {
       expect(entry.blurb.trim().length, `${name} blurb`).toBeGreaterThan(0);
       expect(entry.body.trim().length, `${name} body`).toBeGreaterThan(0);
+    }
+  });
+
+  // AC-2: the profile × tier → gate-set connection is taught, and points at
+  // `cadence config explain` for the reader's concrete set. The concepts form a
+  // graph, not four flashcards.
+  it('AC-2: teaches the profile × tier → gate-set connection', () => {
+    // The connection prose appears in at least one of the three axis concepts.
+    const connection = /profile.*tier.*gate set|tier.*profile.*gate set/is;
+    const taught = ['profiles', 'tiers', 'gates'].some((name) =>
+      connection.test(CONCEPTS[name]!.body),
+    );
+    expect(taught, 'profile × tier → gate set connection prose').toBe(true);
+    // …and the reader is pointed at `cadence config explain` to see the concrete
+    // set for their own config.
+    const bridged = ['profiles', 'tiers', 'gates', 'config'].some((name) =>
+      /cadence config explain/i.test(CONCEPTS[name]!.body),
+    );
+    expect(bridged, 'bridge to `cadence config explain`').toBe(true);
+  });
+
+  // AC-3: every concept cross-links (a "See also" line) so none is an orphan node.
+  it('AC-3: every concept cross-links to related concepts (no orphans)', () => {
+    for (const [name, entry] of Object.entries(CONCEPTS)) {
+      expect(entry.body, `${name} See also`).toMatch(/See also:/i);
     }
   });
 });
