@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 92-config-explain-cli
+**Active phase:** 93-explain-deepening
 **Active draft:** (none)
 **Tier:** (n/a)
 

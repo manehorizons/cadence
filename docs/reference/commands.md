@@ -1328,7 +1328,7 @@ Print an in-terminal explanation of a CADENCE concept
 
 | Argument | Description |
 |---|---|
-| `[concept]` | Concept to explain — `loop`, `gates`, `tiers`, or `profiles` (aliases `gate`/`tier`/`profile` and any casing resolve). Omit to list the available concepts. |
+| `[concept]` | Concept to explain — `loop`, `gates`, `tiers`, `profiles`, or `config` (aliases `gate`/`tier`/`profile`/`configuration` and any casing resolve). Omit to list the available concepts. |
 
 **Behavior** — prints a curated, terminal-sized explanation of a core CADENCE
 concept so you can learn the model without leaving the terminal. The content is
@@ -1339,6 +1339,13 @@ including an `npx` one where the `docs/` tree is not shipped. Run bare
 name prints that list plus a nearest-match "did you mean …?" nudge. A coverage
 test (`tests/cli/explain.test.ts`, AC-5) guards that every advertised concept
 keeps non-empty content.
+
+The concepts are **cross-linked**, not standalone: the central idea is that
+profile (user-involvement) × tier (phase size) selects the effective gate set,
+and each axis concept points across to the others via a "See also" line. The
+`config` concept bridges to [`cadence config explain`](#config) — where that
+abstract profile × tier → gate-set mapping is rendered concretely against *your*
+own `.cadence/config.json`.
 
 **Exit codes** — `0` for a known concept or the bare list; `1` for an unknown
 concept (after printing the list + suggestion).
