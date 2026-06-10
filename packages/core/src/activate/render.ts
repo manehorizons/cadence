@@ -15,7 +15,7 @@ export function renderText(r: ActivationResult): string {
   const { plan } = r;
   const lines: string[] = [];
   lines.push('');
-  if (plan.changes.length === 0 && r.wrote) {
+  if (plan.changes.length === 0) {
     lines.push(`  Already active — ${plan.provider} was already selected.`);
   } else if (r.wrote) {
     const seams = plan.changes.map((c) => c.seam).join(', ');

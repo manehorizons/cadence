@@ -72,6 +72,16 @@ describe('runActivate (AC-1, AC-2, AC-3, AC-4, AC-5)', () => {
     expect(io.stderr()).toMatch(/--provider/);
   });
 
+  it('AC-1: a second activate on an already-active config is a no-op that says "Already active"', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    await runActivate(root, { provider: 'anthropic', isTty: false }, bufferIO(), { ping: okPing, env: { ANTHROPIC_API_KEY: 'sk' } });
+    const io = bufferIO();
+    const res = await runActivate(root, { provider: 'anthropic', isTty: false }, io, { ping: okPing, env: { ANTHROPIC_API_KEY: 'sk' } });
+    expect(res.exitCode).toBe(0);
+    expect(io.stdout()).toMatch(/Already active/);
+  });
+
   it('AC-5c: --print with no key still previews the missing-key warning and writes nothing', async () => {
     active = await tempRepo({ initialized: true });
     const root = active.root;

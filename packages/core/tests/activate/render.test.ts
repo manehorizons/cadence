@@ -21,6 +21,12 @@ describe('activate render (AC-3, AC-6)', () => {
     expect(renderText(result)).toMatch(/export ANTHROPIC_API_KEY/);
   });
 
+  it('text says "Already active" on a no-op (no changes)', () => {
+    const noChange = planActivation({ provider: 'mock', scope: 'deep-verify', currentConfig: base });
+    const out = renderText({ plan: noChange, wrote: false, keyMissing: false });
+    expect(out).toMatch(/Already active/);
+  });
+
   it('json carries provider, changed seams, keyMissing, and ping', () => {
     const result: ActivationResult = { plan, wrote: true, keyMissing: false, ping: { ok: false, reason: '401: bad key' } };
     const data = renderJson(result);
