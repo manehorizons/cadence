@@ -39,7 +39,7 @@ export interface ProviderRow {
   isMock: boolean;
 }
 
-export type WarningCode = 'provider-no-key' | 'hooks-not-installed' | 'auto-complex-softcap';
+export type WarningCode = 'provider-no-key' | 'hooks-not-installed' | 'auto-complex-softcap' | 'all-mock';
 
 /** A config-semantic foot-gun: the config says X but the runtime effect is Y. */
 export interface Warning {

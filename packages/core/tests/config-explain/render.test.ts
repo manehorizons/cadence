@@ -28,8 +28,13 @@ describe('renderText / renderJson (AC-3)', () => {
   });
 
   // AC-3: a clean config prints no warnings section noise.
+  // Use a non-mock provider so the all-mock warning does not fire; cleanCtx has
+  // keys present + hooks installed, so no other warnings fire either.
   it('AC-3: a clean config omits the warnings section', () => {
-    const exp = buildExplanation({ ...defaultConfig, profile: 'standard' as const }, cleanCtx);
+    const exp = buildExplanation(
+      { ...defaultConfig, profile: 'standard' as const, verifier: { provider: 'anthropic' as const, diffCapBytes: 262144 } },
+      cleanCtx,
+    );
     expect(renderText(exp, {}).toLowerCase()).not.toMatch(/warning/);
   });
 

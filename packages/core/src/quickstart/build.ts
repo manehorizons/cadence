@@ -40,6 +40,7 @@ const COMMAND_MAP: QuickstartMapEntry[] = [
   { name: 'tutorial', note: 'watch one real loop run (throwaway sandbox)' },
   { name: 'explain', note: 'learn the model — loop, gates, tiers, profiles, config' },
   { name: 'config explain', note: 'see what your config actually does' },
+  { name: 'activate', note: 'turn on real verification (pick a provider)' },
   { name: 'doctor', note: 'health-check your setup' },
   { name: 'progress', note: 'the next action, anytime (post-init)' },
 ];
