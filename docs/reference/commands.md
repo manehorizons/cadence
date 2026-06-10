@@ -35,6 +35,7 @@ Two CLIs are documented here:
   - [handoff](#handoff)
   - [resume](#resume)
   - [tutorial](#tutorial)
+  - [quickstart](#quickstart)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -1376,6 +1377,32 @@ own `.cadence/config.json`.
 
 **Exit codes** — `0` for a known concept or the bare list; `1` for an unknown
 concept (after printing the list + suggestion).
+
+---
+
+### quickstart
+
+```
+Usage: cadence quickstart [options]
+
+Read-only front door: where you are + your next moves
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit the structured orientation as JSON |
+
+**Behavior** — a read-only, never-failing orientation: the obvious command to run
+first. Before `init` it shows how to set up (`cadence init`) and how to see the loop
+without touching your project (`cadence tutorial`). After `init` it shows the same
+next move `cadence progress` computes (reused, so the two never drift), plus a one-line
+map of the onboarding commands (`init`, `tutorial`, `explain`, `config explain`,
+`doctor`, `progress`). Content is embedded in the binary, so it works from any install.
+Any failure to read state degrades to the uninitialized front door — it never crashes.
+
+**Exit codes** — `0` always (the uninitialized state is the happy primary path, not an error).
 
 ---
 
