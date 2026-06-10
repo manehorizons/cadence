@@ -1,5 +1,32 @@
 # @manehorizons/cadence-host-codex
 
+## 1.21.0
+
+### Minor Changes
+
+- Quickstart-onboarding milestone (v1.21.0): a four-slice arc that lowers the
+  barrier to a first CADENCE loop and makes config self-explanatory.
+  - **Slice A — `cadence config explain`**: terminal-sized, in-CLI explanation of
+    the _active_ config in plain language — resolved gates, providers, and
+    warnings — so operators don't have to cross-reference `docs/reference/config.md`.
+  - **Slice B — deepen `config explain`**: richer per-field guidance and an
+    optional `[field]` focus, extending the embedded help so it works from any
+    install.
+  - **Slice C — `cadence config edit`**: a guided edit wizard that writes
+    validated changes back to `.cadence/config.json` without hand-editing JSON.
+  - **Slice D — `cadence quickstart`**: a state-aware onboarding front door that
+    orients a new user from any loop position (uninitialized, IDLE, mid-phase),
+    reusing `nextAction`; never throws, with a corrupt-state fallback and `--json`.
+
+  `cadence-host-claude-code` and `cadence-host-codex` carry version-alignment bumps
+  only (no functional change).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.21.0
+  - @manehorizons/cadence-types@1.21.0
+
 ## 1.20.0
 
 ### Minor Changes

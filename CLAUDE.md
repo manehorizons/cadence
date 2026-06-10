@@ -134,7 +134,24 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.20.0`** (2026-06-08, tag `v1.20.0`
+change). The latest version is **`1.21.0`** (2026-06-10, tag `v1.21.0`
+pending): the **quickstart-onboarding** milestone (v1.21) — a four-slice arc
+that lowers the barrier to a first CADENCE loop and makes config
+self-explanatory (no new DESIGN.md D-number; additive CLI-only). **Slice A
+(#63)** — **`cadence config explain [field]`**: a terminal-sized, in-CLI
+explanation of the *active* config in plain language (resolved gates, providers,
+warnings) so operators don't cross-reference `docs/reference/config.md`. **Slice
+B (#64)** — deepened `config explain`: richer per-field guidance and an optional
+`[field]` focus, content embedded in the binary so it works from any install.
+**Slice C (#65)** — **`cadence config edit [field]`**: a guided, interactive
+wizard that writes schema-validated changes back to `.cadence/config.json`
+without hand-editing JSON. **Slice D (#66)** — **`cadence quickstart`**: a
+read-only, state-aware onboarding front door that orients a user from any loop
+position (uninitialized, IDLE, mid-phase) by reusing `nextAction`; never throws,
+with a corrupt-state fallback and `--json`. All four published packages bumped
+`1.20.0 → 1.21.0` in lockstep (`cadence-host-claude-code`/`cadence-host-codex`
+version-alignment only); npm publish is the user-triggered manual `Release`
+workflow. Prior: **`1.20.0`** (2026-06-08, tag `v1.20.0`
 pending): the **handoff-retention** milestone (v1.20) — opt-in, count-based
 pruning of dated `SESSION-*.md` handoff docs that previously accumulated
 indefinitely (30 had piled up by v1.19). Sourced from rec-20260608-001; deepens
