@@ -84,6 +84,7 @@ doctor
 mcp
 tutorial
 explain
+quickstart
 <!-- cadence:commands:end -->
 
 ---
