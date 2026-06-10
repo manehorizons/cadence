@@ -301,8 +301,13 @@ Providers are configured per gate in `.cadence/config.json` (e.g.
 `planReview.provider`, `securityAudit.provider`). Each gate also accepts an
 optional `model` override.
 
-Provider selection, fallback behavior, and per-gate configuration are covered
-in detail in [docs/providers.md](providers.md).
+Every gate defaults to `mock`, so a fresh project does **no** real AI
+verification until you switch a provider on. The guided one-command way is
+`cadence activate` (v1.22), which writes `verifier.provider`, validates your key
+with a live check, and never persists the key; `cadence doctor`'s
+`verification-readiness` check reports whether real verification is actually
+wired. Provider selection, fallback behavior, and per-gate configuration are
+covered in detail in [docs/providers.md](providers.md).
 
 ---
 

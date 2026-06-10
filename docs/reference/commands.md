@@ -657,6 +657,8 @@ v1 check set:
 | `host-hooks` | *(if `.claude/settings.json`)* CADENCE-managed hook entries present | warning |
 | `host-commands` | *(if `.claude/commands/`)* every managed `cadence-*.md` run-line is portable (no machine-absolute path) | warning |
 | `worktree-phases` | *(v1.19)* no **sibling git worktree** claims a phase number equal to a local phase number (the silent-dual-merge precondition the v1.18 guard refuses at scaffold time) | warning |
+| `handoff-retention` | *(v1.20)* `SESSION-*.md` handoff docs are within `handoff.retain`, or — when retention is unset — have not accumulated past the warn threshold | warning |
+| `verification-readiness` | *(v1.22)* the deep-verify seam uses a **real** provider whose credentials are present (i.e. settle gates do real AI verification, not mock). Warns on all-mock (→ `cadence activate`) or a real provider missing its key | warning |
 
 Host checks run only when the relevant files exist; their absence is not a
 problem.
