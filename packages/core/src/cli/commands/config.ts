@@ -1,6 +1,13 @@
 import type { Command } from 'commander';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadConfig, writeConfig } from '../../config/loader.js';
 import { CadenceConfigZ } from '@manehorizons/cadence-types';
+import { NotInitializedError } from '../../errors.js';
+import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
+import { buildExplanation } from '../../config-explain/build.js';
+import { gatherExplainContext } from '../../config-explain/gather.js';
+import { isKnownField, renderJson, renderText, type RenderOptions } from '../../config-explain/render.js';
 
 function getPath(obj: Record<string, unknown>, path: string[]): unknown {
   let cur: unknown = obj;
@@ -34,6 +41,48 @@ function coerce(raw: string): unknown {
   } catch {
     return raw;
   }
+}
+
+/**
+ * `cadence config explain [field]` — render the active config in plain language
+ * (phase 92). Loads the config, gathers the impure {@link gatherExplainContext},
+ * builds the explanation with the phase-91 pure core, and renders text / JSON.
+ * Pure over its `io` sink; the CLI action wires real streams + exit code.
+ *
+ * Complements `cadence config doctor` (config-conflict pairs) and `cadence
+ * doctor` (structural host/state health): this surface *explains* what the
+ * config does and flags config-semantic foot-guns, pointing at those for the
+ * full checks.
+ */
+export async function runConfigExplain(
+  root: string,
+  args: { field?: string | undefined; all?: boolean | undefined; json?: boolean | undefined },
+  io: CommandIO,
+): Promise<CommandResult> {
+  if (!existsSync(join(root, '.cadence', 'state.json'))) {
+    throw new NotInitializedError();
+  }
+  const config = await loadConfig(root);
+  const ctx = await gatherExplainContext(root);
+  const exp = buildExplanation(config, ctx);
+
+  if (args.json === true) {
+    const data = renderJson(exp);
+    io.out(JSON.stringify(data, null, 2) + '\n');
+    return { exitCode: 0, data };
+  }
+
+  const field = args.field?.trim();
+  if (field !== undefined && field !== '' && !isKnownField(config, field)) {
+    io.err(renderText(exp, { field }));
+    return { exitCode: 1, data: { unknownField: field } };
+  }
+
+  const opts: RenderOptions = {};
+  if (field !== undefined && field !== '') opts.field = field;
+  if (args.all === true) opts.all = true;
+  io.out(renderText(exp, opts));
+  return { exitCode: 0 };
 }
 
 export function registerConfigCommand(program: Command): void {
@@ -86,5 +135,19 @@ export function registerConfigCommand(program: Command): void {
         for (const i of issues) console.log(`- ${i}`);
         process.exit(1);
       }
+    });
+
+  cmd
+    .command('explain [field]')
+    .description('Explain the active config in plain language — gates, providers, warnings')
+    .option('--all', 'show every config key, grouped')
+    .option('--json', 'emit the structured explanation as JSON')
+    .action(async (field: string | undefined, opts: { all?: boolean; json?: boolean }) => {
+      const res = await runConfigExplain(
+        process.cwd(),
+        { field, all: opts.all, json: opts.json },
+        processIO(),
+      );
+      if (res.exitCode) process.exitCode = res.exitCode;
     });
 }

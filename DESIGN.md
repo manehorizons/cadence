@@ -356,3 +356,31 @@ monotonic numbers stay chronological and never resurrect a number history intent
 (`.keel/`, archived dirs). Even an opt-in `phaseGuard.numbering` knob was judged YAGNI — permanent
 config surface for a mode unlikely to be used. `nextFree` stays `max(observed) + 1`. If gap-reuse is
 ever genuinely wanted it remains a clean additive follow-up; dropping it now burns no bridge.
+
+## 14. Config legibility (`cadence config explain`)
+
+The config surface grew to 22 top-level keys with six near-identical provider blocks and several
+invisible interactions (profile × tier → gate set, `hooks` in config vs. hooks registered in
+`.claude/settings.json`, provider → silent-`mock`-fallback). `docs/reference/config.md` is a faithful
+but large reference dump — not a guide. The first adoption complaint was simply *"I can't tell what my
+config does."* Shipped in the v1.21 config-legibility milestone (phases 91–92) as an **additive,
+read-only** CLI surface — no schema change, no new D-number.
+
+`cadence config explain [field] [--all] [--json]` renders the *active* config in plain language:
+profile/enforcement meanings, the concrete gate set per tier (reusing `gatesFor` — the same matrix the
+engine runs, so the explanation can't drift from behavior), the six provider blocks collapsed into one
+table, and config-semantic **warnings** (provider-set-without-key → silent `mock`; hook-enabled-but-
+adapter-absent; `auto × complex` soft cap). The pure core (`buildExplanation` + `renderText`/`renderJson`,
+phase 91) takes all external facts via an injected `ExplainContext`; the impure gather (phase 92) reads
+`state.json`, the env, and host-install state best-effort, never throwing.
+
+It is **complementary to the doctor commands, not a replacement**: `cadence config doctor` flags
+conflicting config *pairs*, `cadence doctor` runs the structural health checks, and `config explain`
+*describes* + surfaces semantic foot-guns, pointing at both. The three share detection logic where they
+overlap (the host-hooks-installed predicate was extracted to one helper in phase 92) so their answers
+stay consistent.
+
+Deferred (the remaining slices of the same effort): deepening `cadence explain` with concept
+cross-links (B), a guided config editor / wizard so nobody hand-edits 22 keys (C), and a one-command
+`quickstart` chaining `init → tutorial` (D). Explaining an *invalid* config field-by-field, per-field
+docs deep-links, and a diff-vs-defaults view were judged out of scope (YAGNI).
