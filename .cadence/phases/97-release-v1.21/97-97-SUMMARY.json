@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "draftId": "97-97",
+  "completedAt": "2026-06-10T19:49:29.710Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "BLOCKED",
+      "notes": ""
+    },
+    {
+      "id": "T2",
+      "status": "BLOCKED",
+      "notes": ""
+    },
+    {
+      "id": "T3",
+      "status": "BLOCKED",
+      "notes": ""
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
