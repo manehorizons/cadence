@@ -1,0 +1,26 @@
+{
+  "draftId": "99-99",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-10T23:10:48.166Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/activate/wiring.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/config-explain/types.ts",
+        "/home/thomas/projects/cadence/packages/core/src/quickstart/build.ts",
+        "/home/thomas/projects/cadence/packages/core/src/config-explain/build.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/init.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/config-explain/render.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/config-explain/warnings.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/init.test.ts"
+      ],
+      "updatedAt": "2026-06-10T23:18:57.714Z"
+    }
+  }
+}

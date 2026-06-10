@@ -3,6 +3,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
+import { assessReadiness } from '../activate/assess.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
 import {
@@ -327,6 +328,46 @@ export async function checkHandoffRetention(root: string): Promise<DoctorCheck> 
   }
 }
 
+/**
+ * Surface whether real verification is actually wired (v1.22). Reuses the pure
+ * `assessReadiness` (shared with `cadence activate`). `warning` when deep-verify
+ * is mock (remedy: `cadence activate`) or a real provider lacks its credentials;
+ * `ok` otherwise. Read-only, best-effort, never throws (doctor convention). `env`
+ * is injectable for deterministic tests.
+ */
+export async function checkVerificationReadiness(
+  root: string,
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<DoctorCheck> {
+  try {
+    const config = await loadConfig(root);
+    const r = assessReadiness(config, env);
+    if (r.provider === 'mock') {
+      return fail(
+        'verification-readiness',
+        'warning',
+        'deep-verify uses the mock provider — settle gates do no real AI verification.',
+        'Run `cadence activate` to turn on real verification.',
+      );
+    }
+    if (!r.keyPresent) {
+      const envVar = r.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'CADENCE_LOCAL_BASE_URL';
+      return fail(
+        'verification-readiness',
+        'warning',
+        `deep-verify is set to '${r.provider}' but its credentials are missing — it will fall back to mock.`,
+        `Set ${envVar} (or run \`cadence activate\`).`,
+      );
+    }
+    return pass('verification-readiness', r.reason);
+  } catch {
+    return pass(
+      'verification-readiness',
+      'Verification readiness not determinable (best-effort) — skipped.',
+    );
+  }
+}
+
 export async function runDoctor(
   root: string,
   env: DoctorEnv,
@@ -340,6 +381,7 @@ export async function runDoctor(
     await checkHostCommands(root),
     await checkWorktreePhases(root),
     await checkHandoffRetention(root),
+    await checkVerificationReadiness(root),
   ];
   return rollup(checks);
 }

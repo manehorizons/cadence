@@ -194,6 +194,8 @@ All six blocks default to `{ "provider": "mock" }`. Provider options:
 
 See [docs/concepts.md — Providers](../concepts.md#providers) for conceptual detail and [docs/providers.md](../providers.md) for setup instructions.
 
+> **Turning on real verification.** Don't hand-edit these blocks for a first run — use [`cadence activate`](commands.md#activate). It flips `verifier.provider` from the default `mock` to a real provider (just the deep-verify seam by default, or `--all` for every block), validates your key with a live check, and prints the exact next step. The key is read from the environment and is **never** written here — only the provider name. [`cadence doctor`](commands.md#doctor)'s `verification-readiness` check reports whether real verification is actually wired.
+
 ### `verifier` extra fields
 
 The `verifier` block (the `deep-verify` gate) takes extra fields beyond

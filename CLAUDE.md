@@ -134,7 +134,29 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.21.0`** (2026-06-10, tag `v1.21.0`
+change). The latest version is **`1.22.0`** (2026-06-10, tag `v1.22.0`
+pending): the **verification-activation** milestone (v1.22) — `cadence activate`,
+the guided on-ramp from the default all-`mock` verifiers to one real-verification
+loop (no new DESIGN.md D-number; additive activation/legibility over the existing
+verifier-provider model). **Slice 1 (phase 98)** — **`cadence activate`**: picks a
+provider and writes `verifier.provider` (deep-verify seam by default; `--all` for
+every seam), validates the key with a minimal live anthropic ping (`--no-check` to
+skip; `local`/`mock` skip the ping), and **never persists the key** — only the
+provider name is written; key-missing still records the selection + prints the exact
+`export …` line, a failed live check exits non-zero without losing the selection,
+`--print` previews without writing, non-interactive runs require `--provider`. Built
+as a pure flag-driven core (`activate/{assess,plan,render,ping}.ts`) + a thin shell.
+**Slice 2 (phase 99)** — a `cadence doctor` **`verification-readiness`** check
+(reusing the same pure `assessReadiness` — one source of truth: `warning` on
+all-mock → `cadence activate`, or a real provider missing its key; `ok` otherwise;
+best-effort) + discoverability pointers from `quickstart` / `config explain` (a new
+`all-mock` warning) / `init`. **Slice 3** = release. All four published packages
+bumped `1.21.0 → 1.22.0` in lockstep (`cadence-host-claude-code` /
+`cadence-host-codex` version-alignment only); npm publish is the user-triggered
+manual `Release` workflow. (Dogfooding note: this milestone's release phase exposed
+that CADENCE's own phase-id schema `^\d{2}-\d{2}$` caps phases at 99 — phase 100
+can't be represented, so this release was cut outside the loop; tracked for a fix.)
+Prior: **`1.21.0`** (2026-06-10, tag `v1.21.0`
 pending): the **quickstart-onboarding** milestone (v1.21) — a four-slice arc
 that lowers the barrier to a first CADENCE loop and makes config
 self-explanatory (no new DESIGN.md D-number; additive CLI-only). **Slice A

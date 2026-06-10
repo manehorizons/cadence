@@ -79,6 +79,15 @@ function deriveWarnings(
     });
   }
 
+  // 4. Every seam is mock — the default newcomer state. Point at activation.
+  if (rows.every((r) => r.isMock)) {
+    warnings.push({
+      code: 'all-mock',
+      message:
+        'every verifier seam is set to mock — settle gates do no real AI verification. Run `cadence activate` to turn on real verification.',
+    });
+  }
+
   return warnings;
 }
 

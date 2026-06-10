@@ -127,6 +127,14 @@ describe('cadence init', () => {
     expect(r.stdout).toMatch(/cadence progress/);
     expect(r.stdout).toMatch(/Docs:/);
   });
+
+  it('AC-5: init output points at cadence activate for real verification', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/Turn on real verification later/);
+    expect(r.stdout).toMatch(/cadence activate/);
+  });
 });
 
 describe('cadence init — --preset flag rename (rec-20260602-001)', () => {

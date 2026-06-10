@@ -332,6 +332,7 @@ export function registerInitCommand(program: Command): void {
           `  Stuck? Run \`cadence progress\` anytime for the next action.`,
         );
         console.log(`  Docs: .cadence/ROADMAP.md and the project README.`);
+        console.log(`  Turn on real verification later: \`cadence activate\`.`);
         if (gateProfile === 'standard' || gateProfile === 'strict') {
           console.log('');
           console.log(

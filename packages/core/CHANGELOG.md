@@ -1,5 +1,32 @@
 # @manehorizons/cadence-core
 
+## 1.22.0
+
+### Minor Changes
+
+- Verification-activation (v1.22.0): `cadence activate` — a guided command that takes
+  a project from all-mock verifiers to one real-verification loop.
+  - **`cadence activate`** picks a provider and writes `verifier.provider` (the
+    deep-verify seam by default; `--all` sets every seam), validates the key with a
+    minimal live anthropic ping (`--no-check` to skip; `local`/`mock` skip the ping),
+    and never persists the key — only the provider name is written. Key-missing still
+    records the selection and prints the exact `export …` line (set-up-now-key-later);
+    a failed live check exits non-zero without losing the selection. `--print` previews
+    the plan without writing; non-interactive runs require `--provider`.
+  - **`cadence doctor`** gains a `verification-readiness` check (reusing the same pure
+    readiness assessment): `warning` on all-mock (remedy: `cadence activate`) or a real
+    provider missing its key; `ok` otherwise; best-effort, never throws.
+  - **Discoverability:** `cadence quickstart`, `cadence config explain` (a new
+    `all-mock` warning), and `cadence init` now point at `cadence activate`.
+
+  `cadence-host-claude-code` and `cadence-host-codex` carry version-alignment bumps
+  only (no functional change).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-types@1.22.0
+
 ## 1.21.0
 
 ### Minor Changes

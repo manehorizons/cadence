@@ -36,6 +36,7 @@ Two CLIs are documented here:
   - [resume](#resume)
   - [tutorial](#tutorial)
   - [quickstart](#quickstart)
+  - [activate](#activate)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -86,6 +87,7 @@ mcp
 tutorial
 explain
 quickstart
+activate
 <!-- cadence:commands:end -->
 
 ---
@@ -1403,6 +1405,41 @@ map of the onboarding commands (`init`, `tutorial`, `explain`, `config explain`,
 Any failure to read state degrades to the uninitialized front door — it never crashes.
 
 **Exit codes** — `0` always (the uninitialized state is the happy primary path, not an error).
+
+---
+
+### activate
+
+```
+Usage: cadence activate [options]
+
+Turn on real verification — pick a provider, validate the key, wire deep-verify
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--provider <provider>` | `mock` \| `anthropic` \| `local` (required in a non-interactive shell) |
+| `--all` | Activate every verifier seam, not just deep-verify |
+| `--no-check` | Skip the live provider credential check |
+| `--print` | Show the plan without writing config |
+| `--json` | Emit the result as JSON |
+
+**Behavior** — the guided on-ramp from the default all-`mock` verifiers to real AI
+verification. Writes `verifier.provider` (only the deep-verify seam by default; `--all`
+sets every seam) and, unless `--no-check`, makes one minimal live call to confirm the
+provider's key works before declaring success (anthropic only; `local`/`mock` skip the
+ping). The API key is read from the environment (`ANTHROPIC_API_KEY`, or
+`CADENCE_LOCAL_BASE_URL` for `local`) and is **never** written to config or logged — only
+the provider name is persisted. If the key is absent the provider is still selected and
+the exact `export …` line is printed (set-up-now-key-later). In a TTY with no
+`--provider`, it prompts; in a non-TTY it requires `--provider`. `cadence doctor`'s
+`verification-readiness` check reports the resulting state.
+
+**Exit codes** — `0` on success or key-missing (non-fatal); `1` when a live check fails,
+the config is invalid, or a non-interactive run omits `--provider`. (`--print` writes
+nothing and exits `0`.)
 
 ---
 

@@ -70,8 +70,9 @@ describe('buildExplanation — config-semantic warnings (AC-2)', () => {
     );
   });
 
-  // AC-2: every warning message points the reader at `cadence doctor`.
-  it('AC-2: warning messages point to cadence doctor', () => {
+  // AC-2: every warning message (except all-mock, which points at cadence activate)
+  // points the reader at `cadence doctor`.
+  it('AC-2: warning messages point to cadence doctor (except all-mock)', () => {
     const config = { ...defaultConfig, profile: 'auto' as const, verifier: { provider: 'anthropic' as const } };
     const warnings = buildExplanation(config, {
       ...cleanCtx,
@@ -79,6 +80,20 @@ describe('buildExplanation — config-semantic warnings (AC-2)', () => {
       hostHooksInstalled: false,
     }).warnings;
     expect(warnings.length).toBeGreaterThan(0);
-    for (const w of warnings) expect(w.message).toMatch(/cadence doctor/);
+    for (const w of warnings) {
+      if (w.code !== 'all-mock') expect(w.message).toMatch(/cadence doctor/);
+    }
+  });
+
+  // AC-4: the all-mock warning fires on the default newcomer state and points at activate.
+  it('AC-4 (wiring): all-mock fires when every provider is mock', () => {
+    const warnings = buildExplanation(defaultConfig, {
+      ...cleanCtx,
+      anthropicKeyPresent: false,
+      localKeyPresent: false,
+    }).warnings;
+    const allMock = warnings.find((w) => w.code === 'all-mock');
+    expect(allMock).toBeDefined();
+    expect(allMock!.message).toMatch(/cadence activate/);
   });
 });
