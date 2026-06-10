@@ -8,40 +8,7 @@ import { processIO, type CommandIO, type CommandResult } from '../../services/io
 import { buildExplanation } from '../../config-explain/build.js';
 import { gatherExplainContext } from '../../config-explain/gather.js';
 import { isKnownField, renderJson, renderText, type RenderOptions } from '../../config-explain/render.js';
-
-function getPath(obj: Record<string, unknown>, path: string[]): unknown {
-  let cur: unknown = obj;
-  for (const k of path) {
-    if (cur && typeof cur === 'object' && k in (cur as Record<string, unknown>)) {
-      cur = (cur as Record<string, unknown>)[k];
-    } else {
-      return undefined;
-    }
-  }
-  return cur;
-}
-
-function setPath(obj: Record<string, unknown>, path: string[], value: unknown): void {
-  let cur: Record<string, unknown> = obj;
-  for (let i = 0; i < path.length - 1; i++) {
-    const k = path[i]!;
-    if (!(k in cur) || typeof cur[k] !== 'object' || cur[k] === null) cur[k] = {};
-    cur = cur[k] as Record<string, unknown>;
-  }
-  cur[path[path.length - 1]!] = value;
-}
-
-function coerce(raw: string): unknown {
-  if (raw === 'true') return true;
-  if (raw === 'false') return false;
-  const n = Number(raw);
-  if (raw.trim() !== '' && !Number.isNaN(n) && Number.isFinite(n)) return n;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return raw;
-  }
-}
+import { getPath, setPath, coerce } from '../../config-edit/apply.js';
 
 /**
  * `cadence config explain [field]` — render the active config in plain language
