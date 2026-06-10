@@ -14,6 +14,7 @@ For a conceptual overview of providers and the gate universe they serve, see
 ## Table of contents
 
 - [Provider overview](#provider-overview)
+- [Fast path — `cadence activate`](#fast-path--cadence-activate)
 - [mock — offline deterministic default](#mock--offline-deterministic-default)
 - [anthropic — Anthropic API](#anthropic--anthropic-api)
 - [local — OpenAI-compatible endpoint](#local--openai-compatible-endpoint)
@@ -35,6 +36,34 @@ For a conceptual overview of providers and the gate universe they serve, see
 | `mock` | Deterministic offline implementation; always returns a pre-set verdict | Nothing — the default everywhere |
 | `anthropic` | Calls the Anthropic API using `messages.parse` with structured output; prompt-caches the system prompt | `ANTHROPIC_API_KEY` in environment |
 | `local` | POSTs to an OpenAI-compatible `/v1/chat/completions` endpoint; parses JSON output with repair retries | `CADENCE_LOCAL_BASE_URL` + a model name (env or config) |
+
+---
+
+## Fast path — `cadence activate`
+
+The rest of this page walks through configuring providers by hand
+(`cadence config set …` + the env vars). For a first switch from the default
+`mock` to real verification, the one-command way is **[`cadence activate`](reference/commands.md#activate)** (v1.22):
+
+```sh
+export ANTHROPIC_API_KEY=sk-ant-...
+cadence activate --provider anthropic        # flips deep-verify; --all for every gate
+```
+
+It writes `verifier.provider` for you, then makes a minimal **live call** to
+confirm the key actually works before reporting success (skip with `--no-check`;
+`local`/`mock` skip the live check). The key is read from the environment and is
+**never written to config or logged** — only the provider name is persisted. If
+the key is missing it still records your choice and prints the exact `export …`
+line. Preview without writing using `--print`.
+
+To confirm the resulting state at any time, run `cadence doctor` — its
+`verification-readiness` check reports `ok` once a real provider with valid
+credentials is wired, and `warning` (pointing back at `cadence activate`) while
+you are still on mock.
+
+The manual steps below remain the source of truth for per-gate configuration,
+`local` setup, custom headers, and command-line provider selection.
 
 ---
 
