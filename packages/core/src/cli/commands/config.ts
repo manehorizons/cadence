@@ -9,6 +9,9 @@ import { buildExplanation } from '../../config-explain/build.js';
 import { gatherExplainContext } from '../../config-explain/gather.js';
 import { isKnownField, renderJson, renderText, type RenderOptions } from '../../config-explain/render.js';
 import { getPath, setPath, coerce } from '../../config-edit/apply.js';
+import { EDITABLE_FIELDS, resolveField, nearestField } from '../../config-edit/fields.js';
+import { runWizard } from '../../config-edit/wizard.js';
+import { makeReadlinePrompts } from '../prompt.js';
 
 /**
  * `cadence config explain [field]` — render the active config in plain language
@@ -50,6 +53,68 @@ export async function runConfigExplain(
   if (args.all === true) opts.all = true;
   io.out(renderText(exp, opts));
   return { exitCode: 0 };
+}
+
+/**
+ * `cadence config edit [field]` — guided TTY wizard over the curated config
+ * keys. Refuses in a non-TTY (points to `config set`), walks the curated set
+ * (or one resolved field), writes once atomically behind a confirm, then prints
+ * the slice-A `config explain` effect. Pure logic lives in `config-edit/`; this
+ * wires the real readline prompts + the single write.
+ */
+export async function runConfigEdit(
+  root: string,
+  args: { field?: string | undefined; isTty: boolean },
+  io: CommandIO,
+): Promise<CommandResult> {
+  if (!existsSync(join(root, '.cadence', 'state.json'))) {
+    throw new NotInitializedError();
+  }
+
+  // Resolve the field target, if any — runs before the TTY guard so an unknown
+  // field is reported regardless of terminal context (AC-10).
+  let fields = EDITABLE_FIELDS;
+  const target = args.field?.trim();
+  if (target !== undefined && target !== '') {
+    const field = resolveField(target);
+    if (field === null) {
+      io.err(`No such config field: ${target}\n`);
+      const guess = nearestField(target);
+      if (guess !== null) io.err(`Did you mean \`${guess}\`?\n`);
+      io.err(`Editable: ${EDITABLE_FIELDS.map((f) => f.name).join(', ')}\n`);
+      return { exitCode: 1, data: { unknownField: target } };
+    }
+    fields = [field];
+  }
+
+  if (!args.isTty) {
+    io.err('config edit needs an interactive terminal. Use `cadence config set <key> <value>` instead.\n');
+    return { exitCode: 1, data: { reason: 'non-tty' } };
+  }
+
+  const config = await loadConfig(root);
+  const prompts = makeReadlinePrompts(config);
+  let result;
+  try {
+    result = await runWizard(config, fields, io, { ask: prompts.ask, confirm: prompts.confirm });
+  } finally {
+    prompts.close();
+  }
+
+  if (result.status === 'invalid') {
+    io.err(`Invalid ${result.field}: ${result.message}\n`);
+    return { exitCode: 1, data: { invalidField: result.field } };
+  }
+  if (result.status === 'noop') {
+    io.out('No changes.\n');
+    return { exitCode: 0, data: { changed: false } };
+  }
+
+  await writeConfig(root, result.config);
+  io.out(`\n✓ wrote .cadence/config.json\n\nWhat changed for you:\n\n`);
+  const ctx = await gatherExplainContext(root);
+  io.out(renderText(buildExplanation(result.config, ctx), {}));
+  return { exitCode: 0, data: { changed: true, changes: result.changes } };
 }
 
 export function registerConfigCommand(program: Command): void {
@@ -113,6 +178,18 @@ export function registerConfigCommand(program: Command): void {
       const res = await runConfigExplain(
         process.cwd(),
         { field, all: opts.all, json: opts.json },
+        processIO(),
+      );
+      if (res.exitCode) process.exitCode = res.exitCode;
+    });
+
+  cmd
+    .command('edit [field]')
+    .description('Guided wizard to edit curated config keys (interactive)')
+    .action(async (field: string | undefined) => {
+      const res = await runConfigEdit(
+        process.cwd(),
+        { field, isTty: Boolean(process.stdin.isTTY) },
         processIO(),
       );
       if (res.exitCode) process.exitCode = res.exitCode;
