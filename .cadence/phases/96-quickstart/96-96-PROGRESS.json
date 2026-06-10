@@ -1,0 +1,47 @@
+{
+  "draftId": "96-96",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-10T19:20:38.366Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/quickstart/render.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/quickstart/render.ts"
+      ],
+      "updatedAt": "2026-06-10T19:21:12.375Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/quickstart.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/register.ts",
+        "/home/thomas/projects/cadence/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-06-10T19:22:00.187Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/quickstart.test.ts"
+      ],
+      "updatedAt": "2026-06-10T19:22:30.181Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/DESIGN.md"
+      ],
+      "updatedAt": "2026-06-10T19:24:03.303Z"
+    }
+  }
+}

@@ -382,6 +382,8 @@ stay consistent.
 
 Slice C — `cadence config edit`: a guided zero-dep wizard over the curated keys, closing the explain→edit loop (additive; no new D-number).
 
-Deferred (the remaining slices of the same effort): deepening `cadence explain` with concept
-cross-links (B), and a one-command `quickstart` chaining `init → tutorial` (D). Explaining an *invalid*
+Slice D — `cadence quickstart`: a read-only, never-failing, state-aware front door that reuses `progress`'s next-action post-init (additive; no new D-number).
+
+Deferred (remaining slices of the same effort): deepening `cadence explain` with concept
+cross-links (B). Explaining an *invalid*
 config field-by-field, per-field docs deep-links, and a diff-vs-defaults view were judged out of scope (YAGNI).
