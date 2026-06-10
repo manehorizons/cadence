@@ -1,0 +1,48 @@
+{
+  "draftId": "98-98",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-10T22:35:37.688Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/activate/plan.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/activate/plan.ts"
+      ],
+      "updatedAt": "2026-06-10T22:38:17.187Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/activate/ping.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/activate/ping.ts"
+      ],
+      "updatedAt": "2026-06-10T22:41:25.838Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/activate/render.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/activate/render.ts"
+      ],
+      "updatedAt": "2026-06-10T22:44:14.796Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/activate.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/activate.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/register.ts"
+      ],
+      "updatedAt": "2026-06-10T22:54:26.066Z"
+    }
+  }
+}
