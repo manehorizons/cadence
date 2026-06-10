@@ -133,6 +133,13 @@
       "kind": "note",
       "summary": "30 SESSION docs accumulated by v1.19; manually pruned to 1 on 2026-06-08",
       "createdAt": "2026-06-08T15:04:28.206Z"
+    },
+    {
+      "id": "ev-20260610-001",
+      "recommendationId": "rec-20260610-001",
+      "kind": "note",
+      "summary": "Hit live on 2026-06-10 cutting v1.22: 'Invalid string: must match pattern /^\\d{2}-\\d{2}$/' on phase 100.",
+      "createdAt": "2026-06-10T23:25:19.197Z"
     }
   ]
 }

@@ -552,9 +552,39 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "88-handoff-retention-core",
       "createdAt": "2026-06-08T15:04:28.206Z",
-      "updatedAt": "2026-06-09T02:26:36.806Z",
-      "convertedToPhaseId": "88-handoff-retention-core"
+      "updatedAt": "2026-06-09T02:26:36.806Z"
+    },
+    {
+      "id": "rec-20260610-001",
+      "title": "Phase-id schema caps phases at 99 (two digits)",
+      "summary": "PlanZ/SpecZ id regex /^\\d{2}-\\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) rejects 3-digit phase numbers, so 'cadence draft new … 100' generates an invalid id (10-100) and draft approve/coherence fail. CADENCE could not represent its own phase 100; the v1.22 release was cut outside the loop. Fix: widen the regex (e.g. /^\\d{2,}-\\d{2,}$/) + the id-derivation/padding, with tests at the 99→100 boundary.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cadence-types",
+        "phase-id",
+        "loop-state"
+      ],
+      "affectedFiles": [
+        "packages/types/src/plan.ts",
+        "packages/types/src/spec.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260610-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-10T23:25:19.197Z",
+      "updatedAt": "2026-06-10T23:25:19.197Z"
     }
   ]
 }
