@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CadenceConfigZ, defaultConfig } from '@manehorizons/cadence-types';
-import { assessReadiness, credsPresent } from '../../src/activate/assess.js';
+import { assessReadiness, credsPresent, VERIFIER_SEAMS } from '../../src/activate/assess.js';
 
 const cfg = (overrides: Record<string, unknown> = {}) =>
   CadenceConfigZ.parse({ ...defaultConfig, ...overrides });
@@ -11,7 +11,7 @@ describe('assessReadiness (AC-6)', () => {
     expect(r.provider).toBe('mock');
     expect(r.ready).toBe(false);
     expect(r.seamsReal).toEqual([]);
-    expect(r.seamsMock).toContain('verifier');
+    expect(r.seamsMock).toEqual([...VERIFIER_SEAMS]);
     expect(r.reason).toMatch(/mock/i);
   });
 
@@ -34,7 +34,7 @@ describe('assessReadiness (AC-6)', () => {
 
   it('local creds need a base URL and a model', () => {
     const c = cfg({ verifier: { provider: 'local', model: 'm' } });
-    expect(credsPresent('local', c, {})).toBe(false);
-    expect(credsPresent('local', c, { CADENCE_LOCAL_BASE_URL: 'http://x' })).toBe(true);
+    expect(credsPresent('local', 'verifier', c, {})).toBe(false);
+    expect(credsPresent('local', 'verifier', c, { CADENCE_LOCAL_BASE_URL: 'http://x' })).toBe(true);
   });
 });
