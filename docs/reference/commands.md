@@ -103,6 +103,8 @@ Read/write CADENCE config
 | `get <key>` | Print a config value (dotted path) |
 | `set <key> <value>` | Update a config value and validate against schema |
 | `doctor` | Diagnose config conflicts |
+| `explain [field]` | Explain the active config in plain language — gates, providers, warnings |
+| `edit [field]` | Guided wizard to edit curated config keys (interactive) |
 
 **`config get`** — prints the value at the given dotted config path (e.g.
 `cadence config get profile`).
@@ -117,6 +119,30 @@ satisfy).
 
 **Exit codes** — invalid key/value format causes a non-zero exit; behavior on
 unknown keys follows schema validation (rejected with an error message).
+
+---
+
+### config edit
+
+```
+Usage: cadence config edit [field]
+
+Guided wizard to edit curated config keys (interactive)
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `[field]` | Jump to one key — `profile`, `loopEnforcement` (alias `enforcement`), `acDiscipline`, `commitCadence`, or `verifier`. Omit to walk all five. Unknown names get a did-you-mean nudge. |
+
+**Behavior** — an interactive, zero-dependency wizard over the five behavior-shaping
+config keys. Shows each key's current value and legal choices (Enter keeps current),
+validates the result against the schema, shows a change summary, and on confirm writes
+`.cadence/config.json` atomically — then prints the `cadence config explain` effect
+(the gate set that now fires + any foot-gun warnings). Advanced keys stay
+`cadence config set <key> <value>` territory. In a non-TTY context it refuses and points
+to `config set`. Decline or Ctrl-C writes nothing.
 
 ---
 

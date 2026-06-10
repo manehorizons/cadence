@@ -380,7 +380,8 @@ conflicting config *pairs*, `cadence doctor` runs the structural health checks, 
 overlap (the host-hooks-installed predicate was extracted to one helper in phase 92) so their answers
 stay consistent.
 
+Slice C — `cadence config edit`: a guided zero-dep wizard over the curated keys, closing the explain→edit loop (additive; no new D-number).
+
 Deferred (the remaining slices of the same effort): deepening `cadence explain` with concept
-cross-links (B), a guided config editor / wizard so nobody hand-edits 22 keys (C), and a one-command
-`quickstart` chaining `init → tutorial` (D). Explaining an *invalid* config field-by-field, per-field
-docs deep-links, and a diff-vs-defaults view were judged out of scope (YAGNI).
+cross-links (B), and a one-command `quickstart` chaining `init → tutorial` (D). Explaining an *invalid*
+config field-by-field, per-field docs deep-links, and a diff-vs-defaults view were judged out of scope (YAGNI).

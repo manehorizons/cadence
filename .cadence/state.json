@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "93-explain-deepening",
+  "activePhase": "95-config-edit-cli",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-10T16:03:05.172Z",
+  "draftReadAt": "2026-06-10T17:38:47.235Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-06-08-v1.19-phase-85-built-pre-settle.md",
-    "subagentSpawns": 201
+    "subagentSpawns": 203
   },
   "skillAudit": {
     "required": [],
