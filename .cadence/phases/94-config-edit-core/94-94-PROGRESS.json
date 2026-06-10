@@ -1,0 +1,55 @@
+{
+  "draftId": "94-94",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-10T17:31:38.726Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/config-edit/parse.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/config-edit/parse.ts"
+      ],
+      "updatedAt": "2026-06-10T17:32:08.954Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/config-edit/apply.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/config-edit/apply.ts"
+      ],
+      "updatedAt": "2026-06-10T17:32:53.761Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/config.ts"
+      ],
+      "updatedAt": "2026-06-10T17:33:21.455Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/config-edit/render.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/config-edit/render.ts"
+      ],
+      "updatedAt": "2026-06-10T17:33:51.028Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/config-edit/wizard.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/config-edit/wizard.ts"
+      ],
+      "updatedAt": "2026-06-10T17:35:22.264Z"
+    }
+  }
+}
