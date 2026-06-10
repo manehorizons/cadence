@@ -76,7 +76,11 @@ export const CONCEPTS: Record<string, Concept> = {
       'Most gates have a per-invocation bypass flag (e.g. --allow-missing-coverage,',
       '--no-approve, --force) for CI / non-TTY / deliberate overrides.',
       '',
-      'See also: cadence explain profiles, tiers · docs/concepts.md (gate matrix)',
+      'Which gates fire is not fixed — it is selected by profile (user-involvement)',
+      '× tier (phase size). Run `cadence config explain` to see the exact gate set',
+      'for *your* config, per tier, with the active phase marked.',
+      '',
+      'See also: cadence explain profiles, tiers, config · docs/concepts.md (gate matrix)',
     ].join('\n'),
   },
   tiers: {
@@ -92,10 +96,12 @@ export const CONCEPTS: Record<string, Concept> = {
       '  complex     ≥ 6 tasks, any number of files',
       '',
       'Larger tiers pull in more gate work (see cadence explain gates). The tier',
-      'combines with the profile (user-involvement axis) to select the effective',
-      'gate set for the phase.',
+      '(phase-size axis) combines with the profile (user-involvement axis) to',
+      'select the effective gate set for the phase — that profile × tier → gate-set',
+      'mapping is the heart of the model. Run `cadence config explain` to see the',
+      'concrete set each tier resolves to under *your* configured profile.',
       '',
-      'See also: cadence explain profiles, gates · docs/concepts.md (profiles × tiers)',
+      'See also: cadence explain profiles, gates, config · docs/concepts.md (profiles × tiers)',
     ].join('\n'),
   },
   profiles: {
@@ -110,12 +116,49 @@ export const CONCEPTS: Record<string, Concept> = {
       '  standard   Major-step gating — approve at DRAFT + verify at settle.',
       '  auto       Hands-off — the AI drives; anomalies surface automatically.',
       '',
-      'Profile combines with tier (phase-size axis) to select the gate set. Note',
+      'Profile (user-involvement axis) combines with tier (phase-size axis) to',
+      'select the effective gate set — the profile × tier → gate-set mapping. Note',
       'the auto × complex cell is soft-capped: CADENCE refuses to approve/settle',
       'it by default (high blast radius, no supervision) unless you pass',
       '--allow-auto-complex.',
       '',
-      'See also: cadence explain tiers, gates · docs/concepts.md (profiles × tiers)',
+      'Run `cadence config explain` to see the gate set your configured profile',
+      'produces at each tier — concept made concrete against your own config.',
+      '',
+      'See also: cadence explain tiers, gates, config · docs/concepts.md (profiles × tiers)',
+    ].join('\n'),
+  },
+  config: {
+    blurb: 'CADENCE’s configuration surface, and how to see what *yours* actually does.',
+    body: [
+      'Configuration',
+      '',
+      'CADENCE’s behavior is shaped by .cadence/config.json: the project-wide',
+      'profile, the test command, the six AI-verifier/review provider blocks',
+      '(verifier, perTaskVerifier, codeReview, planReview, securityAudit, specReview),',
+      'loop-enforcement and acDiscipline knobs, hooks, and more — 22 top-level keys.',
+      'Most are optional and fall back to safe defaults.',
+      '',
+      'The configuration surface is heavy, and several interactions are invisible:',
+      'profile × tier → which gates fire (see cadence explain gates), acDiscipline',
+      'scaling by tier, and `hooks` in config.json vs. hooks actually registered in',
+      '.claude/settings.json. Reading the raw file rarely answers "what does mine do?".',
+      '',
+      'So don’t read the file — ask:',
+      '',
+      '  cadence config explain            curated, plain-language view of your ACTIVE',
+      '                                    config: profile + enforcement, the gate set',
+      '                                    per tier, providers (which are real vs mock),',
+      '                                    and warnings for silent foot-guns',
+      '  cadence config explain <field>    deep-dive one block (e.g. verifier, hooks)',
+      '  cadence config explain --all      every one of the 22 keys, grouped',
+      '  cadence config explain --json     structured form for scripting',
+      '',
+      'It bridges concept → your config → real effect, and flags config-semantic',
+      'foot-guns (e.g. a provider set to anthropic with no API key silently falling',
+      'back to mock). For structural health checks, see `cadence doctor`.',
+      '',
+      'See also: cadence explain profiles, gates, tiers · docs/reference/config.md',
     ].join('\n'),
   },
 };
@@ -126,6 +169,9 @@ const ALIASES: Record<string, string> = {
   tier: 'tiers',
   profile: 'profiles',
   loops: 'loop',
+  configuration: 'config',
+  cfg: 'config',
+  configs: 'config',
 };
 
 /** Resolve a user-supplied name (alias + case insensitive) to a canonical key, or null. */
@@ -207,7 +253,7 @@ export function runExplain(args: { concept?: string }, io: CommandIO): CommandRe
 export function registerExplainCommand(program: Command): void {
   program
     .command('explain')
-    .argument('[concept]', 'concept to explain (loop | gates | tiers | profiles)')
+    .argument('[concept]', 'concept to explain (loop | gates | tiers | profiles | config)')
     .description('Print an in-terminal explanation of a CADENCE concept')
     .action((concept: string | undefined) => {
       const res = runExplain(concept === undefined ? {} : { concept }, processIO());
