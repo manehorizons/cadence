@@ -55,7 +55,7 @@ describe('runActivate (AC-1, AC-2, AC-3, AC-4, AC-5)', () => {
     expect((await loadConfig(root)).verifier.provider).toBe('anthropic');
   });
 
-  it('AC-5: --print writes nothing', async () => {
+  it('AC-5a: --print writes nothing', async () => {
     active = await tempRepo({ initialized: true });
     const root = active.root;
     const res = await runActivate(root, { provider: 'anthropic', print: true, isTty: false }, bufferIO(), { ping: okPing, env: { ANTHROPIC_API_KEY: 'sk' } });
@@ -63,12 +63,22 @@ describe('runActivate (AC-1, AC-2, AC-3, AC-4, AC-5)', () => {
     expect((await loadConfig(root)).verifier.provider).toBe('mock');
   });
 
-  it('AC-5: non-TTY without --provider exits 1 with guidance', async () => {
+  it('AC-5b: non-TTY without --provider exits 1 with guidance', async () => {
     active = await tempRepo({ initialized: true });
     const root = active.root;
     const io = bufferIO();
     const res = await runActivate(root, { isTty: false }, io, { ping: okPing, env: {} });
     expect(res.exitCode).toBe(1);
     expect(io.stderr()).toMatch(/--provider/);
+  });
+
+  it('AC-5c: --print with no key still previews the missing-key warning and writes nothing', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const io = bufferIO();
+    const res = await runActivate(root, { provider: 'anthropic', print: true, isTty: false }, io, { ping: okPing, env: {} });
+    expect(res.exitCode).toBe(0);
+    expect(io.stdout()).toMatch(/export ANTHROPIC_API_KEY/);
+    expect((await loadConfig(root)).verifier.provider).toBe('mock'); // nothing written
   });
 });

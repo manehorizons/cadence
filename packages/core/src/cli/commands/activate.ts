@@ -81,9 +81,10 @@ export async function runActivate(
   }
 
   const plan = planActivation({ provider, scope, currentConfig: config });
+  const keyMissing = !credsPresent(provider, DEEP_VERIFY_SEAM, config, env);
 
   if (args.print === true) {
-    const result: ActivationResult = { plan, wrote: false, keyMissing: false };
+    const result: ActivationResult = { plan, wrote: false, keyMissing };
     emit(io, args, result);
     return { exitCode: 0, data: renderJson(result) };
   }
@@ -100,8 +101,6 @@ export async function runActivate(
     }
     await writeConfig(root, parsed.data);
   }
-
-  const keyMissing = !credsPresent(provider, DEEP_VERIFY_SEAM, config, env);
 
   let pingResult: ActivationResult['ping'];
   let exitCode = 0;
@@ -122,8 +121,9 @@ export async function runActivate(
 }
 
 function emit(io: CommandIO, args: ActivateArgs, result: ActivationResult): void {
+  const json = renderJson(result);
   if (args.json === true) {
-    io.out(JSON.stringify(renderJson(result), null, 2) + '\n');
+    io.out(JSON.stringify(json, null, 2) + '\n');
   } else {
     io.out(renderText(result));
   }
