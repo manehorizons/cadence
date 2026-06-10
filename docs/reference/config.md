@@ -8,6 +8,8 @@ This page documents every field in the CADENCE configuration file. For conceptua
 
 > **Unsure what your config actually does?** Don't read this whole page — run [`cadence config explain`](#reading-your-config--cadence-config-explain). It renders your *active* configuration in plain language: which gates fire for each tier, which provider backs each gate, and any config-semantic foot-guns (e.g. a real provider set with no API key).
 
+To change the behavior-shaping keys interactively, use [`cadence config edit`](./commands.md#config-edit); to see what your current config does, [`cadence config explain`](./commands.md#config-explain).
+
 ---
 
 ## Table of contents
