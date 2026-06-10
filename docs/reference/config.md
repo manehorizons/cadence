@@ -6,6 +6,8 @@ This page documents every field in the CADENCE configuration file. For conceptua
 
 `cadence init` writes an initial `config.json` from the chosen preset and then overlays two detected values: `profile` (from `--gate-profile` or git-history suggestion) and `verification.testGlobs` (from layout detection — see [cadence init behavior](#cadence-init-behavior)).
 
+> **Unsure what your config actually does?** Don't read this whole page — run [`cadence config explain`](#reading-your-config--cadence-config-explain). It renders your *active* configuration in plain language: which gates fire for each tier, which provider backs each gate, and any config-semantic foot-guns (e.g. a real provider set with no API key).
+
 ---
 
 ## Table of contents
@@ -25,6 +27,7 @@ This page documents every field in the CADENCE configuration file. For conceptua
 - [notify](#notify)
 - [logging](#logging)
 - [phaseGuard](#phaseguard)
+- [Reading your config — `cadence config explain`](#reading-your-config--cadence-config-explain)
 - [Presets](#presets)
 - [cadence init behavior](#cadence-init-behavior)
 
@@ -330,6 +333,40 @@ value to cap the growth.
 // .cadence/config.json — keep the 10 most-recent session handoffs
 { "handoff": { "retain": 10 } }
 ```
+
+---
+
+## Reading your config — `cadence config explain`
+
+This page is a field reference. To see what *your* config actually does — without
+reading all of it — run:
+
+```bash
+cadence config explain            # curated, plain-language summary
+cadence config explain verifier   # deep-dive a single block
+cadence config explain --all      # every key, grouped
+cadence config explain --json     # structured output for scripting
+```
+
+The default view has five parts:
+
+1. **Profile & enforcement** — `profile`, `loopEnforcement`, `acDiscipline`, each with a one-line meaning.
+2. **Gates that fire, by tier** — the concrete gate set for quick-fix / standard / complex under your profile (the `← current` marker points at the active phase's tier when a phase is mid-loop). This is the profile × tier matrix resolved for *your* settings.
+3. **Verifier & gate providers** — the six provider blocks (`specReview`, `verifier`, `perTaskVerifier`, `codeReview`, `planReview`, `securityAudit`) collapsed into one table, flagging which run `mock` (offline — no real AI verification).
+4. **Warnings** — config-semantic foot-guns, shown only when they apply:
+   - a provider set to `anthropic`/`local` with its API key (`ANTHROPIC_API_KEY` / `CADENCE_LOCAL_API_KEY`) unset — it will silently fall back to `mock`;
+   - a `hooks.*` flag enabled while the host adapter is not installed (no managed entry in `.claude/settings.json`) — the hook does nothing until `cadence-host-claude-code install`;
+   - the `auto × complex` soft cap — complex phases under the `auto` profile refuse to approve/settle without `--allow-auto-complex`.
+5. **Footer** — pointers to `<field>`, `--all`, and `cadence doctor`.
+
+### How it relates to the doctor commands
+
+`config explain` is **read-only and describes**; it does not judge structural health. It is complementary to:
+
+- **`cadence config doctor`** — flags conflicting config *pairs* (e.g. `strict` loopEnforcement with `manual` commit cadence).
+- **`cadence doctor`** — the full structural health check (Node version, init state, git hooks, host hooks, worktree collisions, handoff retention).
+
+The three share detection logic where they overlap (e.g. the host-hooks-installed check), so their answers never drift. When `config explain` raises a warning, it points you at `cadence doctor` for the complete picture.
 
 ---
 

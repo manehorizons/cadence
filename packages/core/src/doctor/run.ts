@@ -13,6 +13,7 @@ import {
   type DoctorEnv,
   type DoctorReport,
 } from './model.js';
+import { hasManagedCadence } from './host-hooks.js';
 
 function checkNode(env: DoctorEnv): DoctorCheck {
   const r = checkNodeMajor(env.nodeVersion);
@@ -151,17 +152,6 @@ async function checkGitHooks(root: string): Promise<DoctorCheck> {
       : `core.hooksPath is "${hp}", not ".githooks" — the pre-push gate may not run.`,
     'Run `git config core.hooksPath .githooks` to enable the pre-push gate.',
   );
-}
-
-/** Deep-scan a parsed settings object for any `_managedBy: "cadence"` entry. */
-function hasManagedCadence(value: unknown): boolean {
-  if (Array.isArray(value)) return value.some(hasManagedCadence);
-  if (value !== null && typeof value === 'object') {
-    const o = value as Record<string, unknown>;
-    if (o['_managedBy'] === 'cadence') return true;
-    return Object.values(o).some(hasManagedCadence);
-  }
-  return false;
 }
 
 async function checkHostHooks(root: string): Promise<DoctorCheck> {
