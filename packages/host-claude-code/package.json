@@ -1,6 +1,6 @@
 {
   "name": "@manehorizons/cadence-host-claude-code",
-  "version": "1.22.1",
+  "version": "1.23.0",
   "engines": {
     "node": ">=20"
   },
