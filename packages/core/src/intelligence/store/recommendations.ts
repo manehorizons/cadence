@@ -11,6 +11,7 @@ import {
   type RecommendationReadiness,
   type RecommendationStatus,
 } from '@manehorizons/cadence-types';
+import { loadConfig } from '../../config/loader.js';
 import { nextEvidenceId, nextRecommendationId } from './ids.js';
 import {
   readEvidenceLedger,
@@ -299,6 +300,27 @@ export function unarchiveRecommendation(
   };
 }
 
+// Phase 102 (v1.24): the auto-archive reason for a promotion's target status, or
+// null when the status is not a terminal auto-archive trigger. `converted` is NOT
+// here — converted recs archive when their phase settles, not at promote time.
+export function autoArchiveReasonForPromotion(
+  status: RecommendationStatus | undefined,
+): ArchiveReason | null {
+  if (status === 'shipped') return 'shipped';
+  if (status === 'rejected') return 'rejected';
+  return null;
+}
+
+// Phase 102: resolve `recommendations.autoArchive` best-effort (default `true` when
+// config is missing/unreadable — auto-archive is the opt-out default for v1.24).
+async function resolveAutoArchive(root: string): Promise<boolean> {
+  try {
+    return (await loadConfig(root)).recommendations.autoArchive;
+  } catch {
+    return true;
+  }
+}
+
 // Slice 34.1: existence check for `.cadence/phases/<phaseId>/` lives in the
 // I/O wrapper deliberately — keeps the pure helper disk-free (per Slice 34
 // Decision Log §10 + §11 architectural principle).
@@ -337,12 +359,45 @@ export async function runRecommendationPromotion(
   id: string,
   changes: RecommendationPromotionChanges,
 ): Promise<RecommendationTransitionResult> {
+  const now = new Date();
   const ledger = await readRecommendationLedger(root);
-  const res = applyRecommendationPromotion(ledger, id, changes, new Date());
+  const res = applyRecommendationPromotion(ledger, id, changes, now);
   if (!res.ok) return res;
+  // Phase 102: a promotion to a terminal status (shipped/rejected) auto-archives
+  // the rec in the same atomic write, when `recommendations.autoArchive` is on.
+  let outLedger = res.ledger;
+  const reason = autoArchiveReasonForPromotion(changes.status);
+  if (reason && (await resolveAutoArchive(root))) {
+    const archived = archiveRecommendation(outLedger, id, reason, now);
+    if (archived.ok) outLedger = archived.ledger;
+  }
   const evidenceLedger = await readEvidenceLedger(root);
-  await writeIntelligenceLedgers(root, res.ledger, evidenceLedger);
-  return res;
+  await writeIntelligenceLedgers(root, outLedger, evidenceLedger);
+  return { ok: true, ledger: outLedger };
+}
+
+// Phase 102: settle→rec hook. Archive every `converted` rec whose phase just
+// settled (`convertedToPhaseId === phaseId`) with reason `converted-settled`,
+// folded into a single write. Returns the archived ids ([] when none match).
+// The caller (settle service) invokes this best-effort, config-gated.
+export async function runAutoArchiveConvertedForPhase(
+  root: string,
+  phaseId: string,
+): Promise<string[]> {
+  const now = new Date();
+  const ledger = await readRecommendationLedger(root);
+  const targets = ledger.recommendations.filter(
+    (r) => r.status === 'converted' && r.convertedToPhaseId === phaseId,
+  );
+  if (targets.length === 0) return [];
+  let outLedger = ledger;
+  for (const t of targets) {
+    const archived = archiveRecommendation(outLedger, t.id, 'converted-settled', now);
+    if (archived.ok) outLedger = archived.ledger;
+  }
+  const evidenceLedger = await readEvidenceLedger(root);
+  await writeIntelligenceLedgers(root, outLedger, evidenceLedger);
+  return targets.map((t) => t.id);
 }
 
 // Phase 101 (v1.24): I/O wrappers for soft-archival. Read → pure transform →

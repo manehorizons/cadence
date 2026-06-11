@@ -246,6 +246,19 @@ export const CadenceConfigZ = z.object({
       retain: z.number().int().min(1).optional(),
     })
     .default({}),
+  /**
+   * Recommendation retention (Phase 102, v1.24). `autoArchive` (default `true`)
+   * soft-archives a rec the moment it reaches a terminal state: `shipped`/`rejected`
+   * immediately on `promote`, and a `converted` rec when its phase completes SETTLE.
+   * Archival is recoverable (`recommendation unarchive`), so unlike `handoff.retain`
+   * (a hard delete, opt-in) this defaults on. Set `false` to keep terminal recs in
+   * the active ledger; manual `recommendation archive` still works either way.
+   */
+  recommendations: z
+    .object({
+      autoArchive: z.boolean().default(true),
+    })
+    .default({ autoArchive: true }),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -294,6 +307,7 @@ export const defaultConfig: CadenceConfig = {
   phaseGuard: { enabled: true, integrationRef: 'main' },
   logging: { level: 'silent' as const },
   handoff: {},
+  recommendations: { autoArchive: true },
 };
 
 export const presets = {

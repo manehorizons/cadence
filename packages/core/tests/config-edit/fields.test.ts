@@ -3,10 +3,11 @@ import { EDITABLE_FIELDS, resolveField, nearestField } from '../../src/config-ed
 import { defaultConfig } from '@manehorizons/cadence-types';
 
 describe('config-edit fields', () => {
-  // AC-1: the curated registry is exactly the 5 behavior-shaping keys.
-  it('AC-1: registry holds exactly the curated 5 fields', () => {
+  // AC-1: the curated registry is exactly the behavior-shaping keys
+  // (Phase 102 added `autoArchive`, bringing the count to 6).
+  it('AC-1: registry holds exactly the curated 6 fields', () => {
     expect(EDITABLE_FIELDS.map((f) => f.name)).toEqual([
-      'profile', 'loopEnforcement', 'acDiscipline', 'commitCadence', 'verifier',
+      'profile', 'loopEnforcement', 'acDiscipline', 'commitCadence', 'verifier', 'autoArchive',
     ]);
     for (const f of EDITABLE_FIELDS) {
       expect(f.label.length, `${f.name} label`).toBeGreaterThan(0);
@@ -23,6 +24,14 @@ describe('config-edit fields', () => {
     expect(by.acDiscipline).toBe('tier-scaled');
     expect(by.commitCadence).toBe('draft');
     expect(by.verifier).toBe('mock');
+    expect(by.autoArchive).toBe('true');
+  });
+
+  // Phase 102 / AC-1 (discoverability): autoArchive resolves + reads its config value.
+  it('102 AC-1: autoArchive is editable and current() tracks the config', () => {
+    expect(resolveField('autoArchive')?.dottedKey).toBe('recommendations.autoArchive');
+    const off = { ...defaultConfig, recommendations: { autoArchive: false } };
+    expect(resolveField('autoArchive')?.current(off)).toBe('false');
   });
 
   // AC-2: resolveField handles the canonical name, the alias, and casing.

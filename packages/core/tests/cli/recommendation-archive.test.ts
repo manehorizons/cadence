@@ -64,6 +64,15 @@ describe('cadence recommendation archive / unarchive (Phase 101 / AC-8)', () => 
     expect(relisted.stdout).toContain(id);
   });
 
+  it('AC-8: `show` still finds a rec after it is archived (no vanish)', async () => {
+    active = await tempRepo({ initialized: true });
+    const id = await addRec(active.root);
+    await run(['recommendation', 'archive', id], active.root);
+    const show = await run(['recommendation', 'show', id], active.root);
+    expect(show.code).toBe(0);
+    expect(show.stdout).toContain(id);
+  });
+
   it('AC-8: archiving an unknown id exits 1 with a clear message (no stack trace)', async () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['recommendation', 'archive', 'rec-20200101-001'], active.root);

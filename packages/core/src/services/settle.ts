@@ -24,6 +24,7 @@ import {
 import type { VerifyTestRef } from '../verify/verifier.js';
 import { runSettleGates } from '../gates/registry.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
+import { runAutoArchiveConvertedForPhase } from '../intelligence/store/recommendations.js';
 import {
   type SettleContext,
   type ProgressJson,
@@ -410,6 +411,21 @@ export async function settleService(
     const summaryBase = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-SUMMARY`);
     await atomicWriteJSON(`${summaryBase}.json`, summary);
     await atomicWriteText(`${summaryBase}.md`, renderSummaryMd(summary));
+
+    // Phase 102 (v1.24): auto-archive any recommendation converted into the phase
+    // that just settled. Best-effort + config-gated (`recommendations.autoArchive`,
+    // default on) — a failure here never blocks or fails the settle.
+    const settledPhase = state.activePhase;
+    if (cadenceConfig?.recommendations.autoArchive !== false) {
+      try {
+        const archivedRecIds = await runAutoArchiveConvertedForPhase(cwd, settledPhase);
+        for (const rid of archivedRecIds) {
+          io.out(`archived rec ${rid} (converted → settled)\n`);
+        }
+      } catch {
+        // best-effort: leave the rec untouched, keep settling.
+      }
+    }
 
     const draftId = state.activeDraft;
     state.openDrafts = state.openDrafts.filter((d) => d.id !== draftId);

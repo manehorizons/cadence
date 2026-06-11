@@ -199,7 +199,12 @@ export function registerRecommendationCommand(program: Command): void {
             return;
           }
           const recLedger = await readRecommendationLedger(process.cwd());
-          const rec = recLedger.recommendations.find((r) => r.id === id);
+          // Phase 102: `show` is a lookup by id — find the rec whether it is live
+          // or soft-archived, so an auto-archived (shipped/rejected/converted) rec
+          // does not vanish from inspection.
+          const rec =
+            recLedger.recommendations.find((r) => r.id === id) ??
+            recLedger.archived.find((r) => r.id === id);
           if (!rec) {
             process.stderr.write(`recommendation ${id} not found\n`);
             process.exitCode = 1;
