@@ -682,7 +682,12 @@ logging / OTel), the **public launch** (assets staged local-only).
 
 ---
 
-## v1.24.0 — Recommendation retention (manual + auto soft-archival) — PLANNED 2026-06-11
+## v1.24.0 — Recommendation retention (manual + auto soft-archival) — ✓ SHIPPED 2026-06-11
+
+All three phases settled + merged to `main` (PRs #77/#78/#79, CI green all 6 OS×Node
+legs); all four published packages bumped `1.23.0 → 1.24.0` in lockstep (changeset
+consumed). npm publish is the operator-triggered manual `Release` workflow. Full
+narrative + the phase-102 CI dogfood note in MILESTONES.md §v1.24.0.
 
 Direct follow-on to phase 100. `recommendations.json` is append-only; terminal recs
 already hide from the active `recommend` surface but accumulate forever. Add manual +
@@ -695,16 +700,18 @@ phase settles. **No new DESIGN.md D-number expected** (additive to the
 recommendation-lifecycle model). Full scope/rationale/scope-guards in MILESTONES.md
 §v1.24.0; design `docs/superpowers/specs/2026-06-11-recommendation-retention-design.md`.
 
-- **Phase 101 — Archive core + manual commands** — `archived` array + `archivedAt` /
-  `archiveReason` optional rec fields (`.default([])` keeps existing files valid); pure
-  `archiveRecommendation` / `unarchiveRecommendation`; `runRecommendation{Archive,
-  Unarchive}`; CLI `recommendation archive <id> [--reason]` / `unarchive <id>` /
-  `list --archived`. TDD.
-- **Phase 102 — Auto-archive + config** — `recommendations.autoArchive` config; compose
-  archival into the `shipped`/`rejected` status writes (atomic); best-effort settle→rec
-  hook in `services/settle.ts` archiving a `converted` rec when its phase settles (never
-  blocks settle, reported); `config explain` pointer. TDD.
-- **Phase 103 — Release v1.24.0** — docs (`commands.md` archive/unarchive + `--archived`;
-  `config.md` `recommendations.autoArchive`), changeset, lockstep `1.23.0 → 1.24.0`
-  across all four published packages. Tag + npm provenance via the manual `Release`
-  workflow at publish.
+- **Phase 101 — Archive core + manual commands** ✓ (PR #77) — `archived` array +
+  `archivedAt` / `archiveReason` optional rec fields (`.default([])` keeps existing files
+  valid); pure `archiveRecommendation` / `unarchiveRecommendation`;
+  `runRecommendation{Archive,Unarchive}`; CLI `recommendation archive <id>` /
+  `unarchive <id>` / `list --archived`. TDD. (Dropped the planned `--reason` flag — no
+  free-text note field behind the `archiveReason` enum.)
+- **Phase 102 — Auto-archive + config** ✓ (PR #78) — `recommendations.autoArchive`
+  config; compose archival into the `shipped`/`rejected` status writes (atomic);
+  best-effort settle→rec hook in `services/settle.ts` archiving a `converted` rec when its
+  phase settles (never blocks settle, reported); `autoArchive` in the `config edit`
+  catalog; archive-aware `recommendation show`. TDD.
+- **Phase 103 — Release v1.24.0** ✓ (PR #79) — docs (`commands.md` archive/unarchive +
+  `--archived`; `config.md` `recommendations` section), changeset, lockstep
+  `1.23.0 → 1.24.0` across all four published packages. Tag + npm provenance via the
+  manual `Release` workflow at publish.

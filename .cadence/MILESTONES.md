@@ -354,7 +354,16 @@ introspection); **never silently destructive** (opt-in, keep-N, reported).
 > representable), `1.23.0` (**phase 100** — `shipped` terminal rec status). Phases
 > 93–100 form a de-facto **adoption / lifecycle-hardening** arc.
 
-### v1.24.0 — Recommendation retention (PLANNED 2026-06-11)
+### v1.24.0 — Recommendation retention (DELIVERED 2026-06-11)
+**Outcome:** all three phases settled through CADENCE's own loop and merged to `main`;
+all four published packages bumped `1.23.0 → 1.24.0` in lockstep (changeset consumed,
+CLAUDE.md narrative leads with 1.24.0). PRs #77 (101) / #78 (102) / #79 (103), CI green
+on all 6 OS×Node legs. npm publish is the operator-triggered manual `Release` workflow
+(tag `v1.24.0` + provenance). Dogfood note: phase 102 went CI-red on first push — a
+`promote → shipped` now auto-archives, breaking the existing `recommendation show` test;
+masked locally by a stale `dist/` (CLI tests spawn the built binary). Fixed by making
+`show` archive-aware (no vanish).
+
 **Thesis:** `.cadence/intelligence/recommendations.json` is append-only — terminal
 recs (`rejected`/`converted`/`shipped`) already drop out of the **active** `cadence
 recommend` surface but accumulate in the file forever, with no way to remove one and
@@ -378,19 +387,22 @@ recommendation-lifecycle model). Design:
 - **Manual `archive` works on any status** (covers junk/duplicate cleanup); auto-archive
   only fires on the terminal events above.
 
-- **Phase 101 — Archive core + manual commands.** `archived` array + `archivedAt` /
-  `archiveReason` optional rec fields (`cadence-types`, `.default([])` keeps existing
-  files valid); pure `archiveRecommendation` / `unarchiveRecommendation` (move
-  semantics, typed errors); `runRecommendation{Archive,Unarchive}`; CLI `recommendation
-  archive <id> [--reason]` / `unarchive <id>` / `list --archived`. TDD.
-- **Phase 102 — Auto-archive + config.** `recommendations.autoArchive` config block;
-  compose archival into the `shipped`/`rejected` status writes (same atomic write);
-  best-effort settle→rec hook in `services/settle.ts` archiving a `converted` rec when
-  its phase settles (never blocks settle, reported); `config explain` pointer. TDD.
-- **Phase 103 — Release v1.24.0.** Docs (`commands.md` archive/unarchive + `--archived`;
-  `config.md` `recommendations.autoArchive`), changeset, lockstep `1.23.0 → 1.24.0`
-  across all four published packages, tag + npm provenance via the manual `Release`
-  workflow.
+- **Phase 101 — Archive core + manual commands.** ✓ (PR #77) `archived` array +
+  `archivedAt` / `archiveReason` optional rec fields (`cadence-types`, `.default([])`
+  keeps existing files valid); pure `archiveRecommendation` / `unarchiveRecommendation`
+  (move semantics, typed errors); `runRecommendation{Archive,Unarchive}`; CLI
+  `recommendation archive <id>` / `unarchive <id>` / `list --archived`. TDD. (Deviation:
+  dropped the planned `--reason` flag — `archiveReason` is an enum with no free-text
+  note field, so the flag would be a no-op; manual archive records `manual`.)
+- **Phase 102 — Auto-archive + config.** ✓ (PR #78) `recommendations.autoArchive` config
+  block; compose archival into the `shipped`/`rejected` status writes (same atomic
+  write); best-effort settle→rec hook in `services/settle.ts` archiving a `converted` rec
+  when its phase settles (never blocks settle, reported); `autoArchive` added to the
+  `config edit` catalog; `recommendation show` made archive-aware (no vanish). TDD.
+- **Phase 103 — Release v1.24.0.** ✓ (PR #79) Docs (`commands.md` archive/unarchive +
+  `--archived`; `config.md` `recommendations` section), changeset, lockstep
+  `1.23.0 → 1.24.0` across all four published packages, tag + npm provenance via the
+  manual `Release` workflow.
 
 - **Scope guards.** *In:* soft-archive (manual + auto) + the `archived` array + the
   config knob + `list --archived` + reporting. *Out (YAGNI):* hard-delete/purge;
