@@ -585,6 +585,32 @@
       "decisionIds": [],
       "createdAt": "2026-06-10T23:25:19.197Z",
       "updatedAt": "2026-06-10T23:25:19.197Z"
+    },
+    {
+      "id": "rec-20260611-001",
+      "title": "Recommendation lifecycle needs a terminal shipped/resolved state",
+      "summary": "The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "recommendation-lifecycle",
+        "intelligence"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-11T14:52:03.329Z",
+      "updatedAt": "2026-06-11T14:52:03.329Z"
     }
   ]
 }
