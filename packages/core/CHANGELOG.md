@@ -1,5 +1,16 @@
 # @manehorizons/cadence-core
 
+## 1.22.1
+
+### Patch Changes
+
+- 9a23c60: Fix the phase-id ceiling (rec-20260610-001): widen the id schema from
+  `^\d{2}-\d{2}$` to `^\d{2,}-\d{2,}$` and derive ids through a single
+  `derivePhaseTaskId` helper, so phases >= 100 are representable end-to-end
+  instead of being mangled into `10-100`. Existing 01-99 ids are unchanged.
+- Updated dependencies [9a23c60]
+  - @manehorizons/cadence-types@1.22.1
+
 ## 1.22.0
 
 ### Minor Changes
