@@ -83,4 +83,9 @@ describe('detectPhaseCollision (AC-1)', () => {
   it('AC-1: nextFree with no occupancy is target + 1', () => {
     expect(detectPhaseCollision(30, []).nextFree).toBe(31);
   });
+
+  it('AC-1: nextFree crosses the 99->100 boundary (rec-20260610-001)', () => {
+    expect(detectPhaseCollision(99, [occ(99, 'local', '.')]).nextFree).toBe(100);
+    expect(detectPhaseCollision(0, [occ(99, 'sibling', '../x')]).nextFree).toBe(100);
+  });
 });

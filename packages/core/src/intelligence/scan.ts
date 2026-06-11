@@ -3,6 +3,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { RepoScan } from '@manehorizons/cadence-types';
+import { phaseNumber } from '../phases/collision.js';
 
 function git(root: string, args: string[]): Promise<{ ok: boolean; out: string }> {
   return new Promise((resolve) => {
@@ -80,7 +81,13 @@ async function scanPhases(root: string): Promise<RepoScan['phases']> {
   if (!existsSync(dir)) return { count: 0 };
   try {
     const entries = await readdir(dir, { withFileTypes: true });
-    const phaseDirs = entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
+    const phaseDirs = entries
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort(
+        (a, b) =>
+          (phaseNumber(a) ?? -1) - (phaseNumber(b) ?? -1) || (a < b ? -1 : a > b ? 1 : 0),
+      );
     return {
       count: phaseDirs.length,
       latestId: phaseDirs.length > 0 ? phaseDirs[phaseDirs.length - 1] : undefined,

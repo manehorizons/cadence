@@ -9,6 +9,7 @@ import { selectNotifier } from '../notify/factory.js';
 import { selectSpecReviewVerifier } from '../verify/spec-review-factory.js';
 import { nextConvergence } from '../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../notify/spec-review.js';
+import { derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -23,8 +24,7 @@ export async function specApproveService(
   try {
     const backend = new SimpleStateBackend(repoRoot);
     const state = await backend.readState();
-    const padded = args.num.padStart(2, '0');
-    const id = `${args.phase.slice(0, 2)}-${padded}`;
+    const id = derivePhaseTaskId(args.phase, args.num);
     if (state.loopPosition !== 'SPEC') {
       io.err(`spec approve refused: loopPosition is ${state.loopPosition}, not SPEC.\n`);
       return { exitCode: 1 };

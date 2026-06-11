@@ -9,6 +9,7 @@ import { runRecommendationTransition } from '../intelligence/store/recommendatio
 import { loadConfig } from '../config/loader.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
+import { derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -49,8 +50,7 @@ export async function draftNewService(
       }
     }
     const dir = join(repoRoot, '.cadence', 'phases', args.phase);
-    const padded = args.num.padStart(2, '0');
-    const id = `${args.phase.slice(0, 2)}-${padded}`;
+    const id = derivePhaseTaskId(args.phase, args.num);
     const path = join(dir, `${id}-DRAFT.md`);
     if (existsSync(path)) {
       io.err(`DRAFT already exists: ${path}\n`);
