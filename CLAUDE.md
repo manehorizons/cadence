@@ -134,8 +134,27 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.23.0`** (2026-06-11, tag `v1.23.0`
-pending): the **rec-lifecycle-terminal-status** release publishing **phase 100**
+change). The latest version is **`1.24.0`** (2026-06-11, tag `v1.24.0`
+pending): the **recommendation-retention** milestone (v1.24) — manual + automatic
+**soft-archival** of recommendations (no new DESIGN.md D-number; additive to the
+recommendation-lifecycle model, deepening phase 100's `shipped` status). Terminal recs
+already drop out of the active `cadence recommend` surface, but the ledger was
+append-only; v1.24 adds recoverable move-aside archival into a new `archived` array.
+**Phase 101** — storage + manual surface: `RecommendationLedger.archived`
+(`.default([])`, backward-compatible) + optional `archivedAt`/`archiveReason` on a rec;
+pure `archiveRecommendation`/`unarchiveRecommendation` + `runRecommendation{Archive,
+Unarchive}`; CLI `recommendation archive <id>` / `unarchive <id>` / `list --archived`
+(PR #77). **Phase 102** — auto-archive wiring: `recommendations.autoArchive` config
+(**default on**, recoverable — unlike `handoff.retain`'s hard-delete), `promote` to
+`shipped`/`rejected` auto-archives in the same atomic write, a best-effort settle→rec
+hook archives a `converted` rec when its phase settles (`converted-settled`, never
+blocks settle), `autoArchive` in the `config edit` catalog, and `recommendation show`
+made archive-aware so an auto-archived rec never vanishes from inspection (PR #78).
+**Phase 103** — release: docs (`commands.md` archive/unarchive + `--archived`;
+`config.md` `recommendations` section) + changeset + lockstep `1.23.0 → 1.24.0` across
+all four published packages; npm publish is the user-triggered manual `Release`
+workflow. Prior: **`1.23.0`** (2026-06-11, tag `v1.23.0`): the
+**rec-lifecycle-terminal-status** release publishing **phase 100**
 — a `shipped` terminal status for recommendations (sourced from rec-20260611-001;
 no new DESIGN.md D-number, an additive lifecycle state). A rec whose work has
 landed (directly via a PR, or after a formal `convert`) can now reach a truthful
