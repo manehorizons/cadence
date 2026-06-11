@@ -112,6 +112,17 @@ describe('partitionLedger', () => {
     expect(p.needsAttention).toEqual([]);
   });
 
+  it('AC-6: excludes shipped from the active surface, like rejected/converted', () => {
+    const p = partitionLedger([
+      mkRec({ id: 'a', status: 'shipped' }),
+      mkRec({ id: 'b', status: 'candidate' }),
+    ]);
+    expect(p.excludedCount).toBe(1);
+    expect(p.ranked.map((r) => r.id)).toEqual(['b']);
+    expect(p.parked).toEqual([]);
+    expect(p.needsAttention).toEqual([]);
+  });
+
   it('routes superseded/contradicted to needs-attention, overriding deferred', () => {
     const p = partitionLedger([
       mkRec({ id: 'a', status: 'deferred', decayState: 'contradicted' }),

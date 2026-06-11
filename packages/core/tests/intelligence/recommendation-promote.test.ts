@@ -135,3 +135,77 @@ describe('applyRecommendationPromotion (phase 57 pure helper)', () => {
     expect(JSON.stringify(ledger)).toBe(before);
   });
 });
+
+describe('phase 100: shipped terminal status', () => {
+  const now = new Date('2026-06-11T12:00:00.000Z');
+
+  it.each(['candidate', 'accepted', 'deferred'] as const)(
+    'AC-2: promotes %s → shipped',
+    (from) => {
+      const ledger = mkLedger([mkRec('rec-1', from)]);
+      const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'shipped' }, now);
+      expect(res.ok).toBe(true);
+      if (!res.ok) throw new Error('expected ok');
+      expect(res.ledger.recommendations[0]!.status).toBe('shipped');
+      expect(res.ledger.recommendations[0]!.updatedAt).toBe('2026-06-11T12:00:00.000Z');
+    },
+  );
+
+  it('AC-3: converted → shipped is allowed (the one sanctioned exception)', () => {
+    const ledger = mkLedger([
+      mkRec('rec-1', 'converted', { convertedToPhaseId: '100-rec-shipped-status' }),
+    ]);
+    const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'shipped' }, now);
+    expect(res.ok).toBe(true);
+    if (!res.ok) throw new Error('expected ok');
+    expect(res.ledger.recommendations[0]!.status).toBe('shipped');
+    // the phase link is preserved through the transition
+    expect(res.ledger.recommendations[0]!.convertedToPhaseId).toBe('100-rec-shipped-status');
+  });
+
+  it('AC-3: converted may ONLY go to shipped, not back to an active status', () => {
+    const ledger = mkLedger([mkRec('rec-1', 'converted')]);
+    const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'accepted' }, now);
+    expect(res.ok).toBe(false);
+  });
+
+  it('AC-4: shipped is terminal — cannot be promoted out of', () => {
+    const ledger = mkLedger([mkRec('rec-1', 'shipped')]);
+    const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'accepted' }, now);
+    expect(res.ok).toBe(false);
+    if (res.ok) throw new Error('expected refusal');
+    expect(res.error).toMatch(/terminal status shipped/);
+  });
+
+  it('AC-5: records shippedRef when promoting to shipped', () => {
+    const ledger = mkLedger([mkRec('rec-1', 'candidate')]);
+    const res = applyRecommendationPromotion(
+      ledger,
+      'rec-1',
+      { status: 'shipped', shippedRef: 'PR #70 / v1.22.1' },
+      now,
+    );
+    expect(res.ok).toBe(true);
+    if (!res.ok) throw new Error('expected ok');
+    expect(res.ledger.recommendations[0]!.shippedRef).toBe('PR #70 / v1.22.1');
+  });
+
+  it('AC-5: shipped without a ref is allowed (ref absent)', () => {
+    const ledger = mkLedger([mkRec('rec-1', 'candidate')]);
+    const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'shipped' }, now);
+    expect(res.ok).toBe(true);
+    if (!res.ok) throw new Error('expected ok');
+    expect(res.ledger.recommendations[0]!.shippedRef).toBeUndefined();
+  });
+
+  it('AC-5: shippedRef paired with a non-shipped status is refused', () => {
+    const ledger = mkLedger([mkRec('rec-1', 'candidate')]);
+    const res = applyRecommendationPromotion(
+      ledger,
+      'rec-1',
+      { status: 'accepted', shippedRef: 'PR #70' },
+      now,
+    );
+    expect(res.ok).toBe(false);
+  });
+});

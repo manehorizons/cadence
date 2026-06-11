@@ -85,6 +85,30 @@ describe('cadence recommendation promote', () => {
     expect(show.stdout).toMatch(/ready-for-milestone/);
   });
 
+  it('AC-5: promote --status=shipped --ref persists shipped + ref', async () => {
+    active = await tempRepo({ initialized: true });
+    const id = await addRec(active.root);
+    const r = await run(
+      ['recommendation', 'promote', id, '--status', 'shipped', '--ref', 'PR #70 / v1.22.1'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const show = await run(['recommendation', 'show', id], active.root);
+    expect(show.stdout).toMatch(/status: shipped/);
+    expect(show.stdout).toMatch(/PR #70 \/ v1\.22\.1/);
+  });
+
+  it('AC-5: --ref paired with a non-shipped status is refused', async () => {
+    active = await tempRepo({ initialized: true });
+    const id = await addRec(active.root);
+    const r = await run(
+      ['recommendation', 'promote', id, '--status', 'accepted', '--ref', 'PR #70'],
+      active.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/ref/i);
+  });
+
   it('AC-3: a promoted rec becomes milestone-eligible (propose clusters it)', async () => {
     active = await tempRepo({ initialized: true });
     const id = await addRec(active.root);

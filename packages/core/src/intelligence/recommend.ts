@@ -21,6 +21,9 @@ const STATUS_PTS: Record<Recommendation['status'], number> = {
   deferred: 0,
   rejected: 0,
   converted: 0,
+  // Phase 100: shipped recs are excluded from ranking (partitionLedger), so this
+  // weight is never consulted; present only to satisfy the exhaustive Record.
+  shipped: 0,
 };
 const READINESS_PTS: Record<Recommendation['readiness'], number> = {
   'raw-idea': 0,
@@ -99,7 +102,11 @@ export function partitionLedger(recs: Recommendation[]): Partition {
   const needsAttention: Recommendation[] = [];
   let excludedCount = 0;
   for (const rec of recs) {
-    if (rec.status === 'rejected' || rec.status === 'converted') {
+    if (
+      rec.status === 'rejected' ||
+      rec.status === 'converted' ||
+      rec.status === 'shipped'
+    ) {
       excludedCount += 1;
     } else if (
       rec.decayState === 'superseded' ||

@@ -152,9 +152,16 @@ export function applyRecommendationTransition(
 export interface RecommendationPromotionChanges {
   status?: RecommendationStatus;
   readiness?: RecommendationReadiness;
+  // Phase 100: freeform provenance for the `shipped` terminal status. Only
+  // meaningful with `status: 'shipped'`; rejected otherwise.
+  shippedRef?: string;
 }
 
-/** Statuses an operator may promote *from*. `converted`/`rejected` are terminal. */
+/**
+ * Statuses an operator may promote *from*. `converted`/`rejected`/`shipped` are
+ * terminal. Phase 100 adds one sanctioned exception handled below:
+ * `converted → shipped` (a converted phase that later shipped).
+ */
 const PROMOTABLE_FROM: ReadonlySet<RecommendationStatus> = new Set([
   'candidate',
   'accepted',
@@ -182,7 +189,18 @@ export function applyRecommendationPromotion(
         'cannot promote to converted — use `cadence recommendation convert` (it sets the phase link)',
     };
   }
-  if (!PROMOTABLE_FROM.has(target.status)) {
+  // Phase 100: `--ref` provenance is meaningful only for the shipped status.
+  if (changes.shippedRef !== undefined && changes.status !== 'shipped') {
+    return {
+      ok: false,
+      error: 'shippedRef (--ref) is only valid when promoting to shipped',
+    };
+  }
+  // Phase 100: `converted → shipped` is the sole transition out of an otherwise
+  // terminal status (a converted phase whose work later landed).
+  const convertedToShipped =
+    changes.status === 'shipped' && target.status === 'converted';
+  if (!PROMOTABLE_FROM.has(target.status) && !convertedToShipped) {
     return {
       ok: false,
       error: `cannot promote recommendation in terminal status ${target.status}`,
@@ -198,6 +216,9 @@ export function applyRecommendationPromotion(
             ...(changes.status !== undefined ? { status: changes.status } : {}),
             ...(changes.readiness !== undefined
               ? { readiness: changes.readiness }
+              : {}),
+            ...(changes.shippedRef !== undefined
+              ? { shippedRef: changes.shippedRef }
               : {}),
             updatedAt,
           }

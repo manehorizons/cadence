@@ -477,8 +477,12 @@ export function registerRecommendationCommand(program: Command): void {
       '--readiness <readiness>',
       `New readiness. One of: ${RecommendationReadinessZ.options.join(' | ')}`,
     )
+    .option(
+      '--ref <text>',
+      'Freeform provenance for a shipped rec (e.g. "PR #70 / v1.22.1"). Only valid with --status=shipped.',
+    )
     .action(
-      async (recId: string, opts: { status?: string; readiness?: string }) => {
+      async (recId: string, opts: { status?: string; readiness?: string; ref?: string }) => {
         try {
           const changes: RecommendationPromotionChanges = {};
           if (opts.status !== undefined) {
@@ -502,6 +506,9 @@ export function registerRecommendationCommand(program: Command): void {
             }
             changes.readiness = parsed.data;
           }
+          if (opts.ref !== undefined) {
+            changes.shippedRef = opts.ref;
+          }
           if (changes.status === undefined && changes.readiness === undefined) {
             process.stderr.write(
               'recommendation promote: provide --status and/or --readiness\n',
@@ -522,6 +529,7 @@ export function registerRecommendationCommand(program: Command): void {
           const parts = [
             changes.status ? `status=${changes.status}` : null,
             changes.readiness ? `readiness=${changes.readiness}` : null,
+            changes.shippedRef ? `ref=${changes.shippedRef}` : null,
           ]
             .filter(Boolean)
             .join(', ');

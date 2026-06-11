@@ -101,6 +101,19 @@ describe('renderRecommendationDetail (Slice 14)', () => {
     expect(md).not.toMatch(/- next:/);
   });
 
+  it('AC-7: renders a shipped: provenance line when shippedRef is set', () => {
+    const md = renderRecommendationDetail(
+      mkRec({ status: 'shipped', shippedRef: 'PR #70 / v1.22.1' }),
+      [], [], [],
+    );
+    expect(md).toMatch(/- shipped: PR #70 \/ v1\.22\.1/);
+  });
+
+  it('AC-7: omits the shipped: line when shippedRef is absent', () => {
+    const md = renderRecommendationDetail(mkRec({ status: 'shipped' }), [], [], []);
+    expect(md).not.toMatch(/- shipped:/);
+  });
+
   it('AC-3: assumptions bucket renders per-entry shape; insertion order preserved', () => {
     const as = [
       mkAs({ id: 'as-2', text: 'second' }),

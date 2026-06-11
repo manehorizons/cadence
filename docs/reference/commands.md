@@ -831,16 +831,23 @@ cadence recommendation promote <recId> --status accepted --readiness ready-for-m
 
 | Option | Description |
 |---|---|
-| `--status <status>` | New status: `candidate`, `accepted`, `deferred`, or `rejected`. (`converted` is rejected — that transition is owned by [`recommendation convert`](#recommendation-convert).) |
+| `--status <status>` | New status: `candidate`, `accepted`, `deferred`, `rejected`, or `shipped`. (`converted` is rejected — that transition is owned by [`recommendation convert`](#recommendation-convert).) |
 | `--readiness <readiness>` | New readiness: `raw-idea`, `needs-evidence`, `needs-decision`, `ready-for-milestone`, `ready-for-cadence-spec`, or `blocked`. |
+| `--ref <text>` | Freeform provenance recorded on a `shipped` rec (e.g. `"PR #70 / v1.22.1"`). Only valid with `--status shipped`; rejected otherwise. Stored verbatim and rendered as a `- shipped:` line. |
 
 **Behavior** — at least one of `--status` / `--readiness` is required.
 Status and readiness are independent axes (no forced monotonic
 progression). Refused for recommendations in a terminal status
-(`converted`, `rejected`). On success the ledger is persisted (atomic
-JSON + `RECOMMENDATIONS.md` re-render) with a bumped `updatedAt`. To make
-a rec milestone-eligible, set both `--status accepted` and
+(`converted`, `rejected`, `shipped`). On success the ledger is persisted
+(atomic JSON + `RECOMMENDATIONS.md` re-render) with a bumped `updatedAt`. To
+make a rec milestone-eligible, set both `--status accepted` and
 `--readiness ready-for-milestone` (or `ready-for-cadence-spec`).
+
+`shipped` is the positive-terminal status for a rec whose work has **landed**
+without (or after) a formal `convert` — e.g. a direct fix that merged via a PR.
+It drops the rec out of the active `cadence recommend` surface, exactly like
+`converted`/`rejected`. The one sanctioned transition out of an otherwise-terminal
+status is `converted → shipped` (a converted phase that later shipped).
 
 **Exit codes**
 
