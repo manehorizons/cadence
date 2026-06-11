@@ -134,7 +134,20 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.22.1`** (2026-06-11, tag `v1.22.1`
+change). The latest version is **`1.23.0`** (2026-06-11, tag `v1.23.0`
+pending): the **rec-lifecycle-terminal-status** release publishing **phase 100**
+— a `shipped` terminal status for recommendations (sourced from rec-20260611-001;
+no new DESIGN.md D-number, an additive lifecycle state). A rec whose work has
+landed (directly via a PR, or after a formal `convert`) can now reach a truthful
+positive-terminal state via `cadence recommendation promote <id>
+--status=shipped [--ref "PR #70 / v1.22.1"]` instead of being stuck at
+`candidate`; `shipped` recs drop out of the active `cadence recommend` surface
+(like `converted`/`rejected`), the optional freeform `shippedRef` renders as a
+`- shipped:` provenance line, and the one sanctioned transition out of an
+otherwise-terminal status is `converted → shipped`. Built TDD (7 ACs, PR #73),
+then dogfooded (PR #74: 20 shipped recs retro-marked, clearing the active
+surface). All four published packages bumped `1.22.1 → 1.23.0` in lockstep; npm
+publish is the user-triggered manual `Release` workflow. Prior: **`1.22.1`** (2026-06-11, tag `v1.22.1`
 pending): a **patch** release publishing the phase-id ceiling fix
 (rec-20260610-001, merged to `main` via PR #70, merge `b350630`) — the id schema
 was widened `^\d{2}-\d{2}$ → ^\d{2,}-\d{2,}$` and all id derivation routed through
