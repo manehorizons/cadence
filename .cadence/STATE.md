@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 100-rec-shipped-status
+**Active phase:** 101-rec-archive-core
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 264
-- Last handoff: SESSION-2026-06-11-phase-id-ceiling-fixed.md
+- Subagent spawns this session: 271
+- Last handoff: SESSION-2026-06-11-phase-100-shipped-status.md
 
 ## Counts
 - Open drafts: 0
