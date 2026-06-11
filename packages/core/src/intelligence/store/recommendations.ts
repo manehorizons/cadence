@@ -1,6 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
+  type ArchiveReason,
   type AssumptionLedger,
   type Evidence,
   type IntelligenceDecisionLedger,
@@ -91,6 +92,9 @@ export function deriveRecommendationLinks(
         .filter((d) => d.recommendationId === r.id)
         .map((d) => d.id),
     })),
+    // Phase 101: archived recs pass through untouched (link derivation is for
+    // the active surface only).
+    archived: recLedger.archived,
   };
 }
 
@@ -141,6 +145,7 @@ export function applyRecommendationTransition(
         ? { ...r, status: nextStatus, convertedToPhaseId: toPhase, updatedAt }
         : r,
     ),
+    archived: ledger.archived,
   };
   return { ok: true, ledger: ledgerOut };
 }
@@ -224,8 +229,74 @@ export function applyRecommendationPromotion(
           }
         : r,
     ),
+    archived: ledger.archived,
   };
   return { ok: true, ledger: ledgerOut };
+}
+
+// Phase 101 (v1.24): soft-archival. Move a rec between the ledger's `recommendations`
+// (live) and `archived` arrays. Recoverable — no deletion. Pure + disk-free; the
+// `run*` wrappers below own I/O.
+
+/**
+ * Move a live rec into `archived`, stamping `archivedAt`/`archiveReason` (and
+ * bumping `updatedAt`). Errors if `id` is not in the live array (unknown id, or
+ * already archived). The ledger is otherwise untouched.
+ */
+export function archiveRecommendation(
+  ledger: RecommendationLedger,
+  id: string,
+  reason: ArchiveReason,
+  now: Date,
+): RecommendationTransitionResult {
+  const target = ledger.recommendations.find((r) => r.id === id);
+  if (!target) {
+    return { ok: false, error: `recommendation ${id} not found in active recommendations` };
+  }
+  const stamp = now.toISOString();
+  const archivedRec: Recommendation = {
+    ...target,
+    archivedAt: stamp,
+    archiveReason: reason,
+    updatedAt: stamp,
+  };
+  return {
+    ok: true,
+    ledger: {
+      schemaVersion: 1,
+      recommendations: ledger.recommendations.filter((r) => r.id !== id),
+      archived: [...ledger.archived, archivedRec],
+    },
+  };
+}
+
+/**
+ * Restore an archived rec into `recommendations`, clearing the archive provenance
+ * fields (and bumping `updatedAt`). Errors if `id` is not in the `archived` array.
+ */
+export function unarchiveRecommendation(
+  ledger: RecommendationLedger,
+  id: string,
+  now: Date,
+): RecommendationTransitionResult {
+  const target = ledger.archived.find((r) => r.id === id);
+  if (!target) {
+    return { ok: false, error: `recommendation ${id} not found in archived recommendations` };
+  }
+  // Drop the archive-only fields without leaving them set to undefined
+  // (exactOptionalPropertyTypes forbids explicit undefined).
+  const { archivedAt: _archivedAt, archiveReason: _archiveReason, ...rest } = target;
+  void _archivedAt;
+  void _archiveReason;
+  const restored: Recommendation = { ...rest, updatedAt: now.toISOString() };
+  return {
+    ok: true,
+    ledger: {
+      schemaVersion: 1,
+      recommendations: [...ledger.recommendations, restored],
+      archived: ledger.archived.filter((r) => r.id !== id),
+    },
+  };
 }
 
 // Slice 34.1: existence check for `.cadence/phases/<phaseId>/` lives in the
@@ -268,6 +339,33 @@ export async function runRecommendationPromotion(
 ): Promise<RecommendationTransitionResult> {
   const ledger = await readRecommendationLedger(root);
   const res = applyRecommendationPromotion(ledger, id, changes, new Date());
+  if (!res.ok) return res;
+  const evidenceLedger = await readEvidenceLedger(root);
+  await writeIntelligenceLedgers(root, res.ledger, evidenceLedger);
+  return res;
+}
+
+// Phase 101 (v1.24): I/O wrappers for soft-archival. Read → pure transform →
+// single atomic `writeIntelligenceLedgers` (JSON + RECOMMENDATIONS.md re-render).
+export async function runRecommendationArchive(
+  root: string,
+  id: string,
+  reason: ArchiveReason,
+): Promise<RecommendationTransitionResult> {
+  const ledger = await readRecommendationLedger(root);
+  const res = archiveRecommendation(ledger, id, reason, new Date());
+  if (!res.ok) return res;
+  const evidenceLedger = await readEvidenceLedger(root);
+  await writeIntelligenceLedgers(root, res.ledger, evidenceLedger);
+  return res;
+}
+
+export async function runRecommendationUnarchive(
+  root: string,
+  id: string,
+): Promise<RecommendationTransitionResult> {
+  const ledger = await readRecommendationLedger(root);
+  const res = unarchiveRecommendation(ledger, id, new Date());
   if (!res.ok) return res;
   const evidenceLedger = await readEvidenceLedger(root);
   await writeIntelligenceLedgers(root, res.ledger, evidenceLedger);

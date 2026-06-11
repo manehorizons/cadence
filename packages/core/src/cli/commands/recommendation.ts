@@ -15,8 +15,10 @@ import {
 } from '../../intelligence/store/io.js';
 import {
   addRecommendation,
+  runRecommendationArchive,
   runRecommendationTransition,
   runRecommendationPromotion,
+  runRecommendationUnarchive,
   type AddRecommendationInput,
   type RecommendationPromotionChanges,
 } from '../../intelligence/store/recommendations.js';
@@ -261,7 +263,8 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
     .option('--offset <n>', 'Skip the first N entries (after filters)')
     .option('--limit <n>', 'Cap output to first N entries (after filters)')
-    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterTextExact?: string; filterRegex?: string; filterRegexFlags?: string; filterConvertedTo?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string }) => {
+    .option('--archived', 'List soft-archived recommendations instead of the active set (Phase 101)')
+    .action(async (opts: { format?: string; filterStatus?: string; filterText?: string; filterTextExact?: string; filterRegex?: string; filterRegexFlags?: string; filterConvertedTo?: string; sortBy?: string; reverse?: boolean; offset?: string; limit?: string; archived?: boolean }) => {
       try {
         const format = opts.format ?? 'terminal';
         if (format !== 'terminal' && format !== 'json') {
@@ -272,7 +275,7 @@ export function registerRecommendationCommand(program: Command): void {
           return;
         }
         const ledger = await readRecommendationLedger(process.cwd());
-        let entries = ledger.recommendations;
+        let entries = opts.archived ? ledger.archived : ledger.recommendations;
         if (opts.filterStatus !== undefined) {
           const parsed = RecommendationStatusZ.safeParse(opts.filterStatus);
           if (!parsed.success) {
@@ -420,15 +423,28 @@ export function registerRecommendationCommand(program: Command): void {
           if (opts.filterRegexFlags !== undefined) filterDims.push(`regex-flags="${opts.filterRegexFlags}"`);
           if (opts.filterConvertedTo !== undefined) filterDims.push(`converted-to="${opts.filterConvertedTo}"`);
           if (opts.offset !== undefined) filterDims.push(`offset=${opts.offset}`);
+          const noun = opts.archived ? 'archived recommendations' : 'recommendations';
           const msg = filterDims.length > 0
-            ? `No recommendations matching ${filterDims.join(', ')} recorded.\n`
-            : 'No recommendations recorded.\n';
+            ? `No ${noun} matching ${filterDims.join(', ')} recorded.\n`
+            : `No ${noun} recorded.\n`;
           process.stdout.write(msg);
+          // Phase 101: surface the archive even when the active list is empty.
+          if (!opts.archived && ledger.archived.length > 0) {
+            process.stdout.write(
+              `\n(${ledger.archived.length} archived — see \`recommendation list --archived\`)\n`,
+            );
+          }
           return;
         }
         for (const rec of entries) {
           process.stdout.write(
             `${rec.id}  ${rec.priority}  ${rec.readiness}  ${rec.title}\n`,
+          );
+        }
+        // Phase 101: footer hint that a soft-archive set exists (active list only).
+        if (!opts.archived && ledger.archived.length > 0) {
+          process.stdout.write(
+            `\n(${ledger.archived.length} archived — see \`recommendation list --archived\`)\n`,
           );
         }
       } catch (err) {
@@ -542,4 +558,47 @@ export function registerRecommendationCommand(program: Command): void {
         }
       },
     );
+
+  // Phase 101 (v1.24): manual soft-archival. `archive` moves any rec aside
+  // (recoverable); `unarchive` restores it. Auto-archive on terminal events
+  // arrives in phase 102.
+  cmd
+    .command('archive <recId>')
+    .description('Soft-archive a recommendation (move it aside; recoverable via `unarchive`)')
+    .action(async (recId: string) => {
+      try {
+        const res = await runRecommendationArchive(process.cwd(), recId, 'manual');
+        if (!res.ok) {
+          process.stderr.write(`recommendation archive refused: ${res.error}\n`);
+          process.exitCode = 1;
+          return;
+        }
+        process.stdout.write(`recommendation ${recId} archived\n`);
+      } catch (err) {
+        process.stderr.write(
+          `recommendation archive failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
+    .command('unarchive <recId>')
+    .description('Restore a soft-archived recommendation to the active set')
+    .action(async (recId: string) => {
+      try {
+        const res = await runRecommendationUnarchive(process.cwd(), recId);
+        if (!res.ok) {
+          process.stderr.write(`recommendation unarchive refused: ${res.error}\n`);
+          process.exitCode = 1;
+          return;
+        }
+        process.stdout.write(`recommendation ${recId} unarchived\n`);
+      } catch (err) {
+        process.stderr.write(
+          `recommendation unarchive failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
 }

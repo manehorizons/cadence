@@ -21,6 +21,17 @@ export const RecommendationStatusZ = z.enum([
 ]);
 export type RecommendationStatus = z.infer<typeof RecommendationStatusZ>;
 
+// Phase 101 (v1.24): why a rec was soft-archived (moved aside, recoverable).
+// `manual` = an operator ran `recommendation archive`; the rest are auto-archive
+// reasons wired in phase 102.
+export const ArchiveReasonZ = z.enum([
+  'manual',
+  'shipped',
+  'rejected',
+  'converted-settled',
+]);
+export type ArchiveReason = z.infer<typeof ArchiveReasonZ>;
+
 export const RecommendationReadinessZ = z.enum([
   'raw-idea',
   'needs-evidence',
@@ -74,6 +85,12 @@ export const RecommendationZ = z.object({
   // `/cadence-scout` session. Loose validation (non-empty string); the
   // `scout-YYYYMMDD-HHMM` convention lives in the scout prompt + docs, not here.
   scoutId: z.string().min(1).optional(),
+  // Phase 101 (v1.24): soft-archival provenance. Both absent on a live rec (one
+  // in the ledger's `recommendations` array); both set on an archived rec (one in
+  // the `archived` array). Set/cleared only by `archiveRecommendation` /
+  // `unarchiveRecommendation`.
+  archivedAt: z.string().datetime({ offset: true }).optional(),
+  archiveReason: ArchiveReasonZ.optional(),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
 });
@@ -118,6 +135,11 @@ export type IntelligenceDecision = z.infer<typeof IntelligenceDecisionZ>;
 export const RecommendationLedgerZ = z.object({
   schemaVersion: z.literal(1),
   recommendations: z.array(RecommendationZ),
+  // Phase 101 (v1.24): soft-archived recs, moved aside but retained (recoverable
+  // via `unarchive`). `.default([])` keeps every pre-v1.24 ledger valid with no
+  // migration. Active reads (`recommend`, default `list`, RECOMMENDATIONS.md
+  // render) operate only on `recommendations`.
+  archived: z.array(RecommendationZ).default([]),
 });
 export type RecommendationLedger = z.infer<typeof RecommendationLedgerZ>;
 
@@ -140,7 +162,7 @@ export const IntelligenceDecisionLedgerZ = z.object({
 export type IntelligenceDecisionLedger = z.infer<typeof IntelligenceDecisionLedgerZ>;
 
 export function emptyRecommendationLedger(): RecommendationLedger {
-  return { schemaVersion: 1, recommendations: [] };
+  return { schemaVersion: 1, recommendations: [], archived: [] };
 }
 
 export function emptyEvidenceLedger(): EvidenceLedger {
