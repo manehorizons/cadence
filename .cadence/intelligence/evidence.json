@@ -140,6 +140,13 @@
       "kind": "note",
       "summary": "Hit live on 2026-06-10 cutting v1.22: 'Invalid string: must match pattern /^\\d{2}-\\d{2}$/' on phase 100.",
       "createdAt": "2026-06-10T23:25:19.197Z"
+    },
+    {
+      "id": "ev-20260611-001",
+      "recommendationId": "rec-20260611-001",
+      "kind": "note",
+      "summary": "rec-20260610-001 shipped via PR #70 (merge b350630) but remains candidate/needs-decision; surfaced as a dogfooding nugget in SESSION-2026-06-11 handoff.",
+      "createdAt": "2026-06-11T14:52:03.329Z"
     }
   ]
 }
