@@ -29,6 +29,8 @@ To change the behavior-shaping keys interactively, use [`cadence config edit`](.
 - [notify](#notify)
 - [logging](#logging)
 - [phaseGuard](#phaseguard)
+- [handoff](#handoff)
+- [recommendations](#recommendations)
 - [Reading your config — `cadence config explain`](#reading-your-config--cadence-config-explain)
 - [Presets](#presets)
 - [cadence init behavior](#cadence-init-behavior)
@@ -336,6 +338,31 @@ value to cap the growth.
 ```jsonc
 // .cadence/config.json — keep the 10 most-recent session handoffs
 { "handoff": { "retain": 10 } }
+```
+
+---
+
+## recommendations
+
+Recommendation retention (v1.24). Terminal recommendations (`shipped`/`rejected`/
+`converted`) drop out of the active `cadence recommend` surface but, left unmanaged,
+accumulate in `.cadence/intelligence/recommendations.json` forever.
+**Soft-archival** moves a finished rec aside into the ledger's `archived` array —
+recoverable via [`cadence recommendation unarchive`](commands.md#recommendation-unarchive),
+never deleted — keeping the active ledger lean while preserving provenance.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `recommendations.autoArchive` | `boolean` | `true` | Automatically soft-archive a rec when it reaches a terminal state: `shipped`/`rejected` **immediately** on [`recommendation promote`](commands.md#recommendation-promote), and a `converted` rec **when its phase completes SETTLE**. Set `false` to leave terminal recs in the active ledger. Manual [`recommendation archive`](commands.md#recommendation-archive)/`unarchive` work regardless. |
+
+Unlike [`handoff.retain`](#handoff) (a hard delete, so opt-in/off), auto-archival is
+**recoverable** and so defaults **on**. The settle-time archival of a `converted` rec is
+best-effort — a failure never blocks or fails the settle. The archive is viewable with
+`cadence recommendation list --archived`.
+
+```jsonc
+// .cadence/config.json — keep terminal recs in the active ledger (disable auto-archive)
+{ "recommendations": { "autoArchive": false } }
 ```
 
 ---
