@@ -749,6 +749,7 @@ cadence recommendation list
 | `--reverse` | Reverse the entry order (after filters, before offset/limit). |
 | `--offset <n>` | Skip the first N entries (after filters). |
 | `--limit <n>` | Cap output to first N entries (after filters). |
+| `--archived` | List the **soft-archived** recommendations (the ledger's `archived` array) instead of the active set. Without it, archived recs never appear and the active list footers their count (`(N archived — see \`recommendation list --archived\`)`). (v1.24) |
 
 #### recommendation show
 
@@ -849,11 +850,68 @@ It drops the rec out of the active `cadence recommend` surface, exactly like
 `converted`/`rejected`. The one sanctioned transition out of an otherwise-terminal
 status is `converted → shipped` (a converted phase that later shipped).
 
+**Auto-archive (v1.24)** — when `recommendations.autoArchive` is on (the default),
+promoting to `shipped` or `rejected` also **soft-archives** the rec in the same atomic
+write (it moves to the ledger's `archived` array; see
+[`recommendation archive`](#recommendation-archive)). The rec keeps its status and any
+`--ref`, and stays inspectable via `recommendation show` / `list --archived`. Set
+`recommendations.autoArchive: false` to leave terminal recs in the active ledger.
+
 **Exit codes**
 
 - `0` — promoted, ledger updated.
 - `1` — refused (no flags, invalid enum value, unknown id, or terminal
   status). Refusal goes to stderr; no ledger mutation on refusal.
+
+---
+
+#### recommendation archive
+
+Soft-archives a recommendation — moves it aside but **retains** it (recoverable),
+keeping the active ledger lean without deleting provenance. The honest counterpart to
+deletion: nothing is destroyed. (v1.24)
+
+```sh
+cadence recommendation archive <recId>
+```
+
+**Behavior** — moves the rec from the ledger's `recommendations` array to its
+`archived` array in one atomic write (JSON + `RECOMMENDATIONS.md` re-render), stamping
+`archivedAt` and `archiveReason: 'manual'`. Works on a rec in **any** status (for
+clearing a junk/duplicate). Archived recs drop out of the default `recommendation list`
+(see `--archived`) but remain visible to `recommendation show <id>`. The inverse is
+[`recommendation unarchive`](#recommendation-unarchive).
+
+Automatic archival (on terminal status via `promote`, and for a `converted` rec when
+its phase settles) is wired through the same primitive and gated by
+[`recommendations.autoArchive`](config.md#recommendations).
+
+**Exit codes**
+
+- `0` — archived.
+- `1` — refused (unknown id, or the id is not in the active set — e.g. already
+  archived). Refusal goes to stderr; no ledger mutation on refusal.
+
+---
+
+#### recommendation unarchive
+
+Restores a soft-archived recommendation back into the active set. (v1.24)
+
+```sh
+cadence recommendation unarchive <recId>
+```
+
+**Behavior** — moves the rec from `archived` back to `recommendations`, clearing
+`archivedAt`/`archiveReason` and bumping `updatedAt` (atomic JSON +
+`RECOMMENDATIONS.md` re-render). The rec's status is unchanged — unarchiving a
+`shipped` rec leaves it `shipped`, just back in the active ledger.
+
+**Exit codes**
+
+- `0` — restored.
+- `1` — refused (id not in the `archived` array). Refusal goes to stderr; no ledger
+  mutation on refusal.
 
 ---
 
