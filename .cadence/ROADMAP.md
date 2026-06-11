@@ -673,3 +673,38 @@ D-number). All four published packages bumped `1.15.0 → 1.16.0` in lockstep. D
 
 Deferred candidate vectors (MILESTONES.md §Post-v1.0): observability (structured
 logging / OTel), the **public launch** (assets staged local-only).
+
+> **v1.17.0 – v1.23.0** (2026-06-07 → 06-11) shipped without separate ROADMAP
+> sections — observability (v1.17), worktree safety (v1.18/v1.19), handoff-retention
+> (v1.20), quickstart-onboarding (v1.21), verification-activation (v1.22), the
+> phase-id ceiling fix (v1.22.1), and the phase-100 `shipped` terminal rec status
+> (v1.23). Full narratives in MILESTONES.md.
+
+---
+
+## v1.24.0 — Recommendation retention (manual + auto soft-archival) — PLANNED 2026-06-11
+
+Direct follow-on to phase 100. `recommendations.json` is append-only; terminal recs
+already hide from the active `recommend` surface but accumulate forever. Add manual +
+automatic **soft-archival** (move-aside, recoverable) so the working ledger stays lean
+while honoring phase 100's retain-as-provenance choice. Storage: a second `archived`
+array in the same file (one atomic write moves a rec between arrays). Commands named
+`archive`/`unarchive` (honest verb). Auto-archive (`recommendations.autoArchive`,
+default **on**, recoverable): `shipped`/`rejected` immediately; `converted` when its
+phase settles. **No new DESIGN.md D-number expected** (additive to the
+recommendation-lifecycle model). Full scope/rationale/scope-guards in MILESTONES.md
+§v1.24.0; design `docs/superpowers/specs/2026-06-11-recommendation-retention-design.md`.
+
+- **Phase 101 — Archive core + manual commands** — `archived` array + `archivedAt` /
+  `archiveReason` optional rec fields (`.default([])` keeps existing files valid); pure
+  `archiveRecommendation` / `unarchiveRecommendation`; `runRecommendation{Archive,
+  Unarchive}`; CLI `recommendation archive <id> [--reason]` / `unarchive <id>` /
+  `list --archived`. TDD.
+- **Phase 102 — Auto-archive + config** — `recommendations.autoArchive` config; compose
+  archival into the `shipped`/`rejected` status writes (atomic); best-effort settle→rec
+  hook in `services/settle.ts` archiving a `converted` rec when its phase settles (never
+  blocks settle, reported); `config explain` pointer. TDD.
+- **Phase 103 — Release v1.24.0** — docs (`commands.md` archive/unarchive + `--archived`;
+  `config.md` `recommendations.autoArchive`), changeset, lockstep `1.23.0 → 1.24.0`
+  across all four published packages. Tag + npm provenance via the manual `Release`
+  workflow at publish.
