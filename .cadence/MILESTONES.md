@@ -346,6 +346,57 @@ introspection); **never silently destructive** (opt-in, keep-N, reported).
   warning threshold (10); whether DESIGN.md gets a note under session-continuity (no
   new D-number expected — additive, like v1.19 deepening §13).
 
+> **Point releases v1.21.0–v1.23.0** (2026-06-10 → 06-11) shipped without separate
+> named-milestone entries here — each cut via changesets + `release.yml` with
+> provenance: `1.21.0` (**quickstart-onboarding** — `config explain` / `config edit`
+> / `quickstart`), `1.22.0` (**verification-activation** — `cadence activate` +
+> doctor `verification-readiness`), `1.22.1` (phase-id ceiling fix, phases ≥ 100
+> representable), `1.23.0` (**phase 100** — `shipped` terminal rec status). Phases
+> 93–100 form a de-facto **adoption / lifecycle-hardening** arc.
+
+### v1.24.0 — Recommendation retention (PLANNED 2026-06-11)
+**Thesis:** `.cadence/intelligence/recommendations.json` is append-only — terminal
+recs (`rejected`/`converted`/`shipped`) already drop out of the **active** `cadence
+recommend` surface but accumulate in the file forever, with no way to remove one and
+no automatic reaping when a rec's work is truly done. Add **manual + automatic
+soft-archival**: move a finished rec aside (recoverable), keeping the working ledger
+lean while honoring phase 100's *retain-as-provenance* choice. Direct follow-on to
+phase 100; **no new DESIGN.md D-number expected** (additive to the
+recommendation-lifecycle model). Design:
+`docs/superpowers/specs/2026-06-11-recommendation-retention-design.md` (in-repo).
+
+**Locked decisions (brainstorm 2026-06-11):**
+- **"Remove" = soft-archive, not hard-delete.** Recoverable; honors retain-as-provenance.
+- **Storage:** a second array in the *same* file — `{ schemaVersion, recommendations,
+  archived }`. One atomic write moves a rec between arrays (no two-file half-fail).
+- **Command name:** `archive` / `unarchive` (the honest verb; not literally `remove`).
+- **Auto-archive trigger:** `shipped`/`rejected` → archived immediately (same write
+  that sets the status); `converted` → archived when its phase completes **SETTLE**
+  (in-flight until done; settle→rec hook on `convertedToPhaseId`).
+- **Config:** `recommendations.autoArchive` (boolean, **default `true`** — recoverable,
+  so default-on is safe here, unlike `handoff.retain`'s hard-delete which defaults off).
+- **Manual `archive` works on any status** (covers junk/duplicate cleanup); auto-archive
+  only fires on the terminal events above.
+
+- **Phase 101 — Archive core + manual commands.** `archived` array + `archivedAt` /
+  `archiveReason` optional rec fields (`cadence-types`, `.default([])` keeps existing
+  files valid); pure `archiveRecommendation` / `unarchiveRecommendation` (move
+  semantics, typed errors); `runRecommendation{Archive,Unarchive}`; CLI `recommendation
+  archive <id> [--reason]` / `unarchive <id>` / `list --archived`. TDD.
+- **Phase 102 — Auto-archive + config.** `recommendations.autoArchive` config block;
+  compose archival into the `shipped`/`rejected` status writes (same atomic write);
+  best-effort settle→rec hook in `services/settle.ts` archiving a `converted` rec when
+  its phase settles (never blocks settle, reported); `config explain` pointer. TDD.
+- **Phase 103 — Release v1.24.0.** Docs (`commands.md` archive/unarchive + `--archived`;
+  `config.md` `recommendations.autoArchive`), changeset, lockstep `1.23.0 → 1.24.0`
+  across all four published packages, tag + npm provenance via the manual `Release`
+  workflow.
+
+- **Scope guards.** *In:* soft-archive (manual + auto) + the `archived` array + the
+  config knob + `list --archived` + reporting. *Out (YAGNI):* hard-delete/purge;
+  age-based archival; a separate archive *file*; auto-archiving live recs; a `doctor`
+  archive check (defer unless a real need appears).
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.
