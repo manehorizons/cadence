@@ -89,6 +89,17 @@ export const EDITABLE_FIELDS: EditableField[] = [
     ],
     current: (c) => c.verifier.provider,
   },
+  {
+    name: 'autoArchive',
+    dottedKey: 'recommendations.autoArchive',
+    label: 'Recommendation auto-archive',
+    help: 'Auto soft-archive a rec when it goes terminal (shipped/rejected on promote; converted on settle). Recoverable via `recommendation unarchive`.',
+    choices: [
+      { value: 'true', blurb: 'archive terminal recs automatically (default)' },
+      { value: 'false', blurb: 'keep terminal recs in the active ledger' },
+    ],
+    current: (c) => String(c.recommendations.autoArchive),
+  },
 ];
 
 /** Short aliases → canonical field name (case-insensitive lookup). */

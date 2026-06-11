@@ -443,3 +443,37 @@ describe('handoff retention config (AC-1)', () => {
     ).toThrow();
   });
 });
+
+describe('recommendations auto-archive config (Phase 102 / AC-1)', () => {
+  it('AC-1: applies autoArchive=true when the block is omitted (pre-v1.24)', () => {
+    const { recommendations: _drop, ...without } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(without);
+    expect(parsed.recommendations.autoArchive).toBe(true);
+  });
+
+  it('AC-1: applies autoArchive=true when recommendations is an empty object', () => {
+    const parsed = CadenceConfigZ.parse({ ...defaultConfig, recommendations: {} });
+    expect(parsed.recommendations.autoArchive).toBe(true);
+  });
+
+  it('AC-1: defaultConfig carries recommendations.autoArchive=true', () => {
+    expect(defaultConfig.recommendations.autoArchive).toBe(true);
+  });
+
+  it('AC-1: round-trips an explicit autoArchive=false', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      recommendations: { autoArchive: false },
+    });
+    expect(parsed.recommendations.autoArchive).toBe(false);
+  });
+
+  it('AC-1: rejects a non-boolean autoArchive', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        recommendations: { autoArchive: 'yes' as never },
+      }),
+    ).toThrow();
+  });
+});

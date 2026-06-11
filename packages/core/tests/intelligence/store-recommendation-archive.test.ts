@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import type { Recommendation, RecommendationLedger } from '@manehorizons/cadence-types';
 import { readRecommendationLedger } from '../../src/intelligence/store/io.js';
@@ -6,10 +8,34 @@ import {
   addRecommendation,
   applyRecommendationPromotion,
   archiveRecommendation,
+  autoArchiveReasonForPromotion,
+  runAutoArchiveConvertedForPhase,
   runRecommendationArchive,
+  runRecommendationPromotion,
+  runRecommendationTransition,
   runRecommendationUnarchive,
   unarchiveRecommendation,
 } from '../../src/intelligence/store/recommendations.js';
+
+async function setAutoArchive(root: string, on: boolean): Promise<void> {
+  await writeFile(
+    join(root, '.cadence', 'config.json'),
+    JSON.stringify({ recommendations: { autoArchive: on } }, null, 2),
+  );
+}
+
+async function seedConvertedRec(root: string, phaseId: string): Promise<string> {
+  const rec = await addRecommendation(root, {
+    title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+    affectedAreas: [], affectedFiles: [],
+  });
+  // convert needs the phase dir to exist; create it.
+  await import('node:fs/promises').then((fs) =>
+    fs.mkdir(join(root, '.cadence', 'phases', phaseId), { recursive: true }),
+  );
+  await runRecommendationTransition(root, rec.id, 'convert', phaseId);
+  return rec.id;
+}
 
 let active: Fixture | null = null;
 afterEach(async () => {
@@ -164,5 +190,107 @@ describe('run* wrappers persist atomically (Phase 101 / AC-7)', () => {
     active = await tempRepo();
     const res = await runRecommendationArchive(active.root, 'rec-nope', 'manual');
     expect(res.ok).toBe(false);
+  });
+});
+
+describe('autoArchiveReasonForPromotion (Phase 102 / AC-2)', () => {
+  it('AC-2: maps terminal statuses to reasons, everything else to null', () => {
+    expect(autoArchiveReasonForPromotion('shipped')).toBe('shipped');
+    expect(autoArchiveReasonForPromotion('rejected')).toBe('rejected');
+    expect(autoArchiveReasonForPromotion('accepted')).toBeNull();
+    expect(autoArchiveReasonForPromotion('deferred')).toBeNull();
+    expect(autoArchiveReasonForPromotion(undefined)).toBeNull();
+  });
+});
+
+describe('auto-archive on promote (Phase 102 / AC-3..AC-6)', () => {
+  it('AC-3: promote → shipped auto-archives when autoArchive is on (default)', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const rec = await addRecommendation(root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const res = await runRecommendationPromotion(root, rec.id, {
+      status: 'shipped', shippedRef: 'PR #99',
+    });
+    expect(res.ok).toBe(true);
+    const ledger = await readRecommendationLedger(root);
+    expect(ledger.recommendations).toHaveLength(0);
+    expect(ledger.archived).toHaveLength(1);
+    expect(ledger.archived[0]?.status).toBe('shipped');
+    expect(ledger.archived[0]?.archiveReason).toBe('shipped');
+    expect(ledger.archived[0]?.shippedRef).toBe('PR #99');
+  });
+
+  it('AC-4: promote → rejected auto-archives with reason rejected', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const rec = await addRecommendation(root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await runRecommendationPromotion(root, rec.id, { status: 'rejected' });
+    const ledger = await readRecommendationLedger(root);
+    expect(ledger.recommendations).toHaveLength(0);
+    expect(ledger.archived[0]?.archiveReason).toBe('rejected');
+  });
+
+  it('AC-5: autoArchive=false leaves the terminal rec in the active ledger', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    await setAutoArchive(root, false);
+    const rec = await addRecommendation(root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await runRecommendationPromotion(root, rec.id, { status: 'shipped' });
+    const ledger = await readRecommendationLedger(root);
+    expect(ledger.recommendations).toHaveLength(1);
+    expect(ledger.recommendations[0]?.status).toBe('shipped');
+    expect(ledger.archived).toHaveLength(0);
+  });
+
+  it('AC-6: a non-terminal promotion (accepted) never archives', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const rec = await addRecommendation(root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await runRecommendationPromotion(root, rec.id, { status: 'accepted' });
+    const ledger = await readRecommendationLedger(root);
+    expect(ledger.recommendations).toHaveLength(1);
+    expect(ledger.archived).toHaveLength(0);
+  });
+});
+
+describe('runAutoArchiveConvertedForPhase (Phase 102 / AC-7)', () => {
+  it('AC-7: archives only converted recs matching the phase, with converted-settled', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const matchId = await seedConvertedRec(root, '102-target');
+    await seedConvertedRec(root, '999-other');
+
+    const archived = await runAutoArchiveConvertedForPhase(root, '102-target');
+    expect(archived).toEqual([matchId]);
+
+    const ledger = await readRecommendationLedger(root);
+    expect(ledger.archived.map((r) => r.id)).toEqual([matchId]);
+    expect(ledger.archived[0]?.archiveReason).toBe('converted-settled');
+    expect(ledger.recommendations.map((r) => r.id)).not.toContain(matchId);
+  });
+
+  it('AC-7: is a no-op returning [] when no converted rec matches the phase', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    await addRecommendation(root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const archived = await runAutoArchiveConvertedForPhase(root, '102-nomatch');
+    expect(archived).toEqual([]);
+    const ledger = await readRecommendationLedger(root);
+    expect(ledger.archived).toHaveLength(0);
   });
 });
