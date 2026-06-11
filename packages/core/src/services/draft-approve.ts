@@ -9,6 +9,7 @@ import { buildDraftContext } from '../gates/draft-context.js';
 import { runCoherenceGate, emitCoherenceWarns } from '../gates/coherence.js';
 import { runApproveGate } from '../gates/approve.js';
 import { runPlanReviewGate } from '../gates/plan-review.js';
+import { derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -28,7 +29,7 @@ export async function draftApproveService(
   io: CommandIO,
 ): Promise<CommandResult> {
   try {
-    const id = `${args.phase.slice(0, 2)}-${args.num.padStart(2, '0')}`;
+    const id = derivePhaseTaskId(args.phase, args.num);
     const path = join(repoRoot, '.cadence', 'phases', args.phase, `${id}-DRAFT.md`);
     const draft = parseDraftMd(await readFile(path, 'utf8'));
     const backend = new SimpleStateBackend(repoRoot);

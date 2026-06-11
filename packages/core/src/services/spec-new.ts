@@ -7,6 +7,7 @@ import { runRecommendationTransition } from '../intelligence/store/recommendatio
 import { loadConfig } from '../config/loader.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
+import { derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /** `cadence spec new <phase> <num>` — scaffold a SPEC.md (IDLE→SPEC). */
@@ -39,8 +40,7 @@ export async function specNewService(
       }
     }
     const dir = join(repoRoot, '.cadence', 'phases', args.phase);
-    const padded = args.num.padStart(2, '0');
-    const id = `${args.phase.slice(0, 2)}-${padded}`;
+    const id = derivePhaseTaskId(args.phase, args.num);
     const path = join(dir, `${id}-SPEC.md`);
     if (existsSync(path)) {
       io.err(`SPEC already exists: ${path}\n`);

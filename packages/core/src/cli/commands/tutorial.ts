@@ -11,6 +11,7 @@ import { settleService } from '../../services/settle.js';
 import { recordTaskOutcome } from '../../build/record.js';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
 import { StdinPrompter } from '../../verify/prompter.js';
+import { derivePhaseTaskId } from '../../phases/id.js';
 
 /**
  * `cadence tutorial` — run one real DRAFT→BUILD→SETTLE loop inside an ephemeral
@@ -34,11 +35,10 @@ export interface TutorialDeps {
   steps?: Step[];
 }
 
-// The draft id is derived as `${phase.slice(0,2)}-${num}` and must match
-// /^\d{2}-\d{2}$/, so the demo phase needs a two-digit prefix.
+// The draft id is derived via derivePhaseTaskId and must match /^\d{2,}-\d{2,}$/.
 const DEMO_PHASE = '00-demo';
 const DEMO_NUM = '01';
-const DEMO_ID = `${DEMO_PHASE.slice(0, 2)}-${DEMO_NUM.padStart(2, '0')}`; // 00-01
+const DEMO_ID = derivePhaseTaskId(DEMO_PHASE, DEMO_NUM); // 00-01
 
 /** A coherent quick-fix toy draft: one AC, one task, one file. */
 const TOY_DRAFT = `---
