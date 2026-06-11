@@ -317,7 +317,7 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 ## rec-20260611-001 — Recommendation lifecycle needs a terminal shipped/resolved state
 
-- status: candidate
+- status: converted
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10

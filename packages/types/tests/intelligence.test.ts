@@ -155,6 +155,26 @@ describe('intelligence schemas', () => {
     const result = RecommendationZ.safeParse({ ...recBase, scoutId: '' });
     expect(result.success).toBe(false);
   });
+
+  it('AC-1: accepts the shipped terminal status and round-trips shippedRef', () => {
+    const parsed = RecommendationZ.parse({
+      ...recBase,
+      status: 'shipped',
+      shippedRef: 'PR #70 / v1.22.1',
+    });
+    expect(parsed.status).toBe('shipped');
+    expect(parsed.shippedRef).toBe('PR #70 / v1.22.1');
+  });
+
+  it('AC-1: shippedRef is absent when omitted (pre-phase-100 fixture)', () => {
+    const parsed = RecommendationZ.parse(recBase);
+    expect(parsed.shippedRef).toBeUndefined();
+  });
+
+  it('AC-1: rejects an empty-string shippedRef', () => {
+    const result = RecommendationZ.safeParse({ ...recBase, shippedRef: '' });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('inspection schemas', () => {

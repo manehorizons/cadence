@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "draftId": "100-01",
+  "completedAt": "2026-06-11T18:40:16.772Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    },
+    {
+      "id": "AC-6",
+      "pass": true
+    },
+    {
+      "id": "AC-7",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "BLOCKED",
+      "notes": ""
+    },
+    {
+      "id": "T2",
+      "status": "BLOCKED",
+      "notes": ""
+    },
+    {
+      "id": "T3",
+      "status": "BLOCKED",
+      "notes": ""
+    },
+    {
+      "id": "T4",
+      "status": "BLOCKED",
+      "notes": ""
+    },
+    {
+      "id": "T5",
+      "status": "BLOCKED",
+      "notes": ""
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

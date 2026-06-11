@@ -27,6 +27,10 @@ export function renderRecommendationDetail(
     // Slice 34.1: render-time field only; no disk check (drift is the audit dim's job).
     lines.push(`- converted-to-phase: ${rec.convertedToPhaseId}`);
   }
+  if (rec.shippedRef !== undefined) {
+    // Phase 100: provenance for the shipped terminal status.
+    lines.push(`- shipped: ${rec.shippedRef}`);
+  }
   lines.push(`- ready: ${rec.readiness}`);
   lines.push(`- priority: ${rec.priority}`);
   lines.push(`- leverage: ${rec.leverageScore}/10`);

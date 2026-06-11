@@ -15,6 +15,9 @@ export const RecommendationStatusZ = z.enum([
   'deferred',
   'rejected',
   'converted',
+  // Phase 100: positive-terminal status for a rec whose work has landed without
+  // (or after) a formal `convert`. Reached via `recommendation promote`.
+  'shipped',
 ]);
 export type RecommendationStatus = z.infer<typeof RecommendationStatusZ>;
 
@@ -63,6 +66,10 @@ export const RecommendationZ = z.object({
   // Slice 34.1: exact-optional FK to the CADENCE phase this rec was converted
   // into. Set only by `cadence recommendation convert`; never auto-derived.
   convertedToPhaseId: z.string().optional(),
+  // Phase 100: optional freeform provenance for a `shipped` rec — where the work
+  // landed (e.g. "PR #70 / v1.22.1"). Never parsed; set only via
+  // `recommendation promote --status=shipped --ref=…`.
+  shippedRef: z.string().min(1).optional(),
   // Phase 61: optional grouping key linking the N recs landed by one
   // `/cadence-scout` session. Loose validation (non-empty string); the
   // `scout-YYYYMMDD-HHMM` convention lives in the scout prompt + docs, not here.
