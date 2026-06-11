@@ -76,6 +76,30 @@ describe('DraftZ', () => {
   });
 });
 
+describe('DraftZ id schema (rec-20260610-001)', () => {
+  const base: Draft = {
+    schemaVersion: 1,
+    id: '01-01',
+    phase: '01-foundation',
+    tier: 'quick-fix',
+    title: 't',
+    objective: 'o',
+    acceptanceCriteria: [{ id: 'AC-1', given: '-', when: '-', then: '-' }],
+    tasks: [{ id: 'T1', name: 'n', files: ['a.ts'], action: 'a', verify: 'v', done: 'AC-1' }],
+    boundaries: [],
+    status: 'PENDING',
+  };
+
+  it('accepts a 3-digit phase id', () => {
+    expect(() => DraftZ.parse({ ...base, id: '100-01' })).not.toThrow();
+    expect(() => DraftZ.parse({ ...base, id: '100-100' })).not.toThrow();
+  });
+  it('rejects sub-2-digit halves', () => {
+    expect(() => DraftZ.parse({ ...base, id: '1-1' })).toThrow();
+    expect(() => DraftZ.parse({ ...base, id: '100-1' })).toThrow();
+  });
+});
+
 describe('SummaryZ', () => {
   it('accepts a minimal summary', () => {
     expect(() =>

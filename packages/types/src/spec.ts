@@ -9,7 +9,7 @@ import { AcceptanceCriterionZ } from './plan.js';
  */
 export const SpecZ = z.object({
   schemaVersion: z.literal(1),
-  id: z.string().regex(/^\d{2}-\d{2}$/),
+  id: z.string().regex(/^\d{2,}-\d{2,}$/),
   phase: z.string(),
   objective: z.string(),
   acceptanceCriteria: z.array(AcceptanceCriterionZ),

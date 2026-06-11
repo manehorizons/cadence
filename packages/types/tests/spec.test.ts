@@ -23,6 +23,14 @@ describe('SpecZ (AC-2)', () => {
   it('AC-2: rejects bad id format', () => {
     expect(() => SpecZ.parse({ ...valid, id: 'nope' })).toThrow();
   });
+  it('accepts a 3-digit phase id (rec-20260610-001)', () => {
+    expect(() => SpecZ.parse({ ...valid, id: '100-01' })).not.toThrow();
+    expect(() => SpecZ.parse({ ...valid, id: '100-100' })).not.toThrow();
+  });
+  it('still requires min-2 digits each half', () => {
+    expect(() => SpecZ.parse({ ...valid, id: '1-1' })).toThrow();
+    expect(() => SpecZ.parse({ ...valid, id: '100-1' })).toThrow();
+  });
   it('AC-2: reuses AcceptanceCriterionZ shape (rejects AC missing then)', () => {
     expect(() =>
       SpecZ.parse({ ...valid, acceptanceCriteria: [{ id: 'AC-1', given: 'g', when: 'w' } as never] }),

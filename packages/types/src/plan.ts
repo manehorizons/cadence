@@ -25,7 +25,7 @@ export type Task = z.infer<typeof TaskZ>;
 
 export const DraftZ = z.object({
   schemaVersion: z.literal(1),
-  id: z.string().regex(/^\d{2}-\d{2}$/),
+  id: z.string().regex(/^\d{2,}-\d{2,}$/),
   phase: z.string(),
   tier: TierZ,
   /** Optional per-phase profile override. When set, wins over the project default in config. */
