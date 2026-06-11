@@ -134,7 +134,15 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.22.0`** (2026-06-10, tag `v1.22.0`
+change). The latest version is **`1.22.1`** (2026-06-11, tag `v1.22.1`
+pending): a **patch** release publishing the phase-id ceiling fix
+(rec-20260610-001, merged to `main` via PR #70, merge `b350630`) — the id schema
+was widened `^\d{2}-\d{2}$ → ^\d{2,}-\d{2,}$` and all id derivation routed through
+a shared `derivePhaseTaskId` helper, so phases ≥ 100 are representable end-to-end
+(previously mangled into `10-100`); existing 01–99 ids unchanged. All four
+published packages bumped `1.22.0 → 1.22.1` in lockstep; no new milestone, no
+DESIGN.md D-number (a correctness fix to the existing phase-id schema). npm
+publish is the user-triggered manual `Release` workflow. Prior: **`1.22.0`** (2026-06-10, tag `v1.22.0`
 pending): the **verification-activation** milestone (v1.22) — `cadence activate`,
 the guided on-ramp from the default all-`mock` verifiers to one real-verification
 loop (no new DESIGN.md D-number; additive activation/legibility over the existing
