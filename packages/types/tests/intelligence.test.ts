@@ -175,6 +175,57 @@ describe('intelligence schemas', () => {
     const result = RecommendationZ.safeParse({ ...recBase, shippedRef: '' });
     expect(result.success).toBe(false);
   });
+
+  // Phase 101 (v1.24): soft-archival.
+  it('101 AC-1: a ledger with no `archived` key parses with archived defaulting to []', () => {
+    const parsed = RecommendationLedgerZ.parse({
+      schemaVersion: 1,
+      recommendations: [recBase],
+    });
+    expect(parsed.archived).toEqual([]);
+  });
+
+  it('101 AC-1: a ledger round-trips a populated `archived` array', () => {
+    const archivedRec = {
+      ...recBase,
+      id: 'rec-20260605-002',
+      status: 'shipped' as const,
+      archivedAt: '2026-06-11T00:00:00.000Z',
+      archiveReason: 'shipped' as const,
+    };
+    const parsed = RecommendationLedgerZ.parse({
+      schemaVersion: 1,
+      recommendations: [recBase],
+      archived: [archivedRec],
+    });
+    expect(parsed.archived).toHaveLength(1);
+    expect(parsed.archived[0]?.id).toBe('rec-20260605-002');
+  });
+
+  it('101 AC-2: archivedAt + archiveReason are absent on a live rec, round-trip on an archived one', () => {
+    expect(RecommendationZ.parse(recBase).archivedAt).toBeUndefined();
+    expect(RecommendationZ.parse(recBase).archiveReason).toBeUndefined();
+    const parsed = RecommendationZ.parse({
+      ...recBase,
+      archivedAt: '2026-06-11T12:00:00.000Z',
+      archiveReason: 'manual',
+    });
+    expect(parsed.archivedAt).toBe('2026-06-11T12:00:00.000Z');
+    expect(parsed.archiveReason).toBe('manual');
+  });
+
+  it('101 AC-2: archiveReason rejects an unknown reason and a non-datetime archivedAt', () => {
+    expect(
+      RecommendationZ.safeParse({ ...recBase, archiveReason: 'bogus' }).success,
+    ).toBe(false);
+    expect(
+      RecommendationZ.safeParse({ ...recBase, archivedAt: 'not-a-date' }).success,
+    ).toBe(false);
+  });
+
+  it('101 AC-2: emptyRecommendationLedger seeds an empty archived array', () => {
+    expect(emptyRecommendationLedger().archived).toEqual([]);
+  });
 });
 
 describe('inspection schemas', () => {
