@@ -6,7 +6,7 @@
       "title": "Rename 'cadence init --profile' flag to '--preset'",
       "summary": "The init --profile flag takes solo|team|production (a PRESET), while the domain profile is set via --gate-profile — actively misleading (flag named 'profile' does not set the profile). Rename the flag to --preset, keeping --profile as a deprecated alias. Design settled in the 2026-06-01 CONTEXT.md grilling session; needs a test (TDD), docs/reference/commands.md update, and the two-commit settle.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -26,15 +26,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "52-preset-flag-rename",
+      "shippedRef": "v1.6.0 (phase 52)",
       "createdAt": "2026-06-02T01:17:46.143Z",
-      "updatedAt": "2026-06-04T01:46:21.549Z"
+      "updatedAt": "2026-06-11T18:59:06.400Z"
     },
     {
       "id": "rec-20260602-002",
       "title": "Add /cadence-scout host slash command (ideation dialogue → recs)",
       "summary": "A tenth Claude Code slash command (prompt template, installed by cadence-host-claude-code) that runs a CADENCE-aware divergent→convergent ideation dialogue and lands survivors as Praxis recommendations via existing 'cadence recommendation add'. Named scout (not brainstorm) — it is the opposite end of the superpowers brainstorming skill: divergent candidate generation into the ranked ledger, never design→plan. Zero core-engine change, no new gate/loop position/record type. Fills the gap of an in-tool structured ideation dialogue that today forces leaving the tool and hand-entering results.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
@@ -56,15 +57,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "53-cadence-scout",
+      "shippedRef": "v1.6.0 (phase 53)",
       "createdAt": "2026-06-02T03:46:58.701Z",
-      "updatedAt": "2026-06-04T02:50:47.112Z"
+      "updatedAt": "2026-06-11T18:59:06.580Z"
     },
     {
       "id": "rec-20260602-003",
       "title": "[Deferred] First-class scout-session grouping on recommendations",
       "summary": "Option B from the /cadence-scout design: add an optional scoutId/sourceSessionId to the recommendation schema (cadence-types) + a --scout-id flag, surfaced as a cluster in 'cadence recommend', so the N recs from one /cadence-scout session are queryable as a set. Deferred: spends a permanent schema surface for unproven traceability need and overlaps the existing generic evidence mechanism. Clean additive follow-up if the need appears.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "raw-idea",
       "priority": "low",
       "leverageScore": 5,
@@ -86,15 +88,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "61-scout-session-grouping",
+      "shippedRef": "v1.11.0 (phase 61)",
       "createdAt": "2026-06-02T03:47:06.457Z",
-      "updatedAt": "2026-06-05T16:00:20.321Z"
+      "updatedAt": "2026-06-11T18:59:06.745Z"
     },
     {
       "id": "rec-20260603-001",
       "title": "Enable windows-latest CI leg (timeout + EBUSY harness fixes)",
       "summary": "Phase 49 unblocked macOS via realpath but deferred Windows. Enabling windows-latest surfaced Windows-only test-harness issues: (1) settle-security-audit.test.ts AC-4 and dispatcher.test.ts 'skill-invoke caps at 100 entries' exceed the vitest timeout on Windows runners (CLI-spawn + git + 100 atomic writes are slower there); (2) temp-dir cleanup hits EBUSY (rmdir, open handle) past the fixture's rm retry budget (maxRetries:5/retryDelay:100). Fix: raise fixture cleanup retry budget for EBUSY; address the slow Windows tests without per-test timeout band-aids (CLAUDE.md rule) — likely a Windows-aware global timeout or reducing per-test CLI-spawn count; consider an injectable renameWithRetry for testability. Then add windows-latest back to the ci.yml matrix + the ci-matrix.test.ts guard.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
@@ -120,15 +123,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "50-windows-ci-leg",
+      "shippedRef": "v1.6.0 (phase 50)",
       "createdAt": "2026-06-03T21:05:40.744Z",
-      "updatedAt": "2026-06-03T21:43:16.540Z"
+      "updatedAt": "2026-06-11T18:59:06.912Z"
     },
     {
       "id": "rec-20260604-001",
       "title": "Expose CADENCE as an MCP server surface",
       "summary": "Ship an MCP server that exposes the DRAFT→BUILD→SETTLE loop as MCP tools, so any MCP-capable agent (Claude Desktop/Code, Cursor, etc.) can drive CADENCE without a bespoke per-host adapter. Could reframe the whole multi-host question — one surface instead of N adapters.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -147,15 +151,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "58-mcp-server",
+      "shippedRef": "v1.8.0 (phase 58)",
       "createdAt": "2026-06-04T19:31:58.130Z",
-      "updatedAt": "2026-06-04T22:36:03.931Z"
+      "updatedAt": "2026-06-11T18:59:07.082Z"
     },
     {
       "id": "rec-20260604-002",
       "title": "Host-adapter authoring guide + stable capabilities contract",
       "summary": "Document the host-adapter contract (event-map, shim, capabilities) and publish an authoring guide so the community can write adapters (Codex, Cursor, Copilot CLI) instead of the maintainer building each. Force-multiplier: scales the ecosystem without solo effort. Codex host was started then archived (phases 02→11), so the contract exists implicitly — this makes it explicit and reusable.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -174,15 +179,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "60-host-adapter-contract",
+      "shippedRef": "v1.10.0 (phase 60)",
       "createdAt": "2026-06-04T19:32:11.371Z",
-      "updatedAt": "2026-06-05T03:48:25.423Z"
+      "updatedAt": "2026-06-11T18:59:07.251Z"
     },
     {
       "id": "rec-20260604-003",
       "title": "cadence doctor — diagnose project setup",
       "summary": "A 'cadence doctor' subcommand that checks a project's setup health: hooks wired into settings.json, hooksPath configured, Node >=20, config schema valid, and slash-command run-lines portable (no machine-absolute paths). Surfaces silent misconfig that otherwise looks like CADENCE being broken.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -200,15 +206,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "56-cadence-doctor",
+      "shippedRef": "v1.7.0 (phase 56)",
       "createdAt": "2026-06-04T19:32:11.537Z",
-      "updatedAt": "2026-06-04T19:53:54.212Z"
+      "updatedAt": "2026-06-11T18:59:07.423Z"
     },
     {
       "id": "rec-20260604-004",
       "title": "Recommendation promotion CLI — make milestone propose reachable",
       "summary": "Add CLI to advance a recommendation's status (candidate → accepted) and readiness (→ needs-decision/ready-for-milestone/ready-for-cadence-spec). Today the only rec status transition is 'convert' (→ converted), and readiness is write-once at 'add' time — so 'cadence milestone propose', which requires status=accepted AND readiness∈{ready-for-milestone,ready-for-cadence-spec}, can never be fed a manually-added rec. The whole milestone-clustering → accept → export-to-SPEC pipeline is unreachable from the CLI for manual recs.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -227,15 +234,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "57-rec-promote",
+      "shippedRef": "v1.7.0 (phase 57)",
       "createdAt": "2026-06-04T20:03:07.258Z",
-      "updatedAt": "2026-06-04T20:32:31.746Z"
+      "updatedAt": "2026-06-11T18:59:07.577Z"
     },
     {
       "id": "rec-20260605-001",
       "title": "cadence tutorial — guided first-loop walkthrough",
       "summary": "Interactive walkthrough that runs one toy DRAFT→BUILD→SETTLE loop end-to-end so a newcomer sees the loop in ~2 minutes. Reduces time-to-first-aha; largest build of the onboarding scout set.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -255,16 +263,17 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "63-cadence-tutorial",
+      "shippedRef": "v1.12.0 (phase 63)",
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.220Z",
-      "updatedAt": "2026-06-05T20:07:06.235Z"
+      "updatedAt": "2026-06-11T18:59:07.747Z"
     },
     {
       "id": "rec-20260605-002",
       "title": "First-run 'what now?' nudge after cadence init",
       "summary": "After 'cadence init', print the exact next loop commands (draft new → approve → ...) so the user is not left at a 'now what?' cliff. Tiny, high-ROI removal of the first-5-minutes drop-off.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -284,16 +293,17 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "62-first-run-nudge",
+      "shippedRef": "v1.11.0 (phase 62)",
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.370Z",
-      "updatedAt": "2026-06-05T17:29:04.576Z"
+      "updatedAt": "2026-06-11T18:59:07.914Z"
     },
     {
       "id": "rec-20260605-003",
       "title": "cadence explain <concept> — in-CLI concept help",
       "summary": "In-CLI help for loop / gates / tiers / profiles so users do not have to leave the terminal for docs. Reuses existing docs content; makes the tool self-teaching.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -313,16 +323,17 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "64-explain",
+      "shippedRef": "v1.12.0 (phase 64)",
       "scoutId": "scout-20260605-1702",
       "createdAt": "2026-06-05T17:15:37.528Z",
-      "updatedAt": "2026-06-05T22:00:39.142Z"
+      "updatedAt": "2026-06-11T18:59:08.086Z"
     },
     {
       "id": "rec-20260607-001",
       "title": "MCP Resources: expose .cadence/ artifacts under cadence:// (read-on-demand)",
       "summary": "resources/list+read+templates over a curated cadence:// table (state, roadmap, project, recommendations, phase draft/summary). Read-on-demand, no subscriptions. Phase 75.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
@@ -343,16 +354,17 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "75-mcp-resources",
+      "shippedRef": "v1.16.0 (phase 75)",
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.241Z",
-      "updatedAt": "2026-06-07T15:20:21.184Z"
+      "updatedAt": "2026-06-11T18:59:08.274Z"
     },
     {
       "id": "rec-20260607-002",
       "title": "MCP tool parity: handoff, resume, recommendation add/promote, doctor",
       "summary": "Add the proven-out excluded commands as MCP tools (+ service extraction). Enables scout->rec->promote + session continuity over MCP. Phase 76.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -372,16 +384,17 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "76-mcp-tool-parity",
+      "shippedRef": "v1.16.0 (phase 76)",
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.398Z",
-      "updatedAt": "2026-06-07T15:29:52.959Z"
+      "updatedAt": "2026-06-11T18:59:08.439Z"
     },
     {
       "id": "rec-20260607-003",
       "title": "MCP Prompts + shared guidance extraction into core",
       "summary": "Extract canonical guidance/scout-dialogue text from host-claude-code into core/guidance; expose prompts/list+get (scout, next, draft, settle). Single source of truth. Phase 77.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -403,16 +416,17 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "77-mcp-prompts",
+      "shippedRef": "v1.16.0 (phase 77)",
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.546Z",
-      "updatedAt": "2026-06-07T15:47:46.021Z"
+      "updatedAt": "2026-06-11T18:59:08.616Z"
     },
     {
       "id": "rec-20260607-004",
       "title": "Zero-config: cadence mcp install (writes/merges .mcp.json)",
       "summary": "New 'cadence mcp install [--print] [--client]' subcommand: non-destructive idempotent merge of project .mcp.json; --print snippet for Claude Desktop/Cursor. Phase 78.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -432,16 +446,17 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "78-mcp-install",
+      "shippedRef": "v1.16.0 (phase 78)",
       "scoutId": "scout-20260607-1019",
       "createdAt": "2026-06-07T15:19:42.690Z",
-      "updatedAt": "2026-06-07T15:56:15.073Z"
+      "updatedAt": "2026-06-11T18:59:08.796Z"
     },
     {
       "id": "rec-20260607-005",
       "title": "Phase 80 — structured logger foundation",
       "summary": "Zero-dependency operator-debugging logger: LogLevel/LogRecord types in cadence-types, logger.ts + pure formatters in core, CADENCE_LOG_LEVEL/FORMAT env + config.logging block, stderr-only, default-off. Foundation only (no seam wiring or one trivial seam).",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
@@ -462,16 +477,17 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "80-logger-foundation",
+      "shippedRef": "v1.17.0 (phase 80)",
       "scoutId": "scout-20260607-obs",
       "createdAt": "2026-06-07T18:41:51.719Z",
-      "updatedAt": "2026-06-07T18:41:59.457Z"
+      "updatedAt": "2026-06-11T18:59:08.958Z"
     },
     {
       "id": "rec-20260607-006",
       "title": "Phase 81 — instrument three seams + scoped console.* migration",
       "summary": "Wire gate decisions, hook/event dispatch, and verifier provider calls through the logger via bound child loggers; migrate only diagnostic/error console.* calls at those seams. Per-seam tests + stdout-purity test.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
@@ -493,9 +509,10 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "81-seam-instrumentation",
+      "shippedRef": "v1.17.0 (phase 81)",
       "scoutId": "scout-20260607-obs",
       "createdAt": "2026-06-07T18:41:51.887Z",
-      "updatedAt": "2026-06-07T19:00:54.213Z"
+      "updatedAt": "2026-06-11T18:59:09.122Z"
     },
     {
       "id": "rec-20260607-007",
@@ -530,7 +547,7 @@
       "title": "Handoff retention policy — auto-prune stale SESSION docs",
       "summary": "cadence handoff accumulates dated .cadence/handoff/SESSION-*.md docs indefinitely (30 had piled up by v1.19, manually pruned to 1). Add an opt-in retention policy that supersedes stale handoffs automatically. Design notes from 2026-06-08: (1) trigger at handoff-WRITE time, not settle — settle fires per-phase and would race the lastHandoff pointer mid-session; handoff is when a new doc obsoletes the prior. (2) Prefer retention-by-count (keep lastHandoff + most recent N) over merged-to-main detection — deterministic, offline, no git introspection. (3) Make it opt-in/configurable (handoff.retain knob, default off or generous), same posture as phaseGuard — the resume skill leans on the dated archive existing, so never silently destructive.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
@@ -553,15 +570,16 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "88-handoff-retention-core",
+      "shippedRef": "v1.20.0 (phase 88)",
       "createdAt": "2026-06-08T15:04:28.206Z",
-      "updatedAt": "2026-06-09T02:26:36.806Z"
+      "updatedAt": "2026-06-11T18:59:09.286Z"
     },
     {
       "id": "rec-20260610-001",
       "title": "Phase-id schema caps phases at 99 (two digits)",
       "summary": "PlanZ/SpecZ id regex /^\\d{2}-\\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) rejects 3-digit phase numbers, so 'cadence draft new … 100' generates an invalid id (10-100) and draft approve/coherence fail. CADENCE could not represent its own phase 100; the v1.22 release was cut outside the loop. Fix: widen the regex (e.g. /^\\d{2,}-\\d{2,}$/) + the id-derivation/padding, with tests at the 99→100 boundary.",
       "source": "manual",
-      "status": "candidate",
+      "status": "shipped",
       "readiness": "needs-decision",
       "priority": "high",
       "leverageScore": 5,
@@ -583,15 +601,16 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "shippedRef": "v1.22.1 (PR #70)",
       "createdAt": "2026-06-10T23:25:19.197Z",
-      "updatedAt": "2026-06-10T23:25:19.197Z"
+      "updatedAt": "2026-06-11T18:59:09.453Z"
     },
     {
       "id": "rec-20260611-001",
       "title": "Recommendation lifecycle needs a terminal shipped/resolved state",
       "summary": "The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.",
       "source": "manual",
-      "status": "converted",
+      "status": "shipped",
       "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
@@ -609,9 +628,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "100-rec-shipped-status",
       "createdAt": "2026-06-11T14:52:03.329Z",
-      "updatedAt": "2026-06-11T18:06:51.651Z",
-      "convertedToPhaseId": "100-rec-shipped-status"
+      "updatedAt": "2026-06-11T18:59:09.629Z",
+      "shippedRef": "phase 100 / PR #73 (v1.23.0 pending)"
     }
   ]
 }

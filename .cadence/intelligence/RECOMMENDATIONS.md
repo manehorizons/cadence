@@ -4,7 +4,7 @@
 
 ## rec-20260602-001 — Rename 'cadence init --profile' flag to '--preset'
 
-- status: converted
+- status: shipped
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
@@ -20,7 +20,7 @@ The init --profile flag takes solo|team|production (a PRESET), while the domain 
 
 ## rec-20260602-002 — Add /cadence-scout host slash command (ideation dialogue → recs)
 
-- status: converted
+- status: shipped
 - ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
@@ -36,7 +36,7 @@ A tenth Claude Code slash command (prompt template, installed by cadence-host-cl
 
 ## rec-20260602-003 — [Deferred] First-class scout-session grouping on recommendations
 
-- status: converted
+- status: shipped
 - ready: raw-idea
 - priority: low
 - leverage: 5/10
@@ -52,7 +52,7 @@ Option B from the /cadence-scout design: add an optional scoutId/sourceSessionId
 
 ## rec-20260603-001 — Enable windows-latest CI leg (timeout + EBUSY harness fixes)
 
-- status: converted
+- status: shipped
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10
@@ -68,7 +68,7 @@ Phase 49 unblocked macOS via realpath but deferred Windows. Enabling windows-lat
 
 ## rec-20260604-001 — Expose CADENCE as an MCP server surface
 
-- status: converted
+- status: shipped
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
@@ -83,7 +83,7 @@ Ship an MCP server that exposes the DRAFT→BUILD→SETTLE loop as MCP tools, so
 
 ## rec-20260604-002 — Host-adapter authoring guide + stable capabilities contract
 
-- status: converted
+- status: shipped
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
@@ -98,7 +98,7 @@ Document the host-adapter contract (event-map, shim, capabilities) and publish a
 
 ## rec-20260604-003 — cadence doctor — diagnose project setup
 
-- status: converted
+- status: shipped
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
@@ -113,7 +113,7 @@ A 'cadence doctor' subcommand that checks a project's setup health: hooks wired 
 
 ## rec-20260604-004 — Recommendation promotion CLI — make milestone propose reachable
 
-- status: converted
+- status: shipped
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
@@ -128,7 +128,7 @@ Add CLI to advance a recommendation's status (candidate → accepted) and readin
 
 ## rec-20260605-001 — cadence tutorial — guided first-loop walkthrough
 
-- status: converted
+- status: shipped
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
@@ -144,7 +144,7 @@ Interactive walkthrough that runs one toy DRAFT→BUILD→SETTLE loop end-to-end
 
 ## rec-20260605-002 — First-run 'what now?' nudge after cadence init
 
-- status: converted
+- status: shipped
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
@@ -160,7 +160,7 @@ After 'cadence init', print the exact next loop commands (draft new → approve 
 
 ## rec-20260605-003 — cadence explain <concept> — in-CLI concept help
 
-- status: converted
+- status: shipped
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
@@ -176,7 +176,7 @@ In-CLI help for loop / gates / tiers / profiles so users do not have to leave th
 
 ## rec-20260607-001 — MCP Resources: expose .cadence/ artifacts under cadence:// (read-on-demand)
 
-- status: converted
+- status: shipped
 - ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
@@ -192,7 +192,7 @@ resources/list+read+templates over a curated cadence:// table (state, roadmap, p
 
 ## rec-20260607-002 — MCP tool parity: handoff, resume, recommendation add/promote, doctor
 
-- status: converted
+- status: shipped
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
@@ -208,7 +208,7 @@ Add the proven-out excluded commands as MCP tools (+ service extraction). Enable
 
 ## rec-20260607-003 — MCP Prompts + shared guidance extraction into core
 
-- status: converted
+- status: shipped
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
@@ -224,7 +224,7 @@ Extract canonical guidance/scout-dialogue text from host-claude-code into core/g
 
 ## rec-20260607-004 — Zero-config: cadence mcp install (writes/merges .mcp.json)
 
-- status: converted
+- status: shipped
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
@@ -240,7 +240,7 @@ New 'cadence mcp install [--print] [--client]' subcommand: non-destructive idemp
 
 ## rec-20260607-005 — Phase 80 — structured logger foundation
 
-- status: converted
+- status: shipped
 - ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
@@ -255,7 +255,7 @@ Zero-dependency operator-debugging logger: LogLevel/LogRecord types in cadence-t
 
 ## rec-20260607-006 — Phase 81 — instrument three seams + scoped console.* migration
 
-- status: converted
+- status: shipped
 - ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
@@ -285,7 +285,7 @@ Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md se
 
 ## rec-20260608-001 — Handoff retention policy — auto-prune stale SESSION docs
 
-- status: converted
+- status: shipped
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10
@@ -301,7 +301,7 @@ cadence handoff accumulates dated .cadence/handoff/SESSION-*.md docs indefinitel
 
 ## rec-20260610-001 — Phase-id schema caps phases at 99 (two digits)
 
-- status: candidate
+- status: shipped
 - ready: needs-decision
 - priority: high
 - leverage: 5/10
@@ -317,7 +317,7 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 ## rec-20260611-001 — Recommendation lifecycle needs a terminal shipped/resolved state
 
-- status: converted
+- status: shipped
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10
