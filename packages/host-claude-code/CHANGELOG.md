@@ -1,5 +1,30 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.25.0
+
+### Minor Changes
+
+- v1.25.0 — real-verification-default: name mock honestly as a placeholder
+
+  The `mock` verifier is now explicitly named a non-verifier placeholder across
+  every surface, closing the gap between the "real verification gate" pitch and
+  the out-of-box mock default (the #1 finding of the 2026-06-11 competitive
+  assessment; rec-20260611-003).
+
+  A single source-of-truth `MOCK_VERIFIER_NOTICE` constant in `cadence-types`
+  feeds: the settle mock-fallback banner, the `cadence doctor`
+  verification-readiness check, `cadence init`'s new "Turn on real verification"
+  block, the `cadence quickstart` / `config explain` all-mock warning, and the
+  docs (README, concepts, providers, config). Warning-only — mock stays the
+  zero-config offline default; nothing is blocked. `cadence-types` carries the
+  new constant; the host adapters carry version-alignment bumps only.
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.25.0
+  - @manehorizons/cadence-types@1.25.0
+
 ## 1.24.0
 
 ### Minor Changes

@@ -134,7 +134,28 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.24.0`** (2026-06-11, tag `v1.24.0`
+change). The latest version is **`1.25.0`** (2026-06-12, tag `v1.25.0`
+pending): the **real-verification-default** milestone (v1.25) — name the `mock`
+verifier honestly as a **placeholder** across every surface, closing the gap
+between CADENCE's "real verification gate" pitch and its out-of-box mock default
+(sourced from rec-20260611-003, the #1 finding of the 2026-06-11 competitive
+assessment; no new DESIGN.md D-number — legibility/honesty over the existing
+verifier-provider model). **Phase 104** — a single source-of-truth
+`MOCK_VERIFIER_NOTICE` constant in `cadence-types` (label + message + activate
+hint) now feeds the settle mock-fallback banner, the `cadence doctor`
+verification-readiness check, a dedicated `cadence init` "Turn on real
+verification" block, the `cadence quickstart` / `config explain` all-mock
+warning, and the docs (README, `concepts.md`, `providers.md`, `config.md`) — each
+naming mock a placeholder that is **not real verification**. Warning-only: mock
+stays the zero-config offline default, nothing is blocked, the gate firing rule
+is unchanged, and `deepVerifyMeta` provenance is preserved. Built TDD (5 ACs, 6
+tasks). Also folds in the **rec-20260611-002** fix (PR #86): the IDLE `draft new`
+next-free hint filled the phase number into the *task-number* slot, mangling ids
+for phases ≥ 100 into `NNN-NNN`; the task-num slot now defaults to `1`. All four
+published packages bumped `1.24.0 → 1.25.0` in lockstep (`cadence-types` also
+carrying the new constant; the two host adapters version-alignment only); npm
+publish is the user-triggered manual `Release` workflow. Prior: **`1.24.0`**
+(2026-06-11, tag `v1.24.0`
 pending): the **recommendation-retention** milestone (v1.24) — manual + automatic
 **soft-archival** of recommendations (no new DESIGN.md D-number; additive to the
 recommendation-lifecycle model, deepening phase 100's `shipped` status). Terminal recs
