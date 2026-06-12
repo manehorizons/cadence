@@ -634,37 +634,6 @@
       "updatedAt": "2026-06-11T18:59:09.629Z"
     },
     {
-      "id": "rec-20260611-002",
-      "title": "draft new next-free hint mangles the task-number slot for phases >= 100",
-      "summary": "The IDLE 'draft new' suggestion fills the next-free phase number into the task-number slot, so for phases >= 100 it renders 'draft new 103-foo 103' which derivePhaseTaskId mangles into id 103-103. Workaround used throughout v1.24 (phases 101-103) was passing task-num 1 manually. The phase number and the task number are distinct: next-free should populate the phase-number token only, leaving task-num at its default (1).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "progress",
-        "phase-numbering"
-      ],
-      "affectedFiles": [
-        "packages/core/src/progress.ts",
-        "packages/core/src/services/progress.ts",
-        "packages/core/src/phases/next-free.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260611-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-11T23:12:39.759Z",
-      "updatedAt": "2026-06-11T23:12:39.759Z"
-    },
-    {
       "id": "rec-20260611-004",
       "title": "Deepen the coverage gate beyond AC-token string-matching (false-positive risk)",
       "summary": "The test-coverage gate links a test to an AC by string-matching the AC id (e.g. grep 'AC-1') in test text. A test that merely MENTIONS AC-1 in a comment or describe() label — without actually exercising it — passes the gate. This admits false positives in the exact mechanism the project sells as its credibility (AC-linked verification). Evaluate a cheap deepening: require the AC token to appear inside an it()/test() block that contains >=1 assertion, or proximity-to-expect heuristics, while staying deterministic and offline (no full AST/semantic analysis unless justified). May be partially YAGNI — decide whether the false-positive surface is worth closing or just documenting loudly.",
@@ -818,10 +787,44 @@
       "decisionIds": [],
       "convertedToPhaseId": "104-real-verification-default",
       "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:15.298Z",
-      "updatedAt": "2026-06-12T01:14:48.696Z",
       "archivedAt": "2026-06-12T01:14:48.696Z",
-      "archiveReason": "converted-settled"
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-11T23:57:15.298Z",
+      "updatedAt": "2026-06-12T01:14:48.696Z"
+    },
+    {
+      "id": "rec-20260611-002",
+      "title": "draft new next-free hint mangles the task-number slot for phases >= 100",
+      "summary": "The IDLE 'draft new' suggestion fills the next-free phase number into the task-number slot, so for phases >= 100 it renders 'draft new 103-foo 103' which derivePhaseTaskId mangles into id 103-103. Workaround used throughout v1.24 (phases 101-103) was passing task-num 1 manually. The phase number and the task number are distinct: next-free should populate the phase-number token only, leaving task-num at its default (1).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "progress",
+        "phase-numbering"
+      ],
+      "affectedFiles": [
+        "packages/core/src/progress.ts",
+        "packages/core/src/services/progress.ts",
+        "packages/core/src/phases/next-free.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-11T23:12:39.759Z",
+      "updatedAt": "2026-06-12T01:42:37.617Z",
+      "shippedRef": "PR #86 (squash 6c6baa0)",
+      "archivedAt": "2026-06-12T01:42:37.617Z",
+      "archiveReason": "shipped"
     }
   ]
 }

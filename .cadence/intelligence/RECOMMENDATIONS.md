@@ -330,22 +330,6 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
 
-## rec-20260611-002 — draft new next-free hint mangles the task-number slot for phases >= 100
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, progress, phase-numbering
-- files: packages/core/src/progress.ts, packages/core/src/services/progress.ts, packages/core/src/phases/next-free.ts
-- evidence: Hit every session during v1.24 (phases 101-103); same root area as the v1.22.1 phase-id ceiling fix (rec-20260610-001, ^\d{2,}-\d{2,}$). Workaround documented in SESSION-2026-06-11-v1.24-shipped-to-main.md carry-forward gotchas.
-- next: cadence milestone propose
-
-The IDLE 'draft new' suggestion fills the next-free phase number into the task-number slot, so for phases >= 100 it renders 'draft new 103-foo 103' which derivePhaseTaskId mangles into id 103-103. Workaround used throughout v1.24 (phases 101-103) was passing task-num 1 manually. The phase number and the task number are distinct: next-free should populate the phase-number token only, leaving task-num at its default (1).
-
 ## rec-20260611-004 — Deepen the coverage gate beyond AC-token string-matching (false-positive risk)
 
 - status: candidate
