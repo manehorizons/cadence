@@ -3,7 +3,12 @@ import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
-import { presets, emptyState, type Profile } from '@manehorizons/cadence-types';
+import {
+  presets,
+  emptyState,
+  MOCK_VERIFIER_NOTICE,
+  type Profile,
+} from '@manehorizons/cadence-types';
 import { atomicWriteJSON } from '../../state/atomic-write.js';
 import { SimpleStateBackend } from '../../state/simple.js';
 import {
@@ -332,7 +337,10 @@ export function registerInitCommand(program: Command): void {
           `  Stuck? Run \`cadence progress\` anytime for the next action.`,
         );
         console.log(`  Docs: .cadence/ROADMAP.md and the project README.`);
-        console.log(`  Turn on real verification later: \`cadence activate\`.`);
+        console.log('');
+        console.log(`  Turn on real verification`);
+        console.log(`  ─────────────────────────`);
+        console.log(`  ${MOCK_VERIFIER_NOTICE.message}`);
         if (gateProfile === 'standard' || gateProfile === 'strict') {
           console.log('');
           console.log(

@@ -1,0 +1,60 @@
+{
+  "draftId": "104-104",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added MOCK_VERIFIER_NOTICE constant in cadence-types/guidance.ts (label+message+activateHint); guidance.test.ts green (3 tests, TDD); types build+typecheck clean",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-12T00:56:57.730Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "MOCK_FALLBACK_BANNER now renders from MOCK_VERIFIER_NOTICE (single source); firing rule unchanged; updated 7 banner-firing test anchors to /not real verification/i + regenerated gate-extraction snapshot; deepVerifyMeta provider:mock provenance preserved",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/verify/mock-banner-source.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/verify/verifier-factory.ts"
+      ],
+      "updatedAt": "2026-06-12T01:00:52.275Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "doctor verification-readiness mock-branch detail now sourced from MOCK_VERIFIER_NOTICE.message + activateHint; assessReadiness unchanged (not forked); existing AC-1/AC-2 doctor tests still green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/doctor/verification-readiness.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/doctor/run.ts"
+      ],
+      "updatedAt": "2026-06-12T01:02:17.718Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "config-explain all-mock warning now embeds MOCK_VERIFIER_NOTICE.message (Q3 single-source); quickstart delegates to it; config-explain + quickstart tests green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/config-explain/warnings.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/config-explain/build.ts"
+      ],
+      "updatedAt": "2026-06-12T01:03:28.979Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "init now prints a dedicated 'Turn on real verification' block sourced from MOCK_VERIFIER_NOTICE.message (Q2 dedicated line, names mock a placeholder); init.test.ts updated + new phase-104 case green (21 tests)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/init.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/init.ts"
+      ],
+      "updatedAt": "2026-06-12T01:04:41.922Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "Reframed mock as placeholder/not-real-verification in README, concepts.md, providers.md, config.md; added pure docFramesMockAsPlaceholder checker + live-guard doc-scan test (6 tests green)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/docs/mock-placeholder.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/docs/mock-placeholder-doc.test.ts",
+        "/home/thomas/projects/cadence/docs/concepts.md",
+        "/home/thomas/projects/cadence/docs/providers.md",
+        "/home/thomas/projects/cadence/docs/reference/config.md",
+        "/home/thomas/projects/cadence/README.md"
+      ],
+      "updatedAt": "2026-06-12T01:07:02.712Z"
+    }
+  }
+}

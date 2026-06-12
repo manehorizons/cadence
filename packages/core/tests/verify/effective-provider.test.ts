@@ -35,8 +35,10 @@ describe('resolveEffectiveProvider', () => {
     });
   });
 
-  it('exposes a banner that names mock and points at setup', () => {
+  it('exposes a banner that names mock and points at activation', () => {
     expect(MOCK_FALLBACK_BANNER).toMatch(/MOCK/);
-    expect(MOCK_FALLBACK_BANNER).toMatch(/ANTHROPIC_API_KEY/);
+    // Phase 104: the banner now points at the `cadence activate` on-ramp
+    // (single-sourced from MOCK_VERIFIER_NOTICE) rather than a raw env var.
+    expect(MOCK_FALLBACK_BANNER).toMatch(/cadence activate/);
   });
 });

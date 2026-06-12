@@ -19,7 +19,7 @@ describe('buildQuickstart', () => {
     const state = { ...emptyState('demo'), loopPosition: 'IDLE' as const };
     const qs = buildQuickstart({ initialized: true, state, nextPhaseHint: 7 });
     expect(qs.status).toBe('initialized');
-    expect(qs.next?.command).toBe('cadence draft new 7-<slug> 7 --title=…');
+    expect(qs.next?.command).toBe('cadence draft new 7-<slug> 1 --title=…');
     expect(qs.nextMoves).toEqual([]);
     expect(qs.commandMap.length).toBeGreaterThan(0);
   });

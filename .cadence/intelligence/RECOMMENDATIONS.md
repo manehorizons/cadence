@@ -329,3 +329,83 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 - next: cadence milestone propose
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
+
+## rec-20260611-002 — draft new next-free hint mangles the task-number slot for phases >= 100
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, progress, phase-numbering
+- files: packages/core/src/progress.ts, packages/core/src/services/progress.ts, packages/core/src/phases/next-free.ts
+- evidence: Hit every session during v1.24 (phases 101-103); same root area as the v1.22.1 phase-id ceiling fix (rec-20260610-001, ^\d{2,}-\d{2,}$). Workaround documented in SESSION-2026-06-11-v1.24-shipped-to-main.md carry-forward gotchas.
+- next: cadence milestone propose
+
+The IDLE 'draft new' suggestion fills the next-free phase number into the task-number slot, so for phases >= 100 it renders 'draft new 103-foo 103' which derivePhaseTaskId mangles into id 103-103. Workaround used throughout v1.24 (phases 101-103) was passing task-num 1 manually. The phase number and the task number are distinct: next-free should populate the phase-number token only, leaving task-num at its default (1).
+
+## rec-20260611-004 — Deepen the coverage gate beyond AC-token string-matching (false-positive risk)
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, coverage, verify
+- files: packages/core/src/gates/coverage.ts
+- evidence: Inventory: coverage gate is string-match on AC id in test globs; no assertion-level or structural analysis (intentional since phase 14 for cheapness/determinism, but admits 'mentioned-not-tested' false positives).
+- next: cadence milestone propose
+
+The test-coverage gate links a test to an AC by string-matching the AC id (e.g. grep 'AC-1') in test text. A test that merely MENTIONS AC-1 in a comment or describe() label — without actually exercising it — passes the gate. This admits false positives in the exact mechanism the project sells as its credibility (AC-linked verification). Evaluate a cheap deepening: require the AC token to appear inside an it()/test() block that contains >=1 assertion, or proximity-to-expect heuristics, while staying deterministic and offline (no full AST/semantic analysis unless justified). May be partially YAGNI — decide whether the false-positive surface is worth closing or just documenting loudly.
+
+## rec-20260611-005 — Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, settle, observability
+- files: packages/core/src/gates/deep-verify.ts, packages/core/src/gates/coverage.ts
+- evidence: Inventory weakness #6: verifier-failure handling is permissive; --force bypasses coverage + deep-verify with no audit trail or warning that gates were forced. The v1.17 stderr logger gives a seam to emit bypass events.
+- next: cadence milestone propose
+
+Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility — record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.
+
+## rec-20260611-006 — Close the Codex host-adapter test-parity gap to prevent silent bit-rot
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: host-codex, testing
+- files: packages/host-codex/src, packages/host-claude-code/tests
+- evidence: Inventory weakness #1: codex adapter structure complete but under-exercised vs claude-code (11 test files); flagged as the clearest bit-rot risk by a skeptical-engineer read. Confirm the actual codex test-file delta before scoping.
+- next: cadence milestone propose
+
+The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (same 8 files) but has materially thinner test coverage (claude-code has ~11 test files incl. install/shim/roundtrip/adapter-conformance/integration; codex is newer with far less). Since v1.13 markets CADENCE as genuinely multi-host, an under-tested second adapter risks silently breaking if Codex's hook/apply_patch envelope shifts. Bring codex up to conformance + install + shim + integration parity (reuse the testkit mock host + the adapter-conformance suite already proving the phase-60 contract).
+
+## rec-20260611-007 — Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, positioning, launch
+- files: docs, README.md
+- evidence: Competitive research (primary-source GitHub/npm API, 2026-06-11): no enforcing in-loop AC-linked competitor; scaffolders soft-enforce, review bots gate late on PRs. Category forming (ThoughtWorks Radar v34, Cursor acq. of Graphite Dec 2025). Aligns with [[cadence-launch-positioning]] honesty constraints.
+- next: cadence milestone propose
+
+Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.

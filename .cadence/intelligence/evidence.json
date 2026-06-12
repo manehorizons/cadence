@@ -147,6 +147,48 @@
       "kind": "note",
       "summary": "rec-20260610-001 shipped via PR #70 (merge b350630) but remains candidate/needs-decision; surfaced as a dogfooding nugget in SESSION-2026-06-11 handoff.",
       "createdAt": "2026-06-11T14:52:03.329Z"
+    },
+    {
+      "id": "ev-20260611-002",
+      "recommendationId": "rec-20260611-002",
+      "kind": "note",
+      "summary": "Hit every session during v1.24 (phases 101-103); same root area as the v1.22.1 phase-id ceiling fix (rec-20260610-001, ^\\d{2,}-\\d{2,}$). Workaround documented in SESSION-2026-06-11-v1.24-shipped-to-main.md carry-forward gotchas.",
+      "createdAt": "2026-06-11T23:12:39.759Z"
+    },
+    {
+      "id": "ev-20260611-003",
+      "recommendationId": "rec-20260611-003",
+      "kind": "note",
+      "summary": "Inventory: mock-verifier.ts is a deterministic test-existence rule (AC passes iff >=1 linked test). Real model judgment only fires under deep-verify with a real provider. Assessment: the felt default undercuts the 'AI verifies your work' claim the project leads with publicly.",
+      "createdAt": "2026-06-11T23:57:15.298Z"
+    },
+    {
+      "id": "ev-20260611-004",
+      "recommendationId": "rec-20260611-004",
+      "kind": "note",
+      "summary": "Inventory: coverage gate is string-match on AC id in test globs; no assertion-level or structural analysis (intentional since phase 14 for cheapness/determinism, but admits 'mentioned-not-tested' false positives).",
+      "createdAt": "2026-06-11T23:57:25.445Z"
+    },
+    {
+      "id": "ev-20260611-005",
+      "recommendationId": "rec-20260611-005",
+      "kind": "note",
+      "summary": "Inventory weakness #6: verifier-failure handling is permissive; --force bypasses coverage + deep-verify with no audit trail or warning that gates were forced. The v1.17 stderr logger gives a seam to emit bypass events.",
+      "createdAt": "2026-06-11T23:57:37.321Z"
+    },
+    {
+      "id": "ev-20260611-006",
+      "recommendationId": "rec-20260611-006",
+      "kind": "note",
+      "summary": "Inventory weakness #1: codex adapter structure complete but under-exercised vs claude-code (11 test files); flagged as the clearest bit-rot risk by a skeptical-engineer read. Confirm the actual codex test-file delta before scoping.",
+      "createdAt": "2026-06-11T23:57:46.578Z"
+    },
+    {
+      "id": "ev-20260611-007",
+      "recommendationId": "rec-20260611-007",
+      "kind": "note",
+      "summary": "Competitive research (primary-source GitHub/npm API, 2026-06-11): no enforcing in-loop AC-linked competitor; scaffolders soft-enforce, review bots gate late on PRs. Category forming (ThoughtWorks Radar v34, Cursor acq. of Graphite Dec 2025). Aligns with [[cadence-launch-positioning]] honesty constraints.",
+      "createdAt": "2026-06-11T23:58:00.535Z"
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { defaultConfig, MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
 import { buildExplanation } from '../../src/config-explain/build.js';
 import type { ExplainContext, WarningCode } from '../../src/config-explain/types.js';
 
@@ -95,5 +95,16 @@ describe('buildExplanation — config-semantic warnings (AC-2)', () => {
     const allMock = warnings.find((w) => w.code === 'all-mock');
     expect(allMock).toBeDefined();
     expect(allMock!.message).toMatch(/cadence activate/);
+  });
+
+  // phase-104 AC-1/Q3: the all-mock warning is sourced from MOCK_VERIFIER_NOTICE.
+  it('phase-104: all-mock message embeds the single source-of-truth notice', () => {
+    const warnings = buildExplanation(defaultConfig, {
+      ...cleanCtx,
+      anthropicKeyPresent: false,
+      localKeyPresent: false,
+    }).warnings;
+    const allMock = warnings.find((w) => w.code === 'all-mock');
+    expect(allMock!.message).toContain(MOCK_VERIFIER_NOTICE.message);
   });
 });

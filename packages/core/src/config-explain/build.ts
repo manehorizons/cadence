@@ -1,4 +1,5 @@
 import type { CadenceConfig, Tier } from '@manehorizons/cadence-types';
+import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
 import { effectiveProfile, gatesFor } from '../gates/engine.js';
 import type {
   ConfigExplanation,
@@ -80,11 +81,11 @@ function deriveWarnings(
   }
 
   // 4. Every seam is mock — the default newcomer state. Point at activation.
+  // Phase 104: honesty wording from the single MOCK_VERIFIER_NOTICE source.
   if (rows.every((r) => r.isMock)) {
     warnings.push({
       code: 'all-mock',
-      message:
-        'every verifier seam is set to mock — settle gates do no real AI verification. Run `cadence activate` to turn on real verification.',
+      message: `every verifier seam is set to mock. ${MOCK_VERIFIER_NOTICE.message}`,
     });
   }
 

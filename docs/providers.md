@@ -33,7 +33,7 @@ For a conceptual overview of providers and the gate universe they serve, see
 
 | Provider | What it does | What it requires |
 |---|---|---|
-| `mock` | Deterministic offline implementation; always returns a pre-set verdict | Nothing — the default everywhere |
+| `mock` | Deterministic offline **placeholder** — only checks each AC links to a test; **not real verification** | Nothing — the default everywhere |
 | `anthropic` | Calls the Anthropic API using `messages.parse` with structured output; prompt-caches the system prompt | `ANTHROPIC_API_KEY` in environment |
 | `local` | POSTs to an OpenAI-compatible `/v1/chat/completions` endpoint; parses JSON output with repair retries | `CADENCE_LOCAL_BASE_URL` + a model name (env or config) |
 
@@ -69,8 +69,10 @@ The manual steps below remain the source of truth for per-gate configuration,
 
 ## mock — offline deterministic default
 
-`mock` is the default for every gate. No environment variables or config
-changes are needed. It is ideal for:
+`mock` is the default for every gate. It is a **placeholder, not real
+verification**: it only checks that each AC links to a test, never judging the
+implementation. No environment variables or config changes are needed. It is
+ideal for:
 
 - Getting started without an API key
 - CI pipelines that should not make network calls
