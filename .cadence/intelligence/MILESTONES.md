@@ -16,7 +16,7 @@ None.
 
 ## Exported
 
-None.
+- mil-rec-rec-20260611-003 — Make real verification the felt default — close the gap between the enforcement wedge and the mock default → .cadence/intelligence/exports/mil-rec-rec-20260611-003/SPEC.md
 
 ## Closed
 

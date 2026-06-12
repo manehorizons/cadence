@@ -348,7 +348,7 @@ The IDLE 'draft new' suggestion fills the next-free phase number into the task-n
 
 ## rec-20260611-003 — Make real verification the felt default — close the gap between the enforcement wedge and the mock default
 
-- status: accepted
+- status: converted
 - ready: ready-for-milestone
 - priority: high
 - leverage: 5/10

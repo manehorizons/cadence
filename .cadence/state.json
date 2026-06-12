@@ -4,7 +4,7 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "103-rec-retention-release",
+  "activePhase": "104-real-verification-default",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
@@ -16,7 +16,7 @@
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-06-12-v1.24-shipped-plus-competitive-assessment.md",
-    "subagentSpawns": 291
+    "subagentSpawns": 293
   },
   "skillAudit": {
     "required": [],
