@@ -629,9 +629,195 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "100-rec-shipped-status",
+      "shippedRef": "phase 100 / PR #73 (v1.23.0 pending)",
       "createdAt": "2026-06-11T14:52:03.329Z",
-      "updatedAt": "2026-06-11T18:59:09.629Z",
-      "shippedRef": "phase 100 / PR #73 (v1.23.0 pending)"
+      "updatedAt": "2026-06-11T18:59:09.629Z"
+    },
+    {
+      "id": "rec-20260611-002",
+      "title": "draft new next-free hint mangles the task-number slot for phases >= 100",
+      "summary": "The IDLE 'draft new' suggestion fills the next-free phase number into the task-number slot, so for phases >= 100 it renders 'draft new 103-foo 103' which derivePhaseTaskId mangles into id 103-103. Workaround used throughout v1.24 (phases 101-103) was passing task-num 1 manually. The phase number and the task number are distinct: next-free should populate the phase-number token only, leaving task-num at its default (1).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "progress",
+        "phase-numbering"
+      ],
+      "affectedFiles": [
+        "packages/core/src/progress.ts",
+        "packages/core/src/services/progress.ts",
+        "packages/core/src/phases/next-free.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-11T23:12:39.759Z",
+      "updatedAt": "2026-06-11T23:12:39.759Z"
+    },
+    {
+      "id": "rec-20260611-003",
+      "title": "Make real verification the felt default — close the gap between the enforcement wedge and the mock default",
+      "summary": "CADENCE's sharpest, most-defensible differentiator (a deterministic in-loop AC-linked gate that refuses to settle) currently ships with its WEAKEST implementation on by default: the mock verifier only checks that a linked test exists and references the AC. The public pitch is 'real verification gate'; the out-of-box experience is 'structural test-linkage'. Decide how to converge them — e.g. make 'cadence activate' (v1.22) a near-mandatory first-run step, surface a louder 'you are running mock = NOT real verification' state in settle/doctor/quickstart, and/or reframe docs so mock is explicitly named as a placeholder, not a verifier. This is the #1 strategic finding from the 2026-06-11 competitive assessment: the wedge and the default experience must stop diverging.",
+      "source": "manual",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "onboarding",
+        "positioning"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/mock-verifier.ts",
+        "packages/core/src/cli/commands/activate.ts",
+        "packages/core/src/gates/deep-verify.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:57:15.298Z",
+      "updatedAt": "2026-06-12T00:01:18.972Z"
+    },
+    {
+      "id": "rec-20260611-004",
+      "title": "Deepen the coverage gate beyond AC-token string-matching (false-positive risk)",
+      "summary": "The test-coverage gate links a test to an AC by string-matching the AC id (e.g. grep 'AC-1') in test text. A test that merely MENTIONS AC-1 in a comment or describe() label — without actually exercising it — passes the gate. This admits false positives in the exact mechanism the project sells as its credibility (AC-linked verification). Evaluate a cheap deepening: require the AC token to appear inside an it()/test() block that contains >=1 assertion, or proximity-to-expect heuristics, while staying deterministic and offline (no full AST/semantic analysis unless justified). May be partially YAGNI — decide whether the false-positive surface is worth closing or just documenting loudly.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "coverage",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:57:25.445Z",
+      "updatedAt": "2026-06-11T23:57:25.445Z"
+    },
+    {
+      "id": "rec-20260611-005",
+      "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
+      "summary": "Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility — record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "settle",
+        "observability"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/deep-verify.ts",
+        "packages/core/src/gates/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:57:37.321Z",
+      "updatedAt": "2026-06-11T23:57:37.321Z"
+    },
+    {
+      "id": "rec-20260611-006",
+      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
+      "summary": "The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (same 8 files) but has materially thinner test coverage (claude-code has ~11 test files incl. install/shim/roundtrip/adapter-conformance/integration; codex is newer with far less). Since v1.13 markets CADENCE as genuinely multi-host, an under-tested second adapter risks silently breaking if Codex's hook/apply_patch envelope shifts. Bring codex up to conformance + install + shim + integration parity (reuse the testkit mock host + the adapter-conformance suite already proving the phase-60 contract).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "host-codex",
+        "testing"
+      ],
+      "affectedFiles": [
+        "packages/host-codex/src",
+        "packages/host-claude-code/tests"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:57:46.578Z",
+      "updatedAt": "2026-06-11T23:57:46.578Z"
+    },
+    {
+      "id": "rec-20260611-007",
+      "title": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
+      "summary": "Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "positioning",
+        "launch"
+      ],
+      "affectedFiles": [
+        "docs",
+        "README.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:58:00.535Z",
+      "updatedAt": "2026-06-11T23:58:00.535Z"
     }
-  ]
+  ],
+  "archived": []
 }

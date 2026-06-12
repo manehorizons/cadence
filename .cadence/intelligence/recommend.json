@@ -1,16 +1,268 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-11T18:59:20.434Z",
-  "ranked": [],
+  "generatedAt": "2026-06-12T00:01:24.621Z",
+  "ranked": [
+    {
+      "id": "rec-20260611-003",
+      "title": "Make real verification the felt default — close the gap between the enforcement wedge and the mock default",
+      "raw": 28.7,
+      "score": 77,
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status accepted",
+          "value": 6
+        },
+        {
+          "label": "ready ready-for-milestone",
+          "value": 7
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260611-1857"
+    },
+    {
+      "id": "rec-20260611-002",
+      "title": "draft new next-free hint mangles the task-number slot for phases >= 100",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260611-004",
+      "title": "Deepen the coverage gate beyond AC-token string-matching (false-positive risk)",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260611-1857"
+    },
+    {
+      "id": "rec-20260611-005",
+      "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260611-1857"
+    },
+    {
+      "id": "rec-20260611-007",
+      "title": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260611-1857"
+    },
+    {
+      "id": "rec-20260611-006",
+      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
+      "raw": 13.7,
+      "score": 55,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260611-1857"
+    }
+  ],
   "parked": [],
   "needsAttention": [],
   "advisory": {
-    "kind": "empty",
-    "primary": "No actionable recommendations — add one with `cadence recommendation add`."
+    "kind": "top-recommendation",
+    "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 21,
-    "ranked": 0,
+    "total": 27,
+    "ranked": 6,
     "parked": 0,
     "needsAttention": 0,
     "excluded": 21
