@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
 import { assessReadiness } from '../activate/assess.js';
@@ -343,11 +344,12 @@ export async function checkVerificationReadiness(
     const config = await loadConfig(root);
     const r = assessReadiness(config, env);
     if (r.provider === 'mock') {
+      // Phase 104: source the honesty wording from the single MOCK_VERIFIER_NOTICE.
       return fail(
         'verification-readiness',
         'warning',
-        'deep-verify uses the mock provider — settle gates do no real AI verification.',
-        'Run `cadence activate` to turn on real verification.',
+        MOCK_VERIFIER_NOTICE.message,
+        `Run \`${MOCK_VERIFIER_NOTICE.activateHint}\` to turn on real verification.`,
       );
     }
     if (!r.keyPresent) {

@@ -74,6 +74,24 @@ export const COMMAND_GUIDANCE = {
 } as const satisfies Record<string, CommandGuidance>;
 
 /**
+ * Canonical "mock is not real verification" notice (phase 104).
+ *
+ * Single source of truth for every surface that tells the operator the default
+ * `mock` verifier is a placeholder, not real verification — the settle banner,
+ * `cadence doctor`, `cadence init`, and `config explain` / `quickstart` all
+ * render from this so the wording can't drift. Pure data, no logic.
+ */
+export const MOCK_VERIFIER_NOTICE = {
+  /** Short inline label for headers / one-line warnings. */
+  label: 'mock = not real verification',
+  /** One-sentence canonical message naming mock a placeholder + the on-ramp. */
+  message:
+    'The `mock` verifier is a deterministic, offline placeholder that only checks each AC links to a test — it is NOT real verification. Run `cadence activate` to turn on a real AI verifier.',
+  /** The command that turns on real verification. */
+  activateHint: 'cadence activate',
+} as const;
+
+/**
  * The `cadence-scout` dialogue body. `$ARGUMENTS` is the topic placeholder —
  * the Claude-Code slash command leaves it literal (the host substitutes it);
  * the MCP prompt substitutes the caller's `topic` argument.

@@ -69,7 +69,7 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--deep', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).toMatch(/MOCK verification/);
+    expect(r.stderr).toMatch(/not real verification/i);
   });
 
   it('does not warn when --deep is absent (AC-3)', async () => {
@@ -79,7 +79,7 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).not.toMatch(/MOCK verification/);
+    expect(r.stderr).not.toMatch(/not real verification/i);
   });
 
   it('does not show the banner when a real provider is configured (AC-3)', async () => {
@@ -96,7 +96,7 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--deep', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).not.toMatch(/MOCK verification/);
+    expect(r.stderr).not.toMatch(/not real verification/i);
   });
 
   // AC-1 (Phase 71) — banner fires when deep-verify is in the gate set, no --deep
@@ -107,7 +107,7 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).toMatch(/MOCK verification/);
+    expect(r.stderr).toMatch(/not real verification/i);
   });
 
   // AC-3 (Phase 73) — invalid --verifier value is rejected, not downgraded
@@ -135,7 +135,7 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--deep', '--verifier', 'mock', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).toMatch(/MOCK verification/);
+    expect(r.stderr).toMatch(/not real verification/i);
   });
 
   // AC-1/AC-2 (Phase 73) — --verifier anthropic overrides the silent mock default
@@ -147,7 +147,7 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--deep', '--verifier', 'anthropic', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).not.toMatch(/MOCK verification/);
+    expect(r.stderr).not.toMatch(/not real verification/i);
   });
 
   // AC-2 (Phase 71) — banner silent on membership when a real provider is set
@@ -165,6 +165,6 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).not.toMatch(/MOCK verification/);
+    expect(r.stderr).not.toMatch(/not real verification/i);
   });
 });

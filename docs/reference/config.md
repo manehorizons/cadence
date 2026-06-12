@@ -190,7 +190,7 @@ All six blocks default to `{ "provider": "mock" }`. Provider options:
 
 | Provider | Description | Requires |
 |---|---|---|
-| `mock` | Deterministic offline stub; always passes. No network call. | Nothing |
+| `mock` | Deterministic offline **placeholder** — only checks each AC links to a test; always passes, no network call. **Not real verification.** | Nothing |
 | `anthropic` | Calls the Anthropic API. | `ANTHROPIC_API_KEY` in environment |
 | `local` | OpenAI-compatible `/v1/chat/completions` endpoint (e.g. Ollama). | `CADENCE_LOCAL_BASE_URL` + `CADENCE_LOCAL_MODEL`; falls back to `mock` with a warning if unset |
 

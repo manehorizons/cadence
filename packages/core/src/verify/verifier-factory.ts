@@ -1,3 +1,5 @@
+import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
+
 export type VerifierProvider = 'mock' | 'anthropic' | 'local';
 
 /** Shared options for every `select…Verifier` factory (Phase 40.1). */
@@ -89,16 +91,20 @@ export function resolveEffectiveProvider(
   return { provider, defaulted };
 }
 
-/** Prominent stderr banner for the silent mock-default case under real verify. */
+const PROVIDERS_DOC =
+  'https://github.com/manehorizons/cadence/blob/main/docs/providers.md';
+
+/**
+ * Prominent stderr banner for the mock case under a verification gate.
+ * Phase 104: rendered from the single source-of-truth `MOCK_VERIFIER_NOTICE`
+ * so the "mock = not real verification" wording stays identical to `doctor`,
+ * `init`, and `config explain` (no duplicated honesty literal).
+ */
 export const MOCK_FALLBACK_BANNER = [
   '',
-  '  ┌─────────────────────────────────────────────────────────────────┐',
-  '  │  ⚠  MOCK verification — results are NOT real.                     │',
-  '  │     No verifier provider is configured, so --deep used the        │',
-  '  │     deterministic mock. Set ANTHROPIC_API_KEY (or configure a     │',
-  '  │     provider) for genuine verification.                           │',
-  '  └─────────────────────────────────────────────────────────────────┘',
-  '  https://github.com/manehorizons/cadence/blob/main/docs/providers.md',
+  `  ⚠  ${MOCK_VERIFIER_NOTICE.label.toUpperCase()}`,
+  `     ${MOCK_VERIFIER_NOTICE.message}`,
+  `     ${PROVIDERS_DOC}`,
   '',
 ].join('\n');
 

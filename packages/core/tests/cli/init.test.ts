@@ -132,8 +132,17 @@ describe('cadence init', () => {
     active = await tempRepo();
     const r = await run(['init', '--name=demo'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(/Turn on real verification later/);
+    expect(r.stdout).toMatch(/Turn on real verification/);
     expect(r.stdout).toMatch(/cadence activate/);
+  });
+
+  // phase-104 AC-4/Q2: a dedicated block naming the default mock a placeholder.
+  it('phase-104: init names the default mock a placeholder (not real verification)', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/placeholder/i);
+    expect(r.stdout).toMatch(/not real verification/i);
   });
 });
 

@@ -37,6 +37,12 @@ The core primitive nothing else has: **refusal-to-settle on re-verified declared
 
 The agent isn't believed; the state is.
 
+> **Heads-up on the default verifier.** Out of the box every gate uses `mock`, a
+> deterministic offline **placeholder** that only checks each acceptance criterion
+> links to a test — it is **not real verification**. Run [`cadence activate`](./docs/providers.md)
+> to turn on a real AI verifier (Anthropic or a local model); `cadence doctor`
+> tells you whether real verification is actually wired.
+
 ## Quickstart
 
 Install the CLI globally (requires Node ≥ 20):

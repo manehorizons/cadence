@@ -292,7 +292,7 @@ are available:
 
 | Provider | Description | Requires |
 |---|---|---|
-| `mock` | Deterministic offline implementation; no network call | Nothing — works everywhere |
+| `mock` | Deterministic offline **placeholder** — only checks each AC links to a test; **not real verification** | Nothing — works everywhere |
 | `anthropic` | Calls the Anthropic API; prompt-cached system prompt | `ANTHROPIC_API_KEY` in environment |
 | `local` | OpenAI-compatible `/v1/chat/completions` endpoint (e.g. Ollama) | `CADENCE_LOCAL_BASE_URL` + `CADENCE_LOCAL_MODEL`; falls back to `mock` with a warning if unset |
 
@@ -301,8 +301,8 @@ Providers are configured per gate in `.cadence/config.json` (e.g.
 `planReview.provider`, `securityAudit.provider`). Each gate also accepts an
 optional `model` override.
 
-Every gate defaults to `mock`, so a fresh project does **no** real AI
-verification until you switch a provider on. The guided one-command way is
+Every gate defaults to `mock`, which is a placeholder, **not real verification**
+— a fresh project does no real AI verification until you switch a provider on. The guided one-command way is
 `cadence activate` (v1.22), which writes `verifier.provider`, validates your key
 with a live check, and never persists the key; `cadence doctor`'s
 `verification-readiness` check reports whether real verification is actually
