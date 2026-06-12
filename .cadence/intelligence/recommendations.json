@@ -665,39 +665,6 @@
       "updatedAt": "2026-06-11T23:12:39.759Z"
     },
     {
-      "id": "rec-20260611-003",
-      "title": "Make real verification the felt default — close the gap between the enforcement wedge and the mock default",
-      "summary": "CADENCE's sharpest, most-defensible differentiator (a deterministic in-loop AC-linked gate that refuses to settle) currently ships with its WEAKEST implementation on by default: the mock verifier only checks that a linked test exists and references the AC. The public pitch is 'real verification gate'; the out-of-box experience is 'structural test-linkage'. Decide how to converge them — e.g. make 'cadence activate' (v1.22) a near-mandatory first-run step, surface a louder 'you are running mock = NOT real verification' state in settle/doctor/quickstart, and/or reframe docs so mock is explicitly named as a placeholder, not a verifier. This is the #1 strategic finding from the 2026-06-11 competitive assessment: the wedge and the default experience must stop diverging.",
-      "source": "manual",
-      "status": "converted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "verify",
-        "onboarding",
-        "positioning"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/mock-verifier.ts",
-        "packages/core/src/cli/commands/activate.ts",
-        "packages/core/src/gates/deep-verify.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260611-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:15.298Z",
-      "updatedAt": "2026-06-12T00:15:58.753Z",
-      "convertedToPhaseId": "104-real-verification-default"
-    },
-    {
       "id": "rec-20260611-004",
       "title": "Deepen the coverage gate beyond AC-token string-matching (false-positive risk)",
       "summary": "The test-coverage gate links a test to an AC by string-matching the AC id (e.g. grep 'AC-1') in test text. A test that merely MENTIONS AC-1 in a comment or describe() label — without actually exercising it — passes the gate. This admits false positives in the exact mechanism the project sells as its credibility (AC-linked verification). Evaluate a cheap deepening: require the AC token to appear inside an it()/test() block that contains >=1 assertion, or proximity-to-expect heuristics, while staying deterministic and offline (no full AST/semantic analysis unless justified). May be partially YAGNI — decide whether the false-positive surface is worth closing or just documenting loudly.",
@@ -820,5 +787,41 @@
       "updatedAt": "2026-06-11T23:58:00.535Z"
     }
   ],
-  "archived": []
+  "archived": [
+    {
+      "id": "rec-20260611-003",
+      "title": "Make real verification the felt default — close the gap between the enforcement wedge and the mock default",
+      "summary": "CADENCE's sharpest, most-defensible differentiator (a deterministic in-loop AC-linked gate that refuses to settle) currently ships with its WEAKEST implementation on by default: the mock verifier only checks that a linked test exists and references the AC. The public pitch is 'real verification gate'; the out-of-box experience is 'structural test-linkage'. Decide how to converge them — e.g. make 'cadence activate' (v1.22) a near-mandatory first-run step, surface a louder 'you are running mock = NOT real verification' state in settle/doctor/quickstart, and/or reframe docs so mock is explicitly named as a placeholder, not a verifier. This is the #1 strategic finding from the 2026-06-11 competitive assessment: the wedge and the default experience must stop diverging.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "onboarding",
+        "positioning"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/mock-verifier.ts",
+        "packages/core/src/cli/commands/activate.ts",
+        "packages/core/src/gates/deep-verify.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "104-real-verification-default",
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:57:15.298Z",
+      "updatedAt": "2026-06-12T01:14:48.696Z",
+      "archivedAt": "2026-06-12T01:14:48.696Z",
+      "archiveReason": "converted-settled"
+    }
+  ]
 }

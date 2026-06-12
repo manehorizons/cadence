@@ -346,22 +346,6 @@ The rec lifecycle has no terminal status for work that has actually shipped. pro
 
 The IDLE 'draft new' suggestion fills the next-free phase number into the task-number slot, so for phases >= 100 it renders 'draft new 103-foo 103' which derivePhaseTaskId mangles into id 103-103. Workaround used throughout v1.24 (phases 101-103) was passing task-num 1 manually. The phase number and the task number are distinct: next-free should populate the phase-number token only, leaving task-num at its default (1).
 
-## rec-20260611-003 — Make real verification the felt default — close the gap between the enforcement wedge and the mock default
-
-- status: converted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: verify, onboarding, positioning
-- files: packages/core/src/verify/mock-verifier.ts, packages/core/src/cli/commands/activate.ts, packages/core/src/gates/deep-verify.ts
-- evidence: Inventory: mock-verifier.ts is a deterministic test-existence rule (AC passes iff >=1 linked test). Real model judgment only fires under deep-verify with a real provider. Assessment: the felt default undercuts the 'AI verifies your work' claim the project leads with publicly.
-- next: cadence milestone propose
-
-CADENCE's sharpest, most-defensible differentiator (a deterministic in-loop AC-linked gate that refuses to settle) currently ships with its WEAKEST implementation on by default: the mock verifier only checks that a linked test exists and references the AC. The public pitch is 'real verification gate'; the out-of-box experience is 'structural test-linkage'. Decide how to converge them — e.g. make 'cadence activate' (v1.22) a near-mandatory first-run step, surface a louder 'you are running mock = NOT real verification' state in settle/doctor/quickstart, and/or reframe docs so mock is explicitly named as a placeholder, not a verifier. This is the #1 strategic finding from the 2026-06-11 competitive assessment: the wedge and the default experience must stop diverging.
-
 ## rec-20260611-004 — Deepen the coverage gate beyond AC-token string-matching (false-positive risk)
 
 - status: candidate
