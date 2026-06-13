@@ -27,15 +27,23 @@ export interface StartDeps {
 
 /** The real spawn: cadence binary self-spawn, or npx for host packages. */
 export function defaultSpawn(option: StartOption): Promise<number> {
+  const self = process.argv[1];
+  if (option.runner === 'cadence' && self === undefined) {
+    process.stderr.write('Could not locate the cadence binary to launch.\n');
+    return Promise.resolve(1);
+  }
   const cmd = option.runner === 'cadence' ? process.execPath : 'npx';
-  const args =
-    option.runner === 'cadence'
-      ? [String(process.argv[1]), ...option.args]
-      : option.args;
+  const args = option.runner === 'cadence' ? [self as string, ...option.args] : option.args;
+  // On Windows, npx is `npx.cmd` and spawn() can't resolve it without a shell.
+  // Args are static literals from menu.ts (no user input), so shell is safe here.
+  const useShell = option.runner === 'npx' && process.platform === 'win32';
   return new Promise((resolve) => {
-    const child = nodeSpawn(cmd, args, { stdio: 'inherit' });
+    const child = nodeSpawn(cmd, args, { stdio: 'inherit', shell: useShell });
     child.on('exit', (code) => resolve(code ?? 0));
-    child.on('error', () => resolve(1));
+    child.on('error', (err) => {
+      process.stderr.write(`Failed to launch ${cmd}: ${err.message}\n`);
+      resolve(1);
+    });
   });
 }
 
