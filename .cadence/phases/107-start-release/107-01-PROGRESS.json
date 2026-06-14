@@ -1,0 +1,35 @@
+{
+  "draftId": "107-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "commands.md start entry + drift-guard block + README pointer; concepts has no onboarding area (skipped)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-14T00:02:04.751Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "MILESTONES.md §v1.26.0 + ROADMAP v1.26.0 phases 105-107",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-14T00:02:04.924Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "changeset minor x4",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-14T00:02:05.100Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "pnpm changeset version -> all 4 at 1.26.0",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-14T00:02:05.270Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "CLAUDE.md leads with 1.26.0; doc-sync passes",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-14T00:02:05.446Z"
+    }
+  }
+}

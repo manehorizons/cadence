@@ -409,6 +409,47 @@ recommendation-lifecycle model). Design:
   age-based archival; a separate archive *file*; auto-archiving live recs; a `doctor`
   archive check (defer unless a real need appears).
 
+### v1.26.0 — Guided onboarding: `cadence start` (DELIVERED 2026-06-13)
+**Outcome:** all three phases settled through CADENCE's own loop on branch
+`feat/v1.26-cadence-start`; all four published packages bumped `1.25.0 → 1.26.0`
+in lockstep (changeset consumed, CLAUDE.md narrative leads with 1.26.0). npm
+publish is the operator-triggered manual `Release` workflow. Built subagent-driven
+(implementer + two-stage spec/quality review per phase); the quality review caught
+a Windows-CI portability bug pre-merge (npx via `spawn` needs `shell:true` on win32).
+
+**Thesis:** a newcomer who installs CADENCE faces several setup commands (`init`,
+`tutorial`, the two host installs, `mcp install`, `doctor`) and must know which fits.
+The read-only `cadence quickstart` prints a *map* but doesn't route or run anything.
+**`cadence start`** is the interactive sibling: it asks "What are you doing?", takes a
+numbered pick, confirms, and runs the matching command. **No new DESIGN.md D-number**
+(additive onboarding/legibility over existing commands, same lane as `quickstart`/`activate`).
+Design: `docs/superpowers/specs/2026-06-13-cadence-start-onboarding-design.md` (in-repo).
+
+**Locked decisions (brainstorm 2026-06-13):**
+- **New command *alongside* `quickstart`**, not replacing it — one prints the map,
+  one drives you into it. `quickstart` is untouched behaviorally.
+- **Name `start`** (most discoverable; the menu immediately disambiguates from "start the loop").
+- **Flat six-option menu** giving both hosts first-class billing (multi-host story).
+- **Confirm-then-run**: pick → show command + `[Y/n]` → run, or print the command on decline.
+- **Uniform subprocess-spawn dispatch** (discovered during planning): re-spawn the
+  `cadence` binary for core routes, `npx` for the two host packages. The targets have
+  no uniform `run*` contract, so importing internals would be brittle; spawning keeps
+  `start` a pure launcher, trivially testable via an injected `spawn` dep.
+- **Scriptable everywhere**: `--pick`/`--yes`/`--json`; non-TTY prints the menu and exits 0.
+
+- **Phase 105 — Pure core.** menu catalog (`START_OPTIONS` → runner + args) + text/JSON/confirm
+  renderers + `resolvePick`. No I/O. TDD (AC-1..AC-4).
+- **Phase 106 — CLI shell + wiring.** `runStart` (pick/confirm/spawn, json/non-tty, errors),
+  `registerStartCommand`, `start` entry in the `quickstart` command map, a `cadence start`
+  pointer in `init`'s next-steps. TDD (AC-5..AC-13). Windows npx fix folded in.
+- **Phase 107 — Release v1.26.0.** docs (`commands.md` `start` entry + README pointer),
+  this milestone narrative, changeset, lockstep `1.25.0 → 1.26.0`.
+
+- **Scope guards.** *In:* the six-route interactive menu + confirm-then-run +
+  `--pick`/`--yes`/`--json` + non-TTY menu + the bounded `init`-already-set-up annotation +
+  discoverability pointers. *Out (YAGNI):* nested sub-menus; profile/tier selection inside
+  `start`; remembering past choices; a TUI/arrow-key framework; deprecating `quickstart`.
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.

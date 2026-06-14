@@ -715,3 +715,34 @@ recommendation-lifecycle model). Full scope/rationale/scope-guards in MILESTONES
   `--archived`; `config.md` `recommendations` section), changeset, lockstep
   `1.23.0 → 1.24.0` across all four published packages. Tag + npm provenance via the
   manual `Release` workflow at publish.
+
+---
+
+## v1.26.0 — Guided onboarding: `cadence start` — ✓ DELIVERED 2026-06-13
+
+All three phases settled through CADENCE's own loop on branch
+`feat/v1.26-cadence-start`; all four published packages bumped `1.25.0 → 1.26.0`
+in lockstep (changeset consumed, CLAUDE.md narrative leads with 1.26.0). npm publish
+is the operator-triggered manual `Release` workflow. Built subagent-driven (implementer
++ two-stage spec/quality review per phase); the code-quality review caught a Windows-CI
+portability bug pre-merge (`npx` via `child_process.spawn` needs `shell:true` on win32).
+
+A newcomer faces several setup commands and must know which fits; the read-only
+`cadence quickstart` prints a *map* but doesn't route or run anything. **`cadence start`**
+is the interactive sibling: "What are you doing?" → numbered pick → confirm → runs the
+matching command (tutorial, init, Claude Code / Codex host install, MCP install, doctor).
+Dispatch is a uniform subprocess spawn (the `cadence` binary for core routes, `npx` for
+the two host packages) — `start` never imports host code. Scriptable via
+`--pick`/`--yes`/`--json`; non-TTY prints the menu and exits 0. **No new DESIGN.md
+D-number** (additive onboarding/legibility). Full scope/scope-guards in MILESTONES.md
+§v1.26.0; design `docs/superpowers/specs/2026-06-13-cadence-start-onboarding-design.md`.
+
+- **Phase 105 — Pure core** ✓ — `START_OPTIONS` menu catalog (→ runner + args) +
+  text/JSON/confirm renderers + `resolvePick`; no I/O. TDD (AC-1..AC-4).
+- **Phase 106 — CLI shell + wiring** ✓ — `runStart` (pick/confirm/spawn dispatch,
+  json/non-tty, error paths), `registerStartCommand`, a `start` entry in the `quickstart`
+  command map, and a `cadence start` pointer in `init`'s next-steps output. TDD
+  (AC-5..AC-13). Windows `npx`-spawn fix folded in.
+- **Phase 107 — Release v1.26.0** ✓ — docs (`commands.md` `start` entry + README
+  pointer), MILESTONES/ROADMAP narrative, changeset, lockstep `1.25.0 → 1.26.0` across
+  all four published packages. Tag + npm provenance via the manual `Release` workflow at publish.
