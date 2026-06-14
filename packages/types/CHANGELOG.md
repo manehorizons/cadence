@@ -1,5 +1,18 @@
 # @manehorizons/cadence-types
 
+## 1.26.0
+
+### Minor Changes
+
+- Add `cadence start`, an interactive onboarding front door: "What are you doing?"
+  → numbered pick → confirm → runs the matching setup command (tutorial, init,
+  Claude Code / Codex host install, MCP install, or doctor). Sibling to the
+  read-only `cadence quickstart`. Dispatch is a uniform subprocess spawn (the
+  `cadence` binary for core routes, `npx` for the two host packages). Scriptable
+  via `--pick`/`--yes`/`--json`; a non-interactive shell prints the menu and exits 0.
+
+  cadence-core carries the feature; the other three are version-alignment bumps.
+
 ## 1.25.0
 
 ### Minor Changes

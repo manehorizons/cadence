@@ -134,7 +134,30 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.25.0`** (2026-06-12, tag `v1.25.0`
+change). The latest version is **`1.26.0`** (2026-06-13, tag `v1.26.0`
+pending): the **guided-onboarding** milestone (v1.26) — **`cadence start`**, an
+interactive onboarding front door that asks "What are you doing?", takes a
+numbered pick, confirms, and runs the matching setup command. It is the
+interactive sibling of the read-only `cadence quickstart` (which prints the map
+without running anything); no new DESIGN.md D-number (additive onboarding/legibility
+over existing commands, same lane as `quickstart`/`activate`). The six routes are
+`cadence tutorial`, `cadence init`, `npx @manehorizons/cadence-host-claude-code
+install`, `npx @manehorizons/cadence-host-codex install`, `cadence mcp install`,
+and `cadence doctor`. **Phase 105** — pure core: a `START_OPTIONS` menu catalog
+(→ runner + args) + text/JSON/confirm renderers + `resolvePick`, no I/O
+(`packages/core/src/start/`). **Phase 106** — the CLI shell
+(`packages/core/src/cli/commands/start.ts`): `runStart` does the TTY-aware
+pick/confirm loop and a **uniform subprocess-spawn dispatch** (re-spawns the
+`cadence` binary for core routes, `npx` for the two host packages — so core never
+imports host code), with `--pick`/`--yes`/`--json` and a non-TTY menu-print that
+never hangs; the command is registered and cross-referenced from `quickstart`'s
+command map and `init`'s next-steps. **Phase 107** — release. Built TDD,
+subagent-driven (implementer + two-stage spec/quality review per phase); the
+code-quality review caught a Windows-CI portability bug pre-merge (`npx` via
+`child_process.spawn` needs `shell:true` on win32). All four published packages
+bumped `1.25.0 → 1.26.0` in lockstep (`cadence-core` carries the feature; the
+other three are version-alignment only); npm publish is the user-triggered manual
+`Release` workflow. Prior: **`1.25.0`** (2026-06-12, tag `v1.25.0`
 pending): the **real-verification-default** milestone (v1.25) — name the `mock`
 verifier honestly as a **placeholder** across every surface, closing the gap
 between CADENCE's "real verification gate" pitch and its out-of-box mock default

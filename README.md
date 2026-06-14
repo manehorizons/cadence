@@ -51,6 +51,9 @@ Install the CLI globally (requires Node ≥ 20):
 npm install -g @manehorizons/cadence-core
 ```
 
+New to CADENCE? Run `cadence start` for a guided menu that picks the right setup
+command for what you're doing (or `cadence quickstart` for a read-only map).
+
 Then run one full loop in any project:
 
 ```sh
