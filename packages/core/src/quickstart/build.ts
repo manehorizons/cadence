@@ -36,6 +36,7 @@ export interface Quickstart {
 
 /** The onboarding command map (embedded; authored here, not imported from cli/). */
 const COMMAND_MAP: QuickstartMapEntry[] = [
+  { name: 'start', note: "interactive onboarding — pick what you're doing, and run it" },
   { name: 'init', note: 'scaffold .cadence/ in this repo' },
   { name: 'tutorial', note: 'watch one real loop run (throwaway sandbox)' },
   { name: 'explain', note: 'learn the model — loop, gates, tiers, profiles, config' },

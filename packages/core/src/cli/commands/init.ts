@@ -336,6 +336,9 @@ export function registerInitCommand(program: Command): void {
         console.log(
           `  Stuck? Run \`cadence progress\` anytime for the next action.`,
         );
+        console.log(
+          `  Not sure where to go next? Run \`cadence start\` for a guided menu.`,
+        );
         console.log(`  Docs: .cadence/ROADMAP.md and the project README.`);
         console.log('');
         console.log(`  Turn on real verification`);

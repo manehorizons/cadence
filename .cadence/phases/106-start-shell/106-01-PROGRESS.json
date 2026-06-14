@@ -1,0 +1,23 @@
+{
+  "draftId": "106-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "runStart shell; 11 tests AC-5..AC-12; Windows npx fix applied",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-13T23:54:57.255Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "register + quickstart COMMAND_MAP start entry; 2 tests AC-7/AC-13",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-13T23:54:57.471Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "init next-steps cadence start pointer; 1 test AC-13",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-13T23:54:57.716Z"
+    }
+  }
+}

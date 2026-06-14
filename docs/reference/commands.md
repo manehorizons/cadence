@@ -35,6 +35,7 @@ Two CLIs are documented here:
   - [handoff](#handoff)
   - [resume](#resume)
   - [tutorial](#tutorial)
+  - [start](#start)
   - [quickstart](#quickstart)
   - [activate](#activate)
 - [cadence-host-claude-code](#cadence-host-claude-code)
@@ -86,6 +87,7 @@ doctor
 mcp
 tutorial
 explain
+start
 quickstart
 activate
 <!-- cadence:commands:end -->
@@ -1446,6 +1448,40 @@ own `.cadence/config.json`.
 
 **Exit codes** — `0` for a known concept or the bare list; `1` for an unknown
 concept (after printing the list + suggestion).
+
+---
+
+### start
+
+```
+Usage: cadence start [options]
+
+Interactive onboarding — pick what you're doing, and run it
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--pick <n>` | Select a menu option non-interactively (still confirms unless `--yes`) |
+| `--yes` | Skip the confirm and run the picked option |
+| `--json` | Emit the structured menu and exit (no prompt) |
+
+**Behavior** — the interactive front door, sibling to the read-only `quickstart`
+(which prints the map without running anything). `start` asks "What are you
+doing?", takes a numbered pick, shows the exact command and a `[Y/n]` confirm,
+then runs it. The six routes are: `cadence tutorial` (throwaway sandbox),
+`cadence init` (this repo), `npx @manehorizons/cadence-host-claude-code install`
+(Claude Code), `npx @manehorizons/cadence-host-codex install` (Codex CLI),
+`cadence mcp install` (MCP), and `cadence doctor` (health check). Dispatch is a
+subprocess spawn — the `cadence` binary for core routes, `npx` for the two host
+packages — so `start` never imports host code. Declining the confirm prints the
+command so you can run it yourself. If the repo is already initialized, the
+`init` option is annotated as safe to re-run. In a non-interactive shell with no
+`--pick`, it prints the menu and exits `0` (never hangs).
+
+**Exit codes** — `0` on menu print / quit / declined-confirm; the dispatched
+command's exit code when it runs; `1` on an invalid `--pick`.
 
 ---
 

@@ -1,0 +1,17 @@
+{
+  "draftId": "105-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "menu.ts catalog + resolvePick; 4 tests (AC-1,AC-2) green",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-13T23:44:21.534Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "render.ts text/json/confirm; 4 tests (AC-3,AC-4) green",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-13T23:44:26.018Z"
+    }
+  }
+}
