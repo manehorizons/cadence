@@ -8,6 +8,7 @@ import {
   emptyState,
   MOCK_VERIFIER_NOTICE,
   type Profile,
+  type CadenceConfig,
 } from '@manehorizons/cadence-types';
 import { atomicWriteJSON } from '../../state/atomic-write.js';
 import { SimpleStateBackend } from '../../state/simple.js';
@@ -18,6 +19,8 @@ import {
 import { renderDemoDraft } from '../../init/demo-draft.js';
 import { draftNewService } from '../../services/draft-new.js';
 import type { CommandIO } from '../../services/io.js';
+import { planActivation } from '../../activate/plan.js';
+import { setPath } from '../../config-edit/apply.js';
 import {
   ScriptedPrompter,
   StdinPrompter,
@@ -295,6 +298,10 @@ export function registerInitCommand(program: Command): void {
       '--demo',
       'seed a ready-to-approve demo phase (01-demo) so you can run a full loop in this repo',
     )
+    .option(
+      '--activate',
+      'turn on real verification when ANTHROPIC_API_KEY is present (writes verifier.provider=anthropic; never stores the key)',
+    )
     .action(
       async (opts: {
         name?: string;
@@ -305,6 +312,7 @@ export function registerInitCommand(program: Command): void {
         wireHost?: boolean;
         skipHostWire?: boolean;
         demo?: boolean;
+        activate?: boolean;
       }) => {
         const cwd = process.cwd();
         const cadenceDir = join(cwd, '.cadence');
@@ -373,11 +381,38 @@ export function registerInitCommand(program: Command): void {
           testGlobs[0]?.startsWith('packages/') ?? false
             ? 'monorepo (packages/)'
             : 'single-package';
-        const cfg = {
+        // structuredClone so setPath below never mutates the shared `presets`
+        // singleton (its nested verifier objects are otherwise by-reference).
+        const cfg = structuredClone({
           ...presetCfg,
           profile: gateProfile,
           verification: { ...presetCfg.verification, testGlobs },
-        };
+        });
+
+        // Phase 110 — fold activation into init. With --activate and a present
+        // ANTHROPIC_API_KEY, wire real verification (deep-verify seam) via the
+        // shared activate seam; the key is never persisted (only the provider
+        // name is written). No live ping here — that stays in `cadence activate`.
+        const hasAnthropicKey =
+          typeof process.env.ANTHROPIC_API_KEY === 'string' &&
+          process.env.ANTHROPIC_API_KEY.length > 0;
+        let activatedProvider: 'anthropic' | null = null;
+        let activateNoKey = false;
+        if (opts.activate) {
+          if (hasAnthropicKey) {
+            const plan = planActivation({
+              provider: 'anthropic',
+              scope: 'deep-verify',
+              currentConfig: cfg as CadenceConfig,
+            });
+            for (const c of plan.changes) {
+              setPath(cfg as Record<string, unknown>, [c.seam, 'provider'], c.to);
+            }
+            activatedProvider = 'anthropic';
+          } else {
+            activateNoKey = true;
+          }
+        }
 
         await mkdir(join(cadenceDir, 'phases'), { recursive: true });
         await mkdir(join(cadenceDir, 'handoff'), { recursive: true });
@@ -481,9 +516,26 @@ export function registerInitCommand(program: Command): void {
           console.log(`    cadence settle run --ac AC-1=pass`);
         }
         console.log('');
-        console.log(`  Turn on real verification`);
-        console.log(`  ─────────────────────────`);
-        console.log(`  ${MOCK_VERIFIER_NOTICE.message}`);
+        if (activatedProvider) {
+          console.log(`  Real verification on`);
+          console.log(`  ────────────────────`);
+          console.log(
+            `  ✓ real verification on: ${activatedProvider} (deep-verify) — ANTHROPIC_API_KEY detected.`,
+          );
+          console.log(`  Watch it judge your work:  cadence settle run --deep`);
+        } else {
+          console.log(`  Turn on real verification`);
+          console.log(`  ─────────────────────────`);
+          console.log(`  ${MOCK_VERIFIER_NOTICE.message}`);
+          if (activateNoKey) {
+            console.log('');
+            console.log(
+              `  --activate had no ANTHROPIC_API_KEY to use — staying on mock. Set it then re-activate:`,
+            );
+            console.log(`      export ANTHROPIC_API_KEY=…`);
+            console.log(`      cadence activate --provider anthropic`);
+          }
+        }
         if (gateProfile === 'standard' || gateProfile === 'strict') {
           console.log('');
           console.log(
