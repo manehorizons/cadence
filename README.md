@@ -51,8 +51,9 @@ Install the CLI globally (requires Node ≥ 20):
 npm install -g @manehorizons/cadence-core
 ```
 
-New to CADENCE? Run `cadence start` for a guided menu that picks the right setup
-command for what you're doing (or `cadence quickstart` for a read-only map).
+New to CADENCE? Run `cadence start` — a guided menu that picks the right setup
+command for what you're doing. (Once you're set up, `cadence quickstart` is the
+read-only map of where you are and your next moves.)
 
 The fastest way to *see* a loop run in your own repo — `--demo` seeds a
 ready-to-approve phase so there's nothing to hand-edit:
