@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 108-zero-prompt-init
+**Active phase:** 109-init-demo
 **Active draft:** (none)
 **Tier:** (n/a)
 

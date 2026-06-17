@@ -756,35 +756,6 @@
       "updatedAt": "2026-06-11T23:58:00.535Z"
     },
     {
-      "id": "rec-20260617-002",
-      "title": "init --demo: pre-filled first phase in the real repo",
-      "summary": "cadence tutorial runs in a throwaway sandbox then deletes it - user ends with nothing. README quickstart says 'fill .cadence/phases/.../DRAFT.md' - that hand-edit is the cliff. Scaffold a real phase with objective + AC-1 + task T1 already written (reuse tutorial toy template, tutorial.ts:44-75) so the user runs approve -> done -> settle immediately and watches a real gate fire/pass in their own repo.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "cli"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts",
-        "packages/core/src/cli/commands/tutorial.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260617-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-17T18:31:56.745Z",
-      "updatedAt": "2026-06-17T18:33:40.281Z"
-    },
-    {
       "id": "rec-20260617-003",
       "title": "Auto-derive phase id and collapse --ac syntax",
       "summary": "cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.",
@@ -974,9 +945,41 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "108-zero-prompt-init",
-      "createdAt": "2026-06-17T18:31:56.332Z",
-      "updatedAt": "2026-06-17T18:59:23.874Z",
       "archivedAt": "2026-06-17T18:59:23.874Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:56.332Z",
+      "updatedAt": "2026-06-17T18:59:23.874Z"
+    },
+    {
+      "id": "rec-20260617-002",
+      "title": "init --demo: pre-filled first phase in the real repo",
+      "summary": "cadence tutorial runs in a throwaway sandbox then deletes it - user ends with nothing. README quickstart says 'fill .cadence/phases/.../DRAFT.md' - that hand-edit is the cliff. Scaffold a real phase with objective + AC-1 + task T1 already written (reuse tutorial toy template, tutorial.ts:44-75) so the user runs approve -> done -> settle immediately and watches a real gate fire/pass in their own repo.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/cli/commands/tutorial.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "109-init-demo",
+      "createdAt": "2026-06-17T18:31:56.745Z",
+      "updatedAt": "2026-06-17T19:09:19.966Z",
+      "archivedAt": "2026-06-17T19:09:19.966Z",
       "archiveReason": "converted-settled"
     }
   ]
