@@ -228,7 +228,7 @@ These run on every phase regardless of profile or tier.
 | Gate | When it fires | Bypass flag |
 |---|---|---|
 | `draft-read` | Settle refuses if `DRAFT.md` was modified after `draft approve` (mtime check) | `--allow-stale-draft` (on `settle run`) |
-| `test-coverage` | Each AC must have at least one test file that contains the token `AC-N` anywhere in its text | `--allow-missing-coverage` (on `settle run`) |
+| `test-coverage` | Each AC must have at least one test file that contains the token `AC-N`. By default (`verification.coverageMode: "mention"`) any occurrence anywhere in the file counts; set `coverageMode: "assertion"` to require the token inside an asserting `it()`/`test()` block (a comment-only mention then refuses as a *weak link*) | `--allow-missing-coverage` (on `settle run`) |
 | `anomaly-notify` | Emit anomaly events (blocked tasks, out-of-boundary edits, coherence warns, loop violations, …) via the configured transport | No bypass — transport failures degrade gracefully |
 
 #### Medium

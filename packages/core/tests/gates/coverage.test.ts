@@ -92,3 +92,81 @@ describe('runCoverageGate', () => {
     expect(res.outcome).toBe('pass');
   });
 });
+
+describe('runCoverageGate · assertion mode (AC-5)', () => {
+  const assertionConfig = { verification: { coverageMode: 'assertion' } } as never;
+
+  // AC-5: a weakly-linked AC (mentioned but never inside an asserting block)
+  // refuses with the distinct assertion-mode hint, and the message names the mode.
+  it('refuses a weakly-linked AC with the assertion-block hint', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 3, snippet: '// AC-1', qualifying: false }]],
+    ]);
+    const res = await runCoverageGate(ctx({ errs, config: assertionConfig, coverageMap: map }));
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('AC-1');
+    expect(joined).toContain('not inside an asserting it()/test() block');
+    expect(joined).toContain('assertion mode'); // refusal names the mode
+    // It is NOT the plain "has no linked test" message — it was mentioned.
+    expect(joined).not.toContain('AC-1 has no linked test');
+  });
+
+  // AC-5: an entirely-absent AC still gets the plain "has no linked test" message,
+  // even in assertion mode.
+  it('refuses an absent AC with the plain no-linked-test message', async () => {
+    const errs: string[] = [];
+    const res = await runCoverageGate(
+      ctx({ errs, config: assertionConfig, coverageMap: new Map() }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('AC-1 has no linked test');
+    expect(joined).not.toContain('not inside an asserting');
+  });
+
+  // AC-5: weak link and absent AC each get their own message in one refusal.
+  it('emits distinct messages for a weak link vs an absent AC', async () => {
+    const errs: string[] = [];
+    const draft = {
+      acceptanceCriteria: [
+        { id: 'AC-1', given: '', when: '', then: '' },
+        { id: 'AC-2', given: '', when: '', then: '' },
+      ],
+      tasks: [],
+    } as never;
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 3, snippet: '// AC-1', qualifying: false }]],
+      // AC-2 absent
+    ]);
+    const res = await runCoverageGate(ctx({ errs, draft, config: assertionConfig, coverageMap: map }));
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('AC-1');
+    expect(joined).toContain('not inside an asserting it()/test() block');
+    expect(joined).toContain('AC-2 has no linked test');
+  });
+
+  // AC-5: an AC with a qualifying (asserting-block) ref passes in assertion mode.
+  it('passes an AC that has a qualifying assertion ref', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 5, snippet: "it('AC-1', ...)", qualifying: true }]],
+    ]);
+    const res = await runCoverageGate(ctx({ errs, config: assertionConfig, coverageMap: map }));
+    expect(res.outcome).toBe('pass');
+    expect(errs).toEqual([]);
+  });
+
+  // AC-5: --force settles past a weak link without refusing.
+  it('passes a weak link under --force', async () => {
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 3, snippet: '// AC-1', qualifying: false }]],
+    ]);
+    const res = await runCoverageGate(
+      ctx({ opts: { force: true }, config: assertionConfig, coverageMap: map }),
+    );
+    expect(res.outcome).toBe('pass');
+  });
+});

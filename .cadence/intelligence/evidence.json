@@ -224,6 +224,34 @@
       "kind": "note",
       "summary": "Onboarding map: multiple commands hard-fail in non-TTY (CI/agents) with cryptic StdinPrompter errors; fix flags buried.",
       "createdAt": "2026-06-17T18:31:57.948Z"
+    },
+    {
+      "id": "ev-20260617-006",
+      "recommendationId": "rec-20260617-006",
+      "kind": "note",
+      "summary": "2026-06-17 onboarding assessment; verify against v1.27 init front door.",
+      "createdAt": "2026-06-17T23:15:35.573Z"
+    },
+    {
+      "id": "ev-20260617-007",
+      "recommendationId": "rec-20260617-007",
+      "kind": "note",
+      "summary": "2026-06-17 onboarding assessment.",
+      "createdAt": "2026-06-17T23:15:35.744Z"
+    },
+    {
+      "id": "ev-20260617-008",
+      "recommendationId": "rec-20260617-008",
+      "kind": "note",
+      "summary": "2026-06-17 onboarding assessment.",
+      "createdAt": "2026-06-17T23:15:35.906Z"
+    },
+    {
+      "id": "ev-20260617-009",
+      "recommendationId": "rec-20260617-009",
+      "kind": "note",
+      "summary": "2026-06-17 onboarding assessment.",
+      "createdAt": "2026-06-17T23:15:36.077Z"
     }
   ]
 }

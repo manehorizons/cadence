@@ -143,6 +143,7 @@ Boundary definitions for each tier. The coherence-check gate validates DRAFT fro
 |---|---|---|---|
 | `verification.testGlobs` | `string[]` | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` | Glob patterns the test-coverage scanner walks when checking AC coverage. Supports `**` and `*`. Set by `cadence init` based on repo layout — see [cadence init behavior](#cadence-init-behavior). |
 | `verification.testCommand` | `string` (optional) | — | Shell command the `build-test-must-pass` gate runs at `cadence settle run`. When set, settle runs it and refuses on a non-zero exit unless `--allow-failing-build` / `--force`. When absent, the gate is evaluated but cannot enforce — it passes with a one-time note. |
+| `verification.coverageMode` | `"mention"` \| `"assertion"` | `"mention"` | How the `test-coverage` gate counts an `AC-N` token. `mention` (default) counts any occurrence of the token anywhere in a matched test file, including comments. `assertion` counts it only when it sits inside an asserting `it()`/`test()` block; a comment-only or assertion-less mention is reported as a *weak link* and the gate refuses with a distinct hint (closing the "mentioned-but-not-tested" false positive). Edit it with `cadence config edit coverageMode`. |
 
 ---
 

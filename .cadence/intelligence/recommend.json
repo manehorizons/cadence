@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-12T00:07:10.463Z",
+  "generatedAt": "2026-06-17T23:15:47.990Z",
   "ranked": [
     {
-      "id": "rec-20260611-003",
-      "title": "Make real verification the felt default — close the gap between the enforcement wedge and the mock default",
-      "raw": 28.7,
-      "score": 77,
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
+      "id": "rec-20260617-006",
+      "title": "Frictionless first loop: seed an example DRAFT + make the settle refusal a teaching moment",
+      "raw": 25.7,
+      "score": 73,
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "decayState": "fresh",
       "terms": [
@@ -25,12 +25,12 @@
           "value": -2.5
         },
         {
-          "label": "status accepted",
-          "value": 6
+          "label": "status candidate",
+          "value": 0
         },
         {
-          "label": "ready ready-for-milestone",
-          "value": 7
+          "label": "ready ready-for-cadence-spec",
+          "value": 10
         },
         {
           "label": "decay fresh",
@@ -42,16 +42,16 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
+      "scoutId": "scout-20260617-1659"
     },
     {
-      "id": "rec-20260611-002",
-      "title": "draft new next-free hint mangles the task-number slot for phases >= 100",
-      "raw": 14.7,
-      "score": 56,
+      "id": "rec-20260617-007",
+      "title": "One unambiguous onboarding front door + a guided next-step rail",
+      "raw": 17.7,
+      "score": 61,
       "status": "candidate",
       "readiness": "needs-decision",
-      "priority": "medium",
+      "priority": "high",
       "decayState": "fresh",
       "terms": [
         {
@@ -79,62 +79,21 @@
           "value": 4
         },
         {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260611-004",
-      "title": "Deepen the coverage gate beyond AC-token string-matching (false-positive risk)",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
+          "label": "prio high",
           "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
+      "scoutId": "scout-20260617-1659"
     },
     {
-      "id": "rec-20260611-005",
-      "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
-      "raw": 14.7,
-      "score": 56,
+      "id": "rec-20260617-008",
+      "title": "Put real-verification activation on the golden path",
+      "raw": 17.7,
+      "score": 61,
       "status": "candidate",
       "readiness": "needs-decision",
-      "priority": "medium",
+      "priority": "high",
       "decayState": "fresh",
       "terms": [
         {
@@ -162,16 +121,16 @@
           "value": 4
         },
         {
-          "label": "prio medium",
-          "value": 2
+          "label": "prio high",
+          "value": 5
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
+      "scoutId": "scout-20260617-1659"
     },
     {
-      "id": "rec-20260611-007",
-      "title": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
+      "id": "rec-20260617-009",
+      "title": "Remove onboarding terminology collision + the silent gate-profile flip",
       "raw": 14.7,
       "score": 56,
       "status": "candidate",
@@ -209,62 +168,20 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
-    },
-    {
-      "id": "rec-20260611-006",
-      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
+      "scoutId": "scout-20260617-1659"
     }
   ],
   "parked": [],
   "needsAttention": [],
   "advisory": {
-    "kind": "top-recommendation",
-    "primary": "cadence milestone propose"
+    "kind": "spec-new",
+    "primary": "cadence spec new"
   },
   "totals": {
-    "total": 27,
-    "ranked": 6,
+    "total": 4,
+    "ranked": 4,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 21
+    "excluded": 0
   }
 }
