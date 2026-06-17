@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 112-coverage-assertion-mode
+**Active phase:** 113-onboarding-front-door
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 318
+- Subagent spawns this session: 321
 - Last handoff: SESSION-2026-06-12-v1.25-shipped.md
 
 ## Counts

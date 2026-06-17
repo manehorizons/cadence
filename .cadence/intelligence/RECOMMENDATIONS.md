@@ -330,22 +330,6 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
 
-## rec-20260611-004 — Deepen the coverage gate beyond AC-token string-matching (false-positive risk)
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, coverage, verify
-- files: packages/core/src/gates/coverage.ts
-- evidence: Inventory: coverage gate is string-match on AC id in test globs; no assertion-level or structural analysis (intentional since phase 14 for cheapness/determinism, but admits 'mentioned-not-tested' false positives).
-- next: cadence milestone propose
-
-The test-coverage gate links a test to an AC by string-matching the AC id (e.g. grep 'AC-1') in test text. A test that merely MENTIONS AC-1 in a comment or describe() label — without actually exercising it — passes the gate. This admits false positives in the exact mechanism the project sells as its credibility (AC-linked verification). Evaluate a cheap deepening: require the AC token to appear inside an it()/test() block that contains >=1 assertion, or proximity-to-expect heuristics, while staying deterministic and offline (no full AST/semantic analysis unless justified). May be partially YAGNI — decide whether the false-positive surface is worth closing or just documenting loudly.
-
 ## rec-20260611-005 — Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)
 
 - status: candidate
@@ -426,26 +410,10 @@ cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positi
 
 Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.
 
-## rec-20260617-006 — Frictionless first loop: seed an example DRAFT + make the settle refusal a teaching moment
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, draft, settle, onboarding
-- files: packages/core/src/cli/commands/draft.ts, packages/core/src/cli/commands/tutorial.ts, packages/core/src/services/settle.ts, packages/core/src/gates/coverage.ts
-- evidence: 2026-06-17 onboarding assessment; verify against v1.27 init front door.
-- next: cadence milestone propose
-
-(1) 'cadence draft new' should scaffold a complete runnable toy DRAFT (objective + AC-1 + T1 pre-filled, commented 'replace this') so a newcomer can run the whole loop before learning AC-N/T1 conventions (tutorial.ts already generates this). (2) The first loop's 'settle run --auto' refuses by design ('AC-1 has no test') but the why lives only in a README comment — make the refusal output narrate it with the exact next command. NOTE: re-check against v1.27 'onboarding breeze' which shipped init front-door work. Source: 2026-06-17 onboarding assessment (#1, #3).
-
 ## rec-20260617-007 — One unambiguous onboarding front door + a guided next-step rail
 
 - status: candidate
-- ready: needs-decision
+- ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
 - risk: 5/10
@@ -457,22 +425,6 @@ Approve gate, activate, and the settle interactive gate all block in non-TTY wit
 - next: cadence milestone propose
 
 Collapse competing entry points (start/quickstart/tutorial/docs-quickstart) into one golden path: make 'cadence start' the only README 'new here?' command; guarantee every onboarding command ends with one 'Next:' line (doctor lacks it); open docs/quickstart with a 3-way driver fork (terminal/Claude Code/MCP); feature 'cadence tutorial' right after the install line. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#2, #6, #7, #10).
-
-## rec-20260617-008 — Put real-verification activation on the golden path
-
-- status: candidate
-- ready: needs-decision
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, docs, init, activate, onboarding
-- files: README.md, packages/core/src/cli/commands/init.ts, packages/core/src/cli/commands/activate.ts, docs/providers.md
-- evidence: 2026-06-17 onboarding assessment.
-- next: cadence milestone propose
-
-Add the full 3-step Anthropic recipe inline to README quickstart + init next-steps (get key -> export ANTHROPIC_API_KEY -> cadence activate --provider anthropic -> cadence doctor). End 'cadence init' with a one-line health summary (it already knows what doctor checks). NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#4, #5).
 
 ## rec-20260617-009 — Remove onboarding terminology collision + the silent gate-profile flip
 
