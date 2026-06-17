@@ -393,3 +393,67 @@ The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (sa
 - next: cadence milestone propose
 
 Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.
+
+## rec-20260617-002 — init --demo: pre-filled first phase in the real repo
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: onboarding, cli
+- files: packages/core/src/cli/commands/init.ts, packages/core/src/cli/commands/tutorial.ts
+- evidence: Onboarding map: tutorial sandbox is deleted; the DRAFT hand-edit is the steepest step in the happy path.
+- next: cadence milestone propose
+
+cadence tutorial runs in a throwaway sandbox then deletes it - user ends with nothing. README quickstart says 'fill .cadence/phases/.../DRAFT.md' - that hand-edit is the cliff. Scaffold a real phase with objective + AC-1 + task T1 already written (reuse tutorial toy template, tutorial.ts:44-75) so the user runs approve -> done -> settle immediately and watches a real gate fire/pass in their own repo.
+
+## rec-20260617-003 — Auto-derive phase id and collapse --ac syntax
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, onboarding
+- files: packages/core/src/cli/commands/draft-new.ts, packages/core/src/cli/commands/settle.ts, packages/core/src/cli/commands/progress.ts
+- evidence: Onboarding map: verbose error-prone arg shapes (kebab+zero-pad positionals, --ac colon notes).
+- next: cadence milestone propose
+
+cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.
+
+## rec-20260617-004 — Fold activation into init when API key present
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: onboarding, cli, verify
+- files: packages/core/src/cli/commands/init.ts, packages/core/src/cli/commands/activate.ts
+- evidence: Onboarding map: mock-default scolding + activate is a separate manual hop requiring an env export.
+- next: cadence milestone propose
+
+Out-of-box mock verifier is plastered as 'NOT real verification' across init/doctor/config-explain, but turning it on is a separate cadence activate + export ANTHROPIC_API_KEY dance. At init, if ANTHROPIC_API_KEY is already in env, offer (or --activate auto-select) anthropic right there. User with key gets real verification with zero extra hops and no scolding.
+
+## rec-20260617-005 — Agent/non-TTY mode to kill the StdinPrompter minefield
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: onboarding, cli, gates
+- files: packages/core/src/cli/commands/init.ts, packages/core/src/gates/approve.ts, packages/core/src/cli/commands/settle.ts
+- evidence: Onboarding map: multiple commands hard-fail in non-TTY (CI/agents) with cryptic StdinPrompter errors; fix flags buried.
+- next: cadence milestone propose
+
+Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.

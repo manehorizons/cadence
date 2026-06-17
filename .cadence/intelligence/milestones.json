@@ -24,6 +24,96 @@
       ],
       "createdAt": "2026-06-12T00:08:46.078Z",
       "updatedAt": "2026-06-12T00:09:28.698Z"
+    },
+    {
+      "id": "mil-rec-rec-20260617-001",
+      "name": "Zero-prompt init that auto-wires the host",
+      "objective": "cadence init prompts for name (default 'unnamed') + profile, then tells the user to separately run the host install. Derive name from package.json/dir, profile from git (suggestGateProfile already exists), detect .claude/ and offer/auto-run host install in the same step. --name/--preset stay as overrides. One command, zero questions, fully wired.",
+      "status": "accepted",
+      "recommendationIds": [
+        "rec-20260617-001"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-17T18:33:50.666Z",
+      "updatedAt": "2026-06-17T18:45:08.401Z"
+    },
+    {
+      "id": "mil-rec-rec-20260617-002",
+      "name": "init --demo: pre-filled first phase in the real repo",
+      "objective": "cadence tutorial runs in a throwaway sandbox then deletes it - user ends with nothing. README quickstart says 'fill .cadence/phases/.../DRAFT.md' - that hand-edit is the cliff. Scaffold a real phase with objective + AC-1 + task T1 already written (reuse tutorial toy template, tutorial.ts:44-75) so the user runs approve -> done -> settle immediately and watches a real gate fire/pass in their own repo.",
+      "status": "accepted",
+      "recommendationIds": [
+        "rec-20260617-002"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-17T18:33:50.666Z",
+      "updatedAt": "2026-06-17T18:45:08.767Z"
+    },
+    {
+      "id": "mil-rec-rec-20260617-003",
+      "name": "Auto-derive phase id and collapse --ac syntax",
+      "objective": "cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.",
+      "status": "deferred",
+      "recommendationIds": [
+        "rec-20260617-003"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-17T18:33:50.666Z",
+      "updatedAt": "2026-06-17T18:45:09.522Z"
+    },
+    {
+      "id": "mil-rec-rec-20260617-004",
+      "name": "Fold activation into init when API key present",
+      "objective": "Out-of-box mock verifier is plastered as 'NOT real verification' across init/doctor/config-explain, but turning it on is a separate cadence activate + export ANTHROPIC_API_KEY dance. At init, if ANTHROPIC_API_KEY is already in env, offer (or --activate auto-select) anthropic right there. User with key gets real verification with zero extra hops and no scolding.",
+      "status": "accepted",
+      "recommendationIds": [
+        "rec-20260617-004"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-17T18:33:50.666Z",
+      "updatedAt": "2026-06-17T18:45:09.146Z"
+    },
+    {
+      "id": "mil-rec-rec-20260617-005",
+      "name": "Agent/non-TTY mode to kill the StdinPrompter minefield",
+      "objective": "Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.",
+      "status": "deferred",
+      "recommendationIds": [
+        "rec-20260617-005"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-17T18:33:50.666Z",
+      "updatedAt": "2026-06-17T18:45:09.883Z"
     }
   ]
 }

@@ -450,6 +450,51 @@ Design: `docs/superpowers/specs/2026-06-13-cadence-start-onboarding-design.md` (
   discoverability pointers. *Out (YAGNI):* nested sub-menus; profile/tier selection inside
   `start`; remembering past choices; a TUI/arrow-key framework; deprecating `quickstart`.
 
+## v1.27.0 — Onboarding breeze: `init` is the front door — STARTED 2026-06-17
+
+v1.26 made setup *routable* (`cadence start` points a newcomer at the right command);
+v1.27 makes the command it points at *just work*. Sourced from an onboarding assessment
+(2026-06-17) that walked install → first successful loop and clocked ~8 typed steps + 1
+hand-edit + a separate `activate` hop. **No new DESIGN.md D-number** (additive
+onboarding/legibility, same lane as `quickstart`/`start`/`activate`).
+
+**Thesis:** three recommendations cohere because each lands on `init.ts` and together they
+collapse "install → working real-verification loop" to `cadence init` (auto-wired, demo
+phase, real verifier when a key is present) → 3 paste-ready commands — the biggest
+breeze-per-effort of the five assessment findings.
+
+**Recs (Praxis ledger, 2026-06-17):** rec-20260617-001 (zero-prompt init + auto-wire
+host), rec-20260617-002 (`init --demo` pre-filled phase), rec-20260617-004 (fold
+activation into init) — all **accepted** and clustered into accepted milestone candidates.
+rec-20260617-003 (auto-derive phase id + `--ac` shorthands) and rec-20260617-005
+(agent/non-TTY mode) **deferred** to a v1.28 follow-on.
+
+**Scope decision (2026-06-17):** init-hub trio only. The two CLI-ergonomics recs are
+separable (they touch `draft-new`/`settle`/`progress`/`approve`, not the init front door)
+and were deliberately split out to keep v1.27 tight and coherent.
+
+- **Phase 108 — Zero-prompt init that auto-wires the host (rec-001).** Derive name
+  (package.json/dir) + gate profile (`suggestGateProfile` git heuristic); when `.claude/`
+  is present, offer/auto-run the host install via a spawn seam (core never imports host
+  code, mirroring `start`'s launcher discipline). `--name`/`--preset`/`--gate-profile`
+  remain overrides.
+- **Phase 109 — `init --demo`: pre-filled first phase in the real repo (rec-002).** Scaffold
+  a real phase carrying objective + AC-1 + task T1 (shared toy template with `tutorial`),
+  so the user runs `approve → done → settle` and sees a real gate in their own repo —
+  killing the README's "fill the DRAFT" cliff.
+- **Phase 110 — Fold activation into init when a key is present (rec-004).** If
+  `ANTHROPIC_API_KEY` is in the env, `init --activate` writes `verifier.provider = anthropic`
+  (deep-verify seam) via the existing `activate` plan/assess seam, key never persisted;
+  suppress the mock-NOT-real notice when real verification was just wired.
+- **Phase 111 — Release v1.27.0.** README quickstart collapsed to the new flow;
+  `commands.md` init flags; changeset; lockstep `1.26.0 → 1.27.0` across all four published
+  packages; CLAUDE.md narrative leads with `1.27.0`.
+
+- **Scope guards.** *In:* the init-hub trio + docs + release. *Out (v1.28):* rec-003
+  (phase-id auto-derive + `--ac` shorthands), rec-005 (agent/non-TTY `--preset agent`).
+  *Out (YAGNI):* a full interactive init wizard; remembering host choices; non-Anthropic
+  key detection at init.
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.

@@ -189,6 +189,41 @@
       "kind": "note",
       "summary": "Competitive research (primary-source GitHub/npm API, 2026-06-11): no enforcing in-loop AC-linked competitor; scaffolders soft-enforce, review bots gate late on PRs. Category forming (ThoughtWorks Radar v34, Cursor acq. of Graphite Dec 2025). Aligns with [[cadence-launch-positioning]] honesty constraints.",
       "createdAt": "2026-06-11T23:58:00.535Z"
+    },
+    {
+      "id": "ev-20260617-001",
+      "recommendationId": "rec-20260617-001",
+      "kind": "note",
+      "summary": "Onboarding map: init prompts twice + host install is a separate npx hop; first-run friction.",
+      "createdAt": "2026-06-17T18:31:56.332Z"
+    },
+    {
+      "id": "ev-20260617-002",
+      "recommendationId": "rec-20260617-002",
+      "kind": "note",
+      "summary": "Onboarding map: tutorial sandbox is deleted; the DRAFT hand-edit is the steepest step in the happy path.",
+      "createdAt": "2026-06-17T18:31:56.745Z"
+    },
+    {
+      "id": "ev-20260617-003",
+      "recommendationId": "rec-20260617-003",
+      "kind": "note",
+      "summary": "Onboarding map: verbose error-prone arg shapes (kebab+zero-pad positionals, --ac colon notes).",
+      "createdAt": "2026-06-17T18:31:57.135Z"
+    },
+    {
+      "id": "ev-20260617-004",
+      "recommendationId": "rec-20260617-004",
+      "kind": "note",
+      "summary": "Onboarding map: mock-default scolding + activate is a separate manual hop requiring an env export.",
+      "createdAt": "2026-06-17T18:31:57.532Z"
+    },
+    {
+      "id": "ev-20260617-005",
+      "recommendationId": "rec-20260617-005",
+      "kind": "note",
+      "summary": "Onboarding map: multiple commands hard-fail in non-TTY (CI/agents) with cryptic StdinPrompter errors; fix flags buried.",
+      "createdAt": "2026-06-17T18:31:57.948Z"
     }
   ]
 }
