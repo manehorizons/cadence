@@ -12,6 +12,7 @@ import { recordTaskOutcome } from '../../build/record.js';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
 import { StdinPrompter } from '../../verify/prompter.js';
 import { derivePhaseTaskId } from '../../phases/id.js';
+import { renderDemoDraft } from '../../init/demo-draft.js';
 
 /**
  * `cadence tutorial` — run one real DRAFT→BUILD→SETTLE loop inside an ephemeral
@@ -40,39 +41,9 @@ const DEMO_PHASE = '00-demo';
 const DEMO_NUM = '01';
 const DEMO_ID = derivePhaseTaskId(DEMO_PHASE, DEMO_NUM); // 00-01
 
-/** A coherent quick-fix toy draft: one AC, one task, one file. */
-const TOY_DRAFT = `---
-phase: ${DEMO_PHASE}
-id: ${DEMO_ID}
-tier: quick-fix
-status: PENDING
----
-
-# ${DEMO_ID} — Hello loop
-
-## Objective
-
-A throwaway demo so you can watch one DRAFT→BUILD→SETTLE loop run end to end.
-
-## Acceptance Criteria
-
-### AC-1: the loop closes cleanly
-Given this demo draft
-When the loop settles
-Then AC-1 is recorded as pass.
-
-## Tasks
-
-### T1: greet the loop
-- files: \`hello.txt\`
-- action: write a one-line greeting to hello.txt
-- verify: the greeting is present
-- done: AC-1
-
-## Boundaries
-
-- DO NOT rely on this demo phase outside the tutorial.
-`;
+/** A coherent quick-fix toy draft: one AC, one task, one file. Shared with
+ * `cadence init --demo` via the single `renderDemoDraft` source (phase 109). */
+const TOY_DRAFT = renderDemoDraft(DEMO_PHASE, DEMO_NUM).content;
 
 function line(io: CommandIO, s = ''): void {
   io.out(`${s}\n`);

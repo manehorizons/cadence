@@ -15,6 +15,9 @@ import {
   mergeManagedBlock,
   type MergeMode,
 } from '../../init/claude-md-template.js';
+import { renderDemoDraft } from '../../init/demo-draft.js';
+import { draftNewService } from '../../services/draft-new.js';
+import type { CommandIO } from '../../services/io.js';
 import {
   ScriptedPrompter,
   StdinPrompter,
@@ -288,6 +291,10 @@ export function registerInitCommand(program: Command): void {
       '--skip-host-wire',
       'never wire the Claude Code host, even when .claude/ is present',
     )
+    .option(
+      '--demo',
+      'seed a ready-to-approve demo phase (01-demo) so you can run a full loop in this repo',
+    )
     .action(
       async (opts: {
         name?: string;
@@ -297,6 +304,7 @@ export function registerInitCommand(program: Command): void {
         claudeMd?: boolean;
         wireHost?: boolean;
         skipHostWire?: boolean;
+        demo?: boolean;
       }) => {
         const cwd = process.cwd();
         const cadenceDir = join(cwd, '.cadence');
@@ -395,6 +403,35 @@ export function registerInitCommand(program: Command): void {
           preset,
         });
 
+        // Phase 109 — `--demo`: seed a ready-to-approve demo phase into this
+        // real repo (objective + AC-1 + T1) using the shared toy template, so
+        // the user can run a full loop here with no hand-edit. Leaves the loop
+        // in DRAFT. Best-effort: a failure leaves the scaffold intact.
+        const DEMO_PHASE = '01-demo';
+        const DEMO_NUM = '01';
+        let demoSeeded = false;
+        if (opts.demo) {
+          const silentIO: CommandIO = {
+            out: () => {},
+            err: (s) => void process.stderr.write(s),
+          };
+          const res = await draftNewService(
+            cwd,
+            { phase: DEMO_PHASE, num: DEMO_NUM, title: 'Hello loop', tier: 'quick-fix' },
+            silentIO,
+          );
+          if (res.exitCode === 0) {
+            const { id, content } = renderDemoDraft(DEMO_PHASE, DEMO_NUM);
+            await writeFile(
+              join(cadenceDir, 'phases', DEMO_PHASE, `${id}-DRAFT.md`),
+              content,
+            );
+            demoSeeded = true;
+          } else {
+            console.error('  (could not seed the --demo phase; scaffold is intact)');
+          }
+        }
+
         // Legacy line — retained for back-compat ahead of the summary block.
         console.log(
           `Initialized CADENCE in ${cadenceDir} (profile=${preset})`,
@@ -432,6 +469,17 @@ export function registerInitCommand(program: Command): void {
           `  Not sure where to go next? Run \`cadence start\` for a guided menu.`,
         );
         console.log(`  Docs: .cadence/ROADMAP.md and the project README.`);
+        if (demoSeeded) {
+          console.log('');
+          console.log(`  Demo phase ready`);
+          console.log(`  ────────────────`);
+          console.log(
+            `  Seeded ${DEMO_PHASE} (objective + AC-1 + T1) — run the whole loop now:`,
+          );
+          console.log(`    cadence draft approve ${DEMO_PHASE} ${DEMO_NUM}`);
+          console.log(`    cadence done T1`);
+          console.log(`    cadence settle run --ac AC-1=pass`);
+        }
         console.log('');
         console.log(`  Turn on real verification`);
         console.log(`  ─────────────────────────`);
