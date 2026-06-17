@@ -410,22 +410,6 @@ Turn the 2026-06-11 competitive assessment into a durable, verifiable positionin
 
 cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.
 
-## rec-20260617-004 — Fold activation into init when API key present
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, cli, verify
-- files: packages/core/src/cli/commands/init.ts, packages/core/src/cli/commands/activate.ts
-- evidence: Onboarding map: mock-default scolding + activate is a separate manual hop requiring an env export.
-- next: cadence milestone propose
-
-Out-of-box mock verifier is plastered as 'NOT real verification' across init/doctor/config-explain, but turning it on is a separate cadence activate + export ANTHROPIC_API_KEY dance. At init, if ANTHROPIC_API_KEY is already in env, offer (or --activate auto-select) anthropic right there. User with key gets real verification with zero extra hops and no scolding.
-
 ## rec-20260617-005 — Agent/non-TTY mode to kill the StdinPrompter minefield
 
 - status: accepted

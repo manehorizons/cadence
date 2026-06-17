@@ -786,36 +786,6 @@
       "updatedAt": "2026-06-17T18:33:40.673Z"
     },
     {
-      "id": "rec-20260617-004",
-      "title": "Fold activation into init when API key present",
-      "summary": "Out-of-box mock verifier is plastered as 'NOT real verification' across init/doctor/config-explain, but turning it on is a separate cadence activate + export ANTHROPIC_API_KEY dance. At init, if ANTHROPIC_API_KEY is already in env, offer (or --activate auto-select) anthropic right there. User with key gets real verification with zero extra hops and no scolding.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "cli",
-        "verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts",
-        "packages/core/src/cli/commands/activate.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260617-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-17T18:31:57.532Z",
-      "updatedAt": "2026-06-17T18:33:41.061Z"
-    },
-    {
       "id": "rec-20260617-005",
       "title": "Agent/non-TTY mode to kill the StdinPrompter minefield",
       "summary": "Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.",
@@ -977,9 +947,42 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "109-init-demo",
-      "createdAt": "2026-06-17T18:31:56.745Z",
-      "updatedAt": "2026-06-17T19:09:19.966Z",
       "archivedAt": "2026-06-17T19:09:19.966Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:56.745Z",
+      "updatedAt": "2026-06-17T19:09:19.966Z"
+    },
+    {
+      "id": "rec-20260617-004",
+      "title": "Fold activation into init when API key present",
+      "summary": "Out-of-box mock verifier is plastered as 'NOT real verification' across init/doctor/config-explain, but turning it on is a separate cadence activate + export ANTHROPIC_API_KEY dance. At init, if ANTHROPIC_API_KEY is already in env, offer (or --activate auto-select) anthropic right there. User with key gets real verification with zero extra hops and no scolding.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/cli/commands/activate.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "110-init-activate",
+      "createdAt": "2026-06-17T18:31:57.532Z",
+      "updatedAt": "2026-06-17T19:16:48.277Z",
+      "archivedAt": "2026-06-17T19:16:48.277Z",
       "archiveReason": "converted-settled"
     }
   ]
