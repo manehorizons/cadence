@@ -1,8 +1,8 @@
 import type { Command } from 'commander';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { existsSync, statSync } from 'node:fs';
-import { execSync } from 'node:child_process';
-import { join } from 'node:path';
+import { existsSync, statSync, readFileSync } from 'node:fs';
+import { execSync, spawn } from 'node:child_process';
+import { join, basename } from 'node:path';
 import {
   presets,
   emptyState,
@@ -86,25 +86,42 @@ export function detectTestGlobs(cwd: string): string[] {
     : ['**/*.test.ts', '**/*.test.tsx'];
 }
 
-async function resolveName(
-  flagName: string | undefined,
-  prompter: Prompter | null,
-): Promise<string> {
+/**
+ * Phase 108 (rec-20260617-001) — zero-prompt name derivation. `--name` wins;
+ * otherwise read `package.json#name` (scope stripped: `@scope/foo` → `foo`),
+ * then fall back to the working-directory basename, then the literal
+ * `unnamed` only when nothing else is available. Never prompts, never throws.
+ */
+export function deriveName(cwd: string, flagName: string | undefined): string {
   if (flagName !== undefined) return flagName;
-  if (!prompter) return 'unnamed';
-  const reply = (await prompter.ask('Project name [unnamed]: ')).trim();
-  return reply.length > 0 ? reply : 'unnamed';
+  try {
+    const pkg = JSON.parse(readFileSync(join(cwd, 'package.json'), 'utf8'));
+    if (typeof pkg?.name === 'string' && pkg.name.trim().length > 0) {
+      const trimmed = pkg.name.trim();
+      const lastSegment = trimmed.includes('/')
+        ? (trimmed.split('/').pop() as string)
+        : trimmed;
+      if (lastSegment.length > 0) return lastSegment;
+    }
+  } catch {
+    /* no/unreadable package.json — fall through to dir name */
+  }
+  const base = basename(cwd).trim();
+  return base.length > 0 ? base : 'unnamed';
 }
 
 function isGateProfile(v: string): v is Profile {
   return (GATE_PROFILES as readonly string[]).includes(v);
 }
 
-async function resolveGateProfile(
+/**
+ * Phase 108 — zero-prompt gate-profile resolution. `--gate-profile` wins (and
+ * is validated); otherwise use the git-history suggestion. No prompt.
+ */
+function resolveGateProfile(
   flagProfile: string | undefined,
   suggestion: Profile,
-  prompter: Prompter | null,
-): Promise<Profile> {
+): Profile {
   if (flagProfile !== undefined) {
     if (!isGateProfile(flagProfile)) {
       throw new Error(
@@ -113,19 +130,91 @@ async function resolveGateProfile(
     }
     return flagProfile;
   }
-  if (!prompter) return suggestion;
-  for (let attempt = 0; attempt < 3; attempt++) {
+  return suggestion;
+}
+
+/**
+ * Phase 108 — host auto-wire. When a Claude Code workspace (`.claude/`) is
+ * present, run `cadence-host-claude-code install` in the same step so init is
+ * a one-command front door. Core never imports host code: the install runs via
+ * a subprocess spawn (mirrors `start.ts`'s launcher discipline).
+ *
+ * Decision table (after `.claude/` is confirmed present):
+ *   --skip-host-wire        → skip
+ *   --wire-host             → wire
+ *   prompter available      → offer [Y/n] (TTY, or scripted via CADENCE_PROMPTER_SCRIPT)
+ *   else (non-TTY, no flag) → skip + print a pointer (never hangs — AC-4)
+ *
+ * The spawn target is overridable for tests via `CADENCE_HOST_WIRE_CMD`
+ * (a JSON array `["cmd","arg",…]`, or a bare shell string).
+ */
+const HOST_WIRE_DISPLAY = 'npx @manehorizons/cadence-host-claude-code install';
+
+async function spawnHostWire(cwd: string): Promise<number> {
+  const override = process.env.CADENCE_HOST_WIRE_CMD;
+  let cmd: string;
+  let args: string[];
+  let useShell = false;
+  if (override !== undefined && override.length > 0) {
+    if (override.trimStart().startsWith('[')) {
+      const parsed = JSON.parse(override) as string[];
+      cmd = parsed[0] as string;
+      args = parsed.slice(1);
+    } else {
+      cmd = override;
+      args = [];
+      useShell = true;
+    }
+  } else {
+    cmd = 'npx';
+    args = ['@manehorizons/cadence-host-claude-code', 'install'];
+    // npx is npx.cmd on Windows; spawn() needs a shell to resolve it. Args are
+    // static literals (no user input), so shell is safe here (as in start.ts).
+    useShell = process.platform === 'win32';
+  }
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, { cwd, stdio: 'inherit', shell: useShell });
+    child.on('exit', (code) => resolve(code ?? 0));
+    child.on('error', (err) => {
+      console.error(`Failed to wire the Claude Code host: ${err.message}`);
+      resolve(1);
+    });
+  });
+}
+
+async function maybeWireHost(
+  cwd: string,
+  opts: { wireHost?: boolean | undefined; skipHostWire?: boolean | undefined },
+  prompter: Prompter | null,
+): Promise<{ wired: boolean; offered: boolean }> {
+  if (!existsSync(join(cwd, '.claude'))) return { wired: false, offered: false };
+  if (opts.skipHostWire) return { wired: false, offered: false };
+
+  let doWire: boolean;
+  if (opts.wireHost) {
+    doWire = true;
+  } else if (prompter) {
     const reply = (
-      await prompter.ask(
-        `Profile [${suggestion}] (strict|standard|auto): `,
-      )
+      await prompter.ask('Detected .claude/ — wire the Claude Code host now? [Y/n]: ')
     )
       .trim()
       .toLowerCase();
-    if (reply.length === 0) return suggestion;
-    if (isGateProfile(reply)) return reply;
+    doWire = reply === '' || reply === 'y' || reply === 'yes';
+  } else {
+    doWire = false; // non-TTY, no flag — skip without hanging (AC-4).
   }
-  return suggestion;
+
+  if (!doWire) return { wired: false, offered: true };
+
+  console.log('');
+  console.log(`  Wiring Claude Code host → ${HOST_WIRE_DISPLAY}`);
+  const code = await spawnHostWire(cwd);
+  if (code !== 0) {
+    console.error(
+      `  host wire exited ${code}; run it yourself:\n    ${HOST_WIRE_DISPLAY}`,
+    );
+  }
+  return { wired: code === 0, offered: true };
 }
 
 /**
@@ -191,6 +280,14 @@ export function registerInitCommand(program: Command): void {
       '--claude-md',
       'only (re)generate the managed CLAUDE.md block at the repo root; allowed on an already-initialized project',
     )
+    .option(
+      '--wire-host',
+      'when a .claude/ workspace is present, run the Claude Code host install in the same step (auto-run, no prompt)',
+    )
+    .option(
+      '--skip-host-wire',
+      'never wire the Claude Code host, even when .claude/ is present',
+    )
     .action(
       async (opts: {
         name?: string;
@@ -198,6 +295,8 @@ export function registerInitCommand(program: Command): void {
         profile?: 'solo' | 'team' | 'production';
         gateProfile?: string;
         claudeMd?: boolean;
+        wireHost?: boolean;
+        skipHostWire?: boolean;
       }) => {
         const cwd = process.cwd();
         const cadenceDir = join(cwd, '.cadence');
@@ -250,22 +349,15 @@ export function registerInitCommand(program: Command): void {
           process.exit(2);
         }
 
-        const prompter = makePrompter();
+        // Phase 108 — zero-prompt: derive the name and gate profile, ask nothing.
         let name: string;
         let gateProfile: Profile;
         try {
-          name = await resolveName(opts.name, prompter);
-          const suggestion = suggestGateProfile(cwd);
-          gateProfile = await resolveGateProfile(
-            opts.gateProfile,
-            suggestion,
-            prompter,
-          );
+          name = deriveName(cwd, opts.name);
+          gateProfile = resolveGateProfile(opts.gateProfile, suggestGateProfile(cwd));
         } catch (err) {
           console.error(err instanceof Error ? err.message : String(err));
           process.exit(2);
-        } finally {
-          await prompter?.close?.();
         }
 
         const testGlobs = detectTestGlobs(cwd);
@@ -352,6 +444,24 @@ export function registerInitCommand(program: Command): void {
           console.log(
             `  interactive — pass \`--no-approve\` for non-TTY runs (CI, scripts, agents).`,
           );
+        }
+
+        // Phase 108 — auto-wire the Claude Code host when .claude/ is present.
+        const prompter = makePrompter();
+        let hostWire: { wired: boolean; offered: boolean };
+        try {
+          hostWire = await maybeWireHost(
+            cwd,
+            { wireHost: opts.wireHost, skipHostWire: opts.skipHostWire },
+            prompter,
+          );
+        } finally {
+          await prompter?.close?.();
+        }
+        if (hostWire.offered && !hostWire.wired) {
+          console.log('');
+          console.log(`  Claude Code workspace detected (.claude/).`);
+          console.log(`  Wire it when ready:  ${HOST_WIRE_DISPLAY}`);
         }
       },
     );
