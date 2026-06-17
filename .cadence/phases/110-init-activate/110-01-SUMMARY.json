@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "draftId": "110-01",
+  "completedAt": "2026-06-17T19:16:48.274Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    },
+    {
+      "id": "AC-5",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "init --activate: key probe + planActivation/setPath onto cloned cfg; no key persisted; no ping"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "summary: real-verification-on confirmation suppresses mock notice; missing-key export hint"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "init-activate.test.ts AC-1..AC-5"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

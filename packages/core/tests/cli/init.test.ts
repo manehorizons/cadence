@@ -57,11 +57,9 @@ describe('cadence init', () => {
     expect(r.stderr).toMatch(/already initialized/i);
   });
 
-  it('AC-1+AC-2: scripted prompter supplies name + gate profile', async () => {
+  it('AC-2: --gate-profile + --name still set name and profile explicitly', async () => {
     active = await tempRepo();
-    const r = await run(['init'], active.root, {
-      CADENCE_PROMPTER_SCRIPT: 'myproj\nstandard',
-    });
+    const r = await run(['init', '--name=myproj', '--gate-profile=standard'], active.root);
     expect(r.code).toBe(0);
     const state = JSON.parse(
       readFileSync(join(active.root, '.cadence/state.json'), 'utf8'),
@@ -86,14 +84,16 @@ describe('cadence init', () => {
     expect(cfg.profile).toBe('strict');
   });
 
-  it('AC-4: non-TTY without flags applies defaults, no hang', async () => {
+  it('AC-4: non-TTY without flags derives a real name + git profile, no hang', async () => {
     active = await tempRepo();
     const r = await run(['init'], active.root);
     expect(r.code).toBe(0);
     const state = JSON.parse(
       readFileSync(join(active.root, '.cadence/state.json'), 'utf8'),
     );
-    expect(state.project.name).toBe('unnamed');
+    // phase 108: name is derived (dir basename here), never the literal `unnamed`.
+    expect(state.project.name).not.toBe('unnamed');
+    expect(state.project.name.length).toBeGreaterThan(0);
     const cfg = JSON.parse(
       readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
     );
@@ -296,5 +296,90 @@ describe('cadence init — F1/F4/F6 remediation', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toMatch(/config preset — workflow defaults/);
     expect(r.stdout).toMatch(/gate strictness: strict\|standard\|auto/);
+  });
+});
+
+describe('cadence init — phase 108 zero-prompt + auto-wire (rec-20260617-001)', () => {
+  it('AC-1: derives the project name from package.json and asks nothing', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ name: '@scope/cool-app' }),
+    );
+    const r = await run(['init'], active.root);
+    expect(r.code).toBe(0);
+    const state = JSON.parse(
+      readFileSync(join(active.root, '.cadence/state.json'), 'utf8'),
+    );
+    // scope stripped to the trailing segment.
+    expect(state.project.name).toBe('cool-app');
+    // zero-prompt: no name/profile question was emitted.
+    expect(r.stdout + r.stderr).not.toMatch(/Project name/i);
+    expect(r.stdout + r.stderr).not.toMatch(/Profile \[/i);
+  });
+
+  it('AC-2: --name overrides the derived package.json name', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ name: 'derived-name' }),
+    );
+    const r = await run(['init', '--name=explicit'], active.root);
+    expect(r.code).toBe(0);
+    const state = JSON.parse(
+      readFileSync(join(active.root, '.cadence/state.json'), 'utf8'),
+    );
+    expect(state.project.name).toBe('explicit');
+  });
+
+  it('AC-3: --wire-host spawns the host install via the wire seam', async () => {
+    active = await tempRepo();
+    await mkdir(join(active.root, '.claude'), { recursive: true });
+    const sentinel = join(active.root, 'sentinel.cjs');
+    await writeFile(
+      sentinel,
+      "require('fs').writeFileSync(require('path').join(process.cwd(),'WIRED'),'ok');",
+    );
+    const r = await run(['init', '--name=demo', '--wire-host'], active.root, {
+      CADENCE_HOST_WIRE_CMD: JSON.stringify([process.execPath, sentinel]),
+    });
+    expect(r.code).toBe(0);
+    expect(existsSync(join(active.root, 'WIRED'))).toBe(true);
+    expect(r.stdout).toMatch(/Claude Code/i);
+  });
+
+  it('AC-3/AC-4: non-TTY without --wire-host skips the wire (no hang) and prints a pointer', async () => {
+    active = await tempRepo();
+    await mkdir(join(active.root, '.claude'), { recursive: true });
+    const sentinel = join(active.root, 'sentinel.cjs');
+    await writeFile(
+      sentinel,
+      "require('fs').writeFileSync(require('path').join(process.cwd(),'WIRED'),'ok');",
+    );
+    const r = await run(['init', '--name=demo'], active.root, {
+      CADENCE_HOST_WIRE_CMD: JSON.stringify([process.execPath, sentinel]),
+    });
+    expect(r.code).toBe(0);
+    // skipped: the seam never ran.
+    expect(existsSync(join(active.root, 'WIRED'))).toBe(false);
+    // but a discoverability pointer is printed.
+    expect(r.stdout).toMatch(/cadence-host-claude-code install/);
+  });
+
+  it('AC-3: init.ts source does not import the host package (spawn seam only)', () => {
+    const src = readFileSync(
+      join(__dirname, '../../src/cli/commands/init.ts'),
+      'utf8',
+    );
+    expect(src).not.toMatch(
+      /import[\s\S]*from\s*['"]@manehorizons\/cadence-host-claude-code['"]/,
+    );
+  });
+
+  it('AC-5: --claude-md still works on an already-initialized repo', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['init', '--claude-md'], active.root);
+    expect(r.code).toBe(0);
+    expect(existsSync(join(active.root, 'CLAUDE.md'))).toBe(true);
   });
 });

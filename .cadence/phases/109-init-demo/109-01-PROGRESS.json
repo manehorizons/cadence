@@ -1,0 +1,23 @@
+{
+  "draftId": "109-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "extracted renderDemoDraft shared renderer; tutorial consumes it byte-identical",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-17T19:06:39.708Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "init --demo seeds 01-demo via draftNewService + shared template; demo next-steps block",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-17T19:06:40.114Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "init-demo.test.ts: AC-1..AC-5 incl end-to-end approve→done→settle",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-17T19:06:41.216Z"
+    }
+  }
+}

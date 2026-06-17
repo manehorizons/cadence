@@ -754,6 +754,67 @@
       "scoutId": "scout-20260611-1857",
       "createdAt": "2026-06-11T23:58:00.535Z",
       "updatedAt": "2026-06-11T23:58:00.535Z"
+    },
+    {
+      "id": "rec-20260617-003",
+      "title": "Auto-derive phase id and collapse --ac syntax",
+      "summary": "cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.",
+      "source": "manual",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/draft-new.ts",
+        "packages/core/src/cli/commands/settle.ts",
+        "packages/core/src/cli/commands/progress.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-17T18:31:57.135Z",
+      "updatedAt": "2026-06-17T18:33:40.673Z"
+    },
+    {
+      "id": "rec-20260617-005",
+      "title": "Agent/non-TTY mode to kill the StdinPrompter minefield",
+      "summary": "Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.",
+      "source": "manual",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/gates/approve.ts",
+        "packages/core/src/cli/commands/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-17T18:31:57.948Z",
+      "updatedAt": "2026-06-17T18:33:41.442Z"
     }
   ],
   "archived": [
@@ -820,11 +881,109 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-06-11T23:12:39.759Z",
-      "updatedAt": "2026-06-12T01:42:37.617Z",
       "shippedRef": "PR #86 (squash 6c6baa0)",
       "archivedAt": "2026-06-12T01:42:37.617Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-06-11T23:12:39.759Z",
+      "updatedAt": "2026-06-12T01:42:37.617Z"
+    },
+    {
+      "id": "rec-20260617-001",
+      "title": "Zero-prompt init that auto-wires the host",
+      "summary": "cadence init prompts for name (default 'unnamed') + profile, then tells the user to separately run the host install. Derive name from package.json/dir, profile from git (suggestGateProfile already exists), detect .claude/ and offer/auto-run host install in the same step. --name/--preset stay as overrides. One command, zero questions, fully wired.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "host-claude-code"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/host-claude-code/src/install.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "108-zero-prompt-init",
+      "archivedAt": "2026-06-17T18:59:23.874Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:56.332Z",
+      "updatedAt": "2026-06-17T18:59:23.874Z"
+    },
+    {
+      "id": "rec-20260617-002",
+      "title": "init --demo: pre-filled first phase in the real repo",
+      "summary": "cadence tutorial runs in a throwaway sandbox then deletes it - user ends with nothing. README quickstart says 'fill .cadence/phases/.../DRAFT.md' - that hand-edit is the cliff. Scaffold a real phase with objective + AC-1 + task T1 already written (reuse tutorial toy template, tutorial.ts:44-75) so the user runs approve -> done -> settle immediately and watches a real gate fire/pass in their own repo.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/cli/commands/tutorial.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "109-init-demo",
+      "archivedAt": "2026-06-17T19:09:19.966Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:56.745Z",
+      "updatedAt": "2026-06-17T19:09:19.966Z"
+    },
+    {
+      "id": "rec-20260617-004",
+      "title": "Fold activation into init when API key present",
+      "summary": "Out-of-box mock verifier is plastered as 'NOT real verification' across init/doctor/config-explain, but turning it on is a separate cadence activate + export ANTHROPIC_API_KEY dance. At init, if ANTHROPIC_API_KEY is already in env, offer (or --activate auto-select) anthropic right there. User with key gets real verification with zero extra hops and no scolding.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/cli/commands/activate.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "110-init-activate",
+      "createdAt": "2026-06-17T18:31:57.532Z",
+      "updatedAt": "2026-06-17T19:16:48.277Z",
+      "archivedAt": "2026-06-17T19:16:48.277Z",
+      "archiveReason": "converted-settled"
     }
   ]
 }

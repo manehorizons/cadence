@@ -1,0 +1,23 @@
+{
+  "draftId": "110-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "init --activate: key probe + planActivation/setPath onto cloned cfg; no key persisted; no ping",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-17T19:14:07.090Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "summary: real-verification-on confirmation suppresses mock notice; missing-key export hint",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-17T19:14:07.473Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "init-activate.test.ts AC-1..AC-5",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-17T19:14:08.316Z"
+    }
+  }
+}

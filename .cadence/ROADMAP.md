@@ -746,3 +746,102 @@ D-number** (additive onboarding/legibility). Full scope/scope-guards in MILESTON
 - **Phase 107 — Release v1.26.0** ✓ — docs (`commands.md` `start` entry + README
   pointer), MILESTONES/ROADMAP narrative, changeset, lockstep `1.25.0 → 1.26.0` across
   all four published packages. Tag + npm provenance via the manual `Release` workflow at publish.
+
+---
+
+## v1.27.0 — Onboarding breeze: `init` is the front door — STARTED 2026-06-17
+
+Chosen 2026-06-17 (direct follow-on to v1.26 `cadence start`). v1.26 made setup
+*routable* — `start` points a newcomer at the right command. v1.27 makes the command
+it points at *just work*: `cadence init` becomes a zero-friction front door that
+scaffolds a working, real-verification-ready loop with no follow-up commands and no
+prompts. Sourced from an onboarding assessment (2026-06-17) that walked install → first
+successful loop and found ~8 typed steps + 1 hand-edit + a separate `activate` hop.
+**No new DESIGN.md D-number** (additive onboarding/legibility, same lane as
+`quickstart`/`start`/`activate`). Recs: rec-20260617-001/002/004 (accepted);
+rec-20260617-003 (arg-syntax) + rec-20260617-005 (agent/non-TTY mode) deferred to a
+v1.28 follow-on.
+
+**Thesis.** The three init-hub recs cohere: each lands on `init.ts`, and together they
+collapse "install → working real-verification loop" from ~8 steps + a hand-edit + a
+separate activate into `cadence init` (auto-wired, demo phase, real verifier when a key
+is present) → 3 paste-ready commands. The biggest breeze-per-effort of the five
+findings.
+
+### Phase 108 — Zero-prompt init that auto-wires the host (rec-20260617-001)
+
+**Objective.** `cadence init` prompts for name (default `unnamed`) + profile, then tells
+the user to *separately* run the host install. Make init derive everything: name from
+`package.json`/dir, gate profile from git (the existing `suggestGateProfile` heuristic),
+and — when a Claude Code workspace is detected (`.claude/` present) — offer (or, with a
+flag, auto-run) `cadence-host-claude-code install` in the same step. `--name`/`--preset`/
+`--gate-profile` stay as explicit overrides. One command, zero questions, fully wired.
+
+**Files.**
+- `packages/core/src/cli/commands/init.ts` — name/profile auto-derivation; host-wire step.
+- `packages/host-claude-code/src/install.ts` — reusable install entrypoint init can invoke (or a spawn, mirroring `start`'s launcher discipline — core must not import host code).
+- `packages/core/tests/cli/init.test.ts` — auto-derive + host-wire coverage.
+
+**ACs.** (1) `init` with no flags writes a valid `.cadence/` with a derived name (no
+`unnamed`) and a git-suggested gate profile, asking nothing. (2) `--name`/`--preset`/
+`--gate-profile` still override the derivations. (3) When `.claude/` is present, init
+offers/auto-runs the host install without core importing host code (spawn seam, like
+`start`). (4) Non-TTY runs never block (no prompt path reachable). (5) Behavior for an
+already-initialized dir unchanged (still refuses / `--claude-md` path intact).
+
+### Phase 109 — `init --demo`: a pre-filled first phase in the real repo (rec-20260617-002)
+
+**Objective.** `cadence tutorial` runs in a throwaway sandbox then deletes it — the user
+ends with nothing, and the README quickstart's "fill `.cadence/phases/.../DRAFT.md`" is
+the steepest step in the happy path. Add `cadence init --demo` (or a `start` route) that
+scaffolds a real phase with the objective + AC-1 + task T1 **already written** (reuse the
+`tutorial` toy template), so the user runs `approve → done → settle` immediately and
+watches a real gate fire/pass **in their own repo**.
+
+**Files.**
+- `packages/core/src/cli/commands/init.ts` — `--demo` flag → scaffold the seeded phase.
+- `packages/core/src/cli/commands/tutorial.ts` — extract the shared toy-DRAFT template.
+- `packages/core/tests/cli/init-demo.test.ts` (new).
+
+**ACs.** (1) `cadence init --demo` leaves a ready-to-approve phase DRAFT in the real
+`.cadence/`. (2) The seeded DRAFT carries objective + ≥1 AC + ≥1 task (no hand-edit
+needed to reach settle). (3) The toy template is shared with `tutorial` (one source).
+(4) `init` without `--demo` is unchanged. (5) The seeded loop runs `approve → done →
+settle` clean end-to-end (tested).
+
+### Phase 110 — Fold activation into init when a key is present (rec-20260617-004)
+
+**Objective.** The `mock` verifier is named "NOT real verification" across
+init/doctor/config-explain, but turning it on is a *separate* `cadence activate` +
+`export ANTHROPIC_API_KEY` dance. At init, if `ANTHROPIC_API_KEY` is already in the env,
+offer (or `--activate` auto-select) the `anthropic` provider right there — reusing the
+`activate` plan/assess seam (no key persisted). A user who already has a key gets real
+verification with zero extra hops and no scolding.
+
+**Files.**
+- `packages/core/src/cli/commands/init.ts` — env probe + `--activate`; reuse activate seam.
+- `packages/core/src/cli/commands/activate.ts` (or `activate/*`) — shared provider-write seam.
+- `packages/core/tests/cli/init-activate.test.ts` (new).
+
+**ACs.** (1) With `ANTHROPIC_API_KEY` set, `init --activate` writes `verifier.provider =
+anthropic` (deep-verify seam) without persisting the key. (2) Without the key (or without
+`--activate`), init stays on `mock` and prints the existing activate pointer. (3) The
+provider-write reuses the `activate` seam (no duplicated logic). (4) Non-TTY safe. (5) The
+mock-NOT-real-verification notice is suppressed when real verification was just wired.
+
+### Phase 111 — Release v1.27.0
+
+**Objective.** Docs (`commands.md` init flags `--demo`/`--activate` + the auto-wire
+behavior; README quickstart collapsed to the new flow; `providers.md`/`concepts.md`
+touch-ups), changeset, lockstep `1.26.0 → 1.27.0` across all four published packages.
+Tag + npm provenance via the manual `Release` workflow at publish.
+
+**ACs.** (1) README quickstart reflects the zero-prompt / `--demo` / key-aware flow.
+(2) `commands.md` documents the new init flags. (3) Changeset present; all four packages
+bumped in lockstep. (4) Full suite green. (5) CLAUDE.md narrative leads with `1.27.0`.
+
+**Scope guards.** *In:* the init-hub trio (auto-derive + host-wire, `--demo`, key-aware
+activate) + docs + release. *Out (deferred to v1.28):* rec-003 (auto-derive phase id +
+`--ac` syntax shorthands) and rec-005 (agent/non-TTY mode + `--preset agent`). *Out
+(YAGNI):* a full interactive init wizard; remembering host choices; non-Anthropic
+key-detection at init.
