@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 111-release-v1.27
+**Active phase:** 112-coverage-assertion-mode
 **Active draft:** (none)
 **Tier:** (n/a)
 

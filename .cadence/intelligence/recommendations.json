@@ -815,6 +815,143 @@
       "decisionIds": [],
       "createdAt": "2026-06-17T18:31:57.948Z",
       "updatedAt": "2026-06-17T18:33:41.442Z"
+    },
+    {
+      "id": "rec-20260617-006",
+      "title": "Frictionless first loop: seed an example DRAFT + make the settle refusal a teaching moment",
+      "summary": "(1) 'cadence draft new' should scaffold a complete runnable toy DRAFT (objective + AC-1 + T1 pre-filled, commented 'replace this') so a newcomer can run the whole loop before learning AC-N/T1 conventions (tutorial.ts already generates this). (2) The first loop's 'settle run --auto' refuses by design ('AC-1 has no test') but the why lives only in a README comment — make the refusal output narrate it with the exact next command. NOTE: re-check against v1.27 'onboarding breeze' which shipped init front-door work. Source: 2026-06-17 onboarding assessment (#1, #3).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "draft",
+        "settle",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/draft.ts",
+        "packages/core/src/cli/commands/tutorial.ts",
+        "packages/core/src/services/settle.ts",
+        "packages/core/src/gates/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260617-1659",
+      "createdAt": "2026-06-17T23:15:35.573Z",
+      "updatedAt": "2026-06-17T23:15:35.573Z"
+    },
+    {
+      "id": "rec-20260617-007",
+      "title": "One unambiguous onboarding front door + a guided next-step rail",
+      "summary": "Collapse competing entry points (start/quickstart/tutorial/docs-quickstart) into one golden path: make 'cadence start' the only README 'new here?' command; guarantee every onboarding command ends with one 'Next:' line (doctor lacks it); open docs/quickstart with a 3-way driver fork (terminal/Claude Code/MCP); feature 'cadence tutorial' right after the install line. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#2, #6, #7, #10).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "docs",
+        "start",
+        "quickstart",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/quickstart.md",
+        "docs/README.md",
+        "packages/core/src/cli/commands/doctor.ts",
+        "packages/core/src/start/menu.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260617-1659",
+      "createdAt": "2026-06-17T23:15:35.744Z",
+      "updatedAt": "2026-06-17T23:15:35.744Z"
+    },
+    {
+      "id": "rec-20260617-008",
+      "title": "Put real-verification activation on the golden path",
+      "summary": "Add the full 3-step Anthropic recipe inline to README quickstart + init next-steps (get key -> export ANTHROPIC_API_KEY -> cadence activate --provider anthropic -> cadence doctor). End 'cadence init' with a one-line health summary (it already knows what doctor checks). NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#4, #5).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "docs",
+        "init",
+        "activate",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/cli/commands/activate.ts",
+        "docs/providers.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260617-1659",
+      "createdAt": "2026-06-17T23:15:35.906Z",
+      "updatedAt": "2026-06-17T23:15:35.906Z"
+    },
+    {
+      "id": "rec-20260617-009",
+      "title": "Remove onboarding terminology collision + the silent gate-profile flip",
+      "summary": "(1) 'cadence init' prints both 'preset' (solo/team/production) and 'gate profile' (strict/standard/auto) with no explanation — rename gate profile to 'strictness' or add a one-line distinction. (2) A repo crossing ~20 commits silently flips 'draft approve' to interactive — warn at init time. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#8, #9).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "init",
+        "docs",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "docs/concepts.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-009"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-17T23:15:36.077Z",
+      "updatedAt": "2026-06-17T23:15:36.077Z",
+      "scoutId": "scout-20260617-1659"
     }
   ],
   "archived": [
@@ -980,10 +1117,10 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "110-init-activate",
-      "createdAt": "2026-06-17T18:31:57.532Z",
-      "updatedAt": "2026-06-17T19:16:48.277Z",
       "archivedAt": "2026-06-17T19:16:48.277Z",
-      "archiveReason": "converted-settled"
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:57.532Z",
+      "updatedAt": "2026-06-17T19:16:48.277Z"
     }
   ]
 }

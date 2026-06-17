@@ -425,3 +425,67 @@ cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positi
 - next: cadence milestone propose
 
 Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.
+
+## rec-20260617-006 — Frictionless first loop: seed an example DRAFT + make the settle refusal a teaching moment
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, draft, settle, onboarding
+- files: packages/core/src/cli/commands/draft.ts, packages/core/src/cli/commands/tutorial.ts, packages/core/src/services/settle.ts, packages/core/src/gates/coverage.ts
+- evidence: 2026-06-17 onboarding assessment; verify against v1.27 init front door.
+- next: cadence milestone propose
+
+(1) 'cadence draft new' should scaffold a complete runnable toy DRAFT (objective + AC-1 + T1 pre-filled, commented 'replace this') so a newcomer can run the whole loop before learning AC-N/T1 conventions (tutorial.ts already generates this). (2) The first loop's 'settle run --auto' refuses by design ('AC-1 has no test') but the why lives only in a README comment — make the refusal output narrate it with the exact next command. NOTE: re-check against v1.27 'onboarding breeze' which shipped init front-door work. Source: 2026-06-17 onboarding assessment (#1, #3).
+
+## rec-20260617-007 — One unambiguous onboarding front door + a guided next-step rail
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, docs, start, quickstart, onboarding
+- files: README.md, docs/quickstart.md, docs/README.md, packages/core/src/cli/commands/doctor.ts, packages/core/src/start/menu.ts
+- evidence: 2026-06-17 onboarding assessment.
+- next: cadence milestone propose
+
+Collapse competing entry points (start/quickstart/tutorial/docs-quickstart) into one golden path: make 'cadence start' the only README 'new here?' command; guarantee every onboarding command ends with one 'Next:' line (doctor lacks it); open docs/quickstart with a 3-way driver fork (terminal/Claude Code/MCP); feature 'cadence tutorial' right after the install line. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#2, #6, #7, #10).
+
+## rec-20260617-008 — Put real-verification activation on the golden path
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, docs, init, activate, onboarding
+- files: README.md, packages/core/src/cli/commands/init.ts, packages/core/src/cli/commands/activate.ts, docs/providers.md
+- evidence: 2026-06-17 onboarding assessment.
+- next: cadence milestone propose
+
+Add the full 3-step Anthropic recipe inline to README quickstart + init next-steps (get key -> export ANTHROPIC_API_KEY -> cadence activate --provider anthropic -> cadence doctor). End 'cadence init' with a one-line health summary (it already knows what doctor checks). NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#4, #5).
+
+## rec-20260617-009 — Remove onboarding terminology collision + the silent gate-profile flip
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, init, docs, onboarding
+- files: packages/core/src/cli/commands/init.ts, docs/concepts.md
+- evidence: 2026-06-17 onboarding assessment.
+- next: cadence milestone propose
+
+(1) 'cadence init' prints both 'preset' (solo/team/production) and 'gate profile' (strict/standard/auto) with no explanation — rename gate profile to 'strictness' or add a one-line distinction. (2) A repo crossing ~20 commits silently flips 'draft approve' to interactive — warn at init time. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#8, #9).
