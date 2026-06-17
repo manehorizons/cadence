@@ -134,7 +134,33 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.26.0`** (2026-06-13, tag `v1.26.0`
+change). The latest version is **`1.27.0`** (2026-06-17, tag `v1.27.0`
+pending): the **onboarding-breeze** milestone (v1.27) — make `cadence init` a
+zero-friction front door so a newcomer reaches a working, real-verification-ready
+loop with one command and no follow-up steps. Sourced from a 2026-06-17 onboarding
+assessment (install → first loop was ~8 typed steps + a hand-edit + a separate
+`activate` hop); recs rec-20260617-001/002/004 (the init-hub trio; rec-003
+arg-syntax + rec-005 agent/non-TTY mode deferred to v1.28). No new DESIGN.md
+D-number (additive onboarding/legibility, same lane as `quickstart`/`start`/`activate`).
+**Phase 108** — **zero-prompt init + auto-wire host**: `init` derives the project
+name (`package.json#name`, scope-stripped, else dir basename) and gate profile (git
+heuristic), asking nothing; when `.claude/` is present, `--wire-host` runs the Claude
+Code adapter install in the same step via a subprocess spawn (core never imports host
+code — mirrors `start`'s launcher discipline), a TTY offers it, non-TTY skips with a
+pointer (`--skip-host-wire` opts out). **Phase 109** — **`init --demo`**: seeds a
+ready-to-approve demo phase (objective + AC-1 + T1) into the user's own repo using a
+`renderDemoDraft` template now shared with `cadence tutorial` (one source), so the
+next commands are `approve → done → settle` with no hand-edit. **Phase 110** —
+**`init --activate`**: when `ANTHROPIC_API_KEY` is in the env, writes
+`verifier.provider=anthropic` (deep-verify seam) via the shared activate seam
+(`planActivation`+`setPath`), the key never persisted and no live ping (that stays in
+`cadence activate`); the summary confirms real verification is on and suppresses the
+mock-placeholder notice. **Phase 111** — release: README quickstart collapsed to the
+new flow, `commands.md` init flags, changeset, lockstep `1.26.0 → 1.27.0` across all
+four published packages (`cadence-core` carries the feature; the other three are
+version-alignment only). Built TDD, dogfooded through CADENCE's own loop on branch
+`feat/v1.27-onboarding-breeze`; npm publish is the user-triggered manual `Release`
+workflow. Prior: **`1.26.0`** (2026-06-13, tag `v1.26.0`
 pending): the **guided-onboarding** milestone (v1.26) — **`cadence start`**, an
 interactive onboarding front door that asks "What are you doing?", takes a
 numbered pick, confirms, and runs the matching setup command. It is the

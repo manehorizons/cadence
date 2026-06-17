@@ -164,21 +164,31 @@ Scaffold a new .cadence/ directory in the current working tree
 
 | Option | Default | Description |
 |---|---|---|
-| `--name <project>` | (prompted) | Project name |
+| `--name <project>` | (derived) | Project name. When omitted it is derived from `package.json#name` (scope stripped) then the directory name |
 | `--preset <preset>` | `"team"` | Config preset: `solo \| team \| production` |
 | `--profile <preset>` | — | **Deprecated** alias for `--preset` (kept for back-compat; emits a notice) |
 | `--gate-profile <p>` | (suggested from git history) | Gate profile: `strict \| standard \| auto` |
+| `--demo` | — | Seed a ready-to-approve demo phase (`01-demo`, objective + AC-1 + T1) so you can run a full loop in this repo with no hand-edit |
+| `--activate` | — | When `ANTHROPIC_API_KEY` is present, turn on real verification (`verifier.provider=anthropic`, deep-verify seam) in the same step. The key is never stored; no live check runs (that stays in `cadence activate`) |
+| `--wire-host` | — | When a `.claude/` workspace is present, run `cadence-host-claude-code install` in the same step (subprocess spawn; auto-run, no prompt) |
+| `--skip-host-wire` | — | Never wire the Claude Code host, even when `.claude/` is present |
 | `--claude-md` | — | Only (re)generate the managed CLAUDE.md block at the repo root; allowed on an already-initialized project |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — writes `.cadence/config.json`, `.cadence/state.json`,
-`.cadence/PROJECT.md`, and a managed block in the repo-root `CLAUDE.md`. The
-`--preset` flag selects a config preset; `--gate-profile` sets which quality
-gates fire by default. (`--profile` is a deprecated alias for `--preset`,
-retained for back-compat — it was a misnomer, since it sets a preset, not a gate
-profile.) When `--gate-profile` is omitted, CADENCE analyses git
-history to suggest a value. When `--name` is omitted and the session is
-interactive, CADENCE prompts for it.
+`.cadence/PROJECT.md`, and a managed block in the repo-root `CLAUDE.md`. Init is
+**zero-prompt**: it derives the project name and (via git history) the gate
+profile, asking nothing. The `--preset` flag selects a config preset;
+`--gate-profile` sets which quality gates fire by default. (`--profile` is a
+deprecated alias for `--preset`, retained for back-compat — it was a misnomer,
+since it sets a preset, not a gate profile.)
+
+When a `.claude/` workspace is detected, `--wire-host` installs the Claude Code
+adapter in the same step (a TTY offers it interactively; non-TTY skips with a
+pointer); `--skip-host-wire` opts out. `--demo` seeds a ready-to-approve demo
+phase so the very next commands are `draft approve 01-demo 01` → `done T1` →
+`settle run --ac AC-1=pass`. `--activate` flips on real verification when a key
+is already in the environment.
 
 The `--claude-md` flag is the only `init` option permitted on an
 already-initialized project; it is used to refresh the CLAUDE.md block without

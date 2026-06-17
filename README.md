@@ -54,11 +54,27 @@ npm install -g @manehorizons/cadence-core
 New to CADENCE? Run `cadence start` for a guided menu that picks the right setup
 command for what you're doing (or `cadence quickstart` for a read-only map).
 
-Then run one full loop in any project:
+The fastest way to *see* a loop run in your own repo — `--demo` seeds a
+ready-to-approve phase so there's nothing to hand-edit:
 
 ```sh
 mkdir my-app && cd my-app
-cadence init --name "my-app"
+cadence init --demo        # zero prompts: name + gate profile are derived
+cadence draft approve 01-demo 01
+cadence done T1
+cadence settle run --ac AC-1=pass
+```
+
+`cadence init` asks nothing — it derives the project name (from `package.json`
+or the directory) and the gate profile (from git history). Already have an
+`ANTHROPIC_API_KEY`? Add `--activate` to turn on real verification in the same
+step (the key is never stored). In a Claude Code workspace (`.claude/` present),
+add `--wire-host` to install the adapter in the same step too.
+
+To drive a real phase yourself instead of the demo:
+
+```sh
+cadence init
 cadence draft new 01-foundation 01 --title "First phase"
 # fill .cadence/phases/01-foundation/01-01-DRAFT.md
 cadence draft approve 01-foundation 01

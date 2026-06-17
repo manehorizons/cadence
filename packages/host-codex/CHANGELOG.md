@@ -1,5 +1,34 @@
 # @manehorizons/cadence-host-codex
 
+## 1.27.0
+
+### Minor Changes
+
+- v1.27.0 — onboarding breeze: make `cadence init` a zero-friction front door.
+  - **Zero-prompt init** (phase 108): `cadence init` derives the project name
+    (`package.json#name`, scope-stripped, else the directory name) and the gate
+    profile (git-history heuristic) — it asks nothing.
+  - **Auto-wire the host** (phase 108): when a `.claude/` workspace is present,
+    `--wire-host` runs the Claude Code adapter install in the same step via a
+    subprocess spawn (core never imports host code); a TTY offers it, non-TTY
+    skips with a pointer. `--skip-host-wire` opts out.
+  - **`init --demo`** (phase 109): seed a ready-to-approve demo phase (objective +
+    AC-1 + T1, shared with the `tutorial` toy template) so a newcomer runs a full
+    `approve → done → settle` loop in their own repo with no hand-edit.
+  - **`init --activate`** (phase 110): when `ANTHROPIC_API_KEY` is present, turn on
+    real verification (`verifier.provider=anthropic`, deep-verify seam) in the same
+    step via the shared activate seam — the key is never persisted, and no live
+    check runs (that stays in `cadence activate`).
+
+  `cadence-types`, `cadence-host-claude-code`, and `cadence-host-codex` carry
+  version-alignment bumps only (the feature lands in `cadence-core`).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.27.0
+  - @manehorizons/cadence-types@1.27.0
+
 ## 1.26.0
 
 ### Minor Changes
