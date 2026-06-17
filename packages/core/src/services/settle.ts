@@ -195,7 +195,11 @@ export async function settleService(
       coverage: () => {
         if (!coverageMemo) {
           const globs = cadenceConfig?.verification?.testGlobs;
-          coverageMemo = scanTestCoverage(cwd, globs ? { globs } : {});
+          const mode = cadenceConfig?.verification?.coverageMode;
+          coverageMemo = scanTestCoverage(cwd, {
+            ...(globs ? { globs } : {}),
+            ...(mode ? { mode } : {}),
+          });
         }
         return coverageMemo;
       },

@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import type { Dirent } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { findTestSpans } from './test-spans.js';
 
 export type AcId = `AC-${number}` | string;
 
@@ -12,6 +13,8 @@ export interface TestRef {
   line: number;
   /** Trimmed snippet of the matching line (≤120 chars). */
   snippet: string;
+  /** Assertion mode only: true when the ref is inside a qualifying span. */
+  qualifying?: boolean;
 }
 
 export interface CoverageScanOptions {
@@ -22,6 +25,13 @@ export interface CoverageScanOptions {
    * classes — keep the convention narrow + dependency-free.
    */
   globs?: string[];
+  /**
+   * Coverage strictness (phase 108). `mention` (default) = whole-file token
+   * search. `assertion` = an AC ref counts only inside an `it()`/`test()` block
+   * that asserts; mention-only refs are still recorded but tagged
+   * `qualifying: false`.
+   */
+  mode?: 'mention' | 'assertion';
 }
 
 const DEFAULT_GLOBS = ['packages/**/*.test.ts', 'packages/**/*.test.tsx'];
@@ -50,6 +60,33 @@ export async function scanTestCoverage(
     } catch {
       continue;
     }
+    const mode = opts.mode ?? 'mention';
+
+    if (mode === 'assertion') {
+      const spans = findTestSpans(raw).filter((s) => s.hasAssertion);
+      AC_TOKEN_RE.lastIndex = 0;
+      const seen = new Set<string>();
+      for (const m of raw.matchAll(AC_TOKEN_RE)) {
+        const id = m[0]!;
+        const key = `${id}@${relPath}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const offset = m.index ?? 0;
+        const before = raw.slice(0, offset);
+        const lineNo = before.split('\n').length;
+        const lineText = (raw.split('\n')[lineNo - 1] ?? '').trim().slice(0, 120);
+        const arr = out.get(id) ?? [];
+        arr.push({
+          file: relPath,
+          line: lineNo,
+          snippet: lineText,
+          qualifying: spans.some((s) => offset >= s.start && offset <= s.end),
+        });
+        out.set(id, arr);
+      }
+      continue; // next file; do not run the mention loop
+    }
+
     const lines = raw.split(/\r?\n/);
     const seenInFile = new Set<string>();
     for (let i = 0; i < lines.length; i++) {
@@ -78,6 +115,22 @@ export function uncoveredAcs(
   coverage: Map<AcId, TestRef[]>,
 ): string[] {
   return acIds.filter((id) => (coverage.get(id) ?? []).length === 0);
+}
+
+/**
+ * Assertion mode: AC ids that have ≥1 recorded ref but none that qualifies
+ * (i.e. mentioned somewhere, but never inside an asserting it()/test() block).
+ * Empty in mention mode (refs there carry no `qualifying` flag → treated as
+ * not-weak as long as they exist).
+ */
+export function weaklyLinkedAcs(
+  acIds: string[],
+  coverage: Map<AcId, TestRef[]>,
+): string[] {
+  return acIds.filter((id) => {
+    const refs = coverage.get(id) ?? [];
+    return refs.length > 0 && refs.every((r) => r.qualifying === false);
+  });
 }
 
 /** Best-effort recursive listing, skipping node_modules / dist / .git. */

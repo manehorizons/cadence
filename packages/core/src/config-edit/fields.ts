@@ -100,6 +100,17 @@ export const EDITABLE_FIELDS: EditableField[] = [
     ],
     current: (c) => String(c.recommendations.autoArchive),
   },
+  {
+    name: 'coverageMode',
+    dottedKey: 'verification.coverageMode',
+    label: 'Coverage mode',
+    help: 'How the test-coverage gate counts an AC-N token. `assertion` requires the token to sit inside an asserting it()/test() block.',
+    choices: [
+      { value: 'mention', blurb: 'any AC-N mention in a test file counts (default)' },
+      { value: 'assertion', blurb: 'AC-N must be inside an asserting it()/test() block' },
+    ],
+    current: (c) => c.verification.coverageMode,
+  },
 ];
 
 /** Short aliases → canonical field name (case-insensitive lookup). */

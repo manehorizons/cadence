@@ -77,6 +77,14 @@ export const CadenceConfigZ = z.object({
        */
       testGlobs: z.array(z.string()).default(['packages/**/*.test.ts', 'packages/**/*.test.tsx']),
       /**
+       * How strictly an AC token must be referenced by a test (phase 108).
+       * `mention` (default) — any `AC-N` occurrence anywhere in a matched file
+       * counts (whole-file string search; unchanged historical behavior).
+       * `assertion` — the token must appear inside an `it()`/`test()` block that
+       * contains at least one assertion (`expect(` / `assert` / `.should`).
+       */
+      coverageMode: z.enum(['mention', 'assertion']).default('mention'),
+      /**
        * Shell command the `build-test-must-pass` gate runs at settle time
        * (Phase 39.2). When set, settle runs it and refuses on a non-zero exit
        * unless `--allow-failing-build` / `--force`. When absent, the gate is
@@ -84,7 +92,10 @@ export const CadenceConfigZ = z.object({
        */
       testCommand: z.string().optional(),
     })
-    .default({ testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'] }),
+    .default({
+      testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
+      coverageMode: 'mention',
+    }),
   verifier: z
     .object({
       /**
@@ -297,6 +308,7 @@ export const defaultConfig: CadenceConfig = {
   },
   verification: {
     testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
+    coverageMode: 'mention' as const,
   },
   verifier: { provider: 'mock' as const, diffCapBytes: 262144 },
   perTaskVerifier: { provider: 'mock' as const },

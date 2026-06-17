@@ -477,3 +477,22 @@ describe('recommendations auto-archive config (Phase 102 / AC-1)', () => {
     ).toThrow();
   });
 });
+
+describe('verification.coverageMode (phase 108)', () => {
+  it('defaults to "mention" when omitted (AC-1)', () => {
+    const { verification: _drop, ...withoutVerification } = defaultConfig;
+    const cfg = CadenceConfigZ.parse(withoutVerification);
+    expect(cfg.verification.coverageMode).toBe('mention');
+  });
+
+  it('accepts "assertion" (AC-1)', () => {
+    const cfg = CadenceConfigZ.parse({ ...defaultConfig, verification: { coverageMode: 'assertion' } });
+    expect(cfg.verification.coverageMode).toBe('assertion');
+  });
+
+  it('rejects an unknown mode (AC-1)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, verification: { coverageMode: 'fuzzy' as never } }),
+    ).toThrow();
+  });
+});
