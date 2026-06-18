@@ -495,6 +495,33 @@ and were deliberately split out to keep v1.27 tight and coherent.
   *Out (YAGNI):* a full interactive init wizard; remembering host choices; non-Anthropic
   key detection at init.
 
+## v1.28.0 — Coverage depth + onboarding completion (DELIVERED 2026-06-18)
+
+Three phases bundled into one release; closes the onboarding arc.
+
+- **Phase 112 — coverage-gate assertion mode (rec-20260611-004).** Opt-in
+  `verification.coverageMode: 'assertion'` counts an `AC-N` token only inside an
+  asserting `it()`/`test()` block (pure, dependency-free, string/comment-aware
+  `findTestSpans` + `weaklyLinkedAcs`); a comment-only mention becomes a *weak link*
+  with a distinct refusal hint. Default `mention` mode byte-for-byte unchanged.
+- **Phase 113 — one onboarding front door + guided Next: rail (rec-20260617-007).**
+  `cadence start` is the single front door (README leads with it; `quickstart`
+  reframed as the post-init map); `cadence doctor` ends with a `Next:` line (pure
+  `doctorNextStep`); `docs/quickstart.md` opens with a terminal/Claude Code/MCP
+  driver fork.
+- **Phase 114 — onboarding papercuts (rec-20260617-009 scoped + rec-20260618-001).**
+  `cadence init` warns when a young repo's *derived* `auto` profile will flip
+  `approve` to interactive past ~20 commits; `cadence handoff` honors a `CADENCE_NOW`
+  clock override (pure `resolveNow`), closing a UTC-midnight flake in the
+  clobber-refusal test.
+- **Phase 115 — Release v1.28.0.** Changeset consumed; lockstep `1.27.0 → 1.28.0`
+  across all four published packages; CLAUDE.md narrative leads with `1.28.0`.
+
+**Outcome.** The onboarding arc is complete — recs 006/007/008/009 all shipped (006/008
+via v1.27, 007/009 here). No new DESIGN.md D-number. Remaining backlog is non-onboarding
+(rec-003 arg-syntax, rec-005 agent/non-TTY, rec-611-005 gate-bypass audit,
+rec-611-007 COMPETITIVE.md, rec-611-006 codex test-parity).
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.
