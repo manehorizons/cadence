@@ -67,6 +67,10 @@ export const SummaryZ = z.object({
       }),
     )
     .optional(),
+  /** Phase 116: set when the interactive-verdict walker was auto-skipped in a
+   *  non-TTY (auto-bypass). Mutually exclusive with `interactiveVerify` — no
+   *  per-AC human verdicts are fabricated; the other verification gates decide. */
+  interactiveVerifySkipped: z.literal('non-tty').optional(),
   /** Phase 24.3: per-file code-review findings. Present only when the gate ran. */
   codeReview: z.record(z.string(), z.array(FindingZ)).optional(),
   /** Phase 25.2: flat security-audit findings. Present only when the gate ran. */

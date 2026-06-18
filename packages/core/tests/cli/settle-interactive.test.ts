@@ -19,11 +19,13 @@ function run(
   args: string[],
   cwd: string,
   promptScript?: string,
+  extraEnv?: Record<string, string>,
 ): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
     const env: NodeJS.ProcessEnv = {
       ...process.env,
       ANTHROPIC_API_KEY: '', // keep mock-fallback path for any deep code path
+      ...extraEnv,
     };
     if (promptScript !== undefined) {
       env.CADENCE_PROMPTER_SCRIPT = promptScript;
@@ -222,18 +224,40 @@ describe('settle --interactive (Phase 16)', () => {
     });
   });
 
-  it('refuses when stdin is not a TTY and no prompter script is set (AC-5)', async () => {
+  // Phase 116 AC-4: a non-TTY interactive settle now skips the walker and passes,
+  // recording a skipped marker in the SUMMARY (was: refuses, pre-116).
+  it('Phase 116 AC-4: non-TTY auto-skips the interactive walker, passes, and marks the SUMMARY', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);
     await seedCoverageTest(active.root, ['AC-1']);
-    // No promptScript arg → CADENCE_PROMPTER_SCRIPT not set → StdinPrompter →
-    // refuses because spawn() pipes aren't a TTY.
-    const r = await run(
-      ['settle', 'run', '--auto', '--interactive'],
-      active.root,
+    // No promptScript arg → non-TTY. Pre-116 this refused; now it auto-bypasses.
+    const r = await run(['settle', 'run', '--auto', '--interactive'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/non-TTY; interactive-verdict walker skipped/);
+    const summary = JSON.parse(
+      await readFile(
+        join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
+        'utf8',
+      ),
     );
+    expect(summary.interactiveVerifySkipped).toBe('non-tty');
+    expect(summary.interactiveVerify).toBeUndefined();
+    // The other gates still decide: structural DONE → AC-1 passes.
+    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true });
+  });
+
+  // Phase 116 AC-5: CADENCE_REQUIRE_TTY=1 restores the pre-116 non-TTY refusal.
+  it('Phase 116 AC-5: CADENCE_REQUIRE_TTY=1 still refuses in a non-TTY', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    await seedCoverageTest(active.root, ['AC-1']);
+    const r = await run(['settle', 'run', '--auto', '--interactive'], active.root, undefined, {
+      CADENCE_REQUIRE_TTY: '1',
+    });
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/interactive:.*TTY/);
   });

@@ -8,6 +8,7 @@ import type {
 import type { CoherenceResult } from '../coherence/check.js';
 import type { PlanReviewInput, PlanReviewResult } from '../verify/plan-review.js';
 import type { Prompter } from '../verify/prompter.js';
+import type { Interactivity } from './interactivity.js';
 import type { ConvergenceSidecar, GateResult, IoPort } from './types.js';
 
 /**
@@ -71,6 +72,11 @@ export interface DraftGateContext {
   readonly phase: string;
   readonly id: string;
   readonly opts: DraftGateOpts;
+  /** Phase 116: resolved non-TTY interactivity mode (`resolveInteractivity` over
+   *  env + `process.stdin.isTTY`, computed by the draft-side adapter). `bypass`
+   *  makes the manual approve gate auto-pass loudly instead of refusing on a
+   *  non-TTY. Absent → treated as attempt-prompt (back-compat). */
+  readonly interactivity?: Interactivity;
   /** Memoized `coherenceCheck(draft, state, projectMd)`; computed at most once
    *  per command so the blocker-refuse and warn-emit steps share one result. */
   coherence(): CoherenceResult;

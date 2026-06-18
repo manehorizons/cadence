@@ -280,6 +280,21 @@ CADENCE_LOG_LEVEL=debug CADENCE_LOG_FORMAT=json cadence settle run --auto
 
 An invalid env value is ignored (falls through to config, then the default) rather than failing the command.
 
+### Interactivity (non-TTY auto-bypass)
+
+The two interactive gates (`approve`, `interactive-verdict`) auto-bypass in a
+non-TTY by default (v1.29) so agents and CI don't hit a `stdin is not a TTY`
+error. These env vars tune that behavior (no `config.json` field — env only):
+
+| Variable | Effect |
+|---|---|
+| `CADENCE_REQUIRE_TTY=1` | Restore the strict pre-1.29 refusal in a non-TTY (wins over the others). |
+| `CADENCE_NONINTERACTIVE=1` | Force bypass even when a TTY is present (pty-allocated agents). |
+| `CADENCE_PROMPTER_SCRIPT=<answers>` | Newline-separated scripted answers; when set, the prompt is always honored (never bypassed). |
+
+See [docs/concepts.md — Non-TTY auto-bypass](../concepts.md#non-tty-auto-bypass-agents--ci)
+for the full precedence and semantics.
+
 ---
 
 ## phaseGuard

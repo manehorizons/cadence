@@ -14,6 +14,7 @@ import { LoopViolationError } from '../errors.js';
 import { deriveAcResults, type ProgressFile } from '../status.js';
 import { loadConfig } from '../config/loader.js';
 import { effectiveGateSet } from '../gates/engine.js';
+import { resolveInteractivity } from '../gates/interactivity.js';
 import { selectVerifier } from '../verify/factory.js';
 import { scanTestCoverage } from '../verify/coverage.js';
 import {
@@ -190,6 +191,7 @@ export async function settleService(
         ...(opts.allowSecurityAuditFailure !== undefined ? { allowSecurityAuditFailure: opts.allowSecurityAuditFailure } : {}),
         ...(opts.allowSkillAuditMiss !== undefined ? { allowSkillAuditMiss: opts.allowSkillAuditMiss } : {}),
       },
+      interactivity: resolveInteractivity(process.env, Boolean(process.stdin.isTTY)),
       explicitIds,
       touchedFiles,
       coverage: () => {
@@ -307,6 +309,7 @@ export async function settleService(
       opts.interactive === true ||
       (opts.interactive !== false && gateSet.gates.includes('interactive-verdict'));
     const interactiveVerify = acc.interactiveVerify;
+    const interactiveVerifySkipped = acc.interactiveVerifySkipped;
     const deepVerify = acc.deepVerify;
     const deepVerifyMeta = acc.deepVerifyMeta;
     const verifierFailure = acc.flags.verifierFailure;
@@ -408,6 +411,7 @@ export async function settleService(
       ...(deepVerify ? { deepVerify } : {}),
       ...(deepVerifyMeta ? { deepVerifyMeta } : {}),
       ...(interactiveVerify ? { interactiveVerify } : {}),
+      ...(interactiveVerifySkipped ? { interactiveVerifySkipped } : {}),
       ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
       ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),
     };

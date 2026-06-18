@@ -1,6 +1,7 @@
 import { walkAcsInteractively, type InteractiveVerdict } from '../verify/interactive.js';
 import type { Prompter } from '../verify/prompter.js';
 import type { VerifyTestRef } from '../verify/verifier.js';
+import { SETTLE_BYPASS_NOTICE } from './interactivity.js';
 import type { GateImpl, GateResult } from './types.js';
 
 /**
@@ -17,6 +18,14 @@ export const runInteractiveGate: GateImpl = async (ctx): Promise<GateResult> => 
     (ctx.opts.interactive !== false && ctx.gateSet.gates.includes('interactive-verdict'));
   if (!requested || ctx.opts.auto === false) {
     return { outcome: 'pass' };
+  }
+
+  // Phase 116: in a non-TTY (bypass), skip the per-AC walker and pass — record a
+  // skipped marker in the SUMMARY rather than fabricating human verdicts. The
+  // other verification gates (test-coverage, deep-verify) still decide.
+  if (ctx.interactivity === 'bypass') {
+    ctx.io.err(`${SETTLE_BYPASS_NOTICE}\n`);
+    return { outcome: 'pass', summaryPatch: { interactiveVerifySkipped: 'non-tty' } };
   }
 
   let prompter: Prompter;
