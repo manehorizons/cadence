@@ -1,0 +1,29 @@
+{
+  "draftId": "116-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "pure resolveInteractivity + notice constants (gates/interactivity.ts); table tests",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T02:11:55.132Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "approve gate bypass branch; draft-context adapter + DraftGateContext.interactivity",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T02:11:55.307Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "interactive gate bypass + interactiveVerifySkipped marker; settle adapter + summary schema",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T02:11:55.479Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "docs: concepts gate matrix + Non-TTY auto-bypass section; commands.md + config.md env vars",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T02:11:55.641Z"
+    }
+  }
+}
