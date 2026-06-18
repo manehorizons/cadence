@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "draftId": "117-01",
+  "completedAt": "2026-06-18T02:41:44.202Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "changeset + pnpm changeset version → all 4 published pkgs 1.28.0→1.29.0"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "CLAUDE.md leads with 1.29.0 + phase-116 summary; MILESTONES v1.29.0 section"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "pnpm turbo run lint typecheck test build → 20/20 green"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
