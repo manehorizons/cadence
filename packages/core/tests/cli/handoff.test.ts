@@ -6,9 +6,16 @@ import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
-function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
+function run(
+  args: string[],
+  cwd: string,
+  env?: Record<string, string>,
+): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [CLI, ...args], { cwd });
+    const p = spawn(process.execPath, [CLI, ...args], {
+      cwd,
+      ...(env ? { env: { ...process.env, ...env } } : {}),
+    });
     let stdout = '', stderr = '';
     p.stdout.on('data', (d) => (stdout += d.toString()));
     p.stderr.on('data', (d) => (stderr += d.toString()));
@@ -37,8 +44,12 @@ describe('cadence handoff', () => {
 
   it('AC-23: refusing to clobber exits 2', async () => {
     active = await tempRepo({ initialized: true });
-    await run(['handoff', '--label', 'dup'], active.root);
-    const r = await run(['handoff', '--label', 'dup'], active.root);
+    // Pin the clock for both runs so the same-day collision is deterministic —
+    // a wall-clock run straddling UTC midnight would otherwise produce two
+    // different SESSION dates and never clobber (rec-20260618-001).
+    const pinned = { CADENCE_NOW: '2026-06-17T12:00:00Z' };
+    await run(['handoff', '--label', 'dup'], active.root, pinned);
+    const r = await run(['handoff', '--label', 'dup'], active.root, pinned);
     expect(r.code).toBe(2);
     expect(r.stderr).toMatch(/already exists/);
   });

@@ -1,6 +1,6 @@
 // packages/core/src/cli/commands/handoff.ts
 import type { Command } from 'commander';
-import { runHandoff, type HandoffOptions } from '../../handoff/run-handoff.js';
+import { runHandoff, resolveNow, type HandoffOptions } from '../../handoff/run-handoff.js';
 
 export function registerHandoffCommand(program: Command): void {
   program
@@ -25,7 +25,7 @@ export function registerHandoffCommand(program: Command): void {
         const label = opts.label ?? labelArg;
         if (label !== undefined) handoffOpts.label = label;
         try {
-          const res = await runHandoff(process.cwd(), handoffOpts);
+          const res = await runHandoff(process.cwd(), handoffOpts, resolveNow(process.env));
           if (opts.json) {
             process.stdout.write(JSON.stringify(res) + '\n');
           } else {

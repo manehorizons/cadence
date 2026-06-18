@@ -17,6 +17,7 @@ import {
   type MergeMode,
 } from '../../init/claude-md-template.js';
 import { renderDemoDraft } from '../../init/demo-draft.js';
+import { autoFlipNotice } from '../../init/gate-profile-notice.js';
 import { draftNewService } from '../../services/draft-new.js';
 import type { CommandIO } from '../../services/io.js';
 import { planActivation } from '../../activate/plan.js';
@@ -544,6 +545,11 @@ export function registerInitCommand(program: Command): void {
           console.log(
             `  interactive — pass \`--no-approve\` for non-TTY runs (CI, scripts, agents).`,
           );
+        }
+        const flipNotice = autoFlipNotice(opts.gateProfile, gateProfile);
+        if (flipNotice !== null) {
+          console.log('');
+          console.log(`  ${flipNotice}`);
         }
 
         // Phase 108 — auto-wire the Claude Code host when .claude/ is present.

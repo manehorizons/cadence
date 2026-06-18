@@ -36,6 +36,22 @@ function sanitizeLabel(label: string): string {
   return label.trim().replace(/\s+/g, '-').replace(/[^A-Za-z0-9._-]/g, '');
 }
 
+/**
+ * Resolve the clock for a handoff run (rec-20260618-001). Honors a
+ * `CADENCE_NOW` env override (a date string) so the SESSION date is
+ * reproducible — chiefly so the clobber-refusal test can't flake across the
+ * UTC-midnight boundary. Invalid/absent → wall clock. No behavior change when
+ * unset.
+ */
+export function resolveNow(env: NodeJS.ProcessEnv): Date {
+  const raw = env.CADENCE_NOW;
+  if (raw !== undefined && raw !== '') {
+    const d = new Date(raw);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return new Date();
+}
+
 export async function runHandoff(
   root: string,
   opts: HandoffOptions = {},

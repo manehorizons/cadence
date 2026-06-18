@@ -410,26 +410,10 @@ cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positi
 
 Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.
 
-## rec-20260617-007 — One unambiguous onboarding front door + a guided next-step rail
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, docs, start, quickstart, onboarding
-- files: README.md, docs/quickstart.md, docs/README.md, packages/core/src/cli/commands/doctor.ts, packages/core/src/start/menu.ts
-- evidence: 2026-06-17 onboarding assessment.
-- next: cadence milestone propose
-
-Collapse competing entry points (start/quickstart/tutorial/docs-quickstart) into one golden path: make 'cadence start' the only README 'new here?' command; guarantee every onboarding command ends with one 'Next:' line (doctor lacks it); open docs/quickstart with a 3-way driver fork (terminal/Claude Code/MCP); feature 'cadence tutorial' right after the install line. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#2, #6, #7, #10).
-
 ## rec-20260617-009 — Remove onboarding terminology collision + the silent gate-profile flip
 
 - status: candidate
-- ready: needs-decision
+- ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -441,3 +425,19 @@ Collapse competing entry points (start/quickstart/tutorial/docs-quickstart) into
 - next: cadence milestone propose
 
 (1) 'cadence init' prints both 'preset' (solo/team/production) and 'gate profile' (strict/standard/auto) with no explanation — rename gate profile to 'strictness' or add a one-line distinction. (2) A repo crossing ~20 commits silently flips 'draft approve' to interactive — warn at init time. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#8, #9).
+
+## rec-20260618-001 — Midnight-boundary flake in handoff clobber test (inject the clock at the CLI boundary)
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: tests, cli, handoff, ci
+- files: packages/core/src/handoff/run-handoff.ts, packages/core/src/cli/commands/handoff.ts, packages/core/tests/cli/handoff.test.ts
+- evidence: PR #91 CI: macos-22 AC-23 'expected +0 to be 2' at 2026-06-18T00:00:26Z (UTC midnight); green on re-run. Diff touched no handoff files.
+- next: cadence milestone propose
+
+tests/cli/handoff.test.ts AC-23 ('refusing to clobber exits 2') flakes when a CI run straddles UTC midnight. The SESSION filename is wall-clock-dated (run-handoff.ts:45 'now.toISOString().slice(0,10)') and the clobber refusal is by filename; the test spawns the real CLI twice, so if the clock ticks past midnight between the two invocations they get different date filenames, no collision fires, and the second handoff exits 0 instead of 2. Observed 2026-06-18T00:00:26Z on macos-22 (PR #91), passed on re-run. runHandoff already takes an injectable 'now' (run-handoff.ts:42) but the CLI command doesn't expose it — add a CADENCE_NOW-style env override read at the CLI boundary so the test can pin the date (and runs become reproducible). Pure offline fix; no behavior change in normal use.
