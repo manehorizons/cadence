@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 121-bypass-audit-trail
+**Active phase:** 122-codex-host-test-parity
 **Active draft:** (none)
 **Tier:** (n/a)
 

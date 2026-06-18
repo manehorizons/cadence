@@ -634,36 +634,6 @@
       "updatedAt": "2026-06-11T18:59:09.629Z"
     },
     {
-      "id": "rec-20260611-006",
-      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
-      "summary": "The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (same 8 files) but has materially thinner test coverage (claude-code has ~11 test files incl. install/shim/roundtrip/adapter-conformance/integration; codex is newer with far less). Since v1.13 markets CADENCE as genuinely multi-host, an under-tested second adapter risks silently breaking if Codex's hook/apply_patch envelope shifts. Bring codex up to conformance + install + shim + integration parity (reuse the testkit mock host + the adapter-conformance suite already proving the phase-60 contract).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "host-codex",
-        "testing"
-      ],
-      "affectedFiles": [
-        "packages/host-codex/src",
-        "packages/host-claude-code/tests"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260611-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:46.578Z",
-      "updatedAt": "2026-06-11T23:57:46.578Z"
-    },
-    {
       "id": "rec-20260611-007",
       "title": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
       "summary": "Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.",
@@ -1176,9 +1146,42 @@
       "decisionIds": [],
       "convertedToPhaseId": "121-bypass-audit-trail",
       "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:37.321Z",
-      "updatedAt": "2026-06-18T19:11:34.101Z",
       "archivedAt": "2026-06-18T19:11:34.101Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-11T23:57:37.321Z",
+      "updatedAt": "2026-06-18T19:11:34.101Z"
+    },
+    {
+      "id": "rec-20260611-006",
+      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
+      "summary": "The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (same 8 files) but has materially thinner test coverage (claude-code has ~11 test files incl. install/shim/roundtrip/adapter-conformance/integration; codex is newer with far less). Since v1.13 markets CADENCE as genuinely multi-host, an under-tested second adapter risks silently breaking if Codex's hook/apply_patch envelope shifts. Bring codex up to conformance + install + shim + integration parity (reuse the testkit mock host + the adapter-conformance suite already proving the phase-60 contract).",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "host-codex",
+        "testing"
+      ],
+      "affectedFiles": [
+        "packages/host-codex/src",
+        "packages/host-claude-code/tests"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "122-codex-host-test-parity",
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:57:46.578Z",
+      "updatedAt": "2026-06-18T19:16:22.053Z",
+      "archivedAt": "2026-06-18T19:16:22.053Z",
       "archiveReason": "converted-settled"
     }
   ]
