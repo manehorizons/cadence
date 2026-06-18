@@ -7,6 +7,16 @@ For the *why* behind the loop and the gate model, read
 [docs/concepts.md](concepts.md) first. For exhaustive flag references, see
 [docs/cli.md](cli.md) and [docs/reference/commands.md](reference/commands.md).
 
+### How are you driving CADENCE?
+
+Pick your surface — the loop is the same engine either way:
+
+- **From a terminal (CLI):** you're in the right place — start at [Prerequisites](#prerequisites) below.
+- **From Claude Code:** wire the adapter, then drive the loop with slash commands — jump to [Claude Code surface](#claude-code-surface).
+- **From another MCP host** (Claude Desktop, Cursor, an agent): point it at the MCP server — jump to [MCP surface](#mcp-surface).
+
+New and not sure? Run `cadence start` for a guided menu that picks the right setup command for you.
+
 ---
 
 ## Table of contents

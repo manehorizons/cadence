@@ -1,5 +1,6 @@
 import type { Command } from 'commander';
 import { runDoctor } from '../../doctor/run.js';
+import { doctorNextStep } from '../../doctor/render.js';
 import type { DoctorCheck, DoctorReport } from '../../doctor/model.js';
 
 function renderHuman(report: DoctorReport): string {
@@ -17,6 +18,8 @@ function renderHuman(report: DoctorReport): string {
       ? `All ${report.checks.length} checks passed.`
       : `${problems.length} problem(s) across ${report.checks.length} checks.`,
   );
+  lines.push('');
+  lines.push(`Next: ${doctorNextStep(report)}`);
   return lines.join('\n') + '\n';
 }
 
