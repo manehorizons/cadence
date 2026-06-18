@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-06-18T00:19:47.977Z
+Generated at: 2026-06-18T00:35:21.753Z
 
 ## Advisory
 
@@ -22,21 +22,6 @@ Generated at: 2026-06-18T00:19:47.977Z
 - score: 73/100 (raw 25.7)
 - status: accepted · ready: ready-for-milestone · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status accepted +6 · ready ready-for-milestone +7 · decay fresh +4 · prio medium +2 ⇒ raw 25.7 (score 73)
-- next: cadence milestone propose
-
-### rec-20260617-009 — Remove onboarding terminology collision + the silent gate-profile flip
-
-- score: 68/100 (raw 22.7)
-- status: candidate · ready: ready-for-cadence-spec · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio medium +2 ⇒ raw 22.7 (score 68)
-- scout: scout-20260617-1659
-- next: cadence milestone propose
-
-### rec-20260618-001 — Midnight-boundary flake in handoff clobber test (inject the clock at the CLI boundary)
-
-- score: 68/100 (raw 22.7)
-- status: candidate · ready: ready-for-cadence-spec · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio medium +2 ⇒ raw 22.7 (score 68)
 - next: cadence milestone propose
 
 ### rec-20260611-005 — Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)
@@ -73,4 +58,4 @@ None.
 
 ## Totals
 
-- total 28 · ranked 7 · parked 0 · needs-attention 0 · excluded 21
+- total 26 · ranked 5 · parked 0 · needs-attention 0 · excluded 21
