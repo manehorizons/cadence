@@ -1,0 +1,17 @@
+{
+  "draftId": "122-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added Codex local install roundtrip coverage; verified pnpm --filter @manehorizons/cadence-host-codex test -- tests/local-roundtrip.test.ts.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T23:06:50.852Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Sourced Codex prompt prose from COMMAND_GUIDANCE/SCOUT_DIALOGUE, added cadence-scout prompt, and added parity tests; verified pnpm --filter @manehorizons/cadence-host-codex test -- tests/install-commands-parity.test.ts tests/install-commands.test.ts.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T23:06:55.255Z"
+    }
+  }
+}

@@ -329,19 +329,3 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 - next: cadence milestone propose
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
-
-## rec-20260611-006 — Close the Codex host-adapter test-parity gap to prevent silent bit-rot
-
-- status: candidate
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: host-codex, testing
-- files: packages/host-codex/src, packages/host-claude-code/tests
-- evidence: Inventory weakness #1: codex adapter structure complete but under-exercised vs claude-code (11 test files); flagged as the clearest bit-rot risk by a skeptical-engineer read. Confirm the actual codex test-file delta before scoping.
-- next: cadence milestone propose
-
-The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (same 8 files) but has materially thinner test coverage (claude-code has ~11 test files incl. install/shim/roundtrip/adapter-conformance/integration; codex is newer with far less). Since v1.13 markets CADENCE as genuinely multi-host, an under-tested second adapter risks silently breaking if Codex's hook/apply_patch envelope shifts. Bring codex up to conformance + install + shim + integration parity (reuse the testkit mock host + the adapter-conformance suite already proving the phase-60 contract).

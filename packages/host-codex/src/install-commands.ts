@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallCommandsOptions {
@@ -31,22 +32,22 @@ interface CommandSpec {
   body?: string; // multi-line prompt template for dialogue commands
 }
 
-// The cadence slash-command catalog, rendered as Codex *prompts*. Same commands
-// as the Claude adapter, but Codex prompts are prompt templates (no `!`-autorun,
-// no `allowed-tools`), so the rendering differs. (Catalog duplication with the
-// Claude adapter is deliberate for now; a shared catalog is a future cleanup.)
+// The cadence slash-command catalog, rendered as Codex *prompts*. The prose is
+// shared with Claude/MCP; the host-specific CLI and prompt shape stay here.
+const g = COMMAND_GUIDANCE;
 const COMMANDS: CommandSpec[] = [
-  { name: 'cadence-progress', description: "Show CADENCE's next suggested action", cli: 'progress', trailing: 'Read the output and take the suggested next step.' },
-  { name: 'cadence-draft', description: 'Scaffold a new DRAFT.md for a phase task', argumentHint: '<phase-id> <task-num> [--title=<title>]', cli: 'draft new $ARGUMENTS', trailing: 'Open the new DRAFT.md and fill in summary, ACs, and tasks.' },
-  { name: 'cadence-approve', description: 'Approve a draft and enter BUILD', argumentHint: '<phase-id> <task-num>', cli: 'draft approve $ARGUMENTS', trailing: 'Loop is now in BUILD. Use /cadence-build to record task outcomes.' },
-  { name: 'cadence-check', description: 'Run structural coherence check on a draft', argumentHint: '<phase-id> <task-num>', cli: 'draft check $ARGUMENTS', trailing: 'Address any issues reported before approving the draft.' },
-  { name: 'cadence-build', description: 'Record outcome of a build task', argumentHint: '<task-id> --status=<PASS|FAIL|BLOCKED|ESCALATED>', cli: 'build task $ARGUMENTS', trailing: 'Continue with the next task or run /cadence-settle when done.' },
-  { name: 'cadence-settle', description: 'Close the loop and write SUMMARY', argumentHint: '[--ac AC-1=pass ...]', cli: 'settle run $ARGUMENTS', trailing: 'Review SUMMARY.md; loop is back to IDLE.' },
-  { name: 'cadence-done', description: 'Mark a task DONE (shortcut for build task --status=DONE)', argumentHint: '<task-id> [--notes=<n>]', cli: 'done $ARGUMENTS', trailing: 'Continue with the next task or run /cadence-settle when done.' },
-  { name: 'cadence-block', description: 'Mark a task BLOCKED (shortcut for build task --status=BLOCKED)', argumentHint: '<task-id> [--notes=<n>]', cli: 'block $ARGUMENTS', trailing: 'Record the blocker, then unblock or escalate before settling.' },
-  { name: 'cadence-needs-context', description: 'Mark a task NEEDS_CONTEXT (shortcut for build task --status=NEEDS_CONTEXT)', argumentHint: '<task-id> [--notes=<n>]', cli: 'needs-context $ARGUMENTS', trailing: 'Supply the missing context, then re-run the task.' },
-  { name: 'cadence-handoff', description: 'Scaffold a SESSION handoff doc with machine facts pre-filled', argumentHint: '[label]', cli: 'handoff $ARGUMENTS', trailing: 'Open the new SESSION doc and fill the narrative sections.' },
-  { name: 'cadence-resume', description: 'Replay the freshest session handoff (brief by default; --full adds live context)', cli: 'resume', trailing: 'Read the replayed handoff and continue from the documented next action.' },
+  { name: 'cadence-progress', description: g['cadence-progress'].description, cli: 'progress', trailing: g['cadence-progress'].trailing },
+  { name: 'cadence-draft', description: g['cadence-draft'].description, argumentHint: '<phase-id> <task-num> [--title=<title>]', cli: 'draft new $ARGUMENTS', trailing: g['cadence-draft'].trailing },
+  { name: 'cadence-approve', description: g['cadence-approve'].description, argumentHint: '<phase-id> <task-num>', cli: 'draft approve $ARGUMENTS', trailing: g['cadence-approve'].trailing },
+  { name: 'cadence-check', description: g['cadence-check'].description, argumentHint: '<phase-id> <task-num>', cli: 'draft check $ARGUMENTS', trailing: g['cadence-check'].trailing },
+  { name: 'cadence-build', description: g['cadence-build'].description, argumentHint: '<task-id> --status=<PASS|FAIL|BLOCKED|ESCALATED>', cli: 'build task $ARGUMENTS', trailing: g['cadence-build'].trailing },
+  { name: 'cadence-settle', description: g['cadence-settle'].description, argumentHint: '[--ac AC-1=pass ...]', cli: 'settle run $ARGUMENTS', trailing: g['cadence-settle'].trailing },
+  { name: 'cadence-done', description: g['cadence-done'].description, argumentHint: '<task-id> [--notes=<n>]', cli: 'done $ARGUMENTS', trailing: g['cadence-done'].trailing },
+  { name: 'cadence-block', description: g['cadence-block'].description, argumentHint: '<task-id> [--notes=<n>]', cli: 'block $ARGUMENTS', trailing: g['cadence-block'].trailing },
+  { name: 'cadence-needs-context', description: g['cadence-needs-context'].description, argumentHint: '<task-id> [--notes=<n>]', cli: 'needs-context $ARGUMENTS', trailing: g['cadence-needs-context'].trailing },
+  { name: 'cadence-handoff', description: g['cadence-handoff'].description, argumentHint: '[label]', cli: 'handoff $ARGUMENTS', trailing: g['cadence-handoff'].trailing },
+  { name: 'cadence-resume', description: g['cadence-resume'].description, cli: 'resume', trailing: g['cadence-resume'].trailing },
+  { name: 'cadence-scout', description: g['cadence-scout'].description, argumentHint: '[topic]', cli: 'recommend', body: SCOUT_DIALOGUE },
 ];
 
 function renderFile(spec: CommandSpec, cadenceCommand: string): string {

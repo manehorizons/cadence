@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 121-competitive-objection-faq
+**Active phase:** 122-codex-host-adapter-parity-tests
 **Active draft:** (none)
 **Tier:** (n/a)
 

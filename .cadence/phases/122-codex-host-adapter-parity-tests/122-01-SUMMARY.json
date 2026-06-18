@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "draftId": "122-01",
+  "completedAt": "2026-06-18T23:06:58.536Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Added Codex local install roundtrip coverage; verified pnpm --filter @manehorizons/cadence-host-codex test -- tests/local-roundtrip.test.ts."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Sourced Codex prompt prose from COMMAND_GUIDANCE/SCOUT_DIALOGUE, added cadence-scout prompt, and added parity tests; verified pnpm --filter @manehorizons/cadence-host-codex test -- tests/install-commands-parity.test.ts tests/install-commands.test.ts."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
