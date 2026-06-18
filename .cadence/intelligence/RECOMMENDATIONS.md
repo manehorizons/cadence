@@ -329,19 +329,3 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 - next: cadence milestone propose
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
-
-## rec-20260611-007 — Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs, positioning, launch
-- files: docs, README.md
-- evidence: Competitive research (primary-source GitHub/npm API, 2026-06-11): no enforcing in-loop AC-linked competitor; scaffolders soft-enforce, review bots gate late on PRs. Category forming (ThoughtWorks Radar v34, Cursor acq. of Graphite Dec 2025). Aligns with [[cadence-launch-positioning]] honesty constraints.
-- next: cadence milestone propose
-
-Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.

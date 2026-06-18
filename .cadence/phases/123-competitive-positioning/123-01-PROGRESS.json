@@ -1,0 +1,29 @@
+{
+  "draftId": "123-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "launch/COMPETITIVE.md created with retrieved 2026-06-18 source notes; git check-ignore confirms launch/ ignored.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:30:08.919Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Spec/workflow scaffolders separated from PR review bots; objection FAQ and overclaim bank added.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:30:08.941Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Brief uses narrow npm-distributed/host-agnostic/in-loop AC evidence gate claim; broad only-tool wording lives only in avoid list.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:30:08.954Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "launch/ remains ignored; public docs/packages not edited by phase.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:30:08.954Z"
+    }
+  }
+}
