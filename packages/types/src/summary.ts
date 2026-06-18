@@ -30,6 +30,15 @@ export const DeepVerifyMetaZ = z.object({
 });
 export type DeepVerifyMeta = z.infer<typeof DeepVerifyMetaZ>;
 
+export const GateBypassZ = z.object({
+  type: z.enum(['coverage-bypassed', 'verifier-failure', 'force-used']),
+  severity: z.enum(['info', 'warn', 'error']),
+  flag: z.string(),
+  reason: z.string(),
+  context: z.record(z.string(), z.unknown()).optional(),
+});
+export type GateBypass = z.infer<typeof GateBypassZ>;
+
 /**
  * Per-file / per-diff finding. Introduced for code-review (Phase 24.3,
  * high/medium/low). Phase 25.2 added `critical` for the security-audit
@@ -75,5 +84,7 @@ export const SummaryZ = z.object({
   codeReview: z.record(z.string(), z.array(FindingZ)).optional(),
   /** Phase 25.2: flat security-audit findings. Present only when the gate ran. */
   securityAudit: z.array(FindingZ).optional(),
+  /** Phase 121: durable audit trail for successful settles that bypassed a gate. */
+  gateBypasses: z.array(GateBypassZ).optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

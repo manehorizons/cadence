@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 120-auto-next-command
+**Active phase:** 121-bypass-audit-trail
 **Active draft:** (none)
 **Tier:** (n/a)
 

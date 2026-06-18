@@ -555,8 +555,15 @@ transitions `state.json` back to IDLE.
 AC verdicts may be supplied explicitly with `--ac`, `--ac-pass`, or `--pass-all`; derived automatically from task statuses with `--auto`; or collected interactively with `--interactive`. Explicit `--ac` pairs override shorthand passes for the same AC, so `--ac-pass AC-1 --ac AC-1=fail:reason` records the failure.
 
 **Gate interactions** — each `--allow-*` flag bypasses exactly one gate. Using
-`--force` overrides `--auto`'s refusal when ACs are incomplete but does not
-bypass other gates. See [docs/concepts.md — The gate universe](../concepts.md#the-gate-universe).
+`--force` can proceed past supported failing settle gates (for example structural
+or verifier failures), depending on the gate. See
+[docs/concepts.md — The gate universe](../concepts.md#the-gate-universe).
+
+**Bypass audit trail** — successful settles that bypass verification with
+`--allow-missing-coverage`, `--allow-verifier-failure`, or `--force` record a
+`gateBypasses` array in `SUMMARY.json`, render a `## Gate bypasses` section in
+`SUMMARY.md`, and print a stderr warning naming the bypass flag(s). Clean settles
+omit the field and section.
 
 **Exit codes** — exits non-zero when any gate refuses and the corresponding
 `--allow-*` flag is not supplied.

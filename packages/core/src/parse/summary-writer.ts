@@ -13,6 +13,12 @@ export function renderSummaryMd(s: Summary): string {
     const badge = ac.pass ? 'PASS' : 'FAIL';
     lines.push(`- ${ac.id}: ${badge}${ac.note ? ` — ${ac.note}` : ''}`);
   }
+  if (s.gateBypasses && s.gateBypasses.length > 0) {
+    lines.push('', '## Gate bypasses', '');
+    for (const bypass of s.gateBypasses) {
+      lines.push(`- ${bypass.severity.toUpperCase()} ${bypass.flag}: ${bypass.reason}`);
+    }
+  }
   lines.push('', '## Tasks', '');
   for (const t of s.taskResults) {
     lines.push(`- ${t.id}: ${t.status}${t.notes ? ` — ${t.notes}` : ''}`);

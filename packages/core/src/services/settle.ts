@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import type { Summary } from '@manehorizons/cadence-types';
+import type { AnomalyEvent, Summary } from '@manehorizons/cadence-types';
 import { TaskStatusZ, defaultConfig } from '@manehorizons/cadence-types';
 import { phaseNumber } from '../phases/collision.js';
 import { assertSafePhaseSlug } from '../phases/id.js';
@@ -76,6 +76,40 @@ function parseAcArg(arg: string): AcResult {
   const verdict = colonIdx === -1 ? rest : rest.slice(0, colonIdx);
   const note = colonIdx === -1 ? undefined : rest.slice(colonIdx + 1).trim();
   return { id, pass: verdict === 'pass', ...(note ? { note } : {}) };
+}
+
+type GateBypass = NonNullable<Summary['gateBypasses']>[number];
+
+function gateBypassesFromAnomalies(events: readonly AnomalyEvent[]): GateBypass[] {
+  const bypasses: GateBypass[] = [];
+  for (const event of events) {
+    if (event.type === 'coverage-bypassed') {
+      bypasses.push({
+        type: event.type,
+        severity: event.severity,
+        flag: '--allow-missing-coverage',
+        reason: event.message,
+        context: event.context,
+      });
+    } else if (event.type === 'verifier-failure') {
+      bypasses.push({
+        type: event.type,
+        severity: event.severity,
+        flag: '--allow-verifier-failure',
+        reason: event.message,
+        context: event.context,
+      });
+    } else if (event.type === 'force-used') {
+      bypasses.push({
+        type: event.type,
+        severity: event.severity,
+        flag: '--force',
+        reason: event.message,
+        context: event.context,
+      });
+    }
+  }
+  return bypasses;
 }
 
 /**
@@ -370,17 +404,19 @@ export async function settleService(
       acResults = merged;
     }
 
+    const anomalies = collectAnomalies({
+      draft,
+      progress,
+      coverageBypassed,
+      force: opts.force === true,
+      root: cwd,
+      ...(deepVerify ? { deepVerify } : {}),
+      ...(interactiveVerify ? { interactiveVerify } : {}),
+      ...(verifierFailure ? { verifierFailure } : {}),
+    });
+    const gateBypasses = gateBypassesFromAnomalies(anomalies);
+
     if (gateSet.gates.includes('anomaly-notify')) {
-      const anomalies = collectAnomalies({
-        draft,
-        progress,
-        coverageBypassed,
-        force: opts.force === true,
-        root: cwd,
-        ...(deepVerify ? { deepVerify } : {}),
-        ...(interactiveVerify ? { interactiveVerify } : {}),
-        ...(verifierFailure ? { verifierFailure } : {}),
-      });
       if (anomalies.length > 0) {
         const notifier = selectNotifier(cadenceConfig);
         try {
@@ -421,11 +457,18 @@ export async function settleService(
       ...(interactiveVerifySkipped ? { interactiveVerifySkipped } : {}),
       ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
       ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),
+      ...(gateBypasses.length > 0 ? { gateBypasses } : {}),
     };
 
     const summaryBase = join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`);
     await atomicWriteJSON(`${summaryBase}.json`, summary);
     await atomicWriteText(`${summaryBase}.md`, renderSummaryMd(summary));
+    if (gateBypasses.length > 0) {
+      const flags = [...new Set(gateBypasses.map((b) => b.flag))].join(', ');
+      io.err(
+        `settle: WARNING verification bypass audit recorded in SUMMARY (${flags}).\n`,
+      );
+    }
 
     // Phase 102 (v1.24): auto-archive any recommendation converted into the phase
     // that just settled. Best-effort + config-gated (`recommendations.autoArchive`,

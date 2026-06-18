@@ -1,0 +1,35 @@
+{
+  "draftId": "121-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added optional gateBypasses summary schema with back-compat test coverage",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:11:29.571Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Rendered conditional Gate bypasses SUMMARY.md section",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:11:29.905Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Settle now derives bypass records from anomaly evidence and warns on successful bypassed settles",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:11:30.229Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Added summary schema tests plus settle coverage/force/verifier-failure regression tests",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:11:30.564Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Updated settle command docs and verified full lint/typecheck/build/test",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:11:30.912Z"
+    }
+  }
+}

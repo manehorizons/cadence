@@ -634,37 +634,6 @@
       "updatedAt": "2026-06-11T18:59:09.629Z"
     },
     {
-      "id": "rec-20260611-005",
-      "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
-      "summary": "Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility — record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "settle",
-        "observability"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/deep-verify.ts",
-        "packages/core/src/gates/coverage.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260611-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:37.321Z",
-      "updatedAt": "2026-06-11T23:57:37.321Z"
-    },
-    {
       "id": "rec-20260611-006",
       "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
       "summary": "The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (same 8 files) but has materially thinner test coverage (claude-code has ~11 test files incl. install/shim/roundtrip/adapter-conformance/integration; codex is newer with far less). Since v1.13 markets CADENCE as genuinely multi-host, an under-tested second adapter risks silently breaking if Codex's hook/apply_patch envelope shifts. Bring codex up to conformance + install + shim + integration parity (reuse the testkit mock host + the adapter-conformance suite already proving the phase-60 contract).",
@@ -1173,9 +1142,43 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "120-auto-next-command",
-      "createdAt": "2026-06-17T18:31:57.135Z",
-      "updatedAt": "2026-06-18T19:03:00.692Z",
       "archivedAt": "2026-06-18T19:03:00.692Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:57.135Z",
+      "updatedAt": "2026-06-18T19:03:00.692Z"
+    },
+    {
+      "id": "rec-20260611-005",
+      "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
+      "summary": "Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility — record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "settle",
+        "observability"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/deep-verify.ts",
+        "packages/core/src/gates/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "121-bypass-audit-trail",
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:57:37.321Z",
+      "updatedAt": "2026-06-18T19:11:34.101Z",
+      "archivedAt": "2026-06-18T19:11:34.101Z",
       "archiveReason": "converted-settled"
     }
   ]

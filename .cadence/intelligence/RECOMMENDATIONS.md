@@ -330,22 +330,6 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
 
-## rec-20260611-005 — Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, settle, observability
-- files: packages/core/src/gates/deep-verify.ts, packages/core/src/gates/coverage.ts
-- evidence: Inventory weakness #6: verifier-failure handling is permissive; --force bypasses coverage + deep-verify with no audit trail or warning that gates were forced. The v1.17 stderr logger gives a seam to emit bypass events.
-- next: cadence milestone propose
-
-Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility — record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.
-
 ## rec-20260611-006 — Close the Codex host-adapter test-parity gap to prevent silent bit-rot
 
 - status: candidate

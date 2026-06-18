@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SummaryZ, DeepVerifyMetaZ } from '../src/summary.js';
+import { SummaryZ, DeepVerifyMetaZ, GateBypassZ } from '../src/summary.js';
 
 // AC-4 (Phase 70): run-level deepVerifyMeta provenance — what the verifier saw.
 
@@ -101,5 +101,38 @@ describe('SummaryZ.deepVerifyMeta (AC-4)', () => {
   it('leaves deepVerifyMeta undefined when absent (back-compat)', () => {
     const parsed = SummaryZ.parse(baseSummary);
     expect(parsed.deepVerifyMeta).toBeUndefined();
+  });
+});
+
+describe('SummaryZ.gateBypasses (Phase 121)', () => {
+  it('accepts a durable gate bypass audit record', () => {
+    const bypass = GateBypassZ.parse({
+      type: 'coverage-bypassed',
+      severity: 'warn',
+      flag: '--allow-missing-coverage',
+      reason: 'test-coverage gate bypassed via --allow-missing-coverage',
+      context: { gate: 'test-coverage' },
+    });
+    expect(bypass.flag).toBe('--allow-missing-coverage');
+  });
+
+  it('accepts summaries with gateBypasses', () => {
+    const parsed = SummaryZ.parse({
+      ...baseSummary,
+      gateBypasses: [
+        {
+          type: 'force-used',
+          severity: 'error',
+          flag: '--force',
+          reason: 'settle --force bypassed failing verdicts (structural: AC-1)',
+        },
+      ],
+    });
+    expect(parsed.gateBypasses?.[0]?.type).toBe('force-used');
+  });
+
+  it('leaves gateBypasses undefined when absent (back-compat)', () => {
+    const parsed = SummaryZ.parse(baseSummary);
+    expect(parsed.gateBypasses).toBeUndefined();
   });
 });
