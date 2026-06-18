@@ -121,6 +121,18 @@ describe('MCP resources (phase 75)', () => {
     }
   });
 
+  it('AC-6: rejects unsafe phase slugs in templated resources', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'demo' });
+    const { client, close } = await connect(active.root);
+    try {
+      await expect(
+        client.readResource({ uri: 'cadence://phase/01-x%2F..%2F..%2Fescape/draft' }),
+      ).rejects.toThrow();
+    } finally {
+      await close();
+    }
+  });
+
   // AC-5: tool surface unchanged and the resources capability is now declared
   it('AC-5: existing tool set is unchanged and resources capability is declared', async () => {
     active = await tempRepo({ initialized: true, projectName: 'demo' });

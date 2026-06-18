@@ -104,6 +104,20 @@ describe('cadence spec stage (Phase 36.1)', () => {
     expect(s.activeSpec).toBe('36-01');
   });
 
+  it('AC-1 (h): spec new rejects path traversal phase slugs before writing', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'spec_traversal' });
+
+    const r = await run(
+      ['spec', 'new', '36-x/../../../escape-proof', '01', '--title=Traversal'],
+      active.root,
+    );
+
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain('invalid phase slug');
+    expect(existsSync(join(active.root, 'escape-proof/36-01-SPEC.md'))).toBe(false);
+    expect(existsSync(join(active.root, '.cadence/phases/36-x'))).toBe(false);
+  });
+
   it('AC-1 (b): draft new refused while SPEC', async () => {
     active = await tempRepo({ initialized: true });
     await arrange(active.root);

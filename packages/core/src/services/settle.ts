@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs';
 import type { Summary } from '@manehorizons/cadence-types';
 import { TaskStatusZ, defaultConfig } from '@manehorizons/cadence-types';
 import { phaseNumber } from '../phases/collision.js';
+import { assertSafePhaseSlug } from '../phases/id.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { renderSummaryMd } from '../parse/summary-writer.js';
@@ -32,6 +33,7 @@ import {
   type AcResult,
 } from '../gates/types.js';
 import { ScriptedPrompter, StdinPrompter } from '../verify/prompter.js';
+import { collectGitDiff } from '../git/diff.js';
 import { selectNotifier } from '../notify/factory.js';
 import { collectAnomalies } from '../notify/collect.js';
 import { emitLoopViolation } from '../notify/loop-violation.js';
@@ -94,10 +96,11 @@ export async function settleService(
         { expected: 'BUILD', actual: state.loopPosition },
       );
     }
-    const draftPath = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-DRAFT.md`);
+    const activePhase = assertSafePhaseSlug(state.activePhase);
+    const draftPath = join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-DRAFT.md`);
     const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
 
-    const progPath = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-PROGRESS.json`);
+    const progPath = join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-PROGRESS.json`);
     const progress: ProgressJson = existsSync(progPath)
       ? (JSON.parse(await readFile(progPath, 'utf8')) as ProgressJson)
       : { draftId: state.activeDraft, tasks: {} };
@@ -105,12 +108,7 @@ export async function settleService(
     const explicit = (opts.ac ?? []).map(parseAcArg);
     const explicitIds = new Set(explicit.map((a) => a.id));
 
-    let cadenceConfig: Awaited<ReturnType<typeof loadConfig>> | null = null;
-    try {
-      cadenceConfig = await loadConfig(cwd);
-    } catch {
-      cadenceConfig = null;
-    }
+    const cadenceConfig = await loadConfig(cwd);
 
     // Phase 83: worktree-collision backstop — re-check the active phase number
     // against sibling worktrees + upstream only (the `local` source is self: the
@@ -118,7 +116,7 @@ export async function settleService(
     // A `settleService` precondition, NOT a gate-matrix gate.
     // `--allow-phase-collision` bypasses.
     {
-      const verdict = await assertNoPhaseCollision(cwd, phaseNumber(state.activePhase), {
+      const verdict = await assertNoPhaseCollision(cwd, phaseNumber(activePhase), {
         config: cadenceConfig ?? defaultConfig,
         excludeSources: ['local'],
         ...(opts.allowPhaseCollision !== undefined ? { allow: opts.allowPhaseCollision } : {}),
@@ -168,7 +166,7 @@ export async function settleService(
     let securityAuditVerifierMemo: ReturnType<typeof selectSecurityAuditVerifier> | undefined;
     let diffMemo: string | undefined;
     const codeReviewSidecarPath = join(
-      cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-CODE-REVIEW.json`,
+      cwd, '.cadence/phases', activePhase, `${state.activeDraft}-CODE-REVIEW.json`,
     );
     const ctx: SettleContext = {
       cwd,
@@ -416,7 +414,7 @@ export async function settleService(
       ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),
     };
 
-    const summaryBase = join(cwd, '.cadence/phases', state.activePhase, `${state.activeDraft}-SUMMARY`);
+    const summaryBase = join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`);
     await atomicWriteJSON(`${summaryBase}.json`, summary);
     await atomicWriteText(`${summaryBase}.md`, renderSummaryMd(summary));
 
@@ -458,21 +456,5 @@ export async function settleService(
  * string on any error (non-git workdir, no diff, exec failure).
  */
 function collectDiffForCodeReview(cwd: string, files: string[]): string {
-  if (files.length === 0) return '';
-  try {
-    const args = ['diff', '--no-color', 'HEAD', '--', ...files];
-    return execSync(`git ${args.map(shellQuote).join(' ')}`, {
-      cwd,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-      maxBuffer: 16 * 1024 * 1024,
-    });
-  } catch {
-    return '';
-  }
-}
-
-function shellQuote(arg: string): string {
-  if (/^[A-Za-z0-9._/=:@+-]+$/.test(arg)) return arg;
-  return `"${arg.replace(/(["\\$`])/g, '\\$1')}"`;
+  return collectGitDiff(cwd, files);
 }

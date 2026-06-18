@@ -1,17 +1,14 @@
 # Write your own host adapter
 
-CADENCE has **one engine and two ways to drive it**: the host-agnostic `cadence`
-CLI, and a *host adapter* that wires a coding agent's lifecycle into that engine.
-The only shipped adapter today is `@manehorizons/cadence-host-claude-code`. This
-guide documents the **host-adapter contract** so the adapter shape is explicit,
-versioned, and reproducible.
+CADENCE has **one engine and three categories of surfaces**: the host-agnostic
+`cadence` CLI, host adapters that wire a coding agent's lifecycle into that
+engine, and the MCP server for MCP-capable hosts. The shipped host adapters today
+are `@manehorizons/cadence-host-claude-code` and
+`@manehorizons/cadence-host-codex`. This guide documents the
+**host-adapter contract** so the adapter shape is explicit, versioned, and
+reproducible.
 
-> **Scope note.** For reaching agents other than Claude Code, the supported path
-> is the [MCP server](mcp.md) (`cadence mcp serve`), not a fleet of bespoke
-> adapters. This contract exists so the *one* adapter's shape is a stable,
-> documented reference — and so a future adapter, if a real need pulls one into
-> existence, has an exact target to hit. See [DESIGN.md](../DESIGN.md) decision
-> **D11**. The engine stays host-unaware; an adapter only translates.
+> **Scope note.** For most new hosts, the supported path is the [MCP server](mcp.md) (`cadence mcp serve`), not a fleet of bespoke adapters. Claude Code remains the reference adapter for ambient edit-time gates; Codex is the second shipped conformance consumer. The engine stays host-unaware; an adapter only translates.
 
 ## The contract at a glance
 

@@ -5,6 +5,7 @@ import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ReadResourceResult } from '@modelcontextprotocol/sdk/types.js';
 import { bufferIO } from '../services/io.js';
 import { recommendService } from '../services/recommend.js';
+import { assertSafePhaseSlug } from '../phases/id.js';
 
 /**
  * MCP **Resources** (phase 75) — read-on-demand views of `.cadence/` artifacts
@@ -114,12 +115,13 @@ async function readPhaseArtifact(
   phase: string,
   kind: PhaseArtifactKind,
 ): Promise<string> {
-  const dir = join(repoRoot, '.cadence/phases', phase);
+  const safePhase = assertSafePhaseSlug(phase);
+  const dir = join(repoRoot, '.cadence/phases', safePhase);
   let entries: string[];
   try {
     entries = await readdir(dir);
   } catch {
-    throw new Error(`phase not found: ${phase} (no .cadence/phases/${phase})`);
+    throw new Error(`phase not found: ${safePhase} (no .cadence/phases/${safePhase})`);
   }
   const suffix = ARTIFACT_SUFFIX[kind];
   const match = entries
@@ -127,7 +129,7 @@ async function readPhaseArtifact(
     .sort()
     .at(-1);
   if (!match) {
-    throw new Error(`no ${kind} artifact for phase ${phase} (looked for *${suffix})`);
+    throw new Error(`no ${kind} artifact for phase ${safePhase} (looked for *${suffix})`);
   }
   return readFile(join(dir, match), 'utf8');
 }
