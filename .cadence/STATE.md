@@ -10,8 +10,8 @@
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 336
-- Last handoff: SESSION-2026-06-18-v1.28-shipped.md
+- Subagent spawns this session: 338
+- Last handoff: SESSION-2026-06-18-v1.29-shipped.md
 
 ## Counts
 - Open drafts: 0
