@@ -38,11 +38,16 @@ async function resolveDraftPhase(
  */
 export async function draftNewService(
   repoRoot: string,
-  args: { phase?: string; num?: string; title?: string; tier?: string; fromRec?: string; allowPhaseCollision?: boolean },
+  args: { phase?: string; num?: string; title?: string; tier?: string; brief?: string; fromRec?: string; allowPhaseCollision?: boolean },
   io: CommandIO,
 ): Promise<CommandResult> {
   const title = args.title ?? 'Untitled';
   const tier = args.tier ?? 'standard';
+  const brief = args.brief?.trim();
+  if (args.brief !== undefined && brief?.length === 0) {
+    io.err('draft new refused: --brief cannot be empty\n');
+    return { exitCode: 1 };
+  }
   try {
     const backend = new SimpleStateBackend(repoRoot);
     const state = await backend.readState();
@@ -105,15 +110,15 @@ export async function draftNewService(
           body = renderDraftBody(phase, id, tier, title, spec);
           io.out(`draft new: seeded objective + ${spec.acceptanceCriteria.length} AC(s) from approved SPEC ${id}\n`);
         } catch (err) {
-          io.err(`draft new: SPEC ${id} APPROVED but unparseable (${err instanceof Error ? err.message : String(err)}) — scaffolding empty\n`);
-          body = renderDraftBody(phase, id, tier, title);
+          io.err(`draft new: SPEC ${id} APPROVED but unparseable (${err instanceof Error ? err.message : String(err)}) — scaffolding ${brief ? 'from --brief' : 'empty'}\n`);
+          body = renderDraftBody(phase, id, tier, title, undefined, brief ? { brief } : undefined);
         }
       } else {
-        io.err(`draft new: SPEC ${id} present but not APPROVED — scaffolding empty\n`);
-        body = renderDraftBody(phase, id, tier, title);
+        io.err(`draft new: SPEC ${id} present but not APPROVED — scaffolding ${brief ? 'from --brief' : 'empty'}\n`);
+        body = renderDraftBody(phase, id, tier, title, undefined, brief ? { brief } : undefined);
       }
     } else {
-      body = renderDraftBody(phase, id, tier, title);
+      body = renderDraftBody(phase, id, tier, title, undefined, brief ? { brief } : undefined);
     }
     await writeFile(path, body);
 

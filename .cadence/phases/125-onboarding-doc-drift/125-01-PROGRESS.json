@@ -1,0 +1,29 @@
+{
+  "draftId": "125-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "README, docs/README.md, and docs/claude-code.md now align on twelve/12 Claude slash commands; stale eleven/9 scans clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:09:59.232Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "docs/cli.md copy-paste example now uses --preset; docs/reference/config.md says --profile is deprecated alias.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:09:59.558Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "README and docs/cli.md now document v1.29 non-TTY approve auto-pass plus CADENCE_REQUIRE_TTY/--no-approve controls.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:09:59.873Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Targeted drift scans and git diff --check passed; changed docs plus .cadence artifacts only.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:10:00.168Z"
+    }
+  }
+}

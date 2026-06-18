@@ -61,6 +61,12 @@ None.
 ## Exported
 
 - mil-rec-rec-20260611-003 — Make real verification the felt default — close the gap between the enforcement wedge and the mock default → .cadence/intelligence/exports/mil-rec-rec-20260611-003/SPEC.md
+- mil-rec-rec-20260611-007 — Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge → .cadence/intelligence/exports/mil-rec-rec-20260611-007/SPEC.md
+- mil-rec-rec-20260618-001 — Fix Windows first-run command guidance → .cadence/intelligence/exports/mil-rec-rec-20260618-001/SPEC.md
+- mil-rec-rec-20260618-002 — Lead onboarding with a 60-second no-risk tutorial → .cadence/intelligence/exports/mil-rec-rec-20260618-002/SPEC.md
+- mil-rec-rec-20260618-003 — Remove onboarding documentation drift → .cadence/intelligence/exports/mil-rec-rec-20260618-003/SPEC.md
+- mil-rec-rec-20260618-004 — Fix generated host command hints → .cadence/intelligence/exports/mil-rec-rec-20260618-004/SPEC.md
+- mil-rec-rec-20260618-005 — Add guided first-phase drafting → .cadence/intelligence/exports/mil-rec-rec-20260618-005/SPEC.md
 
 ## Closed
 

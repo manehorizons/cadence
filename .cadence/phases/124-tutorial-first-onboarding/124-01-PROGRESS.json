@@ -1,0 +1,29 @@
+{
+  "draftId": "124-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "README shows cadence tutorial --no-pause before init --demo.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:03:07.242Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "docs/quickstart.md adds fast path with tutorial and init --demo before manual walkthrough.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:03:07.608Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Website start card mentions no-risk tutorial and init --demo path.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:03:07.941Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "git diff --check passed; changed docs plus .cadence artifacts only.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:03:08.265Z"
+    }
+  }
+}

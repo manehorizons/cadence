@@ -1,0 +1,23 @@
+{
+  "draftId": "126-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Claude command hint updated and golden fixture now advertises DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:14:53.137Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Codex prompt hint updated to valid build task statuses.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:14:53.451Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added Claude/Codex tests asserting valid hint and rejecting PASS|FAIL|BLOCKED|ESCALATED; targeted tests passed.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:14:53.823Z"
+    }
+  }
+}

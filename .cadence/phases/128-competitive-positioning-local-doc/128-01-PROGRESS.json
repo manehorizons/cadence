@@ -1,0 +1,23 @@
+{
+  "draftId": "128-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Created ignored launch/COMPETITIVE.md and confirmed .gitignore keeps launch/ local-only.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:30:17.166Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Added 2026-06-18 source-checked narrow positioning claim with direct links.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:30:17.178Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added category map, objection FAQ, copy bank, and overclaim guardrails.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:30:17.205Z"
+    }
+  }
+}

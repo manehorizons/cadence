@@ -232,12 +232,17 @@ Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 |---|---|---|
 | `--title <t>` | `"Untitled"` | Draft title; also used to infer the slug when `[phase]` is omitted |
 | `--tier <t>` | `"standard"` | Tier: `quick-fix \| standard \| complex` |
+| `--brief <text>` | — | Seed a usable first DRAFT from a short work description: Objective, AC-1, T1, and Boundaries. Blank briefs are refused before writing files. |
 | `--from-rec <recId>` | — | Praxis recommendation id. On success, the rec is auto-converted to this phase via the Slice 34.1 transition helper. Symmetric semantics with `cadence spec new --from-rec`. Composes with the existing SPEC-seeded draft body: an approved SPEC plus `--from-rec` produces a SPEC-seeded DRAFT.md AND records the rec→phase link in one operator action. |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — creates `.cadence/phases/<phase>/<id>-DRAFT.md` pre-populated
 with the tier-appropriate template. `cadence draft new --title "My Feature"` infers `<next-free>-my-feature` and task `01`; the old positional form still works for scripts. The tier affects which gates fire at `settle run` time. See
 [docs/concepts.md — Profiles × tiers](../concepts.md#profiles--tiers).
+Use `--brief "Add a greet(name) helper with one test"` to replace the empty
+placeholders with an editable Objective, one structured acceptance criterion,
+one task, and a scoped boundary. If an approved same-id SPEC exists, SPEC
+seeding stays authoritative over `--brief`.
 
 #### draft check
 

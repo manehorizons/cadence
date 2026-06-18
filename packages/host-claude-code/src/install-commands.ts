@@ -76,7 +76,7 @@ const COMMANDS: CommandSpec[] = [
   {
     name: 'cadence-build',
     description: g['cadence-build'].description,
-    argumentHint: '<task-id> --status=<PASS|FAIL|BLOCKED|ESCALATED>',
+    argumentHint: '<task-id> --status=<DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED>',
     cli: 'build task $ARGUMENTS',
     trailing: g['cadence-build'].trailing,
   },

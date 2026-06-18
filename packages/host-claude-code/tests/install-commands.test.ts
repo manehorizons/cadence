@@ -188,6 +188,16 @@ describe('installCommands', () => {
     expect(check).toMatch(/^!cadence draft check \$ARGUMENTS\s*$/m);
   });
 
+  it('cadence-build advertises valid task status values', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+    const build = await readFile(join(root, '.claude/commands/cadence-build.md'), 'utf8');
+    expect(build).toContain(
+      'argument-hint: <task-id> --status=<DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED>',
+    );
+    expect(build).not.toContain('PASS|FAIL|BLOCKED|ESCALATED');
+  });
+
   it('files are tagged cadence-managed via a comment header', async () => {
     const root = await tempDir();
     await installCommands(root);

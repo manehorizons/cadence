@@ -34,6 +34,59 @@ describe('cadence draft new', () => {
     expect(existsSync(path)).toBe(true);
   });
 
+  it('AC-1 AC-2 (phase 127): --brief seeds a usable draft with inferred phase', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(
+      [
+        'draft',
+        'new',
+        '--title=Add greeting module',
+        '--brief=Add a greet(name) helper with one test',
+      ],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const state = JSON.parse(await readFile(join(active.root, '.cadence/state.json'), 'utf8'));
+    expect(state.activePhase).toMatch(/^\d+-add-greeting-module$/);
+    expect(state.activeDraft).toMatch(/^\d+-01$/);
+
+    const path = join(active.root, '.cadence/phases', state.activePhase, `${state.activeDraft}-DRAFT.md`);
+    const content = await readFile(path, 'utf8');
+    expect(content).toContain('## Objective\n\nAdd a greet(name) helper with one test.\n');
+    expect(content).toContain('### AC-1: Add greeting module\nGiven the current project state');
+    expect(content).toContain('### T1: Add greeting module');
+    expect(content).toContain('- action: Add a greet(name) helper with one test.');
+    expect(content).toContain('## Boundaries\n\n- Keep changes scoped to Add greeting module.\n');
+    expect(content).not.toContain('_(one sentence)_');
+    expect(content).not.toContain('_(task name)_');
+  });
+
+  it('AC-3 (phase 127): --brief refuses blank text before creating a draft', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(
+      [
+        'draft',
+        'new',
+        '127-guided-first-phase-drafting',
+        '01',
+        '--title=Empty',
+        '--brief=   ',
+      ],
+      active.root,
+    );
+
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain('draft new refused: --brief cannot be empty');
+    expect(
+      existsSync(
+        join(
+          active.root,
+          '.cadence/phases/127-guided-first-phase-drafting/127-01-DRAFT.md',
+        ),
+      ),
+    ).toBe(false);
+  });
+
   it('creates a DRAFT.md skeleton under phases/<phase>/', async () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);

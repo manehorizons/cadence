@@ -13,6 +13,8 @@ exhaustive option lists (every flag and its default).
 
 > **Install:** `npm install -g @manehorizons/cadence-core` provides the
 > `cadence` command used in every example below (requires Node ≥ 20).
+> On Windows PowerShell, if npm's `.ps1` shim is blocked by execution policy,
+> use the `.cmd` shims instead: `cadence.cmd`, `npx.cmd`, and `npm.cmd`.
 
 ---
 
@@ -40,7 +42,7 @@ exhaustive option lists (every flag and its default).
 Scaffold a `.cadence/` directory in the current repo root:
 
 ```sh
-cadence init --name "my-project" --profile team --gate-profile standard
+cadence init --name "my-project" --preset team --gate-profile standard
 ```
 
 Options used above:
@@ -48,7 +50,8 @@ Options used above:
 | Option | Purpose |
 |---|---|
 | `--name <project>` | Project name embedded in `PROJECT.md` |
-| `--profile <preset>` | `solo` / `team` / `production` — sets the starting config preset |
+| `--preset <preset>` | `solo` / `team` / `production` - sets the starting config preset |
+| `--profile <preset>` | Deprecated alias for `--preset`; kept for back-compat |
 | `--gate-profile <p>` | `strict` / `standard` / `auto` — overrides the gate profile CADENCE would suggest from git history |
 
 To regenerate only the managed `CLAUDE.md` block (e.g. after updating
@@ -69,7 +72,7 @@ A phase begins in IDLE and advances to BUILD only after a DRAFT is approved.
 ### draft new — scaffold a DRAFT
 
 ```sh
-cadence draft new 01-retry 1 --title "Add retry logic"
+cadence draft new 01-retry 1 --title "Add retry logic" --brief "Retry failed HTTP requests once before returning an error"
 ```
 
 Arguments: `<phase> <task-num>`. The draft id is derived as the first two
@@ -79,7 +82,8 @@ characters of the phase plus the zero-padded task number, so this creates:
 .cadence/phases/01-retry/01-01-DRAFT.md
 ```
 
-Open the file and replace the template placeholders:
+`--brief` seeds an editable Objective, AC-1, T1, and Boundaries. Omit it when
+you want the older empty template. Open the file and refine:
 - Frontmatter: `phase` / `id` / `tier` (`quick-fix` / `standard` / `complex`) / `status`
 - `## Objective` — one-sentence description
 - `## Acceptance Criteria` — at least one `### AC-N` block with `Given` / `When` / `Then`
@@ -110,10 +114,12 @@ cadence draft approve 01-retry 1
 ```
 
 What happens at approve (depending on the gate set):
-- `approve` gate: interactive Y/N prompt (TTY) or requires `--no-approve` flag
+- `approve` gate: interactive Y/N prompt in a TTY; non-TTY auto-passes loudly by default since v1.29
 - `plan-review` gate: AI plan-review agent runs; `pass=false` refuses approve
 
-For non-TTY environments (CI, hooks) when the `approve` gate is active:
+For non-TTY environments (CI, hooks) that need strict refusal instead of the
+default auto-pass, set `CADENCE_REQUIRE_TTY=1`. To skip only the manual approve
+gate explicitly:
 
 ```sh
 cadence draft approve 01-retry 1 --no-approve

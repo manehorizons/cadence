@@ -1,92 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-18T00:35:21.753Z",
+  "generatedAt": "2026-06-18T20:30:29.242Z",
   "ranked": [
     {
-      "id": "rec-20260617-005",
-      "title": "Agent/non-TTY mode to kill the StdinPrompter minefield",
-      "raw": 28.7,
-      "score": 77,
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status accepted",
-          "value": 6
-        },
-        {
-          "label": "ready ready-for-milestone",
-          "value": 7
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio high",
-          "value": 5
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260617-003",
-      "title": "Auto-derive phase id and collapse --ac syntax",
-      "raw": 25.7,
-      "score": 73,
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status accepted",
-          "value": 6
-        },
-        {
-          "label": "ready ready-for-milestone",
-          "value": 7
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260611-005",
-      "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
+      "id": "rec-20260618-006",
+      "title": "Add explicit OpenAI verifier activation path",
       "raw": 14.7,
       "score": 56,
       "status": "candidate",
@@ -124,11 +42,11 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
+      "scoutId": "scout-20260618-1554"
     },
     {
-      "id": "rec-20260611-007",
-      "title": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
+      "id": "rec-20260618-007",
+      "title": "Add install preview and dry-run for host adapters",
       "raw": 14.7,
       "score": 56,
       "status": "candidate",
@@ -166,15 +84,15 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
+      "scoutId": "scout-20260618-1554"
     },
     {
-      "id": "rec-20260611-006",
-      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
-      "raw": 13.7,
-      "score": 55,
+      "id": "rec-20260618-008",
+      "title": "Make non-Claude surfaces visible on the website",
+      "raw": 14.7,
+      "score": 56,
       "status": "candidate",
-      "readiness": "needs-evidence",
+      "readiness": "needs-decision",
       "priority": "medium",
       "decayState": "fresh",
       "terms": [
@@ -195,8 +113,8 @@
           "value": 0
         },
         {
-          "label": "ready needs-evidence",
-          "value": 1
+          "label": "ready needs-decision",
+          "value": 2
         },
         {
           "label": "decay fresh",
@@ -208,7 +126,7 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
+      "scoutId": "scout-20260618-1554"
     }
   ],
   "parked": [],
@@ -218,8 +136,8 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 26,
-    "ranked": 5,
+    "total": 24,
+    "ranked": 3,
     "parked": 0,
     "needsAttention": 0,
     "excluded": 21

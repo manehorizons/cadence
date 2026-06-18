@@ -330,7 +330,7 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
 
-## rec-20260611-007 — Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge
+## rec-20260618-006 — Add explicit OpenAI verifier activation path
 
 - status: candidate
 - ready: needs-decision
@@ -339,9 +339,41 @@ The rec lifecycle has no terminal status for work that has actually shipped. pro
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
-- areas: docs, positioning, launch
-- files: docs, README.md
-- evidence: Competitive research (primary-source GitHub/npm API, 2026-06-11): no enforcing in-loop AC-linked competitor; scaffolders soft-enforce, review bots gate late on PRs. Category forming (ThoughtWorks Radar v34, Cursor acq. of Graphite Dec 2025). Aligns with [[cadence-launch-positioning]] honesty constraints.
+- areas: providers, onboarding, docs
+- files: docs/providers.md, packages/core/src/cli/commands/activate.ts, packages/core/src/activate
+- evidence: Docs mention OpenAI, but activation surface exposes local for OpenAI-compatible endpoints.
 - next: cadence milestone propose
 
-Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.
+Add activate --provider openai alias or a clear OpenAI-compatible recipe using base URL, model, and API key env vars.
+
+## rec-20260618-007 — Add install preview and dry-run for host adapters
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: host-adapters, onboarding, trust
+- files: packages/host-codex/src/cli.ts, packages/host-claude-code/src/cli.ts, packages/core/src/start/menu.ts
+- evidence: Codex prompts install globally; preview reduces fear before host config writes.
+- next: cadence milestone propose
+
+Add --print or --dry-run to host installs, especially Codex global prompt installs, and surface write scope in cadence start.
+
+## rec-20260618-008 — Make non-Claude surfaces visible on the website
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: website, docs, onboarding
+- files: website/astro.config.mjs, website/scripts/routes.mjs, website/src/content/docs/index.mdx
+- evidence: Website routes include MCP and host-adapters, but sidebar only exposes Claude Code, providers, and CLI usage.
+- next: cadence milestone propose
+
+Add MCP, Codex, and host-adapter guide entries/cards to website navigation so non-Claude users find setup paths quickly.

@@ -1,6 +1,6 @@
 ---
 description: Record outcome of a build task
-argument-hint: <task-id> --status=<PASS|FAIL|BLOCKED|ESCALATED>
+argument-hint: <task-id> --status=<DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED>
 allowed-tools: Bash(cadence:*), Read
 ---
 

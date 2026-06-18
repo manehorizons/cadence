@@ -1,0 +1,23 @@
+{
+  "draftId": "123-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "README names cadence.cmd, npx.cmd, npm.cmd fallbacks without changing execution policy.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:58:00.778Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "docs/quickstart.md and docs/cli.md mirror the Windows fallback guidance.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:58:01.107Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "git diff --name-only shows docs plus .cadence artifacts only; git diff --check passed.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:58:01.443Z"
+    }
+  }
+}

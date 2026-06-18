@@ -7,7 +7,7 @@
 One engine, four entry points - not separate tools:
 
 - The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. Completely host-agnostic and model-agnostic.
-- The **`cadence-host-claude-code install`** adapter is a thin wiring layer that plugs the same engine into Claude Code via lifecycle hooks and eleven slash commands. It is the only surface that adds *ambient* edit-time gates (boundary checks and anomaly detection as you edit).
+- The **`cadence-host-claude-code install`** adapter is a thin wiring layer that plugs the same engine into Claude Code via lifecycle hooks and twelve slash commands. It is the only surface that adds *ambient* edit-time gates (boundary checks and anomaly detection as you edit).
 - The **`cadence-host-codex install`** adapter plugs the same engine into the OpenAI Codex CLI via lifecycle hooks and global prompt commands. It is the second shipped conformance consumer of the host-adapter contract.
 - **`cadence mcp serve`** runs the engine as a local [MCP](https://modelcontextprotocol.io) server over stdio, so any MCP-capable host (Claude Desktop, Cursor, other agents) can drive the loop with no bespoke adapter. It exposes the imperative loop only — command-boundary gates run; ambient edit-time gates require host hooks.
 

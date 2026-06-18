@@ -419,7 +419,7 @@ The three share detection logic where they overlap (e.g. the host-hooks-installe
 
 ## Presets
 
-`cadence init --profile <preset>` seeds `config.json` from one of three presets. The table shows only the fields that **differ** from `defaultConfig`; all other fields take the `defaultConfig` value.
+`cadence init --preset <preset>` seeds `config.json` from one of three presets. The deprecated `--profile <preset>` alias is still accepted for back-compat, but new docs and scripts should use `--preset`. The table shows only the fields that **differ** from `defaultConfig`; all other fields take the `defaultConfig` value.
 
 | Field | `solo` | `team` (default) | `production` |
 |---|---|---|---|

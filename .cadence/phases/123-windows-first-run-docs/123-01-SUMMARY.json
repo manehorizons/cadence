@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "draftId": "123-01",
+  "completedAt": "2026-06-18T19:58:01.936Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "README names cadence.cmd, npx.cmd, npm.cmd fallbacks without changing execution policy."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "docs/quickstart.md and docs/cli.md mirror the Windows fallback guidance."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "git diff --name-only shows docs plus .cadence artifacts only; git diff --check passed."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "gateBypasses": [
+    {
+      "type": "coverage-bypassed",
+      "severity": "warn",
+      "flag": "--allow-missing-coverage",
+      "reason": "test-coverage gate bypassed via --allow-missing-coverage",
+      "context": {}
+    }
+  ]
+}

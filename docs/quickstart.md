@@ -22,6 +22,7 @@ New and not sure? Run `cadence start` for a guided menu that picks the right set
 ## Table of contents
 
 - [Prerequisites](#prerequisites)
+- [Fast path - see a loop first](#fast-path---see-a-loop-first)
 - [Step 1 — Set up a toy project](#step-1--set-up-a-toy-project)
 - [Step 2 — Draft a phase](#step-2--draft-a-phase)
 - [Step 3 — Fill the DRAFT](#step-3--fill-the-draft)
@@ -44,7 +45,40 @@ New and not sure? Run `cadence start` for a guided menu that picks the right set
 npm install -g @manehorizons/cadence-core
 ```
 
+On Windows PowerShell, npm's `.ps1` shims can be blocked by script execution
+policy. Use the `.cmd` shims instead, for example `cadence.cmd start`,
+`npx.cmd @manehorizons/cadence-core tutorial`, or
+`npm.cmd install -g @manehorizons/cadence-core`.
+
 This gives you the `cadence` command used throughout this guide.
+
+---
+
+## Fast path - see a loop first
+
+If you want to see CADENCE work before editing any files, run the throwaway
+tutorial. It creates a temp sandbox, drives one real loop, and removes the
+sandbox when it finishes:
+
+```sh
+cadence tutorial --no-pause
+```
+
+To try the loop in your own repo without hand-editing a DRAFT, use `--demo`.
+It seeds a ready-to-approve phase:
+
+```sh
+mkdir ~/projects/my-demo-app
+cd ~/projects/my-demo-app
+
+cadence init --demo
+cadence draft approve 01-demo 01
+cadence done T1
+cadence settle run --ac AC-1=pass
+```
+
+The full walkthrough below shows the manual workflow for writing your own
+Objective, Acceptance Criteria, Tasks, and Boundaries.
 
 ---
 
@@ -95,10 +129,11 @@ For stricter profiles (`standard`, `strict`), see
 ## Step 2 — Draft a phase
 
 A *phase* is one named unit of work. Create a DRAFT scaffold for a phase called
-`01-add-greeting`, task number `01`:
+`01-add-greeting`, task number `01`. The `--brief` flag gives you an editable
+first pass instead of an empty template:
 
 ```sh
-cadence draft new 01-add-greeting 01 --title "Add greeting module"
+cadence draft new 01-add-greeting 01 --title "Add greeting module" --brief "Add a greet(name) helper with one test"
 ```
 
 Output:
@@ -107,14 +142,15 @@ Output:
 Created …/.cadence/phases/01-add-greeting/01-01-DRAFT.md
 ```
 
-The file contains a template you fill in. Open it now.
+The file now contains a starting Objective, AC-1, T1, and Boundaries. Open it
+now and tighten any wording before approve.
 
 ---
 
 ## Step 3 — Fill the DRAFT
 
-Open `.cadence/phases/01-add-greeting/01-01-DRAFT.md` and replace the template
-placeholders. A minimal, real DRAFT for this tutorial:
+Open `.cadence/phases/01-add-greeting/01-01-DRAFT.md` and refine the guided
+starter into a precise phase plan. A minimal, real DRAFT for this tutorial:
 
 ```markdown
 ---

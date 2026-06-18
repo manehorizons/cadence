@@ -259,6 +259,62 @@
       "kind": "note",
       "summary": "PR #91 CI: macos-22 AC-23 'expected +0 to be 2' at 2026-06-18T00:00:26Z (UTC midnight); green on re-run. Diff touched no handoff files.",
       "createdAt": "2026-06-18T00:18:38.856Z"
+    },
+    {
+      "id": "ev-20260618-002",
+      "recommendationId": "rec-20260618-001",
+      "kind": "note",
+      "summary": "Observed PowerShell refusing cadence.ps1 during resume; cadence.cmd worked.",
+      "createdAt": "2026-06-18T19:55:08.437Z"
+    },
+    {
+      "id": "ev-20260618-003",
+      "recommendationId": "rec-20260618-002",
+      "kind": "note",
+      "summary": "Current docs support tutorial and init --demo, but quickstart still introduces hand-editing early.",
+      "createdAt": "2026-06-18T19:55:09.695Z"
+    },
+    {
+      "id": "ev-20260618-004",
+      "recommendationId": "rec-20260618-003",
+      "kind": "note",
+      "summary": "Docs disagree on 11 vs 12 slash commands, deprecated --profile, and non-TTY approve refusal vs auto-pass.",
+      "createdAt": "2026-06-18T19:55:10.818Z"
+    },
+    {
+      "id": "ev-20260618-005",
+      "recommendationId": "rec-20260618-004",
+      "kind": "note",
+      "summary": "Generated host hints advertise PASS|FAIL|BLOCKED|ESCALATED while build task accepts DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED.",
+      "createdAt": "2026-06-18T19:55:11.922Z"
+    },
+    {
+      "id": "ev-20260618-006",
+      "recommendationId": "rec-20260618-005",
+      "kind": "note",
+      "summary": "First real phase still asks users to edit DRAFT manually, biggest remaining new-user friction after install.",
+      "createdAt": "2026-06-18T19:55:12.911Z"
+    },
+    {
+      "id": "ev-20260618-007",
+      "recommendationId": "rec-20260618-006",
+      "kind": "note",
+      "summary": "Docs mention OpenAI, but activation surface exposes local for OpenAI-compatible endpoints.",
+      "createdAt": "2026-06-18T19:55:13.826Z"
+    },
+    {
+      "id": "ev-20260618-008",
+      "recommendationId": "rec-20260618-007",
+      "kind": "note",
+      "summary": "Codex prompts install globally; preview reduces fear before host config writes.",
+      "createdAt": "2026-06-18T19:55:14.761Z"
+    },
+    {
+      "id": "ev-20260618-009",
+      "recommendationId": "rec-20260618-008",
+      "kind": "note",
+      "summary": "Website routes include MCP and host-adapters, but sidebar only exposes Claude Code, providers, and CLI usage.",
+      "createdAt": "2026-06-18T19:55:15.688Z"
     }
   ]
 }

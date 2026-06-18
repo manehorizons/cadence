@@ -52,6 +52,16 @@ describe('installCommands (AC-2)', () => {
     expect(draft).toMatch(/argument-hint:/);
   });
 
+  it('cadence-build advertises valid task status values', async () => {
+    const home = await tempDir();
+    await installCommands(process.cwd(), { codexHome: home });
+    const build = await readFile(join(home, 'prompts/cadence-build.md'), 'utf8');
+    expect(build).toContain(
+      'argument-hint: <task-id> --status=<DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED>',
+    );
+    expect(build).not.toContain('PASS|FAIL|BLOCKED|ESCALATED');
+  });
+
   it('AC-2: leaves a user-customized (un-managed) file untouched', async () => {
     const home = await tempDir();
     await mkdir(join(home, 'prompts'), { recursive: true });

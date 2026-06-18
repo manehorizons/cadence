@@ -19,7 +19,7 @@ So Cadence isn't GSD-lite. It keeps the quality gates — they re-check your acc
 One engine, four entry points:
 
 - The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. Completely host-agnostic.
-- The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and eleven slash commands — the only surface that adds *ambient* edit-time gates (boundary checks, anomaly detection as you edit).
+- The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and twelve slash commands — the only surface that adds *ambient* edit-time gates (boundary checks, anomaly detection as you edit).
 - The **`cadence-host-codex install`** adapter wires the same engine into the OpenAI Codex CLI via lifecycle hooks and global prompt commands. It is a shipped conformance consumer of the host-adapter contract.
 - **`cadence mcp serve`** exposes the engine as a local [MCP](https://modelcontextprotocol.io) server over stdio, so any MCP-capable host (Claude Desktop, Cursor, other agents) can drive the loop with no bespoke adapter. It covers the imperative loop (command-boundary gates run; ambient edit-time gates need host hooks). See **[MCP server](./docs/mcp.md)**.
 
@@ -52,6 +52,18 @@ Install the CLI globally (requires Node ≥ 20):
 npm install -g @manehorizons/cadence-core
 ```
 
+On Windows PowerShell, npm's `.ps1` shims can be blocked by script execution
+policy. Use the `.cmd` shims instead, for example `cadence.cmd start`,
+`npx.cmd @manehorizons/cadence-core tutorial`, or
+`npm.cmd install -g @manehorizons/cadence-core`.
+
+Want zero risk first? Run the throwaway tutorial. It creates a temp sandbox,
+drives one real loop, and removes the sandbox when it finishes:
+
+```sh
+cadence tutorial --no-pause
+```
+
 New to CADENCE? Run `cadence start` — a guided menu that picks the right setup
 command for what you're doing. (Once you're set up, `cadence quickstart` is the
 read-only map of where you are and your next moves.)
@@ -77,8 +89,8 @@ To drive a real phase yourself instead of the demo:
 
 ```sh
 cadence init
-cadence draft new 01-foundation 01 --title "First phase"
-# fill .cadence/phases/01-foundation/01-01-DRAFT.md
+cadence draft new 01-foundation 01 --title "First phase" --brief "Add the smallest useful feature and test"
+# review .cadence/phases/01-foundation/01-01-DRAFT.md
 cadence draft approve 01-foundation 01
 cadence build task T1 --status=DONE
 cadence settle run --auto
@@ -102,7 +114,7 @@ Driving it from **another MCP host** (Claude Desktop, Cursor, an agent)? Point t
 
 > **Heads-up — gate profiles and `approve`:** `cadence init` suggests a gate profile from repo maturity — a repo with **≥20 commits** gets `standard`, a younger repo gets `auto` (override with `--gate-profile`). The profile sets how strict `draft approve` is:
 > - **`auto`** — `approve` runs non-interactively (good for solo and agent loops).
-> - **`standard` / `strict`** — `approve` is gated behind an **interactive prompt**. In non-TTY contexts (CI, agents) it **refuses** unless you pass `--no-approve`.
+> - **`standard` / `strict`** — `approve` is gated behind an **interactive prompt** in a TTY. In non-TTY contexts (CI, agents) it auto-passes loudly by default since v1.29; set `CADENCE_REQUIRE_TTY=1` to restore strict refusal, or pass `--no-approve` to skip the manual gate explicitly.
 
 > **`--local` writes machine-absolute paths — do not commit it.** `cadence-host-claude-code install --local` bakes absolute paths to *this machine's* workspace into the settings file. Add the settings file (e.g. `.claude/settings.local.json`) to `.gitignore`; other clones/machines cannot resolve those paths.
 

@@ -114,6 +114,162 @@
       "exportTargets": [],
       "createdAt": "2026-06-17T18:33:50.666Z",
       "updatedAt": "2026-06-17T18:45:09.883Z"
+    },
+    {
+      "id": "mil-rec-rec-20260618-001",
+      "name": "Fix Windows first-run command guidance",
+      "objective": "Document PowerShell npm shim failures and recommend cadence.cmd, npx.cmd, and npm.cmd fallbacks in install and first-run troubleshooting.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260618-001"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260618-001/SPEC.md",
+          "exportedAt": "2026-06-18T19:55:42.912Z"
+        }
+      ],
+      "createdAt": "2026-06-18T19:55:27.790Z",
+      "updatedAt": "2026-06-18T19:55:42.912Z"
+    },
+    {
+      "id": "mil-rec-rec-20260618-002",
+      "name": "Lead onboarding with a 60-second no-risk tutorial",
+      "objective": "Make the throwaway tutorial and init --demo the primary first experience before manual DRAFT editing.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260618-002"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260618-002/SPEC.md",
+          "exportedAt": "2026-06-18T20:00:42.322Z"
+        }
+      ],
+      "createdAt": "2026-06-18T19:55:27.790Z",
+      "updatedAt": "2026-06-18T20:00:42.322Z"
+    },
+    {
+      "id": "mil-rec-rec-20260618-003",
+      "name": "Remove onboarding documentation drift",
+      "objective": "Align README, docs guide, reference docs, and Claude adapter docs around current command counts, --preset naming, and v1.29 non-TTY approve behavior.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260618-003"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260618-003/SPEC.md",
+          "exportedAt": "2026-06-18T20:07:25.224Z"
+        }
+      ],
+      "createdAt": "2026-06-18T19:55:27.790Z",
+      "updatedAt": "2026-06-18T20:07:25.224Z"
+    },
+    {
+      "id": "mil-rec-rec-20260618-004",
+      "name": "Fix generated host command hints",
+      "objective": "Update Claude and Codex prompt argument hints so build status values match the CLI: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260618-004"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260618-004/SPEC.md",
+          "exportedAt": "2026-06-18T20:12:25.670Z"
+        }
+      ],
+      "createdAt": "2026-06-18T19:55:27.790Z",
+      "updatedAt": "2026-06-18T20:12:25.670Z"
+    },
+    {
+      "id": "mil-rec-rec-20260618-005",
+      "name": "Add guided first-phase drafting",
+      "objective": "Add cadence draft wizard or cadence draft new --brief so new users can create Objective, ACs, and Tasks without hand-editing a template from scratch.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260618-005"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260618-005/SPEC.md",
+          "exportedAt": "2026-06-18T20:19:50.325Z"
+        }
+      ],
+      "createdAt": "2026-06-18T20:19:35.790Z",
+      "updatedAt": "2026-06-18T20:19:50.325Z"
+    },
+    {
+      "id": "mil-rec-rec-20260611-007",
+      "name": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
+      "objective": "Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260611-007"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260611-007/SPEC.md",
+          "exportedAt": "2026-06-18T20:28:17.162Z"
+        }
+      ],
+      "createdAt": "2026-06-18T20:28:07.419Z",
+      "updatedAt": "2026-06-18T20:28:17.162Z"
     }
   ]
 }

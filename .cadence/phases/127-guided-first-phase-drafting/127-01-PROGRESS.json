@@ -1,0 +1,23 @@
+{
+  "draftId": "127-01",
+  "tasks": {
+    "T2": {
+      "status": "DONE",
+      "notes": "Added CLI flag pass-through plus blank brief refusal before writes.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:25:36.969Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "Implemented deterministic --brief seeding and preserved no-brief/SPEC behavior.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:25:37.011Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Documented --brief in README, quickstart, CLI guide, and command reference.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T20:25:37.118Z"
+    }
+  }
+}
