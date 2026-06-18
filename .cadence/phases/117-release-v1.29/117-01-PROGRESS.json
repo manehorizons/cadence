@@ -1,0 +1,23 @@
+{
+  "draftId": "117-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "changeset + pnpm changeset version → all 4 published pkgs 1.28.0→1.29.0",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T02:41:43.644Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "CLAUDE.md leads with 1.29.0 + phase-116 summary; MILESTONES v1.29.0 section",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T02:41:43.817Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "pnpm turbo run lint typecheck test build → 20/20 green",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T02:41:43.998Z"
+    }
+  }
+}

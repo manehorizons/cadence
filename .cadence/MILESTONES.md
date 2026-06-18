@@ -522,6 +522,24 @@ via v1.27, 007/009 here). No new DESIGN.md D-number. Remaining backlog is non-on
 (rec-003 arg-syntax, rec-005 agent/non-TTY, rec-611-005 gate-bypass audit,
 rec-611-007 COMPETITIVE.md, rec-611-006 codex test-parity).
 
+### v1.29.0 — Non-TTY gate auto-bypass (DELIVERED 2026-06-18)
+- **Phase 116 — non-TTY auto-bypass for the two interactive loop gates** (rec-20260617-005,
+  top backlog). `approve` and `interactive-verdict` no longer hard-fail in a non-TTY with
+  `StdinPrompter: stdin is not a TTY`. A pure `resolveInteractivity(env, isTTY) →
+  'interactive' | 'bypass' | 'require-tty'` drives both: `approve` auto-passes loudly
+  (stderr audit trail); `interactive-verdict` skips its walker, passes, and records
+  `interactiveVerifySkipped: "non-tty"` in the SUMMARY (no fabricated human verdicts — the
+  other verification gates still decide). Env controls `CADENCE_REQUIRE_TTY=1` (strict
+  restore, wins), `CADENCE_NONINTERACTIVE=1` (force bypass under a pseudo-TTY), and the
+  always-honored `CADENCE_PROMPTER_SCRIPT`. Env-only — no config knob; `init` and the
+  explicitly-interactive commands untouched. TDD (5 ACs), two adversarial reviews PASS.
+- **Phase 117 — Release v1.29.0.** Changeset consumed; lockstep `1.28.0 → 1.29.0` across all
+  four published packages; CLAUDE.md narrative leads with `1.29.0`.
+
+**Outcome.** The top non-onboarding backlog item shipped; CADENCE is now safe to drive
+end-to-end from an AI agent or CI on the default profile. No new DESIGN.md D-number
+(additive legibility over the existing gate model).
+
 ## Post-v1.0 (not scheduled)
 
 - Multi-host adapter re-introduction — **Codex shipped as v1.13.0 (above, 2026-06-06)**. **OpenCode evaluated and REJECTED as the third adapter (2026-06-06)** — its gating cannot be made airtight, which breaks CADENCE's core "refuses to settle unverified work" guarantee: (a) the `tool.execute.before` pre-tool hook does **not** fire for subagent or MCP tool calls (sst/opencode #5894, #2319), so edits leak past the gate; (b) there is **no clean per-turn Stop** hook — only `session.idle`/`session.deleted` — so the session-stop/settle gate maps poorly; (c) the plugin API is young/moving with no stability promise. Also a structural mismatch: OpenCode plugins are **in-process Bun TS modules** (`.opencode/plugin/`), not external stdin-JSON hook subprocesses, so the shim would have to be a generated plugin module shelling back to the `cadence` CLI. Building it would force overclaiming the gate (against the project's verifiable-claims bar) or shipping a visibly hollow gate. Revisit only if OpenCode closes the subagent/MCP hook gaps. Aider remains ruled out (no hook system). No clear fourth-host candidate today.

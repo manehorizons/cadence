@@ -1,5 +1,15 @@
 # @manehorizons/cadence-types
 
+## 1.29.0
+
+### Minor Changes
+
+- Non-TTY auto-bypass for the approve + interactive-verdict gates (phase 116, rec-20260617-005).
+
+  The two interactive loop gates no longer hard-fail in a non-TTY with `StdinPrompter: stdin is not a TTY`. A pure `resolveInteractivity(env, isTTY)` seam drives both: the `approve` gate auto-passes loudly (stderr audit trail), and the `interactive-verdict` gate skips its per-AC walker, passes, and records `interactiveVerifySkipped: "non-tty"` in the SUMMARY — no human verdicts are fabricated, and the other verification gates still decide. Three env controls: `CADENCE_REQUIRE_TTY=1` restores the strict refusal, `CADENCE_NONINTERACTIVE=1` forces bypass under a pseudo-TTY, and a supplied `CADENCE_PROMPTER_SCRIPT` is always honored. Env-driven only — no config knob.
+
+  `cadence-core` carries the feature; `cadence-types` carries the `interactiveVerifySkipped` summary field; the two host adapters are version-alignment only.
+
 ## 1.28.0
 
 ### Minor Changes

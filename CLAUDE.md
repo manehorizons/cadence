@@ -134,7 +134,32 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.28.0`** (2026-06-18, tag `v1.28.0`
+change). The latest version is **`1.29.0`** (2026-06-18, tag `v1.29.0`
+pending): the **non-TTY-gate-bypass** release (v1.29) — make CADENCE's two
+interactive loop gates (`approve` at `cadence draft approve`, `interactive-verdict`
+at `cadence settle run --interactive`) safe to drive from an AI agent or CI, which
+are always non-TTY (sourced from rec-20260617-005, the top backlog item; no new
+DESIGN.md D-number — additive legibility over the existing gate model). **Phase
+116** — both gates previously hard-failed in a non-TTY with a cryptic
+`StdinPrompter: stdin is not a TTY` error, with the fix flags buried; now a single
+pure decision seam `resolveInteractivity(env, isTTY) → 'interactive' | 'bypass' |
+'require-tty'` drives both. In a non-TTY the `approve` gate **auto-passes** loudly
+(`note: non-TTY; approve gate auto-passed …` to stderr — the draft flow has no
+SUMMARY, so the notice is the audit trail), and the `interactive-verdict` gate
+**skips** its per-AC walker, passes, and records `interactiveVerifySkipped:
+"non-tty"` in the SUMMARY — **no human verdicts are fabricated**; the other
+verification gates (`test-coverage`, `deep-verify`) still decide. Three env
+controls tune it: `CADENCE_REQUIRE_TTY=1` restores the strict pre-1.29 refusal
+(wins), `CADENCE_NONINTERACTIVE=1` forces bypass even under a pseudo-TTY (for
+pty-allocated agents), and a supplied `CADENCE_PROMPTER_SCRIPT` is always honored
+(never bypassed). Env-driven only — **no new config knob**; `init` and the
+explicitly-interactive commands (`activate`/`config edit`/`start`) are untouched.
+Built TDD (5 ACs), two adversarial reviews PASS; the `approve` gate dogfooded its
+own fix when this release phase was approved non-interactively. All four published
+packages bumped `1.28.0 → 1.29.0` in lockstep (`cadence-core` carries the feature;
+`cadence-types` carries the `interactiveVerifySkipped` summary field; the two host
+adapters are version-alignment only); npm publish is the user-triggered manual
+`Release` workflow. Prior: **`1.28.0`** (2026-06-18, tag `v1.28.0`
 pending): a **coverage-depth + onboarding-completion** release bundling three
 phases. **Phase 112** — **coverage-gate assertion mode**: an opt-in
 `verification.coverageMode: 'assertion'` that counts an `AC-N` token only when it
