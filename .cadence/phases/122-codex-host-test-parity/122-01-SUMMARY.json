@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "draftId": "122-01",
+  "completedAt": "2026-06-18T19:16:22.050Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Added Codex local hooks.json roundtrip test; generated local shim command runs core SessionStart end-to-end"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Added Codex prompt catalog parity test against Claude command golden names; found and fixed missing cadence-scout"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Parity test locks Codex-native prompt frontmatter, managed marker, terminal command block, and absence of Claude !/allowed-tools"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "Codex host tests pass at 11 files / 53 tests; full workspace lint/typecheck/build/test green"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

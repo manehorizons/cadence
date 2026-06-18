@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallCommandsOptions {
@@ -47,6 +48,7 @@ const COMMANDS: CommandSpec[] = [
   { name: 'cadence-needs-context', description: 'Mark a task NEEDS_CONTEXT (shortcut for build task --status=NEEDS_CONTEXT)', argumentHint: '<task-id> [--notes=<n>]', cli: 'needs-context $ARGUMENTS', trailing: 'Supply the missing context, then re-run the task.' },
   { name: 'cadence-handoff', description: 'Scaffold a SESSION handoff doc with machine facts pre-filled', argumentHint: '[label]', cli: 'handoff $ARGUMENTS', trailing: 'Open the new SESSION doc and fill the narrative sections.' },
   { name: 'cadence-resume', description: 'Replay the freshest session handoff (brief by default; --full adds live context)', cli: 'resume', trailing: 'Read the replayed handoff and continue from the documented next action.' },
+  { name: 'cadence-scout', description: COMMAND_GUIDANCE['cadence-scout'].description, argumentHint: '[topic]', cli: 'recommend', body: SCOUT_DIALOGUE },
 ];
 
 function renderFile(spec: CommandSpec, cadenceCommand: string): string {
