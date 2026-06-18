@@ -65,7 +65,7 @@ export async function buildTaskService(
 
     let perTaskRecord: PerTaskVerifyRecord | undefined;
     if (status === 'DONE' && draft) {
-      const cfg = await loadConfig(repoRoot).catch(() => null);
+      const cfg = await loadConfig(repoRoot);
       const ctx = buildBuildContext({
         cwd: repoRoot,
         state,

@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 import type {
   AnomalyEvent,
   CadenceConfig,
@@ -6,6 +5,7 @@ import type {
   Draft,
   GateSet,
 } from '@manehorizons/cadence-types';
+import { collectGitDiff } from '../git/diff.js';
 import { selectNotifier } from '../notify/factory.js';
 import { selectPerTaskVerifier } from '../verify/per-task-factory.js';
 import type { BuildGateContext, BuildGateOpts } from './build-types.js';
@@ -33,36 +33,11 @@ export function buildBuildContext(args: {
     gateSet,
     taskId,
     opts,
-    diff: (files) => collectDiff(cwd, files),
+    diff: (files) => collectGitDiff(cwd, files),
     verifiers: { perTask: selectPerTaskVerifier(config) },
     emit: { perTaskFail: (info) => emitPerTaskFail(config, info) },
     io: { err: (s) => process.stderr.write(s) },
   };
-}
-
-/**
- * `git diff HEAD -- <files>` via execSync. Empty string when the repo isn't a
- * git workdir, when there's no diff, or on error — the mock verifier reads an
- * empty diff as `'concerns'`, the right conservative default for non-git.
- */
-function collectDiff(cwd: string, files: string[]): string {
-  if (files.length === 0) return '';
-  try {
-    const args = ['diff', '--no-color', 'HEAD', '--', ...files];
-    return execSync(`git ${args.map(shellQuote).join(' ')}`, {
-      cwd,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-      maxBuffer: 16 * 1024 * 1024,
-    });
-  } catch {
-    return '';
-  }
-}
-
-function shellQuote(arg: string): string {
-  if (/^[A-Za-z0-9._/=:@+-]+$/.test(arg)) return arg;
-  return `"${arg.replace(/(["\\$`])/g, '\\$1')}"`;
 }
 
 /**

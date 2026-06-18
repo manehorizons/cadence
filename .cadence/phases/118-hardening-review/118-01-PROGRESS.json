@@ -1,0 +1,41 @@
+{
+  "draftId": "118-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added safe phase slug validation before filesystem joins across draft/spec approve/new, settle, and MCP phase reads.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:27:28.260Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Replaced shell-string git diff collection with execFile argv pathspec execution and regression coverage for shell metacharacter filenames.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:27:30.914Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Removed silent invalid config fallbacks from gate-bearing services and MCP startup; invalid config now fails closed.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:27:33.398Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Updated README, docs README, host adapter docs, and DESIGN to align with current Claude Code plus Codex shipped adapter reality.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:27:35.954Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Rebuilt types before core and verified full workspace build after type drift repair.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:27:38.642Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "Ran full local gate: pnpm.cmd -w lint, typecheck, test, and build all passing.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:27:42.707Z"
+    }
+  }
+}

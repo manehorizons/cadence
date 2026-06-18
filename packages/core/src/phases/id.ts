@@ -7,6 +7,21 @@
 // digits as a width-preserving string (so `00-demo` stays `00`, not `0`) and pads
 // each half to a MINIMUM of 2 — the min-2 invariant the id schema enforces.
 
+const SAFE_PHASE_SLUG_RE = /^\d+[A-Za-z0-9._-]*$/;
+
+/**
+ * Validate a phase directory slug before it is used in a filesystem path.
+ * Phase slugs are directory names under `.cadence/phases/`, never paths.
+ */
+export function assertSafePhaseSlug(phaseArg: string): string {
+  if (!SAFE_PHASE_SLUG_RE.test(phaseArg)) {
+    throw new Error(
+      `invalid phase slug: ${phaseArg} (expected leading digits followed by letters, digits, '.', '_' or '-')`,
+    );
+  }
+  return phaseArg;
+}
+
 /**
  * Build a canonical `PP-TT` phase-task id from a phase arg (slug or number) and
  * a task-number arg. Each half is zero-padded to a minimum of two digits and

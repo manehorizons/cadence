@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { derivePhaseTaskId } from '../../src/phases/id.js';
+import { assertSafePhaseSlug, derivePhaseTaskId } from '../../src/phases/id.js';
 
 describe('derivePhaseTaskId (rec-20260610-001)', () => {
   it('preserves existing 2-digit ids unchanged', () => {
@@ -15,5 +15,23 @@ describe('derivePhaseTaskId (rec-20260610-001)', () => {
   });
   it('throws when the phase arg has no leading number', () => {
     expect(() => derivePhaseTaskId('nope', '1')).toThrow();
+  });
+
+  it('allows display-only placeholders when deriving ids', () => {
+    expect(derivePhaseTaskId('103-<slug>', '1')).toBe('103-01');
+  });
+
+  it('rejects path-like or unsafe phase slugs before path construction', () => {
+    expect(assertSafePhaseSlug('34.3-demo')).toBe('34.3-demo');
+    for (const phase of [
+      '01-x/../../../escape',
+      '01-x\\..\\escape',
+      '../01-x',
+      'C:\\tmp\\01-x',
+      '01 bad',
+      '01:x',
+    ]) {
+      expect(() => assertSafePhaseSlug(phase)).toThrow(/invalid phase slug/);
+    }
   });
 });

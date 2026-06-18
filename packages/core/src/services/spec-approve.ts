@@ -9,7 +9,7 @@ import { selectNotifier } from '../notify/factory.js';
 import { selectSpecReviewVerifier } from '../verify/spec-review-factory.js';
 import { nextConvergence } from '../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../notify/spec-review.js';
-import { derivePhaseTaskId } from '../phases/id.js';
+import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -24,22 +24,23 @@ export async function specApproveService(
   try {
     const backend = new SimpleStateBackend(repoRoot);
     const state = await backend.readState();
-    const id = derivePhaseTaskId(args.phase, args.num);
+    const phase = assertSafePhaseSlug(args.phase);
+    const id = derivePhaseTaskId(phase, args.num);
     if (state.loopPosition !== 'SPEC') {
       io.err(`spec approve refused: loopPosition is ${state.loopPosition}, not SPEC.\n`);
       return { exitCode: 1 };
     }
-    const specPath = join(repoRoot, '.cadence', 'phases', args.phase, `${id}-SPEC.md`);
+    const specPath = join(repoRoot, '.cadence', 'phases', phase, `${id}-SPEC.md`);
     if (!existsSync(specPath)) {
       io.err(`spec approve refused: ${specPath} not found.\n`);
       return { exitCode: 1 };
     }
     const rawSpec = await readFile(specPath, 'utf8');
     const spec = parseSpecMd(rawSpec);
-    const cfg = await loadConfig(repoRoot).catch(() => null);
+    const cfg = await loadConfig(repoRoot);
 
     const verifier = selectSpecReviewVerifier(cfg);
-    const sidecarPath = join(repoRoot, '.cadence', 'phases', args.phase, `${id}-SPEC-REVIEW.json`);
+    const sidecarPath = join(repoRoot, '.cadence', 'phases', phase, `${id}-SPEC-REVIEW.json`);
     let attemptsSoFar = 0;
     let history: unknown[] = [];
     if (existsSync(sidecarPath)) {

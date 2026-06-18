@@ -7,7 +7,7 @@ import { runRecommendationTransition } from '../intelligence/store/recommendatio
 import { loadConfig } from '../config/loader.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
-import { derivePhaseTaskId } from '../phases/id.js';
+import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /** `cadence spec new <phase> <num>` — scaffold a SPEC.md (IDLE→SPEC). */
@@ -39,8 +39,9 @@ export async function specNewService(
         return { exitCode: 1 };
       }
     }
-    const dir = join(repoRoot, '.cadence', 'phases', args.phase);
-    const id = derivePhaseTaskId(args.phase, args.num);
+    const phase = assertSafePhaseSlug(args.phase);
+    const dir = join(repoRoot, '.cadence', 'phases', phase);
+    const id = derivePhaseTaskId(phase, args.num);
     const path = join(dir, `${id}-SPEC.md`);
     if (existsSync(path)) {
       io.err(`SPEC already exists: ${path}\n`);
@@ -52,7 +53,7 @@ export async function specNewService(
     // failure). `--allow-phase-collision` bypasses this, never the existsSync.
     const config = await loadConfig(repoRoot).catch(() => undefined);
     if (config) {
-      const verdict = await assertNoPhaseCollision(repoRoot, phaseNumber(args.phase), {
+      const verdict = await assertNoPhaseCollision(repoRoot, phaseNumber(phase), {
         config,
         // Local is excluded from scaffold-time matching — the dir is being
         // created, so a same-number local dir is self, not a collision. The
@@ -68,9 +69,9 @@ export async function specNewService(
     }
     await mkdir(dir, { recursive: true });
     const body = `---\nphase: ${args.phase}\nid: ${id}\nstatus: PENDING\n---\n\n# ${id} — ${title}\n\n## Objective\n\n_(one sentence)_\n\n## Acceptance Criteria\n\n### AC-1: _(name)_\nGiven _(precondition)_\nWhen _(action)_\nThen _(outcome)_\n\n## Constraints\n\n- _(constraint)_\n\n## Open Questions\n\n- _(question)_\n`;
-    await writeFile(path, body);
+    await writeFile(path, body.replace(`phase: ${args.phase}`, `phase: ${phase}`));
 
-    state.activePhase = args.phase;
+    state.activePhase = phase;
     state.activeSpec = id;
     state.loopPosition = 'SPEC';
     await backend.commit(state);
@@ -78,11 +79,11 @@ export async function specNewService(
     io.out(`Created ${path}\n`);
 
     if (args.fromRec !== undefined) {
-      const convertRes = await runRecommendationTransition(repoRoot, args.fromRec, 'convert', args.phase);
+      const convertRes = await runRecommendationTransition(repoRoot, args.fromRec, 'convert', phase);
       if (!convertRes.ok) {
         io.err(
           `spec new: scaffold succeeded but convert failed: ${convertRes.error}. ` +
-            `Run \`cadence recommendation convert ${args.fromRec} --to-phase ${args.phase}\` to retry.\n`,
+            `Run \`cadence recommendation convert ${args.fromRec} --to-phase ${phase}\` to retry.\n`,
         );
         return { exitCode: 1, data: { path, id, converted: false } };
       }

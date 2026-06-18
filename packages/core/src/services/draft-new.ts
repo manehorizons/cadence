@@ -9,7 +9,7 @@ import { runRecommendationTransition } from '../intelligence/store/recommendatio
 import { loadConfig } from '../config/loader.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
-import { derivePhaseTaskId } from '../phases/id.js';
+import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -49,8 +49,9 @@ export async function draftNewService(
         return { exitCode: 1 };
       }
     }
-    const dir = join(repoRoot, '.cadence', 'phases', args.phase);
-    const id = derivePhaseTaskId(args.phase, args.num);
+    const phase = assertSafePhaseSlug(args.phase);
+    const dir = join(repoRoot, '.cadence', 'phases', phase);
+    const id = derivePhaseTaskId(phase, args.num);
     const path = join(dir, `${id}-DRAFT.md`);
     if (existsSync(path)) {
       io.err(`DRAFT already exists: ${path}\n`);
@@ -60,7 +61,7 @@ export async function draftNewService(
     // local `existsSync` refusal; `--allow-phase-collision` bypasses only this.
     const config = await loadConfig(repoRoot).catch(() => undefined);
     if (config) {
-      const verdict = await assertNoPhaseCollision(repoRoot, phaseNumber(args.phase), {
+      const verdict = await assertNoPhaseCollision(repoRoot, phaseNumber(phase), {
         config,
         // Local excluded from scaffold-time matching (see spec-new.ts): the
         // normal spec→draft progression reuses the same local phase dir, which
@@ -81,22 +82,22 @@ export async function draftNewService(
       if (frontmatterStatus(rawSpec) === 'APPROVED') {
         try {
           const spec = parseSpecMd(rawSpec);
-          body = renderDraftBody(args.phase, id, tier, title, spec);
+          body = renderDraftBody(phase, id, tier, title, spec);
           io.out(`draft new: seeded objective + ${spec.acceptanceCriteria.length} AC(s) from approved SPEC ${id}\n`);
         } catch (err) {
           io.err(`draft new: SPEC ${id} APPROVED but unparseable (${err instanceof Error ? err.message : String(err)}) — scaffolding empty\n`);
-          body = renderDraftBody(args.phase, id, tier, title);
+          body = renderDraftBody(phase, id, tier, title);
         }
       } else {
         io.err(`draft new: SPEC ${id} present but not APPROVED — scaffolding empty\n`);
-        body = renderDraftBody(args.phase, id, tier, title);
+        body = renderDraftBody(phase, id, tier, title);
       }
     } else {
-      body = renderDraftBody(args.phase, id, tier, title);
+      body = renderDraftBody(phase, id, tier, title);
     }
     await writeFile(path, body);
 
-    state.activePhase = args.phase;
+    state.activePhase = phase;
     state.activeDraft = id;
     state.loopPosition = 'DRAFT';
     if (!state.openDrafts.some((d) => d.id === id)) {
@@ -107,15 +108,15 @@ export async function draftNewService(
     io.out(`Created ${path}\n`);
 
     if (args.fromRec !== undefined) {
-      const convertRes = await runRecommendationTransition(repoRoot, args.fromRec, 'convert', args.phase);
+      const convertRes = await runRecommendationTransition(repoRoot, args.fromRec, 'convert', phase);
       if (!convertRes.ok) {
         io.err(
           `draft new: scaffold succeeded but convert failed: ${convertRes.error}. ` +
-            `Run \`cadence recommendation convert ${args.fromRec} --to-phase ${args.phase}\` to retry.\n`,
+            `Run \`cadence recommendation convert ${args.fromRec} --to-phase ${phase}\` to retry.\n`,
         );
         return { exitCode: 1, data: { path, id, converted: false } };
       }
-      io.out(`recommendation ${args.fromRec} → converted (to ${args.phase})\n`);
+      io.out(`recommendation ${args.fromRec} → converted (to ${phase})\n`);
     }
     return { exitCode: 0, data: { path, id, converted: args.fromRec !== undefined } };
   } catch (err) {

@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 117-release-v1.29
+**Active phase:** 118-hardening-review
 **Active draft:** (none)
 **Tier:** (n/a)
 

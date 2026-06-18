@@ -15,7 +15,7 @@ import { resumeService } from '../services/resume.js';
 import { doctorService } from '../services/doctor.js';
 import { recommendationAddService } from '../services/recommendation-add.js';
 import { recommendationPromoteService } from '../services/recommendation-promote.js';
-import { derivePhaseTaskId } from '../phases/id.js';
+import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 
 /**
  * One curated CADENCE command exposed as an MCP tool (phase 58). `run` calls the
@@ -113,8 +113,9 @@ export const TOOLS: ToolDef[] = [
       num: z.string().describe('Two-digit unit number'),
     },
     run: (repoRoot, args, io) => {
-      const id = derivePhaseTaskId(str(args.phase), str(args.num));
-      const path = `.cadence/phases/${str(args.phase)}/${id}-DRAFT.md`;
+      const phase = assertSafePhaseSlug(str(args.phase));
+      const id = derivePhaseTaskId(phase, str(args.num));
+      const path = `.cadence/phases/${phase}/${id}-DRAFT.md`;
       return draftCheckService(repoRoot, { path }, io);
     },
   },

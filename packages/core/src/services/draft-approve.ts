@@ -9,7 +9,7 @@ import { buildDraftContext } from '../gates/draft-context.js';
 import { runCoherenceGate, emitCoherenceWarns } from '../gates/coherence.js';
 import { runApproveGate } from '../gates/approve.js';
 import { runPlanReviewGate } from '../gates/plan-review.js';
-import { derivePhaseTaskId } from '../phases/id.js';
+import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -29,17 +29,18 @@ export async function draftApproveService(
   io: CommandIO,
 ): Promise<CommandResult> {
   try {
-    const id = derivePhaseTaskId(args.phase, args.num);
-    const path = join(repoRoot, '.cadence', 'phases', args.phase, `${id}-DRAFT.md`);
+    const phase = assertSafePhaseSlug(args.phase);
+    const id = derivePhaseTaskId(phase, args.num);
+    const path = join(repoRoot, '.cadence', 'phases', phase, `${id}-DRAFT.md`);
     const draft = parseDraftMd(await readFile(path, 'utf8'));
     const backend = new SimpleStateBackend(repoRoot);
     const state = await backend.readState();
     const projectMdPath = join(repoRoot, '.cadence', 'PROJECT.md');
     const projectMd = existsSync(projectMdPath) ? await readFile(projectMdPath, 'utf8') : '';
-    const cfg = await loadConfig(repoRoot).catch(() => null);
+    const cfg = await loadConfig(repoRoot);
     const gateSet = effectiveGateSet(state, cfg, draft);
     const ctx = buildDraftContext({
-      cwd: repoRoot, state, draft, config: cfg, gateSet, phase: args.phase, id, projectMd,
+      cwd: repoRoot, state, draft, config: cfg, gateSet, phase, id, projectMd,
       opts: {
         ...(args.allowAutoComplex !== undefined ? { allowAutoComplex: args.allowAutoComplex } : {}),
         ...(args.approve !== undefined ? { approve: args.approve } : {}),
@@ -71,7 +72,7 @@ export async function draftApproveService(
     // Coherence-warn emission at approve time (before the BUILD transition).
     await emitCoherenceWarns(ctx, 'coherence.approve');
 
-    state.activePhase = args.phase;
+    state.activePhase = phase;
     state.activeDraft = id;
     state.loopPosition = 'BUILD';
     state.tier = draft.tier;

@@ -35,7 +35,7 @@ export async function draftCheckService(
     // Phase 23.2 — coherence-warn emission (gated on anomaly-notify). Block
     // issues already printed loudly above; warns still emit even when blocked.
     if (issues.some((i) => i.severity === 'warn')) {
-      const cfg = await loadConfig(repoRoot).catch(() => null);
+      const cfg = await loadConfig(repoRoot);
       const ctx = buildDraftContext({
         cwd: repoRoot, state, draft, config: cfg,
         gateSet: effectiveGateSet(state, cfg, draft),

@@ -30,9 +30,7 @@ export function registerMcpCommand(program: Command): void {
       // stderr-only, so it never collides with the stdio MCP protocol channel.
       const { loadConfig } = await import('../../config/loader.js');
       const { configureLoggerFromConfig } = await import('../../logging/logger.js');
-      await loadConfig(repoRoot)
-        .then((cfg) => configureLoggerFromConfig(cfg))
-        .catch(() => {});
+      configureLoggerFromConfig(await loadConfig(repoRoot));
       // Lazy-import the SDK + server so ordinary CLI commands never load the MCP
       // dependency (phase 58 AC-7). Both modules pull in @modelcontextprotocol/sdk.
       const [{ buildCadenceMcpServer }, { StdioServerTransport }] = await Promise.all([
