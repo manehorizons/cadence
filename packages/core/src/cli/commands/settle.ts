@@ -21,6 +21,8 @@ export function registerSettleCommand(program: Command): void {
     .command('run')
     .description('Generate SUMMARY.md + JSON and return to IDLE')
     .option('--ac <pair...>', 'AC verdicts: AC-1=pass  or  AC-1=fail:reason')
+    .option('--ac-pass <id...>', 'mark one or more AC ids as pass (shorthand for --ac AC-n=pass)')
+    .option('--pass-all', 'mark every AC in the active draft as pass')
     .option('--auto', 'derive AC verdicts from task statuses (blocks on incomplete ACs)')
     .option('--force', 'settle even when --auto detects blocked or pending ACs')
     .option(

@@ -17,7 +17,7 @@ describe('quickstart render', () => {
   it('AC-3: renderText (initialized) shows the Next move', () => {
     const state = { ...emptyState('demo'), loopPosition: 'IDLE' as const };
     const out = renderText(buildQuickstart({ initialized: true, state, nextPhaseHint: 7 }));
-    expect(out).toMatch(/Next:.*cadence draft new 7-<slug> 1/);
+    expect(out).toMatch(/Next:.*cadence draft new --title "New work"/);
     expect(out).toMatch(/cadence progress/); // footer pointer
   });
 

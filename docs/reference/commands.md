@@ -214,7 +214,7 @@ IDLE → DRAFT → BUILD → SETTLE model.
 #### draft new
 
 ```
-Usage: cadence draft new [options] <phase> <num>
+Usage: cadence draft new [options] [phase] [num]
 
 Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 ```
@@ -223,21 +223,20 @@ Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 
 | Argument | Description |
 |---|---|
-| `<phase>` | Phase identifier (e.g. `P24`) |
-| `<num>` | Draft number within the phase (e.g. `1`) |
+| `[phase]` | Optional phase identifier (e.g. `120-my-feature`). Omit to infer the next-free phase number and title slug. |
+| `[num]` | Optional draft number within the phase (defaults to `1`) |
 
 **Options**
 
 | Option | Default | Description |
 |---|---|---|
-| `--title <t>` | `"Untitled"` | Draft title |
+| `--title <t>` | `"Untitled"` | Draft title; also used to infer the slug when `[phase]` is omitted |
 | `--tier <t>` | `"standard"` | Tier: `quick-fix \| standard \| complex` |
 | `--from-rec <recId>` | — | Praxis recommendation id. On success, the rec is auto-converted to this phase via the Slice 34.1 transition helper. Symmetric semantics with `cadence spec new --from-rec`. Composes with the existing SPEC-seeded draft body: an approved SPEC plus `--from-rec` produces a SPEC-seeded DRAFT.md AND records the rec→phase link in one operator action. |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — creates `.cadence/phases/<phase>/<id>-DRAFT.md` pre-populated
-with the tier-appropriate template. The tier affects which gates fire at
-`settle run` time. See
+with the tier-appropriate template. `cadence draft new --title "My Feature"` infers `<next-free>-my-feature` and task `01`; the old positional form still works for scripts. The tier affects which gates fire at `settle run` time. See
 [docs/concepts.md — Profiles × tiers](../concepts.md#profiles--tiers).
 
 #### draft check
@@ -529,6 +528,8 @@ Generate SUMMARY.md + JSON and return to IDLE
 | Option | Description |
 |---|---|
 | `--ac <pair...>` | AC verdicts: `AC-1=pass` or `AC-1=fail:reason` |
+| `--ac-pass <id...>` | Mark one or more AC ids as passing (shorthand for `--ac AC-n=pass`) |
+| `--pass-all` | Mark every AC in the active draft as passing |
 | `--auto` | Derive AC verdicts from task statuses (blocks on incomplete ACs) |
 | `--force` | Settle even when `--auto` detects blocked or pending ACs |
 | `--allow-missing-coverage` | Skip the test-coverage gate even if the active profile would enforce it |
@@ -551,9 +552,7 @@ code-review, security-audit, interactive-verdict), records AC outcomes, writes
 `.cadence/phases/<phase>/<id>-SUMMARY.md` and the corresponding JSON, and
 transitions `state.json` back to IDLE.
 
-AC verdicts may be supplied explicitly with `--ac`, derived automatically from
-task statuses with `--auto`, or collected interactively with `--interactive`.
-The three modes are mutually exclusive.
+AC verdicts may be supplied explicitly with `--ac`, `--ac-pass`, or `--pass-all`; derived automatically from task statuses with `--auto`; or collected interactively with `--interactive`. Explicit `--ac` pairs override shorthand passes for the same AC, so `--ac-pass AC-1 --ac AC-1=fail:reason` records the failure.
 
 **Gate interactions** — each `--allow-*` flag bypasses exactly one gate. Using
 `--force` overrides `--auto`'s refusal when ACs are incomplete but does not
@@ -576,16 +575,11 @@ Show single recommended next action
 action (e.g. "Run `cadence draft new`", "Record task T2"). Intended for
 quick orientation. For full loop context, use [`cadence status`](#status).
 
-**Proactive next-free phase number (v1.19)** — at `IDLE`, the suggested
-`cadence draft new …` no longer prints a bare `<num>` placeholder: it fills in
-the next free phase number, computed as `max(observed) + 1` over local phases
-plus any sibling-worktree and upstream claims (the same collision collector
-`cadence doctor`'s `worktree-phases` check uses). So your first pick already
-clears numbers a sibling worktree or upstream holds — no round-trip through the
-v1.18 guard's refusal. This is best-effort: in a non-git checkout, or if the
-occupancy read fails, `progress` falls back to the literal placeholder and never
-blocks. The same occupancy-aware suggestion surfaces in the recommend/Praxis
-backend's IDLE legal action.
+**Copy-pasteable IDLE action** — at `IDLE`, the suggested command is
+`cadence draft new --title "New work"`. `draft new` derives the next-free phase
+number at execution time, slugifies the title, and defaults the task number to
+`01`. The same runnable suggestion surfaces in the recommend/Praxis backend's
+IDLE legal action.
 
 **Exit codes** — exits non-zero if `.cadence/` is missing or `state.json` is
 unreadable.

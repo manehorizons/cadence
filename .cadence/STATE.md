@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 119-gate-surface-audit
+**Active phase:** 120-auto-next-command
 **Active draft:** (none)
 **Tier:** (n/a)
 

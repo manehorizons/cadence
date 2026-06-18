@@ -55,7 +55,7 @@ const COMMANDS: CommandSpec[] = [
   {
     name: 'cadence-draft',
     description: g['cadence-draft'].description,
-    argumentHint: '<phase-id> <task-num> [--title=<title>]',
+    argumentHint: '[phase-id] [task-num] --title=<title>',
     cli: 'draft new $ARGUMENTS',
     trailing: g['cadence-draft'].trailing,
   },
@@ -83,7 +83,7 @@ const COMMANDS: CommandSpec[] = [
   {
     name: 'cadence-settle',
     description: g['cadence-settle'].description,
-    argumentHint: '[--ac AC-1=pass ...]',
+    argumentHint: '[--pass-all | --ac-pass AC-1 ... | --ac AC-1=pass ...]',
     cli: 'settle run $ARGUMENTS',
     trailing: g['cadence-settle'].trailing,
   },

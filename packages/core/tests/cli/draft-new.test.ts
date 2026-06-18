@@ -23,6 +23,17 @@ let active: Fixture | null = null;
 afterEach(async () => { if (active) { await active.cleanup(); active = null; } });
 
 describe('cadence draft new', () => {
+  it('AC-1 (phase 120): infers phase slug and task number from --title', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['draft', 'new', '--title=My Feature'], active.root);
+    expect(r.code).toBe(0);
+    const state = JSON.parse(await readFile(join(active.root, '.cadence/state.json'), 'utf8'));
+    expect(state.activePhase).toMatch(/^\d+-my-feature$/);
+    expect(state.activeDraft).toMatch(/^\d+-01$/);
+    const path = join(active.root, '.cadence/phases', state.activePhase, `${state.activeDraft}-DRAFT.md`);
+    expect(existsSync(path)).toBe(true);
+  });
+
   it('creates a DRAFT.md skeleton under phases/<phase>/', async () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);

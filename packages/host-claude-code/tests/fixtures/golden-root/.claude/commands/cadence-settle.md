@@ -1,6 +1,6 @@
 ---
 description: Close the loop and write SUMMARY
-argument-hint: [--ac AC-1=pass ...]
+argument-hint: [--pass-all | --ac-pass AC-1 ... | --ac AC-1=pass ...]
 allowed-tools: Bash(cadence:*), Read
 ---
 
@@ -8,4 +8,4 @@ allowed-tools: Bash(cadence:*), Read
 
 !cadence settle run $ARGUMENTS
 
-Review SUMMARY.md; loop is back to IDLE.
+Use --pass-all for simple green paths, then review SUMMARY.md; loop is back to IDLE.

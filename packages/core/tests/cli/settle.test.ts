@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
@@ -13,6 +13,21 @@ function run(args: string[], cwd: string): Promise<{ code: number }> {
     const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     p.on('exit', (code) => resolve({ code: code ?? 0 }));
   });
+}
+
+async function addSecondAc(root: string): Promise<void> {
+  const path = join(root, '.cadence/phases/01-foundation/01-01-DRAFT.md');
+  const raw = await readFile(path, 'utf8');
+  const next = raw
+    .replace(
+      '\n## Tasks\n',
+      '\n### AC-2: Extra\nGiven extra setup\nWhen extra action\nThen extra outcome\n\n## Tasks\n',
+    )
+    .replace(
+      '\n## Boundaries\n',
+      '\n### T2: extra task\n- files: `src/extra.ts`\n- action: do extra\n- verify: test extra\n- done: AC-2\n\n## Boundaries\n',
+    );
+  await writeFile(path, next);
 }
 
 let active: Fixture | null = null;
@@ -44,6 +59,39 @@ describe('cadence settle run', () => {
     await run(['settle', 'run', '--ac', 'AC-1=fail:flaky'], active.root);
     const md = await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'), 'utf8');
     expect(md).toMatch(/AC-1.*FAIL/);
+    expect(md).toContain('flaky');
+  });
+
+  it('AC-3 (phase 120): --pass-all records every AC as passing', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await addSecondAc(active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    await run(['build', 'task', 'T2', '--status=DONE'], active.root);
+
+    const r = await run(['settle', 'run', '--pass-all'], active.root);
+
+    expect(r.code).toBe(0);
+    const md = await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'), 'utf8');
+    expect(md).toMatch(/AC-1.*PASS/);
+    expect(md).toMatch(/AC-2.*PASS/);
+  });
+
+  it('AC-4 (phase 120): --ac-pass mixes with existing --ac fail syntax', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await addSecondAc(active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    await run(['build', 'task', 'T2', '--status=DONE_WITH_CONCERNS'], active.root);
+
+    const r = await run(['settle', 'run', '--ac-pass', 'AC-1', '--ac', 'AC-2=fail:flaky'], active.root);
+
+    expect(r.code).toBe(0);
+    const md = await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'), 'utf8');
+    expect(md).toMatch(/AC-1.*PASS/);
+    expect(md).toMatch(/AC-2.*FAIL/);
     expect(md).toContain('flaky');
   });
 });

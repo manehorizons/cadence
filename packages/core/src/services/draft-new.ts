@@ -10,7 +10,26 @@ import { loadConfig } from '../config/loader.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
+import { resolveNextFreePhase } from '../phases/next-free.js';
 import type { CommandIO, CommandResult } from './io.js';
+
+function slugFromTitle(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug.length > 0 ? slug : 'untitled';
+}
+
+async function resolveDraftPhase(
+  repoRoot: string,
+  phase: string | undefined,
+  title: string,
+): Promise<string> {
+  if (phase !== undefined) return assertSafePhaseSlug(phase);
+  const next = (await resolveNextFreePhase(repoRoot)) ?? 1;
+  return assertSafePhaseSlug(`${next}-${slugFromTitle(title)}`);
+}
 
 /**
  * `cadence draft new <phase> <num>` — scaffold a DRAFT.md (IDLE→DRAFT) and,
@@ -19,7 +38,7 @@ import type { CommandIO, CommandResult } from './io.js';
  */
 export async function draftNewService(
   repoRoot: string,
-  args: { phase: string; num: string; title?: string; tier?: string; fromRec?: string; allowPhaseCollision?: boolean },
+  args: { phase?: string; num?: string; title?: string; tier?: string; fromRec?: string; allowPhaseCollision?: boolean },
   io: CommandIO,
 ): Promise<CommandResult> {
   const title = args.title ?? 'Untitled';
@@ -49,9 +68,10 @@ export async function draftNewService(
         return { exitCode: 1 };
       }
     }
-    const phase = assertSafePhaseSlug(args.phase);
+    const phase = await resolveDraftPhase(repoRoot, args.phase, title);
+    const num = args.num ?? '1';
     const dir = join(repoRoot, '.cadence', 'phases', phase);
-    const id = derivePhaseTaskId(phase, args.num);
+    const id = derivePhaseTaskId(phase, num);
     const path = join(dir, `${id}-DRAFT.md`);
     if (existsSync(path)) {
       io.err(`DRAFT already exists: ${path}\n`);

@@ -1,0 +1,35 @@
+{
+  "draftId": "120-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "draft new accepts omitted phase/num and infers next-free slug from title; explicit positional form preserved",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:02:55.497Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "settle run supports --pass-all and --ac-pass, with explicit --ac overriding shorthand by AC id",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:02:55.943Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "progress and backend IDLE legal action now suggest cadence draft new --title \" New work\\",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:02:56.330Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "commands docs, host command hints, guidance, and golden fixtures updated",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:02:56.651Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "verified with focused tests, full workspace test, and lint",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T19:02:56.974Z"
+    }
+  }
+}

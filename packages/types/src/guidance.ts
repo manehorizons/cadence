@@ -41,7 +41,7 @@ export const COMMAND_GUIDANCE = {
   },
   'cadence-settle': {
     description: 'Close the loop and write SUMMARY',
-    trailing: 'Review SUMMARY.md; loop is back to IDLE.',
+    trailing: 'Use --pass-all for simple green paths, then review SUMMARY.md; loop is back to IDLE.',
   },
   'cadence-done': {
     description: 'Mark a task DONE (shortcut for build task --status=DONE)',

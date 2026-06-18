@@ -377,19 +377,3 @@ The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (sa
 - next: cadence milestone propose
 
 Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.
-
-## rec-20260617-003 — Auto-derive phase id and collapse --ac syntax
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, onboarding
-- files: packages/core/src/cli/commands/draft-new.ts, packages/core/src/cli/commands/settle.ts, packages/core/src/cli/commands/progress.ts
-- evidence: Onboarding map: verbose error-prone arg shapes (kebab+zero-pad positionals, --ac colon notes).
-- next: cadence milestone propose
-
-cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.

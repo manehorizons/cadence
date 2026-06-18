@@ -16,10 +16,10 @@ type Gather = (repoRoot: string, opts: { integrationRef: string }) => Promise<Oc
 
 /**
  * Resolve the next free phase number across local + sibling + upstream claims,
- * or `null` when nothing was observed or any source failed. `null` is the
- * caller's signal to fall back to today's literal `<num>` placeholder — this
- * never throws and never blocks `progress`. The collector is injectable for
- * deterministic, offline tests.
+ * or `null` when nothing was observed or any source failed. `draft new` treats
+ * `null` as phase `1`; `progress` remains copy-pasteable and no longer renders
+ * positional placeholders. The collector is injectable for deterministic,
+ * offline tests.
  */
 export async function resolveNextFreePhase(
   root: string,
@@ -34,10 +34,10 @@ export async function resolveNextFreePhase(
     }
 
     const occupancies = await gather(root, { integrationRef });
-    if (occupancies.length === 0) return null; // no signal → caller keeps the placeholder
+    if (occupancies.length === 0) return null;
 
     return detectPhaseCollision(0, occupancies).nextFree;
   } catch {
-    return null; // best-effort: any failure degrades to the placeholder
+    return null; // best-effort: any failure degrades to the caller's fallback
   }
 }

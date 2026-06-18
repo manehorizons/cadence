@@ -724,36 +724,6 @@
       "scoutId": "scout-20260611-1857",
       "createdAt": "2026-06-11T23:58:00.535Z",
       "updatedAt": "2026-06-11T23:58:00.535Z"
-    },
-    {
-      "id": "rec-20260617-003",
-      "title": "Auto-derive phase id and collapse --ac syntax",
-      "summary": "cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "onboarding"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/draft-new.ts",
-        "packages/core/src/cli/commands/settle.ts",
-        "packages/core/src/cli/commands/progress.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260617-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-17T18:31:57.135Z",
-      "updatedAt": "2026-06-17T18:33:40.673Z"
     }
   ],
   "archived": [
@@ -1170,9 +1140,42 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "116-non-tty-gate-bypass",
-      "createdAt": "2026-06-17T18:31:57.948Z",
-      "updatedAt": "2026-06-18T02:13:00.142Z",
       "archivedAt": "2026-06-18T02:13:00.142Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:57.948Z",
+      "updatedAt": "2026-06-18T02:13:00.142Z"
+    },
+    {
+      "id": "rec-20260617-003",
+      "title": "Auto-derive phase id and collapse --ac syntax",
+      "summary": "cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/draft-new.ts",
+        "packages/core/src/cli/commands/settle.ts",
+        "packages/core/src/cli/commands/progress.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "120-auto-next-command",
+      "createdAt": "2026-06-17T18:31:57.135Z",
+      "updatedAt": "2026-06-18T19:03:00.692Z",
+      "archivedAt": "2026-06-18T19:03:00.692Z",
       "archiveReason": "converted-settled"
     }
   ]

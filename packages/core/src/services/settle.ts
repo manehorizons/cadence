@@ -45,6 +45,8 @@ import type { CommandIO, CommandResult } from './io.js';
 
 export interface SettleArgs {
   ac?: string[];
+  acPass?: string[];
+  passAll?: boolean;
   auto?: boolean;
   force?: boolean;
   allowMissingCoverage?: boolean;
@@ -105,7 +107,14 @@ export async function settleService(
       ? (JSON.parse(await readFile(progPath, 'utf8')) as ProgressJson)
       : { draftId: state.activeDraft, tasks: {} };
 
-    const explicit = (opts.ac ?? []).map(parseAcArg);
+    const generatedPasses: AcResult[] = [
+      ...(opts.passAll ? draft.acceptanceCriteria.map((ac) => ({ id: ac.id, pass: true })) : []),
+      ...(opts.acPass ?? []).map((id) => ({ id, pass: true })),
+    ];
+    const explicitById = new Map<string, AcResult>();
+    for (const result of generatedPasses) explicitById.set(result.id, result);
+    for (const result of (opts.ac ?? []).map(parseAcArg)) explicitById.set(result.id, result);
+    const explicit = [...explicitById.values()];
     const explicitIds = new Set(explicit.map((a) => a.id));
 
     const cadenceConfig = await loadConfig(cwd);

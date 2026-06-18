@@ -1,6 +1,6 @@
 ---
 description: Scaffold a new DRAFT.md for a phase task
-argument-hint: <phase-id> <task-num> [--title=<title>]
+argument-hint: [phase-id] [task-num] --title=<title>
 allowed-tools: Bash(cadence:*), Read
 ---
 
