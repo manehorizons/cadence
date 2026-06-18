@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-06-17T23:49:43.641Z
+Generated at: 2026-06-18T00:19:47.977Z
 
 ## Advisory
 
@@ -24,12 +24,19 @@ Generated at: 2026-06-17T23:49:43.641Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status accepted +6 · ready ready-for-milestone +7 · decay fresh +4 · prio medium +2 ⇒ raw 25.7 (score 73)
 - next: cadence milestone propose
 
-### rec-20260617-007 — One unambiguous onboarding front door + a guided next-step rail
+### rec-20260617-009 — Remove onboarding terminology collision + the silent gate-profile flip
 
-- score: 73/100 (raw 25.7)
-- status: candidate · ready: ready-for-cadence-spec · priority: high · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio high +5 ⇒ raw 25.7 (score 73)
+- score: 68/100 (raw 22.7)
+- status: candidate · ready: ready-for-cadence-spec · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio medium +2 ⇒ raw 22.7 (score 68)
 - scout: scout-20260617-1659
+- next: cadence milestone propose
+
+### rec-20260618-001 — Midnight-boundary flake in handoff clobber test (inject the clock at the CLI boundary)
+
+- score: 68/100 (raw 22.7)
+- status: candidate · ready: ready-for-cadence-spec · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio medium +2 ⇒ raw 22.7 (score 68)
 - next: cadence milestone propose
 
 ### rec-20260611-005 — Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)
@@ -46,14 +53,6 @@ Generated at: 2026-06-17T23:49:43.641Z
 - status: candidate · ready: needs-decision · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
 - scout: scout-20260611-1857
-- next: cadence milestone propose
-
-### rec-20260617-009 — Remove onboarding terminology collision + the silent gate-profile flip
-
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
-- scout: scout-20260617-1659
 - next: cadence milestone propose
 
 ### rec-20260611-006 — Close the Codex host-adapter test-parity gap to prevent silent bit-rot

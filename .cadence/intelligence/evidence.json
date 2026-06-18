@@ -252,6 +252,13 @@
       "kind": "note",
       "summary": "2026-06-17 onboarding assessment.",
       "createdAt": "2026-06-17T23:15:36.077Z"
+    },
+    {
+      "id": "ev-20260618-001",
+      "recommendationId": "rec-20260618-001",
+      "kind": "note",
+      "summary": "PR #91 CI: macos-22 AC-23 'expected +0 to be 2' at 2026-06-18T00:00:26Z (UTC midnight); green on re-run. Diff touched no handoff files.",
+      "createdAt": "2026-06-18T00:18:38.856Z"
     }
   ]
 }

@@ -787,48 +787,12 @@
       "updatedAt": "2026-06-17T18:33:41.442Z"
     },
     {
-      "id": "rec-20260617-007",
-      "title": "One unambiguous onboarding front door + a guided next-step rail",
-      "summary": "Collapse competing entry points (start/quickstart/tutorial/docs-quickstart) into one golden path: make 'cadence start' the only README 'new here?' command; guarantee every onboarding command ends with one 'Next:' line (doctor lacks it); open docs/quickstart with a 3-way driver fork (terminal/Claude Code/MCP); feature 'cadence tutorial' right after the install line. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#2, #6, #7, #10).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "docs",
-        "start",
-        "quickstart",
-        "onboarding"
-      ],
-      "affectedFiles": [
-        "README.md",
-        "docs/quickstart.md",
-        "docs/README.md",
-        "packages/core/src/cli/commands/doctor.ts",
-        "packages/core/src/start/menu.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260617-007"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260617-1659",
-      "createdAt": "2026-06-17T23:15:35.744Z",
-      "updatedAt": "2026-06-17T23:49:43.466Z"
-    },
-    {
       "id": "rec-20260617-009",
       "title": "Remove onboarding terminology collision + the silent gate-profile flip",
       "summary": "(1) 'cadence init' prints both 'preset' (solo/team/production) and 'gate profile' (strict/standard/auto) with no explanation — rename gate profile to 'strictness' or add a one-line distinction. (2) A repo crossing ~20 commits silently flips 'draft approve' to interactive — warn at init time. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#8, #9).",
       "source": "manual",
       "status": "candidate",
-      "readiness": "needs-decision",
+      "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -852,7 +816,39 @@
       "decisionIds": [],
       "scoutId": "scout-20260617-1659",
       "createdAt": "2026-06-17T23:15:36.077Z",
-      "updatedAt": "2026-06-17T23:15:36.077Z"
+      "updatedAt": "2026-06-18T00:19:34.705Z"
+    },
+    {
+      "id": "rec-20260618-001",
+      "title": "Midnight-boundary flake in handoff clobber test (inject the clock at the CLI boundary)",
+      "summary": "tests/cli/handoff.test.ts AC-23 ('refusing to clobber exits 2') flakes when a CI run straddles UTC midnight. The SESSION filename is wall-clock-dated (run-handoff.ts:45 'now.toISOString().slice(0,10)') and the clobber refusal is by filename; the test spawns the real CLI twice, so if the clock ticks past midnight between the two invocations they get different date filenames, no collision fires, and the second handoff exits 0 instead of 2. Observed 2026-06-18T00:00:26Z on macos-22 (PR #91), passed on re-run. runHandoff already takes an injectable 'now' (run-handoff.ts:42) but the CLI command doesn't expose it — add a CADENCE_NOW-style env override read at the CLI boundary so the test can pin the date (and runs become reproducible). Pure offline fix; no behavior change in normal use.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "tests",
+        "cli",
+        "handoff",
+        "ci"
+      ],
+      "affectedFiles": [
+        "packages/core/src/handoff/run-handoff.ts",
+        "packages/core/src/cli/commands/handoff.ts",
+        "packages/core/tests/cli/handoff.test.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260618-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-18T00:18:38.856Z",
+      "updatedAt": "2026-06-18T00:18:38.856Z"
     }
   ],
   "archived": [
@@ -1130,6 +1126,45 @@
       "archiveReason": "shipped",
       "createdAt": "2026-06-17T23:15:35.573Z",
       "updatedAt": "2026-06-17T23:48:43.105Z"
+    },
+    {
+      "id": "rec-20260617-007",
+      "title": "One unambiguous onboarding front door + a guided next-step rail",
+      "summary": "Collapse competing entry points (start/quickstart/tutorial/docs-quickstart) into one golden path: make 'cadence start' the only README 'new here?' command; guarantee every onboarding command ends with one 'Next:' line (doctor lacks it); open docs/quickstart with a 3-way driver fork (terminal/Claude Code/MCP); feature 'cadence tutorial' right after the install line. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#2, #6, #7, #10).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "docs",
+        "start",
+        "quickstart",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/quickstart.md",
+        "docs/README.md",
+        "packages/core/src/cli/commands/doctor.ts",
+        "packages/core/src/start/menu.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260617-1659",
+      "createdAt": "2026-06-17T23:15:35.744Z",
+      "updatedAt": "2026-06-18T00:19:47.809Z",
+      "shippedRef": "phase 113 / PR #91 (3fae956) — one front door + guided Next: rail",
+      "archivedAt": "2026-06-18T00:19:47.809Z",
+      "archiveReason": "shipped"
     }
   ]
 }

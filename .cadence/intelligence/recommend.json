@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-17T23:49:43.641Z",
+  "generatedAt": "2026-06-18T00:19:47.977Z",
   "ranked": [
     {
       "id": "rec-20260617-005",
@@ -85,13 +85,13 @@
       "suggestedBackendAction": "cadence milestone propose"
     },
     {
-      "id": "rec-20260617-007",
-      "title": "One unambiguous onboarding front door + a guided next-step rail",
-      "raw": 25.7,
-      "score": 73,
+      "id": "rec-20260617-009",
+      "title": "Remove onboarding terminology collision + the silent gate-profile flip",
+      "raw": 22.7,
+      "score": 68,
       "status": "candidate",
       "readiness": "ready-for-cadence-spec",
-      "priority": "high",
+      "priority": "medium",
       "decayState": "fresh",
       "terms": [
         {
@@ -119,12 +119,53 @@
           "value": 4
         },
         {
-          "label": "prio high",
-          "value": 5
+          "label": "prio medium",
+          "value": 2
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "scout-20260617-1659"
+    },
+    {
+      "id": "rec-20260618-001",
+      "title": "Midnight-boundary flake in handoff clobber test (inject the clock at the CLI boundary)",
+      "raw": 22.7,
+      "score": 68,
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready ready-for-cadence-spec",
+          "value": 10
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
     },
     {
       "id": "rec-20260611-005",
@@ -209,48 +250,6 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "scout-20260611-1857"
-    },
-    {
-      "id": "rec-20260617-009",
-      "title": "Remove onboarding terminology collision + the silent gate-profile flip",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260617-1659"
     },
     {
       "id": "rec-20260611-006",
