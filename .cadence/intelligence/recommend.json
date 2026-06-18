@@ -1,59 +1,16 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-18T23:02:44.288Z",
-  "ranked": [
-    {
-      "id": "rec-20260611-006",
-      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260611-1857"
-    }
-  ],
+  "generatedAt": "2026-06-18T23:07:53.475Z",
+  "ranked": [],
   "parked": [],
   "needsAttention": [],
   "advisory": {
-    "kind": "top-recommendation",
-    "primary": "cadence milestone propose"
+    "kind": "empty",
+    "primary": "No actionable recommendations — add one with `cadence recommendation add`."
   },
   "totals": {
-    "total": 22,
-    "ranked": 1,
+    "total": 21,
+    "ranked": 0,
     "parked": 0,
     "needsAttention": 0,
     "excluded": 21
