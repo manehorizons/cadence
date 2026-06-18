@@ -13,20 +13,20 @@ afterEach(async () => {
 });
 
 describe('cadenceBackend legalActions — occupancy-aware IDLE suggestion', () => {
-  it('AC-3: the IDLE legal action carries the worktree-aware next-free number', async () => {
+  it('AC-4: the IDLE legal action prints the simplified auto-derived draft command', async () => {
     active = await tempRepo({ initialized: true });
     await mkdir(join(active.root, '.cadence', 'phases', '40-foo'), { recursive: true });
 
     const status = await cadenceBackend.readStatus(active.root);
     expect(status.loopPosition).toBe('IDLE');
     expect(status.legalActions).toHaveLength(1);
-    expect(status.legalActions[0]).toMatch(/cadence draft new 41-/);
+    expect(status.legalActions[0]).toBe('cadence draft new --title "..."');
     expect(status.legalActions[0]).not.toContain('<num>');
   });
 
-  it('AC-2: with no phases the IDLE legal action keeps the placeholder', async () => {
+  it('AC-4: with no phases the IDLE legal action still avoids positional placeholders', async () => {
     active = await tempRepo({ initialized: true });
     const status = await cadenceBackend.readStatus(active.root);
-    expect(status.legalActions[0]).toContain('<num>');
+    expect(status.legalActions[0]).toBe('cadence draft new --title "..."');
   });
 });

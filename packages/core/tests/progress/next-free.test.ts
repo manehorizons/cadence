@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { emptyState } from '@manehorizons/cadence-types';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { nextAction } from '../../src/progress.js';
-import { derivePhaseTaskId } from '../../src/phases/id.js';
 import { resolveNextFreePhase } from '../../src/phases/next-free.js';
 import { progressService } from '../../src/services/progress.js';
 import type { Occupancy } from '../../src/phases/collision.js';
@@ -38,27 +37,22 @@ const capture = () => {
 };
 
 describe('nextAction occupancy hint (pure — no I/O)', () => {
-  it('AC-1: IDLE with a nextPhaseNumber renders it in the slug prefix, leaving the num arg at default 1', () => {
+  it('AC-4: IDLE prints the simplified auto-derived draft command', () => {
     const action = nextAction(emptyState(), { nextPhaseNumber: 86 });
-    expect(action.command).toContain('86-'); // slug prefix `86-<slug>`
+    expect(action.command).toBe('cadence draft new --title "..."');
+    expect(action.reason).toContain('phase 86-<title-slug> task 1');
     expect(action.command).not.toContain('<num>');
-    // The phase number and the task number are distinct: next-free fills only the
-    // phase-number token, so the task-num slot defaults to 1 — not the phase number.
-    expect(action.command).toBe('cadence draft new 86-<slug> 1 --title=…');
   });
 
-  it('AC-1: phases >= 100 derive a clean PP-TT id (regression for rec-20260611-002)', () => {
-    // Bug: the num slot used to be filled with the phase number, so `draft new
-    // 103-<slug> 103` mangled into id 103-103 instead of 103-01.
+  it('AC-4: phases >= 100 stay out of the positional command template', () => {
     const action = nextAction(emptyState(), { nextPhaseNumber: 103 });
-    expect(action.command).toBe('cadence draft new 103-<slug> 1 --title=…');
-    // The suggested invocation, run through id derivation, yields the task-1 id.
-    expect(derivePhaseTaskId('103-<slug>', '1')).toBe('103-01');
+    expect(action.command).toBe('cadence draft new --title "..."');
+    expect(action.reason).toContain('phase 103-<title-slug> task 1');
   });
 
-  it("AC-2: IDLE without a hint keeps today's <num> placeholder", () => {
+  it('AC-4: IDLE without a hint still prints the simplified command', () => {
     const action = nextAction(emptyState());
-    expect(action.command).toContain('<num>');
+    expect(action.command).toBe('cadence draft new --title "..."');
   });
 
   it('AC-1: a hint at a non-IDLE position is ignored (BUILD command unchanged)', () => {
@@ -104,7 +98,8 @@ describe('progressService IDLE suggestion (occupancy-aware)', () => {
     const cap = capture();
     const res = await progressService(active.root, cap.io);
     expect(res.exitCode).toBe(0);
-    expect(cap.out).toMatch(/cadence draft new 13-/);
+    expect(cap.out).toContain('cadence draft new --title "..."');
+    expect(cap.out).toContain('phase 13-<title-slug> task 1');
     expect(cap.out).not.toContain('<num>');
   });
 
@@ -113,6 +108,6 @@ describe('progressService IDLE suggestion (occupancy-aware)', () => {
     const cap = capture();
     const res = await progressService(active.root, cap.io);
     expect(res.exitCode).toBe(0);
-    expect(cap.out).toContain('<num>');
+    expect(cap.out).toContain('cadence draft new --title "..."');
   });
 });

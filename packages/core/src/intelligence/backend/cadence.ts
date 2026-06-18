@@ -57,7 +57,8 @@ export const cadenceBackend: PraxisBackend = {
     try {
       const state = await new SimpleStateBackend(root).readState();
       // Same occupancy-aware IDLE suggestion as `cadence progress` — best-effort,
-      // and only resolved at IDLE (the one position whose suggestion fills a num).
+      // and only resolved at IDLE (the one position whose reason can preview the
+      // auto-derived phase number behind the simplified command).
       let hints: NextActionHints | undefined;
       if (state.loopPosition === 'IDLE') {
         const n = await resolveNextFreePhase(root);

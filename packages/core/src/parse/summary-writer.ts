@@ -17,6 +17,12 @@ export function renderSummaryMd(s: Summary): string {
   for (const t of s.taskResults) {
     lines.push(`- ${t.id}: ${t.status}${t.notes ? ` — ${t.notes}` : ''}`);
   }
+  if (s.gateBypasses && s.gateBypasses.length > 0) {
+    lines.push('', '## Gate bypasses', '');
+    for (const b of s.gateBypasses) {
+      lines.push(`- ${b.severity.toUpperCase()} ${b.gate} via ${b.flag}: ${b.reason}`);
+    }
+  }
   lines.push('', '## Decisions', '');
   if (s.decisions.length === 0) lines.push('_(none)_');
   for (const d of s.decisions) {

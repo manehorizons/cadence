@@ -32,6 +32,24 @@ describe('cadence draft new', () => {
     expect(content).toContain('# 01-01 — Demo');
   });
 
+  it('AC-1: derives phase slug and task id from --title when positionals are omitted', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['draft', 'new', '--title=Auto Phase Id'], active.root);
+    expect(r.code).toBe(0);
+    const path = join(active.root, '.cadence/phases/01-auto-phase-id/01-01-DRAFT.md');
+    expect(existsSync(path)).toBe(true);
+    const content = await readFile(path, 'utf8');
+    expect(content).toMatch(/^---\nphase: 01-auto-phase-id\nid: 01-01\ntier: standard\nstatus: PENDING\n---/);
+    expect(content).toContain('# 01-01 — Auto Phase Id');
+  });
+
+  it('AC-1: defaults the task number to 1 when only phase is supplied', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['draft', 'new', '12-manual', '--title=Manual'], active.root);
+    expect(r.code).toBe(0);
+    expect(existsSync(join(active.root, '.cadence/phases/12-manual/12-01-DRAFT.md'))).toBe(true);
+  });
+
   it('transitions state to loopPosition=DRAFT and tracks the open draft', async () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);

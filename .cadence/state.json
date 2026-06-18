@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "118-hardening-review",
+  "activePhase": "121-competitive-objection-faq",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-18T18:11:47.400Z",
+  "draftReadAt": "2026-06-18T21:50:41.525Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-06-18-v1.29-shipped.md",
-    "subagentSpawns": 338
+    "subagentSpawns": 339
   },
   "skillAudit": {
     "required": [],

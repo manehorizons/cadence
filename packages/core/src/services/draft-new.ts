@@ -9,7 +9,8 @@ import { runRecommendationTransition } from '../intelligence/store/recommendatio
 import { loadConfig } from '../config/loader.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
-import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
+import { assertSafePhaseSlug, derivePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
+import { resolveNextFreePhase } from '../phases/next-free.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -19,7 +20,7 @@ import type { CommandIO, CommandResult } from './io.js';
  */
 export async function draftNewService(
   repoRoot: string,
-  args: { phase: string; num: string; title?: string; tier?: string; fromRec?: string; allowPhaseCollision?: boolean },
+  args: { phase?: string; num?: string; title?: string; tier?: string; fromRec?: string; allowPhaseCollision?: boolean },
   io: CommandIO,
 ): Promise<CommandResult> {
   const title = args.title ?? 'Untitled';
@@ -49,9 +50,11 @@ export async function draftNewService(
         return { exitCode: 1 };
       }
     }
-    const phase = assertSafePhaseSlug(args.phase);
+    const phaseArg = args.phase ?? derivePhaseSlug((await resolveNextFreePhase(repoRoot)) ?? 1, title);
+    const numArg = args.num ?? '1';
+    const phase = assertSafePhaseSlug(phaseArg);
     const dir = join(repoRoot, '.cadence', 'phases', phase);
-    const id = derivePhaseTaskId(phase, args.num);
+    const id = derivePhaseTaskId(phase, numArg);
     const path = join(dir, `${id}-DRAFT.md`);
     if (existsSync(path)) {
       io.err(`DRAFT already exists: ${path}\n`);

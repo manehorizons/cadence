@@ -177,12 +177,14 @@ describe('settle --deep (Phase 15)', () => {
         },
       },
     );
+    let stderr = '';
     const code: number = await new Promise((res) => {
       p.stdout.on('data', () => {});
-      p.stderr.on('data', () => {});
+      p.stderr.on('data', (d) => (stderr += d.toString()));
       p.on('exit', (c) => res(c ?? 0));
     });
     expect(code).toBe(0);
+    expect(stderr).toMatch(/settle bypass \[error\] deep-verify:/);
     const summary = JSON.parse(
       await readFile(
         join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
@@ -193,6 +195,20 @@ describe('settle --deep (Phase 15)', () => {
     expect(summary.deepVerify['AC-1'].provider).not.toBe('unknown');
     expect(summary.deepVerify['AC-1'].model).toBe('tinytest');
     expect(summary.deepVerify['AC-1'].pass).toBe(false);
+    expect(summary.gateBypasses).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          gate: 'deep-verify',
+          flag: '--allow-verifier-failure',
+          severity: 'error',
+        }),
+        expect.objectContaining({
+          gate: 'test-coverage',
+          flag: '--allow-missing-coverage',
+          severity: 'warn',
+        }),
+      ]),
+    );
   });
 
   it('does not run verifier when --deep is absent and deep-verify not in gate set (AC-3)', async () => {

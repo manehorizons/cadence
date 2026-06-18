@@ -8,6 +8,7 @@
 // each half to a MINIMUM of 2 — the min-2 invariant the id schema enforces.
 
 const SAFE_PHASE_SLUG_RE = /^\d+[A-Za-z0-9._-]*$/;
+const PHASE_TITLE_SLUG_FALLBACK = 'untitled';
 
 /**
  * Validate a phase directory slug before it is used in a filesystem path.
@@ -35,4 +36,19 @@ export function derivePhaseTaskId(phaseArg: string, numArg: string): string {
   const phase = lead.padStart(2, '0');
   const num = numArg.padStart(2, '0');
   return `${phase}-${num}`;
+}
+
+/** Convert a human title into the slug suffix used by auto-derived phases. */
+export function phaseSlugFromTitle(title: string): string {
+  const slug = title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || PHASE_TITLE_SLUG_FALLBACK;
+}
+
+/** Build the auto-derived phase directory name from a next-free number + title. */
+export function derivePhaseSlug(phaseNumber: number, title: string): string {
+  return `${String(phaseNumber).padStart(2, '0')}-${phaseSlugFromTitle(title)}`;
 }

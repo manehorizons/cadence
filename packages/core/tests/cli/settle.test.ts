@@ -15,15 +15,19 @@ function run(args: string[], cwd: string): Promise<{ code: number }> {
   });
 }
 
+async function draftApproveAndComplete(root: string): Promise<void> {
+  await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], root);
+  await run(['draft', 'approve', '01-foundation', '01'], root);
+  await run(['build', 'task', 'T1', '--status=DONE'], root);
+}
+
 let active: Fixture | null = null;
 afterEach(async () => { if (active) { await active.cleanup(); active = null; } });
 
 describe('cadence settle run', () => {
   it('writes SUMMARY.md + SUMMARY.json and returns to IDLE', async () => {
     active = await tempRepo({ initialized: true });
-    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
-    await run(['draft', 'approve', '01-foundation', '01'], active.root);
-    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    await draftApproveAndComplete(active.root);
     const r = await run(['settle', 'run', '--ac', 'AC-1=pass'], active.root);
     expect(r.code).toBe(0);
 
@@ -45,5 +49,23 @@ describe('cadence settle run', () => {
     const md = await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'), 'utf8');
     expect(md).toMatch(/AC-1.*FAIL/);
     expect(md).toContain('flaky');
+  });
+
+  it('AC-3: --ac-pass records the listed AC as PASS', async () => {
+    active = await tempRepo({ initialized: true });
+    await draftApproveAndComplete(active.root);
+    const r = await run(['settle', 'run', '--ac-pass', 'AC-1'], active.root);
+    expect(r.code).toBe(0);
+    const md = await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'), 'utf8');
+    expect(md).toMatch(/AC-1.*PASS/);
+  });
+
+  it('AC-3: --pass-all records all ACs as PASS', async () => {
+    active = await tempRepo({ initialized: true });
+    await draftApproveAndComplete(active.root);
+    const r = await run(['settle', 'run', '--pass-all'], active.root);
+    expect(r.code).toBe(0);
+    const md = await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'), 'utf8');
+    expect(md).toMatch(/AC-1.*PASS/);
   });
 });
