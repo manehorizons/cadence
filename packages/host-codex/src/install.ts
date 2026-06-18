@@ -1,7 +1,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { EDIT_TOOL_MATCHER } from './event-map.js';
 import { resolveLocalPaths } from './locate-self.js';
+import { resolveProjectPath } from './safe-path.js';
 
 export interface InstallOptions {
   /**
@@ -52,7 +53,7 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
   const base = opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @manehorizons/cadence-host-codex hook');
   const cadenceCommand = opts.cadenceCommand ?? (local ? `node ${local.coreCli}` : undefined);
   const command = cadenceCommand ? `${base} --cadence "${cadenceCommand}"` : base;
-  const hooksPath = join(root, opts.hooksPath ?? '.codex/hooks.json');
+  const hooksPath = resolveProjectPath(root, opts.hooksPath ?? '.codex/hooks.json', 'hooksPath');
 
   let current: HooksFile = {};
   try {

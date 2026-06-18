@@ -29,6 +29,13 @@ describe('installHooks', () => {
     expect(cfg.hooks.SubagentStop).toBeDefined();
   });
 
+  it('AC-1 (phase 119): rejects settingsPath outside the project root', async () => {
+    const root = await tempDir();
+    await expect(installHooks(root, { settingsPath: '../settings.json' })).rejects.toThrow(
+      /settingsPath must stay within the project root/,
+    );
+  });
+
   it('PreToolUse/PostToolUse entries match edit tools only', async () => {
     const root = await tempDir();
     await installHooks(root);

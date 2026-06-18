@@ -97,6 +97,26 @@ describe('handlePreToolEdit anomaly emission', () => {
     expect(existsSync(join(active.root, '.cadence/anomalies.log'))).toBe(false);
   });
 
+  it('AC-1 (phase 119): unsafe activePhase does not drive hook draft path reads', async () => {
+    active = await tempRepo({ initialized: true });
+    await patchConfig(active.root, { notify: { transport: 'file', file: join(active.root, '.cadence/anomalies.log') } });
+    await seedActiveDraft(active.root, 'src/known.ts');
+    const statePath = join(active.root, '.cadence/state.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    state.activePhase = '../escape';
+    await writeFile(statePath, JSON.stringify(state, null, 2));
+
+    const dispatcher = new HookDispatcher(active.root);
+    const result = await dispatcher.dispatch('pre-tool-edit', {
+      event: 'pre-tool-edit',
+      cwd: active.root,
+      raw: { files: ['src/elsewhere.ts'] },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(existsSync(join(active.root, '.cadence/anomalies.log'))).toBe(false);
+  });
+
   it('does not emit when anomaly-notify gate is absent (strict profile)', async () => {
     active = await tempRepo({ initialized: true });
     await patchConfig(active.root, { notify: { transport: 'file', file: join(active.root, '.cadence/anomalies.log') } });

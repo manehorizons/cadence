@@ -59,8 +59,8 @@ export async function draftNewService(
     }
     // Phase 83: worktree-collision guard (see spec-new.ts). Additive to the
     // local `existsSync` refusal; `--allow-phase-collision` bypasses only this.
-    const config = await loadConfig(repoRoot).catch(() => undefined);
-    if (config) {
+    const config = await loadConfig(repoRoot);
+    {
       const verdict = await assertNoPhaseCollision(repoRoot, phaseNumber(phase), {
         config,
         // Local excluded from scaffold-time matching (see spec-new.ts): the

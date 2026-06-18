@@ -5,6 +5,7 @@ import type { TaskStatus } from '@manehorizons/cadence-types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteJSON } from '../state/atomic-write.js';
 import { LoopViolationError } from '../errors.js';
+import { assertSafePhaseSlug } from '../phases/id.js';
 
 export type RecordableStatus = Exclude<TaskStatus, 'PENDING' | 'IN_PROGRESS'>;
 
@@ -50,10 +51,11 @@ export async function recordTaskOutcome(
       { expected: 'BUILD', actual: state.loopPosition },
     );
   }
+  const activePhase = assertSafePhaseSlug(state.activePhase);
   const progPath = join(
     cwd,
     '.cadence/phases',
-    state.activePhase,
+    activePhase,
     `${state.activeDraft}-PROGRESS.json`,
   );
   let progress: ProgressJson;

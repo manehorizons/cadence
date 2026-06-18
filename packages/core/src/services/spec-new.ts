@@ -49,10 +49,11 @@ export async function specNewService(
     }
     // Phase 83: worktree-collision guard — refuse a phase number already in use
     // by a sibling worktree or upstream, before any file is created. Additive to
-    // the local `existsSync` refusal above; best-effort config load (defaults on
-    // failure). `--allow-phase-collision` bypasses this, never the existsSync.
-    const config = await loadConfig(repoRoot).catch(() => undefined);
-    if (config) {
+    // the local `existsSync` refusal above. Invalid config fails closed; missing
+    // config still gets loader defaults. `--allow-phase-collision` bypasses this,
+    // never the existsSync.
+    const config = await loadConfig(repoRoot);
+    {
       const verdict = await assertNoPhaseCollision(repoRoot, phaseNumber(phase), {
         config,
         // Local is excluded from scaffold-time matching — the dir is being

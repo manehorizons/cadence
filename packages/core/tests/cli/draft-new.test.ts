@@ -8,12 +8,14 @@ import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 
 const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
-function run(args: string[], cwd: string): Promise<{ stdout: string; code: number }> {
+function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
     const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     let stdout = '';
+    let stderr = '';
     p.stdout.on('data', (d) => (stdout += d.toString()));
-    p.on('exit', (code) => resolve({ stdout, code: code ?? 0 }));
+    p.stderr.on('data', (d) => (stderr += d.toString()));
+    p.on('exit', (code) => resolve({ stdout, stderr, code: code ?? 0 }));
   });
 }
 
@@ -60,5 +62,17 @@ describe('cadence draft new', () => {
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     const r = await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     expect(r.code).not.toBe(0);
+  });
+
+  it('AC-3 (phase 119): invalid config fails closed before scaffolding', async () => {
+    active = await tempRepo({ initialized: true });
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(join(active.root, '.cadence/config.json'), JSON.stringify({ loopEnforcement: 'nope' }));
+
+    const r = await run(['draft', 'new', '01-invalid-config', '01', '--title=Demo'], active.root);
+
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain('config.json failed schema validation');
+    expect(existsSync(join(active.root, '.cadence/phases/01-invalid-config'))).toBe(false);
   });
 });

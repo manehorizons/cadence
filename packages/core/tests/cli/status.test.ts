@@ -84,4 +84,21 @@ describe('cadence status', () => {
     const after = await readFile(join(active.root, '.cadence/state.json'), 'utf8');
     expect(after).toBe(before);
   });
+
+  it('AC-1 (phase 119): unsafe activePhase does not drive status path reads', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    const { readFile, writeFile } = await import('node:fs/promises');
+    const statePath = join(active.root, '.cadence/state.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    state.activePhase = '../escape';
+    await writeFile(statePath, JSON.stringify(state, null, 2));
+
+    const r = await run(['status'], active.root);
+
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/phase: \.\.\/escape/);
+    expect(r.stdout).not.toMatch(/TASKS/);
+  });
 });

@@ -40,6 +40,13 @@ describe('installCommands', () => {
     ]);
   });
 
+  it('AC-1 (phase 119): rejects commandsDir outside the project root', async () => {
+    const root = await tempDir();
+    await expect(installCommands(root, { commandsDir: '../commands' })).rejects.toThrow(
+      /commandsDir must stay within the project root/,
+    );
+  });
+
   it('AC-1+AC-3: cadence-scout is tagged managed with valid frontmatter', async () => {
     const root = await tempDir();
     await installCommands(root);

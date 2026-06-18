@@ -7,6 +7,7 @@ import { parseDraftMd } from '../parse/draft-parser.js';
 import { effectiveGateSet } from '../gates/engine.js';
 import { selectNotifier } from '../notify/factory.js';
 import { runBoundaryCheck } from '../checks/boundary.js';
+import { assertSafePhaseSlug } from '../phases/id.js';
 
 export interface HookResult {
   ok: boolean;
@@ -49,12 +50,19 @@ export async function handlePreToolEdit(
   // active draft exists, the host passed file paths in ctx.raw, and the gate
   // set includes anomaly-notify. Detection-only — never refuses the edit.
   if (state.activeDraft && state.activePhase) {
+    const safePhase = (() => {
+      try {
+        return assertSafePhaseSlug(state.activePhase!);
+      } catch {
+        return null;
+      }
+    })();
     const rawFiles = (ctx.raw as { files?: string[] } | undefined)?.files;
-    if (rawFiles && rawFiles.length > 0) {
+    if (safePhase && rawFiles && rawFiles.length > 0) {
       const draftPath = join(
         ctx.cwd,
         '.cadence/phases',
-        state.activePhase,
+        safePhase,
         `${state.activeDraft}-DRAFT.md`,
       );
       if (existsSync(draftPath)) {

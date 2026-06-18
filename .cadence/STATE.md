@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 118-hardening-review
+**Active phase:** 119-gate-surface-audit
 **Active draft:** (none)
 **Tier:** (n/a)
 

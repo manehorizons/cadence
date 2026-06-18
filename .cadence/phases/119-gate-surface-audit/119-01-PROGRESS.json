@@ -1,0 +1,35 @@
+{
+  "draftId": "119-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Audited source path joins. Patched project-contained host adapter overrides plus state-derived activePhase joins in status, build record, and hook boundary check.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:42:53.755Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Audited source child_process call sites. Remaining dynamic process launches are argv-safe or intentionally configured commands; updated stale settle diff comment.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:42:56.732Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Audited config loads. Patched draft new/spec new invalid-config fallbacks so phase-guard flows fail closed; status/notify fallbacks remain non-gate presentation/notification degradation.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:43:00.280Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Patched concrete gaps with regression tests: host path containment, unsafe state.activePhase handling, draft/spec new invalid config fail-closed.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:43:03.385Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Gate passed: pnpm.cmd -w lint, pnpm.cmd -w typecheck, pnpm.cmd -w test, pnpm.cmd -w build.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T18:43:06.615Z"
+    }
+  }
+}

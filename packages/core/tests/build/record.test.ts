@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
@@ -51,6 +51,18 @@ describe('recordTaskOutcome', () => {
     active = await tempRepo({ initialized: true });
     await expect(recordTaskOutcome(active.root, 'T1', 'DONE', '')).rejects.toBeInstanceOf(
       LoopViolationError,
+    );
+  });
+
+  it('AC-1 (phase 119): rejects unsafe activePhase before writing progress', async () => {
+    const root = await arrangeBuildPhase();
+    const statePath = join(root, '.cadence/state.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    state.activePhase = '../escape';
+    await writeFile(statePath, JSON.stringify(state, null, 2));
+
+    await expect(recordTaskOutcome(root, 'T1', 'DONE', '')).rejects.toThrow(
+      /invalid phase slug/,
     );
   });
 

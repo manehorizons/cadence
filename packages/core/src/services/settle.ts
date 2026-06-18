@@ -452,7 +452,7 @@ export async function settleService(
 }
 
 /**
- * `git diff --no-color HEAD -- <files>` via execSync. Returns empty
+ * `git diff --no-color HEAD -- <files>` via argv-safe git execution. Returns empty
  * string on any error (non-git workdir, no diff, exec failure).
  */
 function collectDiffForCodeReview(cwd: string, files: string[]): string {

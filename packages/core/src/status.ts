@@ -14,6 +14,7 @@ import { parseDraftMd } from './parse/draft-parser.js';
 import { SimpleStateBackend } from './state/simple.js';
 import { loadConfig } from './config/loader.js';
 import { effectiveProfile } from './gates/engine.js';
+import { assertSafePhaseSlug } from './phases/id.js';
 
 export interface ProgressFile {
   draftId: string;
@@ -250,19 +251,25 @@ export async function loadStatus(root: string): Promise<StatusReport> {
   let draft: Draft | null = null;
   let progress: ProgressFile | null = null;
   if (state.activePhase && state.activeDraft) {
-    const phaseDir = join(root, '.cadence/phases', state.activePhase);
-    const draftPath = join(phaseDir, `${state.activeDraft}-DRAFT.md`);
-    const draftRaw = await readTextIfExists(draftPath);
-    if (draftRaw !== null) {
-      try {
-        draft = parseDraftMd(draftRaw);
-      } catch {
-        draft = null;
+    try {
+      const activePhase = assertSafePhaseSlug(state.activePhase);
+      const phaseDir = join(root, '.cadence/phases', activePhase);
+      const draftPath = join(phaseDir, `${state.activeDraft}-DRAFT.md`);
+      const draftRaw = await readTextIfExists(draftPath);
+      if (draftRaw !== null) {
+        try {
+          draft = parseDraftMd(draftRaw);
+        } catch {
+          draft = null;
+        }
       }
+      progress = await readJsonIfExists<ProgressFile>(
+        join(phaseDir, `${state.activeDraft}-PROGRESS.json`),
+      );
+    } catch {
+      draft = null;
+      progress = null;
     }
-    progress = await readJsonIfExists<ProgressFile>(
-      join(phaseDir, `${state.activeDraft}-PROGRESS.json`),
-    );
   }
   let config: Pick<CadenceConfig, 'profile'> | null = null;
   try {

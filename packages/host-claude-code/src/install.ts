@@ -1,7 +1,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { EDIT_TOOL_MATCHER, SKILL_TOOL_MATCHER } from './event-map.js';
 import { resolveLocalPaths } from './locate-self.js';
+import { resolveProjectPath } from './safe-path.js';
 
 export interface InstallOptions {
   /**
@@ -55,7 +56,11 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
     opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @manehorizons/cadence-host-claude-code hook');
   const cadenceCommand = opts.cadenceCommand ?? (local ? `node ${local.coreCli}` : undefined);
   const command = cadenceCommand ? `${base} --cadence "${cadenceCommand}"` : base;
-  const settingsPath = join(root, opts.settingsPath ?? '.claude/settings.json');
+  const settingsPath = resolveProjectPath(
+    root,
+    opts.settingsPath ?? '.claude/settings.json',
+    'settingsPath',
+  );
 
   let current: SettingsShape = {};
   try {

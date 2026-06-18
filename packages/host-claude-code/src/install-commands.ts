@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
 import { resolveLocalPaths } from './locate-self.js';
+import { resolveProjectPath } from './safe-path.js';
 
 export interface InstallCommandsOptions {
   /** Base CLI invocation. Default `cadence`. */
@@ -154,7 +155,7 @@ export async function installCommands(
 ): Promise<void> {
   const local = opts.local ? resolveLocalPaths() : null;
   const cadenceCommand = opts.cadenceCommand ?? (local ? `node ${local.coreCli}` : 'cadence');
-  const dir = join(root, opts.commandsDir ?? '.claude/commands');
+  const dir = resolveProjectPath(root, opts.commandsDir ?? '.claude/commands', 'commandsDir');
   await mkdir(dir, { recursive: true });
 
   for (const spec of COMMANDS) {

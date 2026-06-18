@@ -92,6 +92,18 @@ describe('cadence spec new --from-rec (Slice 34.3)', () => {
     expect(state.loopPosition).toBe('IDLE');
   });
 
+  it('AC-3 (phase 119): invalid config fails closed before scaffolding', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'slice34_3_spec_bad_config' });
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(join(active.root, '.cadence/config.json'), JSON.stringify({ loopEnforcement: 'nope' }));
+
+    const r = await run(['spec', 'new', '34.3-bad-config', '01'], active.root);
+
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain('config.json failed schema validation');
+    expect(existsSync(join(active.root, '.cadence/phases/34.3-bad-config'))).toBe(false);
+  });
+
   it('rec status deferred: refuses before any fs write', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice34_3_spec_dfr' });
     const recId = await seedRec(active.root);

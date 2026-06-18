@@ -30,6 +30,13 @@ describe('installHooks (AC-1)', () => {
     }
   });
 
+  it('AC-1 (phase 119): rejects hooksPath outside the project root', async () => {
+    const root = await tempDir();
+    await expect(installHooks(root, { hooksPath: '../hooks.json' })).rejects.toThrow(
+      /hooksPath must stay within the project root/,
+    );
+  });
+
   it('AC-1: PreToolUse/PostToolUse match apply_patch only', async () => {
     const root = await tempDir();
     await installHooks(root);
