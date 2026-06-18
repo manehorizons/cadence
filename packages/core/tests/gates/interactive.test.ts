@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { runInteractiveGate } from '../../src/gates/interactive.js';
 import type { SettleContext } from '../../src/gates/types.js';
+import {
+  SETTLE_BYPASS_NOTICE,
+  type Interactivity,
+} from '../../src/gates/interactivity.js';
 import { ScriptedPrompter, type Prompter } from '../../src/verify/prompter.js';
 
 const AC1 = { id: 'AC-1', given: 'g', when: 'w', then: 't' };
@@ -11,6 +15,7 @@ function ctx(over: {
   createThrows?: boolean;
   interactive?: boolean; // opts.interactive
   inGateSet?: boolean; // 'interactive-verdict' membership
+  interactivity?: Interactivity;
   auto?: boolean;
   force?: boolean;
   explicitIds?: Set<string>;
@@ -30,6 +35,7 @@ function ctx(over: {
     config: null,
     gateSet: { gates, softCap: false } as never,
     opts,
+    interactivity: over.interactivity,
     explicitIds: over.explicitIds ?? new Set<string>(),
     touchedFiles: [],
     coverage: async () => new Map(),
@@ -107,6 +113,35 @@ describe('runInteractiveGate', () => {
   it('refuses when the prompter cannot be constructed', async () => {
     const errs: string[] = [];
     const res = await runInteractiveGate(ctx({ interactive: true, createThrows: true, errs }));
+    expect(res.outcome).toBe('refuse');
+    expect(errs).toEqual(['interactive: stdin is not a TTY\n']);
+  });
+
+  // AC-4: bypass mode skips the walker, passes, and marks the SUMMARY skipped.
+  it('skips the walker and passes with a skipped marker in bypass mode (non-TTY)', async () => {
+    const errs: string[] = [];
+    const res = await runInteractiveGate(
+      ctx({ interactive: true, createThrows: true, interactivity: 'bypass', errs }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.summaryPatch?.interactiveVerifySkipped).toBe('non-tty');
+    expect(res.summaryPatch?.interactiveVerify).toBeUndefined();
+    expect(errs.join('')).toContain(SETTLE_BYPASS_NOTICE);
+  });
+
+  // AC-4: bypass only applies when the gate is actually requested.
+  it('does not emit a skipped marker when interactive is not requested (bypass, no request)', async () => {
+    const res = await runInteractiveGate(ctx({ interactivity: 'bypass' }));
+    expect(res.outcome).toBe('pass');
+    expect(res.summaryPatch).toBeUndefined();
+  });
+
+  // AC-5: require-tty preserves today's refuse when the prompter throws.
+  it('still refuses under require-tty in non-TTY', async () => {
+    const errs: string[] = [];
+    const res = await runInteractiveGate(
+      ctx({ interactive: true, createThrows: true, interactivity: 'require-tty', errs }),
+    );
     expect(res.outcome).toBe('refuse');
     expect(errs).toEqual(['interactive: stdin is not a TTY\n']);
   });

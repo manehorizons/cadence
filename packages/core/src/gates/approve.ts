@@ -1,6 +1,7 @@
 import type { Prompter } from '../verify/prompter.js';
 import type { DraftGateImpl } from './draft-types.js';
 import type { GateResult } from './types.js';
+import { APPROVE_BYPASS_NOTICE } from './interactivity.js';
 
 /**
  * Phase 24.1 — manual approve gate prompt walker. Accepts y/yes/n/no
@@ -34,6 +35,12 @@ export async function askApproveVerdict(
  */
 export const runApproveGate: DraftGateImpl = async (ctx): Promise<GateResult> => {
   if (!ctx.gateSet.gates.includes('approve') || ctx.opts.approve === false) {
+    return { outcome: 'pass' };
+  }
+  // Phase 116: in a non-TTY (bypass), auto-pass loudly instead of refusing —
+  // the draft flow has no SUMMARY, so the stderr notice is the audit trail.
+  if (ctx.interactivity === 'bypass') {
+    ctx.io.err(`${APPROVE_BYPASS_NOTICE}\n`);
     return { outcome: 'pass' };
   }
   let prompter: Prompter;

@@ -235,7 +235,7 @@ These run on every phase regardless of profile or tier.
 
 | Gate | When it fires | Bypass flag |
 |---|---|---|
-| `approve` | Interactive Y/N prompt at `cadence draft approve`; CI/non-TTY must pass flag | `--no-approve` (on `draft approve`) |
+| `approve` | Interactive Y/N prompt at `cadence draft approve`; in a non-TTY it **auto-passes** loudly (see [Non-TTY auto-bypass](#non-tty-auto-bypass-agents--ci)) | `--no-approve` (on `draft approve`) |
 | `per-task-verify` | AI verifier runs at `cadence build task <id> --status=DONE`; `refuse` verdict blocks the status write | `--allow-per-task-failure` (on `build task`) |
 | `code-review` | AI code-review agent runs at `cadence settle run`; HIGH-severity findings refuse settle | `--allow-code-review-failure` or `--force` (on `settle run`) |
 
@@ -244,7 +244,7 @@ These run on every phase regardless of profile or tier.
 | Gate | When it fires | Bypass flag |
 |---|---|---|
 | `deep-verify` | Independent AI verifier runs at settle (`--deep` or baked in for `standard × complex`); it is sent the actual phase diff (`git diff HEAD`, capped by `verifier.diffCapBytes`) plus the ACs and linked tests, so it judges the implementation, not just test-linkage; per-AC `pass=false` refuses settle | `--force` or `--allow-verifier-failure` for transport errors (on `settle run`) |
-| `interactive-verdict` | Human walks each AC at settle (`--interactive`); `fail` verdict refuses settle | `--no-interactive` to opt out; `--force` to settle past failures |
+| `interactive-verdict` | Human walks each AC at settle (`--interactive`); `fail` verdict refuses settle; in a non-TTY the walker is **auto-skipped** and the gate passes (see [Non-TTY auto-bypass](#non-tty-auto-bypass-agents--ci)) | `--no-interactive` to opt out; `--force` to settle past failures |
 | `plan-review` | AI plan-review agent runs at `cadence draft approve` (strict × complex only); `pass=false` refuses approve | `--allow-plan-review-failure` (on `draft approve`) |
 | `security-audit` | AI security-audit agent runs at `cadence settle run` after code-review (strict × complex only); CRITICAL findings refuse settle | `--allow-security-audit-failure` or `--force` (on `settle run`) |
 
@@ -282,6 +282,33 @@ choose to run `cadence spec approve`.
 | `--force` | `settle run` | `deep-verify` / `interactive-verdict` / `code-review` / `security-audit` (all at once) |
 | `--no-interactive` | `settle run` | `interactive-verdict` (opt-out, not failure bypass) |
 | `--allow-auto-complex` | `draft approve` / `settle run` | `auto × complex` soft cap |
+
+### Non-TTY auto-bypass (agents & CI)
+
+The two interactive gates — `approve` (at `cadence draft approve`) and
+`interactive-verdict` (at `cadence settle run --interactive`) — read a human
+keypress. When stdin is **not a TTY** (an AI agent, CI, a pipe), there is no human
+to answer, so CADENCE auto-bypasses them instead of hard-failing:
+
+- **`approve`** auto-passes and prints `note: non-TTY; approve gate auto-passed …`
+  to stderr (the draft flow has no SUMMARY, so the notice is the audit trail).
+- **`interactive-verdict`** skips its per-AC walker, the gate passes, and the
+  SUMMARY records `interactiveVerifySkipped: "non-tty"`. No human verdicts are
+  fabricated — the other verification gates (`test-coverage`, `deep-verify`) still
+  decide the outcome.
+
+This removes the pre-1.29 `StdinPrompter: stdin is not a TTY` error class on the
+first run, with no setup. Three environment variables tune it:
+
+| Env var | Effect |
+|---|---|
+| `CADENCE_REQUIRE_TTY=1` | Restore the strict pre-1.29 behavior — refuse in a non-TTY instead of bypassing (for CI that wants a hard human gate). Wins over the others. |
+| `CADENCE_NONINTERACTIVE=1` | Force bypass **even when a TTY is present** — for agents that allocate a pseudo-TTY (`isTTY` is true but no human is watching). |
+| `CADENCE_PROMPTER_SCRIPT=<answers>` | Existing automation seam: newline-separated scripted answers. When set, the prompt is **always honored** (never bypassed) — explicit answers were supplied. |
+
+Precedence: `CADENCE_PROMPTER_SCRIPT` → `CADENCE_REQUIRE_TTY` → `CADENCE_NONINTERACTIVE`
+→ the `isTTY` default. The per-command flags still work too: `--no-approve` and
+`--no-interactive` opt out of the respective gate regardless of TTY state.
 
 ---
 

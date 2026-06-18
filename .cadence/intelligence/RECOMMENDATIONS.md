@@ -393,19 +393,3 @@ Turn the 2026-06-11 competitive assessment into a durable, verifiable positionin
 - next: cadence milestone propose
 
 cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.
-
-## rec-20260617-005 — Agent/non-TTY mode to kill the StdinPrompter minefield
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, cli, gates
-- files: packages/core/src/cli/commands/init.ts, packages/core/src/gates/approve.ts, packages/core/src/cli/commands/settle.ts
-- evidence: Onboarding map: multiple commands hard-fail in non-TTY (CI/agents) with cryptic StdinPrompter errors; fix flags buried.
-- next: cadence milestone propose
-
-Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.

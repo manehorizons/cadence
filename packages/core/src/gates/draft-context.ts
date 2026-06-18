@@ -18,6 +18,7 @@ import {
   StdinPrompter,
   type Prompter,
 } from '../verify/prompter.js';
+import { resolveInteractivity } from './interactivity.js';
 import type { DraftGateContext, DraftGateOpts } from './draft-types.js';
 
 /**
@@ -50,6 +51,7 @@ export function buildDraftContext(args: {
     phase,
     id,
     opts,
+    interactivity: resolveInteractivity(process.env, Boolean(process.stdin.isTTY)),
     coherence: () => (coherenceMemo ??= coherenceCheck(draft, state, projectMd)),
     verifiers: {
       planReview: {

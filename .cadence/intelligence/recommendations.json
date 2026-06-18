@@ -754,37 +754,6 @@
       "decisionIds": [],
       "createdAt": "2026-06-17T18:31:57.135Z",
       "updatedAt": "2026-06-17T18:33:40.673Z"
-    },
-    {
-      "id": "rec-20260617-005",
-      "title": "Agent/non-TTY mode to kill the StdinPrompter minefield",
-      "summary": "Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "cli",
-        "gates"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts",
-        "packages/core/src/gates/approve.ts",
-        "packages/core/src/cli/commands/settle.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260617-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-17T18:31:57.948Z",
-      "updatedAt": "2026-06-17T18:33:41.442Z"
     }
   ],
   "archived": [
@@ -1166,11 +1135,45 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-06-18T00:18:38.856Z",
-      "updatedAt": "2026-06-18T00:35:08.194Z",
       "shippedRef": "phase 114 / PR #92 (f6182c0) — handoff CADENCE_NOW seam",
       "archivedAt": "2026-06-18T00:35:08.194Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-06-18T00:18:38.856Z",
+      "updatedAt": "2026-06-18T00:35:08.194Z"
+    },
+    {
+      "id": "rec-20260617-005",
+      "title": "Agent/non-TTY mode to kill the StdinPrompter minefield",
+      "summary": "Approve gate, activate, and the settle interactive gate all block in non-TTY with cryptic 'StdinPrompter: stdin is not a TTY' errors; the fix flags (--no-approve, --no-interactive) are buried in small init-output text. Primary driver is AI agents = always non-TTY. Detect non-TTY at init (or --preset agent): set auto gate profile + non-blocking loop defaults, emit agent-ready command snippets. Removes the whole error class on first run.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/gates/approve.ts",
+        "packages/core/src/cli/commands/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "116-non-tty-gate-bypass",
+      "createdAt": "2026-06-17T18:31:57.948Z",
+      "updatedAt": "2026-06-18T02:13:00.142Z",
+      "archivedAt": "2026-06-18T02:13:00.142Z",
+      "archiveReason": "converted-settled"
     }
   ]
 }

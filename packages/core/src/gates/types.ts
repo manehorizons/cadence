@@ -14,6 +14,7 @@ import type {
   VerifyTestRef,
 } from '../verify/verifier.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
+import type { Interactivity } from './interactivity.js';
 import type { Prompter } from '../verify/prompter.js';
 import type {
   CodeReviewInput,
@@ -165,6 +166,11 @@ export interface SettleContext {
   readonly config: CadenceConfig | null;
   readonly gateSet: GateSet;
   readonly opts: SettleOpts;
+  /** Phase 116: resolved non-TTY interactivity mode (`resolveInteractivity` over
+   *  env + `process.stdin.isTTY`, computed by the settle-side adapter). `bypass`
+   *  makes the interactive-verdict gate skip its walker and pass instead of
+   *  refusing on a non-TTY. Absent → treated as attempt-prompt (back-compat). */
+  readonly interactivity?: Interactivity;
   readonly explicitIds: ReadonlySet<string>;
   readonly touchedFiles: readonly string[];
   /** Shared, lazily-evaluated test-coverage scan; memoized so it runs at most
@@ -200,6 +206,8 @@ export interface SettleAccumulator {
   /** Phase 70: run-level provenance for the deep-verify pass. */
   deepVerifyMeta?: DeepVerifyMeta;
   interactiveVerify?: Record<string, InteractiveVerdict>;
+  /** Phase 116: walker auto-skipped in a non-TTY (mutually exclusive with above). */
+  interactiveVerifySkipped?: 'non-tty';
   codeReview?: Record<string, Finding[]>;
   securityAudit?: Finding[];
   acResults?: AcResult[];

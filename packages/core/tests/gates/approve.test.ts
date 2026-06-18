@@ -2,6 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { runApproveGate, askApproveVerdict } from '../../src/gates/approve.js';
 import type { DraftGateContext } from '../../src/gates/draft-types.js';
 import type { Prompter } from '../../src/verify/prompter.js';
+import {
+  APPROVE_BYPASS_NOTICE,
+  type Interactivity,
+} from '../../src/gates/interactivity.js';
 
 function scriptedPrompter(answers: string[]): Prompter {
   let i = 0;
@@ -12,6 +16,7 @@ function ctx(over: {
   gates?: string[];
   approve?: boolean;
   prompter?: () => Prompter;
+  interactivity?: Interactivity;
   errs?: string[];
 }): DraftGateContext {
   const errs = over.errs ?? [];
@@ -24,6 +29,7 @@ function ctx(over: {
     phase: '01-foundation',
     id: '01-01',
     opts: over.approve === undefined ? {} : { approve: over.approve },
+    interactivity: over.interactivity,
     coherence: () => ({ issues: [] }),
     verifiers: { planReview: { verify: async () => ({ pass: true, findings: [], provider: 'mock' }) } },
     emit: { coherenceWarn: async () => {}, planReviewUnconverged: async () => {} },
@@ -68,6 +74,41 @@ describe('runApproveGate', () => {
     );
     expect(res.outcome).toBe('refuse');
     expect(errs.join('')).toContain('manual-approve: no TTY available. Pass --no-approve');
+  });
+
+  // AC-2: bypass mode auto-passes loudly without ever constructing a prompter.
+  it('auto-passes with the loud notice in bypass mode (non-TTY), never touching the prompter', async () => {
+    const errs: string[] = [];
+    let created = false;
+    const res = await runApproveGate(
+      ctx({
+        interactivity: 'bypass',
+        prompter: () => {
+          created = true;
+          throw new Error('should not be called');
+        },
+        errs,
+      }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(created).toBe(false);
+    expect(errs.join('')).toContain(APPROVE_BYPASS_NOTICE);
+  });
+
+  // AC-3: require-tty preserves today's refuse-with-hint when the prompter throws.
+  it('still refuses with the manual-approve line under require-tty in non-TTY', async () => {
+    const errs: string[] = [];
+    const res = await runApproveGate(
+      ctx({
+        interactivity: 'require-tty',
+        prompter: () => {
+          throw new Error('stdin is not a TTY.');
+        },
+        errs,
+      }),
+    );
+    expect(res.outcome).toBe('refuse');
+    expect(errs.join('')).toContain('manual-approve: stdin is not a TTY. Pass --no-approve');
   });
 });
 

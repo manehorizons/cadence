@@ -19,11 +19,13 @@ function run(
   args: string[],
   cwd: string,
   promptScript?: string,
+  extraEnv?: Record<string, string>,
 ): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
     const env: NodeJS.ProcessEnv = {
       ...process.env,
       ANTHROPIC_API_KEY: '',
+      ...extraEnv,
     };
     if (promptScript !== undefined) {
       env.CADENCE_PROMPTER_SCRIPT = promptScript;
@@ -114,11 +116,31 @@ describe('cadence draft approve (Phase 24.1 — manual approve gate)', () => {
     expect(r.stdout).toMatch(/Approved 01-01; loopPosition=BUILD/);
   });
 
-  it('AC-5: non-TTY refuses with --no-approve hint when gate is on', async () => {
+  // Phase 116 AC-2: a non-TTY approve now auto-passes loudly instead of refusing.
+  it('Phase 116 AC-2: non-TTY auto-passes the approve gate with a loud notice', async () => {
     active = await tempRepo({ initialized: true });
     await setStandardProfile(active.root);
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    // No promptScript → non-TTY. Pre-116 this refused; now it auto-bypasses.
     const r = await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/Approved 01-01; loopPosition=BUILD/);
+    expect(r.stderr).toMatch(/non-TTY; approve gate auto-passed/);
+    expect(r.stderr).toMatch(/CADENCE_REQUIRE_TTY=1/);
+    const state = JSON.parse(
+      await readFile(join(active.root, '.cadence/state.json'), 'utf8'),
+    );
+    expect(state.loopPosition).toBe('BUILD');
+  });
+
+  // Phase 116 AC-3: CADENCE_REQUIRE_TTY=1 restores the pre-116 non-TTY refusal.
+  it('Phase 116 AC-3: CADENCE_REQUIRE_TTY=1 still refuses with the --no-approve hint in non-TTY', async () => {
+    active = await tempRepo({ initialized: true });
+    await setStandardProfile(active.root);
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    const r = await run(['draft', 'approve', '01-foundation', '01'], active.root, undefined, {
+      CADENCE_REQUIRE_TTY: '1',
+    });
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/manual-approve:.*TTY/);
     expect(r.stderr).toMatch(/--no-approve/);

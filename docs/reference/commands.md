@@ -281,15 +281,17 @@ Approve a draft and enter BUILD phase
 | Option | Description |
 |---|---|
 | `--allow-auto-complex` | Override DESIGN.md §4 M2 soft cap: approve an `auto × complex` draft anyway |
-| `--no-approve` | Bypass the manual approve gate (Phase 24.1) per invocation; required for non-TTY runs when the `approve` gate is in the effective set |
+| `--no-approve` | Bypass the manual approve gate (Phase 24.1) per invocation. In a non-TTY the gate **auto-passes** by default (since v1.29), so this flag is only needed to skip the gate entirely or alongside `CADENCE_REQUIRE_TTY=1` |
 | `--allow-plan-review-failure` | Proceed past a failing plan-review gate (Phase 25.1) instead of refusing approve; findings are still printed |
 | `-h, --help` | Display help for command |
 
 **Behavior** — validates the named DRAFT.md, runs any configured pre-approve
 gates (manual-approve gate, plan-review gate), and transitions `state.json` to
-BUILD. On a `strict` or `standard` profile with the `approve` gate active,
-the command requires a TTY (interactive confirmation) unless `--no-approve` is
-passed.
+BUILD. On a `strict` or `standard` profile with the `approve` gate active, a TTY
+gets the interactive Y/N confirmation; a non-TTY (agent, CI, pipe) **auto-passes
+the gate** with a loud stderr notice (set `CADENCE_REQUIRE_TTY=1` to restore the
+strict refusal, or pass `--no-approve` to skip the gate). See
+[docs/concepts.md — Non-TTY auto-bypass](../concepts.md#non-tty-auto-bypass-agents--ci).
 
 **Gate interactions** — See [docs/concepts.md — The gate universe](../concepts.md#the-gate-universe).
 The `--no-approve` flag bypasses only the manual-approve gate (Phase 24.1);
@@ -534,7 +536,7 @@ Generate SUMMARY.md + JSON and return to IDLE
 | `--verifier <provider>` | Override `config.verifier.provider` for the `deep-verify` gate: `mock`, `anthropic`, or `local`. Precedence is **flag > config > default `mock`**. An invalid value is rejected at parse time. The v1.14 mock-fallback banner honors the effective provider — an explicit `--verifier mock` still warns that results are not real. (Phase 73) |
 | `--allow-verifier-failure` | Do not refuse on verifier transport failures; record failure into SUMMARY and treat as `pass=false` |
 | `--interactive` | Walk each AC and prompt the user for a pass/fail/skip verdict (Phase 16) |
-| `--no-interactive` | Bypass the interactive-verdict gate even if the active profile would enforce it |
+| `--no-interactive` | Bypass the interactive-verdict gate even if the active profile would enforce it. In a non-TTY the walker is **auto-skipped** by default (since v1.29; `interactiveVerifySkipped: "non-tty"` in the SUMMARY) — set `CADENCE_REQUIRE_TTY=1` to restore the strict refusal |
 | `--allow-auto-complex` | Override DESIGN.md §4 M2 soft cap: settle an `auto × complex` draft anyway |
 | `--allow-stale-draft` | Skip the DRAFT-read mtime gate even if the DRAFT.md was edited after approve |
 | `--allow-open-tasks` | Skip the structural-verifier gate even if a task is still PENDING / IN_PROGRESS (Phase 39.2) |
