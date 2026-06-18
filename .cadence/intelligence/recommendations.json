@@ -785,70 +785,6 @@
       "decisionIds": [],
       "createdAt": "2026-06-17T18:31:57.948Z",
       "updatedAt": "2026-06-17T18:33:41.442Z"
-    },
-    {
-      "id": "rec-20260617-009",
-      "title": "Remove onboarding terminology collision + the silent gate-profile flip",
-      "summary": "(1) 'cadence init' prints both 'preset' (solo/team/production) and 'gate profile' (strict/standard/auto) with no explanation — rename gate profile to 'strictness' or add a one-line distinction. (2) A repo crossing ~20 commits silently flips 'draft approve' to interactive — warn at init time. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#8, #9).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "init",
-        "docs",
-        "onboarding"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts",
-        "docs/concepts.md"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260617-009"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260617-1659",
-      "createdAt": "2026-06-17T23:15:36.077Z",
-      "updatedAt": "2026-06-18T00:19:34.705Z"
-    },
-    {
-      "id": "rec-20260618-001",
-      "title": "Midnight-boundary flake in handoff clobber test (inject the clock at the CLI boundary)",
-      "summary": "tests/cli/handoff.test.ts AC-23 ('refusing to clobber exits 2') flakes when a CI run straddles UTC midnight. The SESSION filename is wall-clock-dated (run-handoff.ts:45 'now.toISOString().slice(0,10)') and the clobber refusal is by filename; the test spawns the real CLI twice, so if the clock ticks past midnight between the two invocations they get different date filenames, no collision fires, and the second handoff exits 0 instead of 2. Observed 2026-06-18T00:00:26Z on macos-22 (PR #91), passed on re-run. runHandoff already takes an injectable 'now' (run-handoff.ts:42) but the CLI command doesn't expose it — add a CADENCE_NOW-style env override read at the CLI boundary so the test can pin the date (and runs become reproducible). Pure offline fix; no behavior change in normal use.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "tests",
-        "cli",
-        "handoff",
-        "ci"
-      ],
-      "affectedFiles": [
-        "packages/core/src/handoff/run-handoff.ts",
-        "packages/core/src/cli/commands/handoff.ts",
-        "packages/core/tests/cli/handoff.test.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260618-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-18T00:18:38.856Z",
-      "updatedAt": "2026-06-18T00:18:38.856Z"
     }
   ],
   "archived": [
@@ -1159,11 +1095,81 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260617-1659",
-      "createdAt": "2026-06-17T23:15:35.744Z",
-      "updatedAt": "2026-06-18T00:19:47.809Z",
       "shippedRef": "phase 113 / PR #91 (3fae956) — one front door + guided Next: rail",
+      "scoutId": "scout-20260617-1659",
       "archivedAt": "2026-06-18T00:19:47.809Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-06-17T23:15:35.744Z",
+      "updatedAt": "2026-06-18T00:19:47.809Z"
+    },
+    {
+      "id": "rec-20260617-009",
+      "title": "Remove onboarding terminology collision + the silent gate-profile flip",
+      "summary": "(1) 'cadence init' prints both 'preset' (solo/team/production) and 'gate profile' (strict/standard/auto) with no explanation — rename gate profile to 'strictness' or add a one-line distinction. (2) A repo crossing ~20 commits silently flips 'draft approve' to interactive — warn at init time. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#8, #9).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "init",
+        "docs",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "docs/concepts.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-009"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "phase 114 / PR #92 (f6182c0) — init auto-flip warning",
+      "scoutId": "scout-20260617-1659",
+      "archivedAt": "2026-06-18T00:35:08.005Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-06-17T23:15:36.077Z",
+      "updatedAt": "2026-06-18T00:35:08.005Z"
+    },
+    {
+      "id": "rec-20260618-001",
+      "title": "Midnight-boundary flake in handoff clobber test (inject the clock at the CLI boundary)",
+      "summary": "tests/cli/handoff.test.ts AC-23 ('refusing to clobber exits 2') flakes when a CI run straddles UTC midnight. The SESSION filename is wall-clock-dated (run-handoff.ts:45 'now.toISOString().slice(0,10)') and the clobber refusal is by filename; the test spawns the real CLI twice, so if the clock ticks past midnight between the two invocations they get different date filenames, no collision fires, and the second handoff exits 0 instead of 2. Observed 2026-06-18T00:00:26Z on macos-22 (PR #91), passed on re-run. runHandoff already takes an injectable 'now' (run-handoff.ts:42) but the CLI command doesn't expose it — add a CADENCE_NOW-style env override read at the CLI boundary so the test can pin the date (and runs become reproducible). Pure offline fix; no behavior change in normal use.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "tests",
+        "cli",
+        "handoff",
+        "ci"
+      ],
+      "affectedFiles": [
+        "packages/core/src/handoff/run-handoff.ts",
+        "packages/core/src/cli/commands/handoff.ts",
+        "packages/core/tests/cli/handoff.test.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260618-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-18T00:18:38.856Z",
+      "updatedAt": "2026-06-18T00:35:08.194Z",
+      "shippedRef": "phase 114 / PR #92 (f6182c0) — handoff CADENCE_NOW seam",
+      "archivedAt": "2026-06-18T00:35:08.194Z",
       "archiveReason": "shipped"
     }
   ]

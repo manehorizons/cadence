@@ -1,5 +1,71 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.28.0
+
+### Minor Changes
+
+- 401d86c: Coverage-gate assertion mode (phase 108): an opt-in
+  `verification.coverageMode` that closes the test-coverage gate's
+  "mentioned-but-not-tested" false positive. The default `mention` mode is
+  unchanged — any occurrence of an `AC-N` token anywhere in a matched test file
+  (comments included) counts as covered.
+  - `verification.coverageMode: "assertion"` counts an `AC-N` token only when it
+    sits inside an asserting `it()`/`test()` block. A comment-only or
+    assertion-less mention is reported as a **weak link**: the gate refuses with a
+    distinct "not inside an asserting it()/test() block" hint, separate from the
+    plain "has no linked test" message for an entirely-absent AC, and the refusal
+    names the mode.
+  - Span detection is a pure, dependency-free, string/comment-aware scan
+    (`findTestSpans`) — no AST, no new dependency, no network; deterministic and
+    offline. Parens inside a title string don't break it.
+  - Editable via `cadence config edit coverageMode`; documented in
+    `docs/reference/config.md` and `docs/concepts.md`.
+
+  Backward-compatible: a config with no `verification.coverageMode` loads as
+  `mention` and behaves byte-for-byte as before. `cadence-types` carries the new
+  schema field; `host-claude-code` / `host-codex` carry version-alignment bumps
+  only.
+
+- 3fae956: Onboarding front door + guided Next: rail (phase 113): make `cadence start` the
+  single, unambiguous onboarding entry point, with `cadence quickstart` reframed
+  as the post-init "where am I / what's next" map.
+  - README leads with `cadence start` alone (the co-equal "or quickstart" framing
+    is gone; quickstart is now described as the post-init map).
+  - `cadence doctor` ends with a `Next:` line — the first problem's remediation
+    when any check is non-ok, else `cadence progress` — so doctor joins the same
+    guided rail as the other onboarding commands. (`--json` output unchanged.)
+  - `docs/quickstart.md` opens with a 3-way driver fork (terminal / Claude Code /
+    MCP) so host users branch immediately.
+
+  Copy/UX only except the small `doctor` Next: line; v1.27's
+  `init`/`--demo`/`--activate` flows are untouched, and `quickstart` keeps its
+  never-throw guarantee. `cadence-types` / the two host adapters carry
+  version-alignment bumps only.
+
+- f6182c0: Onboarding papercuts (phase 114): two small fixes.
+  - `cadence init` now prints a one-line heads-up when a young repo gets the
+    `auto` gate profile from the git-history suggestion — warning that
+    `draft approve` will flip to interactive once the repo passes ~20 commits, and
+    that pinning `--gate-profile auto` keeps it hands-off. Only fires for derived
+    `auto` (not when pinned explicitly, nor for `standard`/`strict`).
+    (rec-20260617-009, scoped down — the preset/profile terminology already
+    carries inline clarifiers.)
+  - `cadence handoff` honors a `CADENCE_NOW` env override (a date string) for the
+    SESSION-doc date, via a pure `resolveNow(env)` seam — making handoff runs
+    reproducible and closing a UTC-midnight flake in the clobber-refusal test
+    (two runs straddling midnight got different dates and never collided). No
+    behavior change when unset. (rec-20260618-001.)
+
+  `cadence-types` / the two host adapters carry version-alignment bumps only.
+
+### Patch Changes
+
+- Updated dependencies [401d86c]
+- Updated dependencies [3fae956]
+- Updated dependencies [f6182c0]
+  - @manehorizons/cadence-core@1.28.0
+  - @manehorizons/cadence-types@1.28.0
+
 ## 1.27.0
 
 ### Minor Changes

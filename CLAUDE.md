@@ -134,7 +134,30 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.27.0`** (2026-06-17, tag `v1.27.0`
+change). The latest version is **`1.28.0`** (2026-06-18, tag `v1.28.0`
+pending): a **coverage-depth + onboarding-completion** release bundling three
+phases. **Phase 112** — **coverage-gate assertion mode**: an opt-in
+`verification.coverageMode: 'assertion'` that counts an `AC-N` token only when it
+sits inside an asserting `it()`/`test()` block (a pure, dependency-free,
+string/comment-aware `findTestSpans`), so a comment-only mention is reported as a
+*weak link* with a distinct refusal hint — closing the "mentioned-but-not-tested"
+false positive. Default `mention` mode is byte-for-byte unchanged (rec-20260611-004).
+**Phase 113** — **one onboarding front door + guided Next: rail**: `cadence start`
+is now the single front door (README leads with it; `quickstart` reframed as the
+post-init map), `cadence doctor` ends with a `Next:` line (pure `doctorNextStep`),
+and `docs/quickstart.md` opens with a terminal/Claude Code/MCP driver fork
+(rec-20260617-007). **Phase 114** — **onboarding papercuts**: `cadence init` warns
+when a young repo's *derived* `auto` gate profile will flip `approve` to interactive
+past ~20 commits (rec-20260617-009, scoped), and `cadence handoff` honors a
+`CADENCE_NOW` clock override via a pure `resolveNow` seam, closing a UTC-midnight
+flake in the clobber-refusal test (rec-20260618-001). With v1.28 the onboarding arc
+is **complete** (recs 006/007/008/009 all shipped). No new DESIGN.md D-number
+(coverage-mode deepens the existing test-coverage gate; the rest is
+onboarding/legibility). All four published packages bumped `1.27.0 → 1.28.0` in
+lockstep (`cadence-core` carries the features; `cadence-types` carries the
+`coverageMode` schema field; the two host adapters are version-alignment only); npm
+publish is the user-triggered manual `Release` workflow. Prior: **`1.27.0`**
+(2026-06-17, tag `v1.27.0`
 pending): the **onboarding-breeze** milestone (v1.27) — make `cadence init` a
 zero-friction front door so a newcomer reaches a working, real-verification-ready
 loop with one command and no follow-up steps. Sourced from a 2026-06-17 onboarding

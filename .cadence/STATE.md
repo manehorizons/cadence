@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 114-onboarding-papercuts
+**Active phase:** 115-release-v1.28
 **Active draft:** (none)
 **Tier:** (n/a)
 
