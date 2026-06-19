@@ -17,7 +17,7 @@ One engine, four entry points - not separate tools:
 
 Read in this order:
 
-- **[Quickstart](quickstart.md)** — Run one complete DRAFT→BUILD→SETTLE loop end-to-end in about ten minutes.
+- **[Quickstart](quickstart.md)** — Try the no-install demo, start a real phase from a template, or walk the full loop end-to-end.
 - **[Concepts](concepts.md)** — Understand the loop, gates, profiles, and two-commit convention that everything else builds on.
 - **[CLI guide](cli.md)** — Master the `cadence` command-line tool: all subcommands, flags, and workflows.
 - **[Claude Code integration](claude-code.md)** — Set up and use the Claude Code slash commands and understand how the adapter bridges the CLI engine.

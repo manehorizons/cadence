@@ -46,7 +46,13 @@ The agent isn't believed; the state is.
 
 ## Quickstart
 
-Install the CLI globally (requires Node ≥ 20):
+No install, no repo writes — just watch one real loop run:
+
+```sh
+npx -y @manehorizons/cadence-core tutorial
+```
+
+For daily use, install the CLI globally (requires Node ≥ 20):
 
 ```sh
 npm install -g @manehorizons/cadence-core
@@ -110,7 +116,7 @@ Driving it from **another MCP host** (Claude Desktop, Cursor, an agent)? Point t
 
 See **[docs/README.md](./docs/README.md)** for the complete user guide:
 
-- [Quickstart](./docs/quickstart.md) — one complete loop in ~10 minutes
+- [Quickstart](./docs/quickstart.md) — no-install demo, first real template, and full loop walkthrough
 - [Concepts](./docs/concepts.md) — the loop, gates, profiles, and two-commit convention
 - [CLI guide](./docs/cli.md) — all subcommands and flags
 - [Claude Code integration](./docs/claude-code.md) — hooks and slash commands

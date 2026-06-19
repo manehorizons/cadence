@@ -1,7 +1,13 @@
 # CADENCE Quickstart
 
-This tutorial walks you through one complete CADENCE loop end-to-end — from
-`init` to a closed-phase SUMMARY — in about ten minutes.
+This guide starts with the two fastest onboarding paths:
+
+- **30-second demo:** seed a ready-to-approve phase and close one loop without
+  hand-writing a DRAFT.
+- **First real phase:** scaffold an editable bugfix, feature, or refactor DRAFT
+  from a template, then refine it for your actual work.
+
+The longer manual walkthrough later on shows every artifact in detail.
 
 For the *why* behind the loop and the gate model, read
 [docs/concepts.md](concepts.md) first. For exhaustive flag references, see
@@ -22,7 +28,9 @@ New and not sure? Run `cadence start` for a guided menu that picks the right set
 ## Table of contents
 
 - [Prerequisites](#prerequisites)
-- [Step 1 — Set up a toy project](#step-1--set-up-a-toy-project)
+- [Fast path — 30-second demo](#fast-path--30-second-demo)
+- [First real phase](#first-real-phase)
+- [Step 1 — Set up a toy project manually](#step-1--set-up-a-toy-project-manually)
 - [Step 2 — Draft a phase](#step-2--draft-a-phase)
 - [Step 3 — Fill the DRAFT](#step-3--fill-the-draft)
 - [Step 4 — Coherence-check the DRAFT](#step-4--coherence-check-the-draft)
@@ -38,7 +46,13 @@ New and not sure? Run `cadence start` for a guided menu that picks the right set
 ## Prerequisites
 
 - **Node.js ≥ 20**
-- The CADENCE CLI installed globally:
+- For a zero-install first touch:
+
+```sh
+npx -y @manehorizons/cadence-core tutorial
+```
+
+- For daily use, install the CADENCE CLI globally:
 
 ```sh
 npm install -g @manehorizons/cadence-core
@@ -48,7 +62,64 @@ This gives you the `cadence` command used throughout this guide.
 
 ---
 
-## Step 1 — Set up a toy project
+## Fast path — 30-second demo
+
+This path writes a real `.cadence/` scaffold and a ready-to-approve demo phase
+in a scratch repo. There is no DRAFT hand-editing cliff.
+
+```sh
+mkdir ~/projects/my-toy-app
+cd ~/projects/my-toy-app
+
+cadence init --demo
+cadence draft approve 01-demo 01
+cadence done T1
+cadence settle run --ac AC-1=pass
+```
+
+That is the whole loop: DRAFT → BUILD → SETTLE → IDLE.
+
+`cadence init --demo` derives the project name and gate profile, then seeds
+`.cadence/phases/01-demo/01-01-DRAFT.md` with an Objective, AC-1, and T1
+already filled in. Use this when you want to feel the loop before designing
+your own phase.
+
+---
+
+## First real phase
+
+When you are ready to use Cadence on actual work, start from one of the
+first-real-task templates:
+
+```sh
+cadence init
+```
+
+Then pick the template that matches the work:
+
+```sh
+cadence draft new --title "Fix login timeout" --template bugfix
+cadence draft new --title "Add CSV export" --template feature
+cadence draft new --title "Split billing service" --template refactor
+```
+
+Pick one command, then edit the generated DRAFT. Templates are scaffolds, not
+proof: tune the Objective, Acceptance Criteria, Tasks, and Boundaries until they
+describe your real slice. Then continue:
+
+```sh
+cadence draft check .cadence/phases/01-fix-login-timeout/01-01-DRAFT.md
+cadence draft approve 01-fix-login-timeout 01
+cadence done T1        # repeat for each task you complete
+cadence settle run --auto
+```
+
+If you are unsure what state you are in, run `cadence start` for a guided menu
+or `cadence progress` for the next exact command.
+
+---
+
+## Step 1 — Set up a toy project manually
 
 Create a scratch directory **outside** the cadence repo and initialise CADENCE
 inside it:
@@ -78,7 +149,13 @@ Initialized CADENCE in /home/you/projects/my-toy-app/.cadence (profile=team)
                 SPECIAL-FLOWS.md, STATE.md, CLAUDE.md
                 phases/ handoff/ research/ archive/
 
-  Next: edit .cadence/ROADMAP.md, then `cadence draft new`.
+  Your first loop
+  ───────────────
+  1. cadence draft new --title "Fix login timeout" --template bugfix
+  2. edit the generated DRAFT — templates are scaffolds, not proof
+  3. cadence draft approve 01-fix-login-timeout 01
+  4. cadence done T1  (repeat for each task you complete)
+  5. cadence settle run --auto
 ```
 
 The gate profile is `auto` because the directory has no git history (fewer than

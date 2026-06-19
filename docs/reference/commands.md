@@ -1486,17 +1486,24 @@ Interactive onboarding — pick what you're doing, and run it
 | `--json` | Emit the structured menu and exit (no prompt) |
 
 **Behavior** — the interactive front door, sibling to the read-only `quickstart`
-(which prints the map without running anything). `start` asks "What are you
-doing?", takes a numbered pick, shows the exact command and a `[Y/n]` confirm,
-then runs it. The six routes are: `cadence tutorial` (throwaway sandbox),
-`cadence init` (this repo), `npx @manehorizons/cadence-host-claude-code install`
-(Claude Code), `npx @manehorizons/cadence-host-codex install` (Codex CLI),
-`cadence mcp install` (MCP), and `cadence doctor` (health check). Dispatch is a
-subprocess spawn — the `cadence` binary for core routes, `npx` for the two host
-packages — so `start` never imports host code. Declining the confirm prints the
-command so you can run it yourself. If the repo is already initialized, the
-`init` option is annotated as safe to re-run. In a non-interactive shell with no
-`--pick`, it prints the menu and exits `0` (never hangs).
+(which prints the map without running anything). `start` first prints an
+opinionated recommended command based on local state: uninitialized repos point
+at the no-install `npx -y @manehorizons/cadence-core tutorial`, initialized
+IDLE repos point at `cadence draft new --title "Fix login timeout" --template
+bugfix`, active loops point at `cadence progress`, and unreadable state points
+at `cadence doctor`.
+
+It then asks "What are you doing?", takes a numbered pick, shows the exact
+command and a `[Y/n]` confirm, then runs it. The six routes are:
+`cadence tutorial` (throwaway sandbox), `cadence init` (this repo),
+`npx @manehorizons/cadence-host-claude-code install` (Claude Code),
+`npx @manehorizons/cadence-host-codex install` (Codex CLI), `cadence mcp
+install` (MCP), and `cadence doctor` (health check). Dispatch is a subprocess
+spawn — the `cadence` binary for core routes, `npx` for the two host packages —
+so `start` never imports host code. Declining the confirm prints the command so
+you can run it yourself. If the repo is already initialized, the `init` option
+is annotated as safe to re-run. In a non-interactive shell with no `--pick`, it
+prints the recommendation plus menu and exits `0` (never hangs).
 
 **Exit codes** — `0` on menu print / quit / declined-confirm; the dispatched
 command's exit code when it runs; `1` on an invalid `--pick`.
@@ -1518,12 +1525,13 @@ Read-only front door: where you are + your next moves
 | `--json` | Emit the structured orientation as JSON |
 
 **Behavior** — a read-only, never-failing orientation: the obvious command to run
-first. Before `init` it shows how to set up (`cadence init`) and how to see the loop
-without touching your project (`cadence tutorial`). After `init` it shows the same
-next move `cadence progress` computes (reused, so the two never drift), plus a one-line
-map of the onboarding commands (`init`, `tutorial`, `explain`, `config explain`,
-`doctor`, `progress`). Content is embedded in the binary, so it works from any install.
-Any failure to read state degrades to the uninitialized front door — it never crashes.
+first. Before `init` it shows how to set up (`cadence init`) and how to see the
+loop without touching your project (`cadence tutorial`). After `init` it shows
+the same next move `cadence progress` computes (reused, so the two never drift),
+plus a one-line map of the onboarding commands (`init`, `tutorial`, `explain`,
+`config explain`, `doctor`, `progress`). Content is embedded in the binary, so
+it works from any install. Any failure to read state degrades to the
+uninitialized front door — it never crashes.
 
 **Exit codes** — `0` always (the uninitialized state is the happy primary path, not an error).
 

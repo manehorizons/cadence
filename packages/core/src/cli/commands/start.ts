@@ -5,7 +5,13 @@ import { spawn as nodeSpawn } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
 import { resolvePick, START_OPTIONS, type StartOption } from '../../start/menu.js';
-import { renderMenu, renderJson, renderConfirm } from '../../start/render.js';
+import {
+  renderMenu,
+  renderJson,
+  renderConfirm,
+  type StartRecommendation,
+} from '../../start/render.js';
+import { SimpleStateBackend } from '../../state/simple.js';
 
 export interface StartArgs {
   pick?: number | undefined;
@@ -23,6 +29,8 @@ export interface StartDeps {
   confirm?: (option: StartOption) => Promise<boolean>;
   /** State probe (defaults to checking .cadence/state.json). */
   initialized?: (root: string) => boolean;
+  /** Recommendation probe (defaults to the live repo state). */
+  recommendation?: (root: string, initialized: boolean) => Promise<StartRecommendation>;
 }
 
 /** The real spawn: cadence binary self-spawn, or npx for host packages. */
@@ -49,6 +57,36 @@ export function defaultSpawn(option: StartOption): Promise<number> {
 
 function defaultInitialized(root: string): boolean {
   return existsSync(join(root, '.cadence', 'state.json'));
+}
+
+async function defaultRecommendation(
+  root: string,
+  initialized: boolean,
+): Promise<StartRecommendation> {
+  if (!initialized) {
+    return {
+      command: 'npx -y @manehorizons/cadence-core tutorial',
+      reason: 'Fastest first touch: runs a real loop in a throwaway sandbox and writes nothing here.',
+    };
+  }
+  try {
+    const state = await new SimpleStateBackend(root).readState();
+    if (state.loopPosition === 'IDLE') {
+      return {
+        command: 'cadence draft new --title "Fix login timeout" --template bugfix',
+        reason: 'You are set up and idle; start a first real DRAFT from an editable template.',
+      };
+    }
+    return {
+      command: 'cadence progress',
+      reason: 'You already have an active loop; let CADENCE print the next exact command.',
+    };
+  } catch {
+    return {
+      command: 'cadence doctor',
+      reason: 'This repo looks initialized, but state could not be read cleanly.',
+    };
+  }
 }
 
 async function readlinePick(initialized: boolean, io: CommandIO): Promise<StartOption | null> {
@@ -84,9 +122,13 @@ export async function runStart(
   deps: StartDeps,
 ): Promise<CommandResult> {
   const initialized = (deps.initialized ?? defaultInitialized)(root);
+  const recommendation = await (deps.recommendation ?? defaultRecommendation)(
+    root,
+    initialized,
+  );
 
   if (args.json === true) {
-    const data = renderJson(initialized);
+    const data = renderJson(initialized, recommendation);
     io.out(JSON.stringify(data, null, 2) + '\n');
     return { exitCode: 0, data };
   }
@@ -103,10 +145,10 @@ export async function runStart(
       return { exitCode: 1, data: { reason: 'bad-pick' } };
     }
   } else if (!args.isTty) {
-    io.out(renderMenu(initialized));
+    io.out(renderMenu(initialized, recommendation));
     return { exitCode: 0, data: { reason: 'menu-only' } };
   } else {
-    io.out(renderMenu(initialized));
+    io.out(renderMenu(initialized, recommendation));
     option = await (deps.prompt ?? ((i) => readlinePick(i, io)))(initialized);
     if (option === null) return { exitCode: 0, data: { reason: 'quit' } };
   }
