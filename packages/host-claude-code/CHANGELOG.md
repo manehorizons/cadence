@@ -1,5 +1,20 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.30.0
+
+### Minor Changes
+
+- Release v1.30.0: adoption-onboarding ergonomics, settle bypass audit trails, and Codex host parity.
+  - `cadence draft new --title "..."` can now derive the next free phase id and task number, making the recommended first-loop command shorter and less error-prone.
+  - `cadence settle run` now records and prints explicit gate bypass audit entries for force, coverage, and verifier-failure paths, and SUMMARY artifacts expose those bypasses through the shared summary schema.
+  - Codex host prompts now source shared command guidance, install the `cadence-scout` prompt, and carry parity coverage for local hook roundtrips and prompt-catalog drift.
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.30.0
+  - @manehorizons/cadence-types@1.30.0
+
 ## 1.29.0
 
 ### Minor Changes
