@@ -632,6 +632,222 @@
       "shippedRef": "phase 100 / PR #73 (v1.23.0 pending)",
       "createdAt": "2026-06-11T14:52:03.329Z",
       "updatedAt": "2026-06-11T18:59:09.629Z"
+    },
+    {
+      "id": "rec-20260619-001",
+      "title": "No-install first touch",
+      "summary": "Document and optimize the no-install path: `npx -y @manehorizons/cadence-core tutorial` should let a newcomer feel the CADENCE loop before committing to a global install or repo initialization. This reduces adoption friction and makes the first touch side-effect free.",
+      "source": "manual",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "docs",
+        "cli"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/quickstart.md",
+        "packages/core/src/cli/commands/tutorial.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-19T02:46:20.224Z",
+      "updatedAt": "2026-06-19T02:47:46.896Z"
+    },
+    {
+      "id": "rec-20260619-002",
+      "title": "Make cadence tutorial the hero path",
+      "summary": "Reposition the existing throwaway `cadence tutorial` as the primary README/quickstart call-to-action before global install or in-repo init. The sandbox already runs the real loop; onboarding should make it impossible to miss.",
+      "source": "manual",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "docs"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/quickstart.md",
+        "packages/core/src/start/menu.ts",
+        "packages/core/src/quickstart/build.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-19T02:46:20.598Z",
+      "updatedAt": "2026-06-19T02:47:47.061Z"
+    },
+    {
+      "id": "rec-20260619-004",
+      "title": "doctor --fix for safe onboarding repairs",
+      "summary": "Add a `cadence doctor --fix` mode that applies safe, deterministic repairs for common setup issues: hooks path, missing host/MCP wiring when explicitly requested, stale config shape, and other fixable doctor findings. Keep risky changes as instructions only.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "doctor",
+        "config"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/doctor.ts",
+        "packages/core/src/doctor"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-19T02:46:21.299Z",
+      "updatedAt": "2026-06-19T02:46:21.299Z"
+    },
+    {
+      "id": "rec-20260619-005",
+      "title": "init dry-run fit check",
+      "summary": "Add `cadence init --dry-run` or equivalent fit-check output that shows detected project name, test globs, suggested gate profile, host surface, provider status, and files that would be written before touching the repo.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "init",
+        "trust"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "docs/quickstart.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-19T02:46:21.651Z",
+      "updatedAt": "2026-06-19T02:46:21.651Z"
+    },
+    {
+      "id": "rec-20260619-006",
+      "title": "First real phase agent prompt",
+      "summary": "After init, print or generate a copy-paste prompt for the user's AI agent: create a quick-fix draft for the stated goal, keep ACs testable, and stop for approval. This bridges the CLI into the actual agent workflow.",
+      "source": "manual",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "agents",
+        "docs"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "docs/claude-code.md",
+        "docs/quickstart.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-19T02:46:21.827Z",
+      "updatedAt": "2026-06-19T02:47:47.397Z"
+    },
+    {
+      "id": "rec-20260619-007",
+      "title": "Failure-first tutorial mode",
+      "summary": "Add `cadence tutorial --fail-first` that intentionally shows a settle refusal, explains why the gate blocked closure, then applies the fix and settles cleanly. Teach the product's core value: refusal-to-settle, not just a happy path.",
+      "source": "manual",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "tutorial"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/tutorial.ts",
+        "README.md",
+        "docs/quickstart.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-19T02:46:22.162Z",
+      "updatedAt": "2026-06-19T02:47:47.588Z"
+    },
+    {
+      "id": "rec-20260619-008",
+      "title": "Team rollout kit",
+      "summary": "Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "team",
+        "ci",
+        "docs"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/README.md",
+        ".github"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-06-19T02:46:22.504Z",
+      "updatedAt": "2026-06-19T02:46:22.504Z"
     }
   ],
   "archived": [
@@ -1182,9 +1398,44 @@
       "decisionIds": [],
       "convertedToPhaseId": "122-codex-host-adapter-parity-tests",
       "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:46.578Z",
-      "updatedAt": "2026-06-18T23:06:58.539Z",
       "archivedAt": "2026-06-18T23:06:58.539Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-11T23:57:46.578Z",
+      "updatedAt": "2026-06-18T23:06:58.539Z"
+    },
+    {
+      "id": "rec-20260619-003",
+      "title": "Draft templates for first real work",
+      "summary": "Add first-task templates such as `bugfix`, `feature`, and `refactor` for `cadence draft new`, generating useful Objective, AC, Tasks, and Boundaries scaffolds from a title. This closes the remaining cliff after users understand the loop: what to type for the first real DRAFT.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "drafts"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/draft.ts",
+        "packages/core/src/services/draft-new.ts",
+        "docs/quickstart.md",
+        "docs/reference/commands.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "123-draft-templates",
+      "createdAt": "2026-06-19T02:46:20.958Z",
+      "updatedAt": "2026-06-19T02:54:41.388Z",
+      "archivedAt": "2026-06-19T02:54:41.388Z",
       "archiveReason": "converted-settled"
     }
   ]

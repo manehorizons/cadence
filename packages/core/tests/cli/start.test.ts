@@ -22,7 +22,9 @@ describe('runStart', () => {
     const d = deps();
     const res = await runStart('/repo', { json: true, isTty: false }, io, d);
     expect(res.exitCode).toBe(0);
-    expect(JSON.parse(io.stdout()).options).toHaveLength(6);
+    const json = JSON.parse(io.stdout());
+    expect(json.options).toHaveLength(6);
+    expect(json.recommendation.command).toContain('tutorial');
     expect(d.spawned).toHaveLength(0);
   });
 
@@ -32,7 +34,22 @@ describe('runStart', () => {
     const res = await runStart('/repo', { isTty: false }, io, d);
     expect(res.exitCode).toBe(0);
     expect(io.stdout()).toContain('What are you doing?');
+    expect(io.stdout()).toContain('Recommended: npx -y @manehorizons/cadence-core tutorial');
     expect(d.spawned).toHaveLength(0);
+  });
+
+  it('prints an IDLE template recommendation when initialized state says IDLE', async () => {
+    const io = bufferIO();
+    const d = deps({
+      initialized: () => true,
+      recommendation: async () => ({
+        command: 'cadence draft new --title "Fix login timeout" --template bugfix',
+        reason: 'You are set up and idle.',
+      }),
+    });
+    await runStart('/repo', { isTty: false }, io, d);
+    expect(io.stdout()).toContain('--template bugfix');
+    expect(io.stdout()).toContain('You are set up and idle.');
   });
 
   it('dispatches a core option via --pick --yes (AC-7)', async () => {

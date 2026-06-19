@@ -134,9 +134,26 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.30.0`** (2026-06-19, tag `v1.30.0`
-pending): the **adoption onboarding polish + Codex parity** release (v1.30).
-It bundles four settled phases from PR #105. **Phase 119** made
+change). The latest version is **`1.31.0`** (2026-06-19, tag `v1.31.0`
+pending): the **first-real-DRAFT templates + onboarding front door** release
+(v1.31). It bundles the post-v1.30 template milestone and follow-on onboarding
+UX pass. **Phase 123** added `cadence draft new --template bugfix|feature|refactor`,
+with deterministic editable Objective/AC/Task/Boundary scaffolds, validation
+for unknown templates, auto-derived and explicit phase/task-id coverage, and
+README/quickstart/command-reference teaching that templates are scaffolds, not
+proof. The follow-on front-door pass made the no-install
+`npx -y @manehorizons/cadence-core tutorial` the README/quickstart first touch,
+split quickstart into a 30-second demo path plus first-real-phase template path,
+updated `cadence init`'s "Your first loop" block to point at the bugfix
+template, and made `cadence start` show a state-aware recommendation before the
+full menu (uninitialized → no-install tutorial, initialized+IDLE → template
+DRAFT, active loop → `cadence progress`, unreadable state → `cadence doctor`).
+All four published packages bumped `1.30.0 → 1.31.0` in lockstep
+(`cadence-core` carries the CLI/docs behavior; `cadence-types` and both host
+adapters are version-alignment/dependency bumps only); npm publish is the
+user-triggered manual `Release` workflow. Prior: **`1.30.0`** (2026-06-19,
+tag `v1.30.0` pending): the **adoption onboarding polish + Codex parity**
+release (v1.30). It bundles four settled phases from PR #105. **Phase 119** made
 `cadence draft new --title "..."` derive the next free phase id and task number,
 so the recommended first-loop command no longer requires users or agents to
 invent `phase`/`num` positionals up front. **Phase 120** made gate bypasses loud
@@ -151,8 +168,8 @@ All four published packages bumped `1.29.0 → 1.30.0` in lockstep
 (`cadence-core` and `cadence-types` carry the engine/schema changes;
 `cadence-host-codex` carries the prompt/test parity change; `host-claude-code`
 is version-alignment only); npm publish is the user-triggered manual `Release`
-workflow. Prior: **`1.29.0`** (2026-06-18, tag `v1.29.0`
-pending): the **non-TTY-gate-bypass** release (v1.29) — make CADENCE's two
+workflow. Prior: **`1.29.0`** (2026-06-18, tag `v1.29.0` pending): the
+**non-TTY-gate-bypass** release (v1.29) — make CADENCE's two
 interactive loop gates (`approve` at `cadence draft approve`, `interactive-verdict`
 at `cadence settle run --interactive`) safe to drive from an AI agent or CI, which
 are always non-TTY (sourced from rec-20260617-005, the top backlog item; no new

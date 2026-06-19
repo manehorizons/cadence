@@ -214,7 +214,7 @@ IDLE → DRAFT → BUILD → SETTLE model.
 #### draft new
 
 ```
-Usage: cadence draft new [options] <phase> <num>
+Usage: cadence draft new [options] [phase] [num]
 
 Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 ```
@@ -223,8 +223,8 @@ Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 
 | Argument | Description |
 |---|---|
-| `<phase>` | Phase identifier (e.g. `P24`) |
-| `<num>` | Draft number within the phase (e.g. `1`) |
+| `[phase]` | Optional phase identifier (e.g. `01-retry`). When omitted, Cadence derives the next free phase id from `--title` |
+| `[num]` | Optional draft number within the phase (e.g. `1`). Defaults to `1` when omitted |
 
 **Options**
 
@@ -232,12 +232,18 @@ Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 |---|---|---|
 | `--title <t>` | `"Untitled"` | Draft title |
 | `--tier <t>` | `"standard"` | Tier: `quick-fix \| standard \| complex` |
+| `--template <name>` | — | First-task template: `bugfix \| feature \| refactor`. Generates editable Objective, AC, Task, and Boundary sections from the title |
 | `--from-rec <recId>` | — | Praxis recommendation id. On success, the rec is auto-converted to this phase via the Slice 34.1 transition helper. Symmetric semantics with `cadence spec new --from-rec`. Composes with the existing SPEC-seeded draft body: an approved SPEC plus `--from-rec` produces a SPEC-seeded DRAFT.md AND records the rec→phase link in one operator action. |
+| `--allow-phase-collision` | — | Bypass the worktree phase-collision guard; the local same-dir/file refusal still applies |
 | `-h, --help` | — | Display help for command |
 
-**Behavior** — creates `.cadence/phases/<phase>/<id>-DRAFT.md` pre-populated
-with the tier-appropriate template. The tier affects which gates fire at
-`settle run` time. See
+**Behavior** — creates `.cadence/phases/<phase>/<id>-DRAFT.md`. With no approved
+same-id SPEC and no `--template`, Cadence writes the legacy placeholder DRAFT
+scaffold. With an approved same-id SPEC, it seeds Objective and ACs from the
+SPEC. With `--template`, it writes the selected first-task scaffold instead:
+`bugfix`, `feature`, or `refactor`. Templates are editable starting points, not
+verification; the normal approve and settle gates still decide whether work can
+close. The tier affects which gates fire at `settle run` time. See
 [docs/concepts.md — Profiles × tiers](../concepts.md#profiles--tiers).
 
 #### draft check
@@ -1480,17 +1486,24 @@ Interactive onboarding — pick what you're doing, and run it
 | `--json` | Emit the structured menu and exit (no prompt) |
 
 **Behavior** — the interactive front door, sibling to the read-only `quickstart`
-(which prints the map without running anything). `start` asks "What are you
-doing?", takes a numbered pick, shows the exact command and a `[Y/n]` confirm,
-then runs it. The six routes are: `cadence tutorial` (throwaway sandbox),
-`cadence init` (this repo), `npx @manehorizons/cadence-host-claude-code install`
-(Claude Code), `npx @manehorizons/cadence-host-codex install` (Codex CLI),
-`cadence mcp install` (MCP), and `cadence doctor` (health check). Dispatch is a
-subprocess spawn — the `cadence` binary for core routes, `npx` for the two host
-packages — so `start` never imports host code. Declining the confirm prints the
-command so you can run it yourself. If the repo is already initialized, the
-`init` option is annotated as safe to re-run. In a non-interactive shell with no
-`--pick`, it prints the menu and exits `0` (never hangs).
+(which prints the map without running anything). `start` first prints an
+opinionated recommended command based on local state: uninitialized repos point
+at the no-install `npx -y @manehorizons/cadence-core tutorial`, initialized
+IDLE repos point at `cadence draft new --title "Fix login timeout" --template
+bugfix`, active loops point at `cadence progress`, and unreadable state points
+at `cadence doctor`.
+
+It then asks "What are you doing?", takes a numbered pick, shows the exact
+command and a `[Y/n]` confirm, then runs it. The six routes are:
+`cadence tutorial` (throwaway sandbox), `cadence init` (this repo),
+`npx @manehorizons/cadence-host-claude-code install` (Claude Code),
+`npx @manehorizons/cadence-host-codex install` (Codex CLI), `cadence mcp
+install` (MCP), and `cadence doctor` (health check). Dispatch is a subprocess
+spawn — the `cadence` binary for core routes, `npx` for the two host packages —
+so `start` never imports host code. Declining the confirm prints the command so
+you can run it yourself. If the repo is already initialized, the `init` option
+is annotated as safe to re-run. In a non-interactive shell with no `--pick`, it
+prints the recommendation plus menu and exits `0` (never hangs).
 
 **Exit codes** — `0` on menu print / quit / declined-confirm; the dispatched
 command's exit code when it runs; `1` on an invalid `--pick`.
@@ -1512,12 +1525,13 @@ Read-only front door: where you are + your next moves
 | `--json` | Emit the structured orientation as JSON |
 
 **Behavior** — a read-only, never-failing orientation: the obvious command to run
-first. Before `init` it shows how to set up (`cadence init`) and how to see the loop
-without touching your project (`cadence tutorial`). After `init` it shows the same
-next move `cadence progress` computes (reused, so the two never drift), plus a one-line
-map of the onboarding commands (`init`, `tutorial`, `explain`, `config explain`,
-`doctor`, `progress`). Content is embedded in the binary, so it works from any install.
-Any failure to read state degrades to the uninitialized front door — it never crashes.
+first. Before `init` it shows how to set up (`cadence init`) and how to see the
+loop without touching your project (`cadence tutorial`). After `init` it shows
+the same next move `cadence progress` computes (reused, so the two never drift),
+plus a one-line map of the onboarding commands (`init`, `tutorial`, `explain`,
+`config explain`, `doctor`, `progress`). Content is embedded in the binary, so
+it works from any install. Any failure to read state degrades to the
+uninitialized front door — it never crashes.
 
 **Exit codes** — `0` always (the uninitialized state is the happy primary path, not an error).
 

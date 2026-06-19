@@ -114,6 +114,112 @@
       "exportTargets": [],
       "createdAt": "2026-06-17T18:33:50.666Z",
       "updatedAt": "2026-06-17T18:45:09.883Z"
+    },
+    {
+      "id": "mil-rec-rec-20260619-001",
+      "name": "No-install first touch",
+      "objective": "Document and optimize the no-install path: `npx -y @manehorizons/cadence-core tutorial` should let a newcomer feel the CADENCE loop before committing to a global install or repo initialization. This reduces adoption friction and makes the first touch side-effect free.",
+      "status": "proposed",
+      "recommendationIds": [
+        "rec-20260619-001"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-19T02:47:54.044Z",
+      "updatedAt": "2026-06-19T02:47:54.044Z"
+    },
+    {
+      "id": "mil-rec-rec-20260619-002",
+      "name": "Make cadence tutorial the hero path",
+      "objective": "Reposition the existing throwaway `cadence tutorial` as the primary README/quickstart call-to-action before global install or in-repo init. The sandbox already runs the real loop; onboarding should make it impossible to miss.",
+      "status": "proposed",
+      "recommendationIds": [
+        "rec-20260619-002"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-19T02:47:54.044Z",
+      "updatedAt": "2026-06-19T02:47:54.044Z"
+    },
+    {
+      "id": "mil-rec-rec-20260619-003",
+      "name": "Draft templates for first real work",
+      "objective": "Add first-task templates such as `bugfix`, `feature`, and `refactor` for `cadence draft new`, generating useful Objective, AC, Tasks, and Boundaries scaffolds from a title. This closes the remaining cliff after users understand the loop: what to type for the first real DRAFT.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260619-003"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260619-003/SPEC.md",
+          "exportedAt": "2026-06-19T02:48:05.503Z"
+        }
+      ],
+      "createdAt": "2026-06-19T02:47:54.044Z",
+      "updatedAt": "2026-06-19T02:48:05.503Z"
+    },
+    {
+      "id": "mil-rec-rec-20260619-006",
+      "name": "First real phase agent prompt",
+      "objective": "After init, print or generate a copy-paste prompt for the user's AI agent: create a quick-fix draft for the stated goal, keep ACs testable, and stop for approval. This bridges the CLI into the actual agent workflow.",
+      "status": "proposed",
+      "recommendationIds": [
+        "rec-20260619-006"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-19T02:47:54.044Z",
+      "updatedAt": "2026-06-19T02:47:54.044Z"
+    },
+    {
+      "id": "mil-rec-rec-20260619-007",
+      "name": "Failure-first tutorial mode",
+      "objective": "Add `cadence tutorial --fail-first` that intentionally shows a settle refusal, explains why the gate blocked closure, then applies the fix and settles cleanly. Teach the product's core value: refusal-to-settle, not just a happy path.",
+      "status": "proposed",
+      "recommendationIds": [
+        "rec-20260619-007"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-06-19T02:47:54.044Z",
+      "updatedAt": "2026-06-19T02:47:54.044Z"
     }
   ]
 }

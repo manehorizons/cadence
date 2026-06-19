@@ -259,6 +259,62 @@
       "kind": "note",
       "summary": "PR #91 CI: macos-22 AC-23 'expected +0 to be 2' at 2026-06-18T00:00:26Z (UTC midnight); green on re-run. Diff touched no handoff files.",
       "createdAt": "2026-06-18T00:18:38.856Z"
+    },
+    {
+      "id": "ev-20260619-001",
+      "recommendationId": "rec-20260619-001",
+      "kind": "note",
+      "summary": "2026-06-19 adoption review: tutorial exists, but README still leads with install/init; npx tutorial is the lowest-commitment first touch.",
+      "createdAt": "2026-06-19T02:46:20.224Z"
+    },
+    {
+      "id": "ev-20260619-002",
+      "recommendationId": "rec-20260619-002",
+      "kind": "note",
+      "summary": "2026-06-19 adoption review: tutorial is already implemented and safe, but the public path still centers install/init first.",
+      "createdAt": "2026-06-19T02:46:20.598Z"
+    },
+    {
+      "id": "ev-20260619-003",
+      "recommendationId": "rec-20260619-003",
+      "kind": "note",
+      "summary": "2026-06-19 adoption review: README demo is short, but the full quickstart still asks users to manually author a DRAFT.",
+      "createdAt": "2026-06-19T02:46:20.958Z"
+    },
+    {
+      "id": "ev-20260619-004",
+      "recommendationId": "rec-20260619-004",
+      "kind": "note",
+      "summary": "2026-06-19 adoption review: doctor already points to next actions; a fix mode would convert diagnosis into momentum.",
+      "createdAt": "2026-06-19T02:46:21.299Z"
+    },
+    {
+      "id": "ev-20260619-005",
+      "recommendationId": "rec-20260619-005",
+      "kind": "note",
+      "summary": "2026-06-19 adoption review: adopters may hesitate to run init in an existing repo; previewing writes lowers perceived risk.",
+      "createdAt": "2026-06-19T02:46:21.651Z"
+    },
+    {
+      "id": "ev-20260619-006",
+      "recommendationId": "rec-20260619-006",
+      "kind": "note",
+      "summary": "2026-06-19 adoption review: users adopting agent workflows often need the bridge phrase more than another flag.",
+      "createdAt": "2026-06-19T02:46:21.827Z"
+    },
+    {
+      "id": "ev-20260619-007",
+      "recommendationId": "rec-20260619-007",
+      "kind": "note",
+      "summary": "2026-06-19 adoption review: the existing tutorial proves the loop, but a failure-first variant would communicate the unique wedge faster.",
+      "createdAt": "2026-06-19T02:46:22.162Z"
+    },
+    {
+      "id": "ev-20260619-008",
+      "recommendationId": "rec-20260619-008",
+      "kind": "note",
+      "summary": "2026-06-19 adoption review: solo onboarding is now decent; team adoption needs a concrete rollout path.",
+      "createdAt": "2026-06-19T02:46:22.504Z"
     }
   ]
 }

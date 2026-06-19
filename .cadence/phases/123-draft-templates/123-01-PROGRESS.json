@@ -1,0 +1,29 @@
+{
+  "draftId": "123-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added deterministic bugfix, feature, and refactor DRAFT template rendering.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-19T02:53:55.048Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Wired --template into draft new help, validation, auto-id, and explicit-id flows.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-19T02:53:55.205Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added regression coverage for template generation, unknown-template refusal, and default no-template compatibility.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-19T02:53:55.376Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Documented first-real-DRAFT templates in README, quickstart, CLI guide, and command reference.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-19T02:53:55.557Z"
+    }
+  }
+}

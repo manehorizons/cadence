@@ -46,7 +46,13 @@ The agent isn't believed; the state is.
 
 ## Quickstart
 
-Install the CLI globally (requires Node ≥ 20):
+No install, no repo writes — just watch one real loop run:
+
+```sh
+npx -y @manehorizons/cadence-core tutorial
+```
+
+For daily use, install the CLI globally (requires Node ≥ 20):
 
 ```sh
 npm install -g @manehorizons/cadence-core
@@ -77,9 +83,9 @@ To drive a real phase yourself instead of the demo:
 
 ```sh
 cadence init
-cadence draft new 01-foundation 01 --title "First phase"
-# fill .cadence/phases/01-foundation/01-01-DRAFT.md
-cadence draft approve 01-foundation 01
+cadence draft new --title "Fix login timeout" --template bugfix
+# edit the generated DRAFT: templates are scaffolds, not proof
+cadence draft approve 01-fix-login-timeout 01
 cadence build task T1 --status=DONE
 cadence settle run --auto
 # ^ Cadence refuses: AC-1 has no test. That's the point — it won't settle
@@ -110,7 +116,7 @@ Driving it from **another MCP host** (Claude Desktop, Cursor, an agent)? Point t
 
 See **[docs/README.md](./docs/README.md)** for the complete user guide:
 
-- [Quickstart](./docs/quickstart.md) — one complete loop in ~10 minutes
+- [Quickstart](./docs/quickstart.md) — no-install demo, first real template, and full loop walkthrough
 - [Concepts](./docs/concepts.md) — the loop, gates, profiles, and two-commit convention
 - [CLI guide](./docs/cli.md) — all subcommands and flags
 - [Claude Code integration](./docs/claude-code.md) — hooks and slash commands

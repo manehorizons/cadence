@@ -121,6 +121,8 @@ describe('cadence init', () => {
     // AC-1: a numbered first-loop sequence with the real first commands.
     expect(r.stdout).toMatch(/Your first loop/);
     expect(r.stdout).toMatch(/cadence draft new/);
+    expect(r.stdout).toMatch(/--template bugfix/);
+    expect(r.stdout).toMatch(/templates are scaffolds, not proof/);
     expect(r.stdout).toMatch(/cadence draft approve/);
     expect(r.stdout).toMatch(/cadence settle run/);
     // AC-2: the `cadence progress` escape hatch + Docs pointer.

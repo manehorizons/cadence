@@ -1,5 +1,33 @@
 # @manehorizons/cadence-core
 
+## 1.31.0
+
+### Minor Changes
+
+- 94ade49: Add first-real-task DRAFT templates for `cadence draft new --template`.
+
+  `bugfix`, `feature`, and `refactor` templates now generate editable Objective,
+  Acceptance Criteria, Tasks, and Boundaries sections from the supplied title,
+  while preserving the legacy scaffold whenever `--template` is omitted. The
+  template path works with auto-derived phase ids and explicit phase/task ids, and
+  unknown template names refuse before writing a DRAFT.
+
+  The README, quickstart, CLI guide, and command reference now show template
+  commands as the first-real-DRAFT path after tutorial/demo onboarding. The host
+  adapter and types packages carry version-alignment bumps only.
+
+- 5ab7814: Make onboarding faster and more opinionated.
+
+  The README now leads with a no-install `npx` tutorial, the quickstart separates
+  the 30-second demo from the first-real-phase template path, `cadence init`
+  prints template-first next steps, and `cadence start` now shows a state-aware
+  recommended command before the full menu.
+
+### Patch Changes
+
+- Updated dependencies [94ade49]
+  - @manehorizons/cadence-types@1.31.0
+
 ## 1.30.0
 
 ### Minor Changes
