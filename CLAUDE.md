@@ -134,7 +134,24 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.29.0`** (2026-06-18, tag `v1.29.0`
+change). The latest version is **`1.30.0`** (2026-06-19, tag `v1.30.0`
+pending): the **adoption onboarding polish + Codex parity** release (v1.30).
+It bundles four settled phases from PR #105. **Phase 119** made
+`cadence draft new --title "..."` derive the next free phase id and task number,
+so the recommended first-loop command no longer requires users or agents to
+invent `phase`/`num` positionals up front. **Phase 120** made gate bypasses loud
+and durable: settle now prints explicit bypass notices for force, coverage, and
+verifier-failure paths and writes `gateBypasses` into SUMMARY JSON/Markdown via
+the shared `cadence-types` summary schema. **Phase 121** captured a sourced
+competitive-positioning/objection FAQ for the in-loop enforcement wedge.
+**Phase 122** closed the Codex host-adapter parity gap: Codex prompts now source
+the same `COMMAND_GUIDANCE`/`SCOUT_DIALOGUE` as Claude/MCP, install
+`cadence-scout`, and carry local hook roundtrip + prompt-catalog parity tests.
+All four published packages bumped `1.29.0 → 1.30.0` in lockstep
+(`cadence-core` and `cadence-types` carry the engine/schema changes;
+`cadence-host-codex` carries the prompt/test parity change; `host-claude-code`
+is version-alignment only); npm publish is the user-triggered manual `Release`
+workflow. Prior: **`1.29.0`** (2026-06-18, tag `v1.29.0`
 pending): the **non-TTY-gate-bypass** release (v1.29) — make CADENCE's two
 interactive loop gates (`approve` at `cadence draft approve`, `interactive-verdict`
 at `cadence settle run --interactive`) safe to drive from an AI agent or CI, which
