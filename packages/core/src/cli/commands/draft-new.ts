@@ -9,9 +9,10 @@ export function registerDraftNew(cmd: Command): void {
     .description('Scaffold a new DRAFT.md under .cadence/phases/<phase>/')
     .option('--title <t>', 'Draft title', 'Untitled')
     .option('--tier <t>', 'Tier (quick-fix | standard | complex)', 'standard')
+    .option('--template <name>', 'First-task template (bugfix | feature | refactor)')
     .option('--from-rec <recId>', 'Praxis recommendation id; on success the rec is auto-converted to this phase (Slice 34.3)')
     .option('--allow-phase-collision', 'bypass the worktree phase-collision guard (Phase 83); the local same-dir existsSync refusal still applies')
-    .action(async (phase: string | undefined, num: string | undefined, opts: { title: string; tier: string; fromRec?: string; allowPhaseCollision?: boolean }) => {
+    .action(async (phase: string | undefined, num: string | undefined, opts: { title: string; tier: string; template?: string; fromRec?: string; allowPhaseCollision?: boolean }) => {
       const { exitCode } = await draftNewService(
         process.cwd(),
         {
@@ -19,6 +20,7 @@ export function registerDraftNew(cmd: Command): void {
           ...(num !== undefined ? { num } : {}),
           title: opts.title,
           tier: opts.tier,
+          ...(opts.template !== undefined ? { template: opts.template } : {}),
           ...(opts.fromRec !== undefined ? { fromRec: opts.fromRec } : {}),
           ...(opts.allowPhaseCollision !== undefined ? { allowPhaseCollision: opts.allowPhaseCollision } : {}),
         },

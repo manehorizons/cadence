@@ -86,6 +86,19 @@ Open the file and replace the template placeholders:
 - `## Tasks` — `### T1` blocks with `files` / `action` / `verify` / `done: AC-N`
 - `## Boundaries` — what the AI must not change
 
+For a first real task, use a template to avoid starting from a blank scaffold:
+
+```sh
+cadence draft new --title "Fix login timeout" --template bugfix
+cadence draft new --title "Add CSV export" --template feature
+cadence draft new --title "Split billing service" --template refactor
+```
+
+Templates generate editable Objective, AC, Task, and Boundary sections. They are
+starting points for a human or agent to refine; they do not prove the work is
+correct. The normal approve and settle gates still decide whether the phase can
+close.
+
 For a complex phase with an explicit tier:
 
 ```sh

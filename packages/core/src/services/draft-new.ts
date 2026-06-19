@@ -3,6 +3,11 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseSpecMd } from '../parse/spec-parser.js';
 import { renderDraftBody, frontmatterStatus } from '../parse/draft-scaffold.js';
+import {
+  isDraftTemplateName,
+  renderDraftTemplateBody,
+  supportedDraftTemplates,
+} from '../parse/draft-templates.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
 import { runRecommendationTransition } from '../intelligence/store/recommendations.js';
@@ -20,12 +25,27 @@ import type { CommandIO, CommandResult } from './io.js';
  */
 export async function draftNewService(
   repoRoot: string,
-  args: { phase?: string; num?: string; title?: string; tier?: string; fromRec?: string; allowPhaseCollision?: boolean },
+  args: {
+    phase?: string;
+    num?: string;
+    title?: string;
+    tier?: string;
+    template?: string;
+    fromRec?: string;
+    allowPhaseCollision?: boolean;
+  },
   io: CommandIO,
 ): Promise<CommandResult> {
   const title = args.title ?? 'Untitled';
   const tier = args.tier ?? 'standard';
   try {
+    if (args.template !== undefined && !isDraftTemplateName(args.template)) {
+      io.err(
+        `draft new refused: unknown template "${args.template}". ` +
+          `Supported templates: ${supportedDraftTemplates()}\n`,
+      );
+      return { exitCode: 1 };
+    }
     const backend = new SimpleStateBackend(repoRoot);
     const state = await backend.readState();
     if (state.loopPosition !== 'IDLE') {
@@ -80,7 +100,9 @@ export async function draftNewService(
     await mkdir(dir, { recursive: true });
     const specPath = join(dir, `${id}-SPEC.md`);
     let body: string;
-    if (existsSync(specPath)) {
+    if (args.template !== undefined) {
+      body = renderDraftTemplateBody(args.template, phase, id, tier, title);
+    } else if (existsSync(specPath)) {
       const rawSpec = await readFile(specPath, 'utf8');
       if (frontmatterStatus(rawSpec) === 'APPROVED') {
         try {

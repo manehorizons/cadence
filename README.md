@@ -77,9 +77,9 @@ To drive a real phase yourself instead of the demo:
 
 ```sh
 cadence init
-cadence draft new 01-foundation 01 --title "First phase"
-# fill .cadence/phases/01-foundation/01-01-DRAFT.md
-cadence draft approve 01-foundation 01
+cadence draft new --title "Fix login timeout" --template bugfix
+# edit the generated DRAFT: templates are scaffolds, not proof
+cadence draft approve 01-fix-login-timeout 01
 cadence build task T1 --status=DONE
 cadence settle run --auto
 # ^ Cadence refuses: AC-1 has no test. That's the point — it won't settle

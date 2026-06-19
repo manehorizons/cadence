@@ -101,6 +101,18 @@ A *phase* is one named unit of work. Create a DRAFT scaffold for a phase called
 cadence draft new 01-add-greeting 01 --title "Add greeting module"
 ```
 
+For your first real bugfix, feature, or refactor, you can start from a richer
+template instead of a blank scaffold:
+
+```sh
+cadence draft new --title "Fix login timeout" --template bugfix
+cadence draft new --title "Add CSV export" --template feature
+cadence draft new --title "Split billing service" --template refactor
+```
+
+Templates are editable scaffolds. They help you start with useful ACs, tasks,
+and boundaries; they do not prove the work is correct.
+
 Output:
 
 ```

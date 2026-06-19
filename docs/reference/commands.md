@@ -214,7 +214,7 @@ IDLE → DRAFT → BUILD → SETTLE model.
 #### draft new
 
 ```
-Usage: cadence draft new [options] <phase> <num>
+Usage: cadence draft new [options] [phase] [num]
 
 Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 ```
@@ -223,8 +223,8 @@ Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 
 | Argument | Description |
 |---|---|
-| `<phase>` | Phase identifier (e.g. `P24`) |
-| `<num>` | Draft number within the phase (e.g. `1`) |
+| `[phase]` | Optional phase identifier (e.g. `01-retry`). When omitted, Cadence derives the next free phase id from `--title` |
+| `[num]` | Optional draft number within the phase (e.g. `1`). Defaults to `1` when omitted |
 
 **Options**
 
@@ -232,12 +232,18 @@ Scaffold a new DRAFT.md under .cadence/phases/<phase>/
 |---|---|---|
 | `--title <t>` | `"Untitled"` | Draft title |
 | `--tier <t>` | `"standard"` | Tier: `quick-fix \| standard \| complex` |
+| `--template <name>` | — | First-task template: `bugfix \| feature \| refactor`. Generates editable Objective, AC, Task, and Boundary sections from the title |
 | `--from-rec <recId>` | — | Praxis recommendation id. On success, the rec is auto-converted to this phase via the Slice 34.1 transition helper. Symmetric semantics with `cadence spec new --from-rec`. Composes with the existing SPEC-seeded draft body: an approved SPEC plus `--from-rec` produces a SPEC-seeded DRAFT.md AND records the rec→phase link in one operator action. |
+| `--allow-phase-collision` | — | Bypass the worktree phase-collision guard; the local same-dir/file refusal still applies |
 | `-h, --help` | — | Display help for command |
 
-**Behavior** — creates `.cadence/phases/<phase>/<id>-DRAFT.md` pre-populated
-with the tier-appropriate template. The tier affects which gates fire at
-`settle run` time. See
+**Behavior** — creates `.cadence/phases/<phase>/<id>-DRAFT.md`. With no approved
+same-id SPEC and no `--template`, Cadence writes the legacy placeholder DRAFT
+scaffold. With an approved same-id SPEC, it seeds Objective and ACs from the
+SPEC. With `--template`, it writes the selected first-task scaffold instead:
+`bugfix`, `feature`, or `refactor`. Templates are editable starting points, not
+verification; the normal approve and settle gates still decide whether work can
+close. The tier affects which gates fire at `settle run` time. See
 [docs/concepts.md — Profiles × tiers](../concepts.md#profiles--tiers).
 
 #### draft check
