@@ -1,5 +1,28 @@
 # @manehorizons/cadence-host-codex
 
+## 1.31.0
+
+### Minor Changes
+
+- 94ade49: Add first-real-task DRAFT templates for `cadence draft new --template`.
+
+  `bugfix`, `feature`, and `refactor` templates now generate editable Objective,
+  Acceptance Criteria, Tasks, and Boundaries sections from the supplied title,
+  while preserving the legacy scaffold whenever `--template` is omitted. The
+  template path works with auto-derived phase ids and explicit phase/task ids, and
+  unknown template names refuse before writing a DRAFT.
+
+  The README, quickstart, CLI guide, and command reference now show template
+  commands as the first-real-DRAFT path after tutorial/demo onboarding. The host
+  adapter and types packages carry version-alignment bumps only.
+
+### Patch Changes
+
+- Updated dependencies [94ade49]
+- Updated dependencies [5ab7814]
+  - @manehorizons/cadence-core@1.31.0
+  - @manehorizons/cadence-types@1.31.0
+
 ## 1.30.0
 
 ### Minor Changes
