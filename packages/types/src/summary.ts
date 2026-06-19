@@ -42,6 +42,14 @@ export const FindingZ = z.object({
 });
 export type Finding = z.infer<typeof FindingZ>;
 
+export const GateBypassZ = z.object({
+  gate: z.string(),
+  flag: z.string(),
+  reason: z.string(),
+  severity: z.enum(['warn', 'error']),
+});
+export type GateBypass = z.infer<typeof GateBypassZ>;
+
 export const SummaryZ = z.object({
   schemaVersion: z.literal(1),
   draftId: z.string(),
@@ -75,5 +83,7 @@ export const SummaryZ = z.object({
   codeReview: z.record(z.string(), z.array(FindingZ)).optional(),
   /** Phase 25.2: flat security-audit findings. Present only when the gate ran. */
   securityAudit: z.array(FindingZ).optional(),
+  /** Phase 120: durable audit trail for settle-time gate bypasses. */
+  gateBypasses: z.array(GateBypassZ).optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

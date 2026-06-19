@@ -89,6 +89,7 @@ describe('settle test-coverage gate (Phase 14)', () => {
       ),
     );
     expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true });
+    expect(summary.gateBypasses).toBeUndefined();
   });
 
   it('explicit --ac override bypasses the gate for that AC (AC-5)', async () => {
@@ -114,7 +115,21 @@ describe('settle test-coverage gate (Phase 14)', () => {
       active.root,
     );
     expect(r.code).toBe(0);
-    expect(r.stderr).not.toMatch(/coverage:/);
+    expect(r.stderr).toMatch(/settle bypass \[warn\] test-coverage:/);
+    expect(r.stderr).not.toMatch(/coverage:\s*AC-/);
+    const summary = JSON.parse(
+      await readFile(
+        join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
+        'utf8',
+      ),
+    );
+    expect(summary.gateBypasses).toEqual([
+      expect.objectContaining({
+        gate: 'test-coverage',
+        flag: '--allow-missing-coverage',
+        severity: 'warn',
+      }),
+    ]);
   });
 
   it('gate is skipped under auto × quick-fix profile/tier (AC-3)', async () => {

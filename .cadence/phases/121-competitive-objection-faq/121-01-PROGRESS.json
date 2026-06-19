@@ -1,0 +1,17 @@
+{
+  "draftId": "121-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added gitignored local COMPETITIVE.md launch-prep note and verified: test -f COMPETITIVE.md && git check-ignore -q COMPETITIVE.md",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T21:50:48.788Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Wrote sourced positioning landscape, objection FAQ, and overclaim guardrails; verified with rg coverage for Spec Kit, OpenSpec, BMad, CodeRabbit, Greptile, Qodo, Graphite, Thoughtworks, overclaim, and objection.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T21:50:52.790Z"
+    }
+  }
+}

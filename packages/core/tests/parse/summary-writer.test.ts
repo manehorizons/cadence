@@ -52,4 +52,26 @@ describe('renderSummaryMd', () => {
     const md = renderSummaryMd(summary);
     expect(md).toMatch(/review-pr.*NOT INVOKED/);
   });
+
+  it('AC-2: renders gate bypasses when present', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      gateBypasses: [
+        {
+          gate: 'test-coverage',
+          flag: '--allow-missing-coverage',
+          reason: 'test-coverage gate bypassed via --allow-missing-coverage',
+          severity: 'warn',
+        },
+      ],
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('## Gate bypasses');
+    expect(md).toContain('WARN test-coverage via --allow-missing-coverage');
+  });
+
+  it('AC-4: omits gate bypasses when absent', () => {
+    const md = renderSummaryMd(SAMPLE);
+    expect(md).not.toContain('## Gate bypasses');
+  });
 });

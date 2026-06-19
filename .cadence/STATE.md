@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 118-hardening-review
+**Active phase:** 122-codex-host-adapter-parity-tests
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 338
+- Subagent spawns this session: 339
 - Last handoff: SESSION-2026-06-18-v1.29-shipped.md
 
 ## Counts

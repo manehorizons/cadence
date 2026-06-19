@@ -632,128 +632,6 @@
       "shippedRef": "phase 100 / PR #73 (v1.23.0 pending)",
       "createdAt": "2026-06-11T14:52:03.329Z",
       "updatedAt": "2026-06-11T18:59:09.629Z"
-    },
-    {
-      "id": "rec-20260611-005",
-      "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
-      "summary": "Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility — record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "settle",
-        "observability"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/deep-verify.ts",
-        "packages/core/src/gates/coverage.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260611-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:37.321Z",
-      "updatedAt": "2026-06-11T23:57:37.321Z"
-    },
-    {
-      "id": "rec-20260611-006",
-      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
-      "summary": "The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (same 8 files) but has materially thinner test coverage (claude-code has ~11 test files incl. install/shim/roundtrip/adapter-conformance/integration; codex is newer with far less). Since v1.13 markets CADENCE as genuinely multi-host, an under-tested second adapter risks silently breaking if Codex's hook/apply_patch envelope shifts. Bring codex up to conformance + install + shim + integration parity (reuse the testkit mock host + the adapter-conformance suite already proving the phase-60 contract).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "host-codex",
-        "testing"
-      ],
-      "affectedFiles": [
-        "packages/host-codex/src",
-        "packages/host-claude-code/tests"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260611-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:46.578Z",
-      "updatedAt": "2026-06-11T23:57:46.578Z"
-    },
-    {
-      "id": "rec-20260611-007",
-      "title": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
-      "summary": "Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs",
-        "positioning",
-        "launch"
-      ],
-      "affectedFiles": [
-        "docs",
-        "README.md"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260611-007"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:58:00.535Z",
-      "updatedAt": "2026-06-11T23:58:00.535Z"
-    },
-    {
-      "id": "rec-20260617-003",
-      "title": "Auto-derive phase id and collapse --ac syntax",
-      "summary": "cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "onboarding"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/draft-new.ts",
-        "packages/core/src/cli/commands/settle.ts",
-        "packages/core/src/cli/commands/progress.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260617-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-17T18:31:57.135Z",
-      "updatedAt": "2026-06-17T18:33:40.673Z"
     }
   ],
   "archived": [
@@ -1170,9 +1048,143 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "116-non-tty-gate-bypass",
-      "createdAt": "2026-06-17T18:31:57.948Z",
-      "updatedAt": "2026-06-18T02:13:00.142Z",
       "archivedAt": "2026-06-18T02:13:00.142Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:57.948Z",
+      "updatedAt": "2026-06-18T02:13:00.142Z"
+    },
+    {
+      "id": "rec-20260617-003",
+      "title": "Auto-derive phase id and collapse --ac syntax",
+      "summary": "cadence draft new 01-foundation 01 --title needs kebab-case + zero-padded positionals (error-prone); resolveNextFreePhase already computes next-free. Make positionals optional: draft new --title auto-fills phase/num. settle run --ac AC-1=pass AC-2=fail:reason colon syntax is cryptic - add --pass-all / --ac-pass shorthands. Make cadence progress print one clean copy-pasteable next command.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/draft-new.ts",
+        "packages/core/src/cli/commands/settle.ts",
+        "packages/core/src/cli/commands/progress.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260617-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "119-auto-phase-id",
+      "archivedAt": "2026-06-18T21:34:32.448Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-17T18:31:57.135Z",
+      "updatedAt": "2026-06-18T21:34:32.448Z"
+    },
+    {
+      "id": "rec-20260611-005",
+      "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
+      "summary": "Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility — record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "settle",
+        "observability"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/deep-verify.ts",
+        "packages/core/src/gates/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "120-loud-bypass-audit-trail",
+      "scoutId": "scout-20260611-1857",
+      "archivedAt": "2026-06-18T21:42:35.743Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-11T23:57:37.321Z",
+      "updatedAt": "2026-06-18T21:42:35.743Z"
+    },
+    {
+      "id": "rec-20260611-007",
+      "title": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
+      "summary": "Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "positioning",
+        "launch"
+      ],
+      "affectedFiles": [
+        "docs",
+        "README.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "121-competitive-objection-faq",
+      "scoutId": "scout-20260611-1857",
+      "archivedAt": "2026-06-18T21:51:02.020Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-11T23:58:00.535Z",
+      "updatedAt": "2026-06-18T21:51:02.020Z"
+    },
+    {
+      "id": "rec-20260611-006",
+      "title": "Close the Codex host-adapter test-parity gap to prevent silent bit-rot",
+      "summary": "The cadence-host-codex adapter mirrors cadence-host-claude-code structurally (same 8 files) but has materially thinner test coverage (claude-code has ~11 test files incl. install/shim/roundtrip/adapter-conformance/integration; codex is newer with far less). Since v1.13 markets CADENCE as genuinely multi-host, an under-tested second adapter risks silently breaking if Codex's hook/apply_patch envelope shifts. Bring codex up to conformance + install + shim + integration parity (reuse the testkit mock host + the adapter-conformance suite already proving the phase-60 contract).",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "host-codex",
+        "testing"
+      ],
+      "affectedFiles": [
+        "packages/host-codex/src",
+        "packages/host-claude-code/tests"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260611-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "122-codex-host-adapter-parity-tests",
+      "scoutId": "scout-20260611-1857",
+      "createdAt": "2026-06-11T23:57:46.578Z",
+      "updatedAt": "2026-06-18T23:06:58.539Z",
+      "archivedAt": "2026-06-18T23:06:58.539Z",
       "archiveReason": "converted-settled"
     }
   ]

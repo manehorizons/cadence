@@ -1,0 +1,17 @@
+{
+  "draftId": "119-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Implemented optional draft new positionals, auto phase slug derivation, and simplified progress/legal-action command; verified with targeted draft-new/progress/next-free suite.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T21:33:47.746Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Implemented --pass-all and --ac-pass settle shorthands; verified with targeted settle suite.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T21:33:47.769Z"
+    }
+  }
+}

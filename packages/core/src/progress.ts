@@ -23,18 +23,12 @@ export function nextAction(state: CadenceState, hints?: NextActionHints): NextAc
   switch (state.loopPosition) {
     case 'IDLE': {
       const n = hints?.nextPhaseNumber;
-      // The phase number and the task number are distinct slots. next-free fills
-      // ONLY the phase-number token (`${n}-<slug>`); the task-num slot defaults to
-      // 1, not the phase number — otherwise phases >= 100 render `draft new
-      // 103-<slug> 103`, which derivePhaseTaskId mangles into id 103-103 instead
-      // of 103-01 (rec-20260611-002).
-      const command =
-        n === undefined
-          ? 'cadence draft new <phase> <num> --title=…'
-          : `cadence draft new ${n}-<slug> 1 --title=…`;
       return {
-        command,
-        reason: 'No active draft. Start the loop by drafting a new unit of work.',
+        command: 'cadence draft new --title "..."',
+        reason:
+          n === undefined
+            ? 'No active draft. Start the loop by drafting a new unit of work.'
+            : `No active draft. Start the loop; draft new will derive phase ${n}-<title-slug> task 1.`,
       };
     }
     case 'DRAFT': {

@@ -23,7 +23,9 @@ describe('cadence progress', () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['progress'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(/cadence draft new/);
+    expect(r.stdout).toContain('cadence draft new --title "..."');
+    expect(r.stdout).not.toContain('<phase>');
+    expect(r.stdout).not.toContain('<num>');
   });
 
   it('DRAFT state (after `draft new`) suggests approve with real phase + num', async () => {

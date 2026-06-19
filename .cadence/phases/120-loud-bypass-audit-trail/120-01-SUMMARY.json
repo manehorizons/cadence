@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "draftId": "120-01",
+  "completedAt": "2026-06-18T21:42:35.742Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    },
+    {
+      "id": "AC-4",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Added optional Summary.gateBypasses schema, SUMMARY.md rendering, and settle-service derivation from bypass anomaly signals; verified with summary-writer, settle-anomaly, settle-deep, settle-coverage, gates/deep-verify slices."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Added visible settle bypass stderr warnings and assertions for anomaly-on, anomaly-off, file transport, coverage bypass, and verifier-failure bypass paths."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

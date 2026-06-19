@@ -1,0 +1,17 @@
+{
+  "draftId": "120-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added optional Summary.gateBypasses schema, SUMMARY.md rendering, and settle-service derivation from bypass anomaly signals; verified with summary-writer, settle-anomaly, settle-deep, settle-coverage, gates/deep-verify slices.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T21:42:05.696Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Added visible settle bypass stderr warnings and assertions for anomaly-on, anomaly-off, file transport, coverage bypass, and verifier-failure bypass paths.",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-18T21:42:09.555Z"
+    }
+  }
+}

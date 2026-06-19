@@ -50,7 +50,7 @@ afterEach(async () => {
 // when the gate is off or transport=none.
 
 describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
-  it('auto profile + --force + BLOCKED task → stderr lists anomaly lines (AC-5)', async () => {
+  it('AC-3: auto profile + --force + BLOCKED task → stderr lists bypass and anomaly lines', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
@@ -60,6 +60,8 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
       active.root,
     );
     expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/settle bypass \[error\] settle:/);
+    expect(r.stderr).toMatch(/settle bypass \[warn\] test-coverage:/);
     // Two anomalies expected: ac-blocked + force-used. Coverage-bypassed too,
     // since the test-coverage gate is in the auto×standard set.
     expect(r.stderr).toMatch(/cadence anomaly \[warn\] ac-blocked:/);
@@ -67,7 +69,7 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
     expect(r.stderr).toMatch(/cadence anomaly \[warn\] coverage-bypassed:/);
   });
 
-  it('strict profile (no anomaly-notify gate) → silent + no file written (AC-6)', async () => {
+  it('AC-1/AC-3: strict profile records summary bypasses without anomaly transport', async () => {
     active = await tempRepo({ initialized: true });
     await patchConfig(active.root, { profile: 'strict' });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
@@ -86,8 +88,26 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
       active.root,
     );
     expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/settle bypass \[error\] settle:/);
+    expect(r.stderr).toMatch(/settle bypass \[warn\] test-coverage:/);
     expect(r.stderr).not.toMatch(/cadence anomaly/);
     expect(existsSync(join(active.root, '.cadence/anomalies.log'))).toBe(false);
+    const summary = JSON.parse(
+      await readFile(
+        join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
+        'utf8',
+      ),
+    );
+    expect(summary.gateBypasses).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ gate: 'settle', flag: '--force', severity: 'error' }),
+        expect.objectContaining({
+          gate: 'test-coverage',
+          flag: '--allow-missing-coverage',
+          severity: 'warn',
+        }),
+      ]),
+    );
   });
 
   it('transport=none under auto profile → silent + no file (AC-6)', async () => {
@@ -101,6 +121,8 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
       active.root,
     );
     expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/settle bypass \[error\] settle:/);
+    expect(r.stderr).toMatch(/settle bypass \[warn\] test-coverage:/);
     expect(r.stderr).not.toMatch(/cadence anomaly/);
     expect(existsSync(join(active.root, '.cadence/anomalies.log'))).toBe(false);
   });
@@ -118,6 +140,8 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
       active.root,
     );
     expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/settle bypass \[error\] settle:/);
+    expect(r.stderr).toMatch(/settle bypass \[warn\] test-coverage:/);
     expect(r.stderr).not.toMatch(/cadence anomaly \[/);
     const logPath = join(active.root, '.cadence/anomalies.log');
     expect(existsSync(logPath)).toBe(true);
@@ -130,7 +154,7 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
     expect(types).toContain('coverage-bypassed');
   });
 
-  it('auto profile + clean settle → no anomalies emitted (AC-6)', async () => {
+  it('AC-1/AC-3: coverage bypass records summary audit and emits warning', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
@@ -141,8 +165,22 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
     );
     expect(r.code).toBe(0);
     // Coverage was bypassed → that single event is still expected.
+    expect(r.stderr).toMatch(/settle bypass \[warn\] test-coverage:/);
     expect(r.stderr).toMatch(/cadence anomaly \[warn\] coverage-bypassed:/);
     expect(r.stderr).not.toMatch(/ac-blocked/);
     expect(r.stderr).not.toMatch(/force-used/);
+    const summary = JSON.parse(
+      await readFile(
+        join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
+        'utf8',
+      ),
+    );
+    expect(summary.gateBypasses).toEqual([
+      expect.objectContaining({
+        gate: 'test-coverage',
+        flag: '--allow-missing-coverage',
+        severity: 'warn',
+      }),
+    ]);
   });
 });

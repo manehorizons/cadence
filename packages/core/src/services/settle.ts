@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import type { Summary } from '@manehorizons/cadence-types';
+import type { AnomalyEvent, GateBypass, Summary } from '@manehorizons/cadence-types';
 import { TaskStatusZ, defaultConfig } from '@manehorizons/cadence-types';
 import { phaseNumber } from '../phases/collision.js';
 import { assertSafePhaseSlug } from '../phases/id.js';
@@ -45,6 +45,8 @@ import type { CommandIO, CommandResult } from './io.js';
 
 export interface SettleArgs {
   ac?: string[];
+  acPass?: string[];
+  passAll?: boolean;
   auto?: boolean;
   force?: boolean;
   allowMissingCoverage?: boolean;
@@ -76,6 +78,57 @@ function parseAcArg(arg: string): AcResult {
   return { id, pass: verdict === 'pass', ...(note ? { note } : {}) };
 }
 
+function mergePassShorthands(draftAcIds: string[], explicit: AcResult[], opts: SettleArgs): AcResult[] {
+  const explicitIds = new Set(explicit.map((a) => a.id));
+  const shorthand: AcResult[] = [];
+  for (const id of opts.acPass ?? []) {
+    if (!explicitIds.has(id)) shorthand.push({ id, pass: true });
+  }
+  if (opts.passAll) {
+    const seen = new Set([...explicitIds, ...shorthand.map((a) => a.id)]);
+    for (const id of draftAcIds) {
+      if (!seen.has(id)) shorthand.push({ id, pass: true });
+    }
+  }
+  return [...explicit, ...shorthand];
+}
+
+function anomalyToGateBypass(event: AnomalyEvent): GateBypass | null {
+  if (event.severity === 'info') return null;
+  if (event.type === 'coverage-bypassed') {
+    return {
+      gate: 'test-coverage',
+      flag: '--allow-missing-coverage',
+      reason: event.message,
+      severity: event.severity,
+    };
+  }
+  if (event.type === 'force-used') {
+    return {
+      gate: 'settle',
+      flag: '--force',
+      reason: event.message,
+      severity: event.severity,
+    };
+  }
+  if (event.type === 'verifier-failure') {
+    return {
+      gate: 'deep-verify',
+      flag: '--allow-verifier-failure',
+      reason: event.message,
+      severity: event.severity,
+    };
+  }
+  return null;
+}
+
+function gateBypassesFromAnomalies(events: AnomalyEvent[]): GateBypass[] {
+  return events.flatMap((event) => {
+    const bypass = anomalyToGateBypass(event);
+    return bypass ? [bypass] : [];
+  });
+}
+
 /**
  * `cadence settle run` — close the loop: run the settle gate stack, write
  * SUMMARY.{json,md}, and return to IDLE. Faithful extraction of the former CLI
@@ -105,7 +158,11 @@ export async function settleService(
       ? (JSON.parse(await readFile(progPath, 'utf8')) as ProgressJson)
       : { draftId: state.activeDraft, tasks: {} };
 
-    const explicit = (opts.ac ?? []).map(parseAcArg);
+    const explicit = mergePassShorthands(
+      draft.acceptanceCriteria.map((ac) => ac.id),
+      (opts.ac ?? []).map(parseAcArg),
+      opts,
+    );
     const explicitIds = new Set(explicit.map((a) => a.id));
 
     const cadenceConfig = await loadConfig(cwd);
@@ -361,17 +418,22 @@ export async function settleService(
       acResults = merged;
     }
 
+    const anomalies = collectAnomalies({
+      draft,
+      progress,
+      coverageBypassed,
+      force: opts.force === true,
+      root: cwd,
+      ...(deepVerify ? { deepVerify } : {}),
+      ...(interactiveVerify ? { interactiveVerify } : {}),
+      ...(verifierFailure ? { verifierFailure } : {}),
+    });
+    const gateBypasses = gateBypassesFromAnomalies(anomalies);
+    for (const bypass of gateBypasses) {
+      io.err(`settle bypass [${bypass.severity}] ${bypass.gate}: ${bypass.reason} (${bypass.flag})\n`);
+    }
+
     if (gateSet.gates.includes('anomaly-notify')) {
-      const anomalies = collectAnomalies({
-        draft,
-        progress,
-        coverageBypassed,
-        force: opts.force === true,
-        root: cwd,
-        ...(deepVerify ? { deepVerify } : {}),
-        ...(interactiveVerify ? { interactiveVerify } : {}),
-        ...(verifierFailure ? { verifierFailure } : {}),
-      });
       if (anomalies.length > 0) {
         const notifier = selectNotifier(cadenceConfig);
         try {
@@ -412,6 +474,7 @@ export async function settleService(
       ...(interactiveVerifySkipped ? { interactiveVerifySkipped } : {}),
       ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
       ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),
+      ...(gateBypasses.length > 0 ? { gateBypasses } : {}),
     };
 
     const summaryBase = join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`);
