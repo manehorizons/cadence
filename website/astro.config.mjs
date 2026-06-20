@@ -61,6 +61,7 @@ export default defineConfig({
           { label: 'Issue tracker', slug: 'contributing/issue-tracker' },
           { label: 'Triage labels', slug: 'contributing/triage-labels' },
           { label: 'Domain docs', slug: 'contributing/domain' },
+          { label: 'Release process', slug: 'contributing/release' },
         ]},
         typeDocSidebarGroup,
       ],

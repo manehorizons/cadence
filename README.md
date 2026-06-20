@@ -124,6 +124,7 @@ See **[docs/README.md](./docs/README.md)** for the complete user guide:
 - [Providers](./docs/providers.md) — OpenAI, Claude, Ollama, and custom LLMs
 - [Command reference](./docs/reference/commands.md) — exhaustive CLI reference
 - [Config reference](./docs/reference/config.md) — full `.cadence/` config schema
+- [Release process](./docs/release.md) — maintainer checklist for npm, tag, and GitHub Release integrity
 
 ## Continuous integration
 
