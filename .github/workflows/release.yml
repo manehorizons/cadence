@@ -1,8 +1,9 @@
 name: Release
 
 # Manual, deliberate publish. Trigger from the Actions tab → "Run workflow".
-# Runs the full gate, then publishes the three public packages to npm with
-# provenance and pushes the matching `v<version>` tag. Provenance requires: a
+# Runs the full gate, then publishes the public packages to npm with provenance,
+# pushes the matching `v<version>` tag, creates/updates the GitHub Release, and
+# verifies that npm + tag + release metadata agree. Provenance requires: a
 # public repo + id-token:write (OIDC) + the publish running inside this
 # workflow. The private @manehorizons/cadence-testkit is skipped automatically
 # by `pnpm -r publish` (it has "private": true).
@@ -43,7 +44,13 @@ jobs:
         run: pnpm turbo run typecheck lint test
       - name: Publish to npm (provenance)
         if: ${{ inputs.dry_run == false }}
-        run: pnpm -r publish --access public --provenance --no-git-checks
+        run: |
+          set -euo pipefail
+          if node scripts/release-integrity.mjs --verify-npm; then
+            echo "All public packages already exist on npm at the current version — skipping publish."
+            exit 0
+          fi
+          pnpm -r publish --access public --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
@@ -63,6 +70,12 @@ jobs:
           git tag -a "${version}" -m "${version} — released via the Release workflow"
           git push origin "${version}"
           echo "Pushed annotated tag ${version}."
+      - name: Create GitHub Release and verify registry
+        if: ${{ inputs.dry_run == false }}
+        run: node scripts/release-integrity.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Dry run (pack only, no publish)
         if: ${{ inputs.dry_run == true }}
         run: pnpm -r publish --access public --no-git-checks --dry-run

@@ -26,6 +26,7 @@ export const ROUTES = [
   { src: 'docs/agents/issue-tracker.md', out: 'contributing/issue-tracker', group: 'Contributing', label: 'Issue tracker' },
   { src: 'docs/agents/triage-labels.md', out: 'contributing/triage-labels', group: 'Contributing', label: 'Triage labels' },
   { src: 'docs/agents/domain.md',     out: 'contributing/domain',    group: 'Contributing', label: 'Domain docs' },
+  { src: 'docs/release.md',            out: 'contributing/release',   group: 'Contributing', label: 'Release process' },
 ];
 
 // Build a Map from repo-relative src path -> route info, for link rewriting.

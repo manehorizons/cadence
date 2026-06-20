@@ -26,6 +26,7 @@ Read in this order:
 - **[Providers](providers.md)** — Integrate with your model provider (OpenAI, Claude, custom LLMs, local models).
 - **[Command reference](reference/commands.md)** — Exhaustive reference for all CLI subcommands and their options.
 - **[Config reference](reference/config.md)** — Full `.cadence/` config schema and all settable fields.
+- **[Release process](release.md)** — Maintainer checklist for publishing npm, tag, and GitHub Release records in sync.
 
 ---
 

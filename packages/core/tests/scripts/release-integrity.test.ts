@@ -1,0 +1,145 @@
+import { describe, expect, it } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+const WORKFLOW = join(ROOT, '.github', 'workflows', 'release.yml');
+const RELEASE_DOC = join(ROOT, 'docs', 'release.md');
+
+const script = await import('../../../../scripts/release-integrity.mjs');
+
+function tempRoot() {
+  const root = mkdtempSync(join(tmpdir(), 'cadence-release-integrity-'));
+  mkdirSync(join(root, 'packages'), { recursive: true });
+  return root;
+}
+
+function writePackage(root: string, dir: string, pkg: Record<string, unknown>) {
+  const packageDir = join(root, 'packages', dir);
+  mkdirSync(packageDir, { recursive: true });
+  writeFileSync(join(packageDir, 'package.json'), JSON.stringify(pkg, null, 2));
+}
+
+describe('release-integrity helper', () => {
+  it('extracts the exact core changelog entry for a version (AC-5)', () => {
+    const entry = script.extractChangelogEntry(
+      [
+        '# @manehorizons/cadence-core',
+        '',
+        '## 1.31.0',
+        '',
+        '### Minor Changes',
+        '',
+        '- release-integrity note',
+        '',
+        '## 1.30.0',
+        '',
+        '- older',
+      ].join('\n'),
+      '1.31.0',
+    );
+
+    expect(entry).toContain('### Minor Changes');
+    expect(entry).toContain('release-integrity note');
+    expect(entry).not.toContain('1.30.0');
+  });
+
+  it('fails loudly when package versions drift from core (AC-2)', () => {
+    expect(() =>
+      script.validatePackageVersions(
+        [
+          { name: '@manehorizons/cadence-core', version: '1.31.0' },
+          { name: '@manehorizons/cadence-types', version: '1.30.0' },
+        ],
+        '1.31.0',
+      ),
+    ).toThrow('@manehorizons/cadence-types@1.30.0');
+  });
+
+  it('discovers every public @manehorizons/cadence-* package and skips private packages (AC-3)', async () => {
+    const root = tempRoot();
+    try {
+      writePackage(root, 'core', {
+        name: '@manehorizons/cadence-core',
+        version: '1.31.0',
+      });
+      writePackage(root, 'types', {
+        name: '@manehorizons/cadence-types',
+        version: '1.31.0',
+      });
+      writePackage(root, 'testkit', {
+        name: '@manehorizons/cadence-testkit',
+        version: '1.31.0',
+        private: true,
+      });
+      writePackage(root, 'other', {
+        name: '@example/not-cadence',
+        version: '1.31.0',
+      });
+
+      const packages = await script.discoverPublicPackages(root);
+
+      expect(packages.map((pkg: { name: string }) => pkg.name)).toEqual([
+        '@manehorizons/cadence-core',
+        '@manehorizons/cadence-types',
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('renders release notes from changelog, package list, and workflow run URL (AC-1)', () => {
+    const notes = script.buildReleaseNotes({
+      version: '1.31.0',
+      packages: [
+        { name: '@manehorizons/cadence-core' },
+        { name: '@manehorizons/cadence-types' },
+      ],
+      changelogEntry: '### Minor Changes\n\n- Make releases agree.',
+      runUrl: 'https://github.com/manehorizons/cadence/actions/runs/123',
+    });
+
+    expect(notes).toContain('## Package Changelog');
+    expect(notes).toContain('Make releases agree.');
+    expect(notes).toContain('`@manehorizons/cadence-core`');
+    expect(notes).toContain('https://github.com/manehorizons/cadence/actions/runs/123');
+    expect(notes).toContain('GitHub Release metadata are verified');
+  });
+});
+
+describe('Release workflow integrity wiring', () => {
+  const workflow = readFileSync(WORKFLOW, 'utf8');
+  const releaseDoc = readFileSync(RELEASE_DOC, 'utf8');
+
+  it('runs release-integrity after publishing and tagging real releases (AC-1)', () => {
+    const createReleaseStep = workflow.indexOf('run: node scripts/release-integrity.mjs');
+    expect(createReleaseStep).toBeGreaterThan(-1);
+    expect(workflow.indexOf('Publish to npm (provenance)')).toBeLessThan(
+      createReleaseStep,
+    );
+    expect(workflow.indexOf('Tag the release (v<version>)')).toBeLessThan(
+      createReleaseStep,
+    );
+  });
+
+  it('provides GitHub and npm tokens to the release-integrity step (AC-3)', () => {
+    expect(workflow).toContain('GH_TOKEN: ${{ github.token }}');
+    expect(workflow).toContain('NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}');
+  });
+
+  it('lets repair reruns skip npm publish when the registry is already current (AC-2)', () => {
+    expect(workflow).toContain('node scripts/release-integrity.mjs --verify-npm');
+    expect(workflow.indexOf('node scripts/release-integrity.mjs --verify-npm')).toBeLessThan(
+      workflow.indexOf('pnpm -r publish --access public --provenance --no-git-checks'),
+    );
+  });
+
+  it('documents npm, tag, GitHub Release, and latest marker as the release done bar (AC-4)', () => {
+    expect(releaseDoc).toContain('npm shows the new version');
+    expect(releaseDoc).toContain('matching `v<version>` git tag');
+    expect(releaseDoc).toContain('non-draft Release');
+    expect(releaseDoc).toContain('latest release');
+  });
+});
