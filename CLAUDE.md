@@ -134,7 +134,30 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.31.0`** (2026-06-19, tag `v1.31.0`
+change). The latest version is **`1.32.0`** (2026-06-23, tag `v1.32.0`
+pending): the **tutorial-rebuilt-around-the-catch** release (v1.32) — `cadence
+tutorial` now stages a lie and lets settle catch it, making the refusal the
+demo's centerpiece (sourced from `docs/tutorial-rebuild-brief.md`; no new
+DESIGN.md D-number — it leans on the existing gate model). In a throwaway
+sandbox it drives draft → approve → build, marks task `T1` DONE with a real
+`sum.mjs` but no test, and runs `cadence settle run --auto` — which **refuses**:
+the `test-coverage` gate names `AC-1` and the loop stays in BUILD. The tutorial
+then writes a real `sum.test.mjs`; the second `settle run --auto` executes it
+through `build-test-must-pass` (`node --test`, real exit code) and the loop
+closes with a SUMMARY. The previous `--ac AC-1=pass` manual assertion and
+`allowMissingCoverage` bypass are **gone** — the gates decide on real state
+alone, so a green close requires a real test that both references `AC-1` and
+actually passes (a failing test → build-test exit 1 → refuse). **No engine
+changes**: the tutorial scaffolds at `profile: standard` (where the coverage
+gate fires) and owns a new `renderSumDraft`, while `renderDemoDraft` /
+`cadence init --demo` are untouched (tutorial-only scope). Built TDD and
+**dogfooded through CADENCE's own loop** (phase 129-01, settled via `settle run
+--auto` with all five ACs derived `pass` from real task state); a CI parallel-load
+flake from the new `node --test` subprocess spawns was fixed by consolidating the
+full-run tests. All four published packages bumped `1.31.0 → 1.32.0` in lockstep
+(`cadence-core` carries the feature; `cadence-types` and both host adapters are
+version-alignment only); npm publish is the user-triggered manual `Release`
+workflow. Prior: **`1.31.0`** (2026-06-19, tag `v1.31.0`
 pending): the **first-real-DRAFT templates + onboarding front door** release
 (v1.31). It bundles the post-v1.30 template milestone and follow-on onboarding
 UX pass. **Phase 123** added `cadence draft new --template bugfix|feature|refactor`,
