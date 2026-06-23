@@ -133,51 +133,49 @@ describe('cadence tutorial', () => {
     }
   });
 
-  // AC-1 + AC-4: a full run shows the refusal (distinct, naming AC-1) BEFORE the
-  // settle, then closes to IDLE with a SUMMARY.
-  it('AC-4: full run refuses visibly then settles — refuse precedes the close', async () => {
+  // AC-2 + AC-4 + AC-5: one shared full run covers the visible refuse→fix→pass
+  // arc, the real `node --test` output, IDLE+SUMMARY, sandbox cleanup, cwd
+  // isolation, and the offline (no API key) path. Consolidated into a single
+  // run: each `runTutorial` spawns several real `node --test` subprocesses, so
+  // running it once keeps CI load (and the parallel-load flake budget) down.
+  it('AC-4: full run refuses visibly, then settles — and is offline + ephemeral', async () => {
+    expect(process.env.ANTHROPIC_API_KEY).toBeUndefined(); // AC-5: offline path
+    const sandboxesBefore = await sandboxCount();
+    const cwdCadenceBefore = existsSync(join(process.cwd(), '.cadence'));
+
     const io = bufferIO();
     const res = await runTutorial({ noPause: true }, io);
-    expect(res.exitCode).toBe(0);
     const out = io.stdout();
     const err = io.stderr();
-    // Distinct refusal banner + explicit non-close statement.
+
+    expect(res.exitCode).toBe(0);
+    // AC-4: distinct refusal banner + explicit non-close statement, naming AC-1
+    // (the reason came from the real gate, on stderr).
     expect(out).toContain('SETTLE REFUSED');
     expect(out).toMatch(/will NOT close/);
-    // The refusal reason naming AC-1 came from the real gate (stderr).
     expect(err).toMatch(/coverage:\s*AC-1 has no linked test/);
-    // The close happened after — same run reaches IDLE + SUMMARY.
-    const data = res.data as { loopPosition?: string; summaryWritten?: boolean };
-    expect(data.loopPosition).toBe('IDLE');
-    expect(data.summaryWritten).toBe(true);
-    // The refusal is printed before the settled confirmation.
+    // AC-4: the refusal is printed before the settled confirmation.
     expect(out.indexOf('SETTLE REFUSED')).toBeLessThan(out.indexOf('the loop closed'));
-  });
-
-  // AC-2: the run echoes the real `node --test` execution at both ends.
-  it('AC-2: prints the real node --test run (0 tests, then 1 passing)', async () => {
-    const io = bufferIO();
-    await runTutorial({ noPause: true }, io);
-    const out = io.stdout();
+    // AC-2: the real `node --test` execution is echoed at both ends.
     expect(out).toContain('$ node --test');
     expect(out).toMatch(/tests 0\b/); // before the fix: nothing backs AC-1
     expect(out).toMatch(/pass 1\b/); // after the fix: the real test passes
-  });
-
-  // AC-5: the sandbox is removed and the user's cwd is never scaffolded.
-  it('AC-5: cleans up its temp sandbox and never touches the cwd', async () => {
-    const before = await sandboxCount();
-    const cwdCadenceBefore = existsSync(join(process.cwd(), '.cadence'));
-    const io = bufferIO();
-    const res = await runTutorial({ noPause: true }, io);
-    expect(await sandboxCount()).toBe(before); // no leftover sandbox
+    // AC-2: the close happened — IDLE + SUMMARY.
+    const data = res.data as {
+      loopPosition?: string;
+      summaryWritten?: boolean;
+      sandbox?: string;
+    };
+    expect(data.loopPosition).toBe('IDLE');
+    expect(data.summaryWritten).toBe(true);
+    // AC-5: no leftover sandbox, cwd untouched, sandbox lived under tmpdir.
+    expect(await sandboxCount()).toBe(sandboxesBefore);
     expect(existsSync(join(process.cwd(), '.cadence'))).toBe(cwdCadenceBefore);
-    const data = res.data as { sandbox?: string };
     expect(data.sandbox).toMatch(/cadence-tutorial-/);
     expect(data.sandbox?.startsWith(tmpdir())).toBe(true);
   });
 
-  // AC-5 (failure path): a throw mid-run still removes the sandbox.
+  // AC-5 (failure path): a throw mid-run still removes the sandbox (no spawns).
   it('AC-5: removes the sandbox even when a step throws', async () => {
     const before = await sandboxCount();
     const io = bufferIO();
@@ -191,13 +189,5 @@ describe('cadence tutorial', () => {
       }),
     ).rejects.toThrow(/boom/);
     expect(await sandboxCount()).toBe(before);
-  });
-
-  // AC-5: completes offline/deterministically with no API key set.
-  it('AC-5: completes with no ANTHROPIC_API_KEY (offline mock path)', async () => {
-    expect(process.env.ANTHROPIC_API_KEY).toBeUndefined();
-    const io = bufferIO();
-    const res = await runTutorial({ noPause: true }, io);
-    expect(res.exitCode).toBe(0);
   });
 });
