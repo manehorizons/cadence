@@ -46,7 +46,8 @@ The agent isn't believed; the state is.
 
 ## Quickstart
 
-No install, no repo writes — just watch one real loop run:
+No install, no repo writes — watch one real loop run, including the moment
+settle refuses to close a phase the tests don't back, then closes once they do:
 
 ```sh
 npx -y @manehorizons/cadence-core tutorial

@@ -57,19 +57,21 @@ describe('cadence init --demo (phase 109, rec-20260617-002)', () => {
     expect(draft).toMatch(/done: AC-1/);
   });
 
-  it('AC-3: the toy template is a single shared renderer (no duplicate literal)', () => {
-    // renderDemoDraft is the one source; assert its shape.
+  it('AC-3: renderDemoDraft is init --demo\'s single-source renderer', () => {
+    // renderDemoDraft is the one source for the init --demo seed; assert its shape.
     const { id, content } = renderDemoDraft('00-demo', '01');
     expect(id).toBe('00-01');
     expect(content).toMatch(/### AC-1:/);
     expect(content).toMatch(/### T1:/);
-    // tutorial.ts consumes it and no longer carries its own template literal.
+    // Phase 129: the tutorial intentionally no longer shares this template — it
+    // owns a separate `renderSumDraft` so it can stage a genuinely test-verifiable
+    // AC. init --demo stays the sole consumer of renderDemoDraft.
     const tutSrc = readFileSync(
       join(__dirname, '../../src/cli/commands/tutorial.ts'),
       'utf8',
     );
-    expect(tutSrc).toMatch(/renderDemoDraft/);
-    expect(tutSrc).not.toMatch(/tier: quick-fix/); // template no longer inlined here
+    expect(tutSrc).not.toMatch(/renderDemoDraft/);
+    expect(tutSrc).toMatch(/renderSumDraft/);
   });
 
   it('AC-4: init without --demo seeds no demo phase and stays IDLE', async () => {
