@@ -1405,7 +1405,7 @@ non-zero only on a startup failure.
 ```
 Usage: cadence tutorial [options]
 
-Run one real DRAFT→BUILD→SETTLE loop in a throwaway sandbox
+Run one real DRAFT→BUILD→SETTLE loop — including the moment settle refuses
 ```
 
 **Options**
@@ -1415,21 +1415,27 @@ Run one real DRAFT→BUILD→SETTLE loop in a throwaway sandbox
 | `--no-pause` | Do not pause between steps (auto-advance; required for non-TTY runs — CI, pipes, agents) |
 | `-h, --help` | Display help for command |
 
-**Behavior** — the executable companion to the "Your first loop" block printed
-by [`init`](#init). Instead of *listing* the loop's commands, it *runs* them: it
-scaffolds a disposable `.cadence/` in a temp directory, drives
-draft → edit → approve → done → settle through the **real engine** (composing the
-same services the CLI does), prints each step's command and the engine's actual
-output, then removes the sandbox. Because it runs the real loop, the walkthrough
-can never drift from real behavior.
+**Behavior** — runs one real loop built around the catch. In a disposable
+`.cadence/` sandbox it drives draft → approve → build through the **real engine**,
+then stages a lie: task `T1` is marked DONE and `sum.mjs` exists, but no test
+backs `AC-1`. The first `settle run --auto` therefore **refuses** — the
+`test-coverage` gate names `AC-1` and the loop stays open. The tutorial then
+writes a real `sum.test.mjs`, the second `settle run --auto` executes it via
+`build-test-must-pass` (`node --test`, real exit code), and the loop closes with
+a SUMMARY. It uses no `--ac` manual assertion and no coverage bypass: the gates
+decide on real state alone, so the refuse → fix → pass arc can never drift from
+real behavior.
 
-It is fully **offline and side-effect free**: it uses the default mock verifier
-(no API key or network), never reads or writes the `.cadence/` of the current
-working directory, and always removes its temp sandbox — even if a step fails. In
-a TTY it pauses between steps for the reader; with `--no-pause` (or any non-TTY
-stdin) it auto-advances to completion.
+It is fully **offline and side-effect free**: the only verifier is the default
+mock (no API key or network) and the only executed test is the sandbox's own
+`node --test`; it never reads or writes the `.cadence/` of the current working
+directory, and always removes its temp sandbox — even if a step fails. In a TTY
+it auto-advances with a short pause between beats and a longer beat at the
+refusal; with `--no-pause` (or any non-TTY stdin) it runs straight through.
 
-**Exit codes** — `0` on a clean loop; non-zero if a composed step fails.
+**Exit codes** — `0` on a clean run (which *includes* the staged refusal being
+caught and then resolved); non-zero only if the loop misbehaves — e.g. the
+staged settle fails to refuse, or the fixed settle fails to close.
 
 ---
 
