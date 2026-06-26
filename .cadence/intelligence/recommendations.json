@@ -634,36 +634,6 @@
       "updatedAt": "2026-06-11T18:59:09.629Z"
     },
     {
-      "id": "rec-20260619-004",
-      "title": "doctor --fix for safe onboarding repairs",
-      "summary": "Add a `cadence doctor --fix` mode that applies safe, deterministic repairs for common setup issues: hooks path, missing host/MCP wiring when explicitly requested, stale config shape, and other fixable doctor findings. Keep risky changes as instructions only.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "doctor",
-        "config"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/doctor.ts",
-        "packages/core/src/doctor"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260619-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-19T02:46:21.299Z",
-      "updatedAt": "2026-06-19T02:46:21.299Z"
-    },
-    {
       "id": "rec-20260619-005",
       "title": "init dry-run fit check",
       "summary": "Add `cadence init --dry-run` or equivalent fit-check output that shows detected project name, test globs, suggested gate profile, host surface, provider status, and files that would be written before touching the repo.",
@@ -1445,9 +1415,42 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "130",
-      "createdAt": "2026-06-19T02:46:21.827Z",
-      "updatedAt": "2026-06-26T00:32:34.963Z",
       "archivedAt": "2026-06-26T00:32:34.963Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-19T02:46:21.827Z",
+      "updatedAt": "2026-06-26T00:32:34.963Z"
+    },
+    {
+      "id": "rec-20260619-004",
+      "title": "doctor --fix for safe onboarding repairs",
+      "summary": "Add a `cadence doctor --fix` mode that applies safe, deterministic repairs for common setup issues: hooks path, missing host/MCP wiring when explicitly requested, stale config shape, and other fixable doctor findings. Keep risky changes as instructions only.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "doctor",
+        "config"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/doctor.ts",
+        "packages/core/src/doctor"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "131-doctor-fix-for-safe-onboarding-repairs",
+      "createdAt": "2026-06-19T02:46:21.299Z",
+      "updatedAt": "2026-06-26T03:48:16.246Z",
+      "archivedAt": "2026-06-26T03:48:16.246Z",
       "archiveReason": "converted-settled"
     }
   ]

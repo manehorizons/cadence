@@ -77,6 +77,7 @@ async function checkState(root: string): Promise<DoctorCheck> {
       'warning',
       'STATE.md (the derived human view) is missing.',
       'Run any cadence command to regenerate STATE.md.',
+      'state-md',
     );
   }
   return pass('state', 'state.json parses and STATE.md is present.');
@@ -118,6 +119,7 @@ async function checkHostCommands(root: string): Promise<DoctorCheck> {
       'warning',
       `Machine-absolute run-line in ${offenders.join(', ')} — not portable across clones/machines.`,
       'Regenerate with `cadence-host-claude-code install` (without --local) to write the portable `cadence` form.',
+      'host-install',
     );
   }
   return pass(
@@ -153,6 +155,7 @@ async function checkGitHooks(root: string): Promise<DoctorCheck> {
       ? 'core.hooksPath is unset — the .githooks pre-push gate will not run.'
       : `core.hooksPath is "${hp}", not ".githooks" — the pre-push gate may not run.`,
     'Run `git config core.hooksPath .githooks` to enable the pre-push gate.',
+    'git-hooks',
   );
 }
 
@@ -183,6 +186,7 @@ async function checkHostHooks(root: string): Promise<DoctorCheck> {
     'warning',
     'No CADENCE-managed (_managedBy: "cadence") hook entries found in settings.json.',
     'Run `cadence-host-claude-code install` to (re)write the lifecycle hooks.',
+    'host-install',
   );
 }
 

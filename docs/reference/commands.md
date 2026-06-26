@@ -659,14 +659,17 @@ Diagnose this project’s CADENCE setup and report problems
 | Option | Description |
 |---|---|
 | `--json` | Emit machine-readable JSON instead of rendered text |
+| `--fix` | Apply safe, deterministic repairs for the fixable findings *(v1.34)* |
+| `--wire-host` | With `--fix`, also re-run the Claude Code host install for host findings *(v1.34)* |
+| `--dry-run` | With `--fix`, print the repair plan without writing anything *(v1.34)* |
 | `-h, --help` | Display help for command |
 
 **Behavior** — runs a set of deterministic, offline health checks on the
 project's CADENCE setup and reports each as `ok` / `warning` / `error` with a
 one-line detail and (for problems) a remediation hint. Pure filesystem + config
 inspection: no network, no AI verifier, no host process spawn, and it never
-touches loop state. **Report-only** — it diagnoses and points at the fix; it
-does not auto-repair.
+touches loop state. **Report-only by default** — it diagnoses and points at the
+fix; pass `--fix` to apply the safe repairs (see below).
 
 v1 check set:
 
@@ -698,7 +701,27 @@ non-git checkout or any git/fs failure degrades to `ok`, never throwing.
 **Exit codes** — `0` when no `error`-severity problem exists (warnings do not
 fail), `1` otherwise. Safe to use as a CI gate: `cadence doctor` will fail the
 job only on hard errors. With `--json`, stdout is a single object
-`{ ok, checks: [{ name, status, severity, detail, remediation }] }`.
+`{ ok, checks: [{ name, status, severity, detail, remediation, fixId }] }`
+(`fixId` is the repair id `--fix` uses, or `null` when there is no safe
+auto-repair).
+
+**`--fix` (v1.34)** — applies the *safe, deterministic* repairs and re-runs the
+checks. Safety comes from how each finding is classified, not from a
+confirmation prompt, so `--fix` is **non-interactive and agent/non-TTY-safe** (it
+never prompts):
+
+| Fix kind | Findings | What `--fix` does |
+|---|---|---|
+| **auto** | `git-hooks`, missing `STATE.md` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`) |
+| **wire-host** | `host-hooks`, `host-commands` | applied only with `--fix --wire-host` — re-runs `cadence-host-claude-code install` once (deduped) to rewrite the hooks/commands |
+| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `handoff-retention` | never auto-applied — reported as guidance with the check's remediation |
+
+Each repair is best-effort: a repair that fails is reported (`✗ failed`) and the
+rest still run; `--fix` never throws on a repair failure. `--fix --dry-run`
+prints the plan and writes nothing. Exit code reflects the post-fix report
+(`--dry-run` reflects the pre-fix report). With `--json`, `--fix` emits
+`{ report, fixPlan, fixesApplied, postFixReport }` (a dry run emits
+`{ report, fixPlan }`).
 
 ---
 

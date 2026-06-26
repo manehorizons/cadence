@@ -1,0 +1,49 @@
+{
+  "draftId": "131-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "fixId model field + tagged git-hooks/state-md/host-install checks; 6 tests AC-1 green",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-26T03:37:12.979Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "applyFixes auto repairs (git-hooks via git config, state-md via renderStateMd) best-effort; 3 tests AC-2 green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/doctor/fix-plan.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/doctor/fix.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/doctor/fix-apply.test.ts"
+      ],
+      "updatedAt": "2026-06-26T03:42:02.945Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "wire-host gating + dedupe-by-fixId (install once for 2 host findings); injectable hostInstall; 2 tests AC-4 green (mutation-verified)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/doctor/fix-wire-host.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/doctor/fix.ts"
+      ],
+      "updatedAt": "2026-06-26T03:43:33.302Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "--fix/--wire-host/--dry-run CLI + render helpers + docs; --json {report,fixPlan,fixesApplied,postFixReport}; 5 tests AC-3/AC-5 green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/doctor-fix.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/doctor/render.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/doctor.ts",
+        "/home/thomas/projects/cadence/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-06-26T03:47:02.241Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "pure planFixes(report) + FIX_KIND classification; only non-ok; auto/wire-host/manual; 5 tests AC-1 green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.changeset/doctor-fix.md"
+      ],
+      "updatedAt": "2026-06-26T03:48:16.030Z"
+    }
+  }
+}
