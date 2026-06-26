@@ -134,7 +134,25 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.32.0`** (2026-06-23, tag `v1.32.0`
+change). The latest version is **`1.33.0`** (2026-06-26, tag `v1.33.0`
+pending): the **first-real-phase agent-prompt** release (v1.33) —
+**`cadence agent-prompt`**, a command that hands the user a copy-paste prompt
+instructing an AI agent to scaffold their first real CADENCE phase (testable
+ACs + a task breakdown, with an explicit **stop at the approval gate** so the
+human still approves the DRAFT). Sourced from rec-20260619-006 (no new DESIGN.md
+D-number — onboarding/legibility, the same lane as `draft new --template` and
+`tutorial`/`start`). **Phase 130** added a pure, host-agnostic
+**`renderAgentPrompt`** renderer (AC-1, AC-4) shared by two surfaces: the new
+`cadence agent-prompt` command (AC-2, whose `--json` `goal` is `null` until a
+phase exists) and a **`cadence init`** "hand it to your agent" output block
+(AC-3), plus quickstart command-map + `docs/` wiring teaching the command
+(AC-5). Built TDD and **dogfooded through CADENCE's own loop** (phase 130-01,
+settled via `settle run --auto` with AC-1..AC-5 derived PASS), shipped as
+**PR #111** (squash `689249b`). All four published packages bumped
+`1.32.0 → 1.33.0` in lockstep (`cadence-core` carries the feature;
+`cadence-types` and both host adapters are version-alignment only); npm publish
+is the user-triggered manual `Release` workflow. Prior: **`1.32.0`**
+(2026-06-23, tag `v1.32.0`
 pending): the **tutorial-rebuilt-around-the-catch** release (v1.32) — `cadence
 tutorial` now stages a lie and lets settle catch it, making the refusal the
 demo's centerpiece (sourced from `docs/tutorial-rebuild-brief.md`; no new
