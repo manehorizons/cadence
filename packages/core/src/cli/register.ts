@@ -28,6 +28,7 @@ import { registerExplainCommand } from './commands/explain.js';
 import { registerQuickstartCommand } from './commands/quickstart.js';
 import { registerStartCommand } from './commands/start.js';
 import { registerActivateCommand } from './commands/activate.js';
+import { registerAgentPromptCommand } from './commands/agent-prompt.js';
 
 export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
@@ -59,4 +60,5 @@ export function registerAllCommands(program: Command): void {
   registerQuickstartCommand(program);
   registerStartCommand(program);
   registerActivateCommand(program);
+  registerAgentPromptCommand(program);
 }
