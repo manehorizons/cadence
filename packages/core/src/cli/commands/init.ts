@@ -22,6 +22,7 @@ import { draftNewService } from '../../services/draft-new.js';
 import type { CommandIO } from '../../services/io.js';
 import { planActivation } from '../../activate/plan.js';
 import { setPath } from '../../config-edit/apply.js';
+import { renderAgentPrompt } from '../../agent-prompt/render.js';
 import {
   ScriptedPrompter,
   StdinPrompter,
@@ -507,6 +508,14 @@ export function registerInitCommand(program: Command): void {
           `  Not sure where to go next? Run \`cadence start\` for a guided menu.`,
         );
         console.log(`  Docs: .cadence/ROADMAP.md and the project README.`);
+        console.log('');
+        console.log(`  Hand it to your AI agent`);
+        console.log(`  ────────────────────────`);
+        console.log(`  Paste this to your coding agent to scaffold your first real phase:`);
+        console.log('');
+        process.stdout.write(renderAgentPrompt());
+        console.log('');
+        console.log(`  Reprint with your goal:  cadence agent-prompt --goal "..."`);
         if (demoSeeded) {
           console.log('');
           console.log(`  Demo phase ready`);

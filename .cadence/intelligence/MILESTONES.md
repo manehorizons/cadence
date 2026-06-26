@@ -4,65 +4,7 @@
 
 ## Proposed
 
-### mil-rec-rec-20260619-001 — No-install first touch
-
-- objective: Document and optimize the no-install path: `npx -y @manehorizons/cadence-core tutorial` should let a newcomer feel the CADENCE loop before committing to a global install or repo initialization. This reduces adoption friction and makes the first touch side-effect free.
-- status: proposed
-- recommendations: rec-20260619-001
-- pre-mortem:
-  - likely failure modes:
-    - _(why might this fail?)_
-  - hidden dependencies:
-    - _(what must already be true?)_
-  - drift risks:
-    - Milestone touches documentation surfaces — spec/doc drift risk.
-  - out of scope:
-    - _(what is explicitly NOT in this milestone?)_
-
-### mil-rec-rec-20260619-002 — Make cadence tutorial the hero path
-
-- objective: Reposition the existing throwaway `cadence tutorial` as the primary README/quickstart call-to-action before global install or in-repo init. The sandbox already runs the real loop; onboarding should make it impossible to miss.
-- status: proposed
-- recommendations: rec-20260619-002
-- pre-mortem:
-  - likely failure modes:
-    - _(why might this fail?)_
-  - hidden dependencies:
-    - _(what must already be true?)_
-  - drift risks:
-    - Milestone touches documentation surfaces — spec/doc drift risk.
-  - out of scope:
-    - _(what is explicitly NOT in this milestone?)_
-
-### mil-rec-rec-20260619-006 — First real phase agent prompt
-
-- objective: After init, print or generate a copy-paste prompt for the user's AI agent: create a quick-fix draft for the stated goal, keep ACs testable, and stop for approval. This bridges the CLI into the actual agent workflow.
-- status: proposed
-- recommendations: rec-20260619-006
-- pre-mortem:
-  - likely failure modes:
-    - _(why might this fail?)_
-  - hidden dependencies:
-    - _(what must already be true?)_
-  - drift risks:
-    - Milestone touches documentation surfaces — spec/doc drift risk.
-  - out of scope:
-    - _(what is explicitly NOT in this milestone?)_
-
-### mil-rec-rec-20260619-007 — Failure-first tutorial mode
-
-- objective: Add `cadence tutorial --fail-first` that intentionally shows a settle refusal, explains why the gate blocked closure, then applies the fix and settles cleanly. Teach the product's core value: refusal-to-settle, not just a happy path.
-- status: proposed
-- recommendations: rec-20260619-007
-- pre-mortem:
-  - likely failure modes:
-    - _(why might this fail?)_
-  - hidden dependencies:
-    - _(what must already be true?)_
-  - drift risks:
-    - Milestone touches documentation surfaces — spec/doc drift risk.
-  - out of scope:
-    - _(what is explicitly NOT in this milestone?)_
+None.
 
 ## Accepted
 
@@ -120,6 +62,7 @@
 
 - mil-rec-rec-20260611-003 — Make real verification the felt default — close the gap between the enforcement wedge and the mock default → .cadence/intelligence/exports/mil-rec-rec-20260611-003/SPEC.md
 - mil-rec-rec-20260619-003 — Draft templates for first real work → .cadence/intelligence/exports/mil-rec-rec-20260619-003/SPEC.md
+- mil-rec-rec-20260619-006 — First real phase agent prompt → .cadence/intelligence/exports/mil-rec-rec-20260619-006/SPEC.md
 
 ## Closed
 

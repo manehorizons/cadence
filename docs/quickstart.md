@@ -118,6 +118,10 @@ cadence settle run --auto
 If you are unsure what state you are in, run `cadence start` for a guided menu
 or `cadence progress` for the next exact command.
 
+Driving CADENCE with an AI agent? Run `cadence agent-prompt --goal "<your goal>"`
+(also printed at the end of `cadence init`) and paste the result to your agent —
+it scaffolds the DRAFT, keeps the ACs testable, and stops for your approval.
+
 ---
 
 ## Step 1 — Set up a toy project manually

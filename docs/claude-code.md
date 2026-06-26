@@ -228,6 +228,10 @@ The agent itself does not need to know CADENCE internals. It calls the same
 engine commands an engineer would type manually — the integration surfaces
 (hooks + slash commands) are thin wrappers around `cadence <cmd>`.
 
+To bootstrap the first phase, run `cadence agent-prompt --goal "<your goal>"` and
+paste the output to your agent — it produces a DRAFT with testable acceptance
+criteria and stops at approval, the same loop the slash commands drive.
+
 Hook capabilities declared for this host:
 
 | Capability | Value |

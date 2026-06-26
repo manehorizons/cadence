@@ -31,6 +31,7 @@ exhaustive option lists (every flag and its default).
 - [status — inspect loop state](#status--inspect-loop-state)
 - [progress — next recommended action](#progress--next-recommended-action)
 - [config — read and write config](#config--read-and-write-config)
+- [Hand the loop to your AI agent](#hand-the-loop-to-your-ai-agent)
 - [Two-commit convention in practice](#two-commit-convention-in-practice)
 
 ---
@@ -339,6 +340,16 @@ above (`cadence_progress`/`status`/`recommend` read; `cadence_draft_new`/
 write). Command-boundary gates run exactly as on the CLI; ambient edit-time gates
 require host hooks and are not available over MCP. Setup and the full tool table:
 [docs/mcp.md](mcp.md).
+
+---
+
+## Hand the loop to your AI agent
+
+    cadence agent-prompt --goal "fix the login timeout"
+
+Prints a ready-to-paste prompt for your coding agent. Without `--goal` it prints
+a `<your goal>` placeholder. The same block also appears at the end of
+`cadence init`.
 
 ---
 

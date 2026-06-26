@@ -40,6 +40,7 @@ const COMMAND_MAP: QuickstartMapEntry[] = [
   { name: 'init', note: 'scaffold .cadence/ in this repo' },
   { name: 'tutorial', note: 'watch one real loop run (throwaway sandbox)' },
   { name: 'explain', note: 'learn the model — loop, gates, tiers, profiles, config' },
+  { name: 'agent-prompt', note: 'copy-paste prompt to hand the first phase to your AI agent' },
   { name: 'config explain', note: 'see what your config actually does' },
   { name: 'activate', note: 'turn on real verification (pick a provider)' },
   { name: 'doctor', note: 'health-check your setup' },
