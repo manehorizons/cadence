@@ -330,38 +330,6 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
 
-## rec-20260619-001 — No-install first touch
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, docs, cli
-- files: README.md, docs/quickstart.md, packages/core/src/cli/commands/tutorial.ts
-- evidence: 2026-06-19 adoption review: tutorial exists, but README still leads with install/init; npx tutorial is the lowest-commitment first touch.
-- next: cadence milestone propose
-
-Document and optimize the no-install path: `npx -y @manehorizons/cadence-core tutorial` should let a newcomer feel the CADENCE loop before committing to a global install or repo initialization. This reduces adoption friction and makes the first touch side-effect free.
-
-## rec-20260619-002 — Make cadence tutorial the hero path
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, docs
-- files: README.md, docs/quickstart.md, packages/core/src/start/menu.ts, packages/core/src/quickstart/build.ts
-- evidence: 2026-06-19 adoption review: tutorial is already implemented and safe, but the public path still centers install/init first.
-- next: cadence milestone propose
-
-Reposition the existing throwaway `cadence tutorial` as the primary README/quickstart call-to-action before global install or in-repo init. The sandbox already runs the real loop; onboarding should make it impossible to miss.
-
 ## rec-20260619-004 — doctor --fix for safe onboarding repairs
 
 - status: candidate
@@ -393,38 +361,6 @@ Add a `cadence doctor --fix` mode that applies safe, deterministic repairs for c
 - next: cadence milestone propose
 
 Add `cadence init --dry-run` or equivalent fit-check output that shows detected project name, test globs, suggested gate profile, host surface, provider status, and files that would be written before touching the repo.
-
-## rec-20260619-006 — First real phase agent prompt
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, agents, docs
-- files: packages/core/src/cli/commands/init.ts, docs/claude-code.md, docs/quickstart.md
-- evidence: 2026-06-19 adoption review: users adopting agent workflows often need the bridge phrase more than another flag.
-- next: cadence milestone propose
-
-After init, print or generate a copy-paste prompt for the user's AI agent: create a quick-fix draft for the stated goal, keep ACs testable, and stop for approval. This bridges the CLI into the actual agent workflow.
-
-## rec-20260619-007 — Failure-first tutorial mode
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, cli, tutorial
-- files: packages/core/src/cli/commands/tutorial.ts, README.md, docs/quickstart.md
-- evidence: 2026-06-19 adoption review: the existing tutorial proves the loop, but a failure-first variant would communicate the unique wedge faster.
-- next: cadence milestone propose
-
-Add `cadence tutorial --fail-first` that intentionally shows a settle refusal, explains why the gate blocked closure, then applies the fix and settles cleanly. Teach the product's core value: refusal-to-settle, not just a happy path.
 
 ## rec-20260619-008 — Team rollout kit
 

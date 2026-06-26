@@ -1,0 +1,63 @@
+{
+  "draftId": "130-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-26T00:10:15.653Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/agent-prompt.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/agent-prompt.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/register.ts",
+        "/home/thomas/projects/cadence/.superpowers/sdd/task-2-report.md"
+      ],
+      "updatedAt": "2026-06-26T00:13:51.988Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/init-agent-prompt.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/init.ts",
+        "/home/thomas/projects/cadence/.superpowers/sdd/task-3-report.md"
+      ],
+      "updatedAt": "2026-06-26T00:17:10.401Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/quickstart/build.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/quickstart/build.ts",
+        "/home/thomas/projects/cadence/.superpowers/sdd/task-4-report.md"
+      ],
+      "updatedAt": "2026-06-26T00:19:57.076Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/docs/cli.md",
+        "/home/thomas/projects/cadence/docs/quickstart.md",
+        "/home/thomas/projects/cadence/docs/claude-code.md",
+        "/home/thomas/projects/cadence/.superpowers/sdd/task-5-report.md"
+      ],
+      "updatedAt": "2026-06-26T00:24:25.885Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.changeset/agent-prompt-first-phase.md",
+        "/home/thomas/projects/cadence/.superpowers/sdd/task-6-report.md"
+      ],
+      "updatedAt": "2026-06-26T00:27:24.931Z"
+    }
+  }
+}

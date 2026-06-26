@@ -1,16 +1,304 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-18T23:07:53.475Z",
-  "ranked": [],
+  "generatedAt": "2026-06-25T22:37:49.818Z",
+  "ranked": [
+    {
+      "id": "rec-20260619-001",
+      "title": "No-install first touch",
+      "raw": 28.7,
+      "score": 77,
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status accepted",
+          "value": 6
+        },
+        {
+          "label": "ready ready-for-milestone",
+          "value": 7
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260619-002",
+      "title": "Make cadence tutorial the hero path",
+      "raw": 28.7,
+      "score": 77,
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status accepted",
+          "value": 6
+        },
+        {
+          "label": "ready ready-for-milestone",
+          "value": 7
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260619-006",
+      "title": "First real phase agent prompt",
+      "raw": 28.7,
+      "score": 77,
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status accepted",
+          "value": 6
+        },
+        {
+          "label": "ready ready-for-milestone",
+          "value": 7
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260619-007",
+      "title": "Failure-first tutorial mode",
+      "raw": 28.7,
+      "score": 77,
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status accepted",
+          "value": 6
+        },
+        {
+          "label": "ready ready-for-milestone",
+          "value": 7
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260619-004",
+      "title": "doctor --fix for safe onboarding repairs",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260619-005",
+      "title": "init dry-run fit check",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260619-008",
+      "title": "Team rollout kit",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    }
+  ],
   "parked": [],
   "needsAttention": [],
   "advisory": {
-    "kind": "empty",
-    "primary": "No actionable recommendations — add one with `cadence recommendation add`."
+    "kind": "top-recommendation",
+    "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 21,
-    "ranked": 0,
+    "total": 28,
+    "ranked": 7,
     "parked": 0,
     "needsAttention": 0,
     "excluded": 21

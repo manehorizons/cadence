@@ -634,68 +634,6 @@
       "updatedAt": "2026-06-11T18:59:09.629Z"
     },
     {
-      "id": "rec-20260619-001",
-      "title": "No-install first touch",
-      "summary": "Document and optimize the no-install path: `npx -y @manehorizons/cadence-core tutorial` should let a newcomer feel the CADENCE loop before committing to a global install or repo initialization. This reduces adoption friction and makes the first touch side-effect free.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "docs",
-        "cli"
-      ],
-      "affectedFiles": [
-        "README.md",
-        "docs/quickstart.md",
-        "packages/core/src/cli/commands/tutorial.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260619-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-19T02:46:20.224Z",
-      "updatedAt": "2026-06-19T02:47:46.896Z"
-    },
-    {
-      "id": "rec-20260619-002",
-      "title": "Make cadence tutorial the hero path",
-      "summary": "Reposition the existing throwaway `cadence tutorial` as the primary README/quickstart call-to-action before global install or in-repo init. The sandbox already runs the real loop; onboarding should make it impossible to miss.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "docs"
-      ],
-      "affectedFiles": [
-        "README.md",
-        "docs/quickstart.md",
-        "packages/core/src/start/menu.ts",
-        "packages/core/src/quickstart/build.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260619-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-19T02:46:20.598Z",
-      "updatedAt": "2026-06-19T02:47:47.061Z"
-    },
-    {
       "id": "rec-20260619-004",
       "title": "doctor --fix for safe onboarding repairs",
       "summary": "Add a `cadence doctor --fix` mode that applies safe, deterministic repairs for common setup issues: hooks path, missing host/MCP wiring when explicitly requested, stale config shape, and other fixable doctor findings. Keep risky changes as instructions only.",
@@ -754,68 +692,6 @@
       "decisionIds": [],
       "createdAt": "2026-06-19T02:46:21.651Z",
       "updatedAt": "2026-06-19T02:46:21.651Z"
-    },
-    {
-      "id": "rec-20260619-006",
-      "title": "First real phase agent prompt",
-      "summary": "After init, print or generate a copy-paste prompt for the user's AI agent: create a quick-fix draft for the stated goal, keep ACs testable, and stop for approval. This bridges the CLI into the actual agent workflow.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "agents",
-        "docs"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts",
-        "docs/claude-code.md",
-        "docs/quickstart.md"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260619-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-19T02:46:21.827Z",
-      "updatedAt": "2026-06-19T02:47:47.397Z"
-    },
-    {
-      "id": "rec-20260619-007",
-      "title": "Failure-first tutorial mode",
-      "summary": "Add `cadence tutorial --fail-first` that intentionally shows a settle refusal, explains why the gate blocked closure, then applies the fix and settles cleanly. Teach the product's core value: refusal-to-settle, not just a happy path.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "cli",
-        "tutorial"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/tutorial.ts",
-        "README.md",
-        "docs/quickstart.md"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260619-007"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-06-19T02:46:22.162Z",
-      "updatedAt": "2026-06-19T02:47:47.588Z"
     },
     {
       "id": "rec-20260619-008",
@@ -1433,9 +1309,145 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "123-draft-templates",
-      "createdAt": "2026-06-19T02:46:20.958Z",
-      "updatedAt": "2026-06-19T02:54:41.388Z",
       "archivedAt": "2026-06-19T02:54:41.388Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-06-19T02:46:20.958Z",
+      "updatedAt": "2026-06-19T02:54:41.388Z"
+    },
+    {
+      "id": "rec-20260619-001",
+      "title": "No-install first touch",
+      "summary": "Document and optimize the no-install path: `npx -y @manehorizons/cadence-core tutorial` should let a newcomer feel the CADENCE loop before committing to a global install or repo initialization. This reduces adoption friction and makes the first touch side-effect free.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "docs",
+        "cli"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/quickstart.md",
+        "packages/core/src/cli/commands/tutorial.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "v1.31.0 — README Quickstart leads with npx -y @manehorizons/cadence-core tutorial (no-install first touch)",
+      "archivedAt": "2026-06-25T23:03:57.866Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-06-19T02:46:20.224Z",
+      "updatedAt": "2026-06-25T23:03:57.866Z"
+    },
+    {
+      "id": "rec-20260619-002",
+      "title": "Make cadence tutorial the hero path",
+      "summary": "Reposition the existing throwaway `cadence tutorial` as the primary README/quickstart call-to-action before global install or in-repo init. The sandbox already runs the real loop; onboarding should make it impossible to miss.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "docs"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/quickstart.md",
+        "packages/core/src/start/menu.ts",
+        "packages/core/src/quickstart/build.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "v1.31.0 — cadence tutorial is the hero Quickstart CTA, ahead of global install",
+      "archivedAt": "2026-06-25T23:03:58.035Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-06-19T02:46:20.598Z",
+      "updatedAt": "2026-06-25T23:03:58.035Z"
+    },
+    {
+      "id": "rec-20260619-007",
+      "title": "Failure-first tutorial mode",
+      "summary": "Add `cadence tutorial --fail-first` that intentionally shows a settle refusal, explains why the gate blocked closure, then applies the fix and settles cleanly. Teach the product's core value: refusal-to-settle, not just a happy path.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "tutorial"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/tutorial.ts",
+        "README.md",
+        "docs/quickstart.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "v1.32.0 / phase 129 — tutorial rebuilt around refuse→fix→pass by default (stronger than the proposed --fail-first flag)",
+      "archivedAt": "2026-06-25T23:03:58.197Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-06-19T02:46:22.162Z",
+      "updatedAt": "2026-06-25T23:03:58.197Z"
+    },
+    {
+      "id": "rec-20260619-006",
+      "title": "First real phase agent prompt",
+      "summary": "After init, print or generate a copy-paste prompt for the user's AI agent: create a quick-fix draft for the stated goal, keep ACs testable, and stop for approval. This bridges the CLI into the actual agent workflow.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "agents",
+        "docs"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "docs/claude-code.md",
+        "docs/quickstart.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260619-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "130",
+      "createdAt": "2026-06-19T02:46:21.827Z",
+      "updatedAt": "2026-06-26T00:32:34.963Z",
+      "archivedAt": "2026-06-26T00:32:34.963Z",
       "archiveReason": "converted-settled"
     }
   ]
