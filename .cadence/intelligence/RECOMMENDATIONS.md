@@ -330,22 +330,6 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
 
-## rec-20260619-004 — doctor --fix for safe onboarding repairs
-
-- status: candidate
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, doctor, config
-- files: packages/core/src/cli/commands/doctor.ts, packages/core/src/doctor
-- evidence: 2026-06-19 adoption review: doctor already points to next actions; a fix mode would convert diagnosis into momentum.
-- next: cadence milestone propose
-
-Add a `cadence doctor --fix` mode that applies safe, deterministic repairs for common setup issues: hooks path, missing host/MCP wiring when explicitly requested, stale config shape, and other fixable doctor findings. Keep risky changes as instructions only.
-
 ## rec-20260619-005 — init dry-run fit check
 
 - status: candidate
