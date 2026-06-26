@@ -1,5 +1,20 @@
 # @manehorizons/cadence-core
 
+## 1.34.0
+
+### Minor Changes
+
+- e8101b8: Add `cadence doctor --fix`: apply safe, deterministic repairs for the fixable
+  doctor findings (git-hooks → `core.hooksPath=.githooks`; regenerate a missing
+  `STATE.md`), with a `--wire-host` opt-in that re-runs the Claude Code host
+  install for host findings and a `--dry-run` preview that writes nothing. Risky
+  findings stay manual guidance. Non-interactive and agent/non-TTY-safe.
+
+### Patch Changes
+
+- Updated dependencies [e8101b8]
+  - @manehorizons/cadence-types@1.34.0
+
 ## 1.33.0
 
 ### Minor Changes
