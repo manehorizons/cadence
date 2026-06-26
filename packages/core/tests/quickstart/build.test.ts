@@ -33,4 +33,10 @@ describe('buildQuickstart', () => {
     expect(qs.header).toMatch(/BUILD/);
     expect(qs.header).toContain('94-x');
   });
+
+  // AC-5: agent-prompt is discoverable in the onboarding command map.
+  it('AC-5: lists agent-prompt in the command map', () => {
+    const qs = buildQuickstart({ initialized: false });
+    expect(qs.commandMap.some((e) => e.name === 'agent-prompt')).toBe(true);
+  });
 });
