@@ -38,6 +38,7 @@ Two CLIs are documented here:
   - [start](#start)
   - [quickstart](#quickstart)
   - [activate](#activate)
+  - [agent-prompt](#agent-prompt)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -90,6 +91,7 @@ explain
 start
 quickstart
 activate
+agent-prompt
 <!-- cadence:commands:end -->
 
 ---
@@ -1575,6 +1577,35 @@ the exact `export …` line is printed (set-up-now-key-later). In a TTY with no
 **Exit codes** — `0` on success or key-missing (non-fatal); `1` when a live check fails,
 the config is invalid, or a non-interactive run omits `--provider`. (`--print` writes
 nothing and exits `0`.)
+
+---
+
+### agent-prompt
+
+```
+Usage: cadence agent-prompt [options]
+
+Print a copy-paste prompt that tells your AI agent to scaffold the first real CADENCE phase
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--goal <text>` | Bake a specific goal into the prompt (e.g. `"fix the login timeout"`). Without it, the prompt contains a `<your goal>` placeholder |
+| `--json` | Emit `{ goal, prompt }` as JSON instead of plain text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — print a copy-paste prompt that tells your AI agent to scaffold the first
+real CADENCE phase: run `cadence draft new --template …`, write testable acceptance
+criteria tagged `AC-N`, and stop at approval for your review. `--goal` bakes a
+specific goal into the prompt; `--json` emits `{ goal, prompt }`. Pure output —
+reads and changes nothing.
+
+The same block is also printed at the end of `cadence init` so you see it on every
+new project without having to ask for it.
+
+**Exit codes** — `0` always (pure output; no state read or write).
 
 ---
 
