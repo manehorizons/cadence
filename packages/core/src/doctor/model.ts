@@ -11,6 +11,12 @@ export interface DoctorCheck {
   severity: DoctorSeverity;
   detail: string;
   remediation: string | null;
+  /**
+   * Stable id of a deterministic repair `cadence doctor --fix` can apply for this
+   * finding, or `null` when the finding has no safe auto-repair (the fix-planner
+   * classifies by this id, never by parsing `detail`). Phase 131.
+   */
+  fixId: string | null;
 }
 
 export interface DoctorReport {
@@ -26,7 +32,7 @@ export interface DoctorEnv {
 }
 
 export function pass(name: string, detail: string): DoctorCheck {
-  return { name, status: 'ok', severity: 'ok', detail, remediation: null };
+  return { name, status: 'ok', severity: 'ok', detail, remediation: null, fixId: null };
 }
 
 export function fail(
@@ -34,8 +40,9 @@ export function fail(
   severity: 'warning' | 'error',
   detail: string,
   remediation: string,
+  fixId: string | null = null,
 ): DoctorCheck {
-  return { name, status: severity, severity, detail, remediation };
+  return { name, status: severity, severity, detail, remediation, fixId };
 }
 
 export function rollup(checks: DoctorCheck[]): DoctorReport {
