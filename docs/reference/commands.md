@@ -1585,7 +1585,7 @@ nothing and exits `0`.)
 ```
 Usage: cadence agent-prompt [options]
 
-Print a copy-paste prompt that tells your AI agent to scaffold the first real CADENCE phase
+Print a copy-paste prompt that hands the loop to your AI agent
 ```
 
 **Options**
@@ -1593,7 +1593,7 @@ Print a copy-paste prompt that tells your AI agent to scaffold the first real CA
 | Option | Description |
 |---|---|
 | `--goal <text>` | Bake a specific goal into the prompt (e.g. `"fix the login timeout"`). Without it, the prompt contains a `<your goal>` placeholder |
-| `--json` | Emit `{ goal, prompt }` as JSON instead of plain text |
+| `--json` | Emit `{ goal, prompt }` as JSON instead of plain text (`goal` is `null` when `--goal` is omitted) |
 | `-h, --help` | Display help for command |
 
 **Behavior** — print a copy-paste prompt that tells your AI agent to scaffold the first
