@@ -172,6 +172,7 @@ Scaffold a new .cadence/ directory in the current working tree
 | `--gate-profile <p>` | (suggested from git history) | Gate profile: `strict \| standard \| auto` |
 | `--demo` | — | Seed a ready-to-approve demo phase (`01-demo`, objective + AC-1 + T1) so you can run a full loop in this repo with no hand-edit |
 | `--activate` | — | When `ANTHROPIC_API_KEY` is present, turn on real verification (`verifier.provider=anthropic`, deep-verify seam) in the same step. The key is never stored; no live check runs (that stays in `cadence activate`) |
+| `--dry-run` | — | **Fit-check.** Resolve everything init would (name, gate profile, layout, test globs, verification/provider status, host surface, and the exact files it would create) and print a preview **without touching the repo** — then exit 0. Honors the resolution flags above; safe to run inside a populated or already-initialized repo |
 | `--wire-host` | — | When a `.claude/` workspace is present, run `cadence-host-claude-code install` in the same step (subprocess spawn; auto-run, no prompt) |
 | `--skip-host-wire` | — | Never wire the Claude Code host, even when `.claude/` is present |
 | `--claude-md` | — | Only (re)generate the managed CLAUDE.md block at the repo root; allowed on an already-initialized project |
@@ -192,12 +193,21 @@ phase so the very next commands are `draft approve 01-demo 01` → `done T1` →
 `settle run --ac AC-1=pass`. `--activate` flips on real verification when a key
 is already in the environment.
 
+`--dry-run` is a non-destructive **fit-check**: run it first to preview the
+detected name, gate profile, layout, test globs, provider status, host surface,
+and the files init would write — before committing to the scaffold in an existing
+repo. It writes nothing, honors the resolution flags (e.g. `--gate-profile`,
+`--activate`, `--demo`), and — unlike a real `init` — previews rather than
+refuses when `.cadence/` already exists, so it stays a safe pre-flight check.
+
 The `--claude-md` flag is the only `init` option permitted on an
 already-initialized project; it is used to refresh the CLAUDE.md block without
 re-scaffolding state.
 
 **Exit codes** — exits non-zero if the directory is already initialized (without
-`--claude-md`) or if required options are missing in a non-interactive context.
+`--claude-md` or `--dry-run`) or if required options are missing in a
+non-interactive context. `--dry-run` always exits 0 (even on an already-initialized
+repo); an invalid `--gate-profile` exits 2.
 
 ---
 

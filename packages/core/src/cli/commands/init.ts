@@ -1,8 +1,8 @@
 import type { Command } from 'commander';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { existsSync, statSync, readFileSync } from 'node:fs';
-import { execSync, spawn } from 'node:child_process';
-import { join, basename } from 'node:path';
+import { existsSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { join } from 'node:path';
 import {
   presets,
   emptyState,
@@ -10,6 +10,14 @@ import {
   type Profile,
   type CadenceConfig,
 } from '@manehorizons/cadence-types';
+import {
+  deriveName,
+  detectTestGlobs,
+  planInit,
+  renderInitPlan,
+  resolveGateProfile,
+  suggestGateProfile,
+} from '../../init/plan.js';
 import { atomicWriteJSON } from '../../state/atomic-write.js';
 import { SimpleStateBackend } from '../../state/simple.js';
 import {
@@ -28,8 +36,6 @@ import {
   StdinPrompter,
   type Prompter,
 } from '../../verify/prompter.js';
-
-const GATE_PROFILES: readonly Profile[] = ['strict', 'standard', 'auto'];
 
 /**
  * Build a prompter the same way `draft.ts approve` does: a scripted prompter
@@ -50,95 +56,6 @@ function makePrompter(): Prompter | null {
     }
   }
   return null;
-}
-
-/**
- * Suggest a gate profile from git history: a repo with ≥20 commits is
- * mature enough to want the `standard` gate set; a reachable repo with
- * fewer commits gets `auto`; any git failure (no repo, bare, zero commits)
- * also falls back to `auto`. Never throws.
- */
-export function suggestGateProfile(cwd: string): Profile {
-  try {
-    const out = execSync('git rev-list --count HEAD', {
-      cwd,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
-    const n = Number.parseInt(out, 10);
-    if (Number.isNaN(n)) return 'auto';
-    return n >= 20 ? 'standard' : 'auto';
-  } catch {
-    return 'auto';
-  }
-}
-
-/**
- * Pick `verification.testGlobs` from the repo's layout (F2, Phase 29.1
- * shakedown). A `packages/` directory at the init root means a monorepo —
- * keep the workspace glob (correct for cadence's own dogfood). Any other
- * shape is treated as single-package: a depth-agnostic `**\/*.test.ts(x)`
- * glob so the test-coverage gate can match tests under `tests/`, `src/`,
- * `__tests__/`, etc. The scanner already prunes node_modules/dist/.git/.turbo,
- * so the broad glob is safe. Never throws.
- */
-export function detectTestGlobs(cwd: string): string[] {
-  let monorepo = false;
-  try {
-    monorepo = statSync(join(cwd, 'packages')).isDirectory();
-  } catch {
-    monorepo = false;
-  }
-  return monorepo
-    ? ['packages/**/*.test.ts', 'packages/**/*.test.tsx']
-    : ['**/*.test.ts', '**/*.test.tsx'];
-}
-
-/**
- * Phase 108 (rec-20260617-001) — zero-prompt name derivation. `--name` wins;
- * otherwise read `package.json#name` (scope stripped: `@scope/foo` → `foo`),
- * then fall back to the working-directory basename, then the literal
- * `unnamed` only when nothing else is available. Never prompts, never throws.
- */
-export function deriveName(cwd: string, flagName: string | undefined): string {
-  if (flagName !== undefined) return flagName;
-  try {
-    const pkg = JSON.parse(readFileSync(join(cwd, 'package.json'), 'utf8'));
-    if (typeof pkg?.name === 'string' && pkg.name.trim().length > 0) {
-      const trimmed = pkg.name.trim();
-      const lastSegment = trimmed.includes('/')
-        ? (trimmed.split('/').pop() as string)
-        : trimmed;
-      if (lastSegment.length > 0) return lastSegment;
-    }
-  } catch {
-    /* no/unreadable package.json — fall through to dir name */
-  }
-  const base = basename(cwd).trim();
-  return base.length > 0 ? base : 'unnamed';
-}
-
-function isGateProfile(v: string): v is Profile {
-  return (GATE_PROFILES as readonly string[]).includes(v);
-}
-
-/**
- * Phase 108 — zero-prompt gate-profile resolution. `--gate-profile` wins (and
- * is validated); otherwise use the git-history suggestion. No prompt.
- */
-function resolveGateProfile(
-  flagProfile: string | undefined,
-  suggestion: Profile,
-): Profile {
-  if (flagProfile !== undefined) {
-    if (!isGateProfile(flagProfile)) {
-      throw new Error(
-        `Invalid --gate-profile: ${flagProfile}. Expected one of strict|standard|auto.`,
-      );
-    }
-    return flagProfile;
-  }
-  return suggestion;
 }
 
 /**
@@ -304,6 +221,10 @@ export function registerInitCommand(program: Command): void {
       '--activate',
       'turn on real verification when ANTHROPIC_API_KEY is present (writes verifier.provider=anthropic; never stores the key)',
     )
+    .option(
+      '--dry-run',
+      'preview what init would resolve and write (a fit-check) without touching the repo',
+    )
     .action(
       async (opts: {
         name?: string;
@@ -315,6 +236,7 @@ export function registerInitCommand(program: Command): void {
         skipHostWire?: boolean;
         demo?: boolean;
         activate?: boolean;
+        dryRun?: boolean;
       }) => {
         const cwd = process.cwd();
         const cadenceDir = join(cwd, '.cadence');
@@ -328,6 +250,26 @@ export function registerInitCommand(program: Command): void {
           );
         }
         const preset = opts.preset ?? opts.profile ?? 'team';
+
+        // Phase 132 (rec-20260619-005) — --dry-run fit check. Resolve everything
+        // init would resolve, print the preview, and write NOTHING. Takes
+        // precedence over --claude-md, and previews (never exit-2 refuses) on an
+        // already-initialized repo so it stays a safe pre-flight check.
+        if (opts.dryRun) {
+          try {
+            const plan = planInit(
+              cwd,
+              opts,
+              process.env,
+              process.stdin.isTTY ?? false,
+            );
+            process.stdout.write(renderInitPlan(plan));
+          } catch (err) {
+            console.error(err instanceof Error ? err.message : String(err));
+            process.exit(2);
+          }
+          return;
+        }
 
         // Phase 26.2 — standalone --claude-md: do NOT refuse on an existing
         // .cadence/ and do NOT scaffold; just regenerate the managed block.
