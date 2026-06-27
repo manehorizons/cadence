@@ -134,7 +134,23 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.33.0`** (2026-06-26, tag `v1.33.0`
+change). The latest version is **`1.34.0`** (2026-06-26, tag `v1.34.0`
+pending): the **doctor-fix** release (v1.34) — **`cadence doctor --fix`**, a
+mode that applies safe, deterministic repairs for the fixable `cadence doctor`
+findings, turning the diagnostic into a one-step onboarding repair. Sourced from
+rec-20260619-004 (no new DESIGN.md D-number — onboarding/legibility, the same
+lane as `doctor`/`init`/`activate`). **Phase 131** added the repair engine: the
+**git-hooks** finding sets `core.hooksPath=.githooks`; a **missing `STATE.md`**
+is regenerated from `state.json`; a `--wire-host` opt-in re-runs the Claude Code
+host install for host findings; and `--dry-run` previews every planned repair
+while writing nothing. Risky findings stay **manual guidance** (never
+auto-applied), and the whole path is **non-interactive / agent-non-TTY safe**.
+Built TDD (AC-1..AC-5 PASS) and **dogfooded through CADENCE's own loop** (phase
+131, settled via `settle run --auto`), shipped as **PR #113** (squash
+`e8101b8`). All four published packages bumped `1.33.0 → 1.34.0` in lockstep
+(`cadence-core` carries the feature; `cadence-types` and both host adapters are
+version-alignment only); npm publish is the user-triggered manual `Release`
+workflow. Prior: **`1.33.0`** (2026-06-26, tag `v1.33.0`
 pending): the **first-real-phase agent-prompt** release (v1.33) —
 **`cadence agent-prompt`**, a command that hands the user a copy-paste prompt
 instructing an AI agent to scaffold their first real CADENCE phase (testable
