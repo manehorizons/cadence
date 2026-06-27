@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mkdir, writeFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { planInit, renderInitPlan } from '../../src/init/plan.js';
 
@@ -49,7 +49,8 @@ describe('planInit (phase 132, AC-1)', () => {
 
     const plan = planInit(active.root, {}, {}, false);
 
-    expect(plan.name).toBe(join(active.root).split('/').pop());
+    // basename(), not split('/') — the latter does not split Windows '\' paths
+    expect(plan.name).toBe(basename(active.root));
     expect(plan.nameSource).toBe('dirname');
   });
 
