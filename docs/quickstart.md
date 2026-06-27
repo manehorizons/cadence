@@ -89,8 +89,17 @@ your own phase.
 
 ## First real phase
 
-When you are ready to use Cadence on actual work, start from one of the
-first-real-task templates:
+When you are ready to use Cadence on actual work, **preview before you commit**.
+Inside your real repo, run a non-destructive fit-check first — it resolves the
+project name, gate profile, layout, test globs, provider status, and the exact
+files init would write, and touches nothing:
+
+```sh
+cadence init --dry-run
+```
+
+If the detected settings look right, run init for real (add the same flags you
+previewed, e.g. `--gate-profile`, `--activate`):
 
 ```sh
 cadence init

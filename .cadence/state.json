@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "131-doctor-fix-for-safe-onboarding-repairs",
+  "activePhase": "132-init-dry-run-fit-check",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-06-26T03:32:07.072Z",
+  "draftReadAt": "2026-06-27T00:40:49.957Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-06-26-phase-130-agent-prompt-pr-111.md",
-    "subagentSpawns": 391
+    "lastHandoff": "SESSION-2026-06-27.md",
+    "subagentSpawns": 398
   },
   "skillAudit": {
     "required": [],
