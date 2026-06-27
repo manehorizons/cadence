@@ -1,5 +1,23 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.35.0
+
+### Minor Changes
+
+- Add `cadence init --dry-run`: a non-destructive fit-check that resolves
+  everything init would (project name, gate profile, layout, test globs,
+  verification/provider status, host surface, and the exact files it would
+  create) and prints a preview without touching the repo. Honors the resolution
+  flags (`--gate-profile`, `--activate`, `--demo`), and previews rather than
+  refuses on an already-initialized repo (a real init still exits 2). Powered by
+  a pure `planInit`/`renderInitPlan` seam; the real write path is unchanged.
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.35.0
+  - @manehorizons/cadence-types@1.35.0
+
 ## 1.34.0
 
 ### Minor Changes

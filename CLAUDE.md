@@ -134,7 +134,32 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.34.0`** (2026-06-26, tag `v1.34.0`
+change). The latest version is **`1.35.0`** (2026-06-27, tag `v1.35.0`
+pending): the **init-dry-run** release (v1.35) — **`cadence init --dry-run`**, a
+non-destructive **fit-check** that resolves everything init would (project name
++ source, preset, gate profile + source, layout, test globs,
+verification/provider status, host surface, and the exact files it would create)
+and prints a preview **while writing nothing**, so an adopter can run it inside a
+populated repo before committing to the scaffold. Sourced from rec-20260619-005
+(no new DESIGN.md D-number — onboarding/trust, the same lane as
+`doctor`/`init`/`activate`). **Phase 132** added a pure, inspectable
+**`planInit(cwd, opts, env, isTTY)` → `InitPlan`** plus a **`renderInitPlan`**
+renderer in `init/plan.ts`, with the resolution helpers (`deriveName`,
+`detectTestGlobs`, `suggestGateProfile`, `resolveGateProfile`) **relocated** out
+of `init.ts` into `plan.ts` as the single source of truth (net −39 lines in
+`init.ts`). The init action **short-circuits on `--dry-run` before any write**;
+the real write path is byte-for-byte unchanged. The fit-check honors the
+resolution flags (`--gate-profile`, `--activate` ±key, `--demo`), takes
+precedence over `--claude-md`, and — unlike a real init — **previews rather than
+refuses** on an already-initialized repo (exit 0; a real init still exits 2);
+`init --json` was left out of scope (the `InitPlan` makes it trivial later).
+Built TDD (AC-1..AC-5 PASS; 24 unit + 7 CLI tests) and **dogfooded through
+CADENCE's own loop** (phase 132, settled via `settle run --auto`), shipped as
+**PR #115** (squash `040e5ae`). All four published packages bumped
+`1.34.0 → 1.35.0` in lockstep (`cadence-core` carries the feature;
+`cadence-types` and both host adapters are version-alignment only); npm publish
+is the user-triggered manual `Release` workflow. Prior: **`1.34.0`**
+(2026-06-26, tag `v1.34.0`
 pending): the **doctor-fix** release (v1.34) — **`cadence doctor --fix`**, a
 mode that applies safe, deterministic repairs for the fixable `cadence doctor`
 findings, turning the diagnostic into a one-step onboarding repair. Sourced from
