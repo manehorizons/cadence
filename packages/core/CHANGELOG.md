@@ -1,5 +1,34 @@
 # @manehorizons/cadence-core
 
+## 1.37.0
+
+### Minor Changes
+
+- Close the gap between what `cadence tutorial` demonstrates (real enforcement)
+  and what a fresh `cadence init` delivers: `verification.coverageMode` now
+  defaults to `assertion` for new inits across all three presets (a comment-only
+  `AC-N` mention no longer counts as tested; existing `config.json` files are
+  untouched), `verification.testCommand` is derived from the target repo's
+  `package.json#scripts.test` + detected package manager and wired into both the
+  real init write path and `init --dry-run`'s preview, and `build-test-must-pass`
+  now writes a loud, non-blocking notice to stderr when no test command is
+  configured instead of passing silently.
+- Make a settle's PASS verdicts auditable instead of opaque: `SUMMARY.json`
+  now records per-gate `ran`/`skipped` (+ reason) provenance for every
+  settle-dispatched gate, and each `acResults[]` row carries an optional
+  `evidence` class (`ai-verified`, `executed`, `assertion`, `mention`, or
+  `unverified`) — the strongest real evidence found for that AC. A
+  mock-provider deep-verify never reports `ai-verified` evidence. `SUMMARY.md`
+  renders a new "Gate provenance" section plus an evidence tag next to each AC
+  line. Pre-existing SUMMARY records without these fields still parse and
+  render unchanged.
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies
+  - @manehorizons/cadence-types@1.37.0
+
 ## 1.36.0
 
 ### Minor Changes
