@@ -758,37 +758,6 @@
       "updatedAt": "2026-07-01T23:56:58.475Z"
     },
     {
-      "id": "rec-20260701-004",
-      "title": "Agent-grade JSON across the loop, starting with progress --json",
-      "summary": "progress has no --json (service already returns the structured payload MCP gets); draft/approve/build task/settle run have no JSON output, forcing agents to regex strings like Approved 132-01; recommendation show/list alone spell it --format json. Fix: add --json to progress first (one option + branch), then the loop-critical set; alias --format to --json.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/progress.ts",
-        "packages/core/src/services/io.ts",
-        "packages/core/src/cli/commands/recommendation.ts"
-      ],
-      "suggestedMilestoneId": "onboarding-honesty",
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:58.634Z",
-      "updatedAt": "2026-07-02T00:22:22.020Z"
-    },
-    {
       "id": "rec-20260701-005",
       "title": "init --demo prints instructions that immediately refuse",
       "summary": "--demo seeds a phase leaving the loop in DRAFT, but init still prints the generic Your-first-loop block (step 1: draft new) and the draft-new agent prompt — following the most prominent instruction hits draft new refused: loopPosition is DRAFT. Fix: when demoSeeded, suppress the generic block and agent prompt, print only approve → done → settle; also genericize the hardcoded 01-fix-login-timeout slug.",
@@ -1827,6 +1796,40 @@
       "archiveReason": "converted-settled",
       "createdAt": "2026-06-19T02:46:21.651Z",
       "updatedAt": "2026-06-27T01:21:56.923Z"
+    },
+    {
+      "id": "rec-20260701-004",
+      "title": "Agent-grade JSON across the loop, starting with progress --json",
+      "summary": "progress has no --json (service already returns the structured payload MCP gets); draft/approve/build task/settle run have no JSON output, forcing agents to regex strings like Approved 132-01; recommendation show/list alone spell it --format json. Fix: add --json to progress first (one option + branch), then the loop-critical set; alias --format to --json.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/progress.ts",
+        "packages/core/src/services/io.ts",
+        "packages/core/src/cli/commands/recommendation.ts"
+      ],
+      "suggestedMilestoneId": "onboarding-honesty",
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "134-progress-json",
+      "scoutId": "scout-20260701-audit",
+      "createdAt": "2026-07-01T23:56:58.634Z",
+      "updatedAt": "2026-07-02T01:14:52.736Z",
+      "archivedAt": "2026-07-02T01:14:52.736Z",
+      "archiveReason": "converted-settled"
     }
   ]
 }

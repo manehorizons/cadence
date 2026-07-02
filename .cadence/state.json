@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "133-onboarding-honesty",
+  "activePhase": "134-progress-json",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-02T00:53:35.955Z",
+  "draftReadAt": "2026-07-02T01:12:11.081Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-02.md",
-    "subagentSpawns": 436
+    "subagentSpawns": 437
   },
   "skillAudit": {
     "required": [],

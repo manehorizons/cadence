@@ -394,22 +394,6 @@ checkGitHooks warns in any git repo whose core.hooksPath is not .githooks, witho
 
 SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.
 
-## rec-20260701-004 — Agent-grade JSON across the loop, starting with progress --json
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli
-- files: packages/core/src/cli/commands/progress.ts, packages/core/src/services/io.ts, packages/core/src/cli/commands/recommendation.ts
-- evidence: 2026-07-01 audit R-04/F4: reproduced — cadence progress --json exits 1 with unknown option; 15 read commands support --json, zero loop-write commands do
-- next: cadence milestone propose
-
-progress has no --json (service already returns the structured payload MCP gets); draft/approve/build task/settle run have no JSON output, forcing agents to regex strings like Approved 132-01; recommendation show/list alone spell it --format json. Fix: add --json to progress first (one option + branch), then the loop-critical set; alias --format to --json.
-
 ## rec-20260701-005 — init --demo prints instructions that immediately refuse
 
 - status: accepted
