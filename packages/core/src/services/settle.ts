@@ -26,6 +26,7 @@ import {
 } from '../verify/verifier-factory.js';
 import type { VerifyTestRef } from '../verify/verifier.js';
 import { runSettleGates } from '../gates/registry.js';
+import { deriveAcEvidence } from '../gates/ac-evidence.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
 import { runAutoArchiveConvertedForPhase } from '../intelligence/store/recommendations.js';
 import {
@@ -359,7 +360,7 @@ export async function settleService(
       },
       io: { err: (s) => io.err(s) },
     };
-    const { acc, refused } = await runSettleGates(ctx);
+    const { acc, refused, gates } = await runSettleGates(ctx);
     if (refused) {
       return { exitCode: 1 };
     }
@@ -458,11 +459,23 @@ export async function settleService(
       state.skillAudit.required = res.effectiveRequired;
     }
 
+    // Phase 140: strongest evidence per AC, derived from data the gate loop
+    // already produced — no new I/O. `ctx.coverage()` is memoized so this is
+    // a cache hit, not a second scan.
+    const coverageForEvidence = await ctx.coverage();
+    const coverageModeForEvidence = cadenceConfig?.verification?.coverageMode ?? 'mention';
+    const buildTestRan = acc.buildTestRan !== false;
+    const acResultsWithEvidence: AcResult[] = acResults.map((r) => ({
+      ...r,
+      evidence: deriveAcEvidence(r.id, coverageForEvidence, coverageModeForEvidence, buildTestRan, deepVerify),
+    }));
+
     const summary: Summary = {
       schemaVersion: 1,
       draftId: state.activeDraft,
       completedAt: new Date().toISOString(),
-      acResults,
+      acResults: acResultsWithEvidence,
+      gates,
       taskResults: draft.tasks.map((t) => ({
         id: t.id,
         status: (TaskStatusZ.safeParse(progress.tasks[t.id]?.status).success
@@ -509,7 +522,7 @@ export async function settleService(
     state.tier = null;
     await backend.commit(state);
     io.out(`Settled ${draftId}\n`);
-    return { exitCode: 0, data: { settled: draftId, acResults } };
+    return { exitCode: 0, data: { settled: draftId, acResults: acResultsWithEvidence } };
   } catch (err) {
     io.err(`settle run failed: ${err instanceof Error ? err.message : String(err)}\n`);
     if (err instanceof LoopViolationError) {
