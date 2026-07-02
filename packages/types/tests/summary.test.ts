@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SummaryZ, DeepVerifyMetaZ } from '../src/summary.js';
+import { SummaryZ, DeepVerifyMetaZ, GateProvenanceZ, AcEvidenceZ } from '../src/summary.js';
 
 // AC-4 (Phase 70): run-level deepVerifyMeta provenance — what the verifier saw.
 
@@ -101,5 +101,60 @@ describe('SummaryZ.deepVerifyMeta (AC-4)', () => {
   it('leaves deepVerifyMeta undefined when absent (back-compat)', () => {
     const parsed = SummaryZ.parse(baseSummary);
     expect(parsed.deepVerifyMeta).toBeUndefined();
+  });
+});
+
+describe('GateProvenanceZ (AC-1, phase 140)', () => {
+  it('parses a ran entry with no skipReason', () => {
+    const g = GateProvenanceZ.parse({ gate: 'draft-read', status: 'ran' });
+    expect(g.status).toBe('ran');
+    expect(g.skipReason).toBeUndefined();
+  });
+
+  it('parses a skipped entry with a reason', () => {
+    const g = GateProvenanceZ.parse({
+      gate: 'security-audit',
+      status: 'skipped',
+      skipReason: 'not in the active tier × profile gate set',
+    });
+    expect(g.status).toBe('skipped');
+    expect(g.skipReason).toBe('not in the active tier × profile gate set');
+  });
+
+  it('rejects an unknown gate name', () => {
+    expect(() => GateProvenanceZ.parse({ gate: 'not-a-real-gate', status: 'ran' })).toThrow();
+  });
+});
+
+describe('AcEvidenceZ (AC-2, phase 140)', () => {
+  it('accepts all five evidence classes', () => {
+    for (const v of ['ai-verified', 'executed', 'assertion', 'mention', 'unverified']) {
+      expect(AcEvidenceZ.parse(v)).toBe(v);
+    }
+  });
+
+  it('rejects an unknown class', () => {
+    expect(() => AcEvidenceZ.parse('vibes')).toThrow();
+  });
+});
+
+describe('SummaryZ.gates / acResults[].evidence (AC-1, AC-2, AC-5, phase 140)', () => {
+  it('accepts a summary carrying gates + per-AC evidence', () => {
+    const parsed = SummaryZ.parse({
+      ...baseSummary,
+      acResults: [{ id: 'AC-1', pass: true, evidence: 'assertion' }],
+      gates: [
+        { gate: 'draft-read', status: 'ran' },
+        { gate: 'deep-verify', status: 'skipped', skipReason: 'not requested' },
+      ],
+    });
+    expect(parsed.gates?.[0]).toEqual({ gate: 'draft-read', status: 'ran' });
+    expect(parsed.acResults[0]?.evidence).toBe('assertion');
+  });
+
+  it('leaves gates and evidence undefined when absent (AC-5 back-compat)', () => {
+    const parsed = SummaryZ.parse(baseSummary);
+    expect(parsed.gates).toBeUndefined();
+    expect(parsed.acResults).toEqual([]);
   });
 });
