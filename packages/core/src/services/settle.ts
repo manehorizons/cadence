@@ -366,6 +366,10 @@ export async function settleService(
     }
     const coverageBypassed = acc.flags.coverageBypassed === true;
 
+    // Deliberately NOT the same predicate as gates/interactive.ts's
+    // isInteractiveRequested (Phase 140) — this omits the `auto !== false`
+    // clause because it's `||`'d with `opts.auto` at the call site below.
+    // Do not "DRY" these together; they answer different questions.
     const interactiveRequested =
       opts.interactive === true ||
       (opts.interactive !== false && gateSet.gates.includes('interactive-verdict'));

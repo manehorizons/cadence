@@ -42,7 +42,8 @@ export interface AcResult {
   id: string;
   pass: boolean;
   note?: string;
-  /** Phase 140: strongest evidence class backing `pass`, derived post-gate-loop. */
+  /** Phase 140: strongest evidence class found for this AC (independent of
+   *  `pass`/`fail`), derived post-gate-loop. */
   evidence?: AcEvidence;
 }
 

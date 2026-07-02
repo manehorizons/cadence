@@ -69,9 +69,9 @@ export const GateProvenanceZ = z.object({
 export type GateProvenance = z.infer<typeof GateProvenanceZ>;
 
 /**
- * Phase 140: strongest evidence class backing an AC's PASS verdict, ranked
- * ai-verified > executed > assertion > mention > unverified. See
- * `gates/ac-evidence.ts` for the derivation.
+ * Phase 140: strongest evidence class found for an AC, independent of its
+ * pass/fail verdict, ranked ai-verified > executed > assertion > mention >
+ * unverified. See `gates/ac-evidence.ts` for the derivation.
  */
 export const AcEvidenceZ = z.enum(['ai-verified', 'executed', 'assertion', 'mention', 'unverified']);
 export type AcEvidence = z.infer<typeof AcEvidenceZ>;
