@@ -1,17 +1,21 @@
+import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
 import type { GateImpl, GateResult } from './types.js';
 
 /**
  * Build/test-must-pass gate (DESIGN.md §4.1 always-fire). Wired for real in
  * Phase 39.2: runs `config.verification.testCommand` via the injected runner
  * port and refuses on a non-zero exit, unless --allow-failing-build / --force.
- * When no testCommand is configured (`ran:false`), the gate cannot enforce and
- * passes *silently* — like any other gate that passes, it adds no output, so a
- * settle on an unconfigured repo stays bit-identical (AC-7). The subprocess is
- * reached only through `ctx.runner` — the gate never imports child_process.
+ * When no testCommand is configured (`ran:false`), the gate cannot enforce —
+ * it still passes (Phase 139 keeps this a pass, not a refusal — a repo may
+ * legitimately run tests outside cadence), but is no longer *silent*: it
+ * writes the single-source-of-truth `NO_TEST_COMMAND_NOTICE` to stderr so the
+ * gap is visible instead of hidden. The subprocess is reached only through
+ * `ctx.runner` — the gate never imports child_process.
  */
 export const runBuildTestGate: GateImpl = async (ctx): Promise<GateResult> => {
   const res = await ctx.runner.test();
   if (!res.ran) {
+    ctx.io.err(`build-test-must-pass: ${NO_TEST_COMMAND_NOTICE.message}\n`);
     return { outcome: 'pass' };
   }
   if (!res.ok && !ctx.opts.allowFailingBuild && !ctx.opts.force) {

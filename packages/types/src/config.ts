@@ -308,7 +308,11 @@ export const defaultConfig: CadenceConfig = {
   },
   verification: {
     testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
-    coverageMode: 'mention' as const,
+    /** Phase 139: new inits default to 'assertion' — a comment-only AC-N
+     *  mention no longer counts as tested. The Zod-level `.default('mention')`
+     *  above is unchanged — it's the backward-compat fallback for configs
+     *  that predate this field, not what a fresh init writes. */
+    coverageMode: 'assertion' as const,
   },
   verifier: { provider: 'mock' as const, diffCapBytes: 262144 },
   perTaskVerifier: { provider: 'mock' as const },

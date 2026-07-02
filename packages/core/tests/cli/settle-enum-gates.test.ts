@@ -133,12 +133,14 @@ describe('build-test-must-pass gate at settle (Phase 39.2, AC-8)', () => {
     expect(await loopPosition(active.root)).toBe('IDLE');
   });
 
-  it('passes silently (bit-identical) when no testCommand is configured and tasks are terminal', async () => {
+  // Phase 139 / AC-5: no longer silent — a loud, non-blocking notice replaces
+  // the old bit-identical silence (settle still passes either way).
+  it('passes with a loud no-testCommand notice when none is configured and tasks are terminal', async () => {
     active = await tempRepo({ initialized: true });
     await seedBuild(active.root, 'DONE');
     const r = await run(['settle', 'run', '--ac', 'AC-1=pass', '--allow-missing-coverage'], active.root);
     expect(r.code).toBe(0);
-    expect(r.stderr).not.toMatch(/build-test-must-pass/);
+    expect(r.stderr).toMatch(/build-test-must-pass: no test command configured/);
     expect(r.stderr).not.toMatch(/structural-verifier/);
     expect(await loopPosition(active.root)).toBe('IDLE');
   });

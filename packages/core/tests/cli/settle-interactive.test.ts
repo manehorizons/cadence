@@ -57,9 +57,9 @@ async function seedCoverageTest(
   const abs = join(root, filename);
   await mkdir(dirname(abs), { recursive: true });
   const body =
-    `// Coverage fixture for ${acIds.join(', ')}\n` +
-    acIds.map((id) => `// covers ${id}`).join('\n') +
-    '\n';
+    acIds
+      .map((id) => `it('${id} coverage fixture', () => { expect(true).toBe(true); });`)
+      .join('\n') + '\n';
   await writeFile(abs, body, 'utf8');
 }
 

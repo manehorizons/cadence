@@ -496,3 +496,15 @@ describe('verification.coverageMode (phase 108)', () => {
     ).toThrow();
   });
 });
+
+describe('verification.coverageMode default flip (phase 139 / AC-1)', () => {
+  it('defaultConfig.verification.coverageMode is "assertion"', () => {
+    expect(defaultConfig.verification.coverageMode).toBe('assertion');
+  });
+
+  it('all three presets inherit "assertion" — solo, team, production alike', () => {
+    expect(presets.solo.verification.coverageMode).toBe('assertion');
+    expect(presets.team.verification.coverageMode).toBe('assertion');
+    expect(presets.production.verification.coverageMode).toBe('assertion');
+  });
+});

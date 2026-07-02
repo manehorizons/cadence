@@ -12,6 +12,7 @@ import {
 } from '@manehorizons/cadence-types';
 import {
   deriveName,
+  detectTestCommand,
   detectTestGlobs,
   planInit,
   renderInitPlan,
@@ -321,6 +322,7 @@ export function registerInitCommand(program: Command): void {
         }
 
         const testGlobs = detectTestGlobs(cwd);
+        const testCommand = detectTestCommand(cwd);
         const layout =
           testGlobs[0]?.startsWith('packages/') ?? false
             ? 'monorepo (packages/)'
@@ -330,7 +332,11 @@ export function registerInitCommand(program: Command): void {
         const cfg = structuredClone({
           ...presetCfg,
           profile: gateProfile,
-          verification: { ...presetCfg.verification, testGlobs },
+          verification: {
+            ...presetCfg.verification,
+            testGlobs,
+            ...(testCommand !== null ? { testCommand } : {}),
+          },
         });
 
         // Phase 110 — fold activation into init. With --activate and a present
@@ -428,6 +434,9 @@ export function registerInitCommand(program: Command): void {
         );
         console.log(`  layout        ${layout}`);
         console.log(`  test globs    ${testGlobs.join(', ')}`);
+        console.log(
+          `  test command  ${testCommand ?? '(none derived — build-test-must-pass will not run)'}`,
+        );
         console.log(`  scaffolded    config.json, state.json, PROJECT.md,`);
         console.log(`                ROADMAP.md, MILESTONES.md,`);
         console.log(`                SPECIAL-FLOWS.md, STATE.md, CLAUDE.md`);

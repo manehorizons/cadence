@@ -219,7 +219,7 @@ These run on every phase regardless of profile or tier.
 |---|---|---|
 | `coherence-check` | DRAFT frontmatter consistency — tier vs task/file counts, AC format, loop position | — |
 | `structural-verifier` | All tasks are in a terminal state (DONE / DONE\_WITH\_CONCERNS / NEEDS\_CONTEXT / BLOCKED); a `PENDING`/`IN_PROGRESS` task refuses settle (wired Phase 39.2) | `--allow-open-tasks` or `--force` (on `settle run`) |
-| `build-test-must-pass` | When `verification.testCommand` is configured, settle runs it and refuses on a non-zero exit (wired Phase 39.2). With no `testCommand` set, the gate is evaluated but cannot enforce — it passes silently | `--allow-failing-build` or `--force` (on `settle run`) |
+| `build-test-must-pass` | When `verification.testCommand` is configured, settle runs it and refuses on a non-zero exit (wired Phase 39.2). With no `testCommand` set, the gate is evaluated but cannot enforce — it still passes, but (Phase 139) writes a loud, non-blocking stderr notice instead of passing silently. `cadence init` derives `testCommand` from `package.json#scripts.test` when it can. | `--allow-failing-build` or `--force` (on `settle run`) |
 
 ### Delta gates
 
@@ -228,7 +228,7 @@ These run on every phase regardless of profile or tier.
 | Gate | When it fires | Bypass flag |
 |---|---|---|
 | `draft-read` | Settle refuses if `DRAFT.md` was modified after `draft approve` (mtime check) | `--allow-stale-draft` (on `settle run`) |
-| `test-coverage` | Each AC must have at least one test file that contains the token `AC-N`. By default (`verification.coverageMode: "mention"`) any occurrence anywhere in the file counts; set `coverageMode: "assertion"` to require the token inside an asserting `it()`/`test()` block (a comment-only mention then refuses as a *weak link*) | `--allow-missing-coverage` (on `settle run`) |
+| `test-coverage` | Each AC must have at least one test file that contains the token `AC-N`. A fresh `cadence init` writes `verification.coverageMode: "assertion"` (Phase 139, all presets) which requires the token inside an asserting `it()`/`test()` block — a comment-only mention refuses as a *weak link*. `coverageMode: "mention"` (any occurrence anywhere in the file counts) remains the schema-level fallback for configs that predate this field. | `--allow-missing-coverage` (on `settle run`) |
 | `anomaly-notify` | Emit anomaly events (blocked tasks, out-of-boundary edits, coherence warns, loop violations, …) via the configured transport | No bypass — transport failures degrade gracefully |
 
 #### Medium

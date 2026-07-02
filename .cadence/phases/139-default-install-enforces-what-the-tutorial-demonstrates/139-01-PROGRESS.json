@@ -1,0 +1,54 @@
+{
+  "draftId": "139-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "defaultConfig.verification.coverageMode flipped mention -> assertion; all 3 presets inherit; Zod schema-level backward-compat default left at mention",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-02T03:08:05.827Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "detectTestCommand pure helper added to init/plan.ts; 7 tests cover all 4 lockfile types + no-lockfile fallback + no scripts.test + no package.json",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/init/init-plan.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/init/plan.ts"
+      ],
+      "updatedAt": "2026-07-02T03:09:13.311Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "testCommand wired into InitPlan (planVerification) and the real init.ts write path (only set when non-null, matches optional schema field); verificationLine + CLI console output both render a 'test command' line; --dry-run and real init parity verified in CLI test",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/init/init-plan.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/init/plan.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/init.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/init.test.ts"
+      ],
+      "updatedAt": "2026-07-02T03:11:43.699Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "NO_TEST_COMMAND_NOTICE added to cadence-types guidance.ts mirroring MOCK_VERIFIER_NOTICE; build-test-must-pass gate now writes it via ctx.io.err on ran:false, still passes. Fallout: testkit's tempRepo({initialized:true}) writes defaultConfig verbatim, so the coverageMode flip (T1) + new notice (T4) rippled into ~25 pre-existing CLI tests across 7 files (settle-code-review, settle-codereview-convergence, settle-coverage, settle-deep, settle-gate-extraction, settle-interactive, settle-security-audit) whose comment-only seed helpers (e.g. '// covers AC-1') relied on lenient mention-mode. Fixed at the root: each shared seed helper now writes a real asserting it()/test() block; settle-gate-extraction's 2 snapshot anchors updated to include the new notice line + assertion-mode wording. Full monorepo gate (lint/typecheck/test/build, 20/20 tasks, 1918 core tests) green after the fix.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-code-review.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-codereview-convergence.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-security-audit.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-deep.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-interactive.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-coverage.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-gate-extraction.test.ts"
+      ],
+      "updatedAt": "2026-07-02T03:22:37.641Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "docs/reference/config.md: new testCommand/coverageMode init-behavior subsections + field table updates; docs/concepts.md: build-test-must-pass and test-coverage gate rows updated to describe the new default + notice",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/docs/reference/config.md",
+        "/home/thomas/projects/cadence/docs/concepts.md"
+      ],
+      "updatedAt": "2026-07-02T03:14:55.509Z"
+    }
+  }
+}

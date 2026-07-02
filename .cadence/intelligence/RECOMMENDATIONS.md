@@ -348,7 +348,7 @@ Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that no
 
 ## rec-20260701-001 — Make the default install enforce what the tutorial demonstrates
 
-- status: candidate
+- status: converted
 - ready: needs-decision
 - priority: critical
 - leverage: 5/10

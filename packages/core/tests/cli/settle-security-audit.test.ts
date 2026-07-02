@@ -99,7 +99,11 @@ ${tasks}
 async function seedAcCoverage(root: string): Promise<void> {
   const p = join(root, 'packages/core/tests/foo.test.ts');
   await mkdir(dirname(p), { recursive: true });
-  await writeFile(p, `// covers AC-1\n`, 'utf8');
+  await writeFile(
+    p,
+    `it('AC-1 coverage fixture', () => { expect(true).toBe(true); });\n`,
+    'utf8',
+  );
 }
 
 const SUMMARY_JSON = `.cadence/phases/${PHASE}/25-02-SUMMARY.json`;

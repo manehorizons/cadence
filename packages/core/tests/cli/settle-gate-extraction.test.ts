@@ -75,9 +75,13 @@ describe('Phase 39.1 AC-7: bit-identical gate refusal transcripts', () => {
     // No test files seeded → coverage gate fires on AC-1.
     const r = await run(['settle', 'run', '--auto'], active.root);
     expect(r.code).toBe(1);
-    // Self-evident key line:
+    // Self-evident key line (Phase 139: assertion-mode wording is now the
+    // default; the build-test-must-pass notice fires first since no
+    // testCommand is configured):
     expect(r.stderr).toContain('coverage: AC-1 has no linked test');
-    expect(r.stderr).toContain('settle run refused: each AC needs at least one test');
+    expect(r.stderr).toContain(
+      'settle run refused (assertion mode): each AC needs at least one asserting it()/test() block',
+    );
     // Snapshot locks the full transcript (bit-identical anchor):
     expect(r.stderr).toMatchSnapshot();
   });
