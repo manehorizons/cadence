@@ -394,22 +394,6 @@ checkGitHooks warns in any git repo whose core.hooksPath is not .githooks, witho
 
 SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.
 
-## rec-20260701-007 — Refusal trio: finish the always-a-next-move promise
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, progress
-- files: packages/core/src/progress.ts, packages/core/src/cli/commands/draft-approve.ts, packages/core/src/cli/commands/settle.ts
-- evidence: 2026-07-01 audit R-07/F10: progress.ts:53-55 compound command; draft-approve.ts:35 unguarded readFile vs spec-approve.ts:34 guard; settle.ts:147
-- next: cadence milestone propose
-
-Three surfaces break the refusals-guide pattern: (a) BUILD-state progress emits an unrunnable compound (build task <id> ... OR settle run) instead of one concrete command using the first PENDING task id; (b) draft approve on a missing draft dumps raw ENOENT while spec approve guards properly; (c) settle run out of position names no next step. All three are trivial diffs.
-
 ## rec-20260701-008 — Structured draft editing: draft add-ac / add-task / set-objective
 
 - status: candidate

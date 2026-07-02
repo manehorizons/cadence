@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 136-readme-approve-inline-note
+**Active phase:** 137-refusal-trio
 **Active draft:** (none)
 **Tier:** (n/a)
 

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "draftId": "137-01",
+  "completedAt": "2026-07-02T01:37:11.070Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "BUILD-state progress now names the first-pending task id (or settle --auto once all recorded) via a best-effort NextActionHints.build computed in progressService; falls back to the pre-137 compound message if unreadable. TDD via 2 new tests in cli/progress.test.ts."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "draft approve guards a missing DRAFT.md with existsSync before readFile, mirroring spec-approve's pattern: clean 'draft approve refused: <path> not found.' instead of raw ENOENT. TDD via 1 new test in draft-approve-gate.test.ts."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "settle run's out-of-position refusal now also prints 'Next: <command>' computed via the same nextAction() cadence progress uses, while keeping the existing loop-violation message text + emitLoopViolation call unchanged. TDD via 2 new tests in loop-violation.test.ts."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
