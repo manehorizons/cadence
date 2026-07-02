@@ -2,6 +2,7 @@ import type {
   AnomalyEvent,
   CadenceConfig,
   CadenceState,
+  AcEvidence,
   DeepVerdict,
   DeepVerifyMeta,
   Draft,
@@ -41,6 +42,8 @@ export interface AcResult {
   id: string;
   pass: boolean;
   note?: string;
+  /** Phase 140: strongest evidence class backing `pass`, derived post-gate-loop. */
+  evidence?: AcEvidence;
 }
 
 /** Stderr seam. Defaults to process.stderr.write; tests inject a capture. */
@@ -211,6 +214,10 @@ export interface SettleAccumulator {
   codeReview?: Record<string, Finding[]>;
   securityAudit?: Finding[];
   acResults?: AcResult[];
+  /** Phase 140: false when build-test-must-pass couldn't execute (no
+   *  testCommand configured) — undefined/true means it ran normally. Read by
+   *  the registry's gate-provenance collection and by AC-evidence derivation. */
+  buildTestRan?: boolean;
   flags: GateFlags;
 }
 
