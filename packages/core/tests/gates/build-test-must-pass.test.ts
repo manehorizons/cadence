@@ -94,4 +94,22 @@ describe('runBuildTestGate', () => {
     );
     expect(res.outcome).toBe('pass');
   });
+
+  // AC-1 (phase 140): no testCommand → still PASS, but the accumulator now
+  // carries buildTestRan:false so the registry can classify this gate as
+  // "skipped" (not really checked) in SUMMARY's gate provenance.
+  it('AC-1: patches buildTestRan:false when no testCommand is configured', async () => {
+    const res = await runBuildTestGate(ctx({ run: { ran: false, ok: true } }));
+    expect(res.outcome).toBe('pass');
+    expect(res.summaryPatch?.buildTestRan).toBe(false);
+  });
+
+  // AC-1: a real, successful run does NOT patch buildTestRan (undefined = ran).
+  it('AC-1: omits buildTestRan when the test command actually ran', async () => {
+    const res = await runBuildTestGate(
+      ctx({ run: { ran: true, ok: true, exitCode: 0, command: 'pnpm test' } }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.summaryPatch?.buildTestRan).toBeUndefined();
+  });
 });

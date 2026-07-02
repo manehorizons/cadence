@@ -88,7 +88,7 @@ describe('settle test-coverage gate (Phase 14)', () => {
         'utf8',
       ),
     );
-    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true });
+    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true, evidence: 'assertion' });
     expect(summary.gateBypasses).toBeUndefined();
   });
 

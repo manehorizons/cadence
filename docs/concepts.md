@@ -96,6 +96,10 @@ Progress is persisted continuously so the loop survives session restarts.
 
 **Phase artifacts:**
 - `.cadence/phases/<phase>/<id>-SUMMARY.json` — machine-readable full record
+- Phase 140 added `gates[]` (per-gate ran/skipped provenance) and per-AC
+  `evidence` class (`ai-verified`/`executed`/`assertion`/`mention`/`unverified`)
+  to both the JSON record and the rendered Markdown — see `SUMMARY.md`'s
+  "Gate provenance" section and each AC's evidence tag.
 - `.cadence/phases/<phase>/<id>-SUMMARY.md` — human-readable rendered view
 - `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` — plan-review findings
   (written at `draft approve` when `plan-review` fires)

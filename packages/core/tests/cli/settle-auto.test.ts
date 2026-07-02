@@ -47,7 +47,7 @@ describe('cadence settle run --auto', () => {
     const r = await run(['settle', 'run', '--auto', '--allow-missing-coverage'], active.root);
     expect(r.code).toBe(0);
     const { json } = await readSummary(active.root);
-    expect(json.acResults).toEqual([{ id: 'AC-1', pass: true }]);
+    expect(json.acResults).toEqual([{ id: 'AC-1', pass: true, evidence: 'unverified' }]);
     expect((await readState(active.root)).loopPosition).toBe('IDLE');
   });
 
@@ -127,7 +127,7 @@ describe('cadence settle run --auto', () => {
     );
     expect(r.code).toBe(0);
     const { json } = await readSummary(active.root);
-    expect(json.acResults).toEqual([{ id: 'AC-1', pass: false, note: 'override' }]);
+    expect(json.acResults).toEqual([{ id: 'AC-1', pass: false, note: 'override', evidence: 'unverified' }]);
   });
 
   it('legacy --ac-only flow is unchanged (no --auto)', async () => {
@@ -140,6 +140,6 @@ describe('cadence settle run --auto', () => {
     const r = await run(['settle', 'run', '--ac', 'AC-1=fail:manual'], active.root);
     expect(r.code).toBe(0);
     const { json } = await readSummary(active.root);
-    expect(json.acResults).toEqual([{ id: 'AC-1', pass: false, note: 'manual' }]);
+    expect(json.acResults).toEqual([{ id: 'AC-1', pass: false, note: 'manual', evidence: 'unverified' }]);
   });
 });

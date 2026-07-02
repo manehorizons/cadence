@@ -1,12 +1,13 @@
-import type { Gate } from '@manehorizons/cadence-types';
+import type { Gate, GateProvenance } from '@manehorizons/cadence-types';
+import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
 import type { GateImpl, GateResult, SettleAccumulator, SettleContext } from './types.js';
 import { mergeInto } from './types.js';
 import { runDraftReadGate } from './draft-read.js';
 import { runStructuralVerifierGate } from './structural-verifier.js';
 import { runBuildTestGate } from './build-test-must-pass.js';
 import { runCoverageGate } from './coverage.js';
-import { runInteractiveGate } from './interactive.js';
-import { runDeepVerifyGate } from './deep-verify.js';
+import { runInteractiveGate, isInteractiveRequested } from './interactive.js';
+import { runDeepVerifyGate, isDeepVerifyRequested } from './deep-verify.js';
 import { runCodeReviewGate } from './code-review.js';
 import { runSecurityAuditGate } from './security-audit.js';
 import { getLogger } from '../logging/logger.js';
@@ -70,7 +71,23 @@ export const GATE_ORDER: SettleGate[] = [
 export interface RunGatesResult {
   readonly acc: SettleAccumulator;
   readonly refused: boolean;
+  /** Phase 140: per-gate ran/skipped provenance, in GATE_ORDER. Partial on
+   *  refusal — only entries computed before the halting gate. */
+  readonly gates: GateProvenance[];
 }
+
+/**
+ * Phase 140: the two self-guarded gates are always invoked by the driver
+ * regardless of membership (see `selfGuarded` above), but internally no-op
+ * when not actually requested. These predicates — the gate impls' own exported
+ * "am I requested" checks — let the provenance collection below tell
+ * "invoked but no-op" apart from "actually ran" without re-deriving the
+ * condition a second time.
+ */
+const SELF_GUARD_PREDICATES: Partial<Record<SettleGate, (ctx: SettleContext) => boolean>> = {
+  'deep-verify': isDeepVerifyRequested,
+  'interactive-verdict': isInteractiveRequested,
+};
 
 /**
  * Drive the settle gate sequence (Phase 44.1). Walks `GATE_ORDER`, invoking a
@@ -91,19 +108,35 @@ export async function runSettleGates(
   const order = deps.order ?? GATE_ORDER;
   const log = getLogger().child({ seam: 'gate' });
   const acc: SettleAccumulator = { flags: {} };
+  const gates: GateProvenance[] = [];
   for (const gate of order) {
     const entry = registry[gate];
     if (!entry.selfGuarded && !ctx.gateSet.gates.includes(gate)) {
       log.debug('gate skipped', { gate });
+      gates.push({ gate, status: 'skipped', skipReason: 'not in the active tier × profile gate set' });
       continue;
     }
     const res: GateResult = await entry.impl(ctx);
     mergeInto(acc, res);
     if (res.outcome === 'refuse') {
       log.warn('gate refused', { gate, outcome: res.outcome });
-      return { acc, refused: true };
+      return { acc, refused: true, gates };
+    }
+    const predicate = SELF_GUARD_PREDICATES[gate];
+    if (predicate && !predicate(ctx)) {
+      gates.push({
+        gate,
+        status: 'skipped',
+        skipReason: 'not requested (no --deep / --interactive, not in gate set)',
+      });
+    } else if (gate === 'build-test-must-pass' && res.summaryPatch?.buildTestRan === false) {
+      gates.push({ gate, status: 'skipped', skipReason: NO_TEST_COMMAND_NOTICE.message });
+    } else if (gate === 'test-coverage' && res.flags?.coverageBypassed === true) {
+      gates.push({ gate, status: 'skipped', skipReason: 'bypassed via --allow-missing-coverage' });
+    } else {
+      gates.push({ gate, status: 'ran' });
     }
     log.debug('gate passed', { gate, outcome: res.outcome });
   }
-  return { acc, refused: false };
+  return { acc, refused: false, gates };
 }

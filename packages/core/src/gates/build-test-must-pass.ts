@@ -16,7 +16,7 @@ export const runBuildTestGate: GateImpl = async (ctx): Promise<GateResult> => {
   const res = await ctx.runner.test();
   if (!res.ran) {
     ctx.io.err(`build-test-must-pass: ${NO_TEST_COMMAND_NOTICE.message}\n`);
-    return { outcome: 'pass' };
+    return { outcome: 'pass', summaryPatch: { buildTestRan: false } };
   }
   if (!res.ok && !ctx.opts.allowFailingBuild && !ctx.opts.force) {
     ctx.io.err(`build-test-must-pass: ${res.command} exited ${res.exitCode}\n`);

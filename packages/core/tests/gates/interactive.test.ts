@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { runInteractiveGate } from '../../src/gates/interactive.js';
+import { runInteractiveGate, isInteractiveRequested } from '../../src/gates/interactive.js';
 import type { SettleContext } from '../../src/gates/types.js';
 import {
   SETTLE_BYPASS_NOTICE,
@@ -52,6 +52,28 @@ function ctx(over: {
     io: { err: (s: string) => errs.push(s) },
   } as unknown as SettleContext;
 }
+
+describe('isInteractiveRequested (AC-1, phase 140)', () => {
+  it('true when --interactive is set', () => {
+    expect(isInteractiveRequested(ctx({ interactive: true }))).toBe(true);
+  });
+
+  it('true when interactive-verdict is a gate-set member, even without --interactive', () => {
+    expect(isInteractiveRequested(ctx({ inGateSet: true }))).toBe(true);
+  });
+
+  it('false when neither --interactive nor gate-set membership applies', () => {
+    expect(isInteractiveRequested(ctx({}))).toBe(false);
+  });
+
+  it('false when --interactive=false explicitly opts out even with membership', () => {
+    expect(isInteractiveRequested(ctx({ interactive: false, inGateSet: true }))).toBe(false);
+  });
+
+  it('false when --auto=false overrides an otherwise-requested walker', () => {
+    expect(isInteractiveRequested(ctx({ interactive: true, auto: false }))).toBe(false);
+  });
+});
 
 describe('runInteractiveGate', () => {
   // AC-3: not requested (no flag, not in gate set) → pass, prompter untouched

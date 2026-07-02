@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { TaskStatusZ, DecisionZ, DeferredItemZ } from './state.js';
+import { GateZ } from './profile.js';
 
 export const DeepVerdictZ = z.object({
   pass: z.boolean(),
@@ -50,11 +51,44 @@ export const GateBypassZ = z.object({
 });
 export type GateBypass = z.infer<typeof GateBypassZ>;
 
+/**
+ * Phase 140: per-gate ran/skipped provenance for one settle, in `GATE_ORDER`.
+ * A refusing gate halts settle before SUMMARY is ever written, so a
+ * persisted record only ever shows `'ran' | 'skipped'` — never a refusal.
+ * `gate` uses the full `GateZ` enum (unlike `GateBypassZ.gate`, which is a
+ * loose `z.string()` because it also carries the pseudo-gate name `'settle'`
+ * for the `--force` bypass case) since every entry here is a real,
+ * settle-dispatched gate.
+ */
+export const GateProvenanceZ = z.object({
+  gate: GateZ,
+  status: z.enum(['ran', 'skipped']),
+  /** Present iff status === 'skipped'. */
+  skipReason: z.string().optional(),
+});
+export type GateProvenance = z.infer<typeof GateProvenanceZ>;
+
+/**
+ * Phase 140: strongest evidence class found for an AC, independent of its
+ * pass/fail verdict, ranked ai-verified > executed > assertion > mention >
+ * unverified. See `gates/ac-evidence.ts` for the derivation.
+ */
+export const AcEvidenceZ = z.enum(['ai-verified', 'executed', 'assertion', 'mention', 'unverified']);
+export type AcEvidence = z.infer<typeof AcEvidenceZ>;
+
 export const SummaryZ = z.object({
   schemaVersion: z.literal(1),
   draftId: z.string(),
   completedAt: z.string(),
-  acResults: z.array(z.object({ id: z.string(), pass: z.boolean(), note: z.string().optional() })),
+  acResults: z.array(
+    z.object({
+      id: z.string(),
+      pass: z.boolean(),
+      note: z.string().optional(),
+      /** Phase 140: absent for pre-phase-140 records and explicit-only human declarations with no derivable evidence. */
+      evidence: AcEvidenceZ.optional(),
+    }),
+  ),
   taskResults: z.array(
     z.object({ id: z.string(), status: TaskStatusZ, notes: z.string() }),
   ),
@@ -85,5 +119,8 @@ export const SummaryZ = z.object({
   securityAudit: z.array(FindingZ).optional(),
   /** Phase 120: durable audit trail for settle-time gate bypasses. */
   gateBypasses: z.array(GateBypassZ).optional(),
+  /** Phase 140: per-gate ran/skipped provenance. Optional for back-compat with
+   *  pre-phase-140 records; every settle from this phase forward populates it. */
+  gates: z.array(GateProvenanceZ).optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

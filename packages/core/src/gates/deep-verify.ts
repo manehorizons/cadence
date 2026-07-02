@@ -1,19 +1,27 @@
 import type { DeepVerdict, DeepVerifyMeta } from '@manehorizons/cadence-types';
 import type { VerifyAc, VerifyInput, VerifyTestRef } from '../verify/verifier.js';
 import { capDiff } from '../verify/cap-diff.js';
-import type { GateImpl, GateFlags, GateResult } from './types.js';
+import type { GateImpl, GateFlags, GateResult, SettleContext } from './types.js';
 
 /** Schema default for `verifier.diffCapBytes` (256KB); used when config is absent. */
 const DEFAULT_DIFF_CAP_BYTES = 262144;
+
+/**
+ * Phase 140: is deep-verify actually going to do real work this settle?
+ * Exported so the registry's gate-provenance collection (Task 7) can
+ * classify "invoked but no-op" without duplicating this condition.
+ */
+export function isDeepVerifyRequested(ctx: SettleContext): boolean {
+  const deepRequested = ctx.opts.deep === true || ctx.gateSet.gates.includes('deep-verify');
+  return deepRequested && ctx.opts.auto !== false;
+}
 
 /**
  * Deep verifier gate (Phase 15). Extracted from settle.ts verbatim. Fires on
  * --deep OR membership('deep-verify'); skipped under --auto=false.
  */
 export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
-  const deepRequested =
-    ctx.opts.deep === true || ctx.gateSet.gates.includes('deep-verify');
-  if (!deepRequested || ctx.opts.auto === false) {
+  if (!isDeepVerifyRequested(ctx)) {
     return { outcome: 'pass' };
   }
 

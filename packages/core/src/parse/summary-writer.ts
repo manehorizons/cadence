@@ -11,11 +11,25 @@ export function renderSummaryMd(s: Summary): string {
   ];
   for (const ac of s.acResults) {
     const badge = ac.pass ? 'PASS' : 'FAIL';
-    lines.push(`- ${ac.id}: ${badge}${ac.note ? ` — ${ac.note}` : ''}`);
+    const evidenceTag = ac.evidence ? ` (${ac.evidence})` : '';
+    lines.push(`- ${ac.id}: ${badge}${evidenceTag}${ac.note ? ` — ${ac.note}` : ''}`);
   }
   lines.push('', '## Tasks', '');
   for (const t of s.taskResults) {
     lines.push(`- ${t.id}: ${t.status}${t.notes ? ` — ${t.notes}` : ''}`);
+  }
+  if (s.gates && s.gates.length > 0) {
+    lines.push('', '## Gate provenance', '');
+    for (const g of s.gates) {
+      lines.push(`- ${g.gate}: ${g.status}${g.skipReason ? ` — ${g.skipReason}` : ''}`);
+    }
+    const tokensKnown =
+      s.deepVerifyMeta?.inputTokens !== undefined || s.deepVerifyMeta?.outputTokens !== undefined;
+    if (tokensKnown) {
+      const inTok = s.deepVerifyMeta?.inputTokens ?? 0;
+      const outTok = s.deepVerifyMeta?.outputTokens ?? 0;
+      lines.push(`  tokens: ${inTok} in / ${outTok} out`);
+    }
   }
   if (s.gateBypasses && s.gateBypasses.length > 0) {
     lines.push('', '## Gate bypasses', '');

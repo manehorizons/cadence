@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "139-default-install-enforces-what-the-tutorial-demonstrates",
+  "activePhase": "140-summary-gate-provenance",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-02T03:23:48.160Z",
+  "draftReadAt": "2026-07-02T04:17:24.544Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-02.md",
-    "subagentSpawns": 440
+    "subagentSpawns": 536
   },
   "skillAudit": {
     "required": [],
