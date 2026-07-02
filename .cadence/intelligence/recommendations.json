@@ -693,17 +693,17 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "139-default-install-enforces-what-the-tutorial-demonstrates",
       "scoutId": "scout-20260701-audit",
       "createdAt": "2026-07-01T23:56:35.797Z",
-      "updatedAt": "2026-07-02T03:24:53.670Z",
-      "convertedToPhaseId": "139-default-install-enforces-what-the-tutorial-demonstrates"
+      "updatedAt": "2026-07-02T03:24:53.670Z"
     },
     {
       "id": "rec-20260701-003",
       "title": "SUMMARY gate provenance: record what ran, what skipped, and what PASS meant",
       "summary": "SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.",
       "source": "manual",
-      "status": "candidate",
+      "status": "converted",
       "readiness": "needs-decision",
       "priority": "high",
       "leverageScore": 5,
@@ -726,7 +726,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260701-audit",
       "createdAt": "2026-07-01T23:56:58.475Z",
-      "updatedAt": "2026-07-01T23:56:58.475Z"
+      "updatedAt": "2026-07-02T04:16:18.048Z",
+      "convertedToPhaseId": "140-summary-gate-provenance"
     },
     {
       "id": "rec-20260701-008",

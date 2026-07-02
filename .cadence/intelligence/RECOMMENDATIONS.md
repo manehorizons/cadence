@@ -364,7 +364,7 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 
 ## rec-20260701-003 — SUMMARY gate provenance: record what ran, what skipped, and what PASS meant
 
-- status: candidate
+- status: converted
 - ready: needs-decision
 - priority: high
 - leverage: 5/10
