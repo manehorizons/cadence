@@ -758,36 +758,6 @@
       "updatedAt": "2026-07-01T23:56:58.475Z"
     },
     {
-      "id": "rec-20260701-005",
-      "title": "init --demo prints instructions that immediately refuse",
-      "summary": "--demo seeds a phase leaving the loop in DRAFT, but init still prints the generic Your-first-loop block (step 1: draft new) and the draft-new agent prompt — following the most prominent instruction hits draft new refused: loopPosition is DRAFT. Fix: when demoSeeded, suppress the generic block and agent prompt, print only approve → done → settle; also genericize the hardcoded 01-fix-login-timeout slug.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "init",
-        "onboarding"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts"
-      ],
-      "suggestedMilestoneId": "onboarding-honesty",
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:58.806Z",
-      "updatedAt": "2026-07-02T00:22:22.181Z"
-    },
-    {
       "id": "rec-20260701-006",
       "title": "Defuse the non-TTY approve trap in the agent path",
       "summary": "init gives repos with 20+ commits the standard profile, whose draft approve refuses headless without --no-approve — but the README first-real-phase example and the copy-paste agent-prompt both use plain draft approve. Fix: make renderAgentPrompt profile-aware so step 3 tells the agent to stop and hand the human the approve command (the intended control point), and note the same in README.",
@@ -1826,9 +1796,42 @@
       "decisionIds": [],
       "convertedToPhaseId": "134-progress-json",
       "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:58.634Z",
-      "updatedAt": "2026-07-02T01:14:52.736Z",
       "archivedAt": "2026-07-02T01:14:52.736Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-07-01T23:56:58.634Z",
+      "updatedAt": "2026-07-02T01:14:52.736Z"
+    },
+    {
+      "id": "rec-20260701-005",
+      "title": "init --demo prints instructions that immediately refuse",
+      "summary": "--demo seeds a phase leaving the loop in DRAFT, but init still prints the generic Your-first-loop block (step 1: draft new) and the draft-new agent prompt — following the most prominent instruction hits draft new refused: loopPosition is DRAFT. Fix: when demoSeeded, suppress the generic block and agent prompt, print only approve → done → settle; also genericize the hardcoded 01-fix-login-timeout slug.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "init",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts"
+      ],
+      "suggestedMilestoneId": "onboarding-honesty",
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "135-init-demo-next-steps",
+      "scoutId": "scout-20260701-audit",
+      "createdAt": "2026-07-01T23:56:58.806Z",
+      "updatedAt": "2026-07-02T01:22:37.987Z",
+      "archivedAt": "2026-07-02T01:22:37.987Z",
       "archiveReason": "converted-settled"
     }
   ]

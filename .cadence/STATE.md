@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 134-progress-json
+**Active phase:** 135-init-demo-next-steps
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 437
+- Subagent spawns this session: 438
 - Last handoff: SESSION-2026-07-02.md
 
 ## Counts

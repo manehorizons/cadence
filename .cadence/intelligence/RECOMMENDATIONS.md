@@ -394,22 +394,6 @@ checkGitHooks warns in any git repo whose core.hooksPath is not .githooks, witho
 
 SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.
 
-## rec-20260701-005 — init --demo prints instructions that immediately refuse
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: init, onboarding
-- files: packages/core/src/cli/commands/init.ts
-- evidence: 2026-07-01 audit R-05/F5: init.ts:436-471 prints three conflicting next-step blocks when --demo is used
-- next: cadence milestone propose
-
---demo seeds a phase leaving the loop in DRAFT, but init still prints the generic Your-first-loop block (step 1: draft new) and the draft-new agent prompt — following the most prominent instruction hits draft new refused: loopPosition is DRAFT. Fix: when demoSeeded, suppress the generic block and agent prompt, print only approve → done → settle; also genericize the hardcoded 01-fix-login-timeout slug.
-
 ## rec-20260701-006 — Defuse the non-TTY approve trap in the agent path
 
 - status: accepted
