@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 138-docs-truth-pass
+**Active phase:** 139-default-install-enforces-what-the-tutorial-demonstrates
 **Active draft:** (none)
 **Tier:** (n/a)
 
