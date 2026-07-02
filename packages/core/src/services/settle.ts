@@ -460,8 +460,10 @@ export async function settleService(
     }
 
     // Phase 140: strongest evidence per AC, derived from data the gate loop
-    // already produced — no new I/O. `ctx.coverage()` is memoized so this is
-    // a cache hit, not a second scan.
+    // already produced — no new I/O. `ctx.coverage()` is memoized so this is a
+    // cache hit when the test-coverage gate already ran (common case), but may be
+    // the first scan if that gate was skipped (e.g., --allow-missing-coverage,
+    // --auto=false, or a tier×profile without test-coverage in its gate set).
     const coverageForEvidence = await ctx.coverage();
     const coverageModeForEvidence = cadenceConfig?.verification?.coverageMode ?? 'mention';
     const buildTestRan = acc.buildTestRan !== false;
