@@ -87,6 +87,7 @@ cadence init
 cadence draft new --title "Fix login timeout" --template bugfix
 # edit the generated DRAFT: templates are scaffolds, not proof
 cadence draft approve 01-fix-login-timeout 01
+# ^ non-TTY (CI/agents)? add --no-approve — see the gate-profiles note below
 cadence build task T1 --status=DONE
 cadence settle run --auto
 # ^ Cadence refuses: AC-1 has no test. That's the point — it won't settle
