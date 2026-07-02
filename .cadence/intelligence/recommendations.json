@@ -847,40 +847,6 @@
       "updatedAt": "2026-07-01T23:57:40.509Z"
     },
     {
-      "id": "rec-20260701-011",
-      "title": "Docs truth pass + front-door coherence",
-      "summary": "README flagship example claims settle refuses with AC-1-has-no-test but actually trips the structural-verifier (bugfix template creates T1-T3, only T1 marked done); slash-command count is published as 11, 9, and 12 across three docs (code says 12). Fix the flow, reconcile counts (ideally generated from install-commands.ts under the doc-sync-gate pattern), and add activate + explain to the start menu so the front door reaches the remedy its own banner recommends.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs",
-        "start",
-        "onboarding"
-      ],
-      "affectedFiles": [
-        "README.md",
-        "docs/quickstart.md",
-        "docs/claude-code.md",
-        "packages/core/src/start/menu.ts"
-      ],
-      "suggestedMilestoneId": "onboarding-honesty",
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-011"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:57:40.677Z",
-      "updatedAt": "2026-07-02T00:22:22.696Z"
-    },
-    {
       "id": "rec-20260701-012",
       "title": "Boundary enforcement block mode, including subagent edits",
       "summary": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.",
@@ -1835,9 +1801,46 @@
       "decisionIds": [],
       "convertedToPhaseId": "137-refusal-trio",
       "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:57:18.333Z",
-      "updatedAt": "2026-07-02T01:37:11.071Z",
       "archivedAt": "2026-07-02T01:37:11.071Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-07-01T23:57:18.333Z",
+      "updatedAt": "2026-07-02T01:37:11.071Z"
+    },
+    {
+      "id": "rec-20260701-011",
+      "title": "Docs truth pass + front-door coherence",
+      "summary": "README flagship example claims settle refuses with AC-1-has-no-test but actually trips the structural-verifier (bugfix template creates T1-T3, only T1 marked done); slash-command count is published as 11, 9, and 12 across three docs (code says 12). Fix the flow, reconcile counts (ideally generated from install-commands.ts under the doc-sync-gate pattern), and add activate + explain to the start menu so the front door reaches the remedy its own banner recommends.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "start",
+        "onboarding"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/quickstart.md",
+        "docs/claude-code.md",
+        "packages/core/src/start/menu.ts"
+      ],
+      "suggestedMilestoneId": "onboarding-honesty",
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-011"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "138-docs-truth-pass",
+      "scoutId": "scout-20260701-audit",
+      "createdAt": "2026-07-01T23:57:40.677Z",
+      "updatedAt": "2026-07-02T01:50:45.548Z",
+      "archivedAt": "2026-07-02T01:50:45.548Z",
       "archiveReason": "converted-settled"
     }
   ]

@@ -442,22 +442,6 @@ Every gate honors --force or a per-gate --allow-* flag; even the production pres
 
 An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose — the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.
 
-## rec-20260701-011 — Docs truth pass + front-door coherence
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs, start, onboarding
-- files: README.md, docs/quickstart.md, docs/claude-code.md, packages/core/src/start/menu.ts
-- evidence: 2026-07-01 audit R-11/F9-F10: README.md:22,87-92; docs/quickstart.md:507; docs/claude-code.md:34 vs 168; start/menu.ts:26 omits activate
-- next: cadence milestone propose
-
-README flagship example claims settle refuses with AC-1-has-no-test but actually trips the structural-verifier (bugfix template creates T1-T3, only T1 marked done); slash-command count is published as 11, 9, and 12 across three docs (code says 12). Fix the flow, reconcile counts (ideally generated from install-commands.ts under the doc-sync-gate pattern), and add activate + explain to the start menu so the front door reaches the remedy its own banner recommends.
-
 ## rec-20260701-012 — Boundary enforcement block mode, including subagent edits
 
 - status: candidate

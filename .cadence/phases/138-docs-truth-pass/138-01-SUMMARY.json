@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "draftId": "138-01",
+  "completedAt": "2026-07-02T01:50:45.547Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true
+    },
+    {
+      "id": "AC-2",
+      "pass": true
+    },
+    {
+      "id": "AC-3",
+      "pass": true
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Reconciled slash-command count to code truth (12) across README.md, docs/quickstart.md (also completed its table with the 3 missing commands), and docs/claude-code.md (fixed a broken TOC anchor: TOC said 9, section header said 12). Investigated the README flagship-walkthrough claim live in a sandbox and found it already accurate (settle genuinely refuses on the coverage gate as documented) — scoped out, no change needed. New regression test docs-command-count.test.ts in host-claude-code package derives the true count from installCommands() output rather than hardcoding it."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Added a 7th cadence start menu option ('Turn on real verification' -> cadence activate), so the guided front door reaches the remedy its own mock-verifier banner recommends by name. Updated 3 pre-existing tests' hardcoded option counts (6->7); all existing resolvePick(n<=6) unchanged. Deferred adding cadence explain (no equivalent forcing function, noted in SPEC)."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
