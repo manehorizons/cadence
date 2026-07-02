@@ -134,7 +134,38 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.36.0`** (2026-07-02, tag `v1.36.0`
+change). The latest version is **`1.37.0`** (2026-07-02, tag `v1.37.0`
+pending): the **enforcement-wedge wave 2 (partial)** release (v1.37) — the
+first two of the three 2026-07-01 audit "wave 2" recommendations
+(rec-20260701-001, rec-20260701-003; rec-20260701-009 "sealed gates" not yet
+included — bundling wasn't a foregone conclusion this wave, per the audit's own
+framing, so this release ships what's landed rather than waiting). No new
+DESIGN.md D-number (deepens the existing coverage-gate and settle/SUMMARY
+models). **Phase 139** — **default install enforces what the tutorial
+demonstrates**: `verification.coverageMode` now defaults to `assertion` (not
+`mention`) for new `cadence init` runs across all three presets, so a
+comment-only `AC-N` mention no longer counts as tested (existing
+`config.json` files are untouched); `verification.testCommand` is derived
+from the target repo's `package.json#scripts.test` + detected package manager
+(lockfile sniffing) and wired into both the real init write path and `init
+--dry-run`'s preview; and `build-test-must-pass` writes a loud, non-blocking
+`NO_TEST_COMMAND_NOTICE` to stderr instead of passing silently when no test
+command is configured. Sourced from rec-20260701-001, shipped as **PR #119**
+(squash `595a3f9`). **Phase 140** — **SUMMARY gate provenance**: `SUMMARY.json`
+now records per-gate `ran`/`skipped` (+ reason) provenance for every
+settle-dispatched gate, and each `acResults[]` row carries an optional
+`evidence` class (`ai-verified`, `executed`, `assertion`, `mention`, or
+`unverified` — the strongest real evidence found for that AC), with a
+mock-provider deep-verify never reporting `ai-verified`; `SUMMARY.md` renders
+a new "Gate provenance" section plus an evidence tag per AC line; pre-existing
+SUMMARY records without these fields still parse/render unchanged. Sourced
+from rec-20260701-003, shipped as **PR #120** (squash `13906e9`). Both phases
+built TDD and dogfooded through CADENCE's own loop (`settle run --auto`, all
+ACs derived PASS). All four published packages bumped `1.36.0 → 1.37.0` in
+lockstep (`cadence-core` carries both features; `cadence-types` carries the
+new `GateProvenance`/`AcEvidence` schema fields; both host adapters are
+version-alignment only); npm publish is the user-triggered manual `Release`
+workflow. Prior: **`1.36.0`** (2026-07-02, tag `v1.36.0`
 pending): the **onboarding-honesty wave 1** release (v1.36) — six small,
 high-trust fixes from the 2026-07-01 onboarding/ease-of-use audit
 (rec-20260701-002/004/005/006/007/011; no new DESIGN.md D-number —
