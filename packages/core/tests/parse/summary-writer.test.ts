@@ -75,3 +75,58 @@ describe('renderSummaryMd', () => {
     expect(md).not.toContain('## Gate bypasses');
   });
 });
+
+describe('renderSummaryMd - gate provenance (AC-4, phase 140)', () => {
+  it('renders a Gate provenance section with ran and skipped entries', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      gates: [
+        { gate: 'draft-read', status: 'ran' },
+        { gate: 'security-audit', status: 'skipped', skipReason: 'not in the active tier x profile gate set' },
+      ],
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('## Gate provenance');
+    expect(md).toContain('- draft-read: ran');
+    expect(md).toMatch(/- security-audit: skipped — not in the active tier/);
+  });
+
+  it('omits the Gate provenance section when gates is absent (AC-5 back-compat)', () => {
+    const md = renderSummaryMd(SAMPLE);
+    expect(md).not.toContain('## Gate provenance');
+  });
+
+  it('renders deep-verify token usage under the section when present', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      gates: [{ gate: 'deep-verify', status: 'ran' }],
+      deepVerifyMeta: {
+        diffProvided: true,
+        diffBytes: 500,
+        truncated: false,
+        filesCount: 1,
+        provider: 'anthropic',
+        inputTokens: 1204,
+        outputTokens: 340,
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('tokens: 1204 in / 340 out');
+  });
+});
+
+describe('renderSummaryMd - AC evidence tags (AC-4, phase 140)', () => {
+  it('renders the evidence tag next to a PASS/FAIL line when present', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      acResults: [{ id: 'AC-1', pass: true, evidence: 'assertion' }],
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toMatch(/AC-1: PASS \(assertion\)/);
+  });
+
+  it('omits the evidence tag when absent (AC-5 back-compat)', () => {
+    const md = renderSummaryMd(SAMPLE);
+    expect(md).toMatch(/- AC-1: PASS\n/);
+  });
+});
