@@ -107,3 +107,43 @@ describe('cadence init --demo (phase 109, rec-20260617-002)', () => {
     ).toBe(true);
   });
 });
+
+// Phase 135 (rec-20260701-005 / audit F5): --demo left the loop in DRAFT but
+// init still printed the generic "Your first loop" block (step 1: draft new)
+// and the "Hand it to your AI agent" block/agent prompt — both refuse
+// immediately (loopPosition is DRAFT) if followed, conflicting with the
+// correct "Demo phase ready" instructions printed right below them.
+describe('cadence init --demo next-step suppression (phase 135, rec-20260701-005)', () => {
+  it('AC-1: --demo suppresses the generic "Your first loop" block', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo', '--demo'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/Your first loop/);
+    expect(r.stdout).not.toMatch(/cadence draft new --title "Fix login timeout"/);
+  });
+
+  it('AC-2: --demo suppresses the "Hand it to your AI agent" block', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo', '--demo'], active.root);
+    expect(r.stdout).not.toMatch(/Hand it to your AI agent/);
+    expect(r.stdout).not.toMatch(/Reprint with your goal/);
+  });
+
+  it('AC-3: --demo still prints the "Demo phase ready" instructions', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo', '--demo'], active.root);
+    expect(r.stdout).toMatch(/Demo phase ready/);
+    expect(r.stdout).toMatch(/cadence draft approve 01-demo 01/);
+    expect(r.stdout).toMatch(/cadence done T1/);
+    expect(r.stdout).toMatch(/cadence settle run --ac AC-1=pass/);
+  });
+
+  it('AC-4: without --demo, both generic blocks still print unchanged', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo'], active.root);
+    expect(r.stdout).toMatch(/Your first loop/);
+    expect(r.stdout).toMatch(/cadence draft new --title "Fix login timeout"/);
+    expect(r.stdout).toMatch(/Hand it to your AI agent/);
+    expect(r.stdout).not.toMatch(/Demo phase ready/);
+  });
+});

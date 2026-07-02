@@ -432,32 +432,38 @@ export function registerInitCommand(program: Command): void {
         console.log(`                ROADMAP.md, MILESTONES.md,`);
         console.log(`                SPECIAL-FLOWS.md, STATE.md, CLAUDE.md`);
         console.log(`                phases/ handoff/ research/ archive/`);
-        console.log('');
-        console.log(`  Your first loop`);
-        console.log(`  ───────────────`);
-        console.log(
-          `  1. cadence draft new --title "Fix login timeout" --template bugfix`,
-        );
-        console.log(`  2. edit the generated DRAFT — templates are scaffolds, not proof`);
-        console.log(`  3. cadence draft approve 01-fix-login-timeout 01`);
-        console.log(`  4. cadence done T1  (repeat for each task you complete)`);
-        console.log(`  5. cadence settle run --auto`);
-        console.log('');
-        console.log(
-          `  Stuck? Run \`cadence progress\` anytime for the next action.`,
-        );
-        console.log(
-          `  Not sure where to go next? Run \`cadence start\` for a guided menu.`,
-        );
-        console.log(`  Docs: .cadence/ROADMAP.md and the project README.`);
-        console.log('');
-        console.log(`  Hand it to your AI agent`);
-        console.log(`  ────────────────────────`);
-        console.log(`  Paste this to your coding agent to scaffold your first real phase:`);
-        console.log('');
-        process.stdout.write(renderAgentPrompt());
-        console.log('');
-        console.log(`  Reprint with your goal:  cadence agent-prompt --goal "..."`);
+        // Phase 135: a --demo phase already leaves the loop in DRAFT, so the
+        // generic "next step is draft new" instructions below would refuse
+        // immediately if followed — suppress them in favor of the
+        // demo-specific "Demo phase ready" block printed further down.
+        if (!demoSeeded) {
+          console.log('');
+          console.log(`  Your first loop`);
+          console.log(`  ───────────────`);
+          console.log(
+            `  1. cadence draft new --title "Fix login timeout" --template bugfix`,
+          );
+          console.log(`  2. edit the generated DRAFT — templates are scaffolds, not proof`);
+          console.log(`  3. cadence draft approve 01-fix-login-timeout 01`);
+          console.log(`  4. cadence done T1  (repeat for each task you complete)`);
+          console.log(`  5. cadence settle run --auto`);
+          console.log('');
+          console.log(
+            `  Stuck? Run \`cadence progress\` anytime for the next action.`,
+          );
+          console.log(
+            `  Not sure where to go next? Run \`cadence start\` for a guided menu.`,
+          );
+          console.log(`  Docs: .cadence/ROADMAP.md and the project README.`);
+          console.log('');
+          console.log(`  Hand it to your AI agent`);
+          console.log(`  ────────────────────────`);
+          console.log(`  Paste this to your coding agent to scaffold your first real phase:`);
+          console.log('');
+          process.stdout.write(renderAgentPrompt());
+          console.log('');
+          console.log(`  Reprint with your goal:  cadence agent-prompt --goal "..."`);
+        }
         if (demoSeeded) {
           console.log('');
           console.log(`  Demo phase ready`);
