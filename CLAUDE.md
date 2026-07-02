@@ -134,7 +134,31 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.35.0`** (2026-06-27, tag `v1.35.0`
+change). The latest version is **`1.36.0`** (2026-07-02, tag `v1.36.0`
+pending): the **onboarding-honesty wave 1** release (v1.36) — six small,
+high-trust fixes from the 2026-07-01 onboarding/ease-of-use audit
+(rec-20260701-002/004/005/006/007/011; no new DESIGN.md D-number —
+legibility/trust fixes, the same lane as `doctor`/`init`/`activate`). **Phase
+133** — `cadence doctor`'s git-hooks check now verifies `.githooks/` actually
+exists before flagging, and never auto-overwrites a pre-existing custom
+`hooksPath` (e.g. Husky). **Phase 134** — `cadence progress --json`, mirroring
+`recommend --json`'s pattern. **Phase 135** — `init --demo` no longer prints
+the generic "Your first loop"/"Hand it to your AI agent" blocks (both of which
+immediately refuse in DRAFT) alongside the correct demo instructions. **Phase
+136** — README's real-phase walkthrough gets an inline `--no-approve` pointer
+at the approve line. **Phase 137** — the refusal trio: BUILD-state `progress`
+names the real first-pending task (or `settle run --auto`) instead of an
+unrunnable compound command; `draft approve` on a missing `DRAFT.md` gives a
+clean guarded refusal instead of a raw `ENOENT`; out-of-position `settle run`
+also prints a `Next:` line. **Phase 138** — the slash-command count
+reconciled to the code-true count across README/quickstart/claude-code.md
+(fixing a broken TOC anchor), and `cadence start`'s menu gained an `activate`
+option. Built across a single dogfooded milestone (`mil-grp-onboarding-honesty`),
+each phase real-TDD'd as a two-commit settle, shipped as **PR #117** (squash
+`963f222`). All four published packages bumped `1.35.0 → 1.36.0` in lockstep
+(`cadence-core` carries the features; the other three are version-alignment
+only); npm publish is the user-triggered manual `Release` workflow. Prior:
+**`1.35.0`** (2026-06-27, tag `v1.35.0`
 pending): the **init-dry-run** release (v1.35) — **`cadence init --dry-run`**, a
 non-destructive **fit-check** that resolves everything init would (project name
 + source, preset, gate profile + source, layout, test globs,

@@ -1,5 +1,29 @@
 # @manehorizons/cadence-types
 
+## 1.36.0
+
+### Minor Changes
+
+- Onboarding-honesty wave 1: six small, high-trust fixes from the 2026-07-01
+  audit (phases 133–138).
+  - `cadence doctor`'s git-hooks check now verifies `.githooks/` actually exists
+    before flagging, and never auto-overwrites a pre-existing custom
+    `hooksPath` (e.g. Husky) (phase 133).
+  - `cadence progress --json` — mirrors `recommend --json`'s pattern (phase 134).
+  - `init --demo` no longer prints the generic "Your first loop"/"Hand it to
+    your AI agent" blocks (which immediately refuse in DRAFT) alongside the
+    correct demo instructions (phase 135).
+  - README's real-phase walkthrough gets an inline `--no-approve` pointer at
+    the approve line (phase 136).
+  - Refusal trio: BUILD-state `progress` names the real first-pending task (or
+    `settle run --auto`) instead of an unrunnable compound command;
+    `draft approve` on a missing `DRAFT.md` gives a clean guarded refusal
+    instead of a raw `ENOENT`; out-of-position `settle run` also prints a
+    `Next:` line (phase 137).
+  - Slash-command count reconciled to the code-true count across
+    README/quickstart/claude-code.md (fixed a broken TOC anchor), and
+    `cadence start`'s menu gained an `activate` option (phase 138).
+
 ## 1.35.0
 
 ### Minor Changes
