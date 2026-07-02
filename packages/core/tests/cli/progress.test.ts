@@ -43,4 +43,39 @@ describe('cadence progress', () => {
     const r = await run(['progress'], active.root);
     expect(r.stdout).toMatch(/cadence build task|cadence settle/);
   });
+
+  it('AC-1: --json emits a single { command, reason } object, no rendered text', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['progress', '--json'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/^Next:/m);
+    expect(r.stdout).not.toMatch(/^Reason:/m);
+    const parsed = JSON.parse(r.stdout);
+    expect(parsed).toEqual({
+      command: 'cadence draft new --title "..."',
+      reason: expect.any(String),
+    });
+  });
+
+  it('AC-2: default (no --json) rendering is unchanged', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['progress'], active.root);
+    expect(r.stdout).toMatch(/^Next: /);
+    expect(r.stdout).toMatch(/^Reason: /m);
+    expect(() => JSON.parse(r.stdout)).toThrow();
+  });
+
+  it('AC-3: --json composes with DRAFT and BUILD, matching the non-JSON command', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+
+    const draftText = await run(['progress'], active.root);
+    const draftJson = JSON.parse((await run(['progress', '--json'], active.root)).stdout);
+    expect(draftText.stdout).toContain(draftJson.command);
+
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    const buildText = await run(['progress'], active.root);
+    const buildJson = JSON.parse((await run(['progress', '--json'], active.root)).stdout);
+    expect(buildText.stdout).toContain(buildJson.command);
+  });
 });

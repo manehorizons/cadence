@@ -6,10 +6,12 @@ import type { CommandIO, CommandResult } from './io.js';
 /**
  * `cadence progress` — the single recommended next action (read-only).
  * Returns `data: { command, reason }` for structured consumers.
+ * `args.json` mirrors `--json` (same pattern as `recommendService`).
  */
 export async function progressService(
   repoRoot: string,
   io: CommandIO,
+  args: { json?: boolean } = {},
 ): Promise<CommandResult> {
   try {
     const backend = new SimpleStateBackend(repoRoot);
@@ -22,9 +24,14 @@ export async function progressService(
       if (n !== null) hints = { nextPhaseNumber: n };
     }
     const action = nextAction(state, hints);
-    io.out(`Next: ${action.command}\n`);
-    io.out(`Reason: ${action.reason}\n`);
-    return { exitCode: 0, data: { command: action.command, reason: action.reason } };
+    const data = { command: action.command, reason: action.reason };
+    if (args.json) {
+      io.out(JSON.stringify(data) + '\n');
+    } else {
+      io.out(`Next: ${action.command}\n`);
+      io.out(`Reason: ${action.reason}\n`);
+    }
+    return { exitCode: 0, data };
   } catch (err) {
     io.err(`progress failed: ${err instanceof Error ? err.message : String(err)}\n`);
     return { exitCode: 1 };
