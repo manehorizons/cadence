@@ -90,7 +90,7 @@ describe('settle --interactive (Phase 16)', () => {
       ),
     );
     expect(summary.interactiveVerify['AC-1']).toEqual({ verdict: 'pass' });
-    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true });
+    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true, evidence: 'assertion' });
   });
 
   it('refuses with stderr when user verdicts fail (AC-3)', async () => {
@@ -156,7 +156,7 @@ describe('settle --interactive (Phase 16)', () => {
       ),
     );
     expect(summary.interactiveVerify).toEqual({}); // skipped AC omitted
-    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true }); // structural pass
+    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true, evidence: 'assertion' }); // structural pass
   });
 
   it('T4 (Phase 29.8): skip without --auto still falls through to structural derivation and refuses an incomplete AC', async () => {
@@ -221,6 +221,7 @@ describe('settle --interactive (Phase 16)', () => {
       id: 'AC-1',
       pass: true,
       note: 'explicit-override',
+      evidence: 'assertion',
     });
   });
 
@@ -245,7 +246,7 @@ describe('settle --interactive (Phase 16)', () => {
     expect(summary.interactiveVerifySkipped).toBe('non-tty');
     expect(summary.interactiveVerify).toBeUndefined();
     // The other gates still decide: structural DONE → AC-1 passes.
-    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true });
+    expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true, evidence: 'assertion' });
   });
 
   // Phase 116 AC-5: CADENCE_REQUIRE_TTY=1 restores the pre-116 non-TTY refusal.

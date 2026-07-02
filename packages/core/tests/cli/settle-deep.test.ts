@@ -265,4 +265,29 @@ describe('settle --deep (Phase 15)', () => {
     const r = await run(['settle', 'run', '--auto', '--deep'], active.root);
     expect(r.stderr).toContain('falling back to mock');
   });
+
+  // AC-3 (phase 140): the mock verifier is a placeholder, not real
+  // verification (v1.25 precedent) — a mock-provider deep-verify PASS must
+  // never be reported as 'ai-verified' evidence. This is the one call most
+  // likely to get silently reversed later, so it gets its own explicit
+  // end-to-end regression test rather than relying only on the unit test in
+  // ac-evidence.test.ts.
+  it('AC-3: a mock-provider --deep pass does not report ai-verified evidence', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    await seedCoverageTest(active.root, ['AC-1']);
+    const r = await run(['settle', 'run', '--auto', '--deep'], active.root);
+    expect(r.code).toBe(0);
+    const summary = JSON.parse(
+      await readFile(
+        join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
+        'utf8',
+      ),
+    );
+    expect(summary.deepVerify['AC-1'].provider).toBe('mock');
+    expect(summary.deepVerify['AC-1'].pass).toBe(true);
+    expect(summary.acResults[0].evidence).not.toBe('ai-verified');
+  });
 });
