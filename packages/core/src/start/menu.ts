@@ -66,6 +66,13 @@ export const START_OPTIONS: StartOption[] = [
     runner: 'cadence',
     args: ['doctor'],
   },
+  {
+    number: 7,
+    label: 'Turn on real verification',
+    display: 'cadence activate',
+    runner: 'cadence',
+    args: ['activate'],
+  },
 ];
 
 /** Resolve a 1-based pick to its option, or undefined if out of range. */

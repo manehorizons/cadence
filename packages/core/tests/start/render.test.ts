@@ -3,7 +3,7 @@ import { renderMenu, renderJson, renderConfirm } from '../../src/start/render.js
 import { resolvePick } from '../../src/start/menu.js';
 
 describe('start render', () => {
-  it('lists all six options and the quit line (AC-3)', () => {
+  it('lists all options and the quit line (AC-3)', () => {
     const text = renderMenu(false);
     expect(text).toContain('What are you doing?');
     expect(text).toContain('1. Try Cadence in a throwaway sandbox');
@@ -31,7 +31,7 @@ describe('start render', () => {
       reason: 'You are set up and idle.',
     });
     expect(json.initialized).toBe(true);
-    expect(json.options).toHaveLength(6);
+    expect(json.options).toHaveLength(7);
     expect(json.options[0]).toHaveProperty('runner');
     expect(json.recommendation?.command).toContain('--template bugfix');
   });

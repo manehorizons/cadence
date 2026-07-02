@@ -23,7 +23,7 @@ describe('runStart', () => {
     const res = await runStart('/repo', { json: true, isTty: false }, io, d);
     expect(res.exitCode).toBe(0);
     const json = JSON.parse(io.stdout());
-    expect(json.options).toHaveLength(6);
+    expect(json.options).toHaveLength(7);
     expect(json.recommendation.command).toContain('tutorial');
     expect(d.spawned).toHaveLength(0);
   });
@@ -59,6 +59,16 @@ describe('runStart', () => {
     expect(res.exitCode).toBe(0);
     expect(d.spawned).toEqual([
       expect.objectContaining({ runner: 'cadence', args: ['init'] }),
+    ]);
+  });
+
+  it('138 AC-3: dispatches cadence activate via --pick 7 --yes', async () => {
+    const io = bufferIO();
+    const d = deps();
+    const res = await runStart('/repo', { pick: 7, yes: true, isTty: false }, io, d);
+    expect(res.exitCode).toBe(0);
+    expect(d.spawned).toEqual([
+      expect.objectContaining({ runner: 'cadence', args: ['activate'] }),
     ]);
   });
 
