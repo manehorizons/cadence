@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-27T00:34:46.490Z",
+  "generatedAt": "2026-07-02T00:19:42.012Z",
   "ranked": [
     {
-      "id": "rec-20260619-005",
-      "title": "init dry-run fit check",
-      "raw": 12.7,
-      "score": 53,
+      "id": "rec-20260701-001",
+      "title": "Make the default install enforce what the tutorial demonstrates",
+      "raw": 20.7,
+      "score": 65,
       "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
+      "readiness": "needs-decision",
+      "priority": "critical",
       "decayState": "fresh",
       "terms": [
         {
@@ -29,27 +29,322 @@
           "value": 0
         },
         {
-          "label": "ready raw-idea",
-          "value": 0
+          "label": "ready needs-decision",
+          "value": 2
         },
         {
           "label": "decay fresh",
           "value": 4
         },
         {
-          "label": "prio medium",
-          "value": 2
+          "label": "prio critical",
+          "value": 8
         }
       ],
-      "suggestedBackendAction": "cadence milestone propose"
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
     },
     {
-      "id": "rec-20260619-008",
-      "title": "Team rollout kit",
-      "raw": 12.7,
-      "score": 53,
+      "id": "rec-20260701-002",
+      "title": "doctor git-hooks check leaks Cadence-repo assumption; --fix can break consumer repos",
+      "raw": 20.7,
+      "score": 65,
       "status": "candidate",
-      "readiness": "raw-idea",
+      "readiness": "needs-decision",
+      "priority": "critical",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio critical",
+          "value": 8
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-003",
+      "title": "SUMMARY gate provenance: record what ran, what skipped, and what PASS meant",
+      "raw": 17.7,
+      "score": 61,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-004",
+      "title": "Agent-grade JSON across the loop, starting with progress --json",
+      "raw": 17.7,
+      "score": 61,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-005",
+      "title": "init --demo prints instructions that immediately refuse",
+      "raw": 17.7,
+      "score": 61,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-006",
+      "title": "Defuse the non-TTY approve trap in the agent path",
+      "raw": 17.7,
+      "score": 61,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-007",
+      "title": "Refusal trio: finish the always-a-next-move promise",
+      "raw": 17.7,
+      "score": 61,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-008",
+      "title": "Structured draft editing: draft add-ac / add-task / set-objective",
+      "raw": 17.7,
+      "score": 61,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-009",
+      "title": "Sealed gates: let production preset make named gates non-bypassable",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
       "priority": "medium",
       "decayState": "fresh",
       "terms": [
@@ -70,8 +365,8 @@
           "value": 0
         },
         {
-          "label": "ready raw-idea",
-          "value": 0
+          "label": "ready needs-decision",
+          "value": 2
         },
         {
           "label": "decay fresh",
@@ -82,7 +377,134 @@
           "value": 2
         }
       ],
-      "suggestedBackendAction": "cadence milestone propose"
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-010",
+      "title": "MCP parity for the intelligence lifecycle",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-011",
+      "title": "Docs truth pass + front-door coherence",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
+    },
+    {
+      "id": "rec-20260701-012",
+      "title": "Boundary enforcement block mode, including subagent edits",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260701-audit"
     }
   ],
   "parked": [],
@@ -92,10 +514,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 23,
-    "ranked": 2,
+    "total": 12,
+    "ranked": 12,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 21
+    "excluded": 0
   }
 }

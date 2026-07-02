@@ -345,3 +345,195 @@ The rec lifecycle has no terminal status for work that has actually shipped. pro
 - next: cadence milestone propose
 
 Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.
+
+## rec-20260701-001 — Make the default install enforce what the tutorial demonstrates
+
+- status: candidate
+- ready: needs-decision
+- priority: critical
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, init, verification
+- files: packages/types/src/config.ts, packages/core/src/init/plan.ts, packages/core/src/gates/build-test-must-pass.ts
+- evidence: 2026-07-01 audit R-01/F1: comment-only test file (// AC-1) settled green on fresh init, SUMMARY recorded AC-1: PASS, no test runner executed
+- next: cadence milestone propose
+
+Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, init never derives verification.testCommand (build-test-must-pass passes silently), all verifier seams are mock. Fix: default coverageMode=assertion for new inits, derive testCommand from package.json scripts.test, print a loud settle notice when no testCommand exists.
+
+## rec-20260701-002 — doctor git-hooks check leaks Cadence-repo assumption; --fix can break consumer repos
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: critical
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: doctor
+- files: packages/core/src/doctor/run.ts, packages/core/src/doctor/fix.ts
+- evidence: 2026-07-01 audit R-02/F2: reproduced in sandbox — fix applied hooksPath=.githooks with no .githooks dir, check then reported ok
+- next: cadence milestone propose
+
+checkGitHooks warns in any git repo whose core.hooksPath is not .githooks, without checking the directory exists; doctor --fix sets hooksPath to a nonexistent dir and reports ok, and would overwrite a Husky users .husky path. Fix: return not-applicable when .githooks/ is absent, never flag or overwrite a custom hooksPath, add missing-dir test case.
+
+## rec-20260701-003 — SUMMARY gate provenance: record what ran, what skipped, and what PASS meant
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: settle, types
+- files: packages/core/src/settle/summary-writer.ts, packages/core/src/gates/deep-verify.ts
+- evidence: 2026-07-01 audit R-03/F3: sandbox SUMMARY.json from comment-only settle shows bare acResults pass:true, no gate record, no provenance
+- next: cadence milestone propose
+
+SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.
+
+## rec-20260701-004 — Agent-grade JSON across the loop, starting with progress --json
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli
+- files: packages/core/src/cli/commands/progress.ts, packages/core/src/services/io.ts, packages/core/src/cli/commands/recommendation.ts
+- evidence: 2026-07-01 audit R-04/F4: reproduced — cadence progress --json exits 1 with unknown option; 15 read commands support --json, zero loop-write commands do
+- next: cadence milestone propose
+
+progress has no --json (service already returns the structured payload MCP gets); draft/approve/build task/settle run have no JSON output, forcing agents to regex strings like Approved 132-01; recommendation show/list alone spell it --format json. Fix: add --json to progress first (one option + branch), then the loop-critical set; alias --format to --json.
+
+## rec-20260701-005 — init --demo prints instructions that immediately refuse
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: init, onboarding
+- files: packages/core/src/cli/commands/init.ts
+- evidence: 2026-07-01 audit R-05/F5: init.ts:436-471 prints three conflicting next-step blocks when --demo is used
+- next: cadence milestone propose
+
+--demo seeds a phase leaving the loop in DRAFT, but init still prints the generic Your-first-loop block (step 1: draft new) and the draft-new agent prompt — following the most prominent instruction hits draft new refused: loopPosition is DRAFT. Fix: when demoSeeded, suppress the generic block and agent prompt, print only approve → done → settle; also genericize the hardcoded 01-fix-login-timeout slug.
+
+## rec-20260701-006 — Defuse the non-TTY approve trap in the agent path
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: agent-prompt, onboarding, docs
+- files: packages/core/src/agent-prompt/render.ts, README.md, packages/core/src/init/plan.ts
+- evidence: 2026-07-01 audit R-06/F6: suggestGateProfile threshold at init/plan.ts:18-31 vs plain approve at render.ts:32 and README.md:89
+- next: cadence milestone propose
+
+init gives repos with 20+ commits the standard profile, whose draft approve refuses headless without --no-approve — but the README first-real-phase example and the copy-paste agent-prompt both use plain draft approve. Fix: make renderAgentPrompt profile-aware so step 3 tells the agent to stop and hand the human the approve command (the intended control point), and note the same in README.
+
+## rec-20260701-007 — Refusal trio: finish the always-a-next-move promise
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, progress
+- files: packages/core/src/progress.ts, packages/core/src/cli/commands/draft-approve.ts, packages/core/src/cli/commands/settle.ts
+- evidence: 2026-07-01 audit R-07/F10: progress.ts:53-55 compound command; draft-approve.ts:35 unguarded readFile vs spec-approve.ts:34 guard; settle.ts:147
+- next: cadence milestone propose
+
+Three surfaces break the refusals-guide pattern: (a) BUILD-state progress emits an unrunnable compound (build task <id> ... OR settle run) instead of one concrete command using the first PENDING task id; (b) draft approve on a missing draft dumps raw ENOENT while spec approve guards properly; (c) settle run out of position names no next step. All three are trivial diffs.
+
+## rec-20260701-008 — Structured draft editing: draft add-ac / add-task / set-objective
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: draft, cli
+- files: packages/core/src/parse/draft-scaffold.ts, packages/core/src/parse/draft-md.ts, packages/core/src/cli/commands/draft.ts
+- evidence: 2026-07-01 audit R-08/F7: draft exposes only new/check/approve; templates scaffold literal source-file placeholder stubs; stale-draft mtime gate exists because hand-editing is load-bearing
+- next: cadence milestone propose
+
+The DRAFT is the central artifact and the only loop step the CLI cannot touch — all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.
+
+## rec-20260701-009 — Sealed gates: let production preset make named gates non-bypassable
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, config
+- files: packages/core/src/gates/types.ts, packages/types/src/config.ts
+- evidence: 2026-07-01 audit R-09/F8: gates/types.ts:144-158 uniform bypass surface; production preset at config.ts:333-338 flips only loopEnforcement + preToolUseBuildGate
+- next: cadence milestone propose
+
+Every gate honors --force or a per-gate --allow-* flag; even the production preset removes none — the strictest expressible posture is bypassable-but-logged. Fix: a gates.sealed [gate-ids] config that makes listed gates ignore --force and their allow flag; wire into the production preset for test-coverage and build-test-must-pass. Bypass logging stays for everything unsealed.
+
+## rec-20260701-010 — MCP parity for the intelligence lifecycle
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: mcp
+- files: packages/core/src/mcp/tools.ts
+- evidence: 2026-07-01 audit R-10: 15 MCP tools vs 31 CLI command groups; tools.ts:331 promote description references milestone propose which has no tool
+- next: cadence milestone propose
+
+An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose — the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.
+
+## rec-20260701-011 — Docs truth pass + front-door coherence
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, start, onboarding
+- files: README.md, docs/quickstart.md, docs/claude-code.md, packages/core/src/start/menu.ts
+- evidence: 2026-07-01 audit R-11/F9-F10: README.md:22,87-92; docs/quickstart.md:507; docs/claude-code.md:34 vs 168; start/menu.ts:26 omits activate
+- next: cadence milestone propose
+
+README flagship example claims settle refuses with AC-1-has-no-test but actually trips the structural-verifier (bugfix template creates T1-T3, only T1 marked done); slash-command count is published as 11, 9, and 12 across three docs (code says 12). Fix the flow, reconcile counts (ideally generated from install-commands.ts under the doc-sync-gate pattern), and add activate + explain to the start menu so the front door reaches the remedy its own banner recommends.
+
+## rec-20260701-012 — Boundary enforcement block mode, including subagent edits
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: hooks, gates
+- files: packages/core/src/hooks/checks/boundary.ts, packages/core/src/hooks/handlers.ts, packages/types/src/config.ts
+- evidence: 2026-07-01 audit R-12/F8: boundary.ts:59-68 warn-only; handlers.ts:133-142 subagent counter; preToolUseBuildGate default off at config.ts:296
+- next: cadence milestone propose
+
+DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.

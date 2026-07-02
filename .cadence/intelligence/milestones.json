@@ -166,6 +166,39 @@
       ],
       "createdAt": "2026-06-19T02:47:54.044Z",
       "updatedAt": "2026-06-25T23:04:54.167Z"
+    },
+    {
+      "id": "mil-grp-onboarding-honesty",
+      "name": "onboarding-honesty",
+      "objective": "Deliver 6 recommendation(s): doctor git-hooks check leaks Cadence-repo assumption; --fix can break consumer repos; Agent-grade JSON across the loop, starting with progress --json; init --demo prints instructions that immediately refuse",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260701-002",
+        "rec-20260701-004",
+        "rec-20260701-005",
+        "rec-20260701-006",
+        "rec-20260701-007",
+        "rec-20260701-011"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [
+          "Shared file README.md edited by rec-20260701-006, rec-20260701-011 — ordering/coordination dependency."
+        ],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-grp-onboarding-honesty/SPEC.md",
+          "exportedAt": "2026-07-02T00:44:17.768Z"
+        }
+      ],
+      "createdAt": "2026-07-02T00:22:24.755Z",
+      "updatedAt": "2026-07-02T00:44:17.768Z"
     }
   ]
 }

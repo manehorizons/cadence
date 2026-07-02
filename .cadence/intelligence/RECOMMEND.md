@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-06-27T00:34:46.490Z
+Generated at: 2026-07-02T00:19:42.012Z
 
 ## Advisory
 
@@ -10,18 +10,100 @@ Generated at: 2026-06-27T00:34:46.490Z
 
 ## Ranked
 
-### rec-20260619-005 — init dry-run fit check
+### rec-20260701-001 — Make the default install enforce what the tutorial demonstrates
 
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- score: 65/100 (raw 20.7)
+- status: candidate · ready: needs-decision · priority: critical · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio critical +8 ⇒ raw 20.7 (score 65)
+- scout: scout-20260701-audit
 - next: cadence milestone propose
 
-### rec-20260619-008 — Team rollout kit
+### rec-20260701-002 — doctor git-hooks check leaks Cadence-repo assumption; --fix can break consumer repos
 
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- score: 65/100 (raw 20.7)
+- status: candidate · ready: needs-decision · priority: critical · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio critical +8 ⇒ raw 20.7 (score 65)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-003 — SUMMARY gate provenance: record what ran, what skipped, and what PASS meant
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-004 — Agent-grade JSON across the loop, starting with progress --json
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-005 — init --demo prints instructions that immediately refuse
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-006 — Defuse the non-TTY approve trap in the agent path
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-007 — Refusal trio: finish the always-a-next-move promise
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-008 — Structured draft editing: draft add-ac / add-task / set-objective
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-009 — Sealed gates: let production preset make named gates non-bypassable
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-010 — MCP parity for the intelligence lifecycle
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-011 — Docs truth pass + front-door coherence
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- scout: scout-20260701-audit
+- next: cadence milestone propose
+
+### rec-20260701-012 — Boundary enforcement block mode, including subagent edits
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- scout: scout-20260701-audit
 - next: cadence milestone propose
 
 ## Parked (deferred)
@@ -34,4 +116,4 @@ None.
 
 ## Totals
 
-- total 23 · ranked 2 · parked 0 · needs-attention 0 · excluded 21
+- total 12 · ranked 12 · parked 0 · needs-attention 0 · excluded 0
