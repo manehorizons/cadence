@@ -3,18 +3,18 @@
 > Derived view. Do not edit by hand — regenerated on every state.json write.
 
 **Project:** cadence
-**Loop position:** BUILD
+**Loop position:** IDLE
 **Active phase:** 140-summary-gate-provenance
-**Active draft:** 140-01
-**Tier:** standard
+**Active draft:** (none)
+**Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 444
+- Subagent spawns this session: 536
 - Last handoff: SESSION-2026-07-02.md
 
 ## Counts
-- Open drafts: 1
+- Open drafts: 0
 - Decisions: 0
 - Deferred items: 0
 

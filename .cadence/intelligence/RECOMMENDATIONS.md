@@ -362,22 +362,6 @@ Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that no
 
 Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, init never derives verification.testCommand (build-test-must-pass passes silently), all verifier seams are mock. Fix: default coverageMode=assertion for new inits, derive testCommand from package.json scripts.test, print a loud settle notice when no testCommand exists.
 
-## rec-20260701-003 — SUMMARY gate provenance: record what ran, what skipped, and what PASS meant
-
-- status: converted
-- ready: needs-decision
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: settle, types
-- files: packages/core/src/settle/summary-writer.ts, packages/core/src/gates/deep-verify.ts
-- evidence: 2026-07-01 audit R-03/F3: sandbox SUMMARY.json from comment-only settle shows bare acResults pass:true, no gate record, no provenance
-- next: cadence milestone propose
-
-SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.
-
 ## rec-20260701-008 — Structured draft editing: draft add-ac / add-task / set-objective
 
 - status: candidate

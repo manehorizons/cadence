@@ -699,37 +699,6 @@
       "updatedAt": "2026-07-02T03:24:53.670Z"
     },
     {
-      "id": "rec-20260701-003",
-      "title": "SUMMARY gate provenance: record what ran, what skipped, and what PASS meant",
-      "summary": "SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.",
-      "source": "manual",
-      "status": "converted",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "settle",
-        "types"
-      ],
-      "affectedFiles": [
-        "packages/core/src/settle/summary-writer.ts",
-        "packages/core/src/gates/deep-verify.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:58.475Z",
-      "updatedAt": "2026-07-02T04:16:18.048Z",
-      "convertedToPhaseId": "140-summary-gate-provenance"
-    },
-    {
       "id": "rec-20260701-008",
       "title": "Structured draft editing: draft add-ac / add-task / set-objective",
       "summary": "The DRAFT is the central artifact and the only loop step the CLI cannot touch — all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.",
@@ -1847,6 +1816,39 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-01T23:56:35.969Z",
       "updatedAt": "2026-07-02T01:51:46.414Z"
+    },
+    {
+      "id": "rec-20260701-003",
+      "title": "SUMMARY gate provenance: record what ran, what skipped, and what PASS meant",
+      "summary": "SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "settle",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/core/src/settle/summary-writer.ts",
+        "packages/core/src/gates/deep-verify.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "140-summary-gate-provenance",
+      "scoutId": "scout-20260701-audit",
+      "createdAt": "2026-07-01T23:56:58.475Z",
+      "updatedAt": "2026-07-02T22:23:49.995Z",
+      "archivedAt": "2026-07-02T22:23:49.995Z",
+      "archiveReason": "converted-settled"
     }
   ]
 }

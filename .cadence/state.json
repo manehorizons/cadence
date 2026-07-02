@@ -5,23 +5,18 @@
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
   "activePhase": "140-summary-gate-provenance",
-  "activeDraft": "140-01",
+  "activeDraft": null,
   "activeSpec": null,
-  "loopPosition": "BUILD",
-  "tier": "standard",
+  "loopPosition": "IDLE",
+  "tier": null,
   "draftReadAt": "2026-07-02T04:17:24.544Z",
-  "openDrafts": [
-    {
-      "id": "140-01",
-      "since": "2026-07-02T04:16:18.045Z"
-    }
-  ],
+  "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-02.md",
-    "subagentSpawns": 444
+    "subagentSpawns": 536
   },
   "skillAudit": {
     "required": [],
