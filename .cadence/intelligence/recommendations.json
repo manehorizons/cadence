@@ -698,36 +698,6 @@
       "updatedAt": "2026-07-01T23:56:35.797Z"
     },
     {
-      "id": "rec-20260701-002",
-      "title": "doctor git-hooks check leaks Cadence-repo assumption; --fix can break consumer repos",
-      "summary": "checkGitHooks warns in any git repo whose core.hooksPath is not .githooks, without checking the directory exists; doctor --fix sets hooksPath to a nonexistent dir and reports ok, and would overwrite a Husky users .husky path. Fix: return not-applicable when .githooks/ is absent, never flag or overwrite a custom hooksPath, add missing-dir test case.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "critical",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "doctor"
-      ],
-      "affectedFiles": [
-        "packages/core/src/doctor/run.ts",
-        "packages/core/src/doctor/fix.ts"
-      ],
-      "suggestedMilestoneId": "onboarding-honesty",
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:35.969Z",
-      "updatedAt": "2026-07-02T00:22:21.842Z"
-    },
-    {
       "id": "rec-20260701-003",
       "title": "SUMMARY gate provenance: record what ran, what skipped, and what PASS meant",
       "summary": "SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.",
@@ -1838,10 +1808,43 @@
       "decisionIds": [],
       "convertedToPhaseId": "138-docs-truth-pass",
       "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:57:40.677Z",
-      "updatedAt": "2026-07-02T01:50:45.548Z",
       "archivedAt": "2026-07-02T01:50:45.548Z",
-      "archiveReason": "converted-settled"
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-07-01T23:57:40.677Z",
+      "updatedAt": "2026-07-02T01:50:45.548Z"
+    },
+    {
+      "id": "rec-20260701-002",
+      "title": "doctor git-hooks check leaks Cadence-repo assumption; --fix can break consumer repos",
+      "summary": "checkGitHooks warns in any git repo whose core.hooksPath is not .githooks, without checking the directory exists; doctor --fix sets hooksPath to a nonexistent dir and reports ok, and would overwrite a Husky users .husky path. Fix: return not-applicable when .githooks/ is absent, never flag or overwrite a custom hooksPath, add missing-dir test case.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "critical",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "doctor"
+      ],
+      "affectedFiles": [
+        "packages/core/src/doctor/run.ts",
+        "packages/core/src/doctor/fix.ts"
+      ],
+      "suggestedMilestoneId": "onboarding-honesty",
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260701-audit",
+      "createdAt": "2026-07-01T23:56:35.969Z",
+      "updatedAt": "2026-07-02T01:51:46.414Z",
+      "shippedRef": "phase 133-01, commits f9feb33+2873372 (local, unpushed)",
+      "archivedAt": "2026-07-02T01:51:46.414Z",
+      "archiveReason": "shipped"
     }
   ]
 }
