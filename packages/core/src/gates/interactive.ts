@@ -2,7 +2,19 @@ import { walkAcsInteractively, type InteractiveVerdict } from '../verify/interac
 import type { Prompter } from '../verify/prompter.js';
 import type { VerifyTestRef } from '../verify/verifier.js';
 import { SETTLE_BYPASS_NOTICE } from './interactivity.js';
-import type { GateImpl, GateResult } from './types.js';
+import type { GateImpl, GateResult, SettleContext } from './types.js';
+
+/**
+ * Phase 140: is the interactive-verdict walker actually going to run this
+ * settle? Exported so the registry's gate-provenance collection (Task 7)
+ * can classify "invoked but no-op" without duplicating this condition.
+ */
+export function isInteractiveRequested(ctx: SettleContext): boolean {
+  const requested =
+    ctx.opts.interactive === true ||
+    (ctx.opts.interactive !== false && ctx.gateSet.gates.includes('interactive-verdict'));
+  return requested && ctx.opts.auto !== false;
+}
 
 /**
  * Interactive AC-verdict gate (Phase 16). Extracted from settle.ts verbatim
@@ -13,10 +25,7 @@ import type { GateImpl, GateResult } from './types.js';
  * stderr via ctx.io.err. Produces `interactiveVerify` for the AC-merge finalizer.
  */
 export const runInteractiveGate: GateImpl = async (ctx): Promise<GateResult> => {
-  const requested =
-    ctx.opts.interactive === true ||
-    (ctx.opts.interactive !== false && ctx.gateSet.gates.includes('interactive-verdict'));
-  if (!requested || ctx.opts.auto === false) {
+  if (!isInteractiveRequested(ctx)) {
     return { outcome: 'pass' };
   }
 
