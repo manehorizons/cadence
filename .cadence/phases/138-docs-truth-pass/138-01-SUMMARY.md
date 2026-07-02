@@ -1,0 +1,26 @@
+# SETTLE Summary — 138-01
+
+**Completed:** 2026-07-02T01:50:45.547Z
+
+## Acceptance Criteria
+
+- AC-1: PASS
+- AC-2: PASS
+- AC-3: PASS
+
+## Tasks
+
+- T1: DONE — Reconciled slash-command count to code truth (12) across README.md, docs/quickstart.md (also completed its table with the 3 missing commands), and docs/claude-code.md (fixed a broken TOC anchor: TOC said 9, section header said 12). Investigated the README flagship-walkthrough claim live in a sandbox and found it already accurate (settle genuinely refuses on the coverage gate as documented) — scoped out, no change needed. New regression test docs-command-count.test.ts in host-claude-code package derives the true count from installCommands() output rather than hardcoding it.
+- T2: DONE — Added a 7th cadence start menu option ('Turn on real verification' -> cadence activate), so the guided front door reaches the remedy its own mock-verifier banner recommends by name. Updated 3 pre-existing tests' hardcoded option counts (6->7); all existing resolvePick(n<=6) unchanged. Deferred adding cadence explain (no equivalent forcing function, noted in SPEC).
+
+## Decisions
+
+_(none)_
+
+## Deferred
+
+_(none)_
+
+## Skill audit
+
+_(none)_

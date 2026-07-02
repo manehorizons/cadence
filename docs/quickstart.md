@@ -504,7 +504,7 @@ The `--local` flag resolves the absolute paths of your local workspace builds.
 **Do not commit `.claude/settings.json`** when using `--local` — the paths are
 machine-specific.
 
-`install` writes nine slash commands into `.claude/commands/`:
+`install` writes 12 slash commands into `.claude/commands/`:
 
 | Command | What it does |
 |---|---|
@@ -517,6 +517,9 @@ machine-specific.
 | `/cadence-block` | Mark a task BLOCKED |
 | `/cadence-needs-context` | Mark a task NEEDS\_CONTEXT |
 | `/cadence-settle` | Close the loop and write SUMMARY |
+| `/cadence-handoff` | Scaffold a SESSION handoff doc with machine facts pre-filled |
+| `/cadence-resume` | Replay the freshest session handoff + live context (read-only) |
+| `/cadence-scout` | Divergent→convergent ideation dialogue that lands survivors as Praxis recommendations |
 
 ### Typical Claude Code session
 

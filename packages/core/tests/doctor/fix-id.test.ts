@@ -32,6 +32,8 @@ describe('doctor fixId tagging (131 AC-1)', () => {
   it('AC-1: git-hooks failure is tagged fixId git-hooks', async () => {
     active = await tempRepo({ initialized: true });
     execFileSync('git', ['init', '-q'], { cwd: active.root });
+    // Phase 133: the git-hooks check is only auto-fixable when .githooks/ exists.
+    await mkdir(join(active.root, '.githooks'), { recursive: true });
     const report = await runDoctor(active.root, ENV);
     const c = report.checks.find((x) => x.name === 'git-hooks');
     expect(c?.severity).toBe('warning');

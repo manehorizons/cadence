@@ -17,6 +17,15 @@ export interface NextActionHints {
    * already clears sibling/upstream claims the v1.18 guard would refuse.
    */
   nextPhaseNumber?: number;
+  /**
+   * Phase 137 — BUILD-state task progress, resolved best-effort by reading
+   * the active draft + PROGRESS.json. `firstPendingTaskId` is the first
+   * draft task (in file order) with no recorded outcome, or `null` when
+   * every task already has one. Absent entirely when it couldn't be
+   * computed (e.g. the draft file is unreadable) — the BUILD case then
+   * falls back to the pre-137 compound message rather than blocking.
+   */
+  build?: { firstPendingTaskId: string | null };
 }
 
 export function nextAction(state: CadenceState, hints?: NextActionHints): NextAction {
@@ -49,11 +58,25 @@ export function nextAction(state: CadenceState, hints?: NextActionHints): NextAc
           'SPEC is open. Fill objective, ACs, constraints, run cadence spec check, then approve to leave the spec stage.',
       };
     }
-    case 'BUILD':
+    case 'BUILD': {
+      const pending = hints?.build?.firstPendingTaskId;
+      if (pending === undefined) {
+        return {
+          command: 'cadence build task <id> --status=<DONE|...>  OR  cadence settle run --ac AC-1=pass',
+          reason: 'In BUILD phase. Record task outcomes, then settle.',
+        };
+      }
+      if (pending === null) {
+        return {
+          command: 'cadence settle run --auto',
+          reason: 'In BUILD phase. Every task has a recorded outcome — settle to close the loop.',
+        };
+      }
       return {
-        command: 'cadence build task <id> --status=<DONE|...>  OR  cadence settle run --ac AC-1=pass',
-        reason: 'In BUILD phase. Record task outcomes, then settle.',
+        command: `cadence build task ${pending} --status=DONE`,
+        reason: `In BUILD phase. ${pending} is the first task with no recorded outcome.`,
       };
+    }
     case 'SETTLE':
       return { command: 'cadence settle run', reason: 'In SETTLE. Run to close.' };
     default: {

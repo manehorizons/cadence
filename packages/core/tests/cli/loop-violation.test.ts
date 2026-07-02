@@ -126,4 +126,25 @@ describe('loop-violation anomaly emission', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/settle run requires loopPosition=BUILD/);
   });
+
+  // Phase 137 (rec-20260701-007 / audit F10) — the out-of-position refusal
+  // used to name no next step at all; it must now point at the same command
+  // `cadence progress` would print for the current state, while keeping the
+  // existing loop-violation message/anomaly plumbing intact.
+  it('settle run from IDLE names the concrete next step (137 AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['settle', 'run', '--auto', '--allow-missing-coverage'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/settle run requires loopPosition=BUILD/);
+    expect(r.stderr).toMatch(/Next: cadence draft new --title "\.\.\."/);
+  });
+
+  it('settle run from DRAFT names draft approve as the next step (137 AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    const r = await run(['settle', 'run', '--auto', '--allow-missing-coverage'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/settle run requires loopPosition=BUILD/);
+    expect(r.stderr).toMatch(/Next: cadence draft approve 01-foundation 01/);
+  });
 });

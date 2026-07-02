@@ -345,3 +345,99 @@ The rec lifecycle has no terminal status for work that has actually shipped. pro
 - next: cadence milestone propose
 
 Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.
+
+## rec-20260701-001 — Make the default install enforce what the tutorial demonstrates
+
+- status: candidate
+- ready: needs-decision
+- priority: critical
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, init, verification
+- files: packages/types/src/config.ts, packages/core/src/init/plan.ts, packages/core/src/gates/build-test-must-pass.ts
+- evidence: 2026-07-01 audit R-01/F1: comment-only test file (// AC-1) settled green on fresh init, SUMMARY recorded AC-1: PASS, no test runner executed
+- next: cadence milestone propose
+
+Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, init never derives verification.testCommand (build-test-must-pass passes silently), all verifier seams are mock. Fix: default coverageMode=assertion for new inits, derive testCommand from package.json scripts.test, print a loud settle notice when no testCommand exists.
+
+## rec-20260701-003 — SUMMARY gate provenance: record what ran, what skipped, and what PASS meant
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: settle, types
+- files: packages/core/src/settle/summary-writer.ts, packages/core/src/gates/deep-verify.ts
+- evidence: 2026-07-01 audit R-03/F3: sandbox SUMMARY.json from comment-only settle shows bare acResults pass:true, no gate record, no provenance
+- next: cadence milestone propose
+
+SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.
+
+## rec-20260701-008 — Structured draft editing: draft add-ac / add-task / set-objective
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: draft, cli
+- files: packages/core/src/parse/draft-scaffold.ts, packages/core/src/parse/draft-md.ts, packages/core/src/cli/commands/draft.ts
+- evidence: 2026-07-01 audit R-08/F7: draft exposes only new/check/approve; templates scaffold literal source-file placeholder stubs; stale-draft mtime gate exists because hand-editing is load-bearing
+- next: cadence milestone propose
+
+The DRAFT is the central artifact and the only loop step the CLI cannot touch — all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.
+
+## rec-20260701-009 — Sealed gates: let production preset make named gates non-bypassable
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, config
+- files: packages/core/src/gates/types.ts, packages/types/src/config.ts
+- evidence: 2026-07-01 audit R-09/F8: gates/types.ts:144-158 uniform bypass surface; production preset at config.ts:333-338 flips only loopEnforcement + preToolUseBuildGate
+- next: cadence milestone propose
+
+Every gate honors --force or a per-gate --allow-* flag; even the production preset removes none — the strictest expressible posture is bypassable-but-logged. Fix: a gates.sealed [gate-ids] config that makes listed gates ignore --force and their allow flag; wire into the production preset for test-coverage and build-test-must-pass. Bypass logging stays for everything unsealed.
+
+## rec-20260701-010 — MCP parity for the intelligence lifecycle
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: mcp
+- files: packages/core/src/mcp/tools.ts
+- evidence: 2026-07-01 audit R-10: 15 MCP tools vs 31 CLI command groups; tools.ts:331 promote description references milestone propose which has no tool
+- next: cadence milestone propose
+
+An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose — the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.
+
+## rec-20260701-012 — Boundary enforcement block mode, including subagent edits
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: hooks, gates
+- files: packages/core/src/hooks/checks/boundary.ts, packages/core/src/hooks/handlers.ts, packages/types/src/config.ts
+- evidence: 2026-07-01 audit R-12/F8: boundary.ts:59-68 warn-only; handlers.ts:133-142 subagent counter; preToolUseBuildGate default off at config.ts:296
+- next: cadence milestone propose
+
+DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.

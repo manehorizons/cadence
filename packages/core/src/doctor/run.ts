@@ -148,12 +148,24 @@ async function checkGitHooks(root: string): Promise<DoctorCheck> {
       'core.hooksPath points at .githooks (the pre-push gate is wired).',
     );
   }
+  if (hp !== null) {
+    // A custom hooksPath (e.g. a Husky ".husky" setup) is already someone
+    // else's decision — never auto-overwrite it; surface as manual guidance.
+    return fail(
+      'git-hooks',
+      'warning',
+      `core.hooksPath is "${hp}", not ".githooks" — the pre-push gate may not run.`,
+      `core.hooksPath is already set to "${hp}". If you want the .githooks pre-push ` +
+        'gate, point it there yourself; CADENCE will not overwrite an existing custom hooksPath.',
+    );
+  }
+  if (!existsSync(join(root, '.githooks'))) {
+    return pass('git-hooks', 'Not applicable — no .githooks/ directory here.');
+  }
   return fail(
     'git-hooks',
     'warning',
-    hp === null
-      ? 'core.hooksPath is unset — the .githooks pre-push gate will not run.'
-      : `core.hooksPath is "${hp}", not ".githooks" — the pre-push gate may not run.`,
+    'core.hooksPath is unset — the .githooks pre-push gate will not run.',
     'Run `git config core.hooksPath .githooks` to enable the pre-push gate.',
     'git-hooks',
   );

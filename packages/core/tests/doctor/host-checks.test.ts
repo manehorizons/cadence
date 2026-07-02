@@ -64,6 +64,8 @@ describe('runDoctor — setup + host checks', () => {
       join(active.root, '.git', 'config'),
       '[core]\n\trepositoryformatversion = 0\n',
     );
+    // Phase 133: the git-hooks check is only a warning when .githooks/ exists.
+    await mkdir(join(active.root, '.githooks'), { recursive: true });
     const report = await runDoctor(active.root, ENV);
     expect(report.checks.find((c) => c.name === 'git-hooks')?.severity).toBe(
       'warning',

@@ -590,9 +590,18 @@ Usage: cadence progress [options]
 Show single recommended next action
 ```
 
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON (`{ command, reason }`) instead of rendered text |
+| `-h, --help` | Display help for command |
+
 **Behavior** — reads current `state.json` and prints a single recommended next
 action (e.g. "Run `cadence draft new`", "Record task T2"). Intended for
 quick orientation. For full loop context, use [`cadence status`](#status).
+`--json` emits the same `{ command, reason }` payload MCP callers get, for
+agents that would otherwise regex the rendered text lines.
 
 **Proactive next-free phase number (v1.19)** — at `IDLE`, the suggested
 `cadence draft new …` no longer prints a bare `<num>` placeholder: it fills in

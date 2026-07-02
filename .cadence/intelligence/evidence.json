@@ -315,6 +315,90 @@
       "kind": "note",
       "summary": "2026-06-19 adoption review: solo onboarding is now decent; team adoption needs a concrete rollout path.",
       "createdAt": "2026-06-19T02:46:22.504Z"
+    },
+    {
+      "id": "ev-20260701-001",
+      "recommendationId": "rec-20260701-001",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-01/F1: comment-only test file (// AC-1) settled green on fresh init, SUMMARY recorded AC-1: PASS, no test runner executed",
+      "createdAt": "2026-07-01T23:56:35.797Z"
+    },
+    {
+      "id": "ev-20260701-002",
+      "recommendationId": "rec-20260701-002",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-02/F2: reproduced in sandbox — fix applied hooksPath=.githooks with no .githooks dir, check then reported ok",
+      "createdAt": "2026-07-01T23:56:35.969Z"
+    },
+    {
+      "id": "ev-20260701-003",
+      "recommendationId": "rec-20260701-003",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-03/F3: sandbox SUMMARY.json from comment-only settle shows bare acResults pass:true, no gate record, no provenance",
+      "createdAt": "2026-07-01T23:56:58.475Z"
+    },
+    {
+      "id": "ev-20260701-004",
+      "recommendationId": "rec-20260701-004",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-04/F4: reproduced — cadence progress --json exits 1 with unknown option; 15 read commands support --json, zero loop-write commands do",
+      "createdAt": "2026-07-01T23:56:58.634Z"
+    },
+    {
+      "id": "ev-20260701-005",
+      "recommendationId": "rec-20260701-005",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-05/F5: init.ts:436-471 prints three conflicting next-step blocks when --demo is used",
+      "createdAt": "2026-07-01T23:56:58.806Z"
+    },
+    {
+      "id": "ev-20260701-006",
+      "recommendationId": "rec-20260701-006",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-06/F6: suggestGateProfile threshold at init/plan.ts:18-31 vs plain approve at render.ts:32 and README.md:89",
+      "createdAt": "2026-07-01T23:56:58.984Z"
+    },
+    {
+      "id": "ev-20260701-007",
+      "recommendationId": "rec-20260701-007",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-07/F10: progress.ts:53-55 compound command; draft-approve.ts:35 unguarded readFile vs spec-approve.ts:34 guard; settle.ts:147",
+      "createdAt": "2026-07-01T23:57:18.333Z"
+    },
+    {
+      "id": "ev-20260701-008",
+      "recommendationId": "rec-20260701-008",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-08/F7: draft exposes only new/check/approve; templates scaffold literal source-file placeholder stubs; stale-draft mtime gate exists because hand-editing is load-bearing",
+      "createdAt": "2026-07-01T23:57:18.500Z"
+    },
+    {
+      "id": "ev-20260701-009",
+      "recommendationId": "rec-20260701-009",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-09/F8: gates/types.ts:144-158 uniform bypass surface; production preset at config.ts:333-338 flips only loopEnforcement + preToolUseBuildGate",
+      "createdAt": "2026-07-01T23:57:40.347Z"
+    },
+    {
+      "id": "ev-20260701-010",
+      "recommendationId": "rec-20260701-010",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-10: 15 MCP tools vs 31 CLI command groups; tools.ts:331 promote description references milestone propose which has no tool",
+      "createdAt": "2026-07-01T23:57:40.509Z"
+    },
+    {
+      "id": "ev-20260701-011",
+      "recommendationId": "rec-20260701-011",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-11/F9-F10: README.md:22,87-92; docs/quickstart.md:507; docs/claude-code.md:34 vs 168; start/menu.ts:26 omits activate",
+      "createdAt": "2026-07-01T23:57:40.677Z"
+    },
+    {
+      "id": "ev-20260701-012",
+      "recommendationId": "rec-20260701-012",
+      "kind": "note",
+      "summary": "2026-07-01 audit R-12/F8: boundary.ts:59-68 warn-only; handlers.ts:133-142 subagent counter; preToolUseBuildGate default off at config.ts:296",
+      "createdAt": "2026-07-01T23:57:40.857Z"
     }
   ]
 }

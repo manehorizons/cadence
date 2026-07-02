@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { readFile, rm } from 'node:fs/promises';
+import { readFile, rm, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
@@ -22,6 +22,8 @@ describe('applyFixes auto repairs (131 AC-2)', () => {
   it('AC-2: git-hooks repair sets core.hooksPath=.githooks and clears the finding', async () => {
     active = await tempRepo({ initialized: true });
     execFileSync('git', ['init', '-q'], { cwd: active.root });
+    // Phase 133: the git-hooks check is only auto-fixable when .githooks/ exists.
+    await mkdir(join(active.root, '.githooks'), { recursive: true });
 
     const plan = planFixes(await runDoctor(active.root, ENV));
     const outcomes = await applyFixes(active.root, plan, { wireHost: false });

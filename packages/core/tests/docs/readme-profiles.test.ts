@@ -33,3 +33,32 @@ describe('README gate-profile heads-up', () => {
     expect(md).toMatch(/≥\s*20|20 commits/);
   });
 });
+
+// Phase 136 (rec-20260701-006 / audit F6): the "drive a real phase yourself"
+// walkthrough showed a bare `cadence draft approve ...` with no inline
+// pointer to --no-approve; the fuller heads-up note lives two sections
+// further down, separated by another code block.
+describe('README real-phase walkthrough (phase 136, rec-20260701-006)', () => {
+  const md = readFileSync(README, 'utf8');
+
+  function fencedBlockContaining(needle: string): string {
+    const blocks = md.split(/```[a-z]*\n/).filter((_, i) => i % 2 === 1);
+    const block = blocks.find((b) => b.includes(needle));
+    if (block === undefined) {
+      throw new Error(`no fenced code block contains: ${needle}`);
+    }
+    return block;
+  }
+
+  it('AC-1: the approve line\'s own code block mentions --no-approve', () => {
+    const block = fencedBlockContaining('cadence draft approve 01-fix-login-timeout 01');
+    expect(block).toMatch(/--no-approve/);
+  });
+
+  it('AC-2: the separate gate-profiles heads-up block is unchanged', () => {
+    expect(md).toMatch(/`auto`/);
+    expect(md).toMatch(/`standard`/);
+    expect(md).toMatch(/`strict`/);
+    expect(md).toMatch(/≥\s*20|20 commits/);
+  });
+});

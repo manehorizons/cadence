@@ -31,7 +31,7 @@ the same `cadence hook <event>` dispatch path — without any special API surfac
   - [Options reference](#options-reference)
   - [The --local warning](#the---local-warning)
 - [Hook groups written by install](#hook-groups-written-by-install)
-- [The 9 slash commands](#the-9-slash-commands)
+- [The 12 slash commands](#the-12-slash-commands)
 - [How the agent drives CADENCE](#how-the-agent-drives-cadence)
 - [Gitignore guidance](#gitignore-guidance)
 

@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 132-init-dry-run-fit-check
+**Active phase:** 138-docs-truth-pass
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 398
-- Last handoff: SESSION-2026-06-27.md
+- Subagent spawns this session: 440
+- Last handoff: SESSION-2026-07-02.md
 
 ## Counts
 - Open drafts: 0
