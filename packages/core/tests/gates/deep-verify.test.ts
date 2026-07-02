@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { runDeepVerifyGate } from '../../src/gates/deep-verify.js';
+import { runDeepVerifyGate, isDeepVerifyRequested } from '../../src/gates/deep-verify.js';
 import type { SettleContext } from '../../src/gates/types.js';
 import type { VerifyInput, VerifyResult } from '../../src/verify/verifier.js';
 
@@ -265,5 +265,33 @@ describe('runDeepVerifyGate', () => {
       provider: 'anthropic',
       model: 'claude-opus-4-8',
     });
+  });
+});
+
+describe('isDeepVerifyRequested (AC-1, phase 140)', () => {
+  it('true when --deep is set', () => {
+    expect(isDeepVerifyRequested(ctx({ verify: async () => ({ verdicts: {}, provider: 'mock' }), opts: { deep: true } }))).toBe(true);
+  });
+
+  it('true when deep-verify is a gate-set member, even without --deep', () => {
+    expect(
+      isDeepVerifyRequested(
+        ctx({ verify: async () => ({ verdicts: {}, provider: 'mock' }), opts: {}, gates: ['deep-verify'] }),
+      ),
+    ).toBe(true);
+  });
+
+  it('false when neither --deep nor gate-set membership applies', () => {
+    expect(
+      isDeepVerifyRequested(ctx({ verify: async () => ({ verdicts: {}, provider: 'mock' }), opts: {}, gates: [] })),
+    ).toBe(false);
+  });
+
+  it('false when --auto=false overrides an otherwise-requested deep-verify', () => {
+    expect(
+      isDeepVerifyRequested(
+        ctx({ verify: async () => ({ verdicts: {}, provider: 'mock' }), opts: { deep: true, auto: false } }),
+      ),
+    ).toBe(false);
   });
 });
