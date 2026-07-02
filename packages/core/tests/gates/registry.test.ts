@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
 import type { GateResult, SettleContext } from '../../src/gates/types.js';
 import {
   GATE_ORDER,
@@ -55,7 +56,7 @@ function recordingRegistry(
 
 /** Minimal SettleContext with a controllable gate set. */
 function ctxWith(gates: string[]): SettleContext {
-  return { gateSet: { gates } } as unknown as SettleContext;
+  return { gateSet: { gates }, opts: {} } as unknown as SettleContext;
 }
 
 describe('GATE registry wiring (Phase 44.1)', () => {
@@ -141,5 +142,80 @@ describe('runSettleGates dispatch (Phase 44.1)', () => {
     });
     expect(acc.flags.coverageBypassed).toBe(true);
     expect(acc.codeReview).toEqual({ 'a.ts': [] });
+  });
+});
+
+describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
+  it('records status:"ran" for every membership gate that was invoked', async () => {
+    const { gates } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
+      registry: recordingRegistry([]),
+    });
+    expect(gates).toEqual(EXPECTED_ORDER.map((gate) => ({ gate, status: 'ran' })));
+  });
+
+  it('records status:"skipped" with reason for a gate absent from the set', async () => {
+    const { gates } = await runSettleGates(
+      ctxWith(['draft-read']),
+      { registry: recordingRegistry([]), order: ['draft-read', 'security-audit'] },
+    );
+    expect(gates).toEqual([
+      { gate: 'draft-read', status: 'ran' },
+      { gate: 'security-audit', status: 'skipped', skipReason: 'not in the active tier × profile gate set' },
+    ]);
+  });
+
+  it('records deep-verify as skipped when invoked but not requested (self-guarded no-op)', async () => {
+    const { gates } = await runSettleGates(ctxWith([]), {
+      registry: recordingRegistry([]),
+      order: ['deep-verify'],
+    });
+    expect(gates).toEqual([
+      { gate: 'deep-verify', status: 'skipped', skipReason: 'not requested (no --deep / --interactive, not in gate set)' },
+    ]);
+  });
+
+  it('records deep-verify as ran when actually requested via --deep', async () => {
+    const ctx = { gateSet: { gates: [] }, opts: { deep: true } } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([]),
+      order: ['deep-verify'],
+    });
+    expect(gates).toEqual([{ gate: 'deep-verify', status: 'ran' }]);
+  });
+
+  it('records build-test-must-pass as skipped when the gate patches buildTestRan:false', async () => {
+    const { gates } = await runSettleGates(ctxWith(['build-test-must-pass']), {
+      registry: recordingRegistry([], {
+        'build-test-must-pass': { outcome: 'pass', summaryPatch: { buildTestRan: false } },
+      }),
+      order: ['build-test-must-pass'],
+    });
+    expect(gates).toEqual([
+      { gate: 'build-test-must-pass', status: 'skipped', skipReason: NO_TEST_COMMAND_NOTICE.message },
+    ]);
+  });
+
+  it('records test-coverage as skipped when bypassed via --allow-missing-coverage', async () => {
+    const { gates } = await runSettleGates(ctxWith(['test-coverage']), {
+      registry: recordingRegistry([], {
+        'test-coverage': { outcome: 'pass', flags: { coverageBypassed: true } },
+      }),
+      order: ['test-coverage'],
+    });
+    expect(gates).toEqual([
+      { gate: 'test-coverage', status: 'skipped', skipReason: 'bypassed via --allow-missing-coverage' },
+    ]);
+  });
+
+  it('returns a partial gates[] (only entries before the halt) on refusal', async () => {
+    const { gates, refused } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
+      registry: recordingRegistry([], { 'test-coverage': { outcome: 'refuse' } }),
+    });
+    expect(refused).toBe(true);
+    expect(gates).toEqual([
+      { gate: 'draft-read', status: 'ran' },
+      { gate: 'structural-verifier', status: 'ran' },
+      { gate: 'build-test-must-pass', status: 'ran' },
+    ]);
   });
 });
