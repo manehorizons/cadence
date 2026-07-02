@@ -32,6 +32,10 @@ export async function draftApproveService(
     const phase = assertSafePhaseSlug(args.phase);
     const id = derivePhaseTaskId(phase, args.num);
     const path = join(repoRoot, '.cadence', 'phases', phase, `${id}-DRAFT.md`);
+    if (!existsSync(path)) {
+      io.err(`draft approve refused: ${path} not found.\n`);
+      return { exitCode: 1 };
+    }
     const draft = parseDraftMd(await readFile(path, 'utf8'));
     const backend = new SimpleStateBackend(repoRoot);
     const state = await backend.readState();

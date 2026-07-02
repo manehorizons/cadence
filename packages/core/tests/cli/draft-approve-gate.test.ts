@@ -186,6 +186,17 @@ describe('cadence draft approve (Phase 24.1 — manual approve gate)', () => {
     expect(state.loopPosition).toBe('DRAFT');
   });
 
+  // Phase 137 (rec-20260701-007 / audit F10): a missing DRAFT.md previously
+  // bubbled a raw Node ENOENT message instead of a clean guarded refusal
+  // (spec approve already guards this way).
+  it('AC-2 (137): missing DRAFT.md gives a clean guarded refusal, not raw ENOENT', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['draft', 'approve', '99-missing', '01'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/draft approve refused: .*99-01-DRAFT\.md not found\./);
+    expect(r.stderr).not.toMatch(/ENOENT/);
+  });
+
   void mkdir;
   void existsSync;
 });

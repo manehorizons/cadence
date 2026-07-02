@@ -44,6 +44,26 @@ describe('cadence progress', () => {
     expect(r.stdout).toMatch(/cadence build task|cadence settle/);
   });
 
+  // Phase 137 (rec-20260701-007 / audit F10): BUILD used to emit an
+  // unrunnable compound "build task <id> ... OR settle run ..." command.
+  it('137 AC-1: BUILD names the concrete first-pending task, not a compound command', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    const r = await run(['progress'], active.root);
+    expect(r.stdout).toMatch(/^Next: cadence build task T1 --status=DONE$/m);
+    expect(r.stdout).not.toMatch(/OR/);
+  });
+
+  it('137 AC-1: BUILD names settle once every task is recorded', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    const r = await run(['progress'], active.root);
+    expect(r.stdout).toMatch(/^Next: cadence settle run --auto$/m);
+  });
+
   it('AC-1: --json emits a single { command, reason } object, no rendered text', async () => {
     active = await tempRepo({ initialized: true });
     const r = await run(['progress', '--json'], active.root);

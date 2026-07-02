@@ -4,6 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import type { AnomalyEvent, GateBypass, Summary } from '@manehorizons/cadence-types';
 import { TaskStatusZ, defaultConfig } from '@manehorizons/cadence-types';
+import { nextAction } from '../progress.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertSafePhaseSlug } from '../phases/id.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
@@ -144,10 +145,14 @@ export async function settleService(
     const backend = new SimpleStateBackend(cwd);
     const state = await backend.readState();
     if (state.loopPosition !== 'BUILD' || !state.activeDraft || !state.activePhase) {
-      throw new LoopViolationError(
+      const violation = new LoopViolationError(
         'settle run requires loopPosition=BUILD with an active draft',
         { expected: 'BUILD', actual: state.loopPosition },
       );
+      const action = nextAction(state);
+      io.err(`settle run failed: ${violation.message} Next: ${action.command}\n`);
+      await emitLoopViolation(cwd, violation, 'settle.run');
+      return { exitCode: 1 };
     }
     const activePhase = assertSafePhaseSlug(state.activePhase);
     const draftPath = join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-DRAFT.md`);
