@@ -25,7 +25,8 @@ describe('config-edit fields', () => {
     expect(by.commitCadence).toBe('draft');
     expect(by.verifier).toBe('mock');
     expect(by.autoArchive).toBe('true');
-    expect(by.coverageMode).toBe('mention');
+    // Phase 139: defaultConfig's coverageMode flipped 'mention' → 'assertion'.
+    expect(by.coverageMode).toBe('assertion');
   });
 
   // Phase 108 / AC-1 (discoverability): coverageMode resolves + tracks the config value.

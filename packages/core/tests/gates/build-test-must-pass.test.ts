@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
 import { runBuildTestGate } from '../../src/gates/build-test-must-pass.js';
 import type { SettleContext, TestRunResult } from '../../src/gates/types.js';
 
@@ -32,13 +33,14 @@ function ctx(over: {
 }
 
 describe('runBuildTestGate', () => {
-  // AC-3 / AC-7: no testCommand configured (ran:false) → pass SILENTLY (no
-  // stderr), so an unconfigured settle stays bit-identical.
-  it('passes silently when no testCommand is configured', async () => {
+  // Phase 139 / AC-5: no testCommand configured (ran:false) → still PASS, but
+  // no longer silent — a loud, non-blocking stderr notice is written so the
+  // gap is visible instead of hidden.
+  it('AC-5: passes but writes NO_TEST_COMMAND_NOTICE when no testCommand is configured', async () => {
     const errs: string[] = [];
     const res = await runBuildTestGate(ctx({ run: { ran: false, ok: true }, errs }));
     expect(res.outcome).toBe('pass');
-    expect(errs).toEqual([]);
+    expect(errs.join('')).toContain(NO_TEST_COMMAND_NOTICE.message);
   });
 
   // AC-3: command succeeded (ran:true, ok:true) → pass, no stderr
@@ -49,6 +51,19 @@ describe('runBuildTestGate', () => {
     );
     expect(res.outcome).toBe('pass');
     expect(errs).toEqual([]);
+  });
+
+  // AC-5: a configured testCommand never triggers the no-testCommand notice,
+  // on either outcome.
+  it('AC-5: never writes NO_TEST_COMMAND_NOTICE when a testCommand is configured', async () => {
+    const errs: string[] = [];
+    await runBuildTestGate(
+      ctx({ run: { ran: true, ok: true, exitCode: 0, command: 'pnpm test' }, errs }),
+    );
+    await runBuildTestGate(
+      ctx({ run: { ran: true, ok: false, exitCode: 1, command: 'pnpm test' }, errs, force: true }),
+    );
+    expect(errs.join('')).not.toContain(NO_TEST_COMMAND_NOTICE.message);
   });
 
   // AC-3: command failed, no bypass → refuse with command + summary lines

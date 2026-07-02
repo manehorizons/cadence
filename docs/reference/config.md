@@ -142,8 +142,8 @@ Boundary definitions for each tier. The coherence-check gate validates DRAFT fro
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `verification.testGlobs` | `string[]` | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` | Glob patterns the test-coverage scanner walks when checking AC coverage. Supports `**` and `*`. Set by `cadence init` based on repo layout — see [cadence init behavior](#cadence-init-behavior). |
-| `verification.testCommand` | `string` (optional) | — | Shell command the `build-test-must-pass` gate runs at `cadence settle run`. When set, settle runs it and refuses on a non-zero exit unless `--allow-failing-build` / `--force`. When absent, the gate is evaluated but cannot enforce — it passes with a one-time note. |
-| `verification.coverageMode` | `"mention"` \| `"assertion"` | `"mention"` | How the `test-coverage` gate counts an `AC-N` token. `mention` (default) counts any occurrence of the token anywhere in a matched test file, including comments. `assertion` counts it only when it sits inside an asserting `it()`/`test()` block; a comment-only or assertion-less mention is reported as a *weak link* and the gate refuses with a distinct hint (closing the "mentioned-but-not-tested" false positive). Edit it with `cadence config edit coverageMode`. |
+| `verification.testCommand` | `string` (optional) | derived by `cadence init` — see [cadence init behavior](#cadence-init-behavior) | Shell command the `build-test-must-pass` gate runs at `cadence settle run`. When set, settle runs it and refuses on a non-zero exit unless `--allow-failing-build` / `--force`. When absent, the gate is evaluated but cannot enforce — it still passes, but (as of Phase 139) writes a loud, non-blocking stderr notice instead of passing silently. |
+| `verification.coverageMode` | `"mention"` \| `"assertion"` | `"assertion"` for a fresh `cadence init` (Phase 139); the schema-level fallback for configs that predate this field stays `"mention"` | How the `test-coverage` gate counts an `AC-N` token. `mention` counts any occurrence of the token anywhere in a matched test file, including comments. `assertion` counts it only when it sits inside an asserting `it()`/`test()` block; a comment-only or assertion-less mention is reported as a *weak link* and the gate refuses with a distinct hint (closing the "mentioned-but-not-tested" false positive). Edit it with `cadence config edit coverageMode`. |
 
 ---
 
@@ -455,6 +455,24 @@ Detected from the repo layout at init time:
 | No `packages/` directory (single-package) | `["**/*.test.ts", "**/*.test.tsx"]` |
 
 The scanner prunes `node_modules/`, `dist/`, `.git/`, and `.turbo/`, so the broad single-package glob is safe.
+
+### `verification.testCommand` (Phase 139)
+
+Derived from the target repo's `package.json#scripts.test`, prefixed with the detected package manager:
+
+| Condition | Written `testCommand` |
+|---|---|
+| `scripts.test` exists + `pnpm-lock.yaml` present | `pnpm test` |
+| `scripts.test` exists + `yarn.lock` present | `yarn test` |
+| `scripts.test` exists + `bun.lockb` present | `bun test` |
+| `scripts.test` exists + `package-lock.json` present, or no lockfile matched | `npm test` |
+| No `scripts.test` (or no `package.json` at all) | not written — field stays absent |
+
+`cadence init --dry-run` previews the same derived value (or its absence) without writing.
+
+### `verification.coverageMode` (Phase 139)
+
+A fresh `cadence init` writes `"assertion"` for every preset (`solo`/`team`/`production` alike) — a comment-only `AC-N` mention no longer counts as tested. This only affects what a **new** `init` writes; existing `.cadence/config.json` files are never rewritten.
 
 ---
 

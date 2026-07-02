@@ -92,6 +92,22 @@ export const MOCK_VERIFIER_NOTICE = {
 } as const;
 
 /**
+ * Canonical "no test command configured" notice (phase 139,
+ * rec-20260701-001). Single source of truth for the `build-test-must-pass`
+ * gate's stderr notice — mirrors `MOCK_VERIFIER_NOTICE`'s pattern: loud but
+ * non-blocking. A missing `testCommand` still lets the gate pass (it cannot
+ * enforce what it can't run) but this makes that gap visible instead of
+ * silent.
+ */
+export const NO_TEST_COMMAND_NOTICE = {
+  /** Short inline label for headers / one-line warnings. */
+  label: 'no test command configured',
+  /** One-sentence canonical message naming the gap + the fix. */
+  message:
+    'no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement.',
+} as const;
+
+/**
  * The `cadence-scout` dialogue body. `$ARGUMENTS` is the topic placeholder —
  * the Claude-Code slash command leaves it literal (the host substitutes it);
  * the MCP prompt substitutes the caller's `topic` argument.

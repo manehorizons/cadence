@@ -51,6 +51,39 @@ export function detectTestGlobs(cwd: string): string[] {
     : ['**/*.test.ts', '**/*.test.tsx'];
 }
 
+/** Lockfile → package-manager run prefix, checked in this order. */
+const PM_LOCKFILES: readonly { file: string; run: string }[] = [
+  { file: 'pnpm-lock.yaml', run: 'pnpm test' },
+  { file: 'yarn.lock', run: 'yarn test' },
+  { file: 'bun.lockb', run: 'bun test' },
+  { file: 'package-lock.json', run: 'npm test' },
+];
+
+/**
+ * Derive `verification.testCommand` from the target repo's
+ * `package.json#scripts.test`, prefixed with the package manager detected by
+ * lockfile presence (`pnpm-lock.yaml` → `pnpm test`, `yarn.lock` →
+ * `yarn test`, `bun.lockb` → `bun test`, `package-lock.json` or no lockfile
+ * found → `npm test`). Returns `null` when there's no `package.json` or no
+ * `scripts.test` entry — never guesses a command, never throws (Phase 139,
+ * rec-20260701-001).
+ */
+export function detectTestCommand(cwd: string): string | null {
+  let hasTestScript = false;
+  try {
+    const pkg = JSON.parse(readFileSync(join(cwd, 'package.json'), 'utf8'));
+    hasTestScript = typeof pkg?.scripts?.test === 'string' && pkg.scripts.test.trim().length > 0;
+  } catch {
+    hasTestScript = false;
+  }
+  if (!hasTestScript) return null;
+
+  for (const { file, run } of PM_LOCKFILES) {
+    if (existsSync(join(cwd, file))) return run;
+  }
+  return 'npm test';
+}
+
 /**
  * Phase 108 (rec-20260617-001) — zero-prompt name derivation. `--name` wins;
  * otherwise read `package.json#name` (scope stripped: `@scope/foo` → `foo`),
@@ -137,6 +170,9 @@ export interface InitPlanVerification {
   activateRequested: boolean;
   /** `--activate` requested but no `ANTHROPIC_API_KEY` present → stays mock. */
   activateNoKey: boolean;
+  /** Phase 139: derived `verification.testCommand`, or `null` when nothing
+   *  could be derived (no `package.json` / no `scripts.test`). */
+  testCommand: string | null;
 }
 
 export interface InitPlanHost {
@@ -223,7 +259,7 @@ export function planInit(
   const testGlobs = detectTestGlobs(cwd);
   const layout = testGlobs[0]?.startsWith('packages/') ? 'monorepo' : 'single-package';
 
-  const verification = planVerification(preset, opts.activate ?? false, env);
+  const verification = planVerification(cwd, preset, opts.activate ?? false, env);
   const host = planHost(cwd, opts, env, isTTY);
   const demo = opts.demo ?? false;
 
@@ -247,6 +283,7 @@ export function planInit(
 }
 
 function planVerification(
+  cwd: string,
   preset: 'solo' | 'team' | 'production',
   activate: boolean,
   env: NodeJS.ProcessEnv,
@@ -261,6 +298,7 @@ function planVerification(
     else activateNoKey = true;
   }
   return {
+    testCommand: detectTestCommand(cwd),
     provider,
     realVerificationOn: provider !== 'mock',
     activateRequested: activate,
@@ -353,6 +391,9 @@ export function renderInitPlan(plan: InitPlan): string {
   );
   lines.push(`  layout        ${plan.layout}`);
   lines.push(`  test globs    ${plan.testGlobs.join(', ')}`);
+  lines.push(
+    `  test command  ${plan.verification.testCommand ?? '(none derived — build-test-must-pass will not run)'}`,
+  );
   lines.push(`  verification  ${verificationLine(plan.verification)}`);
   lines.push(`  host          ${hostLine(plan.host)}`);
   lines.push(`  demo phase    ${plan.demo ? 'yes (01-demo)' : 'no'}`);

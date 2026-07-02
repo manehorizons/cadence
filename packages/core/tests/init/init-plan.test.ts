@@ -3,7 +3,7 @@ import { mkdir, writeFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { planInit, renderInitPlan } from '../../src/init/plan.js';
+import { planInit, renderInitPlan, detectTestCommand } from '../../src/init/plan.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {
@@ -139,6 +139,36 @@ describe('planInit verification / --activate (AC-4)', () => {
   });
 });
 
+describe('planInit testCommand (phase 139, AC-4)', () => {
+  it('previews the derived testCommand for a repo with scripts.test + a lockfile', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ scripts: { test: 'vitest run' } }),
+    );
+    await writeFile(join(active.root, 'pnpm-lock.yaml'), '');
+    const plan = planInit(active.root, {}, {}, false);
+    expect(plan.verification.testCommand).toBe('pnpm test');
+  });
+
+  it('previews null when nothing can be derived', async () => {
+    active = await tempRepo();
+    const plan = planInit(active.root, {}, {}, false);
+    expect(plan.verification.testCommand).toBeNull();
+  });
+
+  it('renderInitPlan shows the derived test command', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ scripts: { test: 'vitest run' } }),
+    );
+    const plan = planInit(active.root, {}, {}, false);
+    const out = renderInitPlan(plan);
+    expect(out).toMatch(/test command\s+npm test/i);
+  });
+});
+
 describe('planInit host wire decision (AC-1)', () => {
   it('reports no-claude when no .claude/ workspace exists', async () => {
     active = await tempRepo();
@@ -250,5 +280,67 @@ describe('renderInitPlan (AC-1)', () => {
     const out = renderInitPlan(plan);
     expect(out).toMatch(/anthropic/);
     expect(out).toMatch(/real verification on/i);
+  });
+});
+
+describe('detectTestCommand (phase 139, AC-2/AC-3)', () => {
+  it('falls back to "npm test" when scripts.test exists but no lockfile is present', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ name: 'widget', scripts: { test: 'vitest run' } }),
+    );
+    expect(detectTestCommand(active.root)).toBe('npm test');
+  });
+
+  it('prefixes "pnpm test" when pnpm-lock.yaml is present', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ scripts: { test: 'vitest run' } }),
+    );
+    await writeFile(join(active.root, 'pnpm-lock.yaml'), '');
+    expect(detectTestCommand(active.root)).toBe('pnpm test');
+  });
+
+  it('prefixes "yarn test" when yarn.lock is present', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ scripts: { test: 'jest' } }),
+    );
+    await writeFile(join(active.root, 'yarn.lock'), '');
+    expect(detectTestCommand(active.root)).toBe('yarn test');
+  });
+
+  it('prefixes "bun test" when bun.lockb is present', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ scripts: { test: 'bun test ./src' } }),
+    );
+    await writeFile(join(active.root, 'bun.lockb'), '');
+    expect(detectTestCommand(active.root)).toBe('bun test');
+  });
+
+  it('prefixes "npm test" when package-lock.json is present', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ scripts: { test: 'mocha' } }),
+    );
+    await writeFile(join(active.root, 'package-lock.json'), '{}');
+    expect(detectTestCommand(active.root)).toBe('npm test');
+  });
+
+  it('returns null when package.json has no scripts.test', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'package.json'), JSON.stringify({ name: 'widget' }));
+    expect(detectTestCommand(active.root)).toBeNull();
+  });
+
+  it('returns null when there is no package.json at all', async () => {
+    active = await tempRepo();
+    expect(detectTestCommand(active.root)).toBeNull();
   });
 });

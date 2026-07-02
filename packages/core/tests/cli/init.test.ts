@@ -266,6 +266,52 @@ describe('cadence init — F2 layout-detected testGlobs', () => {
   });
 });
 
+describe('cadence init — testCommand derivation (phase 139, AC-2/AC-3/AC-4)', () => {
+  it('AC-2: writes a pnpm-prefixed testCommand when scripts.test + pnpm-lock.yaml exist', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ name: 'widget', scripts: { test: 'vitest run' } }),
+    );
+    await writeFile(join(active.root, 'pnpm-lock.yaml'), '');
+    const r = await run(['init', '--gate-profile=auto'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.verification.testCommand).toBe('pnpm test');
+  });
+
+  it('AC-3: no testCommand written when there is no scripts.test', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=nodejs', '--gate-profile=auto'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.verification.testCommand).toBeUndefined();
+  });
+
+  it('AC-4: --dry-run previews the same testCommand a real init would write', async () => {
+    active = await tempRepo();
+    await writeFile(
+      join(active.root, 'package.json'),
+      JSON.stringify({ scripts: { test: 'vitest run' } }),
+    );
+    const dry = await run(['init', '--dry-run', '--gate-profile=auto'], active.root);
+    expect(dry.code).toBe(0);
+    expect(dry.stdout).toMatch(/test command\s+npm test/i);
+    expect(existsSync(join(active.root, '.cadence'))).toBe(false);
+
+    const real = await run(['init', '--gate-profile=auto'], active.root);
+    expect(real.code).toBe(0);
+    const cfg = JSON.parse(
+      readFileSync(join(active.root, '.cadence/config.json'), 'utf8'),
+    );
+    expect(cfg.verification.testCommand).toBe('npm test');
+  });
+});
+
 describe('cadence init — F1/F4/F6 remediation', () => {
   it('AC-2: standard gate profile prints the non-TTY draft-approve hint', async () => {
     active = await tempRepo();

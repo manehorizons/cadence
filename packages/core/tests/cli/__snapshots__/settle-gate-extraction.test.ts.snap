@@ -1,8 +1,9 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Phase 39.1 AC-7: bit-identical gate refusal transcripts > coverage gate: refusal stderr is bit-identical after extraction (AC-7) 1`] = `
-"coverage: AC-1 has no linked test (searched: packages/**/*.test.ts, packages/**/*.test.tsx)
-settle run refused: each AC needs at least one test that references its id (e.g. AC-1 in a describe/it). Pass --allow-missing-coverage to bypass, or --force to settle anyway.
+"build-test-must-pass: no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement.
+coverage: AC-1 has no linked test (searched: packages/**/*.test.ts, packages/**/*.test.tsx)
+settle run refused (assertion mode): each AC needs at least one asserting it()/test() block that references its id. Pass --allow-missing-coverage to bypass, or --force to settle anyway.
 "
 `;
 
@@ -12,6 +13,7 @@ exports[`Phase 39.1 AC-7: bit-identical gate refusal transcripts > deep-verify g
      The \`mock\` verifier is a deterministic, offline placeholder that only checks each AC links to a test — it is NOT real verification. Run \`cadence activate\` to turn on a real AI verifier.
      https://github.com/manehorizons/cadence/blob/main/docs/providers.md
 
+build-test-must-pass: no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement.
 deep-verify: AC-1 failed — no linked test found (provider: mock)
 settle run --deep refused: the independent verifier rejected one or more ACs. Pass --force to settle anyway, or address the gaps.
 "

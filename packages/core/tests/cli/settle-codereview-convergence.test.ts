@@ -72,7 +72,11 @@ async function rewireT1(root: string, relPath: string): Promise<void> {
 async function seedAcCoverage(root: string, acId: string): Promise<void> {
   const p = join(root, 'packages/core/tests/foo.test.ts');
   await mkdir(dirname(p), { recursive: true });
-  await writeFile(p, `// covers ${acId}\n`, 'utf8');
+  await writeFile(
+    p,
+    `it('${acId} coverage fixture', () => { expect(true).toBe(true); });\n`,
+    'utf8',
+  );
 }
 
 const HIGH_SRC = 'export function f() { console.log("oops"); }\n';
