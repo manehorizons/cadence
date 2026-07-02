@@ -1,0 +1,11 @@
+{
+  "draftId": "133-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "checkGitHooks now checks .githooks/ existence before flagging, and never auto-overwrites a pre-existing custom hooksPath; TDD via 4 new tests in git-hooks-guard.test.ts + 3 existing fixture updates (host-checks, fix-id, fix-apply, doctor-fix). Full turbo lint/typecheck/test/build green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-02T00:58:28.003Z"
+    }
+  }
+}
