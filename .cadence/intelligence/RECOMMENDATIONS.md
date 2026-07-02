@@ -394,22 +394,6 @@ checkGitHooks warns in any git repo whose core.hooksPath is not .githooks, witho
 
 SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.
 
-## rec-20260701-006 — Defuse the non-TTY approve trap in the agent path
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: agent-prompt, onboarding, docs
-- files: packages/core/src/agent-prompt/render.ts, README.md, packages/core/src/init/plan.ts
-- evidence: 2026-07-01 audit R-06/F6: suggestGateProfile threshold at init/plan.ts:18-31 vs plain approve at render.ts:32 and README.md:89
-- next: cadence milestone propose
-
-init gives repos with 20+ commits the standard profile, whose draft approve refuses headless without --no-approve — but the README first-real-phase example and the copy-paste agent-prompt both use plain draft approve. Fix: make renderAgentPrompt profile-aware so step 3 tells the agent to stop and hand the human the approve command (the intended control point), and note the same in README.
-
 ## rec-20260701-007 — Refusal trio: finish the always-a-next-move promise
 
 - status: accepted

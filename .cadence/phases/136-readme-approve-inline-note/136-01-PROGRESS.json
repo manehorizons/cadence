@@ -1,0 +1,11 @@
+{
+  "draftId": "136-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added an inline '--no-approve' pointer to the README real-phase walkthrough's approve line. Verified renderAgentPrompt (agent-prompt side of rec-006) was already fixed in phase 130 and regression-locked by tests/agent-prompt/render.test.ts; out of scope here. TDD via 2 new tests in readme-profiles.test.ts (AC-1/AC-2). Full turbo lint/typecheck/test/build green (253 files / 1897 tests).",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-02T01:28:26.639Z"
+    }
+  }
+}

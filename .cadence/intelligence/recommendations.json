@@ -758,39 +758,6 @@
       "updatedAt": "2026-07-01T23:56:58.475Z"
     },
     {
-      "id": "rec-20260701-006",
-      "title": "Defuse the non-TTY approve trap in the agent path",
-      "summary": "init gives repos with 20+ commits the standard profile, whose draft approve refuses headless without --no-approve — but the README first-real-phase example and the copy-paste agent-prompt both use plain draft approve. Fix: make renderAgentPrompt profile-aware so step 3 tells the agent to stop and hand the human the approve command (the intended control point), and note the same in README.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "agent-prompt",
-        "onboarding",
-        "docs"
-      ],
-      "affectedFiles": [
-        "packages/core/src/agent-prompt/render.ts",
-        "README.md",
-        "packages/core/src/init/plan.ts"
-      ],
-      "suggestedMilestoneId": "onboarding-honesty",
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:58.984Z",
-      "updatedAt": "2026-07-02T00:22:22.353Z"
-    },
-    {
       "id": "rec-20260701-007",
       "title": "Refusal trio: finish the always-a-next-move promise",
       "summary": "Three surfaces break the refusals-guide pattern: (a) BUILD-state progress emits an unrunnable compound (build task <id> ... OR settle run) instead of one concrete command using the first PENDING task id; (b) draft approve on a missing draft dumps raw ENOENT while spec approve guards properly; (c) settle run out of position names no next step. All three are trivial diffs.",
@@ -1829,9 +1796,45 @@
       "decisionIds": [],
       "convertedToPhaseId": "135-init-demo-next-steps",
       "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:58.806Z",
-      "updatedAt": "2026-07-02T01:22:37.987Z",
       "archivedAt": "2026-07-02T01:22:37.987Z",
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-07-01T23:56:58.806Z",
+      "updatedAt": "2026-07-02T01:22:37.987Z"
+    },
+    {
+      "id": "rec-20260701-006",
+      "title": "Defuse the non-TTY approve trap in the agent path",
+      "summary": "init gives repos with 20+ commits the standard profile, whose draft approve refuses headless without --no-approve — but the README first-real-phase example and the copy-paste agent-prompt both use plain draft approve. Fix: make renderAgentPrompt profile-aware so step 3 tells the agent to stop and hand the human the approve command (the intended control point), and note the same in README.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "agent-prompt",
+        "onboarding",
+        "docs"
+      ],
+      "affectedFiles": [
+        "packages/core/src/agent-prompt/render.ts",
+        "README.md",
+        "packages/core/src/init/plan.ts"
+      ],
+      "suggestedMilestoneId": "onboarding-honesty",
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "136-readme-approve-inline-note",
+      "scoutId": "scout-20260701-audit",
+      "createdAt": "2026-07-01T23:56:58.984Z",
+      "updatedAt": "2026-07-02T01:28:26.824Z",
+      "archivedAt": "2026-07-02T01:28:26.824Z",
       "archiveReason": "converted-settled"
     }
   ]
