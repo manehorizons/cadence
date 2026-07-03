@@ -1265,7 +1265,10 @@ entirely, restoring the exact pre-phase-142/143 local-only behavior.
 `--list` prints the numbered candidate menu (`[local]`/`[sibling]` tag,
 branch, label, loop position, generated-at, worktree path) and resumes
 nothing. `--pick <n>` resolves the Nth entry from that same list (1-based);
-`--path <p>` resolves the candidate at that exact doc path.
+`--path <p>` resolves the candidate at that exact doc path. An out-of-range
+`--pick` or a `--path` matching no candidate is not a hard error — it falls
+back to the local candidate (or, with 2+ candidates and `autoList: true`,
+the interactive picker).
 
 Picking a **sibling** candidate — via `--pick`, `--path`, or the interactive
 picker — is strictly read-only: it never writes into the sibling's
