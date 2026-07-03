@@ -544,4 +544,10 @@ describe('gates.sealed config (Phase 141 / AC-1)', () => {
       }),
     ).toThrow();
   });
+
+  it('AC-2: production preset seals test-coverage and build-test-must-pass', () => {
+    expect(presets.production.gates.sealed).toEqual(['test-coverage', 'build-test-must-pass']);
+    expect(presets.solo.gates.sealed).toEqual([]);
+    expect(presets.team.gates.sealed).toEqual([]);
+  });
 });

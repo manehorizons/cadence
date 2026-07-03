@@ -350,5 +350,6 @@ export const presets = {
     loopEnforcement: 'strict' as const,
     acDiscipline: 'strict' as const,
     hooks: { ...defaultConfig.hooks, preToolUseBuildGate: true },
+    gates: { sealed: ['test-coverage', 'build-test-must-pass'] },
   },
 } satisfies Record<string, CadenceConfig>;
