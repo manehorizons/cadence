@@ -21,6 +21,12 @@ export function renderRecommendMd(report: RecommendationReport): string {
   if (report.ranked.length === 0) {
     lines.push('No actionable recommendations.');
   } else {
+    if (report.ranked.length < report.totals.ranked) {
+      lines.push(
+        `(showing top ${report.ranked.length} of ${report.totals.ranked} — run \`cadence recommend\` for the full list)`,
+      );
+      lines.push('');
+    }
     for (const r of report.ranked) {
       lines.push(`### ${r.id} — ${r.title}`);
       lines.push('');
