@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-02T23:49:29.817Z
+Generated at: 2026-07-03T16:16:28.113Z
 
 ## Advisory
 
@@ -15,14 +15,6 @@ Generated at: 2026-07-02T23:49:29.817Z
 - score: 61/100 (raw 17.7)
 - status: candidate · ready: needs-decision · priority: high · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
-- scout: scout-20260701-audit
-- next: cadence milestone propose
-
-### rec-20260701-009 — Sealed gates: let production preset make named gates non-bypassable
-
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
 - scout: scout-20260701-audit
 - next: cadence milestone propose
 
@@ -59,4 +51,4 @@ None.
 
 ## Totals
 
-- total 27 · ranked 5 · parked 0 · needs-attention 0 · excluded 22
+- total 26 · ranked 4 · parked 0 · needs-attention 0 · excluded 22

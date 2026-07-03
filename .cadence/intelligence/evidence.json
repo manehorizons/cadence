@@ -399,6 +399,13 @@
       "kind": "note",
       "summary": "2026-07-01 audit R-12/F8: boundary.ts:59-68 warn-only; handlers.ts:133-142 subagent counter; preToolUseBuildGate default off at config.ts:296",
       "createdAt": "2026-07-01T23:57:40.857Z"
+    },
+    {
+      "id": "ev-20260703-001",
+      "recommendationId": "rec-20260703-001",
+      "kind": "note",
+      "summary": "Builds on shipped primitives: phase-collision guard (v1.18, DESIGN.md §13), doctor worktree-phases check + next-free allocation (v1.19), agent-prompt (v1.33), and phase 142's gatherHandoffCandidates/liveLoopPosition (settled 07-03, PR #125, unwired core awaiting a consumer).",
+      "createdAt": "2026-07-03T16:59:18.968Z"
     }
   ]
 }
