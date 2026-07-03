@@ -730,36 +730,6 @@
       "updatedAt": "2026-07-01T23:57:18.500Z"
     },
     {
-      "id": "rec-20260701-009",
-      "title": "Sealed gates: let production preset make named gates non-bypassable",
-      "summary": "Every gate honors --force or a per-gate --allow-* flag; even the production preset removes none — the strictest expressible posture is bypassable-but-logged. Fix: a gates.sealed [gate-ids] config that makes listed gates ignore --force and their allow flag; wire into the production preset for test-coverage and build-test-must-pass. Bypass logging stays for everything unsealed.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "config"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/types.ts",
-        "packages/types/src/config.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-009"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:57:40.347Z",
-      "updatedAt": "2026-07-01T23:57:40.347Z"
-    },
-    {
       "id": "rec-20260701-010",
       "title": "MCP parity for the intelligence lifecycle",
       "summary": "An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose — the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.",
@@ -1845,10 +1815,43 @@
       "decisionIds": [],
       "convertedToPhaseId": "140-summary-gate-provenance",
       "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:56:58.475Z",
-      "updatedAt": "2026-07-02T22:23:49.995Z",
       "archivedAt": "2026-07-02T22:23:49.995Z",
-      "archiveReason": "converted-settled"
+      "archiveReason": "converted-settled",
+      "createdAt": "2026-07-01T23:56:58.475Z",
+      "updatedAt": "2026-07-02T22:23:49.995Z"
+    },
+    {
+      "id": "rec-20260701-009",
+      "title": "Sealed gates: let production preset make named gates non-bypassable",
+      "summary": "Every gate honors --force or a per-gate --allow-* flag; even the production preset removes none — the strictest expressible posture is bypassable-but-logged. Fix: a gates.sealed [gate-ids] config that makes listed gates ignore --force and their allow flag; wire into the production preset for test-coverage and build-test-must-pass. Bypass logging stays for everything unsealed.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "config"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/types.ts",
+        "packages/types/src/config.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-009"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260701-audit",
+      "createdAt": "2026-07-01T23:57:40.347Z",
+      "updatedAt": "2026-07-03T01:29:02.447Z",
+      "shippedRef": "PR #123 / phase 141 / v1.38.0-pending",
+      "archivedAt": "2026-07-03T01:29:02.447Z",
+      "archiveReason": "shipped"
     }
   ]
 }
