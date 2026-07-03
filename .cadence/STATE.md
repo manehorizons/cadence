@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 146-cadence-recommend-slash-command-top-flag
+**Active phase:** 147-upstream-self-authorship-exemption-for-phase-collision-guard
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 774
-- Last handoff: SESSION-2026-07-02.md
+- Subagent spawns this session: 817
+- Last handoff: SESSION-2026-07-03-phase146-cadence-recommend-pr130-merged.md
 
 ## Counts
 - Open drafts: 0

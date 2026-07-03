@@ -5,8 +5,14 @@ import {
   type Occupancy,
 } from '../../src/phases/collision.js';
 
-const occ = (number: number, source: Occupancy['source'], location: string): Occupancy => ({
+const occ = (
+  number: number,
+  source: Occupancy['source'],
+  location: string,
+  name = String(number),
+): Occupancy => ({
   number,
+  name,
   source,
   location,
 });
@@ -87,5 +93,39 @@ describe('detectPhaseCollision (AC-1)', () => {
   it('AC-1: nextFree crosses the 99->100 boundary (rec-20260610-001)', () => {
     expect(detectPhaseCollision(99, [occ(99, 'local', '.')]).nextFree).toBe(100);
     expect(detectPhaseCollision(0, [occ(99, 'sibling', '../x')]).nextFree).toBe(100);
+  });
+});
+
+describe('detectPhaseCollision — upstream self-authorship exemption (issue #129)', () => {
+  // The three real call sites always pass excludeSources: ['local'], so these
+  // tests do too — that isolates the new upstream-vs-local-name exemption from
+  // the pre-existing local self-exclusion mechanism (already covered above).
+
+  it('AC-1: exact-slug self-match exempts upstream', () => {
+    const r = detectPhaseCollision(
+      30,
+      [occ(30, 'local', '.', '30-auth'), occ(30, 'upstream', 'origin/main', '30-auth')],
+      { excludeSources: ['local'] },
+    );
+    expect(r.collides).toBe(false);
+    expect(r.conflicts).toEqual([]);
+  });
+
+  it('AC-2: same-number different-slug upstream still conflicts', () => {
+    const upstream = occ(30, 'upstream', 'origin/main', '30-cache');
+    const r = detectPhaseCollision(30, [occ(30, 'local', '.', '30-auth'), upstream], {
+      excludeSources: ['local'],
+    });
+    expect(r.collides).toBe(true);
+    expect(r.conflicts).toEqual([upstream]);
+  });
+
+  it('AC-3: sibling matching is unchanged (no exemption applied to sibling)', () => {
+    const sibling = occ(30, 'sibling', '../feature-x', '30-auth');
+    const r = detectPhaseCollision(30, [occ(30, 'local', '.', '30-auth'), sibling], {
+      excludeSources: ['local'],
+    });
+    expect(r.collides).toBe(true);
+    expect(r.conflicts).toEqual([sibling]);
   });
 });

@@ -68,9 +68,9 @@ describe('resolveNextFreePhase (best-effort I/O)', () => {
     const n = await resolveNextFreePhase(
       active.root,
       stub([
-        { number: 12, source: 'local', location: active.root },
-        { number: 30, source: 'sibling', location: '/wt/other' },
-        { number: 7, source: 'upstream', location: 'origin/main' },
+        { number: 12, name: '12-x', source: 'local', location: active.root },
+        { number: 30, name: '30-x', source: 'sibling', location: '/wt/other' },
+        { number: 7, name: '7-x', source: 'upstream', location: 'origin/main' },
       ]),
     );
     expect(n).toBe(31);

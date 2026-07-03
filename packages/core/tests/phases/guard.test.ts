@@ -16,7 +16,7 @@ describe('assertNoPhaseCollision (AC-4, AC-5)', () => {
   it('AC-4: refuses on a sibling collision, naming the conflict + next free + bypass hint', async () => {
     const v = await assertNoPhaseCollision('', 30, {
       config: cfg(),
-      gather: gatherFrom([{ number: 30, source: 'sibling', location: '/tmp/feature-x' }]),
+      gather: gatherFrom([{ number: 30, name: '30-x', source: 'sibling', location: '/tmp/feature-x' }]),
     });
     expect(v.ok).toBe(false);
     if (!v.ok) {
@@ -29,7 +29,7 @@ describe('assertNoPhaseCollision (AC-4, AC-5)', () => {
   it('AC-4: phrases an upstream conflict as "in use on origin/<ref>"', async () => {
     const v = await assertNoPhaseCollision('x' as never, 42, {
       config: cfg(),
-      gather: gatherFrom([{ number: 42, source: 'upstream', location: 'origin/main' }]),
+      gather: gatherFrom([{ number: 42, name: '42-x', source: 'upstream', location: 'origin/main' }]),
     });
     expect(v.ok).toBe(false);
     if (!v.ok) expect(v.message).toContain('phase 42 is in use on origin/main');
@@ -38,7 +38,7 @@ describe('assertNoPhaseCollision (AC-4, AC-5)', () => {
   it('AC-4: ok when no occupancy collides', async () => {
     const v = await assertNoPhaseCollision('' as never, 30, {
       config: cfg(),
-      gather: gatherFrom([{ number: 28, source: 'sibling', location: '/x' }]),
+      gather: gatherFrom([{ number: 28, name: '28-x', source: 'sibling', location: '/x' }]),
     });
     expect(v.ok).toBe(true);
   });
@@ -47,7 +47,7 @@ describe('assertNoPhaseCollision (AC-4, AC-5)', () => {
     const v = await assertNoPhaseCollision('' as never, 30, {
       config: cfg(),
       allow: true,
-      gather: gatherFrom([{ number: 30, source: 'sibling', location: '/x' }]),
+      gather: gatherFrom([{ number: 30, name: '30-x', source: 'sibling', location: '/x' }]),
     });
     expect(v.ok).toBe(true);
   });
@@ -55,7 +55,7 @@ describe('assertNoPhaseCollision (AC-4, AC-5)', () => {
   it('AC-7: phaseGuard.enabled=false disables the guard entirely', async () => {
     const v = await assertNoPhaseCollision('' as never, 30, {
       config: cfg({ enabled: false }),
-      gather: gatherFrom([{ number: 30, source: 'sibling', location: '/x' }]),
+      gather: gatherFrom([{ number: 30, name: '30-x', source: 'sibling', location: '/x' }]),
     });
     expect(v.ok).toBe(true);
   });
@@ -64,7 +64,7 @@ describe('assertNoPhaseCollision (AC-4, AC-5)', () => {
     const v = await assertNoPhaseCollision('' as never, 30, {
       config: cfg(),
       excludeSources: ['local'],
-      gather: gatherFrom([{ number: 30, source: 'local', location: '.' }]),
+      gather: gatherFrom([{ number: 30, name: '30-x', source: 'local', location: '.' }]),
     });
     expect(v.ok).toBe(true);
   });
@@ -74,8 +74,8 @@ describe('assertNoPhaseCollision (AC-4, AC-5)', () => {
       config: cfg(),
       excludeSources: ['local'],
       gather: gatherFrom([
-        { number: 30, source: 'local', location: '.' },
-        { number: 30, source: 'sibling', location: '/tmp/race-wt' },
+        { number: 30, name: '30-x', source: 'local', location: '.' },
+        { number: 30, name: '30-x', source: 'sibling', location: '/tmp/race-wt' },
       ]),
     });
     expect(v.ok).toBe(false);

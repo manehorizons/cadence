@@ -1,0 +1,29 @@
+{
+  "draftId": "147-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Occupancy.name threaded through gatherOccupancy (AC-4); reviewed clean",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T21:50:08.581Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Exact-slug upstream self-match exemption in detectPhaseCollision (AC-1,2,3); reviewed clean",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T21:50:08.762Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Integration regression test for issue #129 repro (AC-5); reviewed clean",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T21:50:08.953Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "pnpm build && typecheck && lint && test all green (2086/2086)",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T21:50:09.136Z"
+    }
+  }
+}
