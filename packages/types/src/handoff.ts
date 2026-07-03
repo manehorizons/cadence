@@ -34,9 +34,33 @@ export interface HandoffFrontmatter {
   contextPacketPath: string;
 }
 
+/** A discoverable SESSION handoff doc, local or from a sibling worktree, for
+ *  a future cross-worktree `cadence resume` picker. `worktreePath`/
+ *  `worktreeBranch` always come from a live `git worktree list` scan, never
+ *  from the doc's own frontmatter — a worktree can move after the doc was
+ *  written, so the doc is not a reliable source for "where is this now".
+ *  `liveLoopPosition` is that worktree's current `state.json` position,
+ *  distinct from `loopPosition` (what the doc said at generation time). */
+export const HandoffCandidateZ = z.object({
+  path: z.string(),
+  fileName: z.string(),
+  source: z.enum(['local', 'sibling']),
+  worktreePath: z.string(),
+  worktreeBranch: z.string().nullable(),
+  generatedAt: z.string().nullable(),
+  label: z.string().nullable(),
+  loopPosition: z.string().nullable(),
+  activePhase: z.string().nullable(),
+  liveLoopPosition: z.string().nullable(),
+});
+export type HandoffCandidate = z.infer<typeof HandoffCandidateZ>;
+
 /** `cadence resume --json` payload. */
 export const ResumeResultZ = z.union([
-  z.object({ found: z.literal(false) }),
+  z.object({
+    found: z.literal(false),
+    candidates: z.array(HandoffCandidateZ).optional(),
+  }),
   z.object({
     found: z.literal(true),
     handoffPath: z.string(),
@@ -47,6 +71,9 @@ export const ResumeResultZ = z.union([
       .object({ docLoopPosition: z.string(), liveLoopPosition: z.string() })
       .nullable(),
     mode: z.enum(['brief', 'full']),
+    candidates: z.array(HandoffCandidateZ).optional(),
+    pickedSource: z.enum(['local', 'sibling']).optional(),
+    pickedWorktree: z.string().optional(),
   }),
 ]);
 export type ResumeResult = z.infer<typeof ResumeResultZ>;
