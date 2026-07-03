@@ -65,6 +65,10 @@ export function detectPhaseCollision(
   );
   const conflicts = occupancies.filter((o) => {
     if (o.number !== target || excluded.has(o.source)) return false;
+    // Deliberate tradeoff: matches on (number, name), not git blob/tree content.
+    // A foreign phase that happens to share both the number AND the exact slug
+    // would be (mis)exempted here — accepted as vanishingly unlikely, versus the
+    // cost of diffing actual upstream content per candidate.
     if (o.source === 'upstream' && localNames.has(o.name)) return false;
     return true;
   });
