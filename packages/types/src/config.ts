@@ -280,6 +280,19 @@ export const CadenceConfigZ = z.object({
       sealed: z.array(z.string()).default([]),
     })
     .default({ sealed: [] }),
+  /**
+   * Resume cross-worktree discovery (Phase 142/143, v1.38 cross-worktree-handoff-discovery).
+   * Configures `cadence resume` behavior when multiple handoff candidates exist across git
+   * worktrees. `crossWorktree: false` disables discovery entirely (today's exact behavior).
+   * `autoList: true` means when 2+ candidates exist, the interactive picker opens
+   * automatically instead of just nudging. Omitting the block applies the defaults.
+   */
+  resume: z
+    .object({
+      crossWorktree: z.boolean().default(true),
+      autoList: z.boolean().default(false),
+    })
+    .default({ crossWorktree: true, autoList: false }),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -335,6 +348,7 @@ export const defaultConfig: CadenceConfig = {
   handoff: {},
   recommendations: { autoArchive: true },
   gates: { sealed: [] },
+  resume: { crossWorktree: true, autoList: false },
 };
 
 export const presets = {
