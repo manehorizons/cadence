@@ -370,12 +370,17 @@ never deleted — keeping the active ledger lean while preserving provenance.
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `recommendations.autoArchive` | `boolean` | `true` | Automatically soft-archive a rec when it reaches a terminal state: `shipped`/`rejected` **immediately** on [`recommendation promote`](commands.md#recommendation-promote), and a `converted` rec **when its phase completes SETTLE**. Set `false` to leave terminal recs in the active ledger. Manual [`recommendation archive`](commands.md#recommendation-archive)/`unarchive` work regardless. |
+| `recommendations.autoArchive` | `boolean` | `true` | Automatically soft-archive a rec **immediately** when it reaches a terminal state (`shipped`/`rejected`) via [`recommendation promote`](commands.md#recommendation-promote). Also gates the settle-time transition of a `converted` rec to `settle-pending` (see below) — off leaves such a rec at `converted` through settle. Set `false` to leave terminal recs in the active ledger. Manual [`recommendation archive`](commands.md#recommendation-archive)/`unarchive` work regardless. |
 
 Unlike [`handoff.retain`](#handoff) (a hard delete, so opt-in/off), auto-archival is
-**recoverable** and so defaults **on**. The settle-time archival of a `converted` rec is
-best-effort — a failure never blocks or fails the settle. The archive is viewable with
-`cadence recommendation list --archived`.
+**recoverable** and so defaults **on**. Archiving itself is only ever
+immediate-on-terminal-status; a `converted` rec whose phase settles is **not**
+archived — as of v1.39 it moves to the non-terminal `settle-pending` status
+instead (see [`recommendation promote`](commands.md#recommendation-promote)),
+staying in the active ledger until it's later promoted to `shipped` (which
+does archive it). Both the `settle-pending` transition and the terminal-status
+archival are best-effort — a failure never blocks or fails the settle. The
+archive is viewable with `cadence recommendation list --archived`.
 
 ```jsonc
 // .cadence/config.json — keep terminal recs in the active ledger (disable auto-archive)

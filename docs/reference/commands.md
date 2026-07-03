@@ -594,7 +594,7 @@ Show single recommended next action
 
 | Option | Description |
 |---|---|
-| `--json` | Emit machine-readable JSON (`{ command, reason }`) instead of rendered text |
+| `--json` | Emit machine-readable JSON (`{ command, reason, note? }`) instead of rendered text |
 | `-h, --help` | Display help for command |
 
 **Behavior** — reads current `state.json` and prints a single recommended next
@@ -602,6 +602,19 @@ action (e.g. "Run `cadence draft new`", "Record task T2"). Intended for
 quick orientation. For full loop context, use [`cadence status`](#status).
 `--json` emits the same `{ command, reason }` payload MCP callers get, for
 agents that would otherwise regex the rendered text lines.
+
+**Settle-pending note (v1.39)** — independent of loop position, an extra `Note:`
+line (and `--json` `note` field) appears when one or more recommendations are in
+`settle-pending` — code that settled locally but hasn't been confirmed shipped:
+
+```
+Next: cadence draft new --title "..."
+Reason: No active draft. Start the loop by drafting a new unit of work.
+Note: 2 recommendation(s) settled but not yet confirmed shipped — see `cadence doctor`.
+```
+
+Best-effort: omitted entirely (no key in `--json`, no line in text output) when
+there are none, or if the recommendation ledger can't be read.
 
 **Proactive next-free phase number (v1.19)** — at `IDLE`, the suggested
 `cadence draft new …` no longer prints a bare `<num>` placeholder: it fills in
@@ -703,6 +716,7 @@ v1 check set:
 | `worktree-phases` | *(v1.19)* no **sibling git worktree** claims a phase number equal to a local phase number (the silent-dual-merge precondition the v1.18 guard refuses at scaffold time) | warning |
 | `handoff-retention` | *(v1.20)* `SESSION-*.md` handoff docs are within `handoff.retain`, or — when retention is unset — have not accumulated past the warn threshold | warning |
 | `verification-readiness` | *(v1.22)* the deep-verify seam uses a **real** provider whose credentials are present (i.e. settle gates do real AI verification, not mock). Warns on all-mock (→ `cadence activate`) or a real provider missing its key | warning |
+| `recommendation-shipped-drift` | *(v1.39)* no recommendation is stuck in `settle-pending` — its linked phase settled locally but nobody has confirmed the work actually shipped. Warns naming each one's id, title, phase, and the exact `recommendation promote --status=shipped` command to run | warning |
 
 Host checks run only when the relevant files exist; their absence is not a
 problem.
@@ -896,7 +910,7 @@ cadence recommendation promote <recId> --status accepted --readiness ready-for-m
 
 | Option | Description |
 |---|---|
-| `--status <status>` | New status: `candidate`, `accepted`, `deferred`, `rejected`, or `shipped`. (`converted` is rejected — that transition is owned by [`recommendation convert`](#recommendation-convert).) |
+| `--status <status>` | New status: `candidate`, `accepted`, `deferred`, `rejected`, or `shipped`. (`converted` is rejected — that transition is owned by [`recommendation convert`](#recommendation-convert). `settle-pending` is also rejected — see below; it is set automatically, never a manual promote target.) |
 | `--readiness <readiness>` | New readiness: `raw-idea`, `needs-evidence`, `needs-decision`, `ready-for-milestone`, `ready-for-cadence-spec`, or `blocked`. |
 | `--ref <text>` | Freeform provenance recorded on a `shipped` rec (e.g. `"PR #70 / v1.22.1"`). Only valid with `--status shipped`; rejected otherwise. Stored verbatim and rendered as a `- shipped:` line. |
 
@@ -911,15 +925,30 @@ make a rec milestone-eligible, set both `--status accepted` and
 `shipped` is the positive-terminal status for a rec whose work has **landed**
 without (or after) a formal `convert` — e.g. a direct fix that merged via a PR.
 It drops the rec out of the active `cadence recommend` surface, exactly like
-`converted`/`rejected`. The one sanctioned transition out of an otherwise-terminal
-status is `converted → shipped` (a converted phase that later shipped).
+`converted`/`rejected`. The sanctioned transitions out of an otherwise-terminal
+status are `converted → shipped` (a converted phase that later shipped) and
+`settle-pending → shipped` (see below).
+
+**`settle-pending` (v1.39)** — a non-terminal waypoint between `converted` and
+`shipped`: `cadence settle run` automatically moves a `converted` recommendation
+here when its linked phase settles (settle happens on a feature branch, before
+the PR merges — so `settle-pending` says "the code was written for this," not
+yet "this shipped"). It stays in the **active** ledger (not archived) as a
+standing reminder, surfaced by `cadence doctor`'s `recommendation-shipped-drift`
+check and an optional `cadence progress` `Note:` line. The only way out is
+`recommendation promote <id> --status=shipped --ref "<PR/tag>"` once the phase's
+branch actually merges; `settle-pending` cannot be set manually via `promote`.
 
 **Auto-archive (v1.24)** — when `recommendations.autoArchive` is on (the default),
 promoting to `shipped` or `rejected` also **soft-archives** the rec in the same atomic
 write (it moves to the ledger's `archived` array; see
 [`recommendation archive`](#recommendation-archive)). The rec keeps its status and any
 `--ref`, and stays inspectable via `recommendation show` / `list --archived`. Set
-`recommendations.autoArchive: false` to leave terminal recs in the active ledger.
+`recommendations.autoArchive: false` to leave terminal recs in the active ledger. A
+rec moved to `settle-pending` is **not** archived at that point (v1.24's old
+behavior of archiving a `converted` rec on settle was replaced in v1.39 by the
+`settle-pending` waypoint above) — archiving happens only once it reaches
+`shipped`.
 
 **Exit codes**
 
@@ -946,9 +975,12 @@ clearing a junk/duplicate). Archived recs drop out of the default `recommendatio
 (see `--archived`) but remain visible to `recommendation show <id>`. The inverse is
 [`recommendation unarchive`](#recommendation-unarchive).
 
-Automatic archival (on terminal status via `promote`, and for a `converted` rec when
-its phase settles) is wired through the same primitive and gated by
-[`recommendations.autoArchive`](config.md#recommendations).
+Automatic archival (on terminal status via `promote`) is wired through the same
+primitive and gated by [`recommendations.autoArchive`](config.md#recommendations).
+A `converted` rec whose phase settles is **not** auto-archived — as of v1.39 it
+moves to the `settle-pending` status instead (see [`recommendation
+promote`](#recommendation-promote)) and stays in the active ledger until it's
+promoted to `shipped`.
 
 **Exit codes**
 

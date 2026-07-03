@@ -386,7 +386,9 @@ A **recommendation** (rec) is the central Praxis record: a scored, free-floating
 change candidate. It carries three orthogonal lifecycle facets:
 
 - **status** — `candidate` → `accepted` → then `deferred` | `rejected` |
-  `converted`. The operator-driven disposition.
+  `converted` (→ `settle-pending` → `shipped` once its phase settles and later
+  ships) | `shipped` (reachable directly too, via `recommendation promote`).
+  The operator-driven disposition.
 - **readiness** — a maturity gate: `raw-idea` → `needs-evidence` →
   `needs-decision` → `ready-for-milestone` → `ready-for-cadence-spec`, or
   `blocked`. How close the idea is to being actionable.
