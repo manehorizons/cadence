@@ -195,6 +195,13 @@ export function applyRecommendationPromotion(
         'cannot promote to converted — use `cadence recommendation convert` (it sets the phase link)',
     };
   }
+  if (changes.status === 'settle-pending') {
+    return {
+      ok: false,
+      error:
+        'cannot promote to settle-pending — it is set automatically when a converted recommendation\'s phase settles',
+    };
+  }
   // Phase 100: `--ref` provenance is meaningful only for the shipped status.
   if (changes.shippedRef !== undefined && changes.status !== 'shipped') {
     return {
@@ -203,10 +210,18 @@ export function applyRecommendationPromotion(
     };
   }
   // Phase 100: `converted → shipped` is the sole transition out of an otherwise
-  // terminal status (a converted phase whose work later landed).
+  // terminal status (a converted phase whose work later landed). Phase 145 adds
+  // a second: `settle-pending → shipped` (a converted phase that settled locally
+  // and has now been confirmed shipped).
   const convertedToShipped =
     changes.status === 'shipped' && target.status === 'converted';
-  if (!PROMOTABLE_FROM.has(target.status) && !convertedToShipped) {
+  const settlePendingToShipped =
+    changes.status === 'shipped' && target.status === 'settle-pending';
+  if (
+    !PROMOTABLE_FROM.has(target.status) &&
+    !convertedToShipped &&
+    !settlePendingToShipped
+  ) {
     return {
       ok: false,
       error: `cannot promote recommendation in terminal status ${target.status}`,

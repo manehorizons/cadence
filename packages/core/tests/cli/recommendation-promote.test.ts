@@ -109,6 +109,14 @@ describe('cadence recommendation promote', () => {
     expect(r.stderr).toMatch(/ref/i);
   });
 
+  it('AC-3: --status settle-pending is refused as an invalid CLI target', async () => {
+    active = await tempRepo({ initialized: true });
+    const id = await addRec(active.root);
+    const r = await run(['recommendation', 'promote', id, '--status', 'settle-pending'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/invalid --status/);
+  });
+
   it('AC-3: a promoted rec becomes milestone-eligible (propose clusters it)', async () => {
     active = await tempRepo({ initialized: true });
     const id = await addRec(active.root);

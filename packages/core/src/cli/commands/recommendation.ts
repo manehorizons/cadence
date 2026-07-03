@@ -25,8 +25,10 @@ import {
 import { renderRecommendationDetail } from '../../intelligence/render-recommendation-detail.js';
 
 // Statuses settable via `promote`. `converted` is excluded — owned by `convert`.
-const PROMOTE_STATUSES: RecommendationStatus[] =
-  RecommendationStatusZ.options.filter((s) => s !== 'converted');
+// `settle-pending` is excluded — owned by the settle hook (phase 145).
+const PROMOTE_STATUSES: RecommendationStatus[] = RecommendationStatusZ.options.filter(
+  (s) => s !== 'converted' && s !== 'settle-pending',
+);
 
 function csv(value: string | undefined): string[] {
   if (!value) return [];
