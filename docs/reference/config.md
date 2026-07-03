@@ -408,6 +408,11 @@ Naming any other gate id in `gates.sealed` currently has no effect — only
 `test-coverage` and `build-test-must-pass` consult `isGateSealed`; the other
 gates' bypass flags are unaffected regardless of what's listed here.
 
+Sealing binds the **auto** settle path (`cadence settle run --auto`, the one
+agents and CI use) — `cadence settle run --interactive` (non-auto) still lets
+`test-coverage` pass without computing coverage, since that mode delegates
+per-AC verification to the `interactive-verdict` human walker instead.
+
 ```jsonc
 // .cadence/config.json — seal the two gates the production preset seals by default
 { "gates": { "sealed": ["test-coverage", "build-test-must-pass"] } }
