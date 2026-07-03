@@ -14,8 +14,10 @@ function handoffDir(root: string): string {
   return join(root, '.cadence', 'handoff');
 }
 
-function readKey(content: string, key: string): string | null {
-  const m = content.match(new RegExp(`^${key}:\\s*(.*)$`, 'm'));
+export function readKey(content: string, key: string): string | null {
+  // [ \t]* (not \s*) so an empty value doesn't let the match spill across the
+  // newline and capture the following line's content instead of "".
+  const m = content.match(new RegExp(`^${key}:[ \\t]*(.*)$`, 'm'));
   const v = m?.[1]?.trim();
   return v ? v : null;
 }
