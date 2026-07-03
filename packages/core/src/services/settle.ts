@@ -28,7 +28,11 @@ import type { VerifyTestRef } from '../verify/verifier.js';
 import { runSettleGates } from '../gates/registry.js';
 import { deriveAcEvidence } from '../gates/ac-evidence.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
-import { runAdvanceConvertedToSettlePendingForPhase } from '../intelligence/store/recommendations.js';
+import {
+  runAdvanceConvertedToSettlePendingForPhase,
+  runRecommendationPromotion,
+} from '../intelligence/store/recommendations.js';
+import { readRecommendationLedger } from '../intelligence/store/io.js';
 import {
   type SettleContext,
   type ProgressJson,
@@ -67,6 +71,10 @@ export interface SettleArgs {
   /** Phase 73: override config.verifier.provider for the deep-verify gate
    *  (precedence flag > config > default mock). */
   verifier?: VerifierProvider;
+  /** Phase 148: when set, any `converted` recommendation targeting the
+   *  settling phase is promoted straight to `shipped` (with this text as
+   *  `shippedRef`) instead of the default `settle-pending` advance. */
+  shipRef?: string;
 }
 
 function parseAcArg(arg: string): AcResult {
@@ -513,12 +521,32 @@ export async function settleService(
     const settledPhase = state.activePhase;
     if (cadenceConfig?.recommendations.autoArchive !== false) {
       try {
-        const settlePendingRecIds = await runAdvanceConvertedToSettlePendingForPhase(
-          cwd,
-          settledPhase,
-        );
-        for (const rid of settlePendingRecIds) {
-          io.out(`recommendation ${rid} moved to settle-pending (converted phase settled)\n`);
+        if (opts.shipRef) {
+          // Phase 148: --ship-ref shortcut. Promote every `converted` rec
+          // targeting this phase straight to `shipped` instead of the default
+          // settle-pending advance, reusing the existing tested
+          // `converted → shipped` transition (no new transition logic).
+          const ledger = await readRecommendationLedger(cwd);
+          const shipTargets = ledger.recommendations.filter(
+            (r) => r.status === 'converted' && r.convertedToPhaseId === settledPhase,
+          );
+          for (const rec of shipTargets) {
+            const res = await runRecommendationPromotion(cwd, rec.id, {
+              status: 'shipped',
+              shippedRef: opts.shipRef,
+            });
+            if (res.ok) {
+              io.out(`recommendation ${rec.id} moved to shipped (--ship-ref)\n`);
+            }
+          }
+        } else {
+          const settlePendingRecIds = await runAdvanceConvertedToSettlePendingForPhase(
+            cwd,
+            settledPhase,
+          );
+          for (const rid of settlePendingRecIds) {
+            io.out(`recommendation ${rid} moved to settle-pending (converted phase settled)\n`);
+          }
         }
       } catch {
         // best-effort: leave the rec untouched, keep settling.

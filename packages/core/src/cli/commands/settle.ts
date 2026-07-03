@@ -14,6 +14,15 @@ function parseVerifier(value: string): VerifierProvider {
   );
 }
 
+/** Commander arg-parser for `--ship-ref`: reject an empty/whitespace-only
+ *  value rather than silently recording a blank ref (Phase 148). */
+function parseShipRef(value: string): string {
+  if (value.trim().length === 0) {
+    throw new InvalidArgumentError('--ship-ref requires a non-empty value');
+  }
+  return value;
+}
+
 export function registerSettleCommand(program: Command): void {
   const cmd = program.command('settle').description('Close the loop');
 
@@ -81,6 +90,11 @@ export function registerSettleCommand(program: Command): void {
     .option(
       '--allow-phase-collision',
       'bypass the worktree phase-collision backstop (Phase 83): settle even if a sibling worktree or upstream claims this phase number',
+    )
+    .option(
+      '--ship-ref <text>',
+      "when the settling phase has a `converted` recommendation pointed at it, promote it straight to `shipped` with this text as the ref (e.g. \"PR #NNN\") instead of the default settle-pending advance (Phase 148)",
+      parseShipRef,
     )
     .action(async (opts: SettleArgs) => {
       const { exitCode } = await settleService(process.cwd(), opts, processIO());
