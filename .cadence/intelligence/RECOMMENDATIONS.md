@@ -378,22 +378,6 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 
 The DRAFT is the central artifact and the only loop step the CLI cannot touch — all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.
 
-## rec-20260701-009 — Sealed gates: let production preset make named gates non-bypassable
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, config
-- files: packages/core/src/gates/types.ts, packages/types/src/config.ts
-- evidence: 2026-07-01 audit R-09/F8: gates/types.ts:144-158 uniform bypass surface; production preset at config.ts:333-338 flips only loopEnforcement + preToolUseBuildGate
-- next: cadence milestone propose
-
-Every gate honors --force or a per-gate --allow-* flag; even the production preset removes none — the strictest expressible posture is bypassable-but-logged. Fix: a gates.sealed [gate-ids] config that makes listed gates ignore --force and their allow flag; wire into the production preset for test-coverage and build-test-must-pass. Bypass logging stays for everything unsealed.
-
 ## rec-20260701-010 — MCP parity for the intelligence lifecycle
 
 - status: candidate
