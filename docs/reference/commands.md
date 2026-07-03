@@ -1030,6 +1030,7 @@ Rank actionable strategic recommendations and advise the next move (read-only)
 |---|---|
 | `--json` | Emit machine-readable JSON instead of rendered text |
 | `--scout-id <id>` | Narrow the report to one scout-session cluster (recs whose `scoutId` matches); totals reflect the scoped set. |
+| `--top <n>` | Show only the top N ranked recommendations (`totals.ranked` still reports the full count). Must be a positive integer. |
 | `-h, --help` | Display help for command |
 
 **Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).

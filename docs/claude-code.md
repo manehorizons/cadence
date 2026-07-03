@@ -31,7 +31,7 @@ the same `cadence hook <event>` dispatch path — without any special API surfac
   - [Options reference](#options-reference)
   - [The --local warning](#the---local-warning)
 - [Hook groups written by install](#hook-groups-written-by-install)
-- [The 12 slash commands](#the-12-slash-commands)
+- [The 13 slash commands](#the-13-slash-commands)
 - [How the agent drives CADENCE](#how-the-agent-drives-cadence)
 - [Gitignore guidance](#gitignore-guidance)
 
@@ -165,9 +165,9 @@ engine.
 
 ---
 
-## The 12 slash commands
+## The 13 slash commands
 
-`install` writes **12 slash commands** into `.claude/commands/`. Each file is
+`install` writes **13 slash commands** into `.claude/commands/`. Each file is
 tagged with `<!-- managed-by: cadence -->` so re-running install replaces them.
 If you remove that marker, install leaves the file untouched (treating it as
 user-customized).
@@ -189,6 +189,7 @@ keep this section in sync with it).
 | `/cadence-needs-context` | `cadence needs-context $ARGUMENTS` | Mark a task NEEDS_CONTEXT |
 | `/cadence-handoff` | `cadence handoff $ARGUMENTS` | Scaffold a SESSION handoff doc with machine facts pre-filled |
 | `/cadence-resume` | `cadence resume` | Replay the freshest session handoff + live context (read-only) |
+| `/cadence-recommend` | `cadence recommend --top 5` | Rank actionable strategic recommendations and advise the next move (top 5) |
 | `/cadence-scout` | `cadence recommend` | Divergent→convergent ideation dialogue that lands survivors as Praxis recommendations |
 
 Each command file's frontmatter sets `allowed-tools: Bash(cadence:*), Read`,
