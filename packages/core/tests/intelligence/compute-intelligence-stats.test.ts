@@ -38,12 +38,12 @@ const emptyAs: AssumptionLedger = { schemaVersion: 1, assumptions: [] };
 const emptyDec: IntelligenceDecisionLedger = { schemaVersion: 1, decisions: [] };
 
 describe('computeIntelligenceStats (Slice 18)', () => {
-  it('AC-1: byStatus counts shipped and settle-pending (not just the original five statuses)', () => {
+  it('byStatus counts shipped and settle-pending (not just the original five statuses)', () => {
     const recLedger: RecommendationLedger = {
       schemaVersion: 1,
       recommendations: [
         mkRec({ id: 'rec-1', status: 'shipped' }),
-        mkRec({ id: 'rec-2', status: 'settle-pending' as const }),
+        mkRec({ id: 'rec-2', status: 'settle-pending' }),
       ],
       archived: [],
     };
@@ -52,7 +52,7 @@ describe('computeIntelligenceStats (Slice 18)', () => {
     expect(stats.recommendations.byStatus['settle-pending']).toBe(1);
   });
 
-  it('AC-2: empty ledgers → all zeros, perRec empty', () => {
+  it('AC-1: empty ledgers → all zeros, perRec empty', () => {
     const s = computeIntelligenceStats(emptyRec, emptyEv, emptyAs, emptyDec);
     expect(s.recommendations.total).toBe(0);
     expect(s.evidence.total).toBe(0);

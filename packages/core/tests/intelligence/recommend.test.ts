@@ -123,9 +123,9 @@ describe('partitionLedger', () => {
     expect(p.needsAttention).toEqual([]);
   });
 
-  it('AC-1: excludes settle-pending from the active surface, like converted/shipped', () => {
+  it('excludes settle-pending from the active surface, like converted/shipped', () => {
     const p = partitionLedger([
-      mkRec({ id: 'rec-1', status: 'settle-pending' as const }),
+      mkRec({ id: 'rec-1', status: 'settle-pending' }),
       mkRec({ id: 'rec-2', status: 'accepted' }),
     ]);
     expect(p.excludedCount).toBe(1);
