@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 144-docs-release-for-cross-worktree-handoff-picker-v1-38-0
+**Active phase:** 146-cadence-recommend-slash-command-top-flag
 **Active draft:** (none)
 **Tier:** (n/a)
 
