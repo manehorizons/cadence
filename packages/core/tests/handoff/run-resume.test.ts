@@ -105,6 +105,36 @@ describe('runResume', () => {
     }
   });
 
+  // T4 — a corrupt/invalid .cadence/config.json must never break a read-only
+  // `cadence resume` in the single-candidate (no siblings) case: `loadConfig`
+  // is read best-effort and falls back to `defaultConfig`'s `resume` block.
+  it('T4: syntactically invalid config.json does not throw — resume still succeeds', async () => {
+    active = await tempRepo({ initialized: true });
+    await runHandoff(active.root, { label: 'demo' }, NOW);
+    await writeFile(join(active.root, '.cadence', 'config.json'), '{ not valid json');
+
+    const res = await runResume(active.root, {}, NOW);
+    expect(res.found).toBe(true);
+    if (res.found) {
+      expect(res.doc).toContain('## Next action');
+    }
+    // Single-candidate case: resolves via the fast path, still no phase-143 keys.
+    expect(res).not.toHaveProperty('candidates');
+  });
+
+  it('T4: schema-invalid config.json does not throw — resume still succeeds', async () => {
+    active = await tempRepo({ initialized: true });
+    await runHandoff(active.root, { label: 'demo' }, NOW);
+    await writeFile(
+      join(active.root, '.cadence', 'config.json'),
+      JSON.stringify({ resume: { crossWorktree: 'not-a-boolean' } }, null, 2),
+    );
+
+    const res = await runResume(active.root, {}, NOW);
+    expect(res.found).toBe(true);
+    expect(res).not.toHaveProperty('candidates');
+  });
+
   // T6 — the concrete, checkable form of "byte-identical to the
   // pre-phase-143 baseline" for the JSON/`--json` surface: a single-worktree
   // repo (no siblings) must never grow the new phase-143 keys.

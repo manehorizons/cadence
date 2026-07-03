@@ -16,7 +16,7 @@ export async function resumeService(
   io: CommandIO,
 ): Promise<CommandResult> {
   try {
-    const res = await runResume(repoRoot, args.mode ? { mode: args.mode } : {});
+    const res = await runResume(repoRoot, args.mode ? { mode: args.mode } : {}, new Date(), io);
     if (!res.found) {
       io.out('resume: no handoff found — run `cadence handoff` to create one.\n');
       return { exitCode: 0, data: res };

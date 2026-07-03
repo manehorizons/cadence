@@ -1,6 +1,6 @@
 // packages/core/src/handoff/run-resume.ts
 import { readFile } from 'node:fs/promises';
-import type { HandoffCandidate, ResumeResult } from '@manehorizons/cadence-types';
+import { defaultConfig, type HandoffCandidate, type ResumeResult } from '@manehorizons/cadence-types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { runContext } from '../intelligence/context.js';
 import { loadConfig } from '../config/loader.js';
@@ -155,7 +155,11 @@ export async function runResume(
   now: Date = new Date(),
   io: CommandIO = processIO(),
 ): Promise<ResumeResult> {
-  const { resume: resumeConfig } = await loadConfig(root);
+  // Best-effort: an unrelated corrupt/invalid config.json must never break a
+  // read-only `cadence resume` (matches the guarded `loadConfig(...).catch(()
+  // => null)` idiom in status.ts / loop-violation.ts). Fall back to
+  // `defaultConfig`'s `resume` block ({ crossWorktree: true, autoList: false }).
+  const { resume: resumeConfig } = (await loadConfig(root).catch(() => null)) ?? defaultConfig;
 
   // AC-1 fast path: explicit --local, or config opt-out. No candidate
   // gathering at all — not even for logging/counting.
