@@ -5,6 +5,7 @@ import { SimpleStateBackend } from '../state/simple.js';
 import { nextAction, type NextActionHints } from '../progress.js';
 import { resolveNextFreePhase } from '../phases/next-free.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
+import { readRecommendationLedger } from '../intelligence/store/io.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 interface ProgressJson {
@@ -39,6 +40,23 @@ async function resolveBuildHint(
 }
 
 /**
+ * Phase 145 — best-effort count of recommendations awaiting ship confirmation.
+ * Returns `undefined` (nothing to report) when there are none or the ledger is
+ * unreadable, so the caller can omit the `Note:` line entirely rather than
+ * printing a hollow "0 recommendation(s)" message.
+ */
+async function resolveSettlePendingNote(repoRoot: string): Promise<string | undefined> {
+  try {
+    const ledger = await readRecommendationLedger(repoRoot);
+    const count = ledger.recommendations.filter((r) => r.status === 'settle-pending').length;
+    if (count === 0) return undefined;
+    return `${count} recommendation(s) settled but not yet confirmed shipped — see \`cadence doctor\`.`;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * `cadence progress` — the single recommended next action (read-only).
  * Returns `data: { command, reason }` for structured consumers.
  * `args.json` mirrors `--json` (same pattern as `recommendService`).
@@ -62,12 +80,18 @@ export async function progressService(
       if (build !== undefined) hints = { build };
     }
     const action = nextAction(state, hints);
-    const data = { command: action.command, reason: action.reason };
+    const note = await resolveSettlePendingNote(repoRoot);
+    const data = {
+      command: action.command,
+      reason: action.reason,
+      ...(note !== undefined ? { note } : {}),
+    };
     if (args.json) {
       io.out(JSON.stringify(data) + '\n');
     } else {
       io.out(`Next: ${action.command}\n`);
       io.out(`Reason: ${action.reason}\n`);
+      if (note !== undefined) io.out(`Note: ${note}\n`);
     }
     return { exitCode: 0, data };
   } catch (err) {

@@ -787,6 +787,37 @@
       "scoutId": "scout-20260701-audit",
       "createdAt": "2026-07-01T23:57:40.857Z",
       "updatedAt": "2026-07-01T23:57:40.857Z"
+    },
+    {
+      "id": "rec-20260703-001",
+      "title": "Milestone-scoped worktree fan-out for independent phases",
+      "summary": "External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "milestone",
+        "worktree",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/worktree",
+        "packages/core/src/cli/commands/milestone.ts",
+        "DESIGN.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260703-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-03T16:59:18.968Z",
+      "updatedAt": "2026-07-03T16:59:18.968Z"
     }
   ],
   "archived": [
@@ -1846,12 +1877,12 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:57:40.347Z",
-      "updatedAt": "2026-07-03T01:29:02.447Z",
       "shippedRef": "PR #123 / phase 141 / v1.38.0-pending",
+      "scoutId": "scout-20260701-audit",
       "archivedAt": "2026-07-03T01:29:02.447Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-01T23:57:40.347Z",
+      "updatedAt": "2026-07-03T01:29:02.447Z"
     }
   ]
 }

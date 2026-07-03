@@ -165,8 +165,9 @@ export interface RecommendationPromotionChanges {
 
 /**
  * Statuses an operator may promote *from*. `converted`/`rejected`/`shipped` are
- * terminal. Phase 100 adds one sanctioned exception handled below:
- * `converted → shipped` (a converted phase that later shipped).
+ * terminal. Two sanctioned exceptions are handled below: `converted → shipped`
+ * (phase 100, a converted phase that later shipped) and `settle-pending →
+ * shipped` (phase 145, a converted phase that settled and later shipped).
  */
 const PROMOTABLE_FROM: ReadonlySet<RecommendationStatus> = new Set([
   'candidate',
@@ -195,6 +196,13 @@ export function applyRecommendationPromotion(
         'cannot promote to converted — use `cadence recommendation convert` (it sets the phase link)',
     };
   }
+  if (changes.status === 'settle-pending') {
+    return {
+      ok: false,
+      error:
+        'cannot promote to settle-pending — it is set automatically when a converted recommendation\'s phase settles',
+    };
+  }
   // Phase 100: `--ref` provenance is meaningful only for the shipped status.
   if (changes.shippedRef !== undefined && changes.status !== 'shipped') {
     return {
@@ -203,10 +211,18 @@ export function applyRecommendationPromotion(
     };
   }
   // Phase 100: `converted → shipped` is the sole transition out of an otherwise
-  // terminal status (a converted phase whose work later landed).
+  // terminal status (a converted phase whose work later landed). Phase 145 adds
+  // a second: `settle-pending → shipped` (a converted phase that settled locally
+  // and has now been confirmed shipped).
   const convertedToShipped =
     changes.status === 'shipped' && target.status === 'converted';
-  if (!PROMOTABLE_FROM.has(target.status) && !convertedToShipped) {
+  const settlePendingToShipped =
+    changes.status === 'shipped' && target.status === 'settle-pending';
+  if (
+    !PROMOTABLE_FROM.has(target.status) &&
+    !convertedToShipped &&
+    !settlePendingToShipped
+  ) {
     return {
       ok: false,
       error: `cannot promote recommendation in terminal status ${target.status}`,
@@ -376,11 +392,16 @@ export async function runRecommendationPromotion(
   return { ok: true, ledger: outLedger };
 }
 
-// Phase 102: settle→rec hook. Archive every `converted` rec whose phase just
-// settled (`convertedToPhaseId === phaseId`) with reason `converted-settled`,
-// folded into a single write. Returns the archived ids ([] when none match).
-// The caller (settle service) invokes this best-effort, config-gated.
-export async function runAutoArchiveConvertedForPhase(
+// Phase 145: settle→rec hook. Move every `converted` rec whose phase just settled
+// (`convertedToPhaseId === phaseId`) to `settle-pending` — NOT archived, so it
+// stays visible in `cadence recommendation list`/`show` as a reminder to confirm
+// shipping (`cadence recommendation promote <id> --status=shipped --ref ...`).
+// Replaces phase 102's `runAutoArchiveConvertedForPhase`, which archived
+// (`converted-settled`) at this point instead; that archive reason stays valid
+// in `ArchiveReasonZ` for old ledgers but is no longer produced. Returns the
+// moved ids ([] when none match). The caller (settle service) invokes this
+// best-effort, config-gated (`recommendations.autoArchive`).
+export async function runAdvanceConvertedToSettlePendingForPhase(
   root: string,
   phaseId: string,
 ): Promise<string[]> {
@@ -390,11 +411,15 @@ export async function runAutoArchiveConvertedForPhase(
     (r) => r.status === 'converted' && r.convertedToPhaseId === phaseId,
   );
   if (targets.length === 0) return [];
-  let outLedger = ledger;
-  for (const t of targets) {
-    const archived = archiveRecommendation(outLedger, t.id, 'converted-settled', now);
-    if (archived.ok) outLedger = archived.ledger;
-  }
+  const targetIds = new Set(targets.map((t) => t.id));
+  const updatedAt = now.toISOString();
+  const outLedger: RecommendationLedger = {
+    schemaVersion: 1,
+    recommendations: ledger.recommendations.map((r) =>
+      targetIds.has(r.id) ? { ...r, status: 'settle-pending', updatedAt } : r,
+    ),
+    archived: ledger.archived,
+  };
   const evidenceLedger = await readEvidenceLedger(root);
   await writeIntelligenceLedgers(root, outLedger, evidenceLedger);
   return targets.map((t) => t.id);

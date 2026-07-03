@@ -132,7 +132,7 @@ async function readRecs(root: string): Promise<RecommendationLedger> {
   ) as RecommendationLedger;
 }
 
-describe('settle auto-archives converted recs (Phase 102 / AC-8)', () => {
+describe('settle advances converted recs to settle-pending (Phase 145)', () => {
   let parent: string;
   beforeAll(async () => {
     parent = await realpath(await mkdtemp(join(tmpdir(), 'cadence-settle-aa-')));
@@ -141,15 +141,15 @@ describe('settle auto-archives converted recs (Phase 102 / AC-8)', () => {
     await rm(parent, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }).catch(() => {});
   });
 
-  it('AC-8: autoArchive on → the converted rec is archived and reported', async () => {
+  it('AC-1: autoArchive on → the converted rec becomes settle-pending, not archived', async () => {
     const root = await setupBuildRepo(parent, { autoArchive: true });
     const { io, out } = captureIO();
     const res = await settleService(root, { auto: true, allowMissingCoverage: true }, io);
     expect(res.exitCode).toBe(0);
     const recs = await readRecs(root);
-    expect(recs.recommendations).toHaveLength(0);
-    expect(recs.archived.map((r) => r.id)).toEqual(['rec-20260601-001']);
-    expect(recs.archived[0]?.archiveReason).toBe('converted-settled');
+    expect(recs.recommendations).toHaveLength(1);
+    expect(recs.recommendations[0]?.status).toBe('settle-pending');
+    expect(recs.archived).toHaveLength(0);
     expect(out.join('')).toContain('rec-20260601-001');
   });
 

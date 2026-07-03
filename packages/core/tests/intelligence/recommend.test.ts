@@ -123,6 +123,15 @@ describe('partitionLedger', () => {
     expect(p.needsAttention).toEqual([]);
   });
 
+  it('excludes settle-pending from the active surface, like converted/shipped', () => {
+    const p = partitionLedger([
+      mkRec({ id: 'rec-1', status: 'settle-pending' }),
+      mkRec({ id: 'rec-2', status: 'accepted' }),
+    ]);
+    expect(p.excludedCount).toBe(1);
+    expect(p.ranked.map((r) => r.id)).toEqual(['rec-2']);
+  });
+
   it('routes superseded/contradicted to needs-attention, overriding deferred', () => {
     const p = partitionLedger([
       mkRec({ id: 'a', status: 'deferred', decayState: 'contradicted' }),

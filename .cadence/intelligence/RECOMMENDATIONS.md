@@ -409,3 +409,19 @@ An MCP-only client can add and promote a recommendation but cannot convert it to
 - next: cadence milestone propose
 
 DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.
+
+## rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: milestone, worktree, cli
+- files: packages/core/src/worktree, packages/core/src/cli/commands/milestone.ts, DESIGN.md
+- evidence: Builds on shipped primitives: phase-collision guard (v1.18, DESIGN.md §13), doctor worktree-phases check + next-free allocation (v1.19), agent-prompt (v1.33), and phase 142's gatherHandoffCandidates/liveLoopPosition (settled 07-03, PR #125, unwired core awaiting a consumer).
+- next: cadence milestone propose
+
+External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md

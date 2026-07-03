@@ -169,6 +169,30 @@ describe('phase 100: shipped terminal status', () => {
     expect(res.ok).toBe(false);
   });
 
+  it('AC-2: settle-pending → shipped is allowed (the second sanctioned exception)', () => {
+    const ledger = mkLedger([
+      mkRec('rec-1', 'settle-pending', { convertedToPhaseId: '144-target' }),
+    ]);
+    const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'shipped' }, now);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.ledger.recommendations[0]!.status).toBe('shipped');
+  });
+
+  it('AC-2: settle-pending may ONLY go to shipped, not back to an active status', () => {
+    const ledger = mkLedger([mkRec('rec-1', 'settle-pending')]);
+    const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'accepted' }, now);
+    expect(res.ok).toBe(false);
+  });
+
+  it('AC-2: cannot promote directly to settle-pending', () => {
+    const ledger = mkLedger([mkRec('rec-1', 'accepted')]);
+    const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'settle-pending' }, now);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toMatch(/settle-pending/);
+  });
+
   it('AC-4: shipped is terminal — cannot be promoted out of', () => {
     const ledger = mkLedger([mkRec('rec-1', 'shipped')]);
     const res = applyRecommendationPromotion(ledger, 'rec-1', { status: 'accepted' }, now);

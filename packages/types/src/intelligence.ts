@@ -15,6 +15,11 @@ export const RecommendationStatusZ = z.enum([
   'deferred',
   'rejected',
   'converted',
+  // Phase 145: a converted rec whose phase has settled locally, awaiting
+  // confirmation that the work actually shipped (merged/deployed). Reached only
+  // via the settle hook (`runAdvanceConvertedToSettlePendingForPhase`) — never a
+  // manual promote target.
+  'settle-pending',
   // Phase 100: positive-terminal status for a rec whose work has landed without
   // (or after) a formal `convert`. Reached via `recommendation promote`.
   'shipped',
