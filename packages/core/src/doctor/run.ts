@@ -7,6 +7,7 @@ import { loadConfig } from '../config/loader.js';
 import { assessReadiness } from '../activate/assess.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
+import { readRecommendationLedger } from '../intelligence/store/io.js';
 import {
   pass,
   fail,
@@ -386,6 +387,43 @@ export async function checkVerificationReadiness(
   }
 }
 
+/**
+ * Surface recommendations stuck in `settle-pending` (Phase 145) — their linked
+ * phase settled locally but nobody has confirmed the work actually shipped
+ * (merged/deployed) via `recommendation promote --status=shipped`. Read-only,
+ * best-effort, never throws (doctor convention, mirrors `handoff-retention` /
+ * `verification-readiness`).
+ */
+export async function checkRecommendationShippedDrift(root: string): Promise<DoctorCheck> {
+  try {
+    const ledger = await readRecommendationLedger(root);
+    const pending = ledger.recommendations.filter((r) => r.status === 'settle-pending');
+    if (pending.length === 0) {
+      return pass(
+        'recommendation-shipped-drift',
+        'No recommendations awaiting ship confirmation.',
+      );
+    }
+    const detail = pending
+      .map(
+        (r) =>
+          `${r.id} "${r.title}" — phase ${r.convertedToPhaseId ?? '?'} settled, not yet confirmed shipped`,
+      )
+      .join('; ');
+    return fail(
+      'recommendation-shipped-drift',
+      'warning',
+      detail,
+      'Run `cadence recommendation promote <id> --status=shipped --ref "<PR/tag>"` once merged.',
+    );
+  } catch {
+    return pass(
+      'recommendation-shipped-drift',
+      'Recommendation ship-drift not determinable (best-effort) — skipped.',
+    );
+  }
+}
+
 export async function runDoctor(
   root: string,
   env: DoctorEnv,
@@ -400,6 +438,7 @@ export async function runDoctor(
     await checkWorktreePhases(root),
     await checkHandoffRetention(root),
     await checkVerificationReadiness(root),
+    await checkRecommendationShippedDrift(root),
   ];
   return rollup(checks);
 }
