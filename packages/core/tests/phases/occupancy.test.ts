@@ -136,4 +136,37 @@ describe('gatherOccupancy (AC-2, AC-3)', () => {
     const occ = await gatherOccupancy(work, { integrationRef: 'nonexistent-branch' });
     expect(occ.some((o) => o.source === 'upstream')).toBe(false);
   });
+
+  it('AC-4: every Occupancy carries its full directory name for local, sibling, and upstream', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'name-main-')));
+    await initRepo(main);
+    await phaseDir(main, '84-local-name');
+
+    const sibling = join(parent, `name-wt-${Date.now().toString(36)}`);
+    git(main, ['worktree', 'add', '-b', 'feature-name', sibling]);
+    await phaseDir(sibling, '31-sibling-name');
+
+    // Commit + push an upstream phase dir so origin/main carries a real name.
+    await phaseDir(main, '42-upstream-name');
+    git(main, ['add', '.']);
+    git(main, ['commit', '-m', 'add upstream phase dir']);
+    const bare = await realpath(await mkdtemp(join(parent, 'name-bare-')));
+    git(bare, ['init', '--bare', '-b', 'main']);
+    git(main, ['remote', 'add', 'origin', bare]);
+    git(main, ['push', '-u', 'origin', 'main']);
+
+    const occ = await gatherOccupancy(main, { integrationRef: 'main' });
+
+    const local = occ.find((o) => o.source === 'local' && o.number === 84);
+    expect(local).toBeDefined();
+    expect(local!.name).toBe('84-local-name');
+
+    const sib = occ.find((o) => o.source === 'sibling' && o.number === 31);
+    expect(sib).toBeDefined();
+    expect(sib!.name).toBe('31-sibling-name');
+
+    const up = occ.find((o) => o.source === 'upstream' && o.number === 42);
+    expect(up).toBeDefined();
+    expect(up!.name).toBe('42-upstream-name');
+  });
 });

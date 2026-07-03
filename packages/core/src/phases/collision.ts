@@ -9,6 +9,8 @@
 export interface Occupancy {
   /** The leading numeric token of the phase dir name (`30-auth` → 30). */
   number: number;
+  /** The full phase-directory name (e.g. `30-auth`), not just the parsed number. */
+  name: string;
   /** Where the claim was observed. `local` is this worktree's own `.cadence/phases/`. */
   source: 'local' | 'sibling' | 'upstream';
   /** Human-readable origin — a worktree path or `origin/<ref>`. */

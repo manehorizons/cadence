@@ -33,7 +33,7 @@ function toOccupancies(
   const out: Occupancy[] = [];
   for (const name of dirNames) {
     const number = phaseNumber(name);
-    if (number !== null) out.push({ number, source, location });
+    if (number !== null) out.push({ number, name, source, location });
   }
   return out;
 }

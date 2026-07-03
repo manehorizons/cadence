@@ -24,7 +24,7 @@ describe('checkWorktreePhases', () => {
     active = await tempRepo({ initialized: true });
     const check = await checkWorktreePhases(
       active.root,
-      stub([{ number: 85, source: 'local', location: active.root }]),
+      stub([{ number: 85, name: '85-x', source: 'local', location: active.root }]),
     );
     expect(check.severity).toBe('ok');
     expect(check.name).toBe('worktree-phases');
@@ -45,8 +45,8 @@ describe('checkWorktreePhases', () => {
     const check = await checkWorktreePhases(
       active.root,
       stub([
-        { number: 85, source: 'local', location: active.root },
-        { number: 85, source: 'upstream', location: 'origin/main' },
+        { number: 85, name: '85-x', source: 'local', location: active.root },
+        { number: 85, name: '85-x', source: 'upstream', location: 'origin/main' },
       ]),
     );
     expect(check.severity).toBe('ok');
@@ -57,9 +57,9 @@ describe('checkWorktreePhases', () => {
     const check = await checkWorktreePhases(
       active.root,
       stub([
-        { number: 85, source: 'local', location: active.root },
-        { number: 90, source: 'sibling', location: '/wt/other' },
-        { number: 91, source: 'upstream', location: 'origin/main' },
+        { number: 85, name: '85-x', source: 'local', location: active.root },
+        { number: 90, name: '90-x', source: 'sibling', location: '/wt/other' },
+        { number: 91, name: '91-x', source: 'upstream', location: 'origin/main' },
       ]),
     );
     expect(check.severity).toBe('ok');
@@ -72,8 +72,8 @@ describe('checkWorktreePhases', () => {
     const check = await checkWorktreePhases(
       active.root,
       stub([
-        { number: 85, source: 'local', location: active.root },
-        { number: 85, source: 'sibling', location: '/wt/other' },
+        { number: 85, name: '85-x', source: 'local', location: active.root },
+        { number: 85, name: '85-x', source: 'sibling', location: '/wt/other' },
       ]),
     );
     expect(check.severity).toBe('warning');
@@ -88,9 +88,9 @@ describe('checkWorktreePhases', () => {
     const check = await checkWorktreePhases(
       active.root,
       stub([
-        { number: 85, source: 'local', location: active.root },
-        { number: 85, source: 'sibling', location: '/wt/other' },
-        { number: 90, source: 'upstream', location: 'origin/main' },
+        { number: 85, name: '85-x', source: 'local', location: active.root },
+        { number: 85, name: '85-x', source: 'sibling', location: '/wt/other' },
+        { number: 90, name: '90-x', source: 'upstream', location: 'origin/main' },
       ]),
     );
     expect(check.severity).toBe('warning');

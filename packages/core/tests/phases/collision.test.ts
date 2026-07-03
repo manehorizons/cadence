@@ -5,8 +5,14 @@ import {
   type Occupancy,
 } from '../../src/phases/collision.js';
 
-const occ = (number: number, source: Occupancy['source'], location: string): Occupancy => ({
+const occ = (
+  number: number,
+  source: Occupancy['source'],
+  location: string,
+  name = String(number),
+): Occupancy => ({
   number,
+  name,
   source,
   location,
 });
