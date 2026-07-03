@@ -2,37 +2,13 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-02T01:51:21.969Z
+Generated at: 2026-07-02T23:49:29.817Z
 
 ## Advisory
 
 - cadence milestone propose
 
 ## Ranked
-
-### rec-20260701-002 — doctor git-hooks check leaks Cadence-repo assumption; --fix can break consumer repos
-
-- score: 82/100 (raw 31.7)
-- status: accepted · ready: ready-for-milestone · priority: critical · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status accepted +6 · ready ready-for-milestone +7 · decay fresh +4 · prio critical +8 ⇒ raw 31.7 (score 82)
-- scout: scout-20260701-audit
-- next: cadence milestone propose
-
-### rec-20260701-001 — Make the default install enforce what the tutorial demonstrates
-
-- score: 65/100 (raw 20.7)
-- status: candidate · ready: needs-decision · priority: critical · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio critical +8 ⇒ raw 20.7 (score 65)
-- scout: scout-20260701-audit
-- next: cadence milestone propose
-
-### rec-20260701-003 — SUMMARY gate provenance: record what ran, what skipped, and what PASS meant
-
-- score: 61/100 (raw 17.7)
-- status: candidate · ready: needs-decision · priority: high · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
-- scout: scout-20260701-audit
-- next: cadence milestone propose
 
 ### rec-20260701-008 — Structured draft editing: draft add-ac / add-task / set-objective
 
@@ -66,6 +42,13 @@ Generated at: 2026-07-02T01:51:21.969Z
 - scout: scout-20260701-audit
 - next: cadence milestone propose
 
+### rec-20260619-008 — Team rollout kit
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: raw-idea · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- next: cadence milestone propose
+
 ## Parked (deferred)
 
 None.
@@ -76,4 +59,4 @@ None.
 
 ## Totals
 
-- total 7 · ranked 7 · parked 0 · needs-attention 0 · excluded 0
+- total 27 · ranked 5 · parked 0 · needs-attention 0 · excluded 22

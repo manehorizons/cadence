@@ -48,5 +48,8 @@
       "maxTasks": 999,
       "minTasks": 6
     }
+  },
+  "handoff": {
+    "retain": 10
   }
 }
