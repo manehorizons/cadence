@@ -1,10 +1,12 @@
 // packages/core/tests/handoff/candidates.test.ts
-import { describe, expect, it, beforeAll, afterAll } from 'vitest';
+import { describe, expect, it, vi, beforeAll, afterAll, beforeEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseHandoffMeta, gatherHandoffCandidates } from '../../src/handoff/candidates.js';
+import * as locate from '../../src/handoff/locate.js';
+import type * as LocateModule from '../../src/handoff/locate.js';
 
 const FULL_FRONTMATTER = [
   '---',
@@ -104,6 +106,11 @@ describe('parseHandoffMeta', () => {
   });
 });
 
+vi.mock('../../src/handoff/locate.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof LocateModule>();
+  return { ...actual };
+});
+
 function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, {
     cwd,
@@ -175,6 +182,9 @@ describe('gatherHandoffCandidates (AC-4, AC-5, real git worktree fixtures)', () 
     await rm(parent, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }).catch(
       () => {},
     );
+  });
+  beforeEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('case 1: local only, zero siblings → exactly 1 candidate, source local', async () => {
@@ -358,5 +368,46 @@ describe('gatherHandoffCandidates (AC-4, AC-5, real git worktree fixtures)', () 
     const local = result.find((c) => c.source === 'local');
     expect(local?.worktreeBranch).toBe('main');
     expect(local?.worktreeBranch).not.toBe('some-stale-branch-name');
+  });
+
+  it('regression: a throw from locateFreshestHandoff on the LOCAL worktree must not drop siblings too', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-throw-')));
+    await initRepo(main);
+    await writeState(main);
+    await writeHandoffDoc(main, 'SESSION-2026-07-01-local.md', '2026-07-01T08:00:00.000Z');
+
+    const sib = join(parent, `sib-throw-${Date.now().toString(36)}`);
+    git(main, ['worktree', 'add', '-b', 'feature-throw', sib]);
+    await writeState(sib);
+    await writeHandoffDoc(sib, 'SESSION-2026-07-02-sib.md', '2026-07-02T08:00:00.000Z');
+
+    // Simulate `locateFreshestHandoff` throwing for the LOCAL worktree only
+    // (e.g. an EACCES on .cadence/handoff/, or a TOCTOU race between
+    // readdir and readFile) while behaving normally for the sibling. Before
+    // the fix, gatherLocalCandidate had no outer try/catch, so this throw
+    // would reject the whole `Promise.all` in gatherHandoffCandidates and
+    // silently drop the sibling candidate along with the local one.
+    const real = locate.locateFreshestHandoff;
+    vi.spyOn(locate, 'locateFreshestHandoff').mockImplementation(async (root, lastHandoff) => {
+      if (root === main) throw new Error('simulated EACCES reading local handoff dir');
+      return real(root, lastHandoff);
+    });
+
+    let result: Awaited<ReturnType<typeof gatherHandoffCandidates>> = [];
+    await expect(
+      (async () => {
+        result = await gatherHandoffCandidates(main);
+      })(),
+    ).resolves.not.toThrow();
+
+    // The local candidate is dropped (its own lookup threw)...
+    expect(result.find((c) => c.source === 'local')).toBeUndefined();
+    // ...but the sibling still surfaces — proving the local throw did not
+    // reject the shared Promise.all and take the sibling result with it.
+    const sibReal = await realpath(sib);
+    const siblingResult = result.find((c) => c.worktreePath === sibReal);
+    expect(siblingResult).toBeDefined();
+    expect(siblingResult?.source).toBe('sibling');
+    expect(result).toHaveLength(1);
   });
 });

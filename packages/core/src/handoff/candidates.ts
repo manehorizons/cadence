@@ -36,33 +36,41 @@ async function localBranch(repoRoot: string): Promise<string | null> {
 }
 
 async function gatherLocalCandidate(repoRoot: string): Promise<HandoffCandidate | null> {
-  let lastHandoff: string | null = null;
-  let liveLoopPosition: string | null = null;
   try {
-    const state = await new SimpleStateBackend(repoRoot).readState();
-    lastHandoff = state.session.lastHandoff;
-    liveLoopPosition = state.loopPosition;
+    let lastHandoff: string | null = null;
+    let liveLoopPosition: string | null = null;
+    try {
+      const state = await new SimpleStateBackend(repoRoot).readState();
+      lastHandoff = state.session.lastHandoff;
+      liveLoopPosition = state.loopPosition;
+    } catch {
+      // Corrupt/missing local state degrades to null/null, matching
+      // run-resume.ts — locateFreshestHandoff still works via directory glob.
+    }
+
+    const located = await locateFreshestHandoff(repoRoot, lastHandoff);
+    if (!located) return null;
+
+    const meta = parseHandoffMeta(located.content);
+    return {
+      path: located.path,
+      fileName: basename(located.path),
+      source: 'local',
+      worktreePath: repoRoot,
+      worktreeBranch: await localBranch(repoRoot),
+      generatedAt: meta.generatedAt,
+      label: meta.label,
+      loopPosition: meta.loopPosition,
+      activePhase: meta.activePhase,
+      liveLoopPosition,
+    };
   } catch {
-    // Corrupt/missing local state degrades to null/null, matching
-    // run-resume.ts — locateFreshestHandoff still works via directory glob.
+    // Last-resort safety net: anything beyond the state read (e.g.
+    // locateFreshestHandoff hitting EACCES/a TOCTOU race, or localBranch
+    // throwing) must still degrade to "drop this worktree", not reject the
+    // Promise.all in gatherHandoffCandidates and take sibling results with it.
+    return null;
   }
-
-  const located = await locateFreshestHandoff(repoRoot, lastHandoff);
-  if (!located) return null;
-
-  const meta = parseHandoffMeta(located.content);
-  return {
-    path: located.path,
-    fileName: basename(located.path),
-    source: 'local',
-    worktreePath: repoRoot,
-    worktreeBranch: await localBranch(repoRoot),
-    generatedAt: meta.generatedAt,
-    label: meta.label,
-    loopPosition: meta.loopPosition,
-    activePhase: meta.activePhase,
-    liveLoopPosition,
-  };
 }
 
 /** Sibling state is read raw, never via `SimpleStateBackend` — a foreign
