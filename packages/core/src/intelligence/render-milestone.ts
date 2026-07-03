@@ -75,7 +75,10 @@ export function renderMilestonesMd(ledger: MilestoneLedger): string {
   lines.push('## Closed', '');
   const closed = pick('closed');
   if (closed.length === 0) lines.push('None.');
-  else for (const m of closed) lines.push(`- ${m.id} — ${m.name}`);
+  else
+    for (const m of closed) {
+      lines.push(`- ${m.id} — ${m.name}${m.closedRef ? ` (ref: ${m.closedRef})` : ''}`);
+    }
   lines.push('');
 
   return lines.join('\n');
