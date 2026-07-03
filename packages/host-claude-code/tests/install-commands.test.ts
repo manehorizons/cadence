@@ -20,7 +20,7 @@ async function tempDir(): Promise<string> {
 }
 
 describe('installCommands', () => {
-  it('AC-1: writes 12 cadence-*.md files under .claude/commands/', async () => {
+  it('AC-1: writes 13 cadence-*.md files under .claude/commands/', async () => {
     const root = await tempDir();
     await installCommands(root);
     const entries = await readdir(join(root, '.claude/commands'));
@@ -34,6 +34,7 @@ describe('installCommands', () => {
       'cadence-handoff.md',
       'cadence-needs-context.md',
       'cadence-progress.md',
+      'cadence-recommend.md',
       'cadence-resume.md',
       'cadence-scout.md',
       'cadence-settle.md',
@@ -179,6 +180,16 @@ describe('installCommands', () => {
 
     const check = await readFile(join(root, '.claude/commands/cadence-check.md'), 'utf8');
     expect(check).toMatch(/^!cadence draft check \$ARGUMENTS\s*$/m);
+  });
+
+  it('cadence-recommend invokes !cadence recommend --top 5 and mentions $ARGUMENTS override in prose', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+    const body = await readFile(join(root, '.claude/commands/cadence-recommend.md'), 'utf8');
+    expect(body).toMatch(/^!cadence recommend --top 5\s*$/m);
+    expect(body).toMatch(/argument-hint: \[count\]/);
+    expect(body).toMatch(/\$ARGUMENTS/);
+    expect(body).toMatch(/cadence milestone propose/);
   });
 
   it('files are tagged cadence-managed via a comment header', async () => {

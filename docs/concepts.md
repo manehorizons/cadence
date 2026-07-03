@@ -535,6 +535,20 @@ collision. Tune or disable it via the
 reserve numbers ahead of time or auto-renumber — it observes ground truth and
 fails loud.
 
+`cadence resume` (v1.38, phases 142–143) applies the same ground-truth
+philosophy to a sibling concern: resumable sessions. Each worktree writes its
+own `SESSION-*.md` handoff docs, so a bare `cadence resume` now also scans
+`git worktree list` live and reads each sibling's `.cadence/handoff/` directly —
+no cached or shared index anywhere, just the same "observe the working trees
+that exist right now" move the phase-collision guard makes for phase numbers.
+By default, when 2+ resumable candidates turn up, it resumes local and prints a
+stderr nudge pointing at `cadence resume --list` rather than opening the picker
+automatically — a sibling pick is read-only and never touches the sibling's own
+`.cadence/`. Tune or disable this via the
+[`resume` config block](reference/config.md#resume) (`crossWorktree: false`
+turns it off; `autoList: true` opens the picker automatically instead of
+nudging).
+
 ---
 
 *Next: [docs/reference/config.md](reference/config.md) — full configuration

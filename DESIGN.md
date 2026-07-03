@@ -359,6 +359,22 @@ monotonic numbers stay chronological and never resurrect a number history intent
 config surface for a mode unlikely to be used. `nextFree` stays `max(observed) + 1`. If gap-reuse is
 ever genuinely wanted it remains a clean additive follow-up; dropping it now burns no bridge.
 
+The v1.38 cross-worktree-handoff-discovery milestone (phases 142–144) is a **sibling application** of
+this section's locked decision, not a new one — the same "observe ground truth, not a reservation
+registry" philosophy, extended from *phase numbers* to *handoff docs*. Two independent designs were
+weighed for surfacing a sibling worktree's resumable session in `cadence resume`: a live scan, and a
+shared index cached in the repo's common `.git` directory. Live scan won — even the index design's own
+analysis concluded an index is over-engineering at this scale (single-digit worktrees, sub-100ms scan
+cost) and trades in a worse failure mode than the one it optimizes: a lost or never-written index entry
+makes a real handoff invisible, whereas a live scan can only ever be as stale as "right now." **No index
+file anywhere**: every `cadence resume` call freshly discovers sibling worktrees via `git worktree list
+--porcelain` (the discovery plumbing this section already established, now extracted to
+`packages/core/src/git/worktrees.ts`) and freshly reads each sibling's own `.cadence/handoff/` directory.
+The default UX stays conservative for the same reason `--allow-phase-collision` stays opt-in above: bare
+`cadence resume` resumes the local candidate exactly as before, plus a one-line stderr nudge when
+siblings have resumable handoffs — never an auto-picker — with a `resume.autoList` config field for
+operators who want the picker to open automatically. This deepens §13; no new D-number.
+
 ## 14. Config legibility (`cadence config explain`)
 
 The config surface grew to 22 top-level keys with six near-identical provider blocks and several

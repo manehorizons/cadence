@@ -47,6 +47,7 @@ const COMMANDS: CommandSpec[] = [
   { name: 'cadence-needs-context', description: g['cadence-needs-context'].description, argumentHint: '<task-id> [--notes=<n>]', cli: 'needs-context $ARGUMENTS', trailing: g['cadence-needs-context'].trailing },
   { name: 'cadence-handoff', description: g['cadence-handoff'].description, argumentHint: '[label]', cli: 'handoff $ARGUMENTS', trailing: g['cadence-handoff'].trailing },
   { name: 'cadence-resume', description: g['cadence-resume'].description, cli: 'resume', trailing: g['cadence-resume'].trailing },
+  { name: 'cadence-recommend', description: g['cadence-recommend'].description, argumentHint: '[count]', cli: 'recommend --top 5', trailing: g['cadence-recommend'].trailing },
   { name: 'cadence-scout', description: g['cadence-scout'].description, argumentHint: '[topic]', cli: 'recommend', body: SCOUT_DIALOGUE },
 ];
 

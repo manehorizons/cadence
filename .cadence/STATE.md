@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 145-settle-pending-recommendation-status
+**Active phase:** 146-cadence-recommend-slash-command-top-flag
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 700
+- Subagent spawns this session: 774
 - Last handoff: SESSION-2026-07-02.md
 
 ## Counts

@@ -1062,6 +1062,7 @@ Rank actionable strategic recommendations and advise the next move (read-only)
 |---|---|
 | `--json` | Emit machine-readable JSON instead of rendered text |
 | `--scout-id <id>` | Narrow the report to one scout-session cluster (recs whose `scoutId` matches); totals reflect the scoped set. |
+| `--top <n>` | Show only the top N ranked recommendations (`totals.ranked` still reports the full count). Must be a positive integer. |
 | `-h, --help` | Display help for command |
 
 **Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
@@ -1257,20 +1258,75 @@ Replay the freshest .cadence/handoff/ SESSION doc + live context (read-only)
 | Option | Description |
 |---|---|
 | `--json` | Emit machine-readable JSON instead of rendered text |
+| `--full` | Force full output (whole doc + live context replay) |
+| `--brief` | Force brief output (key sections only, no context replay) |
+| `--list` | List every discoverable handoff candidate (local + sibling worktrees) and resume nothing |
+| `--pick <n>` | Resolve directly to the Nth candidate from `cadence resume --list` (1-based), skipping the menu |
+| `--path <p>` | Resolve directly to the handoff doc at this exact path, skipping the menu |
+| `--local` | Force the local-only fast path, ignoring sibling worktrees entirely |
 | `-h, --help` | Display help for command |
 
-**Behavior** — read-only; mutates nothing (a test asserts `state.json` is
-byte-unchanged across a `resume`). Locates the freshest SESSION doc — preferring
-the `state.session.lastHandoff` pointer when its file exists, otherwise globbing
-`.cadence/handoff/SESSION-*.md` ranked by frontmatter `generated_at` — and emits
-it verbatim alongside a freshly recomputed live `cadence context handoff` packet
-(authoritative if the machine facts have drifted since the doc was written). If
-the doc's recorded loop position differs from live state, it prints a one-line
-drift note (e.g. `⚠ handoff written at BUILD; live state now IDLE`).
+**Behavior** — read-only; mutates nothing, including when a pick resolves to a
+sibling worktree (a test asserts `state.json` is byte-unchanged across a
+`resume`). Locates the freshest SESSION doc for the *local* worktree —
+preferring the `state.session.lastHandoff` pointer when its file exists,
+otherwise globbing `.cadence/handoff/SESSION-*.md` ranked by frontmatter
+`generated_at` — and emits it verbatim alongside a freshly recomputed live
+`cadence context handoff` packet (authoritative if the machine facts have
+drifted since the doc was written). If the doc's recorded loop position
+differs from live state, it prints a one-line drift note (e.g. `⚠ handoff
+written at BUILD; live state now IDLE`).
+
+Output mode defaults to drift-decides: `full` (whole doc + live context) when
+drift is detected, else `brief` (key sections only, no context recompute).
+`--full`/`--brief` force one or the other explicitly.
+
+**Cross-worktree discovery** — alongside the local doc, `cadence resume`
+best-effort discovers the freshest handoff doc in every sibling git worktree
+(config `resume.crossWorktree`, default `true`). With 0–1 total candidates,
+behavior is identical to the local-only command. With 2+ candidates and no
+explicit selector (`--pick`/`--path`/`--list`), the default
+(`resume.autoList: false`) still resumes the local candidate but prints one
+stderr nudge: `note: N other worktree(s) have resumable handoffs — cadence
+resume --list`. Setting `resume.autoList: true` instead opens an interactive
+picker (prompting `Pick a number (or q to quit): `) once 2+ candidates exist
+and nothing was explicitly selected; in a non-TTY the picker prints the
+candidate menu and returns cleanly without prompting — it never hangs waiting
+on stdin. `--local` (or config `resume.crossWorktree: false`) skips discovery
+entirely, restoring the exact pre-phase-142/143 local-only behavior.
+
+`--list` prints the numbered candidate menu (`[local]`/`[sibling]` tag,
+branch, label, loop position, generated-at, worktree path) and resumes
+nothing. `--pick <n>` resolves the Nth entry from that same list (1-based);
+`--path <p>` resolves the candidate at that exact doc path. An out-of-range
+`--pick` or a `--path` matching no candidate is not a hard error — it falls
+back to the local candidate (or, with 2+ candidates and `autoList: true`,
+the interactive picker).
+
+Picking a **sibling** candidate — via `--pick`, `--path`, or the interactive
+picker — is strictly read-only: it never writes into the sibling's
+`.cadence/`, and never stamps the local `state.session.lastHandoff`. Its
+output opens with a `--- from sibling worktree: <path> ---` header, followed
+by the usual `--- narrative from <handoffPath> ---` line — both print,
+unconditionally, in that order. A sibling's live
+context is never recomputed (doing so would require writing into its
+`.cadence/intelligence/context/`), so `context` is always `null` for a
+sibling pick: full mode prints a footer — `live context recompute skipped:
+<path> is a different worktree — cd there and run `cadence resume --full` to
+get its live context` — instead of a real context packet, and brief mode
+prints the equivalent shorter note pointing at the same `cd`-and-`--full`
+fix.
+
+**Flag-conflict refusals** (exit 1, clear stderr message, nothing run):
+- `--full` and `--brief` together — `resume: --full and --brief are mutually exclusive`
+- more than one of `--list`, `--pick`, `--path` together — `resume: <flags> are mutually exclusive`
+- `--local` combined with any of `--list`/`--pick`/`--path` — `resume: --local and <flag> are mutually exclusive`
+- `--pick` given a non-numeric value — `resume: --pick must be a number`
 
 **Exit codes** — exits 0 when no handoff is found, printing an informational
 message with a `cadence handoff` hint (an empty handoff dir is not an error);
-exits non-zero only on a genuine failure.
+exits 1 on the flag-conflict refusals above; exits non-zero on other genuine
+failures.
 
 ---
 

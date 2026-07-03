@@ -58,6 +58,19 @@ describe('renderRecommendMd', () => {
     expect(renderRecommendMd(base)).not.toMatch(/- scout:/);
   });
 
+  it('shows a truncation note when ranked.length is less than totals.ranked', () => {
+    const md = renderRecommendMd({
+      ...base,
+      totals: { ...base.totals, ranked: 12 },
+    });
+    expect(md).toMatch(/\(showing top 1 of 12 — run `cadence recommend` for the full list\)/);
+  });
+
+  it('shows no truncation note when ranked.length equals totals.ranked', () => {
+    const md = renderRecommendMd(base);
+    expect(md).not.toMatch(/showing top/);
+  });
+
   it('renders the empty-ledger shape', () => {
     const md = renderRecommendMd({
       ...base,

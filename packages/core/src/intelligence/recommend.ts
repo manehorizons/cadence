@@ -173,7 +173,7 @@ export function synthesizeRecommendation(
   recs: Recommendation[],
   backend: BackendStatus,
   now: Date = new Date(),
-  filter: { scoutId?: string } = {},
+  filter: { scoutId?: string; top?: number } = {},
 ): RecommendationReport {
   // Phase 61: when a scoutId filter is set, scope the whole report to that
   // cluster before partition so totals reflect the scoped set.
@@ -219,10 +219,16 @@ export function synthesizeRecommendation(
     needsAttention: needsAttention.length,
   });
 
+  // `top` truncates only the *displayed* ranked list — totals.ranked below
+  // still reports the full pre-truncation count so callers can tell how many
+  // more exist.
+  const rankedDisplay =
+    filter.top !== undefined ? rankedOut.slice(0, filter.top) : rankedOut;
+
   return RecommendationReportZ.parse({
     schemaVersion: 1,
     generatedAt: now.toISOString(),
-    ranked: rankedOut,
+    ranked: rankedDisplay,
     parked: parked.map((r) => ({
       id: r.id,
       title: r.title,
@@ -248,7 +254,7 @@ export function synthesizeRecommendation(
 export async function runRecommend(
   root: string,
   now: Date = new Date(),
-  filter: { scoutId?: string } = {},
+  filter: { scoutId?: string; top?: number } = {},
 ): Promise<RecommendationReport> {
   const ledger = await readRecommendationLedger(root);
   const backend = await cadenceBackend.readStatus(root);

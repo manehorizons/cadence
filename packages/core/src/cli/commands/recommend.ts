@@ -10,10 +10,21 @@ export function registerRecommendCommand(program: Command): void {
     )
     .option('--json', 'emit machine-readable JSON instead of rendered text')
     .option('--scout-id <id>', 'narrow the report to one scout session cluster')
-    .action(async (opts: { json?: boolean; scoutId?: string }) => {
-      const args: { json?: boolean; scoutId?: string } = {};
+    .option(
+      '--top <n>',
+      'show only the top N ranked recommendations (totals still report the full count)',
+      (v) => Number.parseInt(v, 10),
+    )
+    .action(async (opts: { json?: boolean; scoutId?: string; top?: number }) => {
+      if (opts.top !== undefined && (Number.isNaN(opts.top) || opts.top < 1)) {
+        process.stderr.write('recommend: --top must be a positive integer\n');
+        process.exitCode = 1;
+        return;
+      }
+      const args: { json?: boolean; scoutId?: string; top?: number } = {};
       if (opts.json) args.json = true;
       if (opts.scoutId) args.scoutId = opts.scoutId;
+      if (opts.top !== undefined) args.top = opts.top;
       const { exitCode } = await recommendService(
         process.cwd(),
         args,
