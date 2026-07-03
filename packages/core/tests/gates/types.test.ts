@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { mergeInto, type SettleAccumulator, type GateResult } from '../../src/gates/types.js';
+import {
+  mergeInto,
+  isGateSealed,
+  type SettleAccumulator,
+  type GateResult,
+  type SettleContext,
+} from '../../src/gates/types.js';
 
 describe('mergeInto', () => {
   // AC-4: gate summaryPatch + flags merge into the accumulator
@@ -36,5 +42,41 @@ describe('mergeInto', () => {
     });
     expect(acc.acResults).toEqual([{ id: 'AC-1', pass: true }]);
     expect(acc.flags).toEqual({ coverageBypassed: true });
+  });
+});
+
+describe('isGateSealed', () => {
+  // AC-3/AC-4: a gate id present in ctx.config.gates.sealed is sealed
+  it('returns true when the gate id is in ctx.config.gates.sealed', () => {
+    const ctx = {
+      config: { gates: { sealed: ['test-coverage', 'build-test-must-pass'] } },
+    } as unknown as SettleContext;
+    expect(isGateSealed(ctx, 'test-coverage')).toBe(true);
+    expect(isGateSealed(ctx, 'build-test-must-pass')).toBe(true);
+  });
+
+  // AC-5: a gate id absent from the sealed list is unsealed
+  it('returns false when the gate id is not in ctx.config.gates.sealed', () => {
+    const ctx = {
+      config: { gates: { sealed: ['test-coverage'] } },
+    } as unknown as SettleContext;
+    expect(isGateSealed(ctx, 'build-test-must-pass')).toBe(false);
+  });
+
+  // AC-5: no config at all (ctx.config === null) never throws, never seals
+  it('returns false when ctx.config is null', () => {
+    const ctx = { config: null } as unknown as SettleContext;
+    expect(isGateSealed(ctx, 'test-coverage')).toBe(false);
+  });
+
+  // AC-5: gates.sealed absent or empty behaves like unsealed
+  it('returns false when gates.sealed is empty', () => {
+    const ctx = { config: { gates: { sealed: [] } } } as unknown as SettleContext;
+    expect(isGateSealed(ctx, 'test-coverage')).toBe(false);
+  });
+
+  it('returns false when gates is absent from config entirely', () => {
+    const ctx = { config: {} } as unknown as SettleContext;
+    expect(isGateSealed(ctx, 'test-coverage')).toBe(false);
   });
 });

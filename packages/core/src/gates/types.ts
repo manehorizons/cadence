@@ -237,6 +237,20 @@ export interface GateResult<P = SettleAccumulator> {
 
 export type GateImpl = (ctx: SettleContext) => Promise<GateResult>;
 
+/**
+ * Phase 141: is `gateId` in `config.gates.sealed`? A sealed gate ignores its
+ * usual bypass flags (`--force`, `--allow-missing-coverage`,
+ * `--allow-failing-build`) — the `test-coverage` and `build-test-must-pass`
+ * gates each consult this before honoring a bypass. Loosely typed (`string`,
+ * not `SettleGate`) to match `gates.sealed: string[]` in the config schema; a
+ * typo in config just never matches at runtime rather than a type error.
+ * Safe on a missing/null config or an absent/empty `gates.sealed` — never
+ * throws, always `false` in that case.
+ */
+export function isGateSealed(ctx: SettleContext, gateId: string): boolean {
+  return ctx.config?.gates?.sealed?.includes(gateId) ?? false;
+}
+
 /** Shallow-merge a GateResult's contribution into the accumulator. */
 export function mergeInto(acc: SettleAccumulator, res: GateResult): void {
   if (res.summaryPatch) {
