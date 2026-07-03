@@ -4,13 +4,18 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "140-summary-gate-provenance",
-  "activeDraft": null,
+  "activePhase": "141-sealed-gates-production-preset-makes-named-gates-non-bypassable",
+  "activeDraft": "141-01",
   "activeSpec": null,
-  "loopPosition": "IDLE",
-  "tier": null,
-  "draftReadAt": "2026-07-02T04:17:24.544Z",
-  "openDrafts": [],
+  "loopPosition": "BUILD",
+  "tier": "standard",
+  "draftReadAt": "2026-07-03T00:36:39.776Z",
+  "openDrafts": [
+    {
+      "id": "141-01",
+      "since": "2026-07-03T00:36:10.864Z"
+    }
+  ],
   "decisions": [],
   "deferred": [],
   "session": {
@@ -22,5 +27,9 @@
     "required": [],
     "invoked": []
   },
-  "activeTask": null
+  "activeTask": {
+    "id": "T1",
+    "status": "DONE",
+    "touchedFiles": []
+  }
 }
