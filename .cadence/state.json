@@ -5,31 +5,22 @@
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
   "activePhase": "141-sealed-gates-production-preset-makes-named-gates-non-bypassable",
-  "activeDraft": "141-01",
+  "activeDraft": null,
   "activeSpec": null,
-  "loopPosition": "BUILD",
-  "tier": "standard",
+  "loopPosition": "IDLE",
+  "tier": null,
   "draftReadAt": "2026-07-03T00:36:39.776Z",
-  "openDrafts": [
-    {
-      "id": "141-01",
-      "since": "2026-07-03T00:36:10.864Z"
-    }
-  ],
+  "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-02.md",
-    "subagentSpawns": 536
+    "subagentSpawns": 580
   },
   "skillAudit": {
     "required": [],
     "invoked": []
   },
-  "activeTask": {
-    "id": "T1",
-    "status": "DONE",
-    "touchedFiles": []
-  }
+  "activeTask": null
 }
