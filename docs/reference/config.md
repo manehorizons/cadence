@@ -31,6 +31,7 @@ To change the behavior-shaping keys interactively, use [`cadence config edit`](.
 - [phaseGuard](#phaseguard)
 - [handoff](#handoff)
 - [recommendations](#recommendations)
+- [gates](#gates)
 - [Reading your config — `cadence config explain`](#reading-your-config--cadence-config-explain)
 - [Presets](#presets)
 - [cadence init behavior](#cadence-init-behavior)
@@ -383,6 +384,39 @@ best-effort — a failure never blocks or fails the settle. The archive is viewa
 
 ---
 
+## gates
+
+Sealed-gate enforcement (Phase 141). A gate id listed in `gates.sealed` becomes
+**non-bypassable** at `cadence settle run`: both the global `--force` flag and
+that gate's own per-gate `--allow-*` flag are ignored, and the refusal message
+names `gates.sealed` instead of the usual bypass hint. This closes the gap
+where an operator (or an agent under pressure) could wave away the exact gates
+a `production`-tier project cares about most.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `gates.sealed` | `string[]` | `[]` | Gate ids that cannot be bypassed at settle time. An empty array (the default) restores normal bypass behavior for every gate. |
+
+Only two gate ids currently check `gates.sealed` and are meaningful here:
+
+| Gate id | Bypass flag(s) it seals shut |
+|---|---|
+| `test-coverage` | `--allow-missing-coverage`, `--force` |
+| `build-test-must-pass` | `--allow-failing-build`, `--force` |
+
+Naming any other gate id in `gates.sealed` currently has no effect — only
+`test-coverage` and `build-test-must-pass` consult `isGateSealed`; the other
+gates' bypass flags are unaffected regardless of what's listed here.
+
+```jsonc
+// .cadence/config.json — seal the two gates the production preset seals by default
+{ "gates": { "sealed": ["test-coverage", "build-test-must-pass"] } }
+```
+
+See [docs/concepts.md — Gate bypass reference summary](../concepts.md#gate-bypass-reference-summary) for the full bypass-flag table these two entries interact with.
+
+---
+
 ## Reading your config — `cadence config explain`
 
 This page is a field reference. To see what *your* config actually does — without
@@ -427,6 +461,9 @@ The three share detection logic where they overlap (e.g. the host-hooks-installe
 | `acDiscipline` | `"optional"` | `"tier-scaled"` | `"strict"` |
 | `commitCadence` | `"manual"` | `"draft"` | `"draft"` |
 | `hooks.preToolUseBuildGate` | `false` | `false` | `true` |
+| `gates.sealed` | `[]` | `[]` | `["test-coverage", "build-test-must-pass"]` |
+
+The `production` preset seals `test-coverage` and `build-test-must-pass` by default (see [gates](#gates)) — `solo`/`team` leave `gates.sealed` empty, so every gate's normal bypass flags still work.
 
 All other fields are identical to `defaultConfig` across all three presets. After scaffolding, `cadence init` overlays the detected `profile` and `verification.testGlobs` regardless of preset (see below).
 

@@ -287,6 +287,13 @@ choose to run `cadence spec approve`.
 | `--no-interactive` | `settle run` | `interactive-verdict` (opt-out, not failure bypass) |
 | `--allow-auto-complex` | `draft approve` / `settle run` | `auto × complex` soft cap |
 
+The bypass flags for `test-coverage` and `build-test-must-pass` in the table above stop
+working when the gate's id is listed in the [`gates.sealed`](reference/config.md#gates)
+config array (Phase 141) — `--force` and the gate's own `--allow-*` flag are both
+ignored, and settle refuses with a distinct message naming `gates.sealed`. This is
+config-driven, not a matrix change: the `production` preset seals both gates by
+default; `solo`/`team` seal nothing.
+
 ### Non-TTY auto-bypass (agents & CI)
 
 The two interactive gates — `approve` (at `cadence draft approve`) and
