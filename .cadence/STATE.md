@@ -3,18 +3,18 @@
 > Derived view. Do not edit by hand — regenerated on every state.json write.
 
 **Project:** cadence
-**Loop position:** BUILD
+**Loop position:** IDLE
 **Active phase:** 147-upstream-self-authorship-exemption-for-phase-collision-guard
-**Active draft:** 147-01
-**Tier:** standard
+**Active draft:** (none)
+**Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 783
+- Subagent spawns this session: 817
 - Last handoff: SESSION-2026-07-03-phase146-cadence-recommend-pr130-merged.md
 
 ## Counts
-- Open drafts: 1
+- Open drafts: 0
 - Decisions: 0
 - Deferred items: 0
 

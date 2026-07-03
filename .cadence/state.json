@@ -5,23 +5,18 @@
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
   "activePhase": "147-upstream-self-authorship-exemption-for-phase-collision-guard",
-  "activeDraft": "147-01",
+  "activeDraft": null,
   "activeSpec": null,
-  "loopPosition": "BUILD",
-  "tier": "standard",
+  "loopPosition": "IDLE",
+  "tier": null,
   "draftReadAt": "2026-07-03T21:29:07.066Z",
-  "openDrafts": [
-    {
-      "id": "147-01",
-      "since": "2026-07-03T21:18:17.053Z"
-    }
-  ],
+  "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-03-phase146-cadence-recommend-pr130-merged.md",
-    "subagentSpawns": 783
+    "subagentSpawns": 817
   },
   "skillAudit": {
     "required": [],
