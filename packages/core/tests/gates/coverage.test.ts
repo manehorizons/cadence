@@ -170,3 +170,138 @@ describe('runCoverageGate · assertion mode (AC-5)', () => {
     expect(res.outcome).toBe('pass');
   });
 });
+
+// Phase 141 T5 (AC-3, AC-5): sealed test-coverage ignores --force and
+// --allow-missing-coverage, refusing with a distinct "gates.sealed" message
+// instead of the normal bypass hint.
+describe('runCoverageGate · sealed (phase 141)', () => {
+  const sealedConfig = { gates: { sealed: ['test-coverage'] } } as never;
+  const sealedAssertionConfig = {
+    gates: { sealed: ['test-coverage'] },
+    verification: { coverageMode: 'assertion' },
+  } as never;
+
+  // AC-3: sealed + --force still refuses (mention mode).
+  it('refuses under --force when sealed (mention mode)', async () => {
+    const errs: string[] = [];
+    const res = await runCoverageGate(
+      ctx({ errs, opts: { force: true }, config: sealedConfig, coverageMap: new Map() }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('AC-1 has no linked test');
+    expect(joined).toContain('gates.sealed');
+    expect(joined).not.toContain('Pass --allow-missing-coverage to bypass');
+    expect(res.flags?.coverageBypassed).toBe(false);
+  });
+
+  // AC-3: sealed + --allow-missing-coverage still refuses — the gate must NOT
+  // short-circuit past coverage computation, and coverageBypassed must be
+  // false because the bypass did not actually take effect.
+  it('refuses under --allow-missing-coverage when sealed and still computes coverage', async () => {
+    const errs: string[] = [];
+    const res = await runCoverageGate(
+      ctx({
+        errs,
+        opts: { allowMissingCoverage: true },
+        config: sealedConfig,
+        coverageMap: new Map(),
+      }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('AC-1 has no linked test');
+    expect(joined).toContain('gates.sealed');
+    expect(joined).not.toContain('Pass --allow-missing-coverage to bypass');
+    expect(res.flags?.coverageBypassed).toBe(false);
+  });
+
+  // AC-3: sealed refusal message names gates.sealed literally and says
+  // neither --force nor --allow-missing-coverage can bypass it.
+  it('sealed refusal message names gates.sealed and both unusable flags', async () => {
+    const errs: string[] = [];
+    await runCoverageGate(
+      ctx({
+        errs,
+        opts: { force: true, allowMissingCoverage: true },
+        config: sealedConfig,
+        coverageMap: new Map(),
+      }),
+    );
+    const joined = errs.join('');
+    expect(joined).toContain('gates.sealed');
+    expect(joined).toContain('--force');
+    expect(joined).toContain('--allow-missing-coverage');
+  });
+
+  // AC-3: sealed + --force still refuses in assertion mode too, on a weak link.
+  it('refuses a weak link under --force when sealed (assertion mode)', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 3, snippet: '// AC-1', qualifying: false }]],
+    ]);
+    const res = await runCoverageGate(
+      ctx({ errs, opts: { force: true }, config: sealedAssertionConfig, coverageMap: map }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('not inside an asserting it()/test() block');
+    expect(joined).toContain('gates.sealed');
+    expect(joined).not.toContain('Pass --allow-missing-coverage to bypass');
+    expect(res.flags?.coverageBypassed).toBe(false);
+  });
+
+  // AC-3: sealed but coverage is actually fine → gate passes normally, no
+  // sealed message printed (sealing only removes the ability to bypass an
+  // already-correct refusal, it doesn't change what makes the gate refuse).
+  it('passes when sealed but coverage is fully satisfied', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 1, snippet: 'AC-1' }]],
+    ]);
+    const res = await runCoverageGate(ctx({ errs, config: sealedConfig, coverageMap: map }));
+    expect(res.outcome).toBe('pass');
+    expect(errs).toEqual([]);
+    expect(res.flags?.coverageBypassed).toBe(false);
+  });
+
+  // AC-5 (regression safety): unsealed --allow-missing-coverage behavior is
+  // byte-for-byte unchanged — still short-circuits before computing coverage
+  // (no per-AC stderr lines) and still sets coverageBypassed true.
+  it('unsealed: --allow-missing-coverage still short-circuits and bypasses (regression)', async () => {
+    const errs: string[] = [];
+    const res = await runCoverageGate(
+      ctx({ errs, opts: { allowMissingCoverage: true }, coverageMap: new Map() }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.flags?.coverageBypassed).toBe(true);
+    expect(errs).toEqual([]);
+  });
+
+  // AC-5 (regression safety): unsealed --force still bypasses a refusal and
+  // prints the original "Pass --allow-missing-coverage... or --force" hint,
+  // not the sealed message.
+  it('unsealed: --force still bypasses and prints the original bypass hint (regression)', async () => {
+    const errs: string[] = [];
+    const res = await runCoverageGate(
+      ctx({ errs, opts: { force: true }, coverageMap: new Map() }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.flags?.coverageBypassed).toBe(false);
+    expect(errs).toEqual([]);
+  });
+
+  // AC-5 (regression safety): a config naming a different gate in
+  // gates.sealed does not seal test-coverage — --force bypasses cleanly, just
+  // like the unsealed case (no refusal fires, so no stderr is printed).
+  it('a gates.sealed entry for a different gate does not seal test-coverage (regression)', async () => {
+    const otherSealed = { gates: { sealed: ['build-test-must-pass'] } } as never;
+    const errs: string[] = [];
+    const res = await runCoverageGate(
+      ctx({ errs, opts: { force: true }, config: otherSealed, coverageMap: new Map() }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.flags?.coverageBypassed).toBe(false);
+    expect(errs).toEqual([]);
+  });
+});

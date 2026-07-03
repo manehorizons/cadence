@@ -1,0 +1,71 @@
+{
+  "draftId": "141-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T00:36:39.951Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/types/tests/config.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/types/src/config.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/.superpowers/sdd/task-2-report.md"
+      ],
+      "updatedAt": "2026-07-03T00:41:08.822Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/types/tests/config.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/types/src/config.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/.superpowers/sdd/task-3-report.md"
+      ],
+      "updatedAt": "2026-07-03T00:44:01.647Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/core/tests/gates/types.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/core/src/gates/types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/.superpowers/sdd/task-4-report.md"
+      ],
+      "updatedAt": "2026-07-03T00:47:58.997Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/core/tests/gates/coverage.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/core/src/gates/coverage.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/.superpowers/sdd/task-5-report.md"
+      ],
+      "updatedAt": "2026-07-03T00:55:34.462Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/core/tests/gates/build-test-must-pass.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/packages/core/src/gates/build-test-must-pass.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/.superpowers/sdd/task-6-report.md"
+      ],
+      "updatedAt": "2026-07-03T01:00:39.696Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/docs/reference/config.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-141-sealed-gates/.superpowers/sdd/task-7-report.md"
+      ],
+      "updatedAt": "2026-07-03T01:06:13.479Z"
+    }
+  }
+}

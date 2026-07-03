@@ -1,4 +1,5 @@
 import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
+import { isGateSealed } from './types.js';
 import type { GateImpl, GateResult } from './types.js';
 
 /**
@@ -11,6 +12,12 @@ import type { GateImpl, GateResult } from './types.js';
  * writes the single-source-of-truth `NO_TEST_COMMAND_NOTICE` to stderr so the
  * gap is visible instead of hidden. The subprocess is reached only through
  * `ctx.runner` — the gate never imports child_process.
+ *
+ * Phase 141 (T6, AC-4/AC-5): when 'build-test-must-pass' is in
+ * `config.gates.sealed` (`isGateSealed`), neither --allow-failing-build nor
+ * --force can bypass a failing test run — the refusal message is a distinct
+ * "sealed, cannot be bypassed" message naming `gates.sealed` instead of the
+ * normal bypass hint. Unsealed behavior (AC-5) is byte-for-byte unchanged.
  */
 export const runBuildTestGate: GateImpl = async (ctx): Promise<GateResult> => {
   const res = await ctx.runner.test();
@@ -18,11 +25,16 @@ export const runBuildTestGate: GateImpl = async (ctx): Promise<GateResult> => {
     ctx.io.err(`build-test-must-pass: ${NO_TEST_COMMAND_NOTICE.message}\n`);
     return { outcome: 'pass', summaryPatch: { buildTestRan: false } };
   }
-  if (!res.ok && !ctx.opts.allowFailingBuild && !ctx.opts.force) {
+  const sealed = isGateSealed(ctx, 'build-test-must-pass');
+  if (!res.ok && (sealed || (!ctx.opts.allowFailingBuild && !ctx.opts.force))) {
     ctx.io.err(`build-test-must-pass: ${res.command} exited ${res.exitCode}\n`);
     ctx.io.err(
-      'settle run refused: the test suite must pass before settle. ' +
-        'Pass --allow-failing-build to bypass, or --force to settle anyway.\n',
+      sealed
+        ? 'settle run refused: the test suite must pass before settle. ' +
+            'This gate is sealed (gates.sealed) and cannot be bypassed with ' +
+            '--allow-failing-build or --force.\n'
+        : 'settle run refused: the test suite must pass before settle. ' +
+            'Pass --allow-failing-build to bypass, or --force to settle anyway.\n',
     );
     return { outcome: 'refuse' };
   }

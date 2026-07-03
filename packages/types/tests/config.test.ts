@@ -508,3 +508,46 @@ describe('verification.coverageMode default flip (phase 139 / AC-1)', () => {
     expect(presets.production.verification.coverageMode).toBe('assertion');
   });
 });
+
+describe('gates.sealed config (Phase 141 / AC-1)', () => {
+  it('AC-1: applies gates: { sealed: [] } when gates is omitted (back-compat)', () => {
+    const { gates: _drop, ...withoutGates } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutGates);
+    expect(parsed.gates).toEqual({ sealed: [] });
+  });
+
+  it('AC-1: defaultConfig carries gates.sealed as an empty array', () => {
+    expect(defaultConfig.gates.sealed).toEqual([]);
+  });
+
+  it('AC-1: accepts gates: { sealed: ["test-coverage"] }', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      gates: { sealed: ['test-coverage'] },
+    });
+    expect(parsed.gates.sealed).toEqual(['test-coverage']);
+  });
+
+  it('AC-1: accepts gates: { sealed: ["test-coverage", "deep-verify"] }', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      gates: { sealed: ['test-coverage', 'deep-verify'] },
+    });
+    expect(parsed.gates.sealed).toEqual(['test-coverage', 'deep-verify']);
+  });
+
+  it('AC-1: rejects non-string entries in gates.sealed', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        gates: { sealed: [42] as never },
+      }),
+    ).toThrow();
+  });
+
+  it('AC-2: production preset seals test-coverage and build-test-must-pass', () => {
+    expect(presets.production.gates.sealed).toEqual(['test-coverage', 'build-test-must-pass']);
+    expect(presets.solo.gates.sealed).toEqual([]);
+    expect(presets.team.gates.sealed).toEqual([]);
+  });
+});
