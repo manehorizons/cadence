@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "141-sealed-gates-production-preset-makes-named-gates-non-bypassable",
+  "activePhase": "142-extract-worktree-discovery-cross-worktree-handoff-candidates",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-03T00:36:39.776Z",
+  "draftReadAt": "2026-07-03T14:57:34.779Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-02.md",
-    "subagentSpawns": 580
+    "subagentSpawns": 646
   },
   "skillAudit": {
     "required": [],
