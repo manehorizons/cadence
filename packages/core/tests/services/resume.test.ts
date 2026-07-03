@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { defaultConfig } from '@manehorizons/cadence-types';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { resumeService } from '../../src/services/resume.js';
 import { bufferIO } from '../../src/services/io.js';
@@ -94,6 +95,137 @@ async function writeHandoffDoc(
   lines.push('---', '# Session Handoff', '', '## Next action', '', 'do the thing', '');
   await writeFile(join(dir, fileName), lines.join('\n'));
 }
+
+async function writeResumeConfig(
+  root: string,
+  resume: { crossWorktree?: boolean; autoList?: boolean },
+): Promise<void> {
+  const dir = join(root, '.cadence');
+  await mkdir(dir, { recursive: true });
+  const config = { ...defaultConfig, resume: { ...defaultConfig.resume, ...resume } };
+  await writeFile(join(dir, 'config.json'), JSON.stringify(config, null, 2));
+}
+
+describe('resumeService: CLI-parity rendering for cross-worktree candidates (phase 143 task 9)', () => {
+  let parent: string;
+  beforeAll(async () => {
+    parent = await realpath(await mkdtemp(join(tmpdir(), 'cadence-resume-svc-render-')));
+  });
+  afterAll(async () => {
+    await rm(parent, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }).catch(
+      () => {},
+    );
+  });
+
+  it('renders the candidate menu (not the generic message) when !found but candidates exist', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-render-')));
+    await initRepo(main);
+    await writeRepoState(main, { loopPosition: 'DRAFT' });
+    await writeHandoffDoc(main, 'SESSION-2026-07-01-local.md', '2026-07-01T09:00:00.000Z');
+    await writeResumeConfig(main, { autoList: true });
+
+    const sib1 = join(parent, `sib1-render-${Date.now().toString(36)}`);
+    git(main, ['worktree', 'add', '-b', 'render-feature-1', sib1]);
+    await writeRepoState(sib1, { loopPosition: 'BUILD' });
+    await writeHandoffDoc(sib1, 'SESSION-2026-07-02-s1.md', '2026-07-02T09:00:00.000Z');
+
+    // MCP is always non-TTY: force bypass regardless of the actual test-runner
+    // TTY state, matching run-resume.test.ts's AC-7 non-TTY case.
+    const previous = process.env.CADENCE_NONINTERACTIVE;
+    process.env.CADENCE_NONINTERACTIVE = '1';
+    try {
+      const io = bufferIO();
+      const res = await resumeService(main, {}, io);
+
+      expect(res.exitCode).toBe(0);
+      expect(res.data).toBeDefined();
+      const data = res.data as { found: boolean; candidates?: unknown[] };
+      expect(data.found).toBe(false);
+      expect(data.candidates).toBeDefined();
+      expect(data.candidates).toHaveLength(2);
+      expect(io.stdout()).toContain('Handoff candidates:');
+      expect(io.stdout()).not.toContain('resume: no handoff found');
+    } finally {
+      if (previous === undefined) delete process.env.CADENCE_NONINTERACTIVE;
+      else process.env.CADENCE_NONINTERACTIVE = previous;
+    }
+  });
+
+  it('keeps the exact generic message when !found and there are no candidates', async () => {
+    active = await tempRepo({ initialized: true });
+    const io = bufferIO();
+    const res = await resumeService(active.root, {}, io);
+    expect(res.exitCode).toBe(0);
+    expect(io.stdout()).toContain('resume: no handoff found — run `cadence handoff` to create one.\n');
+  });
+
+  it('prints the sibling-worktree header + full-mode footer when resuming a sibling doc', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-sibling-full-')));
+    await initRepo(main);
+    await writeRepoState(main, { loopPosition: 'DRAFT' });
+    await writeHandoffDoc(main, 'SESSION-2026-07-01-local.md', '2026-07-01T09:00:00.000Z');
+    await writeResumeConfig(main, { autoList: true });
+
+    const sib1 = join(parent, `sib1-full-${Date.now().toString(36)}`);
+    git(main, ['worktree', 'add', '-b', 'sibling-full-feature', sib1]);
+    await writeRepoState(sib1, { loopPosition: 'BUILD' });
+    await writeHandoffDoc(sib1, 'SESSION-2026-07-02-s1.md', '2026-07-02T09:00:00.000Z');
+
+    // Script the interactive prompt to pick the sibling candidate (the
+    // freshest of the two, index 1) so `runResume` resolves to it directly —
+    // mirrors run-resume.test.ts's "AC-7: scripted/TTY-interactive prompt".
+    const previous = process.env.CADENCE_PROMPTER_SCRIPT;
+    process.env.CADENCE_PROMPTER_SCRIPT = '1\n';
+    try {
+      const io = bufferIO();
+      const res = await resumeService(main, { mode: 'full' }, io);
+
+      expect(res.exitCode).toBe(0);
+      const data = res.data as { found: boolean; pickedSource?: string; pickedWorktree?: string };
+      expect(data.found).toBe(true);
+      expect(data.pickedSource).toBe('sibling');
+      expect(io.stdout()).toContain(`--- from sibling worktree: ${data.pickedWorktree} ---\n\n`);
+      expect(io.stdout()).toContain(
+        `live context recompute skipped: ${data.pickedWorktree} is a different worktree — cd there and run \`cadence resume --full\` to get its live context`,
+      );
+    } finally {
+      if (previous === undefined) delete process.env.CADENCE_PROMPTER_SCRIPT;
+      else process.env.CADENCE_PROMPTER_SCRIPT = previous;
+    }
+  });
+
+  it('prints the sibling-worktree header + brief-mode footer when resuming a sibling doc', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-sibling-brief-')));
+    await initRepo(main);
+    await writeRepoState(main, { loopPosition: 'DRAFT' });
+    await writeHandoffDoc(main, 'SESSION-2026-07-01-local.md', '2026-07-01T09:00:00.000Z');
+    await writeResumeConfig(main, { autoList: true });
+
+    const sib1 = join(parent, `sib1-brief-${Date.now().toString(36)}`);
+    git(main, ['worktree', 'add', '-b', 'sibling-brief-feature', sib1]);
+    await writeRepoState(sib1, { loopPosition: 'BUILD' });
+    await writeHandoffDoc(sib1, 'SESSION-2026-07-02-s1.md', '2026-07-02T09:00:00.000Z');
+
+    const previous = process.env.CADENCE_PROMPTER_SCRIPT;
+    process.env.CADENCE_PROMPTER_SCRIPT = '1\n';
+    try {
+      const io = bufferIO();
+      const res = await resumeService(main, { mode: 'brief' }, io);
+
+      expect(res.exitCode).toBe(0);
+      const data = res.data as { found: boolean; pickedSource?: string; pickedWorktree?: string };
+      expect(data.found).toBe(true);
+      expect(data.pickedSource).toBe('sibling');
+      expect(io.stdout()).toContain(`--- from sibling worktree: ${data.pickedWorktree} ---\n\n`);
+      expect(io.stdout()).toContain(
+        `brief mode: ${data.pickedWorktree} is a different worktree — cd there and run \`cadence resume --full\` (or re-supply the same --pick/--path from there) to get its full doc + live context`,
+      );
+    } finally {
+      if (previous === undefined) delete process.env.CADENCE_PROMPTER_SCRIPT;
+      else process.env.CADENCE_PROMPTER_SCRIPT = previous;
+    }
+  });
+});
 
 describe('resumeService: forwards io into runResume (phase 143 task 6)', () => {
   let parent: string;
