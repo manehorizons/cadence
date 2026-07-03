@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 147-upstream-self-authorship-exemption-for-phase-collision-guard
+**Active phase:** 149-milestone-close-verb
 **Active draft:** (none)
 **Tier:** (n/a)
 

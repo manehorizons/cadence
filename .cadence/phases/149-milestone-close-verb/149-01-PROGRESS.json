@@ -1,0 +1,29 @@
+{
+  "draftId": "149-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "closedRef optional field added to IntelligenceMilestoneZ; types build passes",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T23:50:50.169Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "close TransitionAction + applyTransition/runMilestoneTransition threading ref + AC-4 best-effort advisory (buildCloseAdvisory)",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T23:51:01.086Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "milestone close CLI command wired (--ref, refusal/warning printing); render-milestone.ts closedRef suffix",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T23:51:07.181Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "milestone-close.test.ts (new, 15 tests) + milestone.test.ts CLI extensions (7 new tests) + render-milestone.test.ts closedRef case; full core suite 262 files / 2109 tests pass",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T23:51:12.931Z"
+    }
+  }
+}
