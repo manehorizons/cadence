@@ -3,18 +3,18 @@
 > Derived view. Do not edit by hand — regenerated on every state.json write.
 
 **Project:** cadence
-**Loop position:** IDLE
-**Active phase:** 146-cadence-recommend-slash-command-top-flag
-**Active draft:** (none)
-**Tier:** (n/a)
+**Loop position:** BUILD
+**Active phase:** 147-upstream-self-authorship-exemption-for-phase-collision-guard
+**Active draft:** 147-01
+**Tier:** standard
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 774
-- Last handoff: SESSION-2026-07-02.md
+- Subagent spawns this session: 783
+- Last handoff: SESSION-2026-07-03-phase146-cadence-recommend-pr130-merged.md
 
 ## Counts
-- Open drafts: 0
+- Open drafts: 1
 - Decisions: 0
 - Deferred items: 0
 
