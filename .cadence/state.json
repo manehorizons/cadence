@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "147-upstream-self-authorship-exemption-for-phase-collision-guard",
+  "activePhase": "148-settle-run-ship-ref-shortcut",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-03T21:29:07.066Z",
+  "draftReadAt": "2026-07-03T23:34:07.106Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-03-phase146-cadence-recommend-pr130-merged.md",
-    "subagentSpawns": 817
+    "subagentSpawns": 837
   },
   "skillAudit": {
     "required": [],

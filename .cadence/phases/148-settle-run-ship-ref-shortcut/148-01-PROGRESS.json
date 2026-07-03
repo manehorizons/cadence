@@ -1,0 +1,23 @@
+{
+  "draftId": "148-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Wired --ship-ref through CLI + SettleArgs",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T23:49:55.215Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "settle.ts promotes converted recs to shipped when --ship-ref is set",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T23:50:00.593Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "AC-1/2/3 covered by settle-ship-ref.test.ts + CLI settle.test.ts; full suite green",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T23:50:05.543Z"
+    }
+  }
+}
