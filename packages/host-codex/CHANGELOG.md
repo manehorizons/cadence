@@ -1,5 +1,31 @@
 # @manehorizons/cadence-host-codex
 
+## 1.39.0
+
+### Minor Changes
+
+- Two additive features land together in this release:
+  - **`settle-pending` recommendation status** (issue #126, part 1/3): when a
+    `converted` recommendation's phase settles, it now moves to a new
+    non-terminal `settle-pending` status (visible in the active ledger, not
+    archived) instead of the old behavior of silently archiving it. A new
+    `cadence doctor` `recommendation-shipped-drift` check and an optional
+    `cadence progress` `Note:` line surface recommendations awaiting ship
+    confirmation (`recommendation promote --status=shipped`).
+  - **`/cadence-recommend` slash command + `cadence recommend --top <n>`**: caps
+    the displayed ranked recommendation list to the top N entries (totals still
+    report the full count).
+
+  `cadence-types` carries the `settle-pending` schema addition; `cadence-core`
+  carries both features' logic; the two host adapters are version-alignment
+  only (prompt-catalog parity, no functional change).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.39.0
+  - @manehorizons/cadence-types@1.39.0
+
 ## 1.38.0
 
 ### Minor Changes

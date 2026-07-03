@@ -134,7 +134,36 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.38.0`** (2026-07-03, tag `v1.38.0`
+change). The latest version is **`1.39.0`** (2026-07-03, tag `v1.39.0`
+pending): bundles two independently-merged, unreleased features. **Phase
+145 — `settle-pending` recommendation status** (sourced from GitHub issue
+#126, part 1 of a 3-phase arc; no new DESIGN.md D-number — deepens the
+existing recommendation-lifecycle model from phase 100/102). When a
+`converted` recommendation's phase settles, it now moves to a new
+non-terminal `settle-pending` status — visible in the active ledger, not
+archived — instead of phase 102's old behavior of silently archiving it;
+`settle-pending → shipped` is a second sanctioned promotion exception
+(mirroring `converted → shipped`), reachable only via the settle hook, never
+manually, with defense-in-depth at both the pure-helper layer (protects the
+MCP path) and the CLI's `--status` allow-list. A new `cadence doctor`
+`recommendation-shipped-drift` check and an optional `cadence progress`
+`Note:` line surface recommendations awaiting ship confirmation. Two
+now-stale doc claims from phase 102/v1.24 about archive-on-settle behavior
+were corrected. Built through six TDD subagent-driven tasks (each
+independently reviewed) plus a final whole-branch review that caught a
+speculative hardcoded version stamp in the docs and two stale code comments
+(fixed); dogfooded through CADENCE's own loop (`settle run --auto`, all 5
+ACs derived PASS); shipped as **PR #131** (squash `4cd3ad6`). Phases 2/3 of
+the issue #126 arc (an opt-in `settle run --ship-ref` shortcut, and a
+`cadence milestone close` verb) are not yet built. **Phase 146 —
+`/cadence-recommend` slash command + `cadence recommend --top <n>`**: caps
+the displayed ranked recommendation list to the top N entries (totals still
+report the full count); shipped as **PR #130** (squash `bd1ac95`). All four
+published packages bumped `1.38.0 → 1.39.0` in lockstep (`cadence-core`
+carries both features' logic; `cadence-types` carries the `settle-pending`
+schema addition; both host adapters are version-alignment only); npm publish
+is the user-triggered manual `Release` workflow. Prior: **`1.38.0`**
+(2026-07-03, tag `v1.38.0`
 pending): the **cross-worktree-handoff-discovery** release (v1.38) — a
 3-phase milestone (142–144) making `cadence handoff`/`cadence resume` aware
 of multiple concurrent git worktrees of the same repo, closing a real gap:
