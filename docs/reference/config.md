@@ -375,7 +375,7 @@ never deleted — keeping the active ledger lean while preserving provenance.
 Unlike [`handoff.retain`](#handoff) (a hard delete, so opt-in/off), auto-archival is
 **recoverable** and so defaults **on**. Archiving itself is only ever
 immediate-on-terminal-status; a `converted` rec whose phase settles is **not**
-archived — as of v1.39 it moves to the non-terminal `settle-pending` status
+archived — instead it moves to the non-terminal `settle-pending` status
 instead (see [`recommendation promote`](commands.md#recommendation-promote)),
 staying in the active ledger until it's later promoted to `shipped` (which
 does archive it). Both the `settle-pending` transition and the terminal-status

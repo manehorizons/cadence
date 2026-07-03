@@ -165,8 +165,9 @@ export interface RecommendationPromotionChanges {
 
 /**
  * Statuses an operator may promote *from*. `converted`/`rejected`/`shipped` are
- * terminal. Phase 100 adds one sanctioned exception handled below:
- * `converted → shipped` (a converted phase that later shipped).
+ * terminal. Two sanctioned exceptions are handled below: `converted → shipped`
+ * (phase 100, a converted phase that later shipped) and `settle-pending →
+ * shipped` (phase 145, a converted phase that settled and later shipped).
  */
 const PROMOTABLE_FROM: ReadonlySet<RecommendationStatus> = new Set([
   'candidate',
