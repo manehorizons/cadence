@@ -272,6 +272,42 @@ describe('synthesizeRecommendation', () => {
     expect(report.totals.total).toBe(2);
     expect(report.totals.ranked).toBe(2);
   });
+
+  it('top truncates the displayed ranked list but keeps totals.ranked at the full count', () => {
+    const recs = [
+      mkRec({ id: 'a', leverageScore: 9 }),
+      mkRec({ id: 'b', leverageScore: 8 }),
+      mkRec({ id: 'c', leverageScore: 7 }),
+    ];
+    const report = synthesizeRecommendation(recs, idleBackend, new Date(), { top: 2 });
+    expect(report.ranked.map((r) => r.id)).toEqual(['a', 'b']);
+    expect(report.totals.ranked).toBe(3);
+  });
+
+  it('top omitted shows the full ranked list unchanged (no truncation)', () => {
+    const recs = [
+      mkRec({ id: 'a', leverageScore: 9 }),
+      mkRec({ id: 'b', leverageScore: 8 }),
+    ];
+    const report = synthesizeRecommendation(recs, idleBackend, new Date());
+    expect(report.ranked).toHaveLength(2);
+    expect(report.totals.ranked).toBe(2);
+  });
+
+  it('top larger than the ranked count shows everything, no truncation', () => {
+    const recs = [mkRec({ id: 'a' })];
+    const report = synthesizeRecommendation(recs, idleBackend, new Date(), { top: 5 });
+    expect(report.ranked).toHaveLength(1);
+    expect(report.totals.ranked).toBe(1);
+  });
+
+  it('top:0 empties the displayed ranked list but advisory still reflects the true top item', () => {
+    const recs = [mkRec({ id: 'a', leverageScore: 9, readiness: 'ready-for-milestone' })];
+    const report = synthesizeRecommendation(recs, idleBackend, new Date(), { top: 0 });
+    expect(report.ranked).toEqual([]);
+    expect(report.totals.ranked).toBe(1);
+    expect(report.advisory.kind).toBe('top-recommendation');
+  });
 });
 
 let activeRec: Fixture | null = null;

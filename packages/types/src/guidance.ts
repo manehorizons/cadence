@@ -66,6 +66,12 @@ export const COMMAND_GUIDANCE = {
     trailing:
       'Read the replayed handoff and continue from the documented next action. Output is brief by default and auto-promotes to full on drift; run `cadence resume --full` for the whole doc + live context. If it notes other worktrees have resumable handoffs, ask which one to resume or pass `--pick <n>` directly.',
   },
+  'cadence-recommend': {
+    description:
+      'Rank actionable strategic recommendations and advise the next move (top 5)',
+    trailing:
+      'Showing the top 5. Count requested: $ARGUMENTS — if a different number was given, re-run `cadence recommend --top <n>` with it before continuing. Pick one, then run `cadence milestone propose` to cluster it into a scoped milestone, or `cadence draft new` to start scoping directly.',
+  },
   'cadence-scout': {
     description:
       'Divergent→convergent ideation dialogue that lands survivors as Praxis recommendations',

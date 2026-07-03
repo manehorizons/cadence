@@ -121,6 +121,13 @@ const COMMANDS: CommandSpec[] = [
     trailing: g['cadence-resume'].trailing,
   },
   {
+    name: 'cadence-recommend',
+    description: g['cadence-recommend'].description,
+    argumentHint: '[count]',
+    cli: 'recommend --top 5',
+    trailing: g['cadence-recommend'].trailing,
+  },
+  {
     name: 'cadence-scout',
     description: g['cadence-scout'].description,
     argumentHint: '[topic]',

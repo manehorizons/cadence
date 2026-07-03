@@ -1,0 +1,53 @@
+{
+  "draftId": "146-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "core --top truncation logic + tests, committed 6098578",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-03T19:58:45.638Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "renderer truncation note + tests",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/core/tests/intelligence/render-recommend.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/core/src/intelligence/render-recommend.ts"
+      ],
+      "updatedAt": "2026-07-03T19:59:22.252Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "CLI --top flag + validation + service wiring, full core suite green (2069 tests)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/core/tests/cli/recommend.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/core/src/services/recommend.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/core/src/cli/commands/recommend.ts"
+      ],
+      "updatedAt": "2026-07-03T20:00:48.400Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "shared guidance + Claude Code host command + golden fixture + doc-count bumps, host-claude-code suite green (85 tests)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/types/src/guidance.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/host-claude-code/tests/install-commands.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/host-claude-code/src/install-commands.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/host-claude-code/tests/fixtures/golden-root/.claude/commands/cadence-recommend.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/docs/claude-code.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/docs/quickstart.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/README.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-07-03T20:03:27.029Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Codex host parity, full monorepo build+test+typecheck+lint green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/cadence-recommend-slash/packages/host-codex/src/install-commands.ts"
+      ],
+      "updatedAt": "2026-07-03T20:04:44.509Z"
+    }
+  }
+}
