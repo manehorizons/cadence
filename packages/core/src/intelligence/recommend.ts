@@ -21,6 +21,10 @@ const STATUS_PTS: Record<Recommendation['status'], number> = {
   deferred: 0,
   rejected: 0,
   converted: 0,
+  // Phase 145: settle-pending recs are excluded from ranking (partitionLedger),
+  // so this weight is never consulted; present only to satisfy the exhaustive
+  // Record, same as shipped below.
+  'settle-pending': 0,
   // Phase 100: shipped recs are excluded from ranking (partitionLedger), so this
   // weight is never consulted; present only to satisfy the exhaustive Record.
   shipped: 0,
@@ -105,7 +109,8 @@ export function partitionLedger(recs: Recommendation[]): Partition {
     if (
       rec.status === 'rejected' ||
       rec.status === 'converted' ||
-      rec.status === 'shipped'
+      rec.status === 'shipped' ||
+      rec.status === 'settle-pending'
     ) {
       excludedCount += 1;
     } else if (

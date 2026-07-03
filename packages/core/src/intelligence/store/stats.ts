@@ -8,6 +8,7 @@ import type {
   Recommendation,
   RecommendationLedger,
 } from '@manehorizons/cadence-types';
+import { RecommendationStatusZ } from '@manehorizons/cadence-types';
 
 export type IntelligenceStats = {
   recommendations: {
@@ -43,13 +44,10 @@ export type IntelligenceStats = {
   }>;
 };
 
-const REC_STATUSES: Recommendation['status'][] = [
-  'candidate',
-  'accepted',
-  'deferred',
-  'rejected',
-  'converted',
-];
+// Phase 145: derive from the schema instead of a hand-maintained list — this list
+// had already silently missed 'shipped' (phase 100) before settle-pending was
+// added; deriving it closes that class of drift for every future status too.
+const REC_STATUSES: Recommendation['status'][] = [...RecommendationStatusZ.options];
 const REC_READINESSES: Recommendation['readiness'][] = [
   'raw-idea',
   'needs-evidence',
