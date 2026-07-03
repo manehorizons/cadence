@@ -270,6 +270,16 @@ export const CadenceConfigZ = z.object({
       autoArchive: z.boolean().default(true),
     })
     .default({ autoArchive: true }),
+  /**
+   * Gate behavior control (Phase 141, rec-20260701-009). `sealed` gate ids
+   * ignore `--force` and their own `--allow-*` flag at settle time, implementing
+   * the locked-in enforcement gate protocol.
+   */
+  gates: z
+    .object({
+      sealed: z.array(z.string()).default([]),
+    })
+    .default({ sealed: [] }),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -324,6 +334,7 @@ export const defaultConfig: CadenceConfig = {
   logging: { level: 'silent' as const },
   handoff: {},
   recommendations: { autoArchive: true },
+  gates: { sealed: [] },
 };
 
 export const presets = {
