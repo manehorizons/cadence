@@ -34,6 +34,12 @@ export function registerResumeCommand(program: Command): void {
           return;
         }
 
+        if (opts.pick !== undefined && Number.isNaN(opts.pick)) {
+          process.stderr.write('resume: --pick must be a number\n');
+          process.exitCode = 1;
+          return;
+        }
+
         const selectors: string[] = [];
         if (opts.list) selectors.push('--list');
         if (opts.pick !== undefined) selectors.push('--pick');
@@ -84,6 +90,10 @@ export function registerResumeCommand(program: Command): void {
           if (res.pickedSource === 'sibling' && res.mode === 'full') {
             process.stdout.write(
               `\nlive context recompute skipped: ${res.pickedWorktree} is a different worktree — cd there and run \`cadence resume --full\` to get its live context\n`,
+            );
+          } else if (res.pickedSource === 'sibling' && res.mode === 'brief') {
+            process.stdout.write(
+              `\nbrief mode: ${res.pickedWorktree} is a different worktree — cd there and run \`cadence resume --full\` (or re-supply the same --pick/--path from there) to get its full doc + live context\n`,
             );
           } else if (res.mode === 'brief') {
             process.stdout.write(

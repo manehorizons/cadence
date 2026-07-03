@@ -368,7 +368,7 @@ describe('cadence resume: sibling-worktree text rendering (phase 143)', () => {
     expect(jsonR.context).toBeNull();
   });
 
-  it('sibling pick in (default) brief mode keeps the existing brief-mode footer', async () => {
+  it('sibling pick in (default) brief mode prints a cd/re-run hint naming the sibling worktree, not the generic local-brief footer', async () => {
     const main = await realpath(await mkdtemp(join(parent, 'main-brief-')));
     await initRepo(main);
     await writeRepoState(main, { loopPosition: 'IDLE' });
@@ -382,6 +382,7 @@ describe('cadence resume: sibling-worktree text rendering (phase 143)', () => {
     await writeHandoffDoc(sib, 'SESSION-2026-07-02-s.md', '2026-07-02T09:00:00.000Z', {
       loop_position: 'IDLE',
     });
+    const sibReal = await realpath(sib);
 
     const listed = JSON.parse((await run(['resume', '--list', '--json'], main)).stdout);
     const sibIdx = (listed.candidates as Array<{ source: string }>).findIndex(
@@ -391,6 +392,29 @@ describe('cadence resume: sibling-worktree text rendering (phase 143)', () => {
     const r = await run(['resume', '--pick', String(sibIdx + 1)], main);
     expect(r.code).toBe(0);
     expect(r.stdout).toMatch(/from sibling worktree/i);
-    expect(r.stdout).toMatch(/brief mode; run `cadence resume --full`/);
+    // Must NOT print the generic local-brief footer verbatim (no cd/worktree
+    // qualifier) — that phrasing, run unqualified from the local dir, would
+    // silently resolve against the wrong (local) worktree.
+    expect(r.stdout).not.toMatch(
+      /brief mode; run `cadence resume --full` \(or `cadence context handoff`\) for the full doc \+ live context/,
+    );
+    // Must instead mention the sibling's worktree path and a cd-style hint.
+    expect(r.stdout).toMatch(/cd there|cd .* and (re-)?run/i);
+    expect(r.stdout).toContain(sibReal);
+    expect(r.stdout).toContain('cadence resume --full');
+  });
+
+  it('--pick with a non-numeric value refuses cleanly instead of resolving as NaN', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-pick-nan-')));
+    await initRepo(main);
+    await writeRepoState(main, { loopPosition: 'IDLE' });
+    await writeHandoffDoc(main, 'SESSION-2026-07-01-local.md', '2026-07-01T09:00:00.000Z');
+
+    const r = await run(['resume', '--pick', 'abc'], main);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/--pick must be a number/i);
+    // No candidates side-effect should leak into stdout as if it were a
+    // normal successful response.
+    expect(r.stdout).toBe('');
   });
 });
