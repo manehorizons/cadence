@@ -1,5 +1,34 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.38.0
+
+### Minor Changes
+
+- Cross-worktree handoff discovery for `cadence resume` (v1.38 milestone,
+  phases 142-144). `cadence resume` now discovers resumable handoff docs
+  across all active git worktrees of a repo, not just the current checkout's
+  own `.cadence/handoff/` — a live `git worktree list` scan, no cached index.
+
+  Bare `cadence resume` still resumes the local candidate by default; when 2+
+  worktrees have resumable handoffs it additionally prints a one-line stderr
+  nudge pointing at `--list` (a new `resume.autoList` config field switches
+  this to an auto-opening interactive picker instead). New CLI flags —
+  `--list`, `--pick <n>`, `--path <p>`, `--local` — surface the full candidate
+  set and let you resolve directly to any of them. Picking a sibling
+  worktree's candidate is strictly read-only: it never writes into that
+  worktree's `.cadence/` and never stamps the local `state.session.lastHandoff`.
+
+  `cadence-core` carries the feature; `cadence-types` carries the additive
+  `HandoffCandidate`/`ResumeResult` schema fields and the new `resume` config
+  block; both host adapters get a slash-command guidance update (prompt-parity
+  only, no functional change).
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.38.0
+  - @manehorizons/cadence-types@1.38.0
+
 ## 1.37.0
 
 ### Minor Changes

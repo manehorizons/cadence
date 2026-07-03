@@ -30,6 +30,7 @@ To change the behavior-shaping keys interactively, use [`cadence config edit`](.
 - [logging](#logging)
 - [phaseGuard](#phaseguard)
 - [handoff](#handoff)
+- [resume](#resume)
 - [recommendations](#recommendations)
 - [gates](#gates)
 - [Reading your config — `cadence config explain`](#reading-your-config--cadence-config-explain)
@@ -355,6 +356,31 @@ value to cap the growth.
 ```jsonc
 // .cadence/config.json — keep the 10 most-recent session handoffs
 { "handoff": { "retain": 10 } }
+```
+
+---
+
+## resume
+
+Cross-worktree handoff discovery (v1.38, phases 142–143). `cadence handoff` writes a dated
+`SESSION-*.md` doc per worktree's own `.cadence/handoff/`; a bare `cadence resume` now looks
+beyond the local worktree for other resumable sessions before falling back to the old
+local-only behavior.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `resume.crossWorktree` | `boolean` | `true` | Master switch. `false` disables cross-worktree discovery entirely — `cadence resume` behaves exactly as it did before phases 142/143 (local worktree only). |
+| `resume.autoList` | `boolean` | `false` | When 2+ resumable candidates exist across worktrees, `true` opens the interactive picker automatically instead of resuming local and printing a stderr nudge (`cadence resume --list`). |
+
+This block is **schema-only**: like `phaseGuard`/`handoff`/`logging`, it is deliberately absent
+from `config edit`'s wizard catalog and `config explain`'s field rows, which are curated to a
+smaller, guided field set. Hand-edit `.cadence/config.json` to change these values. See
+[the worktree-concurrency note](../concepts.md#worktrees--the-single-writer-assumption) and
+[`cadence resume`](commands.md#resume) for the full candidate-discovery and picker behavior.
+
+```jsonc
+// .cadence/config.json — never look outside this worktree
+{ "resume": { "crossWorktree": false } }
 ```
 
 ---

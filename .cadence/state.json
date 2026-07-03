@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "143-cli-service-integration-picker-for-cadence-resume",
+  "activePhase": "144-docs-release-for-cross-worktree-handoff-picker-v1-38-0",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-03T16:20:57.149Z",
+  "draftReadAt": "2026-07-03T18:09:16.262Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-02.md",
-    "subagentSpawns": 739
+    "subagentSpawns": 774
   },
   "skillAudit": {
     "required": [],

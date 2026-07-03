@@ -134,7 +134,62 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.37.0`** (2026-07-02, tag `v1.37.0`
+change). The latest version is **`1.38.0`** (2026-07-03, tag `v1.38.0`
+pending): the **cross-worktree-handoff-discovery** release (v1.38) — a
+3-phase milestone (142–144) making `cadence handoff`/`cadence resume` aware
+of multiple concurrent git worktrees of the same repo, closing a real gap:
+each worktree holds a fully private `.cadence/`, so a stale `resume` in one
+worktree could replay an old snapshot while a sibling worktree had already
+progressed, with no visibility into that drift. No new DESIGN.md D-number —
+a **sibling application** of §13's already-locked "observe ground truth, not
+a reservation registry" decision, extended from phase numbers to handoff
+docs (live `git worktree list` scan, no cached index — two independent
+designs were weighed, and even the rejected shared-index proposal's own
+analysis concluded an index is over-engineering at this scale). **Phase
+142** — core discovery: extracted the phase-collision guard's
+`git worktree list --porcelain` plumbing into a shared
+`packages/core/src/git/worktrees.ts` (behavior-preserving,
+`occupancy.test.ts` unmodified as the regression guard), added additive
+`HandoffCandidate`/`ResumeResult` schema fields to `cadence-types`, and
+built `gatherHandoffCandidates` — one resumable-handoff candidate per
+worktree, best-effort, never throws. Built subagent-driven (8 DRAFT tasks
+across 5 dispatches, each reviewed clean) plus a final Opus whole-branch
+review that caught one real exception-safety gap (`gatherLocalCandidate`
+could've silently dropped sibling candidates on a local-only failure; fixed)
+and CI catching a genuine Windows-only path-separator test bug (fixed via
+the existing `isSameWorktree` helper); shipped as **PR #125** (squash
+`05f1162`). **Phase 143** — CLI/service integration + picker: wires phase
+142's discovery core into `cadence resume` end-to-end — a TTY-aware
+candidate picker (`pick.ts`), a `resume` config block
+(`crossWorktree`/`autoList`), and `--list`/`--pick <n>`/`--path <p>`/
+`--local` CLI flags, while keeping single-worktree behavior byte-for-byte
+unchanged; a sibling-worktree pick is strictly read-only (never writes to
+the sibling's `.cadence/`, never stamps local `state.session.lastHandoff`,
+never invokes live-context recompute against a foreign root — verified by
+before/after filesystem snapshots, not just inspection). Built
+subagent-driven (8 tasks, 2 fix-and-re-review rounds — config-load
+resilience + MCP `io`-forwarding after the core wiring task; sibling-brief
+footer wording + `--pick` NaN validation after the CLI-flags task) plus a
+final whole-branch review that caught one more real gap (the MCP
+`resumeService` surface hadn't been updated to mirror the CLI's
+candidate-menu/sibling-header rendering, printing a false "no handoff
+found" message under the non-default `resume.autoList: true`; fixed and
+re-reviewed clean); `cadence settle run --auto` derived all 8 ACs PASS in
+`assertion` mode; shipped as **PR #127** (squash `ff35843`). **Phase 144** —
+release: `docs/reference/commands.md`'s `resume` section rewritten to
+document the full current flag surface (it predated even the pre-142
+`--full`/`--brief` flags); a new `docs/reference/config.md` `## resume`
+section (schema-only, deliberately absent from `config edit`/`config
+explain`'s curated field set, matching the `phaseGuard`/`handoff`/`logging`
+precedent); a `docs/concepts.md` worktree-section addendum; the DESIGN.md
+§13 addendum described above; changeset + lockstep `1.37.0 → 1.38.0` across
+all four published packages (`cadence-core` carries the feature;
+`cadence-types` carries the schema fields; both host adapters are
+prompt-parity-only, unchanged from phase 143's slash-command guidance
+update). Built TDD with doc-content-assertion tests in
+`packages/core/tests/docs/resume-cross-worktree-docs.test.ts`, dogfooded
+through CADENCE's own loop; npm publish is the user-triggered manual
+`Release` workflow. Prior: **`1.37.0`** (2026-07-02, tag `v1.37.0`
 pending): the **enforcement-wedge wave 2 (partial)** release (v1.37) — the
 first two of the three 2026-07-01 audit "wave 2" recommendations
 (rec-20260701-001, rec-20260701-003; rec-20260701-009 "sealed gates" not yet
