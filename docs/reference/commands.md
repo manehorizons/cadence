@@ -1273,8 +1273,9 @@ the interactive picker).
 Picking a **sibling** candidate — via `--pick`, `--path`, or the interactive
 picker — is strictly read-only: it never writes into the sibling's
 `.cadence/`, and never stamps the local `state.session.lastHandoff`. Its
-output opens with a `--- from sibling worktree: <path> ---` header instead of
-the usual `--- narrative from <handoffPath> ---` line. A sibling's live
+output opens with a `--- from sibling worktree: <path> ---` header, followed
+by the usual `--- narrative from <handoffPath> ---` line — both print,
+unconditionally, in that order. A sibling's live
 context is never recomputed (doing so would require writing into its
 `.cadence/intelligence/context/`), so `context` is always `null` for a
 sibling pick: full mode prints a footer — `live context recompute skipped:
