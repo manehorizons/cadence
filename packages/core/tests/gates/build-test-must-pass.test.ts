@@ -8,6 +8,7 @@ function ctx(over: {
   allowFailingBuild?: boolean;
   force?: boolean;
   errs?: string[];
+  config?: SettleContext['config'];
 }): SettleContext {
   const errs = over.errs ?? [];
   const opts: Record<string, boolean> = {};
@@ -18,7 +19,7 @@ function ctx(over: {
     state: { draftReadAt: null } as never,
     draft: { acceptanceCriteria: [], tasks: [] } as never,
     progress: { draftId: 'd', tasks: {} },
-    config: null,
+    config: over.config ?? null,
     gateSet: { gates: ['build-test-must-pass'], softCap: false } as never,
     opts,
     explicitIds: new Set<string>(),
@@ -111,5 +112,128 @@ describe('runBuildTestGate', () => {
     );
     expect(res.outcome).toBe('pass');
     expect(res.summaryPatch?.buildTestRan).toBeUndefined();
+  });
+});
+
+// Phase 141 T6 (AC-4, AC-5): sealed build-test-must-pass ignores --force and
+// --allow-failing-build, refusing with a distinct "gates.sealed" message that
+// omits the now-inapplicable bypass hint.
+describe('runBuildTestGate · sealed (phase 141)', () => {
+  const sealedConfig = { gates: { sealed: ['build-test-must-pass'] } } as never;
+  const failingRun: TestRunResult = { ran: true, ok: false, exitCode: 1, command: 'pnpm test' };
+
+  // AC-4: sealed + --force still refuses.
+  it('refuses under --force when sealed', async () => {
+    const errs: string[] = [];
+    const res = await runBuildTestGate(
+      ctx({ run: failingRun, errs, force: true, config: sealedConfig }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('gates.sealed');
+  });
+
+  // AC-4: sealed + --allow-failing-build still refuses.
+  it('refuses under --allow-failing-build when sealed', async () => {
+    const errs: string[] = [];
+    const res = await runBuildTestGate(
+      ctx({ run: failingRun, errs, allowFailingBuild: true, config: sealedConfig }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('gates.sealed');
+  });
+
+  // AC-4: sealed refusal fires even with neither bypass flag passed — the
+  // message ternary is keyed purely on `sealed`, not on an attempted bypass.
+  it('refuses when sealed even with no bypass flags passed', async () => {
+    const errs: string[] = [];
+    const res = await runBuildTestGate(ctx({ run: failingRun, errs, config: sealedConfig }));
+    expect(res.outcome).toBe('refuse');
+    expect(errs.join('')).toContain('gates.sealed');
+  });
+
+  // AC-4: sealed refusal message is distinct, names gates.sealed literally,
+  // and omits the "Pass --allow-failing-build ... or --force" bypass hint.
+  it('sealed refusal message names gates.sealed and omits the bypass hint', async () => {
+    const errs: string[] = [];
+    const res = await runBuildTestGate(
+      ctx({ run: failingRun, errs, force: true, config: sealedConfig }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('gates.sealed');
+    expect(joined).not.toContain('Pass --allow-failing-build to bypass');
+  });
+
+  // AC-4: the command/exitCode stderr line still prints regardless of sealed.
+  it('still prints the command exit-code line when sealed', async () => {
+    const errs: string[] = [];
+    await runBuildTestGate(ctx({ run: failingRun, errs, force: true, config: sealedConfig }));
+    expect(errs[0]).toBe('build-test-must-pass: pnpm test exited 1\n');
+  });
+
+  // AC-4: sealed but the test actually passed → gate passes normally, no
+  // sealed message printed (sealing only removes the ability to bypass an
+  // already-correct refusal, it never manufactures a new one).
+  it('passes when sealed but the test command succeeds', async () => {
+    const errs: string[] = [];
+    const res = await runBuildTestGate(
+      ctx({
+        run: { ran: true, ok: true, exitCode: 0, command: 'pnpm test' },
+        errs,
+        config: sealedConfig,
+      }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(errs).toEqual([]);
+  });
+
+  // AC-4/T6 scope: the !res.ran (no test command configured) path is
+  // unaffected by sealing — there's nothing to refuse since the test never
+  // ran, so it still passes and still patches buildTestRan:false.
+  it('the no-testCommand path is unaffected by sealing', async () => {
+    const errs: string[] = [];
+    const res = await runBuildTestGate(
+      ctx({ run: { ran: false, ok: true }, errs, config: sealedConfig }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.summaryPatch?.buildTestRan).toBe(false);
+    expect(errs.join('')).toContain(NO_TEST_COMMAND_NOTICE.message);
+  });
+
+  // AC-5 (regression safety): unsealed --force still bypasses a refusal and
+  // prints the original bypass hint, not the sealed message.
+  it('unsealed: --force still bypasses and prints the original bypass hint (regression)', async () => {
+    const errs: string[] = [];
+    const res = await runBuildTestGate(ctx({ run: failingRun, errs, force: true }));
+    expect(res.outcome).toBe('pass');
+    expect(errs).toEqual([]);
+  });
+
+  // AC-5 (regression safety): unsealed --allow-failing-build still bypasses.
+  it('unsealed: --allow-failing-build still bypasses (regression)', async () => {
+    const res = await runBuildTestGate(ctx({ run: failingRun, allowFailingBuild: true }));
+    expect(res.outcome).toBe('pass');
+  });
+
+  // AC-5 (regression safety): a config naming a different gate in
+  // gates.sealed does not seal build-test-must-pass — --force bypasses
+  // cleanly, just like the unsealed case.
+  it('a gates.sealed entry for a different gate does not seal build-test-must-pass (regression)', async () => {
+    const otherSealed = { gates: { sealed: ['test-coverage'] } } as never;
+    const res = await runBuildTestGate(
+      ctx({ run: failingRun, force: true, config: otherSealed }),
+    );
+    expect(res.outcome).toBe('pass');
+  });
+
+  // AC-5 (regression safety): empty gates.sealed array does not seal.
+  it('an empty gates.sealed array does not seal build-test-must-pass (regression)', async () => {
+    const emptySealed = { gates: { sealed: [] } } as never;
+    const res = await runBuildTestGate(
+      ctx({ run: failingRun, force: true, config: emptySealed }),
+    );
+    expect(res.outcome).toBe('pass');
   });
 });
