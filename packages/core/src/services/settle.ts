@@ -28,7 +28,7 @@ import type { VerifyTestRef } from '../verify/verifier.js';
 import { runSettleGates } from '../gates/registry.js';
 import { deriveAcEvidence } from '../gates/ac-evidence.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
-import { runAutoArchiveConvertedForPhase } from '../intelligence/store/recommendations.js';
+import { runAdvanceConvertedToSettlePendingForPhase } from '../intelligence/store/recommendations.js';
 import {
   type SettleContext,
   type ProgressJson,
@@ -505,15 +505,20 @@ export async function settleService(
     await atomicWriteJSON(`${summaryBase}.json`, summary);
     await atomicWriteText(`${summaryBase}.md`, renderSummaryMd(summary));
 
-    // Phase 102 (v1.24): auto-archive any recommendation converted into the phase
-    // that just settled. Best-effort + config-gated (`recommendations.autoArchive`,
-    // default on) — a failure here never blocks or fails the settle.
+    // Phase 145: advance any recommendation converted into the phase that just
+    // settled to `settle-pending` (visible, not archived — a reminder to confirm
+    // shipping). Best-effort + config-gated (`recommendations.autoArchive`,
+    // default on, the same flag phase 102 used) — a failure here never blocks or
+    // fails the settle. Replaces phase 102's auto-archive-on-settle behavior.
     const settledPhase = state.activePhase;
     if (cadenceConfig?.recommendations.autoArchive !== false) {
       try {
-        const archivedRecIds = await runAutoArchiveConvertedForPhase(cwd, settledPhase);
-        for (const rid of archivedRecIds) {
-          io.out(`archived rec ${rid} (converted → settled)\n`);
+        const settlePendingRecIds = await runAdvanceConvertedToSettlePendingForPhase(
+          cwd,
+          settledPhase,
+        );
+        for (const rid of settlePendingRecIds) {
+          io.out(`recommendation ${rid} moved to settle-pending (converted phase settled)\n`);
         }
       } catch {
         // best-effort: leave the rec untouched, keep settling.

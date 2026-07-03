@@ -391,11 +391,16 @@ export async function runRecommendationPromotion(
   return { ok: true, ledger: outLedger };
 }
 
-// Phase 102: settle→rec hook. Archive every `converted` rec whose phase just
-// settled (`convertedToPhaseId === phaseId`) with reason `converted-settled`,
-// folded into a single write. Returns the archived ids ([] when none match).
-// The caller (settle service) invokes this best-effort, config-gated.
-export async function runAutoArchiveConvertedForPhase(
+// Phase 145: settle→rec hook. Move every `converted` rec whose phase just settled
+// (`convertedToPhaseId === phaseId`) to `settle-pending` — NOT archived, so it
+// stays visible in `cadence recommendation list`/`show` as a reminder to confirm
+// shipping (`cadence recommendation promote <id> --status=shipped --ref ...`).
+// Replaces phase 102's `runAutoArchiveConvertedForPhase`, which archived
+// (`converted-settled`) at this point instead; that archive reason stays valid
+// in `ArchiveReasonZ` for old ledgers but is no longer produced. Returns the
+// moved ids ([] when none match). The caller (settle service) invokes this
+// best-effort, config-gated (`recommendations.autoArchive`).
+export async function runAdvanceConvertedToSettlePendingForPhase(
   root: string,
   phaseId: string,
 ): Promise<string[]> {
@@ -405,11 +410,15 @@ export async function runAutoArchiveConvertedForPhase(
     (r) => r.status === 'converted' && r.convertedToPhaseId === phaseId,
   );
   if (targets.length === 0) return [];
-  let outLedger = ledger;
-  for (const t of targets) {
-    const archived = archiveRecommendation(outLedger, t.id, 'converted-settled', now);
-    if (archived.ok) outLedger = archived.ledger;
-  }
+  const targetIds = new Set(targets.map((t) => t.id));
+  const updatedAt = now.toISOString();
+  const outLedger: RecommendationLedger = {
+    schemaVersion: 1,
+    recommendations: ledger.recommendations.map((r) =>
+      targetIds.has(r.id) ? { ...r, status: 'settle-pending', updatedAt } : r,
+    ),
+    archived: ledger.archived,
+  };
   const evidenceLedger = await readEvidenceLedger(root);
   await writeIntelligenceLedgers(root, outLedger, evidenceLedger);
   return targets.map((t) => t.id);

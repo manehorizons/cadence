@@ -9,7 +9,7 @@ import {
   applyRecommendationPromotion,
   archiveRecommendation,
   autoArchiveReasonForPromotion,
-  runAutoArchiveConvertedForPhase,
+  runAdvanceConvertedToSettlePendingForPhase,
   runRecommendationArchive,
   runRecommendationPromotion,
   runRecommendationTransition,
@@ -265,31 +265,31 @@ describe('auto-archive on promote (Phase 102 / AC-3..AC-6)', () => {
   });
 });
 
-describe('runAutoArchiveConvertedForPhase (Phase 102 / AC-7)', () => {
-  it('AC-7: archives only converted recs matching the phase, with converted-settled', async () => {
+describe('runAdvanceConvertedToSettlePendingForPhase (Phase 145 / AC-1)', () => {
+  it('AC-1: moves only converted recs matching the phase to settle-pending, not archived', async () => {
     active = await tempRepo({ initialized: true });
     const root = active.root;
-    const matchId = await seedConvertedRec(root, '102-target');
+    const matchId = await seedConvertedRec(root, '144-target');
     await seedConvertedRec(root, '999-other');
 
-    const archived = await runAutoArchiveConvertedForPhase(root, '102-target');
-    expect(archived).toEqual([matchId]);
+    const moved = await runAdvanceConvertedToSettlePendingForPhase(root, '144-target');
+    expect(moved).toEqual([matchId]);
 
     const ledger = await readRecommendationLedger(root);
-    expect(ledger.archived.map((r) => r.id)).toEqual([matchId]);
-    expect(ledger.archived[0]?.archiveReason).toBe('converted-settled');
-    expect(ledger.recommendations.map((r) => r.id)).not.toContain(matchId);
+    expect(ledger.archived).toHaveLength(0);
+    const rec = ledger.recommendations.find((r) => r.id === matchId);
+    expect(rec?.status).toBe('settle-pending');
   });
 
-  it('AC-7: is a no-op returning [] when no converted rec matches the phase', async () => {
+  it('AC-1: is a no-op returning [] when no converted rec matches the phase', async () => {
     active = await tempRepo({ initialized: true });
     const root = active.root;
     await addRecommendation(root, {
       title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
       affectedAreas: [], affectedFiles: [],
     });
-    const archived = await runAutoArchiveConvertedForPhase(root, '102-nomatch');
-    expect(archived).toEqual([]);
+    const moved = await runAdvanceConvertedToSettlePendingForPhase(root, '144-nomatch');
+    expect(moved).toEqual([]);
     const ledger = await readRecommendationLedger(root);
     expect(ledger.archived).toHaveLength(0);
   });
