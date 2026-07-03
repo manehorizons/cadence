@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { parseHandoffMeta, gatherHandoffCandidates } from '../../src/handoff/candidates.js';
 import * as locate from '../../src/handoff/locate.js';
 import type * as LocateModule from '../../src/handoff/locate.js';
+import { isSameWorktree } from '../../src/git/worktrees.js';
 
 const FULL_FRONTMATTER = [
   '---',
@@ -222,13 +223,13 @@ describe('gatherHandoffCandidates (AC-4, AC-5, real git worktree fixtures)', () 
     const sib1Real = await realpath(sib1);
     const sib2Real = await realpath(sib2);
 
-    const c1 = result.find((c) => c.worktreePath === sib1Real);
+    const c1 = result.find((c) => isSameWorktree(c.worktreePath, sib1Real));
     expect(c1).toBeDefined();
     expect(c1?.source).toBe('sibling');
     expect(c1?.worktreeBranch).toBe('feature-1');
     expect(c1?.liveLoopPosition).toBe('BUILD');
 
-    const c2 = result.find((c) => c.worktreePath === sib2Real);
+    const c2 = result.find((c) => isSameWorktree(c.worktreePath, sib2Real));
     expect(c2).toBeDefined();
     expect(c2?.source).toBe('sibling');
     expect(c2?.worktreeBranch).toBe('feature-2');
@@ -405,7 +406,7 @@ describe('gatherHandoffCandidates (AC-4, AC-5, real git worktree fixtures)', () 
     // ...but the sibling still surfaces — proving the local throw did not
     // reject the shared Promise.all and take the sibling result with it.
     const sibReal = await realpath(sib);
-    const siblingResult = result.find((c) => c.worktreePath === sibReal);
+    const siblingResult = result.find((c) => isSameWorktree(c.worktreePath, sibReal));
     expect(siblingResult).toBeDefined();
     expect(siblingResult?.source).toBe('sibling');
     expect(result).toHaveLength(1);
