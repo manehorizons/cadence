@@ -7,4 +7,4 @@ allowed-tools: Bash(cadence:*), Read
 
 !cadence resume
 
-Read the replayed handoff and continue from the documented next action.
+Read the replayed handoff and continue from the documented next action. If it notes other worktrees have resumable handoffs, ask which one to resume or pass `--pick <n>` directly.

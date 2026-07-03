@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 142-extract-worktree-discovery-cross-worktree-handoff-candidates
+**Active phase:** 143-cli-service-integration-picker-for-cadence-resume
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 646
+- Subagent spawns this session: 739
 - Last handoff: SESSION-2026-07-02.md
 
 ## Counts
