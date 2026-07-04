@@ -1,0 +1,26 @@
+{
+  "draftId": "150-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T00:52:04.639Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/status.ts",
+        "/home/thomas/projects/cadence/packages/core/src/notify/collect.ts"
+      ],
+      "updatedAt": "2026-07-04T00:53:38.765Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T00:53:38.940Z"
+    }
+  }
+}
