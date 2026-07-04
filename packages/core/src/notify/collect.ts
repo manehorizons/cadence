@@ -6,6 +6,7 @@ import type {
 import type { ProgressFile } from '../status.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
 import { runBoundaryCheck } from '../checks/boundary.js';
+import { parseAcRefs } from '../parse/ac-refs.js';
 
 export interface CollectAnomaliesContext {
   draft: Draft;
@@ -27,13 +28,6 @@ export interface CollectAnomaliesContext {
    * when omitted, the boundary check falls back to exact-string matching.
    */
   root?: string | undefined;
-}
-
-function parseAcRefs(done: string): string[] {
-  return done
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => /^AC-\d+$/.test(s));
 }
 
 export interface CollectAnomaliesOptions {

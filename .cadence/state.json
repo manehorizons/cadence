@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "148-settle-run-ship-ref-shortcut",
+  "activePhase": "150-ac-ref-parser-drops-ids-after-trailing-annotation",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-03T23:34:07.106Z",
+  "draftReadAt": "2026-07-04T00:51:30.243Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-03-phase146-cadence-recommend-pr130-merged.md",
-    "subagentSpawns": 837
+    "subagentSpawns": 838
   },
   "skillAudit": {
     "required": [],
