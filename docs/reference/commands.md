@@ -319,6 +319,103 @@ the plan-review gate (Phase 25.1) is bypassed separately with
 **Exit codes** — exits non-zero when a gate refuses and no bypass flag is
 provided.
 
+#### draft set-objective
+
+```
+Usage: cadence draft set-objective [options] <phase> <num>
+
+Replace a PENDING draft's ## Objective body (Phase 151)
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `<phase>` | Phase identifier |
+| `<num>` | Draft number |
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--text <t>` | New objective sentence (required) |
+| `-h, --help` | Display help for command |
+
+**Behavior** — replaces the `## Objective` section body in-place with `--text`;
+every other section (frontmatter, Acceptance Criteria, Tasks, Boundaries) is
+left byte-identical. Refuses (exit 1, clear stderr) unless the draft's
+frontmatter `status` is `PENDING`.
+
+#### draft add-ac
+
+```
+Usage: cadence draft add-ac [options] <phase> <num>
+
+Append a sequential AC block to a PENDING draft (Phase 151)
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `<phase>` | Phase identifier |
+| `<num>` | Draft number |
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--given <g>` | Given (precondition) (required) |
+| `--when <w>` | When (action) (required) |
+| `--then <t>` | Then (outcome) (required) |
+| `--name <n>` | AC name (optional) |
+| `-h, --help` | Display help for command |
+
+**Behavior** — appends a new `### AC-(k+1)` block to `## Acceptance Criteria`,
+where `k` is the highest existing AC id, in the exact Given/When/Then shape
+the coherence checker and settle gates expect. Refuses (exit 1, clear stderr)
+unless the draft's frontmatter `status` is `PENDING`.
+
+#### draft add-task
+
+```
+Usage: cadence draft add-task [options] <phase> <num>
+
+Append a sequential Task block to a PENDING draft (Phase 151)
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `<phase>` | Phase identifier |
+| `<num>` | Draft number |
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--files <f1,f2,...>` | Comma-separated touched files (required) |
+| `--action <a>` | What to do (required) |
+| `--verify <v>` | How to verify (required) |
+| `--done <ids>` | Comma-separated AC id(s) this task satisfies (required) |
+| `-h, --help` | Display help for command |
+
+**Behavior** — appends a new `### T-(k+1)` block to `## Tasks`, where `k` is
+the highest existing task id, with the given files/action/verify/done lines.
+Every id passed to `--done` must already exist among the draft's Acceptance
+Criteria; if any is unknown, the command refuses (exit 1, stderr lists the
+unknown id(s): `add-task refused: unknown AC id(s) in --done: ...`) and the
+file is left unmodified. Also refuses (exit 1, clear stderr) unless the
+draft's frontmatter `status` is `PENDING`.
+
+**Note (all three subcommands)** — these are an *additive* write path for
+agents; hand-editing `DRAFT.md` directly remains fully supported. Each
+subcommand's output round-trips through the same parser
+(`packages/core/src/parse/draft-parser.ts`) that `draft check`/`draft approve`
+use, so id sequencing and section formatting can't drift the way a hand-typed
+heading typo could (see phase 150/151 in `CLAUDE.md`).
+
 ---
 
 ### spec
