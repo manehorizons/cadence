@@ -159,6 +159,8 @@ export interface SettleOpts {
   readonly allowSecurityAuditFailure?: boolean;
   /** --allow-skill-audit-miss (Phase 39.6, skill-audit check). */
   readonly allowSkillAuditMiss?: boolean;
+  /** --allow-boundary-scan-failure (Phase 156, boundary-scan gate). */
+  readonly allowBoundaryScanFailure?: boolean;
 }
 
 /** Everything a gate may read. Built once, before the gate loop. Readonly. */
@@ -214,6 +216,8 @@ export interface SettleAccumulator {
   interactiveVerifySkipped?: 'non-tty';
   codeReview?: Record<string, Finding[]>;
   securityAudit?: Finding[];
+  /** Phase 156: audit trail for a bypassed boundary-scan refusal. */
+  boundaryScan?: { offenders: string[] };
   acResults?: AcResult[];
   /** Phase 140: false when build-test-must-pass couldn't execute (no
    *  testCommand configured) — undefined/true means it ran normally. Read by

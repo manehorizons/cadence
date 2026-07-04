@@ -28,6 +28,7 @@ const IMPLEMENTED: Gate[] = [
   'approve', // gates/approve.ts (39.7)
   'plan-review', // gates/plan-review.ts (39.7)
   'per-task-verify', // gates/per-task-verify.ts (39.7)
+  'boundary-scan', // gates/boundary-scan.ts (phase 156)
 ];
 
 // The single non-GateImpl member: a cross-cutting emission toggle, not a
@@ -54,7 +55,11 @@ describe('gate registry coverage (AC-9)', () => {
     expect(IMPLEMENTED).toContain('approve');
     expect(IMPLEMENTED).toContain('plan-review');
     expect(IMPLEMENTED).toContain('per-task-verify');
-    expect(IMPLEMENTED).toHaveLength(12);
     expect(PENDING).toHaveLength(0);
+  });
+
+  it('phase 156 adds boundary-scan, bringing implemented coverage to thirteen gates', () => {
+    expect(IMPLEMENTED).toContain('boundary-scan');
+    expect(IMPLEMENTED).toHaveLength(13);
   });
 });

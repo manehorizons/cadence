@@ -65,6 +65,9 @@ export interface SettleArgs {
   allowCodeReviewFailure?: boolean;
   allowSecurityAuditFailure?: boolean;
   allowSkillAuditMiss?: boolean;
+  /** Phase 156: do not refuse on a boundary-scan violation; record the
+   *  offenders into SUMMARY and settle anyway. */
+  allowBoundaryScanFailure?: boolean;
   /** Phase 83: bypass the worktree phase-collision backstop. */
   allowPhaseCollision?: boolean;
   interactive?: boolean;
@@ -259,6 +262,7 @@ export async function settleService(
         ...(opts.allowCodeReviewFailure !== undefined ? { allowCodeReviewFailure: opts.allowCodeReviewFailure } : {}),
         ...(opts.allowSecurityAuditFailure !== undefined ? { allowSecurityAuditFailure: opts.allowSecurityAuditFailure } : {}),
         ...(opts.allowSkillAuditMiss !== undefined ? { allowSkillAuditMiss: opts.allowSkillAuditMiss } : {}),
+        ...(opts.allowBoundaryScanFailure !== undefined ? { allowBoundaryScanFailure: opts.allowBoundaryScanFailure } : {}),
       },
       interactivity: resolveInteractivity(process.env, Boolean(process.stdin.isTTY)),
       explicitIds,
@@ -388,6 +392,7 @@ export async function settleService(
     const verifierFailure = acc.flags.verifierFailure;
     const codeReviewFindings = acc.codeReview;
     const securityAuditFindings = acc.securityAudit;
+    const boundaryScan = acc.boundaryScan;
 
     const interactiveIds = new Set(interactiveVerify ? Object.keys(interactiveVerify) : []);
     const userVerdictedIds = new Set([...explicitIds, ...interactiveIds]);
@@ -506,6 +511,7 @@ export async function settleService(
       ...(interactiveVerifySkipped ? { interactiveVerifySkipped } : {}),
       ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
       ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),
+      ...(boundaryScan ? { boundaryScan } : {}),
       ...(gateBypasses.length > 0 ? { gateBypasses } : {}),
     };
 

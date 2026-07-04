@@ -4,12 +4,14 @@ import type { GateImpl, GateResult, SettleAccumulator, SettleContext } from './t
 import { mergeInto } from './types.js';
 import { runDraftReadGate } from './draft-read.js';
 import { runStructuralVerifierGate } from './structural-verifier.js';
+import { runBoundaryScanGate } from './boundary-scan.js';
 import { runBuildTestGate } from './build-test-must-pass.js';
 import { runCoverageGate } from './coverage.js';
 import { runInteractiveGate, isInteractiveRequested } from './interactive.js';
 import { runDeepVerifyGate, isDeepVerifyRequested } from './deep-verify.js';
 import { runCodeReviewGate } from './code-review.js';
 import { runSecurityAuditGate } from './security-audit.js';
+import { effectiveBoundaryEnforcement } from './engine.js';
 import { getLogger } from '../logging/logger.js';
 
 /**
@@ -29,9 +31,11 @@ export interface GateEntry {
   readonly impl: GateImpl;
   /**
    * Invoked unconditionally — the impl self-guards on `opts.* OR membership`
-   * and no-ops when not requested. Only `deep-verify` (`--deep`) and
-   * `interactive-verdict` (`--interactive`), which can fire WITHOUT the gate
-   * being in the set; a pure membership intersection would drop those runs.
+   * and no-ops when not requested. `deep-verify` (`--deep`) and
+   * `interactive-verdict` (`--interactive`) can fire WITHOUT the gate being in
+   * the set; `boundary-scan` (Phase 156) instead self-guards on
+   * `effectiveBoundaryEnforcement === 'block'`, orthogonal to gate-set
+   * membership entirely. A pure membership intersection would drop all three.
    */
   readonly selfGuarded?: boolean;
 }
@@ -43,6 +47,7 @@ export interface GateEntry {
 export const GATE_REGISTRY: Record<SettleGate, GateEntry> = {
   'draft-read': { impl: runDraftReadGate },
   'structural-verifier': { impl: runStructuralVerifierGate },
+  'boundary-scan': { impl: runBoundaryScanGate, selfGuarded: true },
   'build-test-must-pass': { impl: runBuildTestGate },
   'test-coverage': { impl: runCoverageGate },
   'interactive-verdict': { impl: runInteractiveGate, selfGuarded: true },
@@ -56,10 +61,13 @@ export const GATE_REGISTRY: Record<SettleGate, GateEntry> = {
  * the cheapest. This is NOT the gate-matrix order (`[...ALWAYS_FIRE, ...DELTAS]`
  * in engine.ts): settle runs deep-verify before code-review, draft-read before
  * coverage, etc. The driver walks THIS, never `gateSet.gates` array order.
+ * `boundary-scan` sits right after `structural-verifier` — early, no external
+ * services, cheap to no-op when not in `block` mode.
  */
 export const GATE_ORDER: SettleGate[] = [
   'draft-read',
   'structural-verifier',
+  'boundary-scan',
   'build-test-must-pass',
   'test-coverage',
   'interactive-verdict',
@@ -87,6 +95,20 @@ export interface RunGatesResult {
 const SELF_GUARD_PREDICATES: Partial<Record<SettleGate, (ctx: SettleContext) => boolean>> = {
   'deep-verify': isDeepVerifyRequested,
   'interactive-verdict': isInteractiveRequested,
+  'boundary-scan': (ctx) => effectiveBoundaryEnforcement(ctx.config, ctx.draft) === 'block',
+};
+
+/**
+ * Per-gate provenance message for a self-guarded gate that no-opped. Keyed so
+ * each self-guarded gate can explain its own trigger rather than sharing
+ * `deep-verify`/`interactive-verdict`'s flag-shaped wording, which would be
+ * misleading for `boundary-scan` (Phase 156, whose trigger is
+ * `boundaryEnforcement`, not a CLI flag).
+ */
+const SELF_GUARD_SKIP_REASON: Partial<Record<SettleGate, string>> = {
+  'deep-verify': 'not requested (no --deep / --interactive, not in gate set)',
+  'interactive-verdict': 'not requested (no --deep / --interactive, not in gate set)',
+  'boundary-scan': 'boundaryEnforcement is not "block"',
 };
 
 /**
@@ -127,7 +149,7 @@ export async function runSettleGates(
       gates.push({
         gate,
         status: 'skipped',
-        skipReason: 'not requested (no --deep / --interactive, not in gate set)',
+        skipReason: SELF_GUARD_SKIP_REASON[gate] ?? 'not requested',
       });
     } else if (gate === 'build-test-must-pass' && res.summaryPatch?.buildTestRan === false) {
       gates.push({ gate, status: 'skipped', skipReason: NO_TEST_COMMAND_NOTICE.message });

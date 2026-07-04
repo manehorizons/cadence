@@ -88,6 +88,10 @@ export function registerSettleCommand(program: Command): void {
       'do not refuse when required skills were not invoked; emit a warn anomaly (bypassed:true) and settle anyway (Phase 34.1)',
     )
     .option(
+      '--allow-boundary-scan-failure',
+      'do not refuse on a boundary-scan violation (files touched outside the declared boundary); record them in SUMMARY and settle anyway (Phase 156)',
+    )
+    .option(
       '--allow-phase-collision',
       'bypass the worktree phase-collision backstop (Phase 83): settle even if a sibling worktree or upstream claims this phase number',
     )

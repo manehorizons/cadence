@@ -12,6 +12,7 @@ export const GateZ = z.enum([
   // Free — always fire
   'coherence-check',
   'structural-verifier',
+  'boundary-scan',
   'build-test-must-pass',
   // Cheap
   'draft-read',

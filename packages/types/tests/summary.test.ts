@@ -158,3 +158,18 @@ describe('SummaryZ.gates / acResults[].evidence (AC-1, AC-2, AC-5, phase 140)', 
     expect(parsed.acResults).toEqual([]);
   });
 });
+
+describe('SummaryZ.boundaryScan (AC-5, phase 156)', () => {
+  it('accepts a summary carrying a bypassed boundary-scan audit trail', () => {
+    const parsed = SummaryZ.parse({
+      ...baseSummary,
+      boundaryScan: { offenders: ['src/outside-boundary.ts'] },
+    });
+    expect(parsed.boundaryScan?.offenders).toEqual(['src/outside-boundary.ts']);
+  });
+
+  it('leaves boundaryScan undefined when absent (back-compat)', () => {
+    const parsed = SummaryZ.parse(baseSummary);
+    expect(parsed.boundaryScan).toBeUndefined();
+  });
+});
