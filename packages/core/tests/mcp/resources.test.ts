@@ -121,6 +121,48 @@ describe('MCP resources (phase 75)', () => {
     }
   });
 
+  // AC-4 (phase 153): the SUMMARY.json resource is advertised and round-trips bytes
+  it('AC-4 (153): lists cadence://phase/{phase}/summary.json and reads SUMMARY.json bytes', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'demo' });
+    const root = active.root;
+    const dir = join(root, '.cadence/phases/03-json');
+    await mkdir(dir, { recursive: true });
+    const summaryJson = JSON.stringify({ phase: '03-json', acResults: [] }, null, 2) + '\n';
+    await writeFile(join(dir, '03-01-SUMMARY.json'), summaryJson);
+    const { client, close } = await connect(root);
+    try {
+      const { resourceTemplates } = await client.listResourceTemplates();
+      const patterns = resourceTemplates.map((t) => t.uriTemplate);
+      expect(patterns).toContain('cadence://phase/{phase}/summary.json');
+
+      const res = await client.readResource({ uri: 'cadence://phase/03-json/summary.json' });
+      expect((res.contents[0] as { text?: string }).text).toBe(
+        await readFile(join(dir, '03-01-SUMMARY.json'), 'utf8'),
+      );
+      expect((res.contents[0] as { mimeType?: string }).mimeType).toBe('application/json');
+    } finally {
+      await close();
+    }
+  });
+
+  // AC-4 (phase 153): missing SUMMARY.json rejects gracefully, mirroring the summary.md case
+  it('AC-4 (153): missing SUMMARY.json rejects gracefully without crashing the server', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'demo' });
+    const root = active.root;
+    const dir = join(root, '.cadence/phases/04-empty-json');
+    await mkdir(dir, { recursive: true });
+    const { client, close } = await connect(root);
+    try {
+      await expect(
+        client.readResource({ uri: 'cadence://phase/04-empty-json/summary.json' }),
+      ).rejects.toThrow();
+      const { resources } = await client.listResources();
+      expect(resources.length).toBeGreaterThan(0);
+    } finally {
+      await close();
+    }
+  });
+
   it('AC-6: rejects unsafe phase slugs in templated resources', async () => {
     active = await tempRepo({ initialized: true, projectName: 'demo' });
     const { client, close } = await connect(active.root);

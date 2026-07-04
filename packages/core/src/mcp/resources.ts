@@ -77,7 +77,7 @@ export const STATIC_RESOURCES: StaticResourceDef[] = [
 /** The static resource URIs this server advertises (handy for tests/AC-1). */
 export const RESOURCE_URIS: readonly string[] = STATIC_RESOURCES.map((r) => r.uri);
 
-type PhaseArtifactKind = 'draft' | 'summary';
+type PhaseArtifactKind = 'draft' | 'summary' | 'summaryJson';
 
 interface PhaseTemplateDef {
   uriTemplate: string;
@@ -90,6 +90,7 @@ interface PhaseTemplateDef {
 const ARTIFACT_SUFFIX: Record<PhaseArtifactKind, string> = {
   draft: '-DRAFT.md',
   summary: '-SUMMARY.md',
+  summaryJson: '-SUMMARY.json',
 };
 
 export const PHASE_TEMPLATES: readonly PhaseTemplateDef[] = [
@@ -106,6 +107,13 @@ export const PHASE_TEMPLATES: readonly PhaseTemplateDef[] = [
     description: "A phase's SUMMARY.md (cadence://phase/<phase>/summary).",
     mimeType: 'text/markdown',
     kind: 'summary',
+  },
+  {
+    uriTemplate: 'cadence://phase/{phase}/summary.json',
+    name: 'Phase SUMMARY (JSON)',
+    description: "A phase's SUMMARY.json (cadence://phase/<phase>/summary.json).",
+    mimeType: 'application/json',
+    kind: 'summaryJson',
   },
 ];
 
