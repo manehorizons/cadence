@@ -117,6 +117,9 @@ export const SummaryZ = z.object({
   codeReview: z.record(z.string(), z.array(FindingZ)).optional(),
   /** Phase 25.2: flat security-audit findings. Present only when the gate ran. */
   securityAudit: z.array(FindingZ).optional(),
+  /** Phase 156: audit trail for a bypassed boundary-scan refusal. Present only
+   *  when the gate refused and a bypass flag let settle proceed anyway. */
+  boundaryScan: z.object({ offenders: z.array(z.string()) }).optional(),
   /** Phase 120: durable audit trail for settle-time gate bypasses. */
   gateBypasses: z.array(GateBypassZ).optional(),
   /** Phase 140: per-gate ran/skipped provenance. Optional for back-compat with

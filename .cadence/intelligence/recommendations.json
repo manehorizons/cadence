@@ -827,8 +827,8 @@
       "title": "Settle-time boundary diff scan (blocking) for subagent edits",
       "summary": "Follow-on to phase 155 (edit-time boundaryEnforcement block mode). Edit-time interception can't see subagent edits (handleSubagentResult only bumps a counter). Needs: (1) a genuine settle-refusal path, since CADENCE anomalies are informational-only and never block settle today (packages/types/src/anomaly.ts:8-11) -- collectAnomalies alone cannot refuse; (2) an unscoped git diff enumeration with a defined base ref, since the existing helpers (git/diff.ts collectGitDiff, services/settle.ts collectDiffForCodeReview) are file-scoped and can never surface an out-of-boundary file; (3) a .cadence/** ignore-list, since settle's own DRAFT/PROGRESS/SUMMARY/state.json writes would otherwise self-trip the scan on every settle. Split out of rec-20260701-012 / phase 155 after an Opus SPEC review found the settle-time AC rested on a false premise.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "status": "settle-pending",
+      "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -851,8 +851,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "156-settle-time-boundary-diff-scan",
       "createdAt": "2026-07-04T18:53:26.201Z",
-      "updatedAt": "2026-07-04T18:53:26.201Z"
+      "updatedAt": "2026-07-04T23:18:10.657Z"
     },
     {
       "id": "rec-20260704-002",

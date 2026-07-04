@@ -17,6 +17,7 @@ describe('GateZ', () => {
   it.each([
     'coherence-check',
     'structural-verifier',
+    'boundary-scan',
     'build-test-must-pass',
     'draft-read',
     'test-coverage',

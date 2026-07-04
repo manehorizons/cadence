@@ -428,8 +428,8 @@ External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): sp
 
 ## rec-20260704-001 — Settle-time boundary diff scan (blocking) for subagent edits
 
-- status: candidate
-- ready: needs-decision
+- status: settle-pending
+- ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
 - risk: 5/10

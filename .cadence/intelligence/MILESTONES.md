@@ -65,6 +65,7 @@ None.
 - mil-rec-rec-20260619-003 — Draft templates for first real work → .cadence/intelligence/exports/mil-rec-rec-20260619-003/SPEC.md
 - mil-rec-rec-20260619-006 — First real phase agent prompt → .cadence/intelligence/exports/mil-rec-rec-20260619-006/SPEC.md
 - mil-rec-rec-20260701-012 — Boundary enforcement block mode, including subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260701-012/SPEC.md
+- mil-rec-rec-20260704-001 — Settle-time boundary diff scan (blocking) for subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260704-001/SPEC.md
 
 ## Closed
 

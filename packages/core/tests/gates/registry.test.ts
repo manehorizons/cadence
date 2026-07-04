@@ -10,6 +10,7 @@ import {
 } from '../../src/gates/registry.js';
 import { runDraftReadGate } from '../../src/gates/draft-read.js';
 import { runStructuralVerifierGate } from '../../src/gates/structural-verifier.js';
+import { runBoundaryScanGate } from '../../src/gates/boundary-scan.js';
 import { runBuildTestGate } from '../../src/gates/build-test-must-pass.js';
 import { runCoverageGate } from '../../src/gates/coverage.js';
 import { runInteractiveGate } from '../../src/gates/interactive.js';
@@ -17,10 +18,11 @@ import { runDeepVerifyGate } from '../../src/gates/deep-verify.js';
 import { runCodeReviewGate } from '../../src/gates/code-review.js';
 import { runSecurityAuditGate } from '../../src/gates/security-audit.js';
 
-/** The eight settle gates in their canonical execution order. */
+/** The nine settle gates in their canonical execution order. */
 const EXPECTED_ORDER: SettleGate[] = [
   'draft-read',
   'structural-verifier',
+  'boundary-scan',
   'build-test-must-pass',
   'test-coverage',
   'interactive-verdict',
@@ -45,6 +47,7 @@ function recordingRegistry(
   return {
     'draft-read': entry('draft-read'),
     'structural-verifier': entry('structural-verifier'),
+    'boundary-scan': entry('boundary-scan'),
     'build-test-must-pass': entry('build-test-must-pass'),
     'test-coverage': entry('test-coverage'),
     'interactive-verdict': entry('interactive-verdict'),
@@ -71,6 +74,7 @@ describe('GATE registry wiring (Phase 44.1)', () => {
   it('each entry wires the real gate impl (identity)', () => {
     expect(GATE_REGISTRY['draft-read'].impl).toBe(runDraftReadGate);
     expect(GATE_REGISTRY['structural-verifier'].impl).toBe(runStructuralVerifierGate);
+    expect(GATE_REGISTRY['boundary-scan'].impl).toBe(runBoundaryScanGate);
     expect(GATE_REGISTRY['build-test-must-pass'].impl).toBe(runBuildTestGate);
     expect(GATE_REGISTRY['test-coverage'].impl).toBe(runCoverageGate);
     expect(GATE_REGISTRY['interactive-verdict'].impl).toBe(runInteractiveGate);
@@ -79,11 +83,11 @@ describe('GATE registry wiring (Phase 44.1)', () => {
     expect(GATE_REGISTRY['security-audit'].impl).toBe(runSecurityAuditGate);
   });
 
-  it('only deep-verify + interactive-verdict are selfGuarded', () => {
+  it('only boundary-scan, deep-verify + interactive-verdict are selfGuarded', () => {
     const selfGuarded = (Object.keys(GATE_REGISTRY) as SettleGate[]).filter(
       (g) => GATE_REGISTRY[g].selfGuarded,
     );
-    expect(selfGuarded.sort()).toEqual(['deep-verify', 'interactive-verdict']);
+    expect(selfGuarded.sort()).toEqual(['boundary-scan', 'deep-verify', 'interactive-verdict']);
   });
 });
 
@@ -105,16 +109,17 @@ describe('runSettleGates dispatch (Phase 44.1)', () => {
     );
     expect(calls).toEqual([
       'structural-verifier',
+      'boundary-scan',
       'build-test-must-pass',
       'interactive-verdict',
       'deep-verify',
     ]);
   });
 
-  it('runs deep-verify + interactive-verdict on an empty set (--deep/--interactive without membership)', async () => {
+  it('runs boundary-scan + deep-verify + interactive-verdict on an empty set (self-guarded, no membership)', async () => {
     const calls: SettleGate[] = [];
     await runSettleGates(ctxWith([]), { registry: recordingRegistry(calls) });
-    expect(calls).toEqual(['interactive-verdict', 'deep-verify']);
+    expect(calls).toEqual(['boundary-scan', 'interactive-verdict', 'deep-verify']);
   });
 
   it('halts on the first refusing gate; later gates never run (AC-5)', async () => {
@@ -126,6 +131,7 @@ describe('runSettleGates dispatch (Phase 44.1)', () => {
     expect(calls).toEqual([
       'draft-read',
       'structural-verifier',
+      'boundary-scan',
       'build-test-must-pass',
       'test-coverage',
     ]);
@@ -146,11 +152,17 @@ describe('runSettleGates dispatch (Phase 44.1)', () => {
 });
 
 describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
-  it('records status:"ran" for every membership gate that was invoked', async () => {
+  it('records status:"ran" for every membership gate that was invoked (boundary-scan self-guards to skipped)', async () => {
     const { gates } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
       registry: recordingRegistry([]),
     });
-    expect(gates).toEqual(EXPECTED_ORDER.map((gate) => ({ gate, status: 'ran' })));
+    expect(gates).toEqual(
+      EXPECTED_ORDER.map((gate) =>
+        gate === 'boundary-scan'
+          ? { gate, status: 'skipped', skipReason: 'boundaryEnforcement is not "block"' }
+          : { gate, status: 'ran' },
+      ),
+    );
   });
 
   it('records status:"skipped" with reason for a gate absent from the set', async () => {
@@ -215,7 +227,22 @@ describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
     expect(gates).toEqual([
       { gate: 'draft-read', status: 'ran' },
       { gate: 'structural-verifier', status: 'ran' },
+      { gate: 'boundary-scan', status: 'skipped', skipReason: 'boundaryEnforcement is not "block"' },
       { gate: 'build-test-must-pass', status: 'ran' },
     ]);
+  });
+
+  it('records boundary-scan as ran when effectiveBoundaryEnforcement resolves to "block"', async () => {
+    const ctx = {
+      gateSet: { gates: [] },
+      opts: {},
+      config: { boundaryEnforcement: 'block' },
+      draft: { tasks: [] },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([]),
+      order: ['boundary-scan'],
+    });
+    expect(gates).toEqual([{ gate: 'boundary-scan', status: 'ran' }]);
   });
 });
