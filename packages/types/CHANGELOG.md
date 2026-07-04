@@ -1,5 +1,17 @@
 # @manehorizons/cadence-types
 
+## 1.41.0
+
+### Minor Changes
+
+- Add three MCP tools closing the scout-to-phase dead-end for MCP-only clients:
+  `cadence_recommendation_convert`, `cadence_milestone_propose`, and
+  `cadence_recommendation_archive`, each a thin wrapper over the existing
+  service/store functions. Also expose a per-phase `SUMMARY.json` resource
+  (`cadence://phase/{phase}/summary.json`), and fix
+  `cadence_recommendation_promote`'s description, which pointed at a CLI-only
+  `milestone propose` command an MCP client has no way to invoke.
+
 ## 1.40.0
 
 ### Minor Changes
