@@ -1,0 +1,45 @@
+{
+  "draftId": "156-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "collectUnscopedTouchedFiles implemented in packages/core/src/git/boundary-diff.ts; 7 unit tests covering clean tree, working-tree files, rename destination-only, merge-base diff, no-remote local fallback, unresolvable base ref, non-git dir",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T23:04:22.712Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "'boundary-scan' added to GateZ + SummaryZ.boundaryScan; registered in GATE_REGISTRY (selfGuarded) + GATE_ORDER (right after structural-verifier) + SELF_GUARD_PREDICATES (effectiveBoundaryEnforcement==='block'); full suite (272 files, 2185 tests) green, no regressions",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/types/src/profile.ts",
+        "/home/thomas/projects/cadence/packages/types/src/summary.ts",
+        "/home/thomas/projects/cadence/packages/types/tests/summary.test.ts",
+        "/home/thomas/projects/cadence/packages/types/tests/profile.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/gates/boundary-scan.ts",
+        "/home/thomas/projects/cadence/packages/core/src/gates/types.ts",
+        "/home/thomas/projects/cadence/packages/core/src/gates/registry.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/gates/registry-coverage.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/gates/registry.test.ts"
+      ],
+      "updatedAt": "2026-07-04T23:11:33.142Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "runBoundaryScanGate in packages/core/src/gates/boundary-scan.ts: no-ops unless block mode; enumerates via collectUnscopedTouchedFiles, filters .cadence/**, fail-open on empty declared set, refuses on real offender via runBoundaryCheck, bypass via --force/--allow-boundary-scan-failure unless sealed. 8 gate-impl tests (real temp git repos) covering AC-1/AC-3/AC-4/AC-5 + bonus AC-2 integration check, all green; typecheck clean",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/gates/boundary-scan.test.ts"
+      ],
+      "updatedAt": "2026-07-04T23:12:44.334Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "allowBoundaryScanFailure threaded through SettleOpts/SettleArgs, --allow-boundary-scan-failure CLI flag registered, ctx.opts spread wiring in services/settle.ts, and acc.boundaryScan -> Summary.boundaryScan wiring added (needed for the audit trail to actually reach SUMMARY.json). 2 new e2e CLI tests (real git repo, built dist CLI) covering refusal + bypass; full monorepo pipeline (lint+typecheck+test+build, all 5 packages) green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/settle.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/settle-boundary-scan.test.ts"
+      ],
+      "updatedAt": "2026-07-04T23:17:59.931Z"
+    }
+  }
+}
