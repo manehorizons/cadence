@@ -293,6 +293,16 @@ export const CadenceConfigZ = z.object({
       autoList: z.boolean().default(false),
     })
     .default({ crossWorktree: true, autoList: false }),
+  /**
+   * Boundary enforcement mode (Phase 155). `warn` (default, back-compat) —
+   * an out-of-boundary edit is only notified via `anomaly-notify`, never
+   * blocked. `block` — `handlePreToolEdit` refuses an out-of-boundary edit at
+   * edit time, wherever the host surfaces the touched files. Top-level (not
+   * nested under `hooks`, which is boolean-only gate toggles) because a
+   * settle-time counterpart is planned as a follow-on (rec-20260704-001).
+   * Overridable per-phase via DRAFT frontmatter, mirroring `profile`.
+   */
+  boundaryEnforcement: z.enum(['warn', 'block']).default('warn'),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -349,6 +359,7 @@ export const defaultConfig: CadenceConfig = {
   recommendations: { autoArchive: true },
   gates: { sealed: [] },
   resume: { crossWorktree: true, autoList: false },
+  boundaryEnforcement: 'warn',
 };
 
 export const presets = {

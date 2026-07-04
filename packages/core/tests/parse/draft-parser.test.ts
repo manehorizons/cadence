@@ -92,4 +92,27 @@ describe('parseDraftMd', () => {
     );
     expect(() => parseDraftMd(bad)).toThrow();
   });
+
+  // Phase 155 T3 (AC-5) — boundaryEnforcement mirrors the profile override.
+  it('AC-5: omits boundaryEnforcement when frontmatter has no `boundaryEnforcement:` field', () => {
+    const d = parseDraftMd(SAMPLE);
+    expect(d.boundaryEnforcement).toBeUndefined();
+  });
+
+  it('AC-5: extracts boundaryEnforcement override when frontmatter includes `boundaryEnforcement: block`', () => {
+    const withOverride = SAMPLE.replace(
+      'status: PENDING',
+      'boundaryEnforcement: block\nstatus: PENDING',
+    );
+    const d = parseDraftMd(withOverride);
+    expect(d.boundaryEnforcement).toBe('block');
+  });
+
+  it('AC-5: rejects DRAFT with invalid boundaryEnforcement value', () => {
+    const bad = SAMPLE.replace(
+      'status: PENDING',
+      'boundaryEnforcement: refuse\nstatus: PENDING',
+    );
+    expect(() => parseDraftMd(bad)).toThrow();
+  });
 });

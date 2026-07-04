@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { parseDraftMd } from '../parse/draft-parser.js';
-import { effectiveGateSet } from '../gates/engine.js';
+import { effectiveGateSet, effectiveBoundaryEnforcement } from '../gates/engine.js';
 import { selectNotifier } from '../notify/factory.js';
 import { runBoundaryCheck } from '../checks/boundary.js';
 
@@ -61,14 +61,29 @@ export async function handlePreToolEdit(
         try {
           const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
           const now = new Date().toISOString();
+          const declaredFiles = draft.tasks.flatMap((t) => t.files);
           const events = runBoundaryCheck({
-            declaredFiles: draft.tasks.flatMap((t) => t.files),
+            declaredFiles,
             touchedFiles: rawFiles,
             stamp: () => now,
             extraContext: { source: 'hook.preToolEdit' },
             root: ctx.cwd,
           });
           if (events.length > 0) {
+            // Phase 155 AC-2/AC-4: block mode refuses, but only when there is an
+            // actual declared boundary to enforce — an empty `files:` union
+            // must fail OPEN (never block 100% of edits as a side effect of a
+            // DRAFT that omits `files:`).
+            if (
+              effectiveBoundaryEnforcement(config, draft) === 'block' &&
+              declaredFiles.length > 0
+            ) {
+              const files = events.map((e) => String(e.context.file));
+              return {
+                ok: false,
+                blockMessage: `boundaryEnforcement=block: file(s) not declared in any task's files: ${files.join(', ')}`,
+              };
+            }
             const gateSet = effectiveGateSet(state, config, draft);
             if (gateSet.gates.includes('anomaly-notify')) {
               const notifier = selectNotifier(config);

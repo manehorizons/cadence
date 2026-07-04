@@ -30,6 +30,11 @@ export const DraftZ = z.object({
   tier: TierZ,
   /** Optional per-phase profile override. When set, wins over the project default in config. */
   profile: ProfileZ.optional(),
+  /**
+   * Optional per-phase boundaryEnforcement override (Phase 155). When set,
+   * wins over the project default in config — mirrors `profile` above.
+   */
+  boundaryEnforcement: z.enum(['warn', 'block']).optional(),
   title: z.string(),
   objective: z.string(),
   acceptanceCriteria: z.array(AcceptanceCriterionZ),

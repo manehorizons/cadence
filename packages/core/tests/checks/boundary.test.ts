@@ -118,4 +118,24 @@ describe('runBoundaryCheck (Phase 43.1)', () => {
     expect(events[0]!.context.file).toBe(stray);
     expect(events[0]!.message).toBe(boundaryMessage(stray));
   });
+
+  // Phase 155 T1 (AC-1) — optional severity param for boundaryEnforcement: 'block'.
+  it('AC-1: omitting severity defaults every emitted event to warn (back-compat)', () => {
+    const events = runBoundaryCheck({
+      declaredFiles: ['a.ts'],
+      touchedFiles: ['stray.ts'],
+      stamp: stampFixed,
+    });
+    expect(events[0]!.severity).toBe('warn');
+  });
+
+  it("AC-1: an explicit severity: 'error' is applied to every emitted event", () => {
+    const events = runBoundaryCheck({
+      declaredFiles: ['a.ts'],
+      touchedFiles: ['stray.ts', 'other.ts'],
+      stamp: stampFixed,
+      severity: 'error',
+    });
+    expect(events.map((e) => e.severity)).toEqual(['error', 'error']);
+  });
 });

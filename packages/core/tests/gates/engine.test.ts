@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { Profile, Tier } from '@manehorizons/cadence-types';
-import { effectiveGateSet, effectiveProfile, gatesFor } from '../../src/gates/engine.js';
+import {
+  effectiveGateSet,
+  effectiveProfile,
+  effectiveBoundaryEnforcement,
+  gatesFor,
+} from '../../src/gates/engine.js';
 
 const ALWAYS = ['coherence-check', 'structural-verifier', 'build-test-must-pass'] as const;
 
@@ -17,6 +22,29 @@ describe('effectiveProfile', () => {
   it('falls back to "auto" when neither config nor draft set a profile', () => {
     expect(effectiveProfile(null, null)).toBe('auto');
     expect(effectiveProfile({ profile: undefined as never }, null)).toBe('auto');
+  });
+});
+
+// Phase 155 T3 (AC-5) — mirrors effectiveProfile's draft-override-wins precedent.
+describe('effectiveBoundaryEnforcement', () => {
+  it('AC-5: draft override wins over config default', () => {
+    expect(
+      effectiveBoundaryEnforcement({ boundaryEnforcement: 'block' }, { boundaryEnforcement: 'warn' }),
+    ).toBe('warn');
+  });
+
+  it('AC-5: config default applies when draft has no override', () => {
+    expect(
+      effectiveBoundaryEnforcement({ boundaryEnforcement: 'block' }, { boundaryEnforcement: undefined }),
+    ).toBe('block');
+    expect(effectiveBoundaryEnforcement({ boundaryEnforcement: 'block' }, null)).toBe('block');
+  });
+
+  it('AC-5: falls back to "warn" when neither config nor draft set it', () => {
+    expect(effectiveBoundaryEnforcement(null, null)).toBe('warn');
+    expect(effectiveBoundaryEnforcement({ boundaryEnforcement: undefined as never }, null)).toBe(
+      'warn',
+    );
   });
 });
 
