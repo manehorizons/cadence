@@ -10,6 +10,7 @@ import type {
   Tier,
 } from '@manehorizons/cadence-types';
 import { nextAction, type NextAction } from './progress.js';
+import { parseAcRefs } from './parse/ac-refs.js';
 import { parseDraftMd } from './parse/draft-parser.js';
 import { SimpleStateBackend } from './state/simple.js';
 import { loadConfig } from './config/loader.js';
@@ -52,13 +53,6 @@ export interface StatusReport {
 }
 
 const PASS_STATUSES: TaskStatus[] = ['DONE', 'DONE_WITH_CONCERNS'];
-
-function parseAcRefs(done: string): string[] {
-  return done
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => /^AC-\d+$/.test(s));
-}
 
 function taskStatusFromProgress(
   taskId: string,
