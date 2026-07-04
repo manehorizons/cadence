@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-03T16:16:28.113Z",
+  "generatedAt": "2026-07-04T02:59:31.027Z",
   "ranked": [
     {
       "id": "rec-20260701-008",
@@ -129,6 +129,47 @@
       "scoutId": "scout-20260701-audit"
     },
     {
+      "id": "rec-20260703-001",
+      "title": "Milestone-scoped worktree fan-out for independent phases",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
       "id": "rec-20260619-008",
       "title": "Team rollout kit",
       "raw": 12.7,
@@ -177,8 +218,8 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 26,
-    "ranked": 4,
+    "total": 27,
+    "ranked": 5,
     "parked": 0,
     "needsAttention": 0,
     "excluded": 22
