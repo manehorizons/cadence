@@ -28,7 +28,10 @@ function parseAcceptanceCriteria(section: string): Draft['acceptanceCriteria'] {
   const out: Draft['acceptanceCriteria'] = [];
   const blocks = section.split(/\n(?=### AC-)/);
   for (const block of blocks) {
-    const head = /^### (AC-\d+):\s*(.*)$/m.exec(block);
+    // [ \t]* (not \s*) — a name-less heading (`### AC-2:` / `### AC-2: `)
+    // must not let the separator swallow the newline into the next line's
+    // Given/When/Then content (phase 151 draft-mutate round-trip fix).
+    const head = /^### (AC-\d+):[ \t]*(.*)$/m.exec(block);
     if (!head) continue;
     const id = head[1]!;
     const name = head[2]?.trim() ?? '';
@@ -44,7 +47,8 @@ function parseTasks(section: string): Draft['tasks'] {
   const out: Draft['tasks'] = [];
   const blocks = section.split(/\n(?=### )/);
   for (const block of blocks) {
-    const head = /^### (T\d+):\s*(.*)$/m.exec(block);
+    // [ \t]* (not \s*) — same name-less-heading fix as parseAcceptanceCriteria.
+    const head = /^### (T\d+):[ \t]*(.*)$/m.exec(block);
     if (!head) continue;
     const id = head[1]!;
     const name = head[2]!.trim();

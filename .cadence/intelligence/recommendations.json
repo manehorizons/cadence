@@ -703,7 +703,7 @@
       "title": "Structured draft editing: draft add-ac / add-task / set-objective",
       "summary": "The DRAFT is the central artifact and the only loop step the CLI cannot touch — all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-decision",
       "priority": "high",
       "leverageScore": 5,
@@ -725,9 +725,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "151-structured-draft-editing-draft-add-ac-add-task-set-objective",
       "scoutId": "scout-20260701-audit",
       "createdAt": "2026-07-01T23:57:18.500Z",
-      "updatedAt": "2026-07-01T23:57:18.500Z"
+      "updatedAt": "2026-07-04T04:38:15.738Z"
     },
     {
       "id": "rec-20260701-010",

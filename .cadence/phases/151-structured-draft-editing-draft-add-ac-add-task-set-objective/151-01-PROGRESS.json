@@ -1,0 +1,27 @@
+{
+  "draftId": "151-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T04:33:37.530Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/services/draft-mutate.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/draft.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/draft-mutate.test.ts"
+      ],
+      "updatedAt": "2026-07-04T04:35:13.830Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T04:35:14.005Z"
+    }
+  }
+}
