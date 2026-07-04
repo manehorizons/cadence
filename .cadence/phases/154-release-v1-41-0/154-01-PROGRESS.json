@@ -1,0 +1,26 @@
+{
+  "draftId": "154-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "docs/mcp.md: added 3 tool rows + updated 15->18 tool count, added summary.json resource row",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T16:44:28.161Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Changeset added + pnpm changeset version run: all 4 packages 1.40.0->1.41.0 lockstep, CHANGELOGs updated. CLAUDE.md narrative updated with v1.41.0 paragraph (2 mentions of 1.41.0 confirmed).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.changeset/mcp-parity-intelligence-lifecycle-release.md",
+        "/home/thomas/projects/cadence/CLAUDE.md"
+      ],
+      "updatedAt": "2026-07-04T16:45:48.812Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Full monorepo verify: pnpm build (5/5), typecheck (8/8), lint (5/5), test (10/10 tasks; core 270/270 files, 2161/2161 tests) all green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T16:46:49.136Z"
+    }
+  }
+}
