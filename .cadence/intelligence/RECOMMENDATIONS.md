@@ -364,7 +364,7 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 
 ## rec-20260701-008 — Structured draft editing: draft add-ac / add-task / set-objective
 
-- status: candidate
+- status: settle-pending
 - ready: needs-decision
 - priority: high
 - leverage: 5/10

@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "150-ac-ref-parser-drops-ids-after-trailing-annotation",
+  "activePhase": "151-structured-draft-editing-draft-add-ac-add-task-set-objective",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-04T00:51:30.243Z",
+  "draftReadAt": "2026-07-04T04:27:57.186Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-03-phase146-cadence-recommend-pr130-merged.md",
-    "subagentSpawns": 839
+    "subagentSpawns": 853
   },
   "skillAudit": {
     "required": [],
