@@ -1,5 +1,24 @@
 # @manehorizons/cadence-host-codex
 
+## 1.40.0
+
+### Minor Changes
+
+- Add `cadence draft set-objective`/`add-ac`/`add-task`: three additive
+  subcommands that mutate a PENDING `DRAFT.md`'s Objective, Acceptance
+  Criteria, and Tasks sections directly, round-tripping through the existing
+  `parseDraftMd` parser so a hand-typed heading typo can no longer silently
+  corrupt AC/Task id sequencing. Hand-editing `DRAFT.md` remains fully
+  supported. Also fixes a `parseAcceptanceCriteria`/`parseTasks` heading-regex
+  bug found via the new round-trip tests where a name-less `### AC-N:` heading
+  bled the next line into the parsed name.
+
+### Patch Changes
+
+- Updated dependencies
+  - @manehorizons/cadence-core@1.40.0
+  - @manehorizons/cadence-types@1.40.0
+
 ## 1.39.0
 
 ### Minor Changes

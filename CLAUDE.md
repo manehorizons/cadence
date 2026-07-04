@@ -134,7 +134,41 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.39.0`** (2026-07-03, tag `v1.39.0`
+change). The latest version is **`1.40.0`** (2026-07-04, tag `v1.40.0`
+pending): bundles five independently-merged, unreleased phases accumulated
+since v1.39.0. **Phase 147 — upstream self-authorship exemption for the
+phase-collision guard** (issue #129): exempts an exact-slug upstream
+self-match from the guard's refusal, closing a false-positive where a
+worktree's own already-pushed phase collided with itself; shipped as **PR
+#133** (squash `97aa1db`). **Phase 148 — `settle run --ship-ref`
+shortcut** (issue #134, part 2/3 of the `settle-pending` arc): a
+`--ship-ref` flag that promotes a `settle-pending` recommendation straight
+to `shipped` with the given ref in the same settle invocation, instead of a
+separate `recommendation promote` call; shipped as **PR #136** (squash
+`c2a652a`). **Phase 149 — `cadence milestone close` verb** (issue #135,
+part 3/3 of the arc, completing it): closes out a milestone group,
+archiving its recommendations and rendering a closure summary; shipped as
+**PR #137** (squash `1e2aef2`). **Phase 150 — AC-ref parser fix**: a
+trailing annotation after the last comma-separated AC id in a task's
+`done:` line was silently dropping that id from coverage; fixed by
+deduplicating the buggy `parseAcRefs` (independently copy-pasted in
+`status.ts` and `notify/collect.ts`) into one shared, tested
+`packages/core/src/parse/ac-refs.ts`; shipped as **PR #138** (squash
+`abbbde0`). **Phase 151 — structured draft editing** (rec-20260701-008):
+`cadence draft set-objective`/`add-ac`/`add-task`, three additive
+subcommands that mutate a PENDING `DRAFT.md`'s Objective/Acceptance
+Criteria/Tasks sections and round-trip through `parseDraftMd`, closing the
+same bug class as phase 150 at the write side — a hand-typed heading typo
+can no longer silently corrupt AC/Task id sequencing (hand-editing remains
+fully supported); also fixed a `parseAcceptanceCriteria`/`parseTasks`
+heading-regex bug where a name-less `### AC-N:` heading bled the next line
+into the parsed name; shipped as **PR #140** (squash `dcb1499`). Also
+folds in housekeeping **PR #139** (squash `7a19b1b`, nine stray uncommitted
+session handoffs + a recommendation-ledger refresh). All four published
+packages bumped `1.39.0 → 1.40.0` in lockstep (`cadence-core` carries all
+five phases' logic; the other three packages are version-alignment only);
+npm publish is the user-triggered manual `Release` workflow. Prior:
+**`1.39.0`** (2026-07-03, tag `v1.39.0`
 pending): bundles two independently-merged, unreleased features. **Phase
 145 — `settle-pending` recommendation status** (sourced from GitHub issue
 #126, part 1 of a 3-phase arc; no new DESIGN.md D-number — deepens the
