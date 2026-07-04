@@ -134,9 +134,31 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.40.0`** (2026-07-04, tag `v1.40.0`
-pending): bundles five independently-merged, unreleased phases accumulated
-since v1.39.0. **Phase 147 — upstream self-authorship exemption for the
+change). The latest version is **`1.41.0`** (2026-07-04, tag `v1.41.0`
+pending): **phase 153 — MCP parity for the intelligence lifecycle**
+(rec-20260701-010, sourced from the 2026-07-01 audit; no new DESIGN.md
+D-number — deepens the existing MCP surface from phase 76/58). An MCP-only
+client could add or promote a recommendation but had no way to convert it
+into a phase, propose a milestone, or archive it — closing that scout-to-phase
+dead-end with three new tools, each a thin wrapper over the existing
+service/store functions: **`cadence_recommendation_convert`** (mirrors
+`cadence recommendation convert`), **`cadence_milestone_propose`** (mirrors
+`cadence milestone propose`, idempotent), and **`cadence_recommendation_archive`**
+(mirrors `cadence recommendation archive`). Also exposes a per-phase
+**`SUMMARY.json`** resource (`cadence://phase/{phase}/summary.json`, alongside
+the existing `-DRAFT.md`/`-SUMMARY.md` templates), and fixes
+`cadence_recommendation_promote`'s description, which pointed at a CLI-only
+`milestone propose` command an MCP client had no way to invoke — it now names
+the two new real tools instead. Built as 5 TDD tasks (T1-T5), each
+independently re-verified (diff review + full suite/typecheck/lint re-run, not
+just the subagent's own report) before being recorded DONE; settled clean
+(5/5 ACs pass), rec-20260701-010 auto-moved to `settle-pending`; shipped as
+**PR #143** (squash `1a9c167`). All four published packages bumped
+`1.40.0 → 1.41.0` in lockstep (`cadence-core` carries the feature; the other
+three packages are version-alignment only); npm publish is the
+user-triggered manual `Release` workflow. Prior: **`1.40.0`** (2026-07-04, tag
+`v1.40.0` pending): bundles five independently-merged, unreleased phases
+accumulated since v1.39.0. **Phase 147 — upstream self-authorship exemption for the
 phase-collision guard** (issue #129): exempts an exact-slug upstream
 self-match from the guard's refusal, closing a false-positive where a
 worktree's own already-pushed phase collided with itself; shipped as **PR

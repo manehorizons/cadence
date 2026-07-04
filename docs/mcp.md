@@ -76,7 +76,7 @@ the repo as the working directory (or pass `--repo <path>`).
 
 ## Tools
 
-The server advertises 15 tools that wrap the same engine the CLI uses. Each
+The server advertises 18 tools that wrap the same engine the CLI uses. Each
 returns both human-readable text and structured content.
 
 | Tool | Wraps | Kind |
@@ -96,11 +96,15 @@ returns both human-readable text and structured content.
 | `cadence_handoff` | `cadence handoff` | write — scaffold a SESSION handoff doc |
 | `cadence_recommendation_add` | `cadence recommendation add` | write — add a recommendation |
 | `cadence_recommendation_promote` | `cadence recommendation promote` | write — advance a recommendation |
+| `cadence_recommendation_convert` | `cadence recommendation convert` | write — convert a recommendation into a phase |
+| `cadence_recommendation_archive` | `cadence recommendation archive` | write — soft-archive a recommendation |
+| `cadence_milestone_propose` | `cadence milestone propose` | write — cluster eligible recommendations into proposed milestones |
 
-Together `cadence_recommendation_add` + `cadence_recommendation_promote` let a
-host run the full scout → recommendation → promote path over MCP. The CLI
-commands `init`, `config`, and `install` are intentionally **not** exposed as
-tools.
+Together `cadence_recommendation_add` + `cadence_recommendation_promote` +
+`cadence_recommendation_convert` + `cadence_milestone_propose` +
+`cadence_recommendation_archive` let a host run the full scout →
+recommendation → convert/milestone → archive path over MCP. The CLI commands
+`init`, `config`, and `install` are intentionally **not** exposed as tools.
 
 ## Resources
 
@@ -118,6 +122,7 @@ host re-reads when it wants fresh data.
 | `cadence://recommendations` | the `cadence recommend --json` payload |
 | `cadence://phase/{phase}/draft` | a phase's `*-DRAFT.md` (templated) |
 | `cadence://phase/{phase}/summary` | a phase's `*-SUMMARY.md` (templated) |
+| `cadence://phase/{phase}/summary.json` | a phase's `*-SUMMARY.json` (templated) |
 
 A read for a missing artifact returns a clean MCP error result; the server keeps
 serving.

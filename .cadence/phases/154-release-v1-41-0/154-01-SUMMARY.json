@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "draftId": "154-01",
+  "completedAt": "2026-07-04T16:47:04.535Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "assertion"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "skipped",
+      "skipReason": "no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement."
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "docs/mcp.md: added 3 tool rows + updated 15->18 tool count, added summary.json resource row"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Changeset added + pnpm changeset version run: all 4 packages 1.40.0->1.41.0 lockstep, CHANGELOGs updated. CLAUDE.md narrative updated with v1.41.0 paragraph (2 mentions of 1.41.0 confirmed)."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Full monorepo verify: pnpm build (5/5), typecheck (8/8), lint (5/5), test (10/10 tasks; core 270/270 files, 2161/2161 tests) all green."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
