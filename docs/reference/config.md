@@ -453,6 +453,48 @@ See [docs/concepts.md — Gate bypass reference summary](../concepts.md#gate-byp
 
 ---
 
+## boundaryEnforcement
+
+Boundary enforcement mode (Phase 155). A DRAFT declares `files:` per task —
+the allow-list of files that task may touch. `boundaryEnforcement` controls
+what happens when an edit falls outside that declared set.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `boundaryEnforcement` | `"warn" \| "block"` | `"warn"` | `warn` — an out-of-boundary edit is only notified via the `anomaly-notify` gate (unchanged historical behavior). `block` — the pre-tool-edit hook refuses the edit outright, wherever the host surfaces the touched files before the write lands. |
+
+`block` mode fails **open** (never blocks) in two cases: when there is no
+active draft/phase, and when the active draft's tasks declare zero files in
+total — an enforcement mode never blocks 100% of edits as a side effect of a
+DRAFT that omits `files:`.
+
+Overridable per-phase via DRAFT frontmatter, mirroring `profile`:
+
+```markdown
+---
+phase: 42-example
+id: 42-01
+tier: standard
+boundaryEnforcement: warn
+status: PENDING
+---
+```
+
+A DRAFT-level override wins over the project default in `.cadence/config.json`.
+
+```jsonc
+// .cadence/config.json — refuse out-of-boundary edits project-wide
+{ "boundaryEnforcement": "block" }
+```
+
+**Scope note:** `block` mode is edit-time only. It cannot see a boundary
+violation that never passes through the host's pre-tool-edit hook — most
+notably a subagent-driven edit, which today is invisible to boundary
+detection entirely. A settle-time diff scan closing that gap is tracked
+separately as a follow-on, not yet built.
+
+---
+
 ## Reading your config — `cadence config explain`
 
 This page is a field reference. To see what *your* config actually does — without

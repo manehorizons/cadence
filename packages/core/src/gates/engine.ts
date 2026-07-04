@@ -79,6 +79,21 @@ export function effectiveProfile(
 }
 
 /**
+ * Resolve the effective boundaryEnforcement mode for a phase (Phase 155,
+ * AC-5). DRAFT frontmatter override wins; otherwise the project default from
+ * `.cadence/config.json` applies. Falls back to `'warn'` if neither is set —
+ * mirrors `effectiveProfile` above.
+ */
+export function effectiveBoundaryEnforcement(
+  config: Pick<CadenceConfig, 'boundaryEnforcement'> | null,
+  draft: Pick<Draft, 'boundaryEnforcement'> | null,
+): CadenceConfig['boundaryEnforcement'] {
+  if (draft?.boundaryEnforcement) return draft.boundaryEnforcement;
+  if (config?.boundaryEnforcement) return config.boundaryEnforcement;
+  return 'warn';
+}
+
+/**
  * Compute the set of gates that should fire for a given (tier, profile)
  * combination. Pure function; no I/O. `softCap` is true only for the
  * `auto × complex` cell — gate implementations later phases refuse without

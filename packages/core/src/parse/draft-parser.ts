@@ -100,6 +100,9 @@ export function parseDraftMd(raw: string): Draft {
     boundaries,
     status: (fm.status as Draft['status']) ?? 'PENDING',
     ...(fm.profile !== undefined ? { profile: fm.profile as Draft['profile'] } : {}),
+    ...(fm.boundaryEnforcement !== undefined
+      ? { boundaryEnforcement: fm.boundaryEnforcement as Draft['boundaryEnforcement'] }
+      : {}),
     ...(fm.requiredSkills !== undefined
       ? { requiredSkills: parseSkillList(fm.requiredSkills) }
       : {}),

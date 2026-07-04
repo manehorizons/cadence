@@ -764,8 +764,8 @@
       "title": "Boundary enforcement block mode, including subagent edits",
       "summary": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "status": "settle-pending",
+      "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -786,9 +786,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "155-boundary-enforcement-block-mode",
       "scoutId": "scout-20260701-audit",
       "createdAt": "2026-07-01T23:57:40.857Z",
-      "updatedAt": "2026-07-01T23:57:40.857Z"
+      "updatedAt": "2026-07-04T19:13:44.638Z"
     },
     {
       "id": "rec-20260703-001",
@@ -820,6 +821,67 @@
       "decisionIds": [],
       "createdAt": "2026-07-03T16:59:18.968Z",
       "updatedAt": "2026-07-03T16:59:18.968Z"
+    },
+    {
+      "id": "rec-20260704-001",
+      "title": "Settle-time boundary diff scan (blocking) for subagent edits",
+      "summary": "Follow-on to phase 155 (edit-time boundaryEnforcement block mode). Edit-time interception can't see subagent edits (handleSubagentResult only bumps a counter). Needs: (1) a genuine settle-refusal path, since CADENCE anomalies are informational-only and never block settle today (packages/types/src/anomaly.ts:8-11) -- collectAnomalies alone cannot refuse; (2) an unscoped git diff enumeration with a defined base ref, since the existing helpers (git/diff.ts collectGitDiff, services/settle.ts collectDiffForCodeReview) are file-scoped and can never surface an out-of-boundary file; (3) a .cadence/** ignore-list, since settle's own DRAFT/PROGRESS/SUMMARY/state.json writes would otherwise self-trip the scan on every settle. Split out of rec-20260701-012 / phase 155 after an Opus SPEC review found the settle-time AC rested on a false premise.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "hooks",
+        "gates",
+        "settle"
+      ],
+      "affectedFiles": [
+        "packages/core/src/notify/collect.ts",
+        "packages/core/src/services/settle.ts",
+        "packages/types/src/anomaly.ts",
+        "packages/core/src/git/diff.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260704-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-04T18:53:26.201Z",
+      "updatedAt": "2026-07-04T18:53:26.201Z"
+    },
+    {
+      "id": "rec-20260704-002",
+      "title": "spec-parser silently truncates multi-line Objective/Given/When/Then on DRAFT seeding",
+      "summary": "parseSpecMd (packages/core/src/parse/spec-parser.ts) truncates the Objective to its first line (extractSection(...).split('\\n')[0]) and each AC's Given/When/Then to its first line ((.+) without the s flag, so it can't match across a newline). Any SPEC.md whose Objective or AC clauses wrap across multiple lines -- normal for anything non-trivial -- gets silently corrupted when 'cadence draft new' seeds a DRAFT from an approved SPEC: no error, just dropped content after the first line break. Discovered live during phase 155's SPEC-to-DRAFT seeding on 2026-07-04: a 3-4 sentence Objective and 5 multi-clause ACs were all truncated mid-sentence in the generated DRAFT.md. Fix: join wrapped lines within a section/clause before parsing (mirror however draft-parser.ts's own Objective/AC extraction already handles multi-line text, if it does; if not, both parsers share the bug and should share the fix).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "parse"
+      ],
+      "affectedFiles": [
+        "packages/core/src/parse/spec-parser.ts",
+        "packages/core/src/parse/draft-parser.ts",
+        "packages/core/src/parse/draft-scaffold.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260704-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-04T18:57:46.462Z",
+      "updatedAt": "2026-07-04T18:57:46.462Z"
     }
   ],
   "archived": [

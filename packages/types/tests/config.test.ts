@@ -599,3 +599,30 @@ describe('resume cross-worktree config (AC-8)', () => {
     ).toThrow();
   });
 });
+
+describe('boundaryEnforcement config (Phase 155 / AC-1)', () => {
+  it('AC-1: applies boundaryEnforcement: "warn" when omitted (back-compat)', () => {
+    const { boundaryEnforcement: _drop, ...withoutIt } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutIt);
+    expect(parsed.boundaryEnforcement).toBe('warn');
+  });
+
+  it('AC-1: defaultConfig carries boundaryEnforcement: "warn"', () => {
+    expect(defaultConfig.boundaryEnforcement).toBe('warn');
+  });
+
+  it('AC-1: accepts boundaryEnforcement: "block"', () => {
+    const parsed = CadenceConfigZ.parse({ ...defaultConfig, boundaryEnforcement: 'block' });
+    expect(parsed.boundaryEnforcement).toBe('block');
+  });
+
+  it('AC-1: rejects an unknown boundaryEnforcement value', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, boundaryEnforcement: 'refuse' as never }),
+    ).toThrow();
+  });
+
+  it('AC-1: is top-level, not nested under hooks', () => {
+    expect(defaultConfig.hooks).not.toHaveProperty('boundaryEnforcement');
+  });
+});

@@ -33,6 +33,13 @@ export interface BoundaryCheckInput {
    * matching (back-compat — settle/hook supply it; unit callers may not).
    */
   root?: string;
+  /**
+   * Severity stamped on every emitted event. Defaults to `'warn'` (unchanged
+   * historical behavior). Phase 155's `block`-mode caller passes `'error'` so
+   * `handlePreToolEdit` can distinguish "found a violation" from "should
+   * refuse the edit" without adding a second detection code path.
+   */
+  severity?: AnomalyEvent['severity'];
 }
 
 /**
@@ -46,7 +53,7 @@ export interface BoundaryCheckInput {
  * skill-audit (39.6), OUTSIDE the Phase 44.1 registry.
  */
 export function runBoundaryCheck(input: BoundaryCheckInput): AnomalyEvent[] {
-  const { root } = input;
+  const { root, severity = 'warn' } = input;
   // Normalize for COMPARISON only — relativize absolute paths to `root`, unify
   // separators. The original (untransformed) path is what the event carries.
   const norm = (p: string): string => {
@@ -59,7 +66,7 @@ export function runBoundaryCheck(input: BoundaryCheckInput): AnomalyEvent[] {
     if (declared.has(norm(file))) continue;
     events.push({
       type: 'files-outside-boundary',
-      severity: 'warn',
+      severity,
       message: boundaryMessage(file),
       context: { file, ...input.extraContext },
       ts: input.stamp(),
