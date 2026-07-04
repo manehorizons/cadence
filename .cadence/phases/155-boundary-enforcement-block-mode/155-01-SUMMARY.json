@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "draftId": "155-01",
+  "completedAt": "2026-07-04T19:13:44.637Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "assertion"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "skipped",
+      "skipReason": "no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement."
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Added top-level boundaryEnforcement config (default warn) + optional severity param on runBoundaryCheck (default warn). AC-1."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "handlePreToolEdit now refuses out-of-boundary edits when boundaryEnforcement=block and the declared files: union is non-empty; fails open with no active draft/phase or an empty declared-files union. AC-2, AC-3, AC-4."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Added optional Draft.boundaryEnforcement frontmatter field (mirrors profile), parsed in draft-parser.ts, resolved via new effectiveBoundaryEnforcement(config, draft) in gates/engine.ts (draft override wins, mirrors effectiveProfile), wired into handlePreToolEdit. AC-5."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

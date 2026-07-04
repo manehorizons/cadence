@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "154-release-v1-41-0",
+  "activePhase": "155-boundary-enforcement-block-mode",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-04T16:43:55.416Z",
+  "draftReadAt": "2026-07-04T18:59:18.870Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-04.md",
-    "subagentSpawns": 889
+    "subagentSpawns": 903
   },
   "skillAudit": {
     "required": [],

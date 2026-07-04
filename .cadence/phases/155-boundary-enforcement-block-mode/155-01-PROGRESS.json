@@ -1,0 +1,34 @@
+{
+  "draftId": "155-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added top-level boundaryEnforcement config (default warn) + optional severity param on runBoundaryCheck (default warn). AC-1.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T19:07:42.471Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "handlePreToolEdit now refuses out-of-boundary edits when boundaryEnforcement=block and the declared files: union is non-empty; fails open with no active draft/phase or an empty declared-files union. AC-2, AC-3, AC-4.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/hooks/handlers-boundary-block.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/handlers.ts"
+      ],
+      "updatedAt": "2026-07-04T19:09:10.855Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added optional Draft.boundaryEnforcement frontmatter field (mirrors profile), parsed in draft-parser.ts, resolved via new effectiveBoundaryEnforcement(config, draft) in gates/engine.ts (draft override wins, mirrors effectiveProfile), wired into handlePreToolEdit. AC-5.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/gates/engine.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/parse/draft-parser.test.ts",
+        "/home/thomas/projects/cadence/packages/types/src/plan.ts",
+        "/home/thomas/projects/cadence/packages/core/src/parse/draft-parser.ts",
+        "/home/thomas/projects/cadence/packages/core/src/gates/engine.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/handlers.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/hooks/handlers-boundary-block.test.ts"
+      ],
+      "updatedAt": "2026-07-04T19:12:19.023Z"
+    }
+  }
+}

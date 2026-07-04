@@ -1,49 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-04T15:18:06.529Z",
+  "generatedAt": "2026-07-04T17:47:05.744Z",
   "ranked": [
-    {
-      "id": "rec-20260701-010",
-      "title": "MCP parity for the intelligence lifecycle",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260701-audit"
-    },
     {
       "id": "rec-20260701-012",
       "title": "Boundary enforcement block mode, including subagent edits",
@@ -177,9 +135,9 @@
   },
   "totals": {
     "total": 27,
-    "ranked": 4,
+    "ranked": 3,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 23
+    "excluded": 24
   }
 }

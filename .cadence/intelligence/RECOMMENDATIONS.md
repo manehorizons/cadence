@@ -396,8 +396,8 @@ An MCP-only client can add and promote a recommendation but cannot convert it to
 
 ## rec-20260701-012 — Boundary enforcement block mode, including subagent edits
 
-- status: candidate
-- ready: needs-decision
+- status: settle-pending
+- ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -425,3 +425,35 @@ DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit check
 - next: cadence milestone propose
 
 External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md
+
+## rec-20260704-001 — Settle-time boundary diff scan (blocking) for subagent edits
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: hooks, gates, settle
+- files: packages/core/src/notify/collect.ts, packages/core/src/services/settle.ts, packages/types/src/anomaly.ts, packages/core/src/git/diff.ts
+- evidence: Found during gap-analysis review of 155-01-SPEC.md (2026-07-04): anomalies never block settle; existing diff helpers are file-scoped; .cadence/** writes would self-trip an unscoped scan
+- next: cadence milestone propose
+
+Follow-on to phase 155 (edit-time boundaryEnforcement block mode). Edit-time interception can't see subagent edits (handleSubagentResult only bumps a counter). Needs: (1) a genuine settle-refusal path, since CADENCE anomalies are informational-only and never block settle today (packages/types/src/anomaly.ts:8-11) -- collectAnomalies alone cannot refuse; (2) an unscoped git diff enumeration with a defined base ref, since the existing helpers (git/diff.ts collectGitDiff, services/settle.ts collectDiffForCodeReview) are file-scoped and can never surface an out-of-boundary file; (3) a .cadence/** ignore-list, since settle's own DRAFT/PROGRESS/SUMMARY/state.json writes would otherwise self-trip the scan on every settle. Split out of rec-20260701-012 / phase 155 after an Opus SPEC review found the settle-time AC rested on a false premise.
+
+## rec-20260704-002 — spec-parser silently truncates multi-line Objective/Given/When/Then on DRAFT seeding
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: parse
+- files: packages/core/src/parse/spec-parser.ts, packages/core/src/parse/draft-parser.ts, packages/core/src/parse/draft-scaffold.ts
+- evidence: Reproduced on phase 155-01: SPEC objective/AC-1..AC-5 all truncated at first newline in the seeded 155-01-DRAFT.md; root cause at spec-parser.ts:38-40 (Given/When/Then regex lacks /s flag) and spec-parser.ts:57 (.split('\n')[0] on Objective)
+- next: cadence milestone propose
+
+parseSpecMd (packages/core/src/parse/spec-parser.ts) truncates the Objective to its first line (extractSection(...).split('\n')[0]) and each AC's Given/When/Then to its first line ((.+) without the s flag, so it can't match across a newline). Any SPEC.md whose Objective or AC clauses wrap across multiple lines -- normal for anything non-trivial -- gets silently corrupted when 'cadence draft new' seeds a DRAFT from an approved SPEC: no error, just dropped content after the first line break. Discovered live during phase 155's SPEC-to-DRAFT seeding on 2026-07-04: a 3-4 sentence Objective and 5 multi-clause ACs were all truncated mid-sentence in the generated DRAFT.md. Fix: join wrapped lines within a section/clause before parsing (mirror however draft-parser.ts's own Objective/AC extraction already handles multi-line text, if it does; if not, both parsers share the bug and should share the fix).

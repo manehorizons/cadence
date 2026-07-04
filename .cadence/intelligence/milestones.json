@@ -199,6 +199,30 @@
       ],
       "createdAt": "2026-07-02T00:22:24.755Z",
       "updatedAt": "2026-07-02T00:44:17.768Z"
+    },
+    {
+      "id": "mil-rec-rec-20260701-012",
+      "name": "Boundary enforcement block mode, including subagent edits",
+      "objective": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260701-012"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260701-012/SPEC.md",
+          "exportedAt": "2026-07-04T18:16:48.176Z"
+        }
+      ],
+      "createdAt": "2026-07-04T18:14:51.169Z",
+      "updatedAt": "2026-07-04T18:16:48.176Z"
     }
   ]
 }
