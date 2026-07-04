@@ -1,0 +1,52 @@
+{
+  "draftId": "153-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "recommendationConvertService + cadence_recommendation_convert MCP tool, mirroring recommendation-promote.ts. Unit + MCP integration tests. Independently re-verified: full suite 267/267 files 2149/2149 tests, typecheck clean, lint clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T15:37:08.541Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "milestoneProposeService + cadence_milestone_propose MCP tool, wraps runProposeMilestones, data matches --json shape. Idempotency covered by test. Independently re-verified: 268/268 files, 2153/2153 tests, typecheck clean, lint clean.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/services/milestone-propose.ts",
+        "/home/thomas/projects/cadence/packages/core/src/mcp/tools.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/mcp/mcp-server.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/mcp/tool-parity.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/services/milestone-propose.test.ts"
+      ],
+      "updatedAt": "2026-07-04T15:42:37.934Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "summaryJson PhaseArtifactKind + cadence://phase/{phase}/summary.json resource, generic reuse of existing readPhaseArtifact/registerResources (no new registration code needed). Independently re-verified: resources.test.ts 8/8 passed in isolation, diff reviewed clean. Full-suite run deferred until concurrent T3 (touches shared tools.ts/tool-parity.test.ts) lands.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/services/recommendation-archive.ts",
+        "/home/thomas/projects/cadence/packages/core/src/mcp/resources.ts",
+        "/home/thomas/projects/cadence/packages/core/src/mcp/tools.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/mcp/resources.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/services/recommendation-archive.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/mcp/mcp-server.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/mcp/tool-parity.test.ts"
+      ],
+      "updatedAt": "2026-07-04T15:46:48.767Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "recommendationArchiveService + cadence_recommendation_archive MCP tool, wraps runRecommendationArchive('manual'). Merged cleanly alongside T1/T2's tools.ts entries. Independently re-verified after T3+T4 both landed: 269/269 files, 2160/2160 tests, typecheck clean, lint clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-04T15:48:00.407Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Rewrote cadence_recommendation_promote's description to name cadence_milestone_propose and cadence_recommendation_convert as the real MCP next-steps, replacing the CLI-only 'milestone propose' dead-end. New tools.test.ts asserts both names appear. Independently re-verified: 270/270 files, 2161/2161 tests, typecheck clean, lint clean.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/src/mcp/tools.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/mcp/tools.test.ts"
+      ],
+      "updatedAt": "2026-07-04T15:51:17.522Z"
+    }
+  }
+}
