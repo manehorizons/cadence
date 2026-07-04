@@ -93,4 +93,16 @@ describe('renderMilestonesMd', () => {
     expect(md).toMatch(/- mil-noexp — NoExp\n/);
     expect(md).not.toMatch(/mil-noexp — NoExp →/);
   });
+
+  it('phase 149: closed milestone with closedRef renders "(ref: ...)"; without closedRef renders unchanged', () => {
+    const md = renderMilestonesMd(
+      led(
+        mk({ id: 'mil-ref', name: 'Ref', status: 'closed', closedRef: 'PR #131' }),
+        mk({ id: 'mil-noref', name: 'NoRef', status: 'closed' }),
+      ),
+    );
+    expect(md).toMatch(/- mil-ref — Ref \(ref: PR #131\)/);
+    expect(md).toMatch(/- mil-noref — NoRef\n/);
+    expect(md).not.toMatch(/mil-noref — NoRef \(ref:/);
+  });
 });

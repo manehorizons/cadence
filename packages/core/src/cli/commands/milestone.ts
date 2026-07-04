@@ -66,6 +66,40 @@ export function registerMilestoneCommand(program: Command): void {
   }
 
   cmd
+    .command('close <id>')
+    .description(
+      'Close an exported milestone whose work has landed (issue #135)',
+    )
+    .option(
+      '--ref <text>',
+      'Freeform provenance for the closed milestone (e.g. "PR #131")',
+    )
+    .action(async (id: string, opts: { ref?: string }) => {
+      try {
+        if (opts.ref !== undefined && opts.ref.trim().length === 0) {
+          process.stderr.write('milestone close: --ref must not be empty\n');
+          process.exitCode = 1;
+          return;
+        }
+        const res = await runMilestoneTransition(process.cwd(), id, 'close', opts.ref);
+        if (!res.ok) {
+          process.stderr.write(`milestone close refused: ${res.error}\n`);
+          process.exitCode = 1;
+          return;
+        }
+        process.stdout.write(`milestone ${id} → closed\n`);
+        if (res.warning !== undefined) {
+          process.stdout.write(`${res.warning}\n`);
+        }
+      } catch (err) {
+        process.stderr.write(
+          `milestone close failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
     .command('export <id>')
     .description('Export an accepted milestone to a staged CADENCE SPEC draft')
     .requiredOption('--to <backend>', 'target backend (only "cadence")')

@@ -359,6 +359,10 @@ export const IntelligenceMilestoneZ = z.object({
   ),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
+  // Phase 149: optional freeform provenance for a `closed` milestone — where the
+  // work actually landed (e.g. "PR #131"). Never parsed; set only via
+  // `cadence milestone close <id> --ref=…` (mirrors Recommendation.shippedRef).
+  closedRef: z.string().min(1).optional(),
 });
 export type IntelligenceMilestone = z.infer<typeof IntelligenceMilestoneZ>;
 

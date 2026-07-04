@@ -216,4 +216,225 @@ describe('cadence milestone', () => {
     expect(noTo.code).toBe(1);
     expect(noTo.stderr).toMatch(/required option.*--to/);
   });
+
+  it('close --help documents the command and the --ref flag', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['milestone', 'close', '--help'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/close \[options\] <id>/);
+    expect(r.stdout).toMatch(/--ref <text>/);
+  });
+
+  async function seedExportedMilestone(
+    root: string,
+    id: string,
+    recommendationIds: string[] = ['rec-1'],
+  ): Promise<void> {
+    const dir = join(root, '.cadence', 'intelligence');
+    await mkdir(dir, { recursive: true });
+    await writeFile(
+      join(dir, 'milestones.json'),
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          milestones: [
+            {
+              id,
+              name: 'X',
+              objective: 'do it',
+              status: 'exported',
+              recommendationIds,
+              preMortem: {
+                likelyFailureModes: [],
+                hiddenDependencies: [],
+                driftRisks: [],
+                outOfScope: [],
+              },
+              exportTargets: [
+                {
+                  backend: 'cadence',
+                  artifactPath: `.cadence/intelligence/exports/${id}/SPEC.md`,
+                  exportedAt: '2026-05-17T00:00:00.000Z',
+                },
+              ],
+              createdAt: '2026-05-17T00:00:00.000Z',
+              updatedAt: '2026-05-17T00:00:00.000Z',
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+  }
+
+  it('AC-1: close transitions exported -> closed', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedExportedMilestone(active.root, 'mil-a');
+
+    const r = await run(['milestone', 'close', 'mil-a'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toMatch(/milestone mil-a → closed/);
+
+    const led = JSON.parse(
+      await readFile(join(active.root, '.cadence', 'intelligence', 'milestones.json'), 'utf8'),
+    );
+    expect(led.milestones[0].status).toBe('closed');
+  });
+
+  it('AC-2: close refuses from proposed/accepted/deferred/already-closed with the current status named', async () => {
+    active = await tempRepo({ initialized: true });
+    const dir = join(active.root, '.cadence', 'intelligence');
+    await mkdir(dir, { recursive: true });
+    await writeFile(
+      join(dir, 'milestones.json'),
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          milestones: (['proposed', 'accepted', 'deferred', 'closed'] as const).map((status) => ({
+            id: `mil-${status}`,
+            name: status,
+            objective: 'do it',
+            status,
+            recommendationIds: ['rec-1'],
+            preMortem: {
+              likelyFailureModes: [],
+              hiddenDependencies: [],
+              driftRisks: [],
+              outOfScope: [],
+            },
+            exportTargets: [],
+            createdAt: '2026-05-17T00:00:00.000Z',
+            updatedAt: '2026-05-17T00:00:00.000Z',
+          })),
+        },
+        null,
+        2,
+      ),
+    );
+
+    for (const status of ['proposed', 'accepted', 'deferred', 'closed']) {
+      const r = await run(['milestone', 'close', `mil-${status}`], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stderr).toMatch(
+        new RegExp(`cannot close milestone in status ${status}`),
+      );
+    }
+
+    // no ledger write happened
+    const led = JSON.parse(
+      await readFile(join(dir, 'milestones.json'), 'utf8'),
+    );
+    for (const m of led.milestones) {
+      expect(m.updatedAt).toBe('2026-05-17T00:00:00.000Z');
+    }
+  });
+
+  it('AC-3: --ref persists as closedRef, renders in MILESTONES.md, and appears in list --json', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedExportedMilestone(active.root, 'mil-ref');
+
+    const r = await run(['milestone', 'close', 'mil-ref', '--ref', 'PR #131'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/milestone mil-ref → closed/);
+
+    const md = await readFile(join(active.root, '.cadence', 'intelligence', 'MILESTONES.md'), 'utf8');
+    expect(md).toMatch(/- mil-ref — X \(ref: PR #131\)/);
+
+    const list = JSON.parse(
+      (await run(['milestone', 'list', '--json'], active.root)).stdout,
+    );
+    const m = list.milestones.find((x: { id: string }) => x.id === 'mil-ref');
+    expect(m.closedRef).toBe('PR #131');
+  });
+
+  it('rejects an empty --ref', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedExportedMilestone(active.root, 'mil-a');
+    const r = await run(['milestone', 'close', 'mil-a', '--ref', ''], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/--ref must not be empty/);
+    // no write happened
+    const led = JSON.parse(
+      await readFile(join(active.root, '.cadence', 'intelligence', 'milestones.json'), 'utf8'),
+    );
+    expect(led.milestones[0].status).toBe('exported');
+  });
+
+  it('AC-4: prints an advisory warning for unshipped members but still closes', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedExportedMilestone(active.root, 'mil-a', ['rec-1', 'rec-2']);
+    const dir = join(active.root, '.cadence', 'intelligence');
+    await writeFile(
+      join(dir, 'recommendations.json'),
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          recommendations: [
+            {
+              id: 'rec-1',
+              title: 'a',
+              summary: 's',
+              source: 'manual',
+              status: 'shipped',
+              readiness: 'ready-for-milestone',
+              priority: 'high',
+              leverageScore: 5,
+              riskScore: 2,
+              confidence: 0.8,
+              decayState: 'fresh',
+              affectedAreas: [],
+              affectedFiles: [],
+              evidenceIds: [],
+              assumptionIds: [],
+              decisionIds: [],
+              createdAt: '2026-05-17T00:00:00.000Z',
+              updatedAt: '2026-05-17T00:00:00.000Z',
+            },
+            {
+              id: 'rec-2',
+              title: 'b',
+              summary: 's',
+              source: 'manual',
+              status: 'converted',
+              readiness: 'ready-for-milestone',
+              priority: 'high',
+              leverageScore: 5,
+              riskScore: 2,
+              confidence: 0.8,
+              decayState: 'fresh',
+              affectedAreas: [],
+              affectedFiles: [],
+              evidenceIds: [],
+              assumptionIds: [],
+              decisionIds: [],
+              createdAt: '2026-05-17T00:00:00.000Z',
+              updatedAt: '2026-05-17T00:00:00.000Z',
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+
+    const r = await run(['milestone', 'close', 'mil-a'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/milestone mil-a → closed/);
+    expect(r.stdout).toMatch(/rec-2/);
+    expect(r.stdout).not.toMatch(/warning:.*rec-1\b/);
+
+    const led = JSON.parse(
+      await readFile(join(dir, 'milestones.json'), 'utf8'),
+    );
+    expect(led.milestones[0].status).toBe('closed');
+  });
+
+  it('close refuses an unknown id', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['milestone', 'close', 'nope'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/milestone close refused: milestone nope not found/);
+  });
 });

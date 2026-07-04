@@ -279,23 +279,58 @@ export function clusterMilestones(
   return [...survivors, ...fresh];
 }
 
-export type TransitionAction = 'accept' | 'defer';
+export type TransitionAction = 'accept' | 'defer' | 'close';
 export type TransitionResult =
-  | { ok: true; ledger: MilestoneLedger }
+  | { ok: true; ledger: MilestoneLedger; warning?: string }
   | { ok: false; error: string };
+
+/**
+ * Phase 149: best-effort advisory for `close` — names any of the milestone's
+ * `recommendationIds` whose *current* status (checked across both the live
+ * `recommendations` and soft-archived `archived` arrays, since a shipped rec is
+ * typically auto-archived with its true status preserved) is not `shipped`.
+ * Never throws: a missing/unreadable/corrupt recommendation ledger degrades to
+ * `undefined` (no warning), mirroring `runAdvanceConvertedToSettlePendingForPhase`'s
+ * defensive style. This is advisory-only — it never blocks the close.
+ */
+async function buildCloseAdvisory(
+  root: string,
+  recommendationIds: readonly string[],
+): Promise<string | undefined> {
+  try {
+    const ledger = await readRecommendationLedger(root);
+    const byId = new Map<string, string>();
+    for (const r of ledger.recommendations) byId.set(r.id, r.status);
+    for (const r of ledger.archived) byId.set(r.id, r.status);
+    const unshipped = recommendationIds.filter((rid) => byId.get(rid) !== 'shipped');
+    if (unshipped.length === 0) return undefined;
+    return `warning: milestone closed with unshipped recommendation(s): ${unshipped.join(', ')}`;
+  } catch {
+    return undefined;
+  }
+}
 
 export function applyTransition(
   ledger: MilestoneLedger,
   id: string,
   action: TransitionAction,
   now: Date = new Date(),
+  ref?: string,
 ): TransitionResult {
   const target = ledger.milestones.find((m) => m.id === id);
   if (!target) return { ok: false, error: `milestone ${id} not found` };
 
+  // Phase 149: `ref` (→ closedRef) is only meaningful for the `close` action —
+  // mirrors applyRecommendationPromotion's "only valid for this specific
+  // transition" guard style.
+  if (ref !== undefined && action !== 'close') {
+    return { ok: false, error: 'ref is only valid for the close action' };
+  }
+
   const allowed: Record<TransitionAction, IntelligenceMilestone['status'][]> = {
     accept: ['proposed'],
     defer: ['proposed', 'accepted'],
+    close: ['exported'],
   };
   if (!allowed[action].includes(target.status)) {
     return {
@@ -305,12 +340,18 @@ export function applyTransition(
   }
 
   const nextStatus: IntelligenceMilestone['status'] =
-    action === 'accept' ? 'accepted' : 'deferred';
+    action === 'accept' ? 'accepted' : action === 'defer' ? 'deferred' : 'closed';
+  const ts = now.toISOString();
   const ledgerOut: MilestoneLedger = {
     schemaVersion: 1,
     milestones: ledger.milestones.map((m) =>
       m.id === id
-        ? { ...m, status: nextStatus, updatedAt: now.toISOString() }
+        ? {
+            ...m,
+            status: nextStatus,
+            updatedAt: ts,
+            ...(action === 'close' && ref !== undefined ? { closedRef: ref } : {}),
+          }
         : m,
     ),
   };
@@ -335,11 +376,17 @@ export async function runMilestoneTransition(
   root: string,
   id: string,
   action: TransitionAction,
+  ref?: string,
 ): Promise<TransitionResult> {
   const ledger = await readMilestoneLedger(root);
-  const res = applyTransition(ledger, id, action, new Date());
+  const res = applyTransition(ledger, id, action, new Date(), ref);
   if (!res.ok) return res;
   await writeMilestoneLedger(root, res.ledger);
+  if (action === 'close') {
+    const target = res.ledger.milestones.find((m) => m.id === id);
+    const warning = await buildCloseAdvisory(root, target?.recommendationIds ?? []);
+    if (warning !== undefined) return { ok: true, ledger: res.ledger, warning };
+  }
   return res;
 }
 

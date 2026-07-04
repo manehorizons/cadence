@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "draftId": "149-01",
+  "completedAt": "2026-07-03T23:55:20.087Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "assertion"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "assertion"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "skipped",
+      "skipReason": "no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement."
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "closedRef optional field added to IntelligenceMilestoneZ; types build passes"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "close TransitionAction + applyTransition/runMilestoneTransition threading ref + AC-4 best-effort advisory (buildCloseAdvisory)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "milestone close CLI command wired (--ref, refusal/warning printing); render-milestone.ts closedRef suffix"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "milestone-close.test.ts (new, 15 tests) + milestone.test.ts CLI extensions (7 new tests) + render-milestone.test.ts closedRef case; full core suite 262 files / 2109 tests pass"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
