@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "151-structured-draft-editing-draft-add-ac-add-task-set-objective",
+  "activePhase": "152-release-v1-40-0",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-04T04:27:57.186Z",
+  "draftReadAt": "2026-07-04T13:50:26.821Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-04.md",
-    "subagentSpawns": 853
+    "subagentSpawns": 854
   },
   "skillAudit": {
     "required": [],
