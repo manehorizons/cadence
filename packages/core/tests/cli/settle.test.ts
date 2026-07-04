@@ -1,10 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import type { Recommendation, RecommendationLedger } from '@manehorizons/cadence-types';
 
 const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
@@ -13,6 +14,39 @@ function run(args: string[], cwd: string): Promise<{ code: number }> {
     const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
     p.on('exit', (code) => resolve({ code: code ?? 0 }));
   });
+}
+
+function runCapture(args: string[], cwd: string): Promise<{ code: number; stdout: string }> {
+  return new Promise((resolve) => {
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
+    let stdout = '';
+    p.stdout.on('data', (d) => { stdout += d.toString(); });
+    p.on('exit', (code) => resolve({ code: code ?? 0, stdout }));
+  });
+}
+
+function convertedRec(id: string, phaseId: string): Recommendation {
+  return {
+    id,
+    title: `${id} title`,
+    summary: 's',
+    source: 'manual',
+    status: 'converted',
+    readiness: 'ready-for-cadence-spec',
+    priority: 'medium',
+    leverageScore: 5,
+    riskScore: 5,
+    confidence: 0.5,
+    decayState: 'fresh',
+    affectedAreas: [],
+    affectedFiles: [],
+    evidenceIds: [],
+    assumptionIds: [],
+    decisionIds: [],
+    convertedToPhaseId: phaseId,
+    createdAt: '2026-06-01T00:00:00.000Z',
+    updatedAt: '2026-06-01T00:00:00.000Z',
+  };
 }
 
 async function draftApproveAndComplete(root: string): Promise<void> {
@@ -67,5 +101,45 @@ describe('cadence settle run', () => {
     expect(r.code).toBe(0);
     const md = await readFile(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'), 'utf8');
     expect(md).toMatch(/AC-1.*PASS/);
+  });
+
+  it('T1: --help lists the --ship-ref flag (Phase 148)', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await runCapture(['settle', 'run', '--help'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('--ship-ref');
+  });
+
+  it('AC-1: --ship-ref promotes a converted rec to shipped via the CLI', async () => {
+    active = await tempRepo({ initialized: true });
+    await draftApproveAndComplete(active.root);
+    const intelDir = join(active.root, '.cadence', 'intelligence');
+    await mkdir(intelDir, { recursive: true });
+    const ledger: RecommendationLedger = {
+      schemaVersion: 1,
+      recommendations: [convertedRec('rec-20260601-002', '01-foundation')],
+      archived: [],
+    };
+    await writeFile(join(intelDir, 'recommendations.json'), JSON.stringify(ledger, null, 2));
+
+    const r = await run(
+      ['settle', 'run', '--auto', '--allow-missing-coverage', '--ship-ref', 'PR #148'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+
+    const recs = JSON.parse(
+      await readFile(join(intelDir, 'recommendations.json'), 'utf8'),
+    ) as RecommendationLedger;
+    expect(recs.recommendations).toHaveLength(0);
+    expect(recs.archived).toHaveLength(1);
+    expect(recs.archived[0]?.status).toBe('shipped');
+    expect(recs.archived[0]?.shippedRef).toBe('PR #148');
+  });
+
+  it('--ship-ref rejects an empty value', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['settle', 'run', '--ship-ref', ''], active.root);
+    expect(r.code).not.toBe(0);
   });
 });
