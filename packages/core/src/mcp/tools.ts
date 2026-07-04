@@ -15,6 +15,9 @@ import { resumeService } from '../services/resume.js';
 import { doctorService } from '../services/doctor.js';
 import { recommendationAddService } from '../services/recommendation-add.js';
 import { recommendationPromoteService } from '../services/recommendation-promote.js';
+import { recommendationConvertService } from '../services/recommendation-convert.js';
+import { recommendationArchiveService } from '../services/recommendation-archive.js';
+import { milestoneProposeService } from '../services/milestone-propose.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 
 /**
@@ -328,8 +331,10 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'cadence_recommendation_promote',
     description:
-      "Advance a recommendation's status and/or readiness (write). Makes `milestone propose` " +
-      'reachable. An unknown id or illegal transition fails cleanly.',
+      "Advance a recommendation's status and/or readiness (write). Once a recommendation is " +
+      'accepted and ready, follow up with cadence_milestone_propose to cluster it into a ' +
+      'proposed milestone, or cadence_recommendation_convert to convert it directly into a ' +
+      'phase. An unknown id or illegal transition fails cleanly.',
     inputSchema: {
       id: z.string().describe('Recommendation id, e.g. "rec-20260607-001"'),
       status: REC_STATUS.optional().describe('New status'),
@@ -347,9 +352,58 @@ export const TOOLS: ToolDef[] = [
       ),
   },
   {
+    name: 'cadence_recommendation_convert',
+    description:
+      'Convert a recommendation into a CADENCE phase (write). The target phase must already be ' +
+      'scaffolded under .cadence/phases/ (e.g. via cadence_draft_new); an unknown id, an illegal ' +
+      'status transition, or a missing phase directory fails cleanly.',
+    inputSchema: {
+      recId: z.string().describe('Recommendation id, e.g. "rec-20260607-001"'),
+      toPhase: z.string().describe('Phase id; must exist under .cadence/phases/'),
+    },
+    run: (repoRoot, args, io) =>
+      recommendationConvertService(
+        repoRoot,
+        {
+          recId: str(args.recId),
+          toPhase: str(args.toPhase),
+        },
+        io,
+      ),
+  },
+  {
+    name: 'cadence_recommendation_archive',
+    description:
+      'Soft-archive a recommendation (write) — moves it out of the live recommendations array ' +
+      "into the ledger's archived array, stamping archivedAt/archiveReason ('manual'). " +
+      'Recoverable via the CLI `cadence recommendation unarchive`; an unknown id, or a rec that ' +
+      'is already archived, fails cleanly.',
+    inputSchema: {
+      recId: z.string().describe('Recommendation id, e.g. "rec-20260607-001"'),
+    },
+    run: (repoRoot, args, io) =>
+      recommendationArchiveService(
+        repoRoot,
+        {
+          recId: str(args.recId),
+        },
+        io,
+      ),
+  },
+  {
     name: 'cadence_doctor',
     description: 'Diagnose this project’s CADENCE setup and report problems (read-only).',
     inputSchema: {},
     run: (repoRoot, _args, io) => doctorService(repoRoot, io),
+  },
+  {
+    name: 'cadence_milestone_propose',
+    description:
+      'Cluster eligible recommendations (status accepted, readiness ready-for-milestone or ' +
+      'ready-for-cadence-spec) into proposed milestones (write). Idempotent and safe to call ' +
+      'repeatedly — already proposed/accepted/deferred/exported milestones are preserved; only ' +
+      'newly eligible recommendations get clustered in.',
+    inputSchema: {},
+    run: (repoRoot, _args, io) => milestoneProposeService(repoRoot, {}, io),
   },
 ];

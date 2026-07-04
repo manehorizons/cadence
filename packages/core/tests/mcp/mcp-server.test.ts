@@ -55,7 +55,11 @@ const EXPECTED_TOOLS = [
   'cadence_resume',
   'cadence_recommendation_add',
   'cadence_recommendation_promote',
+  // phase 153 — MCP parity for the intelligence lifecycle
+  'cadence_recommendation_convert',
+  'cadence_recommendation_archive',
   'cadence_doctor',
+  'cadence_milestone_propose',
 ];
 const EXCLUDED = ['cadence_init', 'cadence_config', 'cadence_install'];
 

@@ -1,49 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-04T02:59:31.027Z",
+  "generatedAt": "2026-07-04T15:18:06.529Z",
   "ranked": [
-    {
-      "id": "rec-20260701-008",
-      "title": "Structured draft editing: draft add-ac / add-task / set-objective",
-      "raw": 17.7,
-      "score": 61,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio high",
-          "value": 5
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260701-audit"
-    },
     {
       "id": "rec-20260701-010",
       "title": "MCP parity for the intelligence lifecycle",
@@ -219,9 +177,9 @@
   },
   "totals": {
     "total": 27,
-    "ranked": 5,
+    "ranked": 4,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 22
+    "excluded": 23
   }
 }

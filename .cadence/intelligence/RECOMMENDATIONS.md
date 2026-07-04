@@ -380,7 +380,7 @@ The DRAFT is the central artifact and the only loop step the CLI cannot touch â€
 
 ## rec-20260701-010 â€” MCP parity for the intelligence lifecycle
 
-- status: candidate
+- status: settle-pending
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10

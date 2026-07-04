@@ -735,7 +735,7 @@
       "title": "MCP parity for the intelligence lifecycle",
       "summary": "An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose — the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
@@ -754,9 +754,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "153-mcp-parity-intelligence-lifecycle",
       "scoutId": "scout-20260701-audit",
       "createdAt": "2026-07-01T23:57:40.509Z",
-      "updatedAt": "2026-07-01T23:57:40.509Z"
+      "updatedAt": "2026-07-04T15:51:32.388Z"
     },
     {
       "id": "rec-20260701-012",

@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "152-release-v1-40-0",
+  "activePhase": "153-mcp-parity-intelligence-lifecycle",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-04T13:50:26.821Z",
+  "draftReadAt": "2026-07-04T15:30:17.578Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-04.md",
-    "subagentSpawns": 854
+    "subagentSpawns": 888
   },
   "skillAudit": {
     "required": [],

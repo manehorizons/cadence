@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 152-release-v1-40-0
+**Active phase:** 153-mcp-parity-intelligence-lifecycle
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 854
+- Subagent spawns this session: 888
 - Last handoff: SESSION-2026-07-04.md
 
 ## Counts
