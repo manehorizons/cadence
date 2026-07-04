@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 149-milestone-close-verb
+**Active phase:** 148-settle-run-ship-ref-shortcut
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 817
+- Subagent spawns this session: 837
 - Last handoff: SESSION-2026-07-03-phase146-cadence-recommend-pr130-merged.md
 
 ## Counts
