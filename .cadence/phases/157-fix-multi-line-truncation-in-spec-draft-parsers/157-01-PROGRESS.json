@@ -1,0 +1,28 @@
+{
+  "draftId": "157-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "parseSpecMd: dropped Objective .split('\\n')[0] truncation, fixed Given/When/Then regexes to capture multi-line clauses via [\\s\\S]+? with a next-label/end-of-block lookahead. 4 new tests (multi-line objective, multi-line clauses, multi-clause boundary correctness, single-line byte-identical guard); full suite (274 files, 2199 tests) green",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-05T00:28:42.072Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "parseDraftMd: mirrored T1's fix (Objective full-section text, Given/When/Then via [\\s\\S]+? with next-label/end-of-block lookahead); phase-151 name-less-heading fix untouched, verified with a dedicated regression test. 4 new tests (multi-line objective, multi-line clauses, single-line byte-identical guard, name-less-heading non-regression); full suite (274 files, 2203 tests) green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/parse/draft-parser.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/parse/draft-parser.ts"
+      ],
+      "updatedAt": "2026-07-05T00:30:51.392Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "draft-scaffold.test.ts: end-to-end SPEC->DRAFT round-trip test (parseSpecMd -> renderDraftBody -> parseDraftMd) with a multi-line Objective + multi-line AC clause, reproducing the exact phase-155 discovery scenario; asserts draft.objective/acceptanceCriteria match spec's full text. Full monorepo pipeline (lint+typecheck+test+build, 5 packages, 274 test files / 2204 tests) green",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/parse/draft-scaffold.test.ts"
+      ],
+      "updatedAt": "2026-07-05T00:32:21.532Z"
+    }
+  }
+}
