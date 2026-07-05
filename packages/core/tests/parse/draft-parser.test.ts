@@ -116,3 +116,145 @@ describe('parseDraftMd', () => {
     expect(() => parseDraftMd(bad)).toThrow();
   });
 });
+
+// Phase 157 (AC-3, AC-4) — rec-20260704-002: mirrors spec-parser.test.ts's
+// multi-line coverage for the draft parser's identical bug shape.
+describe('parseDraftMd multi-line preservation (Phase 157)', () => {
+  it('AC-3: preserves a multi-line Objective in full', () => {
+    const draft = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+Make the widget glow.
+It must also handle the edge case
+where the objective spans multiple sentences.
+
+## Acceptance Criteria
+
+### AC-1: Glows
+Given widget exists
+When user enables glow mode
+Then widget emits photons
+
+## Tasks
+
+### T1: Add glow flag
+- files: \`src/widget.ts\`
+- action: add boolean glow prop
+- verify: vitest passes
+- done: AC-1
+
+## Boundaries
+
+- Do not change \`src/legacy.ts\`
+`;
+    const d = parseDraftMd(draft);
+    expect(d.objective).toBe(
+      'Make the widget glow.\nIt must also handle the edge case\nwhere the objective spans multiple sentences.',
+    );
+  });
+
+  it('AC-3: preserves multi-line Given/When/Then clauses', () => {
+    const draft = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+Make widget glow.
+
+## Acceptance Criteria
+
+### AC-1: Glows
+Given a precondition that spans
+more than one line of prose
+When an action happens
+across two lines too
+Then the outcome is observed
+on its own wrapped second line
+
+## Tasks
+
+### T1: Add glow flag
+- files: \`src/widget.ts\`
+- action: add boolean glow prop
+- verify: vitest passes
+- done: AC-1
+
+## Boundaries
+
+- Do not change \`src/legacy.ts\`
+`;
+    const d = parseDraftMd(draft);
+    expect(d.acceptanceCriteria).toEqual([
+      {
+        id: 'AC-1',
+        name: 'Glows',
+        given: 'a precondition that spans\nmore than one line of prose',
+        when: 'an action happens\nacross two lines too',
+        then: 'the outcome is observed\non its own wrapped second line',
+      },
+    ]);
+  });
+
+  it('AC-4: existing single-line Objective/AC output is byte-identical', () => {
+    const d = parseDraftMd(SAMPLE);
+    expect(d.objective).toBe('Make widget glow.');
+    expect(d.acceptanceCriteria).toEqual([
+      { id: 'AC-1', name: 'Glows', given: 'widget exists', when: 'user enables glow mode', then: 'widget emits photons' },
+    ]);
+  });
+
+  // Phase 151's name-less-heading fix must survive the AC-3 regex change —
+  // this is the same regression coverage shape as draft-mutate.test.ts's own
+  // round-trip test, re-asserted here since it shares parseAcceptanceCriteria.
+  it('does not regress the phase-151 name-less-heading fix', () => {
+    const draft = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+Make widget glow.
+
+## Acceptance Criteria
+
+### AC-1:
+Given widget exists
+When user enables glow mode
+Then widget emits photons
+
+## Tasks
+
+### T1: Add glow flag
+- files: \`src/widget.ts\`
+- action: add boolean glow prop
+- verify: vitest passes
+- done: AC-1
+
+## Boundaries
+
+- Do not change \`src/legacy.ts\`
+`;
+    const d = parseDraftMd(draft);
+    expect(d.acceptanceCriteria[0]?.name).toBe('');
+    expect(d.acceptanceCriteria[0]?.given).toBe('widget exists');
+  });
+});

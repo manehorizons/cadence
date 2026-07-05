@@ -444,7 +444,7 @@ Follow-on to phase 155 (edit-time boundaryEnforcement block mode). Edit-time int
 
 ## rec-20260704-002 — spec-parser silently truncates multi-line Objective/Given/When/Then on DRAFT seeding
 
-- status: candidate
+- status: settle-pending
 - ready: needs-decision
 - priority: high
 - leverage: 5/10

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderDraftBody, frontmatterStatus } from '../../src/parse/draft-scaffold.js';
+import { parseSpecMd } from '../../src/parse/spec-parser.js';
+import { parseDraftMd } from '../../src/parse/draft-parser.js';
 import type { Spec } from '@manehorizons/cadence-types';
 
 // Verbatim pre-#1b scaffold (draft.ts:77) for phase='p' id='99-01' tier='standard' title='T'.
@@ -55,6 +57,57 @@ describe('renderDraftBody (AC-1)', () => {
       acceptanceCriteria: [{ id: 'AC-1', name: '', given: 'g', when: 'w', then: 't' }],
     };
     expect(renderDraftBody('p', '99-01', 'standard', 'T', s)).toContain('### AC-1: \nGiven g');
+  });
+});
+
+// Phase 157 (AC-5) — rec-20260704-002: reproduces and closes the exact
+// phase-155 discovery scenario. An approved multi-line SPEC.md, fed through
+// parseSpecMd → renderDraftBody → parseDraftMd (the real `draft new
+// --from-spec` seeding path), must carry its full Objective and AC clause
+// text — not just the first line of each — all the way into the parsed
+// DRAFT.
+describe('SPEC-to-DRAFT round-trip preserves multi-line text (Phase 157, AC-5)', () => {
+  it('seeds a DRAFT whose Objective and AC clauses match the original multi-line SPEC', () => {
+    const specMd = `---
+phase: 157-x
+id: 157-01
+status: PENDING
+---
+
+# 157-01 — t
+
+## Objective
+
+Build the thing correctly.
+It must also handle the edge case
+where the objective spans multiple sentences.
+
+## Acceptance Criteria
+
+### AC-1: happy path
+Given a precondition that spans
+more than one line of prose
+When an action happens
+across two lines too
+Then the outcome is observed
+on its own wrapped second line
+`;
+    const spec = parseSpecMd(specMd);
+    const draftMd = renderDraftBody('157-x', '157-01', 'standard', 'Seeded', spec);
+    const draft = parseDraftMd(draftMd);
+
+    expect(draft.objective).toBe(spec.objective);
+    expect(draft.objective).toBe(
+      'Build the thing correctly.\nIt must also handle the edge case\nwhere the objective spans multiple sentences.',
+    );
+    expect(draft.acceptanceCriteria).toEqual(spec.acceptanceCriteria);
+    expect(draft.acceptanceCriteria[0]).toEqual({
+      id: 'AC-1',
+      name: 'happy path',
+      given: 'a precondition that spans\nmore than one line of prose',
+      when: 'an action happens\nacross two lines too',
+      then: 'the outcome is observed\non its own wrapped second line',
+    });
   });
 });
 

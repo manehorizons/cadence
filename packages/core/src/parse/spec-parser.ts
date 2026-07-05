@@ -35,9 +35,12 @@ function parseAcceptanceCriteria(section: string): Spec['acceptanceCriteria'] {
     if (!head) continue;
     const id = head[1]!;
     const name = head[2]?.trim() ?? '';
-    const given = /Given\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
-    const when = /When\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
-    const then = /Then\s+(.+)/.exec(block)?.[1]?.trim() ?? '';
+    // Phase 157: [\s\S]+? (not .+) so a wrapped clause spanning more than one
+    // line is captured in full, stopping at the next field label (or end of
+    // block) rather than at the first newline (rec-20260704-002).
+    const given = /Given\s+([\s\S]+?)(?=\nWhen\s|\nThen\s|$)/.exec(block)?.[1]?.trim() ?? '';
+    const when = /When\s+([\s\S]+?)(?=\nThen\s|$)/.exec(block)?.[1]?.trim() ?? '';
+    const then = /Then\s+([\s\S]+)/.exec(block)?.[1]?.trim() ?? '';
     out.push({ id, name, given, when, then });
   }
   return out;
@@ -54,7 +57,9 @@ function parseBulletList(section: string): string[] {
 export function parseSpecMd(raw: string): Spec {
   const fm = parseFrontmatter(raw);
   const body = stripFrontmatter(raw);
-  const objective = extractSection(body, 'Objective').split('\n')[0] ?? '';
+  // Phase 157: the full section text, not just its first line — extractSection
+  // already isolates content up to the next `## ` heading (rec-20260704-002).
+  const objective = extractSection(body, 'Objective');
   const acceptanceCriteria = parseAcceptanceCriteria(extractSection(body, 'Acceptance Criteria'));
   const constraints = parseBulletList(extractSection(body, 'Constraints'));
   const openQuestions = parseBulletList(extractSection(body, 'Open Questions'));
