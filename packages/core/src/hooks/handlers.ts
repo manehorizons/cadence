@@ -4,9 +4,11 @@ import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { parseDraftMd } from '../parse/draft-parser.js';
-import { effectiveGateSet, effectiveBoundaryEnforcement } from '../gates/engine.js';
+import { effectiveGateSet, effectiveBoundaryEnforcement, effectiveRedundantWorkEnforcement } from '../gates/engine.js';
 import { selectNotifier } from '../notify/factory.js';
 import { runBoundaryCheck } from '../checks/boundary.js';
+import { runRedundancyCheck } from '../checks/task-redundancy.js';
+import type { ProgressFile } from '../status.js';
 
 export interface HookResult {
   ok: boolean;
@@ -94,6 +96,60 @@ export async function handlePreToolEdit(
                 process.stderr.write(
                   `notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
                 );
+              }
+            }
+          }
+
+          // Subagent task-redundancy monitoring: same PreToolUse hook, a
+          // different axis (task status, not file boundary). Independent of
+          // the boundary check above — both can fire on the same edit.
+          const redundantMode = effectiveRedundantWorkEnforcement(config, draft);
+          if (redundantMode !== 'off') {
+            const progressPath = join(
+              ctx.cwd,
+              '.cadence/phases',
+              state.activePhase,
+              `${state.activeDraft}-PROGRESS.json`,
+            );
+            let taskStatuses: Record<string, string> = {};
+            if (existsSync(progressPath)) {
+              try {
+                const progress = JSON.parse(await readFile(progressPath, 'utf8')) as ProgressFile;
+                for (const [id, entry] of Object.entries(progress.tasks)) {
+                  taskStatuses[id] = entry.status;
+                }
+              } catch {
+                taskStatuses = {};
+              }
+            }
+            const redundancyEvents = runRedundancyCheck({
+              tasks: draft.tasks.map((t) => ({ taskId: t.id, files: t.files })),
+              taskStatuses,
+              touchedFiles: rawFiles,
+              stamp: () => now,
+              extraContext: { source: 'hook.preToolEdit' },
+              root: ctx.cwd,
+              severity: redundantMode === 'block' ? 'error' : 'warn',
+            });
+            if (redundancyEvents.length > 0) {
+              if (redundantMode === 'block') {
+                const first = redundancyEvents[0]!;
+                return {
+                  ok: false,
+                  blockMessage: `redundantWorkEnforcement=block: ${String(first.context.file)} belongs to ${String(first.context.taskId)}, already ${String(first.context.status)} — mark it back to NEEDS_CONTEXT first (cadence build task ${String(first.context.taskId)} --status=NEEDS_CONTEXT), or confirm with the orchestrator.`,
+                };
+              }
+              const gateSet = effectiveGateSet(state, config, draft);
+              if (gateSet.gates.includes('anomaly-notify')) {
+                const notifier = selectNotifier(config);
+                try {
+                  await notifier.notify(redundancyEvents);
+                } catch (err) {
+                  const msg = err instanceof Error ? err.message : String(err);
+                  process.stderr.write(
+                    `notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
+                  );
+                }
               }
             }
           }
