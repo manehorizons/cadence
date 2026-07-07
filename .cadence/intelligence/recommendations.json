@@ -699,99 +699,6 @@
       "updatedAt": "2026-07-02T03:24:53.670Z"
     },
     {
-      "id": "rec-20260701-008",
-      "title": "Structured draft editing: draft add-ac / add-task / set-objective",
-      "summary": "The DRAFT is the central artifact and the only loop step the CLI cannot touch — all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "draft",
-        "cli"
-      ],
-      "affectedFiles": [
-        "packages/core/src/parse/draft-scaffold.ts",
-        "packages/core/src/parse/draft-md.ts",
-        "packages/core/src/cli/commands/draft.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-008"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "151-structured-draft-editing-draft-add-ac-add-task-set-objective",
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:57:18.500Z",
-      "updatedAt": "2026-07-04T04:38:15.738Z"
-    },
-    {
-      "id": "rec-20260701-010",
-      "title": "MCP parity for the intelligence lifecycle",
-      "summary": "An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose — the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "mcp"
-      ],
-      "affectedFiles": [
-        "packages/core/src/mcp/tools.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-010"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "153-mcp-parity-intelligence-lifecycle",
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:57:40.509Z",
-      "updatedAt": "2026-07-04T15:51:32.388Z"
-    },
-    {
-      "id": "rec-20260701-012",
-      "title": "Boundary enforcement block mode, including subagent edits",
-      "summary": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "hooks",
-        "gates"
-      ],
-      "affectedFiles": [
-        "packages/core/src/hooks/checks/boundary.ts",
-        "packages/core/src/hooks/handlers.ts",
-        "packages/types/src/config.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260701-012"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "155-boundary-enforcement-block-mode",
-      "scoutId": "scout-20260701-audit",
-      "createdAt": "2026-07-01T23:57:40.857Z",
-      "updatedAt": "2026-07-04T19:13:44.638Z"
-    },
-    {
       "id": "rec-20260703-001",
       "title": "Milestone-scoped worktree fan-out for independent phases",
       "summary": "External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md",
@@ -821,69 +728,6 @@
       "decisionIds": [],
       "createdAt": "2026-07-03T16:59:18.968Z",
       "updatedAt": "2026-07-03T16:59:18.968Z"
-    },
-    {
-      "id": "rec-20260704-001",
-      "title": "Settle-time boundary diff scan (blocking) for subagent edits",
-      "summary": "Follow-on to phase 155 (edit-time boundaryEnforcement block mode). Edit-time interception can't see subagent edits (handleSubagentResult only bumps a counter). Needs: (1) a genuine settle-refusal path, since CADENCE anomalies are informational-only and never block settle today (packages/types/src/anomaly.ts:8-11) -- collectAnomalies alone cannot refuse; (2) an unscoped git diff enumeration with a defined base ref, since the existing helpers (git/diff.ts collectGitDiff, services/settle.ts collectDiffForCodeReview) are file-scoped and can never surface an out-of-boundary file; (3) a .cadence/** ignore-list, since settle's own DRAFT/PROGRESS/SUMMARY/state.json writes would otherwise self-trip the scan on every settle. Split out of rec-20260701-012 / phase 155 after an Opus SPEC review found the settle-time AC rested on a false premise.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "hooks",
-        "gates",
-        "settle"
-      ],
-      "affectedFiles": [
-        "packages/core/src/notify/collect.ts",
-        "packages/core/src/services/settle.ts",
-        "packages/types/src/anomaly.ts",
-        "packages/core/src/git/diff.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260704-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "156-settle-time-boundary-diff-scan",
-      "createdAt": "2026-07-04T18:53:26.201Z",
-      "updatedAt": "2026-07-04T23:18:10.657Z"
-    },
-    {
-      "id": "rec-20260704-002",
-      "title": "spec-parser silently truncates multi-line Objective/Given/When/Then on DRAFT seeding",
-      "summary": "parseSpecMd (packages/core/src/parse/spec-parser.ts) truncates the Objective to its first line (extractSection(...).split('\\n')[0]) and each AC's Given/When/Then to its first line ((.+) without the s flag, so it can't match across a newline). Any SPEC.md whose Objective or AC clauses wrap across multiple lines -- normal for anything non-trivial -- gets silently corrupted when 'cadence draft new' seeds a DRAFT from an approved SPEC: no error, just dropped content after the first line break. Discovered live during phase 155's SPEC-to-DRAFT seeding on 2026-07-04: a 3-4 sentence Objective and 5 multi-clause ACs were all truncated mid-sentence in the generated DRAFT.md. Fix: join wrapped lines within a section/clause before parsing (mirror however draft-parser.ts's own Objective/AC extraction already handles multi-line text, if it does; if not, both parsers share the bug and should share the fix).",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "parse"
-      ],
-      "affectedFiles": [
-        "packages/core/src/parse/spec-parser.ts",
-        "packages/core/src/parse/draft-parser.ts",
-        "packages/core/src/parse/draft-scaffold.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260704-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "157-fix-multi-line-truncation-in-spec-draft-parsers",
-      "createdAt": "2026-07-04T18:57:46.462Z",
-      "updatedAt": "2026-07-05T00:32:28.911Z"
     }
   ],
   "archived": [
@@ -1949,6 +1793,177 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-01T23:57:40.347Z",
       "updatedAt": "2026-07-03T01:29:02.447Z"
+    },
+    {
+      "id": "rec-20260701-008",
+      "title": "Structured draft editing: draft add-ac / add-task / set-objective",
+      "summary": "The DRAFT is the central artifact and the only loop step the CLI cannot touch — all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "draft",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/parse/draft-scaffold.ts",
+        "packages/core/src/parse/draft-md.ts",
+        "packages/core/src/cli/commands/draft.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "151-structured-draft-editing-draft-add-ac-add-task-set-objective",
+      "shippedRef": "PR #140 / v1.40.0",
+      "scoutId": "scout-20260701-audit",
+      "archivedAt": "2026-07-07T23:24:05.597Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-01T23:57:18.500Z",
+      "updatedAt": "2026-07-07T23:24:05.597Z"
+    },
+    {
+      "id": "rec-20260701-010",
+      "title": "MCP parity for the intelligence lifecycle",
+      "summary": "An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose — the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "mcp"
+      ],
+      "affectedFiles": [
+        "packages/core/src/mcp/tools.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-010"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "153-mcp-parity-intelligence-lifecycle",
+      "shippedRef": "PR #143 / v1.41.0",
+      "scoutId": "scout-20260701-audit",
+      "archivedAt": "2026-07-07T23:24:05.814Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-01T23:57:40.509Z",
+      "updatedAt": "2026-07-07T23:24:05.814Z"
+    },
+    {
+      "id": "rec-20260701-012",
+      "title": "Boundary enforcement block mode, including subagent edits",
+      "summary": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "hooks",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/hooks/checks/boundary.ts",
+        "packages/core/src/hooks/handlers.ts",
+        "packages/types/src/config.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260701-012"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "155-boundary-enforcement-block-mode",
+      "shippedRef": "PR #145 / v1.42.0",
+      "scoutId": "scout-20260701-audit",
+      "archivedAt": "2026-07-07T23:24:06.003Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-01T23:57:40.857Z",
+      "updatedAt": "2026-07-07T23:24:06.003Z"
+    },
+    {
+      "id": "rec-20260704-001",
+      "title": "Settle-time boundary diff scan (blocking) for subagent edits",
+      "summary": "Follow-on to phase 155 (edit-time boundaryEnforcement block mode). Edit-time interception can't see subagent edits (handleSubagentResult only bumps a counter). Needs: (1) a genuine settle-refusal path, since CADENCE anomalies are informational-only and never block settle today (packages/types/src/anomaly.ts:8-11) -- collectAnomalies alone cannot refuse; (2) an unscoped git diff enumeration with a defined base ref, since the existing helpers (git/diff.ts collectGitDiff, services/settle.ts collectDiffForCodeReview) are file-scoped and can never surface an out-of-boundary file; (3) a .cadence/** ignore-list, since settle's own DRAFT/PROGRESS/SUMMARY/state.json writes would otherwise self-trip the scan on every settle. Split out of rec-20260701-012 / phase 155 after an Opus SPEC review found the settle-time AC rested on a false premise.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "hooks",
+        "gates",
+        "settle"
+      ],
+      "affectedFiles": [
+        "packages/core/src/notify/collect.ts",
+        "packages/core/src/services/settle.ts",
+        "packages/types/src/anomaly.ts",
+        "packages/core/src/git/diff.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260704-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "156-settle-time-boundary-diff-scan",
+      "shippedRef": "PR #146 / v1.42.0",
+      "archivedAt": "2026-07-07T23:24:06.215Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-04T18:53:26.201Z",
+      "updatedAt": "2026-07-07T23:24:06.215Z"
+    },
+    {
+      "id": "rec-20260704-002",
+      "title": "spec-parser silently truncates multi-line Objective/Given/When/Then on DRAFT seeding",
+      "summary": "parseSpecMd (packages/core/src/parse/spec-parser.ts) truncates the Objective to its first line (extractSection(...).split('\\n')[0]) and each AC's Given/When/Then to its first line ((.+) without the s flag, so it can't match across a newline). Any SPEC.md whose Objective or AC clauses wrap across multiple lines -- normal for anything non-trivial -- gets silently corrupted when 'cadence draft new' seeds a DRAFT from an approved SPEC: no error, just dropped content after the first line break. Discovered live during phase 155's SPEC-to-DRAFT seeding on 2026-07-04: a 3-4 sentence Objective and 5 multi-clause ACs were all truncated mid-sentence in the generated DRAFT.md. Fix: join wrapped lines within a section/clause before parsing (mirror however draft-parser.ts's own Objective/AC extraction already handles multi-line text, if it does; if not, both parsers share the bug and should share the fix).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "parse"
+      ],
+      "affectedFiles": [
+        "packages/core/src/parse/spec-parser.ts",
+        "packages/core/src/parse/draft-parser.ts",
+        "packages/core/src/parse/draft-scaffold.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260704-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "157-fix-multi-line-truncation-in-spec-draft-parsers",
+      "createdAt": "2026-07-04T18:57:46.462Z",
+      "updatedAt": "2026-07-07T23:24:06.446Z",
+      "shippedRef": "PR #147 / v1.42.0",
+      "archivedAt": "2026-07-07T23:24:06.446Z",
+      "archiveReason": "shipped"
     }
   ]
 }
