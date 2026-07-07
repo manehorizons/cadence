@@ -58,6 +58,27 @@ export const CadenceStateZ = z.object({
     tokenUtilization: z.number().min(0).max(1),
     lastHandoff: z.string().nullable(),
     subagentSpawns: z.number().int().nonnegative(),
+    /**
+     * Per-subagent baseline snapshot (subagent task-redundancy monitoring).
+     * Keyed by the Claude Code `agentId` from the SubagentStart hook.
+     * `taskStatuses` is a snapshot of every DRAFT task's status *at the
+     * moment this subagent began* (baseline-at-start, not current-at-stop —
+     * fairer to the subagent; see the design doc's "SubagentStop: safety
+     * net" section). `touchedFiles` accumulates via PostToolUse for the
+     * duration of this subagent's run. Entries are ephemeral — created at
+     * SubagentStart, deleted at the matching SubagentStop; an orphaned entry
+     * from a crash/interrupt is harmless (never compared against again).
+     */
+    subagentBaselines: z
+      .record(
+        z.string(),
+        z.object({
+          startedAt: z.string(),
+          taskStatuses: z.record(z.string(), z.string()),
+          touchedFiles: z.array(z.string()),
+        }),
+      )
+      .default({}),
   }),
   skillAudit: z.object({
     required: z.array(z.string()),
@@ -86,7 +107,7 @@ export function emptyState(projectName = 'unnamed'): CadenceState {
     openDrafts: [],
     decisions: [],
     deferred: [],
-    session: { tokenUtilization: 0, lastHandoff: null, subagentSpawns: 0 },
+    session: { tokenUtilization: 0, lastHandoff: null, subagentSpawns: 0, subagentBaselines: {} },
     skillAudit: { required: [], invoked: [] },
     activeTask: null,
     draftReadAt: null,

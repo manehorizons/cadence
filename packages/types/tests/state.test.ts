@@ -66,3 +66,28 @@ describe('CadenceStateZ', () => {
     expect(CadenceStateZ.parse(withoutField).activeSpec).toBeNull();
   });
 });
+
+describe('session.subagentBaselines', () => {
+  it('defaults to {} when omitted (back-compat with existing state.json files)', () => {
+    const raw = emptyState('proj');
+    const { subagentBaselines: _drop, ...sessionWithoutIt } = raw.session;
+    const parsed = CadenceStateZ.parse({ ...raw, session: sessionWithoutIt });
+    expect(parsed.session.subagentBaselines).toEqual({});
+  });
+
+  it('emptyState() includes an empty subagentBaselines map', () => {
+    expect(emptyState('proj').session.subagentBaselines).toEqual({});
+  });
+
+  it('accepts a populated baseline entry', () => {
+    const raw = emptyState('proj');
+    raw.session.subagentBaselines = {
+      'agent-123': {
+        startedAt: '2026-07-06T00:00:00.000Z',
+        taskStatuses: { T1: 'DONE', T2: 'PENDING' },
+        touchedFiles: ['src/a.ts'],
+      },
+    };
+    expect(() => CadenceStateZ.parse(raw)).not.toThrow();
+  });
+});
