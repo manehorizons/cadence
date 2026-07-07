@@ -210,14 +210,84 @@ export async function handleSessionStop(
 }
 
 export async function handleSubagentResult(
-  _ctx: HookContext,
+  ctx: HookContext,
   state: CadenceState,
-  _config: CadenceConfig,
+  config: CadenceConfig,
   backend: SimpleStateBackend,
 ): Promise<HookResult> {
   state.session.subagentSpawns += 1;
-  await backend.commit(state);
-  return { ok: true };
+
+  const agentId = ctx.agentId;
+  const baseline = agentId ? state.session.subagentBaselines[agentId] : undefined;
+  if (!agentId || !baseline) {
+    await backend.commit(state);
+    return { ok: true };
+  }
+
+  // Always prune the baseline after this check — it's a one-shot comparison,
+  // ephemeral session state, never persisted into SUMMARY.json.
+  delete state.session.subagentBaselines[agentId];
+
+  if (!state.activeDraft || !state.activePhase) {
+    await backend.commit(state);
+    return { ok: true };
+  }
+  const draftPath = join(
+    ctx.cwd,
+    '.cadence/phases',
+    state.activePhase,
+    `${state.activeDraft}-DRAFT.md`,
+  );
+  if (!existsSync(draftPath)) {
+    await backend.commit(state);
+    return { ok: true };
+  }
+
+  try {
+    const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
+    const mode = effectiveRedundantWorkEnforcement(config, draft);
+    if (mode === 'off' || baseline.touchedFiles.length === 0) {
+      await backend.commit(state);
+      return { ok: true };
+    }
+    const events = runRedundancyCheck({
+      tasks: draft.tasks.map((t) => ({ taskId: t.id, files: t.files })),
+      taskStatuses: baseline.taskStatuses,
+      touchedFiles: baseline.touchedFiles,
+      stamp: () => new Date().toISOString(),
+      extraContext: { source: 'hook.subagentStop', ...(ctx.agentType ? { agentType: ctx.agentType } : {}) },
+      root: ctx.cwd,
+      severity: mode === 'block' ? 'error' : 'warn',
+    });
+    if (events.length === 0) {
+      await backend.commit(state);
+      return { ok: true };
+    }
+    if (mode === 'block') {
+      await backend.commit(state);
+      const first = events[0]!;
+      return {
+        ok: false,
+        blockMessage: `redundantWorkEnforcement=block: ${String(first.context.file)} belongs to ${String(first.context.taskId)}, already ${String(first.context.status)} — mark it back to NEEDS_CONTEXT first (cadence build task ${String(first.context.taskId)} --status=NEEDS_CONTEXT), or confirm with the orchestrator.`,
+      };
+    }
+    const gateSet = effectiveGateSet(state, config, draft);
+    if (gateSet.gates.includes('anomaly-notify')) {
+      const notifier = selectNotifier(config);
+      try {
+        await notifier.notify(events);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        process.stderr.write(`notify: ${notifier.name} transport failed — ${msg} (continuing)\n`);
+      }
+    }
+    await backend.commit(state);
+    return { ok: true };
+  } catch {
+    /* malformed draft must not break the hook */
+    await backend.commit(state);
+    return { ok: true };
+  }
 }
 
 export async function handleSubagentStart(
