@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 157-fix-multi-line-truncation-in-spec-draft-parsers
+**Active phase:** 159-wave-based-subagent-dispatch
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 915
+- Subagent spawns this session: 1001
 - Last handoff: SESSION-2026-07-04.md
 
 ## Counts
