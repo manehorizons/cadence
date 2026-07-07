@@ -12,9 +12,10 @@ The agent then drives the same CADENCE engine it would via the CLI — through
 the same `cadence hook <event>` dispatch path — without any special API surface.
 
 > **Adapter vs. MCP.** This adapter is the right surface for Claude Code
-> specifically, and the **only** one that delivers *ambient* edit-time gates —
+> specifically, and is the **reference adapter** for *ambient* edit-time gates —
 > the `pre-tool-edit` boundary check and live anomaly detection that fire via
-> lifecycle hooks as the agent edits. To drive the loop from a *different* MCP
+> lifecycle hooks as the agent edits (the Codex adapter also supports these via
+> its own hooks). To drive the loop from a *different* MCP
 > host (Claude Desktop, Cursor, other agents), use `cadence mcp serve` instead
 > (see [docs/mcp.md](mcp.md)); MCP covers the imperative loop but not ambient
 > gating, which has no host-hook equivalent over MCP.

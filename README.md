@@ -8,20 +8,59 @@
 
 Above, the always-fire `build-test-must-pass` gate blocks a plausible lost-penny bug in a bill-splitter — `$100.00` split 3 ways summing to `$99.99`. The AI marked the task **DONE**; the gate didn't agree, and refused to close the loop. The demo repo carries the story past the block — the fix, then a clean **settle** once `$100.00` actually splits to `$100.00` — with real git history and reproduce-it-yourself steps: **[cadence-demo-billsplit →](https://github.com/manehorizons/cadence-demo-billsplit)**
 
+## For technical reviewers
+
+Cadence is an open-source TypeScript developer tool for AI-assisted software workflows. It uses a DRAFT→BUILD→SETTLE loop with configurable quality gates to verify declared acceptance criteria before work is considered complete. It can be driven from the CLI, Claude Code, Codex, or any MCP-capable host through its local MCP server.
+
+**Problem.** AI coding agents can produce plausible work and mark a task complete before the promised behavior is actually verified.
+
+**Solution.** Cadence wraps AI-assisted development in a DRAFT→BUILD→SETTLE loop. Work begins with declared acceptance criteria, progresses through explicit tasks, and cannot settle until configured gates re-check the state of the work.
+
+**Why it matters.** Cadence gives teams a practical control layer for adopting AI coding agents without treating the agent's self-report as proof.
+
+**Architecture at a glance.** One core engine is exposed through the CLI, host adapters (Claude Code, Codex), and an MCP server. The same loop and gate logic stay authoritative across every surface.
+
+```mermaid
+flowchart LR
+  Human[Human operator] --> Surface{Entry surface}
+  Agent[AI agent] --> Surface
+
+  Surface --> CLI[cadence CLI]
+  Surface --> Hosts["Host adapters<br/>Claude Code + Codex"]
+  Surface --> MCP[cadence mcp serve]
+
+  CLI --> Core["Core engine<br/>DRAFT → BUILD → SETTLE"]
+  Hosts --> Core
+  MCP --> Core
+
+  Core --> State[(.cadence state + artifacts)]
+  Core --> Gates[Quality gates]
+  Gates --> ACs[Acceptance criteria]
+  Gates --> Tests[Test / AC evidence]
+  Gates --> Verifiers["Verifier providers<br/>mock / anthropic / local"]
+
+  Gates --> Refuse[Refuse to settle]
+  Gates --> Settle[Settle phase]
+```
+
+See [GitHub Releases](https://github.com/manehorizons/cadence/releases) for package changelogs, npm publication status, and release verification notes.
+
 ## Why this exists
 
 Cadence grew out of working with **GSD (Get Shit Done)** — a planning framework that produces genuinely disciplined work, but at a real cost in tokens, wall-clock time, and constant back-and-forth. I wanted that discipline without that cost.
 
 So Cadence isn't GSD-lite. It keeps the quality gates — they re-check your acceptance criteria and refuse to settle unverified work — but lets you choose which gates fire for a given change. A complex, risky change gets the full battery; a one-line fix doesn't pay for it. Same rigor, far less drag.
 
-## Three-surface model
+## One engine, three surface categories
 
-One engine, four entry points:
+Cadence has **one core engine and three surface categories** — CLI, host
+adapters, and an MCP server — for **four current entry points**:
 
 - The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. Completely host-agnostic.
-- The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and 14 slash commands — the only surface that adds *ambient* edit-time gates (boundary checks, anomaly detection as you edit).
-- The **`cadence-host-codex install`** adapter wires the same engine into the OpenAI Codex CLI via lifecycle hooks and global prompt commands. It is a shipped conformance consumer of the host-adapter contract.
-- **`cadence mcp serve`** exposes the engine as a local [MCP](https://modelcontextprotocol.io) server over stdio, so any MCP-capable host (Claude Desktop, Cursor, other agents) can drive the loop with no bespoke adapter. It covers the imperative loop (command-boundary gates run; ambient edit-time gates need host hooks). See **[MCP server](./docs/mcp.md)**.
+- **Host adapters** wire the same engine into a specific coding agent's lifecycle — currently two:
+  - The **`cadence-host-claude-code install`** adapter wires Claude Code via lifecycle hooks and 14 slash commands. Claude Code is the **reference adapter** for *ambient* edit-time gates (boundary checks, anomaly detection as you edit).
+  - The **`cadence-host-codex install`** adapter wires the OpenAI Codex CLI via lifecycle hooks and global prompt commands. It is a shipped conformance consumer of the host-adapter contract, and also supports ambient edit-time boundary checks via its own hooks.
+- **`cadence mcp serve`** exposes the engine as a local [MCP](https://modelcontextprotocol.io) server over stdio, so any MCP-capable host (Claude Desktop, Cursor, other agents) can drive the loop with no bespoke adapter. It covers the imperative loop only (command-boundary gates run; ambient edit-time gates need host hooks). See **[MCP server](./docs/mcp.md)**.
 
 ## How it compares
 

@@ -8,12 +8,14 @@ a draft/build/settle framework for AI-assisted development. The goal is GSD-grad
 discipline with far less wall-clock cost, achieved by letting you choose which
 quality gates fire for each phase of work.
 
-One engine drives everything below; you reach it through three surfaces — the
-**CLI** (`cadence …`), the **Claude Code adapter** (lifecycle hooks + slash
-commands, the only surface with *ambient* edit-time gates), and an **MCP server**
-(`cadence mcp serve`, for any MCP host). The concepts here apply to all three.
-See [the user guide](README.md#three-surface-model) and [docs/mcp.md](mcp.md).
-The adapter shape itself is a versioned contract — see
+One engine drives everything below; you reach it through three surface
+categories — the **CLI** (`cadence …`), **host adapters** (Claude Code and
+Codex, wiring lifecycle hooks + slash/prompt commands — Claude Code is the
+**reference adapter** for *ambient* edit-time gates), and an **MCP server**
+(`cadence mcp serve`, for any MCP host, imperative loop only). The concepts
+here apply across all of them.
+See [the user guide](README.md#one-engine-three-surface-categories) and
+[docs/mcp.md](mcp.md). The adapter shape itself is a versioned contract — see
 [Write your own adapter](host-adapters.md).
 
 ---

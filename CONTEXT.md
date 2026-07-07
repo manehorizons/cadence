@@ -216,9 +216,12 @@ opt-in — it is *not* a gate-matrix cell.
 ### Host
 
 **Host / adapter**:
-A host is the tool CADENCE drives (v1 = Claude Code only). The **adapter**
-(`cadence-host-claude-code`) translates host lifecycle events into the abstract
-events the core dispatcher understands; it never duplicates engine logic.
+A host is a coding agent tool CADENCE drives — currently Claude Code and
+Codex, plus any MCP-capable host via the MCP server. A host **adapter**
+(`cadence-host-claude-code`, `cadence-host-codex`) translates that host's
+lifecycle events into the abstract events the core dispatcher understands; it
+never duplicates engine logic. Claude Code is the reference adapter for
+*ambient* edit-time gates.
 _Avoid_: integration, plugin.
 
 ---
