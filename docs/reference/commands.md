@@ -1648,20 +1648,22 @@ and **refuses to overwrite a malformed `.mcp.json`**. Only Claude Code's
 paste-ready snippet plus a path hint and writes nothing.
 
 **Behavior** — starts a local [Model Context Protocol](https://modelcontextprotocol.io)
-server on **stdio** (a third surface alongside the CLI and the Claude Code hook
-adapter). An MCP-capable host (Claude Desktop, Cursor, other agents) launches it
+server on **stdio** (one of Cadence's three surface categories — CLI, host
+adapters, MCP). An MCP-capable host (Claude Desktop, Cursor, other agents) launches it
 as a child process and drives the DRAFT→BUILD→SETTLE loop through a curated tool
 set. It is **not** a network service — there is no daemon, URL, or auth; the
 server operates on the `.cadence/` of `--repo` (or the launch cwd), exactly like
 the CLI. See **[Driving CADENCE over MCP](../mcp.md)** for setup and the full
 tool list.
 
-The server advertises 15 tools that wrap the same engine the CLI does:
+The server advertises 18 tools that wrap the same engine the CLI does:
 `cadence_progress`, `cadence_status`, `cadence_recommend`, `cadence_doctor`,
 `cadence_resume` (read); `cadence_draft_new`, `cadence_draft_check`,
 `cadence_draft_approve`, `cadence_build_task`, `cadence_settle`,
 `cadence_spec_new`, `cadence_spec_approve`, `cadence_handoff`,
-`cadence_recommendation_add`, `cadence_recommendation_promote` (write). It also
+`cadence_recommendation_add`, `cadence_recommendation_promote`,
+`cadence_recommendation_convert`, `cadence_recommendation_archive`,
+`cadence_milestone_propose` (write). It also
 exposes `.cadence/` artifacts as read-on-demand **resources** (`cadence://…`)
 and guided **prompts** (incl. `cadence_scout`). Command-boundary gates
 (coherence, the settle gate stack, spec-review) run exactly as they do from the

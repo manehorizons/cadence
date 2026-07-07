@@ -1,0 +1,41 @@
+{
+  "draftId": "161-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "docs-only, verified",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T04:45:03.292Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "docs-only, verified",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T04:45:03.467Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "docs-only, verified",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T04:45:03.640Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "docs-only, verified",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T04:45:03.814Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "docs-only, verified",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T04:45:03.996Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "docs-only, verified",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T04:45:04.169Z"
+    }
+  }
+}

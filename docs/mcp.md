@@ -4,12 +4,14 @@ CADENCE can run as a local [Model Context Protocol](https://modelcontextprotocol
 (MCP) server, so any MCP-capable host — Claude Desktop, Cursor, or another agent
 — can drive the DRAFT→BUILD→SETTLE loop **without** a bespoke host adapter.
 
-This is a **third surface** on the single engine:
+This is the **MCP server** — one of Cadence's three surface categories on the
+single engine (CLI, host adapters, MCP):
 
 | Surface | How you drive it | Ambient edit-time gates? |
 |---|---|---|
 | **CLI** (`cadence …`) | terminal, host-agnostic | n/a (you run commands) |
-| **Claude Code hooks** | `cadence-host-claude-code install` wires lifecycle hooks | ✅ yes (boundary checks, anomaly emission as you edit) |
+| **Host adapter — Claude Code** | `cadence-host-claude-code install` wires lifecycle hooks | ✅ yes — the reference adapter (boundary checks, anomaly emission as you edit) |
+| **Host adapter — Codex** | `cadence-host-codex install` wires lifecycle hooks | ✅ yes (boundary checks via its own `pre-tool-edit` hook) |
 | **MCP** (`cadence mcp serve`) | any MCP host calls tools | ❌ no — see [Gate semantics](#gate-semantics) |
 
 ## It's a local subprocess, not a service
