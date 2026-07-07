@@ -63,7 +63,8 @@ a spec.
 
 You (or the AI) write a structured plan file — the **DRAFT** — that proposes:
 
-- What will change (`files:` list per task)
+- What will change (`files:` list per task; an optional `depends:` list of
+  task ids lets `cadence dispatch plan` compute wave-based dispatch order)
 - What success looks like (acceptance criteria `AC-N`)
 - How large the work is (`tier:`, discussed below)
 - Which profile should apply (optional override)
