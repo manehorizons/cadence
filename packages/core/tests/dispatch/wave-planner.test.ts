@@ -121,4 +121,24 @@ describe('computeWaves', () => {
       { wave: 3, taskIds: ['T3'] },
     ]);
   });
+
+  it('a files: collision bump can never land a task in the same (or an earlier) wave as its own dependent', () => {
+    // T0 and T1 share a file (no depends between them) — T1 would be
+    // bumped one level past T0 by the files: veto alone. T2 depends on
+    // T1 and shares no files with anything. A buggy two-phase
+    // implementation (level by depends: first, then splice-bump for
+    // files: collisions afterward, using each task's ORIGINAL computed
+    // bucket-array length to decide whether to allocate a new bucket)
+    // can land T1's bump directly into T2's pre-existing bucket, putting
+    // a task in the same wave as something that depends on it. The
+    // correct result keeps T2 strictly after T1.
+    const draft = makeDraft([
+      task('T0', { files: ['a.ts'] }),
+      task('T1', { files: ['a.ts'] }),
+      task('T2', { files: ['c.ts'], depends: ['T1'] }),
+    ]);
+    const waves = computeWaves(draft, NO_PROGRESS);
+    const waveOf = (id: string): number => waves.find((w) => w.taskIds.includes(id))!.wave;
+    expect(waveOf('T1')).toBeLessThan(waveOf('T2'));
+  });
 });
