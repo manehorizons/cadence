@@ -626,3 +626,36 @@ describe('boundaryEnforcement config (Phase 155 / AC-1)', () => {
     expect(defaultConfig.hooks).not.toHaveProperty('boundaryEnforcement');
   });
 });
+
+describe('redundantWorkEnforcement config', () => {
+  it('applies redundantWorkEnforcement: "warn" when omitted (back-compat)', () => {
+    const { redundantWorkEnforcement: _drop, ...withoutIt } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutIt);
+    expect(parsed.redundantWorkEnforcement).toBe('warn');
+  });
+
+  it('defaultConfig carries redundantWorkEnforcement: "warn"', () => {
+    expect(defaultConfig.redundantWorkEnforcement).toBe('warn');
+  });
+
+  it('accepts "off" and "block"', () => {
+    expect(
+      CadenceConfigZ.parse({ ...defaultConfig, redundantWorkEnforcement: 'off' })
+        .redundantWorkEnforcement,
+    ).toBe('off');
+    expect(
+      CadenceConfigZ.parse({ ...defaultConfig, redundantWorkEnforcement: 'block' })
+        .redundantWorkEnforcement,
+    ).toBe('block');
+  });
+
+  it('rejects an unknown redundantWorkEnforcement value', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, redundantWorkEnforcement: 'refuse' as never }),
+    ).toThrow();
+  });
+
+  it('is top-level, not nested under hooks', () => {
+    expect(defaultConfig.hooks).not.toHaveProperty('redundantWorkEnforcement');
+  });
+});
