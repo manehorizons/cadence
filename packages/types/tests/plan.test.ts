@@ -100,6 +100,66 @@ describe('DraftZ id schema (rec-20260610-001)', () => {
   });
 });
 
+describe('Task.depends', () => {
+  const base = {
+    schemaVersion: 1 as const,
+    id: '01-01',
+    phase: '01-foundation',
+    tier: 'standard' as const,
+    title: 'x',
+    objective: 'x',
+    acceptanceCriteria: [{ id: 'AC-1', given: '-', when: '-', then: '-' }],
+    boundaries: [],
+    status: 'PENDING' as const,
+  };
+
+  it('is optional — a task with no depends parses fine', () => {
+    const parsed = DraftZ.parse({
+      ...base,
+      tasks: [{ id: 'T1', name: 'n', files: ['a.ts'], action: 'a', verify: 'v', done: 'AC-1' }],
+    });
+    expect(parsed.tasks[0]?.depends).toBeUndefined();
+  });
+
+  it('round-trips a declared depends list', () => {
+    const parsed = DraftZ.parse({
+      ...base,
+      tasks: [
+        { id: 'T1', name: 'n', files: ['a.ts'], action: 'a', verify: 'v', done: 'AC-1' },
+        {
+          id: 'T2',
+          name: 'n2',
+          files: ['b.ts'],
+          action: 'a',
+          verify: 'v',
+          done: 'AC-1',
+          depends: ['T1'],
+        },
+      ],
+    });
+    expect(parsed.tasks[1]?.depends).toEqual(['T1']);
+  });
+
+  it('rejects non-string depends entries', () => {
+    expect(() =>
+      DraftZ.parse({
+        ...base,
+        tasks: [
+          {
+            id: 'T1',
+            name: 'n',
+            files: ['a.ts'],
+            action: 'a',
+            verify: 'v',
+            done: 'AC-1',
+            depends: [7] as never,
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+});
+
 describe('SummaryZ', () => {
   it('accepts a minimal summary', () => {
     expect(() =>

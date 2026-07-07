@@ -18,6 +18,8 @@ export const TaskZ = z.object({
   action: z.string(),
   verify: z.string(),
   done: z.string(),
+  /** Optional task ids this task requires to complete first (Phase: wave-based dispatch). */
+  depends: z.array(z.string()).optional(),
   status: TaskStatusZ.optional(),
   touchedFiles: z.array(z.string()).optional(),
 });
