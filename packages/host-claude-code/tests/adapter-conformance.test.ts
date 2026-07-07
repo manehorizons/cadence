@@ -16,6 +16,7 @@ const CLAUDE_CODE_EVENTS = [
   'PostToolUse',
   'Stop',
   'SubagentStop',
+  'SubagentStart',
 ];
 
 describe('claudeCodeAdapter conforms to HostAdapter (AC-4)', () => {
@@ -67,5 +68,11 @@ describe('claudeCodeAdapter conforms to HostAdapter (AC-4)', () => {
       tool_input: { file_path: '/tmp/x.ts' },
     });
     expect(payload).toEqual({ files: ['/tmp/x.ts'] });
+  });
+
+  it('AC-4: maps SubagentStart to a valid AbstractEvent', () => {
+    const mapped = claudeCodeAdapter.mapEvent('SubagentStart');
+    expect(mapped).toBe('subagent-start');
+    expect(() => AbstractEventZ.parse(mapped)).not.toThrow();
   });
 });
