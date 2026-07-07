@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TOOLS } from '../../src/mcp/tools.js';
 
 // Resolve repo-root docs from this test file's location:
 // packages/core/tests/docs → ../../../../<asset>
@@ -52,13 +53,30 @@ describe('portfolio-readiness doc sync', () => {
   it('AC-3: MCP docs describe the imperative-loop-only scope via the surface-category vocabulary', () => {
     const mcp = read('docs', 'mcp.md');
     const commands = read('docs', 'reference', 'commands.md');
+    // Whitespace-normalized copies so a re-wrapped line can't dodge the negative assertion below.
+    const mcpFlat = mcp.replace(/\s+/g, ' ');
+    const commandsFlat = commands.replace(/\s+/g, ' ');
 
     expect(mcp).toMatch(/one of Cadence's three surface categories/);
-    expect(mcp).not.toMatch(/This is a \*\*third surface\*\* on the single engine:/);
+    expect(mcpFlat).not.toMatch(/This is a \*\*third surface\*\* on the single engine:/);
     expect(mcp).toMatch(/ambient edit-time gates\?/i);
 
     expect(commands).toMatch(/one of Cadence's three surface categories/);
-    expect(commands).not.toMatch(/a third surface alongside the CLI and the Claude Code hook\nadapter/);
+    expect(commandsFlat).not.toMatch(/a third surface alongside the CLI and the Claude Code hook adapter/);
+  });
+
+  it('AC-3b: the MCP tool count in the docs is derived from and matches the real TOOLS array (code-true, not a hardcoded number)', () => {
+    const mcp = read('docs', 'mcp.md');
+    const commands = read('docs', 'reference', 'commands.md');
+    const trueCount = TOOLS.length;
+
+    expect(mcp).toMatch(new RegExp(`advertises ${trueCount} tools`));
+    expect(commands).toMatch(new RegExp(`advertises ${trueCount} tools`));
+
+    // Every tool the code actually registers must be named somewhere in the commands.md write-tool list.
+    for (const tool of TOOLS) {
+      expect(commands).toContain(tool.name);
+    }
   });
 
   it('AC-4: docs/claude-code.md calls Claude Code the reference adapter, not the only one', () => {
