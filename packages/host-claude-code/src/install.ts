@@ -85,6 +85,7 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
     PostToolUse: [matched(EDIT_TOOL_MATCHER), matched(SKILL_TOOL_MATCHER)],
     Stop: [plain()],
     SubagentStop: [plain()],
+    SubagentStart: [plain()],
   };
 
   const hooks: Record<string, HookEntry[]> = current.hooks ?? {};

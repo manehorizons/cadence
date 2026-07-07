@@ -212,6 +212,16 @@ export async function handleSubagentResult(
   return { ok: true };
 }
 
+// Task 7 stub — replaced with the full baseline-snapshot implementation in Task 8.
+export async function handleSubagentStart(
+  _ctx: HookContext,
+  _state: CadenceState,
+  _config: CadenceConfig,
+  _backend: SimpleStateBackend,
+): Promise<HookResult> {
+  return { ok: true };
+}
+
 const SKILL_AUDIT_CAP = 100;
 
 /**
