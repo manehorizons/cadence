@@ -183,6 +183,14 @@ export async function handlePostToolEdit(
       await backend.commit(state);
     }
   }
+  if (ctx.agentId && state.session.subagentBaselines[ctx.agentId]) {
+    const raw = ctx.raw as { files?: string[] } | undefined;
+    if (raw?.files) {
+      const baseline = state.session.subagentBaselines[ctx.agentId]!;
+      baseline.touchedFiles = Array.from(new Set([...baseline.touchedFiles, ...raw.files]));
+      await backend.commit(state);
+    }
+  }
   return { ok: true };
 }
 
