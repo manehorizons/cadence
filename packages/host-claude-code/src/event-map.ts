@@ -14,6 +14,7 @@ const EVENT_TABLE: Record<string, AbstractEvent> = {
   PostToolUse: 'post-tool-edit',
   Stop: 'session-stop',
   SubagentStop: 'subagent-result',
+  SubagentStart: 'subagent-start',
 };
 
 /**
@@ -34,18 +35,35 @@ export function extractPayload(raw: unknown): ExtractedPayload | undefined {
     hook_event_name?: string;
     tool_name?: string;
     tool_input?: { file_path?: unknown; skill?: unknown };
+    agent_id?: unknown;
+    agent_type?: unknown;
   };
-  if (r.hook_event_name !== 'PreToolUse' && r.hook_event_name !== 'PostToolUse') return undefined;
-  if (!r.tool_name) return undefined;
+  const agentId = typeof r.agent_id === 'string' && r.agent_id.length > 0 ? r.agent_id : undefined;
+  const agentType =
+    typeof r.agent_type === 'string' && r.agent_type.length > 0 ? r.agent_type : undefined;
+  const agentFields = { ...(agentId ? { agentId } : {}), ...(agentType ? { agentType } : {}) };
+
+  if (r.hook_event_name !== 'PreToolUse' && r.hook_event_name !== 'PostToolUse') {
+    // SubagentStart/SubagentStop (and any other future event) only ever
+    // carry agent fields — no files/skill to extract.
+    return Object.keys(agentFields).length > 0 ? agentFields : undefined;
+  }
+  if (!r.tool_name) return Object.keys(agentFields).length > 0 ? agentFields : undefined;
   // Skill tool: extract skill name (Phase 23.4).
   if (r.tool_name === 'Skill') {
     const s = r.tool_input?.skill;
-    if (typeof s !== 'string' || s.length === 0) return undefined;
-    return { skill: s };
+    if (typeof s !== 'string' || s.length === 0) {
+      return Object.keys(agentFields).length > 0 ? agentFields : undefined;
+    }
+    return { skill: s, ...agentFields };
   }
   // Edit tools: extract file path.
-  if (!EDIT_TOOLS.has(r.tool_name)) return undefined;
+  if (!EDIT_TOOLS.has(r.tool_name)) {
+    return Object.keys(agentFields).length > 0 ? agentFields : undefined;
+  }
   const fp = r.tool_input?.file_path;
-  if (typeof fp !== 'string' || fp.length === 0) return undefined;
-  return { files: [fp] };
+  if (typeof fp !== 'string' || fp.length === 0) {
+    return Object.keys(agentFields).length > 0 ? agentFields : undefined;
+  }
+  return { files: [fp], ...agentFields };
 }

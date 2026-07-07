@@ -24,6 +24,7 @@ export const AnomalyTypeZ = z.enum([
   'plan-review-unconverged',
   'spec-review-unconverged',
   'code-review-unconverged',
+  'redundant-task-work',
 ]);
 export type AnomalyType = z.infer<typeof AnomalyTypeZ>;
 

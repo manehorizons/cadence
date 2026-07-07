@@ -8,10 +8,11 @@ export const claudeCodeCapabilities: HostCapabilities = {
     'post-tool-edit',
     'session-stop',
     'subagent-result',
+    'subagent-start',
   ],
   slashCommands: true,
   skillSystem: 'native',
-  blockingHooks: ['pre-tool-edit', 'session-stop'],
+  blockingHooks: ['pre-tool-edit', 'session-stop', 'subagent-result'],
   subagentSpawn: 'native',
   streamingOutput: true,
 };

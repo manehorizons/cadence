@@ -100,6 +100,35 @@ describe('DraftZ id schema (rec-20260610-001)', () => {
   });
 });
 
+describe('Draft.redundantWorkEnforcement override', () => {
+  const base = {
+    schemaVersion: 1 as const,
+    id: '01-01',
+    phase: '01-foundation',
+    tier: 'standard' as const,
+    title: 'x',
+    objective: 'x',
+    acceptanceCriteria: [],
+    tasks: [],
+    boundaries: [],
+    status: 'PENDING' as const,
+  };
+
+  it('is optional — omitting it parses fine', () => {
+    expect(() => DraftZ.parse(base)).not.toThrow();
+  });
+
+  it('accepts "off" | "warn" | "block"', () => {
+    for (const v of ['off', 'warn', 'block'] as const) {
+      expect(DraftZ.parse({ ...base, redundantWorkEnforcement: v }).redundantWorkEnforcement).toBe(v);
+    }
+  });
+
+  it('rejects an unknown value', () => {
+    expect(() => DraftZ.parse({ ...base, redundantWorkEnforcement: 'nope' as never })).toThrow();
+  });
+});
+
 describe('SummaryZ', () => {
   it('accepts a minimal summary', () => {
     expect(() =>

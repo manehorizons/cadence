@@ -1,0 +1,108 @@
+{
+  "draftId": "158-01",
+  "tasks": {
+    "T2": {
+      "status": "DONE",
+      "notes": "state.session.subagentBaselines schema (per-agent baseline snapshot)",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T00:13:48.519Z"
+    },
+    "T11": {
+      "status": "DONE",
+      "notes": "Documented redundantWorkEnforcement; corrected stale boundaryEnforcement scope note",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T00:13:52.226Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "Schema additions: redundant-task-work anomaly type, redundantWorkEnforcement config field (default warn), DraftZ override",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-07T00:14:02.767Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Pure task-redundancy check (checks/task-redundancy.ts), mirrors checks/boundary.ts",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/checks/task-redundancy.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/checks/task-redundancy.ts"
+      ],
+      "updatedAt": "2026-07-07T00:15:59.704Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "agentId/agentType extraction onto HookContext + 'subagent-start' AbstractEvent",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/types/src/events.ts",
+        "/home/thomas/projects/cadence/packages/types/src/host.ts",
+        "/home/thomas/projects/cadence/packages/host-claude-code/src/event-map.ts",
+        "/home/thomas/projects/cadence/packages/core/src/cli/commands/hook.ts",
+        "/home/thomas/projects/cadence/packages/types/tests/events.test.ts",
+        "/home/thomas/projects/cadence/packages/types/tests/host.test.ts",
+        "/home/thomas/projects/cadence/packages/host-claude-code/tests/event-map.test.ts",
+        "/home/thomas/projects/cadence/packages/host-claude-code/tests/adapter-conformance.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/cli/hook.test.ts"
+      ],
+      "updatedAt": "2026-07-07T00:22:34.788Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "effectiveRedundantWorkEnforcement (draft > config > warn default) + DRAFT frontmatter parsing",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/gates/engine.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/parse/draft-parser.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/gates/engine.ts",
+        "/home/thomas/projects/cadence/packages/core/src/parse/draft-parser.ts"
+      ],
+      "updatedAt": "2026-07-07T00:24:54.390Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Wired task-redundancy check into handlePreToolEdit (warn/block modes)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/hooks/handlers-redundancy.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/handlers.ts"
+      ],
+      "updatedAt": "2026-07-07T00:27:32.987Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "Registered SubagentStart end-to-end (capabilities, install, dispatcher, handler stub)",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/host-claude-code/src/capabilities.ts",
+        "/home/thomas/projects/cadence/packages/host-claude-code/src/install.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/dispatcher.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/handlers.ts",
+        "/home/thomas/projects/cadence/packages/host-claude-code/tests/install.test.ts",
+        "/home/thomas/projects/cadence/packages/core/tests/hooks/dispatcher.test.ts"
+      ],
+      "updatedAt": "2026-07-07T00:30:42.200Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "handleSubagentStart: baseline snapshot + advisory task-board nudge",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/hooks/handlers-subagent-start.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/handlers.ts"
+      ],
+      "updatedAt": "2026-07-07T00:32:45.088Z"
+    },
+    "T9": {
+      "status": "DONE",
+      "notes": "Per-agent touched-file accumulation in handlePostToolEdit",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/hooks/handlers-subagent-touched-files.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/handlers.ts"
+      ],
+      "updatedAt": "2026-07-07T00:34:28.642Z"
+    },
+    "T10": {
+      "status": "DONE",
+      "notes": "handleSubagentResult safety net: baseline-diff, warn/hard-block-stop",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/packages/core/tests/hooks/handlers-subagent-stop-safety-net.test.ts",
+        "/home/thomas/projects/cadence/packages/core/src/hooks/handlers.ts"
+      ],
+      "updatedAt": "2026-07-07T00:37:05.673Z"
+    }
+  }
+}

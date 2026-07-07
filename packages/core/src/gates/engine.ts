@@ -94,6 +94,21 @@ export function effectiveBoundaryEnforcement(
 }
 
 /**
+ * Resolve the effective redundantWorkEnforcement mode for a phase (subagent
+ * task-redundancy monitoring). DRAFT frontmatter override wins; otherwise the
+ * project default from `.cadence/config.json` applies. Falls back to
+ * `'warn'` if neither is set — mirrors `effectiveBoundaryEnforcement`.
+ */
+export function effectiveRedundantWorkEnforcement(
+  config: Pick<CadenceConfig, 'redundantWorkEnforcement'> | null,
+  draft: Pick<Draft, 'redundantWorkEnforcement'> | null,
+): CadenceConfig['redundantWorkEnforcement'] {
+  if (draft?.redundantWorkEnforcement) return draft.redundantWorkEnforcement;
+  if (config?.redundantWorkEnforcement) return config.redundantWorkEnforcement;
+  return 'warn';
+}
+
+/**
  * Compute the set of gates that should fire for a given (tier, profile)
  * combination. Pure function; no I/O. `softCap` is true only for the
  * `auto × complex` cell — gate implementations later phases refuse without

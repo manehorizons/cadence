@@ -203,3 +203,17 @@ describe('AnomalyEventZ (AC-1)', () => {
     }
   });
 });
+
+describe('redundant-task-work anomaly type', () => {
+  it('accepts type: "redundant-task-work"', () => {
+    expect(() =>
+      AnomalyEventZ.parse({
+        type: 'redundant-task-work',
+        severity: 'warn',
+        message: 'x',
+        context: {},
+        ts: '2026-07-06T00:00:00.000Z',
+      }),
+    ).not.toThrow();
+  });
+});

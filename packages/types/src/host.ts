@@ -35,6 +35,9 @@ export const ADAPTER_CONTRACT_VERSION = 1;
 export interface ExtractedPayload {
   files?: string[];
   skill?: string;
+  /** Present when the host's raw event fired inside a subagent's tool call. */
+  agentId?: string;
+  agentType?: string;
 }
 
 /**
