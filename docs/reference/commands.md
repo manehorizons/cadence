@@ -92,6 +92,7 @@ start
 quickstart
 activate
 agent-prompt
+dispatch
 <!-- cadence:commands:end -->
 
 ---
