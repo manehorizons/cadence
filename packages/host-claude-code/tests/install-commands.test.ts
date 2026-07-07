@@ -20,7 +20,7 @@ async function tempDir(): Promise<string> {
 }
 
 describe('installCommands', () => {
-  it('AC-1: writes 13 cadence-*.md files under .claude/commands/', async () => {
+  it('AC-1: writes 14 cadence-*.md files under .claude/commands/', async () => {
     const root = await tempDir();
     await installCommands(root);
     const entries = await readdir(join(root, '.claude/commands'));
@@ -29,6 +29,7 @@ describe('installCommands', () => {
       'cadence-block.md',
       'cadence-build.md',
       'cadence-check.md',
+      'cadence-dispatch.md',
       'cadence-done.md',
       'cadence-draft.md',
       'cadence-handoff.md',
@@ -234,5 +235,18 @@ describe('installCommands', () => {
     await installCommands(root, { local: true });
     const body = await readFile(join(root, '.claude/commands/cadence-progress.md'), 'utf8');
     expect(body).toMatch(/!node .+core[\\/]dist[\\/]cli[\\/]index\.js progress/);
+  });
+
+  it('cadence-dispatch invokes !cadence dispatch plan --json and encodes the wave-halt contract', async () => {
+    const root = await tempDir();
+    await installCommands(root);
+    const dispatch = await readFile(join(root, '.claude/commands/cadence-dispatch.md'), 'utf8');
+    expect(dispatch).toMatch(/^!cadence dispatch plan --json\s*$/m);
+    expect(dispatch).toMatch(/<!-- managed-by: cadence -->/);
+    expect(dispatch).toMatch(/HALT/);
+    expect(dispatch).toMatch(/DONE_WITH_CONCERNS/);
+    expect(dispatch).toMatch(/cadence build task/);
+    expect(dispatch).toMatch(/cadence settle run/);
+    expect(dispatch).not.toMatch(/^!.*settle run/m);
   });
 });
