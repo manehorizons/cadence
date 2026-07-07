@@ -559,10 +559,13 @@ Compute the next dispatch wave(s) from the active BUILD draft
 | `-h, --help` | Display help for command |
 
 **Behavior** — read-only; never mutates state. Reads the active BUILD draft +
-`PROGRESS.json`, computes wave-based dispatch groups (`depends:` topological
-leveling, with a `files:`-disjointness veto splitting same-level tasks that
-touch overlapping files), and renders a self-contained dispatch packet per
-task. Tasks already `DONE`/`DONE_WITH_CONCERNS` are excluded from every wave.
+`PROGRESS.json`, computes wave-based dispatch groups via a single topological-
+leveling pass over both `depends:` edges and synthetic `files:`-overlap
+prerequisite edges (a task's wave is always strictly after every one of its
+real-or-synthetic prerequisites — not a separate `depends:` pass followed by a
+`files:` veto, which can silently place a task in the same wave as its own
+dependent), and renders a self-contained dispatch packet per task. Tasks
+already `DONE`/`DONE_WITH_CONCERNS` are excluded from every wave.
 Outside BUILD (no active draft), reports "nothing to plan" at exit 0. When
 every task is already finished, reports "nothing to dispatch" at exit 0.
 
