@@ -7,7 +7,7 @@ import { parseDraftMd } from '../parse/draft-parser.js';
 import { effectiveGateSet, effectiveBoundaryEnforcement, effectiveRedundantWorkEnforcement } from '../gates/engine.js';
 import { selectNotifier } from '../notify/factory.js';
 import { runBoundaryCheck } from '../checks/boundary.js';
-import { runRedundancyCheck } from '../checks/task-redundancy.js';
+import { runRedundancyCheck, TERMINAL_TASK_STATUSES } from '../checks/task-redundancy.js';
 import type { ProgressFile } from '../status.js';
 
 export interface HookResult {
@@ -212,14 +212,60 @@ export async function handleSubagentResult(
   return { ok: true };
 }
 
-// Task 7 stub — replaced with the full baseline-snapshot implementation in Task 8.
 export async function handleSubagentStart(
-  _ctx: HookContext,
-  _state: CadenceState,
+  ctx: HookContext,
+  state: CadenceState,
   _config: CadenceConfig,
-  _backend: SimpleStateBackend,
+  backend: SimpleStateBackend,
 ): Promise<HookResult> {
-  return { ok: true };
+  if (!ctx.agentId || !state.activeDraft || !state.activePhase) return { ok: true };
+  const draftPath = join(
+    ctx.cwd,
+    '.cadence/phases',
+    state.activePhase,
+    `${state.activeDraft}-DRAFT.md`,
+  );
+  if (!existsSync(draftPath)) return { ok: true };
+  try {
+    const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
+    const progressPath = join(
+      ctx.cwd,
+      '.cadence/phases',
+      state.activePhase,
+      `${state.activeDraft}-PROGRESS.json`,
+    );
+    let progress: ProgressFile | null = null;
+    if (existsSync(progressPath)) {
+      try {
+        progress = JSON.parse(await readFile(progressPath, 'utf8')) as ProgressFile;
+      } catch {
+        progress = null;
+      }
+    }
+    const taskStatuses: Record<string, string> = {};
+    for (const t of draft.tasks) {
+      taskStatuses[t.id] = progress?.tasks[t.id]?.status ?? 'PENDING';
+    }
+    state.session.subagentBaselines[ctx.agentId] = {
+      startedAt: new Date().toISOString(),
+      taskStatuses,
+      touchedFiles: [],
+    };
+    await backend.commit(state);
+
+    const board = draft.tasks.map((t) => `${t.id} ${taskStatuses[t.id]}`).join(', ');
+    const doneIds = draft.tasks
+      .filter((t) => TERMINAL_TASK_STATUSES.has(taskStatuses[t.id] ?? 'PENDING'))
+      .map((t) => t.id);
+    const nudge =
+      doneIds.length > 0
+        ? `Live task status as of your start: ${board}. Do not redo ${doneIds.join('/')} — already finished.`
+        : `Live task status as of your start: ${board}.`;
+    return { ok: true, contextPayload: nudge };
+  } catch {
+    /* malformed draft/progress must not break the hook */
+    return { ok: true };
+  }
 }
 
 const SKILL_AUDIT_CAP = 100;
