@@ -60,7 +60,11 @@ function parseTasks(section: string): Draft['tasks'] {
     const action = /-\s*action:\s*(.+)/.exec(block)?.[1]?.trim() ?? '';
     const verify = /-\s*verify:\s*(.+)/.exec(block)?.[1]?.trim() ?? '';
     const done = /-\s*done:\s*(.+)/.exec(block)?.[1]?.trim() ?? '';
-    out.push({ id, name, files, action, verify, done });
+    const dependsLine = /-\s*depends:\s*(.+)/.exec(block)?.[1];
+    const depends = dependsLine
+      ? dependsLine.split(',').map((s) => s.trim()).filter((s) => s.length > 0)
+      : undefined;
+    out.push({ id, name, files, action, verify, done, ...(depends ? { depends } : {}) });
   }
   return out;
 }
