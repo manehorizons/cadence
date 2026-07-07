@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 158-subagent-task-redundancy-monitoring
+**Active phase:** 160-release-v1-42-0
 **Active draft:** (none)
 **Tier:** (n/a)
 
