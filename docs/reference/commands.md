@@ -20,6 +20,7 @@ Two CLIs are documented here:
   - [draft](#draft)
   - [hook](#hook)
   - [build](#build)
+  - [dispatch](#dispatch)
   - [done](#done)
   - [block](#block)
   - [needs-context](#needs-context)
@@ -92,6 +93,7 @@ start
 quickstart
 activate
 agent-prompt
+dispatch
 <!-- cadence:commands:end -->
 
 ---
@@ -527,6 +529,49 @@ non-zero). Note: the `block` and `needs-context` shortcut commands do **not**
 share this validation — see [Carry-forward notes](#carry-forward-notes).
 
 **Exit codes** — exits non-zero on gate refusal or unknown task ID.
+
+---
+
+### dispatch
+
+```
+Usage: cadence dispatch [options] [command]
+
+Compute wave-based subagent dispatch plans
+```
+
+`dispatch` groups the read-only wave-planning subcommand consumed by the
+`/cadence-dispatch` Claude Code slash command.
+
+#### dispatch plan
+
+```
+Usage: cadence dispatch plan [options]
+
+Compute the next dispatch wave(s) from the active BUILD draft
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON (`{ waves: [{ wave, tasks: [{ id, name, packet }] }] }`) instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — read-only; never mutates state. Reads the active BUILD draft +
+`PROGRESS.json`, computes wave-based dispatch groups via a single topological-
+leveling pass over both `depends:` edges and synthetic `files:`-overlap
+prerequisite edges (a task's wave is always strictly after every one of its
+real-or-synthetic prerequisites — not a separate `depends:` pass followed by a
+`files:` veto, which can silently place a task in the same wave as its own
+dependent), and renders a self-contained dispatch packet per task. Tasks
+already `DONE`/`DONE_WITH_CONCERNS` are excluded from every wave.
+Outside BUILD (no active draft), reports "nothing to plan" at exit 0. When
+every task is already finished, reports "nothing to dispatch" at exit 0.
+
+**Exit codes** — exits non-zero (with a message naming the cycle, or the
+unknown task id) if `depends:` forms a dependency cycle, or references a
+task id that doesn't exist in the draft.
 
 ---
 

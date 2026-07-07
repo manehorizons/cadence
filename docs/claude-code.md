@@ -31,7 +31,7 @@ the same `cadence hook <event>` dispatch path — without any special API surfac
   - [Options reference](#options-reference)
   - [The --local warning](#the---local-warning)
 - [Hook groups written by install](#hook-groups-written-by-install)
-- [The 13 slash commands](#the-13-slash-commands)
+- [The 14 slash commands](#the-14-slash-commands)
 - [How the agent drives CADENCE](#how-the-agent-drives-cadence)
 - [Gitignore guidance](#gitignore-guidance)
 
@@ -165,9 +165,9 @@ engine.
 
 ---
 
-## The 13 slash commands
+## The 14 slash commands
 
-`install` writes **13 slash commands** into `.claude/commands/`. Each file is
+`install` writes **14 slash commands** into `.claude/commands/`. Each file is
 tagged with `<!-- managed-by: cadence -->` so re-running install replaces them.
 If you remove that marker, install leaves the file untouched (treating it as
 user-customized).
@@ -191,6 +191,7 @@ keep this section in sync with it).
 | `/cadence-resume` | `cadence resume` | Replay the freshest session handoff + live context (read-only) |
 | `/cadence-recommend` | `cadence recommend --top 5` | Rank actionable strategic recommendations and advise the next move (top 5) |
 | `/cadence-scout` | `cadence recommend` | Divergent→convergent ideation dialogue that lands survivors as Praxis recommendations |
+| `/cadence-dispatch` | `cadence dispatch plan --json` | Compute the next wave-based subagent dispatch plan from the active BUILD draft |
 
 Each command file's frontmatter sets `allowed-tools: Bash(cadence:*), Read`,
 limiting tool use to CADENCE-namespaced bash invocations and file reads. The

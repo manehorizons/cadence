@@ -19,7 +19,7 @@ So Cadence isn't GSD-lite. It keeps the quality gates — they re-check your acc
 One engine, four entry points:
 
 - The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. Completely host-agnostic.
-- The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and 13 slash commands — the only surface that adds *ambient* edit-time gates (boundary checks, anomaly detection as you edit).
+- The **`cadence-host-claude-code install`** adapter wires the same engine into Claude Code via lifecycle hooks and 14 slash commands — the only surface that adds *ambient* edit-time gates (boundary checks, anomaly detection as you edit).
 - The **`cadence-host-codex install`** adapter wires the same engine into the OpenAI Codex CLI via lifecycle hooks and global prompt commands. It is a shipped conformance consumer of the host-adapter contract.
 - **`cadence mcp serve`** exposes the engine as a local [MCP](https://modelcontextprotocol.io) server over stdio, so any MCP-capable host (Claude Desktop, Cursor, other agents) can drive the loop with no bespoke adapter. It covers the imperative loop (command-boundary gates run; ambient edit-time gates need host hooks). See **[MCP server](./docs/mcp.md)**.
 

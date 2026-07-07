@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MOCK_VERIFIER_NOTICE } from '../src/guidance.js';
+import { COMMAND_GUIDANCE, DISPATCH_DIALOGUE, MOCK_VERIFIER_NOTICE } from '../src/guidance.js';
 
 // AC-1 (phase 104): one source-of-truth "mock = not real verification" message.
 describe('MOCK_VERIFIER_NOTICE', () => {
@@ -16,5 +16,23 @@ describe('MOCK_VERIFIER_NOTICE', () => {
 
   it('exposes a short non-empty inline label', () => {
     expect(MOCK_VERIFIER_NOTICE.label.length).toBeGreaterThan(0);
+  });
+});
+
+describe('cadence-dispatch guidance', () => {
+  it('has a non-empty description', () => {
+    expect(COMMAND_GUIDANCE['cadence-dispatch'].description.length).toBeGreaterThan(0);
+  });
+
+  it('DISPATCH_DIALOGUE encodes the wave-complete halt contract', () => {
+    expect(DISPATCH_DIALOGUE).toMatch(/HALT/);
+    expect(DISPATCH_DIALOGUE).toMatch(/DONE_WITH_CONCERNS/);
+    expect(DISPATCH_DIALOGUE).toMatch(/Task-tool/);
+    expect(DISPATCH_DIALOGUE).toMatch(/cadence build task/);
+    expect(DISPATCH_DIALOGUE).toMatch(/cadence settle run/);
+  });
+
+  it('never tells the agent to invoke settle itself', () => {
+    expect(DISPATCH_DIALOGUE).not.toMatch(/^!.*settle run/m);
   });
 });

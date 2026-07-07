@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
+import { COMMAND_GUIDANCE, DISPATCH_DIALOGUE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallCommandsOptions {
@@ -133,6 +133,12 @@ const COMMANDS: CommandSpec[] = [
     argumentHint: '[topic]',
     cli: 'recommend',
     body: SCOUT_DIALOGUE,
+  },
+  {
+    name: 'cadence-dispatch',
+    description: g['cadence-dispatch'].description,
+    cli: 'dispatch plan --json',
+    body: DISPATCH_DIALOGUE,
   },
 ];
 
