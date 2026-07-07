@@ -19,10 +19,14 @@ export function registerHookCommand(program: Command): void {
           for await (const chunk of process.stdin) raw += chunk.toString();
         }
         const dispatcher = new HookDispatcher(process.cwd());
+        const parsedRaw = raw ? safeJson(raw) : undefined;
+        const rawObj = parsedRaw as { agentId?: unknown; agentType?: unknown } | undefined;
         const ctx = {
           event: parsed.data,
           cwd: process.cwd(),
-          raw: raw ? safeJson(raw) : undefined,
+          raw: parsedRaw,
+          ...(typeof rawObj?.agentId === 'string' ? { agentId: rawObj.agentId } : {}),
+          ...(typeof rawObj?.agentType === 'string' ? { agentType: rawObj.agentType } : {}),
         };
         const result = await dispatcher.dispatch(parsed.data, ctx);
         if (result.contextPayload) console.log(result.contextPayload);

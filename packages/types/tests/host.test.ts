@@ -3,6 +3,7 @@ import {
   HostCapabilitiesZ,
   ADAPTER_CONTRACT_VERSION,
   type HostCapabilities,
+  type ExtractedPayload,
 } from '../src/host.js';
 
 const validCapabilities: HostCapabilities = {
@@ -48,5 +49,12 @@ describe('HostCapabilitiesZ (AC-2)', () => {
 describe('ADAPTER_CONTRACT_VERSION (AC-3)', () => {
   it('AC-3: is the integer contract version 1', () => {
     expect(ADAPTER_CONTRACT_VERSION).toBe(1);
+  });
+});
+
+describe('ExtractedPayload agentId/agentType', () => {
+  it('type allows optional agentId/agentType alongside files/skill', () => {
+    const payload: ExtractedPayload = { files: ['a.ts'], agentId: 'x', agentType: 'y' };
+    expect(payload.agentId).toBe('x');
   });
 });

@@ -37,6 +37,11 @@ export const DraftZ = z.object({
    * wins over the project default in config — mirrors `profile` above.
    */
   boundaryEnforcement: z.enum(['warn', 'block']).optional(),
+  /**
+   * Optional per-phase redundantWorkEnforcement override, mirroring
+   * `boundaryEnforcement`. When set, wins over the project default.
+   */
+  redundantWorkEnforcement: z.enum(['off', 'warn', 'block']).optional(),
   title: z.string(),
   objective: z.string(),
   acceptanceCriteria: z.array(AcceptanceCriterionZ),

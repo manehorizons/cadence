@@ -26,6 +26,14 @@ describe('HookDispatcher', () => {
     expect(state.session.subagentSpawns).toBe(2);
   });
 
+  // Task 7 (Phase 158) — SubagentStart wiring.
+  it('routes subagent-start to handleSubagentStart (does not throw, returns ok)', async () => {
+    active = await tempRepo({ initialized: true });
+    const d = new HookDispatcher(active.root);
+    const result = await d.dispatch('subagent-start', { cwd: active.root, event: 'subagent-start' });
+    expect(result.ok).toBe(true);
+  });
+
   it('pre-tool-edit blocks when buildGate=true and loopPosition != BUILD', async () => {
     active = await tempRepo({ initialized: true });
     const cfgPath = join(active.root, '.cadence/config.json');

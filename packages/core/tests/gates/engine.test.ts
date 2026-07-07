@@ -4,6 +4,7 @@ import {
   effectiveGateSet,
   effectiveProfile,
   effectiveBoundaryEnforcement,
+  effectiveRedundantWorkEnforcement,
   gatesFor,
 } from '../../src/gates/engine.js';
 
@@ -45,6 +46,25 @@ describe('effectiveBoundaryEnforcement', () => {
     expect(effectiveBoundaryEnforcement({ boundaryEnforcement: undefined as never }, null)).toBe(
       'warn',
     );
+  });
+});
+
+describe('effectiveRedundantWorkEnforcement', () => {
+  it('defaults to "warn" when neither draft nor config set it', () => {
+    expect(effectiveRedundantWorkEnforcement(null, null)).toBe('warn');
+  });
+
+  it('config value wins over the default', () => {
+    expect(effectiveRedundantWorkEnforcement({ redundantWorkEnforcement: 'off' }, null)).toBe('off');
+  });
+
+  it('draft override wins over config', () => {
+    expect(
+      effectiveRedundantWorkEnforcement(
+        { redundantWorkEnforcement: 'block' },
+        { redundantWorkEnforcement: 'warn' },
+      ),
+    ).toBe('warn');
   });
 });
 

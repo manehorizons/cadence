@@ -112,6 +112,9 @@ export function parseDraftMd(raw: string): Draft {
     ...(fm.boundaryEnforcement !== undefined
       ? { boundaryEnforcement: fm.boundaryEnforcement as Draft['boundaryEnforcement'] }
       : {}),
+    ...(fm.redundantWorkEnforcement !== undefined
+      ? { redundantWorkEnforcement: fm.redundantWorkEnforcement as Draft['redundantWorkEnforcement'] }
+      : {}),
     ...(fm.requiredSkills !== undefined
       ? { requiredSkills: parseSkillList(fm.requiredSkills) }
       : {}),

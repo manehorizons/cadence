@@ -114,3 +114,49 @@ describe('extractPayload', () => {
     ).toBeUndefined();
   });
 });
+
+describe('mapEvent SubagentStart', () => {
+  it('maps SubagentStart → subagent-start', () => {
+    expect(mapEvent('SubagentStart')).toBe('subagent-start');
+  });
+});
+
+describe('extractPayload agentId/agentType', () => {
+  it('extracts agent_id/agent_type from a PreToolUse subagent edit', () => {
+    const raw = {
+      hook_event_name: 'PreToolUse',
+      tool_name: 'Edit',
+      tool_input: { file_path: '/p.ts', old_string: 'a', new_string: 'b' },
+      agent_id: 'agent-123',
+      agent_type: 'general-purpose',
+    };
+    expect(extractPayload(raw)).toEqual({
+      files: ['/p.ts'],
+      agentId: 'agent-123',
+      agentType: 'general-purpose',
+    });
+  });
+
+  it('extracts agent_id/agent_type from a SubagentStart event (no files/skill)', () => {
+    const raw = { hook_event_name: 'SubagentStart', agent_id: 'agent-9', agent_type: 'claude' };
+    expect(extractPayload(raw)).toEqual({ agentId: 'agent-9', agentType: 'claude' });
+  });
+
+  it('extracts agent_id/agent_type from a SubagentStop event', () => {
+    const raw = { hook_event_name: 'SubagentStop', agent_id: 'agent-9', agent_type: 'claude' };
+    expect(extractPayload(raw)).toEqual({ agentId: 'agent-9', agentType: 'claude' });
+  });
+
+  it('a main-thread PreToolUse edit (no agent_id) omits agentId/agentType', () => {
+    const raw = {
+      hook_event_name: 'PreToolUse',
+      tool_name: 'Edit',
+      tool_input: { file_path: '/p.ts' },
+    };
+    expect(extractPayload(raw)).toEqual({ files: ['/p.ts'] });
+  });
+
+  it('a SessionStart event with no extractable fields still returns undefined', () => {
+    expect(extractPayload({ hook_event_name: 'SessionStart' })).toBeUndefined();
+  });
+});

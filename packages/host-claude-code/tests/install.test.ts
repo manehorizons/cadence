@@ -174,6 +174,15 @@ describe('installHooks', () => {
     }
   });
 
+  // Task 7 (Phase 158) — SubagentStart wiring.
+  it('writes a SubagentStart hook entry', async () => {
+    const root = await tempDir();
+    await installHooks(root);
+    const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
+    expect(cfg.hooks.SubagentStart).toHaveLength(1);
+    expect(cfg.hooks.SubagentStart[0]._managedBy).toBe('cadence');
+  });
+
   // AC-1 (Phase 18.1) — F2 rename rollout.
   it('evicts legacy _managedBy=keel hook entries on re-install', async () => {
     const root = await tempDir();

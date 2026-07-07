@@ -317,3 +317,17 @@ Then widget emits photons
     expect(d.tasks[1]?.depends).toEqual(['T1', 'T1b']);
   });
 });
+
+describe('redundantWorkEnforcement frontmatter', () => {
+  it('parses redundantWorkEnforcement when present', () => {
+    const raw = `---\nphase: 01-foundation\nid: 01-01\ntier: standard\nredundantWorkEnforcement: block\nstatus: PENDING\n---\n\n# 01-01 — Demo\n\n## Objective\n\nDemo.\n\n## Acceptance Criteria\n\n### AC-1: Demo\nGiven a\nWhen b\nThen c\n\n## Tasks\n\n## Boundaries\n\n- _(none)_\n`;
+    const draft = parseDraftMd(raw);
+    expect(draft.redundantWorkEnforcement).toBe('block');
+  });
+
+  it('omits redundantWorkEnforcement when absent from frontmatter', () => {
+    const raw = `---\nphase: 01-foundation\nid: 01-01\ntier: standard\nstatus: PENDING\n---\n\n# 01-01 — Demo\n\n## Objective\n\nDemo.\n\n## Acceptance Criteria\n\n### AC-1: Demo\nGiven a\nWhen b\nThen c\n\n## Tasks\n\n## Boundaries\n\n- _(none)_\n`;
+    const draft = parseDraftMd(raw);
+    expect(draft.redundantWorkEnforcement).toBeUndefined();
+  });
+});

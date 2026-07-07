@@ -303,6 +303,18 @@ export const CadenceConfigZ = z.object({
    * Overridable per-phase via DRAFT frontmatter, mirroring `profile`.
    */
   boundaryEnforcement: z.enum(['warn', 'block']).default('warn'),
+  /**
+   * Redundant-work enforcement mode (subagent task-redundancy monitoring).
+   * `off` — the check never runs. `warn` (default) — an edit touching a file
+   * owned by an already-terminal (`DONE`/`DONE_WITH_CONCERNS`) task is only
+   * notified via `anomaly-notify`. `block` — `handlePreToolEdit` refuses the
+   * edit, and the `SubagentStop` safety net hard-blocks the subagent's stop.
+   * A third `off` value exists (unlike `boundaryEnforcement`) because
+   * re-touching finished work is a more subjective, more commonly legitimate
+   * signal than an out-of-boundary edit. Overridable per-phase via DRAFT
+   * frontmatter, mirroring `boundaryEnforcement`.
+   */
+  redundantWorkEnforcement: z.enum(['off', 'warn', 'block']).default('warn'),
 });
 
 export type CadenceConfig = z.infer<typeof CadenceConfigZ>;
@@ -360,6 +372,7 @@ export const defaultConfig: CadenceConfig = {
   gates: { sealed: [] },
   resume: { crossWorktree: true, autoList: false },
   boundaryEnforcement: 'warn',
+  redundantWorkEnforcement: 'warn',
 };
 
 export const presets = {

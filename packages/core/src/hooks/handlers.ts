@@ -4,9 +4,11 @@ import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { parseDraftMd } from '../parse/draft-parser.js';
-import { effectiveGateSet, effectiveBoundaryEnforcement } from '../gates/engine.js';
+import { effectiveGateSet, effectiveBoundaryEnforcement, effectiveRedundantWorkEnforcement } from '../gates/engine.js';
 import { selectNotifier } from '../notify/factory.js';
 import { runBoundaryCheck } from '../checks/boundary.js';
+import { runRedundancyCheck, TERMINAL_TASK_STATUSES } from '../checks/task-redundancy.js';
+import type { ProgressFile } from '../status.js';
 
 export interface HookResult {
   ok: boolean;
@@ -97,6 +99,60 @@ export async function handlePreToolEdit(
               }
             }
           }
+
+          // Subagent task-redundancy monitoring: same PreToolUse hook, a
+          // different axis (task status, not file boundary). Independent of
+          // the boundary check above — both can fire on the same edit.
+          const redundantMode = effectiveRedundantWorkEnforcement(config, draft);
+          if (redundantMode !== 'off') {
+            const progressPath = join(
+              ctx.cwd,
+              '.cadence/phases',
+              state.activePhase,
+              `${state.activeDraft}-PROGRESS.json`,
+            );
+            let taskStatuses: Record<string, string> = {};
+            if (existsSync(progressPath)) {
+              try {
+                const progress = JSON.parse(await readFile(progressPath, 'utf8')) as ProgressFile;
+                for (const [id, entry] of Object.entries(progress.tasks)) {
+                  taskStatuses[id] = entry.status;
+                }
+              } catch {
+                taskStatuses = {};
+              }
+            }
+            const redundancyEvents = runRedundancyCheck({
+              tasks: draft.tasks.map((t) => ({ taskId: t.id, files: t.files })),
+              taskStatuses,
+              touchedFiles: rawFiles,
+              stamp: () => now,
+              extraContext: { source: 'hook.preToolEdit' },
+              root: ctx.cwd,
+              severity: redundantMode === 'block' ? 'error' : 'warn',
+            });
+            if (redundancyEvents.length > 0) {
+              if (redundantMode === 'block') {
+                const first = redundancyEvents[0]!;
+                return {
+                  ok: false,
+                  blockMessage: `redundantWorkEnforcement=block: ${String(first.context.file)} belongs to ${String(first.context.taskId)}, already ${String(first.context.status)} — mark it back to NEEDS_CONTEXT first (cadence build task ${String(first.context.taskId)} --status=NEEDS_CONTEXT), or confirm with the orchestrator.`,
+                };
+              }
+              const gateSet = effectiveGateSet(state, config, draft);
+              if (gateSet.gates.includes('anomaly-notify')) {
+                const notifier = selectNotifier(config);
+                try {
+                  await notifier.notify(redundancyEvents);
+                } catch (err) {
+                  const msg = err instanceof Error ? err.message : String(err);
+                  process.stderr.write(
+                    `notify: ${notifier.name} transport failed — ${msg} (continuing)\n`,
+                  );
+                }
+              }
+            }
+          }
         } catch {
           /* malformed draft must not break the hook */
         }
@@ -127,6 +183,14 @@ export async function handlePostToolEdit(
       await backend.commit(state);
     }
   }
+  if (ctx.agentId && state.session.subagentBaselines[ctx.agentId]) {
+    const raw = ctx.raw as { files?: string[] } | undefined;
+    if (raw?.files) {
+      const baseline = state.session.subagentBaselines[ctx.agentId]!;
+      baseline.touchedFiles = Array.from(new Set([...baseline.touchedFiles, ...raw.files]));
+      await backend.commit(state);
+    }
+  }
   return { ok: true };
 }
 
@@ -146,14 +210,140 @@ export async function handleSessionStop(
 }
 
 export async function handleSubagentResult(
-  _ctx: HookContext,
+  ctx: HookContext,
+  state: CadenceState,
+  config: CadenceConfig,
+  backend: SimpleStateBackend,
+): Promise<HookResult> {
+  state.session.subagentSpawns += 1;
+
+  const agentId = ctx.agentId;
+  const baseline = agentId ? state.session.subagentBaselines[agentId] : undefined;
+  if (!agentId || !baseline) {
+    await backend.commit(state);
+    return { ok: true };
+  }
+
+  // Always prune the baseline after this check — it's a one-shot comparison,
+  // ephemeral session state, never persisted into SUMMARY.json.
+  delete state.session.subagentBaselines[agentId];
+
+  if (!state.activeDraft || !state.activePhase) {
+    await backend.commit(state);
+    return { ok: true };
+  }
+  const draftPath = join(
+    ctx.cwd,
+    '.cadence/phases',
+    state.activePhase,
+    `${state.activeDraft}-DRAFT.md`,
+  );
+  if (!existsSync(draftPath)) {
+    await backend.commit(state);
+    return { ok: true };
+  }
+
+  try {
+    const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
+    const mode = effectiveRedundantWorkEnforcement(config, draft);
+    if (mode === 'off' || baseline.touchedFiles.length === 0) {
+      await backend.commit(state);
+      return { ok: true };
+    }
+    const events = runRedundancyCheck({
+      tasks: draft.tasks.map((t) => ({ taskId: t.id, files: t.files })),
+      taskStatuses: baseline.taskStatuses,
+      touchedFiles: baseline.touchedFiles,
+      stamp: () => new Date().toISOString(),
+      extraContext: { source: 'hook.subagentStop', ...(ctx.agentType ? { agentType: ctx.agentType } : {}) },
+      root: ctx.cwd,
+      severity: mode === 'block' ? 'error' : 'warn',
+    });
+    if (events.length === 0) {
+      await backend.commit(state);
+      return { ok: true };
+    }
+    if (mode === 'block') {
+      await backend.commit(state);
+      const first = events[0]!;
+      return {
+        ok: false,
+        blockMessage: `redundantWorkEnforcement=block: ${String(first.context.file)} belongs to ${String(first.context.taskId)}, already ${String(first.context.status)} — mark it back to NEEDS_CONTEXT first (cadence build task ${String(first.context.taskId)} --status=NEEDS_CONTEXT), or confirm with the orchestrator.`,
+      };
+    }
+    const gateSet = effectiveGateSet(state, config, draft);
+    if (gateSet.gates.includes('anomaly-notify')) {
+      const notifier = selectNotifier(config);
+      try {
+        await notifier.notify(events);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        process.stderr.write(`notify: ${notifier.name} transport failed — ${msg} (continuing)\n`);
+      }
+    }
+    await backend.commit(state);
+    return { ok: true };
+  } catch {
+    /* malformed draft must not break the hook */
+    await backend.commit(state);
+    return { ok: true };
+  }
+}
+
+export async function handleSubagentStart(
+  ctx: HookContext,
   state: CadenceState,
   _config: CadenceConfig,
   backend: SimpleStateBackend,
 ): Promise<HookResult> {
-  state.session.subagentSpawns += 1;
-  await backend.commit(state);
-  return { ok: true };
+  if (!ctx.agentId || !state.activeDraft || !state.activePhase) return { ok: true };
+  const draftPath = join(
+    ctx.cwd,
+    '.cadence/phases',
+    state.activePhase,
+    `${state.activeDraft}-DRAFT.md`,
+  );
+  if (!existsSync(draftPath)) return { ok: true };
+  try {
+    const draft = parseDraftMd(await readFile(draftPath, 'utf8'));
+    const progressPath = join(
+      ctx.cwd,
+      '.cadence/phases',
+      state.activePhase,
+      `${state.activeDraft}-PROGRESS.json`,
+    );
+    let progress: ProgressFile | null = null;
+    if (existsSync(progressPath)) {
+      try {
+        progress = JSON.parse(await readFile(progressPath, 'utf8')) as ProgressFile;
+      } catch {
+        progress = null;
+      }
+    }
+    const taskStatuses: Record<string, string> = {};
+    for (const t of draft.tasks) {
+      taskStatuses[t.id] = progress?.tasks[t.id]?.status ?? 'PENDING';
+    }
+    state.session.subagentBaselines[ctx.agentId] = {
+      startedAt: new Date().toISOString(),
+      taskStatuses,
+      touchedFiles: [],
+    };
+    await backend.commit(state);
+
+    const board = draft.tasks.map((t) => `${t.id} ${taskStatuses[t.id]}`).join(', ');
+    const doneIds = draft.tasks
+      .filter((t) => TERMINAL_TASK_STATUSES.has(taskStatuses[t.id] ?? 'PENDING'))
+      .map((t) => t.id);
+    const nudge =
+      doneIds.length > 0
+        ? `Live task status as of your start: ${board}. Do not redo ${doneIds.join('/')} — already finished.`
+        : `Live task status as of your start: ${board}.`;
+    return { ok: true, contextPayload: nudge };
+  } catch {
+    /* malformed draft/progress must not break the hook */
+    return { ok: true };
+  }
 }
 
 const SKILL_AUDIT_CAP = 100;
