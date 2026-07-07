@@ -1,49 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-04T17:47:05.744Z",
+  "generatedAt": "2026-07-07T23:23:45.328Z",
   "ranked": [
-    {
-      "id": "rec-20260701-012",
-      "title": "Boundary enforcement block mode, including subagent edits",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260701-audit"
-    },
     {
       "id": "rec-20260703-001",
       "title": "Milestone-scoped worktree fan-out for independent phases",
@@ -134,10 +92,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 27,
-    "ranked": 3,
+    "total": 29,
+    "ranked": 2,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 24
+    "excluded": 27
   }
 }
