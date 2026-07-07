@@ -1,5 +1,18 @@
 # @manehorizons/cadence-types
 
+## 1.42.0
+
+### Minor Changes
+
+- Add `boundaryEnforcement: 'warn' | 'block'` (default `warn`, back-compat), overridable per-phase via DRAFT frontmatter. In `block` mode, `handlePreToolEdit` refuses an out-of-boundary edit at edit time instead of only warning. Fails open (never blocks) when there's no active draft/phase, or when the active draft declares zero `files:` in total.
+- Add a `boundary-scan` settle gate — closes the blind spot edit-time `boundaryEnforcement: 'block'` can't see (most notably a subagent-driven edit, invisible to the pre-tool-edit hook). Enumerates every file touched by the whole phase via an unscoped git diff against the integration ref, and refuses settle on a real out-of-boundary offender when `boundaryEnforcement` resolves to `block` — bypassable via `--force`/`--allow-boundary-scan-failure` unless the gate is sealed.
+- Catch a subagent (or a human) touching a DRAFT task's declared files after that task is already marked `DONE`/`DONE_WITH_CONCERNS` — live at edit time via a new `redundantWorkEnforcement: 'off' | 'warn' | 'block'` config (default `warn`, DRAFT-frontmatter overridable), plus a `SubagentStart` baseline snapshot + advisory task-board nudge and a `SubagentStop` safety net that diffs an agent's touched files against its baseline.
+- Add `cadence dispatch plan [--json]`, a read-only CLI command that computes wave-based subagent dispatch groups from the active BUILD draft's task list (a unified topological-leveling pass over `depends:` edges and `files:`-overlap prerequisite edges, plus cycle/unknown-dependency detection), and a new `/cadence-dispatch` Claude Code slash command that drives the host agent through a parallel Task-tool dispatch loop over the computed waves. `Task` gains an optional `depends: string[]` DRAFT.md field.
+
+### Patch Changes
+
+- Fix `parseSpecMd`/`parseDraftMd` silently truncating a multi-line Objective or a multi-line Given/When/Then clause at the first line break. Both extractors now capture the full wrapped text; single-line parsing is byte-identical to before.
+
 ## 1.41.0
 
 ### Minor Changes

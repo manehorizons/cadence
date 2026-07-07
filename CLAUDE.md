@@ -134,7 +134,45 @@ explain [concept]`** (in-CLI, terminal-sized help for loop/gates/tiers/profiles,
 with content embedded in the binary so it works from any install — bare lists
 the concepts, unknown names get a did-you-mean nudge). `cadence-types` and
 `cadence-host-claude-code` carried version-alignment bumps only (no functional
-change). The latest version is **`1.41.0`** (2026-07-04, tag `v1.41.0`
+change). The latest version is **`1.42.0`** (2026-07-07, tag `v1.42.0`
+pending): bundles five independently-merged, unreleased phases accumulated
+since v1.41.0. **Phase 155 — `boundaryEnforcement` block mode** (issue #145,
+sourced from rec-20260701-012): a top-level `boundaryEnforcement: 'warn' |
+'block'` config (default `warn`, back-compat, DRAFT-frontmatter overridable)
+so an out-of-boundary edit can be refused at edit time, not just warned about;
+fails open when there's no active draft/phase or the active draft declares
+zero `files:` in total. **Phase 156 — settle-time `boundary-scan` gate**
+(issue #146): closes the blind spot phase 155's edit-time enforcement can't
+see — a subagent-driven edit never passes through the host's pre-tool-edit
+hook. `collectUnscopedTouchedFiles` enumerates every file touched by the whole
+phase via an unscoped git diff against the integration ref; the gate refuses
+settle on a real offender when `boundaryEnforcement` resolves to `block`,
+bypassable via `--force`/`--allow-boundary-scan-failure` unless sealed.
+**Phase 157 — multi-line SPEC/DRAFT parser fix** (issue #147,
+rec-20260704-002): `parseSpecMd`/`parseDraftMd` were silently truncating a
+multi-line Objective or a multi-line Given/When/Then clause at the first line
+break (discovered live seeding phase 155's own DRAFT from its SPEC); both
+extractors now capture the full wrapped text, single-line parsing unchanged.
+**Phase 158 — subagent task-redundancy monitoring** (PR #150): catches a
+subagent (or human) touching a DRAFT task's declared files after that task is
+already `DONE`/`DONE_WITH_CONCERNS` — a `redundantWorkEnforcement: 'off' |
+'warn' | 'block'` config (default `warn`) drives both a live edit-time check
+and a `SubagentStart` baseline snapshot + `SubagentStop` safety net that diffs
+an agent's touched files against it. **Phase 159 — wave-based subagent
+dispatch** (PR #149, the companion spec from the same two-part brainstorm as
+phase 158): `cadence dispatch plan [--json]`, a read-only CLI command
+computing wave-based subagent dispatch groups from a BUILD draft's task list
+— a single unified topological-leveling pass over `depends:` edges and
+`files:`-overlap prerequisite edges (an ordering bug in an earlier two-phase
+design was caught and fixed during task review), plus cycle/unknown-dependency
+detection — and a new `/cadence-dispatch` Claude Code slash command driving
+the host agent through a parallel Task-tool dispatch loop over the computed
+waves; `Task` gains an optional `depends: string[]` DRAFT.md field. All four
+published packages bumped `1.41.0 → 1.42.0` in lockstep (`cadence-core`
+carries all five phases' logic; `cadence-types` carries the `depends` schema
+field; both host adapters carry the `/cadence-dispatch` /
+Codex-prompt-parity wiring); npm publish is the user-triggered manual
+`Release` workflow. Prior: **`1.41.0`** (2026-07-04, tag `v1.41.0`
 pending): **phase 153 — MCP parity for the intelligence lifecycle**
 (rec-20260701-010, sourced from the 2026-07-01 audit; no new DESIGN.md
 D-number — deepens the existing MCP surface from phase 76/58). An MCP-only
