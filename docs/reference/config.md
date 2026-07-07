@@ -487,11 +487,55 @@ A DRAFT-level override wins over the project default in `.cadence/config.json`.
 { "boundaryEnforcement": "block" }
 ```
 
-**Scope note:** `block` mode is edit-time only. It cannot see a boundary
-violation that never passes through the host's pre-tool-edit hook — most
-notably a subagent-driven edit, which today is invisible to boundary
-detection entirely. A settle-time diff scan closing that gap is tracked
-separately as a follow-on, not yet built.
+**Scope note:** `block` mode is edit-time only — it fires on `PreToolUse`,
+which includes subagent-originated edits (Claude Code's `PreToolUse` hook
+fires for subagent tool calls, not just main-thread ones). A settle-time diff
+scan (phase 156, `boundary-scan` gate) is a second, independent line of
+defense for anything that slips past edit-time detection.
+
+---
+
+## redundantWorkEnforcement
+
+Redundant-work enforcement mode (subagent task-redundancy monitoring). A
+DRAFT task's `files:` declares what it owns; once that task's `PROGRESS.json`
+status reaches `DONE`/`DONE_WITH_CONCERNS`, `redundantWorkEnforcement`
+controls what happens when an edit touches one of those files again.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `redundantWorkEnforcement` | `"off" \| "warn" \| "block"` | `"warn"` | `off` — the check never runs. `warn` — a redundant-work edit is only notified via the `anomaly-notify` gate. `block` — the pre-tool-edit hook refuses the edit, and a `SubagentStop` safety net can hard-block a subagent's turn from ending if it slipped through edit-time detection. |
+
+Unlike `boundaryEnforcement` (`"warn" | "block"` only), this field has a
+third `"off"` value: re-touching finished work is a more subjective signal
+than an out-of-boundary edit (fixing a bug just introduced by that task is a
+legitimate reason to touch it again), so a full opt-out is offered.
+
+Overridable per-phase via DRAFT frontmatter, mirroring `boundaryEnforcement`:
+
+```markdown
+---
+phase: 42-example
+id: 42-01
+tier: standard
+redundantWorkEnforcement: block
+status: PENDING
+---
+```
+
+```jsonc
+// .cadence/config.json — refuse redundant edits project-wide
+{ "redundantWorkEnforcement": "block" }
+```
+
+**Scope note:** this check runs at edit time (`handlePreToolEdit`, fires for
+both main-thread and subagent edits) and again as a `SubagentStop` safety net
+scoped to files touched during that specific subagent's run (tracked via
+`PostToolUse`, not a git diff — a subagent's edits are normally uncommitted
+working-tree changes, so there's no commit boundary to diff against). It does
+not track cross-worktree task status, and it does not know which task a
+subagent was *assigned* — only whether a touched file's owning task is
+already finished.
 
 ---
 
