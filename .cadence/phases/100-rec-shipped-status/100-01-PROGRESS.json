@@ -1,0 +1,35 @@
+{
+  "draftId": "100-01",
+  "tasks": {
+    "T1": {
+      "status": "BLOCKED",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-11T18:40:16.772Z"
+    },
+    "T2": {
+      "status": "BLOCKED",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-11T18:40:16.772Z"
+    },
+    "T3": {
+      "status": "BLOCKED",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-11T18:40:16.772Z"
+    },
+    "T4": {
+      "status": "BLOCKED",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-11T18:40:16.772Z"
+    },
+    "T5": {
+      "status": "BLOCKED",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-11T18:40:16.772Z"
+    }
+  }
+}

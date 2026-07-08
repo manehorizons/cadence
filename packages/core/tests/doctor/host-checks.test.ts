@@ -12,6 +12,7 @@ afterEach(async () => {
     await active.cleanup();
     active = null;
   }
+  delete process.env.CODEX_HOME;
 });
 
 async function writeCommand(
@@ -24,6 +25,26 @@ async function writeCommand(
   await writeFile(
     join(dir, name),
     `---\ndescription: x\nallowed-tools: Bash(cadence:*), Read\n---\n\n<!-- managed-by: cadence -->\n\n${runLine}\n`,
+  );
+}
+
+async function writeCodexHooks(root: string): Promise<void> {
+  await mkdir(join(root, '.codex'), { recursive: true });
+  await writeFile(
+    join(root, '.codex', 'hooks.json'),
+    JSON.stringify({
+      hooks: {
+        Stop: [{ _managedBy: 'cadence', hooks: [{ type: 'command', command: 'x' }] }],
+      },
+    }),
+  );
+}
+
+async function writeCodexPrompt(codexHome: string): Promise<void> {
+  await mkdir(join(codexHome, 'prompts'), { recursive: true });
+  await writeFile(
+    join(codexHome, 'prompts', 'cadence-progress.md'),
+    '---\ndescription: x\n---\n\n<!-- managed-by: cadence -->\n\nRun cadence progress.\n',
   );
 }
 
@@ -89,7 +110,15 @@ describe('runDoctor — setup + host checks', () => {
   it('no .git / no .claude → git-hooks, host-hooks, host-commands all ok (n/a)', async () => {
     active = await tempRepo({ initialized: true });
     const report = await runDoctor(active.root, ENV);
-    for (const n of ['git-hooks', 'host-hooks', 'host-commands']) {
+    for (const n of [
+      'git-hooks',
+      'host-hooks',
+      'host-commands',
+      'codex-hooks',
+      'codex-prompts',
+      'codex-agents-md',
+      'codex-cadence-command',
+    ]) {
       expect(report.checks.find((c) => c.name === n)?.severity).toBe('ok');
     }
     expect(report.ok).toBe(true);
@@ -122,6 +151,37 @@ describe('runDoctor — setup + host checks', () => {
     const report = await runDoctor(active.root, ENV);
     expect(report.checks.find((c) => c.name === 'host-hooks')?.severity).toBe(
       'ok',
+    );
+  });
+
+  it('codex readiness: all managed artifacts present → ok', async () => {
+    active = await tempRepo({ initialized: true });
+    process.env.CODEX_HOME = join(active.root, 'codex-home');
+    await writeCodexHooks(active.root);
+    await writeCodexPrompt(process.env.CODEX_HOME);
+    await writeFile(
+      join(active.root, 'AGENTS.md'),
+      '# demo\n\n<!-- cadence:managed:start -->\n## CADENCE\n<!-- cadence:managed:end -->\n',
+    );
+    const report = await runDoctor(active.root, ENV);
+    for (const n of ['codex-hooks', 'codex-prompts', 'codex-agents-md']) {
+      expect(report.checks.find((c) => c.name === n)?.severity).toBe('ok');
+    }
+  });
+
+  it('codex readiness: missing hooks/prompts/AGENTS.md are fixable findings', async () => {
+    active = await tempRepo({ initialized: true });
+    process.env.CODEX_HOME = join(active.root, 'codex-home');
+    await mkdir(join(active.root, '.codex'), { recursive: true });
+    const report = await runDoctor(active.root, ENV);
+    expect(report.checks.find((c) => c.name === 'codex-hooks')?.fixId).toBe(
+      'codex-host-install',
+    );
+    expect(report.checks.find((c) => c.name === 'codex-prompts')?.fixId).toBe(
+      'codex-host-install',
+    );
+    expect(report.checks.find((c) => c.name === 'codex-agents-md')?.fixId).toBe(
+      'agents-md',
     );
   });
 });

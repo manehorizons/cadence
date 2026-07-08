@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 161-portfolio-readiness-doc-sync
+**Active phase:** 162-codex-first-run-bootstrap
 **Active draft:** (none)
 **Tier:** (n/a)
 

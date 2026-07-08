@@ -63,4 +63,34 @@ describe('applyFixes wire-host gating + dedupe (131 AC-4)', () => {
     expect(hostOutcomes).toHaveLength(2);
     expect(hostOutcomes.every((o) => o.status === 'skipped')).toBe(true);
   });
+
+  it('runs the Codex host install once for shared Codex host findings', async () => {
+    const plan = {
+      actions: [
+        {
+          check: 'codex-hooks',
+          kind: 'wire-host' as const,
+          fixId: 'codex-host-install',
+          title: 't',
+          detail: 'd',
+        },
+        {
+          check: 'codex-prompts',
+          kind: 'wire-host' as const,
+          fixId: 'codex-host-install',
+          title: 't',
+          detail: 'd',
+        },
+      ],
+    };
+    let calls = 0;
+    const outcomes = await applyFixes('/repo', plan, { wireHost: true }, {
+      codexHostInstall: async () => {
+        calls++;
+        return 0;
+      },
+    });
+    expect(calls).toBe(1);
+    expect(outcomes.every((o) => o.status === 'applied')).toBe(true);
+  });
 });

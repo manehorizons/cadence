@@ -36,7 +36,7 @@ export function registerDoctorCommand(program: Command): void {
     .option('--fix', 'apply safe, deterministic repairs for fixable findings')
     .option(
       '--wire-host',
-      'with --fix, also re-run the Claude Code host install for host findings',
+      'with --fix, also re-run host installs for host findings',
     )
     .option('--dry-run', 'with --fix, print the repair plan without writing anything')
     .action(

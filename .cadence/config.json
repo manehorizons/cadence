@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "profile": "auto",
   "loopEnforcement": "soft",
   "acDiscipline": "tier-scaled",
   "workstreamBackend": "simple",
@@ -35,6 +36,15 @@
     "skillInvocations": true,
     "remoteOptIn": false
   },
+  "skillAudit": {
+    "required": []
+  },
+  "convergence": {
+    "maxAttempts": 3
+  },
+  "specReview": {
+    "provider": "mock"
+  },
   "tier": {
     "quickFix": {
       "maxTasks": 1,
@@ -49,7 +59,53 @@
       "minTasks": 6
     }
   },
+  "verification": {
+    "testGlobs": [
+      "packages/**/*.test.ts",
+      "packages/**/*.test.tsx"
+    ],
+    "coverageMode": "assertion",
+    "testCommand": "pnpm test"
+  },
+  "verifier": {
+    "provider": "mock",
+    "diffCapBytes": 262144
+  },
+  "perTaskVerifier": {
+    "provider": "mock"
+  },
+  "codeReview": {
+    "provider": "mock"
+  },
+  "planReview": {
+    "provider": "mock"
+  },
+  "securityAudit": {
+    "provider": "mock"
+  },
+  "notify": {
+    "transport": "stderr"
+  },
+  "phaseGuard": {
+    "enabled": true,
+    "integrationRef": "main"
+  },
+  "logging": {
+    "level": "silent"
+  },
   "handoff": {
     "retain": 10
-  }
+  },
+  "recommendations": {
+    "autoArchive": true
+  },
+  "gates": {
+    "sealed": []
+  },
+  "resume": {
+    "crossWorktree": true,
+    "autoList": false
+  },
+  "boundaryEnforcement": "warn",
+  "redundantWorkEnforcement": "warn"
 }

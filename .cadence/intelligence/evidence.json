@@ -420,6 +420,20 @@
       "kind": "note",
       "summary": "Reproduced on phase 155-01: SPEC objective/AC-1..AC-5 all truncated at first newline in the seeded 155-01-DRAFT.md; root cause at spec-parser.ts:38-40 (Given/When/Then regex lacks /s flag) and spec-parser.ts:57 (.split('\\n')[0] on Objective)",
       "createdAt": "2026-07-04T18:57:46.462Z"
+    },
+    {
+      "id": "ev-20260708-001",
+      "recommendationId": "rec-20260708-001",
+      "kind": "note",
+      "summary": "Current init auto-wires only Claude Code when .claude/ exists; Codex prompt commands install globally under CODEX_HOME/prompts and the host installer tells users to approve hooks and start a new Codex session. Init writes CLAUDE.md, while Codex consumes AGENTS.md. Quickstart mentions the Codex install but does not make it a pre-Codex first-run bootstrap.",
+      "createdAt": "2026-07-08T00:43:25.603Z"
+    },
+    {
+      "id": "ev-20260708-002",
+      "recommendationId": "rec-20260708-002",
+      "kind": "note",
+      "summary": "User requested a mock Cadence milestone workflow so the branch demonstrates Cadence dogfooding before commit.",
+      "createdAt": "2026-07-08T02:00:55.927Z"
     }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "draftId": "97-97",
+  "tasks": {
+    "T1": {
+      "status": "BLOCKED",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-10T19:49:29.710Z"
+    },
+    "T2": {
+      "status": "BLOCKED",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-10T19:49:29.710Z"
+    },
+    "T3": {
+      "status": "BLOCKED",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-10T19:49:29.710Z"
+    }
+  }
+}

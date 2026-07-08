@@ -1,0 +1,29 @@
+{
+  "draftId": "162-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added explicit Codex init host path that shells out to the Codex host installer and preserves Claude host behavior.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-08T01:05:09.396Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Generalized the managed agent block so Codex AGENTS.md can be generated/regenerated while preserving user-owned files.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-08T01:05:15.415Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added Codex readiness doctor checks and fix planning for hooks, prompts, AGENTS.md, and cadence-on-PATH.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-08T01:05:20.849Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Updated README, quickstart, CLI docs, command reference, host adapter docs, and Codex host README with first-run ordering.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-08T01:05:24.618Z"
+    }
+  }
+}

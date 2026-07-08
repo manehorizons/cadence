@@ -247,6 +247,31 @@
       ],
       "createdAt": "2026-07-04T20:18:09.208Z",
       "updatedAt": "2026-07-04T20:18:15.176Z"
+    },
+    {
+      "id": "mil-rec-rec-20260708-002",
+      "name": "Mock milestone workflow proof for Codex first-run bootstrap",
+      "objective": "Proof-only wrapper for the Codex first-run bootstrap work already settled in phase 162; exercises milestone propose, pre-mortem, accept, export, and close inside Cadence's own repository workflow.",
+      "status": "closed",
+      "recommendationIds": [
+        "rec-20260708-002"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md",
+          "exportedAt": "2026-07-08T02:01:40.974Z"
+        }
+      ],
+      "createdAt": "2026-07-08T02:01:09.682Z",
+      "updatedAt": "2026-07-08T02:02:11.363Z",
+      "closedRef": "proof workflow artifact: .cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md; phase 162 settled on feat/codex-first-run-recommendation"
     }
   ]
 }

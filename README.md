@@ -59,7 +59,7 @@ adapters, and an MCP server — for **four current entry points**:
 - The **`cadence` CLI** is the engine — it implements the DRAFT→BUILD→SETTLE loop and all quality gates. You run it in a terminal; a human operator or an AI agent can drive it. Completely host-agnostic.
 - **Host adapters** wire the same engine into a specific coding agent's lifecycle — currently two:
   - The **`cadence-host-claude-code install`** adapter wires Claude Code via lifecycle hooks and 14 slash commands. Claude Code is the **reference adapter** for *ambient* edit-time gates (boundary checks, anomaly detection as you edit).
-  - The **`cadence-host-codex install`** adapter wires the OpenAI Codex CLI via lifecycle hooks and global prompt commands. It is a shipped conformance consumer of the host-adapter contract, and also supports ambient edit-time boundary checks via its own hooks.
+  - The **`cadence init --host codex` / `cadence-host-codex install`** path wires the OpenAI Codex CLI via lifecycle hooks and global prompt commands. Run the bootstrap before opening Codex for the first time so Codex sees the commands on its first useful session. It is a shipped conformance consumer of the host-adapter contract, and also supports ambient edit-time boundary checks via its own hooks.
 - **`cadence mcp serve`** exposes the engine as a local [MCP](https://modelcontextprotocol.io) server over stdio, so any MCP-capable host (Claude Desktop, Cursor, other agents) can drive the loop with no bespoke adapter. It covers the imperative loop only (command-boundary gates run; ambient edit-time gates need host hooks). See **[MCP server](./docs/mcp.md)**.
 
 ## How it compares
@@ -117,7 +117,9 @@ cadence settle run --ac AC-1=pass
 or the directory) and the gate profile (from git history). Already have an
 `ANTHROPIC_API_KEY`? Add `--activate` to turn on real verification in the same
 step (the key is never stored). In a Claude Code workspace (`.claude/` present),
-add `--wire-host` to install the adapter in the same step too.
+add `--wire-host` to install the adapter in the same step too. For Codex, run
+`cadence init --host codex` before opening Codex so hooks, prompt commands, and
+`AGENTS.md` are ready for the first session.
 
 To drive a real phase yourself instead of the demo:
 

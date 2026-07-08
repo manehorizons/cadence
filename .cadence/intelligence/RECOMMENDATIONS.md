@@ -377,3 +377,19 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 - next: cadence milestone propose
 
 External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md
+
+## rec-20260708-001 — Make Codex first-run setup a one-command bootstrap
+
+- status: settle-pending
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: onboarding, host-codex, docs, doctor, agent-instructions
+- files: packages/core/src/cli/commands/init.ts, packages/core/src/init/claude-md-template.ts, packages/core/src/doctor/run.ts, packages/host-codex/src/cli.ts, docs/quickstart.md
+- evidence: Current init auto-wires only Claude Code when .claude/ exists; Codex prompt commands install globally under CODEX_HOME/prompts and the host installer tells users to approve hooks and start a new Codex session. Init writes CLAUDE.md, while Codex consumes AGENTS.md. Quickstart mentions the Codex install but does not make it a pre-Codex first-run bootstrap.
+- next: cadence milestone propose
+
+Codex users need Cadence commands available before their first useful Codex session. Add a Codex-first bootstrap path such as 'cadence init --host codex' or 'cadence setup codex' that installs the Codex host adapter before launch, generates/merges AGENTS.md with the managed Cadence loop instructions, and adds doctor checks/fixes for prompts, hooks, AGENTS.md, and the cadence binary. Keep the AGENTS.md fallback explicit so Codex can run the cadence CLI directly if slash-command prompts are not loaded until the next session.

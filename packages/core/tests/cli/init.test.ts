@@ -430,4 +430,48 @@ describe('cadence init — phase 108 zero-prompt + auto-wire (rec-20260617-001)'
     expect(r.code).toBe(0);
     expect(existsSync(join(active.root, 'CLAUDE.md'))).toBe(true);
   });
+
+  it('AC-6: --host codex spawns the Codex host install and writes AGENTS.md', async () => {
+    active = await tempRepo();
+    const sentinel = join(active.root, 'sentinel.cjs');
+    await writeFile(
+      sentinel,
+      "require('fs').writeFileSync(require('path').join(process.cwd(),'CODEX_WIRED'),'ok');",
+    );
+    const r = await run(['init', '--name=demo', '--host=codex'], active.root, {
+      CADENCE_HOST_CODEX_WIRE_CMD: JSON.stringify([process.execPath, sentinel]),
+    });
+    expect(r.code).toBe(0);
+    expect(existsSync(join(active.root, 'CODEX_WIRED'))).toBe(true);
+    expect(existsSync(join(active.root, 'AGENTS.md'))).toBe(true);
+    expect(readFileSync(join(active.root, 'AGENTS.md'), 'utf8')).toMatch(
+      /cadence init --agents-md/,
+    );
+    expect(r.stdout).toMatch(/Codex first run/);
+  });
+
+  it('AC-6: --agents-md works on an already-initialized repo', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['init', '--agents-md'], active.root);
+    expect(r.code).toBe(0);
+    expect(existsSync(join(active.root, 'AGENTS.md'))).toBe(true);
+    expect(r.stdout).toMatch(/AGENTS\.md created/);
+  });
+
+  it('AC-6: --agents-md preserves marker-less user-owned AGENTS.md', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeFile(join(active.root, 'AGENTS.md'), '# User rules\n');
+    const r = await run(['init', '--agents-md'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/AGENTS\.md preserved/);
+    expect(readFileSync(join(active.root, 'AGENTS.md'), 'utf8')).toBe('# User rules\n');
+  });
+
+  it('AC-6: invalid --host refuses before writing', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--host=vim'], active.root);
+    expect(r.code).toBe(2);
+    expect(r.stderr).toMatch(/Unknown host/);
+    expect(existsSync(join(active.root, '.cadence'))).toBe(false);
+  });
 });

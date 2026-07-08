@@ -175,9 +175,11 @@ Scaffold a new .cadence/ directory in the current working tree
 | `--demo` | — | Seed a ready-to-approve demo phase (`01-demo`, objective + AC-1 + T1) so you can run a full loop in this repo with no hand-edit |
 | `--activate` | — | When `ANTHROPIC_API_KEY` is present, turn on real verification (`verifier.provider=anthropic`, deep-verify seam) in the same step. The key is never stored; no live check runs (that stays in `cadence activate`) |
 | `--dry-run` | — | **Fit-check.** Resolve everything init would (name, gate profile, layout, test globs, verification/provider status, host surface, and the exact files it would create) and print a preview **without touching the repo** — then exit 0. Honors the resolution flags above; safe to run inside a populated or already-initialized repo |
+| `--host <host>` | — | Wire a host during init: `claude \| codex`. `codex` runs the Codex host installer and writes managed `AGENTS.md` instructions |
 | `--wire-host` | — | When a `.claude/` workspace is present, run `cadence-host-claude-code install` in the same step (subprocess spawn; auto-run, no prompt) |
 | `--skip-host-wire` | — | Never wire the Claude Code host, even when `.claude/` is present |
 | `--claude-md` | — | Only (re)generate the managed CLAUDE.md block at the repo root; allowed on an already-initialized project |
+| `--agents-md` | — | Only (re)generate the managed AGENTS.md block at the repo root; allowed on an already-initialized project |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — writes `.cadence/config.json`, `.cadence/state.json`,
@@ -190,10 +192,16 @@ since it sets a preset, not a gate profile.)
 
 When a `.claude/` workspace is detected, `--wire-host` installs the Claude Code
 adapter in the same step (a TTY offers it interactively; non-TTY skips with a
-pointer); `--skip-host-wire` opts out. `--demo` seeds a ready-to-approve demo
-phase so the very next commands are `draft approve 01-demo 01` → `done T1` →
-`settle run --ac AC-1=pass`. `--activate` flips on real verification when a key
-is already in the environment.
+pointer); `--skip-host-wire` opts out. `--host codex` is the explicit first-run
+bootstrap for Codex and should be run before opening Codex in the repo: it
+writes `.cadence/`, creates the managed `AGENTS.md` block Codex reads at session
+start, runs `npx -y @manehorizons/cadence-host-codex install`, and prints the
+"approve hooks then start a new Codex session" next step. The plain Codex host
+installer is adapter-only; use it for already-initialized repos, paired with
+`cadence init --agents-md` if `AGENTS.md` is missing. `--demo` seeds a
+ready-to-approve demo phase so the very next commands are `draft approve
+01-demo 01` → `done T1` → `settle run --ac AC-1=pass`. `--activate` flips on
+real verification when a key is already in the environment.
 
 `--dry-run` is a non-destructive **fit-check**: run it first to preview the
 detected name, gate profile, layout, test globs, provider status, host surface,
@@ -202,14 +210,14 @@ repo. It writes nothing, honors the resolution flags (e.g. `--gate-profile`,
 `--activate`, `--demo`), and — unlike a real `init` — previews rather than
 refuses when `.cadence/` already exists, so it stays a safe pre-flight check.
 
-The `--claude-md` flag is the only `init` option permitted on an
-already-initialized project; it is used to refresh the CLAUDE.md block without
-re-scaffolding state.
+The `--claude-md` and `--agents-md` flags are the only `init` options permitted
+on an already-initialized project; they refresh managed agent-instruction blocks
+without re-scaffolding state.
 
 **Exit codes** — exits non-zero if the directory is already initialized (without
-`--claude-md` or `--dry-run`) or if required options are missing in a
+`--claude-md`, `--agents-md`, or `--dry-run`) or if required options are missing in a
 non-interactive context. `--dry-run` always exits 0 (even on an already-initialized
-repo); an invalid `--gate-profile` exits 2.
+repo); an invalid `--gate-profile` or `--host` exits 2.
 
 ---
 
@@ -834,7 +842,7 @@ Diagnose this project’s CADENCE setup and report problems
 |---|---|
 | `--json` | Emit machine-readable JSON instead of rendered text |
 | `--fix` | Apply safe, deterministic repairs for the fixable findings *(v1.34)* |
-| `--wire-host` | With `--fix`, also re-run the Claude Code host install for host findings *(v1.34)* |
+| `--wire-host` | With `--fix`, also re-run host installs for host findings *(v1.34)* |
 | `--dry-run` | With `--fix`, print the repair plan without writing anything *(v1.34)* |
 | `-h, --help` | Display help for command |
 
@@ -855,13 +863,18 @@ v1 check set:
 | `git-hooks` | *(git repos)* `core.hooksPath` resolves to `.githooks` (the pre-push gate) | warning |
 | `host-hooks` | *(if `.claude/settings.json`)* CADENCE-managed hook entries present | warning |
 | `host-commands` | *(if `.claude/commands/`)* every managed `cadence-*.md` run-line is portable (no machine-absolute path) | warning |
+| `codex-hooks` | *(if Codex readiness artifacts exist)* `.codex/hooks.json` contains CADENCE-managed hook entries | warning |
+| `codex-prompts` | *(if Codex readiness artifacts exist)* `$CODEX_HOME/prompts/cadence-*.md` contains CADENCE-managed prompt commands | warning |
+| `codex-agents-md` | *(if Codex readiness artifacts exist)* `AGENTS.md` contains the managed CADENCE instruction block | warning |
+| `codex-cadence-command` | *(if Codex readiness artifacts exist)* `cadence` is available on `PATH` for Codex prompt commands | warning |
 | `worktree-phases` | *(v1.19)* no **sibling git worktree** claims a phase number equal to a local phase number (the silent-dual-merge precondition the v1.18 guard refuses at scaffold time) | warning |
 | `handoff-retention` | *(v1.20)* `SESSION-*.md` handoff docs are within `handoff.retain`, or — when retention is unset — have not accumulated past the warn threshold | warning |
 | `verification-readiness` | *(v1.22)* the deep-verify seam uses a **real** provider whose credentials are present (i.e. settle gates do real AI verification, not mock). Warns on all-mock (→ `cadence activate`) or a real provider missing its key | warning |
 | `recommendation-shipped-drift` | no recommendation is stuck in `settle-pending` — its linked phase settled locally but nobody has confirmed the work actually shipped. Warns naming each one's id, title, phase, and the exact `recommendation promote --status=shipped` command to run | warning |
 
 Host checks run only when the relevant files exist; their absence is not a
-problem.
+problem. Codex readiness checks activate when `.codex/` exists or `AGENTS.md`
+already contains the managed CADENCE block.
 
 The `worktree-phases` check (v1.19, phase 85) reuses the v1.18 collision
 collector: it reports `ok` when no sibling worktree holds a colliding number
@@ -887,9 +900,9 @@ never prompts):
 
 | Fix kind | Findings | What `--fix` does |
 |---|---|---|
-| **auto** | `git-hooks`, missing `STATE.md` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`) |
-| **wire-host** | `host-hooks`, `host-commands` | applied only with `--fix --wire-host` — re-runs `cadence-host-claude-code install` once (deduped) to rewrite the hooks/commands |
-| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `handoff-retention` | never auto-applied — reported as guidance with the check's remediation |
+| **auto** | `git-hooks`, missing `STATE.md`, missing managed `AGENTS.md` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`); regenerate `AGENTS.md` |
+| **wire-host** | `host-hooks`, `host-commands`, `codex-hooks`, `codex-prompts` | applied only with `--fix --wire-host` — re-runs the relevant host installer once per host repair id (deduped) to rewrite hooks/commands |
+| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `handoff-retention`, `codex-cadence-command`, user-owned prompt/agent files | never auto-applied — reported as guidance with the check's remediation |
 
 Each repair is best-effort: a repair that fails is reported (`✗ failed`) and the
 rest still run; `--fix` never throws on a repair failure. `--fix --dry-run`
@@ -1786,6 +1799,11 @@ so `start` never imports host code. Declining the confirm prints the command so
 you can run it yourself. If the repo is already initialized, the `init` option
 is annotated as safe to re-run. In a non-interactive shell with no `--pick`, it
 prints the recommendation plus menu and exits `0` (never hangs).
+
+For Codex first-run setup, prefer `cadence init --host codex` before launching
+Codex. The `start` menu's Codex route is the adapter-only installer for an
+already-initialized repo; it does not create `.cadence/` or `AGENTS.md` by
+itself.
 
 **Exit codes** — `0` on menu print / quit / declined-confirm; the dispatched
 command's exit code when it runs; `1` on an invalid `--pick`.

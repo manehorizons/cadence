@@ -1,0 +1,29 @@
+{
+  "draftId": "60-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "HostCapabilitiesZ + ADAPTER_CONTRACT_VERSION (AC-2, AC-3)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T04:14:07.005Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "HostAdapter<> contract + ExtractedPayload relocated (AC-1)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T04:14:07.005Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "claudeCodeAdapter satisfies HostAdapter + conformance test (AC-4, AC-6)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T04:14:07.005Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "docs/host-adapters.md published + route registered (AC-5)",
+      "touchedFiles": [],
+      "updatedAt": "2026-06-05T04:14:07.005Z"
+    }
+  }
+}

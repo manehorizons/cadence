@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { execFile } from 'node:child_process';
+import { delimiter, join } from 'node:path';
+import { homedir } from 'node:os';
 import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
@@ -136,13 +138,26 @@ function gitHooksPath(configText: string): string | null {
   return m[1];
 }
 
+function gitConfigHooksPath(root: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    execFile('git', ['config', '--local', '--get', 'core.hooksPath'], { cwd: root }, (err, stdout) => {
+      if (err) {
+        resolve(null);
+        return;
+      }
+      const value = stdout.trim();
+      resolve(value.length > 0 ? value : null);
+    });
+  });
+}
+
 async function checkGitHooks(root: string): Promise<DoctorCheck> {
   if (!existsSync(join(root, '.git'))) {
     return pass('git-hooks', 'Not applicable — not a git repository.');
   }
   const cfgPath = join(root, '.git', 'config');
   const cfg = existsSync(cfgPath) ? await readFile(cfgPath, 'utf8') : '';
-  const hp = gitHooksPath(cfg);
+  const hp = (await gitConfigHooksPath(root)) ?? gitHooksPath(cfg);
   if (hp === '.githooks') {
     return pass(
       'git-hooks',
@@ -200,6 +215,152 @@ async function checkHostHooks(root: string): Promise<DoctorCheck> {
     'No CADENCE-managed (_managedBy: "cadence") hook entries found in settings.json.',
     'Run `cadence-host-claude-code install` to (re)write the lifecycle hooks.',
     'host-install',
+  );
+}
+
+const CADENCE_MANAGED_BLOCK = '<!-- cadence:managed:start -->';
+const CODEX_PROMPT_MARKER = '<!-- managed-by: cadence -->';
+
+async function hasManagedAgentsMd(root: string): Promise<boolean> {
+  const path = join(root, 'AGENTS.md');
+  if (!existsSync(path)) return false;
+  try {
+    return (await readFile(path, 'utf8')).includes(CADENCE_MANAGED_BLOCK);
+  } catch {
+    return false;
+  }
+}
+
+async function codexReadinessActive(root: string): Promise<boolean> {
+  return existsSync(join(root, '.codex')) || (await hasManagedAgentsMd(root));
+}
+
+function resolveCodexHome(): string {
+  return process.env.CODEX_HOME ?? join(homedir(), '.codex');
+}
+
+function commandOnPath(command: string): boolean {
+  const path = process.env.PATH ?? '';
+  for (const dir of path.split(delimiter).filter(Boolean)) {
+    if (existsSync(join(dir, command))) return true;
+    if (process.platform === 'win32' && existsSync(join(dir, `${command}.cmd`))) return true;
+  }
+  return false;
+}
+
+async function checkCodexHooks(root: string): Promise<DoctorCheck> {
+  if (!(await codexReadinessActive(root))) {
+    return pass('codex-hooks', 'Not applicable — no Codex readiness artifacts here.');
+  }
+  const hooksPath = join(root, '.codex', 'hooks.json');
+  if (!existsSync(hooksPath)) {
+    return fail(
+      'codex-hooks',
+      'warning',
+      '.codex/hooks.json is missing.',
+      'Run `npx -y @manehorizons/cadence-host-codex install` to write Codex lifecycle hooks.',
+      'codex-host-install',
+    );
+  }
+  try {
+    const parsed = JSON.parse(await readFile(hooksPath, 'utf8'));
+    if (hasManagedCadence(parsed)) {
+      return pass('codex-hooks', 'CADENCE-managed Codex hook entries are present.');
+    }
+    return fail(
+      'codex-hooks',
+      'warning',
+      'No CADENCE-managed (_managedBy: "cadence") hook entries found in .codex/hooks.json.',
+      'Run `npx -y @manehorizons/cadence-host-codex install` to rewrite Codex lifecycle hooks.',
+      'codex-host-install',
+    );
+  } catch (err) {
+    return fail(
+      'codex-hooks',
+      'warning',
+      `.codex/hooks.json is not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
+      'Fix or regenerate it with `npx -y @manehorizons/cadence-host-codex install`.',
+      'codex-host-install',
+    );
+  }
+}
+
+async function checkCodexPrompts(root: string): Promise<DoctorCheck> {
+  if (!(await codexReadinessActive(root))) {
+    return pass('codex-prompts', 'Not applicable — no Codex readiness artifacts here.');
+  }
+  const promptsDir = join(resolveCodexHome(), 'prompts');
+  const progress = join(promptsDir, 'cadence-progress.md');
+  if (!existsSync(progress)) {
+    return fail(
+      'codex-prompts',
+      'warning',
+      `Codex prompt commands are missing from ${promptsDir}.`,
+      'Run `npx -y @manehorizons/cadence-host-codex install` before opening Codex.',
+      'codex-host-install',
+    );
+  }
+  let content: string;
+  try {
+    content = await readFile(progress, 'utf8');
+  } catch (err) {
+    return fail(
+      'codex-prompts',
+      'warning',
+      `Could not read ${progress}: ${err instanceof Error ? err.message : String(err)}`,
+      'Fix or regenerate Codex prompts with `npx -y @manehorizons/cadence-host-codex install`.',
+      'codex-host-install',
+    );
+  }
+  if (!content.includes(CODEX_PROMPT_MARKER)) {
+    return fail(
+      'codex-prompts',
+      'warning',
+      'cadence-progress.md exists but is not CADENCE-managed.',
+      'Move the user-owned prompt aside or reinstall Codex prompts intentionally.',
+    );
+  }
+  return pass('codex-prompts', `CADENCE Codex prompts are present in ${promptsDir}.`);
+}
+
+async function checkCodexAgentsMd(root: string): Promise<DoctorCheck> {
+  if (!(await codexReadinessActive(root))) {
+    return pass('codex-agents-md', 'Not applicable — no Codex readiness artifacts here.');
+  }
+  const path = join(root, 'AGENTS.md');
+  if (!existsSync(path)) {
+    return fail(
+      'codex-agents-md',
+      'warning',
+      'AGENTS.md is missing; Codex may not see the CADENCE loop instructions.',
+      'Run `cadence init --agents-md` to write the managed AGENTS.md block.',
+      'agents-md',
+    );
+  }
+  const content = await readFile(path, 'utf8');
+  if (!content.includes(CADENCE_MANAGED_BLOCK)) {
+    return fail(
+      'codex-agents-md',
+      'warning',
+      'AGENTS.md exists but has no CADENCE managed block.',
+      'Add the CADENCE block manually or run `cadence init --agents-md` after adding cadence markers.',
+    );
+  }
+  return pass('codex-agents-md', 'AGENTS.md contains the CADENCE managed block.');
+}
+
+async function checkCodexCadenceCommand(root: string): Promise<DoctorCheck> {
+  if (!(await codexReadinessActive(root))) {
+    return pass('codex-cadence-command', 'Not applicable — no Codex readiness artifacts here.');
+  }
+  if (commandOnPath('cadence')) {
+    return pass('codex-cadence-command', '`cadence` is available on PATH for Codex prompt commands.');
+  }
+  return fail(
+    'codex-cadence-command',
+    'warning',
+    '`cadence` is not available on PATH; Codex prompts may not be able to run it.',
+    'Install @manehorizons/cadence-core globally or reinstall Codex prompts with an explicit --cadence command.',
   );
 }
 
@@ -435,6 +596,10 @@ export async function runDoctor(
     await checkGitHooks(root),
     await checkHostHooks(root),
     await checkHostCommands(root),
+    await checkCodexHooks(root),
+    await checkCodexPrompts(root),
+    await checkCodexAgentsMd(root),
+    await checkCodexCadenceCommand(root),
     await checkWorktreePhases(root),
     await checkHandoffRetention(root),
     await checkVerificationReadiness(root),
