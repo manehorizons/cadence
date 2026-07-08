@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import { renderStateMd } from '../render/state-md.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteText } from '../state/atomic-write.js';
+import { loadConfig } from '../config/loader.js';
+import { renderAgentsMd } from '../init/claude-md-template.js';
 import type { DoctorReport } from './model.js';
 
 /**
@@ -32,12 +34,16 @@ const FIX_KIND: Record<string, Exclude<FixKind, 'manual'>> = {
   'git-hooks': 'auto',
   'state-md': 'auto',
   'host-install': 'wire-host',
+  'codex-host-install': 'wire-host',
+  'agents-md': 'auto',
 };
 
 const TITLES: Record<string, string> = {
   'git-hooks': 'Set core.hooksPath to .githooks',
   'state-md': 'Regenerate STATE.md from state.json',
   'host-install': 'Re-run the Claude Code host install',
+  'codex-host-install': 'Re-run the Codex host install',
+  'agents-md': 'Regenerate AGENTS.md',
 };
 
 /**
@@ -86,6 +92,8 @@ export interface FixOutcome {
 export interface ApplyDeps {
   /** Run the Claude Code host install in `root`; resolves with its exit code. */
   hostInstall?: (root: string) => Promise<number>;
+  /** Run the Codex host install in `root`; resolves with its exit code. */
+  codexHostInstall?: (root: string) => Promise<number>;
 }
 
 function errMessage(err: unknown): string {
@@ -113,7 +121,21 @@ async function regenerateStateMd(root: string): Promise<void> {
   await atomicWriteText(join(root, '.cadence', 'STATE.md'), renderStateMd(state));
 }
 
+async function regenerateAgentsMd(root: string): Promise<void> {
+  const state = await new SimpleStateBackend(root).readState();
+  const config = await loadConfig(root);
+  await atomicWriteText(
+    join(root, 'AGENTS.md'),
+    renderAgentsMd({
+      projectName: state.project.name,
+      gateProfile: config.profile,
+      preset: 'team',
+    }),
+  );
+}
+
 const HOST_WIRE_DISPLAY = 'npx @manehorizons/cadence-host-claude-code install';
+const CODEX_HOST_WIRE_DISPLAY = 'npx -y @manehorizons/cadence-host-codex install';
 
 /**
  * Spawn the Claude Code host install (the host-install repair). Core never
@@ -149,15 +171,49 @@ function defaultHostInstall(root: string): Promise<number> {
   });
 }
 
+function defaultCodexHostInstall(root: string): Promise<number> {
+  const override = process.env.CADENCE_HOST_CODEX_WIRE_CMD ?? process.env.CADENCE_HOST_WIRE_CMD;
+  let cmd: string;
+  let args: string[];
+  let useShell = false;
+  if (override !== undefined && override.length > 0) {
+    if (override.trimStart().startsWith('[')) {
+      const parsed = JSON.parse(override) as string[];
+      cmd = parsed[0] as string;
+      args = parsed.slice(1);
+    } else {
+      cmd = override;
+      args = [];
+      useShell = true;
+    }
+  } else {
+    cmd = 'npx';
+    args = ['-y', '@manehorizons/cadence-host-codex', 'install'];
+    useShell = process.platform === 'win32';
+  }
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, { cwd: root, stdio: 'inherit', shell: useShell });
+    child.on('exit', (code) => resolve(code ?? 0));
+    child.on('error', () => resolve(1));
+  });
+}
+
 async function runRepair(root: string, fixId: string, deps: ApplyDeps): Promise<void> {
   switch (fixId) {
     case 'git-hooks':
       return setGitHooksPath(root);
     case 'state-md':
       return regenerateStateMd(root);
+    case 'agents-md':
+      return regenerateAgentsMd(root);
     case 'host-install': {
       const code = await (deps.hostInstall ?? defaultHostInstall)(root);
       if (code !== 0) throw new Error(`${HOST_WIRE_DISPLAY} exited ${code}`);
+      return;
+    }
+    case 'codex-host-install': {
+      const code = await (deps.codexHostInstall ?? defaultCodexHostInstall)(root);
+      if (code !== 0) throw new Error(`${CODEX_HOST_WIRE_DISPLAY} exited ${code}`);
       return;
     }
     default:

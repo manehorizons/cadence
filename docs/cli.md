@@ -51,12 +51,24 @@ Options used above:
 | `--name <project>` | Project name embedded in `PROJECT.md` |
 | `--profile <preset>` | `solo` / `team` / `production` — sets the starting config preset |
 | `--gate-profile <p>` | `strict` / `standard` / `auto` — overrides the gate profile CADENCE would suggest from git history |
+| `--host <host>` | `claude` / `codex` — wire a host during init; `codex` also writes `AGENTS.md` |
 
-To regenerate only the managed `CLAUDE.md` block (e.g. after updating
+For a first Codex run, use the full bootstrap before launching Codex:
+
+```sh
+cadence init --host codex
+```
+
+The plain Codex host installer only writes `.codex/hooks.json` and global
+prompt files. `--host codex` also creates the project `.cadence/` state and the
+managed `AGENTS.md` instructions that Codex reads at session start.
+
+To regenerate only a managed agent-instruction block (e.g. after updating
 CADENCE) on an already-initialized repo:
 
 ```sh
 cadence init --claude-md
+cadence init --agents-md
 ```
 
 After `init`, commit `.cadence/` before starting any phase work.

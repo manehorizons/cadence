@@ -19,10 +19,10 @@ Pick your surface — the loop is the same engine either way:
 
 - **From a terminal (CLI):** you're in the right place — start at [Prerequisites](#prerequisites) below.
 - **From Claude Code:** wire the adapter, then drive the loop with slash commands — jump to [Claude Code surface](#claude-code-surface).
-- **From the OpenAI Codex CLI:** run `npx @manehorizons/cadence-host-codex install` to wire lifecycle hooks + prompt commands — see [docs/host-adapters.md](host-adapters.md) for how the Codex adapter maps onto the same engine.
+- **From the OpenAI Codex CLI:** before opening Codex for the first time in this repo, run `cadence init --host codex` to scaffold Cadence, write `AGENTS.md`, and wire lifecycle hooks + prompt commands. This is the full first-run bootstrap. If the repo is already initialized, run `npx -y @manehorizons/cadence-host-codex install` plus `cadence init --agents-md`. See [docs/host-adapters.md](host-adapters.md) for how the Codex adapter maps onto the same engine.
 - **From another MCP host** (Claude Desktop, Cursor, an agent): point it at the MCP server — jump to [MCP surface](#mcp-surface).
 
-New and not sure? Run `cadence start` for a guided menu that picks the right setup command for you.
+New and not sure? Run `cadence start` for a guided menu that picks the right setup command for you. For Codex specifically, prefer `cadence init --host codex` before the first Codex launch; the adapter-only install menu item is for repos that are already initialized.
 
 ---
 

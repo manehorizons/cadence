@@ -23,6 +23,7 @@ import { atomicWriteJSON } from '../../state/atomic-write.js';
 import { SimpleStateBackend } from '../../state/simple.js';
 import {
   mergeManagedBlock,
+  renderAgentsMd,
   type MergeMode,
 } from '../../init/claude-md-template.js';
 import { renderDemoDraft } from '../../init/demo-draft.js';
@@ -74,10 +75,19 @@ function makePrompter(): Prompter | null {
  * The spawn target is overridable for tests via `CADENCE_HOST_WIRE_CMD`
  * (a JSON array `["cmd","arg",…]`, or a bare shell string).
  */
-const HOST_WIRE_DISPLAY = 'npx @manehorizons/cadence-host-claude-code install';
+type InitHostTarget = 'claude' | 'codex';
 
-async function spawnHostWire(cwd: string): Promise<number> {
-  const override = process.env.CADENCE_HOST_WIRE_CMD;
+function hostWireDisplay(target: InitHostTarget): string {
+  return target === 'codex'
+    ? 'npx -y @manehorizons/cadence-host-codex install'
+    : 'npx @manehorizons/cadence-host-claude-code install';
+}
+
+async function spawnHostWire(cwd: string, target: InitHostTarget): Promise<number> {
+  const override =
+    target === 'codex'
+      ? process.env.CADENCE_HOST_CODEX_WIRE_CMD ?? process.env.CADENCE_HOST_WIRE_CMD
+      : process.env.CADENCE_HOST_WIRE_CMD;
   let cmd: string;
   let args: string[];
   let useShell = false;
@@ -93,7 +103,10 @@ async function spawnHostWire(cwd: string): Promise<number> {
     }
   } else {
     cmd = 'npx';
-    args = ['@manehorizons/cadence-host-claude-code', 'install'];
+    args =
+      target === 'codex'
+        ? ['-y', '@manehorizons/cadence-host-codex', 'install']
+        : ['@manehorizons/cadence-host-claude-code', 'install'];
     // npx is npx.cmd on Windows; spawn() needs a shell to resolve it. Args are
     // static literals (no user input), so shell is safe here (as in start.ts).
     useShell = process.platform === 'win32';
@@ -102,7 +115,9 @@ async function spawnHostWire(cwd: string): Promise<number> {
     const child = spawn(cmd, args, { cwd, stdio: 'inherit', shell: useShell });
     child.on('exit', (code) => resolve(code ?? 0));
     child.on('error', (err) => {
-      console.error(`Failed to wire the Claude Code host: ${err.message}`);
+      console.error(
+        `Failed to wire the ${target === 'codex' ? 'Codex' : 'Claude Code'} host: ${err.message}`,
+      );
       resolve(1);
     });
   });
@@ -110,16 +125,24 @@ async function spawnHostWire(cwd: string): Promise<number> {
 
 async function maybeWireHost(
   cwd: string,
-  opts: { wireHost?: boolean | undefined; skipHostWire?: boolean | undefined },
+  opts: {
+    wireHost?: boolean | undefined;
+    skipHostWire?: boolean | undefined;
+    host?: string | undefined;
+  },
   prompter: Prompter | null,
 ): Promise<{ wired: boolean; offered: boolean }> {
-  if (!existsSync(join(cwd, '.claude'))) return { wired: false, offered: false };
+  const explicitHost =
+    opts.host === 'claude' || opts.host === 'codex' ? opts.host : undefined;
+  const target: InitHostTarget | undefined =
+    explicitHost ?? (existsSync(join(cwd, '.claude')) ? 'claude' : undefined);
+  if (target === undefined) return { wired: false, offered: false };
   if (opts.skipHostWire) return { wired: false, offered: false };
 
   let doWire: boolean;
-  if (opts.wireHost) {
+  if (opts.wireHost || explicitHost !== undefined) {
     doWire = true;
-  } else if (prompter) {
+  } else if (target === 'claude' && prompter) {
     const reply = (
       await prompter.ask('Detected .claude/ — wire the Claude Code host now? [Y/n]: ')
     )
@@ -132,12 +155,13 @@ async function maybeWireHost(
 
   if (!doWire) return { wired: false, offered: true };
 
+  const display = hostWireDisplay(target);
   console.log('');
-  console.log(`  Wiring Claude Code host → ${HOST_WIRE_DISPLAY}`);
-  const code = await spawnHostWire(cwd);
+  console.log(`  Wiring ${target === 'codex' ? 'Codex' : 'Claude Code'} host → ${display}`);
+  const code = await spawnHostWire(cwd, target);
   if (code !== 0) {
     console.error(
-      `  host wire exited ${code}; run it yourself:\n    ${HOST_WIRE_DISPLAY}`,
+      `  host wire exited ${code}; run it yourself:\n    ${display}`,
     );
   }
   return { wired: code === 0, offered: true };
@@ -155,6 +179,26 @@ async function writeClaudeMd(
   const path = join(cwd, 'CLAUDE.md');
   const existing = existsSync(path) ? await readFile(path, 'utf8') : null;
   const merged = mergeManagedBlock(existing, opts);
+  if (merged.mode !== 'preserved') {
+    await writeFile(path, merged.content);
+  }
+  return merged.mode;
+}
+
+async function writeAgentsMd(
+  cwd: string,
+  opts: { projectName: string; gateProfile: Profile; preset: string },
+): Promise<MergeMode> {
+  const path = join(cwd, 'AGENTS.md');
+  const existing = existsSync(path) ? await readFile(path, 'utf8') : null;
+  if (existing === null || existing.trim().length === 0) {
+    await writeFile(path, renderAgentsMd(opts));
+    return 'created';
+  }
+  const merged = mergeManagedBlock(existing, {
+    ...opts,
+    regenerateCommand: 'cadence init --agents-md',
+  });
   if (merged.mode !== 'preserved') {
     await writeFile(path, merged.content);
   }
@@ -207,6 +251,11 @@ export function registerInitCommand(program: Command): void {
       'only (re)generate the managed CLAUDE.md block at the repo root; allowed on an already-initialized project',
     )
     .option(
+      '--agents-md',
+      'only (re)generate the managed AGENTS.md block at the repo root; allowed on an already-initialized project',
+    )
+    .option('--host <host>', 'wire a host during init: claude | codex')
+    .option(
       '--wire-host',
       'when a .claude/ workspace is present, run the Claude Code host install in the same step (auto-run, no prompt)',
     )
@@ -233,6 +282,8 @@ export function registerInitCommand(program: Command): void {
         profile?: 'solo' | 'team' | 'production';
         gateProfile?: string;
         claudeMd?: boolean;
+        agentsMd?: boolean;
+        host?: string;
         wireHost?: boolean;
         skipHostWire?: boolean;
         demo?: boolean;
@@ -251,6 +302,12 @@ export function registerInitCommand(program: Command): void {
           );
         }
         const preset = opts.preset ?? opts.profile ?? 'team';
+
+        if (opts.host !== undefined && opts.host !== 'claude' && opts.host !== 'codex') {
+          console.error(`Unknown host: ${opts.host} (expected claude|codex)`);
+          process.exit(2);
+          return;
+        }
 
         // Phase 132 (rec-20260619-005) — --dry-run fit check. Resolve everything
         // init would resolve, print the preview, and write NOTHING. Takes
@@ -272,9 +329,9 @@ export function registerInitCommand(program: Command): void {
           return;
         }
 
-        // Phase 26.2 — standalone --claude-md: do NOT refuse on an existing
-        // .cadence/ and do NOT scaffold; just regenerate the managed block.
-        if (opts.claudeMd) {
+        // Phase 26.2 — standalone agent doc regeneration: do NOT refuse on an
+        // existing .cadence/ and do NOT scaffold; just regenerate the managed block.
+        if (opts.claudeMd || opts.agentsMd) {
           const src = existsSync(cadenceDir)
             ? await readExistingProject(cadenceDir)
             : {
@@ -285,17 +342,19 @@ export function registerInitCommand(program: Command): void {
                   ? opts.gateProfile
                   : 'auto') as Profile,
               };
-          const mode = await writeClaudeMd(cwd, {
+          const file = opts.agentsMd ? 'AGENTS.md' : 'CLAUDE.md';
+          const writer = opts.agentsMd ? writeAgentsMd : writeClaudeMd;
+          const mode = await writer(cwd, {
             projectName: src.name,
             gateProfile: src.gateProfile,
             preset,
           });
           if (mode === 'preserved') {
             console.error(
-              'CLAUDE.md preserved: no cadence:managed markers found — leaving the user file untouched.',
+              `${file} preserved: no cadence:managed markers found — leaving the user file untouched.`,
             );
           } else {
-            console.log(`CLAUDE.md ${mode} (${src.name}, ${src.gateProfile}).`);
+            console.log(`${file} ${mode} (${src.name}, ${src.gateProfile}).`);
           }
           return;
         }
@@ -387,6 +446,13 @@ export function registerInitCommand(program: Command): void {
           gateProfile,
           preset,
         });
+        if (opts.host === 'codex') {
+          await writeAgentsMd(cwd, {
+            projectName: name,
+            gateProfile,
+            preset,
+          });
+        }
 
         // Phase 109 — `--demo`: seed a ready-to-approve demo phase into this
         // real repo (objective + AC-1 + T1) using the shared toy template, so
@@ -526,7 +592,7 @@ export function registerInitCommand(program: Command): void {
         try {
           hostWire = await maybeWireHost(
             cwd,
-            { wireHost: opts.wireHost, skipHostWire: opts.skipHostWire },
+            { wireHost: opts.wireHost, skipHostWire: opts.skipHostWire, host: opts.host },
             prompter,
           );
         } finally {
@@ -534,8 +600,21 @@ export function registerInitCommand(program: Command): void {
         }
         if (hostWire.offered && !hostWire.wired) {
           console.log('');
-          console.log(`  Claude Code workspace detected (.claude/).`);
-          console.log(`  Wire it when ready:  ${HOST_WIRE_DISPLAY}`);
+          console.log(
+            opts.host === 'codex'
+              ? '  Codex host not wired.'
+              : '  Claude Code workspace detected (.claude/).',
+          );
+          console.log(
+            `  Wire it when ready:  ${hostWireDisplay(opts.host === 'codex' ? 'codex' : 'claude')}`,
+          );
+        }
+        if (opts.host === 'codex' && hostWire.wired) {
+          console.log('');
+          console.log('  Codex first run');
+          console.log('  ───────────────');
+          console.log('  Approve the new hooks in Codex, then start a new Codex session.');
+          console.log('  If prompts are not loaded yet, ask Codex to run `cadence progress` directly.');
         }
       },
     );

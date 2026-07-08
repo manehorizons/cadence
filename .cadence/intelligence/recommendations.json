@@ -728,6 +728,42 @@
       "decisionIds": [],
       "createdAt": "2026-07-03T16:59:18.968Z",
       "updatedAt": "2026-07-03T16:59:18.968Z"
+    },
+    {
+      "id": "rec-20260708-001",
+      "title": "Make Codex first-run setup a one-command bootstrap",
+      "summary": "Codex users need Cadence commands available before their first useful Codex session. Add a Codex-first bootstrap path such as 'cadence init --host codex' or 'cadence setup codex' that installs the Codex host adapter before launch, generates/merges AGENTS.md with the managed Cadence loop instructions, and adds doctor checks/fixes for prompts, hooks, AGENTS.md, and the cadence binary. Keep the AGENTS.md fallback explicit so Codex can run the cadence CLI directly if slash-command prompts are not loaded until the next session.",
+      "source": "manual",
+      "status": "settle-pending",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "host-codex",
+        "docs",
+        "doctor",
+        "agent-instructions"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/init/claude-md-template.ts",
+        "packages/core/src/doctor/run.ts",
+        "packages/host-codex/src/cli.ts",
+        "docs/quickstart.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260708-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "162-codex-first-run-bootstrap",
+      "createdAt": "2026-07-08T00:43:25.603Z",
+      "updatedAt": "2026-07-08T01:05:55.185Z"
     }
   ],
   "archived": [
@@ -1959,10 +1995,41 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "157-fix-multi-line-truncation-in-spec-draft-parsers",
-      "createdAt": "2026-07-04T18:57:46.462Z",
-      "updatedAt": "2026-07-07T23:24:06.446Z",
       "shippedRef": "PR #147 / v1.42.0",
       "archivedAt": "2026-07-07T23:24:06.446Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-04T18:57:46.462Z",
+      "updatedAt": "2026-07-07T23:24:06.446Z"
+    },
+    {
+      "id": "rec-20260708-002",
+      "title": "Mock milestone workflow proof for Codex first-run bootstrap",
+      "summary": "Proof-only wrapper for the Codex first-run bootstrap work already settled in phase 162; exercises milestone propose, pre-mortem, accept, export, and close inside Cadence's own repository workflow.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "milestone-workflow",
+        "codex-first-run"
+      ],
+      "affectedFiles": [
+        ".cadence/phases/162-codex-first-run-bootstrap/162-01-SUMMARY.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260708-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-08T02:00:55.927Z",
+      "updatedAt": "2026-07-08T02:02:01.629Z",
+      "shippedRef": "proof workflow artifact: .cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md; phase 162 settled on feat/codex-first-run-recommendation",
+      "archivedAt": "2026-07-08T02:02:01.629Z",
       "archiveReason": "shipped"
     }
   ]

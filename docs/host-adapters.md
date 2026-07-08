@@ -175,6 +175,13 @@ the reference are the instructive ones:
    (`.codex/hooks.json`). One adapter, two install scopes — the contract leaves
    install-option shapes to the adapter for exactly this reason.
 
+   For first-run onboarding, run `cadence init --host codex` before opening
+   Codex in the repo. That writes the project `.codex/hooks.json`, installs the
+   global prompt commands, and creates the managed `AGENTS.md` block Codex reads
+   for project instructions. After approving hooks, start a new Codex session so
+   prompt commands are loaded. If the prompt surface is not loaded yet, ask
+   Codex to run the `cadence` CLI directly, for example `cadence progress`.
+
 3. **A near-1:1 event map.** Codex's hook lifecycle
    (`SessionStart`/`PreToolUse`/`PostToolUse`/`Stop`/`SubagentStop`/`UserPromptSubmit`)
    maps almost directly onto the same `AbstractEvent`s, and its stdin-JSON shape

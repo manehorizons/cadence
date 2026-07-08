@@ -15,10 +15,12 @@ export interface ClaudeMdOptions {
   projectName: string;
   gateProfile: Profile;
   preset: string;
+  regenerateCommand?: string;
 }
 
 /** The managed block (markers inclusive). Regenerated verbatim by `--claude-md`. */
 export function renderManagedBlock(opts: ClaudeMdOptions): string {
+  const regenerateCommand = opts.regenerateCommand ?? 'cadence init --claude-md';
   return `${MANAGED_START}
 ## CADENCE
 
@@ -45,7 +47,7 @@ loop. Do not freelance multi-step work; run it through the loop.
 5. \`cadence settle run --auto\` — derive AC verdicts, write SUMMARY, return to IDLE
 
 Run \`cadence progress\` anytime for the next suggested step. Regenerate this
-block with \`cadence init --claude-md\`; edits outside the markers are kept.
+block with \`${regenerateCommand}\`; edits outside the markers are kept.
 ${MANAGED_END}`;
 }
 
@@ -54,6 +56,14 @@ export function renderClaudeMd(opts: ClaudeMdOptions): string {
   return `# ${opts.projectName}
 
 ${renderManagedBlock(opts)}
+`;
+}
+
+/** Full default file for Codex/OpenAI agent instruction discovery. */
+export function renderAgentsMd(opts: ClaudeMdOptions): string {
+  return `# ${opts.projectName}
+
+${renderManagedBlock({ ...opts, regenerateCommand: 'cadence init --agents-md' })}
 `;
 }
 
