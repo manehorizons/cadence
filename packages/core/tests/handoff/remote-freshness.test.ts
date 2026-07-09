@@ -25,11 +25,15 @@ describe('checkRemoteFreshness', () => {
     const pc2Path = `${active.root}-pc2`;
     execSync(`git init -q --bare "${originPath}" && git remote add origin "${originPath}" && git push -q -u origin HEAD`,
       { cwd: active.root, stdio: 'ignore' });
-    // second clone pushes a commit "from the other PC"
-    execSync(
-      `git clone -q "${originPath}" "${pc2Path}" && cd "${pc2Path}" && git config user.email t@t && git config user.name t && git commit -q --allow-empty -m from-pc2 && git push -q`,
-      { cwd: active.root, stdio: 'ignore', shell: '/bin/bash' },
-    );
+    // second clone pushes a commit "from the other PC" — separate execSync
+    // calls with `cwd` (not a `cd &&`-chained command) so this runs the same
+    // under cmd.exe on Windows CI as under bash elsewhere (no /bin/bash dep).
+    execSync(`git clone -q "${originPath}" "${pc2Path}"`, { cwd: active.root, stdio: 'ignore' });
+    execSync('git config user.email t@t', { cwd: pc2Path, stdio: 'ignore' });
+    execSync('git config user.name t', { cwd: pc2Path, stdio: 'ignore' });
+    execSync('git config commit.gpgsign false', { cwd: pc2Path, stdio: 'ignore' });
+    execSync('git commit -q --allow-empty -m from-pc2', { cwd: pc2Path, stdio: 'ignore' });
+    execSync('git push -q', { cwd: pc2Path, stdio: 'ignore' });
 
     const r = await checkRemoteFreshness(active.root);
     expect(r.checked).toBe(true);
