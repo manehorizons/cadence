@@ -378,18 +378,77 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 
 External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md
 
-## rec-20260708-001 — Make Codex first-run setup a one-command bootstrap
+## rec-20260709-001 — cadence quickstart: single mega-command for full setup
 
-- status: settle-pending
-- ready: ready-for-cadence-spec
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, init
+- evidence: Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.
+- next: cadence milestone propose
+
+One idempotent command = init + auto-detect/wire whatever host is present (.claude/, Codex, .cursor/, .mcp.json) + auto-populate verification.testCommand from package.json/pyproject/etc + activate if a key is already in env + seed a demo phase + print a doctor-style summary of what it did/skipped. Collapses ~5 separate init flags into one call.
+
+## rec-20260709-002 — cadence doctor --fix: auto-remediate mechanical health-check failures
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, doctor
+- evidence: Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.
+- next: cadence milestone propose
+
+doctor's checks currently only print fix suggestions. Auto-remediate everything mechanical (rewire host hooks, regenerate host configs, prune stale handoffs past retention budget) so only genuine judgment calls (e.g. verification-readiness) are left as print-and-suggest.
+
+## rec-20260709-003 — cadence init --ci: generate + enforce a CI gate workflow for consumer repos
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, ci
+- evidence: Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.
+- next: cadence milestone propose
+
+Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow that re-runs the gate suite on PRs, plus a one-shot recipe/script to make it a required branch-protection check. Closes the gap where gates exist locally but nothing enforces them in the team's actual PR flow.
+
+## rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config
+
+- status: accepted
+- ready: ready-for-milestone
 - priority: high
 - leverage: 5/10
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
-- areas: onboarding, host-codex, docs, doctor, agent-instructions
-- files: packages/core/src/cli/commands/init.ts, packages/core/src/init/claude-md-template.ts, packages/core/src/doctor/run.ts, packages/host-codex/src/cli.ts, docs/quickstart.md
-- evidence: Current init auto-wires only Claude Code when .claude/ exists; Codex prompt commands install globally under CODEX_HOME/prompts and the host installer tells users to approve hooks and start a new Codex session. Init writes CLAUDE.md, while Codex consumes AGENTS.md. Quickstart mentions the Codex install but does not make it a pre-Codex first-run bootstrap.
+- areas: cli, verify, providers
+- evidence: Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.
 - next: cadence milestone propose
 
-Codex users need Cadence commands available before their first useful Codex session. Add a Codex-first bootstrap path such as 'cadence init --host codex' or 'cadence setup codex' that installs the Codex host adapter before launch, generates/merges AGENTS.md with the managed Cadence loop instructions, and adds doctor checks/fixes for prompts, hooks, AGENTS.md, and the cadence binary. Keep the AGENTS.md fallback explicit so Codex can run the cadence CLI directly if slash-command prompts are not loaded until the next session.
+Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.
+
+## rec-20260709-005 — cadence onboard: one-command setup for the 2nd-Nth teammate
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, init, docs
+- evidence: Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.
+- next: cadence milestone propose
+
+For a developer cloning a repo that already has .cadence/ committed: one command does only the per-machine bits (host hooks, local paths, key check) instead of re-running full init. Pair with an init-generated CONTRIBUTING.md snippet so this path is discoverable.

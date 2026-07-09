@@ -730,40 +730,141 @@
       "updatedAt": "2026-07-03T16:59:18.968Z"
     },
     {
-      "id": "rec-20260708-001",
-      "title": "Make Codex first-run setup a one-command bootstrap",
-      "summary": "Codex users need Cadence commands available before their first useful Codex session. Add a Codex-first bootstrap path such as 'cadence init --host codex' or 'cadence setup codex' that installs the Codex host adapter before launch, generates/merges AGENTS.md with the managed Cadence loop instructions, and adds doctor checks/fixes for prompts, hooks, AGENTS.md, and the cadence binary. Keep the AGENTS.md fallback explicit so Codex can run the cadence CLI directly if slash-command prompts are not loaded until the next session.",
+      "id": "rec-20260709-001",
+      "title": "cadence quickstart: single mega-command for full setup",
+      "summary": "One idempotent command = init + auto-detect/wire whatever host is present (.claude/, Codex, .cursor/, .mcp.json) + auto-populate verification.testCommand from package.json/pyproject/etc + activate if a key is already in env + seed a demo phase + print a doctor-style summary of what it did/skipped. Collapses ~5 separate init flags into one call.",
       "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-cadence-spec",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "init"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:41.471Z",
+      "updatedAt": "2026-07-09T23:23:41.471Z"
+    },
+    {
+      "id": "rec-20260709-002",
+      "title": "cadence doctor --fix: auto-remediate mechanical health-check failures",
+      "summary": "doctor's checks currently only print fix suggestions. Auto-remediate everything mechanical (rewire host hooks, regenerate host configs, prune stale handoffs past retention budget) so only genuine judgment calls (e.g. verification-readiness) are left as print-and-suggest.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "doctor"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:41.643Z",
+      "updatedAt": "2026-07-09T23:23:41.643Z"
+    },
+    {
+      "id": "rec-20260709-003",
+      "title": "cadence init --ci: generate + enforce a CI gate workflow for consumer repos",
+      "summary": "Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow that re-runs the gate suite on PRs, plus a one-shot recipe/script to make it a required branch-protection check. Closes the gap where gates exist locally but nothing enforces them in the team's actual PR flow.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "ci"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:41.842Z",
+      "updatedAt": "2026-07-09T23:23:41.842Z"
+    },
+    {
+      "id": "rec-20260709-004",
+      "title": "Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config",
+      "summary": "Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.",
+      "source": "manual",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
       "priority": "high",
       "leverageScore": 5,
       "riskScore": 5,
       "confidence": 0.7,
       "decayState": "fresh",
       "affectedAreas": [
-        "onboarding",
-        "host-codex",
-        "docs",
-        "doctor",
-        "agent-instructions"
+        "cli",
+        "verify",
+        "providers"
       ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts",
-        "packages/core/src/init/claude-md-template.ts",
-        "packages/core/src/doctor/run.ts",
-        "packages/host-codex/src/cli.ts",
-        "docs/quickstart.md"
-      ],
+      "affectedFiles": [],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260708-001"
+        "ev-20260709-004"
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "convertedToPhaseId": "162-codex-first-run-bootstrap",
-      "createdAt": "2026-07-08T00:43:25.603Z",
-      "updatedAt": "2026-07-08T01:05:55.185Z"
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:42.017Z",
+      "updatedAt": "2026-07-09T23:28:44.127Z"
+    },
+    {
+      "id": "rec-20260709-005",
+      "title": "cadence onboard: one-command setup for the 2nd-Nth teammate",
+      "summary": "For a developer cloning a repo that already has .cadence/ committed: one command does only the per-machine bits (host hooks, local paths, key check) instead of re-running full init. Pair with an init-generated CONTRIBUTING.md snippet so this path is discoverable.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "init",
+        "docs"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:42.199Z",
+      "updatedAt": "2026-07-09T23:23:42.199Z"
     }
   ],
   "archived": [
@@ -2026,11 +2127,50 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-07-08T02:00:55.927Z",
-      "updatedAt": "2026-07-08T02:02:01.629Z",
       "shippedRef": "proof workflow artifact: .cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md; phase 162 settled on feat/codex-first-run-recommendation",
       "archivedAt": "2026-07-08T02:02:01.629Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-08T02:00:55.927Z",
+      "updatedAt": "2026-07-08T02:02:01.629Z"
+    },
+    {
+      "id": "rec-20260708-001",
+      "title": "Make Codex first-run setup a one-command bootstrap",
+      "summary": "Codex users need Cadence commands available before their first useful Codex session. Add a Codex-first bootstrap path such as 'cadence init --host codex' or 'cadence setup codex' that installs the Codex host adapter before launch, generates/merges AGENTS.md with the managed Cadence loop instructions, and adds doctor checks/fixes for prompts, hooks, AGENTS.md, and the cadence binary. Keep the AGENTS.md fallback explicit so Codex can run the cadence CLI directly if slash-command prompts are not loaded until the next session.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "host-codex",
+        "docs",
+        "doctor",
+        "agent-instructions"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/init/claude-md-template.ts",
+        "packages/core/src/doctor/run.ts",
+        "packages/host-codex/src/cli.ts",
+        "docs/quickstart.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260708-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "162-codex-first-run-bootstrap",
+      "shippedRef": "PR #157",
+      "archivedAt": "2026-07-09T22:49:14.713Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-08T00:43:25.603Z",
+      "updatedAt": "2026-07-09T22:49:14.713Z"
     }
   ]
 }

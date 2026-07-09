@@ -434,6 +434,41 @@
       "kind": "note",
       "summary": "User requested a mock Cadence milestone workflow so the branch demonstrates Cadence dogfooding before commit.",
       "createdAt": "2026-07-08T02:00:55.927Z"
+    },
+    {
+      "id": "ev-20260709-001",
+      "recommendationId": "rec-20260709-001",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.",
+      "createdAt": "2026-07-09T23:23:41.471Z"
+    },
+    {
+      "id": "ev-20260709-002",
+      "recommendationId": "rec-20260709-002",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.",
+      "createdAt": "2026-07-09T23:23:41.643Z"
+    },
+    {
+      "id": "ev-20260709-003",
+      "recommendationId": "rec-20260709-003",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.",
+      "createdAt": "2026-07-09T23:23:41.842Z"
+    },
+    {
+      "id": "ev-20260709-004",
+      "recommendationId": "rec-20260709-004",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.",
+      "createdAt": "2026-07-09T23:23:42.017Z"
+    },
+    {
+      "id": "ev-20260709-005",
+      "recommendationId": "rec-20260709-005",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.",
+      "createdAt": "2026-07-09T23:23:42.199Z"
     }
   ]
 }

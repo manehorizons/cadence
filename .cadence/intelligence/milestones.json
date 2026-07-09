@@ -272,6 +272,24 @@
       "createdAt": "2026-07-08T02:01:09.682Z",
       "updatedAt": "2026-07-08T02:02:11.363Z",
       "closedRef": "proof workflow artifact: .cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md; phase 162 settled on feat/codex-first-run-recommendation"
+    },
+    {
+      "id": "mil-rec-rec-20260709-004",
+      "name": "Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config",
+      "objective": "Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.",
+      "status": "proposed",
+      "recommendationIds": [
+        "rec-20260709-004"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-07-09T23:28:49.500Z",
+      "updatedAt": "2026-07-09T23:28:56.992Z"
     }
   ]
 }
