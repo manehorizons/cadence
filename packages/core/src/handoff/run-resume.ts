@@ -12,6 +12,7 @@ import { extractBriefSections } from './brief.js';
 import { gatherHandoffCandidates } from './candidates.js';
 import { resolvePick, promptForPick } from './pick.js';
 import { checkRemoteFreshness } from './remote-freshness.js';
+import { findUnfilledSections } from './placeholders.js';
 
 export interface ResumeOptions {
   /** Force output mode. Omitted → drift decides: drift → 'full', else 'brief'. */
@@ -230,12 +231,16 @@ export async function runResume(
 ): Promise<ResumeResult> {
   const result = await resolveResume(root, opts, now, io);
   if (!result.found) return result;
+
+  const unfilled = findUnfilledSections(result.found ? result.doc : '');
+  const decorated = unfilled.length > 0 ? { ...result, unfilled } : result;
+
   // Two-PC guard: a handoff superseded by work pushed from another clone is
   // invisible to loop-position drift. Probe origin unless opted out. The probe
   // is soft and its fetch touches remote-tracking refs only (resume stays
   // working-tree read-only).
   const { resume: cfg } = (await loadConfig(root).catch(() => null)) ?? defaultConfig;
-  if (opts.offline === true || cfg.remoteCheck === false) return result;
+  if (opts.offline === true || cfg.remoteCheck === false) return decorated;
   const remote = await checkRemoteFreshness(root);
-  return { ...result, remote };
+  return { ...decorated, remote };
 }

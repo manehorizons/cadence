@@ -89,6 +89,7 @@ export const ResumeResultZ = z.union([
     pickedSource: z.enum(['local', 'sibling']).optional(),
     pickedWorktree: z.string().optional(),
     remote: RemoteFreshnessZ.optional(),
+    unfilled: z.array(z.string()).optional(),
   }),
 ]);
 export type ResumeResult = z.infer<typeof ResumeResultZ>;

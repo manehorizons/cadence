@@ -95,6 +95,11 @@ export function registerResumeCommand(program: Command): void {
               process.stdout.write(`note: could not verify freshness against origin (${res.remote.reason})\n\n`);
             }
           }
+          if (res.unfilled && res.unfilled.length > 0) {
+            process.stdout.write(
+              `⚠ handoff has unfilled sections: ${res.unfilled.join(', ')} — treat them as absent; the previous session did not complete its handoff.\n\n`,
+            );
+          }
           if (res.pickedSource === 'sibling') {
             process.stdout.write(`--- from sibling worktree: ${res.pickedWorktree} ---\n\n`);
           }
