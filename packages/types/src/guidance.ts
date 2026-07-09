@@ -58,13 +58,13 @@ export const COMMAND_GUIDANCE = {
   'cadence-handoff': {
     description: 'Scaffold a SESSION handoff doc with machine facts pre-filled',
     trailing:
-      'Open the new SESSION doc and fill the narrative sections (TL;DR, what landed, gotchas, next action).',
+      'Open the new SESSION doc and fill every FILL-IN section (TL;DR, what landed, gotchas, next action as **Action:**/**Verify:**/**If it fails:**). Redact sensitive filenames (.env*, *credentials*, *.key, *.pem, id_rsa*) from anything you write. Then run `cadence handoff --check` — it must print "complete" before you finish. Commit the SESSION doc + state stamp as `chore(cadence): stamp session handoff` unless told otherwise; never push without asking.',
   },
   'cadence-resume': {
     description:
       'Replay the freshest session handoff (brief by default; --full adds live context, read-only)',
     trailing:
-      'Read the replayed handoff and continue from the documented next action. Output is brief by default and auto-promotes to full on drift; run `cadence resume --full` for the whole doc + live context. If it notes other worktrees have resumable handoffs, ask which one to resume or pass `--pick <n>` directly.',
+      'Read the replayed handoff and continue from the documented next action. Output is brief by default and auto-promotes to full on drift; run `cadence resume --full` for the whole doc + live context. If it notes other worktrees have resumable handoffs, ask which one to resume or pass `--pick <n>` directly. If an `⚠ origin/… ahead` banner appears, STOP — origin has commits this clone lacks and the handoff may be superseded; show the user `git log --oneline HEAD..@{u}` and ask continue/sync/abort before acting (never auto-pull/rebase/reset). If it warns of unfilled sections, treat them as absent. For env-check, stash restore, and execution-mode gating, prefer invoking the fuller /resume skill.',
   },
   'cadence-recommend': {
     description:
