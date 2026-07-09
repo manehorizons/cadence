@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { defaultConfig } from '@manehorizons/cadence-types';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { SimpleStateBackend } from '../../src/state/simple.js';
-import { runHandoff } from '../../src/handoff/run-handoff.js';
+import { runHandoff, runHandoffCheck } from '../../src/handoff/run-handoff.js';
 
 const NOW = new Date('2026-06-03T14:02:00.000Z');
 // Newer than the seeded SESSION docs below, so the just-written doc is the newest.
@@ -120,5 +120,13 @@ describe('runHandoff', () => {
     expect(res.stamped).toBe(true);
     expect(existsSync(res.path)).toBe(true);
     expect(res.pruned).toEqual([]); // error swallowed → no pruned report
+  });
+
+  it('AC-5: runHandoffCheck reports unfilled sections of the freshest doc', async () => {
+    active = await tempRepo({ initialized: true });
+    const res = await runHandoff(active.root, {}, new Date('2026-01-02T03:04:05Z'));
+    const check = await runHandoffCheck(active.root);
+    expect(check.path).toBe(res.path);
+    expect(check.unfilled).toContain('Next action');
   });
 });

@@ -17,7 +17,7 @@ const PACKET: ContextPacket = {
 
 const GIT: GitFacts = {
   available: true, branch: 'main', dirty: true, ahead: 0, behind: 0,
-  head: 'abc1234', recentCommits: 'abc1234 feat: x', diffStat: ' 1 file changed',
+  head: 'abc1234', recentCommits: 'abc1234 feat: x', diffStat: ' 1 file changed', fetched: true,
 };
 
 describe('renderSession', () => {

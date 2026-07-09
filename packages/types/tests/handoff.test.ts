@@ -17,6 +17,7 @@ describe('handoff types', () => {
         head: 'abc1234',
         recentCommits: 'abc1234 feat: x',
         diffStat: ' 1 file changed',
+        fetched: true,
       }),
     ).not.toThrow();
   });

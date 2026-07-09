@@ -556,11 +556,11 @@ describe('resume cross-worktree config (AC-8)', () => {
   it('AC-8: applies defaults { crossWorktree: true, autoList: false } when omitted', () => {
     const { resume: _drop, ...withoutResume } = defaultConfig;
     const parsed = CadenceConfigZ.parse(withoutResume);
-    expect(parsed.resume).toEqual({ crossWorktree: true, autoList: false });
+    expect(parsed.resume).toEqual({ crossWorktree: true, autoList: false, remoteCheck: true });
   });
 
   it('AC-8: defaultConfig includes the resume block', () => {
-    expect(defaultConfig.resume).toEqual({ crossWorktree: true, autoList: false });
+    expect(defaultConfig.resume).toEqual({ crossWorktree: true, autoList: false, remoteCheck: true });
   });
 
   it('AC-8: round-trips crossWorktree:false and autoList:true', () => {
@@ -568,7 +568,7 @@ describe('resume cross-worktree config (AC-8)', () => {
       ...defaultConfig,
       resume: { crossWorktree: false, autoList: true },
     });
-    expect(parsed.resume).toEqual({ crossWorktree: false, autoList: true });
+    expect(parsed.resume).toEqual({ crossWorktree: false, autoList: true, remoteCheck: true });
   });
 
   it('AC-8: defaults individual sub-fields when only partial object provided', () => {
@@ -576,7 +576,7 @@ describe('resume cross-worktree config (AC-8)', () => {
       ...defaultConfig,
       resume: { crossWorktree: false },
     });
-    expect(parsed.resume).toEqual({ crossWorktree: false, autoList: false });
+    expect(parsed.resume).toEqual({ crossWorktree: false, autoList: false, remoteCheck: true });
   });
 
   it('AC-8: defaults individual sub-fields when only autoList provided', () => {
@@ -584,7 +584,7 @@ describe('resume cross-worktree config (AC-8)', () => {
       ...defaultConfig,
       resume: { autoList: true },
     });
-    expect(parsed.resume).toEqual({ crossWorktree: true, autoList: true });
+    expect(parsed.resume).toEqual({ crossWorktree: true, autoList: true, remoteCheck: true });
   });
 
   it('AC-8: rejects a non-boolean crossWorktree', () => {

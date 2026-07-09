@@ -9,12 +9,15 @@ import { loadConfig } from '../config/loader.js';
 import { readGitFacts } from './git-facts.js';
 import { renderSession } from './render-session.js';
 import { pruneHandoffDir } from './retention.js';
+import { locateFreshestHandoff } from './locate.js';
+import { findUnfilledSections } from './placeholders.js';
 
 export interface HandoffOptions {
   label?: string;
   force?: boolean;
   noStamp?: boolean;
   noGit?: boolean;
+  noFetch?: boolean;
 }
 
 /** Injectable seam for the best-effort retention prune (Phase 88). */
@@ -70,7 +73,7 @@ export async function runHandoff(
 
   const [packet, git] = await Promise.all([
     runContext(root, 'handoff', now),
-    opts.noGit ? Promise.resolve({ available: false } as const) : readGitFacts(root),
+    opts.noGit ? Promise.resolve({ available: false } as const) : readGitFacts(root, { fetch: opts.noFetch !== true }),
   ]);
 
   const md = renderSession({
@@ -115,4 +118,20 @@ export async function runHandoff(
     stamped,
     pruned,
   };
+}
+
+/** Completion gate for the narrative fill-in: names sections of the freshest
+ *  SESSION doc that still carry scaffold markers. `path: null` = no doc. */
+export async function runHandoffCheck(
+  root: string,
+): Promise<{ path: string | null; unfilled: string[] }> {
+  let lastHandoff: string | null = null;
+  try {
+    lastHandoff = (await new SimpleStateBackend(root).readState()).session.lastHandoff;
+  } catch {
+    /* corrupt/missing state — locate falls back to the ranked glob */
+  }
+  const located = await locateFreshestHandoff(root, lastHandoff);
+  if (!located) return { path: null, unfilled: [] };
+  return { path: located.path, unfilled: findUnfilledSections(located.content) };
 }

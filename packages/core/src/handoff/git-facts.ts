@@ -11,12 +11,28 @@ async function git(root: string, args: string[]): Promise<string> {
   return stdout;
 }
 
+export interface GitFactsOptions {
+  /** Run a best-effort `git fetch --quiet` first so ahead/behind are current.
+   *  Soft: offline / no remote leaves fetched=false and facts still valid. */
+  fetch?: boolean;
+}
+
 /** Best-effort, read-only. Never throws: non-repo / missing git → unavailable. */
-export async function readGitFacts(root: string): Promise<GitFacts> {
+export async function readGitFacts(root: string, opts: GitFactsOptions = {}): Promise<GitFacts> {
   try {
     await git(root, ['rev-parse', '--is-inside-work-tree']);
   } catch {
     return { available: false };
+  }
+  let fetched = false;
+  if (opts.fetch === true) {
+    try {
+      // fetch touches remote-tracking refs only — never the working tree.
+      await pexec('git', ['fetch', '--quiet'], { cwd: root, timeout: 15000, windowsHide: true });
+      fetched = true;
+    } catch {
+      /* offline / no remote — soft */
+    }
   }
   try {
     const status = await git(root, ['status', '--short', '--branch']);
@@ -34,7 +50,7 @@ export async function readGitFacts(root: string): Promise<GitFacts> {
     const recentCommits = await safe(['log', '--oneline', '-8']);
     const diffStat = await safe(['diff', '--stat']);
 
-    return { available: true, branch, dirty, ahead, behind, head, recentCommits, diffStat };
+    return { available: true, branch, dirty, ahead, behind, head, recentCommits, diffStat, fetched };
   } catch {
     return { available: false };
   }

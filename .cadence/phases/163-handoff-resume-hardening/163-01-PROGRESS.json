@@ -1,0 +1,47 @@
+{
+  "draftId": "163-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "pnpm test -- tests/handoff/git-facts.test.ts: 6 passed",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-09T04:45:41.190Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "pnpm test -- tests/handoff/remote-freshness.test.ts: 3 passed",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-09T04:45:41.360Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "pnpm test -- tests/handoff/run-resume.test.ts tests/cli/resume.test.ts: 20+24 passed",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-09T04:45:41.569Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "pnpm test -- tests/handoff/placeholders.test.ts tests/handoff/run-resume.test.ts: passed",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-09T04:45:41.749Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "pnpm test -- tests/handoff/run-handoff.test.ts tests/cli/handoff.test.ts: 9+6 passed",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-09T04:45:41.931Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "pnpm test -- tests/intelligence/context.test.ts: 35 passed",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-09T04:45:42.111Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "pnpm test -- tests/install-commands-parity.test.ts, packages/types tests/guidance.test.ts: passed",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-09T04:45:42.296Z"
+    }
+  }
+}

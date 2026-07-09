@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 162-codex-first-run-bootstrap
+**Active phase:** 163-handoff-resume-hardening
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1044
-- Last handoff: SESSION-2026-07-07.md
+- Subagent spawns this session: 1046
+- Last handoff: SESSION-2026-07-09-phase163-pr158-ci-watch.md
 
 ## Counts
 - Open drafts: 0

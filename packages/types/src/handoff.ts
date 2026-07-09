@@ -14,6 +14,9 @@ export const GitFactsZ = z.union([
     head: z.string(),
     recentCommits: z.string(),
     diffStat: z.string(),
+    /** True when a best-effort `git fetch` ran before ahead/behind were read.
+     *  False = the counts are against last-fetched refs and may be stale. */
+    fetched: z.boolean(),
   }),
 ]);
 export type GitFacts = z.infer<typeof GitFactsZ>;
@@ -55,6 +58,17 @@ export const HandoffCandidateZ = z.object({
 });
 export type HandoffCandidate = z.infer<typeof HandoffCandidateZ>;
 
+/** Result of the resume-time origin-freshness probe. `checked: false` is a
+ *  soft outcome (offline / no upstream / detached), never an error. */
+export const RemoteFreshnessZ = z.object({
+  checked: z.boolean(),
+  reason: z.enum(['not-a-repo', 'detached', 'fetch-failed', 'no-upstream']).optional(),
+  branch: z.string().optional(),
+  behind: z.number().int().nonnegative().optional(),
+  ahead: z.number().int().nonnegative().optional(),
+});
+export type RemoteFreshness = z.infer<typeof RemoteFreshnessZ>;
+
 /** `cadence resume --json` payload. */
 export const ResumeResultZ = z.union([
   z.object({
@@ -74,6 +88,8 @@ export const ResumeResultZ = z.union([
     candidates: z.array(HandoffCandidateZ).optional(),
     pickedSource: z.enum(['local', 'sibling']).optional(),
     pickedWorktree: z.string().optional(),
+    remote: RemoteFreshnessZ.optional(),
+    unfilled: z.array(z.string()).optional(),
   }),
 ]);
 export type ResumeResult = z.infer<typeof ResumeResultZ>;

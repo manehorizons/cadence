@@ -130,6 +130,32 @@ describe('synthesizeContextPacket', () => {
     expect(p.files.map((f) => f.path)).toEqual(['src/a.ts', 'src/b.ts']);
   });
 
+  it('AC-6: handoff files-in-play come from the top-N selected recs, not every scored rec', () => {
+    // 7 scored recs > TOP_N_HANDOFF (5): the two lowest-scored recs' files
+    // must not leak into the handoff packet's files-in-play block.
+    const recs: Recommendation[] = [];
+    for (let i = 0; i < 7; i++) {
+      recs.push(
+        mkRec({
+          id: `rec-${i}`,
+          status: 'candidate',
+          leverageScore: i,
+          createdAt: `2026-05-${String(i + 1).padStart(2, '0')}T00:00:00.000Z`,
+          affectedFiles: [`src/file-${i}.ts`],
+        }),
+      );
+    }
+    const handoff = synthesizeContextPacket(
+      'handoff',
+      { recommendations: recs, evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    const paths = handoff.files.map((f) => f.path);
+    expect(paths).toEqual(['src/file-6.ts', 'src/file-5.ts', 'src/file-4.ts', 'src/file-3.ts', 'src/file-2.ts']);
+    expect(paths).not.toContain('src/file-1.ts');
+    expect(paths).not.toContain('src/file-0.ts');
+  });
+
   it('phase decisions tie to selected recs; handoff carries all decisions', () => {
     const recs = [mkRec({ id: 'rec-a', status: 'candidate', leverageScore: 5 })];
     const decisions: IntelligenceDecision[] = [

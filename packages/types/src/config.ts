@@ -291,8 +291,11 @@ export const CadenceConfigZ = z.object({
     .object({
       crossWorktree: z.boolean().default(true),
       autoList: z.boolean().default(false),
+      /** Origin-freshness probe on resume (fetch + behind-count). The fetch
+       *  touches remote-tracking refs only. `false` = never probe. */
+      remoteCheck: z.boolean().default(true),
     })
-    .default({ crossWorktree: true, autoList: false }),
+    .default({ crossWorktree: true, autoList: false, remoteCheck: true }),
   /**
    * Boundary enforcement mode (Phase 155). `warn` (default, back-compat) —
    * an out-of-boundary edit is only notified via `anomaly-notify`, never
@@ -370,7 +373,7 @@ export const defaultConfig: CadenceConfig = {
   handoff: {},
   recommendations: { autoArchive: true },
   gates: { sealed: [] },
-  resume: { crossWorktree: true, autoList: false },
+  resume: { crossWorktree: true, autoList: false, remoteCheck: true },
   boundaryEnforcement: 'warn',
   redundantWorkEnforcement: 'warn',
 };
