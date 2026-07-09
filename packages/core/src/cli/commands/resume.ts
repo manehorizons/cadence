@@ -18,6 +18,7 @@ export function registerResumeCommand(program: Command): void {
     )
     .option('--path <p>', 'resolve directly to the handoff doc at this exact path, skipping the menu')
     .option('--local', 'force the local-only fast path, ignoring sibling worktrees entirely')
+    .option('--offline', 'skip the origin-freshness probe (no network)')
     .action(
       async (opts: {
         json?: boolean;
@@ -27,6 +28,7 @@ export function registerResumeCommand(program: Command): void {
         pick?: number;
         path?: string;
         local?: boolean;
+        offline?: boolean;
       }) => {
         if (opts.full && opts.brief) {
           process.stderr.write('resume: --full and --brief are mutually exclusive\n');
@@ -64,6 +66,7 @@ export function registerResumeCommand(program: Command): void {
             ...(opts.pick !== undefined ? { pick: opts.pick } : {}),
             ...(opts.path !== undefined ? { path: opts.path } : {}),
             ...(opts.local !== undefined ? { local: opts.local } : {}),
+            ...(opts.offline !== undefined ? { offline: opts.offline } : {}),
           });
           if (opts.json) {
             process.stdout.write(JSON.stringify(res) + '\n');
@@ -81,6 +84,16 @@ export function registerResumeCommand(program: Command): void {
             process.stdout.write(
               `⚠ handoff written at ${res.drift.docLoopPosition}; live state now ${res.drift.liveLoopPosition}\n\n`,
             );
+          }
+          if (res.remote) {
+            if (res.remote.checked && (res.remote.behind ?? 0) > 0) {
+              process.stdout.write(
+                `⚠ origin/${res.remote.branch} is ${res.remote.behind} commit(s) ahead of local HEAD — this handoff may be superseded by work pushed from another machine.\n` +
+                `  Inspect: git log --oneline HEAD..@{u} | head -25 · then sync (your call) before acting on the next action.\n\n`,
+              );
+            } else if (!res.remote.checked) {
+              process.stdout.write(`note: could not verify freshness against origin (${res.remote.reason})\n\n`);
+            }
           }
           if (res.pickedSource === 'sibling') {
             process.stdout.write(`--- from sibling worktree: ${res.pickedWorktree} ---\n\n`);

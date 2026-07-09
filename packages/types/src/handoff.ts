@@ -58,6 +58,17 @@ export const HandoffCandidateZ = z.object({
 });
 export type HandoffCandidate = z.infer<typeof HandoffCandidateZ>;
 
+/** Result of the resume-time origin-freshness probe. `checked: false` is a
+ *  soft outcome (offline / no upstream / detached), never an error. */
+export const RemoteFreshnessZ = z.object({
+  checked: z.boolean(),
+  reason: z.enum(['not-a-repo', 'detached', 'fetch-failed', 'no-upstream']).optional(),
+  branch: z.string().optional(),
+  behind: z.number().int().nonnegative().optional(),
+  ahead: z.number().int().nonnegative().optional(),
+});
+export type RemoteFreshness = z.infer<typeof RemoteFreshnessZ>;
+
 /** `cadence resume --json` payload. */
 export const ResumeResultZ = z.union([
   z.object({
@@ -77,17 +88,7 @@ export const ResumeResultZ = z.union([
     candidates: z.array(HandoffCandidateZ).optional(),
     pickedSource: z.enum(['local', 'sibling']).optional(),
     pickedWorktree: z.string().optional(),
+    remote: RemoteFreshnessZ.optional(),
   }),
 ]);
 export type ResumeResult = z.infer<typeof ResumeResultZ>;
-
-/** Result of the resume-time origin-freshness probe. `checked: false` is a
- *  soft outcome (offline / no upstream / detached), never an error. */
-export const RemoteFreshnessZ = z.object({
-  checked: z.boolean(),
-  reason: z.enum(['not-a-repo', 'detached', 'fetch-failed', 'no-upstream']).optional(),
-  branch: z.string().optional(),
-  behind: z.number().int().nonnegative().optional(),
-  ahead: z.number().int().nonnegative().optional(),
-});
-export type RemoteFreshness = z.infer<typeof RemoteFreshnessZ>;
