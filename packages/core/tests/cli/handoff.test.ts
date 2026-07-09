@@ -53,4 +53,32 @@ describe('cadence handoff', () => {
     expect(r.code).toBe(2);
     expect(r.stderr).toMatch(/already exists/);
   });
+
+  it('AC-5: --check exits 1 when no SESSION doc exists', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['handoff', '--check'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/no SESSION doc found/);
+  });
+
+  it('AC-5: --check exits 3 and lists unfilled sections for a freshly scaffolded doc', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['handoff', '--label', 'cli'], active.root);
+    const r = await run(['handoff', '--check'], active.root);
+    expect(r.code).toBe(3);
+    expect(r.stderr).toMatch(/unfilled sections/);
+    expect(r.stderr).toMatch(/Next action/);
+  });
+
+  it('AC-5: --check exits 0 and prints complete once every FILL-IN section is filled', async () => {
+    active = await tempRepo({ initialized: true });
+    const wrote = await run(['handoff', '--label', 'cli', '--json'], active.root);
+    const path: string = JSON.parse(wrote.stdout).path;
+    const { readFile, writeFile } = await import('node:fs/promises');
+    const filled = (await readFile(path, 'utf8')).replace(/<!--[^]*?-->/g, 'done.');
+    await writeFile(path, filled);
+    const r = await run(['handoff', '--check'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/complete/);
+  });
 });

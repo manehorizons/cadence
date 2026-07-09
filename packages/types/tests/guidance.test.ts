@@ -36,3 +36,17 @@ describe('cadence-dispatch guidance', () => {
     expect(DISPATCH_DIALOGUE).not.toMatch(/^!.*settle run/m);
   });
 });
+
+describe('AC-7: cadence-handoff/cadence-resume guidance teaches the new gates', () => {
+  it('cadence-handoff instructs running --check before finishing', () => {
+    const text = COMMAND_GUIDANCE['cadence-handoff'].trailing;
+    expect(text).toMatch(/cadence handoff --check/);
+    expect(text.toLowerCase()).toContain('complete');
+  });
+
+  it('cadence-resume instructs honoring the origin-ahead banner and unfilled-section warning', () => {
+    const text = COMMAND_GUIDANCE['cadence-resume'].trailing;
+    expect(text).toMatch(/origin\/… ahead/);
+    expect(text.toLowerCase()).toContain('unfilled sections');
+  });
+});

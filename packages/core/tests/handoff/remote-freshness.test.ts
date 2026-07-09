@@ -14,7 +14,7 @@ function gitInit(root: string): void {
 }
 
 describe('checkRemoteFreshness', () => {
-  it('reports behind>0 when origin has commits this clone lacks', async () => {
+  it('AC-2: reports behind>0 when origin has commits this clone lacks', async () => {
     active = await tempRepo({ initialized: true });
     gitInit(active.root);
     execSync('git add -A && git commit -q -m init', { cwd: active.root, stdio: 'ignore' });
@@ -36,7 +36,7 @@ describe('checkRemoteFreshness', () => {
     expect(r.behind).toBe(1);
   });
 
-  it('is soft when there is no upstream', async () => {
+  it('AC-2: is soft when there is no upstream', async () => {
     active = await tempRepo({ initialized: true });
     gitInit(active.root);
     execSync('git add -A && git commit -q -m init', { cwd: active.root, stdio: 'ignore' });
@@ -45,7 +45,7 @@ describe('checkRemoteFreshness', () => {
     expect(['fetch-failed', 'no-upstream']).toContain(r.reason);
   });
 
-  it('is soft in a non-repo', async () => {
+  it('AC-2: is soft in a non-repo', async () => {
     active = await tempRepo({ initialized: true }); // no git init
     const r = await checkRemoteFreshness(active.root);
     expect(r).toEqual({ checked: false, reason: 'not-a-repo' });

@@ -122,7 +122,7 @@ describe('runHandoff', () => {
     expect(res.pruned).toEqual([]); // error swallowed → no pruned report
   });
 
-  it('runHandoffCheck reports unfilled sections of the freshest doc', async () => {
+  it('AC-5: runHandoffCheck reports unfilled sections of the freshest doc', async () => {
     active = await tempRepo({ initialized: true });
     const res = await runHandoff(active.root, {}, new Date('2026-01-02T03:04:05Z'));
     const check = await runHandoffCheck(active.root);

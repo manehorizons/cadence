@@ -49,7 +49,7 @@ describe('readGitFacts', () => {
     expect(facts).toEqual({ available: false });
   });
 
-  it('fetches from origin before reading facts and reports fetched=true', async () => {
+  it('AC-1: fetches from origin before reading facts and reports fetched=true', async () => {
     active = await tempRepo({ initialized: true });
     gitInit(active.root);
     execSync('git add -A && git commit -q -m init', { cwd: active.root, stdio: 'ignore' });
@@ -64,7 +64,7 @@ describe('readGitFacts', () => {
     expect(facts.available && facts.fetched).toBe(true);
   });
 
-  it('fetch failure is soft: facts still available, fetched=false', async () => {
+  it('AC-1: fetch failure is soft: facts still available, fetched=false', async () => {
     active = await tempRepo({ initialized: true });
     gitInit(active.root);
     execSync('git add -A && git commit -q -m init', { cwd: active.root, stdio: 'ignore' });
@@ -77,7 +77,7 @@ describe('readGitFacts', () => {
     if (facts.available) expect(facts.fetched).toBe(false);
   });
 
-  it('default is no fetch: fetched=false without a fetch attempt', async () => {
+  it('AC-1: default is no fetch: fetched=false without a fetch attempt', async () => {
     active = await tempRepo({ initialized: true });
     gitInit(active.root);
     execSync('git add -A && git commit -q -m init', { cwd: active.root, stdio: 'ignore' });

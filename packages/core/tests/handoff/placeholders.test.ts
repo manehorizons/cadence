@@ -16,10 +16,10 @@ const DOC = [
 ].join('\n');
 
 describe('findUnfilledSections', () => {
-  it('names each section that still holds a FILL IN marker, once', () => {
+  it('AC-4: names each section that still holds a FILL IN marker, once', () => {
     expect(findUnfilledSections(DOC)).toEqual(['TL;DR for the next session', 'Next action']);
   });
-  it('returns [] for a completed doc', () => {
+  it('AC-4: returns [] for a completed doc', () => {
     expect(findUnfilledSections('## Next action\n**Action:** run x\n')).toEqual([]);
   });
 });

@@ -533,7 +533,7 @@ describe('runResume: cross-worktree candidates (phase 143)', () => {
     }
   });
 
-  it('attaches remote freshness to a found result and honors --offline', async () => {
+  it('AC-3: attaches remote freshness to a found result and honors --offline', async () => {
     active = await tempRepo({ initialized: true });
     await runHandoff(active.root, { label: 'demo' }, NOW);
 
@@ -543,5 +543,17 @@ describe('runResume: cross-worktree candidates (phase 143)', () => {
 
     const off = await runResume(active.root, { offline: true });
     if (off.found) expect(off.remote).toBeUndefined();
+  });
+
+  it('AC-4: attaches unfilled sections for a freshly scaffolded (never-edited) handoff doc', async () => {
+    active = await tempRepo({ initialized: true });
+    await runHandoff(active.root, { label: 'demo' }, NOW);
+
+    const res = await runResume(active.root, {});
+    expect(res.found).toBe(true);
+    if (res.found) {
+      expect(res.unfilled).toContain('TL;DR for the next session');
+      expect(res.unfilled).toContain('Next action');
+    }
   });
 });
