@@ -10,17 +10,19 @@ export function registerHandoffCommand(program: Command): void {
     .option('--force', 'overwrite an existing same-day SESSION doc')
     .option('--no-stamp', 'do not write state.session.lastHandoff (no state.json change)')
     .option('--no-git', 'skip read-only git facts')
+    .option('--no-fetch', 'skip the pre-facts git fetch (offline)')
     .option('--json', 'emit machine-readable JSON instead of a summary')
     .action(
       async (
         labelArg: string | undefined,
-        opts: { label?: string; force?: boolean; stamp?: boolean; git?: boolean; json?: boolean },
+        opts: { label?: string; force?: boolean; stamp?: boolean; git?: boolean; fetch?: boolean; json?: boolean },
       ) => {
-        // commander negates --no-stamp/--no-git to stamp:false / git:false.
+        // commander negates --no-stamp/--no-git/--no-fetch to stamp:false / git:false / fetch:false.
         const handoffOpts: HandoffOptions = {
           force: opts.force ?? false,
           noStamp: opts.stamp === false,
           noGit: opts.git === false,
+          noFetch: opts.fetch === false,
         };
         const label = opts.label ?? labelArg;
         if (label !== undefined) handoffOpts.label = label;

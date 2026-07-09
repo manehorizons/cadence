@@ -36,7 +36,7 @@ function gitBlock(git: GitFacts): string {
   if (!git.available) return '- git: unavailable (not a git repo or git not found)';
   const dirty = git.dirty ? 'dirty' : 'clean';
   const out = [
-    `- Branch \`${git.branch}\` (${dirty}), ${git.ahead} ahead / ${git.behind} behind origin`,
+    `- Branch \`${git.branch}\` (${dirty}), ${git.ahead} ahead / ${git.behind} behind origin${git.fetched ? '' : ' (unfetched — counts may be stale)'}`,
     `- HEAD \`${git.head}\``,
   ];
   if (git.recentCommits) out.push('- Recent commits:', '```', git.recentCommits, '```');

@@ -14,6 +14,9 @@ export const GitFactsZ = z.union([
     head: z.string(),
     recentCommits: z.string(),
     diffStat: z.string(),
+    /** True when a best-effort `git fetch` ran before ahead/behind were read.
+     *  False = the counts are against last-fetched refs and may be stale. */
+    fetched: z.boolean(),
   }),
 ]);
 export type GitFacts = z.infer<typeof GitFactsZ>;

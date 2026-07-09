@@ -15,6 +15,7 @@ export interface HandoffOptions {
   force?: boolean;
   noStamp?: boolean;
   noGit?: boolean;
+  noFetch?: boolean;
 }
 
 /** Injectable seam for the best-effort retention prune (Phase 88). */
@@ -70,7 +71,7 @@ export async function runHandoff(
 
   const [packet, git] = await Promise.all([
     runContext(root, 'handoff', now),
-    opts.noGit ? Promise.resolve({ available: false } as const) : readGitFacts(root),
+    opts.noGit ? Promise.resolve({ available: false } as const) : readGitFacts(root, { fetch: opts.noFetch !== true }),
   ]);
 
   const md = renderSession({
