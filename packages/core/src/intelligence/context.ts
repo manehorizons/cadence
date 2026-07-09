@@ -159,9 +159,7 @@ export function synthesizeContextPacket(
     });
 
   let fileRecs: Recommendation[];
-  if (scope === 'handoff') {
-    fileRecs = scored.map((s) => s.rec);
-  } else if (scope === 'review') {
+  if (scope === 'review') {
     // selected ranked recs + every needsAttention rec
     fileRecs = [...selected.map((s) => s.rec), ...attnBucket];
   } else {
