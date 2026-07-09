@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-07T23:23:45.328Z",
+  "generatedAt": "2026-07-09T23:23:46.414Z",
   "ranked": [
     {
-      "id": "rec-20260703-001",
-      "title": "Milestone-scoped worktree fan-out for independent phases",
-      "raw": 14.7,
-      "score": 56,
+      "id": "rec-20260709-004",
+      "title": "Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config",
+      "raw": 15.7,
+      "score": 58,
       "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
+      "readiness": "raw-idea",
+      "priority": "high",
       "decayState": "fresh",
       "terms": [
         {
@@ -29,23 +29,24 @@
           "value": 0
         },
         {
-          "label": "ready needs-decision",
-          "value": 2
+          "label": "ready raw-idea",
+          "value": 0
         },
         {
           "label": "decay fresh",
           "value": 4
         },
         {
-          "label": "prio medium",
-          "value": 2
+          "label": "prio high",
+          "value": 5
         }
       ],
-      "suggestedBackendAction": "cadence milestone propose"
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260709-1813"
     },
     {
-      "id": "rec-20260619-008",
-      "title": "Team rollout kit",
+      "id": "rec-20260709-001",
+      "title": "cadence quickstart: single mega-command for full setup",
       "raw": 12.7,
       "score": 53,
       "status": "candidate",
@@ -82,7 +83,134 @@
           "value": 2
         }
       ],
-      "suggestedBackendAction": "cadence milestone propose"
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260709-1813"
+    },
+    {
+      "id": "rec-20260709-002",
+      "title": "cadence doctor --fix: auto-remediate mechanical health-check failures",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260709-1813"
+    },
+    {
+      "id": "rec-20260709-003",
+      "title": "cadence init --ci: generate + enforce a CI gate workflow for consumer repos",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260709-1813"
+    },
+    {
+      "id": "rec-20260709-005",
+      "title": "cadence onboard: one-command setup for the 2nd-Nth teammate",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260709-1813"
     }
   ],
   "parked": [],
@@ -92,10 +220,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 29,
-    "ranked": 2,
+    "total": 5,
+    "ranked": 5,
     "parked": 0,
     "needsAttention": 0,
-    "excluded": 27
+    "excluded": 0
   }
 }

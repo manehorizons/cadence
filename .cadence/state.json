@@ -16,7 +16,7 @@
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-09-phase163-pr158-ci-watch.md",
-    "subagentSpawns": 1046,
+    "subagentSpawns": 1048,
     "subagentBaselines": {}
   },
   "skillAudit": {
