@@ -80,3 +80,14 @@ export const ResumeResultZ = z.union([
   }),
 ]);
 export type ResumeResult = z.infer<typeof ResumeResultZ>;
+
+/** Result of the resume-time origin-freshness probe. `checked: false` is a
+ *  soft outcome (offline / no upstream / detached), never an error. */
+export const RemoteFreshnessZ = z.object({
+  checked: z.boolean(),
+  reason: z.enum(['not-a-repo', 'detached', 'fetch-failed', 'no-upstream']).optional(),
+  branch: z.string().optional(),
+  behind: z.number().int().nonnegative().optional(),
+  ahead: z.number().int().nonnegative().optional(),
+});
+export type RemoteFreshness = z.infer<typeof RemoteFreshnessZ>;
