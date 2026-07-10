@@ -1,0 +1,56 @@
+{
+  "draftId": "165-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-10T22:34:44.074Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-10T22:57:17.328Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-10T23:10:11.257Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-10T23:10:11.426Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-10T23:10:11.605Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/host-cli-headless-verifier/packages/core/src/verify/per-task.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/host-cli-headless-verifier/packages/core/src/verify/per-task-factory.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/host-cli-headless-verifier/packages/core/tests/verify/per-task.test.ts"
+      ],
+      "updatedAt": "2026-07-10T23:16:23.589Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/host-cli-headless-verifier/packages/core/tests/verify/json-repair.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/host-cli-headless-verifier/docs/providers.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/host-cli-headless-verifier/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/host-cli-headless-verifier/README.md"
+      ],
+      "updatedAt": "2026-07-10T23:31:04.219Z"
+    }
+  }
+}

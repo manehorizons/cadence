@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "164-trustworthy-verifier-activation",
+  "activePhase": "165-host-cli-headless-verifier",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-10T01:01:58.025Z",
+  "draftReadAt": "2026-07-10T22:26:25.239Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-10-claude-cli-verifier-provider-brainstorm.md",
-    "subagentSpawns": 1167,
+    "subagentSpawns": 1233,
     "subagentBaselines": {}
   },
   "skillAudit": {

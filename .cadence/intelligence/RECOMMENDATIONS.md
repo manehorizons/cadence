@@ -455,7 +455,7 @@ Users running cadence inside a live Claude Code session assume that auth exempts
 
 ## rec-20260710-002 — Host-CLI headless verifier provider: reuse Claude Code/Codex's own auth instead of requiring a raw API key
 
-- status: accepted
+- status: settle-pending
 - ready: ready-for-milestone
 - priority: high
 - leverage: 5/10
