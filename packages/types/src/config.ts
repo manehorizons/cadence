@@ -60,7 +60,7 @@ export const CadenceConfigZ = z.object({
     .default({ maxAttempts: 3 }),
   specReview: z
     .object({
-      provider: z.enum(['mock', 'anthropic', 'local']).default('mock'),
+      provider: z.enum(['mock', 'anthropic', 'local', 'host-cli']).default('mock'),
       model: z.string().optional(),
     })
     .default({ provider: 'mock' }),
@@ -102,7 +102,7 @@ export const CadenceConfigZ = z.object({
        * `--deep` verifier provider selection (Phase 15). `mock` always works
        * offline; `anthropic` requires ANTHROPIC_API_KEY in env.
        */
-      provider: z.enum(['mock', 'anthropic', 'local']).default('mock'),
+      provider: z.enum(['mock', 'anthropic', 'local', 'host-cli']).default('mock'),
       /** Optional model override for the Anthropic provider. */
       model: z.string().optional(),
       /**
@@ -139,7 +139,7 @@ export const CadenceConfigZ = z.object({
        * `cadence build task <id> --status=DONE` when `'per-task-verify'`
        * is in the effective gate set (strict×standard, strict×complex).
        */
-      provider: z.enum(['mock', 'anthropic', 'local']).default('mock'),
+      provider: z.enum(['mock', 'anthropic', 'local', 'host-cli']).default('mock'),
       /** Optional model override for the Anthropic provider. */
       model: z.string().optional(),
     })
@@ -152,7 +152,7 @@ export const CadenceConfigZ = z.object({
        * gate set. HIGH findings refuse settle unless `--force` /
        * `--allow-code-review-failure`.
        */
-      provider: z.enum(['mock', 'anthropic', 'local']).default('mock'),
+      provider: z.enum(['mock', 'anthropic', 'local', 'host-cli']).default('mock'),
       /** Optional model override for the Anthropic provider. */
       model: z.string().optional(),
     })
@@ -165,7 +165,7 @@ export const CadenceConfigZ = z.object({
        * gate set (strict×complex). `pass=false` refuses approve unless
        * `--allow-plan-review-failure`.
        */
-      provider: z.enum(['mock', 'anthropic', 'local']).default('mock'),
+      provider: z.enum(['mock', 'anthropic', 'local', 'host-cli']).default('mock'),
       /** Optional model override for the Anthropic provider. */
       model: z.string().optional(),
     })
@@ -179,7 +179,7 @@ export const CadenceConfigZ = z.object({
        * (strict×complex only). CRITICAL findings refuse settle unless
        * `--force` / `--allow-security-audit-failure`.
        */
-      provider: z.enum(['mock', 'anthropic', 'local']).default('mock'),
+      provider: z.enum(['mock', 'anthropic', 'local', 'host-cli']).default('mock'),
       /** Optional model override for the Anthropic provider. */
       model: z.string().optional(),
     })

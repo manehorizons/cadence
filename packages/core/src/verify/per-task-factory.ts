@@ -1,6 +1,7 @@
 import type { CadenceConfig } from '@manehorizons/cadence-types';
 import {
   AnthropicPerTaskVerifier,
+  HostCliPerTaskVerifier,
   LocalPerTaskVerifier,
   MockPerTaskVerifier,
   type PerTaskVerifier,
@@ -23,4 +24,5 @@ export const selectPerTaskVerifier = createVerifierFactory<
   mock: () => new MockPerTaskVerifier(),
   anthropic: (o) => new AnthropicPerTaskVerifier(o),
   local: (o) => new LocalPerTaskVerifier(o),
+  hostCli: (o) => new HostCliPerTaskVerifier(o),
 });

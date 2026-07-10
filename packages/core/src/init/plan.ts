@@ -288,7 +288,12 @@ function planVerification(
   activate: boolean,
   env: NodeJS.ProcessEnv,
 ): InitPlanVerification {
-  const base = presets[preset].verifier.provider;
+  // Presets only ever carry 'mock' today; the config schema's `provider` enum
+  // also admits `'host-cli'` (Phase 165) but `cadence init` doesn't offer that
+  // provider yet, so narrow defensively rather than widening this plan's
+  // public surface.
+  const rawBase = presets[preset].verifier.provider;
+  const base: 'mock' | 'anthropic' | 'local' = rawBase === 'host-cli' ? 'mock' : rawBase;
   const hasKey =
     typeof env.ANTHROPIC_API_KEY === 'string' && env.ANTHROPIC_API_KEY.length > 0;
   let provider: 'mock' | 'anthropic' | 'local' = base;

@@ -130,6 +130,21 @@ describe('cadence settle run --auto', () => {
     expect(json.acResults).toEqual([{ id: 'AC-1', pass: false, note: 'override', evidence: 'unverified' }]);
   });
 
+  // AC-1 (Phase 165) — parseVerifier accepts 'host-cli' as a valid --verifier
+  // value instead of rejecting it with InvalidArgumentError.
+  it('accepts --verifier host-cli without rejecting it as an invalid provider (AC-1)', async () => {
+    active = await tempRepo({ initialized: true });
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+    const r = await run(
+      ['settle', 'run', '--auto', '--verifier', 'host-cli', '--allow-missing-coverage'],
+      active.root,
+    );
+    expect(r.stderr).not.toMatch(/invalid --verifier/);
+    expect(r.code).toBe(0);
+  });
+
   it('legacy --ac-only flow is unchanged (no --auto)', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);

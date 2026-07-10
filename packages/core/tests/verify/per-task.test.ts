@@ -2,10 +2,47 @@ import { describe, it, expect, vi } from 'vitest';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   AnthropicPerTaskVerifier,
+  HostCliPerTaskVerifier,
   MockPerTaskVerifier,
   type PerTaskInput,
 } from '../../src/verify/per-task.js';
+import type { SpawnFn, SpawnedProcessLike } from '../../src/verify/host-cli-client.js';
 import { selectPerTaskVerifier } from '../../src/verify/per-task-factory.js';
+
+/**
+ * Stubs the subprocess transport one layer below `hostCliJSON` (matching how
+ * `host-cli-client.test.ts` avoids ever invoking a real `claude`/`codex`
+ * binary): records each spawn call and resolves with a scripted stdout
+ * payload on the next microtask.
+ */
+function fakeSpawn(stdout: string, calls: Array<{ bin: string; args: string[] }>): SpawnFn {
+  return (bin, args) => {
+    calls.push({ bin, args });
+    const stdoutListeners: Array<(chunk: Buffer) => void> = [];
+    let closeListener: ((code: number | null) => void) | undefined;
+    const proc: SpawnedProcessLike = {
+      stdout: {
+        on: (event: string, cb: (chunk: Buffer) => void) => {
+          if (event === 'data') stdoutListeners.push(cb);
+          return proc.stdout as NodeJS.ReadableStream;
+        },
+      } as unknown as NodeJS.ReadableStream,
+      stderr: { on: () => proc.stderr } as unknown as NodeJS.ReadableStream,
+      on: (event: 'error' | 'close', cb: never) => {
+        if (event === 'close') closeListener = cb as (code: number | null) => void;
+        return proc;
+      },
+    };
+    queueMicrotask(() => {
+      stdoutListeners.forEach((l) => l(Buffer.from(stdout)));
+      closeListener?.(0);
+    });
+    return proc;
+  };
+}
+
+const claudeEnvelope = (result: unknown) =>
+  JSON.stringify({ is_error: false, result: JSON.stringify(result) });
 
 // AC-2: MockPerTaskVerifier deterministic branches (pass/concerns/refuse)
 // AC-3: AnthropicPerTaskVerifier — happy paths via injected client + error paths
@@ -101,10 +138,63 @@ describe('AnthropicPerTaskVerifier (AC-3)', () => {
   });
 });
 
+describe('HostCliPerTaskVerifier (AC-1)', () => {
+  const input: PerTaskInput = {
+    taskId: 'T1',
+    files: ['src/foo.ts'],
+    diff: '+ added line',
+  };
+
+  it('AC-1: spawns the host CLI headlessly, parses its output via the repair harness, and returns the same verdict shape local/anthropic return', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(
+      claudeEnvelope({ verdict: 'pass', reason: 'diff is coherent and on-scope' }),
+      calls,
+    );
+    const v = new HostCliPerTaskVerifier({ bin: 'claude', spawnImpl });
+    const r = await v.verify(input);
+    expect(r).toEqual({
+      verdict: 'pass',
+      reason: 'diff is coherent and on-scope',
+      provider: 'host-cli',
+    });
+    expect(calls[0]?.bin).toBe('claude');
+    expect(calls[0]?.args).toContain('-p');
+    expect(calls[0]?.args).toContain('--output-format');
+  });
+
+  it('passes the model flag through and reports it on the result when configured', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(claudeEnvelope({ verdict: 'concerns', reason: 'eh' }), calls);
+    const v = new HostCliPerTaskVerifier({ bin: 'claude', model: 'opus', spawnImpl });
+    const r = await v.verify(input);
+    expect(r.model).toBe('opus');
+    expect(calls[0]?.args).toContain('--model');
+    expect(calls[0]?.args).toContain('opus');
+  });
+
+  it('omits the model field from the result when not configured', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(claudeEnvelope({ verdict: 'pass', reason: 'ok' }), calls);
+    const v = new HostCliPerTaskVerifier({ bin: 'claude', spawnImpl });
+    const r = await v.verify(input);
+    expect(r.model).toBeUndefined();
+  });
+});
+
 describe('selectPerTaskVerifier (AC-1, AC-3)', () => {
   it('returns mock by default', () => {
     const v = selectPerTaskVerifier(null, { env: {} });
     expect(v.name).toBe('mock');
+  });
+
+  it('AC-1: resolves host-cli config to a HostCliPerTaskVerifier instance — the first end-to-end host-cli path for any verifier family', () => {
+    const v = selectPerTaskVerifier(
+      { perTaskVerifier: { provider: 'host-cli' } },
+      { env: {} },
+    );
+    expect(v.name).toBe('host-cli');
+    expect(v).toBeInstanceOf(HostCliPerTaskVerifier);
   });
 
   it('returns anthropic when configured and key present', () => {

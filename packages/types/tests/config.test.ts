@@ -112,6 +112,33 @@ describe('CadenceConfigZ', () => {
     expect(parsed.verifier.model).toBe('claude-haiku-4-5');
   });
 
+  // AC-1 (Phase 165) — host-cli provider accepted by the schema.
+  it('accepts provider "host-cli" on the verifier (deep-verify) seam (AC-1)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: { provider: 'host-cli' },
+    });
+    expect(parsed.verifier.provider).toBe('host-cli');
+  });
+
+  it('accepts provider "host-cli" on every LLM gate (AC-1)', () => {
+    const cfg = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: { provider: 'host-cli' },
+      perTaskVerifier: { provider: 'host-cli' },
+      codeReview: { provider: 'host-cli' },
+      planReview: { provider: 'host-cli' },
+      securityAudit: { provider: 'host-cli' },
+      specReview: { provider: 'host-cli' },
+    });
+    expect(cfg.verifier.provider).toBe('host-cli');
+    expect(cfg.perTaskVerifier.provider).toBe('host-cli');
+    expect(cfg.codeReview.provider).toBe('host-cli');
+    expect(cfg.planReview.provider).toBe('host-cli');
+    expect(cfg.securityAudit.provider).toBe('host-cli');
+    expect(cfg.specReview.provider).toBe('host-cli');
+  });
+
   it('accepts provider "local" on every LLM gate', () => {
     const cfg = CadenceConfigZ.parse({
       ...defaultConfig,

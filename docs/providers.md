@@ -1,9 +1,10 @@
 # Provider Setup How-To
 
-CADENCE delegates AI gate work to a **provider**. Three providers are
+CADENCE delegates AI gate work to a **provider**. Four providers are
 available: `mock` (offline, no config needed), `anthropic` (Anthropic API),
-and `local` (any OpenAI-compatible endpoint, e.g. Ollama). Each gate that
-calls an AI verifier can be configured independently.
+`local` (any OpenAI-compatible endpoint, e.g. Ollama), and `host-cli` (shells
+out to your already-installed, already-authenticated `claude`/`codex` CLI).
+Each gate that calls an AI verifier can be configured independently.
 
 For a conceptual overview of providers and the gate universe they serve, see
 [docs/concepts.md — Providers](concepts.md#providers) and
@@ -21,6 +22,12 @@ For a conceptual overview of providers and the gate universe they serve, see
   - [Per-gate model override](#per-gate-model-override)
   - [Auth — bearer token + custom headers](#auth--bearer-token--custom-headers)
   - [Warn + mock fallback](#warn--mock-fallback)
+- [host-cli — headless host CLI (`claude`/`codex`)](#host-cli--headless-host-cli-claudecodex)
+  - [Binary discovery](#binary-discovery)
+  - [Current scope: per-task-verify only](#current-scope-per-task-verify-only)
+  - [Fallback behavior](#fallback-behavior)
+  - [Readiness reporting caveat](#readiness-reporting-caveat)
+  - [Deferred: batching + quota transparency](#deferred-batching--quota-transparency)
 - [Per-gate provider configuration](#per-gate-provider-configuration)
 - [Which gate fires in which cell](#which-gate-fires-in-which-cell)
 - [Selecting a provider at the command line (Phase 73)](#selecting-a-provider-at-the-command-line-phase-73)
@@ -36,6 +43,7 @@ For a conceptual overview of providers and the gate universe they serve, see
 | `mock` | Deterministic offline **placeholder** — only checks each AC links to a test; **not real verification** | Nothing — the default everywhere |
 | `anthropic` | Calls the Anthropic API using `messages.parse` with structured output; prompt-caches the system prompt | `ANTHROPIC_API_KEY` in environment or a `.env` file at the repo root |
 | `local` | POSTs to an OpenAI-compatible `/v1/chat/completions` endpoint; parses JSON output with repair retries | `CADENCE_LOCAL_BASE_URL` + a model name (env or config) |
+| `host-cli` | Spawns your already-installed, already-authenticated `claude`/`codex` CLI in headless mode; parses its stdout with the same repair-retry harness `local` uses | Nothing — no separate API key. Only the CLI binary itself, already on PATH and logged in |
 
 ---
 
@@ -216,6 +224,122 @@ verifier: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — 
 per-task-verify: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.
 code-review: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.
 ```
+
+---
+
+## host-cli — headless host CLI (`claude`/`codex`)
+
+The `host-cli` provider reuses your already-installed, already-authenticated
+`claude` or `codex` CLI instead of requiring a separately configured
+`ANTHROPIC_API_KEY`. It spawns the binary in headless/non-interactive mode
+(`claude -p "<prompt>" --output-format json`, or `codex exec --json
+--skip-git-repo-check "<prompt>"` for a `codex`-named binary), parses its
+stdout, and coerces it into a schema-valid verdict with the same
+transport-agnostic JSON-extraction + repair-retry harness the `local`
+provider uses (`packages/core/src/verify/json-repair.ts`) — only the
+transport differs (subprocess spawn/capture vs. an HTTP `fetch` call).
+
+It is selected per verifier family the same way as `mock`/`anthropic`/`local`
+(see [Per-gate provider configuration](#per-gate-provider-configuration)
+below). Today only the `per-task-verify` gate (`perTaskVerifier` config
+key) has a real `host-cli`-backed verifier wired up — see
+[Current scope](#current-scope-per-task-verify-only) — so that is the gate to
+point at it to get real host-CLI verification:
+
+```sh
+cadence config set perTaskVerifier.provider host-cli
+```
+
+`cadence activate --provider host-cli` (no `--all`) only flips the
+top-level `verifier` seam (the `deep-verify` gate), which is **not** the
+wired family — use `--all` to also flip `perTaskVerifier` (and every other
+seam) to `host-cli` in one step:
+
+```sh
+cadence activate --provider host-cli --all
+```
+
+`cadence settle run --deep --verifier host-cli` is accepted by the CLI (T5),
+but it overrides the `deep-verify` gate specifically, which has no `host-cli`
+builder yet — it will fall back to mock with a warning until that family is
+wired in a follow-up.
+
+### Binary discovery
+
+The binary name/path is discovered the same way `local`'s base URL and model
+are — via `CADENCE_HOST_CLI_BIN` (env var or a `.env` file at the repo root),
+not a new config schema field:
+
+```sh
+export CADENCE_HOST_CLI_BIN=/usr/local/bin/codex   # optional override
+```
+
+If unset, it defaults to `claude` on PATH. The CLI family (which flags to
+use, how to parse the output) is inferred from the binary's basename — a
+`codex`-named binary gets `codex exec --json …`; everything else is treated
+as `claude`.
+
+### Current scope: per-task-verify only
+
+Only the `per-task-verify` gate (`perTaskVerifier` config key, the family
+that fires at `build task --status=DONE`) has a real `host-cli`-backed
+verifier class wired up so far (`HostCliPerTaskVerifier` in
+`packages/core/src/verify/per-task.ts`). The other five verifier
+families — the top-level `verifier` slice (the `deep-verify` gate),
+`codeReview`, `planReview`, `securityAudit`, and `specReview` — have no
+`host-cli` builder yet, so selecting `provider: 'host-cli'` on any of them
+falls back to `mock` with a stderr warning:
+
+```
+verifier: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.
+code-review: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.
+```
+
+This is current scope for this provider, not a bug — wiring the remaining
+five families, including `deep-verify` itself, is a follow-up.
+
+### Fallback behavior
+
+If the binary is missing (`ENOENT`) or the spawned process exits non-zero
+(the common shape of an unauthenticated CLI, e.g. "not logged in"), the call
+transparently falls back to `mock` for that call, with the same
+stderr-warning pattern used by `anthropic`/`local`:
+
+```
+per-task-verify: host-cli provider failed (not-found: host-cli provider: binary "claude" not found on PATH) — falling back to mock provider for this call.
+```
+
+The fallback is per-call and lazy — there is no upfront probe of whether the
+binary exists or is authenticated, the same way `local`/`anthropic` don't
+probe connectivity at selection time either. It never hangs waiting on
+interactive auth: stdin is not piped to the child process, so a CLI that
+opportunistically reads stdin when it isn't a TTY sees an immediate EOF
+instead of blocking.
+
+**Known limitation:** the subprocess transport has no spawn timeout. A
+process that hangs without ever closing stdout or exiting (as opposed to
+exiting non-zero or erroring) is not caught by this fallback — the call
+would hang rather than falling back to mock. This is a known gap, documented
+honestly rather than fixed in this slice; it is out of scope per the phase's
+boundaries.
+
+### Readiness reporting caveat
+
+`cadence doctor` and `cadence activate` report `host-cli` as **ready** based
+on config well-formedness alone — `host-cli` has no required credential by
+design, so readiness here just means "nothing is missing," not "the binary
+is confirmed installed and authenticated." Whether the binary actually
+exists and is logged in is only discovered lazily on the first real
+verification call. Don't be surprised if `doctor` reports `host-cli` as
+ready and a subsequent gate run still falls back to mock — that fallback,
+with its stderr warning, is the actual live check.
+
+### Deferred: batching + quota transparency
+
+Batching multiple ACs into a single subprocess spawn per gate run, and
+surfacing quota-transparency messaging (host-cli verification consumes your
+host-CLI subscription's usage, not a separately metered API key), are both
+explicitly deferred — not implemented by this provider today.
 
 ---
 

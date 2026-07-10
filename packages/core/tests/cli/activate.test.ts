@@ -1,6 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { loadConfig } from '../../src/config/loader.js';
 import { runActivate } from '../../src/cli/commands/activate.js';
@@ -8,6 +10,19 @@ import { bufferIO } from '../../src/services/io.js';
 import type { ProviderPing } from '../../src/activate/ping.js';
 
 const okPing: ProviderPing = async () => ({ ok: true as const });
+
+const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
+
+function runCli(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
+  return new Promise((resolve) => {
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
+    let stdout = '';
+    let stderr = '';
+    p.stdout.on('data', (d) => (stdout += d.toString()));
+    p.stderr.on('data', (d) => (stderr += d.toString()));
+    p.on('exit', (code) => resolve({ stdout, stderr, code: code ?? 0 }));
+  });
+}
 
 let active: Fixture | null = null;
 afterEach(async () => {
@@ -82,6 +97,32 @@ describe('runActivate (AC-1, AC-2, AC-3, AC-4, AC-5)', () => {
     const res = await runActivate(root, { provider: 'anthropic', isTty: false }, io, { ping: okPing, env: { ANTHROPIC_API_KEY: 'sk' } });
     expect(res.exitCode).toBe(0);
     expect(io.stdout()).toMatch(/Already active/);
+  });
+
+  // AC-1 (Phase 165) — 'host-cli' is an accepted --provider value, not rejected
+  // as an unknown choice, and it writes through to config like the other providers.
+  it('AC-1: accepts provider=host-cli and writes it to config (P165)', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const res = await runActivate(
+      root,
+      { provider: 'host-cli', noCheck: true, isTty: false },
+      bufferIO(),
+      { ping: okPing, env: {} },
+    );
+    expect(res.exitCode).toBe(0);
+    expect((await loadConfig(root)).verifier.provider).toBe('host-cli');
+  });
+
+  // AC-1 (Phase 165) — at the actual CLI entry point, `--provider host-cli`
+  // must be accepted by the PROVIDERS allowlist (registerActivateCommand's
+  // action closure), not rejected as an unknown choice before runActivate
+  // ever sees it.
+  it('AC-1: `cadence activate --provider host-cli --print` is accepted at the CLI entry (P165)', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await runCli(['activate', '--provider', 'host-cli', '--print', '--no-check'], active.root);
+    expect(r.stderr).not.toMatch(/Not a provider/);
+    expect(r.code).toBe(0);
   });
 
   it('AC-5c: --print with no key still previews the missing-key warning and writes nothing', async () => {

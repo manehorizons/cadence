@@ -48,6 +48,16 @@ export function credsPresent(
 ): boolean {
   if (provider === 'mock') return true;
   if (provider === 'anthropic') return Boolean(discoverKey('ANTHROPIC_API_KEY', env, cwd).value);
+  // Phase 165: host-cli has no required credential by design — it shells out
+  // to the user's already-installed, already-authenticated host CLI, with a
+  // hardcoded default binary (`claude`) when CADENCE_HOST_CLI_BIN is unset
+  // (mirrors verify/verifier-factory.ts's `discoverKey(...) ?? 'claude'`).
+  // Whether that binary actually exists/authenticates is checked lazily at
+  // spawn time (host-cli-client.ts), the same way `local`/`anthropic` never
+  // probe connectivity here either — so "present" just means "nothing is
+  // missing", which is unconditionally true. Without this branch, `host-cli`
+  // fell through to the `local` check below and was misreported as broken.
+  if (provider === 'host-cli') return true;
   const model =
     (config[seam] as { model?: string }).model ??
     discoverKey('CADENCE_LOCAL_MODEL', env, cwd).value;

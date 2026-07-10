@@ -37,7 +37,7 @@ flowchart LR
   Core --> Gates[Quality gates]
   Gates --> ACs[Acceptance criteria]
   Gates --> Tests[Test / AC evidence]
-  Gates --> Verifiers["Verifier providers<br/>mock / anthropic / local"]
+  Gates --> Verifiers["Verifier providers<br/>mock / anthropic / local / host-cli"]
 
   Gates --> Refuse[Refuse to settle]
   Gates --> Settle[Settle phase]
