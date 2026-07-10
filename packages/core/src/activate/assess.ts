@@ -1,5 +1,6 @@
 import type { CadenceConfig } from '@manehorizons/cadence-types';
 import type { VerifierProvider } from '../verify/verifier-factory.js';
+import { discoverKey } from './key-discovery.js';
 
 /**
  * The six verifier seam config blocks (parallels config-explain PROVIDER_BLOCKS).
@@ -35,23 +36,30 @@ function seamProvider(config: CadenceConfig, seam: VerifierSeam): VerifierProvid
 }
 
 /** Are `provider`'s credentials present for `seam`? local needs a base URL + a model
- *  (the seam's own `model`, else CADENCE_LOCAL_MODEL — mirrors verify/verifier-factory.ts). */
+ *  (the seam's own `model`, else CADENCE_LOCAL_MODEL — mirrors verify/verifier-factory.ts).
+ *  `cwd` (default `process.cwd()`) is where a `.env` file is discovered — a key found
+ *  there counts the same as one exported into the env (AC-1). */
 export function credsPresent(
   provider: VerifierProvider,
   seam: VerifierSeam,
   config: CadenceConfig,
   env: NodeJS.ProcessEnv,
+  cwd: string = process.cwd(),
 ): boolean {
   if (provider === 'mock') return true;
-  if (provider === 'anthropic') return Boolean(env.ANTHROPIC_API_KEY);
-  const model = (config[seam] as { model?: string }).model ?? env.CADENCE_LOCAL_MODEL;
-  return Boolean(env.CADENCE_LOCAL_BASE_URL) && Boolean(model);
+  if (provider === 'anthropic') return Boolean(discoverKey('ANTHROPIC_API_KEY', env, cwd).value);
+  const model =
+    (config[seam] as { model?: string }).model ??
+    discoverKey('CADENCE_LOCAL_MODEL', env, cwd).value;
+  return Boolean(discoverKey('CADENCE_LOCAL_BASE_URL', env, cwd).value) && Boolean(model);
 }
 
-/** Pure verifier-posture assessment. Shared by `activate` and `doctor`. */
+/** Pure verifier-posture assessment. Shared by `activate` and `doctor`.
+ *  `cwd` (default `process.cwd()`) is threaded to `credsPresent` for `.env` discovery. */
 export function assessReadiness(
   config: CadenceConfig,
   env: NodeJS.ProcessEnv,
+  cwd: string = process.cwd(),
 ): VerifierReadiness {
   const seamsReal: VerifierSeam[] = [];
   const seamsMock: VerifierSeam[] = [];
@@ -59,7 +67,7 @@ export function assessReadiness(
     (seamProvider(config, seam) === 'mock' ? seamsMock : seamsReal).push(seam);
   }
   const provider = seamProvider(config, DEEP_VERIFY_SEAM);
-  const keyPresent = credsPresent(provider, DEEP_VERIFY_SEAM, config, env);
+  const keyPresent = credsPresent(provider, DEEP_VERIFY_SEAM, config, env, cwd);
   const ready = provider !== 'mock' && keyPresent;
   const reason =
     provider === 'mock'

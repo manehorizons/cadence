@@ -1892,8 +1892,9 @@ Turn on real verification — pick a provider, validate the key, wire deep-verif
 verification. Writes `verifier.provider` (only the deep-verify seam by default; `--all`
 sets every seam) and, unless `--no-check`, makes one minimal live call to confirm the
 provider's key works before declaring success (anthropic only; `local`/`mock` skip the
-ping). The API key is read from the environment (`ANTHROPIC_API_KEY`, or
-`CADENCE_LOCAL_BASE_URL` for `local`) and is **never** written to config or logged — only
+ping). The API key is discovered from the environment (`ANTHROPIC_API_KEY`, or
+`CADENCE_LOCAL_BASE_URL` for `local`) or, failing that, a `.env` file at the repo root —
+and is **never** written to config or logged — only
 the provider name is persisted. If the key is absent the provider is still selected and
 the exact `export …` line is printed (set-up-now-key-later). In a TTY with no
 `--provider`, it prompts; in a non-TTY it requires `--provider`. `cadence doctor`'s

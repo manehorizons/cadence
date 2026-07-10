@@ -8,6 +8,7 @@ import type {
   VerifyResult,
 } from './verifier.js';
 import { getLogger } from '../logging/logger.js';
+import { discoverKey } from '../activate/key-discovery.js';
 
 export const VerifierResponseSchema = z.object({
   verdicts: z.array(
@@ -73,7 +74,8 @@ export class AnthropicVerifier implements Verifier {
     if (opts.client) {
       this.client = opts.client;
     } else {
-      const apiKey = opts.apiKey ?? process.env.ANTHROPIC_API_KEY;
+      const apiKey =
+        opts.apiKey ?? discoverKey('ANTHROPIC_API_KEY', process.env, process.cwd()).value;
       if (!apiKey) {
         throw new Error(
           'AnthropicVerifier requires an API key. Set ANTHROPIC_API_KEY or pass `apiKey` / `client`.',

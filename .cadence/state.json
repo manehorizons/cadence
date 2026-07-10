@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "163-handoff-resume-hardening",
+  "activePhase": "164-trustworthy-verifier-activation",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-09T04:45:35.142Z",
+  "draftReadAt": "2026-07-10T01:01:58.025Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-09-phase163-pr158-ci-watch.md",
-    "subagentSpawns": 1048,
+    "subagentSpawns": 1165,
     "subagentBaselines": {}
   },
   "skillAudit": {

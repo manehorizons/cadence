@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { loadConfig } from '../../src/config/loader.js';
 import { runActivate } from '../../src/cli/commands/activate.js';
@@ -90,5 +92,66 @@ describe('runActivate (AC-1, AC-2, AC-3, AC-4, AC-5)', () => {
     expect(res.exitCode).toBe(0);
     expect(io.stdout()).toMatch(/export ANTHROPIC_API_KEY/);
     expect((await loadConfig(root)).verifier.provider).toBe('mock'); // nothing written
+  });
+});
+
+// Phase: trustworthy-verifier-activation, task T3.
+// AC-2: given an operator runs `cadence activate` with a discovered or supplied
+// verifier key, activation must make one real verification call to the
+// configured provider and report success/failure based on that live call's
+// outcome — not merely because a key string was present.
+describe('runActivate — non-skippable activation smoke test (AC-2)', () => {
+  it('AC-2: a key discovered only via .env (not process env) still triggers the live ping, and its success gates activation', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    writeFileSync(join(root, '.env'), 'ANTHROPIC_API_KEY=from-dotenv\n');
+    let calls = 0;
+    let seenCwd: string | undefined;
+    const spyPing: ProviderPing = async (_provider, _env, deps) => {
+      calls += 1;
+      seenCwd = deps?.cwd;
+      return { ok: true as const };
+    };
+    // No ANTHROPIC_API_KEY in env — the key only lives in .env at root.
+    const res = await runActivate(root, { provider: 'anthropic', isTty: false }, bufferIO(), {
+      ping: spyPing,
+      env: {},
+    });
+    expect(calls).toBe(1);
+    expect(seenCwd).toBe(root);
+    expect(res.exitCode).toBe(0);
+  });
+
+  it('AC-2: a key discovered via .env whose live ping fails still reports activation as a failure (writing config is not success)', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    writeFileSync(join(root, '.env'), 'ANTHROPIC_API_KEY=from-dotenv\n');
+    const failPing: ProviderPing = async () => ({ ok: false as const, reason: '401 unauthorized' });
+    const res = await runActivate(root, { provider: 'anthropic', isTty: false }, bufferIO(), {
+      ping: failPing,
+      env: {},
+    });
+    // Config write still happens (the provider choice is recorded), but the
+    // activation result itself must not be reported as a success.
+    expect((await loadConfig(root)).verifier.provider).toBe('anthropic');
+    expect(res.exitCode).toBe(1);
+  });
+
+  it('AC-2: --no-check is the only opt-out — the ping is never invoked when it is set, even with a key present', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    let calls = 0;
+    const spyPing: ProviderPing = async () => {
+      calls += 1;
+      return { ok: true as const };
+    };
+    const res = await runActivate(
+      root,
+      { provider: 'anthropic', noCheck: true, isTty: false },
+      bufferIO(),
+      { ping: spyPing, env: { ANTHROPIC_API_KEY: 'sk' } },
+    );
+    expect(calls).toBe(0);
+    expect(res.exitCode).toBe(0);
   });
 });

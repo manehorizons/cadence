@@ -520,7 +520,7 @@ export async function checkVerificationReadiness(
 ): Promise<DoctorCheck> {
   try {
     const config = await loadConfig(root);
-    const r = assessReadiness(config, env);
+    const r = assessReadiness(config, env, root);
     if (r.provider === 'mock') {
       // Phase 104: source the honesty wording from the single MOCK_VERIFIER_NOTICE.
       return fail(
