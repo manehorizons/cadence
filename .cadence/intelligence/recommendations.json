@@ -897,6 +897,115 @@
       "scoutId": "scout-20260710-0400",
       "createdAt": "2026-07-10T03:57:01.960Z",
       "updatedAt": "2026-07-10T03:57:01.960Z"
+    },
+    {
+      "id": "rec-20260710-003",
+      "title": "MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool",
+      "summary": "Alternative to shelling out to the host CLI: instead run the host CLI headlessly and have IT call into cadence's own MCP verify tool, using the host's native tool-calling to enforce the per-AC verdict schema rather than parsing freeform JSON from a subprocess. Worth prototyping against rec-20260710-002's direct-subprocess approach before committing -- tool-call-constrained output may be materially more reliable than prompt-and-parse, at the cost of a more unusual control-flow (host CLI as the driver, cadence as the callee).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "mcp",
+        "providers"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260710-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260710-2126",
+      "createdAt": "2026-07-10T22:11:55.412Z",
+      "updatedAt": "2026-07-10T22:11:55.412Z"
+    },
+    {
+      "id": "rec-20260710-004",
+      "title": "Headless-CLI verifier: batching, fallback-chain, and model-passthrough behavior",
+      "summary": "Implementation-detail decisions that apply once a headless host-CLI verifier provider (rec-20260710-002 or its MCP-inversion sibling) ships: (1) batch all ACs for a gate-run into one subprocess spawn rather than one spawn per AC, to offset process-spawn latency/cost; (2) treat the provider as a free upgrade over mock -- fall back to mock with the existing loud-fallback banner if the host CLI errors or isn't installed, never silently; (3) accept the host CLI's own model choice as the default (simplicity, 'whatever the user already pays for') but expose a --model passthrough where the host CLI supports it, to preserve today's per-gate model selection story.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "providers"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260710-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260710-2126",
+      "createdAt": "2026-07-10T22:11:55.587Z",
+      "updatedAt": "2026-07-10T22:11:55.587Z"
+    },
+    {
+      "id": "rec-20260710-005",
+      "title": "Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report",
+      "summary": "A headless host-CLI verifier subprocess has zero shared context with the calling session -- arguably a stronger independence claim than today's same-session self-report or even a direct API call under the same account. Worth a docs/positioning pass tying this framing to the existing 'trustworthy verifier' wedge and the mock-default competitive risk, independent of which engineering direction (rec-20260710-002 direct-subprocess vs MCP-inversion sibling) ships.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260710-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260710-2126",
+      "createdAt": "2026-07-10T22:11:55.763Z",
+      "updatedAt": "2026-07-10T22:11:55.763Z"
+    },
+    {
+      "id": "rec-20260710-006",
+      "title": "Guardrails for headless-CLI verifier: quota transparency, self-invocation loops, CI fallback",
+      "summary": "Three risks surfaced while widening rec-20260710-002 that need explicit handling, not just the happy path: (1) reusing the user's host-CLI subscription/quota for verification calls is invisible cost -- it should be surfaced loudly (e.g. in verify output or a doctor check), not silently drain a Pro/Max plan's usage budget; (2) if cadence itself is being driven by the same host CLI it would spawn headlessly for verification, there is a self-referential invocation risk (nested Claude Code/Codex processes, rate-limit or permission-prompt contention) that needs an explicit guard; (3) headless host-CLI providers assume an interactive login exists locally and will not work in CI -- needs a documented, loud fallback to anthropic/mock rather than a confusing hang or silent failure in automated environments.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "security",
+        "providers"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260710-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-10T22:11:55.932Z",
+      "updatedAt": "2026-07-10T22:11:55.932Z",
+      "scoutId": "scout-20260710-2126"
     }
   ],
   "archived": [
@@ -2228,12 +2337,12 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:42.017Z",
-      "updatedAt": "2026-07-10T21:25:52.678Z",
       "shippedRef": "phase 164 / PR #161 / commit bef364d",
+      "scoutId": "scout-20260709-1813",
       "archivedAt": "2026-07-10T21:25:52.678Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-09T23:23:42.017Z",
+      "updatedAt": "2026-07-10T21:25:52.678Z"
     }
   ]
 }

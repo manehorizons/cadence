@@ -468,3 +468,63 @@ Users running cadence inside a live Claude Code session assume that auth exempts
 - next: cadence milestone propose
 
 All 3 current verifier providers (mock/anthropic/local) either do no real judgment or require a directly-configured credential (ANTHROPIC_API_KEY, or an OpenAI-compatible endpoint's own key) -- there is no path for a user who already has Claude Code or Codex installed and authenticated to use that existing auth for cadence's independent-verifier gates. Proposal: a 4th provider that shells out to the host CLI in headless/non-interactive mode (e.g. 'claude -p <prompt> --output-format json', or an analogous 'codex exec') as a fresh out-of-band subprocess -- genuinely independent of the calling session (arguably MORE independent than same-session self-report, since it is a new process with no shared context), while reusing whatever auth that CLI already has configured, with zero new env var required. Open design questions: (1) does the host CLI's headless/print mode reliably emit structured JSON matching cadence's per-AC verdict Zod schema, or does it need a repair-retry loop like local-client.ts; (2) process-spawn latency/cost vs a direct API call, and whether it belongs behind a new HostAdapter capability (e.g. 'headlessVerify') so core does not hardcode 'claude'/'codex' binary names -- core never imports host code, so this needs the same core-spawns-host-as-subprocess pattern already used for host installs; (3) whether per-gate model selection still makes sense when the host CLI picks its own model. Directly addresses the competitive risk (see cadence-competitive-landscape notes) that mock-default undercuts the enforcement wedge for users without a standalone Anthropic API key.
+
+## rec-20260710-003 — MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, mcp, providers
+- evidence: Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; alternative architecture to the direct-subprocess proposal
+- next: cadence milestone propose
+
+Alternative to shelling out to the host CLI: instead run the host CLI headlessly and have IT call into cadence's own MCP verify tool, using the host's native tool-calling to enforce the per-AC verdict schema rather than parsing freeform JSON from a subprocess. Worth prototyping against rec-20260710-002's direct-subprocess approach before committing -- tool-call-constrained output may be materially more reliable than prompt-and-parse, at the cost of a more unusual control-flow (host CLI as the driver, cadence as the callee).
+
+## rec-20260710-004 — Headless-CLI verifier: batching, fallback-chain, and model-passthrough behavior
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, providers
+- evidence: Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; implementation details for whichever headless-CLI provider direction is chosen
+- next: cadence milestone propose
+
+Implementation-detail decisions that apply once a headless host-CLI verifier provider (rec-20260710-002 or its MCP-inversion sibling) ships: (1) batch all ACs for a gate-run into one subprocess spawn rather than one spawn per AC, to offset process-spawn latency/cost; (2) treat the provider as a free upgrade over mock -- fall back to mock with the existing loud-fallback banner if the host CLI errors or isn't installed, never silently; (3) accept the host CLI's own model choice as the default (simplicity, 'whatever the user already pays for') but expose a --model passthrough where the host CLI supports it, to preserve today's per-gate model selection story.
+
+## rec-20260710-005 — Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs
+- evidence: Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; see cadence-competitive-landscape notes on mock-default risk
+- next: cadence milestone propose
+
+A headless host-CLI verifier subprocess has zero shared context with the calling session -- arguably a stronger independence claim than today's same-session self-report or even a direct API call under the same account. Worth a docs/positioning pass tying this framing to the existing 'trustworthy verifier' wedge and the mock-default competitive risk, independent of which engineering direction (rec-20260710-002 direct-subprocess vs MCP-inversion sibling) ships.
+
+## rec-20260710-006 — Guardrails for headless-CLI verifier: quota transparency, self-invocation loops, CI fallback
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, security, providers
+- evidence: Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; risk considerations that apply to any headless-CLI provider direction
+- next: cadence milestone propose
+
+Three risks surfaced while widening rec-20260710-002 that need explicit handling, not just the happy path: (1) reusing the user's host-CLI subscription/quota for verification calls is invisible cost -- it should be surfaced loudly (e.g. in verify output or a doctor check), not silently drain a Pro/Max plan's usage budget; (2) if cadence itself is being driven by the same host CLI it would spawn headlessly for verification, there is a self-referential invocation risk (nested Claude Code/Codex processes, rate-limit or permission-prompt contention) that needs an explicit guard; (3) headless host-CLI providers assume an interactive login exists locally and will not work in CI -- needs a documented, loud fallback to anthropic/mock rather than a confusing hang or silent failure in automated environments.

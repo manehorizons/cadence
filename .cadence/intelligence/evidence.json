@@ -483,6 +483,34 @@
       "kind": "note",
       "summary": "Raised live by operator in phenyx-confusion follow-up, 2026-07-10 session; builds on phase 164's key-discovery work",
       "createdAt": "2026-07-10T03:57:01.960Z"
+    },
+    {
+      "id": "ev-20260710-003",
+      "recommendationId": "rec-20260710-003",
+      "kind": "note",
+      "summary": "Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; alternative architecture to the direct-subprocess proposal",
+      "createdAt": "2026-07-10T22:11:55.412Z"
+    },
+    {
+      "id": "ev-20260710-004",
+      "recommendationId": "rec-20260710-004",
+      "kind": "note",
+      "summary": "Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; implementation details for whichever headless-CLI provider direction is chosen",
+      "createdAt": "2026-07-10T22:11:55.587Z"
+    },
+    {
+      "id": "ev-20260710-005",
+      "recommendationId": "rec-20260710-005",
+      "kind": "note",
+      "summary": "Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; see cadence-competitive-landscape notes on mock-default risk",
+      "createdAt": "2026-07-10T22:11:55.763Z"
+    },
+    {
+      "id": "ev-20260710-006",
+      "recommendationId": "rec-20260710-006",
+      "kind": "note",
+      "summary": "Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; risk considerations that apply to any headless-CLI provider direction",
+      "createdAt": "2026-07-10T22:11:55.932Z"
     }
   ]
 }
