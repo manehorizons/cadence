@@ -39,7 +39,7 @@ export async function specApproveService(
     const spec = parseSpecMd(rawSpec);
     const cfg = await loadConfig(repoRoot);
 
-    const verifier = selectSpecReviewVerifier(cfg);
+    const verifier = selectSpecReviewVerifier(cfg, { cwd: repoRoot });
     const sidecarPath = join(repoRoot, '.cadence', 'phases', phase, `${id}-SPEC-REVIEW.json`);
     let attemptsSoFar = 0;
     let history: unknown[] = [];

@@ -1,4 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   AnthropicVerifier,
@@ -6,6 +9,19 @@ import {
   formatUserMessage,
 } from '../../src/verify/anthropic-verifier.js';
 import type { VerifyInput } from '../../src/verify/verifier.js';
+
+const dirs: string[] = [];
+const makeTmpDir = (): string => {
+  const dir = mkdtempSync(join(tmpdir(), 'cadence-anthropic-verifier-'));
+  dirs.push(dir);
+  return dir;
+};
+afterEach(() => {
+  while (dirs.length > 0) {
+    const dir = dirs.pop();
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 // AC-2: happy path — parses verdicts from a successful API call
 // AC-2: empty input short-circuits without an API call
@@ -130,6 +146,23 @@ describe('AnthropicVerifier (AC-2 + AC-5)', () => {
     // Should not throw — instantiates internal client lazily.
     const v = new AnthropicVerifier({ apiKey: 'sk-test-placeholder' });
     expect(v.name).toBe('anthropic');
+  });
+
+  it('falls back to a key discoverable only via .env, not just ANTHROPIC_API_KEY (AC-1)', () => {
+    const orig = process.env.ANTHROPIC_API_KEY;
+    const origCwd = process.cwd();
+    delete process.env.ANTHROPIC_API_KEY;
+    const cwd = makeTmpDir();
+    writeFileSync(join(cwd, '.env'), 'ANTHROPIC_API_KEY=from-dotenv\n');
+    process.chdir(cwd);
+    try {
+      // No `apiKey` and no `client` passed — construction must not throw, proving
+      // the internal lookup found the key via .env rather than process.env.
+      expect(() => new AnthropicVerifier()).not.toThrow();
+    } finally {
+      process.chdir(origCwd);
+      if (orig !== undefined) process.env.ANTHROPIC_API_KEY = orig;
+    }
   });
 });
 

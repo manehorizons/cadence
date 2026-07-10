@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { checkVerificationReadiness } from '../../src/doctor/run.js';
@@ -43,6 +45,26 @@ describe('checkVerificationReadiness (AC-1, AC-2)', () => {
     const cfg = await loadConfig(active.root);
     await writeConfig(active.root, { ...cfg, verifier: { ...cfg.verifier, provider: 'anthropic' } });
     const c = await checkVerificationReadiness(active.root, { ANTHROPIC_API_KEY: 'sk' });
+    expect(c.name).toBe('verification-readiness');
+    expect(c.severity).toBe('ok');
+  });
+
+  // T5 (phase 164 amendment) — `checkVerificationReadiness` must forward its
+  // own `root` param to `assessReadiness` as `cwd`, not rely on the default
+  // `process.cwd()`. Proven with a key that lives ONLY in a `.env` file at
+  // `root` (a tempRepo under os.tmpdir(), always distinct from this test
+  // process's own cwd) and is never exported into the env passed in.
+  it('AC-1: discovers a key via .env at repoRoot even when process.cwd() differs (AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, { ...cfg, verifier: { ...cfg.verifier, provider: 'anthropic' } });
+    await writeFile(
+      join(active.root, '.env'),
+      'ANTHROPIC_API_KEY=from-dotenv-verification-readiness-test\n',
+    );
+    // Empty env: no ANTHROPIC_API_KEY exported — must resolve via .env at
+    // root, not process.env and not the real (unrelated) process.cwd().
+    const c = await checkVerificationReadiness(active.root, {});
     expect(c.name).toBe('verification-readiness');
     expect(c.severity).toBe('ok');
   });

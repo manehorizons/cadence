@@ -34,7 +34,7 @@ export function buildBuildContext(args: {
     taskId,
     opts,
     diff: (files) => collectGitDiff(cwd, files),
-    verifiers: { perTask: selectPerTaskVerifier(config) },
+    verifiers: { perTask: selectPerTaskVerifier(config, { cwd }) },
     emit: { perTaskFail: (info) => emitPerTaskFail(config, info) },
     io: { err: (s) => process.stderr.write(s) },
   };

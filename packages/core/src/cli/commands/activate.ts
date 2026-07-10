@@ -64,7 +64,7 @@ export async function runActivate(
 
   const env = deps.env ?? process.env;
   const config = await loadConfig(root);
-  const current = assessReadiness(config, env);
+  const current = assessReadiness(config, env, root);
 
   let provider = args.provider;
   let scope: ActivationScope = args.all === true ? 'all' : 'deep-verify';
@@ -81,7 +81,7 @@ export async function runActivate(
   }
 
   const plan = planActivation({ provider, scope, currentConfig: config });
-  const keyMissing = !credsPresent(provider, DEEP_VERIFY_SEAM, config, env);
+  const keyMissing = !credsPresent(provider, DEEP_VERIFY_SEAM, config, env, root);
 
   if (args.print === true) {
     const result: ActivationResult = { plan, wrote: false, keyMissing };
@@ -105,8 +105,12 @@ export async function runActivate(
   let pingResult: ActivationResult['ping'];
   let exitCode = 0;
 
+  // AC-2: a live provider key (env var or discovered elsewhere, e.g. .env)
+  // must be proven with one real verification call, not merely assumed —
+  // `--no-check` is the only opt-out. `cwd: root` keeps this call's key
+  // discovery consistent with the `credsPresent` check above.
   if (args.noCheck !== true && provider !== 'mock' && !keyMissing) {
-    pingResult = await deps.ping(provider, env);
+    pingResult = await deps.ping(provider, env, { cwd: root });
     if ('ok' in pingResult && pingResult.ok === false) exitCode = 1;
   }
 

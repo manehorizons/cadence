@@ -1,8 +1,28 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { CadenceConfigZ, defaultConfig } from '@manehorizons/cadence-types';
 import {
   buildLocalHeaders,
   createVerifierFactory,
 } from '../../src/verify/verifier-factory.js';
+import { selectVerifier } from '../../src/verify/factory.js';
+import { AnthropicVerifier } from '../../src/verify/anthropic-verifier.js';
+import { MockVerifier } from '../../src/verify/mock-verifier.js';
+
+const dirs: string[] = [];
+const makeTmpDir = (): string => {
+  const dir = mkdtempSync(join(tmpdir(), 'cadence-verifier-factory-'));
+  dirs.push(dir);
+  return dir;
+};
+afterEach(() => {
+  while (dirs.length > 0) {
+    const dir = dirs.pop();
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 // A trivial verifier family: each provider returns a tagged object so the test
 // can assert which branch fired and what payload it received.
@@ -130,6 +150,85 @@ describe('createVerifierFactory', () => {
       { env: { CADENCE_LOCAL_BASE_URL: 'http://x', CADENCE_LOCAL_MODEL: 'm' } },
     );
     expect(v).toEqual({ kind: 'local', baseURL: 'http://x', model: 'm' });
+  });
+
+  it('builds a real anthropic verifier from a key discoverable only via .env, not just env (AC-1, AC-3)', () => {
+    const cwd = makeTmpDir();
+    writeFileSync(join(cwd, '.env'), 'ANTHROPIC_API_KEY=from-dotenv\n');
+    // Simulates a teammate: the provider ('anthropic') is already committed in
+    // config, they never exported the env var, and never ran `cadence activate`
+    // themselves — the key only lives in their local .env file.
+    const warns: string[] = [];
+    const v = select(
+      { fake: { provider: 'anthropic' } },
+      { env: {}, cwd, warn: (m) => warns.push(m) },
+    );
+    expect(v).toEqual({ kind: 'anthropic' });
+    expect(warns).toEqual([]);
+  });
+
+  it('builds a real local verifier from CADENCE_LOCAL_BASE_URL/MODEL discoverable only via .env (AC-1)', () => {
+    const cwd = makeTmpDir();
+    writeFileSync(
+      cwd + '/.env',
+      'CADENCE_LOCAL_BASE_URL=http://dotenv-host\nCADENCE_LOCAL_MODEL=dotenv-model\nCADENCE_LOCAL_API_KEY=dotenv-key\n',
+    );
+    const v = select({ fake: { provider: 'local' } }, { env: {}, cwd });
+    expect(v).toEqual({
+      kind: 'local',
+      baseURL: 'http://dotenv-host',
+      model: 'dotenv-model',
+      headers: { Authorization: 'Bearer dotenv-key' },
+    });
+  });
+
+  it('without a .env and without the env var still falls back to mock (no cwd given)', () => {
+    const warns: string[] = [];
+    const v = select({ fake: { provider: 'anthropic' } }, { env: {}, warn: (m) => warns.push(m) });
+    expect(v).toEqual({ kind: 'mock' });
+    expect(warns.length).toBe(1);
+  });
+});
+
+// AC-3 (Phase 164 T4) — one level more real than the fake-spec harness above:
+// exercises the actual production wrapper (`selectVerifier`) over the real
+// `CadenceConfig`/`CadenceConfigZ` shape from @manehorizons/cadence-types, and
+// asserts the real `AnthropicVerifier` class is constructed (not a fake tag).
+describe('selectVerifier — committed-config inheritance across teammates (AC-3, integration)', () => {
+  it('a teammate who never ran `cadence activate` still gets real anthropic verification from a committed provider + a key discoverable only via .env', () => {
+    const cwd = makeTmpDir();
+    // Simulates a team repo: someone already ran `cadence activate` and
+    // committed `.cadence/config.json` with `verifier.provider: 'anthropic'`.
+    // This teammate clones fresh, never runs `cadence activate` themselves,
+    // and never exports ANTHROPIC_API_KEY into their shell — the key only
+    // exists in a real .env file at the repo root.
+    writeFileSync(
+      join(cwd, '.env'),
+      'ANTHROPIC_API_KEY=sk-test-integration-placeholder\n',
+    );
+    const committedConfig = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verifier: { provider: 'anthropic', diffCapBytes: 262144 },
+    });
+
+    const warns: string[] = [];
+    // Real production wrapper (packages/core/src/verify/factory.ts), the same
+    // one settle.ts etc. call — not the FakeV harness above.
+    const verifier = selectVerifier(committedConfig, {
+      env: {}, // no ANTHROPIC_API_KEY exported — must resolve via .env, not process.env
+      cwd,
+      warn: (m) => warns.push(m),
+    });
+
+    // Never call .verify() — constructing the Anthropic SDK client does no
+    // network I/O, only invoking a client method would. Asserting identity
+    // (constructor + name) proves the real provider was selected without any
+    // network call.
+    expect(verifier).toBeInstanceOf(AnthropicVerifier);
+    expect(verifier).not.toBeInstanceOf(MockVerifier);
+    expect(verifier.name).toBe('anthropic');
+    // No fallback warning — this is real verification, not a silent mock downgrade.
+    expect(warns).toEqual([]);
   });
 });
 

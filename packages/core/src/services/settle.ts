@@ -296,7 +296,7 @@ export async function settleService(
         deep: {
           verify: (input) => {
             if (!deepVerifierMemo) {
-              deepVerifierMemo = selectVerifier(cadenceConfig, verifierOverride);
+              deepVerifierMemo = selectVerifier(cadenceConfig, { ...verifierOverride, cwd });
             }
             return deepVerifierMemo.verify(input);
           },
@@ -304,7 +304,7 @@ export async function settleService(
         codeReview: {
           verify: (input) => {
             if (!codeReviewVerifierMemo) {
-              codeReviewVerifierMemo = selectCodeReviewVerifier(cadenceConfig);
+              codeReviewVerifierMemo = selectCodeReviewVerifier(cadenceConfig, { cwd });
             }
             return codeReviewVerifierMemo.verify(input);
           },
@@ -312,7 +312,7 @@ export async function settleService(
         securityAudit: {
           verify: (input) => {
             if (!securityAuditVerifierMemo) {
-              securityAuditVerifierMemo = selectSecurityAuditVerifier(cadenceConfig);
+              securityAuditVerifierMemo = selectSecurityAuditVerifier(cadenceConfig, { cwd });
             }
             return securityAuditVerifierMemo.verify(input);
           },

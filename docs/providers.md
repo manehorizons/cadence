@@ -34,7 +34,7 @@ For a conceptual overview of providers and the gate universe they serve, see
 | Provider | What it does | What it requires |
 |---|---|---|
 | `mock` | Deterministic offline **placeholder** — only checks each AC links to a test; **not real verification** | Nothing — the default everywhere |
-| `anthropic` | Calls the Anthropic API using `messages.parse` with structured output; prompt-caches the system prompt | `ANTHROPIC_API_KEY` in environment |
+| `anthropic` | Calls the Anthropic API using `messages.parse` with structured output; prompt-caches the system prompt | `ANTHROPIC_API_KEY` in environment or a `.env` file at the repo root |
 | `local` | POSTs to an OpenAI-compatible `/v1/chat/completions` endpoint; parses JSON output with repair retries | `CADENCE_LOCAL_BASE_URL` + a model name (env or config) |
 
 ---
@@ -52,7 +52,8 @@ cadence activate --provider anthropic        # flips deep-verify; --all for ever
 
 It writes `verifier.provider` for you, then makes a minimal **live call** to
 confirm the key actually works before reporting success (skip with `--no-check`;
-`local`/`mock` skip the live check). The key is read from the environment and is
+`local`/`mock` skip the live check). The key is discovered from the environment
+or, failing that, a `.env` file at the repo root, and is
 **never written to config or logged** — only the provider name is persisted. If
 the key is missing it still records your choice and prints the exact `export …`
 line. Preview without writing using `--print`.

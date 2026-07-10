@@ -194,12 +194,12 @@ All six blocks default to `{ "provider": "mock" }`. Provider options:
 | Provider | Description | Requires |
 |---|---|---|
 | `mock` | Deterministic offline **placeholder** — only checks each AC links to a test; always passes, no network call. **Not real verification.** | Nothing |
-| `anthropic` | Calls the Anthropic API. | `ANTHROPIC_API_KEY` in environment |
+| `anthropic` | Calls the Anthropic API. | `ANTHROPIC_API_KEY` in environment or a `.env` file at the repo root |
 | `local` | OpenAI-compatible `/v1/chat/completions` endpoint (e.g. Ollama). | `CADENCE_LOCAL_BASE_URL` + `CADENCE_LOCAL_MODEL`; falls back to `mock` with a warning if unset |
 
 See [docs/concepts.md — Providers](../concepts.md#providers) for conceptual detail and [docs/providers.md](../providers.md) for setup instructions.
 
-> **Turning on real verification.** Don't hand-edit these blocks for a first run — use [`cadence activate`](commands.md#activate). It flips `verifier.provider` from the default `mock` to a real provider (just the deep-verify seam by default, or `--all` for every block), validates your key with a live check, and prints the exact next step. The key is read from the environment and is **never** written here — only the provider name. [`cadence doctor`](commands.md#doctor)'s `verification-readiness` check reports whether real verification is actually wired.
+> **Turning on real verification.** Don't hand-edit these blocks for a first run — use [`cadence activate`](commands.md#activate). It flips `verifier.provider` from the default `mock` to a real provider (just the deep-verify seam by default, or `--all` for every block), validates your key with a live check, and prints the exact next step. The key is discovered from the environment or a `.env` file at the repo root and is **never** written here — only the provider name. [`cadence doctor`](commands.md#doctor)'s `verification-readiness` check reports whether real verification is actually wired.
 
 ### `verifier` extra fields
 
