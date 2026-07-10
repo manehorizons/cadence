@@ -552,6 +552,19 @@ automatically — a sibling pick is read-only and never touches the sibling's ow
 turns it off; `autoList: true` opens the picker automatically instead of
 nudging).
 
+Phase 163 (v1.42) closes two gaps that ground-truth discovery alone doesn't
+catch: a handoff can be *stale relative to origin*, and a handoff can be
+*incomplete*. `cadence resume` now runs a best-effort origin-freshness probe
+(`resume.remoteCheck`, default `true`; `--offline` to skip) and warns when
+origin holds commits this clone doesn't — the sibling-worktree scan only
+sees what's checked out locally, not what another machine already pushed. It
+also detects scaffolded `<!-- … FILL IN … -->` markers left unfilled in the
+replayed doc and warns that those sections should be treated as absent.
+`cadence handoff --check` gates the same detection at handoff-time, exiting
+non-zero if the freshest doc still has unfilled sections — see
+[handoff](reference/commands.md#handoff) and
+[resume](reference/commands.md#resume) for the full behavior.
+
 ---
 
 *Next: [docs/reference/config.md](reference/config.md) — full configuration

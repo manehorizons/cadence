@@ -1379,6 +1379,8 @@ Scaffold a SESSION handoff doc in .cadence/handoff/ with machine facts pre-fille
 | `--force` | Overwrite an existing same-day SESSION doc instead of refusing |
 | `--no-stamp` | Do not write `state.session.lastHandoff` (leaves `state.json` unchanged) |
 | `--no-git` | Skip the read-only git facts section |
+| `--no-fetch` | Skip the `git fetch` that normally runs before reading git facts (offline) |
+| `--check` | Verify the freshest SESSION doc has no unfilled `FILL IN` sections instead of writing a new one; exits 3 if any remain |
 | `--json` | Emit machine-readable JSON instead of a summary |
 | `-h, --help` | Display help for command |
 
@@ -1393,10 +1395,21 @@ refreshes `.cadence/intelligence/context/handoff.{json,md}` as a side effect of
 reliably); `--no-stamp` skips that single state write. When git is unavailable
 (non-repo or git missing), the git section renders as `unavailable` and the
 command still succeeds — git facts are best-effort, never a hard dependency.
+By default the git facts read runs a best-effort `git fetch` first, so the
+recorded ahead/behind counts reflect origin's current state rather than
+whatever was last fetched; `--no-fetch` skips it for a fully offline write.
+
+**`--check`** — a completion gate, not a scaffold: skips writing a new doc
+and instead re-reads the freshest existing SESSION doc for unfilled
+`<!-- … FILL IN … -->` markers left by a session that stamped a handoff
+without finishing its narrative. Prints `handoff check: <path> complete` and
+exits 0 when every section was filled in; exits 3 and names the unfilled
+section(s) otherwise; exits 1 if no SESSION doc exists yet.
 
 **Exit codes** — exits 2 when the target file already exists and `--force` was
-not passed (never silently overwrites a human's narrative); exits non-zero on
-other genuine failures (e.g. `.cadence/` not initialized).
+not passed (never silently overwrites a human's narrative); exits 3 under
+`--check` when unfilled sections remain; exits non-zero on other genuine
+failures (e.g. `.cadence/` not initialized).
 
 ---
 
@@ -1419,6 +1432,7 @@ Replay the freshest .cadence/handoff/ SESSION doc + live context (read-only)
 | `--pick <n>` | Resolve directly to the Nth candidate from `cadence resume --list` (1-based), skipping the menu |
 | `--path <p>` | Resolve directly to the handoff doc at this exact path, skipping the menu |
 | `--local` | Force the local-only fast path, ignoring sibling worktrees entirely |
+| `--offline` | Skip the origin-freshness probe (no network) |
 | `-h, --help` | Display help for command |
 
 **Behavior** — read-only; mutates nothing, including when a pick resolves to a
@@ -1435,6 +1449,25 @@ written at BUILD; live state now IDLE`).
 Output mode defaults to drift-decides: `full` (whole doc + live context) when
 drift is detected, else `brief` (key sections only, no context recompute).
 `--full`/`--brief` force one or the other explicitly.
+
+**Origin-freshness probe** — after resolving the doc, `resume` runs a
+best-effort `git fetch` and compares local `HEAD` against `@{u}` (config
+`resume.remoteCheck`, default `true`; `--offline` skips it for a fully
+offline run). If origin has commits this clone lacks, it prints `⚠
+origin/<branch> is N commit(s) ahead of local HEAD — this handoff may be
+superseded by work pushed from another machine.` with an `git log --oneline
+HEAD..@{u}` hint — a signal to inspect and reconcile before acting on the
+replayed next action, never an automatic pull/rebase/reset. The probe is
+soft: a non-repo, detached HEAD, no upstream, or failed fetch prints `note:
+could not verify freshness against origin (<reason>)` instead of failing the
+command.
+
+**Unfilled-section warning** — if the resolved doc still has scaffolded
+`<!-- … FILL IN … -->` markers (a prior session ran `cadence handoff` but
+never finished the narrative), `resume` prints `⚠ handoff has unfilled
+sections: <sections> — treat them as absent; the previous session did not
+complete its handoff.` before the doc body. See
+[`handoff --check`](#handoff) for gating this at handoff-time instead.
 
 **Cross-worktree discovery** — alongside the local doc, `cadence resume`
 best-effort discovers the freshest handoff doc in every sibling git worktree
