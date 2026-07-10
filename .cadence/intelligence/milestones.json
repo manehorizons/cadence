@@ -277,7 +277,7 @@
       "id": "mil-rec-rec-20260709-004",
       "name": "Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config",
       "objective": "Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.",
-      "status": "proposed",
+      "status": "closed",
       "recommendationIds": [
         "rec-20260709-004"
       ],
@@ -287,9 +287,16 @@
         "driftRisks": [],
         "outOfScope": []
       },
-      "exportTargets": [],
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260709-004/SPEC.md",
+          "exportedAt": "2026-07-10T03:44:44.810Z"
+        }
+      ],
       "createdAt": "2026-07-09T23:28:49.500Z",
-      "updatedAt": "2026-07-09T23:28:56.992Z"
+      "updatedAt": "2026-07-10T03:44:49.787Z",
+      "closedRef": "PR #161 / phase 164"
     }
   ]
 }

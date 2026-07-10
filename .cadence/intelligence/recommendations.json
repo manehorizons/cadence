@@ -811,34 +811,6 @@
       "updatedAt": "2026-07-09T23:23:41.842Z"
     },
     {
-      "id": "rec-20260709-004",
-      "title": "Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config",
-      "summary": "Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "verify",
-        "providers"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260709-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:42.017Z",
-      "updatedAt": "2026-07-09T23:28:44.127Z"
-    },
-    {
       "id": "rec-20260709-005",
       "title": "cadence onboard: one-command setup for the 2nd-Nth teammate",
       "summary": "For a developer cloning a repo that already has .cadence/ committed: one command does only the per-machine bits (host hooks, local paths, key check) instead of re-running full init. Pair with an init-generated CONTRIBUTING.md snippet so this path is discoverable.",
@@ -2171,6 +2143,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-08T00:43:25.603Z",
       "updatedAt": "2026-07-09T22:49:14.713Z"
+    },
+    {
+      "id": "rec-20260709-004",
+      "title": "Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config",
+      "summary": "Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "verify",
+        "providers"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:42.017Z",
+      "updatedAt": "2026-07-10T03:44:54.391Z",
+      "shippedRef": "PR #161 / phase 164 (v1.42.0 chain)",
+      "archivedAt": "2026-07-10T03:44:54.391Z",
+      "archiveReason": "shipped"
     }
   ]
 }

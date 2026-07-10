@@ -423,21 +423,6 @@ doctor's checks currently only print fix suggestions. Auto-remediate everything 
 
 Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow that re-runs the gate suite on PRs, plus a one-shot recipe/script to make it a required branch-protection check. Closes the gap where gates exist locally but nothing enforces them in the team's actual PR flow.
 
-## rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, verify, providers
-- evidence: Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.
-- next: cadence milestone propose
-
-Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.
-
 ## rec-20260709-005 — cadence onboard: one-command setup for the 2nd-Nth teammate
 
 - status: candidate

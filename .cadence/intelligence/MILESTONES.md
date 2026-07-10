@@ -4,20 +4,7 @@
 
 ## Proposed
 
-### mil-rec-rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config
-
-- objective: Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.
-- status: proposed
-- recommendations: rec-20260709-004
-- pre-mortem:
-  - likely failure modes:
-    - _(why might this fail?)_
-  - hidden dependencies:
-    - _(what must already be true?)_
-  - drift risks:
-    - _(what docs/specs will drift?)_
-  - out of scope:
-    - _(what is explicitly NOT in this milestone?)_
+None.
 
 ## Accepted
 
@@ -83,3 +70,4 @@
 ## Closed
 
 - mil-rec-rec-20260708-002 — Mock milestone workflow proof for Codex first-run bootstrap (ref: proof workflow artifact: .cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md; phase 162 settled on feat/codex-first-run-recommendation)
+- mil-rec-rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config (ref: PR #161 / phase 164)
