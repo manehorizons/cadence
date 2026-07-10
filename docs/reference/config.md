@@ -371,6 +371,7 @@ local-only behavior.
 |---|---|---|---|
 | `resume.crossWorktree` | `boolean` | `true` | Master switch. `false` disables cross-worktree discovery entirely — `cadence resume` behaves exactly as it did before phases 142/143 (local worktree only). |
 | `resume.autoList` | `boolean` | `false` | When 2+ resumable candidates exist across worktrees, `true` opens the interactive picker automatically instead of resuming local and printing a stderr nudge (`cadence resume --list`). |
+| `resume.remoteCheck` | `boolean` | `true` | Origin-freshness probe (phase 163): `resume` runs a best-effort `git fetch` and warns when origin has commits this clone lacks, so a stale handoff superseded by another machine's push isn't silently replayed. `false` (or `--offline`) skips the fetch entirely — the fetch only touches remote-tracking refs, never the working tree. |
 
 This block is **schema-only**: like `phaseGuard`/`handoff`/`logging`, it is deliberately absent
 from `config edit`'s wizard catalog and `config explain`'s field rows, which are curated to a
