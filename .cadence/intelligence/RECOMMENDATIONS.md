@@ -455,8 +455,8 @@ Users running cadence inside a live Claude Code session assume that auth exempts
 
 ## rec-20260710-002 — Host-CLI headless verifier provider: reuse Claude Code/Codex's own auth instead of requiring a raw API key
 
-- status: candidate
-- ready: needs-decision
+- status: accepted
+- ready: ready-for-milestone
 - priority: high
 - leverage: 5/10
 - risk: 5/10
@@ -471,7 +471,7 @@ All 3 current verifier providers (mock/anthropic/local) either do no real judgme
 
 ## rec-20260710-003 — MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool
 
-- status: candidate
+- status: deferred
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
