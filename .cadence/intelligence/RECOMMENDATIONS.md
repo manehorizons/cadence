@@ -425,7 +425,7 @@ Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow 
 
 ## rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config
 
-- status: accepted
+- status: converted
 - ready: ready-for-milestone
 - priority: high
 - leverage: 5/10

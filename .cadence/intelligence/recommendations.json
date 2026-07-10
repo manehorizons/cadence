@@ -815,7 +815,7 @@
       "title": "Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config",
       "summary": "Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.",
       "source": "manual",
-      "status": "accepted",
+      "status": "converted",
       "readiness": "ready-for-milestone",
       "priority": "high",
       "leverageScore": 5,
@@ -836,7 +836,8 @@
       "decisionIds": [],
       "scoutId": "scout-20260709-1813",
       "createdAt": "2026-07-09T23:23:42.017Z",
-      "updatedAt": "2026-07-09T23:28:44.127Z"
+      "updatedAt": "2026-07-10T00:59:57.205Z",
+      "convertedToPhaseId": "164-trustworthy-verifier-activation"
     },
     {
       "id": "rec-20260709-005",

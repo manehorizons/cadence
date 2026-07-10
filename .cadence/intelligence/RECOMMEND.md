@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-09T23:23:46.414Z
+Generated at: 2026-07-10T00:14:09.402Z
 
 ## Advisory
 
@@ -12,10 +12,24 @@ Generated at: 2026-07-09T23:23:46.414Z
 
 ### rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config
 
-- score: 58/100 (raw 15.7)
-- status: candidate · ready: raw-idea · priority: high · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio high +5 ⇒ raw 15.7 (score 58)
+- score: 77/100 (raw 28.7)
+- status: accepted · ready: ready-for-milestone · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status accepted +6 · ready ready-for-milestone +7 · decay fresh +4 · prio high +5 ⇒ raw 28.7 (score 77)
 - scout: scout-20260709-1813
+- next: cadence milestone propose
+
+### rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- next: cadence milestone propose
+
+### rec-20260619-008 — Team rollout kit
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: raw-idea · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
 - next: cadence milestone propose
 
 ### rec-20260709-001 — cadence quickstart: single mega-command for full setup
@@ -60,4 +74,4 @@ None.
 
 ## Totals
 
-- total 5 · ranked 5 · parked 0 · needs-attention 0 · excluded 0
+- total 29 · ranked 7 · parked 0 · needs-attention 0 · excluded 22
