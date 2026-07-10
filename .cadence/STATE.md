@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 163-handoff-resume-hardening
+**Active phase:** 164-trustworthy-verifier-activation
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1048
+- Subagent spawns this session: 1165
 - Last handoff: SESSION-2026-07-09-phase163-pr158-ci-watch.md
 
 ## Counts

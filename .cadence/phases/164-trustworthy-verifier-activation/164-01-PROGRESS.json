@@ -1,0 +1,64 @@
+{
+  "draftId": "164-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-10T01:09:46.213Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/activate/assess.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/activate/ping.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/verify/verifier-factory.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/verify/anthropic-verifier.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/activate/assess.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/activate/ping.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/verify/verifier-factory.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/verify/anthropic-verifier.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/.cadence/phases/164-trustworthy-verifier-activation/164-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-07-10T01:23:33.723Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/verify/verifier-factory.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/cli/activate.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/cli/commands/activate.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/verify/verifier-factory.ts"
+      ],
+      "updatedAt": "2026-07-10T01:28:41.530Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/.cadence/phases/164-trustworthy-verifier-activation/164-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/cli/commands/activate.ts"
+      ],
+      "updatedAt": "2026-07-10T01:34:03.886Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/services/spec-approve.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/doctor/verification-readiness.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/doctor/run.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/gates/build-context.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/gates/draft-context.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/src/services/spec-approve.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/services/settle.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/gates/build-context.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/trustworthy-verifier-activation/packages/core/tests/gates/draft-context.test.ts"
+      ],
+      "updatedAt": "2026-07-10T02:05:25.911Z"
+    }
+  }
+}
