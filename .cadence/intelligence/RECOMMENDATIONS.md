@@ -423,21 +423,6 @@ doctor's checks currently only print fix suggestions. Auto-remediate everything 
 
 Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow that re-runs the gate suite on PRs, plus a one-shot recipe/script to make it a required branch-protection check. Closes the gap where gates exist locally but nothing enforces them in the team's actual PR flow.
 
-## rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, verify, providers
-- evidence: Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.
-- next: cadence milestone propose
-
-Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.
-
 ## rec-20260709-005 — cadence onboard: one-command setup for the 2nd-Nth teammate
 
 - status: candidate
@@ -452,3 +437,34 @@ Look for a verifier key anywhere it legitimately lives (not just env var), run o
 - next: cadence milestone propose
 
 For a developer cloning a repo that already has .cadence/ committed: one command does only the per-machine bits (host hooks, local paths, key check) instead of re-running full init. Pair with an init-generated CONTRIBUTING.md snippet so this path is discoverable.
+
+## rec-20260710-001 — Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, verify
+- evidence: User confusion in phenyx (external consumer project), 2026-07-10 session
+- next: cadence milestone propose
+
+Users running cadence inside a live Claude Code session assume that auth exempts them from ANTHROPIC_API_KEY for the anthropic verifier provider, since Claude Code itself doesn't require that env var to run. It doesn't: cadence's anthropic provider is a direct Anthropic SDK call authenticated with a separate API-billed key, with zero visibility into Claude Code's own OAuth/subscription credential store. Surfaced live by an external consumer (phenyx) hitting silent mock-fallback with no obvious cause. Add an explicit callout to docs/providers.md and the mock-fallback warning text (verifier-factory.ts MOCK_FALLBACK_BANNER) distinguishing 'logged into Claude Code' from 'ANTHROPIC_API_KEY set' so the fallback isn't mistaken for a bug.
+
+## rec-20260710-002 — Host-CLI headless verifier provider: reuse Claude Code/Codex's own auth instead of requiring a raw API key
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, providers, host-claude-code, host-codex
+- files: packages/core/src/verify/verifier-factory.ts, packages/core/src/verify/local-client.ts, packages/host-claude-code/src/capabilities.ts
+- evidence: Raised live by operator in phenyx-confusion follow-up, 2026-07-10 session; builds on phase 164's key-discovery work
+- next: cadence milestone propose
+
+All 3 current verifier providers (mock/anthropic/local) either do no real judgment or require a directly-configured credential (ANTHROPIC_API_KEY, or an OpenAI-compatible endpoint's own key) -- there is no path for a user who already has Claude Code or Codex installed and authenticated to use that existing auth for cadence's independent-verifier gates. Proposal: a 4th provider that shells out to the host CLI in headless/non-interactive mode (e.g. 'claude -p <prompt> --output-format json', or an analogous 'codex exec') as a fresh out-of-band subprocess -- genuinely independent of the calling session (arguably MORE independent than same-session self-report, since it is a new process with no shared context), while reusing whatever auth that CLI already has configured, with zero new env var required. Open design questions: (1) does the host CLI's headless/print mode reliably emit structured JSON matching cadence's per-AC verdict Zod schema, or does it need a repair-retry loop like local-client.ts; (2) process-spawn latency/cost vs a direct API call, and whether it belongs behind a new HostAdapter capability (e.g. 'headlessVerify') so core does not hardcode 'claude'/'codex' binary names -- core never imports host code, so this needs the same core-spawns-host-as-subprocess pattern already used for host installs; (3) whether per-gate model selection still makes sense when the host CLI picks its own model. Directly addresses the competitive risk (see cadence-competitive-landscape notes) that mock-default undercuts the enforcement wedge for users without a standalone Anthropic API key.

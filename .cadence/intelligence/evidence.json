@@ -469,6 +469,20 @@
       "kind": "note",
       "summary": "Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.",
       "createdAt": "2026-07-09T23:23:42.199Z"
+    },
+    {
+      "id": "ev-20260710-001",
+      "recommendationId": "rec-20260710-001",
+      "kind": "note",
+      "summary": "User confusion in phenyx (external consumer project), 2026-07-10 session",
+      "createdAt": "2026-07-10T03:56:50.808Z"
+    },
+    {
+      "id": "ev-20260710-002",
+      "recommendationId": "rec-20260710-002",
+      "kind": "note",
+      "summary": "Raised live by operator in phenyx-confusion follow-up, 2026-07-10 session; builds on phase 164's key-discovery work",
+      "createdAt": "2026-07-10T03:57:01.960Z"
     }
   ]
 }
