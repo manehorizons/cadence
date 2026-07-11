@@ -104,10 +104,10 @@ export const EDITABLE_FIELDS: EditableField[] = [
     name: 'coverageMode',
     dottedKey: 'verification.coverageMode',
     label: 'Coverage mode',
-    help: 'How the test-coverage gate counts an AC-N token. `assertion` requires the token to sit inside an asserting it()/test() block.',
+    help: 'How the test-coverage gate counts an AC-N token. `assertion` requires the token to sit inside a recognized asserting test block (js/ts, python, go, rust, php built in; extend via verification.coverageProfiles).',
     choices: [
       { value: 'mention', blurb: 'any AC-N mention in a test file counts (default)' },
-      { value: 'assertion', blurb: 'AC-N must be inside an asserting it()/test() block' },
+      { value: 'assertion', blurb: 'AC-N must be inside a recognized asserting test block' },
     ],
     current: (c) => c.verification.coverageMode,
   },

@@ -2,7 +2,9 @@ import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import type { Dirent } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import { findTestSpans } from './test-spans.js';
+import { getProfileForExtension } from './coverage-profiles/registry.js';
+import { findSpansForProfile } from './coverage-profiles/engine.js';
+import type { TestSpan } from './coverage-profiles/types.js';
 
 export type AcId = `AC-${number}` | string;
 
@@ -65,7 +67,29 @@ export async function scanTestCoverage(
     const mode = opts.mode ?? 'mention';
 
     if (mode === 'assertion') {
-      const spans = findTestSpans(raw);
+      // Phase 167 (T6): dispatch by the file's own extension to the profile
+      // registered for it (`./coverage-profiles/registry.js`) rather than
+      // always scanning with the js/ts scanner regardless of language. An
+      // extension no built-in (or custom, T7) profile claims yields zero
+      // spans outright — never a fallback scan with an unrelated profile —
+      // matching the phase's false-negative-over-false-positive invariant
+      // (AC-6): an unrecognized language must never produce a partial or
+      // wrong match. The same zero-spans outcome also falls out naturally
+      // when a profile IS found but its `findSpansForProfile` scan simply
+      // doesn't recognize any block in this particular file — both cases
+      // collapse to the same "zero qualifying spans" result here, and stay
+      // distinguishable downstream (glob-miss vs span-miss, phase 166 T3)
+      // because that distinction is keyed off whether ANY file matched the
+      // globs at all (`anyTestFilesMatched`), not off which of these two
+      // reasons produced zero spans for a given file.
+      //
+      // Phase 169 (ported at merge time): spans are NOT pre-filtered to
+      // `hasAssertion` here — the qualifying/skipped computation below needs
+      // the full span list (including skipped ones) to tell "qualifies" and
+      // "only linked test is skipped" apart; filtering here would collapse
+      // that distinction before it can be made.
+      const profile = getProfileForExtension(extensionOf(relPath));
+      const spans = profile ? findSpansForProfile(raw, profile) : [];
       AC_TOKEN_RE.lastIndex = 0;
       const seen = new Set<string>();
       for (const m of raw.matchAll(AC_TOKEN_RE)) {
@@ -186,6 +210,232 @@ export function skippedOnlyLinkedAcs(
   });
 }
 
+/**
+ * Phase 167 (T8) — per-file, per-span diagnostic detail for
+ * `cadence verify coverage --explain AC-N`.
+ *
+ * `scanTestCoverage` deliberately collapses per-file profile/span detail
+ * into a flat `qualifying: boolean` — enough for the gate's binary
+ * pass/fail, but not enough to diagnose a refusal without reading engine
+ * source. This is a NEW, separate read path (not a modification of
+ * `scanTestCoverage`) that walks the same glob-matched file set and
+ * preserves that detail: which profile (if any) scanned each file, why
+ * (unclaimed extension vs. a claimed extension with zero recognized
+ * blocks), every span found, and — per occurrence of the target AC token —
+ * which span contains it and a plain-language satisfy/not-satisfy reason.
+ * Read-only: only ever calls `readFile`/`readdir`, never writes anything,
+ * and shares no mutable state with `scanTestCoverage` or the real gate
+ * (`../gates/coverage.ts`), so this addition cannot regress either.
+ */
+export interface ExplainSpan {
+  /** Absolute char offset of the span's opener match start. */
+  start: number;
+  /** Absolute char offset of the span's closing boundary (inclusive). */
+  end: number;
+  /** 1-based line number of `start`. */
+  startLine: number;
+  /** 1-based line number of `end`. */
+  endLine: number;
+  /** True iff a code-mode assertion token was found inside this span. */
+  hasAssertion: boolean;
+  /** True iff this span's opener marks a test that doesn't run its body
+   * normally (phase 169's "skip dodge", e.g. js/ts's `it.skip`/`test.todo`;
+   * ported onto this diagnostic at merge time so it stays accurate — an
+   * intact assertion inside a skipped test must NOT read as satisfying,
+   * matching `runCoverageGate`'s own real refusal behavior). */
+  skipped: boolean;
+}
+
+export interface ExplainOccurrence {
+  /** 1-based line number where the AC token occurrence starts. */
+  line: number;
+  /** Trimmed snippet of the matching line (≤120 chars). */
+  snippet: string;
+  /** Absolute char offset of the occurrence. */
+  offset: number;
+  /** The span containing this occurrence, or null if none does. */
+  span: ExplainSpan | null;
+  /** True iff this occurrence satisfies the configured coverage mode. */
+  satisfies: boolean;
+  /** Human-readable reason for the satisfy/not-satisfy verdict. */
+  reason: string;
+}
+
+export interface ExplainFileResult {
+  /** Path relative to `repoRoot`, forward-slashed. */
+  file: string;
+  /** Lowercase file extension (with leading dot), `''` if none. */
+  extension: string;
+  /** Id of the profile that scanned this file, or null if unclaimed
+   * (mention mode always reports null — no profile scan is performed). */
+  profileId: string | null;
+  /** Human-readable reason naming which case applies: no profile for the
+   * extension, a profile that found no test block, or a normal scan. */
+  profileReason: string;
+  /** Total spans `findSpansForProfile` found in this file (0 in mention
+   * mode, for an unclaimed extension, or for a claimed extension whose
+   * profile recognized no block shape in this file's actual content). */
+  spansFound: number;
+  /** Occurrences of the target AC token found in this file. */
+  occurrences: ExplainOccurrence[];
+}
+
+export interface CoverageExplainResult {
+  /** The AC id being explained, e.g. `'AC-8'`. */
+  acId: string;
+  /** Coverage mode in effect. */
+  mode: 'mention' | 'assertion';
+  /** Glob patterns searched (resolved defaults if none configured). */
+  globs: string[];
+  /** Whether any file in the repo matched `globs` at all — distinguishes a
+   * glob-configuration problem from "globs matched, this AC just isn't
+   * mentioned anywhere". */
+  anyFilesMatched: boolean;
+  /** Per-file detail for every glob-matched file, sorted by path. */
+  files: ExplainFileResult[];
+  /** True iff at least one occurrence, in any file, satisfies the mode. */
+  satisfied: boolean;
+}
+
+function offsetToLine(raw: string, offset: number): number {
+  return raw.slice(0, offset).split('\n').length;
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Walk glob-matched files and, for a single target `acId`, surface every
+ * occurrence together with its containing span (if any) and a plain-
+ * language satisfy/not-satisfy reason. Powers `cadence verify coverage
+ * --explain` (T8, AC-8). Read-only.
+ */
+export async function explainAcCoverage(
+  repoRoot: string,
+  acId: string,
+  opts: CoverageScanOptions = {},
+): Promise<CoverageExplainResult> {
+  const mode = opts.mode ?? 'mention';
+  const globs = opts.globs ?? DEFAULT_GLOBS;
+  const matchers = globs.map(toMatcher);
+  const files = await listAllFiles(repoRoot);
+  const tokenRe = new RegExp(`\\b${escapeRegExp(acId)}\\b`, 'g');
+
+  const matchedRel = files
+    .map((abs) => relative(repoRoot, abs).split(sep).join('/'))
+    .filter((relPath) => matchers.some((m) => m(relPath)))
+    .sort();
+
+  const results: ExplainFileResult[] = [];
+  for (const relPath of matchedRel) {
+    const abs = join(repoRoot, relPath);
+    let raw: string;
+    try {
+      raw = await readFile(abs, 'utf8');
+    } catch {
+      continue;
+    }
+    const ext = extensionOf(relPath);
+    let profileId: string | null = null;
+    let profileReason: string;
+    let spans: TestSpan[] = [];
+
+    if (mode === 'assertion') {
+      const profile = getProfileForExtension(ext);
+      if (!profile) {
+        profileReason =
+          `no coverage profile registered for extension "${ext || '(none)'}" ` +
+          '— file contributes zero spans';
+      } else {
+        profileId = profile.id;
+        spans = findSpansForProfile(raw, profile);
+        profileReason =
+          spans.length > 0
+            ? `scanned with profile "${profile.id}"`
+            : `scanned with profile "${profile.id}", but no test block was recognized in this file`;
+      }
+    } else {
+      profileReason = 'mention mode: no profile scan performed (whole-file token search only)';
+    }
+
+    tokenRe.lastIndex = 0;
+    const occurrences: ExplainOccurrence[] = [];
+    for (const m of raw.matchAll(tokenRe)) {
+      const offset = m.index ?? 0;
+      const line = offsetToLine(raw, offset);
+      const snippet = (raw.split('\n')[line - 1] ?? '').trim().slice(0, 120);
+
+      if (mode !== 'assertion') {
+        occurrences.push({
+          line,
+          snippet,
+          offset,
+          span: null,
+          satisfies: true,
+          reason: 'mention mode: token found (no assertion requirement)',
+        });
+        continue;
+      }
+
+      const containing = spans.find((s) => offset >= s.start && offset <= s.end) ?? null;
+      const span: ExplainSpan | null =
+        containing === null
+          ? null
+          : {
+              start: containing.start,
+              end: containing.end,
+              startLine: offsetToLine(raw, containing.start),
+              endLine: offsetToLine(raw, containing.end),
+              hasAssertion: containing.hasAssertion,
+              skipped: containing.skipped,
+            };
+
+      let satisfies: boolean;
+      let reason: string;
+      if (profileId === null) {
+        satisfies = false;
+        reason =
+          `no coverage profile claims this file's extension ("${ext || '(none)'}") ` +
+          '— token cannot satisfy assertion mode here';
+      } else if (span === null) {
+        satisfies = false;
+        reason = `token found but not inside any test block recognized by profile "${profileId}"`;
+      } else if (span.skipped) {
+        satisfies = false;
+        reason =
+          `token is inside a test marked skipped (profile "${profileId}") — an intact ` +
+          'assertion in a skipped test does not run and cannot satisfy assertion mode';
+      } else if (!span.hasAssertion) {
+        satisfies = false;
+        reason = `token present but block not asserting (profile "${profileId}")`;
+      } else {
+        satisfies = true;
+        reason = `token inside an asserting test block (profile "${profileId}") — satisfies assertion mode`;
+      }
+      occurrences.push({ line, snippet, offset, span, satisfies, reason });
+    }
+
+    results.push({
+      file: relPath,
+      extension: ext,
+      profileId,
+      profileReason,
+      spansFound: spans.length,
+      occurrences,
+    });
+  }
+
+  return {
+    acId,
+    mode,
+    globs,
+    anyFilesMatched: matchedRel.length > 0,
+    files: results,
+    satisfied: results.some((f) => f.occurrences.some((o) => o.satisfies)),
+  };
+}
+
 /** Best-effort recursive listing, skipping node_modules / dist / .git. */
 async function listAllFiles(root: string): Promise<string[]> {
   if (!existsSync(root)) return [];
@@ -217,6 +467,18 @@ async function listAllFiles(root: string): Promise<string[]> {
     }
   }
   return out;
+}
+
+/**
+ * Lowercase file extension (with leading dot) of a forward-slashed relative
+ * path, e.g. `packages/x/a.test.ts` → `.ts`, `_test.go` → `.go`. Returns
+ * `''` for an extensionless file, which no registered profile claims (Phase
+ * 167, T6).
+ */
+function extensionOf(relPath: string): string {
+  const base = relPath.slice(relPath.lastIndexOf('/') + 1);
+  const dot = base.lastIndexOf('.');
+  return dot === -1 ? '' : base.slice(dot).toLowerCase();
 }
 
 /**

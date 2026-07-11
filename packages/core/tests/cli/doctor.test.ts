@@ -92,9 +92,10 @@ describe('cadence doctor', () => {
    * (not just the MCP `doctorService` seam) must surface the coverage-mode
    * language-support check, since the CLI calls `runDoctor` directly.
    */
-  it('AC-4 (phase 166): coverageMode:assertion + detected python project → warning surfaced via the CLI', async () => {
+  it('AC-4 (phase 166, phase 167 registry-driven fix): coverageMode:assertion + an unrecognized project language → warning surfaced via the CLI', async () => {
     active = await tempRepo({ initialized: true, projectName: 'doc-cli-lang' });
-    await writeFile(join(active.root, 'pyproject.toml'), '[tool.poetry]\nname = "demo"\n');
+    // No package.json/pyproject.toml/go.mod/Cargo.toml/composer.json — detectProjectLanguage() → 'unknown'.
+    // (python now has real assertion-mode support as of phase 167, so it no longer warns here.)
 
     const r = await run(['doctor'], active.root);
     expect(r.code).toBe(0); // a warning must not fail the report

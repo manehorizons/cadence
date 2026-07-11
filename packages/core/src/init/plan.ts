@@ -66,11 +66,24 @@ function exists(cwd: string, file: string): boolean {
   }
 }
 
-/** Language-aware default test-file globs for non-js/ts languages (Phase 166, AC-2). */
+/**
+ * Language-aware default test-file globs for non-js/ts languages (Phase 166,
+ * AC-2). Rust's `src/**\/*.rs` entry was added in Phase 167 (AC-10): idiomatic
+ * Rust unit tests commonly live inline, in a `#[cfg(test)] mod tests { ... }`
+ * block within the same file as the code under test, rather than only under
+ * `tests/` or in a `*_test.rs`-suffixed file — the attribute-aware rust
+ * coverage profile (`../verify/coverage-profiles/rust.ts`) only ever yields
+ * spans for genuine `#[test]` functions, so widening the glob to include all
+ * of `src/` cannot itself manufacture false-positive coverage evidence out of
+ * non-test source. This map is consulted only at fresh-`cadence init` time
+ * (`detectTestGlobs`, below) — an existing `.cadence/config.json` is never
+ * rewritten by init (init.ts refuses outright when `.cadence/` already
+ * exists, before any glob detection runs).
+ */
 const LANGUAGE_TEST_GLOBS: Partial<Record<ProjectLanguage, string[]>> = {
   python: ['**/test_*.py', '**/*_test.py'],
   go: ['**/*_test.go'],
-  rust: ['tests/**/*.rs', '**/*_test.rs'],
+  rust: ['tests/**/*.rs', '**/*_test.rs', 'src/**/*.rs'],
   php: ['**/*Test.php', 'tests/**/*.php'],
 };
 
@@ -111,15 +124,24 @@ export type CoverageMode = 'mention' | 'assertion';
 /**
  * Language-aware `verification.coverageMode` default (Phase 166, AC-1). The
  * config schema's static default (`packages/types/src/config.ts`'s
- * `DEFAULT_CONFIG`) writes `'assertion'` unconditionally — but `assertion`
- * mode's span-finder (`findTestSpans`) only understands JS/TS test files
- * today, so defaulting a non-JS/TS project to `assertion` would produce a
- * `test-coverage` gate that can never pass, no matter how well-tested the
- * code is. `'js'` keeps today's `'assertion'` default unchanged; every other
- * detected (or undetected) language gets the honest `'mention'` default
- * instead. `lang` defaults to `detectProjectLanguage(cwd)` but can be passed
- * explicitly by callers (e.g. `init.ts`) that already detected it, to share
- * one fs sniff with `detectTestGlobs`. Never throws.
+ * `DEFAULT_CONFIG`) writes `'assertion'` unconditionally. When this default
+ * was written (Phase 166), `assertion` mode's span-finder understood JS/TS
+ * test files only, so defaulting a non-JS/TS project to `assertion` would
+ * have produced a `test-coverage` gate that could never pass no matter how
+ * well-tested the code was — `'js'` kept that default unchanged, every other
+ * detected (or undetected) language got the honest `'mention'` default
+ * instead. As of Phase 167 the span-finder is a shared multi-language engine
+ * with real built-in support for python/go/rust/php too (per-file dispatch,
+ * `../verify/coverage-profiles/registry.ts`), so `'assertion'` is no longer
+ * permanently unsatisfiable for those languages — but this function's
+ * *behavior* is deliberately unchanged: Phase 167 shipped the span-parsing,
+ * not a revisit of what a fresh `init` auto-writes, so non-js languages
+ * still default to `'mention'` here, and switching to `'assertion'` is left
+ * as a manual, informed `cadence config edit coverageMode` choice that now
+ * genuinely works (see `docs/reference/config.md`'s "Supported-language
+ * matrix" section). `lang` defaults to `detectProjectLanguage(cwd)` but can
+ * be passed explicitly by callers (e.g. `init.ts`) that already detected it,
+ * to share one fs sniff with `detectTestGlobs`. Never throws.
  */
 export function detectCoverageMode(
   cwd: string,

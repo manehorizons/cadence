@@ -2,6 +2,110 @@ import { z } from 'zod';
 import { ProfileZ } from './profile.js';
 import { LogLevelZ, LogFormatZ } from './logging.js';
 
+/**
+ * Config-facing shape for a custom assertion-coverage profile
+ * (`verification.coverageProfiles`, phase 167 T7). Mirrors
+ * `@manehorizons/cadence-core`'s `LanguageProfile`
+ * (`packages/core/src/verify/coverage-profiles/types.ts`) as a
+ * JSON-serializable, string-pattern shape: `openerPattern`/`assertionPattern`
+ * are regex SOURCE STRINGS here, compiled into real `RegExp`s at
+ * config-load time by core's `compileCustomProfile`
+ * (`packages/core/src/verify/coverage-profiles/custom.ts`) — never by this
+ * schema — since a native `RegExp` cannot round-trip through
+ * `.cadence/config.json`. This package has no dependency on core (pure data
+ * layer), so `strategy` below is a hand-kept mirror of core's `BlockStrategy`
+ * union, not an import; core's `compileCustomProfile` is the single bridge
+ * between this JSON shape and the runtime `LanguageProfile`.
+ *
+ * Deliberately narrower than the full `LanguageProfile` surface — two field
+ * groups are scoped OUT of config entirely for this task (see
+ * `custom.ts`'s module docstring for the full rationale, repeated in brief
+ * here since this is the schema an operator actually reads):
+ *  - `openerRequiredLiteral`: an advanced, easy-to-misuse field whose own
+ *    docstring (`LanguageProfile.openerRequiredLiteral`) requires
+ *    `openerPattern` to end at one exact position (immediately after the
+ *    triggering `(`) for its paren-depth-aware extraction to be safe at
+ *    all — go's own module docstring documents three real false-positive
+ *    bugs this field's misuse can reintroduce. Built-in profiles that don't
+ *    need it (php's PHPUnit opener, python, most shapes) prove a custom
+ *    profile can be fully functional without it.
+ *  - `fencedStrings` / `heredocs`: advanced dynamic-fence string forms
+ *    (Rust's `r#"..."#`, PHP's heredoc/nowdoc) needed by only one or two
+ *    built-ins each. Plain `strings` (fixed open/close delimiters) plus
+ *    line/block `comments` cover ordinary language grammars, including the
+ *    Ruby do-end-keyword fixture this task ships end-to-end.
+ */
+export const CoverageProfileStringDelimiterZ = z.object({
+  open: z.string().min(1),
+  /** Defaults to `open` (symmetric quote) when omitted. */
+  close: z.string().min(1).optional(),
+  /** `null` disables escape handling entirely (e.g. raw strings). Omit for
+   * the default `\`. */
+  escape: z.union([z.string().length(1), z.null()]).optional(),
+});
+
+export const CoverageProfileSyntaxZ = z.object({
+  comments: z
+    .object({
+      /** Line-comment openers, e.g. `['#']`. */
+      line: z.array(z.string().min(1)).default([]),
+      /** Block-comment `[open, close]` pairs, e.g. `[['/*', '*\/']]`. */
+      block: z.array(z.tuple([z.string().min(1), z.string().min(1)])).default([]),
+    })
+    .default({ line: [], block: [] }),
+  strings: z.array(CoverageProfileStringDelimiterZ).default([]),
+});
+
+/** Hand-kept mirror of core's `BlockStrategy` union — see module docstring
+ * above for why this package can't import it directly. */
+export const CoverageProfileStrategyZ = z.enum([
+  'call-expression',
+  'brace-delimited',
+  'indentation-delimited',
+  'do-end-keyword',
+]);
+
+export const CoverageProfileKeywordZ = z.object({
+  /** Keywords that open a further nested block needing its own closer. */
+  blockOpenKeywords: z.array(z.string().min(1)).min(1),
+  /** The keyword that closes the innermost currently-open block. */
+  endKeyword: z.string().min(1),
+});
+
+export const CoverageProfileConfigZ = z.object({
+  /** Unique profile id, e.g. `'ruby-rspec'`. Named in load-time refusal
+   * messages, so pick something identifiable. */
+  id: z.string().min(1),
+  /** Lowercase file extensions this profile claims, e.g. `['.rb']`.
+   * Refused at load time if any extension is already owned by a built-in
+   * profile (add-only — custom profiles may not override a built-in). */
+  extensions: z.array(z.string().min(1)).min(1),
+  /** Regex SOURCE STRING, compiled with the sticky `y` flag at load time.
+   * A string that throws when passed to `new RegExp(...)` is refused at
+   * load time, naming this profile's `id` and the field. */
+  openerPattern: z.string().min(1),
+  /** Regex SOURCE STRING, compiled (no sticky flag needed) at load time.
+   * Same invalid-regex refusal as `openerPattern`. */
+  assertionPattern: z.string().min(1),
+  strategy: CoverageProfileStrategyZ,
+  /** Required (not defaulted) — an operator must explicitly declare a
+   * comment/string table, even an empty one, rather than silently getting
+   * no masking at all. */
+  syntax: CoverageProfileSyntaxZ,
+  /** Required iff `strategy === 'do-end-keyword'`; refused at load time
+   * when missing for that strategy. Deliberately left unenforced by a Zod
+   * cross-field refinement here — core's `compileCustomProfile` is the
+   * single place that produces the refuse+suggest message naming the
+   * profile id and the fix, matching this codebase's other load-time
+   * validation (`packages/core/src/config/loader.ts`). */
+  keyword: CoverageProfileKeywordZ.optional(),
+  /** See `LanguageProfile.openerMatchesStrings` (core `types.ts`) for the
+   * full tradeoff. Default `false`. */
+  openerMatchesStrings: z.boolean().optional(),
+});
+
+export type CoverageProfileConfig = z.infer<typeof CoverageProfileConfigZ>;
+
 export const CadenceConfigZ = z.object({
   $schema: z.string().optional(),
   schemaVersion: z.literal(1),
@@ -91,10 +195,24 @@ export const CadenceConfigZ = z.object({
        * evaluated but cannot enforce — it passes with a one-time note.
        */
       testCommand: z.string().optional(),
+      /**
+       * Operator-extensible assertion-coverage profiles for languages no
+       * built-in profile claims (phase 167, T7). Add-only: an entry
+       * claiming an extension a BUILT-IN profile already owns (`.ts`,
+       * `.py`, `.go`, `.rs`, `.php`, ...) is refused loudly at config-load
+       * time, naming the collision and suggesting a fix — overriding a
+       * built-in is not supported. Validated (regex compiles, required
+       * fields present, no collision) by
+       * `packages/core/src/config/loader.ts` via
+       * `mergeCustomProfiles` (`packages/core/src/verify/coverage-profiles/
+       * registry.ts`), never silently accepted or ignored.
+       */
+      coverageProfiles: z.array(CoverageProfileConfigZ).default([]),
     })
     .default({
       testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
       coverageMode: 'mention',
+      coverageProfiles: [],
     }),
   verifier: z
     .object({
@@ -361,6 +479,9 @@ export const defaultConfig: CadenceConfig = {
      *  above is unchanged — it's the backward-compat fallback for configs
      *  that predate this field, not what a fresh init writes. */
     coverageMode: 'assertion' as const,
+    /** Phase 167 T7: no custom profiles by default — every fresh init and
+     *  every pre-existing config predating this field gets the empty list. */
+    coverageProfiles: [],
   },
   verifier: { provider: 'mock' as const, diffCapBytes: 262144 },
   perTaskVerifier: { provider: 'mock' as const },

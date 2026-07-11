@@ -67,11 +67,22 @@ describe('runDoctor', () => {
  * span-parsing support yet. This is the check `cadence doctor` (the CLI
  * command) must surface, since the CLI calls `runDoctor` directly and never
  * goes through `doctorService`.
+ *
+ * Phase 167 shipped real assertion-mode span support for python/go/rust/php
+ * (previously js/ts-only), checked against the live coverage-profile
+ * registry rather than a hardcoded language list (`../../src/doctor/run.ts`,
+ * `checkCoverageModeLanguageSupport`) — a phase-167 doc review caught that
+ * this check had originally been left hardcoded to `lang === 'js'` even
+ * after all five profiles landed, which would have kept producing a false
+ * "no support yet" warning for exactly the four languages the phase built
+ * support for. The python-warns case below no longer applies (python now
+ * has real support, like js/go/rust/php); only `unknown` (no recognized
+ * marker file) still warns.
  */
-describe('runDoctor — coverage-mode language support (phase 166, AC-4)', () => {
-  it('flags coverageMode:assertion paired with a detected non-js language (python)', async () => {
-    active = await tempRepo({ initialized: true, projectName: 'doc-lang-python' });
-    await writeFile(join(active.root, 'pyproject.toml'), '[tool.poetry]\nname = "demo"\n');
+describe('runDoctor — coverage-mode language support (phase 166 AC-4, phase 167 registry-driven fix)', () => {
+  it('flags coverageMode:assertion paired with an unrecognized project language (no marker file)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-lang-unknown' });
+    // No package.json/pyproject.toml/go.mod/Cargo.toml/composer.json — detectProjectLanguage() → 'unknown'.
 
     const report = await runDoctor(active.root, HEALTHY_ENV);
 
@@ -80,7 +91,7 @@ describe('runDoctor — coverage-mode language support (phase 166, AC-4)', () =>
     expect(check?.severity).toBe('warning');
     expect(check?.detail).toMatch(/coverageMode/);
     expect(check?.detail).toMatch(/assertion/);
-    expect(check?.detail).toMatch(/python/);
+    expect(check?.detail).toMatch(/unknown/);
     expect(check?.remediation).toMatch(/cadence config edit coverageMode/);
     // A warning must not fail the overall report.
     expect(report.ok).toBe(true);
@@ -96,6 +107,26 @@ describe('runDoctor — coverage-mode language support (phase 166, AC-4)', () =>
     expect(check).toBeDefined();
     expect(check?.severity).toBe('ok');
   });
+
+  it.each([
+    ['python', 'pyproject.toml', '[tool.poetry]\nname = "demo"\n'],
+    ['go', 'go.mod', 'module demo\n\ngo 1.22\n'],
+    ['rust', 'Cargo.toml', '[package]\nname = "demo"\n'],
+    ['php', 'composer.json', JSON.stringify({ name: 'demo/demo' })],
+  ])(
+    'does not flag coverageMode:assertion paired with a detected %s project (phase 167: real span support now exists)',
+    async (lang, markerFile, markerContent) => {
+      active = await tempRepo({ initialized: true, projectName: `doc-lang-${lang}` });
+      await writeFile(join(active.root, markerFile), markerContent);
+
+      const report = await runDoctor(active.root, HEALTHY_ENV);
+
+      const check = findCheck(report.checks, 'coverage-mode-language-support');
+      expect(check).toBeDefined();
+      expect(check?.severity).toBe('ok');
+      expect(check?.detail).toMatch(new RegExp(lang));
+    },
+  );
 
   it('does not flag coverageMode:mention regardless of detected language', async () => {
     active = await tempRepo({ initialized: true, projectName: 'doc-lang-mention' });

@@ -13,9 +13,18 @@ import type { GateImpl, GateResult } from './types.js';
  * non-explicit AC has no linked test, unless --allow-missing-coverage / --force.
  *
  * Phase 108: in `assertion` coverage mode the gate additionally refuses an AC
- * that is *mentioned* but never inside an asserting it()/test() block (a "weak
- * link"), with a distinct hint from the plain "no linked test" message. The
- * `mention`-mode path (default) is unchanged.
+ * that is *mentioned* but never inside a recognized asserting test block (a
+ * "weak link"), with a distinct hint from the plain "no linked test" message.
+ * The `mention`-mode path (default) is unchanged.
+ *
+ * Phase 167: assertion-mode span recognition is no longer JS/TS-only —
+ * built-in profiles cover js/ts, python, go, rust, and php (per-file
+ * dispatch, `../verify/coverage-profiles/registry.ts`), plus an
+ * operator-extensible `verification.coverageProfiles` escape hatch for any
+ * other language. The refusal messages below are written language-neutral
+ * accordingly and point at `cadence verify coverage --explain AC-N` (T8) —
+ * the diagnostic built specifically so a weak-link refusal is debuggable
+ * without reading engine source.
  *
  * Phase 141 (T5, AC-3/AC-5): when 'test-coverage' is in `config.gates.sealed`
  * (`isGateSealed`), neither the early --allow-missing-coverage short-circuit
@@ -52,7 +61,7 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
       }
       for (const id of weak) {
         ctx.io.err(
-          `coverage: ${id} is mentioned but not inside an asserting it()/test() block ` +
+          `coverage: ${id} is mentioned but not inside a recognized asserting test block ` +
             `(assertion mode) (searched: ${globsLabel})\n`,
         );
       }
@@ -64,9 +73,10 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
       // Phase 166 (T3, AC-3): the trailing refusal names each distinct cause
       // separately instead of one shared blob — a glob-miss (discovery: no
       // test files matched verification.testGlobs) and a span-miss (parsing:
-      // files matched but findTestSpans found no asserting it()/test() block
-      // for the id, often because the project's test framework isn't the
-      // JS/TS shape that parser recognizes) call for different fixes.
+      // files matched but no recognized asserting test block was found for
+      // the id — run `cadence verify coverage --explain <id>` (phase 167, T8)
+      // to see exactly which profile scanned each file and why) call for
+      // different fixes.
       const bypassHint = sealed
         ? 'This gate is sealed (gates.sealed) and cannot be bypassed with --force or ' +
             '--allow-missing-coverage.'
@@ -94,10 +104,12 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
       if (weak.length > 0) {
         ctx.io.err(
           `settle run refused (assertion mode): test files matched but no assertion-shaped ` +
-            `span found for ${weak.join(', ')}. Add an asserting it()/test() block that ` +
-            `references the AC id, or if this project's test framework isn't JS/TS-shaped, ` +
-            `switch coverageMode to 'mention' via \`cadence config edit coverageMode\`. ` +
-            `${bypassHint}\n`,
+            `span found for ${weak.join(', ')}. Run \`cadence verify coverage --explain ` +
+            `${weak[0]}\` to see which profile scanned each file and why the span didn't ` +
+            `qualify, then add an asserting test block that references the AC id — or, if this ` +
+            `project's language/framework genuinely has no coverage profile (built-in: js/ts, ` +
+            `python, go, rust, php; extend via verification.coverageProfiles for others), switch ` +
+            `coverageMode to 'mention' via \`cadence config edit coverageMode\`. ${bypassHint}\n`,
         );
       }
       if (skippedOnly.length > 0) {

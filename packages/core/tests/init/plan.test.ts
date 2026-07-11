@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { detectProjectLanguage, detectTestGlobs } from '../../src/init/plan.js';
+import { detectProjectLanguage, detectTestGlobs, planInit } from '../../src/init/plan.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {
@@ -86,10 +86,10 @@ describe('detectTestGlobs language-aware defaults (phase 166, AC-2)', () => {
     expect(detectTestGlobs(active.root)).toEqual(['**/*_test.go']);
   });
 
-  it('returns rust defaults when Cargo.toml is present', async () => {
+  it('returns rust defaults when Cargo.toml is present, including src/**/*.rs (phase 167, AC-10)', async () => {
     active = await tempRepo();
     await writeFile(join(active.root, 'Cargo.toml'), '[package]\nname = "widget"\n');
-    expect(detectTestGlobs(active.root)).toEqual(['tests/**/*.rs', '**/*_test.rs']);
+    expect(detectTestGlobs(active.root)).toEqual(['tests/**/*.rs', '**/*_test.rs', 'src/**/*.rs']);
   });
 
   it('returns php defaults when composer.json is present', async () => {
@@ -123,5 +123,31 @@ describe('detectTestGlobs language-aware defaults (phase 166, AC-2)', () => {
     active = await tempRepo();
     // cwd has no markers at all, but an explicit override still wins
     expect(detectTestGlobs(active.root, 'go')).toEqual(['**/*_test.go']);
+  });
+});
+
+describe('rust default testGlobs widened for inline unit tests (phase 167, T4, AC-10)', () => {
+  it('a fresh cadence init in a rust project writes src/**/*.rs alongside tests/**/*.rs and **/*_test.rs (AC-10)', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'Cargo.toml'), '[package]\nname = "widget"\n');
+
+    const plan = planInit(active.root, {}, {}, false);
+
+    expect(plan.alreadyInitialized).toBe(false);
+    expect(plan.testGlobs).toEqual(['tests/**/*.rs', '**/*_test.rs', 'src/**/*.rs']);
+  });
+
+  it('an already-initialized rust project is never rewritten by init (AC-10, init-time only, phase 139/166 precedent)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeFile(join(active.root, 'Cargo.toml'), '[package]\nname = "widget"\n');
+
+    const plan = planInit(active.root, {}, {}, false);
+
+    // A real `cadence init` refuses outright once .cadence/ exists (init.ts
+    // exits before any glob detection is written to disk) — the empty
+    // `files` list is what actually governs writes; `testGlobs` is still
+    // computed for planning/preview purposes but nothing is written from it.
+    expect(plan.alreadyInitialized).toBe(true);
+    expect(plan.files).toEqual([]);
   });
 });

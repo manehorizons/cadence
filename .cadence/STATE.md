@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 169-assertion-mode-coverage-refuses-the-skip-todo-failing-dodge
+**Active phase:** 167-multi-language-coverage-engine
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1280
+- Subagent spawns this session: 1494
 - Last handoff: SESSION-2026-07-11-phase166-language-aware-coverage-shipped.md
 
 ## Counts
