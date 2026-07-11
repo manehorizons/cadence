@@ -107,6 +107,26 @@ export async function scanTestCoverage(
 }
 
 /**
+ * Whether any file in the repo matches `globs` at all (Phase 166, T3 fix
+ * round). `uncoveredAcs` alone can't distinguish "no test files matched the
+ * globs" from "files matched fine but this particular AC-N is never
+ * mentioned in any of them" — both produce zero refs. The gate needs this
+ * signal to avoid telling the operator to check their globs when the globs
+ * were never the problem.
+ */
+export async function anyTestFilesMatched(
+  repoRoot: string,
+  globs?: string[],
+): Promise<boolean> {
+  const matchers = (globs ?? DEFAULT_GLOBS).map(toMatcher);
+  const files = await listAllFiles(repoRoot);
+  return files.some((abs) => {
+    const relPath = relative(repoRoot, abs).split(sep).join('/');
+    return matchers.some((m) => m(relPath));
+  });
+}
+
+/**
  * Returns the list of AC ids that have zero linked tests. Useful for the
  * settle gate's refusal message.
  */

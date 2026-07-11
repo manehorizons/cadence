@@ -77,10 +77,12 @@ describe('Phase 39.1 AC-7: bit-identical gate refusal transcripts', () => {
     expect(r.code).toBe(1);
     // Self-evident key line (Phase 139: assertion-mode wording is now the
     // default; the build-test-must-pass notice fires first since no
-    // testCommand is configured):
+    // testCommand is configured). Phase 166 (T3, AC-3) split this refusal
+    // into a glob-miss vs. span-miss cause; no test files are seeded here,
+    // so the glob-miss variant fires.
     expect(r.stderr).toContain('coverage: AC-1 has no linked test');
     expect(r.stderr).toContain(
-      'settle run refused (assertion mode): each AC needs at least one asserting it()/test() block',
+      'settle run refused (assertion mode): no test files matched configured globs for AC-1',
     );
     // Snapshot locks the full transcript (bit-identical anchor):
     expect(r.stderr).toMatchSnapshot();

@@ -475,3 +475,79 @@ describe('cadence init — phase 108 zero-prompt + auto-wire (rec-20260617-001)'
     expect(existsSync(join(active.root, '.cadence'))).toBe(false);
   });
 });
+
+describe('cadence init — language-aware coverageMode default (phase 166, AC-1, T2)', () => {
+  it('python project: writes coverageMode mention and prints a stderr notice naming python', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'pyproject.toml'), '[project]\nname = "widget"\n');
+    const r = await run(['init', '--name=pyproj', '--gate-profile=auto'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    expect(cfg.verification.coverageMode).toBe('mention');
+    expect(r.stderr).toMatch(/coverageMode/);
+    expect(r.stderr).toMatch(/python/);
+  });
+
+  it('go project: writes coverageMode mention and prints a stderr notice naming go', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'go.mod'), 'module widget\n');
+    const r = await run(['init', '--name=goproj', '--gate-profile=auto'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    expect(cfg.verification.coverageMode).toBe('mention');
+    expect(r.stderr).toMatch(/coverageMode/);
+    expect(r.stderr).toMatch(/go/);
+  });
+
+  it('rust project: writes coverageMode mention and prints a stderr notice naming rust', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'Cargo.toml'), '[package]\nname = "widget"\n');
+    const r = await run(['init', '--name=rustproj', '--gate-profile=auto'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    expect(cfg.verification.coverageMode).toBe('mention');
+    expect(r.stderr).toMatch(/coverageMode/);
+    expect(r.stderr).toMatch(/rust/);
+  });
+
+  it('php project: writes coverageMode mention and prints a stderr notice naming php', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'composer.json'), JSON.stringify({ name: 'widget' }));
+    const r = await run(['init', '--name=phpproj', '--gate-profile=auto'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    expect(cfg.verification.coverageMode).toBe('mention');
+    expect(r.stderr).toMatch(/coverageMode/);
+    expect(r.stderr).toMatch(/php/);
+  });
+
+  it('unknown language (no marker files): writes coverageMode mention and prints a stderr notice naming unknown', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=unknownproj', '--gate-profile=auto'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    expect(cfg.verification.coverageMode).toBe('mention');
+    expect(r.stderr).toMatch(/coverageMode/);
+    expect(r.stderr).toMatch(/unknown/);
+  });
+
+  it('js/ts project: coverageMode stays assertion (unchanged), no coverageMode notice printed', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'package.json'), JSON.stringify({ name: 'widget' }));
+    const r = await run(['init', '--name=jsproj', '--gate-profile=auto'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    expect(cfg.verification.coverageMode).toBe('assertion');
+    expect(r.stderr).not.toMatch(/coverageMode/);
+  });
+
+  it('never rewrites coverageMode on an existing .cadence/config.json (init-time only)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeFile(join(active.root, 'pyproject.toml'), '[project]\nname = "widget"\n');
+    const before = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    const r = await run(['init', '--name=demo'], active.root);
+    expect(r.code).not.toBe(0);
+    const after = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    expect(after.verification.coverageMode).toBe(before.verification.coverageMode);
+  });
+});

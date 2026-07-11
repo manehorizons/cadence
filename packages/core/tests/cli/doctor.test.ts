@@ -86,4 +86,20 @@ describe('cadence doctor', () => {
     expect(r.code).toBe(0); // a warning must not fail
     expect(r.stdout).toMatch(/warning/);
   });
+
+  /**
+   * T4 (phase 166, AC-4, fix round): the actual `cadence doctor` CLI path
+   * (not just the MCP `doctorService` seam) must surface the coverage-mode
+   * language-support check, since the CLI calls `runDoctor` directly.
+   */
+  it('AC-4 (phase 166): coverageMode:assertion + detected python project → warning surfaced via the CLI', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-cli-lang' });
+    await writeFile(join(active.root, 'pyproject.toml'), '[tool.poetry]\nname = "demo"\n');
+
+    const r = await run(['doctor'], active.root);
+    expect(r.code).toBe(0); // a warning must not fail the report
+    expect(r.stdout).toMatch(/coverage-mode-language-support/);
+    expect(r.stdout).toMatch(/coverageMode is 'assertion'/);
+    expect(r.stdout).toMatch(/cadence config edit coverageMode/);
+  });
 });

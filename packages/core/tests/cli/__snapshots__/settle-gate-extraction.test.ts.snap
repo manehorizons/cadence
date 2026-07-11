@@ -3,7 +3,7 @@
 exports[`Phase 39.1 AC-7: bit-identical gate refusal transcripts > coverage gate: refusal stderr is bit-identical after extraction (AC-7) 1`] = `
 "build-test-must-pass: no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement.
 coverage: AC-1 has no linked test (searched: packages/**/*.test.ts, packages/**/*.test.tsx)
-settle run refused (assertion mode): each AC needs at least one asserting it()/test() block that references its id. Pass --allow-missing-coverage to bypass, or --force to settle anyway.
+settle run refused (assertion mode): no test files matched configured globs for AC-1 (searched: packages/**/*.test.ts, packages/**/*.test.tsx). Check verification.testGlobs, or move/rename the test file so it matches. Pass --allow-missing-coverage to bypass, or --force to settle anyway.
 "
 `;
 

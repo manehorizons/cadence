@@ -10,6 +10,7 @@ import { assessReadiness } from '../activate/assess.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
+import { detectProjectLanguage } from '../init/plan.js';
 import {
   pass,
   fail,
@@ -585,6 +586,45 @@ export async function checkRecommendationShippedDrift(root: string): Promise<Doc
   }
 }
 
+/**
+ * Flags `verification.coverageMode: 'assertion'` paired with a detected
+ * project language that has no assertion-mode span-parsing support yet
+ * (Phase 166, AC-4 — everything but js/ts today). `mention` mode is always
+ * fine regardless of language, so this only fires on the one unsafe
+ * pairing. Read-only, best-effort, never throws (doctor convention): a
+ * config-load failure just skips the check, since `checkInitialized`/
+ * `checkState` already own reporting a broken config.
+ */
+export async function checkCoverageModeLanguageSupport(root: string): Promise<DoctorCheck> {
+  try {
+    const config = await loadConfig(root);
+    if (config.verification.coverageMode !== 'assertion') {
+      return pass(
+        'coverage-mode-language-support',
+        "Not applicable — coverageMode is not 'assertion'.",
+      );
+    }
+    const lang = detectProjectLanguage(root);
+    if (lang === 'js') {
+      return pass(
+        'coverage-mode-language-support',
+        "Detected language ('js') has assertion-mode span-parsing support.",
+      );
+    }
+    return fail(
+      'coverage-mode-language-support',
+      'warning',
+      `coverageMode is 'assertion' but the detected project language ('${lang}') has no assertion-mode span-parsing support yet.`,
+      "Run `cadence config edit coverageMode` to switch it to 'mention'.",
+    );
+  } catch {
+    return pass(
+      'coverage-mode-language-support',
+      'Coverage-mode language support not determinable (best-effort) — skipped.',
+    );
+  }
+}
+
 export async function runDoctor(
   root: string,
   env: DoctorEnv,
@@ -604,6 +644,7 @@ export async function runDoctor(
     await checkHandoffRetention(root),
     await checkVerificationReadiness(root),
     await checkRecommendationShippedDrift(root),
+    await checkCoverageModeLanguageSupport(root),
   ];
   return rollup(checks);
 }

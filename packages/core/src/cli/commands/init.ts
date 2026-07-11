@@ -12,6 +12,8 @@ import {
 } from '@manehorizons/cadence-types';
 import {
   deriveName,
+  detectCoverageMode,
+  detectProjectLanguage,
   detectTestCommand,
   detectTestGlobs,
   planInit,
@@ -380,8 +382,12 @@ export function registerInitCommand(program: Command): void {
           process.exit(2);
         }
 
-        const testGlobs = detectTestGlobs(cwd);
+        // Phase 166 (AC-1/AC-2) — one language sniff shared by testGlobs and
+        // coverageMode, so the two never disagree about the detected language.
+        const projectLanguage = detectProjectLanguage(cwd);
+        const testGlobs = detectTestGlobs(cwd, projectLanguage);
         const testCommand = detectTestCommand(cwd);
+        const coverageMode = detectCoverageMode(cwd, projectLanguage);
         const layout =
           testGlobs[0]?.startsWith('packages/') ?? false
             ? 'monorepo (packages/)'
@@ -394,9 +400,22 @@ export function registerInitCommand(program: Command): void {
           verification: {
             ...presetCfg.verification,
             testGlobs,
+            coverageMode,
             ...(testCommand !== null ? { testCommand } : {}),
           },
         });
+        // Phase 166 (AC-1) — coverageMode fell back to 'mention' because the
+        // detected language isn't js/ts: assertion mode's span-finder doesn't
+        // understand that language's test files yet, so writing 'assertion'
+        // would produce a test-coverage gate that can never pass. Loud
+        // stderr notice, never a silent downgrade.
+        if (projectLanguage !== 'js') {
+          console.error(
+            `coverageMode: 'assertion' requires JS/TS test syntax support; detected language ` +
+              `'${projectLanguage}' isn't supported yet, defaulting to 'mention' instead. ` +
+              `See docs/reference/config.md.`,
+          );
+        }
 
         // Phase 110 — fold activation into init. With --activate and a present
         // ANTHROPIC_API_KEY, wire real verification (deep-verify seam) via the
