@@ -511,6 +511,13 @@
       "kind": "note",
       "summary": "Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; risk considerations that apply to any headless-CLI provider direction",
       "createdAt": "2026-07-10T22:11:55.932Z"
+    },
+    {
+      "id": "ev-20260711-004",
+      "recommendationId": "rec-20260711-004",
+      "kind": "note",
+      "summary": "External consumer project observation, 2026-07-11 (dumpfile): SPEC-stage UI gap noted mid-brainstorm for a BuilderShell/StructuredWizardShell modal component, where the design decided behavior+visual precedent but not concrete layout.",
+      "createdAt": "2026-07-11T14:33:47.461Z"
     }
   ]
 }

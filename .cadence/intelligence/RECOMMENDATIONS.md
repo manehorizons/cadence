@@ -512,3 +512,18 @@ A headless host-CLI verifier subprocess has zero shared context with the calling
 - next: cadence milestone propose
 
 Three risks surfaced while widening rec-20260710-002 that need explicit handling, not just the happy path: (1) reusing the user's host-CLI subscription/quota for verification calls is invisible cost -- it should be surfaced loudly (e.g. in verify output or a doctor check), not silently drain a Pro/Max plan's usage budget; (2) if cadence itself is being driven by the same host CLI it would spawn headlessly for verification, there is a self-referential invocation risk (nested Claude Code/Codex processes, rate-limit or permission-prompt contention) that needs an explicit guard; (3) headless host-CLI providers assume an interactive login exists locally and will not work in CI -- needs a documented, loud fallback to anthropic/mock rather than a confusing hang or silent failure in automated environments.
+
+## rec-20260711-004 — Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, draft, spec
+- evidence: External consumer project observation, 2026-07-11 (dumpfile): SPEC-stage UI gap noted mid-brainstorm for a BuilderShell/StructuredWizardShell modal component, where the design decided behavior+visual precedent but not concrete layout.
+- next: cadence milestone propose
+
+CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC captures component list and behavioral shape only (e.g. 'reuse StructuredWizardShell's visual language' as a precedent reference), with no concrete layout -- field spacing/grouping, exact design-token usage, responsive behavior, or per-field-type visual treatment. Left as-is, DRAFT tasks inherit only a loose behavioral pointer and whoever executes BUILD makes the real layout calls in the moment, looser than this project's own deliberate token-driven UI work. Proposal: an opt-in gate/step between SPEC and DRAFT for phases touching UI surfaces that produces a concrete design contract (component-level layout, token usage, responsive/interaction detail) before DRAFT tasks are written -- conceptually parallel to gsd-ui-phase's UI-SPEC.md but native to CADENCE's loop and gate model, not a GSD borrow. 'When applicable' is key: most CADENCE phases are not UI work and must not pay this cost.
