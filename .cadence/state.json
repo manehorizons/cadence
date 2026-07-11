@@ -4,7 +4,7 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "165-host-cli-headless-verifier",
+  "activePhase": "166-language-aware-coverage-defaults",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
@@ -16,7 +16,7 @@
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-11-v1.43.0-release-shipped.md",
-    "subagentSpawns": 1234,
+    "subagentSpawns": 1305,
     "subagentBaselines": {}
   },
   "skillAudit": {
