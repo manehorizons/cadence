@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 168-land-test-gutting-demo-as-a-committed-example
+**Active phase:** 169-assertion-mode-coverage-refuses-the-skip-todo-failing-dodge
 **Active draft:** (none)
 **Tier:** (n/a)
 

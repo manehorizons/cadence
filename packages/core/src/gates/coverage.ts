@@ -1,4 +1,9 @@
-import { anyTestFilesMatched, uncoveredAcs, weaklyLinkedAcs } from '../verify/coverage.js';
+import {
+  anyTestFilesMatched,
+  skippedOnlyLinkedAcs,
+  uncoveredAcs,
+  weaklyLinkedAcs,
+} from '../verify/coverage.js';
 import { isGateSealed } from './types.js';
 import type { GateImpl, GateResult } from './types.js';
 
@@ -37,7 +42,11 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
 
   if (mode === 'assertion') {
     const weak = weaklyLinkedAcs(required, coverage);
-    if ((absent.length > 0 || weak.length > 0) && (!ctx.opts.force || sealed)) {
+    const skippedOnly = skippedOnlyLinkedAcs(required, coverage);
+    if (
+      (absent.length > 0 || weak.length > 0 || skippedOnly.length > 0) &&
+      (!ctx.opts.force || sealed)
+    ) {
       for (const id of absent) {
         ctx.io.err(`coverage: ${id} has no linked test (searched: ${globsLabel})\n`);
       }
@@ -45,6 +54,11 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
         ctx.io.err(
           `coverage: ${id} is mentioned but not inside an asserting it()/test() block ` +
             `(assertion mode) (searched: ${globsLabel})\n`,
+        );
+      }
+      for (const id of skippedOnly) {
+        ctx.io.err(
+          `coverage: ${id}'s only linked test is skipped (assertion mode) (searched: ${globsLabel})\n`,
         );
       }
       // Phase 166 (T3, AC-3): the trailing refusal names each distinct cause
@@ -84,6 +98,13 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
             `references the AC id, or if this project's test framework isn't JS/TS-shaped, ` +
             `switch coverageMode to 'mention' via \`cadence config edit coverageMode\`. ` +
             `${bypassHint}\n`,
+        );
+      }
+      if (skippedOnly.length > 0) {
+        ctx.io.err(
+          `settle run refused (assertion mode): ${skippedOnly.join(', ')}'s only linked test ` +
+            `is skipped. Unskip the test or replace it with a running asserting it()/test() ` +
+            `block. ${bypassHint}\n`,
         );
       }
       return { outcome: 'refuse', flags: { coverageBypassed } };
