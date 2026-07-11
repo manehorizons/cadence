@@ -1,5 +1,65 @@
 # @manehorizons/cadence-types
 
+## 1.43.0
+
+### Minor Changes
+
+- Enable `cadence init` to prepare a repo for Codex on the first run, so a new
+  user starting Codex can immediately use Cadence commands without manually
+  discovering extra adapter setup steps.
+  - `cadence init --host codex` (with `--agents-md`) now wires host hooks,
+    generates the project-level `AGENTS.md` guidance, and flows through the
+    same init path as Claude Code — previously Codex setup only installed
+    adapter hooks/prompts and skipped `AGENTS.md` generation.
+  - `cadence doctor` gained Codex readiness checks (hooks, prompts,
+    `AGENTS.md`, global command availability), each with an opt-in `doctor
+--fix` remediation.
+  - Codex/quickstart/CLI docs point first-time users at `cadence init --host
+codex` instead of adapter-only setup.
+
+- d502562: Harden handoff/resume against two gaps ground-truth discovery didn't cover:
+  a handoff that's stale relative to origin, and a handoff whose narrative was
+  never finished.
+  - `cadence resume` now runs a best-effort origin-freshness probe before
+    replaying a doc (config `resume.remoteCheck`, default `true`; `--offline`
+    to skip) and warns when origin has commits this clone lacks, since a
+    stale handoff can be superseded by work pushed from another machine.
+  - `cadence resume` and `cadence handoff --check` (new) both detect
+    scaffolded `<!-- … FILL IN … -->` sections left unfilled by a prior
+    session and flag them — `resume` as a warning, `handoff --check` as an
+    exit-3 completion gate.
+  - `cadence handoff --no-fetch` skips the pre-facts `git fetch` for a fully
+    offline write; `git-facts` records whether the fetch actually ran.
+  - The Claude Code `/cadence-handoff` and `/cadence-resume` slash-command
+    guidance text is updated to teach agents the new gate and banner.
+
+- 1351044: Add `host-cli`, a 4th verifier provider that shells out to your already-authenticated `claude`/`codex` CLI in headless mode instead of requiring a separate `ANTHROPIC_API_KEY`.
+  - New provider value `'host-cli'` on every provider config slice (`verifier`, `perTaskVerifier`, `codeReview`, `planReview`, `securityAudit`, `specReview`), plus `cadence activate --provider host-cli` and `cadence settle run --verifier host-cli`. Binary discovery defaults to `claude` on PATH, overridable via `CADENCE_HOST_CLI_BIN`.
+  - If the configured binary is missing or the CLI reports an auth/exit failure, verification for that call transparently falls back to `mock` with a loud stderr warning — never silent, never a hang waiting on interactive auth.
+  - **Current scope**: only the per-task-verify family (the BUILD-phase task verifier) has a real `host-cli`-backed implementation in this release. The other verifier families (deep-verify, code-review, spec-review, plan-review, security-audit) accept the config value but currently fall back to mock with a warning until they're wired in a follow-up. `cadence doctor`/`cadence activate` report `host-cli` readiness from config well-formedness alone (no required credential, by design) — not a live probe of the binary; that's only discovered lazily on the first real verification call. See `docs/providers.md` for the full picture, including a known no-spawn-timeout gap.
+  - The JSON-extraction + schema-repair-retry logic previously private to the `local` provider is now a shared, transport-agnostic module (`json-repair.ts`) reused by both `local` and `host-cli`.
+
+- bef364d: Make verifier activation trustworthy: broader key discovery, a real
+  activation smoke test, and committed provider config that actually reaches
+  every real call site.
+  - A verifier API key is now discovered from a `.env` file at the repo root
+    when it isn't exported into the process environment (`discoverKey`),
+    closing the gap where a legitimately-available key was invisible to
+    `cadence activate`/`cadence doctor` unless manually `export`ed.
+  - `cadence activate`'s live provider check is no longer coincidentally
+    skippable — when a key is discovered and the provider isn't `mock`, the
+    smoke test runs and its outcome (not mere key presence) gates whether
+    activation is reported as successful. `--no-check` remains the only
+    explicit opt-out.
+  - The discovered-key path now reaches every real verifier-selection call
+    site (`cadence doctor`, `cadence settle run`'s deep-verify/code-review/
+    security-audit seams, the draft/build gates, `cadence spec approve`), not
+    just the primitives — including `cadence mcp serve --repo <path>`, where
+    the server process's own working directory can differ from the repo being
+    operated on. A teammate who never ran `cadence activate` locally, but
+    whose key is discoverable and whose repo already commits a real provider
+    choice, now gets real verification instead of a silent mock fallback.
+
 ## 1.42.0
 
 ### Minor Changes
