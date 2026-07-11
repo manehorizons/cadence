@@ -20,6 +20,14 @@
           }
         ],
         "_managedBy": "cadence"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "deja hook user-prompt-submit"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -32,6 +40,15 @@
           }
         ],
         "_managedBy": "cadence"
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "deja hook pre-tool-use"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -44,6 +61,15 @@
           }
         ],
         "_managedBy": "cadence"
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "deja hook post-tool-use"
+          }
+        ]
       }
     ],
     "Stop": [
