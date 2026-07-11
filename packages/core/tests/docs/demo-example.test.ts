@@ -30,8 +30,14 @@ const NODE_MODULES = join(DEMO_DIR, 'node_modules');
 describe('demo-test-gutting example (phase 168)', () => {
   it('run-demo.sh is present and executable, and no stray zip is committed (AC-1)', () => {
     expect(existsSync(RUN_DEMO_SH)).toBe(true);
-    const mode = statSync(RUN_DEMO_SH).mode;
-    expect(mode & 0o111).toBeTruthy();
+    // Windows/NTFS has no POSIX executable bit — fs.stat always reports 0 for
+    // the execute bits there regardless of git's recorded file mode, so this
+    // check is meaningful only on POSIX platforms (matches the doc-sync-hook
+    // test's `isWindows` pattern for the same class of platform limitation).
+    if (process.platform !== 'win32') {
+      const mode = statSync(RUN_DEMO_SH).mode;
+      expect(mode & 0o111).toBeTruthy();
+    }
     expect(existsSync(ZIP_PATH)).toBe(false);
   });
 
