@@ -28,6 +28,10 @@ export interface VerifyTestRef {
   line: number;
   /** Trimmed snippet of the matching test line. */
   snippet: string;
+  /** Assertion mode only: true when the ref is inside a qualifying span. */
+  qualifying?: boolean;
+  /** Assertion mode only: true when the ref falls inside a skip/todo/failing span. */
+  skipped?: boolean;
 }
 
 export interface VerifyInput {

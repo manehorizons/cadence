@@ -15,6 +15,8 @@ export interface TestRef {
   snippet: string;
   /** Assertion mode only: true when the ref is inside a qualifying span. */
   qualifying?: boolean;
+  /** Assertion mode only: true when the ref falls inside a skip/todo/failing span (the "skip dodge"). */
+  skipped?: boolean;
 }
 
 export interface CoverageScanOptions {
@@ -63,7 +65,7 @@ export async function scanTestCoverage(
     const mode = opts.mode ?? 'mention';
 
     if (mode === 'assertion') {
-      const spans = findTestSpans(raw).filter((s) => s.hasAssertion);
+      const spans = findTestSpans(raw);
       AC_TOKEN_RE.lastIndex = 0;
       const seen = new Set<string>();
       for (const m of raw.matchAll(AC_TOKEN_RE)) {
@@ -80,7 +82,10 @@ export async function scanTestCoverage(
           file: relPath,
           line: lineNo,
           snippet: lineText,
-          qualifying: spans.some((s) => offset >= s.start && offset <= s.end),
+          qualifying: spans.some(
+            (s) => s.hasAssertion && !s.skipped && offset >= s.start && offset <= s.end,
+          ),
+          skipped: spans.some((s) => s.skipped && offset >= s.start && offset <= s.end),
         });
         out.set(id, arr);
       }
@@ -137,9 +142,18 @@ export function uncoveredAcs(
   return acIds.filter((id) => (coverage.get(id) ?? []).length === 0);
 }
 
+/** True iff `refs` is non-empty and none of them qualify (assertion mode). */
+function isFullyNonQualifying(refs: TestRef[]): boolean {
+  return refs.length > 0 && refs.every((r) => r.qualifying === false);
+}
+
 /**
  * Assertion mode: AC ids that have ≥1 recorded ref but none that qualifies
- * (i.e. mentioned somewhere, but never inside an asserting it()/test() block).
+ * (i.e. mentioned somewhere, but never inside an asserting it()/test() block),
+ * where at least one of those non-qualifying refs is NOT skip-caused (e.g. a
+ * bare comment mention with no containing span at all). Mutually exclusive
+ * with `skippedOnlyLinkedAcs` (phase 169): every AC with ≥1 ref and 0
+ * qualifying refs lands in exactly one of the two buckets.
  * Empty in mention mode (refs there carry no `qualifying` flag → treated as
  * not-weak as long as they exist).
  */
@@ -149,7 +163,26 @@ export function weaklyLinkedAcs(
 ): string[] {
   return acIds.filter((id) => {
     const refs = coverage.get(id) ?? [];
-    return refs.length > 0 && refs.every((r) => r.qualifying === false);
+    if (!isFullyNonQualifying(refs)) return false;
+    return !refs.every((r) => r.skipped === true);
+  });
+}
+
+/**
+ * Assertion mode (phase 169): AC ids that have ≥1 recorded ref, none of
+ * which qualify, where EVERY non-qualifying ref is skip-caused — i.e. every
+ * ref sits inside a `test.skip`/`.todo`/`.failing` span (the "skip dodge").
+ * Distinct from `weaklyLinkedAcs`, which requires at least one non-qualifying
+ * ref to NOT be skip-caused; the two are mutually exclusive.
+ */
+export function skippedOnlyLinkedAcs(
+  acIds: string[],
+  coverage: Map<AcId, TestRef[]>,
+): string[] {
+  return acIds.filter((id) => {
+    const refs = coverage.get(id) ?? [];
+    if (!isFullyNonQualifying(refs)) return false;
+    return refs.every((r) => r.skipped === true);
   });
 }
 

@@ -295,6 +295,87 @@ describe('runCoverageGate · assertion mode split refusal (phase 166 T3)', () =>
   });
 });
 
+// Phase 169 T1 (red): the skip-only refusal doesn't exist yet. Fed a literal
+// ref shaped like what the FIXED scanner (T2/T3) will produce for a
+// test.skip(...) block with an intact assertion — `qualifying: false,
+// skipped: true` — the gate today has no skip-aware branch at all, so this
+// ref falls into the generic weak-link bucket and gets the generic
+// "not inside an asserting it()/test() block" message instead of a distinct
+// "only linked test is skipped" message. Fixed in T4.
+describe('runCoverageGate · skip-only refusal (phase 169 T1, red)', () => {
+  const assertionConfig = { verification: { coverageMode: 'assertion' } } as never;
+
+  it('refuses a skip-only-linked AC with a distinct "skipped" message, not the generic weak-link message', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      [
+        'AC-1',
+        [
+          {
+            file: 'a.test.ts',
+            line: 3,
+            snippet: "test.skip('AC-1', ...)",
+            qualifying: false,
+            skipped: true,
+          } as VerifyTestRef,
+        ],
+      ],
+    ]);
+    const res = await runCoverageGate(ctx({ errs, config: assertionConfig, coverageMap: map }));
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('AC-1');
+    expect(joined).toContain('only linked test is skipped');
+    expect(joined).not.toContain('not inside an asserting it()/test() block');
+  });
+
+  // Phase 169 (T5): mixed refs for the same AC id, fed directly as a
+  // multi-entry array (the gate consumes whatever Map scanTestCoverage
+  // produces; these two entries model a skip-caused ref and a qualifying
+  // ref for AC-1 landing in the same array, as a real scan across two files
+  // would produce). A qualifying ref anywhere wins — the gate must pass with
+  // no refusal at all, not fall into either the weak-link or skip-only
+  // branch.
+  it('passes when an AC has both a skip-caused ref and a qualifying ref (mixed-pass, phase 169)', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      [
+        'AC-1',
+        [
+          { file: 'a.test.ts', line: 3, snippet: "test.skip('AC-1', ...)", qualifying: false, skipped: true },
+          { file: 'b.test.ts', line: 5, snippet: "it('AC-1', ...)", qualifying: true },
+        ],
+      ],
+    ]);
+    const res = await runCoverageGate(ctx({ errs, config: assertionConfig, coverageMap: map }));
+    expect(res.outcome).toBe('pass');
+    expect(errs).toEqual([]);
+  });
+
+  // Phase 169 (T5): mixed-weak. A skip-caused ref plus a non-qualifying,
+  // non-skip-caused ref (a bare mention) for the same AC id. Per the
+  // "every non-qualifying ref must be skip-caused" rule, one non-skip ref is
+  // enough to keep the AC out of the skip-only bucket — it refuses with the
+  // generic weak-link message, not the skip-specific one.
+  it('refuses with the generic weak-link message, not the skip-only message, when only some non-qualifying refs are skip-caused (mixed-weak, phase 169)', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      [
+        'AC-1',
+        [
+          { file: 'a.test.ts', line: 3, snippet: "test.skip('AC-1', ...)", qualifying: false, skipped: true },
+          { file: 'b.test.ts', line: 7, snippet: '// AC-1 mention only', qualifying: false },
+        ],
+      ],
+    ]);
+    const res = await runCoverageGate(ctx({ errs, config: assertionConfig, coverageMap: map }));
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('not inside an asserting it()/test() block');
+    expect(joined).not.toContain('only linked test is skipped');
+  });
+});
+
 // Phase 141 T5 (AC-3, AC-5): sealed test-coverage ignores --force and
 // --allow-missing-coverage, refusing with a distinct "gates.sealed" message
 // instead of the normal bypass hint.

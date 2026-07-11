@@ -20,13 +20,18 @@ export interface TestSpan {
   end: number;
   /** True iff a code-mode assertion token appears inside the call. */
   hasAssertion: boolean;
+  /** True iff the opener's modifier is `skip`, `todo`, or `failing` (the test does not run its body normally). */
+  skipped: boolean;
 }
 
 type ScanState = 'code' | 'sq' | 'dq' | 'tpl' | 'line' | 'block';
 
 /** Opener: `it`/`test` optionally chained with a no-arg modifier, then `(`. */
 const OPENER_AT =
-  /(?:it|test)(?:\.(?:only|skip|todo|concurrent|failing))?\s*\(/y;
+  /(?:it|test)(?:\.(only|skip|todo|concurrent|failing))?\s*\(/y;
+
+/** Modifiers that mean the test body is not run normally (the "skip dodge"). */
+const SKIPPED_MODIFIERS = new Set(['skip', 'todo', 'failing']);
 
 /** Assertion tokens (code-mode text only). Fixed set this phase. */
 const ASSERTION_RE = /\bexpect\s*\(|\bassert\b|\.should\b/;
@@ -39,7 +44,7 @@ export function findTestSpans(text: string): TestSpan[] {
   const spans: TestSpan[] = [];
   const n = text.length;
   let state: ScanState = 'code';
-  let active: { start: number; depth: number; code: string } | null = null;
+  let active: { start: number; depth: number; code: string; skipped: boolean } | null = null;
   let i = 0;
 
   while (i < n) {
@@ -64,7 +69,12 @@ export function findTestSpans(text: string): TestSpan[] {
       else if (c === ')') {
         active.depth--;
         if (active.depth === 0) {
-          spans.push({ start: active.start, end: i, hasAssertion: ASSERTION_RE.test(active.code) });
+          spans.push({
+            start: active.start,
+            end: i,
+            hasAssertion: ASSERTION_RE.test(active.code),
+            skipped: active.skipped,
+          });
           active = null;
           i++;
           continue;
@@ -80,7 +90,13 @@ export function findTestSpans(text: string): TestSpan[] {
       OPENER_AT.lastIndex = i;
       const m = OPENER_AT.exec(text);
       if (m && m.index === i) {
-        active = { start: i, depth: 1, code: '' };
+        const modifier = m[1];
+        active = {
+          start: i,
+          depth: 1,
+          code: '',
+          skipped: modifier !== undefined && SKIPPED_MODIFIERS.has(modifier),
+        };
         i = i + m[0].length; // position just past the opening '('
         continue;
       }
