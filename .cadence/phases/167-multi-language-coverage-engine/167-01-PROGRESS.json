@@ -1,0 +1,128 @@
+{
+  "draftId": "167-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-11T16:02:53.728Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/python.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/coverage-profiles-python.test.ts"
+      ],
+      "updatedAt": "2026-07-11T16:13:42.123Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/go.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/coverage-profiles-go.test.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/a7b9dfb1-4b24-4501-adda-d5729f80b04d/scratchpad/adversarial-go.mts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/engine.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/coverage-profiles-engine.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/mask.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/a7b9dfb1-4b24-4501-adda-d5729f80b04d/scratchpad/mask-check.mjs",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/a7b9dfb1-4b24-4501-adda-d5729f80b04d/scratchpad/exploit-check.mjs",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/zzz-probe.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/strategies.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/zzz-repro-round4.test.ts"
+      ],
+      "updatedAt": "2026-07-11T17:03:50.712Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/rust.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/init/plan.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/init/plan.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/coverage-profiles-rust.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/zzz-adversarial-rust-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/mask.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/zzz-adversarial-fence.test.ts"
+      ],
+      "updatedAt": "2026-07-11T17:33:19.676Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/php.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/coverage-profiles-php.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/coverage-profiles-php-probe.test.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/a7b9dfb1-4b24-4501-adda-d5729f80b04d/scratchpad/heredoc-repro.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/zz-adversarial-php-checks.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/mask.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/a7b9dfb1-4b24-4501-adda-d5729f80b04d/scratchpad/heredoc-adversarial.ts"
+      ],
+      "updatedAt": "2026-07-11T17:59:30.298Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/coverage-dispatch.test.ts"
+      ],
+      "updatedAt": "2026-07-11T18:10:33.506Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/cli/commands/verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/cli/register.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/cli/verify-coverage.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/types/src/config.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/custom.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/verify/coverage-profiles/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/config/loader.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/tutorial/fixtures.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/types/tests/config.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/config/coverage-profiles.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/verify/coverage-profiles-custom.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/config/_adversarial-t7.test.ts"
+      ],
+      "updatedAt": "2026-07-11T18:33:18.029Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/config/coverage-profiles.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/config/tmp-adversarial-review.test.ts"
+      ],
+      "updatedAt": "2026-07-11T18:36:55.350Z"
+    },
+    "T9": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/docs/reference/config.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/docs/coverage-language-matrix.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/src/doctor/run.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/doctor/run.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/cli/doctor.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/services/doctor.test.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/a7b9dfb1-4b24-4501-adda-d5729f80b04d/scratchpad/verify-doctor-lang.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/multi-language-coverage-engine/packages/core/tests/doctor/zz-adversarial-verify.test.ts"
+      ],
+      "updatedAt": "2026-07-11T18:56:04.842Z"
+    }
+  }
+}
