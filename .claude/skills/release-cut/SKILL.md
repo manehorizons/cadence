@@ -1,6 +1,6 @@
 ---
 name: release-cut
-description: Cut and verify a CADENCE release end-to-end — inventory unreleased phases, audit changesets, lockstep version bump, CLAUDE.md doc-sync, release PR, operator-triggered Release workflow, and independent npm/tag/GitHub verification. Use when the user says "cut a release", "release vX.Y", "publish to npm", or when a release phase begins.
+description: Cut and verify a CADENCE release end-to-end — inventory unreleased phases, audit changesets, lockstep version bump, a full doc-sync verification pass (automated doc tests + manual stale-version-reference sweep), release PR, operator-triggered Release workflow, and independent npm/tag/GitHub verification. Use when the user says "cut a release", "release vX.Y", "publish to npm", or when a release phase begins.
 ---
 
 # Release cut
@@ -31,13 +31,34 @@ release PR, and firing the Release workflow. Neither happens on a generic
   `packages/core/tests/docs/doc-sync-hook.test.ts` re-asserts it in CI.
 - Run the full pipeline locally: `pnpm turbo run lint typecheck test build`.
 
-## 3 — Release PR
+## 3 — Doc-sync verification (mandatory, not implied by the pipeline run)
+
+Step 2's full pipeline only proves the *automated* doc-content tests pass —
+it does not prove every doc mentioning the old version got updated, since
+several repo docs (`DESIGN.md`, `docs/*`) carry version references with no
+test covering them.
+
+- Run the doc-content test surface explicitly and confirm it's green:
+  `pnpm --filter @manehorizons/cadence-core test -- tests/docs`,
+  `pnpm --filter @manehorizons/cadence-host-claude-code test -- docs-command-count docs-published`,
+  `pnpm --filter @manehorizons/cadence-host-codex test -- docs-published`.
+- Grep the whole repo for the **previous** version string and triage every
+  hit: `grep -rn "<old-version>" --include="*.md" . | grep -v node_modules |
+  grep -v CHANGELOG | grep -v '\.cadence/' | grep -v '\.changeset/'`. A hit
+  in a CHANGELOG or a "reconstructed for vX.Y.Z" narrative note is
+  historical and correct as-is; a hit describing *current* state (e.g.
+  `DESIGN.md`'s "Current architecture (as of vX.Y.Z)" line, which slipped
+  once already in the v1.43.0 cut) needs bumping to the new version.
+- Note anything fixed (or anything left alone with its reason) in the
+  release PR body and the handoff.
+
+## 4 — Release PR
 
 - Subject: `chore(release): vX.Y.Z -- <one-line bundle summary>`.
 - Land it via the `pr-land` skill (protected main; `ci-success` required;
   merge only on explicit operator consent).
 
-## 4 — Publish (operator-triggered, never automatic)
+## 5 — Publish (operator-triggered, never automatic)
 
 - After the release PR merges, ask for the explicit go-ahead, then trigger
   the manual `Release` workflow
@@ -46,7 +67,7 @@ release PR, and firing the Release workflow. Neither happens on a generic
   `pnpm -r publish` and fails on already-published versions; a red
   release-integrity step is often just an npm-CDN propagation race.
 
-## 5 — Verify independently (never trust the workflow's own report)
+## 6 — Verify independently (never trust the workflow's own report)
 
 Run all three, regardless of what the workflow says:
 
@@ -66,7 +87,7 @@ artifact by hand (`git tag -a` + push, `gh release create`). Some packages
 missing on npm → wait out propagation (minutes), re-check before touching
 anything; only then consider a targeted republish.
 
-## 6 — Close the loop
+## 7 — Close the loop
 
 - Settle the release phase (two-commit convention) if it ran as one.
 - Promote recommendations now shipped: `settle run --ship-ref "<PR/vX.Y.Z>"`
