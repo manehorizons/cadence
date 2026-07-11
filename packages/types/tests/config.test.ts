@@ -524,6 +524,179 @@ describe('verification.coverageMode (phase 108)', () => {
   });
 });
 
+describe('verification.coverageProfiles schema (phase 167 T7, AC-7)', () => {
+  it('AC-7: defaults to [] when verification is entirely omitted', () => {
+    const { verification: _drop, ...withoutVerification } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutVerification);
+    expect(parsed.verification.coverageProfiles).toEqual([]);
+  });
+
+  it('AC-7: defaults to [] when verification is present but coverageProfiles is omitted', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verification: { testGlobs: ['packages/**/*.test.ts'] },
+    });
+    expect(parsed.verification.coverageProfiles).toEqual([]);
+  });
+
+  it('AC-7: defaultConfig itself carries an empty coverageProfiles list', () => {
+    expect(defaultConfig.verification.coverageProfiles).toEqual([]);
+  });
+
+  it('AC-7: accepts a well-formed custom profile entry (Ruby-style do-end-keyword shape)', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verification: {
+        coverageProfiles: [
+          {
+            id: 'ruby-rspec',
+            extensions: ['.rb'],
+            openerPattern: String.raw`\bit\s+'[^']*'\s+do\b`,
+            assertionPattern: String.raw`\bexpect\s*\(`,
+            strategy: 'do-end-keyword',
+            keyword: { blockOpenKeywords: ['do'], endKeyword: 'end' },
+            openerMatchesStrings: true,
+            syntax: {
+              comments: { line: ['#'] },
+              strings: [{ open: "'" }, { open: '"' }],
+            },
+          },
+        ],
+      },
+    });
+    expect(parsed.verification.coverageProfiles).toHaveLength(1);
+    expect(parsed.verification.coverageProfiles[0]?.id).toBe('ruby-rspec');
+    expect(parsed.verification.coverageProfiles[0]?.keyword).toEqual({
+      blockOpenKeywords: ['do'],
+      endKeyword: 'end',
+    });
+  });
+
+  it('AC-7: syntax.comments/strings default to empty arrays when omitted', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verification: {
+        coverageProfiles: [
+          {
+            id: 'bare',
+            extensions: ['.bare'],
+            openerPattern: 'x',
+            assertionPattern: 'y',
+            strategy: 'call-expression',
+            syntax: {},
+          },
+        ],
+      },
+    });
+    expect(parsed.verification.coverageProfiles[0]?.syntax).toEqual({
+      comments: { line: [], block: [] },
+      strings: [],
+    });
+  });
+
+  it('AC-7: rejects a coverageProfiles entry missing required fields (e.g. no strategy)', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        verification: {
+          coverageProfiles: [
+            {
+              id: 'bad',
+              extensions: ['.bad'],
+              openerPattern: 'x',
+              assertionPattern: 'y',
+              syntax: {},
+            } as never,
+          ],
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('AC-7: rejects a coverageProfiles entry missing required "syntax"', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        verification: {
+          coverageProfiles: [
+            {
+              id: 'bad',
+              extensions: ['.bad'],
+              openerPattern: 'x',
+              assertionPattern: 'y',
+              strategy: 'call-expression',
+            } as never,
+          ],
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('AC-7: rejects an empty extensions array', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        verification: {
+          coverageProfiles: [
+            {
+              id: 'bad',
+              extensions: [],
+              openerPattern: 'x',
+              assertionPattern: 'y',
+              strategy: 'call-expression',
+              syntax: {},
+            },
+          ],
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('AC-7: rejects an unknown strategy literal', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        verification: {
+          coverageProfiles: [
+            {
+              id: 'bad',
+              extensions: ['.bad'],
+              openerPattern: 'x',
+              assertionPattern: 'y',
+              strategy: 'regex-magic' as never,
+              syntax: {},
+            },
+          ],
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('AC-7: accepts a do-end-keyword entry with no keyword config at the SCHEMA level (the conditional requirement is enforced at config-load time, not by this schema — see packages/core/src/verify/coverage-profiles/custom.ts)', () => {
+    // Deliberate: the schema alone cannot express "keyword required iff
+    // strategy === 'do-end-keyword'" with a message naming the field and a
+    // suggested fix as clearly as plain TypeScript can — see
+    // CoverageProfileConfigZ's `keyword` field docstring. This shape is
+    // schema-valid but refused by core's compileCustomProfile at load time.
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      verification: {
+        coverageProfiles: [
+          {
+            id: 'incomplete-keyword-profile',
+            extensions: ['.kw'],
+            openerPattern: 'x',
+            assertionPattern: 'y',
+            strategy: 'do-end-keyword',
+            syntax: {},
+          },
+        ],
+      },
+    });
+    expect(parsed.verification.coverageProfiles[0]?.keyword).toBeUndefined();
+  });
+});
+
 describe('verification.coverageMode default flip (phase 139 / AC-1)', () => {
   it('defaultConfig.verification.coverageMode is "assertion"', () => {
     expect(defaultConfig.verification.coverageMode).toBe('assertion');

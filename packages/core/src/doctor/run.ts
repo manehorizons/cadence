@@ -11,6 +11,7 @@ import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
 import { detectProjectLanguage } from '../init/plan.js';
+import { getProfileForExtension } from '../verify/coverage-profiles/registry.js';
 import {
   pass,
   fail,
@@ -586,14 +587,35 @@ export async function checkRecommendationShippedDrift(root: string): Promise<Doc
   }
 }
 
+/** A representative extension per `ProjectLanguage` (`../init/plan.js`), used
+ * only to probe the live coverage-profile registry — not a duplicate source
+ * of truth for which languages exist, since `getProfileForExtension` is the
+ * actual check. */
+const LANGUAGE_PROBE_EXTENSION: Partial<Record<string, string>> = {
+  js: '.ts',
+  python: '.py',
+  go: '.go',
+  rust: '.rs',
+  php: '.php',
+};
+
 /**
  * Flags `verification.coverageMode: 'assertion'` paired with a detected
- * project language that has no assertion-mode span-parsing support yet
- * (Phase 166, AC-4 — everything but js/ts today). `mention` mode is always
- * fine regardless of language, so this only fires on the one unsafe
- * pairing. Read-only, best-effort, never throws (doctor convention): a
- * config-load failure just skips the check, since `checkInitialized`/
- * `checkState` already own reporting a broken config.
+ * project language that has no assertion-mode span-parsing support.
+ * `mention` mode is always fine regardless of language, so this only fires
+ * on the one unsafe pairing. Support is checked against the LIVE
+ * coverage-profile registry (`../verify/coverage-profiles/registry.js`),
+ * not a hardcoded language list — phase 166 (AC-4) shipped only a js/ts
+ * profile, so this check originally hardcoded `lang === 'js'`; phase 167
+ * built real profiles for python/go/rust/php too, and a doc-content review
+ * during that phase caught that this check still hardcoded the pre-167
+ * language list, which would have kept producing a false "no support yet"
+ * warning for exactly the four languages the phase was built to support —
+ * checking the registry directly means this check never goes stale again
+ * when a future language profile ships. Read-only, best-effort, never
+ * throws (doctor convention): a config-load failure just skips the check,
+ * since `checkInitialized`/`checkState` already own reporting a broken
+ * config.
  */
 export async function checkCoverageModeLanguageSupport(root: string): Promise<DoctorCheck> {
   try {
@@ -605,10 +627,11 @@ export async function checkCoverageModeLanguageSupport(root: string): Promise<Do
       );
     }
     const lang = detectProjectLanguage(root);
-    if (lang === 'js') {
+    const probeExt = LANGUAGE_PROBE_EXTENSION[lang];
+    if (probeExt !== undefined && getProfileForExtension(probeExt) !== undefined) {
       return pass(
         'coverage-mode-language-support',
-        "Detected language ('js') has assertion-mode span-parsing support.",
+        `Detected language ('${lang}') has assertion-mode span-parsing support.`,
       );
     }
     return fail(

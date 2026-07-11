@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { CadenceConfigZ, defaultConfig, type CadenceConfig } from '@manehorizons/cadence-types';
 import { ConfigInvalidError } from '../errors.js';
 import { atomicWriteJSON } from '../state/atomic-write.js';
+import { mergeCustomProfiles } from '../verify/coverage-profiles/registry.js';
 
 export async function loadConfig(repoRoot: string): Promise<CadenceConfig> {
   const path = join(repoRoot, '.cadence', 'config.json');
@@ -30,6 +31,12 @@ export async function loadConfig(repoRoot: string): Promise<CadenceConfig> {
   if (!result.success) {
     throw new ConfigInvalidError(`config.json failed schema validation: ${result.error.message}`);
   }
+  // Phase 167, T7 (AC-7): validate + register any custom assertion-coverage
+  // profiles at config-load time, not lazily on first use. Throws
+  // `ConfigInvalidError` (refuse + suggest) on a bad regex, a missing
+  // `keyword` config for `do-end-keyword`, or a built-in extension
+  // collision — never silently ignored.
+  mergeCustomProfiles(result.data.verification.coverageProfiles);
   return result.data;
 }
 

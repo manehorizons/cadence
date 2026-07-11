@@ -1,6 +1,4 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { defaultConfig } from '@manehorizons/cadence-types';
 import { doctorService } from '../../src/services/doctor.js';
@@ -11,6 +9,10 @@ import type { DoctorReport } from '../../src/doctor/model.js';
  * T4 (phase 166, AC-4): `verification.coverageMode: 'assertion'` paired with
  * a detected project language that has no assertion-mode span-parsing
  * support yet is flagged by the `coverage-mode-language-support` check.
+ * Phase 167 gave python/go/rust/php real support (checked against the live
+ * coverage-profile registry, not a hardcoded language list), so an
+ * unrecognized ('unknown') language is used here instead of python to keep
+ * exercising the "no support" branch.
  *
  * The check itself now lives in `doctor/run.ts` (as `checkCoverageModeLanguageSupport`,
  * fully covered in `tests/doctor/run.test.ts`) so it surfaces from both the
@@ -40,9 +42,9 @@ afterEach(async () => {
 
 describe('doctorService — coverage-mode language support (phase 166, AC-4)', () => {
   it('surfaces the coverage-mode-language-support check via runDoctor', async () => {
-    active = await tempRepo({ initialized: true, projectName: 'doc-lang-python' });
+    active = await tempRepo({ initialized: true, projectName: 'doc-lang-unknown' });
     expect(defaultConfig.verification.coverageMode).toBe('assertion'); // sanity: fixture starts in assertion mode
-    await writeFile(join(active.root, 'pyproject.toml'), '[tool.poetry]\nname = "demo"\n');
+    // No package.json/pyproject.toml/go.mod/Cargo.toml/composer.json — detectProjectLanguage() → 'unknown'.
 
     const { io } = captureIO();
     const result = await doctorService(active.root, io);
@@ -53,7 +55,7 @@ describe('doctorService — coverage-mode language support (phase 166, AC-4)', (
     expect(check?.severity).toBe('warning');
     expect(check?.detail).toMatch(/coverageMode/);
     expect(check?.detail).toMatch(/assertion/);
-    expect(check?.detail).toMatch(/python/);
+    expect(check?.detail).toMatch(/unknown/);
     expect(check?.remediation).toMatch(/cadence config edit coverageMode/);
   });
 });

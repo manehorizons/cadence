@@ -110,7 +110,7 @@ describe('runCoverageGate · assertion mode (AC-5)', () => {
     expect(res.outcome).toBe('refuse');
     const joined = errs.join('');
     expect(joined).toContain('AC-1');
-    expect(joined).toContain('not inside an asserting it()/test() block');
+    expect(joined).toContain('not inside a recognized asserting test block');
     expect(joined).toContain('assertion mode'); // refusal names the mode
     // It is NOT the plain "has no linked test" message — it was mentioned.
     expect(joined).not.toContain('AC-1 has no linked test');
@@ -147,7 +147,7 @@ describe('runCoverageGate · assertion mode (AC-5)', () => {
     expect(res.outcome).toBe('refuse');
     const joined = errs.join('');
     expect(joined).toContain('AC-1');
-    expect(joined).toContain('not inside an asserting it()/test() block');
+    expect(joined).toContain('not inside a recognized asserting test block');
     expect(joined).toContain('AC-2 has no linked test');
   });
 
@@ -450,7 +450,7 @@ describe('runCoverageGate · sealed (phase 141)', () => {
     );
     expect(res.outcome).toBe('refuse');
     const joined = errs.join('');
-    expect(joined).toContain('not inside an asserting it()/test() block');
+    expect(joined).toContain('not inside a recognized asserting test block');
     expect(joined).toContain('gates.sealed');
     expect(joined).not.toContain('Pass --allow-missing-coverage to bypass');
     expect(res.flags?.coverageBypassed).toBe(false);

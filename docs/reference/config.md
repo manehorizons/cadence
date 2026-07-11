@@ -145,7 +145,70 @@ Boundary definitions for each tier. The coherence-check gate validates DRAFT fro
 |---|---|---|---|
 | `verification.testGlobs` | `string[]` | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` | Glob patterns the test-coverage scanner walks when checking AC coverage. Supports `**` and `*`. Set by `cadence init` based on repo layout and detected project language (Phase 166) — see [cadence init behavior](#cadence-init-behavior). |
 | `verification.testCommand` | `string` (optional) | derived by `cadence init` — see [cadence init behavior](#cadence-init-behavior) | Shell command the `build-test-must-pass` gate runs at `cadence settle run`. When set, settle runs it and refuses on a non-zero exit unless `--allow-failing-build` / `--force`. When absent, the gate is evaluated but cannot enforce — it still passes, but (as of Phase 139) writes a loud, non-blocking stderr notice instead of passing silently. |
-| `verification.coverageMode` | `"mention"` \| `"assertion"` | `"assertion"` for a fresh `cadence init` when the detected project language is js/ts, `"mention"` for every other detected or unknown language (Phase 166); the schema-level fallback for configs that predate this field stays `"mention"` | How the `test-coverage` gate counts an `AC-N` token. `mention` counts any occurrence of the token anywhere in a matched test file, including comments. `assertion` counts it only when it sits inside an asserting `it()`/`test()` block; a comment-only or assertion-less mention is reported as a *weak link* and the gate refuses with a distinct hint (closing the "mentioned-but-not-tested" false positive). `assertion` mode currently has real span-parsing support for js/ts only — see [cadence init behavior](#cadence-init-behavior). Edit it with `cadence config edit coverageMode`. |
+| `verification.coverageMode` | `"mention"` \| `"assertion"` | `"assertion"` for a fresh `cadence init` when the detected project language is js/ts, `"mention"` for every other detected or unknown language (Phase 166); the schema-level fallback for configs that predate this field stays `"mention"` | How the `test-coverage` gate counts an `AC-N` token. `mention` counts any occurrence of the token anywhere in a matched test file, including comments. `assertion` counts it only when it sits inside an asserting test block for that file's language; a comment-only or assertion-less mention is reported as a *weak link* and the gate refuses with a distinct hint (closing the "mentioned-but-not-tested" false positive). `assertion` mode has real span-parsing support for five built-in languages — js/ts, python, go, rust, php — dispatched per file by extension; see the [supported-language matrix](#supported-language-matrix-assertion-mode). Edit it with `cadence config edit coverageMode`. |
+| `verification.coverageProfiles` | `CoverageProfileConfig[]` | `[]` | Operator-defined custom assertion-mode profiles that extend `assertion` mode to a language with no built-in profile. Validated at config-load time — a bad regex, a missing required field, or an extension collision with a built-in profile refuses loudly, naming the offending field/collision and suggesting a fix. Add-only: a custom profile can never override a built-in's extensions. See [Custom coverage profiles](#custom-coverage-profiles). |
+
+### Supported-language matrix (assertion mode)
+
+`assertion` mode's span-finder is one shared string/comment-aware engine (phase 167) parameterized by a per-language **profile**: an opener pattern (what counts as a test), an assertion pattern (what counts as asserting inside it), a comment/string table (so text inside comments/strings is never mistaken for code), and one of four block-boundary strategies. Each test file is dispatched to the profile registered for its extension; a file whose extension no profile claims — or a block shape no profile positively recognizes — contributes zero spans (false-negative-over-false-positive is the invariant: an unrecognized shape never fabricates a span). The table below is generated from, and kept in sync with, the live profile registry (`packages/core/src/verify/coverage-profiles/registry.ts`'s `listProfiles()`) by a doc-content test (`packages/core/tests/docs/coverage-language-matrix.test.ts`) that fails on drift in either direction — a profile added without a matching row here, or a row here with no matching profile, both fail the build.
+
+<!-- cadence:coverage-languages:start -->
+| Language | Profile id | Extensions | Block strategy | Recognized shape(s) |
+|---|---|---|---|---|
+| JS/TS | `js-ts` | `.ts`, `.tsx`, `.js`, `.jsx` | `call-expression` | `it(...)` / `test(...)` calls, optionally chained with `.only`/`.skip`/`.todo`/`.concurrent`/`.failing`, asserting via `expect(...)`, a bare `assert`, or `.should`. |
+| Python | `python` | `.py` | `indentation-delimited` | `[async ]def test_<name>(...):` — module-level or a class method (indentation is resolved relative to the `def` line itself, not the enclosing class) — asserting via a standalone `assert` statement. A `def` not prefixed `test_` is never an opener, matching pytest's own collection rule. |
+| Go | `go` | `.go` | `brace-delimited` | `func Test<Name>(t *testing.T)` where `<Name>` is empty or starts with an uppercase letter, digit, or underscore (mirrors `go vet`'s own naming rule) and the parameter's declared type is literally `*testing.T`, asserting via `t.Error`/`t.Errorf`/`t.Fatal`/`t.Fatalf` or testify's `assert.<Method>(...)`/`require.<Method>(...)`. Table-driven tests and `t.Run(...)` subtests fold into the outer function's span — they are never mistaken for a second, independent test opener. |
+| Rust | `rust` | `.rs` | `brace-delimited` | `#[test]`-attributed functions — optionally stacked with `#[should_panic]`, and/or nested inside `#[cfg(test)] mod tests { ... }` — asserting via `assert!`, `assert_eq!`, or `assert_ne!`. A bare `#[should_panic]` with no `#[test]` on the same function is never treated as a test, matching real Rust semantics. |
+| PHP | `php` | `.php` | `brace-delimited` | Both shapes in one profile: Pest `it('description', function () { ... })` / `test('description', function () { ... })` closures asserting via `expect(...)` (a description string is required — a bare closure with no description never matches), **and** PHPUnit `public function test<Name>(...): ...  { ... }` methods asserting via `$this->assert*(...)`. A non-asserting `test`-prefixed PHPUnit method still yields a span (with no assertion found), matching PHPUnit's own reflection-based discovery, which collects it regardless. |
+<!-- cadence:coverage-languages:end -->
+
+Each built-in profile's own module (`packages/core/src/verify/coverage-profiles/{js-ts,python,go,rust,php}.ts`) documents its fixed assertion set, string/comment edge cases (e.g. Go's raw strings, Rust's arbitrary-hash-count raw strings and non-nesting block comments, PHP's heredoc/nowdoc), and — for go/rust/php — the specific spoofing vectors their reviews found and closed (a comment- or string-embedded fake opener token, a nested-parens false terminator, an unmasked heredoc). Read the profile's docstring for the full detail behind any given row above.
+
+To see exactly which test files, profile, and spans a specific AC resolved against — and why a span did or didn't satisfy the configured `coverageMode` — run [`cadence verify coverage --explain AC-N`](commands.md#verify) (`--json` for machine consumption); it is read-only and never mutates loop state.
+
+### Custom coverage profiles
+
+`verification.coverageProfiles` extends `assertion` mode to a language with no built-in profile — an unsupported language is never a dead end. Each entry is a JSON-serializable mirror of the engine's internal `LanguageProfile` shape (`CoverageProfileConfig`, `packages/types/src/config.ts`); `openerPattern`/`assertionPattern` are regex **source strings**, compiled (with the sticky `y` flag added to `openerPattern`) at config-load time — an invalid regex is refused loudly, naming the profile id and the field.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | `string` | yes | Unique profile id, e.g. `"ruby-rspec"`. Named in load-time refusal messages. |
+| `extensions` | `string[]` (min 1) | yes | Lowercase file extensions this profile claims, e.g. `[".rb"]`. Refused at load time if any extension is already owned by a **built-in** profile — add-only, never an override. |
+| `openerPattern` | `string` (regex source) | yes | What counts as a test opener. Compiled with the sticky `y` flag. |
+| `assertionPattern` | `string` (regex source) | yes | What counts as an assertion inside an opener's resolved block. |
+| `strategy` | `"call-expression"` \| `"brace-delimited"` \| `"indentation-delimited"` \| `"do-end-keyword"` | yes | Which block-boundary primitive resolves this profile's opener. `do-end-keyword` bounds the block from a block-opening keyword (e.g. `do`) to a matching `end`-family keyword — the shape ruby/elixir-style languages need, and the one no *built-in* profile ships (it's exercised end-to-end by a custom-profile test fixture instead). |
+| `syntax` | `{ comments: { line?: string[], block?: [string, string][] }, strings: { open: string, close?: string, escape?: string \| null }[] }` | yes | Comment/string delimiter table used to mask non-code text before opener/assertion matching. Required — even an empty table must be declared explicitly, rather than silently getting no masking. |
+| `keyword` | `{ blockOpenKeywords: string[], endKeyword: string }` | only when `strategy` is `"do-end-keyword"` | Refused at load time, naming the profile id, when missing for that strategy. |
+| `openerMatchesStrings` | `boolean` | no (default `false`) | Default `false` masks string content from opener matching, same as every other masked region (the false-positive-averse default). Set `true` only when the opener's own syntax legitimately spans a quoted string as structure, not incidental content — e.g. a `do-end-keyword` opener like `it 'title' do`, where the quotes are the framework's own title-delimiter syntax. |
+
+A collision with a **built-in** extension (`.ts`, `.py`, `.go`, `.rs`, `.php`, ...) is refused loudly at load time, naming the colliding extension and the built-in profile that already owns it, with a suggested fix (choose a different extension, or drop the entry) — custom profiles are add-only by design (phase 167 operator decision, 2026-07-11).
+
+Example — a Ruby-style `do-end-keyword` profile for RSpec's `it '...' do ... end` blocks (adapted from the fixture `packages/core/tests/verify/coverage-profiles-custom.test.ts` exercises end-to-end):
+
+```jsonc
+// .cadence/config.json
+{
+  "verification": {
+    "coverageProfiles": [
+      {
+        "id": "ruby-rspec",
+        "extensions": [".rb"],
+        "openerPattern": "\\bit\\s+'[^']*'\\s+do\\b",
+        "assertionPattern": "\\bexpect\\s*\\(",
+        "strategy": "do-end-keyword",
+        "keyword": { "blockOpenKeywords": ["do"], "endKeyword": "end" },
+        "openerMatchesStrings": true,
+        "syntax": {
+          "comments": { "line": ["#"] },
+          "strings": [{ "open": "'" }, { "open": "\"" }]
+        }
+      }
+    ]
+  }
+}
+```
+
+`openerMatchesStrings: true` is needed here because the opener's own syntax (`it 'title' do`) legitimately spans the quoted title — without it, the title's quotes would be masked to blank space along with every other string and the opener would never match at all.
 
 ---
 
@@ -630,11 +693,11 @@ Detected from the repo layout and the detected project language at init time:
 | `js` + no `packages/` directory (single-package) | `["**/*.test.ts", "**/*.test.tsx"]` |
 | `python` | `["**/test_*.py", "**/*_test.py"]` |
 | `go` | `["**/*_test.go"]` |
-| `rust` | `["tests/**/*.rs", "**/*_test.rs"]` |
+| `rust` | `["tests/**/*.rs", "**/*_test.rs", "src/**/*.rs"]` |
 | `php` | `["**/*Test.php", "tests/**/*.php"]` |
 | `unknown` | same layout-based fallback as `js` (monorepo vs. single-package glob above) |
 
-The scanner prunes `node_modules/`, `dist/`, `.git/`, and `.turbo/`, so the broad single-package glob is safe.
+The scanner prunes `node_modules/`, `dist/`, `.git/`, and `.turbo/`, so the broad single-package glob is safe. Rust's `src/**/*.rs` entry was added in Phase 167 (AC-10): idiomatic Rust unit tests commonly live inline in a `#[cfg(test)] mod tests { ... }` block within the same file as the code under test, rather than only under `tests/` or in a `*_test.rs`-suffixed file — safe to widen because the attribute-aware rust coverage profile only ever yields spans for genuine `#[test]` functions, never from ordinary source.
 
 ### `verification.testCommand` (Phase 139)
 
@@ -659,7 +722,7 @@ A fresh `cadence init` originally wrote `"assertion"` unconditionally for every 
 | `js` | `"assertion"` |
 | `python`, `go`, `rust`, `php`, or `unknown` | `"mention"` — init also prints a stderr notice naming the detected language and explaining why `assertion` mode wasn't used |
 
-This distinction exists because `assertion` mode's span-finder — the code that locates the asserting `it()`/`test()` block an `AC-N` token sits inside — currently only understands JS/TS test files. Defaulting a non-JS/TS project to `assertion` would produce a gate that can never pass no matter how well-tested the code is, since no test file would ever match an assertion-shaped span. Writing `"mention"` instead is a safe, honest default: it does not mean CADENCE has gained Python/Go/Rust/PHP test-parsing support (it has not — that is tracked separately, out of scope for this phase), only that those languages get a coverage mode that actually works with today's parser rather than one that is permanently unsatisfiable. Any project can still opt into `assertion` mode explicitly via `cadence config edit coverageMode` once real span support for that language exists.
+This table records what a **fresh `cadence init`** writes, not what `assertion` mode can actually parse — those are no longer the same thing. When Phase 166 shipped this table, `assertion` mode's span-finder understood JS/TS test files only, so defaulting a non-JS/TS project to `assertion` would have produced a gate that could never pass no matter how well-tested the code was. As of Phase 167, the span-finder is a shared multi-language engine with real built-in support for python, go, rust, and php too — see the [supported-language matrix](#supported-language-matrix-assertion-mode). Phase 167 deliberately left this init default table itself unchanged (it shipped the span-parsing, not a revisit of what a fresh `init` auto-writes): a fresh init still writes `"mention"` for every non-js detected language, and switching one of `python`/`go`/`rust`/`php` to `"assertion"` is now a manual, informed choice via `cadence config edit coverageMode` — real span support exists for them today, so the switch genuinely works rather than being permanently unsatisfiable. `unknown` still gets `"mention"` since there is no profile to dispatch to at all until an operator adds one via [`verification.coverageProfiles`](#custom-coverage-profiles).
 
 This only affects what a **new** `init` writes; existing `.cadence/config.json` files are never rewritten.
 

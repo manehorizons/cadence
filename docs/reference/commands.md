@@ -40,6 +40,7 @@ Two CLIs are documented here:
   - [quickstart](#quickstart)
   - [activate](#activate)
   - [agent-prompt](#agent-prompt)
+  - [verify](#verify)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -94,6 +95,7 @@ quickstart
 activate
 agent-prompt
 dispatch
+verify
 <!-- cadence:commands:end -->
 
 ---
@@ -871,7 +873,7 @@ v1 check set:
 | `handoff-retention` | *(v1.20)* `SESSION-*.md` handoff docs are within `handoff.retain`, or — when retention is unset — have not accumulated past the warn threshold | warning |
 | `verification-readiness` | *(v1.22)* the deep-verify seam uses a **real** provider whose credentials are present (i.e. settle gates do real AI verification, not mock). Warns on all-mock (→ `cadence activate`) or a real provider missing its key | warning |
 | `recommendation-shipped-drift` | no recommendation is stuck in `settle-pending` — its linked phase settled locally but nobody has confirmed the work actually shipped. Warns naming each one's id, title, phase, and the exact `recommendation promote --status=shipped` command to run | warning |
-| `coverage-mode-language-support` | *(Phase 166)* `verification.coverageMode` **is** `'assertion'` paired with a detected project language that has no assertion-mode span-parsing support yet (js/ts only, today). Warns naming the detected language and the exact `cadence config edit coverageMode` command to switch to `'mention'` | warning |
+| `coverage-mode-language-support` | *(Phase 166; registry-driven since Phase 167)* `verification.coverageMode` **is** `'assertion'` paired with a detected project language with no registered assertion-mode coverage profile — checked against the live profile registry (js/ts, Python, Go, Rust, and PHP all have real support as of Phase 167; see `docs/reference/config.md`'s supported-language matrix). Warns naming the detected language and the exact `cadence config edit coverageMode` command to switch to `'mention'` | warning |
 
 Host checks run only when the relevant files exist; their absence is not a
 problem. Codex readiness checks activate when `.codex/` exists or `AGENTS.md`
@@ -1933,6 +1935,49 @@ The same block is also printed at the end of `cadence init` so you see it on eve
 new project without having to ask for it.
 
 **Exit codes** — `0` always (pure output; no state read or write).
+
+---
+
+### verify
+
+```
+Usage: cadence verify [options] [command]
+
+Read-only verification diagnostics
+```
+
+**Subcommands**
+
+| Subcommand | Description |
+|---|---|
+| `coverage --explain <acId>` | Explain why an AC does or does not satisfy coverage (read-only, no state mutation) |
+
+**`coverage` options**
+
+| Option | Description |
+|---|---|
+| `--explain <acId>` | AC id to explain, e.g. `AC-8` (required) |
+| `--json` | Emit machine-readable JSON instead of a human-readable report |
+
+**Behavior** (phase 167, T8) — a read-only diagnostic companion to the `test-coverage`
+gate (`docs/concepts.md`). It re-derives, for a single target AC id, everything the
+gate computes internally but never prints: which test files matched
+`verification.testGlobs`, which coverage profile (`docs/reference/config.md`'s
+supported-language matrix) scanned each one — or, for an unclaimed extension, that
+none did — every span the profile found, and, per occurrence of the AC token, which
+span (if any) contains it and a plain-language reason it does or doesn't satisfy the
+configured `coverageMode`, e.g. "token present but block not asserting" (`assertion`
+mode) vs. a straightforward mention (`mention` mode). Globs and mode are read from
+`.cadence/config.json` (defaults apply if absent); it does not require an active
+BUILD/phase and never reads or writes `.cadence/state.json`, `STATE.md`, or any other
+loop state — safe to run at any time, including outside the loop. `--json` emits the
+same facts as structured JSON on stdout (`{ acId, mode, globs, anyFilesMatched, files,
+satisfied }`); human mode prints an equivalent multi-line report, also on stdout.
+Diagnostics (config-load failures, an empty `--explain` value) go to stderr.
+
+**Exit codes** — `0` on a successful run (regardless of whether the AC is satisfied —
+this command diagnoses, it does not gate); `1` on a config-load failure or an empty
+`--explain` value.
 
 ---
 

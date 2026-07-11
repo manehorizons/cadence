@@ -39,6 +39,7 @@ export const SANDBOX_CONFIG: CadenceConfig = {
     testGlobs: ['**/*.test.mjs'],
     coverageMode: 'mention',
     testCommand: 'node --test',
+    coverageProfiles: [],
   },
 };
 
