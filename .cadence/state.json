@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "165-host-cli-headless-verifier",
+  "activePhase": "169-assertion-mode-coverage-refuses-the-skip-todo-failing-dodge",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-10T22:26:25.239Z",
+  "draftReadAt": "2026-07-11T18:29:31.557Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-11-phase166-language-aware-coverage-shipped.md",
-    "subagentSpawns": 1244,
+    "subagentSpawns": 1278,
     "subagentBaselines": {}
   },
   "skillAudit": {

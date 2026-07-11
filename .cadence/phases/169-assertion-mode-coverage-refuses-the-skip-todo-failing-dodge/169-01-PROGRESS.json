@@ -1,0 +1,48 @@
+{
+  "draftId": "169-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-11T18:36:05.314Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/packages/core/src/verify/test-spans.ts"
+      ],
+      "updatedAt": "2026-07-11T18:39:13.203Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/packages/core/src/verify/verifier.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/packages/core/src/verify/coverage.ts"
+      ],
+      "updatedAt": "2026-07-11T18:47:34.116Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/packages/core/src/gates/coverage.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/packages/core/tests/gates/zzz-review-scratch.test.ts"
+      ],
+      "updatedAt": "2026-07-11T18:51:17.568Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/packages/core/tests/verify/test-spans.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/packages/core/tests/verify/coverage-assertion.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/skip-dodge-coverage-gate/packages/core/tests/gates/coverage.test.ts"
+      ],
+      "updatedAt": "2026-07-11T19:00:53.661Z"
+    }
+  }
+}
