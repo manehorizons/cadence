@@ -16,7 +16,7 @@
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-11-phase166-language-aware-coverage-shipped.md",
-    "subagentSpawns": 1278,
+    "subagentSpawns": 1280,
     "subagentBaselines": {}
   },
   "skillAudit": {
