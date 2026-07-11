@@ -27,6 +27,13 @@ describe('shared coverage-profiles engine (phase 167 T1)', () => {
     expect(spans.some((s) => s.hasAssertion)).toBe(true);
   });
 
+  it('the js/ts profile also claims .mjs/.cjs/.mts/.cts (regression: these were missing pre-land, silently breaking .mjs test suites like examples/demo-test-gutting) (AC-1)', () => {
+    expect(getProfileForExtension('.mjs')).toBe(jsTsProfile);
+    expect(getProfileForExtension('.cjs')).toBe(jsTsProfile);
+    expect(getProfileForExtension('.mts')).toBe(jsTsProfile);
+    expect(getProfileForExtension('.cts')).toBe(jsTsProfile);
+  });
+
   it('computeCodeMask marks string and comment interiors as non-code, matching js/ts syntax (AC-1)', () => {
     const text = `x // AC-1\ny = "AC-1" /* AC-1 */ z`;
     const mask = computeCodeMask(text, jsTsProfile.syntax);

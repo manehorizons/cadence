@@ -46,13 +46,16 @@ Suite: **GREEN**. Tasks marked DONE. `git status` clean. Every CI on earth merge
 
 ```
 $ cadence settle run --auto
-coverage: AC-2 is mentioned but not inside an asserting it()/test() block
+coverage: AC-2 is mentioned but not inside a recognized asserting test block
   (assertion mode) (searched: **/*.test.mjs)
 settle run refused (assertion mode): test files matched but no assertion-shaped
-  span found for AC-2. Add an asserting it()/test() block that references the
-  AC id, or if this project's test framework isn't JS/TS-shaped, switch
-  coverageMode to 'mention' via `cadence config edit coverageMode`. Pass
-  --allow-missing-coverage to bypass, or --force to settle anyway.
+  span found for AC-2. Run `cadence verify coverage --explain AC-2` to see which
+  profile scanned each file and why the span didn't qualify, then add an
+  asserting test block that references the AC id — or, if this project's
+  language/framework genuinely has no coverage profile (built-in: js/ts,
+  python, go, rust, php; extend via verification.coverageProfiles for others),
+  switch coverageMode to 'mention' via `cadence config edit coverageMode`.
+  Pass --allow-missing-coverage to bypass, or --force to settle anyway.
 $ echo $?
 1
 ```

@@ -34,7 +34,16 @@ function isSkippedOpener(match: RegExpExecArray): boolean {
 
 export const jsTsProfile: LanguageProfile = {
   id: 'js-ts',
-  extensions: ['.ts', '.tsx', '.js', '.jsx'],
+  // `.mjs`/`.cjs`/`.mts`/`.cts` (Node's explicit-module-system extensions)
+  // were missing from the original phase 167 list — a real regression from
+  // pre-167 behavior, where `findTestSpans` ran unconditionally on every
+  // glob-matched file regardless of extension. Post-167's per-extension
+  // dispatch (`../coverage.ts`, T6) requires an exact match, so a `.mjs`
+  // test file previously scanned fine and, without this entry, silently
+  // produced zero spans instead — found by a live run of this repo's own
+  // committed `examples/demo-test-gutting` (which configures
+  // `testGlobs: ["**/*.test.mjs"]`) during final review.
+  extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts'],
   openerPattern: OPENER,
   assertionPattern: ASSERTION,
   syntax: {
