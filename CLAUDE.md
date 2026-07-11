@@ -379,6 +379,16 @@ the rule that prevents it — with the enforcement layer where one exists.
 - **The Hardcoded Count.** Writing "14 slash commands" as a literal from
   memory. → Counts and command lists are asserted against code truth
   (`docs-command-count.test.ts`); derive them, then write.
+- **The Untested Version Reference.** Assuming a green `pnpm turbo run test`
+  proves every doc is in sync at release time. → The automated doc-content
+  tests only assert that `CLAUDE.md`/`README.md` mention the *new* version;
+  docs like `DESIGN.md` carry their own version references
+  (`DESIGN.md`'s "Current architecture (as of vX.Y.Z)" line slipped once,
+  v1.43.0 cut) that no test covers. The `release-cut` skill's **step 3, Doc-
+  sync verification**, is the mandatory backstop: run the full doc-content
+  test surface explicitly, then grep the repo for the previous version
+  string and triage every hit. Run it on every release. *(Operator review
+  only — no automated enforcement for the grep sweep.)*
 
 ### Git and process
 

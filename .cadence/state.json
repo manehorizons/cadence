@@ -15,8 +15,8 @@
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-11.md",
-    "subagentSpawns": 1233,
+    "lastHandoff": "SESSION-2026-07-11-v1.43.0-release-shipped.md",
+    "subagentSpawns": 1234,
     "subagentBaselines": {}
   },
   "skillAudit": {
