@@ -1,5 +1,37 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.44.0
+
+### Minor Changes
+
+- e3179cf: Add real assertion-mode test-coverage span parsing for Python, Go, Rust, and PHP (previously js/ts only), plus an operator-extensible escape hatch for any other language.
+  - A shared, profile-parameterized scanning engine (`packages/core/src/verify/coverage-profiles/`) replaces the old hardcoded JS/TS-only scanner. Four block-boundary strategies — call-expression, brace-delimited, indentation-delimited, and do-end-keyword — cover every built-in profile and remain available to custom ones.
+  - Five built-in language profiles ship: js/ts (re-expressed, byte-identical behavior to before), python (pytest-style, including `async def`), go (`func TestX(t *testing.T)`, table-driven tests, testify), rust (`#[test]`/`#[should_panic]`, unbounded raw strings), and php (both Pest closures and PHPUnit methods, including heredoc/nowdoc-safe masking).
+  - `verification.coverageProfiles` lets an operator define a custom profile (opener/assertion patterns, comment/string syntax, block strategy) for any language with no built-in support — validated at config-load time with refuse+suggest diagnostics; custom profiles are add-only and cannot override a built-in's extensions.
+  - `cadence verify coverage --explain AC-N [--json]` is a new read-only diagnostic: which files matched, which profile scanned each one, every span found, and why each did or didn't satisfy assertion mode.
+  - Per-file dispatch is wired into the real `test-coverage` gate (`scanTestCoverage`) — assertion mode now genuinely works end-to-end for all five built-in languages, not just in isolation. The gate's refusal messages are language-neutral and point at the new `--explain` diagnostic. `cadence init`'s default `verification.testGlobs` for rust now also includes `src/**/*.rs`, since idiomatic Rust unit tests commonly live inline in a `#[cfg(test)] mod tests { ... }` block. `cadence doctor`'s coverage-mode language-support check now reflects the live profile registry instead of a hardcoded js-only list.
+  - The false-positive-averse invariant holds throughout: an unrecognized shape always yields zero spans, never a partial or fabricated match. This required closing several real gaps found during review — opener-pattern spoofing via comments, strings, and nested parenthesized sub-expressions (go); an unbounded-hash raw-string masking gap (rust); a standalone-heredoc fabricated-span gap (php); and a cross-process custom-profile collision-shadowing gap (`verification.coverageProfiles`).
+
+### Patch Changes
+
+- a5b21ec: Fix `cadence init` defaulting `verification.coverageMode` to `'assertion'` for every project regardless of language, which made the `test-coverage` gate permanently unsatisfiable for non-JS/TS projects (the assertion-mode span-finder only recognizes JS/TS `it()`/`test()` syntax).
+  - `cadence init` now detects the project's language from root marker files (`package.json`→js/ts, `pyproject.toml`/`setup.py`/`requirements.txt`→python, `go.mod`→go, `Cargo.toml`→rust, `composer.json`→php) and only defaults `coverageMode` to `'assertion'` when the detected language is js/ts; every other detected or unknown language defaults to `'mention'` instead, with a stderr notice explaining why. Existing `.cadence/config.json` files are never rewritten.
+  - Default `verification.testGlobs` are now language-aware too, so `mention`-mode coverage checking can actually discover test files in non-JS projects (python: `**/test_*.py`, `**/*_test.py`; go: `**/*_test.go`; rust: `tests/**/*.rs`, `**/*_test.rs`; php: `**/*Test.php`, `tests/**/*.php`).
+  - The `test-coverage` gate's assertion-mode refusal message now distinguishes its causes accurately: no test file matched the configured globs at all, vs. files matched but no test references the AC, vs. files matched and reference the AC but not inside an asserting `it()`/`test()` block — each with its own suggested fix.
+  - `cadence doctor` (and the MCP `doctor` tool) now warns when `coverageMode: 'assertion'` is paired with a detected project language that has no assertion-mode parsing support yet, suggesting `cadence config edit coverageMode`.
+
+  This does not add real assertion-mode test-span parsing for Python/Go/Rust/PHP — only js/ts has that today. It closes the "permanently unsatisfiable gate" failure mode for every language by making the defaults and diagnostics honest.
+
+- 8bf3135: Fix `test-coverage` gate in `assertion` coverage mode wrongly treating an AC whose only linked test sits inside a `test.skip`/`.todo`/`.failing` block as fully covered, even when the block contains an intact assertion. Previously `cadence settle run --auto` would settle clean (exit 0) on a skipped test; the gate now refuses with a distinct message ("AC-N's only linked test is skipped") separate from the existing "no linked test" and "mentioned but not asserting" refusals, naming the fix (unskip the test or replace it with a running asserting block) rather than suggesting an unrelated `coverageMode` switch.
+
+  `findTestSpans` now flags `skip`/`todo`/`failing` openers as non-asserting spans (`only`/`concurrent` are unaffected, since those execute normally); `scanTestCoverage` propagates this through a new `skipped` flag on each test reference, and a new `skippedOnlyLinkedAcs` export is mutually exclusive with the existing `weaklyLinkedAcs` — an AC only lands in the new bucket when every one of its non-qualifying references is skip-caused. `mention`-mode coverage is unaffected.
+
+- Updated dependencies [a5b21ec]
+- Updated dependencies [e3179cf]
+- Updated dependencies [8bf3135]
+  - @manehorizons/cadence-core@1.44.0
+  - @manehorizons/cadence-types@1.44.0
+
 ## 1.43.0
 
 ### Minor Changes
