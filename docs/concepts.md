@@ -269,8 +269,10 @@ gate; `spec-review` is the other.
 
 `spec-review` reuses the same convergence primitive as `plan-review` and is
 configured per provider in `.cadence/config.json` under the `specReview` key
-(providers `mock` / `anthropic` / `local`, with an optional `model` override).
-Because the SPEC stage is itself optional, `spec-review` never fires unless you
+(providers `mock` / `anthropic` / `local` / `host-cli`, with an optional
+`model` override — see `docs/providers.md` for which gates `host-cli` is
+currently wired for). Because the SPEC stage is itself optional, `spec-review`
+never fires unless you
 choose to run `cadence spec approve`.
 
 ### Gate bypass reference summary

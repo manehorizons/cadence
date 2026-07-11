@@ -3,14 +3,15 @@ import { settleService, type SettleArgs } from '../../services/settle.js';
 import { processIO } from '../../services/io.js';
 import type { VerifierProvider } from '../../verify/verifier-factory.js';
 
-/** Commander arg-parser for `--verifier`: reject anything outside the three
- *  providers rather than silently downgrading (Phase 73 AC-3). */
+/** Commander arg-parser for `--verifier`: reject anything outside the four
+ *  providers rather than silently downgrading (Phase 73 AC-3; 'host-cli'
+ *  added Phase 165). */
 function parseVerifier(value: string): VerifierProvider {
-  if (value === 'mock' || value === 'anthropic' || value === 'local') {
+  if (value === 'mock' || value === 'anthropic' || value === 'local' || value === 'host-cli') {
     return value;
   }
   throw new InvalidArgumentError(
-    `invalid --verifier "${value}" — expected one of: mock | anthropic | local`,
+    `invalid --verifier "${value}" — expected one of: mock | anthropic | local | host-cli`,
   );
 }
 
@@ -44,7 +45,7 @@ export function registerSettleCommand(program: Command): void {
     )
     .option(
       '--verifier <provider>',
-      'override config.verifier.provider for the deep-verify gate (mock | anthropic | local); precedence flag > config > default mock',
+      'override config.verifier.provider for the deep-verify gate (mock | anthropic | local | host-cli); precedence flag > config > default mock',
       parseVerifier,
     )
     .option(

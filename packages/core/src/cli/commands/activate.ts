@@ -29,7 +29,7 @@ export interface ActivateDeps {
   prompt?: (current: VerifierProvider) => Promise<{ provider: VerifierProvider; all: boolean } | null>;
 }
 
-const PROVIDERS: VerifierProvider[] = ['mock', 'anthropic', 'local'];
+const PROVIDERS: VerifierProvider[] = ['mock', 'anthropic', 'local', 'host-cli'];
 
 async function readlinePrompt(
   current: VerifierProvider,
@@ -38,7 +38,7 @@ async function readlinePrompt(
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
     io.out(`Current deep-verify provider: ${current}\n`);
-    const p = (await rl.question('Provider to activate [anthropic/local/mock]: ')).trim();
+    const p = (await rl.question('Provider to activate [anthropic/local/host-cli/mock]: ')).trim();
     if (!PROVIDERS.includes(p as VerifierProvider)) {
       io.err(`Not a provider: ${p}\n`);
       return null;
@@ -71,7 +71,7 @@ export async function runActivate(
 
   if (provider === undefined) {
     if (!args.isTty) {
-      io.err('activate needs --provider <mock|anthropic|local> in a non-interactive shell.\n');
+      io.err('activate needs --provider <mock|anthropic|local|host-cli> in a non-interactive shell.\n');
       return { exitCode: 1, data: { reason: 'no-provider' } };
     }
     const ans = await (deps.prompt ?? ((c) => readlinePrompt(c, io)))(current.provider);
@@ -137,7 +137,7 @@ export function registerActivateCommand(program: Command): void {
   program
     .command('activate')
     .description('Turn on real verification — pick a provider, validate the key, wire deep-verify')
-    .option('--provider <provider>', 'mock | anthropic | local')
+    .option('--provider <provider>', 'mock | anthropic | local | host-cli')
     .option('--all', 'activate every verifier seam, not just deep-verify')
     .option('--no-check', 'skip the live provider credential check')
     .option('--print', 'show the plan without writing config')
@@ -155,7 +155,7 @@ export function registerActivateCommand(program: Command): void {
           !PROVIDERS.includes(opts.provider as VerifierProvider)
         ) {
           process.stderr.write(
-            `Not a provider: ${opts.provider} (expected mock|anthropic|local)\n`,
+            `Not a provider: ${opts.provider} (expected mock|anthropic|local|host-cli)\n`,
           );
           process.exitCode = 1;
           return;

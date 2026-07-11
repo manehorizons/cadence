@@ -1,4 +1,5 @@
 import type { CadenceConfig, Gate, Profile, Tier } from '@manehorizons/cadence-types';
+import type { VerifierProvider } from '../verify/verifier-factory.js';
 
 /**
  * External facts the pure {@link buildExplanation} needs but cannot observe
@@ -34,7 +35,7 @@ export interface ProviderRow {
   block: string;
   /** The gate (or SPEC verifier) the block backs, e.g. `deep-verify`. */
   gate: string;
-  provider: 'mock' | 'anthropic' | 'local';
+  provider: VerifierProvider;
   /** True when `provider === 'mock'` (offline / no real AI verification). */
   isMock: boolean;
 }

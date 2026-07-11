@@ -4,20 +4,7 @@
 
 ## Proposed
 
-### mil-rec-rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config
-
-- objective: Look for a verifier key anywhere it legitimately lives (not just env var), run one real verification call on 'cadence activate' so real verification is proven not assumed, and let the provider choice (not the key) live in committed config so every teammate inherits real verification instead of silently defaulting to mock. Targets the known competitive risk that mock-default undercuts the enforcement wedge.
-- status: proposed
-- recommendations: rec-20260709-004
-- pre-mortem:
-  - likely failure modes:
-    - _(why might this fail?)_
-  - hidden dependencies:
-    - _(what must already be true?)_
-  - drift risks:
-    - _(what docs/specs will drift?)_
-  - out of scope:
-    - _(what is explicitly NOT in this milestone?)_
+None.
 
 ## Accepted
 
@@ -79,6 +66,7 @@
 - mil-rec-rec-20260619-006 — First real phase agent prompt → .cadence/intelligence/exports/mil-rec-rec-20260619-006/SPEC.md
 - mil-rec-rec-20260701-012 — Boundary enforcement block mode, including subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260701-012/SPEC.md
 - mil-rec-rec-20260704-001 — Settle-time boundary diff scan (blocking) for subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260704-001/SPEC.md
+- mil-rec-rec-20260710-002 — Host-CLI headless verifier provider: reuse Claude Code/Codex's own auth instead of requiring a raw API key → .cadence/intelligence/exports/mil-rec-rec-20260710-002/SPEC.md
 
 ## Closed
 

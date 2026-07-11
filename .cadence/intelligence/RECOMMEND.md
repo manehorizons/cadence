@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-09T23:23:46.414Z
+Generated at: 2026-07-10T22:11:58.442Z
 
 ## Advisory
 
@@ -10,44 +10,36 @@ Generated at: 2026-07-09T23:23:46.414Z
 
 ## Ranked
 
-### rec-20260709-004 — Trustworthy verifier activation: broader key discovery + activation smoke test + committed provider config
+### rec-20260710-003 — MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool
 
-- score: 58/100 (raw 15.7)
-- status: candidate · ready: raw-idea · priority: high · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio high +5 ⇒ raw 15.7 (score 58)
-- scout: scout-20260709-1813
+- score: 55/100 (raw 13.7)
+- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
+- scout: scout-20260710-2126
 - next: cadence milestone propose
 
-### rec-20260709-001 — cadence quickstart: single mega-command for full setup
+### rec-20260710-006 — Guardrails for headless-CLI verifier: quota transparency, self-invocation loops, CI fallback
+
+- score: 55/100 (raw 13.7)
+- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
+- scout: scout-20260710-2126
+- next: cadence milestone propose
+
+### rec-20260710-004 — Headless-CLI verifier: batching, fallback-chain, and model-passthrough behavior
 
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260709-1813
+- scout: scout-20260710-2126
 - next: cadence milestone propose
 
-### rec-20260709-002 — cadence doctor --fix: auto-remediate mechanical health-check failures
+### rec-20260710-005 — Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report
 
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260709-1813
-- next: cadence milestone propose
-
-### rec-20260709-003 — cadence init --ci: generate + enforce a CI gate workflow for consumer repos
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260709-1813
-- next: cadence milestone propose
-
-### rec-20260709-005 — cadence onboard: one-command setup for the 2nd-Nth teammate
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260709-1813
+- score: 50/100 (raw 10.7)
+- status: candidate · ready: raw-idea · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
+- scout: scout-20260710-2126
 - next: cadence milestone propose
 
 ## Parked (deferred)
@@ -60,4 +52,4 @@ None.
 
 ## Totals
 
-- total 5 · ranked 5 · parked 0 · needs-attention 0 · excluded 0
+- total 4 · ranked 4 · parked 0 · needs-attention 0 · excluded 0

@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 164-trustworthy-verifier-activation
+**Active phase:** 165-host-cli-headless-verifier
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1165
-- Last handoff: SESSION-2026-07-09-phase163-pr158-ci-watch.md
+- Subagent spawns this session: 1233
+- Last handoff: SESSION-2026-07-10-claude-cli-verifier-provider-brainstorm.md
 
 ## Counts
 - Open drafts: 0

@@ -87,4 +87,32 @@ describe('assessReadiness (AC-6)', () => {
     const r = assessReadiness(cfg({ verifier: { provider: 'anthropic' } }), {});
     expect(r.provider).toBe('anthropic');
   });
+
+  it('host-cli creds are present with no env at all — no required credential by design (AC-1)', () => {
+    const c = cfg({ verifier: { provider: 'host-cli' } });
+    expect(credsPresent('host-cli', 'verifier', c, {})).toBe(true);
+  });
+
+  it('host-cli creds are present when CADENCE_HOST_CLI_BIN overrides the default binary (AC-1)', () => {
+    const c = cfg({ verifier: { provider: 'host-cli' } });
+    expect(
+      credsPresent('host-cli', 'verifier', c, { CADENCE_HOST_CLI_BIN: '/usr/local/bin/codex' }),
+    ).toBe(true);
+  });
+
+  it('host-cli does not fall through to the local provider baseURL/model check (AC-1)', () => {
+    // Regression guard: prior to the host-cli branch, an unhandled provider
+    // silently fell through to local's `CADENCE_LOCAL_BASE_URL` + model check,
+    // which would misreport a bare host-cli setup as "credentials missing".
+    const c = cfg({ verifier: { provider: 'host-cli' } });
+    expect(credsPresent('host-cli', 'verifier', c, {})).toBe(true);
+  });
+
+  it('assessReadiness reports host-cli as ready with no CADENCE_LOCAL_* / CADENCE_HOST_CLI_BIN env set (AC-1)', () => {
+    const r = assessReadiness(cfg({ verifier: { provider: 'host-cli' } }), {});
+    expect(r.provider).toBe('host-cli');
+    expect(r.keyPresent).toBe(true);
+    expect(r.ready).toBe(true);
+    expect(r.reason).toMatch(/host-cli/i);
+  });
 });

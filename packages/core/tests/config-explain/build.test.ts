@@ -41,3 +41,21 @@ describe('buildExplanation — gate sets per tier (AC-1)', () => {
     expect(idle.tiers.some((t) => t.current)).toBe(false);
   });
 });
+
+describe('buildExplanation — provider rows (Phase 165 AC-1)', () => {
+  // AC-1: a 'host-cli' provider renders as a real, non-mock row — proves the
+  // ProviderRow['provider'] type (and providerRows' block-indexed read) genuinely
+  // admits the 4th provider rather than silently coercing/erroring on it.
+  it("AC-1: a 'host-cli' provider block renders as a non-mock row", () => {
+    const config = { ...defaultConfig, perTaskVerifier: { provider: 'host-cli' as const } };
+    const exp = buildExplanation(config, cleanCtx);
+
+    const row = exp.providers.find((r) => r.block === 'perTaskVerifier');
+    expect(row).toEqual({
+      block: 'perTaskVerifier',
+      gate: 'per-task-verify',
+      provider: 'host-cli',
+      isMock: false,
+    });
+  });
+});

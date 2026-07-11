@@ -1,7 +1,8 @@
 import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
 import { discoverKey } from '../activate/key-discovery.js';
+import { HostCliError } from './host-cli-client.js';
 
-export type VerifierProvider = 'mock' | 'anthropic' | 'local';
+export type VerifierProvider = 'mock' | 'anthropic' | 'local' | 'host-cli';
 
 /** Shared options for every `select…Verifier` factory (Phase 40.1). */
 export interface VerifierSelectOptions {
@@ -52,6 +53,17 @@ export interface VerifierFactorySpec<C, V> {
     model: string;
     headers?: Record<string, string>;
   }): V;
+  /**
+   * Phase 165: `host-cli` provider builder — spawns the user's already-
+   * installed, already-authenticated host CLI (`claude`/`codex`) in headless
+   * mode instead of calling an HTTP endpoint. Optional (unlike `mock` /
+   * `anthropic` / `local`): a verifier family that hasn't wired a
+   * `host-cli`-backed verifier class yet simply falls back to `mock` with a
+   * warning (see `createVerifierFactory`) rather than failing to compile —
+   * this lets `host-cli` land as a provider without forcing every family's
+   * factory file to change in lockstep.
+   */
+  hostCli?(opts: { bin: string; model?: string }): V;
 }
 
 /**
@@ -112,6 +124,78 @@ export const MOCK_FALLBACK_BANNER = [
   '',
 ].join('\n');
 
+/**
+ * Phase 165 T3 — wraps a `host-cli`-backed verifier instance so that a
+ * `HostCliError` (binary not found, spawn failure, non-zero exit, unparseable
+ * output — see `host-cli-client.ts`) thrown/rejected by any of its methods is
+ * caught and the call is transparently redirected to `fallback`'s
+ * same-named method instead of crashing the gate or hanging.
+ *
+ * `V` is generic and unknown to this module — each verifier family
+ * (`PerTaskVerifier`, `CodeReviewVerifier`, `Verifier`, …) defines its own
+ * interface shape, and `verifier-factory.ts` must work for all of them
+ * without per-family edits (boundary: only this file + its test may change
+ * for T3). Rather than hardcoding a method name like `verify`, this wraps
+ * *every* function-valued property behind a `Proxy`: whichever method the
+ * caller invokes, a synchronous throw or a rejected `Promise` carrying a
+ * `HostCliError` triggers one warning (mirroring the `anthropic`/`local`
+ * prerequisite-missing warnings above) and a delegate call to the same
+ * method on `fallback`. Non-`HostCliError` failures (e.g. the repair-retry
+ * harness exhausting retries on genuinely bad model output) are real
+ * verification failures, not host-cli-availability problems, and are left to
+ * propagate unchanged.
+ *
+ * This can only run lazily, at actual call time — unlike the `anthropic`/
+ * `local` branches, whether the host CLI binary exists or is authenticated
+ * can't be determined synchronously without a blocking probe on every
+ * selection (see the `host-cli` branch below), so the warning fires on first
+ * failed call rather than at selection time. No timers/delays are added
+ * here, so a caller awaiting the wrapped method never waits longer than the
+ * underlying primary + fallback calls themselves take.
+ */
+function wrapWithFallback<V>(
+  primary: V,
+  fallback: V,
+  warn: (message: string) => void,
+  label: string,
+): V {
+  // `V` is unconstrained at the `createVerifierFactory<C, V>` call site (any
+  // verifier family's interface), but every family's builder in practice
+  // returns a plain object/class instance — `Proxy` requires an object
+  // target, so narrow via a local cast rather than constraining the exported
+  // generic (which would ripple into every `VerifierFactorySpec<C, V>` usage).
+  const fallbackObj = fallback as object;
+
+  const delegateToFallback = (prop: PropertyKey, args: unknown[], err: unknown): unknown => {
+    if (!(err instanceof HostCliError)) throw err;
+    warn(
+      `${label}: host-cli provider failed (${err.reason}: ${err.message}) — falling back to mock provider for this call.`,
+    );
+    const fallbackFn = Reflect.get(fallbackObj, prop, fallbackObj);
+    if (typeof fallbackFn !== 'function') throw err;
+    return Reflect.apply(fallbackFn as (...a: unknown[]) => unknown, fallbackObj, args);
+  };
+
+  return new Proxy(primary as object, {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, receiver);
+      if (typeof value !== 'function') return value;
+      return (...args: unknown[]): unknown => {
+        let result: unknown;
+        try {
+          result = Reflect.apply(value as (...a: unknown[]) => unknown, target, args);
+        } catch (err) {
+          return delegateToFallback(prop, args, err);
+        }
+        if (result instanceof Promise) {
+          return result.catch((err: unknown) => delegateToFallback(prop, args, err));
+        }
+        return result;
+      };
+    },
+  }) as V;
+}
+
 export function createVerifierFactory<C, V>(
   spec: VerifierFactorySpec<C, V>,
 ): (config: C | null, opts?: VerifierSelectOptions) => V {
@@ -153,6 +237,30 @@ export function createVerifierFactory<C, V>(
       const localApiKey = discoverKey('CADENCE_LOCAL_API_KEY', env, cwd).value;
       const headers = buildLocalHeaders(localApiKey, slice?.localHeaders);
       return spec.local({ baseURL, model, ...(headers ? { headers } : {}) });
+    }
+
+    if (provider === 'host-cli') {
+      if (!spec.hostCli) {
+        warn(
+          `${spec.label}: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.`,
+        );
+        return spec.mock();
+      }
+      // Phase 165: binary name/path is env/`.env`-discoverable the same way
+      // `local`'s baseURL/model are (`discoverKey`), not a new config schema
+      // field — defaults to `claude` on PATH. Whether the binary actually
+      // exists/authenticates is checked lazily at spawn time inside
+      // `host-cli-client.ts`, mirroring how `local`/`anthropic` don't probe
+      // connectivity during selection either.
+      const bin = discoverKey('CADENCE_HOST_CLI_BIN', env, cwd).value ?? 'claude';
+      const model = slice?.model;
+      const primary = spec.hostCli({ bin, ...(model ? { model } : {}) });
+      // T3: the binary's existence/auth status is only knowable once a real
+      // call is attempted (see `wrapWithFallback`'s doc comment) — wrap here
+      // rather than probing synchronously, so a missing/unauthenticated
+      // binary degrades to `mock` per-call with a loud warning instead of
+      // throwing out of the gate or hanging on interactive auth (AC-2).
+      return wrapWithFallback(primary, spec.mock(), warn, spec.label);
     }
 
     return spec.mock();

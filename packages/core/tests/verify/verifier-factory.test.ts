@@ -6,10 +6,12 @@ import { CadenceConfigZ, defaultConfig } from '@manehorizons/cadence-types';
 import {
   buildLocalHeaders,
   createVerifierFactory,
+  type VerifierProvider,
 } from '../../src/verify/verifier-factory.js';
 import { selectVerifier } from '../../src/verify/factory.js';
 import { AnthropicVerifier } from '../../src/verify/anthropic-verifier.js';
 import { MockVerifier } from '../../src/verify/mock-verifier.js';
+import { HostCliError } from '../../src/verify/host-cli-client.js';
 
 const dirs: string[] = [];
 const makeTmpDir = (): string => {
@@ -228,6 +230,104 @@ describe('selectVerifier — committed-config inheritance across teammates (AC-3
     expect(verifier).not.toBeInstanceOf(MockVerifier);
     expect(verifier.name).toBe('anthropic');
     // No fallback warning — this is real verification, not a silent mock downgrade.
+    expect(warns).toEqual([]);
+  });
+});
+
+// AC-2 (Phase 165 T3) — loud, non-blocking fallback to mock when the
+// host-cli provider's own method rejects with a HostCliError (binary not
+// found / spawn failure / non-zero exit — i.e. "not found on PATH or not
+// authenticated"). Uses a second, method-bearing fake spec (unlike the
+// tag-object `FakeV` above) because the fallback wrapper operates on real
+// method calls, not on the object the factory returns synchronously.
+interface FakeAsyncResult {
+  result: string;
+}
+interface FakeAsyncVerifier {
+  readonly name: string;
+  verify(input: string): Promise<FakeAsyncResult>;
+}
+interface FakeAsyncConfig {
+  fake?: { provider?: VerifierProvider; model?: string };
+}
+
+function makeAsyncSpec(hostCliVerify: FakeAsyncVerifier['verify']) {
+  return createVerifierFactory<FakeAsyncConfig, FakeAsyncVerifier>({
+    label: 'fake-async',
+    read: (c) => c?.fake,
+    mock: () => ({
+      name: 'mock',
+      verify: async (input: string) => ({ result: `mock:${input}` }),
+    }),
+    anthropic: () => {
+      throw new Error('not exercised in these tests');
+    },
+    local: () => {
+      throw new Error('not exercised in these tests');
+    },
+    hostCli: () => ({ name: 'host-cli', verify: hostCliVerify }),
+  });
+}
+
+describe('host-cli fallback wrapping (AC-2, Phase 165 T3)', () => {
+  it('falls back to mock, warns, and resolves quickly when verify() rejects with a HostCliError (not-found)', async () => {
+    const warns: string[] = [];
+    const select = makeAsyncSpec(async () => {
+      throw new HostCliError('binary "claude" not found on PATH', 'not-found');
+    });
+    const v = select({ fake: { provider: 'host-cli' } }, { env: {}, warn: (m) => warns.push(m) });
+
+    const HANG_TIMEOUT_MS = 200;
+    const start = Date.now();
+    const result = await Promise.race([
+      v.verify('x'),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('AC-2: fallback hung instead of resolving')), HANG_TIMEOUT_MS),
+      ),
+    ]);
+    const elapsedMs = Date.now() - start;
+
+    // (a) does not throw/reject — resolves using mock's own behavior instead.
+    expect(result).toEqual({ result: 'mock:x' });
+    // (c) resolves fast — no artificial delay, no hang waiting on interactive auth.
+    expect(elapsedMs).toBeLessThan(HANG_TIMEOUT_MS);
+    // (b) a warning was emitted, mirroring the anthropic/local fallback pattern.
+    expect(warns.length).toBe(1);
+    expect(warns[0]).toContain('fake-async');
+    expect(warns[0]).toContain('host-cli provider failed');
+    expect(warns[0]).toContain('not-found');
+    expect(warns[0]).toContain('falling back to mock');
+  });
+
+  it('falls back to mock on a non-zero-exit HostCliError (unauthenticated CLI)', async () => {
+    const warns: string[] = [];
+    const select = makeAsyncSpec(async () => {
+      throw new HostCliError('"claude" exited with code 1: not logged in', 'nonzero-exit');
+    });
+    const v = select({ fake: { provider: 'host-cli' } }, { env: {}, warn: (m) => warns.push(m) });
+
+    await expect(v.verify('y')).resolves.toEqual({ result: 'mock:y' });
+    expect(warns.length).toBe(1);
+    expect(warns[0]).toContain('nonzero-exit');
+  });
+
+  it('does NOT swallow a non-HostCliError failure (e.g. exhausted repair retries) — it propagates', async () => {
+    const warns: string[] = [];
+    const select = makeAsyncSpec(async () => {
+      throw new Error('host-cli provider: model output failed JSON/schema validation after 2 repair retries');
+    });
+    const v = select({ fake: { provider: 'host-cli' } }, { env: {}, warn: (m) => warns.push(m) });
+
+    await expect(v.verify('z')).rejects.toThrow(/repair retries/);
+    expect(warns).toEqual([]);
+  });
+
+  it('the successful (non-throwing) host-cli path is used untouched, with no warning', async () => {
+    const warns: string[] = [];
+    const select = makeAsyncSpec(async (input: string) => ({ result: `host-cli:${input}` }));
+    const v = select({ fake: { provider: 'host-cli' } }, { env: {}, warn: (m) => warns.push(m) });
+
+    await expect(v.verify('ok')).resolves.toEqual({ result: 'host-cli:ok' });
     expect(warns).toEqual([]);
   });
 });
