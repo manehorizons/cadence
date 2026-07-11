@@ -30,16 +30,70 @@ export function suggestGateProfile(cwd: string): Profile {
   }
 }
 
+/** Languages `detectProjectLanguage` can identify from root marker files. */
+export type ProjectLanguage = 'js' | 'python' | 'go' | 'rust' | 'php' | 'unknown';
+
 /**
- * Pick `verification.testGlobs` from the repo's layout (F2, Phase 29.1
- * shakedown). A `packages/` directory at the init root means a monorepo —
- * keep the workspace glob (correct for cadence's own dogfood). Any other
- * shape is treated as single-package: a depth-agnostic `**\/*.test.ts(x)`
- * glob so the test-coverage gate can match tests under `tests/`, `src/`,
- * `__tests__/`, etc. The scanner already prunes node_modules/dist/.git/.turbo,
- * so the broad glob is safe. Never throws.
+ * Best-effort project-language sniff from root marker files (Phase 166,
+ * AC-1). Checked in this exact priority order — `package.json` first, so a
+ * mixed-language monorepo (e.g. a root `package.json` alongside a nested
+ * `pyproject.toml`) deterministically resolves to `'js'` rather than
+ * guessing at monorepo structure (an explicitly open question, out of scope
+ * here). Never throws — any fs failure (missing dir, permission error) falls
+ * back to `'unknown'`.
  */
-export function detectTestGlobs(cwd: string): string[] {
+export function detectProjectLanguage(cwd: string): ProjectLanguage {
+  if (exists(cwd, 'package.json')) return 'js';
+  if (
+    exists(cwd, 'pyproject.toml') ||
+    exists(cwd, 'setup.py') ||
+    exists(cwd, 'requirements.txt')
+  ) {
+    return 'python';
+  }
+  if (exists(cwd, 'go.mod')) return 'go';
+  if (exists(cwd, 'Cargo.toml')) return 'rust';
+  if (exists(cwd, 'composer.json')) return 'php';
+  return 'unknown';
+}
+
+/** `existsSync` wrapped so a permission/read error degrades to `false`, never throws. */
+function exists(cwd: string, file: string): boolean {
+  try {
+    return existsSync(join(cwd, file));
+  } catch {
+    return false;
+  }
+}
+
+/** Language-aware default test-file globs for non-js/ts languages (Phase 166, AC-2). */
+const LANGUAGE_TEST_GLOBS: Partial<Record<ProjectLanguage, string[]>> = {
+  python: ['**/test_*.py', '**/*_test.py'],
+  go: ['**/*_test.go'],
+  rust: ['tests/**/*.rs', '**/*_test.rs'],
+  php: ['**/*Test.php', 'tests/**/*.php'],
+};
+
+/**
+ * Pick `verification.testGlobs` from the repo's layout and detected language
+ * (F2, Phase 29.1 shakedown; language-aware defaults added Phase 166, AC-2).
+ * For `'js'`/`'unknown'` the original behavior is unchanged: a `packages/`
+ * directory at the init root means a monorepo — keep the workspace glob
+ * (correct for cadence's own dogfood); any other shape is treated as
+ * single-package, a depth-agnostic `**\/*.test.ts(x)` glob so the
+ * test-coverage gate can match tests under `tests/`, `src/`, `__tests__/`,
+ * etc. Other detected languages get sensible defaults for that language's
+ * conventional test-file naming instead. `lang` defaults to
+ * `detectProjectLanguage(cwd)` but can be passed explicitly by callers that
+ * already detected it, to avoid a second fs sniff. Never throws.
+ */
+export function detectTestGlobs(
+  cwd: string,
+  lang: ProjectLanguage = detectProjectLanguage(cwd),
+): string[] {
+  const languageDefault = LANGUAGE_TEST_GLOBS[lang];
+  if (languageDefault !== undefined) return languageDefault;
+
   let monorepo = false;
   try {
     monorepo = statSync(join(cwd, 'packages')).isDirectory();
@@ -49,6 +103,29 @@ export function detectTestGlobs(cwd: string): string[] {
   return monorepo
     ? ['packages/**/*.test.ts', 'packages/**/*.test.tsx']
     : ['**/*.test.ts', '**/*.test.tsx'];
+}
+
+/** `verification.coverageMode` values the config schema admits. */
+export type CoverageMode = 'mention' | 'assertion';
+
+/**
+ * Language-aware `verification.coverageMode` default (Phase 166, AC-1). The
+ * config schema's static default (`packages/types/src/config.ts`'s
+ * `DEFAULT_CONFIG`) writes `'assertion'` unconditionally — but `assertion`
+ * mode's span-finder (`findTestSpans`) only understands JS/TS test files
+ * today, so defaulting a non-JS/TS project to `assertion` would produce a
+ * `test-coverage` gate that can never pass, no matter how well-tested the
+ * code is. `'js'` keeps today's `'assertion'` default unchanged; every other
+ * detected (or undetected) language gets the honest `'mention'` default
+ * instead. `lang` defaults to `detectProjectLanguage(cwd)` but can be passed
+ * explicitly by callers (e.g. `init.ts`) that already detected it, to share
+ * one fs sniff with `detectTestGlobs`. Never throws.
+ */
+export function detectCoverageMode(
+  cwd: string,
+  lang: ProjectLanguage = detectProjectLanguage(cwd),
+): CoverageMode {
+  return lang === 'js' ? 'assertion' : 'mention';
 }
 
 /** Lockfile → package-manager run prefix, checked in this order. */

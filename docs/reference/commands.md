@@ -871,6 +871,7 @@ v1 check set:
 | `handoff-retention` | *(v1.20)* `SESSION-*.md` handoff docs are within `handoff.retain`, or — when retention is unset — have not accumulated past the warn threshold | warning |
 | `verification-readiness` | *(v1.22)* the deep-verify seam uses a **real** provider whose credentials are present (i.e. settle gates do real AI verification, not mock). Warns on all-mock (→ `cadence activate`) or a real provider missing its key | warning |
 | `recommendation-shipped-drift` | no recommendation is stuck in `settle-pending` — its linked phase settled locally but nobody has confirmed the work actually shipped. Warns naming each one's id, title, phase, and the exact `recommendation promote --status=shipped` command to run | warning |
+| `coverage-mode-language-support` | *(Phase 166)* `verification.coverageMode` **is** `'assertion'` paired with a detected project language that has no assertion-mode span-parsing support yet (js/ts only, today). Warns naming the detected language and the exact `cadence config edit coverageMode` command to switch to `'mention'` | warning |
 
 Host checks run only when the relevant files exist; their absence is not a
 problem. Codex readiness checks activate when `.codex/` exists or `AGENTS.md`

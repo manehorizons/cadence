@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 165-host-cli-headless-verifier
+**Active phase:** 166-language-aware-coverage-defaults
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1234
+- Subagent spawns this session: 1305
 - Last handoff: SESSION-2026-07-11-v1.43.0-release-shipped.md
 
 ## Counts

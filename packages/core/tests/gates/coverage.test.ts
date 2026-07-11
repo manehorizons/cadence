@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { runCoverageGate } from '../../src/gates/coverage.js';
 import type { SettleContext } from '../../src/gates/types.js';
 import type { VerifyTestRef } from '../../src/verify/verifier.js';
@@ -168,6 +171,127 @@ describe('runCoverageGate · assertion mode (AC-5)', () => {
       ctx({ opts: { force: true }, config: assertionConfig, coverageMap: map }),
     );
     expect(res.outcome).toBe('pass');
+  });
+});
+
+// Phase 166 T3 (AC-3): the assertion-mode trailing refusal message names
+// which distinct cause applies — glob-miss (no test files matched
+// verification.testGlobs) vs. span-miss (files matched but no
+// assertion-shaped span found for the AC id) — each with its own fix
+// suggestion, instead of one generic blob covering both causes.
+describe('runCoverageGate · assertion mode split refusal (phase 166 T3)', () => {
+  const assertionConfig = { verification: { coverageMode: 'assertion' } } as never;
+  const sealedAssertionConfig = {
+    gates: { sealed: ['test-coverage'] },
+    verification: { coverageMode: 'assertion' },
+  } as never;
+
+  it('glob-miss (absent-only) refusal explains testGlobs discovery, not span parsing', async () => {
+    const errs: string[] = [];
+    const res = await runCoverageGate(
+      ctx({ errs, config: assertionConfig, coverageMap: new Map() }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('no test files matched configured globs');
+    expect(joined).toContain('verification.testGlobs');
+    expect(joined).not.toContain('assertion-shaped span');
+    expect(joined).not.toContain('cadence config edit coverageMode');
+  });
+
+  // Phase 166 (whole-branch review fix): `absent` alone doesn't prove no
+  // file matched the globs — it only means zero refs were found anywhere.
+  // When a real file DOES match the globs but simply never mentions the AC,
+  // blaming testGlobs is wrong; the gate must say so accurately instead.
+  it('glob-miss message is accurate when files matched globs but never mention the AC', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'cadence-coverage-gate-'));
+    const explicitGlobsConfig = {
+      verification: { coverageMode: 'assertion', testGlobs: ['**/*.test.ts'] },
+    } as never;
+    try {
+      await writeFile(join(dir, 'unrelated.test.ts'), "it('does something else', () => {});\n");
+      const errs: string[] = [];
+      const res = await runCoverageGate(
+        ctx({ errs, cwd: dir, config: explicitGlobsConfig, coverageMap: new Map() }),
+      );
+      expect(res.outcome).toBe('refuse');
+      const joined = errs.join('');
+      expect(joined).toContain('no test file references');
+      expect(joined).toContain('verification.testGlobs');
+      expect(joined).not.toContain('no test files matched configured globs');
+      expect(joined).not.toContain('assertion-shaped span');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('span-miss (weak-only) refusal explains assertion parsing and the coverageMode fallback, not testGlobs', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 3, snippet: '// AC-1', qualifying: false }]],
+    ]);
+    const res = await runCoverageGate(ctx({ errs, config: assertionConfig, coverageMap: map }));
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('assertion-shaped span');
+    expect(joined).toContain('cadence config edit coverageMode');
+    expect(joined).not.toContain('no test files matched configured globs');
+    expect(joined).not.toContain('verification.testGlobs');
+  });
+
+  it('when both absent and weak ACs are present, each gets its own distinct explanation', async () => {
+    const errs: string[] = [];
+    const draft = {
+      acceptanceCriteria: [
+        { id: 'AC-1', given: '', when: '', then: '' },
+        { id: 'AC-2', given: '', when: '', then: '' },
+      ],
+      tasks: [],
+    } as never;
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 3, snippet: '// AC-1', qualifying: false }]],
+      // AC-2 absent entirely
+    ]);
+    const res = await runCoverageGate(
+      ctx({ errs, draft, config: assertionConfig, coverageMap: map }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('no test files matched configured globs');
+    expect(joined).toContain('verification.testGlobs');
+    expect(joined).toContain('assertion-shaped span');
+    expect(joined).toContain('cadence config edit coverageMode');
+  });
+
+  it('sealed: glob-miss explanation stays cause-specific and names gates.sealed', async () => {
+    const errs: string[] = [];
+    const res = await runCoverageGate(
+      ctx({ errs, opts: { force: true }, config: sealedAssertionConfig, coverageMap: new Map() }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('no test files matched configured globs');
+    expect(joined).toContain('verification.testGlobs');
+    expect(joined).toContain('gates.sealed');
+    expect(joined).not.toContain('assertion-shaped span');
+    expect(res.flags?.coverageBypassed).toBe(false);
+  });
+
+  it('sealed: span-miss explanation stays cause-specific and names gates.sealed', async () => {
+    const errs: string[] = [];
+    const map = new Map<string, VerifyTestRef[]>([
+      ['AC-1', [{ file: 'a.test.ts', line: 3, snippet: '// AC-1', qualifying: false }]],
+    ]);
+    const res = await runCoverageGate(
+      ctx({ errs, opts: { force: true }, config: sealedAssertionConfig, coverageMap: map }),
+    );
+    expect(res.outcome).toBe('refuse');
+    const joined = errs.join('');
+    expect(joined).toContain('assertion-shaped span');
+    expect(joined).toContain('cadence config edit coverageMode');
+    expect(joined).toContain('gates.sealed');
+    expect(joined).not.toContain('no test files matched configured globs');
+    expect(res.flags?.coverageBypassed).toBe(false);
   });
 });
 

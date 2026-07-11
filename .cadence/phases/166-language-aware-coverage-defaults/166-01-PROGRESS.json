@@ -1,0 +1,45 @@
+{
+  "draftId": "166-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-11T03:32:07.976Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/166-language-aware-coverage-defaults/docs/reference/config.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/166-language-aware-coverage-defaults/packages/core/tests/gates/coverage.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/166-language-aware-coverage-defaults/packages/core/src/gates/coverage.ts"
+      ],
+      "updatedAt": "2026-07-11T03:33:16.213Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-11T03:33:24.583Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/166-language-aware-coverage-defaults/packages/core/tests/cli/init.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/166-language-aware-coverage-defaults/packages/core/tests/services/doctor.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/166-language-aware-coverage-defaults/packages/core/src/services/doctor.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/166-language-aware-coverage-defaults/packages/core/src/init/plan.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/166-language-aware-coverage-defaults/packages/core/src/cli/commands/init.ts"
+      ],
+      "updatedAt": "2026-07-11T03:39:54.120Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-11T03:41:25.289Z"
+    }
+  }
+}

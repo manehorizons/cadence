@@ -4,7 +4,7 @@
 
 This page documents every field in the CADENCE configuration file. For conceptual explanations of profiles, gates, tiers, and providers, see [docs/concepts.md](../concepts.md). For provider setup (env vars, fallback behavior), see [docs/providers.md](../providers.md).
 
-`cadence init` writes an initial `config.json` from the chosen preset and then overlays two detected values: `profile` (from `--gate-profile` or git-history suggestion) and `verification.testGlobs` (from layout detection — see [cadence init behavior](#cadence-init-behavior)).
+`cadence init` writes an initial `config.json` from the chosen preset and then overlays several detected values: `profile` (from `--gate-profile` or git-history suggestion), `verification.testGlobs` (from repo layout and detected project language), and `verification.coverageMode` (from detected project language) — see [cadence init behavior](#cadence-init-behavior).
 
 > **Unsure what your config actually does?** Don't read this whole page — run [`cadence config explain`](#reading-your-config--cadence-config-explain). It renders your *active* configuration in plain language: which gates fire for each tier, which provider backs each gate, and any config-semantic foot-guns (e.g. a real provider set with no API key).
 
@@ -143,9 +143,9 @@ Boundary definitions for each tier. The coherence-check gate validates DRAFT fro
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `verification.testGlobs` | `string[]` | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` | Glob patterns the test-coverage scanner walks when checking AC coverage. Supports `**` and `*`. Set by `cadence init` based on repo layout — see [cadence init behavior](#cadence-init-behavior). |
+| `verification.testGlobs` | `string[]` | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` | Glob patterns the test-coverage scanner walks when checking AC coverage. Supports `**` and `*`. Set by `cadence init` based on repo layout and detected project language (Phase 166) — see [cadence init behavior](#cadence-init-behavior). |
 | `verification.testCommand` | `string` (optional) | derived by `cadence init` — see [cadence init behavior](#cadence-init-behavior) | Shell command the `build-test-must-pass` gate runs at `cadence settle run`. When set, settle runs it and refuses on a non-zero exit unless `--allow-failing-build` / `--force`. When absent, the gate is evaluated but cannot enforce — it still passes, but (as of Phase 139) writes a loud, non-blocking stderr notice instead of passing silently. |
-| `verification.coverageMode` | `"mention"` \| `"assertion"` | `"assertion"` for a fresh `cadence init` (Phase 139); the schema-level fallback for configs that predate this field stays `"mention"` | How the `test-coverage` gate counts an `AC-N` token. `mention` counts any occurrence of the token anywhere in a matched test file, including comments. `assertion` counts it only when it sits inside an asserting `it()`/`test()` block; a comment-only or assertion-less mention is reported as a *weak link* and the gate refuses with a distinct hint (closing the "mentioned-but-not-tested" false positive). Edit it with `cadence config edit coverageMode`. |
+| `verification.coverageMode` | `"mention"` \| `"assertion"` | `"assertion"` for a fresh `cadence init` when the detected project language is js/ts, `"mention"` for every other detected or unknown language (Phase 166); the schema-level fallback for configs that predate this field stays `"mention"` | How the `test-coverage` gate counts an `AC-N` token. `mention` counts any occurrence of the token anywhere in a matched test file, including comments. `assertion` counts it only when it sits inside an asserting `it()`/`test()` block; a comment-only or assertion-less mention is reported as a *weak link* and the gate refuses with a distinct hint (closing the "mentioned-but-not-tested" false positive). `assertion` mode currently has real span-parsing support for js/ts only — see [cadence init behavior](#cadence-init-behavior). Edit it with `cadence config edit coverageMode`. |
 
 ---
 
@@ -588,7 +588,7 @@ The three share detection logic where they overlap (e.g. the host-hooks-installe
 
 The `production` preset seals `test-coverage` and `build-test-must-pass` by default (see [gates](#gates)) — `solo`/`team` leave `gates.sealed` empty, so every gate's normal bypass flags still work.
 
-All other fields are identical to `defaultConfig` across all three presets. After scaffolding, `cadence init` overlays the detected `profile` and `verification.testGlobs` regardless of preset (see below).
+All other fields are identical to `defaultConfig` across all three presets. After scaffolding, `cadence init` overlays the detected `profile`, `verification.testGlobs`, and `verification.coverageMode` regardless of preset (see below).
 
 ---
 
@@ -605,14 +605,34 @@ Sourced from `--gate-profile <p>` if provided. Otherwise:
 
 The suggestion is derived from git history: a repo with **20 or more commits** gets `"standard"`; fewer commits or any git error gets `"auto"`.
 
+### Project language detection (Phase 166)
+
+`cadence init` sniffs the target repo's root for language marker files, best-effort and never throwing (a permission or fs-read failure just falls back to `unknown`). Checked in this priority order, first match wins:
+
+| Marker file(s) present at init cwd | Detected language |
+|---|---|
+| `package.json` | `js` (covers JS and TS) |
+| `pyproject.toml`, `setup.py`, or `requirements.txt` | `python` |
+| `go.mod` | `go` |
+| `Cargo.toml` | `rust` |
+| `composer.json` | `php` |
+| none of the above | `unknown` |
+
+`package.json` is checked first, so a mixed-language repo with a root `package.json` alongside e.g. a nested `pyproject.toml` deterministically resolves to `js`. This detected language feeds both `verification.testGlobs` and `verification.coverageMode` below.
+
 ### `verification.testGlobs`
 
-Detected from the repo layout at init time:
+Detected from the repo layout and the detected project language at init time:
 
-| Layout condition | Written value |
+| Language / layout condition | Written value |
 |---|---|
-| `packages/` directory exists at init cwd (monorepo) | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` |
-| No `packages/` directory (single-package) | `["**/*.test.ts", "**/*.test.tsx"]` |
+| `js` + `packages/` directory exists at init cwd (monorepo) | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` |
+| `js` + no `packages/` directory (single-package) | `["**/*.test.ts", "**/*.test.tsx"]` |
+| `python` | `["**/test_*.py", "**/*_test.py"]` |
+| `go` | `["**/*_test.go"]` |
+| `rust` | `["tests/**/*.rs", "**/*_test.rs"]` |
+| `php` | `["**/*Test.php", "tests/**/*.php"]` |
+| `unknown` | same layout-based fallback as `js` (monorepo vs. single-package glob above) |
 
 The scanner prunes `node_modules/`, `dist/`, `.git/`, and `.turbo/`, so the broad single-package glob is safe.
 
@@ -630,9 +650,18 @@ Derived from the target repo's `package.json#scripts.test`, prefixed with the de
 
 `cadence init --dry-run` previews the same derived value (or its absence) without writing.
 
-### `verification.coverageMode` (Phase 139)
+### `verification.coverageMode` (Phase 139, language-aware as of Phase 166)
 
-A fresh `cadence init` writes `"assertion"` for every preset (`solo`/`team`/`production` alike) — a comment-only `AC-N` mention no longer counts as tested. This only affects what a **new** `init` writes; existing `.cadence/config.json` files are never rewritten.
+A fresh `cadence init` originally wrote `"assertion"` unconditionally for every preset (Phase 139) — a comment-only `AC-N` mention no longer counts as tested. As of Phase 166, that default is language-aware, using the same [project language detection](#project-language-detection-phase-166) that drives `verification.testGlobs`:
+
+| Detected language | Written `coverageMode` |
+|---|---|
+| `js` | `"assertion"` |
+| `python`, `go`, `rust`, `php`, or `unknown` | `"mention"` — init also prints a stderr notice naming the detected language and explaining why `assertion` mode wasn't used |
+
+This distinction exists because `assertion` mode's span-finder — the code that locates the asserting `it()`/`test()` block an `AC-N` token sits inside — currently only understands JS/TS test files. Defaulting a non-JS/TS project to `assertion` would produce a gate that can never pass no matter how well-tested the code is, since no test file would ever match an assertion-shaped span. Writing `"mention"` instead is a safe, honest default: it does not mean CADENCE has gained Python/Go/Rust/PHP test-parsing support (it has not — that is tracked separately, out of scope for this phase), only that those languages get a coverage mode that actually works with today's parser rather than one that is permanently unsatisfiable. Any project can still opt into `assertion` mode explicitly via `cadence config edit coverageMode` once real span support for that language exists.
+
+This only affects what a **new** `init` writes; existing `.cadence/config.json` files are never rewritten.
 
 ---
 
