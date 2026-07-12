@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "171-installer-settings-parse-failure-recovery",
+  "activePhase": "173-optimistic-concurrency-for-cadence-state-writes",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-12T03:20:22.855Z",
+  "draftReadAt": "2026-07-12T15:40:03.416Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-12-phase171-shipped-recs-recovered.md",
-    "subagentSpawns": 1575,
+    "subagentSpawns": 1598,
     "subagentBaselines": {}
   },
   "skillAudit": {
