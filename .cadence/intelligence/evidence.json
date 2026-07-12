@@ -518,6 +518,48 @@
       "kind": "note",
       "summary": "External consumer project observation, 2026-07-11 (dumpfile): SPEC-stage UI gap noted mid-brainstorm for a BuilderShell/StructuredWizardShell modal component, where the design decided behavior+visual precedent but not concrete layout.",
       "createdAt": "2026-07-11T14:33:47.461Z"
+    },
+    {
+      "id": "ev-20260712-001",
+      "recommendationId": "rec-20260712-001",
+      "kind": "note",
+      "summary": "Reconstructed stub: original entry (landed 2026-07-12 by a concurrent session's /cadence-scout retro) was lost to an unrelated git reset --hard before being committed. Recreated from a handoff doc's prose summary; full original rationale/evidence not recoverable.",
+      "createdAt": "2026-07-12T04:23:33.174Z"
+    },
+    {
+      "id": "ev-20260712-002",
+      "recommendationId": "rec-20260712-002",
+      "kind": "note",
+      "summary": "Reconstructed stub: original entry (landed 2026-07-12 by a concurrent session's /cadence-scout retro, originally rec-20260712-005) was lost to an unrelated git reset --hard before being committed. Recreated from a handoff doc's prose summary.",
+      "createdAt": "2026-07-12T04:24:07.083Z"
+    },
+    {
+      "id": "ev-20260712-003",
+      "recommendationId": "rec-20260712-003",
+      "kind": "note",
+      "summary": "Reconstructed stub: original entry (landed 2026-07-12 by a concurrent session's /cadence-scout retro, originally rec-20260712-006) was lost to an unrelated git reset --hard before being committed. Recreated from a handoff doc's prose summary.",
+      "createdAt": "2026-07-12T04:24:07.244Z"
+    },
+    {
+      "id": "ev-20260712-004",
+      "recommendationId": "rec-20260712-004",
+      "kind": "note",
+      "summary": "Reconstructed stub: original entry (rec-20260712-001, logged during the phase 170 session, 2026-07-12) was lost to an unrelated git reset --hard before being committed. Recreated from context earlier in this session.",
+      "createdAt": "2026-07-12T04:25:17.359Z"
+    },
+    {
+      "id": "ev-20260712-005",
+      "recommendationId": "rec-20260712-005",
+      "kind": "note",
+      "summary": "Reconstructed stub: original entry (rec-20260712-002, logged during the phase 170 session, 2026-07-12) was lost to an unrelated git reset --hard before being committed. Recreated from context earlier in this session.",
+      "createdAt": "2026-07-12T04:25:17.528Z"
+    },
+    {
+      "id": "ev-20260712-006",
+      "recommendationId": "rec-20260712-006",
+      "kind": "note",
+      "summary": "Reconstructed stub: original entry (rec-20260712-003, logged during the phase 170 session, 2026-07-12) was lost to an unrelated git reset --hard before being committed. Recreated from context earlier in this session.",
+      "createdAt": "2026-07-12T04:25:17.712Z"
     }
   ]
 }

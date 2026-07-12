@@ -1000,6 +1000,171 @@
       "decisionIds": [],
       "createdAt": "2026-07-11T14:33:47.461Z",
       "updatedAt": "2026-07-11T14:33:47.461Z"
+    },
+    {
+      "id": "rec-20260712-001",
+      "title": "Post-settle retro artifact + GitHub issue offer",
+      "summary": "Synthesize a post-settle retro artifact from existing SUMMARY fields (gateBypasses, taskResults status, gates[].status, deferred, findings) and offer to file a GitHub issue via an interactive gh issue create prompt, silent on non-TTY so it never breaks automation. Landed via a /cadence-scout session (scout-20260712-0328) exploring workflow-friction capture; a 4th candidate direction, an enforced retro-required gate, was explicitly dropped as anti-YAGNI.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "retro",
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260712-0328",
+      "createdAt": "2026-07-12T04:23:33.174Z",
+      "updatedAt": "2026-07-12T04:23:33.174Z"
+    },
+    {
+      "id": "rec-20260712-002",
+      "title": "Cross-phase retro rollup/trend view",
+      "summary": "A cross-phase rollup/trend view over the post-settle retro artifacts (depends on the retro-artifact recommendation existing first) — surfaces recurring workflow friction across multiple phases rather than one phase at a time. Landed via the same /cadence-scout session (scout-20260712-0328).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "retro",
+        "rollup"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260712-0328",
+      "createdAt": "2026-07-12T04:24:07.083Z",
+      "updatedAt": "2026-07-12T04:24:07.083Z"
+    },
+    {
+      "id": "rec-20260712-003",
+      "title": "Retro friction feeds back into Praxis recommendation scoring",
+      "summary": "Recurring friction identified by the post-settle retro feeds back into evidence.json to bump the scores of related recommendations (depends on the retro-artifact and rollup recommendations existing first). Landed via the same /cadence-scout session (scout-20260712-0328).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "retro",
+        "praxis-scoring"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260712-0328",
+      "createdAt": "2026-07-12T04:24:07.244Z",
+      "updatedAt": "2026-07-12T04:24:07.244Z"
+    },
+    {
+      "id": "rec-20260712-004",
+      "title": "cadence draft new: num arg accepts nonsense with no sanity check",
+      "summary": "cadence draft new's optional [num] positional argument silently accepts any string with no validation against the phase's existing 01-numbering convention. Omitting num already correctly defaults to 01; passing a bad value produces a nonsensical draft filename with no refusal or warning.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-12T04:25:17.359Z",
+      "updatedAt": "2026-07-12T04:25:17.359Z"
+    },
+    {
+      "id": "rec-20260712-005",
+      "title": "add-ac/add-task silently append after a placeholder AC-1/T1",
+      "summary": "cadence draft add-ac and add-task never warn when appending a new AC/task after the scaffolded draft still has its placeholder AC-1/T1 stub in place (e.g. from draft new without --template or --from-rec). This can silently leave a stale generic placeholder alongside real, hand-authored ACs/tasks.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-12T04:25:17.528Z",
+      "updatedAt": "2026-07-12T04:25:17.528Z"
+    },
+    {
+      "id": "rec-20260712-006",
+      "title": "Settle-internal refusal paths still write no SUMMARY",
+      "summary": "Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "settle"
+      ],
+      "affectedFiles": [
+        "packages/core/src/parse/summary-writer.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-12T04:25:17.712Z",
+      "updatedAt": "2026-07-12T04:25:17.712Z"
     }
   ],
   "archived": [
@@ -2368,12 +2533,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "165-host-cli-headless-verifier",
-      "scoutId": "scout-20260710-0400",
-      "createdAt": "2026-07-10T03:57:01.960Z",
-      "updatedAt": "2026-07-11T00:23:03.970Z",
       "shippedRef": "phase 165 / PR #164 / commit 1351044",
+      "scoutId": "scout-20260710-0400",
       "archivedAt": "2026-07-11T00:23:03.970Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-10T03:57:01.960Z",
+      "updatedAt": "2026-07-11T00:23:03.970Z"
     }
   ]
 }
