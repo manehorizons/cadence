@@ -138,6 +138,51 @@ describe('runSettleGates dispatch (Phase 44.1)', () => {
     expect(calls).not.toContain('code-review');
   });
 
+  it('normalizes a throwing gate into a refuse outcome and halts (Phase 176, AC-1)', async () => {
+    const calls: SettleGate[] = [];
+    const registry = recordingRegistry(calls);
+    registry['test-coverage'] = {
+      impl: async () => {
+        calls.push('test-coverage');
+        throw new Error('boom');
+      },
+      selfGuarded: false,
+    };
+    const { refused, gates } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), { registry });
+    expect(refused).toBe(true);
+    expect(calls).toEqual([
+      'draft-read',
+      'structural-verifier',
+      'boundary-scan',
+      'build-test-must-pass',
+      'test-coverage',
+    ]);
+    expect(calls).not.toContain('code-review');
+    expect(gates[gates.length - 1]).toEqual({
+      gate: 'test-coverage',
+      status: 'refused',
+      reason: 'test-coverage: threw — boom',
+    });
+  });
+
+  it('normalizes a throw of a non-Error value into a refuse outcome (Phase 176, AC-1)', async () => {
+    const registry = recordingRegistry([]);
+    registry['draft-read'] = {
+      impl: async () => {
+        throw 'not-an-error';
+      },
+      selfGuarded: false,
+    };
+    const { refused, gates } = await runSettleGates(ctxWith(['draft-read']), {
+      registry,
+      order: ['draft-read'],
+    });
+    expect(refused).toBe(true);
+    expect(gates).toEqual([
+      { gate: 'draft-read', status: 'refused', reason: 'draft-read: threw — not-an-error' },
+    ]);
+  });
+
   it('merges gate summaryPatch + flags into the accumulator', async () => {
     const calls: SettleGate[] = [];
     const { acc } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {

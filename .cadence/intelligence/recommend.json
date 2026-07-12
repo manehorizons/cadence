@@ -1,91 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-12T19:47:52.834Z",
+  "generatedAt": "2026-07-12T23:32:15.189Z",
   "ranked": [
-    {
-      "id": "rec-20260712-001",
-      "title": "Post-settle retro artifact + GitHub issue offer",
-      "raw": 16.7,
-      "score": 59,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "high",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio high",
-          "value": 5
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-0328"
-    },
-    {
-      "id": "rec-20260712-007",
-      "title": "Guarantee an audit/SUMMARY record when any settle gate throws (not just security-audit)",
-      "raw": 16.7,
-      "score": 59,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "high",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio high",
-          "value": 5
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-1234"
-    },
     {
       "id": "rec-20260703-001",
       "title": "Milestone-scoped worktree fan-out for independent phases",
@@ -1187,10 +1103,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 51,
-    "ranked": 28,
+    "total": 50,
+    "ranked": 26,
     "parked": 1,
     "needsAttention": 0,
-    "excluded": 22
+    "excluded": 23
   }
 }

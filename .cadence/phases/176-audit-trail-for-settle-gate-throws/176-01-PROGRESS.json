@@ -1,0 +1,17 @@
+{
+  "draftId": "176-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Wrapped entry.impl(ctx) invocation in runSettleGates in try/catch; on throw, synthesizes {outcome:'refuse', reason} and a 'refused' provenance entry, returning refused:true so settle.ts's existing SUMMARY-on-refusal path fires. Verified via 2 new tests in registry.test.ts (Error and non-Error throw cases).",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-12T23:18:00.178Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Regression coverage: full packages/core/tests/gates suite (22 files, 221 tests) passes after the T1 change, confirming normal pass/refuse gate flows and provenance are unchanged.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-12T23:18:05.640Z"
+    }
+  }
+}

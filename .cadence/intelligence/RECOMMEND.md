@@ -2,29 +2,13 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-12T19:47:52.834Z
+Generated at: 2026-07-12T23:32:15.189Z
 
 ## Advisory
 
 - cadence milestone propose
 
 ## Ranked
-
-### rec-20260712-001 — Post-settle retro artifact + GitHub issue offer
-
-- score: 59/100 (raw 16.7)
-- status: candidate · ready: needs-evidence · priority: high · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio high +5 ⇒ raw 16.7 (score 59)
-- scout: scout-20260712-0328
-- next: cadence milestone propose
-
-### rec-20260712-007 — Guarantee an audit/SUMMARY record when any settle gate throws (not just security-audit)
-
-- score: 59/100 (raw 16.7)
-- status: candidate · ready: needs-evidence · priority: high · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio high +5 ⇒ raw 16.7 (score 59)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
 
 ### rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases
 
@@ -238,4 +222,4 @@ None.
 
 ## Totals
 
-- total 51 · ranked 28 · parked 1 · needs-attention 0 · excluded 22
+- total 50 · ranked 26 · parked 1 · needs-attention 0 · excluded 23
