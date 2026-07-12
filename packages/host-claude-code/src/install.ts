@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { EDIT_TOOL_MATCHER, SKILL_TOOL_MATCHER } from './event-map.js';
 import { resolveLocalPaths } from './locate-self.js';
@@ -58,10 +58,29 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
   const settingsPath = join(root, opts.settingsPath ?? '.claude/settings.json');
 
   let current: SettingsShape = {};
+  let raw: string | undefined;
   try {
-    current = JSON.parse(await readFile(settingsPath, 'utf8')) as SettingsShape;
-  } catch {
-    // file absent or malformed → start fresh
+    raw = await readFile(settingsPath, 'utf8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      // file absent → start fresh, same as today's fresh-install behavior
+      raw = undefined;
+    } else {
+      throw new Error(
+        `Refusing to install: ${settingsPath} could not be read (${(err as Error).message}). ` +
+          `Fix or remove the file manually before re-running install.`,
+      );
+    }
+  }
+  if (raw !== undefined) {
+    try {
+      current = JSON.parse(raw) as SettingsShape;
+    } catch {
+      throw new Error(
+        `Refusing to install: ${settingsPath} exists but is not valid JSON. ` +
+          `Fix or remove the file manually before re-running install.`,
+      );
+    }
   }
   if (typeof current !== 'object' || current === null || Array.isArray(current)) current = {};
 
@@ -102,5 +121,22 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
   current.hooks = hooks;
 
   await mkdir(dirname(settingsPath), { recursive: true });
-  await writeFile(settingsPath, JSON.stringify(current, null, 2) + '\n', 'utf8');
+
+  // Phase 171 — before overwriting a prior settings file, preserve it under a
+  // timestamped backup path. `raw !== undefined` here means the file existed
+  // AND parsed as valid JSON above (malformed JSON already threw earlier), so
+  // this is the only case where a prior file's content could be clobbered.
+  if (raw !== undefined) {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = `${settingsPath}.bak-${timestamp}`;
+    await writeFile(backupPath, raw, 'utf8');
+  }
+
+  // Write atomically: stage the new content in a temp file in the same
+  // directory, then rename it over the real path. `rename` on the same
+  // filesystem is atomic, so a crash mid-write never leaves `settingsPath`
+  // truncated or partially written.
+  const tempPath = `${settingsPath}.tmp-${process.pid}-${Date.now()}`;
+  await writeFile(tempPath, JSON.stringify(current, null, 2) + '\n', 'utf8');
+  await rename(tempPath, settingsPath);
 }

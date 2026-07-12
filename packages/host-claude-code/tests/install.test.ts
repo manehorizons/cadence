@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtemp, readFile, rm, writeFile, mkdir } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { installHooks } from '../src/install.js';
@@ -226,5 +226,125 @@ describe('installHooks', () => {
       e.hooks.some((h) => h.command === 'user-hook'),
     );
     expect(userStill).toBeDefined();
+  });
+
+  // AC-1 (Phase 171) — malformed settings.json must never be silently
+  // discarded/overwritten. Regression test for the deja-hooks-wiped incident
+  // (31f1351 / PR #170): a JSON.parse failure on an existing file used to
+  // reset `current` to `{}` and write a fresh cadence-only config over it,
+  // destroying any third-party content that happened to be present.
+  it('AC-1: refuses to touch settings.json that is malformed (parse failure), leaving raw content byte-for-byte unchanged', async () => {
+    const root = await tempDir();
+    await mkdir(join(root, '.claude'), { recursive: true });
+
+    // Start from a plausible real settings.json containing a recognizable
+    // third-party (non-cadence) hook entry...
+    const validWithThirdParty = JSON.stringify({
+      hooks: {
+        SessionStart: [
+          { hooks: [{ type: 'command', command: 'some-other-tool' }] },
+        ],
+      },
+    });
+    // ...then corrupt it (truncate) so JSON.parse throws — simulating the
+    // on-disk malformed-JSON state that triggered the real incident.
+    const malformed = validWithThirdParty.slice(0, -1);
+    expect(() => JSON.parse(malformed)).toThrow();
+
+    const settingsPath = join(root, '.claude/settings.json');
+    await writeFile(settingsPath, malformed, 'utf8');
+
+    const before = await readFile(settingsPath, 'utf8');
+    expect(before).toBe(malformed);
+
+    // installHooks must refuse (throw) rather than silently overwrite.
+    await expect(installHooks(root)).rejects.toThrow(/not valid JSON/);
+
+    const after = await readFile(settingsPath, 'utf8');
+    // installHooks must refuse to write over a malformed settings.json —
+    // the raw bytes on disk must be exactly what they were before the call.
+    expect(after).toBe(before);
+  });
+
+  // AC-4 (Phase 171) — existing successful-parse merge behavior (preserving
+  // third-party/non-cadence keys and hooks) must be unaffected by the T2/T3
+  // refusal + backup/atomic-write changes. Also confirms the T3 backup
+  // exists and contains the ORIGINAL pre-install bytes, and that no leftover
+  // temp file is left behind after a successful call.
+  it('AC-4: preserves third-party hook entries on a valid install AND writes a backup of the original content AND leaves no leftover tmp file', async () => {
+    const root = await tempDir();
+    await mkdir(join(root, '.claude'), { recursive: true });
+    const settingsPath = join(root, '.claude/settings.json');
+
+    const original = JSON.stringify(
+      {
+        hooks: {
+          SessionStart: [
+            { hooks: [{ type: 'command', command: 'third-party-tool --flag' }] },
+          ],
+        },
+        someThirdPartyKey: 'keep-me',
+      },
+      null,
+      2,
+    );
+    await writeFile(settingsPath, original, 'utf8');
+
+    await installHooks(root);
+
+    // (a) third-party entry still present (existing merge-preserve behavior, unchanged).
+    const cfg = JSON.parse(await readFile(settingsPath, 'utf8'));
+    expect(cfg.someThirdPartyKey).toBe('keep-me');
+    type Entry = { hooks: Array<{ command: string }>; _managedBy?: string };
+    const thirdPartyEntry = (cfg.hooks.SessionStart as Entry[]).find((e) =>
+      e.hooks.some((h) => h.command === 'third-party-tool --flag'),
+    );
+    expect(thirdPartyEntry).toBeDefined();
+    // Cadence entry was also added alongside it.
+    const cadenceEntry = (cfg.hooks.SessionStart as Entry[]).find(
+      (e) => e._managedBy === 'cadence',
+    );
+    expect(cadenceEntry).toBeDefined();
+
+    // (b) a backup matching settings.json.bak-* exists and holds the
+    // ORIGINAL pre-install content byte-for-byte.
+    const dirEntries = await readdir(join(root, '.claude'));
+    const backupNames = dirEntries.filter((name) => name.startsWith('settings.json.bak-'));
+    expect(backupNames).toHaveLength(1);
+    const backupContent = await readFile(join(root, '.claude', backupNames[0] as string), 'utf8');
+    expect(backupContent).toBe(original);
+
+    // (c) no leftover settings.json.tmp-* file remains after success.
+    const tmpNames = dirEntries.filter((name) => name.startsWith('settings.json.tmp-'));
+    expect(tmpNames).toHaveLength(0);
+  });
+
+  // AC-2 (Phase 171) — ENOENT (no settings.json yet) must still create a
+  // fresh file with the cadence-managed hooks; the T2 malformed-JSON refusal
+  // must not regress the absent-file path.
+  it('AC-2: ENOENT (no prior settings.json) still creates a fresh settings file with cadence hooks', async () => {
+    const root = await tempDir();
+    await installHooks(root);
+
+    const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
+    expect(cfg.hooks.SessionStart[0]._managedBy).toBe('cadence');
+    expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
+      'npx @manehorizons/cadence-host-claude-code hook',
+    );
+  });
+
+  // AC-3 (Phase 171) — the ENOENT / fresh-install path has nothing to back
+  // up, so no `.bak-*` file should be created.
+  it('AC-3: a fresh install with no prior settings.json creates no backup file', async () => {
+    const root = await tempDir();
+    await installHooks(root);
+
+    const dirEntries = await readdir(join(root, '.claude'));
+    const backupNames = dirEntries.filter((name) => name.startsWith('settings.json.bak-'));
+    expect(backupNames).toHaveLength(0);
+    const tmpNames = dirEntries.filter((name) => name.startsWith('settings.json.tmp-'));
+    expect(tmpNames).toHaveLength(0);
+    // Sanity: the settings file itself was still created (AC-2, unaffected).
+    expect(dirEntries).toContain('settings.json');
   });
 });
