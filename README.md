@@ -4,9 +4,20 @@
 
 **Cadence stops AI agents from shipping work they only *claim* is done** — a DRAFT→BUILD→SETTLE loop whose quality gates re-check your acceptance criteria and refuse to settle when they don't pass.
 
+> **"Your CI is green. Cadence still said no."**
+
+![An agent guts a failing test to make the suite green; Cadence's settle gate still refuses, then accepts once the bug is actually fixed](https://raw.githubusercontent.com/manehorizons/cadence/main/examples/demo-test-gutting/gutting.svg)
+
+An agent hits a failing test, guts the assertion, and leaves a plausible excuse (`// flaky rounding on some platforms? disabling for now`). The suite goes green, tasks get marked DONE. Then `cadence settle run --auto` refuses anyway — naming the specific AC and the specific dodge, exit 1. Fix the bug for real, restore the assertion, and it settles clean. Real output, offline, mock verifier, zero npm deps — run it yourself: **[docs/DEMO.md →](https://github.com/manehorizons/cadence/blob/main/docs/DEMO.md)** (full 4-beat narrative) or `examples/demo-test-gutting/run-demo.sh` (replay it locally).
+
+<details>
+<summary>Also see: the $100/3 demo (arithmetic bugs, not agent cheating)</summary>
+
 ![CADENCE refusing to settle a failing build](https://raw.githubusercontent.com/manehorizons/cadence-demo-billsplit/main/billsplit.gif)
 
 Above, the always-fire `build-test-must-pass` gate blocks a plausible lost-penny bug in a bill-splitter — `$100.00` split 3 ways summing to `$99.99`. The AI marked the task **DONE**; the gate didn't agree, and refused to close the loop. The demo repo carries the story past the block — the fix, then a clean **settle** once `$100.00` actually splits to `$100.00` — with real git history and reproduce-it-yourself steps: **[cadence-demo-billsplit →](https://github.com/manehorizons/cadence-demo-billsplit)**
+
+</details>
 
 ## For technical reviewers
 

@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 22,
+  "revision": 18,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "176-audit-trail-for-settle-gate-throws",
+  "activePhase": "177-readme-embeds-the-animated-test-gutting-demo-svg",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-12T23:16:18.337Z",
+  "draftReadAt": "2026-07-12T23:07:40.725Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-12-phase174-fully-landed.md",
-    "subagentSpawns": 1612,
+    "lastHandoff": "SESSION-2026-07-12-phase174-shipped.md",
+    "subagentSpawns": 1608,
     "subagentBaselines": {}
   },
   "skillAudit": {
