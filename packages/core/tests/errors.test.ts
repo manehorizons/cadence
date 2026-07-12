@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CadenceError, StateCorruptError, NotInitializedError, ConfigInvalidError, LoopViolationError } from '../src/errors.js';
+import { CadenceError, StateCorruptError, NotInitializedError, ConfigInvalidError, LoopViolationError, StateConflictError } from '../src/errors.js';
 
 describe('errors', () => {
   it('CadenceError carries a code', () => {
@@ -42,5 +42,17 @@ describe('errors', () => {
     expect(e.actual).toBe('IDLE');
     expect(e.message).toBe('bad');
     expect(e.code).toBe('LOOP_VIOLATION');
+  });
+
+  it('StateConflictError code is STATE_CONFLICT', () => {
+    const e = new StateConflictError('conflict', { expectedRevision: 0, actualRevision: 1 });
+    expect(e.code).toBe('STATE_CONFLICT');
+    expect(e.name).toBe('StateConflictError');
+  });
+
+  it('StateConflictError carries expectedRevision + actualRevision', () => {
+    const e = new StateConflictError('conflict', { expectedRevision: 3, actualRevision: 5 });
+    expect(e.expectedRevision).toBe(3);
+    expect(e.actualRevision).toBe(5);
   });
 });

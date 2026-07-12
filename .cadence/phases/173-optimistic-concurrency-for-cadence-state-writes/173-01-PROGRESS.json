@@ -1,0 +1,47 @@
+{
+  "draftId": "173-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-12T15:50:14.145Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-12T15:50:14.402Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/172-optimistic-concurrency-for-cadence-state-writes/packages/core/src/state/backend.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/172-optimistic-concurrency-for-cadence-state-writes/packages/core/src/state/simple.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/172-optimistic-concurrency-for-cadence-state-writes/packages/core/tests/state/commit.test.ts"
+      ],
+      "updatedAt": "2026-07-12T15:58:47.500Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-12T16:00:43.224Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/172-optimistic-concurrency-for-cadence-state-writes/packages/core/tests/hooks/handlers-subagent-touched-files.test.ts"
+      ],
+      "updatedAt": "2026-07-12T16:01:56.478Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-12T16:03:05.093Z"
+    }
+  }
+}

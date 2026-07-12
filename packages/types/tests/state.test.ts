@@ -65,6 +65,28 @@ describe('CadenceStateZ', () => {
     const { activeSpec: _drop, ...withoutField } = emptyState();
     expect(CadenceStateZ.parse(withoutField).activeSpec).toBeNull();
   });
+
+  // AC-1 (Phase 173) — optimistic-concurrency revision field.
+  it('emptyState includes revision: 0 (AC-1)', () => {
+    expect(emptyState().revision).toBe(0);
+  });
+
+  it('parses state.json without revision (legacy, defaults to 0) (AC-1)', () => {
+    const { revision: _drop, ...withoutField } = emptyState();
+    expect(CadenceStateZ.parse(withoutField).revision).toBe(0);
+  });
+
+  it('rejects a negative revision (AC-1)', () => {
+    expect(() => CadenceStateZ.parse({ ...emptyState(), revision: -1 })).toThrow();
+  });
+
+  it('rejects a non-integer revision (AC-1)', () => {
+    expect(() => CadenceStateZ.parse({ ...emptyState(), revision: 1.5 })).toThrow();
+  });
+
+  it('accepts an incremented revision (AC-1)', () => {
+    expect(CadenceStateZ.parse({ ...emptyState(), revision: 7 }).revision).toBe(7);
+  });
 });
 
 describe('session.subagentBaselines', () => {
