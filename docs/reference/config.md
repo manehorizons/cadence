@@ -479,6 +479,33 @@ archive is viewable with `cadence recommendation list --archived`.
 
 ---
 
+## retro
+
+Post-settle retro artifact (Phase 174, rec-20260712-001). On every successful
+settle, `cadence` synthesizes a friction digest — gate bypasses, tasks whose
+terminal status wasn't a clean `DONE`, and any code-review / security-audit /
+boundary-scan findings — purely from the SUMMARY it already assembled, and
+writes it as `<draftId>-RETRO.json`/`.md` alongside `SUMMARY.json`/`.md`. When
+the digest is non-empty and the run is interactive, it also offers to file a
+GitHub issue for it via `gh` (auto-labeled `needs-triage` on a best-effort
+basis after creation).
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `retro.enabled` | `boolean` | `true` | Master switch. `false` disables both the artifact write and the GitHub issue offer entirely. |
+| `retro.offerGithubIssue` | `boolean` | `true` | Sub-toggle. `false` keeps writing the retro artifact but never prompts to file a GitHub issue, even when the digest has friction. |
+
+The GitHub issue offer only appears when the digest is non-empty, the run is
+interactive (a real TTY, or the `CADENCE_PROMPTER_SCRIPT` test seam), and
+`gh` can resolve the current repo (`gh repo view`). It never appears in CI or
+any other non-TTY run.
+
+```json
+{ "retro": { "enabled": true, "offerGithubIssue": false } }
+```
+
+---
+
 ## gates
 
 Sealed-gate enforcement (Phase 141). A gate id listed in `gates.sealed` becomes

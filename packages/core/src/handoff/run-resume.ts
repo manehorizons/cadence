@@ -6,7 +6,7 @@ import { runContext } from '../intelligence/context.js';
 import { loadConfig } from '../config/loader.js';
 import { type CommandIO, processIO } from '../services/io.js';
 import { resolveInteractivity } from '../gates/interactivity.js';
-import { StdinPrompter, ScriptedPrompter, type Prompter } from '../verify/prompter.js';
+import { createDefaultPrompter } from '../verify/prompter.js';
 import { locateFreshestHandoff, readKey } from './locate.js';
 import { extractBriefSections } from './brief.js';
 import { gatherHandoffCandidates } from './candidates.js';
@@ -143,16 +143,6 @@ function withCandidates(result: ResumeResult, candidates: HandoffCandidate[]): R
   return { ...result, candidates };
 }
 
-/** Mirrors `services/settle.ts`'s `prompter.create` seam exactly. */
-function buildPrompter(): Prompter {
-  const scripted = process.env.CADENCE_PROMPTER_SCRIPT;
-  if (scripted !== undefined) {
-    const answers = scripted.split('\n').filter((s) => s.length > 0 || s === '');
-    return new ScriptedPrompter(answers);
-  }
-  return new StdinPrompter();
-}
-
 async function resolveResume(
   root: string,
   opts: ResumeOptions,
@@ -211,7 +201,7 @@ async function resolveResume(
     }
 
     const interactivity = resolveInteractivity(process.env, Boolean(process.stdin.isTTY));
-    const picked = await promptForPick(candidates, interactivity, io, { createPrompter: buildPrompter });
+    const picked = await promptForPick(candidates, interactivity, io, { createPrompter: createDefaultPrompter });
     if (!picked) return { found: false, candidates };
     return withCandidates(await resolveByCandidate(root, picked, opts, now), candidates);
   }
