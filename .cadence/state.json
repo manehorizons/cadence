@@ -15,8 +15,8 @@
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-12-phase170-refusing-gate-provenance-landed.md",
-    "subagentSpawns": 1573,
+    "lastHandoff": "SESSION-2026-07-12-phase171-shipped-recs-recovered.md",
+    "subagentSpawns": 1575,
     "subagentBaselines": {}
   },
   "skillAudit": {

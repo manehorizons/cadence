@@ -438,3 +438,21 @@ the rule that prevents it — with the enforcement layer where one exists.
 Pre-Phase-12 artifacts under `.keel/` are intentionally preserved as a
 transition narrative. The project was renamed KEEL → CADENCE in Phase 12
 (`v0.2.0-rc.1`, 2026-05-14). `DESIGN.md §8.3` lists rejected names.
+
+<!-- deja:start -->
+## deja
+
+ACTION: before writing a new function/component, call `deja_find` (oracle MCP)
+to check whether an equivalent already exists in the repo. ACTION: before
+adding a new dependency, call `deja_check_dep` to check whether an existing
+dependency or project function already covers it. `deja_peek` reads a
+candidate's full source.
+
+Note: these are MCP tools — if they only appear by name in a deferred-tools
+list, call `ToolSearch` first (e.g. `select:deja_find,deja_check_dep,deja_peek`)
+to load them before you can call them.
+
+Edits are also gated automatically against near-duplicates
+(PreToolUse/PostToolUse hooks) — a block means reuse the existing function,
+or use the `deja:new` override token for a genuine intentional rewrite.
+<!-- deja:end -->
