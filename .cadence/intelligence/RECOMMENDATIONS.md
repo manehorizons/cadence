@@ -530,7 +530,7 @@ CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC capture
 
 ## rec-20260712-001 — Post-settle retro artifact + GitHub issue offer
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: high
 - leverage: 5/10
