@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "170-refusing-gate-provenance",
+  "activePhase": "171-installer-settings-parse-failure-recovery",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-12T00:11:42.651Z",
+  "draftReadAt": "2026-07-12T03:20:22.855Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-11-phase166-language-aware-coverage-shipped.md",
-    "subagentSpawns": 1561,
+    "subagentSpawns": 1573,
     "subagentBaselines": {}
   },
   "skillAudit": {
