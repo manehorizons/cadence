@@ -61,7 +61,6 @@ None.
 ## Exported
 
 - mil-grp-onboarding-honesty — onboarding-honesty → .cadence/intelligence/exports/mil-grp-onboarding-honesty/SPEC.md
-- mil-rec-rec-20260611-003 — Make real verification the felt default — close the gap between the enforcement wedge and the mock default → .cadence/intelligence/exports/mil-rec-rec-20260611-003/SPEC.md
 - mil-rec-rec-20260619-003 — Draft templates for first real work → .cadence/intelligence/exports/mil-rec-rec-20260619-003/SPEC.md
 - mil-rec-rec-20260619-006 — First real phase agent prompt → .cadence/intelligence/exports/mil-rec-rec-20260619-006/SPEC.md
 - mil-rec-rec-20260701-012 — Boundary enforcement block mode, including subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260701-012/SPEC.md
@@ -70,4 +69,5 @@ None.
 
 ## Closed
 
+- mil-rec-rec-20260611-003 — Make real verification the felt default — close the gap between the enforcement wedge and the mock default (ref: phase 104 / PR #87 / v1.25.0 (commit 60fdad8))
 - mil-rec-rec-20260708-002 — Mock milestone workflow proof for Codex first-run bootstrap (ref: proof workflow artifact: .cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md; phase 162 settled on feat/codex-first-run-recommendation)
