@@ -1002,34 +1002,6 @@
       "updatedAt": "2026-07-11T14:33:47.461Z"
     },
     {
-      "id": "rec-20260712-001",
-      "title": "Post-settle retro artifact + GitHub issue offer",
-      "summary": "Synthesize a post-settle retro artifact from existing SUMMARY fields (gateBypasses, taskResults status, gates[].status, deferred, findings) and offer to file a GitHub issue via an interactive gh issue create prompt, silent on non-TTY so it never breaks automation. Landed via a /cadence-scout session (scout-20260712-0328) exploring workflow-friction capture; a 4th candidate direction, an enforced retro-required gate, was explicitly dropped as anti-YAGNI.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-evidence",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "retro",
-        "core"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "174-post-settle-retro-artifact",
-      "scoutId": "scout-20260712-0328",
-      "createdAt": "2026-07-12T04:23:33.174Z",
-      "updatedAt": "2026-07-12T19:58:24.695Z"
-    },
-    {
       "id": "rec-20260712-002",
       "title": "Cross-phase retro rollup/trend view",
       "summary": "A cross-phase rollup/trend view over the post-settle retro artifacts (depends on the retro-artifact recommendation existing first) — surfaces recurring workflow friction across multiple phases rather than one phase at a time. Landed via the same /cadence-scout session (scout-20260712-0328).",
@@ -2878,11 +2850,42 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "104-real-verification-default",
-      "scoutId": "scout-20260611-1857",
-      "createdAt": "2026-06-11T23:57:15.298Z",
-      "updatedAt": "2026-07-12T19:28:49.724Z",
       "shippedRef": "phase 104 / PR #87 / v1.25.0 (commit 60fdad8)",
+      "scoutId": "scout-20260611-1857",
       "archivedAt": "2026-07-12T19:28:49.724Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-06-11T23:57:15.298Z",
+      "updatedAt": "2026-07-12T19:28:49.724Z"
+    },
+    {
+      "id": "rec-20260712-001",
+      "title": "Post-settle retro artifact + GitHub issue offer",
+      "summary": "Synthesize a post-settle retro artifact from existing SUMMARY fields (gateBypasses, taskResults status, gates[].status, deferred, findings) and offer to file a GitHub issue via an interactive gh issue create prompt, silent on non-TTY so it never breaks automation. Landed via a /cadence-scout session (scout-20260712-0328) exploring workflow-friction capture; a 4th candidate direction, an enforced retro-required gate, was explicitly dropped as anti-YAGNI.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "retro",
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "174-post-settle-retro-artifact",
+      "scoutId": "scout-20260712-0328",
+      "createdAt": "2026-07-12T04:23:33.174Z",
+      "updatedAt": "2026-07-12T20:59:11.134Z",
+      "shippedRef": "PR #184",
+      "archivedAt": "2026-07-12T20:59:11.134Z",
       "archiveReason": "shipped"
     }
   ]
