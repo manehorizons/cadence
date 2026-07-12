@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 7,
+  "revision": 9,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
@@ -16,7 +16,7 @@
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-12-phase174-shipped.md",
+    "lastHandoff": "SESSION-2026-07-12-phase174-fully-landed.md",
     "subagentSpawns": 1607,
     "subagentBaselines": {}
   },
