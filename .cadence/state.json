@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "revision": 13,
+  "revision": 18,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "175-readme-features-the-test-gutting-demo",
+  "activePhase": "177-readme-embeds-the-animated-test-gutting-demo-svg",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-12T21:15:45.537Z",
+  "draftReadAt": "2026-07-12T23:07:40.725Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
