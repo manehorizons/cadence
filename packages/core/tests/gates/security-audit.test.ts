@@ -72,6 +72,11 @@ describe('runSecurityAuditGate', () => {
     expect(res.outcome).toBe('refuse');
     expect(errs[0]).toBe('security-audit: 7 critical — sqli\n');
     expect(errs.join('')).toContain('reported 1 CRITICAL finding(s)');
+    // AC-2: reason matches the exact summary refusal message.
+    expect(res.reason).toBe(
+      'settle run refused: security-audit reported 1 CRITICAL finding(s). ' +
+        'Pass --allow-security-audit-failure to record them and settle anyway, or --force to bypass.',
+    );
   });
 
   // AC-4: CRITICAL + --allow-security-audit-failure → pass + proceed line
@@ -99,6 +104,10 @@ describe('runSecurityAuditGate', () => {
     const res = await runSecurityAuditGate(ctx({ verifyThrows: 'boom', errs }));
     expect(res.outcome).toBe('refuse');
     expect(errs.join('')).toContain('security-audit: verifier failed — boom');
+    // AC-2: reason matches the exact stderr message (minus trailing newline).
+    expect(res.reason).toBe(
+      'security-audit: verifier failed — boom. Pass --allow-security-audit-failure to continue.',
+    );
   });
 
   // AC-4: verifier throws + bypass → pass

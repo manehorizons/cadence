@@ -219,7 +219,7 @@ describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
     ]);
   });
 
-  it('returns a partial gates[] (only entries before the halt) on refusal', async () => {
+  it('returns a partial gates[] (earlier entries plus the refusing gate itself) on refusal (AC-1, phase 170)', async () => {
     const { gates, refused } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
       registry: recordingRegistry([], { 'test-coverage': { outcome: 'refuse' } }),
     });
@@ -229,7 +229,39 @@ describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
       { gate: 'structural-verifier', status: 'ran' },
       { gate: 'boundary-scan', status: 'skipped', skipReason: 'boundaryEnforcement is not "block"' },
       { gate: 'build-test-must-pass', status: 'ran' },
+      { gate: 'test-coverage', status: 'refused' },
     ]);
+  });
+
+  it('pushes the refusing gate onto provenance with its reason before halting, preserving earlier ran/skipped entries (AC-1, phase 170)', async () => {
+    // test-coverage sits mid-GATE_ORDER: draft-read, structural-verifier, and
+    // build-test-must-pass all record their own ran entries first.
+    const { gates, refused } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
+      registry: recordingRegistry([], {
+        'test-coverage': { outcome: 'refuse', reason: 'some specific test reason' },
+      }),
+    });
+    expect(refused).toBe(true);
+    expect(gates.at(-1)).toEqual({
+      gate: 'test-coverage',
+      status: 'refused',
+      reason: 'some specific test reason',
+    });
+    expect(gates.slice(0, -1)).toEqual([
+      { gate: 'draft-read', status: 'ran' },
+      { gate: 'structural-verifier', status: 'ran' },
+      { gate: 'boundary-scan', status: 'skipped', skipReason: 'boundaryEnforcement is not "block"' },
+      { gate: 'build-test-must-pass', status: 'ran' },
+    ]);
+  });
+
+  it('pushes a refused entry with no reason key when the gate result omits reason (AC-1, phase 170)', async () => {
+    const { gates } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
+      registry: recordingRegistry([], { 'test-coverage': { outcome: 'refuse' } }),
+    });
+    const refusedEntry = gates.at(-1);
+    expect(refusedEntry).toEqual({ gate: 'test-coverage', status: 'refused' });
+    expect(refusedEntry && 'reason' in refusedEntry).toBe(false);
   });
 
   it('records boundary-scan as ran when effectiveBoundaryEnforcement resolves to "block"', async () => {

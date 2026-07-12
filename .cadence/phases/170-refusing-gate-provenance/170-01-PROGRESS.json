@@ -1,0 +1,68 @@
+{
+  "draftId": "170-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "GateProvenanceZ.status gains 'refused'; optional reason field added to GateProvenanceZ + GateResult. Reviewed independently, full pipeline (lint/typecheck/test/build) green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-12T00:17:13.408Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "reason threaded through all 15 refuse sites across the 9 settle-dispatched gate impls, verbatim matching their stderr text. Reviewed independently (spot-checked TDD via stash-revert), full pipeline green.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/draft-read.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/structural-verifier.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/boundary-scan.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/build-test-must-pass.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/coverage.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/interactive.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/deep-verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/code-review.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/security-audit.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/draft-read.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/structural-verifier.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/boundary-scan.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/build-test-must-pass.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/coverage.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/interactive.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/deep-verify.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/code-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/security-audit.test.ts"
+      ],
+      "updatedAt": "2026-07-12T00:30:11.323Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "docs/concepts.md documents the new 'refused' GateProvenance status + reason field and the SUMMARY-on-refusal end state. Reviewed independently for doc-drift and technical accuracy, full pipeline green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-12T00:30:11.503Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "runSettleGates now pushes the refusing gate's {status:'refused', reason} entry onto provenance before halting. Reviewed independently including a legitimate correction of a pre-existing test that encoded the bug. Full pipeline green.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/gates/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/gates/registry.test.ts"
+      ],
+      "updatedAt": "2026-07-12T00:34:44.635Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Refused settle now persists SUMMARY.json/md (empty acResults, real taskResults, populated gates ending in the refused entry), with zero loopPosition/activeDraft mutation. Fixed 7 pre-existing tests that encoded the old no-SUMMARY-on-refusal behavior. Reviewed independently with heavy scrutiny on state-mutation safety; full pipeline green.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/services/settle.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/cli/draft-read-gate.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/cli/settle-code-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/cli/settle-codereview-convergence.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/cli/settle-coverage.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/cli/settle-interactive.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/cli/settle-security-audit.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/170-refusing-gate-provenance/packages/core/tests/cli/tutorial.test.ts"
+      ],
+      "updatedAt": "2026-07-12T00:47:00.848Z"
+    }
+  }
+}

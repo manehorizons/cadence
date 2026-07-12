@@ -47,6 +47,11 @@ describe('runStructuralVerifierGate', () => {
     expect(errs.join('')).toContain(
       'settle run refused: all tasks must be terminal (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED).',
     );
+    // AC-2: reason matches the final summary stderr line exactly (minus trailing newline).
+    expect(res.reason).toBe(
+      'settle run refused: all tasks must be terminal (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED). ' +
+        'Pass --allow-open-tasks to bypass, or --force to settle anyway.',
+    );
   });
 
   // AC-2: a PENDING task is non-terminal → refuse

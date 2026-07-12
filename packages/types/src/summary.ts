@@ -53,18 +53,20 @@ export type GateBypass = z.infer<typeof GateBypassZ>;
 
 /**
  * Phase 140: per-gate ran/skipped provenance for one settle, in `GATE_ORDER`.
- * A refusing gate halts settle before SUMMARY is ever written, so a
- * persisted record only ever shows `'ran' | 'skipped'` — never a refusal.
- * `gate` uses the full `GateZ` enum (unlike `GateBypassZ.gate`, which is a
- * loose `z.string()` because it also carries the pseudo-gate name `'settle'`
- * for the `--force` bypass case) since every entry here is a real,
- * settle-dispatched gate.
+ * Phase 170: a refusing gate now also gets a persisted entry (`status:
+ * 'refused'`) before settle halts, alongside every earlier gate's ran/skipped
+ * entry — see `reason` below. `gate` uses the full `GateZ` enum (unlike
+ * `GateBypassZ.gate`, which is a loose `z.string()` because it also carries
+ * the pseudo-gate name `'settle'` for the `--force` bypass case) since every
+ * entry here is a real, settle-dispatched gate.
  */
 export const GateProvenanceZ = z.object({
   gate: GateZ,
-  status: z.enum(['ran', 'skipped']),
+  status: z.enum(['ran', 'skipped', 'refused']),
   /** Present iff status === 'skipped'. */
   skipReason: z.string().optional(),
+  /** Present iff status === 'refused'. */
+  reason: z.string().optional(),
 });
 export type GateProvenance = z.infer<typeof GateProvenanceZ>;
 

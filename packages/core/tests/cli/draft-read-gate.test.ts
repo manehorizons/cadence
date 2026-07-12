@@ -69,10 +69,17 @@ describe('DRAFT-read mtime gate (Phase 23.1)', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/DRAFT\.md was edited after approve/);
     expect(r.stderr).toMatch(/--allow-stale-draft/);
-    // No SUMMARY written; state still BUILD.
+    // State still BUILD; the refusal persists a SUMMARY with the refusing
+    // gate's provenance (phase 170), where previously nothing was written.
     const state = JSON.parse(await readFile(join(active.root, '.cadence/state.json'), 'utf8'));
     expect(state.loopPosition).toBe('BUILD');
-    expect(existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'))).toBe(false);
+    const summaryPath = join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json');
+    expect(existsSync(summaryPath)).toBe(true);
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8'));
+    expect(summary.gates[summary.gates.length - 1]).toMatchObject({
+      gate: 'draft-read',
+      status: 'refused',
+    });
   });
 
   it('--allow-stale-draft bypasses the gate and logs INFO trace (AC-4)', async () => {

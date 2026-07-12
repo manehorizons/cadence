@@ -106,11 +106,15 @@ describe('cadence settle run (Phase 24.3 — code-review verifier gate)', () => 
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/code-review: src\/foo\.ts:\d+ high — console\.log left in source/);
     expect(r.stderr).toMatch(/--allow-code-review-failure/);
-    expect(
-      existsSync(
-        join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
-      ),
-    ).toBe(false);
+    // Refused settle now persists a SUMMARY with the refusing gate's
+    // provenance (phase 170), where previously nothing was written.
+    const summaryPath = join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json');
+    expect(existsSync(summaryPath)).toBe(true);
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8'));
+    expect(summary.gates[summary.gates.length - 1]).toMatchObject({
+      gate: 'code-review',
+      status: 'refused',
+    });
   });
 
   it('AC-5 + AC-6: --allow-code-review-failure records SUMMARY.codeReview', async () => {

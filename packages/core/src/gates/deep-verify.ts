@@ -93,13 +93,14 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
           `deep-verify: ${id} failed — ${deepVerify[id]!.reason} (provider: ${result.provider})\n`,
         );
       }
-      ctx.io.err(
+      const reason =
         'settle run --deep refused: the independent verifier rejected one or more ACs. ' +
-          'Pass --force to settle anyway, or address the gaps.\n',
-      );
+        'Pass --force to settle anyway, or address the gaps.';
+      ctx.io.err(`${reason}\n`);
       return {
         outcome: 'refuse',
         summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model, result.usage) },
+        reason,
       };
     }
     return {
@@ -130,9 +131,8 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
         flags,
       };
     }
-    ctx.io.err(
-      `deep-verify: verifier failed — ${message}. Pass --allow-verifier-failure to continue.\n`,
-    );
-    return { outcome: 'refuse' };
+    const reason = `deep-verify: verifier failed — ${message}. Pass --allow-verifier-failure to continue.`;
+    ctx.io.err(`${reason}\n`);
+    return { outcome: 'refuse', reason };
   }
 };

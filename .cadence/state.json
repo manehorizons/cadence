@@ -4,19 +4,19 @@
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "167-multi-language-coverage-engine",
+  "activePhase": "170-refusing-gate-provenance",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-11T15:23:57.810Z",
+  "draftReadAt": "2026-07-12T00:11:42.651Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-11-phase166-language-aware-coverage-shipped.md",
-    "subagentSpawns": 1494,
+    "subagentSpawns": 1561,
     "subagentBaselines": {}
   },
   "skillAudit": {

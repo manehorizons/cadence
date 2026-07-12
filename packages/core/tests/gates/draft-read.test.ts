@@ -39,11 +39,12 @@ describe('runDraftReadGate', () => {
       ctx({ draftReadAt: BASELINE, mtimeMs: BASELINE_MS + 1000, errs }),
     );
     expect(res.outcome).toBe('refuse');
-    expect(errs.join('')).toBe(
-      `settle run refused: DRAFT.md was edited after approve (mtime ${new Date(
-        BASELINE_MS + 1000,
-      ).toISOString()} > draftReadAt ${BASELINE}). Re-read it then re-approve, or pass --allow-stale-draft to override.\n`,
-    );
+    const expectedMessage = `settle run refused: DRAFT.md was edited after approve (mtime ${new Date(
+      BASELINE_MS + 1000,
+    ).toISOString()} > draftReadAt ${BASELINE}). Re-read it then re-approve, or pass --allow-stale-draft to override.`;
+    expect(errs.join('')).toBe(`${expectedMessage}\n`);
+    // AC-2: the reason field mirrors the exact stderr message (minus trailing newline).
+    expect(res.reason).toBe(expectedMessage);
   });
 
   // AC-1: --allow-stale-draft → pass with the exact bypass note

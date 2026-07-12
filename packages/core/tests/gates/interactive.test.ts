@@ -112,6 +112,10 @@ describe('runInteractiveGate', () => {
     expect(errs.join('')).toContain(
       'settle run --interactive refused: one or more ACs verdicted as fail.',
     );
+    // AC-2: reason matches the exact refusal message written to stderr.
+    expect(res.reason).toBe(
+      'settle run --interactive refused: one or more ACs verdicted as fail. Pass --force to settle anyway.',
+    );
   });
 
   // AC-3: fail under --force → pass
@@ -137,6 +141,8 @@ describe('runInteractiveGate', () => {
     const res = await runInteractiveGate(ctx({ interactive: true, createThrows: true, errs }));
     expect(res.outcome).toBe('refuse');
     expect(errs).toEqual(['interactive: stdin is not a TTY\n']);
+    // AC-2: reason matches the exact stderr message (minus trailing newline).
+    expect(res.reason).toBe('interactive: stdin is not a TTY');
   });
 
   // AC-4: bypass mode skips the walker, passes, and marks the SUMMARY skipped.

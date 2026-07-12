@@ -128,7 +128,7 @@ describe('cadence settle run (Phase 37.1 — code-review convergence)', () => {
     expect(sc.history[0].pass).toBe(true);
   });
 
-  it('AC-2: HIGH no flag — reloop, exit 1, attempt 1/3, sidecar attempts:1, no SUMMARY', async () => {
+  it('AC-2: HIGH no flag — reloop, exit 1, attempt 1/3, sidecar attempts:1, SUMMARY records the refusal (phase 170)', async () => {
     active = await tempRepo({ initialized: true });
     await strictScaffold(active.root, HIGH_SRC); // default convergence → max 3
     await run(
@@ -152,7 +152,14 @@ describe('cadence settle run (Phase 37.1 — code-review convergence)', () => {
     expect(sc.converged).toBe(false);
     expect(sc.history).toHaveLength(1);
     expect(sc.history[0].verdict).toBe('reloop');
-    expect(existsSync(join(active.root, SUMMARY))).toBe(false);
+    // Refused settle now persists a SUMMARY with the refusing gate's
+    // provenance (phase 170), where previously nothing was written.
+    expect(existsSync(join(active.root, SUMMARY))).toBe(true);
+    const summary = await readJson(active.root, SUMMARY);
+    expect(summary.gates[summary.gates.length - 1]).toMatchObject({
+      gate: 'code-review',
+      status: 'refused',
+    });
   });
 
   it('AC-3: escalate (maxAttempts:1) — exit 1, unconditional code-review-unconverged under strict (no anomaly-notify), code-review-high silent', async () => {

@@ -78,6 +78,11 @@ describe('runBuildTestGate', () => {
     expect(errs.join('')).toContain(
       'settle run refused: the test suite must pass before settle.',
     );
+    // AC-2: reason matches the exact unsealed refusal message.
+    expect(res.reason).toBe(
+      'settle run refused: the test suite must pass before settle. ' +
+        'Pass --allow-failing-build to bypass, or --force to settle anyway.',
+    );
   });
 
   // AC-3: --allow-failing-build bypasses a failing command
@@ -164,6 +169,12 @@ describe('runBuildTestGate · sealed (phase 141)', () => {
     const joined = errs.join('');
     expect(joined).toContain('gates.sealed');
     expect(joined).not.toContain('Pass --allow-failing-build to bypass');
+    // AC-2: reason matches the exact sealed refusal message.
+    expect(res.reason).toBe(
+      'settle run refused: the test suite must pass before settle. ' +
+        'This gate is sealed (gates.sealed) and cannot be bypassed with ' +
+        '--allow-failing-build or --force.',
+    );
   });
 
   // AC-4: the command/exitCode stderr line still prints regardless of sealed.

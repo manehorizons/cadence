@@ -61,15 +61,14 @@ export const runBoundaryScanGate: GateImpl = async (ctx): Promise<GateResult> =>
   const sealed = isGateSealed(ctx, 'boundary-scan');
   const bypassed = !sealed && (ctx.opts.force === true || ctx.opts.allowBoundaryScanFailure === true);
   if (!bypassed) {
-    ctx.io.err(
-      sealed
-        ? 'settle run refused: boundary-scan found file(s) outside the declared boundary. ' +
-            'This gate is sealed (gates.sealed) and cannot be bypassed with --force or ' +
-            '--allow-boundary-scan-failure.\n'
-        : 'settle run refused: boundary-scan found file(s) outside the declared boundary. ' +
-            'Pass --allow-boundary-scan-failure to record them and settle anyway, or --force to bypass.\n',
-    );
-    return { outcome: 'refuse' };
+    const reason = sealed
+      ? 'settle run refused: boundary-scan found file(s) outside the declared boundary. ' +
+          'This gate is sealed (gates.sealed) and cannot be bypassed with --force or ' +
+          '--allow-boundary-scan-failure.'
+      : 'settle run refused: boundary-scan found file(s) outside the declared boundary. ' +
+          'Pass --allow-boundary-scan-failure to record them and settle anyway, or --force to bypass.';
+    ctx.io.err(`${reason}\n`);
+    return { outcome: 'refuse', reason };
   }
 
   const flag = ctx.opts.force === true ? '--force' : '--allow-boundary-scan-failure';

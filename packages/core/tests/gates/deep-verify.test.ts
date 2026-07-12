@@ -56,6 +56,11 @@ describe('runDeepVerifyGate', () => {
     expect(res.outcome).toBe('refuse');
     expect(errs.join('')).toContain('deep-verify: AC-1 failed — nope (provider: mock)');
     expect(errs.join('')).toContain('settle run --deep refused');
+    // AC-2: reason matches the exact summary refusal message.
+    expect(res.reason).toBe(
+      'settle run --deep refused: the independent verifier rejected one or more ACs. ' +
+        'Pass --force to settle anyway, or address the gaps.',
+    );
   });
 
   // AC-2: failing verdict but --force → pass (still records deepVerify)
@@ -101,6 +106,10 @@ describe('runDeepVerifyGate', () => {
       ctx({ opts: { deep: true }, verify: async () => { throw new Error('boom'); } }),
     );
     expect(res.outcome).toBe('refuse');
+    // AC-2: reason matches the exact stderr message (minus trailing newline).
+    expect(res.reason).toBe(
+      'deep-verify: verifier failed — boom. Pass --allow-verifier-failure to continue.',
+    );
   });
 
   // AC-2: not requested (no --deep, not in gate set) → pass without calling verifier
