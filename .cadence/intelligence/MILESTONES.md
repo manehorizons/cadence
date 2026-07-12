@@ -65,9 +65,9 @@ None.
 - mil-rec-rec-20260619-006 — First real phase agent prompt → .cadence/intelligence/exports/mil-rec-rec-20260619-006/SPEC.md
 - mil-rec-rec-20260701-012 — Boundary enforcement block mode, including subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260701-012/SPEC.md
 - mil-rec-rec-20260704-001 — Settle-time boundary diff scan (blocking) for subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260704-001/SPEC.md
-- mil-rec-rec-20260710-002 — Host-CLI headless verifier provider: reuse Claude Code/Codex's own auth instead of requiring a raw API key → .cadence/intelligence/exports/mil-rec-rec-20260710-002/SPEC.md
 
 ## Closed
 
 - mil-rec-rec-20260611-003 — Make real verification the felt default — close the gap between the enforcement wedge and the mock default (ref: phase 104 / PR #87 / v1.25.0 (commit 60fdad8))
 - mil-rec-rec-20260708-002 — Mock milestone workflow proof for Codex first-run bootstrap (ref: proof workflow artifact: .cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md; phase 162 settled on feat/codex-first-run-recommendation)
+- mil-rec-rec-20260710-002 — Host-CLI headless verifier provider: reuse Claude Code/Codex's own auth instead of requiring a raw API key (ref: phase 165 / PR #164 / commit 1351044)
