@@ -389,6 +389,22 @@ export const CadenceConfigZ = z.object({
     })
     .default({ autoArchive: true }),
   /**
+   * Post-settle retro artifact (Phase 174, rec-20260712-001). `enabled`
+   * (default `true`) is the master switch: on every successful settle,
+   * synthesize a friction digest from the SUMMARY already assembled and
+   * write `<draftId>-RETRO.json`/`.md` alongside it. `offerGithubIssue`
+   * (default `true`) is a sub-toggle — when the digest is non-empty and the
+   * run is interactive, offer to file a GitHub issue via `gh`. Setting
+   * `enabled: false` disables both the artifact and the offer; setting only
+   * `offerGithubIssue: false` keeps the artifact but never prompts.
+   */
+  retro: z
+    .object({
+      enabled: z.boolean().default(true),
+      offerGithubIssue: z.boolean().default(true),
+    })
+    .default({ enabled: true, offerGithubIssue: true }),
+  /**
    * Gate behavior control (Phase 141, rec-20260701-009). `sealed` gate ids
    * ignore `--force` and their own `--allow-*` flag at settle time, implementing
    * the locked-in enforcement gate protocol.
@@ -493,6 +509,7 @@ export const defaultConfig: CadenceConfig = {
   logging: { level: 'silent' as const },
   handoff: {},
   recommendations: { autoArchive: true },
+  retro: { enabled: true, offerGithubIssue: true },
   gates: { sealed: [] },
   resume: { crossWorktree: true, autoList: false, remoteCheck: true },
   boundaryEnforcement: 'warn',

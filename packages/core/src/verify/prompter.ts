@@ -69,3 +69,45 @@ export class ScriptedPrompter implements Prompter {
     return this.cursor;
   }
 }
+
+/**
+ * Shared prompter factory: `CADENCE_PROMPTER_SCRIPT` (newline-separated
+ * answers) selects a deterministic `ScriptedPrompter` for tests/automation;
+ * otherwise a real `StdinPrompter` (which itself throws off a non-TTY).
+ * Phase 174: extracted from two previously-independent, near-identical
+ * copies — an inline closure in `settle.ts`'s `prompter.create` and
+ * `handoff/run-resume.ts`'s private `buildPrompter()` (which was already
+ * commented "mirrors settle.ts's seam exactly") — into the one place that
+ * already owns `Prompter`/`ScriptedPrompter`/`StdinPrompter`, so a third
+ * caller (the retro issue offer) doesn't need a fourth copy.
+ *
+ * Known limitation (Phase 174 whole-branch review): each call builds a
+ * brand-new `ScriptedPrompter` starting at answer-list position 0. A single
+ * `cadence settle` run can now call this twice — once for the
+ * interactive-verdict gate (`gates/interactive.ts`, when the active gate set
+ * includes it, e.g. `strict` profile), once for the post-commit retro issue
+ * offer (`services/retro.ts`'s `runRetroOffer`) — and under
+ * `CADENCE_PROMPTER_SCRIPT`, the second call does NOT continue from where
+ * the first left off; it re-reads from the start. Real `StdinPrompter` usage
+ * (an actual human at an actual terminal) is unaffected — this only bites
+ * the scripted/test-automation seam. The failure mode is fail-safe: a
+ * mismatched scripted answer just exhausts `askRetroIssueVerdict`'s retries
+ * and defaults to a quiet decline, never a crash or a wrongly-filed issue.
+ * A real fix (one memoized `Prompter` shared across a whole settle run)
+ * needs matching close()-lifecycle changes in every existing caller
+ * (`gates/approve.ts`, `gates/interactive.ts` already call `.close()` after
+ * their own use) and was judged out of this phase's scope — a scripted test
+ * or CI script driving both an interactive-verdict gate AND a friction-
+ * having retro offer in the same run must currently script the SAME
+ * expected answer twice (once for each independent call), not two
+ * sequential distinct answers.
+ */
+// deja:new consolidating settle.ts's inline prompter.create closure and run-resume.ts's private buildPrompter into this one shared factory (phase 174 T6) — this IS the fix for that pre-existing duplication, not a new instance of it
+export function createDefaultPrompter(): Prompter {
+  const scripted = process.env.CADENCE_PROMPTER_SCRIPT;
+  if (scripted !== undefined) {
+    const answers = scripted.split('\n').filter((s) => s.length > 0 || s === '');
+    return new ScriptedPrompter(answers);
+  }
+  return new StdinPrompter();
+}

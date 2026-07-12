@@ -81,6 +81,18 @@ describe('CadenceConfigZ', () => {
     ).toThrow();
   });
 
+  it('retro defaults to enabled + offerGithubIssue on when omitted (Phase 174)', () => {
+    const { retro: _drop, ...withoutRetro } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutRetro);
+    expect(parsed.retro).toEqual({ enabled: true, offerGithubIssue: true });
+  });
+
+  it('retro.enabled can be turned off independently of offerGithubIssue', () => {
+    const cfg = { ...defaultConfig, retro: { enabled: false, offerGithubIssue: true } };
+    const parsed = CadenceConfigZ.parse(cfg);
+    expect(parsed.retro).toEqual({ enabled: false, offerGithubIssue: true });
+  });
+
   it('verifier defaults to provider=mock when absent', () => {
     const { verifier: _drop, ...withoutVerifier } = defaultConfig;
     const parsed = CadenceConfigZ.parse(withoutVerifier);

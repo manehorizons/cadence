@@ -10,6 +10,7 @@ import { assertSafePhaseSlug } from '../phases/id.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { renderSummaryMd } from '../parse/summary-writer.js';
+import { buildRetroDigest, writeRetroArtifacts, runRetroOffer } from './retro.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { LoopViolationError } from '../errors.js';
@@ -38,7 +39,7 @@ import {
   type ProgressJson,
   type AcResult,
 } from '../gates/types.js';
-import { ScriptedPrompter, StdinPrompter } from '../verify/prompter.js';
+import { createDefaultPrompter } from '../verify/prompter.js';
 import { collectGitDiff } from '../git/diff.js';
 import { selectNotifier } from '../notify/factory.js';
 import { collectAnomalies } from '../notify/collect.js';
@@ -262,6 +263,10 @@ export async function settleService(
     const codeReviewSidecarPath = join(
       cwd, '.cadence/phases', activePhase, `${state.activeDraft}-CODE-REVIEW.json`,
     );
+    // Phase 174: computed once and reused by both the gate-registry ctx below
+    // and the post-commit retro offer, rather than recomputing resolveInteractivity
+    // twice against process.env/process.stdin.isTTY.
+    const interactivity = resolveInteractivity(process.env, Boolean(process.stdin.isTTY));
     const ctx: SettleContext = {
       cwd,
       state,
@@ -284,7 +289,7 @@ export async function settleService(
         ...(opts.allowSkillAuditMiss !== undefined ? { allowSkillAuditMiss: opts.allowSkillAuditMiss } : {}),
         ...(opts.allowBoundaryScanFailure !== undefined ? { allowBoundaryScanFailure: opts.allowBoundaryScanFailure } : {}),
       },
-      interactivity: resolveInteractivity(process.env, Boolean(process.stdin.isTTY)),
+      interactivity,
       explicitIds,
       touchedFiles,
       coverage: () => {
@@ -364,14 +369,7 @@ export async function settleService(
         },
       },
       prompter: {
-        create: () => {
-          const scripted = process.env.CADENCE_PROMPTER_SCRIPT;
-          if (scripted !== undefined) {
-            const answers = scripted.split('\n').filter((s) => s.length > 0 || s === '');
-            return new ScriptedPrompter(answers);
-          }
-          return new StdinPrompter();
-        },
+        create: () => createDefaultPrompter(),
       },
       codeReviewSidecar: {
         read: async () => {
@@ -559,6 +557,26 @@ export async function settleService(
     await atomicWriteJSON(`${summaryBase}.json`, summary);
     await atomicWriteText(`${summaryBase}.md`, renderSummaryMd(summary));
 
+    // Phase 174: friction digest, purely derived from `summary` above — no
+    // extra I/O. Best-effort: never blocks or fails settle. The digest is
+    // kept in-memory regardless of whether the write below succeeds, so the
+    // post-commit offer (below) can still use it even if the file write failed.
+    let retroDigest: ReturnType<typeof buildRetroDigest> | undefined;
+    try {
+      retroDigest = buildRetroDigest(summary);
+      if (cadenceConfig?.retro.enabled !== false) {
+        await writeRetroArtifacts(retroDigest, {
+          cwd,
+          activePhase,
+          draftId: state.activeDraft,
+          io,
+        });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      io.err(`note: retro artifact failed to write — ${msg}\n`);
+    }
+
     // Phase 145: advance any recommendation converted into the phase that just
     // settled to `settle-pending` (visible, not archived — a reminder to confirm
     // shipping). Best-effort + config-gated (`recommendations.autoArchive`,
@@ -607,6 +625,31 @@ export async function settleService(
     state.tier = null;
     await backend.commit(state);
     io.out(`Settled ${draftId}\n`);
+
+    // Phase 174: the interactive GitHub-issue offer runs AFTER the state
+    // commit, deliberately — an open prompt sitting between the SUMMARY write
+    // and the commit would let a Ctrl-C strand the loop mid-BUILD despite a
+    // SUMMARY already existing, and could collide with the optimistic-
+    // concurrency revision check (Phase 173) on settle's own final commit.
+    // By this point IDLE is already durable; nothing below can undo it.
+    if (retroDigest) {
+      try {
+        await runRetroOffer(retroDigest, {
+          cwd,
+          activePhase,
+          draftId,
+          io,
+          interactivity,
+          isRealTTY: Boolean(process.stdin.isTTY),
+          createPrompter: createDefaultPrompter,
+          cadenceConfig,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        io.err(`note: retro issue offer failed — ${msg}\n`);
+      }
+    }
+
     return { exitCode: 0, data: { settled: draftId, acResults: acResultsWithEvidence } };
   } catch (err) {
     io.err(`settle run failed: ${err instanceof Error ? err.message : String(err)}\n`);
