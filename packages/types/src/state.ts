@@ -37,6 +37,15 @@ export type DeferredItem = z.infer<typeof DeferredItemZ>;
 
 export const CadenceStateZ = z.object({
   schemaVersion: z.literal(1),
+  /**
+   * Optimistic-concurrency counter (Phase 173). Bumped by exactly 1 on every
+   * successful `SimpleStateBackend.commit()`. A caller's in-memory state
+   * carries the revision it was read at; `commit()` refuses when the
+   * on-disk revision has since moved, rather than silently overwriting a
+   * concurrent writer's change. `.default(0)` keeps pre-Phase-173
+   * `state.json` files parsing unchanged.
+   */
+  revision: z.number().int().nonnegative().default(0),
   project: z.object({ name: z.string(), createdAt: z.string() }),
   activePhase: z.string().nullable(),
   activeDraft: z.string().nullable(),
@@ -98,6 +107,7 @@ export type CadenceState = z.infer<typeof CadenceStateZ>;
 export function emptyState(projectName = 'unnamed'): CadenceState {
   return {
     schemaVersion: 1,
+    revision: 0,
     project: { name: projectName, createdAt: new Date().toISOString() },
     activePhase: null,
     activeDraft: null,

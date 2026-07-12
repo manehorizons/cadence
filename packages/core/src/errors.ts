@@ -4,6 +4,7 @@ export type CadenceErrorCode =
   | 'NOT_INITIALIZED'
   | 'CONFIG_INVALID'
   | 'LOOP_VIOLATION'
+  | 'STATE_CONFLICT'
   | 'COHERENCE_FAILED'
   | 'HOOK_FAILED';
 
@@ -55,5 +56,24 @@ export class LoopViolationError extends CadenceError {
     this.name = 'LoopViolationError';
     this.expected = opts.expected;
     this.actual = opts.actual;
+  }
+}
+
+export interface StateConflictOptions {
+  /** Revision the caller's in-memory state was read at. */
+  expectedRevision: number;
+  /** Revision currently on disk. */
+  actualRevision: number;
+}
+
+export class StateConflictError extends CadenceError {
+  readonly expectedRevision: number;
+  readonly actualRevision: number;
+
+  constructor(message: string, opts: StateConflictOptions) {
+    super(message, 'STATE_CONFLICT');
+    this.name = 'StateConflictError';
+    this.expectedRevision = opts.expectedRevision;
+    this.actualRevision = opts.actualRevision;
   }
 }

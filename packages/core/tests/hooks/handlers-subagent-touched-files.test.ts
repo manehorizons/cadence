@@ -90,4 +90,31 @@ describe('handlePostToolEdit per-agent touched-file accumulation', () => {
     const after = JSON.parse(await readFile(statePath, 'utf8'));
     expect(after.activeTask.touchedFiles).toEqual(['src/main-thread.ts']);
   });
+
+  it('does not false-positive a state conflict when both activeTask and a subagent baseline are touched in one dispatch (AC-3, regression)', async () => {
+    active = await tempRepo({ initialized: true });
+    const statePath = join(active.root, '.cadence/state.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    state.activeTask = { id: 'T1', status: 'IN_PROGRESS', touchedFiles: [] };
+    state.session.subagentBaselines['agent-1'] = {
+      startedAt: '2026-07-06T00:00:00.000Z',
+      taskStatuses: { T1: 'DONE' },
+      touchedFiles: [],
+    };
+    await writeFile(statePath, JSON.stringify(state, null, 2));
+
+    const dispatcher = new HookDispatcher(active.root);
+    const result = await dispatcher.dispatch('post-tool-edit', {
+      event: 'post-tool-edit',
+      cwd: active.root,
+      agentId: 'agent-1',
+      raw: { files: ['src/a.ts'] },
+    });
+
+    expect(result.ok).toBe(true);
+    const after = JSON.parse(await readFile(statePath, 'utf8'));
+    expect(after.activeTask.touchedFiles).toEqual(['src/a.ts']);
+    expect(after.session.subagentBaselines['agent-1'].touchedFiles).toEqual(['src/a.ts']);
+    expect(after.revision).toBe(2); // both sequential commits inside this one dispatch succeeded
+  });
 });
