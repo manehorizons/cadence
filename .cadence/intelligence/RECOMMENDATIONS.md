@@ -528,21 +528,6 @@ Three risks surfaced while widening rec-20260710-002 that need explicit handling
 
 CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC captures component list and behavioral shape only (e.g. 'reuse StructuredWizardShell's visual language' as a precedent reference), with no concrete layout -- field spacing/grouping, exact design-token usage, responsive behavior, or per-field-type visual treatment. Left as-is, DRAFT tasks inherit only a loose behavioral pointer and whoever executes BUILD makes the real layout calls in the moment, looser than this project's own deliberate token-driven UI work. Proposal: an opt-in gate/step between SPEC and DRAFT for phases touching UI surfaces that produces a concrete design contract (component-level layout, token usage, responsive/interaction detail) before DRAFT tasks are written -- conceptually parallel to gsd-ui-phase's UI-SPEC.md but native to CADENCE's loop and gate model, not a GSD borrow. 'When applicable' is key: most CADENCE phases are not UI work and must not pay this cost.
 
-## rec-20260712-001 — Post-settle retro artifact + GitHub issue offer
-
-- status: settle-pending
-- ready: needs-evidence
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: retro, core
-- evidence: Reconstructed stub: original entry (landed 2026-07-12 by a concurrent session's /cadence-scout retro) was lost to an unrelated git reset --hard before being committed. Recreated from a handoff doc's prose summary; full original rationale/evidence not recoverable.
-- next: cadence milestone propose
-
-Synthesize a post-settle retro artifact from existing SUMMARY fields (gateBypasses, taskResults status, gates[].status, deferred, findings) and offer to file a GitHub issue via an interactive gh issue create prompt, silent on non-TTY so it never breaks automation. Landed via a /cadence-scout session (scout-20260712-0328) exploring workflow-friction capture; a 4th candidate direction, an enforced retro-required gate, was explicitly dropped as anti-YAGNI.
-
 ## rec-20260712-002 — Cross-phase retro rollup/trend view
 
 - status: candidate
