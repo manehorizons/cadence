@@ -16,7 +16,7 @@
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-12-phase173-optimistic-concurrency-shipped.md",
-    "subagentSpawns": 1599,
+    "subagentSpawns": 1604,
     "subagentBaselines": {}
   },
   "skillAudit": {

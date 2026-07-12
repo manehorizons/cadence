@@ -620,3 +620,179 @@ cadence draft add-ac and add-task never warn when appending a new AC/task after 
 - next: cadence milestone propose
 
 Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.
+
+## rec-20260712-007 — Guarantee an audit/SUMMARY record when any settle gate throws (not just security-audit)
+
+- status: candidate
+- ready: needs-evidence
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, settle, reliability
+- files: packages/core/src/services/settle.ts, packages/core/src/gates/registry.ts, packages/core/src/gates/security-audit.ts
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-1 audit-on-throw); sibling: rec-20260712-006 (refusal-without-SUMMARY, distinct code path, already partially fixed).
+- next: cadence milestone propose
+
+gates/security-audit.ts normalizes a verifier throw into a refuse+record via its own try/catch, but the other 8 gates in gates/registry.ts's runSettleGates driver have no such wrapper -- a thrown exception from any of them propagates uncaught to settle.ts's outer catch (line ~611), which only prints stderr and returns exitCode 1 with NO SUMMARY written. This is distinct from rec-20260712-006 (refusal-without-SUMMARY, already fixed for gate-dispatched refuse outcomes in phase 170/171) -- this is throw-without-SUMMARY, still open. Wrap each gate invocation in try/catch/finally and normalize exceptions to a typed failure result so every gate outcome is auditable.
+
+## rec-20260712-008 — Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: intelligence, gates, security
+- files: packages/core/src/intelligence/store/audit.ts, packages/core/src/gates/security-audit.ts, .cadence/intelligence/evidence.json
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-2 sensitive audit content). Verified no existing redaction/scrub logic in cited files.
+- next: cadence milestone propose
+
+The evidence ledger (.cadence/intelligence/evidence.json) and SUMMARY.securityAudit persist source-derived quotes and diff findings to disk verbatim -- confirmed no redact/scrub/secret/token/credential handling exists anywhere in intelligence/store/audit.ts or gates/security-audit.ts. Those can carry tokens/credentials. Add a redaction pass (token/key/credential patterns) and a per-record policy before persistence, and restrict ledger file permissions to the current user.
+
+## rec-20260712-009 — Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: settle, types, praxis
+- files: packages/core/src/services/settle.ts, packages/types/src/summary.ts
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-1 lifecycle states); sibling: rec-20260712-007. Verified GateProvenanceZ enum only has ran/skipped/refused today.
+- next: cadence milestone propose
+
+GateProvenanceZ (packages/types/src/summary.ts) currently enumerates only status: 'ran' | 'skipped' | 'refused' -- confirmed no 'failed' or 'timed-out' state distinct from 'refused', and no in-flight requested/started states. Extend SUMMARY to record a fuller gate lifecycle-state taxonomy so incident analysis and resume can reconstruct where a settle run stopped, including crash-mid-gate cases a synchronous refuse/pass pair can't distinguish. Pairs with the exit-code-taxonomy-as-public-contract work. Distinct from rec-20260611-001, which is about recommendation status lifecycle, not gate lifecycle.
+
+## rec-20260712-010 — Thread AbortSignal + deadline + trace id through gates, verifiers, and the headless-CLI verifier
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, verify, reliability
+- files: packages/core/src/gates, packages/core/src/verify/security-audit.ts
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (arch: cancellation/deadlines); siblings: rec-20260710-004, rec-20260710-006. Verified neither sibling covers AbortSignal/deadline plumbing.
+- next: cadence milestone propose
+
+Give every gate and verifier call an AbortSignal, a deadline, and a trace id so long verifier runs, headless-CLI self-invocation, and shutdown can cancel cleanly. Scoped to plumbing; cross-links the existing headless-verifier guardrail recs (rec-20260710-004: batching/fallback-chain/model-passthrough, rec-20260710-006: quota transparency/self-invocation loops/CI fallback) without duplicating either -- neither currently covers signal/deadline propagation.
+
+## rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: mcp, security
+- files: packages/core/src/mcp/tools.ts, packages/core/src/mcp/server.ts, packages/core/src/cli/commands/mcp.ts
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 MCP trust risk). Verified the bypass comment and confirmed no expiry/capability/origin/revoke logic exists in mcp/*.ts.
+- next: cadence milestone propose
+
+Confirmed: mcp/tools.ts explicitly bypasses the interactive draft/spec-approve prompt over MCP ('the tool call IS the approval', e.g. cadence_draft_approve, cadence_spec_approve) with no expiry/capability-scope/origin-binding/revoke logic anywhere in packages/core/src/mcp/*.ts. Document exactly what that grants and constrain it: bind approval to caller identity/transport origin and tool-definition hash, attach a capability class, and add expiry with revoke-on-version-change so a schema-stable but changed server can't retain silent trust.
+
+## rec-20260712-012 — Generate the command/config/exit-code reference from source and fail CI on drift
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, ci, tooling
+- files: docs/reference/commands.md, docs/reference/config.md, scripts
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (arch: docs from registries / doc drift). Verified no existing drift-check script or exit-code taxonomy doc.
+- next: cadence milestone propose
+
+RECOMMENDATIONS.md is already generated from JSON. docs/reference/commands.md and docs/reference/config.md exist but are hand-maintained -- confirmed no drift-check script and no exit-code taxonomy doc exist yet, and docs.yml only builds/deploys typedoc API docs, with no source-vs-checked-in-docs comparison. Extend the same generated-from-source + fail-on-drift discipline to those two docs and the exit-code taxonomy, with a CI check that fails when the checked-in docs diverge from the source of truth.
+
+## rec-20260712-013 — Add the missing CI security automation: CodeQL, secret scanning, npm-audit policy, SBOM, scheduled run
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: ci, security, governance
+- files: .github/workflows, .github/dependabot.yml
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 security automation). Verified Dependabot+provenance already shipped; grepped .github/workflows for codeql/secret-scanning/sbom terms with zero hits.
+- next: cadence milestone propose
+
+Verified current .github state: Dependabot (.github/dependabot.yml) and npm provenance/OIDC (release.yml) are already in place -- do not duplicate. Confirmed genuinely missing: no CodeQL workflow, no secret-scanning/push-protection/gitleaks/trufflehog references, no SBOM/CycloneDX/SPDX generation anywhere in .github/workflows. Add the missing layers: CodeQL, secret scanning + push protection, an npm audit policy with documented exceptions, SBOM + license inventory, and a scheduled security CI run.
+
+## rec-20260712-014 — Add test-coverage reporting with enforced minimum thresholds to CI
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: ci, testkit
+- files: .github/workflows/ci.yml, vitest.config.ts
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (CI: coverage thresholds). Verified vitest.config.ts collects but does not gate coverage, and ci.yml has no coverage step.
+- next: cadence milestone propose
+
+vitest.config.ts already has a coverage block (reporter: text/html, include packages/*/src/**) but no thresholds field, and ci.yml's test job runs 'pnpm test' with no coverage flag or gate -- confirmed no enforcement anywhere. Add minimum thresholds wired into the gate, so coverage regressions surface in CI rather than silently.
+
+## rec-20260712-015 — Smoke-test the packed npm tarball (clean install -> init -> settle), not just in-repo dist
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: ci, release, testkit
+- files: scripts/publish-proof.mjs, scripts/release-integrity.mjs, .github/workflows/release.yml
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-3/P1 packaged-app smoke). Verified release-integrity.mjs's tempDir usage is scoped to release notes only, not a pack+install+exercise flow.
+- next: cadence milestone propose
+
+Tests run against in-repo dist; verified scripts/release-integrity.mjs uses a tempDir only for the GitHub release notes file, not for packing/installing the CLI -- no 'npm pack'/'pnpm pack' usage anywhere in .github or scripts except release-integrity.mjs's unrelated tempDir. Add a smoke test that packs the public packages, installs them into a clean temp dir, and runs init -> draft -> settle against the installed CLI, so a broken published artifact (missing files, bad bin, ESM resolution) is caught before release. Complements publish-proof.mjs and release-integrity.mjs.
+
+## rec-20260712-016 — Write a formal threat model covering MCP serve, hooks, host adapters, headless verifier, and ledger exposure
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security, docs
+- files: SECURITY.md, DESIGN.md
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 threat model). Verified SECURITY.md's existing 'Scope and threat model' section omits MCP serve, hooks, host adapters, headless-verifier self-invocation, and ledger exposure.
+- next: cadence milestone propose
+
+SECURITY.md already has a 'Scope and threat model' section (shell execution, LLM gate providers, generated/installed files, notification webhooks) but does not mention MCP serve trust, hooks/dispatcher, host-adapter boundaries, headless-verifier self-invocation loops, or local intelligence-ledger exposure at all. Extend SECURITY.md with a structured threat model: prompt injection into gates, MCP serve trust, hooks/dispatcher, host-adapter boundaries, headless-verifier self-invocation loops, release/update integrity, and local intelligence-ledger exposure. Names the surfaces and their mitigations in one place.
+
+## rec-20260712-017 — Add failure-injection tests: corrupt intelligence ledger, offline settle, mcp-serve crash recovery
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: reliability, testkit, intelligence
+- files: packages/core/src/intelligence/store, packages/testkit/src
+- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 failure-injection). Verified existing 'corrupt' test coverage is state.json-specific, not intelligence-ledger-specific.
+- next: cadence milestone propose
+
+Verified: existing 'corrupt' references in tests (state/simple.test.ts, render-context.test.ts, context.test.ts) cover state.json corruption specifically, not the intelligence ledger (evidence.json/recommendations.json). No tests found for intelligence-store ledger corruption, offline settle behavior, or mcp-serve crash recovery. Add static failure-injection coverage for the intelligence store and runtime: a corrupt/partial ledger recovers or fails closed with a clear error, settle behaves predictably with no network, and mcp serve recovers from a crashed session. Mirrors the corrupt-DB/offline-start layer flagged for Lumen.

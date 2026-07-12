@@ -560,6 +560,83 @@
       "kind": "note",
       "summary": "Reconstructed stub: original entry (rec-20260712-003, logged during the phase 170 session, 2026-07-12) was lost to an unrelated git reset --hard before being committed. Recreated from context earlier in this session.",
       "createdAt": "2026-07-12T04:25:17.712Z"
+    },
+    {
+      "id": "ev-20260712-007",
+      "recommendationId": "rec-20260712-007",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-1 audit-on-throw); sibling: rec-20260712-006 (refusal-without-SUMMARY, distinct code path, already partially fixed).",
+      "createdAt": "2026-07-12T17:39:48.570Z"
+    },
+    {
+      "id": "ev-20260712-008",
+      "recommendationId": "rec-20260712-008",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-2 sensitive audit content). Verified no existing redaction/scrub logic in cited files.",
+      "createdAt": "2026-07-12T17:40:20.202Z"
+    },
+    {
+      "id": "ev-20260712-009",
+      "recommendationId": "rec-20260712-009",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-1 lifecycle states); sibling: rec-20260712-007. Verified GateProvenanceZ enum only has ran/skipped/refused today.",
+      "createdAt": "2026-07-12T17:40:28.618Z"
+    },
+    {
+      "id": "ev-20260712-010",
+      "recommendationId": "rec-20260712-010",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (arch: cancellation/deadlines); siblings: rec-20260710-004, rec-20260710-006. Verified neither sibling covers AbortSignal/deadline plumbing.",
+      "createdAt": "2026-07-12T17:40:36.192Z"
+    },
+    {
+      "id": "ev-20260712-011",
+      "recommendationId": "rec-20260712-011",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 MCP trust risk). Verified the bypass comment and confirmed no expiry/capability/origin/revoke logic exists in mcp/*.ts.",
+      "createdAt": "2026-07-12T17:40:44.241Z"
+    },
+    {
+      "id": "ev-20260712-012",
+      "recommendationId": "rec-20260712-012",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (arch: docs from registries / doc drift). Verified no existing drift-check script or exit-code taxonomy doc.",
+      "createdAt": "2026-07-12T17:40:51.986Z"
+    },
+    {
+      "id": "ev-20260712-013",
+      "recommendationId": "rec-20260712-013",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 security automation). Verified Dependabot+provenance already shipped; grepped .github/workflows for codeql/secret-scanning/sbom terms with zero hits.",
+      "createdAt": "2026-07-12T17:41:00.135Z"
+    },
+    {
+      "id": "ev-20260712-014",
+      "recommendationId": "rec-20260712-014",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (CI: coverage thresholds). Verified vitest.config.ts collects but does not gate coverage, and ci.yml has no coverage step.",
+      "createdAt": "2026-07-12T17:41:07.730Z"
+    },
+    {
+      "id": "ev-20260712-015",
+      "recommendationId": "rec-20260712-015",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-3/P1 packaged-app smoke). Verified release-integrity.mjs's tempDir usage is scoped to release notes only, not a pack+install+exercise flow.",
+      "createdAt": "2026-07-12T17:41:15.703Z"
+    },
+    {
+      "id": "ev-20260712-016",
+      "recommendationId": "rec-20260712-016",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 threat model). Verified SECURITY.md's existing 'Scope and threat model' section omits MCP serve, hooks, host adapters, headless-verifier self-invocation, and ledger exposure.",
+      "createdAt": "2026-07-12T17:41:25.546Z"
+    },
+    {
+      "id": "ev-20260712-017",
+      "recommendationId": "rec-20260712-017",
+      "kind": "note",
+      "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 failure-injection). Verified existing 'corrupt' test coverage is state.json-specific, not intelligence-ledger-specific.",
+      "createdAt": "2026-07-12T17:41:44.930Z"
     }
   ]
 }
