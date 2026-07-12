@@ -14,10 +14,9 @@ export const runDraftReadGate: GateImpl = async (ctx): Promise<GateResult> => {
   const baselineMs = Date.parse(ctx.state.draftReadAt);
   if (mtimeMs > baselineMs) {
     if (!ctx.opts.allowStaleDraft) {
-      ctx.io.err(
-        `settle run refused: DRAFT.md was edited after approve (mtime ${new Date(mtimeMs).toISOString()} > draftReadAt ${ctx.state.draftReadAt}). Re-read it then re-approve, or pass --allow-stale-draft to override.\n`,
-      );
-      return { outcome: 'refuse' };
+      const reason = `settle run refused: DRAFT.md was edited after approve (mtime ${new Date(mtimeMs).toISOString()} > draftReadAt ${ctx.state.draftReadAt}). Re-read it then re-approve, or pass --allow-stale-draft to override.`;
+      ctx.io.err(`${reason}\n`);
+      return { outcome: 'refuse', reason };
     }
     ctx.io.err(
       'settle: --allow-stale-draft set; proceeding past draft-read gate (DRAFT.md mtime newer than draftReadAt).\n',

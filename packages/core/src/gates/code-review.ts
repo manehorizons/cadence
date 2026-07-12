@@ -113,12 +113,14 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
             bypassed: false,
           });
         }
-        ctx.io.err(
-          `code-review: attempt ${nv.attempt}/${maxAttempts} did not pass — ` +
+        {
+          const reason =
+            `code-review: attempt ${nv.attempt}/${maxAttempts} did not pass — ` +
             'fix the flagged code and re-run `cadence settle run`, ' +
-            'or pass --allow-code-review-failure to proceed anyway.\n',
-        );
-        return { outcome: 'refuse', summaryPatch: { codeReview: codeReviewFindings } };
+            'or pass --allow-code-review-failure to proceed anyway.';
+          ctx.io.err(`${reason}\n`);
+          return { outcome: 'refuse', summaryPatch: { codeReview: codeReviewFindings }, reason };
+        }
       } else {
         // nv.verdict === 'escalate', no bypass flag → hard refuse.
         if (ctx.gateSet.gates.includes('anomaly-notify')) {
@@ -135,24 +137,25 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
           provider: result.provider,
           ...(result.model ? { model: result.model } : {}),
         });
-        ctx.io.err(
-          'settle run refused: code-review did NOT converge after ' +
+        {
+          const reason =
+            'settle run refused: code-review did NOT converge after ' +
             `${maxAttempts} attempts — a human decision is required. ` +
             'Fix the flagged code, or pass --allow-code-review-failure ' +
-            'to proceed anyway.\n',
-        );
-        return { outcome: 'refuse', summaryPatch: { codeReview: codeReviewFindings } };
+            'to proceed anyway.';
+          ctx.io.err(`${reason}\n`);
+          return { outcome: 'refuse', summaryPatch: { codeReview: codeReviewFindings }, reason };
+        }
       }
     }
     // pass (converged) OR bypass fall-through → record findings, proceed.
     return { outcome: 'pass', summaryPatch: { codeReview: codeReviewFindings } };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    ctx.io.err(
-      `code-review: verifier failed — ${message}. Pass --allow-code-review-failure to continue.\n`,
-    );
+    const reason = `code-review: verifier failed — ${message}. Pass --allow-code-review-failure to continue.`;
+    ctx.io.err(`${reason}\n`);
     if (ctx.opts.allowCodeReviewFailure !== true && ctx.opts.force !== true) {
-      return { outcome: 'refuse' };
+      return { outcome: 'refuse', reason };
     }
     return { outcome: 'pass' };
   }

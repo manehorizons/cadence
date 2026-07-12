@@ -135,6 +135,11 @@ describe('runBoundaryScanGate', () => {
     expect(res.outcome).toBe('refuse');
     expect(errs.join('')).toContain('undeclared.ts');
     expect(errs.join('')).toContain('settle run refused');
+    // AC-2: reason matches the exact refusal message written to stderr.
+    expect(res.reason).toBe(
+      'settle run refused: boundary-scan found file(s) outside the declared boundary. ' +
+        'Pass --allow-boundary-scan-failure to record them and settle anyway, or --force to bypass.',
+    );
   });
 
   // AC-5: --force bypasses the refusal and records an audit trail.
@@ -196,6 +201,12 @@ describe('runBoundaryScanGate', () => {
 
     expect(res.outcome).toBe('refuse');
     expect(errs.join('')).toContain('sealed');
+    // AC-2: reason matches the sealed refusal message written to stderr.
+    expect(res.reason).toBe(
+      'settle run refused: boundary-scan found file(s) outside the declared boundary. ' +
+        'This gate is sealed (gates.sealed) and cannot be bypassed with --force or ' +
+        '--allow-boundary-scan-failure.',
+    );
   });
 
   // AC-2 (bonus, gate-level integration): an unresolvable base ref still lets

@@ -95,6 +95,11 @@ describe('runCodeReviewGate', () => {
     expect(calls.high).toEqual([{ provider: 'mock', bypassed: false }]);
     expect(calls.unconverged).toBe(0);
     expect(calls.writes[0]).toContain('"converged": false');
+    // AC-2: reason matches the exact reloop refusal message.
+    expect(res.reason).toBe(
+      'code-review: attempt 1/3 did not pass — fix the flagged code and re-run `cadence settle run`, ' +
+        'or pass --allow-code-review-failure to proceed anyway.',
+    );
   });
 
   // AC-5: HIGH at the attempt ceiling (attemptsSoFar 2 → attempt 3 = max) → escalate refuse + both emits
@@ -106,6 +111,11 @@ describe('runCodeReviewGate', () => {
     expect(res.outcome).toBe('refuse');
     expect(calls.high).toEqual([{ provider: 'mock', bypassed: false }]);
     expect(calls.unconverged).toBe(1);
+    // AC-2: reason matches the exact escalate refusal message.
+    expect(res.reason).toBe(
+      'settle run refused: code-review did NOT converge after 3 attempts — a human decision is required. ' +
+        'Fix the flagged code, or pass --allow-code-review-failure to proceed anyway.',
+    );
   });
 
   // AC-5: escalate with anomaly-notify OFF → no high emit, but unconverged still fires
@@ -145,6 +155,10 @@ describe('runCodeReviewGate', () => {
     const res = await runCodeReviewGate(ctx({ verifyThrows: 'boom', errs }));
     expect(res.outcome).toBe('refuse');
     expect(errs.join('')).toContain('code-review: verifier failed — boom');
+    // AC-2: reason matches the exact stderr message (minus trailing newline).
+    expect(res.reason).toBe(
+      'code-review: verifier failed — boom. Pass --allow-code-review-failure to continue.',
+    );
   });
 
   // AC-5: verifier throws + bypass → pass

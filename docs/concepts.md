@@ -93,9 +93,15 @@ Progress is persisted continuously so the loop survives session restarts.
 
 1. Runs the gate set checks (test-coverage, deep-verify, interactive verdict,
    code-review, security-audit — whichever the active profile × tier cell
-   enables).
+   enables). The first gate that refuses halts the run right there — later
+   gates never run.
 2. Emits anomaly events for anything worth surfacing.
 3. Writes the SUMMARY pair and resets state to IDLE.
+
+A refusal short-circuits steps 2–3 for the normal success path, but (Phase
+170) still writes the SUMMARY pair before exiting — see the `gates[]` note
+below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
+`settle run` can be retried once the refusal is addressed.
 
 **Phase artifacts:**
 - `.cadence/phases/<phase>/<id>-SUMMARY.json` — machine-readable full record
@@ -103,6 +109,17 @@ Progress is persisted continuously so the loop survives session restarts.
   `evidence` class (`ai-verified`/`executed`/`assertion`/`mention`/`unverified`)
   to both the JSON record and the rendered Markdown — see `SUMMARY.md`'s
   "Gate provenance" section and each AC's evidence tag.
+- Phase 170: `gates[]` entries also carry `status: 'refused'` (in addition to
+  the existing `'ran'`/`'skipped'`) for the gate that halted the run, with a
+  `reason` string — the same message the gate wrote to stderr — attached to
+  that entry. The array is partial on a refusal: it holds every earlier
+  gate's `ran`/`skipped` entry plus the one `refused` entry, and stops there.
+  Previously a refused settle wrote no SUMMARY at all, so the refusing gate
+  and its reason existed only as an ephemeral stderr line; now they're a
+  durable record on disk. `reason` is JSON-only so far — the rendered
+  `SUMMARY.md` "Gate provenance" section prints a skipped gate's
+  `skipReason` but does not yet print a refused gate's `reason`, so read the
+  `.json` record for the refusal text.
 - `.cadence/phases/<phase>/<id>-SUMMARY.md` — human-readable rendered view
 - `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` — plan-review findings
   (written at `draft approve` when `plan-review` fires)

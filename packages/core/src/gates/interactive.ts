@@ -41,8 +41,9 @@ export const runInteractiveGate: GateImpl = async (ctx): Promise<GateResult> => 
   try {
     prompter = ctx.prompter.create();
   } catch (err) {
-    ctx.io.err(`interactive: ${err instanceof Error ? err.message : String(err)}\n`);
-    return { outcome: 'refuse' };
+    const reason = `interactive: ${err instanceof Error ? err.message : String(err)}`;
+    ctx.io.err(`${reason}\n`);
+    return { outcome: 'refuse', reason };
   }
 
   let interactiveVerify: Record<string, InteractiveVerdict>;
@@ -75,10 +76,10 @@ export const runInteractiveGate: GateImpl = async (ctx): Promise<GateResult> => 
     for (const [id, v] of failing) {
       ctx.io.err(`interactive: ${id} fail${v.note ? ` — ${v.note}` : ''}\n`);
     }
-    ctx.io.err(
-      'settle run --interactive refused: one or more ACs verdicted as fail. Pass --force to settle anyway.\n',
-    );
-    return { outcome: 'refuse', summaryPatch: { interactiveVerify } };
+    const reason =
+      'settle run --interactive refused: one or more ACs verdicted as fail. Pass --force to settle anyway.';
+    ctx.io.err(`${reason}\n`);
+    return { outcome: 'refuse', summaryPatch: { interactiveVerify }, reason };
   }
   return { outcome: 'pass', summaryPatch: { interactiveVerify } };
 };

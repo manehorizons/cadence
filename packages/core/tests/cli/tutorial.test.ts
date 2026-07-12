@@ -81,9 +81,16 @@ describe('cadence tutorial', () => {
       // The loop must not have closed.
       const state = await new SimpleStateBackend(root).readState();
       expect(state.loopPosition).toBe('BUILD');
-      expect(
-        existsSync(join(root, '.cadence', 'phases', DEMO_PHASE, `${DEMO_ID}-SUMMARY.md`)),
-      ).toBe(false);
+      // Refused settle now persists a SUMMARY with the refusing gate's
+      // provenance (phase 170), where previously nothing was written.
+      const summaryMdPath = join(root, '.cadence', 'phases', DEMO_PHASE, `${DEMO_ID}-SUMMARY.md`);
+      const summaryJsonPath = join(root, '.cadence', 'phases', DEMO_PHASE, `${DEMO_ID}-SUMMARY.json`);
+      expect(existsSync(summaryMdPath)).toBe(true);
+      const summary = JSON.parse(await readFile(summaryJsonPath, 'utf8'));
+      expect(summary.gates[summary.gates.length - 1]).toMatchObject({
+        gate: 'test-coverage',
+        status: 'refused',
+      });
     } finally {
       await rm(root, { recursive: true, force: true });
     }

@@ -106,9 +106,15 @@ describe('settle --interactive (Phase 16)', () => {
     );
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/interactive:\s*AC-1\s*fail.*broken/);
-    expect(
-      existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md')),
-    ).toBe(false);
+    // Refused settle now persists a SUMMARY with the refusing gate's
+    // provenance (phase 170), where previously nothing was written.
+    const summaryJsonPath = join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json');
+    expect(existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'))).toBe(true);
+    const summary = JSON.parse(await readFile(summaryJsonPath, 'utf8'));
+    expect(summary.gates[summary.gates.length - 1]).toMatchObject({
+      gate: 'interactive-verdict',
+      status: 'refused',
+    });
   });
 
   it('--force bypasses interactive refusal (AC-3)', async () => {

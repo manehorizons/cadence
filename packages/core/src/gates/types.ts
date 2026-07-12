@@ -237,6 +237,9 @@ export interface GateResult<P = SettleAccumulator> {
   readonly outcome: 'pass' | 'refuse';
   readonly summaryPatch?: Partial<P>;
   readonly flags?: GateFlags;
+  /** Phase 170: human-readable refusal reason a gate impl attaches when
+   *  `outcome === 'refuse'`, surfaced onto the refusing gate's provenance entry. */
+  readonly reason?: string;
 }
 
 export type GateImpl = (ctx: SettleContext) => Promise<GateResult>;

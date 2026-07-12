@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { defaultConfig, emptyState, type CadenceConfig } from '@manehorizons/cadence-types';
@@ -250,5 +250,65 @@ describe('settleService threads repoRoot as cwd to its verifier-selection seams 
 
     expect(res.exitCode).toBe(0);
     expect(constructed.securityAudit).toEqual(['anthropic']);
+  });
+});
+
+describe('settleService persists a SUMMARY on the refused-settle path (phase 170, T4)', () => {
+  it('AC-3: a refused build-test-must-pass gate still writes SUMMARY.json/.md with the refused gate in provenance, and leaves loop state unchanged', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '53-refused-settle-summary',
+      id: '53-01',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        verification: {
+          ...defaultConfig.verification,
+          testCommand: 'node -e "process.exit(1)"',
+        },
+      },
+    });
+
+    const { io, err } = captureIO();
+    const res = await settleService(root, {}, io);
+
+    // The gate refuses (no --allow-failing-build / --force) — settle halts.
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('build-test-must-pass:');
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '53-refused-settle-summary', '53-01-SUMMARY.json',
+    );
+    const summaryMdPath = join(
+      root, '.cadence', 'phases', '53-refused-settle-summary', '53-01-SUMMARY.md',
+    );
+    const summaryRaw = await readFile(summaryPath, 'utf8');
+    const summary = JSON.parse(summaryRaw) as {
+      acResults: unknown[];
+      gates: { gate: string; status: string; reason?: string }[];
+      taskResults: { id: string; status: string }[];
+    };
+
+    expect(summary.acResults).toEqual([]);
+    expect(summary.gates.length).toBeGreaterThan(0);
+    const lastGate = summary.gates[summary.gates.length - 1];
+    expect(lastGate?.status).toBe('refused');
+    expect(lastGate?.gate).toBe('build-test-must-pass');
+    expect(typeof lastGate?.reason).toBe('string');
+    expect(summary.taskResults.some((t) => t.id === 'T1' && t.status === 'DONE')).toBe(true);
+
+    // .md sibling was also written (renderSummaryMd's output — not asserting
+    // its exact shape, `reason` rendering is explicitly out of scope for this
+    // phase).
+    const mdRaw = await readFile(summaryMdPath, 'utf8');
+    expect(mdRaw.length).toBeGreaterThan(0);
+
+    // The refusal must NOT transition the loop — a human retries `settle run`
+    // from exactly where they left off.
+    const stateRaw = await readFile(join(root, '.cadence', 'state.json'), 'utf8');
+    const state = JSON.parse(stateRaw) as { loopPosition: string; activeDraft: string | null };
+    expect(state.loopPosition).toBe('BUILD');
+    expect(state.activeDraft).toBe('53-01');
   });
 });

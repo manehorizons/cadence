@@ -142,6 +142,7 @@ export async function runSettleGates(
     mergeInto(acc, res);
     if (res.outcome === 'refuse') {
       log.warn('gate refused', { gate, outcome: res.outcome });
+      gates.push({ gate, status: 'refused', ...(res.reason !== undefined ? { reason: res.reason } : {}) });
       return { acc, refused: true, gates };
     }
     const predicate = SELF_GUARD_PREDICATES[gate];

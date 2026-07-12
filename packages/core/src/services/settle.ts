@@ -143,6 +143,26 @@ function gateBypassesFromAnomalies(events: AnomalyEvent[]): GateBypass[] {
 }
 
 /**
+ * Phase 170 (T4): `taskResults` derivation shared by both the normal settle
+ * path and the refused-settle path — a BLOCKED-task falls back to 'BLOCKED'
+ * for any task the PROGRESS file doesn't recognize as a valid TaskStatus.
+ * Extracted so the refusal path can persist a SUMMARY with byte-identical
+ * task-status logic instead of duplicating it.
+ */
+function buildTaskResults(
+  draft: { tasks: { id: string }[] },
+  progress: ProgressJson,
+): Summary['taskResults'] {
+  return draft.tasks.map((t) => ({
+    id: t.id,
+    status: (TaskStatusZ.safeParse(progress.tasks[t.id]?.status).success
+      ? (progress.tasks[t.id]!.status as Summary['taskResults'][number]['status'])
+      : 'BLOCKED'),
+    notes: progress.tasks[t.id]?.notes ?? '',
+  }));
+}
+
+/**
  * `cadence settle run` — close the loop: run the settle gate stack, write
  * SUMMARY.{json,md}, and return to IDLE. Faithful extraction of the former CLI
  * action body (process streams + exit code routed through `io`/the result).
@@ -374,6 +394,32 @@ export async function settleService(
     };
     const { acc, refused, gates } = await runSettleGates(ctx);
     if (refused) {
+      // Phase 170 (T4): a refusing gate previously left zero durable evidence
+      // besides its own ephemeral stderr line — `gates` (already correctly
+      // ending in the refused entry, per T3) was discarded and no SUMMARY was
+      // written. Persist one now, to the same path the success path uses, with
+      // `acResults: []` (nothing was ever evaluated before the halt) and no
+      // loop-state mutation: `state.loopPosition`/`activeDraft` stay exactly
+      // where they were so a human can fix the refusal cause and retry
+      // `settle run`. Deliberately skips `runSkillAuditCheck`,
+      // `collectAnomalies`, and recommendation-promotion — none of those apply
+      // before gates have actually finished running.
+      const refusedSummary: Summary = {
+        schemaVersion: 1,
+        draftId: state.activeDraft,
+        completedAt: new Date().toISOString(),
+        acResults: [],
+        gates,
+        taskResults: buildTaskResults(draft, progress),
+        decisions: [],
+        deferred: [],
+        skillAudit: state.skillAudit,
+      };
+      const refusedSummaryBase = join(
+        cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`,
+      );
+      await atomicWriteJSON(`${refusedSummaryBase}.json`, refusedSummary);
+      await atomicWriteText(`${refusedSummaryBase}.md`, renderSummaryMd(refusedSummary));
       return { exitCode: 1 };
     }
     const coverageBypassed = acc.flags.coverageBypassed === true;
@@ -495,13 +541,7 @@ export async function settleService(
       completedAt: new Date().toISOString(),
       acResults: acResultsWithEvidence,
       gates,
-      taskResults: draft.tasks.map((t) => ({
-        id: t.id,
-        status: (TaskStatusZ.safeParse(progress.tasks[t.id]?.status).success
-          ? (progress.tasks[t.id]!.status as Summary['taskResults'][number]['status'])
-          : 'BLOCKED'),
-        notes: progress.tasks[t.id]?.notes ?? '',
-      })),
+      taskResults: buildTaskResults(draft, progress),
       decisions: [],
       deferred: [],
       skillAudit: state.skillAudit,

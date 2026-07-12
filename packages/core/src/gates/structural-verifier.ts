@@ -21,11 +21,11 @@ export const runStructuralVerifierGate: GateImpl = async (ctx): Promise<GateResu
     for (const [id, t] of open) {
       ctx.io.err(`structural-verifier: task ${id} is ${t.status} (not terminal)\n`);
     }
-    ctx.io.err(
+    const reason =
       'settle run refused: all tasks must be terminal (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED). ' +
-        'Pass --allow-open-tasks to bypass, or --force to settle anyway.\n',
-    );
-    return { outcome: 'refuse' };
+      'Pass --allow-open-tasks to bypass, or --force to settle anyway.';
+    ctx.io.err(`${reason}\n`);
+    return { outcome: 'refuse', reason };
   }
   return { outcome: 'pass' };
 };

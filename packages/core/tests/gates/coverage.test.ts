@@ -41,6 +41,11 @@ describe('runCoverageGate', () => {
     expect(errs[0]).toBe('coverage: AC-1 has no linked test (searched: (defaults))\n');
     expect(errs.join('')).toContain('settle run refused: each AC needs at least one test');
     expect(res.flags?.coverageBypassed).toBe(false);
+    // AC-2: reason matches the exact unsealed mention-mode refusal message.
+    expect(res.reason).toBe(
+      'settle run refused: each AC needs at least one test that references its id (e.g. AC-1 in a describe/it). ' +
+        'Pass --allow-missing-coverage to bypass, or --force to settle anyway.',
+    );
   });
 
   // AC-1: covered AC → pass, no stderr
@@ -114,6 +119,15 @@ describe('runCoverageGate · assertion mode (AC-5)', () => {
     expect(joined).toContain('assertion mode'); // refusal names the mode
     // It is NOT the plain "has no linked test" message — it was mentioned.
     expect(joined).not.toContain('AC-1 has no linked test');
+    // AC-2: reason matches the exact weak-only assertion-mode refusal message.
+    expect(res.reason).toBe(
+      "settle run refused (assertion mode): test files matched but no assertion-shaped span found for AC-1. " +
+        "Run `cadence verify coverage --explain AC-1` to see which profile scanned each file and why the span " +
+        "didn't qualify, then add an asserting test block that references the AC id — or, if this project's " +
+        "language/framework genuinely has no coverage profile (built-in: js/ts, python, go, rust, php; extend " +
+        "via verification.coverageProfiles for others), switch coverageMode to 'mention' via " +
+        "`cadence config edit coverageMode`. Pass --allow-missing-coverage to bypass, or --force to settle anyway.",
+    );
   });
 
   // AC-5: an entirely-absent AC still gets the plain "has no linked test" message,
@@ -127,6 +141,12 @@ describe('runCoverageGate · assertion mode (AC-5)', () => {
     const joined = errs.join('');
     expect(joined).toContain('AC-1 has no linked test');
     expect(joined).not.toContain('not inside an asserting');
+    // AC-2: reason matches the exact absent-only (glob-miss variant) refusal message.
+    expect(res.reason).toBe(
+      'settle run refused (assertion mode): no test files matched configured globs for AC-1 ' +
+        '(searched: (defaults)). Check verification.testGlobs, or move/rename the test file so it matches. ' +
+        'Pass --allow-missing-coverage to bypass, or --force to settle anyway.',
+    );
   });
 
   // AC-5: weak link and absent AC each get their own message in one refusal.
@@ -149,6 +169,9 @@ describe('runCoverageGate · assertion mode (AC-5)', () => {
     expect(joined).toContain('AC-1');
     expect(joined).toContain('not inside a recognized asserting test block');
     expect(joined).toContain('AC-2 has no linked test');
+    // AC-2: reason concatenates both distinct causes' "settle run refused" messages.
+    expect(res.reason).toContain('settle run refused (assertion mode): no test files matched configured globs for AC-2');
+    expect(res.reason).toContain('settle run refused (assertion mode): test files matched but no assertion-shaped span found for AC-1');
   });
 
   // AC-5: an AC with a qualifying (asserting-block) ref passes in assertion mode.
@@ -197,6 +220,12 @@ describe('runCoverageGate · assertion mode split refusal (phase 166 T3)', () =>
     expect(joined).toContain('verification.testGlobs');
     expect(joined).not.toContain('assertion-shaped span');
     expect(joined).not.toContain('cadence config edit coverageMode');
+    // AC-2: reason matches the exact glob-miss-only refusal message.
+    expect(res.reason).toBe(
+      'settle run refused (assertion mode): no test files matched configured globs for AC-1 ' +
+        '(searched: (defaults)). Check verification.testGlobs, or move/rename the test file so it matches. ' +
+        'Pass --allow-missing-coverage to bypass, or --force to settle anyway.',
+    );
   });
 
   // Phase 166 (whole-branch review fix): `absent` alone doesn't prove no
@@ -220,6 +249,12 @@ describe('runCoverageGate · assertion mode split refusal (phase 166 T3)', () =>
       expect(joined).toContain('verification.testGlobs');
       expect(joined).not.toContain('no test files matched configured globs');
       expect(joined).not.toContain('assertion-shaped span');
+      // AC-2: reason matches the exact anyMatched-true absent-only refusal message.
+      expect(res.reason).toBe(
+        'settle run refused (assertion mode): no test file references AC-1 (searched: **/*.test.ts). ' +
+          'Write a test that references the AC id, or check verification.testGlobs if you expect a matching ' +
+          'file already exists. Pass --allow-missing-coverage to bypass, or --force to settle anyway.',
+      );
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -237,6 +272,15 @@ describe('runCoverageGate · assertion mode split refusal (phase 166 T3)', () =>
     expect(joined).toContain('cadence config edit coverageMode');
     expect(joined).not.toContain('no test files matched configured globs');
     expect(joined).not.toContain('verification.testGlobs');
+    // AC-2: reason matches the exact span-miss-only refusal message.
+    expect(res.reason).toBe(
+      "settle run refused (assertion mode): test files matched but no assertion-shaped span found for AC-1. " +
+        "Run `cadence verify coverage --explain AC-1` to see which profile scanned each file and why the span " +
+        "didn't qualify, then add an asserting test block that references the AC id — or, if this project's " +
+        "language/framework genuinely has no coverage profile (built-in: js/ts, python, go, rust, php; extend " +
+        "via verification.coverageProfiles for others), switch coverageMode to 'mention' via " +
+        "`cadence config edit coverageMode`. Pass --allow-missing-coverage to bypass, or --force to settle anyway.",
+    );
   });
 
   it('when both absent and weak ACs are present, each gets its own distinct explanation', async () => {
@@ -261,6 +305,9 @@ describe('runCoverageGate · assertion mode split refusal (phase 166 T3)', () =>
     expect(joined).toContain('verification.testGlobs');
     expect(joined).toContain('assertion-shaped span');
     expect(joined).toContain('cadence config edit coverageMode');
+    // AC-2: reason concatenates both distinct causes' messages.
+    expect(res.reason).toContain('settle run refused (assertion mode): no test files matched configured globs for AC-2');
+    expect(res.reason).toContain('settle run refused (assertion mode): test files matched but no assertion-shaped span found for AC-1');
   });
 
   it('sealed: glob-miss explanation stays cause-specific and names gates.sealed', async () => {
@@ -275,6 +322,12 @@ describe('runCoverageGate · assertion mode split refusal (phase 166 T3)', () =>
     expect(joined).toContain('gates.sealed');
     expect(joined).not.toContain('assertion-shaped span');
     expect(res.flags?.coverageBypassed).toBe(false);
+    // AC-2: reason matches the exact sealed glob-miss-only refusal message.
+    expect(res.reason).toBe(
+      'settle run refused (assertion mode): no test files matched configured globs for AC-1 ' +
+        '(searched: (defaults)). Check verification.testGlobs, or move/rename the test file so it matches. ' +
+        'This gate is sealed (gates.sealed) and cannot be bypassed with --force or --allow-missing-coverage.',
+    );
   });
 
   it('sealed: span-miss explanation stays cause-specific and names gates.sealed', async () => {
@@ -292,6 +345,16 @@ describe('runCoverageGate · assertion mode split refusal (phase 166 T3)', () =>
     expect(joined).toContain('gates.sealed');
     expect(joined).not.toContain('no test files matched configured globs');
     expect(res.flags?.coverageBypassed).toBe(false);
+    // AC-2: reason matches the exact sealed span-miss-only refusal message.
+    expect(res.reason).toBe(
+      "settle run refused (assertion mode): test files matched but no assertion-shaped span found for AC-1. " +
+        "Run `cadence verify coverage --explain AC-1` to see which profile scanned each file and why the span " +
+        "didn't qualify, then add an asserting test block that references the AC id — or, if this project's " +
+        "language/framework genuinely has no coverage profile (built-in: js/ts, python, go, rust, php; extend " +
+        "via verification.coverageProfiles for others), switch coverageMode to 'mention' via " +
+        "`cadence config edit coverageMode`. This gate is sealed (gates.sealed) and cannot be bypassed with " +
+        "--force or --allow-missing-coverage.",
+    );
   });
 });
 
@@ -398,6 +461,12 @@ describe('runCoverageGate · sealed (phase 141)', () => {
     expect(joined).toContain('gates.sealed');
     expect(joined).not.toContain('Pass --allow-missing-coverage to bypass');
     expect(res.flags?.coverageBypassed).toBe(false);
+    // AC-2: reason matches the exact sealed mention-mode refusal message.
+    expect(res.reason).toBe(
+      'settle run refused: each AC needs at least one test that references its id ' +
+        '(e.g. AC-1 in a describe/it). This gate is sealed (gates.sealed) and cannot be ' +
+        'bypassed with --force or --allow-missing-coverage.',
+    );
   });
 
   // AC-3: sealed + --allow-missing-coverage still refuses — the gate must NOT
@@ -454,6 +523,16 @@ describe('runCoverageGate · sealed (phase 141)', () => {
     expect(joined).toContain('gates.sealed');
     expect(joined).not.toContain('Pass --allow-missing-coverage to bypass');
     expect(res.flags?.coverageBypassed).toBe(false);
+    // AC-2: reason matches the exact sealed span-miss-only refusal message.
+    expect(res.reason).toBe(
+      "settle run refused (assertion mode): test files matched but no assertion-shaped span found for AC-1. " +
+        "Run `cadence verify coverage --explain AC-1` to see which profile scanned each file and why the span " +
+        "didn't qualify, then add an asserting test block that references the AC id — or, if this project's " +
+        "language/framework genuinely has no coverage profile (built-in: js/ts, python, go, rust, php; extend " +
+        "via verification.coverageProfiles for others), switch coverageMode to 'mention' via " +
+        "`cadence config edit coverageMode`. This gate is sealed (gates.sealed) and cannot be bypassed with " +
+        "--force or --allow-missing-coverage.",
+    );
   });
 
   // AC-3: sealed but coverage is actually fine → gate passes normally, no

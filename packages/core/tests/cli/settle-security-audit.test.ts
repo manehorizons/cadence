@@ -149,7 +149,14 @@ describe(
       /security-audit: \d+ critical — hardcoded JWT-shaped credential/,
     );
     expect(r.stderr).toMatch(/--allow-security-audit-failure/);
-    expect(existsSync(join(active.root, SUMMARY_JSON))).toBe(false);
+    // Refused settle now persists a SUMMARY with the refusing gate's
+    // provenance (phase 170), where previously nothing was written.
+    expect(existsSync(join(active.root, SUMMARY_JSON))).toBe(true);
+    const summary = JSON.parse(await readFile(join(active.root, SUMMARY_JSON), 'utf8'));
+    expect(summary.gates[summary.gates.length - 1]).toMatchObject({
+      gate: 'security-audit',
+      status: 'refused',
+    });
   });
 
   it('AC-5: --allow-security-audit-failure settles + records SUMMARY.securityAudit', async () => {

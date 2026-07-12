@@ -81,6 +81,7 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
         ? 'This gate is sealed (gates.sealed) and cannot be bypassed with --force or ' +
             '--allow-missing-coverage.'
         : 'Pass --allow-missing-coverage to bypass, or --force to settle anyway.';
+      const reasons: string[] = [];
       if (absent.length > 0) {
         // `absent` means zero refs anywhere in matched files — that's true
         // whether no file matched the globs at all, or files matched fine
@@ -90,36 +91,38 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
           ctx.cwd,
           ctx.config?.verification?.testGlobs,
         );
-        ctx.io.err(
-          anyMatched
-            ? `settle run refused (assertion mode): no test file references ` +
-                `${absent.join(', ')} (searched: ${globsLabel}). Write a test that references ` +
-                `the AC id, or check verification.testGlobs if you expect a matching file ` +
-                `already exists. ${bypassHint}\n`
-            : `settle run refused (assertion mode): no test files matched configured globs for ` +
-                `${absent.join(', ')} (searched: ${globsLabel}). Check verification.testGlobs, or ` +
-                `move/rename the test file so it matches. ${bypassHint}\n`,
-        );
+        const message = anyMatched
+          ? `settle run refused (assertion mode): no test file references ` +
+              `${absent.join(', ')} (searched: ${globsLabel}). Write a test that references ` +
+              `the AC id, or check verification.testGlobs if you expect a matching file ` +
+              `already exists. ${bypassHint}`
+          : `settle run refused (assertion mode): no test files matched configured globs for ` +
+              `${absent.join(', ')} (searched: ${globsLabel}). Check verification.testGlobs, or ` +
+              `move/rename the test file so it matches. ${bypassHint}`;
+        ctx.io.err(`${message}\n`);
+        reasons.push(message);
       }
       if (weak.length > 0) {
-        ctx.io.err(
+        const message =
           `settle run refused (assertion mode): test files matched but no assertion-shaped ` +
-            `span found for ${weak.join(', ')}. Run \`cadence verify coverage --explain ` +
-            `${weak[0]}\` to see which profile scanned each file and why the span didn't ` +
-            `qualify, then add an asserting test block that references the AC id — or, if this ` +
-            `project's language/framework genuinely has no coverage profile (built-in: js/ts, ` +
-            `python, go, rust, php; extend via verification.coverageProfiles for others), switch ` +
-            `coverageMode to 'mention' via \`cadence config edit coverageMode\`. ${bypassHint}\n`,
-        );
+          `span found for ${weak.join(', ')}. Run \`cadence verify coverage --explain ` +
+          `${weak[0]}\` to see which profile scanned each file and why the span didn't ` +
+          `qualify, then add an asserting test block that references the AC id — or, if this ` +
+          `project's language/framework genuinely has no coverage profile (built-in: js/ts, ` +
+          `python, go, rust, php; extend via verification.coverageProfiles for others), switch ` +
+          `coverageMode to 'mention' via \`cadence config edit coverageMode\`. ${bypassHint}`;
+        ctx.io.err(`${message}\n`);
+        reasons.push(message);
       }
       if (skippedOnly.length > 0) {
-        ctx.io.err(
+        const message =
           `settle run refused (assertion mode): ${skippedOnly.join(', ')}'s only linked test ` +
-            `is skipped. Unskip the test or replace it with a running asserting it()/test() ` +
-            `block. ${bypassHint}\n`,
-        );
+          `is skipped. Unskip the test or replace it with a running asserting it()/test() ` +
+          `block. ${bypassHint}`;
+        ctx.io.err(`${message}\n`);
+        reasons.push(message);
       }
-      return { outcome: 'refuse', flags: { coverageBypassed } };
+      return { outcome: 'refuse', flags: { coverageBypassed }, reason: reasons.join('\n') };
     }
     return { outcome: 'pass', flags: { coverageBypassed } };
   }
@@ -128,15 +131,14 @@ export const runCoverageGate: GateImpl = async (ctx): Promise<GateResult> => {
     for (const id of absent) {
       ctx.io.err(`coverage: ${id} has no linked test (searched: ${globsLabel})\n`);
     }
-    ctx.io.err(
-      sealed
-        ? 'settle run refused: each AC needs at least one test that references its id ' +
-            '(e.g. AC-1 in a describe/it). This gate is sealed (gates.sealed) and cannot be ' +
-            'bypassed with --force or --allow-missing-coverage.\n'
-        : 'settle run refused: each AC needs at least one test that references its id (e.g. AC-1 in a describe/it). ' +
-            'Pass --allow-missing-coverage to bypass, or --force to settle anyway.\n',
-    );
-    return { outcome: 'refuse', flags: { coverageBypassed } };
+    const reason = sealed
+      ? 'settle run refused: each AC needs at least one test that references its id ' +
+          '(e.g. AC-1 in a describe/it). This gate is sealed (gates.sealed) and cannot be ' +
+          'bypassed with --force or --allow-missing-coverage.'
+      : 'settle run refused: each AC needs at least one test that references its id (e.g. AC-1 in a describe/it). ' +
+          'Pass --allow-missing-coverage to bypass, or --force to settle anyway.';
+    ctx.io.err(`${reason}\n`);
+    return { outcome: 'refuse', flags: { coverageBypassed }, reason };
   }
   return { outcome: 'pass', flags: { coverageBypassed } };
 };

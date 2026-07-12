@@ -28,15 +28,14 @@ export const runBuildTestGate: GateImpl = async (ctx): Promise<GateResult> => {
   const sealed = isGateSealed(ctx, 'build-test-must-pass');
   if (!res.ok && (sealed || (!ctx.opts.allowFailingBuild && !ctx.opts.force))) {
     ctx.io.err(`build-test-must-pass: ${res.command} exited ${res.exitCode}\n`);
-    ctx.io.err(
-      sealed
-        ? 'settle run refused: the test suite must pass before settle. ' +
-            'This gate is sealed (gates.sealed) and cannot be bypassed with ' +
-            '--allow-failing-build or --force.\n'
-        : 'settle run refused: the test suite must pass before settle. ' +
-            'Pass --allow-failing-build to bypass, or --force to settle anyway.\n',
-    );
-    return { outcome: 'refuse' };
+    const reason = sealed
+      ? 'settle run refused: the test suite must pass before settle. ' +
+          'This gate is sealed (gates.sealed) and cannot be bypassed with ' +
+          '--allow-failing-build or --force.'
+      : 'settle run refused: the test suite must pass before settle. ' +
+          'Pass --allow-failing-build to bypass, or --force to settle anyway.';
+    ctx.io.err(`${reason}\n`);
+    return { outcome: 'refuse', reason };
   }
   return { outcome: 'pass' };
 };

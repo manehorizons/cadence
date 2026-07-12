@@ -69,9 +69,16 @@ describe('settle test-coverage gate (Phase 14)', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/coverage:\s*AC-1\s*has no linked test/);
     expect(r.stderr).toMatch(/--allow-missing-coverage/);
-    expect(
-      existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md')),
-    ).toBe(false);
+    // Refused settle now persists a SUMMARY with the refusing gate's
+    // provenance (phase 170), where previously nothing was written.
+    const summaryJsonPath = join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json');
+    expect(existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'))).toBe(true);
+    expect(existsSync(summaryJsonPath)).toBe(true);
+    const summary = JSON.parse(await readFile(summaryJsonPath, 'utf8'));
+    expect(summary.gates[summary.gates.length - 1]).toMatchObject({
+      gate: 'test-coverage',
+      status: 'refused',
+    });
   });
 
   it('passes when each AC has a linked test (AC-2)', async () => {

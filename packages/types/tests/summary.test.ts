@@ -124,6 +124,39 @@ describe('GateProvenanceZ (AC-1, phase 140)', () => {
   it('rejects an unknown gate name', () => {
     expect(() => GateProvenanceZ.parse({ gate: 'not-a-real-gate', status: 'ran' })).toThrow();
   });
+
+  // AC-4 (phase 170): pre-existing ran/skipped shapes must still validate unchanged.
+  it('still validates pre-existing ran/skipped shapes (AC-4)', () => {
+    const ran = GateProvenanceZ.safeParse({ gate: 'structural-verifier', status: 'ran' });
+    expect(ran.success).toBe(true);
+
+    const skipped = GateProvenanceZ.safeParse({
+      gate: 'structural-verifier',
+      status: 'skipped',
+      skipReason: 'some reason',
+    });
+    expect(skipped.success).toBe(true);
+  });
+
+  // AC-1 (phase 170): new 'refused' status + optional reason field.
+  it('accepts a refused entry with a reason, and reason is optional (AC-1)', () => {
+    const withReason = GateProvenanceZ.safeParse({
+      gate: 'boundary-scan',
+      status: 'refused',
+      reason: 'some reason string',
+    });
+    expect(withReason.success).toBe(true);
+    if (withReason.success) {
+      expect(withReason.data.status).toBe('refused');
+      expect(withReason.data.reason).toBe('some reason string');
+    }
+
+    const withoutReason = GateProvenanceZ.safeParse({ gate: 'boundary-scan', status: 'refused' });
+    expect(withoutReason.success).toBe(true);
+    if (withoutReason.success) {
+      expect(withoutReason.data.reason).toBeUndefined();
+    }
+  });
 });
 
 describe('AcEvidenceZ (AC-2, phase 140)', () => {
