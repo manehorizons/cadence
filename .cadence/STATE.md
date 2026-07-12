@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 173-optimistic-concurrency-for-cadence-state-writes
+**Active phase:** 175-readme-features-the-test-gutting-demo
 **Active draft:** (none)
 **Tier:** (n/a)
 
