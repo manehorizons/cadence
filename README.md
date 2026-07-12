@@ -20,7 +20,7 @@ $ echo $?
 1
 ```
 
-Cadence names the specific AC, the specific dodge, and refuses with a non-zero exit an orchestrating agent can't talk its way past. Real output, offline, mock verifier, zero npm deps — run it yourself: **[docs/DEMO.md →](docs/DEMO.md)** (full 4-beat narrative) or `examples/demo-test-gutting/run-demo.sh` (replay it locally).
+Cadence names the specific AC, the specific dodge, and refuses with a non-zero exit an orchestrating agent can't talk its way past. Real output, offline, mock verifier, zero npm deps — run it yourself: **[docs/DEMO.md →](https://github.com/manehorizons/cadence/blob/main/docs/DEMO.md)** (full 4-beat narrative) or `examples/demo-test-gutting/run-demo.sh` (replay it locally).
 
 <details>
 <summary>Also see: the $100/3 demo (arithmetic bugs, not agent cheating)</summary>
