@@ -201,6 +201,24 @@ export interface RetroOfferContext {
   draftId: string;
   io: CommandIO;
   interactivity: Interactivity;
+  /**
+   * Genuine `process.stdin.isTTY`, independent of `interactivity` — required
+   * in addition to `interactivity !== 'bypass'` before this offer will spawn
+   * `gh` or prompt at all. `resolveInteractivity` resolves to `'interactive'`
+   * whenever `CADENCE_PROMPTER_SCRIPT` is set, even off a real TTY — that env
+   * var is this codebase's *test-only* seam for scripting gate prompt
+   * answers deterministically (`CLAUDE.md`: "Tests never call real
+   * providers... plus the CADENCE_PROMPTER_SCRIPT seam for interactive
+   * flows"), not a license to spawn a real external process. Without this
+   * flag, any existing (or future) test/script that drives the interactive-
+   * verdict gate via `CADENCE_PROMPTER_SCRIPT` and happens to also produce
+   * settle-time friction (e.g. a `force-used` bypass from a failed AC
+   * verdict) would trigger a real, unmocked `gh repo view` spawn — this is
+   * exactly what caused a ~71s hang on Windows CI in
+   * `tests/cli/settle-interactive.test.ts`'s `--force bypasses interactive
+   * refusal` test, discovered post-implementation, not by design.
+   */
+  isRealTTY: boolean;
   createPrompter: () => Prompter;
   cadenceConfig?: CadenceConfig;
   spawn?: SpawnFn;
@@ -217,6 +235,7 @@ export async function runRetroOffer(digest: RetroDigest, ctx: RetroOfferContext)
   if (ctx.cadenceConfig?.retro.offerGithubIssue === false) return;
   if (isDigestEmpty(digest)) return;
   if (ctx.interactivity === 'bypass') return;
+  if (!ctx.isRealTTY) return;
 
   const spawnImpl = ctx.spawn ?? defaultSpawn;
   const target = await resolveIssueTarget(spawnImpl);

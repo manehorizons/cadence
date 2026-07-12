@@ -285,6 +285,7 @@ function offerCtx(overrides: Partial<Parameters<typeof runRetroOffer>[1]> = {}) 
       draftId: '174-01',
       io: { out: (s: string) => out.push(s), err: (s: string) => err.push(s) },
       interactivity: 'interactive' as const,
+      isRealTTY: true,
       createPrompter: () => new ScriptedPrompter(['y']),
       cadenceConfig: defaultConfig,
       ...overrides,
@@ -308,6 +309,26 @@ describe('runRetroOffer', () => {
   it('skips silently when interactivity is bypass (non-TTY, no script)', async () => {
     const { ctx, out, err } = offerCtx({ interactivity: 'bypass' });
     await runRetroOffer(FRICTION_DIGEST, ctx);
+    expect(out).toHaveLength(0);
+    expect(err).toHaveLength(0);
+  });
+
+  it('skips silently, and never spawns gh, when interactivity is "interactive" but isRealTTY is false (CADENCE_PROMPTER_SCRIPT-only, no real TTY)', async () => {
+    // Regression test: resolveInteractivity resolves to 'interactive' whenever
+    // CADENCE_PROMPTER_SCRIPT is set, even off a real TTY — this is the exact
+    // combination that caused a real, unmocked `gh repo view` spawn to hang
+    // tests/cli/settle-interactive.test.ts on Windows CI (a pre-existing test
+    // driving the interactive-verdict gate via CADENCE_PROMPTER_SCRIPT, whose
+    // failed AC verdict produces a force-used bypass — friction — with no
+    // real TTY anywhere in the process).
+    let ghSpawned = false;
+    const spawn: SpawnFn = () => {
+      ghSpawned = true;
+      throw new Error('gh must never be spawned when isRealTTY is false');
+    };
+    const { ctx, out, err } = offerCtx({ interactivity: 'interactive', isRealTTY: false, spawn });
+    await runRetroOffer(FRICTION_DIGEST, ctx);
+    expect(ghSpawned).toBe(false);
     expect(out).toHaveLength(0);
     expect(err).toHaveLength(0);
   });

@@ -167,6 +167,28 @@ describe('settle writes + offers a retro artifact (Phase 174)', () => {
     expect(err.some((l) => l.includes('Filed'))).toBe(false);
   });
 
+  it('never spawns a real gh process on a friction-having settle driven by CADENCE_PROMPTER_SCRIPT off a non-TTY test process (regression: caused a real hang on Windows CI)', async () => {
+    // Reproduces the exact CI failure: CADENCE_PROMPTER_SCRIPT makes
+    // resolveInteractivity report 'interactive' (it's this codebase's
+    // scripted-prompt-answer test seam, not a real TTY), and a coverage
+    // bypass gives the retro digest real friction. Without the isRealTTY
+    // gate, runRetroOffer would spawn a real, unmocked `gh repo view` here —
+    // this test process's own process.stdin.isTTY is falsy (a real vitest/CI
+    // process, not an interactive terminal), so this exercises the same
+    // "scripted but not a real terminal" combination that hung Windows CI.
+    process.env.CADENCE_PROMPTER_SCRIPT = 'irrelevant\n';
+    const root = await setupRepo(parent);
+    const { io, out, err } = captureIO();
+    const start = Date.now();
+    const res = await settleService(root, { auto: true, allowMissingCoverage: true }, io);
+    const elapsedMs = Date.now() - start;
+    expect(res.exitCode).toBe(0);
+    expect(elapsedMs).toBeLessThan(5000); // a real gh spawn attempt would take vastly longer (or hang)
+    expect(out.some((l) => l.includes('File a GitHub issue'))).toBe(false);
+    expect(err.some((l) => l.includes('Filed'))).toBe(false);
+    expect(err.some((l) => l.includes('gh CLI unavailable'))).toBe(false); // never even tried to resolve a target
+  });
+
   it('reaches IDLE regardless of the retro offer step (state transition does not depend on it)', async () => {
     const root = await setupRepo(parent);
     const { io } = captureIO();

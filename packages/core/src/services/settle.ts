@@ -640,6 +640,7 @@ export async function settleService(
           draftId,
           io,
           interactivity,
+          isRealTTY: Boolean(process.stdin.isTTY),
           createPrompter: createDefaultPrompter,
           cadenceConfig,
         });
