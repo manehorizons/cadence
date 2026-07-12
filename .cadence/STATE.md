@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 175-readme-features-the-test-gutting-demo
+**Active phase:** 177-readme-embeds-the-animated-test-gutting-demo-svg
 **Active draft:** (none)
 **Tier:** (n/a)
 
