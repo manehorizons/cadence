@@ -1,28 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 45,
+  "revision": 60,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
   "activePhase": "179-milestone-fan-in-worktree-status",
-  "activeDraft": "179-01",
+  "activeDraft": null,
   "activeSpec": null,
-  "loopPosition": "BUILD",
-  "tier": "standard",
+  "loopPosition": "IDLE",
+  "tier": null,
   "draftReadAt": "2026-07-13T23:02:26.163Z",
-  "openDrafts": [
-    {
-      "id": "179-01",
-      "since": "2026-07-13T04:08:14.695Z"
-    }
-  ],
+  "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-13-milestone-fan-in-worktree-status-draft.md",
-    "subagentSpawns": 1618,
+    "subagentSpawns": 1625,
     "subagentBaselines": {}
   },
   "skillAudit": {

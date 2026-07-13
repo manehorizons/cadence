@@ -364,7 +364,7 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 
 ## rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases
 
-- status: converted
+- status: settle-pending
 - ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
