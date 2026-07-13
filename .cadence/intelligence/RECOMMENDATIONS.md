@@ -608,7 +608,7 @@ Two settle-internal refusal paths — the --auto blocked-task refusal and the sk
 
 ## rec-20260712-007 — Guarantee an audit/SUMMARY record when any settle gate throws (not just security-audit)
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: high
 - leverage: 5/10

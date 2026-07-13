@@ -1144,7 +1144,7 @@
       "title": "Guarantee an audit/SUMMARY record when any settle gate throws (not just security-audit)",
       "summary": "gates/security-audit.ts normalizes a verifier throw into a refuse+record via its own try/catch, but the other 8 gates in gates/registry.ts's runSettleGates driver have no such wrapper -- a thrown exception from any of them propagates uncaught to settle.ts's outer catch (line ~611), which only prints stderr and returns exitCode 1 with NO SUMMARY written. This is distinct from rec-20260712-006 (refusal-without-SUMMARY, already fixed for gate-dispatched refuse outcomes in phase 170/171) -- this is throw-without-SUMMARY, still open. Wrap each gate invocation in try/catch/finally and normalize exceptions to a typed failure result so every gate outcome is auditable.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-evidence",
       "priority": "high",
       "leverageScore": 5,
@@ -1167,9 +1167,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "176-audit-trail-for-settle-gate-throws",
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:39:48.570Z",
-      "updatedAt": "2026-07-12T17:39:48.570Z"
+      "updatedAt": "2026-07-12T23:18:59.755Z"
     },
     {
       "id": "rec-20260712-008",
@@ -2881,12 +2882,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "174-post-settle-retro-artifact",
-      "scoutId": "scout-20260712-0328",
-      "createdAt": "2026-07-12T04:23:33.174Z",
-      "updatedAt": "2026-07-12T20:59:11.134Z",
       "shippedRef": "PR #184",
+      "scoutId": "scout-20260712-0328",
       "archivedAt": "2026-07-12T20:59:11.134Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T04:23:33.174Z",
+      "updatedAt": "2026-07-12T20:59:11.134Z"
     }
   ]
 }

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "draftId": "176-01",
+  "completedAt": "2026-07-12T23:18:59.754Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Wrapped entry.impl(ctx) invocation in runSettleGates in try/catch; on throw, synthesizes {outcome:'refuse', reason} and a 'refused' provenance entry, returning refused:true so settle.ts's existing SUMMARY-on-refusal path fires. Verified via 2 new tests in registry.test.ts (Error and non-Error throw cases)."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Regression coverage: full packages/core/tests/gates suite (22 files, 221 tests) passes after the T1 change, confirming normal pass/refuse gate flows and provenance are unchanged."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}

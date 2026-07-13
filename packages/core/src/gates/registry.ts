@@ -118,6 +118,13 @@ const SELF_GUARD_SKIP_REASON: Partial<Record<SettleGate, string>> = {
  * it has already written its own stderr; the caller sets `process.exitCode`.
  * Bit-identical to the former hand-wired settle.ts dispatch block.
  *
+ * Phase 176: a gate impl that throws (rather than returning `{outcome:
+ * 'refuse'}`) is caught here and normalized into the same refuse path, so
+ * settle.ts's refusal branch always gets a chance to persist a SUMMARY —
+ * previously only `security-audit` self-normalized its own throws this way;
+ * every other gate's throw escaped uncaught to settle.ts's outer catch, which
+ * writes no SUMMARY at all.
+ *
  * `deps` is a test seam (production callers pass only `ctx`): it lets a test
  * drive the real loop over recording stubs. The defaults ARE the real registry
  * and order — the object identity wired here is what settle runs.
@@ -138,7 +145,16 @@ export async function runSettleGates(
       gates.push({ gate, status: 'skipped', skipReason: 'not in the active tier × profile gate set' });
       continue;
     }
-    const res: GateResult = await entry.impl(ctx);
+    let res: GateResult;
+    try {
+      res = await entry.impl(ctx);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const reason = `${gate}: threw — ${message}`;
+      log.warn('gate threw', { gate, error: message });
+      gates.push({ gate, status: 'refused', reason });
+      return { acc, refused: true, gates };
+    }
     mergeInto(acc, res);
     if (res.outcome === 'refuse') {
       log.warn('gate refused', { gate, outcome: res.outcome });
