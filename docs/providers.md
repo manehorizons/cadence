@@ -26,8 +26,10 @@ For a conceptual overview of providers and the gate universe they serve, see
   - [Binary discovery](#binary-discovery)
   - [Current scope: per-task-verify only](#current-scope-per-task-verify-only)
   - [Fallback behavior](#fallback-behavior)
+  - [Quota-transparency notice](#quota-transparency-notice)
+  - [Self-invocation guard](#self-invocation-guard)
   - [Readiness reporting caveat](#readiness-reporting-caveat)
-  - [Deferred: batching + quota transparency](#deferred-batching--quota-transparency)
+  - [Deferred: batching](#deferred-batching)
 - [Per-gate provider configuration](#per-gate-provider-configuration)
 - [Which gate fires in which cell](#which-gate-fires-in-which-cell)
 - [Selecting a provider at the command line (Phase 73)](#selecting-a-provider-at-the-command-line-phase-73)
@@ -316,12 +318,95 @@ interactive auth: stdin is not piped to the child process, so a CLI that
 opportunistically reads stdin when it isn't a TTY sees an immediate EOF
 instead of blocking.
 
-**Known limitation:** the subprocess transport has no spawn timeout. A
-process that hangs without ever closing stdout or exiting (as opposed to
-exiting non-zero or erroring) is not caught by this fallback — the call
-would hang rather than falling back to mock. This is a known gap, documented
-honestly rather than fixed in this slice; it is out of scope per the phase's
-boundaries.
+Every host-cli failure reason — `not-found`, `spawn-error`, `nonzero-exit`,
+`output-error`, `self-invocation` (see [Self-invocation
+guard](#self-invocation-guard)), and `timeout` (a hung subprocess; see
+below) — flows through this same per-call fallback path and warning format
+(`HostCliError`'s `reason` and `message`), never a second parallel fallback
+mechanism. For example:
+
+```
+per-task-verify: host-cli provider failed (self-invocation: host-cli provider: refusing to spawn "claude" — cadence is already running inside a headless "claude" session (detected via CLAUDECODE=1). Spawning another headless call here risks an unbounded nested self-invocation of the same host CLI. Falling back to mock for this call.) — falling back to mock provider for this call.
+
+per-task-verify: host-cli provider failed (timeout: host-cli provider: "claude" timed out after 180000ms without closing stdout or exiting (the spawned host-CLI subprocess's documented "never exits" limitation — see docs/providers.md) — the subprocess was killed.) — falling back to mock provider for this call.
+```
+
+**Spawn timeout.** The subprocess transport bounds how long it will wait for
+the spawned host-CLI process to close stdout or exit. The timeout defaults
+to 3 minutes (`180000` ms) and is configurable via `CADENCE_HOST_CLI_TIMEOUT_MS`
+(env var or a `.env` file at the repo root, discovered the same way as
+`CADENCE_HOST_CLI_BIN`):
+
+```sh
+export CADENCE_HOST_CLI_TIMEOUT_MS=60000   # optional override, in ms
+```
+
+If the subprocess neither closes stdout nor exits before the timeout
+elapses, it is killed (`SIGKILL`) and the call rejects with a `timeout`
+`HostCliError`, which is caught by the same fallback path as every other
+host-cli failure reason above — the call degrades to `mock` for that call
+with a stderr warning rather than hanging. A non-numeric or non-positive
+`CADENCE_HOST_CLI_TIMEOUT_MS` value is treated as unset and falls back to
+the 3-minute default.
+
+### Quota-transparency notice
+
+The first time a `host-cli` call actually spawns a subprocess — not when the
+provider is merely selected in config — CADENCE writes a one-time,
+always-visible stderr banner:
+
+```
+  ⚠  HOST-CLI PROVIDER: SUBSCRIPTION QUOTA IN USE
+     This verification call runs through your host CLI's own
+     subscription/usage quota — not a separately metered API key.
+```
+
+This fires exactly once per process, regardless of how many `host-cli` calls
+are made afterward, and only when a real spawn is attempted (selecting
+`provider: 'host-cli'` in config without ever calling a wired gate never
+triggers it). It is stderr-only — it never touches stdout, which is reserved
+for `--json` output and the MCP stdio protocol — and it is a direct,
+always-on write rather than routed through the structured logger, so it
+stays visible even at the default silent log level. The point is purely
+transparency: unlike `anthropic`/`local`, a `host-cli` call has no separately
+metered cost you can see in an API dashboard — it draws down your `claude`/
+`codex` subscription's own usage/rate limits instead, and this notice makes
+that fact visible the first time it actually happens.
+
+### Self-invocation guard
+
+If cadence is itself already running inside a headless/non-interactive
+session of the *same* host-CLI family it would spawn, `host-cli` refuses to
+spawn a nested subprocess and falls back to `mock` for that call instead —
+using the same per-call fallback path described above (`reason:
+'self-invocation'`), not a second mechanism.
+
+For the `claude` family, this is detected via `CLAUDECODE=1`, the session
+environment variable Claude Code documents as being set "in subprocesses
+Claude Code spawns (Bash and PowerShell tools, tmux sessions, hook commands,
+status line commands, stdio MCP server subprocesses)" — IDE integrated
+terminals set it too.
+
+**This has a first-order operator-facing consequence, not just a narrow
+recursion edge case:** if you are running `cadence` from *within* a Claude
+Code terminal, a Claude Code hook, or a Claude Code Bash tool call —
+including the ordinary subagent-driven-build workflow this repo itself
+uses — `host-cli` calls will **always** fall back to `mock`, every time,
+because `CLAUDECODE=1` is ambient in that shell. This is intentional
+self-invocation protection, not a bug: it is exactly as likely to trigger
+from cadence's own everyday operator workflow as from a genuine
+cadence-spawns-claude-spawns-cadence recursion, and both are guarded the
+same way. If you need real `host-cli` verification, run the `cadence`
+command from a plain terminal/CI job outside any Claude Code process, where
+`CLAUDECODE` is unset.
+
+The `codex` family is **not** guarded. The only candidate session variable,
+`CODEX_SANDBOX`, is undocumented in OpenAI's official Codex CLI docs and is
+narrower than a reliable family-wide session signal even where it appears
+(only set under the macOS Seatbelt sandbox backend, not on Linux or other
+sandbox modes, and not universal across `codex exec` invocations) — guessing
+at it would risk false negatives/positives, so `codex` self-invocation is
+left unguarded until a documented signal exists.
 
 ### Readiness reporting caveat
 
@@ -334,12 +419,12 @@ verification call. Don't be surprised if `doctor` reports `host-cli` as
 ready and a subsequent gate run still falls back to mock — that fallback,
 with its stderr warning, is the actual live check.
 
-### Deferred: batching + quota transparency
+### Deferred: batching
 
-Batching multiple ACs into a single subprocess spawn per gate run, and
-surfacing quota-transparency messaging (host-cli verification consumes your
-host-CLI subscription's usage, not a separately metered API key), are both
-explicitly deferred — not implemented by this provider today.
+Batching multiple ACs into a single subprocess spawn per gate run is
+explicitly deferred — not implemented by this provider today. (Quota
+transparency, previously listed here as deferred alongside batching, is now
+implemented — see [Quota-transparency notice](#quota-transparency-notice).)
 
 ---
 

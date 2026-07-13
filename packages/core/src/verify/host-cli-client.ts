@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import type { ZodType } from 'zod/v4';
+import { discoverKey } from '../activate/key-discovery.js';
 import { getLogger } from '../logging/logger.js';
 import { runWithRepair, type RepairMessage } from './json-repair.js';
 
@@ -12,12 +13,23 @@ export type HostCliFamily = 'claude' | 'codex';
  * `node:child_process`'s `ChildProcess` to just the events/streams we
  * consume, so tests can inject a lightweight fake instead of implementing
  * the full `ChildProcess` interface.
+ *
+ * `kill` is deliberately **optional** (Phase 178 T3), not required: this
+ * interface is imported by two test files outside this task's file boundary
+ * (`packages/core/tests/verify/per-task.test.ts`,
+ * `packages/core/tests/verify/json-repair.test.ts`) whose fake process
+ * objects predate the timeout guard and do not implement `kill`. Making it
+ * required would break those files' typecheck. Real spawned processes
+ * (`realSpawn`, below) structurally satisfy the optional method fine via
+ * Node's actual `ChildProcess.kill`; the timeout logic calls it defensively
+ * (`child.kill?.(...)`) rather than assuming it exists.
  */
 export interface SpawnedProcessLike {
   stdout: NodeJS.ReadableStream | null;
   stderr: NodeJS.ReadableStream | null;
   on(event: 'error', listener: (err: NodeJS.ErrnoException) => void): unknown;
   on(event: 'close', listener: (code: number | null) => void): unknown;
+  kill?(signal?: NodeJS.Signals): boolean;
 }
 
 /** Test seam / real implementation signature: spawn `bin args…`, return the process. */
@@ -33,11 +45,87 @@ export type SpawnFn = (bin: string, args: string[]) => SpawnedProcessLike;
 const realSpawn: SpawnFn = (bin, args) =>
   spawn(bin, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
+/**
+ * Phase 178 T1 — one-time-per-process quota-transparency notice. A module-
+ * level flag is the simplest correct "once per process" implementation
+ * (mirrors a real Node process's lifetime); test files that `vi.resetModules()`
+ * naturally get a fresh flag too.
+ *
+ * This is deliberately an unconditional, direct `process.stderr.write` —
+ * mirroring the loud `MOCK_FALLBACK_BANNER` convention in
+ * `verifier-factory.ts` — rather than routed through `getLogger()`, whose
+ * `warn`/`debug` levels are silent by default (`resolveLogLevel`'s
+ * `env > config > 'silent'` fallback) and would make this transparency
+ * notice invisible in the common case. `getLogger()` is still used
+ * elsewhere in this file for the existing debug/warn structured-logging
+ * seam; this notice is a separate, always-visible user-facing disclosure,
+ * not a diagnostic.
+ */
+let quotaNoticeEmitted = false;
+
+const QUOTA_NOTICE = [
+  '',
+  '  ⚠  HOST-CLI PROVIDER: SUBSCRIPTION QUOTA IN USE',
+  '     This verification call runs through your host CLI\'s own',
+  '     subscription/usage quota — not a separately metered API key.',
+  '',
+].join('\n');
+
+/** Emits {@link QUOTA_NOTICE} to stderr exactly once per process, the first
+ *  time a real host-cli subprocess is about to be spawned. Config selection
+ *  of the `host-cli` provider alone never triggers this — only an actual
+ *  spawn attempt does. */
+function emitQuotaNoticeOnce(): void {
+  if (quotaNoticeEmitted) return;
+  quotaNoticeEmitted = true;
+  process.stderr.write(QUOTA_NOTICE);
+}
+
 export type HostCliErrorReason =
   | 'not-found'
   | 'spawn-error'
   | 'nonzero-exit'
-  | 'output-error';
+  | 'output-error'
+  | 'self-invocation'
+  | 'timeout';
+
+/**
+ * Phase 178 T2 — per-family session environment variable that reliably
+ * indicates "this process is already running inside a headless/non-
+ * interactive session of this host CLI family", confirmed against each
+ * family's *official* docs before wiring (never guessed):
+ *
+ * - `claude`: `CLAUDECODE` — documented at
+ *   https://code.claude.com/docs/en/env-vars: "Set to `1` in subprocesses
+ *   Claude Code spawns (Bash and PowerShell tools, tmux sessions, hook
+ *   commands, status line commands, stdio MCP server subprocesses). IDE
+ *   extensions also set this in their integrated terminals." This is exactly
+ *   the self-invocation shape AC-2 guards against — a `cadence` process
+ *   already running as (or under) a Claude Code subprocess would inherit
+ *   `CLAUDECODE=1`.
+ * - `codex`: deliberately **not** detected. The only candidate found,
+ *   `CODEX_SANDBOX` (`=seatbelt`), is undocumented in OpenAI's official
+ *   Codex CLI docs (`developers.openai.com/codex/environment-variables`
+ *   lists no session-indicator variable at all) and is narrower than a
+ *   family-wide session signal even where it does appear — it is only set
+ *   when the macOS Seatbelt sandbox backend is in use, not on Linux/other
+ *   sandbox modes, and not universally for every `codex exec` invocation.
+ *   Guessing it here would risk exactly the false-negative/false-positive
+ *   failure modes this task exists to avoid. Left unguarded; see
+ *   `docs/providers.md`.
+ */
+const SELF_INVOCATION_ENV_VAR: Partial<Record<HostCliFamily, string>> = {
+  claude: 'CLAUDECODE',
+};
+
+/** True when the family's documented session env var is set on the *current*
+ *  invoking process — i.e. cadence itself is already running inside a
+ *  headless session of the same host-CLI family it is about to spawn. */
+function isSelfInvocation(family: HostCliFamily, env: NodeJS.ProcessEnv): boolean {
+  const varName = SELF_INVOCATION_ENV_VAR[family];
+  if (!varName) return false;
+  return env[varName] === '1';
+}
 
 /**
  * Distinguishable error type for host-cli spawn/output failures. This is the
@@ -72,6 +160,49 @@ export interface HostCliJSONOptions<T> {
   schema: ZodType<T>;
   /** Test seam; defaults to a real `node:child_process.spawn` wrapper with piped stdio. */
   spawnImpl?: SpawnFn;
+  /** Test seam for the self-invocation guard; defaults to `process.env`. */
+  env?: NodeJS.ProcessEnv;
+  /**
+   * Phase 178 T3 — subprocess spawn timeout override (ms), test-injectable so
+   * tests never sleep for the real duration. Falls back to
+   * {@link TIMEOUT_ENV_VAR} (env or `.env`, via the existing `discoverKey`
+   * seam) then {@link DEFAULT_TIMEOUT_MS} when unset. If the spawned host-CLI
+   * subprocess neither closes stdout nor exits before this elapses, it is
+   * killed and `spawnCapture` rejects with `HostCliError({ reason: 'timeout' })`.
+   */
+  timeoutMs?: number;
+}
+
+/**
+ * Phase 178 T3 — env var name for the spawn-timeout default, discovered the
+ * same way `CADENCE_HOST_CLI_BIN` is in `verifier-factory.ts` (env, then a
+ * `.env` file at `process.cwd()`).
+ */
+const TIMEOUT_ENV_VAR = 'CADENCE_HOST_CLI_TIMEOUT_MS';
+
+/**
+ * Default subprocess spawn timeout (ms) when neither `timeoutMs` nor
+ * `CADENCE_HOST_CLI_TIMEOUT_MS` is set. A real headless host-CLI verification
+ * call (spawning the user's own `claude`/`codex` binary, which may itself
+ * call out to a model) can legitimately take tens of seconds — 3 minutes
+ * gives real slow-but-working calls plenty of room while still bounding the
+ * "Known limitation" hang (`docs/providers.md`) to something well short of a
+ * stuck CI job.
+ */
+const DEFAULT_TIMEOUT_MS = 3 * 60 * 1000;
+
+/**
+ * Resolves the effective spawn timeout: an explicit per-call `override` wins;
+ * otherwise `CADENCE_HOST_CLI_TIMEOUT_MS` (env/`.env`); otherwise
+ * {@link DEFAULT_TIMEOUT_MS}. A non-numeric or non-positive env value is
+ * treated as unset rather than producing a zero/NaN timeout.
+ */
+function resolveTimeoutMs(override: number | undefined, env: NodeJS.ProcessEnv): number {
+  if (override !== undefined) return override;
+  const raw = discoverKey(TIMEOUT_ENV_VAR, env, process.cwd()).value;
+  if (raw === undefined) return DEFAULT_TIMEOUT_MS;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
 }
 
 /** Initial call + this many repair retries before throwing. */
@@ -142,13 +273,39 @@ function toHostCliError(bin: string, err: unknown): HostCliError {
   );
 }
 
-/** Spawns `bin args…`, captures stdout/stderr, and settles on process exit. */
+/**
+ * Spawns `bin args…`, captures stdout/stderr, and settles on process exit —
+ * or on the Phase 178 T3 spawn timeout, whichever comes first.
+ *
+ * `settled` guards against a double-settle race: the timeout timer and the
+ * child's `error`/`close` listeners can each attempt to resolve/reject this
+ * promise, but only the first should win, and the timer must be cleared on
+ * *every* other path (both `resolve` and `reject`) so it never fires
+ * spuriously after the promise has already settled and never leaves a
+ * dangling timer alive past this call.
+ */
 function spawnCapture(
   spawnImpl: SpawnFn,
   bin: string,
   args: string[],
+  family: HostCliFamily,
+  env: NodeJS.ProcessEnv,
+  timeoutMs: number,
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
+    if (isSelfInvocation(family, env)) {
+      reject(
+        new HostCliError(
+          `host-cli provider: refusing to spawn "${bin}" — cadence is already running inside a ` +
+            `headless "${family}" session (detected via ${SELF_INVOCATION_ENV_VAR[family]}=1). ` +
+            'Spawning another headless call here risks an unbounded nested self-invocation of the ' +
+            'same host CLI. Falling back to mock for this call.',
+          'self-invocation',
+        ),
+      );
+      return;
+    }
+    emitQuotaNoticeOnce();
     let child: SpawnedProcessLike;
     try {
       child = spawnImpl(bin, args);
@@ -159,6 +316,22 @@ function spawnCapture(
 
     let stdout = '';
     let stderr = '';
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      child.kill?.('SIGKILL');
+      reject(
+        new HostCliError(
+          `host-cli provider: "${bin}" timed out after ${timeoutMs}ms without closing stdout or exiting ` +
+            `(the spawned host-CLI subprocess's documented "never exits" limitation — see docs/providers.md) ` +
+            '— the subprocess was killed.',
+          'timeout',
+        ),
+      );
+    }, timeoutMs);
+
     child.stdout?.on('data', (chunk: Buffer | string) => {
       stdout += chunk.toString();
     });
@@ -166,9 +339,15 @@ function spawnCapture(
       stderr += chunk.toString();
     });
     child.on('error', (err) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       reject(toHostCliError(bin, err));
     });
     child.on('close', (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       if (code !== 0) {
         reject(
           new HostCliError(
@@ -241,7 +420,14 @@ function extractClaudeText(stdout: string, bin: string): string {
 }
 
 async function callOnce(
-  o: { bin: string; family: HostCliFamily; model: string | undefined; spawnImpl: SpawnFn },
+  o: {
+    bin: string;
+    family: HostCliFamily;
+    model: string | undefined;
+    spawnImpl: SpawnFn;
+    env: NodeJS.ProcessEnv;
+    timeoutMs: number;
+  },
   messages: RepairMessage[],
 ): Promise<string> {
   const prompt = flattenMessages(messages);
@@ -249,7 +435,7 @@ async function callOnce(
   const log = getLogger().child({ seam: 'verify', provider: 'host-cli', bin: o.bin, family: o.family });
   log.debug('verify request', { bin: o.bin, family: o.family });
 
-  const { stdout } = await spawnCapture(o.spawnImpl, o.bin, args);
+  const { stdout } = await spawnCapture(o.spawnImpl, o.bin, args, o.family, o.env, o.timeoutMs);
 
   try {
     const text = o.family === 'codex' ? extractCodexText(stdout, o.bin) : extractClaudeText(stdout, o.bin);
@@ -278,13 +464,15 @@ export async function hostCliJSON<T>(o: HostCliJSONOptions<T>): Promise<T> {
   const bin = o.bin ?? 'claude';
   const family = o.family ?? inferFamily(bin);
   const spawnImpl = o.spawnImpl ?? realSpawn;
+  const env = o.env ?? process.env;
+  const timeoutMs = resolveTimeoutMs(o.timeoutMs, env);
 
   return runWithRepair({
     system: o.system,
     user: o.user,
     schema: o.schema,
     maxRepairRetries: MAX_REPAIR_RETRIES,
-    transport: (messages) => callOnce({ bin, family, model: o.model, spawnImpl }, messages),
+    transport: (messages) => callOnce({ bin, family, model: o.model, spawnImpl, env, timeoutMs }, messages),
     buildError: (lastError, retries) =>
       `host-cli provider: model output failed JSON/schema validation after ${retries} repair retries (bin=${bin}, family=${family}): ${lastError}`,
   });
