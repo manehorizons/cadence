@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   AnthropicPerTaskVerifier,
@@ -144,6 +144,24 @@ describe('HostCliPerTaskVerifier (AC-1)', () => {
     files: ['src/foo.ts'],
     diff: '+ added line',
   };
+
+  // Phase 178 T2: `HostCliPerTaskVerifierOptions` has no env-injection seam
+  // (unlike `hostCliJSON` itself, which callers pin via `env: {}` — see
+  // host-cli-client.test.ts's `base` fixture and json-repair.test.ts), so
+  // `hostCliJSON` falls through to the real `process.env` here. Pin
+  // CLAUDECODE unset for these tests so they stay deterministic regardless
+  // of the invoking shell (e.g. this repo's own dev sessions, where
+  // CLAUDECODE=1 is ambient and would otherwise trip the self-invocation
+  // guard and fall back to mock).
+  let savedClaudecode: string | undefined;
+  beforeEach(() => {
+    savedClaudecode = process.env.CLAUDECODE;
+    delete process.env.CLAUDECODE;
+  });
+  afterEach(() => {
+    if (savedClaudecode === undefined) delete process.env.CLAUDECODE;
+    else process.env.CLAUDECODE = savedClaudecode;
+  });
 
   it('AC-1: spawns the host CLI headlessly, parses its output via the repair harness, and returns the same verdict shape local/anthropic return', async () => {
     const calls: Array<{ bin: string; args: string[] }> = [];

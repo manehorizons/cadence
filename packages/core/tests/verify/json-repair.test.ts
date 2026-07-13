@@ -186,6 +186,10 @@ describe('runWithRepair is the single shared harness used by both local and host
       system: 's',
       user: 'u',
       schema: Schema,
+      // Phase 178 T2: pin env deterministic — without this, a real
+      // CLAUDECODE=1 in the invoking shell (e.g. this repo's own dev
+      // sessions) trips the self-invocation guard and falls back to mock.
+      env: {},
       spawnImpl: fakeSpawn(JSON.stringify({ is_error: false, result: '{"ok":true}' })),
     });
 
@@ -206,6 +210,8 @@ describe('runWithRepair is the single shared harness used by both local and host
       system: 's',
       user: 'u',
       schema: Schema,
+      // Phase 178 T2: pin env deterministic (see note above).
+      env: {},
       spawnImpl: fakeSpawn(JSON.stringify({ is_error: false, result: '{"ok":true}' })),
     });
 

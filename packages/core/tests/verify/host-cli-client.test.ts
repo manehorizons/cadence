@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { z } from 'zod/v4';
 import { hostCliJSON, type SpawnFn, type SpawnedProcessLike } from '../../src/verify/host-cli-client.js';
 
@@ -14,6 +14,8 @@ const Schema = z.object({ ok: z.boolean() });
 interface FakeCall {
   bin: string;
   args: string[];
+  /** Phase 178 T3: signals passed to the fake process's `kill()`, in call order. */
+  killSignals: NodeJS.Signals[];
 }
 
 interface FakeResponse {
@@ -21,13 +23,17 @@ interface FakeResponse {
   stderr?: string;
   code?: number;
   err?: NodeJS.ErrnoException;
+  /** Phase 178 T3: AC-3's "never closes stdout or exits" case — no listener is
+   *  ever invoked, simulating the documented hung-subprocess limitation. */
+  hang?: boolean;
 }
 
 /** Stubs the subprocess transport: records each spawn call and replays scripted responses in order (last one repeats). No real `claude`/`codex` binary is ever invoked. */
 function fakeSpawn(responses: FakeResponse[], calls: FakeCall[]): SpawnFn {
   let i = 0;
   return (bin, args) => {
-    calls.push({ bin, args });
+    const call: FakeCall = { bin, args, killSignals: [] };
+    calls.push(call);
     const resp = responses[Math.min(i++, responses.length - 1)] ?? {};
 
     const stdoutListeners: Array<(chunk: Buffer) => void> = [];
@@ -53,9 +59,14 @@ function fakeSpawn(responses: FakeResponse[], calls: FakeCall[]): SpawnFn {
         if (event === 'close') closeListener = cb as (code: number | null) => void;
         return proc;
       },
+      kill: (signal?: NodeJS.Signals) => {
+        call.killSignals.push(signal ?? 'SIGTERM');
+        return true;
+      },
     };
 
     queueMicrotask(() => {
+      if (resp.hang) return; // never fires error/close — the timeout guard must catch this
       if (resp.err) {
         errorListener?.(resp.err);
         return;
@@ -73,7 +84,13 @@ const claudeEnvelope = (result: string, extra: Record<string, unknown> = {}) =>
   JSON.stringify({ is_error: false, result, ...extra });
 
 describe('hostCliJSON', () => {
-  const base = { system: 's', user: 'u', schema: Schema };
+  // `env: {}` pins every pre-existing test to a deterministic, self-invocation-
+  // -free environment regardless of what the *actual* process this test suite
+  // runs under happens to export (e.g. this repo's own dev sessions often run
+  // under Claude Code itself, which sets `CLAUDECODE=1` — without this default
+  // those ambient variables would leak into `hostCliJSON`'s default
+  // `env ?? process.env` and spuriously trip the AC-2 guard added below).
+  const base = { system: 's', user: 'u', schema: Schema, env: {} };
 
   it('AC-1: spawns claude in headless/non-interactive mode with the flattened prompt and parses the JSON envelope into a schema-valid verdict', async () => {
     const calls: FakeCall[] = [];
@@ -211,5 +228,162 @@ describe('hostCliJSON', () => {
 
     expect(err).toMatchObject({ name: 'HostCliError', reason: 'output-error' });
     expect((err as Error).message).toMatch(/boom/);
+  });
+
+  it('AC-1: emits a one-time quota-transparency notice on first real spawn, and never repeats it across multiple calls in the same process', async () => {
+    // Fresh module instance so this test's "once per process" assertion is
+    // not polluted by earlier tests in this file already having spawned
+    // (and thus already flipped the module-level once-per-process flag).
+    vi.resetModules();
+    const { hostCliJSON: freshHostCliJSON } = await import('../../src/verify/host-cli-client.js');
+
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+    try {
+      const calls: FakeCall[] = [];
+      const spawnImpl = fakeSpawn(
+        [{ stdout: claudeEnvelope('{"ok":true}') }, { stdout: claudeEnvelope('{"ok":true}') }],
+        calls,
+      );
+
+      await freshHostCliJSON({ ...base, spawnImpl });
+      await freshHostCliJSON({ ...base, spawnImpl });
+
+      expect(calls).toHaveLength(2); // two real spawns happened...
+      const quotaNotices = stderrSpy.mock.calls.filter(
+        ([chunk]) => typeof chunk === 'string' && chunk.toLowerCase().includes('quota'),
+      );
+      expect(quotaNotices).toHaveLength(1); // ...but the notice fired only once
+    } finally {
+      stderrSpy.mockRestore();
+    }
+  });
+
+  it('AC-2: refuses to spawn and rejects with HostCliError(reason="self-invocation") when CLAUDECODE=1 is set (claude family)', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+
+    const err = await hostCliJSON({
+      ...base,
+      env: { CLAUDECODE: '1' },
+      spawnImpl,
+    }).catch((e: unknown) => e);
+
+    expect(err).toMatchObject({ name: 'HostCliError', reason: 'self-invocation' });
+    expect((err as Error).message).toMatch(/self-invocation|already running inside a headless/i);
+    // No-hang guarantee (AC-2): the refusal happens before any subprocess is
+    // created — no spawn call was ever made, no retry either (a
+    // self-invocation refusal is not JSON/schema-repairable).
+    expect(calls).toHaveLength(0);
+  });
+
+  it('AC-2: does not refuse when CLAUDECODE is unset — proceeds to spawn normally (no false positive)', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+
+    const r = await hostCliJSON({ ...base, env: {}, spawnImpl });
+
+    expect(r.ok).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it('AC-2: does not refuse when CLAUDECODE is set to something other than "1" (e.g. unset/empty-string ambient var)', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+
+    const r = await hostCliJSON({ ...base, env: { CLAUDECODE: '' }, spawnImpl });
+
+    expect(r.ok).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it('AC-2: CLAUDECODE=1 does not affect the codex family — self-invocation detection is not (yet) wired for codex, since no reliable documented session env var was found', async () => {
+    const calls: FakeCall[] = [];
+    const jsonl = JSON.stringify({ type: 'item.completed', item: { type: 'agent_message', text: '{"ok":true}' } });
+    const spawnImpl = fakeSpawn([{ stdout: jsonl }], calls);
+
+    const r = await hostCliJSON({ ...base, bin: 'codex', env: { CLAUDECODE: '1' }, spawnImpl });
+
+    expect(r.ok).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it('AC-2: propagating through the standard fallback path — the self-invocation HostCliError has the same shape (name/reason) as the other spawn-boundary errors so wrapWithFallback needs no new logic', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([], calls);
+
+    const err = await hostCliJSON({
+      ...base,
+      env: { CLAUDECODE: '1' },
+      spawnImpl,
+    }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as { name: string }).name).toBe('HostCliError');
+    expect((err as { reason: string }).reason).toBe('self-invocation');
+  });
+
+  it('AC-3: kills the subprocess and rejects with HostCliError(reason="timeout") when it never closes stdout or exits', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ hang: true }], calls);
+
+    const err = await hostCliJSON({ ...base, spawnImpl, timeoutMs: 20 }).catch((e: unknown) => e);
+
+    expect(err).toMatchObject({ name: 'HostCliError', reason: 'timeout' });
+    // Killed via the optional `SpawnedProcessLike.kill` capability, not left running.
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.killSignals).toContain('SIGKILL');
+    // A timeout is not JSON/schema-repairable — must not retry the process.
+  });
+
+  it('AC-3: a normally-closing process is unaffected by the timeout guard (no regression)', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+
+    const r = await hostCliJSON({ ...base, spawnImpl, timeoutMs: 50 });
+
+    expect(r.ok).toBe(true);
+    expect(calls[0]!.killSignals).toHaveLength(0);
+  });
+
+  it('AC-3: the timeout timer is cleared on normal completion (resolve path) — no dangling/spurious timer', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+    const clearSpy = vi.spyOn(global, 'clearTimeout');
+    try {
+      const r = await hostCliJSON({ ...base, spawnImpl, timeoutMs: 50 });
+
+      expect(r.ok).toBe(true);
+      expect(clearSpy).toHaveBeenCalled();
+    } finally {
+      clearSpy.mockRestore();
+    }
+  });
+
+  it('AC-3: the timeout timer is cleared on the reject path too (non-zero exit), not just on resolve', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ code: 1, stderr: 'boom' }], calls);
+    const clearSpy = vi.spyOn(global, 'clearTimeout');
+    try {
+      await expect(hostCliJSON({ ...base, spawnImpl, timeoutMs: 50 })).rejects.toMatchObject({
+        reason: 'nonzero-exit',
+      });
+
+      expect(clearSpy).toHaveBeenCalled();
+    } finally {
+      clearSpy.mockRestore();
+    }
+  });
+
+  it('AC-3: resolves the timeout from CADENCE_HOST_CLI_TIMEOUT_MS when no explicit timeoutMs override is given', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ hang: true }], calls);
+
+    const err = await hostCliJSON({
+      ...base,
+      env: { CADENCE_HOST_CLI_TIMEOUT_MS: '15' },
+      spawnImpl,
+    }).catch((e: unknown) => e);
+
+    expect(err).toMatchObject({ name: 'HostCliError', reason: 'timeout' });
   });
 });
