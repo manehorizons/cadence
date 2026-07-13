@@ -1,6 +1,0 @@
----
-'@manehorizons/cadence-core': patch
-'@manehorizons/cadence-types': patch
----
-
-Add optimistic concurrency to `SimpleStateBackend.commit()` to prevent lost updates when two `cadence` state writers (CLI commands, hooks, or the MCP server) race on `.cadence/state.json` in the same checkout — the actual failure mode behind a recent incident where two concurrent Claude Code sessions in one primary checkout stomped each other's uncommitted work. `CadenceState` gains a `revision: number` field (additive, `.default(0)`, back-compat with pre-existing `state.json` files). `commit()` now compares the current on-disk revision to the caller's in-memory `state.revision` before writing: a match bumps it in place and writes as before; a mismatch refuses with a new `StateConflictError` (naming both revisions) instead of silently overwriting the other writer's change, unless the new `{ force: true }` option is passed (which overwrites unconditionally and warns loudly to stderr). A bootstrap write (no existing `state.json`) skips the check entirely. The in-place revision bump means a caller issuing several sequential `commit()` calls on the same in-memory object — e.g. a hook handler with two independent write branches — stays in sync automatically without re-reading between calls.
