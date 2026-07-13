@@ -1141,39 +1141,6 @@
       "updatedAt": "2026-07-12T04:25:17.712Z"
     },
     {
-      "id": "rec-20260712-007",
-      "title": "Guarantee an audit/SUMMARY record when any settle gate throws (not just security-audit)",
-      "summary": "gates/security-audit.ts normalizes a verifier throw into a refuse+record via its own try/catch, but the other 8 gates in gates/registry.ts's runSettleGates driver have no such wrapper -- a thrown exception from any of them propagates uncaught to settle.ts's outer catch (line ~611), which only prints stderr and returns exitCode 1 with NO SUMMARY written. This is distinct from rec-20260712-006 (refusal-without-SUMMARY, already fixed for gate-dispatched refuse outcomes in phase 170/171) -- this is throw-without-SUMMARY, still open. Wrap each gate invocation in try/catch/finally and normalize exceptions to a typed failure result so every gate outcome is auditable.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-evidence",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "settle",
-        "reliability"
-      ],
-      "affectedFiles": [
-        "packages/core/src/services/settle.ts",
-        "packages/core/src/gates/registry.ts",
-        "packages/core/src/gates/security-audit.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-007"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "176-audit-trail-for-settle-gate-throws",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:39:48.570Z",
-      "updatedAt": "2026-07-12T23:18:59.755Z"
-    },
-    {
       "id": "rec-20260712-008",
       "title": "Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings",
       "summary": "The evidence ledger (.cadence/intelligence/evidence.json) and SUMMARY.securityAudit persist source-derived quotes and diff findings to disk verbatim -- confirmed no redact/scrub/secret/token/credential handling exists anywhere in intelligence/store/audit.ts or gates/security-audit.ts. Those can carry tokens/credentials. Add a redaction pass (token/key/credential patterns) and a per-record policy before persistence, and restrict ledger file permissions to the current user.",
@@ -2889,6 +2856,42 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-12T04:23:33.174Z",
       "updatedAt": "2026-07-12T20:59:11.134Z"
+    },
+    {
+      "id": "rec-20260712-007",
+      "title": "Guarantee an audit/SUMMARY record when any settle gate throws (not just security-audit)",
+      "summary": "gates/security-audit.ts normalizes a verifier throw into a refuse+record via its own try/catch, but the other 8 gates in gates/registry.ts's runSettleGates driver have no such wrapper -- a thrown exception from any of them propagates uncaught to settle.ts's outer catch (line ~611), which only prints stderr and returns exitCode 1 with NO SUMMARY written. This is distinct from rec-20260712-006 (refusal-without-SUMMARY, already fixed for gate-dispatched refuse outcomes in phase 170/171) -- this is throw-without-SUMMARY, still open. Wrap each gate invocation in try/catch/finally and normalize exceptions to a typed failure result so every gate outcome is auditable.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "settle",
+        "reliability"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/settle.ts",
+        "packages/core/src/gates/registry.ts",
+        "packages/core/src/gates/security-audit.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "176-audit-trail-for-settle-gate-throws",
+      "scoutId": "scout-20260712-1234",
+      "createdAt": "2026-07-12T17:39:48.570Z",
+      "updatedAt": "2026-07-13T01:27:56.679Z",
+      "shippedRef": "v1.44.1 (PR #192)",
+      "archivedAt": "2026-07-13T01:27:56.679Z",
+      "archiveReason": "shipped"
     }
   ]
 }
