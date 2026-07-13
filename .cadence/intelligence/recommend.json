@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-12T23:32:15.189Z",
+  "generatedAt": "2026-07-13T01:28:12.276Z",
   "ranked": [
     {
       "id": "rec-20260703-001",
@@ -1103,10 +1103,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 50,
+    "total": 49,
     "ranked": 26,
     "parked": 1,
     "needsAttention": 0,
-    "excluded": 23
+    "excluded": 22
   }
 }
