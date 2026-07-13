@@ -703,8 +703,8 @@
       "title": "Milestone-scoped worktree fan-out for independent phases",
       "summary": "External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "status": "converted",
+      "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -727,7 +727,8 @@
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-07-03T16:59:18.968Z",
-      "updatedAt": "2026-07-03T16:59:18.968Z"
+      "updatedAt": "2026-07-13T04:08:09.689Z",
+      "convertedToPhaseId": "179-milestone-fan-in-worktree-status"
     },
     {
       "id": "rec-20260709-001",
@@ -1145,8 +1146,8 @@
       "title": "Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings",
       "summary": "The evidence ledger (.cadence/intelligence/evidence.json) and SUMMARY.securityAudit persist source-derived quotes and diff findings to disk verbatim -- confirmed no redact/scrub/secret/token/credential handling exists anywhere in intelligence/store/audit.ts or gates/security-audit.ts. Those can carry tokens/credentials. Add a redaction pass (token/key/credential patterns) and a per-record policy before persistence, and restrict ledger file permissions to the current user.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1170,7 +1171,7 @@
       "decisionIds": [],
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:40:20.202Z",
-      "updatedAt": "2026-07-12T17:40:20.202Z"
+      "updatedAt": "2026-07-13T03:46:13.234Z"
     },
     {
       "id": "rec-20260712-009",
@@ -1239,8 +1240,8 @@
       "title": "Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)",
       "summary": "Confirmed: mcp/tools.ts explicitly bypasses the interactive draft/spec-approve prompt over MCP ('the tool call IS the approval', e.g. cadence_draft_approve, cadence_spec_approve) with no expiry/capability-scope/origin-binding/revoke logic anywhere in packages/core/src/mcp/*.ts. Document exactly what that grants and constrain it: bind approval to caller identity/transport origin and tool-definition hash, attach a capability class, and add expiry with revoke-on-version-change so a schema-stable but changed server can't retain silent trust.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1263,7 +1264,7 @@
       "decisionIds": [],
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:40:44.241Z",
-      "updatedAt": "2026-07-12T17:40:44.241Z"
+      "updatedAt": "2026-07-13T03:46:13.059Z"
     },
     {
       "id": "rec-20260712-012",
@@ -2886,12 +2887,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "176-audit-trail-for-settle-gate-throws",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:39:48.570Z",
-      "updatedAt": "2026-07-13T01:27:56.679Z",
       "shippedRef": "v1.44.1 (PR #192)",
+      "scoutId": "scout-20260712-1234",
       "archivedAt": "2026-07-13T01:27:56.679Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T17:39:48.570Z",
+      "updatedAt": "2026-07-13T01:27:56.679Z"
     }
   ]
 }

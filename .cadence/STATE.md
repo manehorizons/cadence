@@ -3,14 +3,14 @@
 > Derived view. Do not edit by hand — regenerated on every state.json write.
 
 **Project:** cadence
-**Loop position:** DRAFT
+**Loop position:** BUILD
 **Active phase:** 179-milestone-fan-in-worktree-status
 **Active draft:** 179-01
-**Tier:** (n/a)
+**Tier:** standard
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1617
+- Subagent spawns this session: 1618
 - Last handoff: SESSION-2026-07-13-milestone-fan-in-worktree-status-draft.md
 
 ## Counts
