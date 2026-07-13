@@ -606,22 +606,6 @@ cadence draft add-ac and add-task never warn when appending a new AC/task after 
 
 Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.
 
-## rec-20260712-007 — Guarantee an audit/SUMMARY record when any settle gate throws (not just security-audit)
-
-- status: settle-pending
-- ready: needs-evidence
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, settle, reliability
-- files: packages/core/src/services/settle.ts, packages/core/src/gates/registry.ts, packages/core/src/gates/security-audit.ts
-- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-1 audit-on-throw); sibling: rec-20260712-006 (refusal-without-SUMMARY, distinct code path, already partially fixed).
-- next: cadence milestone propose
-
-gates/security-audit.ts normalizes a verifier throw into a refuse+record via its own try/catch, but the other 8 gates in gates/registry.ts's runSettleGates driver have no such wrapper -- a thrown exception from any of them propagates uncaught to settle.ts's outer catch (line ~611), which only prints stderr and returns exitCode 1 with NO SUMMARY written. This is distinct from rec-20260712-006 (refusal-without-SUMMARY, already fixed for gate-dispatched refuse outcomes in phase 170/171) -- this is throw-without-SUMMARY, still open. Wrap each gate invocation in try/catch/finally and normalize exceptions to a typed failure result so every gate outcome is auditable.
-
 ## rec-20260712-008 — Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings
 
 - status: candidate
