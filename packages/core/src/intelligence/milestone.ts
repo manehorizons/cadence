@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type {
   Assumption,
+  HandoffCandidate,
   IntelligenceMilestone,
   MilestoneLedger,
   MilestonePreMortem,
@@ -20,6 +21,7 @@ import {
 } from './store/milestones.js';
 import { atomicWriteText } from '../state/atomic-write.js';
 import { cadenceBackend } from './backend/cadence.js';
+import { gatherHandoffCandidates } from '../handoff/candidates.js';
 
 const ELIGIBLE_READINESS = new Set<RecommendationReadiness>([
   'ready-for-milestone',
@@ -477,4 +479,88 @@ export async function runMilestonePreMortem(
   };
   await writeMilestoneLedger(root, next);
   return { ok: true, ledger: next };
+}
+
+/**
+ * Phase 179: per-recommendation reconciliation entry for `runMilestoneStatus`.
+ * A discriminated union on `status` — `not-yet-converted` means the
+ * recommendation has no `convertedToPhaseId` yet (or wasn't found in the
+ * ledger at all); `no-worktree-found` means it converted to a phase but no
+ * local/sibling worktree currently advertises that phase as its active one;
+ * `resolved` carries the live worktree facts from the matched
+ * `HandoffCandidate`.
+ */
+export type MilestoneStatusPhaseEntry =
+  | { recommendationId: string; status: 'not-yet-converted' }
+  | { recommendationId: string; phaseId: string; status: 'no-worktree-found' }
+  | {
+      recommendationId: string;
+      phaseId: string;
+      status: 'resolved';
+      source: HandoffCandidate['source'];
+      worktreePath: string;
+      worktreeBranch: string | null;
+      liveLoopPosition: string | null;
+      settled: boolean;
+    };
+
+export type MilestoneStatusResult =
+  | { ok: true; milestoneId: string; phases: MilestoneStatusPhaseEntry[] }
+  | { ok: false; error: string };
+
+/**
+ * Phase 179: read-only fan-in reconciliation. Maps a milestone's
+ * `recommendationIds` to the phases they converted into, resolves each
+ * phase's owning worktree (local or sibling) via phase 142's
+ * `gatherHandoffCandidates`, and reports that worktree's live loop position —
+ * replacing N manual `cadence status` round-trips with one. Never mutates
+ * any ledger.
+ */
+export async function runMilestoneStatus(
+  repoRoot: string,
+  id: string,
+): Promise<MilestoneStatusResult> {
+  const ledger = await readMilestoneLedger(repoRoot);
+  const target = ledger.milestones.find((m) => m.id === id);
+  if (!target) return { ok: false, error: `milestone ${id} not found` };
+
+  const recLedger = await readRecommendationLedger(repoRoot);
+  const recById = new Map<string, Recommendation>();
+  for (const r of recLedger.recommendations) recById.set(r.id, r);
+  for (const r of recLedger.archived) recById.set(r.id, r);
+
+  // First-seen-wins per activePhase: candidates arrive newest-first by
+  // generatedAt, so the first candidate for a given phase is the freshest.
+  const candidates = await gatherHandoffCandidates(repoRoot);
+  const byActivePhase = new Map<string, HandoffCandidate>();
+  for (const c of candidates) {
+    if (c.activePhase === null) continue;
+    if (!byActivePhase.has(c.activePhase)) byActivePhase.set(c.activePhase, c);
+  }
+
+  const phases: MilestoneStatusPhaseEntry[] = target.recommendationIds.map(
+    (recommendationId): MilestoneStatusPhaseEntry => {
+      const rec = recById.get(recommendationId);
+      const phaseId = rec?.convertedToPhaseId;
+      if (phaseId === undefined) {
+        return { recommendationId, status: 'not-yet-converted' };
+      }
+      const candidate = byActivePhase.get(phaseId);
+      if (!candidate) {
+        return { recommendationId, phaseId, status: 'no-worktree-found' };
+      }
+      return {
+        recommendationId,
+        phaseId,
+        status: 'resolved',
+        source: candidate.source,
+        worktreePath: candidate.worktreePath,
+        worktreeBranch: candidate.worktreeBranch,
+        liveLoopPosition: candidate.liveLoopPosition,
+        settled: candidate.liveLoopPosition === 'IDLE',
+      };
+    },
+  );
+
+  return { ok: true, milestoneId: id, phases };
 }

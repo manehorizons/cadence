@@ -437,4 +437,111 @@ describe('cadence milestone', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/milestone close refused: milestone nope not found/);
   });
+
+  async function seedStatusFixture(root: string): Promise<void> {
+    const dir = join(root, '.cadence', 'intelligence');
+    await mkdir(dir, { recursive: true });
+    await writeFile(
+      join(dir, 'recommendations.json'),
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          recommendations: [
+            {
+              id: 'rec-1',
+              title: 'ship it',
+              summary: 'because',
+              source: 'manual',
+              status: 'accepted',
+              readiness: 'ready-for-milestone',
+              priority: 'high',
+              leverageScore: 5,
+              riskScore: 2,
+              confidence: 0.8,
+              decayState: 'fresh',
+              affectedAreas: [],
+              affectedFiles: [],
+              evidenceIds: [],
+              assumptionIds: [],
+              decisionIds: [],
+              createdAt: '2026-05-17T00:00:00.000Z',
+              updatedAt: '2026-05-17T00:00:00.000Z',
+              // converted, but no live worktree currently reports this phase
+              // as active -> resolves to no-worktree-found
+              convertedToPhaseId: 'phase-42',
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      join(dir, 'milestones.json'),
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          milestones: [
+            {
+              id: 'mil-status',
+              name: 'Status milestone',
+              objective: 'do it',
+              status: 'accepted',
+              recommendationIds: ['rec-1'],
+              preMortem: {
+                likelyFailureModes: [],
+                hiddenDependencies: [],
+                driftRisks: [],
+                outOfScope: [],
+              },
+              exportTargets: [],
+              createdAt: '2026-05-17T00:00:00.000Z',
+              updatedAt: '2026-05-17T00:00:00.000Z',
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+  }
+
+  it('status <id> renders the phase | worktree | loop position | state table (AC-3: CLI text wiring)', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedStatusFixture(active.root);
+
+    const r = await run(['milestone', 'status', 'mil-status'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toMatch(/# Milestone Status: mil-status/);
+    expect(r.stdout).toMatch(/\| phase \| worktree \| loop position \| state \|/);
+    expect(r.stdout).toMatch(/phase-42/);
+    // AC-3: CLI text-rendering wiring is exercised and asserted
+    expect(r.stdout).toMatch(/no-worktree-found/);
+  });
+
+  it('status <id> --json emits a MilestoneStatusResult-shaped payload (AC-3: CLI --json wiring)', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedStatusFixture(active.root);
+
+    const r = await run(['milestone', 'status', 'mil-status', '--json'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    const parsed = JSON.parse(r.stdout);
+    expect(parsed.ok).toBe(true);
+    expect(parsed.milestoneId).toBe('mil-status');
+    // AC-3: CLI --json wiring is exercised and asserted against the full shape
+    expect(parsed.phases).toEqual([
+      { recommendationId: 'rec-1', phaseId: 'phase-42', status: 'no-worktree-found' },
+    ]);
+  });
+
+  it('status <unknown-id> exits non-zero with a "not found"/"refused" stderr message (AC-2)', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['milestone', 'status', 'nope'], active.root);
+    expect(r.code).toBe(1);
+    // AC-2: the CLI refusal shape matches accept/defer/close — exit 1, stderr-only
+    expect(r.stderr).toMatch(/milestone status refused: milestone nope not found/);
+    expect(r.stdout).toBe('');
+  });
 });

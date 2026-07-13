@@ -1267,12 +1267,17 @@ Shape recommendations into milestone candidates (read-narrow; never transitions 
 | `defer <id>` | Defer a proposed or accepted milestone |
 | `export <id> --to cadence` | Export an accepted milestone to a staged CADENCE SPEC draft |
 | `premortem <id> [--json]` | Recompute the deterministic pre-mortem for a `proposed`/`accepted` milestone in place (refuses other statuses) |
+| `status <id> [--json]` | Report each of the milestone's phases (derived from its recommendations' `convertedToPhaseId`) with its owning worktree, live loop position, and settled/not-settled state |
 | `list [--json]` | Show the current milestone ledger |
 
 **Behavior** — part of the CADENCE strategic-intelligence layer (Praxis).
 `propose` reads the recommendation ledger **read-narrow** (it is backend-free —
-it never reads or writes `state.json` and never transitions the loop),
-clusters recommendations that are `accepted` and `ready-for-milestone`/
+it never reads or writes `state.json` and never transitions the loop).
+`status <id>` (below) is read-narrow in the complementary sense — it *reads*
+(never writes) `state.json` across both the local repo and any sibling
+worktrees, via `gatherHandoffCandidates` (phase 142), and likewise never
+transitions the loop.
+`propose` clusters recommendations that are `accepted` and `ready-for-milestone`/
 `ready-for-cadence-spec` (excluding `superseded`/`contradicted`) by their
 `suggestedMilestoneId` (each ungrouped rec becomes its own singleton
 candidate), and attaches a deterministically-seeded scaffolded pre-mortem
@@ -1296,6 +1301,21 @@ milestone's own facts, writes it to `.cadence/intelligence/exports/<id>/SPEC.md`
 allocates a loop id, or writes `state.json` — the staged SPEC is promoted manually by the
 operator. Export is refused for an unknown backend, unknown id, or any status other than
 `accepted` (re-export of an already-`exported` milestone is refused).
+`status <id>` is a read-only fan-in reconciliation: for each of the milestone's
+`recommendationIds` it looks up that recommendation's `convertedToPhaseId` and,
+for each converted phase, resolves the worktree (local or sibling) currently
+reporting that phase as its live `activePhase` via `gatherHandoffCandidates`
+(phase 142), then reports that worktree's source (`local`/`sibling`), path,
+branch, and live loop position — replacing N manual `cadence status`
+round-trips (one per worktree) with a single command. A recommendation with no
+`convertedToPhaseId` yet is reported as `not-yet-converted`; a converted phase
+with no local/sibling worktree currently reporting it active is reported as
+`no-worktree-found`; both are listed, never dropped. A resolved phase is
+marked `settled` when the owning worktree's live loop position is `IDLE`, and
+`not-settled` otherwise. `status` does not create, provision, or otherwise
+fan out worktrees, and it never writes to any ledger or transitions the loop
+— it is refused (exit 1) for an unknown milestone id, matching the existing
+`accept`/`defer`/`close` refusal shape.
 
 Writes:
 
@@ -1303,12 +1323,15 @@ Writes:
 - `.cadence/intelligence/MILESTONES.md`
 - `.cadence/intelligence/exports/<id>/SPEC.md` (on `export`)
 
-With `--json` (on `propose`, `premortem`, and `list`), the milestone ledger object is emitted to stdout instead of
+`status` writes nothing.
+
+With `--json` (on `propose`, `premortem`, `status`, and `list`), the milestone ledger object — or, for `status`, the
+`{ ok, milestoneId, phases }` reconciliation result — is emitted to stdout instead of
 the rendered text. Distinct from CADENCE's own execution-layer
 `.cadence/MILESTONES.md`.
 
 **Exit codes** — exits non-zero only on a genuine failure (artifact write
-error, or an illegal/unknown-id `accept`/`defer`, or an unknown-backend/unknown-id/non-accepted `export`, or an unknown-id/non-`proposed`/`accepted` `premortem`). An empty/absent
+error, or an illegal/unknown-id `accept`/`defer`, or an unknown-backend/unknown-id/non-accepted `export`, or an unknown-id/non-`proposed`/`accepted` `premortem`, or an unknown-id `status`). An empty/absent
 recommendation ledger degrades gracefully and still exits 0.
 
 ---
