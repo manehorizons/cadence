@@ -951,7 +951,7 @@
       "title": "Guardrails for headless-CLI verifier: quota transparency, self-invocation loops, CI fallback",
       "summary": "Three risks surfaced while widening rec-20260710-002 that need explicit handling, not just the happy path: (1) reusing the user's host-CLI subscription/quota for verification calls is invisible cost -- it should be surfaced loudly (e.g. in verify output or a doctor check), not silently drain a Pro/Max plan's usage budget; (2) if cadence itself is being driven by the same host CLI it would spawn headlessly for verification, there is a self-referential invocation risk (nested Claude Code/Codex processes, rate-limit or permission-prompt contention) that needs an explicit guard; (3) headless host-CLI providers assume an interactive login exists locally and will not work in CI -- needs a documented, loud fallback to anthropic/mock rather than a confusing hang or silent failure in automated environments.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -970,9 +970,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "178-headless-verifier-guardrails",
       "scoutId": "scout-20260710-2126",
       "createdAt": "2026-07-10T22:11:55.932Z",
-      "updatedAt": "2026-07-10T22:11:55.932Z"
+      "updatedAt": "2026-07-13T00:33:31.386Z"
     },
     {
       "id": "rec-20260711-004",

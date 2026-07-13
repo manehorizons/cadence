@@ -500,7 +500,7 @@ A headless host-CLI verifier subprocess has zero shared context with the calling
 
 ## rec-20260710-006 — Guardrails for headless-CLI verifier: quota transparency, self-invocation loops, CI fallback
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
