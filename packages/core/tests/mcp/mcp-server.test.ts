@@ -5,7 +5,12 @@ import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import type { McpTrustGrant } from '@manehorizons/cadence-types';
 import { buildCadenceMcpServer } from '../../src/mcp/server.js';
+import { TOOLS, type ToolDef } from '../../src/mcp/tools.js';
+import { computeToolDefHash } from '../../src/mcp/trust/def-hash.js';
+import { writeTrustLedger } from '../../src/mcp/trust/store.js';
+import { readPackageVersion } from '../../src/version.js';
 
 /** Connect an in-process MCP client to a CADENCE server scoped to `repoRoot`. */
 async function connect(repoRoot: string): Promise<{ client: Client; close: () => Promise<void> }> {
@@ -38,6 +43,36 @@ async function call(
 }
 
 const text = (r: ToolResult): string => r.content.map((c) => c.text ?? '').join('\n');
+
+/**
+ * Phase 181 (mcp-tool-trust-envelope): `cadence_draft_approve` and
+ * `cadence_spec_approve` are `APPROVAL_BYPASS` tools and now refuse without a
+ * valid trust grant on file (see `mcp/trust/enforce.ts`). Tests exercising
+ * the normal approve-call path need to seed a grant first — same pattern as
+ * `tests/mcp/trust/enforce.test.ts`: a real `computeToolDefHash` against the
+ * tool's live `ToolDef`, `grantedVersion` from `readPackageVersion()`, and
+ * `expiresAt: null`.
+ */
+function findTool(name: string): ToolDef {
+  const tool = TOOLS.find((t) => t.name === name);
+  if (!tool) throw new Error(`tool not found: ${name}`);
+  return tool;
+}
+
+function grantFor(tool: ToolDef): McpTrustGrant {
+  return {
+    toolName: tool.name,
+    capabilityClass: 'APPROVAL_BYPASS',
+    defHash: computeToolDefHash(tool),
+    grantedAt: new Date().toISOString(),
+    grantedVersion: readPackageVersion(),
+    expiresAt: null,
+  };
+}
+
+async function grantApprovalBypass(repoRoot: string, toolName: string): Promise<void> {
+  await writeTrustLedger(repoRoot, { schemaVersion: 1, grants: [grantFor(findTool(toolName))] });
+}
 
 const EXPECTED_TOOLS = [
   'cadence_progress',
@@ -120,6 +155,7 @@ describe('MCP server surface (phase 58)', () => {
       expect(dn.isError).toBeFalsy();
       expect((dn.structuredContent as { id?: string }).id).toBe('01-01');
 
+      await grantApprovalBypass(active.root, 'cadence_draft_approve');
       const da = await call(client, 'cadence_draft_approve', { phase: '01-foundation', num: '01' });
       expect(da.isError).toBeFalsy();
       expect((da.structuredContent as { loopPosition?: string }).loopPosition).toBe('BUILD');
@@ -156,6 +192,7 @@ describe('MCP server surface (phase 58)', () => {
 
       // Settle gate stack: missing test-coverage refuses without the bypass.
       await call(client, 'cadence_draft_new', { phase: '02-gate', num: '01', title: 'G' });
+      await grantApprovalBypass(active.root, 'cadence_draft_approve');
       await call(client, 'cadence_draft_approve', { phase: '02-gate', num: '01' });
       await call(client, 'cadence_build_task', { taskId: 'T1', status: 'DONE' });
       const settle = await call(client, 'cadence_settle', { auto: true }); // no allowMissingCoverage

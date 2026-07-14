@@ -326,28 +326,10 @@
       "updatedAt": "2026-07-13T03:53:49.667Z"
     },
     {
-      "id": "mil-rec-rec-20260712-008",
-      "name": "Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings",
-      "objective": "The evidence ledger (.cadence/intelligence/evidence.json) and SUMMARY.securityAudit persist source-derived quotes and diff findings to disk verbatim -- confirmed no redact/scrub/secret/token/credential handling exists anywhere in intelligence/store/audit.ts or gates/security-audit.ts. Those can carry tokens/credentials. Add a redaction pass (token/key/credential patterns) and a per-record policy before persistence, and restrict ledger file permissions to the current user.",
-      "status": "proposed",
-      "recommendationIds": [
-        "rec-20260712-008"
-      ],
-      "preMortem": {
-        "likelyFailureModes": [],
-        "hiddenDependencies": [],
-        "driftRisks": [],
-        "outOfScope": []
-      },
-      "exportTargets": [],
-      "createdAt": "2026-07-13T03:46:18.942Z",
-      "updatedAt": "2026-07-13T03:46:18.942Z"
-    },
-    {
       "id": "mil-rec-rec-20260712-011",
       "name": "Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)",
       "objective": "Confirmed: mcp/tools.ts explicitly bypasses the interactive draft/spec-approve prompt over MCP ('the tool call IS the approval', e.g. cadence_draft_approve, cadence_spec_approve) with no expiry/capability-scope/origin-binding/revoke logic anywhere in packages/core/src/mcp/*.ts. Document exactly what that grants and constrain it: bind approval to caller identity/transport origin and tool-definition hash, attach a capability class, and add expiry with revoke-on-version-change so a schema-stable but changed server can't retain silent trust.",
-      "status": "proposed",
+      "status": "exported",
       "recommendationIds": [
         "rec-20260712-011"
       ],
@@ -357,9 +339,15 @@
         "driftRisks": [],
         "outOfScope": []
       },
-      "exportTargets": [],
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260712-011/SPEC.md",
+          "exportedAt": "2026-07-14T03:14:47.612Z"
+        }
+      ],
       "createdAt": "2026-07-13T03:46:18.942Z",
-      "updatedAt": "2026-07-13T03:46:18.942Z"
+      "updatedAt": "2026-07-14T03:14:47.612Z"
     }
   ]
 }

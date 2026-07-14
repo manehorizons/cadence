@@ -1,0 +1,58 @@
+{
+  "draftId": "181-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-14T04:18:56.431Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-14T04:18:56.607Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-14T04:18:56.787Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/tests/cli/mcp-trust.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/src/services/mcp-trust-grant.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/src/cli/commands/mcp.ts"
+      ],
+      "updatedAt": "2026-07-14T04:26:51.473Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/tests/mcp/trust/enforce.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/src/version.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/src/cli/commands/mcp.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/src/mcp/trust/enforce.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/src/mcp/tools.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/tests/mcp/mcp-server.test.ts"
+      ],
+      "updatedAt": "2026-07-14T04:38:52.380Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/.cadence/handoff/SESSION-2026-07-14.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/packages/core/src/mcp/tools.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/docs/mcp.md"
+      ],
+      "updatedAt": "2026-07-14T21:40:04.286Z"
+    }
+  }
+}

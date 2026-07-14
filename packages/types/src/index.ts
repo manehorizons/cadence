@@ -12,3 +12,4 @@ export * from './intelligence.js';
 export * from './handoff.js';
 export * from './guidance.js';
 export * from './logging.js';
+export * from './mcp-trust.js';

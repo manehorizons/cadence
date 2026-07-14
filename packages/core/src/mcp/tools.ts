@@ -19,6 +19,7 @@ import { recommendationConvertService } from '../services/recommendation-convert
 import { recommendationArchiveService } from '../services/recommendation-archive.js';
 import { milestoneProposeService } from '../services/milestone-propose.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
+import { enforceApprovalBypassGrant } from './trust/enforce.js';
 
 /**
  * One curated CADENCE command exposed as an MCP tool (phase 58). `run` calls the
@@ -30,10 +31,28 @@ import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
  * the settle gate stack, spec-review) run exactly as they do from the CLI. The
  * write-tool descriptions say so.
  */
+/**
+ * Capability class for the MCP tool-trust envelope (phase 181). READ_ONLY tools
+ * never write; LEDGER_WRITE tools mutate the intelligence ledger (recommendations/
+ * milestones) but not loop state; LOOP_WRITE tools mutate `state.json`/DRAFT/SPEC
+ * artifacts but require no bypassed approval; APPROVAL_BYPASS tools skip the
+ * interactive TTY approval prompt the CLI would otherwise show ("the tool call IS
+ * the approval") and are the gated surface this phase's trust envelope targets;
+ * SETTLE is `cadence_settle` alone, classified but deliberately left ungated this
+ * phase (see DRAFT Boundaries).
+ */
+export type CapabilityClass =
+  | 'READ_ONLY'
+  | 'LEDGER_WRITE'
+  | 'LOOP_WRITE'
+  | 'APPROVAL_BYPASS'
+  | 'SETTLE';
+
 export interface ToolDef {
   name: string;
   description: string;
   inputSchema: z.ZodRawShape;
+  capabilityClass: CapabilityClass;
   run(repoRoot: string, args: Record<string, unknown>, io: CommandIO): Promise<CommandResult>;
 }
 
@@ -57,10 +76,34 @@ const REC_STATUS = z.enum(['candidate', 'accepted', 'deferred', 'rejected']);
 const optStrArr = (v: unknown): string[] | undefined =>
   Array.isArray(v) ? v.map(String) : undefined;
 
+/**
+ * Wrap an `APPROVAL_BYPASS` tool's `run()` with the trust-envelope pre-check
+ * (phase 181, T5). `enforceApprovalBypassGrant` runs BEFORE `originalRun` —
+ * on refusal, `originalRun` (and therefore `draftApproveService`/
+ * `specApproveService`) never executes: no `state.json`/DRAFT/SPEC write, no
+ * gate-ladder run (AC-1). `toolName` is looked up in `TOOLS` lazily, at call
+ * time, so this closure always sees the tool's live registered definition —
+ * `TOOLS` is fully initialized by the time any `run()` is ever invoked.
+ */
+function gatedRun(toolName: string, originalRun: ToolDef['run']): ToolDef['run'] {
+  return async (repoRoot, args, io) => {
+    const tool = TOOLS.find((t) => t.name === toolName);
+    /* istanbul ignore next -- toolName is always one of this file's own TOOLS entries */
+    if (!tool) throw new Error(`gatedRun: unknown tool "${toolName}"`);
+    const gate = await enforceApprovalBypassGrant(repoRoot, tool);
+    if (!gate.ok) {
+      io.err(`${toolName} refused: ${gate.reason}\n`);
+      return { exitCode: 1 };
+    }
+    return originalRun(repoRoot, args, io);
+  };
+}
+
 export const TOOLS: ToolDef[] = [
   {
     name: 'cadence_progress',
     description: 'Show the single recommended next action for the CADENCE loop (read-only).',
+    capabilityClass: 'READ_ONLY',
     inputSchema: {},
     run: (repoRoot, _args, io) => progressService(repoRoot, io),
   },
@@ -68,6 +111,7 @@ export const TOOLS: ToolDef[] = [
     name: 'cadence_status',
     description:
       'Show full loop context: position, active phase/draft, tasks, AC results, next action (read-only).',
+    capabilityClass: 'READ_ONLY',
     inputSchema: {
       json: z.boolean().optional().describe('Return the raw status report instead of rendered text'),
     },
@@ -76,6 +120,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'cadence_recommend',
     description: 'Rank actionable strategic recommendations and advise the next move (read-only).',
+    capabilityClass: 'READ_ONLY',
     inputSchema: {
       json: z.boolean().optional().describe('Return the raw recommend report instead of rendered text'),
     },
@@ -86,6 +131,7 @@ export const TOOLS: ToolDef[] = [
     description:
       'Scaffold a new DRAFT for a phase task and enter the DRAFT stage (requires loop IDLE). ' +
       'With fromRec, the recommendation is auto-converted to this phase.',
+    capabilityClass: 'LOOP_WRITE',
     inputSchema: {
       phase: z.string().describe('Phase slug, e.g. "58-mcp-server"'),
       num: z.string().describe('Two-digit unit number within the phase, e.g. "01"'),
@@ -111,6 +157,7 @@ export const TOOLS: ToolDef[] = [
     description:
       'Run the structural coherence check on a phase DRAFT.md against state + PROJECT.md. ' +
       'Reports blocking issues exactly as the CLI does (command-boundary gate).',
+    capabilityClass: 'READ_ONLY',
     inputSchema: {
       phase: z.string().describe('Phase slug'),
       num: z.string().describe('Two-digit unit number'),
@@ -126,8 +173,11 @@ export const TOOLS: ToolDef[] = [
     name: 'cadence_draft_approve',
     description:
       'Approve a DRAFT and enter BUILD. Runs the coherence → soft-cap → plan-review gate ladder ' +
-      '(the same command-boundary gates as the CLI). The interactive manual-approve prompt is ' +
-      'bypassed over MCP — calling this tool IS the approval.',
+      '(the same command-boundary gates as the CLI). Requires a valid, unexpired trust grant ' +
+      '(matching def-hash and CADENCE version) issued via `cadence mcp trust grant --tool ' +
+      'cadence_draft_approve` on a real terminal; without one the call is refused before any ' +
+      'state.json/DRAFT write, naming the failing check.',
+    capabilityClass: 'APPROVAL_BYPASS',
     inputSchema: {
       phase: z.string().describe('Phase slug'),
       num: z.string().describe('Two-digit unit number'),
@@ -140,7 +190,7 @@ export const TOOLS: ToolDef[] = [
         .optional()
         .describe('Proceed past a failing plan-review gate (findings still reported)'),
     },
-    run: (repoRoot, args, io) =>
+    run: gatedRun('cadence_draft_approve', (repoRoot, args, io) =>
       draftApproveService(
         repoRoot,
         {
@@ -152,10 +202,12 @@ export const TOOLS: ToolDef[] = [
         },
         io,
       ),
+    ),
   },
   {
     name: 'cadence_build_task',
     description: 'Record the outcome of a BUILD task (runs the per-task verifier gate on DONE).',
+    capabilityClass: 'LOOP_WRITE',
     inputSchema: {
       taskId: z.string().describe('Task id from the active DRAFT, e.g. "T1"'),
       status: TASK_STATUS.optional().describe('Outcome (default: DONE)'),
@@ -183,6 +235,7 @@ export const TOOLS: ToolDef[] = [
       'Close the loop: run the settle gate stack, write SUMMARY.{json,md}, and return to IDLE. ' +
       'Runs the full command-boundary gate stack (coverage, structural verifier, etc.). The ' +
       'interactive verdict walker is disabled over MCP; supply AC verdicts via "ac" or use "auto".',
+    capabilityClass: 'SETTLE',
     inputSchema: {
       ac: z
         .array(z.string())
@@ -216,6 +269,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'cadence_spec_new',
     description: 'Scaffold a new SPEC for a phase task and enter the SPEC stage (requires loop IDLE).',
+    capabilityClass: 'LOOP_WRITE',
     inputSchema: {
       phase: z.string().describe('Phase slug'),
       num: z.string().describe('Two-digit unit number'),
@@ -237,7 +291,11 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'cadence_spec_approve',
     description:
-      'Run the convergent spec-review gate; on pass mark the SPEC APPROVED and leave the spec stage.',
+      'Run the convergent spec-review gate; on pass mark the SPEC APPROVED and leave the spec stage. ' +
+      'Requires a valid, unexpired trust grant (matching def-hash and CADENCE version) issued via ' +
+      '`cadence mcp trust grant --tool cadence_spec_approve` on a real terminal; without one the ' +
+      'call is refused before any state.json/SPEC write, naming the failing check.',
+    capabilityClass: 'APPROVAL_BYPASS',
     inputSchema: {
       phase: z.string().describe('Phase slug'),
       num: z.string().describe('Two-digit unit number'),
@@ -246,7 +304,7 @@ export const TOOLS: ToolDef[] = [
         .optional()
         .describe('Proceed past a failing/unconverged spec-review'),
     },
-    run: (repoRoot, args, io) =>
+    run: gatedRun('cadence_spec_approve', (repoRoot, args, io) =>
       specApproveService(
         repoRoot,
         {
@@ -256,12 +314,14 @@ export const TOOLS: ToolDef[] = [
         },
         io,
       ),
+    ),
   },
   {
     name: 'cadence_handoff',
     description:
       'Scaffold a SESSION handoff doc in .cadence/handoff/ with machine facts pre-filled, so ' +
       'another session can resume. Returns the written path. A same-day collision needs force.',
+    capabilityClass: 'LOOP_WRITE',
     inputSchema: {
       label: z.string().optional().describe('Context label appended to the filename'),
       force: z.boolean().optional().describe('Overwrite an existing same-day SESSION doc'),
@@ -285,6 +345,7 @@ export const TOOLS: ToolDef[] = [
     description:
       'Replay the freshest .cadence/handoff/ SESSION doc + live context (read-only). Output is ' +
       'drift-decided (brief unless loop state drifted); force with mode=brief|full.',
+    capabilityClass: 'READ_ONLY',
     inputSchema: {
       mode: z.enum(['brief', 'full']).optional().describe('Force output mode (default: drift decides)'),
     },
@@ -302,6 +363,7 @@ export const TOOLS: ToolDef[] = [
     description:
       'Add a strategic recommendation to the intelligence ledger (write). Together with ' +
       'cadence_recommendation_promote this drives the scout → rec → promote path.',
+    capabilityClass: 'LEDGER_WRITE',
     inputSchema: {
       title: z.string().describe('Recommendation title'),
       summary: z.string().optional().describe('Recommendation summary'),
@@ -335,6 +397,7 @@ export const TOOLS: ToolDef[] = [
       'accepted and ready, follow up with cadence_milestone_propose to cluster it into a ' +
       'proposed milestone, or cadence_recommendation_convert to convert it directly into a ' +
       'phase. An unknown id or illegal transition fails cleanly.',
+    capabilityClass: 'LEDGER_WRITE',
     inputSchema: {
       id: z.string().describe('Recommendation id, e.g. "rec-20260607-001"'),
       status: REC_STATUS.optional().describe('New status'),
@@ -357,6 +420,7 @@ export const TOOLS: ToolDef[] = [
       'Convert a recommendation into a CADENCE phase (write). The target phase must already be ' +
       'scaffolded under .cadence/phases/ (e.g. via cadence_draft_new); an unknown id, an illegal ' +
       'status transition, or a missing phase directory fails cleanly.',
+    capabilityClass: 'LEDGER_WRITE',
     inputSchema: {
       recId: z.string().describe('Recommendation id, e.g. "rec-20260607-001"'),
       toPhase: z.string().describe('Phase id; must exist under .cadence/phases/'),
@@ -378,6 +442,7 @@ export const TOOLS: ToolDef[] = [
       "into the ledger's archived array, stamping archivedAt/archiveReason ('manual'). " +
       'Recoverable via the CLI `cadence recommendation unarchive`; an unknown id, or a rec that ' +
       'is already archived, fails cleanly.',
+    capabilityClass: 'LEDGER_WRITE',
     inputSchema: {
       recId: z.string().describe('Recommendation id, e.g. "rec-20260607-001"'),
     },
@@ -393,6 +458,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: 'cadence_doctor',
     description: 'Diagnose this project’s CADENCE setup and report problems (read-only).',
+    capabilityClass: 'READ_ONLY',
     inputSchema: {},
     run: (repoRoot, _args, io) => doctorService(repoRoot, io),
   },
@@ -403,6 +469,7 @@ export const TOOLS: ToolDef[] = [
       'ready-for-cadence-spec) into proposed milestones (write). Idempotent and safe to call ' +
       'repeatedly — already proposed/accepted/deferred/exported milestones are preserved; only ' +
       'newly eligible recommendations get clustered in.',
+    capabilityClass: 'LEDGER_WRITE',
     inputSchema: {},
     run: (repoRoot, _args, io) => milestoneProposeService(repoRoot, {}, io),
   },

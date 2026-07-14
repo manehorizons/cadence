@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 133,
+  "revision": 307,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "180-redact-secrets-from-evidence-quotes-and-security-audit-findings",
+  "activePhase": "181-mcp-tool-trust-envelope",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-14T01:16:11.114Z",
+  "draftReadAt": "2026-07-14T04:05:29.753Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-13-milestone-fan-in-worktree-status-draft.md",
-    "subagentSpawns": 1671,
+    "lastHandoff": "SESSION-2026-07-14.md",
+    "subagentSpawns": 1777,
     "subagentBaselines": {}
   },
   "skillAudit": {

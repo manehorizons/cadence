@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 180-redact-secrets-from-evidence-quotes-and-security-audit-findings
+**Active phase:** 181-mcp-tool-trust-envelope
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1671
-- Last handoff: SESSION-2026-07-13-milestone-fan-in-worktree-status-draft.md
+- Subagent spawns this session: 1777
+- Last handoff: SESSION-2026-07-14.md
 
 ## Counts
 - Open drafts: 0

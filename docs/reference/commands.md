@@ -1695,6 +1695,9 @@ Model Context Protocol surface
 |---|---|
 | `serve [--repo <path>]` | Run the CADENCE MCP server over stdio so any MCP host can drive the loop |
 | `install [--print] [--client <c>]` | Wire the MCP server into a host by writing/merging `.mcp.json` |
+| `trust grant --tool <name> [--ttl-days <n>]` | Grant a trust envelope for an `APPROVAL_BYPASS`/`SETTLE` MCP tool (CLI-only) |
+| `trust revoke --tool <name>` | Revoke a previously granted trust envelope |
+| `trust list [--json]` | List trust grants and whether each is currently valid |
 
 **`serve` options**
 
@@ -1718,6 +1721,57 @@ Model Context Protocol surface
 and **refuses to overwrite a malformed `.mcp.json`**. Only Claude Code's
 `.mcp.json` is written; `--print` (or `--client claude-desktop|cursor`) emits a
 paste-ready snippet plus a path hint and writes nothing.
+
+**`trust grant` options**
+
+| Option | Description |
+|---|---|
+| `--repo <path>` | Repo root to operate on (default: current working directory) |
+| `--tool <name>` | MCP tool name to grant, e.g. `cadence_draft_approve` (required) |
+| `--ttl-days <n>` | Grant expires after N days (default: never expires) |
+| `-h, --help` | Display help for command |
+
+**`trust revoke` options**
+
+| Option | Description |
+|---|---|
+| `--repo <path>` | Repo root to operate on (default: current working directory) |
+| `--tool <name>` | MCP tool name to revoke (required) |
+| `-h, --help` | Display help for command |
+
+**`trust list` options**
+
+| Option | Description |
+|---|---|
+| `--repo <path>` | Repo root to operate on (default: current working directory) |
+| `--json` | Print the raw trust ledger as JSON instead of the rendered table |
+| `-h, --help` | Display help for command |
+
+**`trust` behavior** — the MCP tool-trust envelope (phase 181). Two of the 18
+registered MCP tools are classified `APPROVAL_BYPASS` (`cadence_draft_approve`,
+`cadence_spec_approve`): calling either one over MCP skips the interactive
+manual-approve prompt the CLI would otherwise show. `cadence mcp trust
+grant/revoke/list` constrains that bypass instead of leaving it unconditional.
+A grant binds a sha256 structural hash of the tool's live definition (name +
+description + `inputSchema` shape), the CADENCE version it was granted
+against, and an optional expiry. `grant` refuses (exit 1, refuse+suggest) for
+any tool whose capability class is not `APPROVAL_BYPASS`/`SETTLE` — there is
+nothing to gate on a read-only, ledger-write, or loop-write tool. Grants are
+issued **only** through this CLI command, run interactively on a real
+terminal — there is no MCP tool that can create, list, or revoke a grant, so
+an MCP client can never self-attest or self-grant its own trust. `list`'s
+`valid` column is `yes` only when the grant's stored version matches the
+running CADENCE version and it is unexpired; it does not re-check the
+def-hash (that check runs at call time, inside `cadence_draft_approve` /
+`cadence_spec_approve` themselves). See
+[Driving CADENCE over MCP](../mcp.md) for how a gated tool call is refused
+when no valid grant exists.
+
+**Exit codes** — `trust grant`: exits 1 on an unknown tool name, a capability
+class that isn't `APPROVAL_BYPASS`/`SETTLE`, or an invalid `--ttl-days`;
+exits 0 on success. `trust revoke`: exits 1 if no grant exists for `--tool`;
+exits 0 on success. `trust list`: always exits 0, including on an empty
+ledger.
 
 **Behavior** — starts a local [Model Context Protocol](https://modelcontextprotocol.io)
 server on **stdio** (one of Cadence's three surface categories — CLI, host

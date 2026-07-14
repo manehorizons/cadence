@@ -1209,7 +1209,7 @@
       "title": "Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)",
       "summary": "Confirmed: mcp/tools.ts explicitly bypasses the interactive draft/spec-approve prompt over MCP ('the tool call IS the approval', e.g. cadence_draft_approve, cadence_spec_approve) with no expiry/capability-scope/origin-binding/revoke logic anywhere in packages/core/src/mcp/*.ts. Document exactly what that grants and constrain it: bind approval to caller identity/transport origin and tool-definition hash, attach a capability class, and add expiry with revoke-on-version-change so a schema-stable but changed server can't retain silent trust.",
       "source": "manual",
-      "status": "accepted",
+      "status": "settle-pending",
       "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
@@ -1231,9 +1231,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "181-mcp-tool-trust-envelope",
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:40:44.241Z",
-      "updatedAt": "2026-07-13T03:46:13.059Z"
+      "updatedAt": "2026-07-14T22:00:03.179Z"
     },
     {
       "id": "rec-20260712-012",
@@ -1420,6 +1421,93 @@
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:41:44.930Z",
       "updatedAt": "2026-07-12T17:41:44.930Z"
+    },
+    {
+      "id": "rec-20260714-001",
+      "title": "milestone premortem: no CLI writer for the operator-authored outOfScope field",
+      "summary": "cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/driftRisks deterministically from ledger heuristics (correctly empty when a milestone's recs trip no risk signal — e.g. mil-rec-rec-20260712-011: single high-confidence, accepted+ready-for-milestone, undecayed rec). outOfScope is explicitly excluded from that derivation (milestone.ts:90,188 — seedPreMortem hardcodes [], deepenPreMortem passes milestone.preMortem.outOfScope through unchanged) because it's meant to be operator-authored, not inferred. But there is no 'cadence milestone' subcommand to set it — the only path today is a raw hand-edit of .cadence/intelligence/milestones.json, which the project otherwise treats as a derived-state file. Add a small CLI writer, e.g. 'cadence milestone premortem <id> --out-of-scope <text>' (repeatable) or a dedicated 'cadence milestone scope <id>' subcommand, so pre-mortems can be completed without hand-editing ledger JSON.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/milestone.ts",
+        "packages/core/src/intelligence/milestone.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260714-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-14T03:01:16.909Z",
+      "updatedAt": "2026-07-14T03:01:16.909Z"
+    },
+    {
+      "id": "rec-20260714-002",
+      "title": "draft add-task has no --name flag (add-ac does) — every appended task needs a hand-fix",
+      "summary": "cadence draft add-task <phase> <num> --files --action --verify --done has no --name option, unlike cadence draft add-ac which has --given/--when/--then/--name. Every task appended via add-task lands as '### T<n>: ' with an empty heading, requiring a manual Edit pass to fill in the name before the DRAFT reads sensibly — confirmed live 2026-07-14 appending T2-T6 to phase 181's DRAFT (all five came out blank). Add --name <n> to add-task mirroring add-ac's option.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/draft.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260714-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-14T04:03:43.550Z",
+      "updatedAt": "2026-07-14T04:03:43.550Z"
+    },
+    {
+      "id": "rec-20260714-003",
+      "title": "gateBypasses omits the --allow-auto-complex soft-cap override",
+      "summary": "settle.ts's gateBypassesFromAnomalies() and the equivalent draft-approve path only map AnomalyEvent types coverage-bypassed/force-used/verifier-failure to a recorded GateBypass. --allow-auto-complex (DESIGN.md §4 M2 soft cap, used at both draft approve and settle run) only prints a stderr notice via io.err() and never emits an AnomalyEvent, so it is silently absent from SUMMARY.json's gateBypasses field even when used twice in the same phase. This contradicts CLAUDE.md's claim that bypasses are 'loud and recorded in the SUMMARY (gateBypasses)'. Discovered live during phase 181 settle (mcp-tool-trust-envelope), whose draft was approved and settled under --allow-auto-complex with zero trace in its SUMMARY. Fix: emit a proper AnomalyEvent (new type, e.g. 'auto-complex-override') from both draft-approve.ts and settle.ts when the flag is used, and add it to anomalyToGateBypass's mapping.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "settle",
+        "draft-approve"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/settle.ts",
+        "packages/core/src/services/draft-approve.ts",
+        "packages/types/src/anomaly.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260714-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-14T22:08:57.237Z",
+      "updatedAt": "2026-07-14T22:08:57.237Z"
     }
   ],
   "archived": [

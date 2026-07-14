@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-13T03:42:44.858Z
+Generated at: 2026-07-14T02:50:03.205Z
 
 ## Advisory
 
@@ -10,26 +10,11 @@ Generated at: 2026-07-13T03:42:44.858Z
 
 ## Ranked
 
-### rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases
-
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
-- next: cadence milestone propose
-
 ### rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)
 
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
-
-### rec-20260712-008 — Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings
-
-- score: 55/100 (raw 13.7)
-- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
+- score: 73/100 (raw 25.7)
+- status: accepted · ready: ready-for-milestone · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status accepted +6 · ready ready-for-milestone +7 · decay fresh +4 · prio medium +2 ⇒ raw 25.7 (score 73)
 - scout: scout-20260712-1234
 - next: cadence milestone propose
 
@@ -214,4 +199,4 @@ None.
 
 ## Totals
 
-- total 49 · ranked 25 · parked 1 · needs-attention 0 · excluded 23
+- total 48 · ranked 23 · parked 1 · needs-attention 0 · excluded 24

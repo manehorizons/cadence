@@ -343,6 +343,48 @@ Precedence: `CADENCE_PROMPTER_SCRIPT` → `CADENCE_REQUIRE_TTY` → `CADENCE_NON
 → the `isTTY` default. The per-command flags still work too: `--no-approve` and
 `--no-interactive` opt out of the respective gate regardless of TTY state.
 
+### MCP tool-trust envelope
+
+Two of the 18 MCP tools (see [docs/mcp.md](mcp.md)) are classified
+`APPROVAL_BYPASS`: `cadence_draft_approve` and `cadence_spec_approve`. A call
+over MCP is inherently non-TTY, so without anything further the `approve`
+gate above would simply auto-pass for them — "the tool call IS the
+approval," unconditionally. `cadence mcp trust grant/revoke/list` (phase 181)
+constrains that: before `cadence_draft_approve` or `cadence_spec_approve`
+ever reaches `draftApproveService`/`specApproveService` — before any
+`state.json`, DRAFT, or SPEC write occurs — the server checks for a valid
+trust grant and refuses, naming the failing check, if one doesn't exist.
+
+A grant binds four things:
+
+- the **tool name** it was issued for;
+- a **structural def-hash** — a sha256 over the tool's name + description +
+  `inputSchema` shape exactly as currently registered in `TOOLS`. If the
+  tool's definition changes (e.g. its description or schema is edited), the
+  old grant's hash no longer matches and the grant is treated as invalid
+  until re-granted (revoke-on-def-change);
+- the **CADENCE version** it was granted under — a version bump likewise
+  invalidates a stale grant (revoke-on-version-change);
+- an optional **expiry** (`--ttl-days`; omit for a grant that never
+  expires).
+
+Grants are issued **only** by `cadence mcp trust grant`, run by an operator
+on a real terminal. This is the core security property of the envelope: no
+MCP tool call can create, list, or revoke a grant — an MCP client can never
+self-attest or self-grant its own trust; only an out-of-band CLI invocation
+can. `cadence mcp trust grant` itself refuses (capability-class check) for
+any tool that isn't `APPROVAL_BYPASS`/`SETTLE` — there is nothing to gate on
+a read-only, ledger-write, or loop-write tool.
+
+`cadence_settle` is classified `SETTLE`, which makes it grantable
+(`cadence mcp trust grant --tool cadence_settle` succeeds), but nothing in
+the MCP server actually enforces that grant yet — `cadence_settle`'s `run()`
+is not wrapped with the trust-envelope pre-check the way the two
+`APPROVAL_BYPASS` tools are. That is a deliberate phase-181 boundary, not an
+oversight: extending enforcement to `cadence_settle` is left to a follow-up
+recommendation. See [docs/reference/commands.md — mcp](reference/commands.md#mcp)
+for the full `trust grant`/`revoke`/`list` CLI reference.
+
 ---
 
 ## Providers

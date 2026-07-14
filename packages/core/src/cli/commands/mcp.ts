@@ -1,20 +1,13 @@
 import type { Command } from 'commander';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { processIO } from '../../services/io.js';
 import { installMcpConfig, MCP_CLIENTS, type McpClient } from '../../mcp/install.js';
-
-/** Read this package's version (dist/cli/commands/mcp.js → ../../../package.json). */
-function readPackageVersion(): string {
-  try {
-    const pkgPath = join(dirname(fileURLToPath(import.meta.url)), '../../../package.json');
-    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version?: string };
-    return pkg.version ?? '0.0.0';
-  } catch {
-    return '0.0.0';
-  }
-}
+import { readPackageVersion } from '../../version.js';
+import {
+  mcpTrustGrantService,
+  mcpTrustRevokeService,
+  mcpTrustListService,
+} from '../../services/mcp-trust-grant.js';
 
 export function registerMcpCommand(program: Command): void {
   const cmd = program.command('mcp').description('Model Context Protocol surface');
@@ -68,6 +61,64 @@ export function registerMcpCommand(program: Command): void {
       const res = await installMcpConfig(
         repoRoot,
         { ...(opts.print ? { print: true } : {}), ...(client ? { client } : {}) },
+        processIO(),
+      );
+      process.exitCode = res.exitCode;
+    });
+
+  const trust = cmd
+    .command('trust')
+    .description(
+      'Operator-issued MCP tool trust grants (CLI-only, real-TTY — never exposed over MCP; ' +
+        'an MCP client can never self-attest or self-grant its own trust)',
+    );
+
+  trust
+    .command('grant')
+    .description('Grant trust for an APPROVAL_BYPASS/SETTLE MCP tool')
+    .option('--repo <path>', 'repo root to operate on (default: current working directory)')
+    .requiredOption('--tool <name>', 'MCP tool name, e.g. cadence_draft_approve')
+    .option('--ttl-days <n>', 'grant expires after N days (default: never expires)')
+    .action(async (opts: { repo?: string; tool: string; ttlDays?: string }) => {
+      const repoRoot = opts.repo ? resolve(process.cwd(), opts.repo) : process.cwd();
+      const args: { tool: string; version: string; ttlDays?: number } = {
+        tool: opts.tool,
+        version: readPackageVersion(),
+      };
+      if (opts.ttlDays !== undefined) {
+        const n = Number(opts.ttlDays);
+        if (!Number.isFinite(n) || n <= 0) {
+          process.stderr.write('mcp trust grant: --ttl-days must be a positive number\n');
+          process.exitCode = 1;
+          return;
+        }
+        args.ttlDays = n;
+      }
+      const res = await mcpTrustGrantService(repoRoot, args, processIO());
+      process.exitCode = res.exitCode;
+    });
+
+  trust
+    .command('revoke')
+    .description('Revoke a previously granted MCP tool trust grant')
+    .option('--repo <path>', 'repo root to operate on (default: current working directory)')
+    .requiredOption('--tool <name>', 'MCP tool name, e.g. cadence_draft_approve')
+    .action(async (opts: { repo?: string; tool: string }) => {
+      const repoRoot = opts.repo ? resolve(process.cwd(), opts.repo) : process.cwd();
+      const res = await mcpTrustRevokeService(repoRoot, { tool: opts.tool }, processIO());
+      process.exitCode = res.exitCode;
+    });
+
+  trust
+    .command('list')
+    .description('List MCP tool trust grants')
+    .option('--repo <path>', 'repo root to operate on (default: current working directory)')
+    .option('--json', 'print the raw trust ledger as JSON')
+    .action(async (opts: { repo?: string; json?: boolean }) => {
+      const repoRoot = opts.repo ? resolve(process.cwd(), opts.repo) : process.cwd();
+      const res = await mcpTrustListService(
+        repoRoot,
+        { version: readPackageVersion(), ...(opts.json ? { json: true } : {}) },
         processIO(),
       );
       process.exitCode = res.exitCode;
