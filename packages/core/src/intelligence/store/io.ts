@@ -68,8 +68,8 @@ export async function writeIntelligenceLedgers(
   await mkdir(dir, { recursive: true });
   RecommendationLedgerZ.parse(ledger);
   EvidenceLedgerZ.parse(evidenceLedger);
-  await atomicWriteJSON(recommendationsPath(root), ledger);
-  await atomicWriteJSON(evidencePath(root), evidenceLedger);
+  await atomicWriteJSON(recommendationsPath(root), ledger, { mode: 0o600 });
+  await atomicWriteJSON(evidencePath(root), evidenceLedger, { mode: 0o600 });
   // Read sibling ledgers so the rec MD renders status-annotated link bullets (Slice 15).
   const asLedger = await readAssumptionLedger(root);
   const decLedger = await readIntelligenceDecisionLedger(root);
@@ -82,7 +82,7 @@ export async function writeIntelligenceLedgers(
 export async function writeAssumptionLedger(root: string, ledger: AssumptionLedger): Promise<void> {
   AssumptionLedgerZ.parse(ledger);
   await mkdir(intelligenceDir(root), { recursive: true });
-  await atomicWriteJSON(assumptionsPath(root), ledger);
+  await atomicWriteJSON(assumptionsPath(root), ledger, { mode: 0o600 });
   await atomicWriteText(assumptionsMdPath(root), renderAssumptionsMd(ledger));
 }
 
@@ -92,7 +92,7 @@ export async function writeIntelligenceDecisionLedger(
 ): Promise<void> {
   IntelligenceDecisionLedgerZ.parse(ledger);
   await mkdir(intelligenceDir(root), { recursive: true });
-  await atomicWriteJSON(decisionsPath(root), ledger);
+  await atomicWriteJSON(decisionsPath(root), ledger, { mode: 0o600 });
   await atomicWriteText(decisionsMdPath(root), renderDecisionsMd(ledger));
 }
 

@@ -12,6 +12,7 @@ import {
   type RecommendationStatus,
 } from '@manehorizons/cadence-types';
 import { loadConfig } from '../../config/loader.js';
+import { redactSecrets } from '../../security/redact.js';
 import { nextEvidenceId, nextRecommendationId } from './ids.js';
 import {
   readEvidenceLedger,
@@ -44,7 +45,8 @@ export async function addRecommendation(
         id: nextEvidenceId(evidenceLedger, now),
         recommendationId,
         kind: 'note',
-        summary: input.evidenceSummary,
+        // Choke point: raw evidence text may quote logs/diffs containing a live credential.
+        summary: redactSecrets(input.evidenceSummary),
         createdAt: ts,
       }
     : null;
