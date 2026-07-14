@@ -637,6 +637,27 @@
       "kind": "note",
       "summary": "Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 failure-injection). Verified existing 'corrupt' test coverage is state.json-specific, not intelligence-ledger-specific.",
       "createdAt": "2026-07-12T17:41:44.930Z"
+    },
+    {
+      "id": "ev-20260714-001",
+      "recommendationId": "rec-20260714-001",
+      "kind": "note",
+      "summary": "Verified live 2026-07-14: ran 'cadence milestone premortem mil-rec-rec-20260712-011', all three derived fields correctly empty (no heuristic signal), outOfScope stayed [] with no CLI path to fill it; milestone.ts:90 and :188 confirm it's excluded from derivation by design.",
+      "createdAt": "2026-07-14T03:01:16.909Z"
+    },
+    {
+      "id": "ev-20260714-002",
+      "recommendationId": "rec-20260714-002",
+      "kind": "note",
+      "summary": "Verified live 2026-07-14: ran 'cadence draft add-task 181-mcp-tool-trust-envelope 1 --files ... --action ... --verify ... --done AC-1' five times for T2-T6; every resulting heading was '### T2: ' etc with nothing after the colon, required Edit to add names.",
+      "createdAt": "2026-07-14T04:03:43.550Z"
+    },
+    {
+      "id": "ev-20260714-003",
+      "recommendationId": "rec-20260714-003",
+      "kind": "note",
+      "summary": "181-01-SUMMARY.json has no gateBypasses field despite --allow-auto-complex used at both draft approve (07-13 session) and settle run (07-14, this session)",
+      "createdAt": "2026-07-14T22:08:57.237Z"
     }
   ]
 }

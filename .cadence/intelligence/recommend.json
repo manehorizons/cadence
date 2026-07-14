@@ -1,55 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-13T03:42:44.858Z",
+  "generatedAt": "2026-07-14T02:50:03.205Z",
   "ranked": [
-    {
-      "id": "rec-20260703-001",
-      "title": "Milestone-scoped worktree fan-out for independent phases",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
     {
       "id": "rec-20260712-011",
       "title": "Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "raw": 25.7,
+      "score": 73,
+      "status": "accepted",
+      "readiness": "ready-for-milestone",
       "priority": "medium",
       "decayState": "fresh",
       "terms": [
@@ -66,54 +25,12 @@
           "value": -2.5
         },
         {
-          "label": "status candidate",
-          "value": 0
+          "label": "status accepted",
+          "value": 6
         },
         {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-1234"
-    },
-    {
-      "id": "rec-20260712-008",
-      "title": "Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
+          "label": "ready ready-for-milestone",
+          "value": 7
         },
         {
           "label": "decay fresh",
@@ -1061,10 +978,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 49,
-    "ranked": 25,
+    "total": 48,
+    "ranked": 23,
     "parked": 1,
     "needsAttention": 0,
-    "excluded": 23
+    "excluded": 24
   }
 }

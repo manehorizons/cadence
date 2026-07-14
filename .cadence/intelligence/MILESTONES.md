@@ -4,35 +4,7 @@
 
 ## Proposed
 
-### mil-rec-rec-20260712-008 — Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings
-
-- objective: The evidence ledger (.cadence/intelligence/evidence.json) and SUMMARY.securityAudit persist source-derived quotes and diff findings to disk verbatim -- confirmed no redact/scrub/secret/token/credential handling exists anywhere in intelligence/store/audit.ts or gates/security-audit.ts. Those can carry tokens/credentials. Add a redaction pass (token/key/credential patterns) and a per-record policy before persistence, and restrict ledger file permissions to the current user.
-- status: proposed
-- recommendations: rec-20260712-008
-- pre-mortem:
-  - likely failure modes:
-    - _(why might this fail?)_
-  - hidden dependencies:
-    - _(what must already be true?)_
-  - drift risks:
-    - _(what docs/specs will drift?)_
-  - out of scope:
-    - _(what is explicitly NOT in this milestone?)_
-
-### mil-rec-rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)
-
-- objective: Confirmed: mcp/tools.ts explicitly bypasses the interactive draft/spec-approve prompt over MCP ('the tool call IS the approval', e.g. cadence_draft_approve, cadence_spec_approve) with no expiry/capability-scope/origin-binding/revoke logic anywhere in packages/core/src/mcp/*.ts. Document exactly what that grants and constrain it: bind approval to caller identity/transport origin and tool-definition hash, attach a capability class, and add expiry with revoke-on-version-change so a schema-stable but changed server can't retain silent trust.
-- status: proposed
-- recommendations: rec-20260712-011
-- pre-mortem:
-  - likely failure modes:
-    - _(why might this fail?)_
-  - hidden dependencies:
-    - _(what must already be true?)_
-  - drift risks:
-    - _(what docs/specs will drift?)_
-  - out of scope:
-    - _(what is explicitly NOT in this milestone?)_
+None.
 
 ## Accepted
 
@@ -94,6 +66,7 @@
 - mil-rec-rec-20260701-012 — Boundary enforcement block mode, including subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260701-012/SPEC.md
 - mil-rec-rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases → .cadence/intelligence/exports/mil-rec-rec-20260703-001/SPEC.md
 - mil-rec-rec-20260704-001 — Settle-time boundary diff scan (blocking) for subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260704-001/SPEC.md
+- mil-rec-rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry) → .cadence/intelligence/exports/mil-rec-rec-20260712-011/SPEC.md
 
 ## Closed
 

@@ -1,39 +1,28 @@
 {
   "schemaVersion": 1,
-  "revision": 266,
+  "revision": 307,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
   "activePhase": "181-mcp-tool-trust-envelope",
-  "activeDraft": "181-01",
+  "activeDraft": null,
   "activeSpec": null,
-  "loopPosition": "BUILD",
-  "tier": "complex",
+  "loopPosition": "IDLE",
+  "tier": null,
   "draftReadAt": "2026-07-14T04:05:29.753Z",
-  "openDrafts": [
-    {
-      "id": "181-01",
-      "since": "2026-07-14T03:52:20.529Z"
-    }
-  ],
+  "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-14.md",
-    "subagentSpawns": 1749,
+    "subagentSpawns": 1777,
     "subagentBaselines": {}
   },
   "skillAudit": {
     "required": [],
     "invoked": []
   },
-  "activeTask": {
-    "id": "T5",
-    "status": "DONE",
-    "touchedFiles": [
-      "/home/thomas/projects/cadence/.claude/worktrees/mcp-tool-trust-envelope/.cadence/handoff/SESSION-2026-07-14.md"
-    ]
-  }
+  "activeTask": null
 }
