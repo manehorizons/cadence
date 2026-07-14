@@ -482,21 +482,6 @@ Implementation-detail decisions that apply once a headless host-CLI verifier pro
 
 A headless host-CLI verifier subprocess has zero shared context with the calling session -- arguably a stronger independence claim than today's same-session self-report or even a direct API call under the same account. Worth a docs/positioning pass tying this framing to the existing 'trustworthy verifier' wedge and the mock-default competitive risk, independent of which engineering direction (rec-20260710-002 direct-subprocess vs MCP-inversion sibling) ships.
 
-## rec-20260710-006 — Guardrails for headless-CLI verifier: quota transparency, self-invocation loops, CI fallback
-
-- status: settle-pending
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: verify, security, providers
-- evidence: Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; risk considerations that apply to any headless-CLI provider direction
-- next: cadence milestone propose
-
-Three risks surfaced while widening rec-20260710-002 that need explicit handling, not just the happy path: (1) reusing the user's host-CLI subscription/quota for verification calls is invisible cost -- it should be surfaced loudly (e.g. in verify output or a doctor check), not silently drain a Pro/Max plan's usage budget; (2) if cadence itself is being driven by the same host CLI it would spawn headlessly for verification, there is a self-referential invocation risk (nested Claude Code/Codex processes, rate-limit or permission-prompt contention) that needs an explicit guard; (3) headless host-CLI providers assume an interactive login exists locally and will not work in CI -- needs a documented, loud fallback to anthropic/mock rather than a confusing hang or silent failure in automated environments.
-
 ## rec-20260711-004 — Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)
 
 - status: candidate
@@ -590,22 +575,6 @@ cadence draft add-ac and add-task never warn when appending a new AC/task after 
 
 Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.
 
-## rec-20260712-008 — Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings
-
-- status: settle-pending
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: intelligence, gates, security
-- files: packages/core/src/intelligence/store/audit.ts, packages/core/src/gates/security-audit.ts, .cadence/intelligence/evidence.json
-- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-2 sensitive audit content). Verified no existing redaction/scrub logic in cited files.
-- next: cadence milestone propose
-
-The evidence ledger (.cadence/intelligence/evidence.json) and SUMMARY.securityAudit persist source-derived quotes and diff findings to disk verbatim -- confirmed no redact/scrub/secret/token/credential handling exists anywhere in intelligence/store/audit.ts or gates/security-audit.ts. Those can carry tokens/credentials. Add a redaction pass (token/key/credential patterns) and a per-record policy before persistence, and restrict ledger file permissions to the current user.
-
 ## rec-20260712-009 — Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY
 
 - status: candidate
@@ -637,22 +606,6 @@ GateProvenanceZ (packages/types/src/summary.ts) currently enumerates only status
 - next: cadence milestone propose
 
 Give every gate and verifier call an AbortSignal, a deadline, and a trace id so long verifier runs, headless-CLI self-invocation, and shutdown can cancel cleanly. Scoped to plumbing; cross-links the existing headless-verifier guardrail recs (rec-20260710-004: batching/fallback-chain/model-passthrough, rec-20260710-006: quota transparency/self-invocation loops/CI fallback) without duplicating either -- neither currently covers signal/deadline propagation.
-
-## rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)
-
-- status: settle-pending
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: mcp, security
-- files: packages/core/src/mcp/tools.ts, packages/core/src/mcp/server.ts, packages/core/src/cli/commands/mcp.ts
-- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 MCP trust risk). Verified the bypass comment and confirmed no expiry/capability/origin/revoke logic exists in mcp/*.ts.
-- next: cadence milestone propose
-
-Confirmed: mcp/tools.ts explicitly bypasses the interactive draft/spec-approve prompt over MCP ('the tool call IS the approval', e.g. cadence_draft_approve, cadence_spec_approve) with no expiry/capability-scope/origin-binding/revoke logic anywhere in packages/core/src/mcp/*.ts. Document exactly what that grants and constrain it: bind approval to caller identity/transport origin and tool-definition hash, attach a capability class, and add expiry with revoke-on-version-change so a schema-stable but changed server can't retain silent trust.
 
 ## rec-20260712-012 — Generate the command/config/exit-code reference from source and fail CI on drift
 
