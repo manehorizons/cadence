@@ -1,3 +1,4 @@
+import { redactSecrets } from '../security/redact.js';
 import type { GateImpl, GateResult } from './types.js';
 
 /**
@@ -13,8 +14,11 @@ export const runSecurityAuditGate: GateImpl = async (ctx): Promise<GateResult> =
   const diff = ctx.diff();
   try {
     const result = await ctx.verifiers.securityAudit.verify({ files: touched, diff });
-    const securityAuditFindings = result.findings;
-    const criticals = result.findings.filter((f) => f.severity === 'critical');
+    const securityAuditFindings = result.findings.map((f) => ({
+      ...f,
+      message: redactSecrets(f.message),
+    }));
+    const criticals = securityAuditFindings.filter((f) => f.severity === 'critical');
     const bypassed =
       ctx.opts.force === true || ctx.opts.allowSecurityAuditFailure === true;
     if (criticals.length > 0) {

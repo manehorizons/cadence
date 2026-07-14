@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 60,
+  "revision": 133,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "179-milestone-fan-in-worktree-status",
+  "activePhase": "180-redact-secrets-from-evidence-quotes-and-security-audit-findings",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-13T23:02:26.163Z",
+  "draftReadAt": "2026-07-14T01:16:11.114Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-13-milestone-fan-in-worktree-status-draft.md",
-    "subagentSpawns": 1625,
+    "subagentSpawns": 1671,
     "subagentBaselines": {}
   },
   "skillAudit": {
