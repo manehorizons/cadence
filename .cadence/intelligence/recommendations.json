@@ -699,38 +699,6 @@
       "updatedAt": "2026-07-02T03:24:53.670Z"
     },
     {
-      "id": "rec-20260703-001",
-      "title": "Milestone-scoped worktree fan-out for independent phases",
-      "summary": "External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "milestone",
-        "worktree",
-        "cli"
-      ],
-      "affectedFiles": [
-        "packages/core/src/worktree",
-        "packages/core/src/cli/commands/milestone.ts",
-        "DESIGN.md"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260703-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "179-milestone-fan-in-worktree-status",
-      "createdAt": "2026-07-03T16:59:18.968Z",
-      "updatedAt": "2026-07-13T23:38:16.295Z"
-    },
-    {
       "id": "rec-20260709-001",
       "title": "cadence quickstart: single mega-command for full setup",
       "summary": "One idempotent command = init + auto-detect/wire whatever host is present (.claude/, Codex, .cursor/, .mcp.json) + auto-populate verification.testCommand from package.json/pyproject/etc + activate if a key is already in env + seed a demo phase + print a doctor-style summary of what it did/skipped. Collapses ~5 separate init flags into one call.",
@@ -2893,6 +2861,41 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-12T17:39:48.570Z",
       "updatedAt": "2026-07-13T01:27:56.679Z"
+    },
+    {
+      "id": "rec-20260703-001",
+      "title": "Milestone-scoped worktree fan-out for independent phases",
+      "summary": "External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "milestone",
+        "worktree",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/worktree",
+        "packages/core/src/cli/commands/milestone.ts",
+        "DESIGN.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260703-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "179-milestone-fan-in-worktree-status",
+      "createdAt": "2026-07-03T16:59:18.968Z",
+      "updatedAt": "2026-07-14T00:28:44.304Z",
+      "shippedRef": "PR #195",
+      "archivedAt": "2026-07-14T00:28:44.304Z",
+      "archiveReason": "shipped"
     }
   ]
 }

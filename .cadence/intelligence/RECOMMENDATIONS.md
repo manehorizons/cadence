@@ -362,22 +362,6 @@ Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that no
 
 Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, init never derives verification.testCommand (build-test-must-pass passes silently), all verifier seams are mock. Fix: default coverageMode=assertion for new inits, derive testCommand from package.json scripts.test, print a loud settle notice when no testCommand exists.
 
-## rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases
-
-- status: settle-pending
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: milestone, worktree, cli
-- files: packages/core/src/worktree, packages/core/src/cli/commands/milestone.ts, DESIGN.md
-- evidence: Builds on shipped primitives: phase-collision guard (v1.18, DESIGN.md §13), doctor worktree-phases check + next-free allocation (v1.19), agent-prompt (v1.33), and phase 142's gatherHandoffCandidates/liveLoopPosition (settled 07-03, PR #125, unwired core awaiting a consumer).
-- next: cadence milestone propose
-
-External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md
-
 ## rec-20260709-001 — cadence quickstart: single mega-command for full setup
 
 - status: candidate
