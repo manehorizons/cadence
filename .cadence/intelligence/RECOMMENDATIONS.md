@@ -592,7 +592,7 @@ Two settle-internal refusal paths — the --auto blocked-task refusal and the sk
 
 ## rec-20260712-008 — Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings
 
-- status: accepted
+- status: settle-pending
 - ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10

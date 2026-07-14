@@ -1114,7 +1114,7 @@
       "title": "Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings",
       "summary": "The evidence ledger (.cadence/intelligence/evidence.json) and SUMMARY.securityAudit persist source-derived quotes and diff findings to disk verbatim -- confirmed no redact/scrub/secret/token/credential handling exists anywhere in intelligence/store/audit.ts or gates/security-audit.ts. Those can carry tokens/credentials. Add a redaction pass (token/key/credential patterns) and a per-record policy before persistence, and restrict ledger file permissions to the current user.",
       "source": "manual",
-      "status": "accepted",
+      "status": "settle-pending",
       "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
@@ -1137,9 +1137,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "180-redact-secrets-from-evidence-quotes-and-security-audit-findings",
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:40:20.202Z",
-      "updatedAt": "2026-07-13T03:46:13.234Z"
+      "updatedAt": "2026-07-14T01:43:22.013Z"
     },
     {
       "id": "rec-20260712-009",
@@ -2891,11 +2892,11 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "179-milestone-fan-in-worktree-status",
-      "createdAt": "2026-07-03T16:59:18.968Z",
-      "updatedAt": "2026-07-14T00:28:44.304Z",
       "shippedRef": "PR #195",
       "archivedAt": "2026-07-14T00:28:44.304Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-03T16:59:18.968Z",
+      "updatedAt": "2026-07-14T00:28:44.304Z"
     }
   ]
 }
