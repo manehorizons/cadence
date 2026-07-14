@@ -298,6 +298,68 @@
       "createdAt": "2026-07-10T22:18:44.771Z",
       "updatedAt": "2026-07-12T20:16:51.279Z",
       "closedRef": "phase 165 / PR #164 / commit 1351044"
+    },
+    {
+      "id": "mil-rec-rec-20260703-001",
+      "name": "Milestone-scoped worktree fan-out for independent phases",
+      "objective": "External proposal (lumen2 session, grounded against cadence@05f1162/v1.37.0): split into fan-out (provision N sibling worktrees + emit N agent-prompt-shaped hand-off prompts for a milestone's independent PENDING phases) and fan-in (a status/reconciliation command consuming phase 142's gatherHandoffCandidates/liveLoopPosition to show which parallel phases have settled). Recommends starting with fan-in only (Option C) as the more natural next consumer of the just-shipped, still-unwired phase 142 primitive; fan-out (Option A, a new cadence milestone worktrees subcommand) is a bigger, side-effecting surface worth a real cost/benefit pass first. Full writeup: ~/cadence-parallel-phase-worktree-agents-proposal.md",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260703-001"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260703-001/SPEC.md",
+          "exportedAt": "2026-07-13T03:53:49.667Z"
+        }
+      ],
+      "createdAt": "2026-07-13T03:46:18.942Z",
+      "updatedAt": "2026-07-13T03:53:49.667Z"
+    },
+    {
+      "id": "mil-rec-rec-20260712-008",
+      "name": "Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings",
+      "objective": "The evidence ledger (.cadence/intelligence/evidence.json) and SUMMARY.securityAudit persist source-derived quotes and diff findings to disk verbatim -- confirmed no redact/scrub/secret/token/credential handling exists anywhere in intelligence/store/audit.ts or gates/security-audit.ts. Those can carry tokens/credentials. Add a redaction pass (token/key/credential patterns) and a per-record policy before persistence, and restrict ledger file permissions to the current user.",
+      "status": "proposed",
+      "recommendationIds": [
+        "rec-20260712-008"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-07-13T03:46:18.942Z",
+      "updatedAt": "2026-07-13T03:46:18.942Z"
+    },
+    {
+      "id": "mil-rec-rec-20260712-011",
+      "name": "Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)",
+      "objective": "Confirmed: mcp/tools.ts explicitly bypasses the interactive draft/spec-approve prompt over MCP ('the tool call IS the approval', e.g. cadence_draft_approve, cadence_spec_approve) with no expiry/capability-scope/origin-binding/revoke logic anywhere in packages/core/src/mcp/*.ts. Document exactly what that grants and constrain it: bind approval to caller identity/transport origin and tool-definition hash, attach a capability class, and add expiry with revoke-on-version-change so a schema-stable but changed server can't retain silent trust.",
+      "status": "proposed",
+      "recommendationIds": [
+        "rec-20260712-011"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-07-13T03:46:18.942Z",
+      "updatedAt": "2026-07-13T03:46:18.942Z"
     }
   ]
 }

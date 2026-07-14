@@ -364,8 +364,8 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 
 ## rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases
 
-- status: candidate
-- ready: needs-decision
+- status: settle-pending
+- ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -608,8 +608,8 @@ Two settle-internal refusal paths — the --auto blocked-task refusal and the sk
 
 ## rec-20260712-008 — Redact secrets/credentials from persisted evidence quotes and SUMMARY.securityAudit findings
 
-- status: candidate
-- ready: needs-evidence
+- status: accepted
+- ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -656,8 +656,8 @@ Give every gate and verifier call an AbortSignal, a deadline, and a trace id so 
 
 ## rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)
 
-- status: candidate
-- ready: needs-decision
+- status: accepted
+- ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
 - risk: 5/10

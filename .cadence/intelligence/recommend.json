@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-13T01:28:12.276Z",
+  "generatedAt": "2026-07-13T03:42:44.858Z",
   "ranked": [
     {
       "id": "rec-20260703-001",
@@ -84,48 +84,6 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "scout-20260712-1234"
-    },
-    {
-      "id": "rec-20260710-006",
-      "title": "Guardrails for headless-CLI verifier: quota transparency, self-invocation loops, CI fallback",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260710-2126"
     },
     {
       "id": "rec-20260712-008",
@@ -1104,9 +1062,9 @@
   },
   "totals": {
     "total": 49,
-    "ranked": 26,
+    "ranked": 25,
     "parked": 1,
     "needsAttention": 0,
-    "excluded": 22
+    "excluded": 23
   }
 }

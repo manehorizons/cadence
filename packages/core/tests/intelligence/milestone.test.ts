@@ -1,9 +1,12 @@
-import { describe, expect, it, afterEach } from 'vitest';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { describe, expect, it, afterEach, beforeAll, afterAll } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, rm, realpath, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Assumption, IntelligenceMilestone, MilestoneLedger, Recommendation } from '@manehorizons/cadence-types';
-import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport, runMilestonePreMortem } from '../../src/intelligence/milestone.js';
+import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport, runMilestonePreMortem, runMilestoneStatus } from '../../src/intelligence/milestone.js';
 import { readMilestoneLedger } from '../../src/intelligence/store/milestones.js';
+import { isSameWorktree } from '../../src/git/worktrees.js';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
@@ -797,5 +800,186 @@ describe('runMilestonePreMortem', () => {
     } finally {
       await t.cleanup();
     }
+  });
+});
+
+describe('runMilestoneStatus — non-worktree branches (AC-2, AC-3)', () => {
+  it('unconverted recommendation appears as not-yet-converted rather than being dropped (AC-2)', async () => {
+    fx = await tempRepo({ initialized: true });
+    await seedRecs(fx.root, [mkRec({ id: 'rec-1' })]); // no convertedToPhaseId
+    await seedMilestones(fx.root, [mkMs({ id: 'mil-a', recommendationIds: ['rec-1'] })]);
+
+    const res = await runMilestoneStatus(fx.root, 'mil-a');
+    expect(res.ok).toBe(true);
+    if (!res.ok) throw new Error('unreachable');
+    // AC-2: not-yet-converted recs still appear in the output array
+    expect(res.phases).toEqual([{ recommendationId: 'rec-1', status: 'not-yet-converted' }]);
+  });
+
+  it('converted recommendation with no matching worktree -> no-worktree-found, still appears (AC-2)', async () => {
+    fx = await tempRepo({ initialized: true });
+    await seedRecs(fx.root, [mkRec({ id: 'rec-1', convertedToPhaseId: 'phase-99' })]);
+    await seedMilestones(fx.root, [mkMs({ id: 'mil-a', recommendationIds: ['rec-1'] })]);
+
+    const res = await runMilestoneStatus(fx.root, 'mil-a');
+    expect(res.ok).toBe(true);
+    if (!res.ok) throw new Error('unreachable');
+    // AC-2: a converted phase with no matching local/sibling worktree is reported,
+    // not silently omitted
+    expect(res.phases).toEqual([
+      { recommendationId: 'rec-1', phaseId: 'phase-99', status: 'no-worktree-found' },
+    ]);
+  });
+
+  it('unknown milestone id -> ok:false with a clear "not found" error (AC-2)', async () => {
+    fx = await tempRepo({ initialized: true });
+    const res = await runMilestoneStatus(fx.root, 'nope');
+    // AC-2: cadence milestone status <unknown-id> refuses with a "not found" message
+    expect(res).toEqual({ ok: false, error: 'milestone nope not found' });
+  });
+});
+
+function git(cwd: string, args: string[]): string {
+  return execFileSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+}
+
+/** Init a git repo with a deterministic `main` branch and an initial commit —
+ *  mirrors `packages/core/tests/handoff/candidates.test.ts`'s `initRepo`. */
+async function initStatusGitRepo(root: string): Promise<void> {
+  git(root, ['init', '-b', 'main']);
+  git(root, ['config', 'user.email', 'test@example.com']);
+  git(root, ['config', 'user.name', 'Test']);
+  git(root, ['config', 'commit.gpgsign', 'false']);
+  await writeFile(join(root, 'README.md'), '# test\n');
+  git(root, ['add', '.']);
+  git(root, ['commit', '-m', 'init']);
+}
+
+/** Writes a minimal but complete `.cadence/state.json` at `root` with the
+ *  given live loop position — mirrors candidates.test.ts's `writeState`. */
+async function writeStatusState(root: string, loopPosition: string): Promise<void> {
+  const dir = join(root, '.cadence');
+  await mkdir(dir, { recursive: true });
+  const state = {
+    schemaVersion: 1,
+    project: { name: 'test', createdAt: '2026-01-01T00:00:00.000Z' },
+    activePhase: null,
+    activeDraft: null,
+    activeSpec: null,
+    loopPosition,
+    tier: null,
+    draftReadAt: null,
+    openDrafts: [],
+    decisions: [],
+    deferred: [],
+    session: { tokenUtilization: 0, lastHandoff: null, subagentSpawns: 0 },
+    skillAudit: { required: [], invoked: [] },
+    activeTask: null,
+  };
+  await writeFile(join(dir, 'state.json'), JSON.stringify(state, null, 2));
+}
+
+/** Writes a `.cadence/handoff/<fileName>.md` doc advertising `activePhase` via
+ *  the `active_phase:` frontmatter key that `gatherHandoffCandidates` reads —
+ *  mirrors candidates.test.ts's `writeHandoffDoc`. */
+async function writeStatusHandoffDoc(
+  root: string,
+  fileName: string,
+  generatedAt: string,
+  activePhase: string,
+): Promise<void> {
+  const dir = join(root, '.cadence', 'handoff');
+  await mkdir(dir, { recursive: true });
+  const lines = [
+    '---',
+    'cadence_handoff: 1',
+    `generated_at: ${generatedAt}`,
+    `active_phase: ${activePhase}`,
+    '---',
+    '# Session Handoff',
+    '',
+  ];
+  await writeFile(join(dir, fileName), lines.join('\n'));
+}
+
+describe('runMilestoneStatus — worktree resolution (AC-1, real git worktree fixtures)', () => {
+  let parent: string;
+  beforeAll(async () => {
+    parent = await realpath(await mkdtemp(join(tmpdir(), 'cadence-mstatus-')));
+  });
+  afterAll(async () => {
+    await rm(parent, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }).catch(
+      () => {},
+    );
+  });
+
+  it("converted rec whose phase's sibling worktree is IDLE -> resolved, settled true (AC-1)", async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-idle-')));
+    await initStatusGitRepo(main);
+
+    const sib = join(parent, `sib-idle-${Date.now().toString(36)}`);
+    git(main, ['worktree', 'add', '-b', 'feature-idle', sib]);
+    await writeStatusState(sib, 'IDLE');
+    await writeStatusHandoffDoc(
+      sib,
+      'SESSION-2026-07-01-a.md',
+      '2026-07-01T10:00:00.000Z',
+      'phase-idle',
+    );
+
+    await seedRecs(main, [mkRec({ id: 'rec-1', convertedToPhaseId: 'phase-idle' })]);
+    await seedMilestones(main, [mkMs({ id: 'mil-a', recommendationIds: ['rec-1'] })]);
+
+    const res = await runMilestoneStatus(main, 'mil-a');
+    expect(res.ok).toBe(true);
+    if (!res.ok) throw new Error('unreachable');
+    expect(res.phases).toHaveLength(1);
+    const entry = res.phases[0]!;
+    expect(entry.status).toBe('resolved');
+    if (entry.status !== 'resolved') throw new Error('unreachable');
+    expect(entry.source).toBe('sibling');
+    const sibReal = await realpath(sib);
+    // Compare via isSameWorktree, not string equality — git worktree list vs.
+    // realpath disagree on separator style on Windows (native git.exe backslashes
+    // vs. Node's realpath forward slashes) even for the same directory.
+    expect(isSameWorktree(entry.worktreePath, sibReal)).toBe(true);
+    expect(entry.worktreeBranch).toBe('feature-idle');
+    expect(entry.liveLoopPosition).toBe('IDLE');
+    // AC-1: a phase whose worktree reports IDLE is marked settled
+    expect(entry.settled).toBe(true);
+  });
+
+  it("converted rec whose phase's sibling worktree is BUILD -> resolved, settled false (AC-1)", async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-build-')));
+    await initStatusGitRepo(main);
+
+    const sib = join(parent, `sib-build-${Date.now().toString(36)}`);
+    git(main, ['worktree', 'add', '-b', 'feature-build', sib]);
+    await writeStatusState(sib, 'BUILD');
+    await writeStatusHandoffDoc(
+      sib,
+      'SESSION-2026-07-01-a.md',
+      '2026-07-01T10:00:00.000Z',
+      'phase-build',
+    );
+
+    await seedRecs(main, [mkRec({ id: 'rec-1', convertedToPhaseId: 'phase-build' })]);
+    await seedMilestones(main, [mkMs({ id: 'mil-a', recommendationIds: ['rec-1'] })]);
+
+    const res = await runMilestoneStatus(main, 'mil-a');
+    expect(res.ok).toBe(true);
+    if (!res.ok) throw new Error('unreachable');
+    expect(res.phases).toHaveLength(1);
+    const entry = res.phases[0]!;
+    expect(entry.status).toBe('resolved');
+    if (entry.status !== 'resolved') throw new Error('unreachable');
+    expect(entry.source).toBe('sibling');
+    expect(entry.liveLoopPosition).toBe('BUILD');
+    // AC-1: a phase whose worktree reports a non-IDLE loop position is not settled
+    expect(entry.settled).toBe(false);
   });
 });

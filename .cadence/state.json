@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 24,
+  "revision": 60,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "178-headless-verifier-guardrails",
+  "activePhase": "179-milestone-fan-in-worktree-status",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-12T23:39:51.555Z",
+  "draftReadAt": "2026-07-13T23:02:26.163Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-13.md",
-    "subagentSpawns": 1611,
+    "lastHandoff": "SESSION-2026-07-13-milestone-fan-in-worktree-status-draft.md",
+    "subagentSpawns": 1625,
     "subagentBaselines": {}
   },
   "skillAudit": {

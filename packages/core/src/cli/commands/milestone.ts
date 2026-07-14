@@ -2,11 +2,15 @@ import type { Command } from 'commander';
 import {
   runMilestoneExport,
   runMilestonePreMortem,
+  runMilestoneStatus,
   runMilestoneTransition,
   runProposeMilestones,
 } from '../../intelligence/milestone.js';
 import { readMilestoneLedger } from '../../intelligence/store/milestones.js';
-import { renderMilestonesMd } from '../../intelligence/render-milestone.js';
+import {
+  renderMilestoneStatusMd,
+  renderMilestonesMd,
+} from '../../intelligence/render-milestone.js';
 
 export function registerMilestoneCommand(program: Command): void {
   const cmd = program
@@ -153,6 +157,33 @@ export function registerMilestoneCommand(program: Command): void {
       } catch (err) {
         process.stderr.write(
           `milestone premortem failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  cmd
+    .command('status <id>')
+    .description(
+      "Report each milestone phase's owning worktree and live loop position (read-only)",
+    )
+    .option('--json', 'emit machine-readable JSON instead of rendered text')
+    .action(async (id: string, opts: { json?: boolean }) => {
+      try {
+        const res = await runMilestoneStatus(process.cwd(), id);
+        if (!res.ok) {
+          process.stderr.write(`milestone status refused: ${res.error}\n`);
+          process.exitCode = 1;
+          return;
+        }
+        if (opts.json) {
+          process.stdout.write(JSON.stringify(res) + '\n');
+        } else {
+          process.stdout.write(renderMilestoneStatusMd(res));
+        }
+      } catch (err) {
+        process.stderr.write(
+          `milestone status failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
         process.exitCode = 1;
       }
