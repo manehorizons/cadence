@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 307,
+  "revision": 310,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
@@ -16,7 +16,7 @@
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-14.md",
+    "lastHandoff": "SESSION-2026-07-14-mcp-tool-trust-envelope-shipped.md",
     "subagentSpawns": 1777,
     "subagentBaselines": {}
   },
