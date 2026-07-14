@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import type { Assumption, IntelligenceMilestone, MilestoneLedger, Recommendation } from '@manehorizons/cadence-types';
 import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport, runMilestonePreMortem, runMilestoneStatus } from '../../src/intelligence/milestone.js';
 import { readMilestoneLedger } from '../../src/intelligence/store/milestones.js';
+import { isSameWorktree } from '../../src/git/worktrees.js';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
@@ -942,7 +943,10 @@ describe('runMilestoneStatus — worktree resolution (AC-1, real git worktree fi
     if (entry.status !== 'resolved') throw new Error('unreachable');
     expect(entry.source).toBe('sibling');
     const sibReal = await realpath(sib);
-    expect(entry.worktreePath).toBe(sibReal);
+    // Compare via isSameWorktree, not string equality — git worktree list vs.
+    // realpath disagree on separator style on Windows (native git.exe backslashes
+    // vs. Node's realpath forward slashes) even for the same directory.
+    expect(isSameWorktree(entry.worktreePath, sibReal)).toBe(true);
     expect(entry.worktreeBranch).toBe('feature-idle');
     expect(entry.liveLoopPosition).toBe('IDLE');
     // AC-1: a phase whose worktree reports IDLE is marked settled
