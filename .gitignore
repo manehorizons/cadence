@@ -29,6 +29,11 @@ HANDOFF.md.resumed-*
 # tracked artifact, unlike the recommendation/milestone ledgers beside it.
 .cadence/intelligence/context/
 
+# MCP tool-trust grant ledger (`cadence mcp trust grant/revoke/list`).
+# Operator/machine-local security material bound to a specific CADENCE
+# version and expiry — unlike state.json, not shared planning state.
+.cadence/mcp-trust.json
+
 # Local-only reference docs (architecture reviews, scratch notes). Kept on
 # disk for the operator; never published.
 .local/
