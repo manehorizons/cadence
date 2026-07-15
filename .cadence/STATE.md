@@ -11,7 +11,7 @@
 ## Telemetry
 - Token utilization: 100%
 - Subagent spawns this session: 1842
-- Last handoff: SESSION-2026-07-14-mcp-tool-trust-envelope-shipped.md
+- Last handoff: SESSION-2026-07-15-merge-prs-201-202-203-then-release.md
 
 ## Counts
 - Open drafts: 0

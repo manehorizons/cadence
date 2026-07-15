@@ -16,7 +16,7 @@
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-14-mcp-tool-trust-envelope-shipped.md",
+    "lastHandoff": "SESSION-2026-07-15-merge-prs-201-202-203-then-release.md",
     "subagentSpawns": 1842,
     "subagentBaselines": {}
   },
