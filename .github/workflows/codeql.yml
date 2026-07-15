@@ -1,0 +1,42 @@
+name: CodeQL
+
+# Static analysis via GitHub's CodeQL, scoped to the single javascript-typescript
+# language this monorepo is written in. Runs on push/PR so new code is scanned
+# before it lands, and on a weekly schedule (independent of push/PR activity)
+# so analysis coverage doesn't silently lapse if the repo goes quiet — rec-20260712-013.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 3 * * 1' # every Monday 03:00 UTC
+
+permissions:
+  actions: read # required so the analyze step can read workflow run metadata
+  contents: read # checkout the repo
+  security-events: write # upload CodeQL results to the Security tab
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript-typescript']
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      # No compiled build step is needed for javascript-typescript — CodeQL's
+      # extractor parses source directly, so the autobuild/manual-build steps
+      # used for compiled languages are intentionally omitted here.
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'
