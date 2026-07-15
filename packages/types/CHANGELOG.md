@@ -1,5 +1,11 @@
 # @manehorizons/cadence-types
 
+## 1.45.0
+
+### Minor Changes
+
+- 90364bb: Add an MCP tool-trust envelope constraining `cadence_draft_approve` and `cadence_spec_approve` — the two MCP tools where the tool call itself previously acted as the approval, with no expiry, capability scope, or revoke logic. Each of the 18 registered MCP tools is now tagged with a `capabilityClass` (`READ_ONLY` | `LEDGER_WRITE` | `LOOP_WRITE` | `APPROVAL_BYPASS` | `SETTLE`); the two `APPROVAL_BYPASS` tools now refuse (naming the failing check, before any `state.json` write) unless the caller holds a trust grant that matches the tool's live structural def-hash (name + description + inputSchema), was issued for the running CADENCE version, and has not expired. Grants are issued exclusively via a new CLI-only command family — `cadence mcp trust grant --tool <name> [--ttl-days <n>]`, `cadence mcp trust revoke --tool <name>`, `cadence mcp trust list` — never reachable from any MCP tool call, so an MCP client can never self-grant approval-bypass trust. Grants are stored in a new operator/machine-local `.cadence/mcp-trust.json` ledger (gitignored, not shared repo state like `state.json`). `cadence_settle` is classified `SETTLE` but deliberately left ungated this phase. See `docs/concepts.md`'s new "MCP tool-trust envelope" section and `docs/reference/commands.md`'s `mcp trust` entries for full detail.
+
 ## 1.44.1
 
 ### Patch Changes
