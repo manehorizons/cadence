@@ -1,0 +1,112 @@
+name: Security
+
+# Consolidated security automation, one job per concern (rec-20260712-013).
+# Runs on push/PR so new code is checked before it lands, and on a weekly
+# schedule (independent of push/PR activity) so coverage doesn't silently
+# lapse if the repo goes quiet. CodeQL static analysis has its own weekly
+# schedule in codeql.yml and is out of scope here.
+#
+# Jobs today: secret-scan (gitleaks), audit (pnpm audit vs. the documented
+# exceptions allowlist), sbom (CycloneDX SBOM + license inventory). Keep new
+# jobs additive, one per concern.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 4 * * 1' # every Monday 04:00 UTC (offset from CodeQL's 03:00 slot)
+
+permissions:
+  contents: read # checkout the repo
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    # gitleaks-action's pull_request path fetches the PR's commit list via the
+    # GitHub API before scanning (unrelated to the `contents` scope above) —
+    # without `pull-requests: read`, that call 403s and the whole job errors
+    # on every PR run instead of actually scanning. Job-level `permissions:`
+    # fully replaces the workflow-level block for this job, so `contents`
+    # must be repeated here too (needed for actions/checkout).
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # gitleaks needs full history to scan past commits
+
+      - name: Scan for leaked credentials (gitleaks)
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Fails on any high/critical advisory pnpm audit reports that is not listed
+  # in docs/security/audit-exceptions.md (or is listed but past its expiry).
+  # See docs/security/audit-exceptions.md for the policy and
+  # scripts/check-audit-exceptions.mjs for the check itself.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v6
+        with:
+          # pnpm <11 hits npm's retired legacy audit endpoint (410 Gone —
+          # pnpm/pnpm#11265); check-audit-exceptions.mjs works around this by
+          # running the audit itself via `corepack pnpm@11.x`, which requires
+          # Node >=22.13 (uses node:sqlite). Pinned to 22 here even though
+          # the rest of this repo's CI matrix (ci.yml) covers Node 20 too.
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check pnpm audit against documented exceptions
+        run: node scripts/check-audit-exceptions.mjs
+
+  # Generates a CycloneDX SBOM (full dependency graph/component inventory)
+  # and a license inventory grouped by license type, uploaded as workflow
+  # artifacts for audit/compliance use. No signing/attestation and no
+  # external publishing — artifact upload only, out of scope for this phase
+  # (see the phase 182 DRAFT's Boundaries).
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate CycloneDX SBOM
+        # --ignore-npm-errors: cyclonedx-npm shells out to `npm ls` to walk
+        # the dependency tree, but this is a pnpm workspace (pnpm-lock.yaml,
+        # no package-lock.json) — npm reports spurious "extraneous" /
+        # "invalid" / "missing peer" errors against pnpm's node_modules
+        # layout that aren't real problems here. Verified locally against
+        # this repo: without this flag the command exits non-zero; with it,
+        # it produces a valid CycloneDX 1.6 document.
+        run: pnpm dlx @cyclonedx/cyclonedx-npm --ignore-npm-errors --output-format JSON --output-file sbom.cdx.json
+
+      - name: Generate license inventory
+        run: pnpm licenses list --json > licenses.json
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sbom-and-licenses
+          path: |
+            sbom.cdx.json
+            licenses.json
