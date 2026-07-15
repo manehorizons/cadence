@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 181-mcp-tool-trust-envelope
+**Active phase:** 184-gate-verifier-abort-signal
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1777
+- Subagent spawns this session: 1834
 - Last handoff: SESSION-2026-07-14-mcp-tool-trust-envelope-shipped.md
 
 ## Counts

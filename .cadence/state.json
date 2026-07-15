@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 310,
+  "revision": 394,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "181-mcp-tool-trust-envelope",
+  "activePhase": "184-gate-verifier-abort-signal",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-14T04:05:29.753Z",
+  "draftReadAt": "2026-07-15T01:09:29.064Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-14-mcp-tool-trust-envelope-shipped.md",
-    "subagentSpawns": 1777,
+    "subagentSpawns": 1834,
     "subagentBaselines": {}
   },
   "skillAudit": {

@@ -1,0 +1,29 @@
+{
+  "draftId": "184-01",
+  "tasks": {
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-15T01:12:57.255Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/184-gate-verifier-abort-signal/packages/core/src/gates/types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/184-gate-verifier-abort-signal/packages/core/tests/verify/security-audit.test.ts"
+      ],
+      "updatedAt": "2026-07-15T01:13:47.048Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/184-gate-verifier-abort-signal/packages/core/tests/verify/security-audit.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/184-gate-verifier-abort-signal/packages/core/tests/gates/security-audit.test.ts"
+      ],
+      "updatedAt": "2026-07-15T01:14:49.898Z"
+    }
+  }
+}
