@@ -1147,7 +1147,7 @@
       "title": "Generate the command/config/exit-code reference from source and fail CI on drift",
       "summary": "RECOMMENDATIONS.md is already generated from JSON. docs/reference/commands.md and docs/reference/config.md exist but are hand-maintained -- confirmed no drift-check script and no exit-code taxonomy doc exist yet, and docs.yml only builds/deploys typedoc API docs, with no source-vs-checked-in-docs comparison. Extend the same generated-from-source + fail-on-drift discipline to those two docs and the exit-code taxonomy, with a CI check that fails when the checked-in docs diverge from the source of truth.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -1170,9 +1170,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "183-docs-drift-check",
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:40:51.986Z",
-      "updatedAt": "2026-07-12T17:40:51.986Z"
+      "updatedAt": "2026-07-15T01:06:08.171Z"
     },
     {
       "id": "rec-20260712-013",
