@@ -1179,7 +1179,7 @@
       "title": "Add the missing CI security automation: CodeQL, secret scanning, npm-audit policy, SBOM, scheduled run",
       "summary": "Verified current .github state: Dependabot (.github/dependabot.yml) and npm provenance/OIDC (release.yml) are already in place -- do not duplicate. Confirmed genuinely missing: no CodeQL workflow, no secret-scanning/push-protection/gitleaks/trufflehog references, no SBOM/CycloneDX/SPDX generation anywhere in .github/workflows. Add the missing layers: CodeQL, secret scanning + push protection, an npm audit policy with documented exceptions, SBOM + license inventory, and a scheduled security CI run.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -1201,9 +1201,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "182-ci-security-automation",
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:41:00.135Z",
-      "updatedAt": "2026-07-12T17:41:00.135Z"
+      "updatedAt": "2026-07-15T00:41:52.423Z"
     },
     {
       "id": "rec-20260712-014",
@@ -2988,12 +2989,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "181-mcp-tool-trust-envelope",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:40:44.241Z",
-      "updatedAt": "2026-07-14T22:28:08.432Z",
       "shippedRef": "PR #198",
+      "scoutId": "scout-20260712-1234",
       "archivedAt": "2026-07-14T22:28:08.432Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T17:40:44.241Z",
+      "updatedAt": "2026-07-14T22:28:08.432Z"
     }
   ]
 }
