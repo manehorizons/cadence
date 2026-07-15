@@ -591,54 +591,6 @@ Two settle-internal refusal paths — the --auto blocked-task refusal and the sk
 
 GateProvenanceZ (packages/types/src/summary.ts) currently enumerates only status: 'ran' | 'skipped' | 'refused' -- confirmed no 'failed' or 'timed-out' state distinct from 'refused', and no in-flight requested/started states. Extend SUMMARY to record a fuller gate lifecycle-state taxonomy so incident analysis and resume can reconstruct where a settle run stopped, including crash-mid-gate cases a synchronous refuse/pass pair can't distinguish. Pairs with the exit-code-taxonomy-as-public-contract work. Distinct from rec-20260611-001, which is about recommendation status lifecycle, not gate lifecycle.
 
-## rec-20260712-010 — Thread AbortSignal + deadline + trace id through gates, verifiers, and the headless-CLI verifier
-
-- status: settle-pending
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, verify, reliability
-- files: packages/core/src/gates, packages/core/src/verify/security-audit.ts
-- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (arch: cancellation/deadlines); siblings: rec-20260710-004, rec-20260710-006. Verified neither sibling covers AbortSignal/deadline plumbing.
-- next: cadence milestone propose
-
-Give every gate and verifier call an AbortSignal, a deadline, and a trace id so long verifier runs, headless-CLI self-invocation, and shutdown can cancel cleanly. Scoped to plumbing; cross-links the existing headless-verifier guardrail recs (rec-20260710-004: batching/fallback-chain/model-passthrough, rec-20260710-006: quota transparency/self-invocation loops/CI fallback) without duplicating either -- neither currently covers signal/deadline propagation.
-
-## rec-20260712-012 — Generate the command/config/exit-code reference from source and fail CI on drift
-
-- status: settle-pending
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs, ci, tooling
-- files: docs/reference/commands.md, docs/reference/config.md, scripts
-- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (arch: docs from registries / doc drift). Verified no existing drift-check script or exit-code taxonomy doc.
-- next: cadence milestone propose
-
-RECOMMENDATIONS.md is already generated from JSON. docs/reference/commands.md and docs/reference/config.md exist but are hand-maintained -- confirmed no drift-check script and no exit-code taxonomy doc exist yet, and docs.yml only builds/deploys typedoc API docs, with no source-vs-checked-in-docs comparison. Extend the same generated-from-source + fail-on-drift discipline to those two docs and the exit-code taxonomy, with a CI check that fails when the checked-in docs diverge from the source of truth.
-
-## rec-20260712-013 — Add the missing CI security automation: CodeQL, secret scanning, npm-audit policy, SBOM, scheduled run
-
-- status: settle-pending
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: ci, security, governance
-- files: .github/workflows, .github/dependabot.yml
-- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P1 security automation). Verified Dependabot+provenance already shipped; grepped .github/workflows for codeql/secret-scanning/sbom terms with zero hits.
-- next: cadence milestone propose
-
-Verified current .github state: Dependabot (.github/dependabot.yml) and npm provenance/OIDC (release.yml) are already in place -- do not duplicate. Confirmed genuinely missing: no CodeQL workflow, no secret-scanning/push-protection/gitleaks/trufflehog references, no SBOM/CycloneDX/SPDX generation anywhere in .github/workflows. Add the missing layers: CodeQL, secret scanning + push protection, an npm audit policy with documented exceptions, SBOM + license inventory, and a scheduled security CI run.
-
 ## rec-20260712-014 — Add test-coverage reporting with enforced minimum thresholds to CI
 
 - status: candidate
