@@ -609,7 +609,7 @@ Give every gate and verifier call an AbortSignal, a deadline, and a trace id so 
 
 ## rec-20260712-012 — Generate the command/config/exit-code reference from source and fail CI on drift
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10

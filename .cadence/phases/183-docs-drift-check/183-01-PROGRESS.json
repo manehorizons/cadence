@@ -1,0 +1,28 @@
+{
+  "draftId": "183-01",
+  "tasks": {
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-15T00:47:19.612Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/183-docs-drift-check/packages/core/tests/docs/exit-codes.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/183-docs-drift-check/packages/core/tests/docs/cli-reference.test.ts"
+      ],
+      "updatedAt": "2026-07-15T00:48:15.310Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/183-docs-drift-check/packages/core/tests/docs/cli-reference.test.ts"
+      ],
+      "updatedAt": "2026-07-15T00:51:15.532Z"
+    }
+  }
+}
