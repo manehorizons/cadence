@@ -61,8 +61,16 @@ export interface VerifierPorts {
   readonly deep: { verify(input: VerifyInput): Promise<VerifyResult> };
   /** Code-review verifier (Phase 39.4), lazily `selectCodeReviewVerifier`. */
   readonly codeReview: { verify(input: CodeReviewInput): Promise<CodeReviewResult> };
-  /** Security-audit verifier (Phase 39.5), lazily `selectSecurityAuditVerifier`. */
-  readonly securityAudit: { verify(input: SecurityAuditInput): Promise<SecurityAuditResult> };
+  /** Security-audit verifier (Phase 39.5), lazily `selectSecurityAuditVerifier`.
+   *  Phase 184: `opts` mirrors `SecurityAuditVerifier.verify`'s optional
+   *  `{ signal?; traceId? }` second parameter — the real gate call site
+   *  passes a per-run `traceId`. */
+  readonly securityAudit: {
+    verify(
+      input: SecurityAuditInput,
+      opts?: { signal?: AbortSignal; traceId?: string },
+    ): Promise<SecurityAuditResult>;
+  };
 }
 
 /**

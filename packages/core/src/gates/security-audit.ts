@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { redactSecrets } from '../security/redact.js';
 import type { GateImpl, GateResult } from './types.js';
 
@@ -13,7 +14,15 @@ export const runSecurityAuditGate: GateImpl = async (ctx): Promise<GateResult> =
   const touched = [...ctx.touchedFiles];
   const diff = ctx.diff();
   try {
-    const result = await ctx.verifiers.securityAudit.verify({ files: touched, diff });
+    // Phase 184: a per-run trace id, generated fresh on every gate run, is
+    // passed to the verifier's optional `opts` parameter so a `traceId` can
+    // be correlated across the call — proving the plumbing is genuinely
+    // connected end-to-end rather than plumbed-and-unused.
+    const traceId = randomUUID();
+    const result = await ctx.verifiers.securityAudit.verify(
+      { files: touched, diff },
+      { traceId },
+    );
     const securityAuditFindings = result.findings.map((f) => ({
       ...f,
       message: redactSecrets(f.message),

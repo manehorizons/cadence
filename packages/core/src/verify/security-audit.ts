@@ -29,7 +29,16 @@ export interface SecurityAuditResult {
 
 export interface SecurityAuditVerifier {
   readonly name: string;
-  verify(input: SecurityAuditInput): Promise<SecurityAuditResult>;
+  /**
+   * Phase 184: `opts` mirrors `Verifier.verify`'s shape
+   * (`packages/core/src/verify/verifier.ts`) — an optional external
+   * `AbortSignal` plus a `traceId` for logging. Every implementation must
+   * accept it and keep behaving identically when it is omitted.
+   */
+  verify(
+    input: SecurityAuditInput,
+    opts?: { signal?: AbortSignal; traceId?: string },
+  ): Promise<SecurityAuditResult>;
 }
 
 /** `Authorization:` header carrying a literal credential value. */
@@ -47,7 +56,12 @@ const JWT_RE = /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/;
 export class MockSecurityAuditVerifier implements SecurityAuditVerifier {
   readonly name = 'mock';
 
-  async verify(input: SecurityAuditInput): Promise<SecurityAuditResult> {
+  async verify(
+    input: SecurityAuditInput,
+    // Pure, no I/O to cancel and nothing to trace — accepted for interface
+    // parity with `SecurityAuditVerifier` and ignored, same as `MockVerifier`.
+    _opts?: { signal?: AbortSignal; traceId?: string },
+  ): Promise<SecurityAuditResult> {
     const findings: Finding[] = [];
     if (input.diff.trim().length === 0) {
       return { findings, provider: this.name };
@@ -153,7 +167,10 @@ export class AnthropicSecurityAuditVerifier
     this.maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;
   }
 
-  async verify(input: SecurityAuditInput): Promise<SecurityAuditResult> {
+  async verify(
+    input: SecurityAuditInput,
+    opts?: { signal?: AbortSignal; traceId?: string },
+  ): Promise<SecurityAuditResult> {
     if (input.files.length === 0 && input.diff.trim().length === 0) {
       return { findings: [], provider: this.name, model: this.model };
     }
@@ -161,21 +178,29 @@ export class AnthropicSecurityAuditVerifier
     const userMessage = formatUserMessage(input);
     let response: Awaited<ReturnType<Anthropic['messages']['parse']>>;
     try {
-      response = await this.client.messages.parse({
-        model: this.model,
-        max_tokens: this.maxTokens,
-        system: [
-          {
-            type: 'text',
-            text: SYSTEM_PROMPT,
-            cache_control: { type: 'ephemeral' },
+      response = await this.client.messages.parse(
+        {
+          model: this.model,
+          max_tokens: this.maxTokens,
+          system: [
+            {
+              type: 'text',
+              text: SYSTEM_PROMPT,
+              cache_control: { type: 'ephemeral' },
+            },
+          ],
+          output_config: {
+            format: zodOutputFormat(SecurityAuditResponseSchema),
           },
-        ],
-        output_config: {
-          format: zodOutputFormat(SecurityAuditResponseSchema),
+          messages: [{ role: 'user', content: userMessage }],
         },
-        messages: [{ role: 'user', content: userMessage }],
-      });
+        // The Anthropic SDK's request options (`RequestOptions`, see
+        // `@anthropic-ai/sdk/internal/request-options`) accept a real
+        // `signal?: AbortSignal` forwarded straight to the underlying fetch;
+        // there is no `traceId`-shaped field on `RequestOptions`, so — as in
+        // this file today — there is no logger call here to carry it into.
+        opts?.signal ? { signal: opts.signal } : undefined,
+      );
     } catch (err) {
       if (err instanceof Anthropic.APIError) {
         throw new Error(
@@ -214,7 +239,10 @@ export class LocalSecurityAuditVerifier implements SecurityAuditVerifier {
   readonly name = 'local';
   constructor(private readonly o: LocalSecurityAuditVerifierOptions) {}
 
-  async verify(input: SecurityAuditInput): Promise<SecurityAuditResult> {
+  async verify(
+    input: SecurityAuditInput,
+    opts?: { signal?: AbortSignal; traceId?: string },
+  ): Promise<SecurityAuditResult> {
     if (input.files.length === 0 && input.diff.trim().length === 0) {
       return { findings: [], provider: this.name, model: this.o.model };
     }
@@ -225,6 +253,8 @@ export class LocalSecurityAuditVerifier implements SecurityAuditVerifier {
       user: formatUserMessage(input),
       schema: SecurityAuditResponseSchema,
       ...(this.o.transport ? { transport: this.o.transport } : {}),
+      ...(opts?.signal ? { signal: opts.signal } : {}),
+      ...(opts?.traceId ? { traceId: opts.traceId } : {}),
     });
     const findings: Finding[] = [];
     for (const f of parsed.findings) {

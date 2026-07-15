@@ -335,11 +335,11 @@ export async function settleService(
           },
         },
         securityAudit: {
-          verify: (input) => {
+          verify: (input, opts) => {
             if (!securityAuditVerifierMemo) {
               securityAuditVerifierMemo = selectSecurityAuditVerifier(cadenceConfig, { cwd });
             }
-            return securityAuditVerifierMemo.verify(input);
+            return securityAuditVerifierMemo.verify(input, opts);
           },
         },
       },

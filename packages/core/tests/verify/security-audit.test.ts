@@ -71,6 +71,28 @@ describe('MockSecurityAuditVerifier (AC-2)', () => {
     const r = await v.verify({ files: ['src/api.ts'], diff });
     expect(r.findings).toEqual([]);
   });
+
+  // Phase 184 (AC-3): omitting the new `opts` parameter entirely must keep
+  // behaving exactly as before — the regression case.
+  it('behaves identically when opts is omitted (regression)', async () => {
+    const v = new MockSecurityAuditVerifier();
+    const r = await v.verify({ files: ['src/api.ts'], diff: authDiff });
+    expect(r.findings).toHaveLength(1);
+    expect(r.provider).toBe('mock');
+  });
+
+  // Phase 184 (AC-3): mock is pure/no I/O — it accepts `opts` without
+  // erroring and ignores it, same as MockVerifier.
+  it('accepts an opts argument without erroring and ignores it', async () => {
+    const v = new MockSecurityAuditVerifier();
+    const controller = new AbortController();
+    const r = await v.verify(
+      { files: ['src/api.ts'], diff: authDiff },
+      { signal: controller.signal, traceId: 'trace-mock-1' },
+    );
+    expect(r.findings).toHaveLength(1);
+    expect(r.provider).toBe('mock');
+  });
 });
 
 function makeMockClient(parsedOutput: unknown): Anthropic {
@@ -124,6 +146,35 @@ describe('AnthropicSecurityAuditVerifier (AC-3)', () => {
     } as unknown as Anthropic;
     const v = new AnthropicSecurityAuditVerifier({ client });
     await expect(v.verify(input)).rejects.toThrow(/net bork/);
+  });
+
+  // Phase 184 (AC-3): omitting opts entirely keeps calling `messages.parse`
+  // with a single argument — the regression case for the new parameter.
+  it('calls messages.parse with no request-options argument when opts is omitted', async () => {
+    const parse = vi.fn().mockResolvedValue({
+      parsed_output: { findings: [] },
+    });
+    const client = { messages: { parse } } as unknown as Anthropic;
+    const v = new AnthropicSecurityAuditVerifier({ client });
+    await v.verify(input);
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(parse.mock.calls[0]?.[1]).toBeUndefined();
+  });
+
+  // Phase 184 (AC-3): the real transport call — `client.messages.parse` —
+  // genuinely receives the caller's AbortSignal as its request-options
+  // second argument (confirmed against the installed `@anthropic-ai/sdk`'s
+  // `RequestOptions.signal?: AbortSignal` type).
+  it('forwards opts.signal into the messages.parse request-options argument', async () => {
+    const parse = vi.fn().mockResolvedValue({
+      parsed_output: { findings: [] },
+    });
+    const client = { messages: { parse } } as unknown as Anthropic;
+    const v = new AnthropicSecurityAuditVerifier({ client });
+    const controller = new AbortController();
+    await v.verify(input, { signal: controller.signal, traceId: 'trace-1' });
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(parse.mock.calls[0]?.[1]).toEqual({ signal: controller.signal });
   });
 
   it('refuses to construct without an API key', () => {

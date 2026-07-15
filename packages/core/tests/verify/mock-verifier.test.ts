@@ -81,4 +81,20 @@ describe('MockVerifier (AC-1)', () => {
     const b = await v.verify(input);
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
+
+  // AC-2 (Phase 184) — accepts the optional {signal, traceId} second
+  // parameter without erroring; behavior/result is unchanged (pure, ignores it).
+  it('accepts an opts argument ({signal, traceId}) without erroring, result unchanged', async () => {
+    const v = new MockVerifier();
+    const input = makeInput({
+      acs: [{ id: 'AC-1', given: 'g', when: 'w', then: 't' }],
+      tests: { 'AC-1': [{ file: 'x.test.ts', line: 1, snippet: 's' }] },
+    });
+    const controller = new AbortController();
+
+    const withOpts = await v.verify(input, { signal: controller.signal, traceId: 'trace-x' });
+    const withoutOpts = await v.verify(input);
+
+    expect(JSON.stringify(withOpts)).toBe(JSON.stringify(withoutOpts));
+  });
 });

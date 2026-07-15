@@ -80,7 +80,10 @@ export interface VerifyResult {
  */
 export interface Verifier {
   readonly name: string;
-  verify(input: VerifyInput): Promise<VerifyResult>;
+  verify(
+    input: VerifyInput,
+    opts?: { signal?: AbortSignal; traceId?: string },
+  ): Promise<VerifyResult>;
 }
 
 export interface LocalVerifierOptions {
@@ -95,7 +98,10 @@ export class LocalVerifier implements Verifier {
   readonly name = 'local';
   constructor(private readonly o: LocalVerifierOptions) {}
 
-  async verify(input: VerifyInput): Promise<VerifyResult> {
+  async verify(
+    input: VerifyInput,
+    opts?: { signal?: AbortSignal; traceId?: string },
+  ): Promise<VerifyResult> {
     if (input.acs.length === 0) {
       return { verdicts: {}, provider: this.name, model: this.o.model };
     }
@@ -111,6 +117,8 @@ export class LocalVerifier implements Verifier {
       },
       ...(this.o.transport ? { transport: this.o.transport } : {}),
       ...(this.o.headers ? { headers: this.o.headers } : {}),
+      ...(opts?.signal ? { signal: opts.signal } : {}),
+      ...(opts?.traceId ? { traceId: opts.traceId } : {}),
     });
     const verdicts: Record<string, AcVerdict> = {};
     for (const v of parsed.verdicts) verdicts[v.id] = { pass: v.pass, reason: v.reason };

@@ -13,7 +13,12 @@ import type { Verifier, VerifyInput, VerifyResult } from './verifier.js';
 export class MockVerifier implements Verifier {
   readonly name = 'mock';
 
-  async verify(input: VerifyInput): Promise<VerifyResult> {
+  async verify(
+    input: VerifyInput,
+    // Phase 184: accepted for interface parity with `Verifier.verify`; ignored
+    // — mock is pure/synchronous-ish with no I/O to cancel or trace.
+    _opts?: { signal?: AbortSignal; traceId?: string },
+  ): Promise<VerifyResult> {
     const verdicts: VerifyResult['verdicts'] = {};
     for (const ac of input.acs) {
       const linkedTests = input.tests[ac.id] ?? [];

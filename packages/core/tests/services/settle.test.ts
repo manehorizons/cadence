@@ -21,6 +21,15 @@ const constructed = vi.hoisted(() => ({
   deep: [] as string[],
   codeReview: [] as string[],
   securityAudit: [] as string[],
+  /**
+   * Phase 184: captures the `opts` (`{ signal?; traceId? }`) argument each
+   * real `.verify()` call receives, so a test can prove `settleService`'s
+   * memoized wrapper (`services/settle.ts`) genuinely forwards the gate's
+   * generated traceId to the concrete verifier rather than silently
+   * dropping it — the bug an earlier review of this phase caught (the
+   * wrapper only accepted `input` and never passed `opts` through).
+   */
+  securityAuditOpts: [] as Array<{ signal?: AbortSignal; traceId?: string } | undefined>,
 }));
 
 vi.mock('../../src/verify/factory.js', async (importOriginal) => {
@@ -76,7 +85,13 @@ vi.mock('../../src/verify/security-audit-factory.js', async (importOriginal) => 
       constructed.securityAudit.push(real.name);
       return {
         name: real.name,
-        verify: async () => ({ findings: [], provider: real.name }),
+        verify: async (
+          _input: Parameters<typeof real.verify>[0],
+          verifyOpts?: Parameters<typeof real.verify>[1],
+        ) => {
+          constructed.securityAuditOpts.push(verifyOpts);
+          return { findings: [], provider: real.name };
+        },
       };
     },
   };
@@ -167,6 +182,7 @@ afterEach(async () => {
   constructed.deep.length = 0;
   constructed.codeReview.length = 0;
   constructed.securityAudit.length = 0;
+  constructed.securityAuditOpts.length = 0;
   if (origKey !== undefined) {
     process.env.ANTHROPIC_API_KEY = origKey;
   } else {
@@ -250,6 +266,37 @@ describe('settleService threads repoRoot as cwd to its verifier-selection seams 
 
     expect(res.exitCode).toBe(0);
     expect(constructed.securityAudit).toEqual(['anthropic']);
+  });
+
+  it('Phase 184 AC-3: settleService forwards the security-audit gate\'s generated traceId to the concrete verifier through the real settle path, not just the gate function in isolation', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '184-security-audit-traceid',
+      id: '184-01',
+      tier: 'complex',
+      config: {
+        ...defaultConfig,
+        profile: 'strict',
+        securityAudit: { provider: 'anthropic' },
+      },
+    });
+
+    delete process.env.ANTHROPIC_API_KEY;
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+    // Before this fix, services/settle.ts's memoized securityAudit.verify
+    // wrapper accepted only `input` and never forwarded `opts` — the gate
+    // generated a real traceId but it never reached the concrete verifier.
+    expect(constructed.securityAuditOpts).toHaveLength(1);
+    expect(typeof constructed.securityAuditOpts[0]?.traceId).toBe('string');
+    expect(constructed.securityAuditOpts[0]?.traceId).not.toBe('');
   });
 });
 
