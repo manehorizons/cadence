@@ -56,4 +56,40 @@ describe('LocalVerifier', () => {
     expect(called).toBe(false);
     expect(r).toEqual({ verdicts: {}, provider: 'local', model: 'm' });
   });
+
+  // AC-2 (Phase 184) — verify() forwards an external signal into the
+  // underlying fetch call's init.signal.
+  it('AC-2 (Phase 184): forwards a passed signal through to the underlying fetch call', async () => {
+    let seenInit: RequestInit | undefined;
+    const transport = (async (_url: string, init: RequestInit) => {
+      seenInit = init;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: '{"verdicts":[{"id":"AC-1","pass":true,"reason":"ok"}]}' } }] }),
+      } as Response;
+    }) as unknown as typeof fetch;
+    const v = new LocalVerifier({ baseURL: 'http://x/v1', model: 'qwen', transport });
+    const controller = new AbortController();
+
+    await v.verify(
+      { acs: [{ id: 'AC-1', given: 'g', when: 'w', then: 't' }], tests: {}, diff: '', files: [] },
+      { signal: controller.signal },
+    );
+
+    expect(seenInit?.signal).toBe(controller.signal);
+  });
+
+  it('AC-2 (Phase 184): a call with no opts argument at all still works exactly as before', async () => {
+    const v = new LocalVerifier({
+      baseURL: 'http://x/v1', model: 'qwen',
+      transport: fetchJson('{"verdicts":[{"id":"AC-1","pass":true,"reason":"ok"}]}'),
+    });
+    const r = await v.verify({
+      acs: [{ id: 'AC-1', given: 'g', when: 'w', then: 't' }],
+      tests: {}, diff: '', files: [],
+    });
+    expect(r.provider).toBe('local');
+    expect(r.verdicts['AC-1']).toEqual({ pass: true, reason: 'ok' });
+  });
 });

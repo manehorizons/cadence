@@ -18,6 +18,7 @@ function ctx(over: {
   allowSecurityAuditFailure?: boolean;
   force?: boolean;
   errs?: string[];
+  captureOpts?: (opts: { signal?: AbortSignal; traceId?: string } | undefined) => void;
 }): SettleContext {
   const errs = over.errs ?? [];
   const opts: Record<string, boolean> = {};
@@ -40,7 +41,11 @@ function ctx(over: {
       deep: { verify: async () => ({ verdicts: {}, provider: 'mock' }) },
       codeReview: { verify: async () => ({ findings: {}, provider: 'mock' }) },
       securityAudit: {
-        verify: async () => {
+        verify: async (
+          _input: unknown,
+          calledWithOpts?: { signal?: AbortSignal; traceId?: string },
+        ) => {
+          over.captureOpts?.(calledWithOpts);
           if (over.verifyThrows) throw new Error(over.verifyThrows);
           return { findings: over.findings ?? [], provider: 'mock' };
         },
@@ -156,5 +161,41 @@ describe('runSecurityAuditGate', () => {
   it('leaves a non-secret finding message unchanged', async () => {
     const res = await runSecurityAuditGate(ctx({ findings: CRIT }));
     expect(res.summaryPatch?.securityAudit).toEqual(CRIT);
+  });
+
+  // Phase 184 (AC-3): the gate must generate a per-run traceId and pass it
+  // through on the real verify() call — this is the concrete proof that the
+  // signal/traceId plumbing is genuinely connected end-to-end for this gate,
+  // not just added-and-unused.
+  it('passes a generated traceId through to verify()', async () => {
+    let captured: { signal?: AbortSignal; traceId?: string } | undefined;
+    const res = await runSecurityAuditGate(
+      ctx({
+        findings: [],
+        captureOpts: (opts) => {
+          captured = opts;
+        },
+      }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(captured).toBeDefined();
+    expect(captured?.traceId).toEqual(expect.any(String));
+    expect(captured?.traceId?.length).toBeGreaterThan(0);
+  });
+
+  // Phase 184 (AC-3): two separate gate runs must generate two distinct
+  // traceIds — proving it is a genuine per-run id, not a hardcoded constant.
+  it('generates a distinct traceId on each run', async () => {
+    const seen: (string | undefined)[] = [];
+    await runSecurityAuditGate(
+      ctx({ findings: [], captureOpts: (opts) => seen.push(opts?.traceId) }),
+    );
+    await runSecurityAuditGate(
+      ctx({ findings: [], captureOpts: (opts) => seen.push(opts?.traceId) }),
+    );
+    expect(seen).toHaveLength(2);
+    expect(seen[0]).toBeDefined();
+    expect(seen[1]).toBeDefined();
+    expect(seen[0]).not.toEqual(seen[1]);
   });
 });

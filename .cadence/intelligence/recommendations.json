@@ -1116,7 +1116,7 @@
       "title": "Thread AbortSignal + deadline + trace id through gates, verifiers, and the headless-CLI verifier",
       "summary": "Give every gate and verifier call an AbortSignal, a deadline, and a trace id so long verifier runs, headless-CLI self-invocation, and shutdown can cancel cleanly. Scoped to plumbing; cross-links the existing headless-verifier guardrail recs (rec-20260710-004: batching/fallback-chain/model-passthrough, rec-20260710-006: quota transparency/self-invocation loops/CI fallback) without duplicating either -- neither currently covers signal/deadline propagation.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -1138,9 +1138,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "184-gate-verifier-abort-signal",
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:40:36.192Z",
-      "updatedAt": "2026-07-12T17:40:36.192Z"
+      "updatedAt": "2026-07-15T01:35:24.205Z"
     },
     {
       "id": "rec-20260712-012",

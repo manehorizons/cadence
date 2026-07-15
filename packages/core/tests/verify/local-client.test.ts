@@ -101,4 +101,48 @@ describe('localChatJSON', () => {
     expect(seen).toEqual({ 'content-type': 'application/json' });
     expect(seen).not.toHaveProperty('Authorization');
   });
+
+  // AC-2 (Phase 184) — an external AbortSignal reaches the outgoing fetch init.
+  it('AC-2 (Phase 184): forwards a passed signal into fetch init.signal', async () => {
+    let seenInit: RequestInit | undefined;
+    const capture = (async (_url: string, init: RequestInit) => {
+      seenInit = init;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: '{"ok":true}' } }] }),
+      } as Response;
+    }) as unknown as typeof fetch;
+    const controller = new AbortController();
+
+    await localChatJSON({ ...base, transport: capture, signal: controller.signal });
+
+    expect(seenInit?.signal).toBe(controller.signal);
+  });
+
+  it('AC-2 (Phase 184): omits signal from fetch init when none passed', async () => {
+    let seenInit: RequestInit | undefined;
+    const capture = (async (_url: string, init: RequestInit) => {
+      seenInit = init;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: '{"ok":true}' } }] }),
+      } as Response;
+    }) as unknown as typeof fetch;
+
+    await localChatJSON({ ...base, transport: capture });
+
+    expect(seenInit).not.toHaveProperty('signal');
+  });
+
+  it('AC-2 (Phase 184): an already-aborted signal rejects the call (native fetch AbortError behavior)', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    // Real global fetch (no transport override) honors init.signal natively —
+    // this proves passing it through is sufficient without manual handling.
+    await expect(
+      localChatJSON({ ...base, signal: controller.signal }),
+    ).rejects.toThrow();
+  });
 });

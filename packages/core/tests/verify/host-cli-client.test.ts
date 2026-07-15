@@ -386,4 +386,75 @@ describe('hostCliJSON', () => {
 
     expect(err).toMatchObject({ name: 'HostCliError', reason: 'timeout' });
   });
+
+  // Phase 184 T1 — AbortSignal + traceId plumbing.
+
+  it('AC-1: an external signal that aborts mid-call kills the child and rejects with HostCliError(reason="aborted")', async () => {
+    const calls: FakeCall[] = [];
+    // Never closes stdout or exits on its own — the abort must be what ends
+    // the call, not the (much larger) timeout.
+    const spawnImpl = fakeSpawn([{ hang: true }], calls);
+    const controller = new AbortController();
+
+    // `spawnCapture`'s Promise executor (which registers the abort listener)
+    // runs synchronously as part of calling `hostCliJSON` — nothing awaits
+    // before that point — so aborting here, before awaiting the returned
+    // promise, reliably lands after the listener is registered and before
+    // the fake process's queued microtask (which never settles anyway, per
+    // `hang: true`) could matter. No real sleeping/timers needed.
+    const promise = hostCliJSON({ ...base, spawnImpl, timeoutMs: 60_000, signal: controller.signal });
+    controller.abort();
+
+    const err = await promise.catch((e: unknown) => e);
+
+    expect(err).toMatchObject({ name: 'HostCliError', reason: 'aborted' });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.killSignals).toContain('SIGKILL');
+  });
+
+  it('AC-1: a signal that is already aborted before the call starts rejects immediately with reason="aborted" and never spawns a child', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+    const controller = new AbortController();
+    controller.abort();
+
+    const err = await hostCliJSON({ ...base, spawnImpl, signal: controller.signal }).catch(
+      (e: unknown) => e,
+    );
+
+    expect(err).toMatchObject({ name: 'HostCliError', reason: 'aborted' });
+    expect(calls).toHaveLength(0); // never spawned
+  });
+
+  it('AC-1: a signal that never fires does not affect a normally-closing call (no regression)', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+    const controller = new AbortController();
+
+    const r = await hostCliJSON({ ...base, spawnImpl, signal: controller.signal });
+
+    expect(r.ok).toBe(true);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.killSignals).toHaveLength(0);
+  });
+
+  it('omitting signal entirely keeps today\'s behavior byte-identical (no regression)', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+
+    const r = await hostCliJSON({ ...base, spawnImpl });
+
+    expect(r.ok).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it('AC-1: an optional traceId is accepted without changing behavior or output', async () => {
+    const calls: FakeCall[] = [];
+    const spawnImpl = fakeSpawn([{ stdout: claudeEnvelope('{"ok":true}') }], calls);
+
+    const r = await hostCliJSON({ ...base, spawnImpl, traceId: 'trace-abc-123' });
+
+    expect(r.ok).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
 });

@@ -87,7 +87,8 @@ export type HostCliErrorReason =
   | 'nonzero-exit'
   | 'output-error'
   | 'self-invocation'
-  | 'timeout';
+  | 'timeout'
+  | 'aborted';
 
 /**
  * Phase 178 T2 — per-family session environment variable that reliably
@@ -171,6 +172,28 @@ export interface HostCliJSONOptions<T> {
    * killed and `spawnCapture` rejects with `HostCliError({ reason: 'timeout' })`.
    */
   timeoutMs?: number;
+  /**
+   * Phase 184 T1 — optional external cancellation signal, e.g. one a caller
+   * builds itself via `AbortSignal.timeout(ms)` (a web/Node-standard API;
+   * this module never constructs one on the caller's behalf — see the phase
+   * boundary in DESIGN.md/the DRAFT). When it fires before the subprocess
+   * settles, the spawned child is killed and `spawnCapture` rejects with
+   * `HostCliError({ reason: 'aborted' })` — distinct from the internal
+   * {@link timeoutMs} guard's `'timeout'` reason. A signal that is already
+   * aborted before the call starts is honored immediately, without spawning
+   * a child. Omitting this keeps today's behavior byte-identical.
+   */
+  signal?: AbortSignal;
+  /**
+   * Phase 184 T1 — optional per-call trace identifier, threaded into the
+   * structured logger's child context (`callOnce`'s
+   * `getLogger().child({...})`) so this call's log lines can be correlated
+   * with a caller's own tracing. Purely observational: never sent to the
+   * spawned subprocess and never affects behavior. Omitted from the logger
+   * context entirely when unset, matching this file's existing
+   * conditional-field convention.
+   */
+  traceId?: string;
 }
 
 /**
@@ -275,14 +298,16 @@ function toHostCliError(bin: string, err: unknown): HostCliError {
 
 /**
  * Spawns `bin args…`, captures stdout/stderr, and settles on process exit —
- * or on the Phase 178 T3 spawn timeout, whichever comes first.
+ * or on the Phase 178 T3 spawn timeout, or the Phase 184 T1 external
+ * `signal` firing, whichever comes first.
  *
- * `settled` guards against a double-settle race: the timeout timer and the
- * child's `error`/`close` listeners can each attempt to resolve/reject this
- * promise, but only the first should win, and the timer must be cleared on
- * *every* other path (both `resolve` and `reject`) so it never fires
- * spuriously after the promise has already settled and never leaves a
- * dangling timer alive past this call.
+ * `settled` guards against a double-settle race: the timeout timer, the
+ * abort listener, and the child's `error`/`close` listeners can each attempt
+ * to resolve/reject this promise, but only the first should win, and the
+ * timeout timer + abort listener must both be torn down on *every* other
+ * path (resolve, reject-via-timeout, reject-via-abort, reject-via-error) so
+ * neither fires spuriously after the promise has already settled and
+ * neither leaves a dangling timer/listener alive past this call.
  */
 function spawnCapture(
   spawnImpl: SpawnFn,
@@ -291,8 +316,20 @@ function spawnCapture(
   family: HostCliFamily,
   env: NodeJS.ProcessEnv,
   timeoutMs: number,
+  signal?: AbortSignal,
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      // Already aborted before this call even started: honor it immediately
+      // and never spawn a doomed child.
+      reject(
+        new HostCliError(
+          `host-cli provider: "${bin}" call aborted before the subprocess was spawned`,
+          'aborted',
+        ),
+      );
+      return;
+    }
     if (isSelfInvocation(family, env)) {
       reject(
         new HostCliError(
@@ -318,9 +355,25 @@ function spawnCapture(
     let stderr = '';
     let settled = false;
 
+    const onAbort = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
+      child.kill?.('SIGKILL');
+      reject(
+        new HostCliError(
+          `host-cli provider: "${bin}" call aborted via external AbortSignal — the subprocess was killed.`,
+          'aborted',
+        ),
+      );
+    };
+    signal?.addEventListener('abort', onAbort);
+
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
+      signal?.removeEventListener('abort', onAbort);
       child.kill?.('SIGKILL');
       reject(
         new HostCliError(
@@ -342,12 +395,14 @@ function spawnCapture(
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
       reject(toHostCliError(bin, err));
     });
     child.on('close', (code) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
       if (code !== 0) {
         reject(
           new HostCliError(
@@ -427,15 +482,23 @@ async function callOnce(
     spawnImpl: SpawnFn;
     env: NodeJS.ProcessEnv;
     timeoutMs: number;
+    signal?: AbortSignal;
+    traceId?: string;
   },
   messages: RepairMessage[],
 ): Promise<string> {
   const prompt = flattenMessages(messages);
   const args = buildInvocation(o, prompt);
-  const log = getLogger().child({ seam: 'verify', provider: 'host-cli', bin: o.bin, family: o.family });
+  const log = getLogger().child({
+    seam: 'verify',
+    provider: 'host-cli',
+    bin: o.bin,
+    family: o.family,
+    ...(o.traceId !== undefined ? { traceId: o.traceId } : {}),
+  });
   log.debug('verify request', { bin: o.bin, family: o.family });
 
-  const { stdout } = await spawnCapture(o.spawnImpl, o.bin, args, o.family, o.env, o.timeoutMs);
+  const { stdout } = await spawnCapture(o.spawnImpl, o.bin, args, o.family, o.env, o.timeoutMs, o.signal);
 
   try {
     const text = o.family === 'codex' ? extractCodexText(stdout, o.bin) : extractClaudeText(stdout, o.bin);
@@ -472,7 +535,20 @@ export async function hostCliJSON<T>(o: HostCliJSONOptions<T>): Promise<T> {
     user: o.user,
     schema: o.schema,
     maxRepairRetries: MAX_REPAIR_RETRIES,
-    transport: (messages) => callOnce({ bin, family, model: o.model, spawnImpl, env, timeoutMs }, messages),
+    transport: (messages) =>
+      callOnce(
+        {
+          bin,
+          family,
+          model: o.model,
+          spawnImpl,
+          env,
+          timeoutMs,
+          ...(o.signal ? { signal: o.signal } : {}),
+          ...(o.traceId !== undefined ? { traceId: o.traceId } : {}),
+        },
+        messages,
+      ),
     buildError: (lastError, retries) =>
       `host-cli provider: model output failed JSON/schema validation after ${retries} repair retries (bin=${bin}, family=${family}): ${lastError}`,
   });

@@ -593,7 +593,7 @@ GateProvenanceZ (packages/types/src/summary.ts) currently enumerates only status
 
 ## rec-20260712-010 — Thread AbortSignal + deadline + trace id through gates, verifiers, and the headless-CLI verifier
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10

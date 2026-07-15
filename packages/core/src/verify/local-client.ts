@@ -23,6 +23,14 @@ export interface LocalChatJSONOptions<T> {
    * called when the endpoint omits usage. Last call wins across repair retries.
    */
   onUsage?: (usage: { inputTokens: number; outputTokens: number }) => void;
+  /**
+   * Phase 184: external abort signal — when it fires before the request
+   * settles, `fetch` itself rejects with an `AbortError`. Omitted → today's
+   * behavior is byte-identical.
+   */
+  signal?: AbortSignal;
+  /** Phase 184: trace id merged into the logger's child context, when set. */
+  traceId?: string;
 }
 
 async function callOnce(
@@ -31,7 +39,11 @@ async function callOnce(
 ): Promise<string> {
   const fetchImpl = o.transport ?? fetch;
   // Header values (auth bearer etc.) are never logged — only the endpoint + model.
-  const log = getLogger().child({ seam: 'verify', provider: 'local' });
+  const log = getLogger().child({
+    seam: 'verify',
+    provider: 'local',
+    ...(o.traceId ? { traceId: o.traceId } : {}),
+  });
   let res: Response;
   log.debug('verify request', { baseURL: o.baseURL, model: o.model });
   try {
@@ -45,11 +57,19 @@ async function callOnce(
         temperature: 0,
         ...(o.maxTokens ? { max_tokens: o.maxTokens } : {}),
       }),
+      ...(o.signal ? { signal: o.signal } : {}),
     });
   } catch (err) {
-    log.warn('verify error', { baseURL: o.baseURL, error: err instanceof Error ? err.name : 'unknown' });
+    const name = err instanceof Error ? err.name : 'unknown';
+    log.warn('verify error', { baseURL: o.baseURL, error: name });
+    // `cause` and the error name in the message (rather than just the raw
+    // message) let a caller distinguish an aborted call (`fetch` rejects
+    // with `name === 'AbortError'` when `signal` fires) from a genuine
+    // network failure — mirrored from `HostCliError`'s `reason: 'aborted'`
+    // in host-cli-client.ts, this module's sibling transport.
     throw new Error(
-      `local provider: request to ${o.baseURL} failed: ${err instanceof Error ? err.message : String(err)}`,
+      `local provider: request to ${o.baseURL} failed (${name}): ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
     );
   }
   if (!res.ok) {
