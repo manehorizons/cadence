@@ -1112,103 +1112,6 @@
       "updatedAt": "2026-07-12T17:40:28.618Z"
     },
     {
-      "id": "rec-20260712-010",
-      "title": "Thread AbortSignal + deadline + trace id through gates, verifiers, and the headless-CLI verifier",
-      "summary": "Give every gate and verifier call an AbortSignal, a deadline, and a trace id so long verifier runs, headless-CLI self-invocation, and shutdown can cancel cleanly. Scoped to plumbing; cross-links the existing headless-verifier guardrail recs (rec-20260710-004: batching/fallback-chain/model-passthrough, rec-20260710-006: quota transparency/self-invocation loops/CI fallback) without duplicating either -- neither currently covers signal/deadline propagation.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "verify",
-        "reliability"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates",
-        "packages/core/src/verify/security-audit.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-010"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "184-gate-verifier-abort-signal",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:40:36.192Z",
-      "updatedAt": "2026-07-15T01:35:24.205Z"
-    },
-    {
-      "id": "rec-20260712-012",
-      "title": "Generate the command/config/exit-code reference from source and fail CI on drift",
-      "summary": "RECOMMENDATIONS.md is already generated from JSON. docs/reference/commands.md and docs/reference/config.md exist but are hand-maintained -- confirmed no drift-check script and no exit-code taxonomy doc exist yet, and docs.yml only builds/deploys typedoc API docs, with no source-vs-checked-in-docs comparison. Extend the same generated-from-source + fail-on-drift discipline to those two docs and the exit-code taxonomy, with a CI check that fails when the checked-in docs diverge from the source of truth.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs",
-        "ci",
-        "tooling"
-      ],
-      "affectedFiles": [
-        "docs/reference/commands.md",
-        "docs/reference/config.md",
-        "scripts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-012"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "183-docs-drift-check",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:40:51.986Z",
-      "updatedAt": "2026-07-15T01:06:08.171Z"
-    },
-    {
-      "id": "rec-20260712-013",
-      "title": "Add the missing CI security automation: CodeQL, secret scanning, npm-audit policy, SBOM, scheduled run",
-      "summary": "Verified current .github state: Dependabot (.github/dependabot.yml) and npm provenance/OIDC (release.yml) are already in place -- do not duplicate. Confirmed genuinely missing: no CodeQL workflow, no secret-scanning/push-protection/gitleaks/trufflehog references, no SBOM/CycloneDX/SPDX generation anywhere in .github/workflows. Add the missing layers: CodeQL, secret scanning + push protection, an npm audit policy with documented exceptions, SBOM + license inventory, and a scheduled security CI run.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "ci",
-        "security",
-        "governance"
-      ],
-      "affectedFiles": [
-        ".github/workflows",
-        ".github/dependabot.yml"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-013"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "182-ci-security-automation",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:41:00.135Z",
-      "updatedAt": "2026-07-15T00:41:52.423Z"
-    },
-    {
       "id": "rec-20260712-014",
       "title": "Add test-coverage reporting with enforced minimum thresholds to CI",
       "summary": "vitest.config.ts already has a coverage block (reporter: text/html, include packages/*/src/**) but no thresholds field, and ci.yml's test job runs 'pnpm test' with no coverage flag or gate -- confirmed no enforcement anywhere. Add minimum thresholds wired into the gate, so coverage regressions surface in CI rather than silently.",
@@ -2997,6 +2900,112 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-12T17:40:44.241Z",
       "updatedAt": "2026-07-14T22:28:08.432Z"
+    },
+    {
+      "id": "rec-20260712-013",
+      "title": "Add the missing CI security automation: CodeQL, secret scanning, npm-audit policy, SBOM, scheduled run",
+      "summary": "Verified current .github state: Dependabot (.github/dependabot.yml) and npm provenance/OIDC (release.yml) are already in place -- do not duplicate. Confirmed genuinely missing: no CodeQL workflow, no secret-scanning/push-protection/gitleaks/trufflehog references, no SBOM/CycloneDX/SPDX generation anywhere in .github/workflows. Add the missing layers: CodeQL, secret scanning + push protection, an npm audit policy with documented exceptions, SBOM + license inventory, and a scheduled security CI run.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "ci",
+        "security",
+        "governance"
+      ],
+      "affectedFiles": [
+        ".github/workflows",
+        ".github/dependabot.yml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-013"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "182-ci-security-automation",
+      "shippedRef": "PR #201",
+      "scoutId": "scout-20260712-1234",
+      "archivedAt": "2026-07-15T04:10:46.507Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T17:41:00.135Z",
+      "updatedAt": "2026-07-15T04:10:46.507Z"
+    },
+    {
+      "id": "rec-20260712-012",
+      "title": "Generate the command/config/exit-code reference from source and fail CI on drift",
+      "summary": "RECOMMENDATIONS.md is already generated from JSON. docs/reference/commands.md and docs/reference/config.md exist but are hand-maintained -- confirmed no drift-check script and no exit-code taxonomy doc exist yet, and docs.yml only builds/deploys typedoc API docs, with no source-vs-checked-in-docs comparison. Extend the same generated-from-source + fail-on-drift discipline to those two docs and the exit-code taxonomy, with a CI check that fails when the checked-in docs diverge from the source of truth.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "ci",
+        "tooling"
+      ],
+      "affectedFiles": [
+        "docs/reference/commands.md",
+        "docs/reference/config.md",
+        "scripts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-012"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "183-docs-drift-check",
+      "shippedRef": "PR #202",
+      "scoutId": "scout-20260712-1234",
+      "archivedAt": "2026-07-15T04:10:46.692Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T17:40:51.986Z",
+      "updatedAt": "2026-07-15T04:10:46.692Z"
+    },
+    {
+      "id": "rec-20260712-010",
+      "title": "Thread AbortSignal + deadline + trace id through gates, verifiers, and the headless-CLI verifier",
+      "summary": "Give every gate and verifier call an AbortSignal, a deadline, and a trace id so long verifier runs, headless-CLI self-invocation, and shutdown can cancel cleanly. Scoped to plumbing; cross-links the existing headless-verifier guardrail recs (rec-20260710-004: batching/fallback-chain/model-passthrough, rec-20260710-006: quota transparency/self-invocation loops/CI fallback) without duplicating either -- neither currently covers signal/deadline propagation.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "verify",
+        "reliability"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates",
+        "packages/core/src/verify/security-audit.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-010"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "184-gate-verifier-abort-signal",
+      "scoutId": "scout-20260712-1234",
+      "createdAt": "2026-07-12T17:40:36.192Z",
+      "updatedAt": "2026-07-15T04:10:46.878Z",
+      "shippedRef": "PR #203",
+      "archivedAt": "2026-07-15T04:10:46.878Z",
+      "archiveReason": "shipped"
     }
   ]
 }

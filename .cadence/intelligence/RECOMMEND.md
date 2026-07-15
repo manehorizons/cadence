@@ -2,21 +2,13 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-14T02:50:03.205Z
+Generated at: 2026-07-14T23:29:35.877Z
 
 ## Advisory
 
 - cadence milestone propose
 
 ## Ranked
-
-### rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry)
-
-- score: 73/100 (raw 25.7)
-- status: accepted · ready: ready-for-milestone · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status accepted +6 · ready ready-for-milestone +7 · decay fresh +4 · prio medium +2 ⇒ raw 25.7 (score 73)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
 
 ### rec-20260712-010 — Thread AbortSignal + deadline + trace id through gates, verifiers, and the headless-CLI verifier
 
@@ -48,6 +40,13 @@ Generated at: 2026-07-14T02:50:03.205Z
 - status: candidate · ready: needs-evidence · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
 - scout: scout-20260712-1234
+- next: cadence milestone propose
+
+### rec-20260714-003 — gateBypasses omits the --allow-auto-complex soft-cap override
+
+- score: 55/100 (raw 13.7)
+- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
 - next: cadence milestone propose
 
 ### rec-20260619-008 — Team rollout kit
@@ -144,6 +143,13 @@ Generated at: 2026-07-14T02:50:03.205Z
 - scout: scout-20260712-1234
 - next: cadence milestone propose
 
+### rec-20260714-001 — milestone premortem: no CLI writer for the operator-authored outOfScope field
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: raw-idea · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- next: cadence milestone propose
+
 ### rec-20260710-005 — Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report
 
 - score: 50/100 (raw 10.7)
@@ -189,6 +195,13 @@ Generated at: 2026-07-14T02:50:03.205Z
 - scout: scout-20260712-1234
 - next: cadence milestone propose
 
+### rec-20260714-002 — draft add-task has no --name flag (add-ac does) — every appended task needs a hand-fix
+
+- score: 50/100 (raw 10.7)
+- status: candidate · ready: raw-idea · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
+- next: cadence milestone propose
+
 ## Parked (deferred)
 
 - rec-20260710-003 — MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool (deferred, needs-evidence)
@@ -199,4 +212,4 @@ None.
 
 ## Totals
 
-- total 48 · ranked 23 · parked 1 · needs-attention 0 · excluded 24
+- total 48 · ranked 25 · parked 1 · needs-attention 0 · excluded 22
