@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 418,
+  "revision": 525,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "182-ci-security-automation",
+  "activePhase": "185-smoke-test-the-packed-npm-tarball",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-14T23:50:07.064Z",
+  "draftReadAt": "2026-07-15T21:51:33.476Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-15-merge-prs-201-202-203-then-release.md",
-    "subagentSpawns": 1842,
+    "subagentSpawns": 1909,
     "subagentBaselines": {}
   },
   "skillAudit": {

@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 182-ci-security-automation
+**Active phase:** 185-smoke-test-the-packed-npm-tarball
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1842
+- Subagent spawns this session: 1909
 - Last handoff: SESSION-2026-07-15-merge-prs-201-202-203-then-release.md
 
 ## Counts
