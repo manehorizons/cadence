@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 375,
+  "revision": 418,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "183-docs-drift-check",
+  "activePhase": "182-ci-security-automation",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-15T00:45:00.665Z",
+  "draftReadAt": "2026-07-14T23:50:07.064Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-14-mcp-tool-trust-envelope-shipped.md",
-    "subagentSpawns": 1821,
+    "subagentSpawns": 1842,
     "subagentBaselines": {}
   },
   "skillAudit": {

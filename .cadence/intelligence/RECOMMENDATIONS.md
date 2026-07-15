@@ -625,7 +625,7 @@ RECOMMENDATIONS.md is already generated from JSON. docs/reference/commands.md an
 
 ## rec-20260712-013 — Add the missing CI security automation: CodeQL, secret scanning, npm-audit policy, SBOM, scheduled run
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
