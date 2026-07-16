@@ -277,6 +277,10 @@ export function registerInitCommand(program: Command): void {
       '--dry-run',
       'preview what init would resolve and write (a fit-check) without touching the repo',
     )
+    .option(
+      '--full',
+      'one-command full setup: wire the host, seed the demo phase, and activate real verification when their preconditions are met (each still yields to an explicitly-passed flag, e.g. --skip-host-wire)',
+    )
     .action(
       async (opts: {
         name?: string;
@@ -291,9 +295,18 @@ export function registerInitCommand(program: Command): void {
         demo?: boolean;
         activate?: boolean;
         dryRun?: boolean;
+        full?: boolean;
       }) => {
         const cwd = process.cwd();
         const cadenceDir = join(cwd, '.cadence');
+
+        // Phase 188 — `--full` sets *defaults* for --wire-host/--demo/--activate;
+        // an explicitly-passed flag (including a negative one like
+        // --skip-host-wire, handled separately below) always wins over the
+        // --full-implied default (AC-5).
+        const effectiveWireHost = opts.wireHost ?? opts.full;
+        const effectiveDemo = opts.demo ?? opts.full;
+        const effectiveActivate = opts.activate ?? opts.full;
 
         // rec-20260602-001: --profile was a misnomer (it sets a config preset,
         // not a gate profile). --preset is the primary flag; --profile lives on
@@ -426,7 +439,7 @@ export function registerInitCommand(program: Command): void {
           process.env.ANTHROPIC_API_KEY.length > 0;
         let activatedProvider: 'anthropic' | null = null;
         let activateNoKey = false;
-        if (opts.activate) {
+        if (effectiveActivate) {
           if (hasAnthropicKey) {
             const plan = planActivation({
               provider: 'anthropic',
@@ -480,7 +493,7 @@ export function registerInitCommand(program: Command): void {
         const DEMO_PHASE = '01-demo';
         const DEMO_NUM = '01';
         let demoSeeded = false;
-        if (opts.demo) {
+        if (effectiveDemo) {
           const silentIO: CommandIO = {
             out: () => {},
             err: (s) => void process.stderr.write(s),
@@ -611,7 +624,7 @@ export function registerInitCommand(program: Command): void {
         try {
           hostWire = await maybeWireHost(
             cwd,
-            { wireHost: opts.wireHost, skipHostWire: opts.skipHostWire, host: opts.host },
+            { wireHost: effectiveWireHost, skipHostWire: opts.skipHostWire, host: opts.host },
             prompter,
           );
         } finally {
