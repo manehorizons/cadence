@@ -648,6 +648,42 @@ export function registerInitCommand(program: Command): void {
           console.log('  Approve the new hooks in Codex, then start a new Codex session.');
           console.log('  If prompts are not loaded yet, ask Codex to run `cadence progress` directly.');
         }
+
+        // Phase 188 (T2, AC-3) — `--full` composes three independently-gated
+        // features whose messages are scattered across the run above. Print one
+        // consolidated summary at the end, additive to (never replacing) the
+        // per-feature blocks. Gated on the raw `opts.full` flag (not the
+        // effective-per-subfeature values) so a bare --activate/--demo/--host
+        // run keeps today's single-feature output instead of a summary that
+        // talks about features the user never asked for. Reuses the same
+        // skip-reason text the per-feature blocks above already print.
+        if (opts.full) {
+          const hostWireTarget = opts.host === 'codex' ? 'codex' : 'claude';
+          const hostWireLine = hostWire.wired
+            ? `done: ${hostWireDisplay(hostWireTarget)}`
+            : hostWire.offered
+              ? `skipped: not wired — run \`${hostWireDisplay(hostWireTarget)}\` when ready`
+              : opts.skipHostWire
+                ? 'skipped: --skip-host-wire passed'
+                : 'skipped: no .claude/ workspace detected';
+          const demoLine = demoSeeded
+            ? `done: ${DEMO_PHASE}`
+            : effectiveDemo
+              ? 'skipped: could not seed the --demo phase; scaffold is intact'
+              : 'skipped: --demo not requested';
+          const activationLine = activatedProvider
+            ? `done: ${activatedProvider}`
+            : activateNoKey
+              ? 'skipped: no ANTHROPIC_API_KEY — staying on mock'
+              : 'skipped: --activate not requested';
+          const summaryTitle = 'Full setup summary';
+          console.log('');
+          console.log(`  ${summaryTitle}`);
+          console.log(`  ${'─'.repeat(summaryTitle.length)}`);
+          console.log(`  host wire     ${hostWireLine}`);
+          console.log(`  demo phase    ${demoLine}`);
+          console.log(`  activation    ${activationLine}`);
+        }
       },
     );
 }
