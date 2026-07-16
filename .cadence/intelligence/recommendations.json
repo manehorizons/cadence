@@ -1146,7 +1146,7 @@
       "title": "Smoke-test the packed npm tarball (clean install -> init -> settle), not just in-repo dist",
       "summary": "Tests run against in-repo dist; verified scripts/release-integrity.mjs uses a tempDir only for the GitHub release notes file, not for packing/installing the CLI -- no 'npm pack'/'pnpm pack' usage anywhere in .github or scripts except release-integrity.mjs's unrelated tempDir. Add a smoke test that packs the public packages, installs them into a clean temp dir, and runs init -> draft -> settle against the installed CLI, so a broken published artifact (missing files, bad bin, ESM resolution) is caught before release. Complements publish-proof.mjs and release-integrity.mjs.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -1169,9 +1169,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "185-smoke-test-the-packed-npm-tarball",
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:41:15.703Z",
-      "updatedAt": "2026-07-12T17:41:15.703Z"
+      "updatedAt": "2026-07-15T23:56:07.185Z"
     },
     {
       "id": "rec-20260712-016",
@@ -3000,12 +3001,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "184-gate-verifier-abort-signal",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:40:36.192Z",
-      "updatedAt": "2026-07-15T04:10:46.878Z",
       "shippedRef": "PR #203",
+      "scoutId": "scout-20260712-1234",
       "archivedAt": "2026-07-15T04:10:46.878Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T17:40:36.192Z",
+      "updatedAt": "2026-07-15T04:10:46.878Z"
     }
   ]
 }

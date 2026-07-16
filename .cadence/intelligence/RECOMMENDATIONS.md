@@ -609,7 +609,7 @@ vitest.config.ts already has a coverage block (reporter: text/html, include pack
 
 ## rec-20260712-015 — Smoke-test the packed npm tarball (clean install -> init -> settle), not just in-repo dist
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
