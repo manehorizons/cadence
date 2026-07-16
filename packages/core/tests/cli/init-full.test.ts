@@ -145,4 +145,49 @@ describe('cadence init --full (phase 188)', () => {
     const { cfg } = readConfig(active.root);
     expect(cfg.verifier.provider).toBe('anthropic');
   });
+
+  it('AC-3: everything-present run prints one consolidated summary with all three lines "done"', async () => {
+    active = await tempRepo();
+    await mkdir(join(active.root, '.claude'), { recursive: true });
+    const wireEnv = await sentinelHostWireEnv(active.root);
+    const r = await run(['init', '--name=demo', '--full'], active.root, {
+      ...wireEnv,
+      ANTHROPIC_API_KEY: FAKE_KEY,
+    });
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('Full setup summary');
+    expect(r.stdout).toContain(
+      'host wire     done: npx @manehorizons/cadence-host-claude-code install',
+    );
+    expect(r.stdout).toContain('demo phase    done: 01-demo');
+    expect(r.stdout).toContain('activation    done: anthropic');
+  });
+
+  it('AC-3: nothing-present run prints one consolidated summary with skipped-and-reason lines (demo still done)', async () => {
+    active = await tempRepo();
+    // No .claude/ workspace, no ANTHROPIC_API_KEY, and no CADENCE_HOST_WIRE_CMD
+    // override — mirrors AC-2's "nothing present" fixture.
+    const r = await run(['init', '--name=demo', '--full'], active.root, {
+      ANTHROPIC_API_KEY: '',
+    });
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('Full setup summary');
+    expect(r.stdout).toContain('host wire     skipped: no .claude/ workspace detected');
+    // --demo has no precondition, so it's still "done" even though host wire
+    // and activation are skipped — proves the summary reports each
+    // sub-feature independently rather than a single all-or-nothing verdict.
+    expect(r.stdout).toContain('demo phase    done: 01-demo');
+    expect(r.stdout).toContain(
+      'activation    skipped: no ANTHROPIC_API_KEY — staying on mock',
+    );
+  });
+
+  it('AC-3: bare --activate (no --full) never prints the "Full setup summary" block', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo', '--activate'], active.root, {
+      ANTHROPIC_API_KEY: '',
+    });
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toContain('Full setup summary');
+  });
 });
