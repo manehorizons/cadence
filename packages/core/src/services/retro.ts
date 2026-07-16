@@ -39,22 +39,38 @@ export function buildRetroDigest(summary: Summary): RetroDigest {
   };
 }
 
+export type RetroFindingCategory = 'codeReview' | 'securityAudit' | 'boundaryScan';
+
+/**
+ * Which of the three finding categories are genuinely non-empty on this
+ * digest. Presence isn't enough — `RetroFindings` permits schema-valid-but-
+ * empty shapes (`codeReview: {}`, `securityAudit: []`,
+ * `boundaryScan: { offenders: [] }`), all truthy in JS despite representing
+ * "gate ran and found nothing" rather than an actual finding (see
+ * `buildRetroDigest`'s comment). Single source of truth for that per-
+ * category emptiness check — reused by `isDigestEmpty` and by
+ * `computeRetroRollup`'s `findingCategories` frequency bucket, so neither
+ * can drift from the other.
+ */
+export function nonEmptyFindingCategories(digest: RetroDigest): RetroFindingCategory[] {
+  const categories: RetroFindingCategory[] = [];
+  if (digest.findings.codeReview && Object.keys(digest.findings.codeReview).length > 0) {
+    categories.push('codeReview');
+  }
+  if (digest.findings.securityAudit && digest.findings.securityAudit.length > 0) {
+    categories.push('securityAudit');
+  }
+  if (digest.findings.boundaryScan && digest.findings.boundaryScan.offenders.length > 0) {
+    categories.push('boundaryScan');
+  }
+  return categories;
+}
+
 export function isDigestEmpty(digest: RetroDigest): boolean {
-  // Presence isn't enough — see `buildRetroDigest`'s comment. Checked here too
-  // (not just at the source) so this predicate is correct for any RetroDigest,
-  // not only ones built by `buildRetroDigest`.
-  const codeReviewEmpty =
-    !digest.findings.codeReview || Object.keys(digest.findings.codeReview).length === 0;
-  const securityAuditEmpty =
-    !digest.findings.securityAudit || digest.findings.securityAudit.length === 0;
-  const boundaryScanEmpty =
-    !digest.findings.boundaryScan || digest.findings.boundaryScan.offenders.length === 0;
   return (
     digest.bypasses.length === 0 &&
     digest.roughTasks.length === 0 &&
-    codeReviewEmpty &&
-    securityAuditEmpty &&
-    boundaryScanEmpty
+    nonEmptyFindingCategories(digest).length === 0
   );
 }
 

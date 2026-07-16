@@ -31,6 +31,7 @@ import { registerActivateCommand } from './commands/activate.js';
 import { registerAgentPromptCommand } from './commands/agent-prompt.js';
 import { registerDispatchCommand } from './commands/dispatch.js';
 import { registerVerifyCommand } from './commands/verify.js';
+import { registerRetroCommand } from './commands/retro.js';
 
 export function registerAllCommands(program: Command): void {
   registerConfigCommand(program);
@@ -65,4 +66,5 @@ export function registerAllCommands(program: Command): void {
   registerAgentPromptCommand(program);
   registerDispatchCommand(program);
   registerVerifyCommand(program);
+  registerRetroCommand(program);
 }

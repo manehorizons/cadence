@@ -41,6 +41,7 @@ Two CLIs are documented here:
   - [activate](#activate)
   - [agent-prompt](#agent-prompt)
   - [verify](#verify)
+  - [retro](#retro)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -96,6 +97,7 @@ activate
 agent-prompt
 dispatch
 verify
+retro
 <!-- cadence:commands:end -->
 
 ---
@@ -2055,6 +2057,49 @@ Diagnostics (config-load failures, an empty `--explain` value) go to stderr.
 **Exit codes** — `0` on a successful run (regardless of whether the AC is satisfied —
 this command diagnoses, it does not gate); `1` on a config-load failure or an empty
 `--explain` value.
+
+---
+
+### retro
+
+```
+Usage: cadence retro [options]
+
+Cross-phase rollup of recurring retro friction (gate bypasses, rough tasks,
+findings)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--format <format>` | Output format: terminal \| json (default: "terminal") |
+| `-h, --help` | Display help for command |
+
+**Behavior** (phase 186, rec-20260712-002) — a read-only cross-phase rollup over
+every settled phase's post-settle retro artifact (`.cadence/phases/*/*-RETRO.json`,
+written by the phase-174 retro-artifact feature). It scans `.cadence/phases/` for
+`*-RETRO.json` files, parses each against `RetroDigestZ`, and aggregates three
+dimensions across all scanned phases: gate-bypass names, rough-task status values,
+and code-review/security-audit/boundary-scan finding categories. Each dimension is
+split into a **recurring** bucket (the key appears in 2 or more distinct phases) and
+a **one-off** bucket (exactly 1 phase), so friction that keeps showing up isn't
+buried under single-occurrence noise — the rec's "surfaces recurring workflow
+friction" intent. A phase directory whose `*-RETRO.json` is unreadable or fails
+`RetroDigestZ` validation is skipped with a stderr notice; the rollup still computes
+over the remaining valid phases. With `--format json`, the computed `RetroRollup`
+object is emitted as JSON on stdout (or `null` if no retro artifacts were found);
+terminal mode (the default) renders a Markdown summary. If `.cadence/phases/` is
+missing, or phases exist but none carry a `*-RETRO.json`, it prints "No retro
+artifacts found." (terminal) or `null` (JSON) rather than an empty object that could
+be misread as data; the command is read-only throughout and never mutates
+`.cadence/state.json`, `STATE.md`, or any phase artifact.
+
+**Exit codes** — exits `0` on success, including when the rollup finds recurring
+friction (informational, like `intelligence stats` — not a pass/fail gate like
+`intelligence audit`). Exits `1` on an invalid `--format` value or a genuine
+unexpected error (e.g. a filesystem error other than a missing `.cadence/phases/`
+directory).
 
 ---
 
