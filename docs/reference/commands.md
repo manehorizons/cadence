@@ -210,10 +210,10 @@ real verification when a key is already in the environment.
 
 `--full` is sugar for `--wire-host --demo --activate` together: it composes
 all three per-step flags in one run and prints a single consolidated "Full
-setup summary" listing each as done or skipped-with-reason, instead of three
-separate diagnostic blocks. Any explicitly-passed flag (including
-`--skip-host-wire`) still overrides its default within `--full`, and bare
-`cadence init` with no flags is unchanged.
+setup summary" listing each as done or skipped-with-reason, printed in
+addition to the existing per-feature messages above it. Any explicitly-passed
+flag (including `--skip-host-wire`) still overrides its default within
+`--full`, and bare `cadence init` with no flags is unchanged.
 
 `--dry-run` is a non-destructive **fit-check**: run it first to preview the
 detected name, gate profile, layout, test globs, provider status, host surface,
