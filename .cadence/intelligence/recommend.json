@@ -1,133 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-14T23:29:35.877Z",
+  "generatedAt": "2026-07-15T21:34:11.928Z",
   "ranked": [
-    {
-      "id": "rec-20260712-010",
-      "title": "Thread AbortSignal + deadline + trace id through gates, verifiers, and the headless-CLI verifier",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-1234"
-    },
-    {
-      "id": "rec-20260712-012",
-      "title": "Generate the command/config/exit-code reference from source and fail CI on drift",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-1234"
-    },
-    {
-      "id": "rec-20260712-013",
-      "title": "Add the missing CI security automation: CodeQL, secret scanning, npm-audit policy, SBOM, scheduled run",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-1234"
-    },
     {
       "id": "rec-20260712-015",
       "title": "Smoke-test the packed npm tarball (clean install -> init -> settle), not just in-repo dist",
@@ -1059,8 +933,8 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 48,
-    "ranked": 25,
+    "total": 45,
+    "ranked": 22,
     "parked": 1,
     "needsAttention": 0,
     "excluded": 22

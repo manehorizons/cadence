@@ -1142,39 +1142,6 @@
       "updatedAt": "2026-07-12T17:41:07.730Z"
     },
     {
-      "id": "rec-20260712-015",
-      "title": "Smoke-test the packed npm tarball (clean install -> init -> settle), not just in-repo dist",
-      "summary": "Tests run against in-repo dist; verified scripts/release-integrity.mjs uses a tempDir only for the GitHub release notes file, not for packing/installing the CLI -- no 'npm pack'/'pnpm pack' usage anywhere in .github or scripts except release-integrity.mjs's unrelated tempDir. Add a smoke test that packs the public packages, installs them into a clean temp dir, and runs init -> draft -> settle against the installed CLI, so a broken published artifact (missing files, bad bin, ESM resolution) is caught before release. Complements publish-proof.mjs and release-integrity.mjs.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "ci",
-        "release",
-        "testkit"
-      ],
-      "affectedFiles": [
-        "scripts/publish-proof.mjs",
-        "scripts/release-integrity.mjs",
-        ".github/workflows/release.yml"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-015"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "185-smoke-test-the-packed-npm-tarball",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:41:15.703Z",
-      "updatedAt": "2026-07-15T23:56:07.185Z"
-    },
-    {
       "id": "rec-20260712-016",
       "title": "Write a formal threat model covering MCP serve, hooks, host adapters, headless verifier, and ledger exposure",
       "summary": "SECURITY.md already has a 'Scope and threat model' section (shell execution, LLM gate providers, generated/installed files, notification webhooks) but does not mention MCP serve trust, hooks/dispatcher, host-adapter boundaries, headless-verifier self-invocation loops, or local intelligence-ledger exposure at all. Extend SECURITY.md with a structured threat model: prompt injection into gates, MCP serve trust, hooks/dispatcher, host-adapter boundaries, headless-verifier self-invocation loops, release/update integrity, and local intelligence-ledger exposure. Names the surfaces and their mitigations in one place.",
@@ -3007,6 +2974,42 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-12T17:40:36.192Z",
       "updatedAt": "2026-07-15T04:10:46.878Z"
+    },
+    {
+      "id": "rec-20260712-015",
+      "title": "Smoke-test the packed npm tarball (clean install -> init -> settle), not just in-repo dist",
+      "summary": "Tests run against in-repo dist; verified scripts/release-integrity.mjs uses a tempDir only for the GitHub release notes file, not for packing/installing the CLI -- no 'npm pack'/'pnpm pack' usage anywhere in .github or scripts except release-integrity.mjs's unrelated tempDir. Add a smoke test that packs the public packages, installs them into a clean temp dir, and runs init -> draft -> settle against the installed CLI, so a broken published artifact (missing files, bad bin, ESM resolution) is caught before release. Complements publish-proof.mjs and release-integrity.mjs.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "ci",
+        "release",
+        "testkit"
+      ],
+      "affectedFiles": [
+        "scripts/publish-proof.mjs",
+        "scripts/release-integrity.mjs",
+        ".github/workflows/release.yml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-015"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "185-smoke-test-the-packed-npm-tarball",
+      "scoutId": "scout-20260712-1234",
+      "createdAt": "2026-07-12T17:41:15.703Z",
+      "updatedAt": "2026-07-16T00:29:58.046Z",
+      "shippedRef": "PR #207",
+      "archivedAt": "2026-07-16T00:29:58.046Z",
+      "archiveReason": "shipped"
     }
   ]
 }
