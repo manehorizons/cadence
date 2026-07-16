@@ -61,6 +61,7 @@ export function buildDraftContext(args: {
     },
     emit: {
       coherenceWarn: (events) => notifyOrWarn(events, config),
+      autoComplexOverride: (event) => notifyOrWarn([event], config),
       planReviewUnconverged: (info) =>
         emitPlanReviewUnconverged(selectNotifier(config), info),
     },

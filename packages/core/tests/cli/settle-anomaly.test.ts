@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
@@ -36,6 +36,19 @@ async function patchConfig(
   const path = join(root, '.cadence/config.json');
   const cfg = JSON.parse(await readFile(path, 'utf8'));
   await writeFile(path, JSON.stringify({ ...cfg, ...patch }, null, 2), 'utf8');
+}
+
+// Mirrors packages/core/tests/cli/soft-cap.test.ts's seedDraft — hand-writes a
+// DRAFT.md frontmatter directly (bypassing `draft new --tier=complex`) so
+// gateSet.softCap is true (auto profile x complex tier, DESIGN.md §4 M2).
+async function seedDraft(
+  root: string,
+  tier: 'quick-fix' | 'standard' | 'complex',
+): Promise<void> {
+  const phaseDir = join(root, '.cadence/phases/01-foundation');
+  await mkdir(phaseDir, { recursive: true });
+  const body = `---\nphase: 01-foundation\nid: 01-01\ntier: ${tier}\nstatus: PENDING\n---\n\n# 01-01 — Demo\n\n## Objective\nDemo.\n\n## Acceptance Criteria\n\n### AC-1: ok\nGiven x\nWhen y\nThen z\n\n## Tasks\n\n### T1: do\n- files: \`src/x.ts\`\n- action: a\n- verify: v\n- done: AC-1\n\n## Boundaries\n\n- _(none)_\n`;
+  await writeFile(join(phaseDir, '01-01-DRAFT.md'), body);
 }
 
 let active: Fixture | null = null;
@@ -182,5 +195,43 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
         severity: 'warn',
       }),
     ]);
+  });
+
+  it('AC-1: --allow-auto-complex soft-cap override lands in SUMMARY.json gateBypasses', async () => {
+    active = await tempRepo({ initialized: true });
+    // auto profile (tempRepo default) x complex tier => gateSet.softCap === true.
+    await seedDraft(active.root, 'complex');
+    await run(
+      ['draft', 'approve', '01-foundation', '01', '--allow-auto-complex'],
+      active.root,
+    );
+    await run(['done', 'T1', '--notes=ok'], active.root);
+    const r = await run(
+      [
+        'settle',
+        'run',
+        '--auto',
+        '--allow-missing-coverage',
+        '--allow-auto-complex',
+      ],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stderr).toMatch(/proceeding past soft cap/);
+    const summary = JSON.parse(
+      await readFile(
+        join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json'),
+        'utf8',
+      ),
+    );
+    expect(summary.gateBypasses).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          gate: 'soft-cap',
+          flag: '--allow-auto-complex',
+          severity: 'warn',
+        }),
+      ]),
+    );
   });
 });

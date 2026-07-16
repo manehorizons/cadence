@@ -4,14 +4,14 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 186-cross-phase-retro-rollup
+**Active phase:** 187-gate-bypass-auto-complex-override
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1927
-- Last handoff: SESSION-2026-07-15-merge-prs-201-202-203-then-release.md
+- Subagent spawns this session: 1967
+- Last handoff: SESSION-2026-07-16-phase-187-build-mid-pipeline.md
 
 ## Counts
 - Open drafts: 0

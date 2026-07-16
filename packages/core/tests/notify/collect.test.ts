@@ -179,6 +179,24 @@ describe('collectAnomalies (AC-3)', () => {
     expect(events.find((e) => e.type === 'force-used')).toBeUndefined();
   });
 
+  it('AC-1: emits auto-complex-override (severity warn) when --allow-auto-complex bypassed the soft cap', () => {
+    const events = collectAnomalies(ctx({ autoComplexOverride: true }));
+    const event = events.find((e) => e.type === 'auto-complex-override');
+    expect(event).toBeDefined();
+    expect(event!.severity).toBe('warn');
+  });
+
+  it('AC-1: does NOT emit auto-complex-override when the flag is false/absent', () => {
+    expect(
+      collectAnomalies(ctx()).find((e) => e.type === 'auto-complex-override'),
+    ).toBeUndefined();
+    expect(
+      collectAnomalies(ctx({ autoComplexOverride: false })).find(
+        (e) => e.type === 'auto-complex-override',
+      ),
+    ).toBeUndefined();
+  });
+
   it('returns no events for a clean settle', () => {
     expect(collectAnomalies(ctx())).toEqual([]);
   });

@@ -39,6 +39,11 @@ export interface DraftEmitPort {
    *  the `source` + timestamp); this wraps the selected notifier with the
    *  transport-fail stderr fallback. Membership gating is the gate's. */
   coherenceWarn(events: AnomalyEvent[]): Promise<void>;
+  /** `auto-complex-override` anomaly (Phase 187 / T3): emitted when
+   *  `--allow-auto-complex` bypasses the draft-approve soft cap (DESIGN.md
+   *  §4 M2). Same transport-fail-tolerant wrapper as `coherenceWarn`;
+   *  membership gating on `anomaly-notify` is the caller's. */
+  autoComplexOverride(event: AnomalyEvent): Promise<void>;
   /** plan-review unconverged escalation anomaly (Phase 25.1 / 35.1). */
   planReviewUnconverged(info: {
     draftId: string;
