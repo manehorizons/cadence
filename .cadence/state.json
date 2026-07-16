@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 557,
+  "revision": 559,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
@@ -17,7 +17,7 @@
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-15-merge-prs-201-202-203-then-release.md",
-    "subagentSpawns": 1926,
+    "subagentSpawns": 1927,
     "subagentBaselines": {}
   },
   "skillAudit": {

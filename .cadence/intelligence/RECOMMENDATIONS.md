@@ -497,21 +497,6 @@ A headless host-CLI verifier subprocess has zero shared context with the calling
 
 CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC captures component list and behavioral shape only (e.g. 'reuse StructuredWizardShell's visual language' as a precedent reference), with no concrete layout -- field spacing/grouping, exact design-token usage, responsive behavior, or per-field-type visual treatment. Left as-is, DRAFT tasks inherit only a loose behavioral pointer and whoever executes BUILD makes the real layout calls in the moment, looser than this project's own deliberate token-driven UI work. Proposal: an opt-in gate/step between SPEC and DRAFT for phases touching UI surfaces that produces a concrete design contract (component-level layout, token usage, responsive/interaction detail) before DRAFT tasks are written -- conceptually parallel to gsd-ui-phase's UI-SPEC.md but native to CADENCE's loop and gate model, not a GSD borrow. 'When applicable' is key: most CADENCE phases are not UI work and must not pay this cost.
 
-## rec-20260712-002 — Cross-phase retro rollup/trend view
-
-- status: settle-pending
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: retro, rollup
-- evidence: Reconstructed stub: original entry (landed 2026-07-12 by a concurrent session's /cadence-scout retro, originally rec-20260712-005) was lost to an unrelated git reset --hard before being committed. Recreated from a handoff doc's prose summary.
-- next: cadence milestone propose
-
-A cross-phase rollup/trend view over the post-settle retro artifacts (depends on the retro-artifact recommendation existing first) — surfaces recurring workflow friction across multiple phases rather than one phase at a time. Landed via the same /cadence-scout session (scout-20260712-0328).
-
 ## rec-20260712-003 — Retro friction feeds back into Praxis recommendation scoring
 
 - status: candidate
