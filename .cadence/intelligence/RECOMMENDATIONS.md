@@ -607,22 +607,6 @@ GateProvenanceZ (packages/types/src/summary.ts) currently enumerates only status
 
 vitest.config.ts already has a coverage block (reporter: text/html, include packages/*/src/**) but no thresholds field, and ci.yml's test job runs 'pnpm test' with no coverage flag or gate -- confirmed no enforcement anywhere. Add minimum thresholds wired into the gate, so coverage regressions surface in CI rather than silently.
 
-## rec-20260712-015 — Smoke-test the packed npm tarball (clean install -> init -> settle), not just in-repo dist
-
-- status: settle-pending
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: ci, release, testkit
-- files: scripts/publish-proof.mjs, scripts/release-integrity.mjs, .github/workflows/release.yml
-- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (P0-3/P1 packaged-app smoke). Verified release-integrity.mjs's tempDir usage is scoped to release notes only, not a pack+install+exercise flow.
-- next: cadence milestone propose
-
-Tests run against in-repo dist; verified scripts/release-integrity.mjs uses a tempDir only for the GitHub release notes file, not for packing/installing the CLI -- no 'npm pack'/'pnpm pack' usage anywhere in .github or scripts except release-integrity.mjs's unrelated tempDir. Add a smoke test that packs the public packages, installs them into a clean temp dir, and runs init -> draft -> settle against the installed CLI, so a broken published artifact (missing files, bad bin, ESM resolution) is caught before release. Complements publish-proof.mjs and release-integrity.mjs.
-
 ## rec-20260712-016 — Write a formal threat model covering MCP serve, hooks, host adapters, headless verifier, and ledger exposure
 
 - status: candidate
