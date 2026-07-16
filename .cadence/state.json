@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 525,
+  "revision": 557,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "185-smoke-test-the-packed-npm-tarball",
+  "activePhase": "186-cross-phase-retro-rollup",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-15T21:51:33.476Z",
+  "draftReadAt": "2026-07-16T01:33:59.538Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-15-merge-prs-201-202-203-then-release.md",
-    "subagentSpawns": 1909,
+    "subagentSpawns": 1926,
     "subagentBaselines": {}
   },
   "skillAudit": {

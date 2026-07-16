@@ -499,7 +499,7 @@ CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC capture
 
 ## rec-20260712-002 — Cross-phase retro rollup/trend view
 
-- status: candidate
+- status: settle-pending
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
