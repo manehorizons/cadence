@@ -3,7 +3,9 @@ import { z } from 'zod';
 /**
  * Anomaly event types. Phase 17 introduced the first six; Phase 23.2 adds
  * `coherence-warn` (emitted from `cadence draft check`/`draft approve` per
- * warn issue). DESIGN.md §3.3 is the canonical list.
+ * warn issue). DESIGN.md §3.3 is the canonical list. Phase 187 adds
+ * `auto-complex-override` (emitted when `--allow-auto-complex` bypasses the
+ * settle/draft-approve soft cap).
  *
  * Fired when the `'anomaly-notify'` gate is in the effective gate set
  * (auto + standard×{standard,complex} cells). Informational only —
@@ -25,6 +27,7 @@ export const AnomalyTypeZ = z.enum([
   'spec-review-unconverged',
   'code-review-unconverged',
   'redundant-task-work',
+  'auto-complex-override',
 ]);
 export type AnomalyType = z.infer<typeof AnomalyTypeZ>;
 

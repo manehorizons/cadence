@@ -1,16 +1,36 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import type { AnomalyEvent } from '@manehorizons/cadence-types';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { loadConfig } from '../config/loader.js';
 import { effectiveGateSet } from '../gates/engine.js';
 import { buildDraftContext } from '../gates/draft-context.js';
+import type { DraftGateContext } from '../gates/draft-types.js';
 import { runCoherenceGate, emitCoherenceWarns } from '../gates/coherence.js';
 import { runApproveGate } from '../gates/approve.js';
 import { runPlanReviewGate } from '../gates/plan-review.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import type { CommandIO, CommandResult } from './io.js';
+
+/**
+ * Emit the `auto-complex-override` anomaly when `--allow-auto-complex`
+ * bypasses the draft-approve soft cap (Phase 187 / T3, DESIGN.md §4 M2).
+ * Membership-gated on `anomaly-notify`, mirroring `emitCoherenceWarns` —
+ * the caller does the gating check, not the emit implementation.
+ */
+export async function emitAutoComplexOverride(ctx: DraftGateContext): Promise<void> {
+  if (!ctx.gateSet.gates.includes('anomaly-notify')) return;
+  const event: AnomalyEvent = {
+    type: 'auto-complex-override',
+    severity: 'warn',
+    message: 'auto × complex soft cap bypassed via --allow-auto-complex (DESIGN.md §4 M2)',
+    context: {},
+    ts: new Date().toISOString(),
+  };
+  await ctx.emit.autoComplexOverride(event);
+}
 
 /**
  * `cadence draft approve <phase> <num>` — run the coherence → soft-cap →
@@ -65,6 +85,7 @@ export async function draftApproveService(
     }
     if (gateSet.softCap && args.allowAutoComplex) {
       io.err('draft approve: --allow-auto-complex set; proceeding past soft cap (auto × complex).\n');
+      await emitAutoComplexOverride(ctx);
     }
     // Manual approve gate (Phase 24.1) then plan-review gate (25.1 / 35.1).
     if ((await runApproveGate(ctx)).outcome === 'refuse') {

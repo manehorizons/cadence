@@ -133,6 +133,14 @@ function anomalyToGateBypass(event: AnomalyEvent): GateBypass | null {
       severity: event.severity,
     };
   }
+  if (event.type === 'auto-complex-override') {
+    return {
+      gate: 'soft-cap',
+      flag: '--allow-auto-complex',
+      reason: event.message,
+      severity: event.severity,
+    };
+  }
   return null;
 }
 
@@ -491,6 +499,7 @@ export async function settleService(
       coverageBypassed,
       force: opts.force === true,
       root: cwd,
+      autoComplexOverride: gateSet.softCap && opts.allowAutoComplex === true,
       ...(deepVerify ? { deepVerify } : {}),
       ...(interactiveVerify ? { interactiveVerify } : {}),
       ...(verifierFailure ? { verifierFailure } : {}),

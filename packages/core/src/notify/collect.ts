@@ -15,6 +15,12 @@ export interface CollectAnomaliesContext {
   coverageBypassed: boolean;
   /** True iff `--force` was set on settle. */
   force: boolean;
+  /**
+   * Phase 187: true iff `--allow-auto-complex` was used AND `gateSet.softCap`
+   * was true (auto profile x complex tier, DESIGN.md §4 M2). Records the
+   * override into `gateBypasses` instead of leaving it as a stderr-only notice.
+   */
+  autoComplexOverride?: boolean;
   /** Per-AC deep verifier verdicts (Phase 15), if --deep / deep-verify gate ran. */
   deepVerify?: Record<string, DeepVerdict> | undefined;
   /** Per-AC interactive verdicts (Phase 16), if --interactive / interactive-verdict gate ran. */
@@ -82,6 +88,18 @@ export function collectAnomalies(
       type: 'coverage-bypassed',
       severity: 'warn',
       message: 'test-coverage gate bypassed via --allow-missing-coverage',
+      context: {},
+      ts: stamp(),
+    });
+  }
+
+  // auto-complex-override — single event when --allow-auto-complex bypassed
+  // the auto x complex soft cap (DESIGN.md §4 M2).
+  if (ctx.autoComplexOverride) {
+    events.push({
+      type: 'auto-complex-override',
+      severity: 'warn',
+      message: 'auto × complex soft cap bypassed via --allow-auto-complex (DESIGN.md §4 M2)',
       context: {},
       ts: stamp(),
     });
