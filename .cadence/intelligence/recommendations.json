@@ -947,7 +947,7 @@
       "title": "Cross-phase retro rollup/trend view",
       "summary": "A cross-phase rollup/trend view over the post-settle retro artifacts (depends on the retro-artifact recommendation existing first) — surfaces recurring workflow friction across multiple phases rather than one phase at a time. Landed via the same /cadence-scout session (scout-20260712-0328).",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -965,9 +965,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "186-cross-phase-retro-rollup",
       "scoutId": "scout-20260712-0328",
       "createdAt": "2026-07-12T04:24:07.083Z",
-      "updatedAt": "2026-07-12T04:24:07.083Z"
+      "updatedAt": "2026-07-16T02:22:53.960Z"
     },
     {
       "id": "rec-20260712-003",
@@ -3004,12 +3005,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "185-smoke-test-the-packed-npm-tarball",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:41:15.703Z",
-      "updatedAt": "2026-07-16T00:29:58.046Z",
       "shippedRef": "PR #207",
+      "scoutId": "scout-20260712-1234",
       "archivedAt": "2026-07-16T00:29:58.046Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T17:41:15.703Z",
+      "updatedAt": "2026-07-16T00:29:58.046Z"
     }
   ]
 }
