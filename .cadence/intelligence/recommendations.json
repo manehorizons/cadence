@@ -1236,7 +1236,7 @@
       "title": "gateBypasses omits the --allow-auto-complex soft-cap override",
       "summary": "settle.ts's gateBypassesFromAnomalies() and the equivalent draft-approve path only map AnomalyEvent types coverage-bypassed/force-used/verifier-failure to a recorded GateBypass. --allow-auto-complex (DESIGN.md §4 M2 soft cap, used at both draft approve and settle run) only prints a stderr notice via io.err() and never emits an AnomalyEvent, so it is silently absent from SUMMARY.json's gateBypasses field even when used twice in the same phase. This contradicts CLAUDE.md's claim that bypasses are 'loud and recorded in the SUMMARY (gateBypasses)'. Discovered live during phase 181 settle (mcp-tool-trust-envelope), whose draft was approved and settled under --allow-auto-complex with zero trace in its SUMMARY. Fix: emit a proper AnomalyEvent (new type, e.g. 'auto-complex-override') from both draft-approve.ts and settle.ts when the flag is used, and add it to anomalyToGateBypass's mapping.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -1259,8 +1259,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "187-gate-bypass-auto-complex-override",
       "createdAt": "2026-07-14T22:08:57.237Z",
-      "updatedAt": "2026-07-14T22:08:57.237Z"
+      "updatedAt": "2026-07-16T21:27:19.933Z"
     }
   ],
   "archived": [
@@ -3008,12 +3009,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "186-cross-phase-retro-rollup",
-      "scoutId": "scout-20260712-0328",
-      "createdAt": "2026-07-12T04:24:07.083Z",
-      "updatedAt": "2026-07-16T02:47:00.687Z",
       "shippedRef": "PR #209",
+      "scoutId": "scout-20260712-0328",
       "archivedAt": "2026-07-16T02:47:00.687Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T04:24:07.083Z",
+      "updatedAt": "2026-07-16T02:47:00.687Z"
     }
   ]
 }

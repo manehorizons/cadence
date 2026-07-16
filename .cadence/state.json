@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 559,
+  "revision": 635,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "186-cross-phase-retro-rollup",
+  "activePhase": "187-gate-bypass-auto-complex-override",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-16T01:33:59.538Z",
+  "draftReadAt": "2026-07-16T03:26:14.071Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
-    "lastHandoff": "SESSION-2026-07-15-merge-prs-201-202-203-then-release.md",
-    "subagentSpawns": 1927,
+    "lastHandoff": "SESSION-2026-07-16-phase-187-build-mid-pipeline.md",
+    "subagentSpawns": 1967,
     "subagentBaselines": {}
   },
   "skillAudit": {

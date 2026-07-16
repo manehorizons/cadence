@@ -1,0 +1,47 @@
+{
+  "draftId": "187-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-16T03:27:29.033Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/packages/core/tests/notify/collect.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/packages/core/tests/cli/settle-anomaly.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/packages/core/src/notify/collect.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/packages/core/tests/cli/draft-approve.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/packages/core/src/gates/draft-types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/packages/core/src/gates/draft-context.ts"
+      ],
+      "updatedAt": "2026-07-16T03:31:58.840Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/packages/core/src/services/draft-approve.ts"
+      ],
+      "updatedAt": "2026-07-16T03:33:13.156Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-16T03:36:00.949Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/187-gate-bypass-auto-complex-override/.changeset/gate-bypass-auto-complex-override.md"
+      ],
+      "updatedAt": "2026-07-16T03:37:30.722Z"
+    }
+  }
+}

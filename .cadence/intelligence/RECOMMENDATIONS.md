@@ -658,7 +658,7 @@ cadence draft add-task <phase> <num> --files --action --verify --done has no --n
 
 ## rec-20260714-003 — gateBypasses omits the --allow-auto-complex soft-cap override
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
