@@ -655,19 +655,3 @@ cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/dr
 - next: cadence milestone propose
 
 cadence draft add-task <phase> <num> --files --action --verify --done has no --name option, unlike cadence draft add-ac which has --given/--when/--then/--name. Every task appended via add-task lands as '### T<n>: ' with an empty heading, requiring a manual Edit pass to fill in the name before the DRAFT reads sensibly — confirmed live 2026-07-14 appending T2-T6 to phase 181's DRAFT (all five came out blank). Add --name <n> to add-task mirroring add-ac's option.
-
-## rec-20260714-003 — gateBypasses omits the --allow-auto-complex soft-cap override
-
-- status: settle-pending
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, settle, draft-approve
-- files: packages/core/src/services/settle.ts, packages/core/src/services/draft-approve.ts, packages/types/src/anomaly.ts
-- evidence: 181-01-SUMMARY.json has no gateBypasses field despite --allow-auto-complex used at both draft approve (07-13 session) and settle run (07-14, this session)
-- next: cadence milestone propose
-
-settle.ts's gateBypassesFromAnomalies() and the equivalent draft-approve path only map AnomalyEvent types coverage-bypassed/force-used/verifier-failure to a recorded GateBypass. --allow-auto-complex (DESIGN.md §4 M2 soft cap, used at both draft approve and settle run) only prints a stderr notice via io.err() and never emits an AnomalyEvent, so it is silently absent from SUMMARY.json's gateBypasses field even when used twice in the same phase. This contradicts CLAUDE.md's claim that bypasses are 'loud and recorded in the SUMMARY (gateBypasses)'. Discovered live during phase 181 settle (mcp-tool-trust-envelope), whose draft was approved and settled under --allow-auto-complex with zero trace in its SUMMARY. Fix: emit a proper AnomalyEvent (new type, e.g. 'auto-complex-override') from both draft-approve.ts and settle.ts when the flag is used, and add it to anomalyToGateBypass's mapping.
