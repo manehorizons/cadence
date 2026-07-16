@@ -943,34 +943,6 @@
       "updatedAt": "2026-07-11T14:33:47.461Z"
     },
     {
-      "id": "rec-20260712-002",
-      "title": "Cross-phase retro rollup/trend view",
-      "summary": "A cross-phase rollup/trend view over the post-settle retro artifacts (depends on the retro-artifact recommendation existing first) — surfaces recurring workflow friction across multiple phases rather than one phase at a time. Landed via the same /cadence-scout session (scout-20260712-0328).",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "retro",
-        "rollup"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "186-cross-phase-retro-rollup",
-      "scoutId": "scout-20260712-0328",
-      "createdAt": "2026-07-12T04:24:07.083Z",
-      "updatedAt": "2026-07-16T02:22:53.960Z"
-    },
-    {
       "id": "rec-20260712-003",
       "title": "Retro friction feeds back into Praxis recommendation scoring",
       "summary": "Recurring friction identified by the post-settle retro feeds back into evidence.json to bump the scores of related recommendations (depends on the retro-artifact and rollup recommendations existing first). Landed via the same /cadence-scout session (scout-20260712-0328).",
@@ -3011,6 +2983,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-12T17:41:15.703Z",
       "updatedAt": "2026-07-16T00:29:58.046Z"
+    },
+    {
+      "id": "rec-20260712-002",
+      "title": "Cross-phase retro rollup/trend view",
+      "summary": "A cross-phase rollup/trend view over the post-settle retro artifacts (depends on the retro-artifact recommendation existing first) — surfaces recurring workflow friction across multiple phases rather than one phase at a time. Landed via the same /cadence-scout session (scout-20260712-0328).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "retro",
+        "rollup"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "186-cross-phase-retro-rollup",
+      "scoutId": "scout-20260712-0328",
+      "createdAt": "2026-07-12T04:24:07.083Z",
+      "updatedAt": "2026-07-16T02:47:00.687Z",
+      "shippedRef": "PR #209",
+      "archivedAt": "2026-07-16T02:47:00.687Z",
+      "archiveReason": "shipped"
     }
   ]
 }
