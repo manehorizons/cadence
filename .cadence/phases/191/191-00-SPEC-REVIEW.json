@@ -1,0 +1,19 @@
+{
+  "specId": "191-00",
+  "converged": true,
+  "attempts": 0,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-07-17T22:11:08.047Z",
+      "pass": true,
+      "findingsCount": 0,
+      "provider": "mock",
+      "verdict": "pass"
+    }
+  ],
+  "pass": true,
+  "provider": "mock",
+  "findings": 0,
+  "at": "2026-07-17T22:11:08.047Z"
+}

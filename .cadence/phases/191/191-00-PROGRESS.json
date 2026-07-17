@@ -1,0 +1,41 @@
+{
+  "draftId": "191-00",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added HostCliSpecReviewVerifier to spec-review.ts (mirrors HostCliPerTaskVerifier exactly: {bin,model?,spawnImpl?}, hostCliJSON transport, same SYSTEM_PROMPT/formatUserMessage/SpecReviewResponseSchema). Wired hostCli: (o) => new HostCliSpecReviewVerifier(o) into spec-review-factory.ts. New test/verify/spec-review.test.ts: 6/6 green via fakeSpawn seam (no real host CLI spawned). typecheck clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-17T22:14:17.378Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Added HostCliPlanReviewVerifier to plan-review.ts, wired into plan-review-factory.ts. Extended existing test/verify/plan-review.test.ts (reused its makeDraft fixture) with a HostCliPlanReviewVerifier describe block + selectPlanReviewVerifier host-cli resolution test. 15/15 green, typecheck clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-17T22:16:04.229Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added HostCliCodeReviewVerifier to code-review.ts (same early-return-on-empty-input pattern as Local/Anthropic, groups findings by file), wired into code-review-factory.ts. Extended existing test/verify/code-review.test.ts with HostCliCodeReviewVerifier + selectCodeReviewVerifier host-cli tests. 17/17 green, typecheck + lint clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-17T22:18:19.043Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Added HostCliSecurityAuditVerifier to security-audit.ts (early-return, {signal,traceId} opts threaded to hostCliJSON like LocalSecurityAuditVerifier), wired into security-audit-factory.ts. Extended test/verify/security-audit.test.ts: 5 new tests incl. signal-forwarding proof (aborted signal short-circuits before spawn, calls.length===0). 23/23 green, typecheck clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-17T22:20:16.968Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Added HostCliVerifier to verifier.ts (empty-ACs early return, {signal,traceId} threaded, imports SYSTEM_PROMPT/formatUserMessage/VerifierResponseSchema from anthropic-verifier.ts same as LocalVerifier, no fabricated usage field), wired into factory.ts. New test/verify/host-cli-verifier.test.ts: 7/7 green (incl. signal-abort test). Full cadence-core suite: 328 files / 2824 tests green, typecheck + lint clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-17T22:22:58.526Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "Read doctor/run.ts's verification-readiness check + activate/assess.ts's assessReadiness/credsPresent. Finding: credsPresent('host-cli',...) is unconditionally true by design (Phase 165 comment: host-cli has no required credential) — it never actually introspected whether the family's factory has a real hostCli builder wired, for ANY of the 6 seams. Before this phase, its claim 'deep-verify uses host-cli with credentials present' was true on config/creds grounds but false in practice (selectVerifier silently fell back to mock). T5 closes that gap for the verifier seam specifically, so the claim is now genuinely accurate. No code change needed (confirmed via existing assess.test.ts host-cli coverage, already green) — deeper wiring-introspection in this check would be scope creep past what this phase set out to fix, and conflicts with the repo's zero-added-complexity bias. Recorded as a finding, not a defect to fix here.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-17T22:23:51.069Z"
+    }
+  }
+}
