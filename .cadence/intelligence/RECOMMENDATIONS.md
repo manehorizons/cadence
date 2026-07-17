@@ -394,7 +394,7 @@ Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow 
 
 ## rec-20260709-005 — cadence onboard: one-command setup for the 2nd-Nth teammate
 
-- status: candidate
+- status: settle-pending
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
