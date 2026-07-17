@@ -1,0 +1,5 @@
+---
+'@manehorizons/cadence-core': minor
+---
+
+Wire a real `hostCli` builder into the 5 verifier families phase 165 left unwired: `spec-review`, `plan-review`, `code-review`, `security-audit`, and deep-verify (`Verifier`). Only `per-task` (phase 165 T7) had a working `host-cli` provider — every other family with `provider: "host-cli"` set in `.cadence/config.json` was silently falling back to `mock` (a deterministic placeholder, not real verification) regardless of config, since `createVerifierFactory`'s generic `host-cli` dispatch only activates when a family supplies a `hostCli()` builder. Adds `HostCliSpecReviewVerifier`, `HostCliPlanReviewVerifier`, `HostCliCodeReviewVerifier`, `HostCliSecurityAuditVerifier`, and `HostCliVerifier`, each spawning the configured host CLI (`claude`/`codex`) headlessly via the existing `hostCliJSON` transport — same pattern as `HostCliPerTaskVerifier`, no new dependency. `cadence doctor`'s verification-readiness claim for the `verifier` seam ("deep-verify uses host-cli with credentials present") is now actually true instead of coincidentally true.

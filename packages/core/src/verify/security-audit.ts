@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
 import type { Finding } from '@manehorizons/cadence-types';
+import { hostCliJSON, type SpawnFn } from './host-cli-client.js';
 import { localChatJSON } from './local-client.js';
 
 /**
@@ -265,6 +266,55 @@ export class LocalSecurityAuditVerifier implements SecurityAuditVerifier {
       });
     }
     return { findings, provider: this.name, model: this.o.model };
+  }
+}
+
+export interface HostCliSecurityAuditVerifierOptions {
+  /** Host CLI binary name or path, e.g. `"claude"` or `"codex"`. */
+  bin: string;
+  model?: string;
+  /** Inject a spawn implementation for tests; production callers should omit this. */
+  spawnImpl?: SpawnFn;
+}
+
+/**
+ * Phase 191 — spawns the user's already-installed, already-authenticated
+ * host CLI (`claude`/`codex`) in headless mode via `hostCliJSON` instead of
+ * calling an HTTP endpoint. Structurally mirrors `LocalSecurityAuditVerifier`
+ * — same early-return, `{signal, traceId}` opts threading,
+ * `SYSTEM_PROMPT`/`formatUserMessage`/`SecurityAuditResponseSchema`, only the
+ * transport differs.
+ */
+export class HostCliSecurityAuditVerifier implements SecurityAuditVerifier {
+  readonly name = 'host-cli';
+  constructor(private readonly o: HostCliSecurityAuditVerifierOptions) {}
+
+  async verify(
+    input: SecurityAuditInput,
+    opts?: { signal?: AbortSignal; traceId?: string },
+  ): Promise<SecurityAuditResult> {
+    if (input.files.length === 0 && input.diff.trim().length === 0) {
+      return { findings: [], provider: this.name, ...(this.o.model ? { model: this.o.model } : {}) };
+    }
+    const parsed = await hostCliJSON({
+      bin: this.o.bin,
+      ...(this.o.model ? { model: this.o.model } : {}),
+      system: SYSTEM_PROMPT,
+      user: formatUserMessage(input),
+      schema: SecurityAuditResponseSchema,
+      ...(this.o.spawnImpl ? { spawnImpl: this.o.spawnImpl } : {}),
+      ...(opts?.signal ? { signal: opts.signal } : {}),
+      ...(opts?.traceId ? { traceId: opts.traceId } : {}),
+    });
+    const findings: Finding[] = [];
+    for (const f of parsed.findings) {
+      findings.push({
+        severity: f.severity,
+        message: f.message,
+        ...(f.line !== undefined ? { line: f.line } : {}),
+      });
+    }
+    return { findings, provider: this.name, ...(this.o.model ? { model: this.o.model } : {}) };
   }
 }
 

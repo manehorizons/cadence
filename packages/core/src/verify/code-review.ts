@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
+import { hostCliJSON, type SpawnFn } from './host-cli-client.js';
 import { localChatJSON } from './local-client.js';
 
 /**
@@ -229,6 +230,49 @@ export class LocalCodeReviewVerifier implements CodeReviewVerifier {
       });
     }
     return { findings, provider: this.name, model: this.o.model };
+  }
+}
+
+export interface HostCliCodeReviewVerifierOptions {
+  /** Host CLI binary name or path, e.g. `"claude"` or `"codex"`. */
+  bin: string;
+  model?: string;
+  /** Inject a spawn implementation for tests; production callers should omit this. */
+  spawnImpl?: SpawnFn;
+}
+
+/**
+ * Phase 191 — spawns the user's already-installed, already-authenticated
+ * host CLI (`claude`/`codex`) in headless mode via `hostCliJSON` instead of
+ * calling an HTTP endpoint. Structurally mirrors `LocalCodeReviewVerifier` —
+ * same early-return, `SYSTEM_PROMPT`/`formatUserMessage`/
+ * `CodeReviewResponseSchema`, only the transport differs.
+ */
+export class HostCliCodeReviewVerifier implements CodeReviewVerifier {
+  readonly name = 'host-cli';
+  constructor(private readonly o: HostCliCodeReviewVerifierOptions) {}
+
+  async verify(input: CodeReviewInput): Promise<CodeReviewResult> {
+    if (input.files.length === 0 && input.diff.trim().length === 0) {
+      return { findings: {}, provider: this.name, ...(this.o.model ? { model: this.o.model } : {}) };
+    }
+    const parsed = await hostCliJSON({
+      bin: this.o.bin,
+      ...(this.o.model ? { model: this.o.model } : {}),
+      system: SYSTEM_PROMPT,
+      user: formatUserMessage(input),
+      schema: CodeReviewResponseSchema,
+      ...(this.o.spawnImpl ? { spawnImpl: this.o.spawnImpl } : {}),
+    });
+    const findings: Record<string, Finding[]> = {};
+    for (const f of parsed.findings) {
+      (findings[f.file] ??= []).push({
+        severity: f.severity,
+        message: f.message,
+        ...(f.line !== undefined ? { line: f.line } : {}),
+      });
+    }
+    return { findings, provider: this.name, ...(this.o.model ? { model: this.o.model } : {}) };
   }
 }
 

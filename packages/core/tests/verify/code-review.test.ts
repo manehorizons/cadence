@@ -1,11 +1,44 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   AnthropicCodeReviewVerifier,
+  HostCliCodeReviewVerifier,
   MockCodeReviewVerifier,
   type CodeReviewInput,
 } from '../../src/verify/code-review.js';
+import type { SpawnFn, SpawnedProcessLike } from '../../src/verify/host-cli-client.js';
 import { selectCodeReviewVerifier } from '../../src/verify/code-review-factory.js';
+
+/** Mirrors `per-task.test.ts`'s `fakeSpawn` — stubs the subprocess transport
+ *  one layer below `hostCliJSON` so no test ever spawns a real binary. */
+function fakeSpawn(stdout: string, calls: Array<{ bin: string; args: string[] }>): SpawnFn {
+  return (bin, args) => {
+    calls.push({ bin, args });
+    const stdoutListeners: Array<(chunk: Buffer) => void> = [];
+    let closeListener: ((code: number | null) => void) | undefined;
+    const proc: SpawnedProcessLike = {
+      stdout: {
+        on: (event: string, cb: (chunk: Buffer) => void) => {
+          if (event === 'data') stdoutListeners.push(cb);
+          return proc.stdout as NodeJS.ReadableStream;
+        },
+      } as unknown as NodeJS.ReadableStream,
+      stderr: { on: () => proc.stderr } as unknown as NodeJS.ReadableStream,
+      on: (event: 'error' | 'close', cb: never) => {
+        if (event === 'close') closeListener = cb as (code: number | null) => void;
+        return proc;
+      },
+    };
+    queueMicrotask(() => {
+      stdoutListeners.forEach((l) => l(Buffer.from(stdout)));
+      closeListener?.(0);
+    });
+    return proc;
+  };
+}
+
+const claudeEnvelope = (result: unknown) =>
+  JSON.stringify({ is_error: false, result: JSON.stringify(result) });
 
 const cleanDiff = `--- a/src/foo.ts
 +++ b/src/foo.ts
@@ -135,10 +168,66 @@ describe('AnthropicCodeReviewVerifier (AC-3)', () => {
   });
 });
 
+describe('HostCliCodeReviewVerifier (AC-3)', () => {
+  // See per-task.test.ts: pin CLAUDECODE unset so the self-invocation guard
+  // doesn't trip when these tests run inside a Claude Code session.
+  let savedClaudecode: string | undefined;
+  beforeEach(() => {
+    savedClaudecode = process.env.CLAUDECODE;
+    delete process.env.CLAUDECODE;
+  });
+  afterEach(() => {
+    if (savedClaudecode === undefined) delete process.env.CLAUDECODE;
+    else process.env.CLAUDECODE = savedClaudecode;
+  });
+
+  it('AC-3: spawns the host CLI headlessly and returns per-file findings in the same shape local/anthropic return', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(
+      claudeEnvelope({
+        findings: [{ file: 'src/foo.ts', severity: 'high', message: 'debug log', line: 7 }],
+      }),
+      calls,
+    );
+    const v = new HostCliCodeReviewVerifier({ bin: 'claude', spawnImpl });
+    const r = await v.verify(input);
+    expect(r).toEqual({
+      findings: { 'src/foo.ts': [{ severity: 'high', message: 'debug log', line: 7 }] },
+      provider: 'host-cli',
+    });
+    expect(calls[0]?.bin).toBe('claude');
+    expect(calls[0]?.args).toContain('-p');
+  });
+
+  it('returns empty findings without spawning when no files + no diff', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(claudeEnvelope({ findings: [] }), calls);
+    const v = new HostCliCodeReviewVerifier({ bin: 'claude', spawnImpl });
+    const r = await v.verify({ files: [], diff: '' });
+    expect(r.findings).toEqual({});
+    expect(calls).toHaveLength(0);
+  });
+
+  it('reports the model when configured, omits it when not', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(claudeEnvelope({ findings: [] }), calls);
+    const v = new HostCliCodeReviewVerifier({ bin: 'claude', model: 'opus', spawnImpl });
+    const r = await v.verify(input);
+    expect(r.model).toBe('opus');
+    expect(calls[0]?.args).toContain('opus');
+  });
+});
+
 describe('selectCodeReviewVerifier (AC-1)', () => {
   it('returns mock by default', () => {
     const v = selectCodeReviewVerifier(null, { env: {} });
     expect(v.name).toBe('mock');
+  });
+
+  it('AC-3: resolves host-cli config to a HostCliCodeReviewVerifier instance, not a mock fallback', () => {
+    const v = selectCodeReviewVerifier({ codeReview: { provider: 'host-cli' } }, { env: {} });
+    expect(v.name).toBe('host-cli');
+    expect(v).toBeInstanceOf(HostCliCodeReviewVerifier);
   });
 
   it('returns anthropic when configured + key present', () => {

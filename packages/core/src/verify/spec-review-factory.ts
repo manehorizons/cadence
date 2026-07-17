@@ -1,6 +1,7 @@
 import type { CadenceConfig } from '@manehorizons/cadence-types';
 import {
   AnthropicSpecReviewVerifier,
+  HostCliSpecReviewVerifier,
   LocalSpecReviewVerifier,
   MockSpecReviewVerifier,
   type SpecReviewVerifier,
@@ -23,4 +24,5 @@ export const selectSpecReviewVerifier = createVerifierFactory<
   mock: () => new MockSpecReviewVerifier(),
   anthropic: (o) => new AnthropicSpecReviewVerifier(o),
   local: (o) => new LocalSpecReviewVerifier(o),
+  hostCli: (o) => new HostCliSpecReviewVerifier(o),
 });
