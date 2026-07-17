@@ -451,7 +451,7 @@ export async function checkWorktreePhases(
 }
 
 /** Warn when this many SESSION docs accumulate with retention disabled. */
-const HANDOFF_WARN_THRESHOLD = 10;
+export const HANDOFF_WARN_THRESHOLD = 10;
 
 /**
  * Make SESSION-doc accumulation visible (Phase 89, v1.20). Read-only and
@@ -495,6 +495,7 @@ export async function checkHandoffRetention(root: string): Promise<DoctorCheck> 
         'warning',
         `${count} handoff docs are accumulating under .cadence/handoff/ with retention disabled.`,
         'Set handoff.retain (suggested 10) to auto-prune stale SESSION docs on handoff write.',
+        'handoff-retention',
       );
     }
     return pass(

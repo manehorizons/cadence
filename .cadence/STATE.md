@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 189-cadence-onboard
+**Active phase:** 190-doctor-fix-handoff-retention
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1983
+- Subagent spawns this session: 2016
 - Last handoff: SESSION-2026-07-17-phase-189-cadence-onboard-shipped.md
 
 ## Counts

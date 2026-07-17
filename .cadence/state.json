@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 678,
+  "revision": 739,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "189-cadence-onboard",
+  "activePhase": "190-doctor-fix-handoff-retention",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-17T01:02:08.277Z",
+  "draftReadAt": "2026-07-17T21:44:33.551Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-17-phase-189-cadence-onboard-shipped.md",
-    "subagentSpawns": 1983,
+    "subagentSpawns": 2016,
     "subagentBaselines": {}
   },
   "skillAudit": {

@@ -21,6 +21,24 @@ describe('planFixes (131 AC-1)', () => {
     expect(planFixes(report).actions.every((a) => a.kind === 'auto')).toBe(true);
   });
 
+  it('AC-1 (phase 190): handoff-retention classifies as auto', () => {
+    const report = rollup([
+      fail('handoff-retention', 'warning', 'd', 'r', 'handoff-retention'),
+    ]);
+    const [action] = planFixes(report).actions;
+    expect(action?.kind).toBe('auto');
+    expect(action?.fixId).toBe('handoff-retention');
+  });
+
+  it('AC-3 (phase 190): a passing handoff-retention check yields no handoff-retention action', () => {
+    const report = rollup([
+      pass('node', 'fine'),
+      pass('handoff-retention', '3 handoff doc(s); retention disabled (set handoff.retain to cap growth).'),
+      fail('git-hooks', 'warning', 'd', 'r', 'git-hooks'),
+    ]);
+    expect(planFixes(report).actions.some((a) => a.check === 'handoff-retention')).toBe(false);
+  });
+
   it('AC-1: host-install classifies as wire-host', () => {
     const report = rollup([fail('host-hooks', 'warning', 'd', 'r', 'host-install')]);
     const [action] = planFixes(report).actions;

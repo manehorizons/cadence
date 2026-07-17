@@ -60,6 +60,7 @@ describe('checkHandoffRetention', () => {
     expect(check.severity).toBe('warning');
     expect(check.detail).toMatch(/12/);
     expect(check.remediation).toMatch(/handoff\.retain/);
+    expect(check.fixId).toBe('handoff-retention');
   });
 
   it('AC-4: retain unset and below threshold → ok', async () => {
