@@ -703,7 +703,7 @@
       "title": "cadence doctor --fix: auto-remediate mechanical health-check failures",
       "summary": "doctor's checks currently only print fix suggestions. Auto-remediate everything mechanical (rewire host hooks, regenerate host configs, prune stale handoffs past retention budget) so only genuine judgment calls (e.g. verification-readiness) are left as print-and-suggest.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -721,9 +721,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "190-doctor-fix-handoff-retention",
       "scoutId": "scout-20260709-1813",
       "createdAt": "2026-07-09T23:23:41.643Z",
-      "updatedAt": "2026-07-09T23:23:41.643Z"
+      "updatedAt": "2026-07-17T22:07:47.210Z"
     },
     {
       "id": "rec-20260709-003",
@@ -3020,12 +3021,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "189-cadence-onboard",
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:42.199Z",
-      "updatedAt": "2026-07-17T02:15:25.497Z",
       "shippedRef": "#219",
+      "scoutId": "scout-20260709-1813",
       "archivedAt": "2026-07-17T02:15:25.497Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-09T23:23:42.199Z",
+      "updatedAt": "2026-07-17T02:15:25.497Z"
     }
   ]
 }

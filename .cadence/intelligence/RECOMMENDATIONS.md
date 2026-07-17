@@ -364,7 +364,7 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 
 ## rec-20260709-002 — cadence doctor --fix: auto-remediate mechanical health-check failures
 
-- status: candidate
+- status: settle-pending
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
