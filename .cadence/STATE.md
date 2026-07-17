@@ -4,13 +4,13 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 188-cadence-quickstart
+**Active phase:** 189-cadence-onboard
 **Active draft:** (none)
 **Tier:** (n/a)
 
 ## Telemetry
 - Token utilization: 100%
-- Subagent spawns this session: 1974
+- Subagent spawns this session: 1983
 - Last handoff: SESSION-2026-07-16-retro-rollup-phase-186-shipped.md
 
 ## Counts

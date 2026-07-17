@@ -1,7 +1,6 @@
 import type { Command } from 'commander';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import {
   presets,
@@ -28,8 +27,10 @@ import {
   renderAgentsMd,
   type MergeMode,
 } from '../../init/claude-md-template.js';
+import { writeContributingMd } from '../../init/contributing-md-template.js';
 import { renderDemoDraft } from '../../init/demo-draft.js';
 import { autoFlipNotice } from '../../init/gate-profile-notice.js';
+import { maybeWireHost, hostWireDisplay } from '../../init/host-wire.js';
 import { draftNewService } from '../../services/draft-new.js';
 import type { CommandIO } from '../../services/io.js';
 import { planActivation } from '../../activate/plan.js';
@@ -60,113 +61,6 @@ function makePrompter(): Prompter | null {
     }
   }
   return null;
-}
-
-/**
- * Phase 108 — host auto-wire. When a Claude Code workspace (`.claude/`) is
- * present, run `cadence-host-claude-code install` in the same step so init is
- * a one-command front door. Core never imports host code: the install runs via
- * a subprocess spawn (mirrors `start.ts`'s launcher discipline).
- *
- * Decision table (after `.claude/` is confirmed present):
- *   --skip-host-wire        → skip
- *   --wire-host             → wire
- *   prompter available      → offer [Y/n] (TTY, or scripted via CADENCE_PROMPTER_SCRIPT)
- *   else (non-TTY, no flag) → skip + print a pointer (never hangs — AC-4)
- *
- * The spawn target is overridable for tests via `CADENCE_HOST_WIRE_CMD`
- * (a JSON array `["cmd","arg",…]`, or a bare shell string).
- */
-type InitHostTarget = 'claude' | 'codex';
-
-function hostWireDisplay(target: InitHostTarget): string {
-  return target === 'codex'
-    ? 'npx -y @manehorizons/cadence-host-codex install'
-    : 'npx @manehorizons/cadence-host-claude-code install';
-}
-
-async function spawnHostWire(cwd: string, target: InitHostTarget): Promise<number> {
-  const override =
-    target === 'codex'
-      ? process.env.CADENCE_HOST_CODEX_WIRE_CMD ?? process.env.CADENCE_HOST_WIRE_CMD
-      : process.env.CADENCE_HOST_WIRE_CMD;
-  let cmd: string;
-  let args: string[];
-  let useShell = false;
-  if (override !== undefined && override.length > 0) {
-    if (override.trimStart().startsWith('[')) {
-      const parsed = JSON.parse(override) as string[];
-      cmd = parsed[0] as string;
-      args = parsed.slice(1);
-    } else {
-      cmd = override;
-      args = [];
-      useShell = true;
-    }
-  } else {
-    cmd = 'npx';
-    args =
-      target === 'codex'
-        ? ['-y', '@manehorizons/cadence-host-codex', 'install']
-        : ['@manehorizons/cadence-host-claude-code', 'install'];
-    // npx is npx.cmd on Windows; spawn() needs a shell to resolve it. Args are
-    // static literals (no user input), so shell is safe here (as in start.ts).
-    useShell = process.platform === 'win32';
-  }
-  return new Promise((resolve) => {
-    const child = spawn(cmd, args, { cwd, stdio: 'inherit', shell: useShell });
-    child.on('exit', (code) => resolve(code ?? 0));
-    child.on('error', (err) => {
-      console.error(
-        `Failed to wire the ${target === 'codex' ? 'Codex' : 'Claude Code'} host: ${err.message}`,
-      );
-      resolve(1);
-    });
-  });
-}
-
-async function maybeWireHost(
-  cwd: string,
-  opts: {
-    wireHost?: boolean | undefined;
-    skipHostWire?: boolean | undefined;
-    host?: string | undefined;
-  },
-  prompter: Prompter | null,
-): Promise<{ wired: boolean; offered: boolean }> {
-  const explicitHost =
-    opts.host === 'claude' || opts.host === 'codex' ? opts.host : undefined;
-  const target: InitHostTarget | undefined =
-    explicitHost ?? (existsSync(join(cwd, '.claude')) ? 'claude' : undefined);
-  if (target === undefined) return { wired: false, offered: false };
-  if (opts.skipHostWire) return { wired: false, offered: false };
-
-  let doWire: boolean;
-  if (opts.wireHost || explicitHost !== undefined) {
-    doWire = true;
-  } else if (target === 'claude' && prompter) {
-    const reply = (
-      await prompter.ask('Detected .claude/ — wire the Claude Code host now? [Y/n]: ')
-    )
-      .trim()
-      .toLowerCase();
-    doWire = reply === '' || reply === 'y' || reply === 'yes';
-  } else {
-    doWire = false; // non-TTY, no flag — skip without hanging (AC-4).
-  }
-
-  if (!doWire) return { wired: false, offered: true };
-
-  const display = hostWireDisplay(target);
-  console.log('');
-  console.log(`  Wiring ${target === 'codex' ? 'Codex' : 'Claude Code'} host → ${display}`);
-  const code = await spawnHostWire(cwd, target);
-  if (code !== 0) {
-    console.error(
-      `  host wire exited ${code}; run it yourself:\n    ${display}`,
-    );
-  }
-  return { wired: code === 0, offered: true };
 }
 
 /**
@@ -485,6 +379,12 @@ export function registerInitCommand(program: Command): void {
             preset,
           });
         }
+        // Phase 189 (T3, AC-3) — seed the CONTRIBUTING.md onboarding pointer
+        // so the next teammate who clones this repo (`.cadence/` already
+        // committed) discovers `cadence onboard` instead of re-running
+        // `cadence init` (which would refuse). Merge-idempotent like
+        // CLAUDE.md/AGENTS.md; a marker-less user file is left untouched.
+        await writeContributingMd(cwd, { projectName: name });
 
         // Phase 109 — `--demo`: seed a ready-to-approve demo phase into this
         // real repo (objective + AC-1 + T1) using the shared toy template, so
@@ -537,7 +437,8 @@ export function registerInitCommand(program: Command): void {
         );
         console.log(`  scaffolded    config.json, state.json, PROJECT.md,`);
         console.log(`                ROADMAP.md, MILESTONES.md,`);
-        console.log(`                SPECIAL-FLOWS.md, STATE.md, CLAUDE.md`);
+        console.log(`                SPECIAL-FLOWS.md, STATE.md, CLAUDE.md,`);
+        console.log(`                CONTRIBUTING.md`);
         console.log(`                phases/ handoff/ research/ archive/`);
         // Phase 135: a --demo phase already leaves the loop in DRAFT, so the
         // generic "next step is draft new" instructions below would refuse

@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": 655,
+  "revision": 677,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "188-cadence-quickstart",
+  "activePhase": "189-cadence-onboard",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-16T23:16:10.247Z",
+  "draftReadAt": "2026-07-17T01:02:08.277Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-16-retro-rollup-phase-186-shipped.md",
-    "subagentSpawns": 1974,
+    "subagentSpawns": 1983,
     "subagentBaselines": {}
   },
   "skillAudit": {
