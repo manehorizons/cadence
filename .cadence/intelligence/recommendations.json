@@ -699,34 +699,6 @@
       "updatedAt": "2026-07-02T03:24:53.670Z"
     },
     {
-      "id": "rec-20260709-001",
-      "title": "cadence quickstart: single mega-command for full setup",
-      "summary": "One idempotent command = init + auto-detect/wire whatever host is present (.claude/, Codex, .cursor/, .mcp.json) + auto-populate verification.testCommand from package.json/pyproject/etc + activate if a key is already in env + seed a demo phase + print a doctor-style summary of what it did/skipped. Collapses ~5 separate init flags into one call.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "init"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260709-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "188-cadence-quickstart",
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:41.471Z",
-      "updatedAt": "2026-07-16T23:44:35.905Z"
-    },
-    {
       "id": "rec-20260709-002",
       "title": "cadence doctor --fix: auto-remediate mechanical health-check failures",
       "summary": "doctor's checks currently only print fix suggestions. Auto-remediate everything mechanical (rewire host hooks, regenerate host configs, prune stale handoffs past retention budget) so only genuine judgment calls (e.g. verification-readiness) are left as print-and-suggest.",
@@ -3019,6 +2991,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-14T22:08:57.237Z",
       "updatedAt": "2026-07-16T22:37:23.143Z"
+    },
+    {
+      "id": "rec-20260709-001",
+      "title": "cadence quickstart: single mega-command for full setup",
+      "summary": "One idempotent command = init + auto-detect/wire whatever host is present (.claude/, Codex, .cursor/, .mcp.json) + auto-populate verification.testCommand from package.json/pyproject/etc + activate if a key is already in env + seed a demo phase + print a doctor-style summary of what it did/skipped. Collapses ~5 separate init flags into one call.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "init"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "188-cadence-quickstart",
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:41.471Z",
+      "updatedAt": "2026-07-17T00:12:03.650Z",
+      "shippedRef": "PR #215 / phase 188 / cadence init --full",
+      "archivedAt": "2026-07-17T00:12:03.650Z",
+      "archiveReason": "shipped"
     }
   ]
 }
