@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
 import type { Draft } from '@manehorizons/cadence-types';
+import { hostCliJSON, type SpawnFn } from './host-cli-client.js';
 import { localChatJSON } from './local-client.js';
 
 /**
@@ -219,6 +220,51 @@ export class LocalPlanReviewVerifier implements PlanReviewVerifier {
       findings,
       provider: this.name,
       model: this.o.model,
+    };
+  }
+}
+
+export interface HostCliPlanReviewVerifierOptions {
+  /** Host CLI binary name or path, e.g. `"claude"` or `"codex"`. */
+  bin: string;
+  model?: string;
+  /** Inject a spawn implementation for tests; production callers should omit this. */
+  spawnImpl?: SpawnFn;
+}
+
+/**
+ * Phase 191 — spawns the user's already-installed, already-authenticated
+ * host CLI (`claude`/`codex`) in headless mode via `hostCliJSON` instead of
+ * calling an HTTP endpoint. Structurally mirrors `LocalPlanReviewVerifier` —
+ * same `SYSTEM_PROMPT`/`formatUserMessage`/`PlanReviewResponseSchema`, only
+ * the transport differs.
+ */
+export class HostCliPlanReviewVerifier implements PlanReviewVerifier {
+  readonly name = 'host-cli';
+  constructor(private readonly o: HostCliPlanReviewVerifierOptions) {}
+
+  async verify(input: PlanReviewInput): Promise<PlanReviewResult> {
+    const parsed = await hostCliJSON({
+      bin: this.o.bin,
+      ...(this.o.model ? { model: this.o.model } : {}),
+      system: SYSTEM_PROMPT,
+      user: formatUserMessage(input.draft),
+      schema: PlanReviewResponseSchema,
+      ...(this.o.spawnImpl ? { spawnImpl: this.o.spawnImpl } : {}),
+    });
+    const findings: PlanReviewFinding[] = [];
+    for (const f of parsed.findings) {
+      findings.push({
+        severity: f.severity,
+        message: f.message,
+        ...(f.suggestedEdit !== undefined ? { suggestedEdit: f.suggestedEdit } : {}),
+      });
+    }
+    return {
+      pass: parsed.pass,
+      findings,
+      provider: this.name,
+      ...(this.o.model ? { model: this.o.model } : {}),
     };
   }
 }

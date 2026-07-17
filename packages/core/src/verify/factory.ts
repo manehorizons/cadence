@@ -1,7 +1,7 @@
 import type { CadenceConfig } from '@manehorizons/cadence-types';
 import { AnthropicVerifier } from './anthropic-verifier.js';
 import { MockVerifier } from './mock-verifier.js';
-import { LocalVerifier, type Verifier } from './verifier.js';
+import { HostCliVerifier, LocalVerifier, type Verifier } from './verifier.js';
 import {
   createVerifierFactory,
   type VerifierSelectOptions,
@@ -24,4 +24,5 @@ export const selectVerifier = createVerifierFactory<
   mock: () => new MockVerifier(),
   anthropic: (o) => new AnthropicVerifier(o),
   local: (o) => new LocalVerifier(o),
+  hostCli: (o) => new HostCliVerifier(o),
 });

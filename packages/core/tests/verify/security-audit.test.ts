@@ -1,11 +1,45 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   AnthropicSecurityAuditVerifier,
+  HostCliSecurityAuditVerifier,
   MockSecurityAuditVerifier,
   type SecurityAuditInput,
 } from '../../src/verify/security-audit.js';
+import type { SpawnFn, SpawnedProcessLike } from '../../src/verify/host-cli-client.js';
+import { HostCliError } from '../../src/verify/host-cli-client.js';
 import { selectSecurityAuditVerifier } from '../../src/verify/security-audit-factory.js';
+
+/** Mirrors `per-task.test.ts`'s `fakeSpawn` — stubs the subprocess transport
+ *  one layer below `hostCliJSON` so no test ever spawns a real binary. */
+function fakeSpawn(stdout: string, calls: Array<{ bin: string; args: string[] }>): SpawnFn {
+  return (bin, args) => {
+    calls.push({ bin, args });
+    const stdoutListeners: Array<(chunk: Buffer) => void> = [];
+    let closeListener: ((code: number | null) => void) | undefined;
+    const proc: SpawnedProcessLike = {
+      stdout: {
+        on: (event: string, cb: (chunk: Buffer) => void) => {
+          if (event === 'data') stdoutListeners.push(cb);
+          return proc.stdout as NodeJS.ReadableStream;
+        },
+      } as unknown as NodeJS.ReadableStream,
+      stderr: { on: () => proc.stderr } as unknown as NodeJS.ReadableStream,
+      on: (event: 'error' | 'close', cb: never) => {
+        if (event === 'close') closeListener = cb as (code: number | null) => void;
+        return proc;
+      },
+    };
+    queueMicrotask(() => {
+      stdoutListeners.forEach((l) => l(Buffer.from(stdout)));
+      closeListener?.(0);
+    });
+    return proc;
+  };
+}
+
+const claudeEnvelope = (result: unknown) =>
+  JSON.stringify({ is_error: false, result: JSON.stringify(result) });
 
 const cleanDiff = `--- a/src/foo.ts
 +++ b/src/foo.ts
@@ -190,10 +224,77 @@ describe('AnthropicSecurityAuditVerifier (AC-3)', () => {
   });
 });
 
+describe('HostCliSecurityAuditVerifier (AC-4)', () => {
+  // See per-task.test.ts: pin CLAUDECODE unset so the self-invocation guard
+  // doesn't trip when these tests run inside a Claude Code session.
+  let savedClaudecode: string | undefined;
+  beforeEach(() => {
+    savedClaudecode = process.env.CLAUDECODE;
+    delete process.env.CLAUDECODE;
+  });
+  afterEach(() => {
+    if (savedClaudecode === undefined) delete process.env.CLAUDECODE;
+    else process.env.CLAUDECODE = savedClaudecode;
+  });
+
+  it('AC-4: spawns the host CLI headlessly and returns the same result shape local/anthropic return', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(
+      claudeEnvelope({ findings: [{ severity: 'critical', message: 'hardcoded token', line: 4 }] }),
+      calls,
+    );
+    const v = new HostCliSecurityAuditVerifier({ bin: 'claude', spawnImpl });
+    const r = await v.verify(input);
+    expect(r).toEqual({
+      findings: [{ severity: 'critical', message: 'hardcoded token', line: 4 }],
+      provider: 'host-cli',
+    });
+    expect(calls[0]?.bin).toBe('claude');
+  });
+
+  it('returns no findings without spawning when no files + no diff', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(claudeEnvelope({ findings: [] }), calls);
+    const v = new HostCliSecurityAuditVerifier({ bin: 'claude', spawnImpl });
+    const r = await v.verify({ files: [], diff: '' });
+    expect(r.findings).toEqual([]);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('AC-4: forwards opts.signal to the spawn layer — an already-aborted signal short-circuits before spawning', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(claudeEnvelope({ findings: [] }), calls);
+    const v = new HostCliSecurityAuditVerifier({ bin: 'claude', spawnImpl });
+    const controller = new AbortController();
+    controller.abort();
+    await expect(v.verify(input, { signal: controller.signal, traceId: 'trace-1' })).rejects.toThrow(
+      HostCliError,
+    );
+    expect(calls).toHaveLength(0);
+  });
+
+  it('accepts traceId without erroring and without affecting the result', async () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const spawnImpl = fakeSpawn(claudeEnvelope({ findings: [] }), calls);
+    const v = new HostCliSecurityAuditVerifier({ bin: 'claude', spawnImpl });
+    const r = await v.verify(input, { traceId: 'trace-2' });
+    expect(r.findings).toEqual([]);
+  });
+});
+
 describe('selectSecurityAuditVerifier (AC-1)', () => {
   it('returns mock by default', () => {
     const v = selectSecurityAuditVerifier(null, { env: {} });
     expect(v.name).toBe('mock');
+  });
+
+  it('AC-4: resolves host-cli config to a HostCliSecurityAuditVerifier instance, not a mock fallback', () => {
+    const v = selectSecurityAuditVerifier(
+      { securityAudit: { provider: 'host-cli' } },
+      { env: {} },
+    );
+    expect(v.name).toBe('host-cli');
+    expect(v).toBeInstanceOf(HostCliSecurityAuditVerifier);
   });
 
   it('returns anthropic when configured + key present', () => {

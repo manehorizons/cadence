@@ -1,6 +1,7 @@
 import type { CadenceConfig } from '@manehorizons/cadence-types';
 import {
   AnthropicSecurityAuditVerifier,
+  HostCliSecurityAuditVerifier,
   LocalSecurityAuditVerifier,
   MockSecurityAuditVerifier,
   type SecurityAuditVerifier,
@@ -23,4 +24,5 @@ export const selectSecurityAuditVerifier = createVerifierFactory<
   mock: () => new MockSecurityAuditVerifier(),
   anthropic: (o) => new AnthropicSecurityAuditVerifier(o),
   local: (o) => new LocalSecurityAuditVerifier(o),
+  hostCli: (o) => new HostCliSecurityAuditVerifier(o),
 });
