@@ -411,7 +411,7 @@ function planVerification(
 }
 
 /**
- * Mirror `maybeWireHost`'s decision table (init.ts) as a pure report. A
+ * Mirror `maybeWireHost`'s decision table (init/host-wire.ts) as a pure report. A
  * prompter is "available" when `CADENCE_PROMPTER_SCRIPT` is set or stdin is a
  * TTY — the same test `makePrompter()` applies.
  */
