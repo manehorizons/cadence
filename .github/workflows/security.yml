@@ -55,7 +55,7 @@ jobs:
         with:
           version: 9.12.0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           # pnpm <11 hits npm's retired legacy audit endpoint (410 Gone —
           # pnpm/pnpm#11265); check-audit-exceptions.mjs works around this by
@@ -84,7 +84,7 @@ jobs:
         with:
           version: 9.12.0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: 'pnpm'
