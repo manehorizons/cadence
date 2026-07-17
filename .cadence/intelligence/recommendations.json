@@ -753,35 +753,6 @@
       "updatedAt": "2026-07-09T23:23:41.842Z"
     },
     {
-      "id": "rec-20260709-005",
-      "title": "cadence onboard: one-command setup for the 2nd-Nth teammate",
-      "summary": "For a developer cloning a repo that already has .cadence/ committed: one command does only the per-machine bits (host hooks, local paths, key check) instead of re-running full init. Pair with an init-generated CONTRIBUTING.md snippet so this path is discoverable.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "init",
-        "docs"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260709-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "189-cadence-onboard",
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:42.199Z",
-      "updatedAt": "2026-07-17T01:36:39.775Z"
-    },
-    {
       "id": "rec-20260710-001",
       "title": "Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning",
       "summary": "Users running cadence inside a live Claude Code session assume that auth exempts them from ANTHROPIC_API_KEY for the anthropic verifier provider, since Claude Code itself doesn't require that env var to run. It doesn't: cadence's anthropic provider is a direct Anthropic SDK call authenticated with a separate API-billed key, with zero visibility into Claude Code's own OAuth/subscription credential store. Surfaced live by an external consumer (phenyx) hitting silent mock-fallback with no obvious cause. Add an explicit callout to docs/providers.md and the mock-fallback warning text (verifier-factory.ts MOCK_FALLBACK_BANNER) distinguishing 'logged into Claude Code' from 'ANTHROPIC_API_KEY set' so the fallback isn't mistaken for a bug.",
@@ -3023,6 +2994,38 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-09T23:23:41.471Z",
       "updatedAt": "2026-07-17T00:12:03.650Z"
+    },
+    {
+      "id": "rec-20260709-005",
+      "title": "cadence onboard: one-command setup for the 2nd-Nth teammate",
+      "summary": "For a developer cloning a repo that already has .cadence/ committed: one command does only the per-machine bits (host hooks, local paths, key check) instead of re-running full init. Pair with an init-generated CONTRIBUTING.md snippet so this path is discoverable.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "init",
+        "docs"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "189-cadence-onboard",
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:42.199Z",
+      "updatedAt": "2026-07-17T02:15:25.497Z",
+      "shippedRef": "#219",
+      "archivedAt": "2026-07-17T02:15:25.497Z",
+      "archiveReason": "shipped"
     }
   ]
 }
