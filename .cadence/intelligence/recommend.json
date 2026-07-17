@@ -1,90 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-15T21:34:11.928Z",
+  "generatedAt": "2026-07-16T23:07:48.517Z",
   "ranked": [
-    {
-      "id": "rec-20260712-015",
-      "title": "Smoke-test the packed npm tarball (clean install -> init -> settle), not just in-repo dist",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-1234"
-    },
-    {
-      "id": "rec-20260714-003",
-      "title": "gateBypasses omits the --allow-auto-complex soft-cap override",
-      "raw": 13.7,
-      "score": 55,
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-evidence",
-          "value": 1
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
     {
       "id": "rec-20260619-008",
       "title": "Team rollout kit",
@@ -418,48 +335,6 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260712-002",
-      "title": "Cross-phase retro rollup/trend view",
-      "raw": 12.7,
-      "score": 53,
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready raw-idea",
-          "value": 0
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-0328"
     },
     {
       "id": "rec-20260712-003",
@@ -933,8 +808,8 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 45,
-    "ranked": 22,
+    "total": 42,
+    "ranked": 19,
     "parked": 1,
     "needsAttention": 0,
     "excluded": 22

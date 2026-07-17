@@ -703,8 +703,8 @@
       "title": "cadence quickstart: single mega-command for full setup",
       "summary": "One idempotent command = init + auto-detect/wire whatever host is present (.claude/, Codex, .cursor/, .mcp.json) + auto-populate verification.testCommand from package.json/pyproject/etc + activate if a key is already in env + seed a demo phase + print a doctor-style summary of what it did/skipped. Collapses ~5 separate init flags into one call.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
+      "status": "settle-pending",
+      "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -721,9 +721,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "188-cadence-quickstart",
       "scoutId": "scout-20260709-1813",
       "createdAt": "2026-07-09T23:23:41.471Z",
-      "updatedAt": "2026-07-09T23:23:41.471Z"
+      "updatedAt": "2026-07-16T23:44:35.905Z"
     },
     {
       "id": "rec-20260709-002",
@@ -3013,11 +3014,11 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "187-gate-bypass-auto-complex-override",
-      "createdAt": "2026-07-14T22:08:57.237Z",
-      "updatedAt": "2026-07-16T22:37:23.143Z",
       "shippedRef": "#211",
       "archivedAt": "2026-07-16T22:37:23.143Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-14T22:08:57.237Z",
+      "updatedAt": "2026-07-16T22:37:23.143Z"
     }
   ]
 }

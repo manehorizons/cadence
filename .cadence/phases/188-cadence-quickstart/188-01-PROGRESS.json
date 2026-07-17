@@ -1,0 +1,35 @@
+{
+  "draftId": "188-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-16T23:19:24.968Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Added consolidated Full setup summary block to init.ts, gated on raw --full flag; reuses existing skip-reason strings. Verified manually against everything-present and nothing-present fixtures; typecheck/lint/build all pass.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-16T23:25:20.604Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-16T23:25:31.572Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-16T23:31:10.203Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-16T23:32:06.492Z"
+    }
+  }
+}

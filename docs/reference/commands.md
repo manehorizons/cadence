@@ -178,6 +178,7 @@ Scaffold a new .cadence/ directory in the current working tree
 | `--gate-profile <p>` | (suggested from git history) | Gate profile: `strict \| standard \| auto` |
 | `--demo` | — | Seed a ready-to-approve demo phase (`01-demo`, objective + AC-1 + T1) so you can run a full loop in this repo with no hand-edit |
 | `--activate` | — | When `ANTHROPIC_API_KEY` is present, turn on real verification (`verifier.provider=anthropic`, deep-verify seam) in the same step. The key is never stored; no live check runs (that stays in `cadence activate`) |
+| `--full` | — | One-command full setup: wire the host, seed the demo phase, and activate real verification when their preconditions are met (each still yields to an explicitly-passed flag, e.g. `--skip-host-wire`) |
 | `--dry-run` | — | **Fit-check.** Resolve everything init would (name, gate profile, layout, test globs, verification/provider status, host surface, and the exact files it would create) and print a preview **without touching the repo** — then exit 0. Honors the resolution flags above; safe to run inside a populated or already-initialized repo |
 | `--host <host>` | — | Wire a host during init: `claude \| codex`. `codex` runs the Codex host installer and writes managed `AGENTS.md` instructions |
 | `--wire-host` | — | When a `.claude/` workspace is present, run `cadence-host-claude-code install` in the same step (subprocess spawn; auto-run, no prompt) |
@@ -206,6 +207,13 @@ installer is adapter-only; use it for already-initialized repos, paired with
 ready-to-approve demo phase so the very next commands are `draft approve
 01-demo 01` → `done T1` → `settle run --ac AC-1=pass`. `--activate` flips on
 real verification when a key is already in the environment.
+
+`--full` is sugar for `--wire-host --demo --activate` together: it composes
+all three per-step flags in one run and prints a single consolidated "Full
+setup summary" listing each as done or skipped-with-reason, printed in
+addition to the existing per-feature messages above it. Any explicitly-passed
+flag (including `--skip-host-wire`) still overrides its default within
+`--full`, and bare `cadence init` with no flags is unchanged.
 
 `--dry-run` is a non-destructive **fit-check**: run it first to preview the
 detected name, gate profile, layout, test globs, provider status, host surface,

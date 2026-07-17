@@ -364,8 +364,8 @@ Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, i
 
 ## rec-20260709-001 — cadence quickstart: single mega-command for full setup
 
-- status: candidate
-- ready: raw-idea
+- status: settle-pending
+- ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
