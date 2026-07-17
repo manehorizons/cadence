@@ -915,9 +915,9 @@ never prompts):
 
 | Fix kind | Findings | What `--fix` does |
 |---|---|---|
-| **auto** | `git-hooks`, missing `STATE.md`, missing managed `AGENTS.md` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`); regenerate `AGENTS.md` |
+| **auto** | `git-hooks`, missing `STATE.md`, missing managed `AGENTS.md`, `handoff-retention` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`); regenerate `AGENTS.md`; set `handoff.retain` to the default (10) when unset and prune the `SESSION-*.md` archive down to that budget (the active `lastHandoff` doc is always kept) |
 | **wire-host** | `host-hooks`, `host-commands`, `codex-hooks`, `codex-prompts` | applied only with `--fix --wire-host` — re-runs the relevant host installer once per host repair id (deduped) to rewrite hooks/commands |
-| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `handoff-retention`, `codex-cadence-command`, user-owned prompt/agent files | never auto-applied — reported as guidance with the check's remediation |
+| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `codex-cadence-command`, user-owned prompt/agent files | never auto-applied — reported as guidance with the check's remediation |
 
 Each repair is best-effort: a repair that fails is reported (`✗ failed`) and the
 rest still run; `--fix` never throws on a repair failure. `--fix --dry-run`

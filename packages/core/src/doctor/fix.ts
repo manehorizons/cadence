@@ -3,8 +3,10 @@ import { join } from 'node:path';
 import { renderStateMd } from '../render/state-md.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteText } from '../state/atomic-write.js';
-import { loadConfig } from '../config/loader.js';
+import { loadConfig, writeConfig } from '../config/loader.js';
 import { renderAgentsMd } from '../init/claude-md-template.js';
+import { pruneHandoffDir } from '../handoff/retention.js';
+import { HANDOFF_WARN_THRESHOLD } from './run.js';
 import type { DoctorReport } from './model.js';
 
 /**
@@ -36,6 +38,7 @@ const FIX_KIND: Record<string, Exclude<FixKind, 'manual'>> = {
   'host-install': 'wire-host',
   'codex-host-install': 'wire-host',
   'agents-md': 'auto',
+  'handoff-retention': 'auto',
 };
 
 const TITLES: Record<string, string> = {
@@ -44,6 +47,7 @@ const TITLES: Record<string, string> = {
   'host-install': 'Re-run the Claude Code host install',
   'codex-host-install': 'Re-run the Codex host install',
   'agents-md': 'Regenerate AGENTS.md',
+  'handoff-retention': 'Set handoff.retain and prune excess SESSION docs',
 };
 
 /**
@@ -134,6 +138,26 @@ async function regenerateAgentsMd(root: string): Promise<void> {
   );
 }
 
+/**
+ * Set `handoff.retain` (when unset) to `HANDOFF_WARN_THRESHOLD` and prune the
+ * SESSION-doc archive down to budget (the handoff-retention repair). Reuses
+ * `pruneHandoffDir`/`selectPrunable` as-is — never reimplements pruning. If
+ * `handoff.retain` is already set (defensive: `checkHandoffRetention` only
+ * fails when it's unset, so this branch shouldn't normally run), the repair
+ * still prunes using that existing value rather than overwriting a user's
+ * explicit setting.
+ */
+async function pruneHandoffRetention(root: string): Promise<void> {
+  const config = await loadConfig(root);
+  let retain = config.handoff.retain;
+  if (retain === undefined) {
+    retain = HANDOFF_WARN_THRESHOLD;
+    await writeConfig(root, { ...config, handoff: { ...config.handoff, retain } });
+  }
+  const state = await new SimpleStateBackend(root).readState();
+  await pruneHandoffDir(join(root, '.cadence', 'handoff'), retain, state.session.lastHandoff ?? '');
+}
+
 const HOST_WIRE_DISPLAY = 'npx @manehorizons/cadence-host-claude-code install';
 const CODEX_HOST_WIRE_DISPLAY = 'npx -y @manehorizons/cadence-host-codex install';
 
@@ -206,6 +230,8 @@ async function runRepair(root: string, fixId: string, deps: ApplyDeps): Promise<
       return regenerateStateMd(root);
     case 'agents-md':
       return regenerateAgentsMd(root);
+    case 'handoff-retention':
+      return pruneHandoffRetention(root);
     case 'host-install': {
       const code = await (deps.hostInstall ?? defaultHostInstall)(root);
       if (code !== 0) throw new Error(`${HOST_WIRE_DISPLAY} exited ${code}`);

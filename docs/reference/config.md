@@ -411,10 +411,12 @@ keeps the active handoff, reports what it removed (`handoff: pruned N stale doc(
 behavior is opt-in and the dated archive that `cadence resume` relies on is preserved (the newest N),
 nothing the resume flow needs is destroyed.
 
-`cadence doctor` includes a read-only `handoff-retention` check: `ok` when the count is within the
+`cadence doctor` includes a `handoff-retention` check: `ok` when the count is within the
 `retain` budget (or retention is set and the next write will self-heal the excess), and a `warning`
 only when retention is **unset** and at least 10 docs have piled up — suggesting a `handoff.retain`
-value to cap the growth.
+value to cap the growth. `cadence doctor --fix` auto-remediates that warning: it sets `handoff.retain`
+to the default (10) and immediately prunes the archive down to budget (see `docs/reference/commands.md`'s
+`cadence doctor` section for the full `--fix` classification table).
 
 ```jsonc
 // .cadence/config.json — keep the 10 most-recent session handoffs
