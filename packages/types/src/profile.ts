@@ -18,6 +18,7 @@ export const GateZ = z.enum([
   'draft-read',
   'test-coverage',
   'anomaly-notify',
+  'task-verify-required',
   // Medium
   'approve',
   'per-task-verify',

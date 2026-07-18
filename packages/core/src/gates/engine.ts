@@ -33,6 +33,7 @@ const DELTAS: Record<Profile, Record<Tier, Gate[]>> = {
       'interactive-verdict',
       'per-task-verify',
       'code-review',
+      'task-verify-required',
     ],
     complex: [
       'draft-read',
@@ -43,11 +44,12 @@ const DELTAS: Record<Profile, Record<Tier, Gate[]>> = {
       'code-review',
       'plan-review',
       'security-audit',
+      'task-verify-required',
     ],
   },
   standard: {
     'quick-fix': ['test-coverage'],
-    standard: ['test-coverage', 'draft-read', 'approve', 'anomaly-notify'],
+    standard: ['test-coverage', 'draft-read', 'approve', 'anomaly-notify', 'task-verify-required'],
     complex: [
       'test-coverage',
       'draft-read',
@@ -55,12 +57,13 @@ const DELTAS: Record<Profile, Record<Tier, Gate[]>> = {
       'anomaly-notify',
       'code-review',
       'deep-verify',
+      'task-verify-required',
     ],
   },
   auto: {
     'quick-fix': ['anomaly-notify'],
-    standard: ['test-coverage', 'anomaly-notify'],
-    complex: ['test-coverage', 'anomaly-notify'],
+    standard: ['test-coverage', 'anomaly-notify', 'task-verify-required'],
+    complex: ['test-coverage', 'anomaly-notify', 'task-verify-required'],
   },
 };
 

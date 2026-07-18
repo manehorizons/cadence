@@ -116,7 +116,7 @@ heading typo has silently corrupted AC/task sequencing before.
 
 ### Gates
 
-The gate universe (13 gates: 3 always-fire + 10 deltas) is defined in
+The gate universe (14 gates: 3 always-fire + 11 deltas) is defined in
 `packages/core/src/gates/engine.ts`. The full matrix and bypass flags are in
 `docs/concepts.md` — when changing gates, update `engine.ts` and
 `docs/concepts.md` **together**; do not duplicate the table anywhere else.
