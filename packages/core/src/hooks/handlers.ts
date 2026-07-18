@@ -215,14 +215,19 @@ export async function handleSubagentResult(
   config: CadenceConfig,
   backend: SimpleStateBackend,
 ): Promise<HookResult> {
-  state.session.subagentSpawns += 1;
-
   const agentId = ctx.agentId;
   const baseline = agentId ? state.session.subagentBaselines[agentId] : undefined;
   if (!agentId || !baseline) {
-    await backend.commit(state);
+    // Sole mutation on this path is the spawn-count telemetry increment —
+    // route it through the revision-exempt path (issue #234) so a
+    // long-running gate elsewhere can never see this as a structural
+    // conflict. Bumps on-disk state directly rather than persisting the
+    // in-memory `state` snapshot, so the in-memory object is intentionally
+    // left untouched here (see `bumpSessionCounter` doc).
+    await backend.bumpSessionCounter('subagentSpawns', 1);
     return { ok: true };
   }
+  state.session.subagentSpawns += 1;
 
   // Always prune the baseline after this check — it's a one-shot comparison,
   // ephemeral session state, never persisted into SUMMARY.json.
