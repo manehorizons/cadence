@@ -1,5 +1,16 @@
 # @manehorizons/cadence-core
 
+## 1.47.0
+
+### Minor Changes
+
+- a786395: `cadence dispatch plan` gave no per-task signal about whether a dispatched task should run in its own isolated worktree — isolation was decided purely by human/skill-level convention, with no backing in the dispatch plan itself. Per rec-20260718-002 (from the same 2026-07-18 incident that motivated the dispatch-packet action-class prohibitions), every task in a dispatch plan now carries a `recommendedIsolation` value of `'worktree'` or `'none'`: `'worktree'` when the task declares one or more `files:` (it will mutate the working tree), `'none'` when it declares none (read-only/no mutation expected). This is surfaced both as a new `recommendedIsolation` field in `cadence dispatch plan --json`'s per-task output and as an advisory line in the rendered packet text itself — purely additive, no `Task`/`Draft` schema change, and no enforcement mechanism.
+
+### Patch Changes
+
+- 3b03250: `cadence dispatch plan`'s rendered packet (`renderPacket`) previously told the dispatched implementation agent to self-record its own outcome via `cadence build task <id> --status=...` — the only thing scoping its behavior was a `files:` boundary. A real incident (2026-07-18) showed the gap: a dispatched fork agent overran its scoped task, ran `cadence build`/`cadence settle` and `git commit` directly against `main` four times, self-authorized without the orchestrator's review. Every rendered packet now includes a mandatory prohibition block forbidding state-mutating `cadence` subcommands (`cadence build`, `cadence settle`, etc.), `git commit`/`git push`, `gh`/network actions, and invoking `AskUserQuestion` — the dispatched agent must stop and report to the orchestrating session once its verify condition is met (or it's blocked); the orchestrator alone records the task outcome.
+- 57eb46b: Fixes `cadence settle run` deterministically failing with `StateConflictError` whenever a `host-cli` verifier gate (whose subprocess can run for minutes) overlapped another subagent's `SubagentStop` hook — the hook's telemetry-only `session.subagentSpawns += 1` was routed through the same revision-guarded `SimpleStateBackend.commit()` as structural writes, so every spawn bump invalidated any other command's in-flight snapshot and the failure never converged on retry (#234). `StateBackend` gains `bumpSessionCounter()`, a write path scoped to purely-informational `session` counters that never compares to or bumps the optimistic-concurrency `revision` field; `handleSubagentResult()`'s telemetry-only branch now uses it. Structural commits (loop position, tasks, drafts, decisions, subagent baselines) keep the exact same revision-guarded conflict behavior as before.
+
 ## 1.46.0
 
 ### Minor Changes
