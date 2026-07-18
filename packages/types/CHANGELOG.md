@@ -1,5 +1,15 @@
 # @manehorizons/cadence-types
 
+## 1.46.0
+
+### Minor Changes
+
+- 3e9319e: Add `cadence retro`, a read-only cross-phase rollup over every settled phase's post-settle retro artifact (`.cadence/phases/*/*-RETRO.json`). It aggregates gate-bypass names, rough-task statuses, and code-review/security-audit/boundary-scan finding categories across all scanned phases, splitting each dimension into a **recurring** bucket (2+ phases) and a **one-off** bucket (exactly 1 phase) so friction that keeps showing up isn't buried under single-occurrence noise. Supports `--format terminal|json` (default `terminal`), mirroring `cadence intelligence stats`'s format-flag and exit-code conventions; never writes to `state.json`, `STATE.md`, or any phase artifact. `@manehorizons/cadence-types` gains additive `RetroRollupZ`, `PhaseRetroEntryZ`, `RetroFrequencyEntryZ`, and `RetroFrequencyBucketsZ` schemas (and their inferred types) backing the rollup shape. Fulfils rec-20260712-002.
+
+### Patch Changes
+
+- 42dc58f: Fix `--allow-auto-complex` soft-cap overrides being invisible in `SUMMARY.json` and the real-time anomaly-notify transport. Settling a phase under the auto×complex soft cap with `--allow-auto-complex` now records a `{ gate: 'soft-cap', flag: '--allow-auto-complex', severity: 'warn' }` entry in `SUMMARY.json`'s `gateBypasses`, and `cadence draft approve --allow-auto-complex` now emits a new `auto-complex-override` `AnomalyEvent` through the anomaly-notify transport (mirroring `coherence-warn`) when the `anomaly-notify` gate is active. `@manehorizons/cadence-types` gains the additive `'auto-complex-override'` value on `AnomalyTypeZ`.
+
 ## 1.45.0
 
 ### Minor Changes
