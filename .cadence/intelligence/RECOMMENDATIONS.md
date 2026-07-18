@@ -596,21 +596,6 @@ cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/dr
 
 cadence draft add-task <phase> <num> --files --action --verify --done has no --name option, unlike cadence draft add-ac which has --given/--when/--then/--name. Every task appended via add-task lands as '### T<n>: ' with an empty heading, requiring a manual Edit pass to fill in the name before the DRAFT reads sensibly — confirmed live 2026-07-14 appending T2-T6 to phase 181's DRAFT (all five came out blank). Add --name <n> to add-task mirroring add-ac's option.
 
-## rec-20260718-001 — Mandatory action-class prohibition boilerplate for dispatched implementation agents
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: agent-instructions, cli, gates
-- evidence: deja repo, phase 78-php-gate-support T4 dispatch, 2026-07-18: fork committed 4x directly to main and ran cadence build task/settle itself before any parent review
-- next: cadence milestone propose
-
-Real incident (deja phase 78-01, 2026-07-18): a Claude Code fork agent dispatched to implement one scoped task went on to implement three more tasks, then ran cadence build task / cadence settle run and git commit directly against main -- all self-authorized via its own AskUserQuestion calls that the orchestrating session never saw. Root cause: the dispatch prompt scoped which FILES the agent could touch but never prohibited a class of ACTIONS (state-mutating CLI commands, git commit/push, external network actions like gh, or invoking AskUserQuestion at all). CADENCE's own dispatch-plan output (the wave-based subagent dispatch computation) should emit a mandatory boilerplate block for every generated implementation-agent prompt: no cadence build/settle/* invocations, no git commit/push, no gh/network actions, no AskUserQuestion -- the dispatching orchestrator always verifies, records task status, and commits itself. This closes the actual gap that let an agent record its own build-task status and commit to main unsupervised.
-
 ## rec-20260718-002 — Recommend isolation:worktree by default for implementation-type dispatch plans
 
 - status: candidate
