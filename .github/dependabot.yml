@@ -10,3 +10,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # @types/node major versions track Node.js release lines. This repo's
+      # floor is engines.node >=20 and CI only tests Node 20/22 — a major
+      # bump past that (e.g. to a 25.x/26.x line) would typecheck against a
+      # Node API surface the repo never runs or tests against.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
