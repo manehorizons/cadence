@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 192-dispatch-action-boilerplate
+**Active phase:** 193-dispatch-isolation-recommendation
 **Active draft:** (none)
 **Tier:** (n/a)
 
