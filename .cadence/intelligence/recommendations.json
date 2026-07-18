@@ -781,33 +781,6 @@
       "updatedAt": "2026-07-10T22:18:39.729Z"
     },
     {
-      "id": "rec-20260710-004",
-      "title": "Headless-CLI verifier: batching, fallback-chain, and model-passthrough behavior",
-      "summary": "Implementation-detail decisions that apply once a headless host-CLI verifier provider (rec-20260710-002 or its MCP-inversion sibling) ships: (1) batch all ACs for a gate-run into one subprocess spawn rather than one spawn per AC, to offset process-spawn latency/cost; (2) treat the provider as a free upgrade over mock -- fall back to mock with the existing loud-fallback banner if the host CLI errors or isn't installed, never silently; (3) accept the host CLI's own model choice as the default (simplicity, 'whatever the user already pays for') but expose a --model passthrough where the host CLI supports it, to preserve today's per-gate model selection story.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "verify",
-        "providers"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260710-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260710-2126",
-      "createdAt": "2026-07-10T22:11:55.587Z",
-      "updatedAt": "2026-07-10T22:11:55.587Z"
-    },
-    {
       "id": "rec-20260710-005",
       "title": "Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report",
       "summary": "A headless host-CLI verifier subprocess has zero shared context with the calling session -- arguably a stronger independence claim than today's same-session self-report or even a direct API call under the same account. Worth a docs/positioning pass tying this framing to the existing 'trustworthy verifier' wedge and the mock-default competitive risk, independent of which engineering direction (rec-20260710-002 direct-subprocess vs MCP-inversion sibling) ships.",
@@ -3024,11 +2997,41 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "190-doctor-fix-handoff-retention",
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:41.643Z",
-      "updatedAt": "2026-07-18T02:41:38.768Z",
       "shippedRef": "PR #222 / v1.46.0",
+      "scoutId": "scout-20260709-1813",
       "archivedAt": "2026-07-18T02:41:38.768Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-09T23:23:41.643Z",
+      "updatedAt": "2026-07-18T02:41:38.768Z"
+    },
+    {
+      "id": "rec-20260710-004",
+      "title": "Headless-CLI verifier: batching, fallback-chain, and model-passthrough behavior",
+      "summary": "Implementation-detail decisions that apply once a headless host-CLI verifier provider (rec-20260710-002 or its MCP-inversion sibling) ships: (1) batch all ACs for a gate-run into one subprocess spawn rather than one spawn per AC, to offset process-spawn latency/cost; (2) treat the provider as a free upgrade over mock -- fall back to mock with the existing loud-fallback banner if the host CLI errors or isn't installed, never silently; (3) accept the host CLI's own model choice as the default (simplicity, 'whatever the user already pays for') but expose a --model passthrough where the host CLI supports it, to preserve today's per-gate model selection story.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "providers"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260710-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260710-2126",
+      "createdAt": "2026-07-10T22:11:55.587Z",
+      "updatedAt": "2026-07-18T04:30:11.120Z",
+      "shippedRef": "phase 165/PR #164, phase 178/PR #193, phase 184/PR #203, phase 191/PR #223 -- batching, fallback-chain, and model-passthrough all landed incidentally across these, no dedicated phase needed",
+      "archivedAt": "2026-07-18T04:30:11.120Z",
       "archiveReason": "shipped"
     }
   ]

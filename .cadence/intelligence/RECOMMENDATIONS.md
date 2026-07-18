@@ -407,21 +407,6 @@ Users running cadence inside a live Claude Code session assume that auth exempts
 
 Alternative to shelling out to the host CLI: instead run the host CLI headlessly and have IT call into cadence's own MCP verify tool, using the host's native tool-calling to enforce the per-AC verdict schema rather than parsing freeform JSON from a subprocess. Worth prototyping against rec-20260710-002's direct-subprocess approach before committing -- tool-call-constrained output may be materially more reliable than prompt-and-parse, at the cost of a more unusual control-flow (host CLI as the driver, cadence as the callee).
 
-## rec-20260710-004 — Headless-CLI verifier: batching, fallback-chain, and model-passthrough behavior
-
-- status: candidate
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: verify, providers
-- evidence: Surfaced in cadence-scout session on rec-20260710-002, 2026-07-10; implementation details for whichever headless-CLI provider direction is chosen
-- next: cadence milestone propose
-
-Implementation-detail decisions that apply once a headless host-CLI verifier provider (rec-20260710-002 or its MCP-inversion sibling) ships: (1) batch all ACs for a gate-run into one subprocess spawn rather than one spawn per AC, to offset process-spawn latency/cost; (2) treat the provider as a free upgrade over mock -- fall back to mock with the existing loud-fallback banner if the host CLI errors or isn't installed, never silently; (3) accept the host CLI's own model choice as the default (simplicity, 'whatever the user already pays for') but expose a --model passthrough where the host CLI supports it, to preserve today's per-gate model selection story.
-
 ## rec-20260710-005 — Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report
 
 - status: candidate
