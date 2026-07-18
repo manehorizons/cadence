@@ -1,5 +1,13 @@
 # @manehorizons/cadence-types
 
+## 1.47.0
+
+### Patch Changes
+
+- `cadence-types` carries a version-alignment bump to stay in lockstep with
+  `cadence-core`, `cadence-host-claude-code`, and `cadence-host-codex`; no
+  functional change.
+
 ## 1.46.0
 
 ### Minor Changes
