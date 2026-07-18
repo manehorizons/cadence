@@ -208,9 +208,9 @@ always-fire gates for each profile × tier cell. Source of truth:
 
 | | `quick-fix` | `standard` | `complex` |
 |---|---|---|---|
-| **strict** | `draft-read` · `approve` · `test-coverage` · `interactive-verdict` | + `per-task-verify` · `code-review` | + `plan-review` · `security-audit` |
-| **standard** | `test-coverage` | + `draft-read` · `approve` · `anomaly-notify` | + `code-review` · `deep-verify` |
-| **auto** | `anomaly-notify` | + `test-coverage` | **soft cap** (see below) |
+| **strict** | `draft-read` · `approve` · `test-coverage` · `interactive-verdict` | + `per-task-verify` · `code-review` · `task-verify-required` | + `plan-review` · `security-audit` |
+| **standard** | `test-coverage` | + `draft-read` · `approve` · `anomaly-notify` · `task-verify-required` | + `code-review` · `deep-verify` |
+| **auto** | `anomaly-notify` | + `test-coverage` · `task-verify-required` | **soft cap** (see below) |
 
 > **Reading the table:** each cell lists gates *added on top of the previous
 > tier in that profile row* via the `+` prefix. (`engine.ts` stores the full
@@ -231,7 +231,7 @@ The cap is implemented as `softCap: true` in the `GateSet` return value from
 
 ## The gate universe
 
-CADENCE has **13 gates** in total: 3 that always fire and 10 delta gates grouped
+CADENCE has **14 gates** in total: 3 that always fire and 11 delta gates grouped
 by cost band. Gate names are the canonical strings from `GateZ` in
 `packages/types/src/profile.ts`.
 
@@ -254,6 +254,7 @@ These run on every phase regardless of profile or tier.
 | `draft-read` | Settle refuses if `DRAFT.md` was modified after `draft approve` (mtime check) | `--allow-stale-draft` (on `settle run`) |
 | `test-coverage` | Each AC must have at least one test file that contains the token `AC-N`. A fresh `cadence init` writes `verification.coverageMode: "assertion"` (Phase 139, all presets) which requires the token inside an asserting `it()`/`test()` block — a comment-only mention refuses as a *weak link*, and an AC whose only linked test(s) are `it.skip`/`test.todo`/`.failing` (the "skip dodge") refuses distinctly as *skip-only linked* (Phase 169). `coverageMode: "mention"` (any occurrence anywhere in the file counts) remains the schema-level fallback for configs that predate this field. | `--allow-missing-coverage` (on `settle run`) |
 | `anomaly-notify` | Emit anomaly events (blocked tasks, out-of-boundary edits, coherence warns, loop violations, …) via the configured transport | No bypass — transport failures degrade gracefully |
+| `task-verify-required` | Settle refuses if any `DONE` task's DRAFT block has an empty or missing `- verify:` line (issue #206 / rec-20260712-001); names every offending task id | No bypass — add the missing `- verify:` line and re-settle |
 
 #### Medium
 
@@ -274,7 +275,7 @@ These run on every phase regardless of profile or tier.
 
 ### Stage-scoped gates (outside the profile × tier matrix)
 
-The 13 gates above are the profile × tier universe. A few **stage-scoped**,
+The 14 gates above are the profile × tier universe. A few **stage-scoped**,
 provider-backed review gates fire at a specific loop transition regardless of
 the active cell — they are deliberately *not* matrix cells because the stage
 itself (or the relevant tier) is the opt-in. `plan-review` (above) is one such

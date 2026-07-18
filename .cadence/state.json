@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "revision": 833,
+  "revision": 841,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "194-settle-telemetry-revision-conflict",
+  "activePhase": "195-settle-refuses-bare-tn-done-with-no-verify-evidence",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-18T19:54:59.744Z",
+  "draftReadAt": "2026-07-18T22:16:24.145Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],

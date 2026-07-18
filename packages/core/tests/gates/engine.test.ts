@@ -105,9 +105,14 @@ describe('gatesFor — matrix coverage', () => {
     expect(set.softCap).toBe(false);
   });
 
-  it('auto × standard: adds test-coverage + anomaly-notify', () => {
+  it('auto × standard: adds test-coverage + anomaly-notify + task-verify-required', () => {
     const set = gatesFor('standard', 'auto');
-    expect(set.gates).toEqual([...ALWAYS, 'test-coverage', 'anomaly-notify']);
+    expect(set.gates).toEqual([
+      ...ALWAYS,
+      'test-coverage',
+      'anomaly-notify',
+      'task-verify-required',
+    ]);
     expect(set.softCap).toBe(false);
   });
 
@@ -141,7 +146,12 @@ describe('effectiveGateSet', () => {
 
   it('defaults to standard tier + auto profile when nothing is specified', () => {
     const set = effectiveGateSet({ tier: null }, null, null);
-    expect(set.gates).toEqual([...ALWAYS, 'test-coverage', 'anomaly-notify']);
+    expect(set.gates).toEqual([
+      ...ALWAYS,
+      'test-coverage',
+      'anomaly-notify',
+      'task-verify-required',
+    ]);
     expect(set.softCap).toBe(false);
   });
 });

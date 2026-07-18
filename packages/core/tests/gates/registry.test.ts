@@ -17,12 +17,14 @@ import { runInteractiveGate } from '../../src/gates/interactive.js';
 import { runDeepVerifyGate } from '../../src/gates/deep-verify.js';
 import { runCodeReviewGate } from '../../src/gates/code-review.js';
 import { runSecurityAuditGate } from '../../src/gates/security-audit.js';
+import { runTaskVerifyRequiredGate } from '../../src/gates/task-verify-required.js';
 
-/** The nine settle gates in their canonical execution order. */
+/** The ten settle gates in their canonical execution order. */
 const EXPECTED_ORDER: SettleGate[] = [
   'draft-read',
   'structural-verifier',
   'boundary-scan',
+  'task-verify-required',
   'build-test-must-pass',
   'test-coverage',
   'interactive-verdict',
@@ -48,6 +50,7 @@ function recordingRegistry(
     'draft-read': entry('draft-read'),
     'structural-verifier': entry('structural-verifier'),
     'boundary-scan': entry('boundary-scan'),
+    'task-verify-required': entry('task-verify-required'),
     'build-test-must-pass': entry('build-test-must-pass'),
     'test-coverage': entry('test-coverage'),
     'interactive-verdict': entry('interactive-verdict'),
@@ -63,7 +66,7 @@ function ctxWith(gates: string[]): SettleContext {
 }
 
 describe('GATE registry wiring (Phase 44.1)', () => {
-  it('GATE_ORDER is the canonical 8-gate execution order (AC-3)', () => {
+  it('GATE_ORDER is the canonical 10-gate execution order (AC-3)', () => {
     expect(GATE_ORDER).toEqual(EXPECTED_ORDER);
   });
 
@@ -75,6 +78,7 @@ describe('GATE registry wiring (Phase 44.1)', () => {
     expect(GATE_REGISTRY['draft-read'].impl).toBe(runDraftReadGate);
     expect(GATE_REGISTRY['structural-verifier'].impl).toBe(runStructuralVerifierGate);
     expect(GATE_REGISTRY['boundary-scan'].impl).toBe(runBoundaryScanGate);
+    expect(GATE_REGISTRY['task-verify-required'].impl).toBe(runTaskVerifyRequiredGate);
     expect(GATE_REGISTRY['build-test-must-pass'].impl).toBe(runBuildTestGate);
     expect(GATE_REGISTRY['test-coverage'].impl).toBe(runCoverageGate);
     expect(GATE_REGISTRY['interactive-verdict'].impl).toBe(runInteractiveGate);
@@ -132,6 +136,7 @@ describe('runSettleGates dispatch (Phase 44.1)', () => {
       'draft-read',
       'structural-verifier',
       'boundary-scan',
+      'task-verify-required',
       'build-test-must-pass',
       'test-coverage',
     ]);
@@ -154,6 +159,7 @@ describe('runSettleGates dispatch (Phase 44.1)', () => {
       'draft-read',
       'structural-verifier',
       'boundary-scan',
+      'task-verify-required',
       'build-test-must-pass',
       'test-coverage',
     ]);
@@ -273,6 +279,7 @@ describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
       { gate: 'draft-read', status: 'ran' },
       { gate: 'structural-verifier', status: 'ran' },
       { gate: 'boundary-scan', status: 'skipped', skipReason: 'boundaryEnforcement is not "block"' },
+      { gate: 'task-verify-required', status: 'ran' },
       { gate: 'build-test-must-pass', status: 'ran' },
       { gate: 'test-coverage', status: 'refused' },
     ]);
@@ -296,6 +303,7 @@ describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
       { gate: 'draft-read', status: 'ran' },
       { gate: 'structural-verifier', status: 'ran' },
       { gate: 'boundary-scan', status: 'skipped', skipReason: 'boundaryEnforcement is not "block"' },
+      { gate: 'task-verify-required', status: 'ran' },
       { gate: 'build-test-must-pass', status: 'ran' },
     ]);
   });

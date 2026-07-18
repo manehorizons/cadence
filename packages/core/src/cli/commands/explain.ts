@@ -55,11 +55,11 @@ export const CONCEPTS: Record<string, Concept> = {
     ].join('\n'),
   },
   gates: {
-    blurb: 'The 13 quality checks that fire across the loop, by cost band.',
+    blurb: 'The 14 quality checks that fire across the loop, by cost band.',
     body: [
       'Gates',
       '',
-      'CADENCE has 13 gates: 3 that always fire and 10 delta gates added per',
+      'CADENCE has 14 gates: 3 that always fire and 11 delta gates added per',
       '(profile × tier) cell. Which fire is decided in gates/engine.ts; the full',
       'matrix lives in docs/concepts.md.',
       '',
@@ -69,7 +69,7 @@ export const CONCEPTS: Record<string, Concept> = {
       '  build-test-must-pass  configured test command must exit 0 at settle',
       '',
       'Delta gates by cost band (added on top of always-fire):',
-      '  cheap      draft-read · test-coverage · anomaly-notify',
+      '  cheap      draft-read · test-coverage · anomaly-notify · task-verify-required',
       '  medium     approve · per-task-verify · code-review',
       '  expensive  deep-verify · interactive-verdict · plan-review · security-audit',
       '',

@@ -11,6 +11,7 @@ import { runInteractiveGate, isInteractiveRequested } from './interactive.js';
 import { runDeepVerifyGate, isDeepVerifyRequested } from './deep-verify.js';
 import { runCodeReviewGate } from './code-review.js';
 import { runSecurityAuditGate } from './security-audit.js';
+import { runTaskVerifyRequiredGate } from './task-verify-required.js';
 import { effectiveBoundaryEnforcement } from './engine.js';
 import { getLogger } from '../logging/logger.js';
 
@@ -48,6 +49,7 @@ export const GATE_REGISTRY: Record<SettleGate, GateEntry> = {
   'draft-read': { impl: runDraftReadGate },
   'structural-verifier': { impl: runStructuralVerifierGate },
   'boundary-scan': { impl: runBoundaryScanGate, selfGuarded: true },
+  'task-verify-required': { impl: runTaskVerifyRequiredGate },
   'build-test-must-pass': { impl: runBuildTestGate },
   'test-coverage': { impl: runCoverageGate },
   'interactive-verdict': { impl: runInteractiveGate, selfGuarded: true },
@@ -68,6 +70,7 @@ export const GATE_ORDER: SettleGate[] = [
   'draft-read',
   'structural-verifier',
   'boundary-scan',
+  'task-verify-required',
   'build-test-must-pass',
   'test-coverage',
   'interactive-verdict',
