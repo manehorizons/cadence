@@ -586,7 +586,13 @@ leveling pass over both `depends:` edges and synthetic `files:`-overlap
 prerequisite edges (a task's wave is always strictly after every one of its
 real-or-synthetic prerequisites — not a separate `depends:` pass followed by a
 `files:` veto, which can silently place a task in the same wave as its own
-dependent), and renders a self-contained dispatch packet per task. Tasks
+dependent), and renders a self-contained dispatch packet per task. Every
+rendered packet includes a mandatory prohibition block: the dispatched
+agent is forbidden from running state-mutating `cadence` subcommands (e.g.
+`cadence build`/`cadence settle`), `git commit`/`git push`, `gh`/network
+actions, or invoking `AskUserQuestion` — once its verify condition is met
+(or it is blocked), it must stop and report back to the orchestrating
+session, which alone records the task's outcome. Tasks
 already `DONE`/`DONE_WITH_CONCERNS` are excluded from every wave.
 Outside BUILD (no active draft), reports "nothing to plan" at exit 0. When
 every task is already finished, reports "nothing to dispatch" at exit 0.

@@ -48,9 +48,21 @@ describe('renderPacket', () => {
     expect(packet.toLowerCase()).toContain('redundant');
   });
 
-  it('tells the subagent to record its own outcome via cadence build task', () => {
+  it('tells the subagent to stop and report to the orchestrator instead of recording its own outcome', () => {
     const packet = renderPacket(task, draft);
-    expect(packet).toContain('cadence build task T1');
+    expect(packet.toLowerCase()).toContain('stop');
+    expect(packet.toLowerCase()).toContain('orchestrat');
+    expect(packet).not.toContain('cadence build task T1');
+  });
+
+  it('includes a mandatory prohibition block naming forbidden action classes', () => {
+    const packet = renderPacket(task, draft);
+    expect(packet).toContain('cadence build');
+    expect(packet).toContain('cadence settle');
+    expect(packet).toContain('git commit');
+    expect(packet).toContain('git push');
+    expect(packet).toContain('gh ');
+    expect(packet).toContain('AskUserQuestion');
   });
 
   it('handles a task with no declared files', () => {
