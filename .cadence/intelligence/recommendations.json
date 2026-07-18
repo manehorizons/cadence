@@ -699,34 +699,6 @@
       "updatedAt": "2026-07-02T03:24:53.670Z"
     },
     {
-      "id": "rec-20260709-002",
-      "title": "cadence doctor --fix: auto-remediate mechanical health-check failures",
-      "summary": "doctor's checks currently only print fix suggestions. Auto-remediate everything mechanical (rewire host hooks, regenerate host configs, prune stale handoffs past retention budget) so only genuine judgment calls (e.g. verification-readiness) are left as print-and-suggest.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "doctor"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260709-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "190-doctor-fix-handoff-retention",
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:41.643Z",
-      "updatedAt": "2026-07-17T22:07:47.210Z"
-    },
-    {
       "id": "rec-20260709-003",
       "title": "cadence init --ci: generate + enforce a CI gate workflow for consumer repos",
       "summary": "Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow that re-runs the gate suite on PRs, plus a one-shot recipe/script to make it a required branch-protection check. Closes the gap where gates exist locally but nothing enforces them in the team's actual PR flow.",
@@ -3027,6 +2999,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-09T23:23:42.199Z",
       "updatedAt": "2026-07-17T02:15:25.497Z"
+    },
+    {
+      "id": "rec-20260709-002",
+      "title": "cadence doctor --fix: auto-remediate mechanical health-check failures",
+      "summary": "doctor's checks currently only print fix suggestions. Auto-remediate everything mechanical (rewire host hooks, regenerate host configs, prune stale handoffs past retention budget) so only genuine judgment calls (e.g. verification-readiness) are left as print-and-suggest.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "doctor"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "190-doctor-fix-handoff-retention",
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:41.643Z",
+      "updatedAt": "2026-07-18T02:41:38.768Z",
+      "shippedRef": "PR #222 / v1.46.0",
+      "archivedAt": "2026-07-18T02:41:38.768Z",
+      "archiveReason": "shipped"
     }
   ]
 }
