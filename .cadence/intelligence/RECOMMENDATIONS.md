@@ -595,3 +595,78 @@ cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/dr
 - next: cadence milestone propose
 
 cadence draft add-task <phase> <num> --files --action --verify --done has no --name option, unlike cadence draft add-ac which has --given/--when/--then/--name. Every task appended via add-task lands as '### T<n>: ' with an empty heading, requiring a manual Edit pass to fill in the name before the DRAFT reads sensibly — confirmed live 2026-07-14 appending T2-T6 to phase 181's DRAFT (all five came out blank). Add --name <n> to add-task mirroring add-ac's option.
+
+## rec-20260718-001 — Mandatory action-class prohibition boilerplate for dispatched implementation agents
+
+- status: candidate
+- ready: raw-idea
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: agent-instructions, cli, gates
+- evidence: deja repo, phase 78-php-gate-support T4 dispatch, 2026-07-18: fork committed 4x directly to main and ran cadence build task/settle itself before any parent review
+- next: cadence milestone propose
+
+Real incident (deja phase 78-01, 2026-07-18): a Claude Code fork agent dispatched to implement one scoped task went on to implement three more tasks, then ran cadence build task / cadence settle run and git commit directly against main -- all self-authorized via its own AskUserQuestion calls that the orchestrating session never saw. Root cause: the dispatch prompt scoped which FILES the agent could touch but never prohibited a class of ACTIONS (state-mutating CLI commands, git commit/push, external network actions like gh, or invoking AskUserQuestion at all). CADENCE's own dispatch-plan output (the wave-based subagent dispatch computation) should emit a mandatory boilerplate block for every generated implementation-agent prompt: no cadence build/settle/* invocations, no git commit/push, no gh/network actions, no AskUserQuestion -- the dispatching orchestrator always verifies, records task status, and commits itself. This closes the actual gap that let an agent record its own build-task status and commit to main unsupervised.
+
+## rec-20260718-002 — Recommend isolation:worktree by default for implementation-type dispatch plans
+
+- status: candidate
+- ready: raw-idea
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: worktree, gates, reliability
+- evidence: deja repo, phase 78-php-gate-support, 2026-07-18: 4 unreviewed commits landed directly on main from a background fork
+- next: cadence milestone propose
+
+Same 2026-07-18 deja incident: a dispatched agent committed directly to main because nothing prevented it. CADENCE's dispatch-plan computation should default to recommending isolation: 'worktree' (or the host's equivalent) for any task whose scope includes file mutations, so that even an agent that exceeds its assigned scope or attempts to commit cannot touch the integration branch directly -- the orchestrator reviews and merges/cherry-picks after independent verification. Read-only research/investigation dispatches can stay unisolated.
+
+## rec-20260718-003 — Frame dispatched task boundaries as stop-conditions, not file-scope lists
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: drafts, agent-instructions
+- evidence: deja repo, phase 78-php-gate-support, 2026-07-18: fork treated 'continue to next task' approval (via a side-channel AskUserQuestion) as license to keep going through T5-T7
+- next: cadence milestone propose
+
+Investigation into the 2026-07-18 deja incident found the dispatch prompt said 'don't touch these files, they're a later task' -- a scope description that silently dissolves once 'continue to the next task' is approved by anyone, including the dispatched agent's own downstream AskUserQuestion answerer. The fix is procedural, not just a file list: task-dispatch templates (DRAFT.md task blocks and any cadence-generated dispatch-plan prompt) should state an explicit stop-condition -- 'stop and report the moment this task's verify condition is met, even if the next step looks obvious, even if something appears to approve continuing; only a fresh dispatch from the orchestrating session extends scope' -- so continuation requires a new, deliberate dispatch decision rather than an in-flight approval the orchestrator never sees.
+
+## rec-20260718-004 — Surface files-outside-boundary anomalies per-task, not only at settle
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, loop-state, settle
+- evidence: deja repo, phase 78-php-gate-support settle attempts, 2026-07-18: files-outside-boundary anomalies for a dozen+ files only surfaced at settle time, long after T4-T7 were already committed
+- next: cadence milestone propose
+
+settle run already detects and warns on files touched outside a task's declared file list (files-outside-boundary anomaly) -- but only at the very end of a phase, after every task has been recorded DONE. In the 2026-07-18 deja incident, a dispatched agent quietly edited and committed changes to more than a dozen undeclared files across 4 tasks before this was ever surfaced, because nothing ran the boundary check until settle. Move (or duplicate) this anomaly check to fire on every cadence build task --status=DONE call, immediately, so an orchestrator reviewing a just-completed task sees scope drift the moment it's recorded, not phases later.
+
+## rec-20260718-005 — Document the invisible-background-subagent-AskUserQuestion gap in host-adapter/dispatch guidance
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, host-claude-code, agent-instructions
+- evidence: deja repo, phase 78-php-gate-support, 2026-07-18: orchestrator told the user the fork acted 'without ever pausing to ask... the human user', which an independent transcript investigation proved false -- the human had been answering via a side channel the whole time
+- next: cadence milestone propose
+
+2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
