@@ -598,8 +598,8 @@ cadence draft add-task <phase> <num> --files --action --verify --done has no --n
 
 ## rec-20260718-002 — Recommend isolation:worktree by default for implementation-type dispatch plans
 
-- status: candidate
-- ready: raw-idea
+- status: settle-pending
+- ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
 - risk: 5/10

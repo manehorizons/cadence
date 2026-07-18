@@ -5,7 +5,7 @@ import { SimpleStateBackend } from '../state/simple.js';
 import { assertSafePhaseSlug } from '../phases/id.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { computeWaves } from '../dispatch/wave-planner.js';
-import { renderPacket } from '../dispatch/packet.js';
+import { renderPacket, recommendIsolation } from '../dispatch/packet.js';
 import type { ProgressJson } from '../gates/types.js';
 import type { CommandIO, CommandResult } from './io.js';
 
@@ -13,6 +13,7 @@ interface DispatchTaskPlan {
   id: string;
   name: string;
   packet: string;
+  recommendedIsolation: 'worktree' | 'none';
 }
 interface DispatchWavePlan {
   wave: number;
@@ -77,7 +78,12 @@ export async function dispatchPlanService(
       wave: w.wave,
       tasks: w.taskIds.map((id) => {
         const task = byId.get(id)!;
-        return { id: task.id, name: task.name, packet: renderPacket(task, draft) };
+        return {
+          id: task.id,
+          name: task.name,
+          packet: renderPacket(task, draft),
+          recommendedIsolation: recommendIsolation(task),
+        };
       }),
     }));
 

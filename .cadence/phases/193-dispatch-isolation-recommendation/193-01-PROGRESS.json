@@ -1,0 +1,23 @@
+{
+  "draftId": "193-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "recommendIsolation heuristic added + threaded into renderPacket's text. Tightened the none-branch test assertion (reviewer caught a tautological check against the pre-existing '(none declared)' files fallback) and fixed a doc-comment nit. Verified: lint+typecheck+test all green (2833/2833).",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-18T18:33:42.678Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "recommendedIsolation field threaded into dispatch plan --json output (DispatchTaskPlan + task-mapping in dispatch.ts); CLI e2e test updated with a real (non-gamed) fixture-derived expectation. Verified: full lint+typecheck+test+build green (2833/2833). Independent reviewer verdict READY; flagged stale --json shape doc in commands.md, which T3 covers.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-18T18:39:04.870Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "docs/reference/commands.md's dispatch plan section updated: --json shape row + Behavior paragraph now describe recommendedIsolation and its heuristic. Verified: full lint+typecheck+test green (2833/2833). Independent reviewer verdict READY, zero findings.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-18T18:41:39.773Z"
+    }
+  }
+}

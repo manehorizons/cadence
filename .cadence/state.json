@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "revision": 785,
+  "revision": 791,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
   },
-  "activePhase": "192-dispatch-action-boilerplate",
+  "activePhase": "193-dispatch-isolation-recommendation",
   "activeDraft": null,
   "activeSpec": null,
   "loopPosition": "IDLE",
   "tier": null,
-  "draftReadAt": "2026-07-18T17:23:03.860Z",
+  "draftReadAt": "2026-07-18T18:29:00.951Z",
   "openDrafts": [],
   "decisions": [],
   "deferred": [],
