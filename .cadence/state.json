@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 758,
+  "revision": 763,
   "project": {
     "name": "cadence",
     "createdAt": "2026-05-14T00:53:31.484Z"
@@ -17,7 +17,7 @@
   "session": {
     "tokenUtilization": 1,
     "lastHandoff": "SESSION-2026-07-17-phase-189-cadence-onboard-shipped.md",
-    "subagentSpawns": 2025,
+    "subagentSpawns": 2027,
     "subagentBaselines": {}
   },
   "skillAudit": {

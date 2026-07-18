@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-16T23:07:48.517Z
+Generated at: 2026-07-18T03:33:53.584Z
 
 ## Advisory
 
@@ -17,31 +17,7 @@ Generated at: 2026-07-16T23:07:48.517Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
 - next: cadence milestone propose
 
-### rec-20260709-001 — cadence quickstart: single mega-command for full setup
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260709-1813
-- next: cadence milestone propose
-
-### rec-20260709-002 — cadence doctor --fix: auto-remediate mechanical health-check failures
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260709-1813
-- next: cadence milestone propose
-
 ### rec-20260709-003 — cadence init --ci: generate + enforce a CI gate workflow for consumer repos
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260709-1813
-- next: cadence milestone propose
-
-### rec-20260709-005 — cadence onboard: one-command setup for the 2nd-Nth teammate
 
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
@@ -165,4 +141,4 @@ None.
 
 ## Totals
 
-- total 42 · ranked 19 · parked 1 · needs-attention 0 · excluded 22
+- total 39 · ranked 16 · parked 1 · needs-attention 0 · excluded 22
