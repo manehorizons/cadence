@@ -362,21 +362,6 @@ Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that no
 
 Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, init never derives verification.testCommand (build-test-must-pass passes silently), all verifier seams are mock. Fix: default coverageMode=assertion for new inits, derive testCommand from package.json scripts.test, print a loud settle notice when no testCommand exists.
 
-## rec-20260709-002 — cadence doctor --fix: auto-remediate mechanical health-check failures
-
-- status: settle-pending
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, doctor
-- evidence: Generated in /cadence-scout session on near-zero-setup consumer adoption, 2026-07-09; see --scout-id scout-20260709-1813 for sibling recs in this cluster.
-- next: cadence milestone propose
-
-doctor's checks currently only print fix suggestions. Auto-remediate everything mechanical (rewire host hooks, regenerate host configs, prune stale handoffs past retention budget) so only genuine judgment calls (e.g. verification-readiness) are left as print-and-suggest.
-
 ## rec-20260709-003 — cadence init --ci: generate + enforce a CI gate workflow for consumer repos
 
 - status: candidate
