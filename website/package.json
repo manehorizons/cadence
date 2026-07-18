@@ -13,13 +13,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "astro": "^6.4.4",
-    "@astrojs/starlight": "^0.39.3"
+    "@astrojs/starlight": "^0.39.3",
+    "astro": "^6.4.8"
   },
   "devDependencies": {
     "starlight-typedoc": "^0.23.0",
-    "typedoc": "^0.28.19",
+    "typedoc": "^0.28.20",
     "typedoc-plugin-markdown": "^4.12.0",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.10"
   }
 }

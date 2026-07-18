@@ -21,7 +21,14 @@ import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 const dispatchSpy = vi.hoisted(() => vi.fn().mockResolvedValue({ ok: true }));
 
 vi.mock('../../src/hooks/dispatcher.js', () => ({
-  HookDispatcher: vi.fn().mockImplementation(() => ({ dispatch: dispatchSpy })),
+  // Vitest 4 tightened vi.fn() mock implementations to real JS `new`
+  // semantics: an arrow function can never be a constructor, so `new
+  // HookDispatcher(...)` in the source under test now throws unless the
+  // implementation is a real `function` (Vitest 2/3 tolerated the arrow
+  // form; see https://vitest.dev/api/vi#vi-spyon's constructor-mock note).
+  HookDispatcher: vi.fn().mockImplementation(function () {
+    return { dispatch: dispatchSpy };
+  }),
 }));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

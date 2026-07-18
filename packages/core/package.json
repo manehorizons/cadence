@@ -62,6 +62,6 @@
   },
   "devDependencies": {
     "@manehorizons/cadence-testkit": "workspace:*",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.10"
   }
 }

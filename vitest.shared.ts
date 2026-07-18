@@ -20,9 +20,9 @@ export default defineConfig({
     testTimeout: TIMEOUT_MS,
     hookTimeout: TIMEOUT_MS,
     pool: 'forks',
-    // minForks must be <= maxForks: vitest's default minForks tracks CPU count
-    // (24 on this box) and would otherwise exceed a bare maxForks cap, throwing
-    // "minThreads and maxThreads must not conflict". 1 lets the pool scale down.
-    poolOptions: { forks: { minForks: 1, maxForks: 12 } },
+    // Vitest 4's pool rework flattened poolOptions.<pool>.{minForks,maxForks}
+    // into a single top-level maxWorkers cap (no min/max-conflict footgun to
+    // manage anymore — see https://vitest.dev/guide/migration#pool-rework).
+    maxWorkers: 12,
   },
 });
