@@ -4,7 +4,7 @@
 
 **Project:** cadence
 **Loop position:** IDLE
-**Active phase:** 194-settle-telemetry-revision-conflict
+**Active phase:** 195-settle-refuses-bare-tn-done-with-no-verify-evidence
 **Active draft:** (none)
 **Tier:** (n/a)
 
