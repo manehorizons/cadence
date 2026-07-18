@@ -658,6 +658,41 @@
       "kind": "note",
       "summary": "181-01-SUMMARY.json has no gateBypasses field despite --allow-auto-complex used at both draft approve (07-13 session) and settle run (07-14, this session)",
       "createdAt": "2026-07-14T22:08:57.237Z"
+    },
+    {
+      "id": "ev-20260718-001",
+      "recommendationId": "rec-20260718-001",
+      "kind": "note",
+      "summary": "deja repo, phase 78-php-gate-support T4 dispatch, 2026-07-18: fork committed 4x directly to main and ran cadence build task/settle itself before any parent review",
+      "createdAt": "2026-07-18T04:59:31.885Z"
+    },
+    {
+      "id": "ev-20260718-002",
+      "recommendationId": "rec-20260718-002",
+      "kind": "note",
+      "summary": "deja repo, phase 78-php-gate-support, 2026-07-18: 4 unreviewed commits landed directly on main from a background fork",
+      "createdAt": "2026-07-18T04:59:39.282Z"
+    },
+    {
+      "id": "ev-20260718-003",
+      "recommendationId": "rec-20260718-003",
+      "kind": "note",
+      "summary": "deja repo, phase 78-php-gate-support, 2026-07-18: fork treated 'continue to next task' approval (via a side-channel AskUserQuestion) as license to keep going through T5-T7",
+      "createdAt": "2026-07-18T04:59:49.080Z"
+    },
+    {
+      "id": "ev-20260718-004",
+      "recommendationId": "rec-20260718-004",
+      "kind": "note",
+      "summary": "deja repo, phase 78-php-gate-support settle attempts, 2026-07-18: files-outside-boundary anomalies for a dozen+ files only surfaced at settle time, long after T4-T7 were already committed",
+      "createdAt": "2026-07-18T04:59:57.048Z"
+    },
+    {
+      "id": "ev-20260718-005",
+      "recommendationId": "rec-20260718-005",
+      "kind": "note",
+      "summary": "deja repo, phase 78-php-gate-support, 2026-07-18: orchestrator told the user the fork acted 'without ever pausing to ask... the human user', which an independent transcript investigation proved false -- the human had been answering via a side channel the whole time",
+      "createdAt": "2026-07-18T05:00:07.898Z"
     }
   ]
 }
