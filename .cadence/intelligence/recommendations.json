@@ -1123,34 +1123,6 @@
       "updatedAt": "2026-07-14T04:03:43.550Z"
     },
     {
-      "id": "rec-20260718-002",
-      "title": "Recommend isolation:worktree by default for implementation-type dispatch plans",
-      "summary": "Same 2026-07-18 deja incident: a dispatched agent committed directly to main because nothing prevented it. CADENCE's dispatch-plan computation should default to recommending isolation: 'worktree' (or the host's equivalent) for any task whose scope includes file mutations, so that even an agent that exceeds its assigned scope or attempts to commit cannot touch the integration branch directly -- the orchestrator reviews and merges/cherry-picks after independent verification. Read-only research/investigation dispatches can stay unisolated.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "worktree",
-        "gates",
-        "reliability"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260718-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "193-dispatch-isolation-recommendation",
-      "createdAt": "2026-07-18T04:59:39.282Z",
-      "updatedAt": "2026-07-18T18:43:46.800Z"
-    },
-    {
       "id": "rec-20260718-003",
       "title": "Frame dispatched task boundaries as stop-conditions, not file-scope lists",
       "summary": "Investigation into the 2026-07-18 deja incident found the dispatch prompt said 'don't touch these files, they're a later task' -- a scope description that silently dissolves once 'continue to the next task' is approved by anyone, including the dispatched agent's own downstream AskUserQuestion answerer. The fix is procedural, not just a file list: task-dispatch templates (DRAFT.md task blocks and any cadence-generated dispatch-plan prompt) should state an explicit stop-condition -- 'stop and report the moment this task's verify condition is met, even if the next step looks obvious, even if something appears to approve continuing; only a fresh dispatch from the orchestrating session extends scope' -- so continuation requires a new, deliberate dispatch decision rather than an in-flight approval the orchestrator never sees.",
@@ -3172,6 +3144,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-18T04:59:31.885Z",
       "updatedAt": "2026-07-18T17:57:27.728Z"
+    },
+    {
+      "id": "rec-20260718-002",
+      "title": "Recommend isolation:worktree by default for implementation-type dispatch plans",
+      "summary": "Same 2026-07-18 deja incident: a dispatched agent committed directly to main because nothing prevented it. CADENCE's dispatch-plan computation should default to recommending isolation: 'worktree' (or the host's equivalent) for any task whose scope includes file mutations, so that even an agent that exceeds its assigned scope or attempts to commit cannot touch the integration branch directly -- the orchestrator reviews and merges/cherry-picks after independent verification. Read-only research/investigation dispatches can stay unisolated.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "worktree",
+        "gates",
+        "reliability"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260718-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "193-dispatch-isolation-recommendation",
+      "createdAt": "2026-07-18T04:59:39.282Z",
+      "updatedAt": "2026-07-18T19:01:59.967Z",
+      "shippedRef": "PR #240",
+      "archivedAt": "2026-07-18T19:01:59.967Z",
+      "archiveReason": "shipped"
     }
   ]
 }

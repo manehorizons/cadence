@@ -596,21 +596,6 @@ cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/dr
 
 cadence draft add-task <phase> <num> --files --action --verify --done has no --name option, unlike cadence draft add-ac which has --given/--when/--then/--name. Every task appended via add-task lands as '### T<n>: ' with an empty heading, requiring a manual Edit pass to fill in the name before the DRAFT reads sensibly — confirmed live 2026-07-14 appending T2-T6 to phase 181's DRAFT (all five came out blank). Add --name <n> to add-task mirroring add-ac's option.
 
-## rec-20260718-002 — Recommend isolation:worktree by default for implementation-type dispatch plans
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: worktree, gates, reliability
-- evidence: deja repo, phase 78-php-gate-support, 2026-07-18: 4 unreviewed commits landed directly on main from a background fork
-- next: cadence milestone propose
-
-Same 2026-07-18 deja incident: a dispatched agent committed directly to main because nothing prevented it. CADENCE's dispatch-plan computation should default to recommending isolation: 'worktree' (or the host's equivalent) for any task whose scope includes file mutations, so that even an agent that exceeds its assigned scope or attempts to commit cannot touch the integration branch directly -- the orchestrator reviews and merges/cherry-picks after independent verification. Read-only research/investigation dispatches can stay unisolated.
-
 ## rec-20260718-003 — Frame dispatched task boundaries as stop-conditions, not file-scope lists
 
 - status: candidate
