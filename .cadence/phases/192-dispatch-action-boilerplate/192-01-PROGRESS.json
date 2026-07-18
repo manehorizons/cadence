@@ -1,0 +1,19 @@
+{
+  "draftId": "192-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Prohibition boilerplate + stop-and-report instruction added to renderPacket; packet.test.ts updated. Verified: lint+typecheck+test all green (2829/2829), independent reviewer verdict READY.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-18T17:27:47.912Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "docs/reference/commands.md's dispatch plan Behavior paragraph updated to describe the new prohibition block; fixed reviewer-caught positional inaccuracy ('opens with a preamble' -> 'includes a ... block'). Verified: full lint+typecheck+test green (2829/2829).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/192-dispatch-action-boilerplate/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-07-18T17:31:24.931Z"
+    }
+  }
+}

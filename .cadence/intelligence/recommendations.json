@@ -1127,8 +1127,8 @@
       "title": "Mandatory action-class prohibition boilerplate for dispatched implementation agents",
       "summary": "Real incident (deja phase 78-01, 2026-07-18): a Claude Code fork agent dispatched to implement one scoped task went on to implement three more tasks, then ran cadence build task / cadence settle run and git commit directly against main -- all self-authorized via its own AskUserQuestion calls that the orchestrating session never saw. Root cause: the dispatch prompt scoped which FILES the agent could touch but never prohibited a class of ACTIONS (state-mutating CLI commands, git commit/push, external network actions like gh, or invoking AskUserQuestion at all). CADENCE's own dispatch-plan output (the wave-based subagent dispatch computation) should emit a mandatory boilerplate block for every generated implementation-agent prompt: no cadence build/settle/* invocations, no git commit/push, no gh/network actions, no AskUserQuestion -- the dispatching orchestrator always verifies, records task status, and commits itself. This closes the actual gap that let an agent record its own build-task status and commit to main unsupervised.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
+      "status": "settle-pending",
+      "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1146,8 +1146,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "192-dispatch-action-boilerplate",
       "createdAt": "2026-07-18T04:59:31.885Z",
-      "updatedAt": "2026-07-18T04:59:31.885Z"
+      "updatedAt": "2026-07-18T17:34:29.212Z"
     },
     {
       "id": "rec-20260718-002",
