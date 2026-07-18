@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { SimpleStateBackend } from '../../src/state/simple.js';
@@ -160,6 +161,78 @@ describe('SimpleStateBackend.commit (Phase 41.1)', () => {
     active = null;
   });
 
+  it('a telemetry-only intervening bump no longer falsely conflicts with an unrelated structural commit (AC-1)', async () => {
+    active = await tempRepo({ initialized: true });
+    const backend = new SimpleStateBackend(active.root);
+    const telemetryWriter = new SimpleStateBackend(active.root);
+
+    // Caller reads state at revision 0 and begins building an unrelated
+    // structural change (nothing to do with session.subagentSpawns).
+    const state = await backend.readState();
+    state.skillAudit.invoked = ['superpowers:tdd'];
+
+    // Before the caller commits, a second backend instance bumps ONLY the
+    // telemetry counter session.subagentSpawns via the telemetry-exempt
+    // write path — this is the real fixed code path: handleSubagentResult()
+    // now calls backend.bumpSessionCounter() instead of the old read +
+    // mutate + commit() sequence for this case, specifically because
+    // bumpSessionCounter() never compares to or bumps `revision`.
+    const dir = join(active.root, '.cadence');
+    const revisionBefore = (
+      await readFile(join(dir, 'state.json'), 'utf8').then((raw) => JSON.parse(raw))
+    ).revision;
+
+    await telemetryWriter.bumpSessionCounter('subagentSpawns', 1);
+
+    const revisionAfter = (
+      await readFile(join(dir, 'state.json'), 'utf8').then((raw) => JSON.parse(raw))
+    ).revision;
+    // Core guarantee of the fix: a telemetry bump never touches `revision`.
+    expect(revisionAfter).toBe(revisionBefore);
+
+    // The caller's structural commit, still built from revision 0, has
+    // nothing to do with subagentSpawns and should be allowed to land.
+    // Before the fix, this failed because the old handleSubagentResult()
+    // path routed telemetry bumps through commit(), which bumps the shared
+    // `revision` regardless of what changed — invalidating this unrelated
+    // structural commit's snapshot. bumpSessionCounter() leaves `revision`
+    // untouched, so this now resolves successfully.
+    await expect(backend.commit(state)).resolves.toBeUndefined();
+
+    await active.cleanup();
+    active = null;
+  });
+
+  it('two structural commits from the same on-disk revision still conflict — telemetry exemption did not widen (AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    const staleReader = new SimpleStateBackend(active.root);
+    const otherWriter = new SimpleStateBackend(active.root);
+    const staleState = await staleReader.readState(); // revision 0
+    const freshState = await otherWriter.readState(); // revision 0
+
+    // Both callers mutate genuinely structural fields — loopPosition and
+    // openDrafts — never session.subagentSpawns. This is deliberately NOT
+    // the telemetry-only shape bumpSessionCounter() exempts from the
+    // revision guard, so both commits must still go through commit()'s
+    // compare-and-swap exactly as before this phase.
+    freshState.loopPosition = 'BUILD';
+    freshState.openDrafts.push({ id: '194-01', since: new Date().toISOString() });
+    await otherWriter.commit(freshState); // bumps on-disk revision to 1
+
+    staleState.loopPosition = 'SETTLE';
+    staleState.activeTask = { id: 'T3', status: 'IN_PROGRESS', touchedFiles: [] };
+    await expect(staleReader.commit(staleState)).rejects.toBeInstanceOf(StateConflictError);
+
+    // The winning structural commit landed; the conflicting one never did.
+    const onDisk = await staleReader.readState();
+    expect(onDisk.loopPosition).toBe('BUILD');
+    expect(onDisk.openDrafts).toEqual([{ id: '194-01', since: expect.any(String) }]);
+    expect(onDisk.revision).toBe(1);
+
+    await active.cleanup();
+    active = null;
+  });
+
   it('bootstrap write accepts a nonzero revision unconditionally — the check is truly skipped, not coincidentally satisfied (AC-4)', async () => {
     active = await tempRepo({ initialized: true });
     const sub = join(active.root, 'nested-bootstrap');
@@ -172,6 +245,41 @@ describe('SimpleStateBackend.commit (Phase 41.1)', () => {
 
     const onDisk = await backend.readState();
     expect(onDisk.revision).toBe(42); // written as-is; no comparison was possible or attempted
+
+    await active.cleanup();
+    active = null;
+  });
+});
+
+describe('SimpleStateBackend.bumpSessionCounter (Phase 194 / issue #234)', () => {
+  it('increments the named session counter and leaves revision untouched', async () => {
+    active = await tempRepo({ initialized: true });
+    const backend = new SimpleStateBackend(active.root);
+    const before = await backend.readState();
+    expect(before.session.subagentSpawns).toBe(0);
+    expect(before.revision).toBe(0);
+
+    await backend.bumpSessionCounter('subagentSpawns', 1);
+    await backend.bumpSessionCounter('subagentSpawns', 2);
+
+    const after = await backend.readState();
+    expect(after.session.subagentSpawns).toBe(3);
+    expect(after.revision).toBe(0); // never bumped — the whole point of this path
+
+    const dir = join(active.root, '.cadence');
+    const md = await readFile(join(dir, 'STATE.md'), 'utf8');
+    expect(md).toBe(renderStateMd(after)); // STATE.md kept in sync, same as commit()
+
+    await active.cleanup();
+    active = null;
+  });
+
+  it('is a silent no-op when state.json does not exist yet', async () => {
+    active = await tempRepo({ initialized: false });
+    const backend = new SimpleStateBackend(active.root);
+
+    await expect(backend.bumpSessionCounter('subagentSpawns', 1)).resolves.toBeUndefined();
+    expect(existsSync(join(active.root, '.cadence', 'state.json'))).toBe(false);
 
     await active.cleanup();
     active = null;

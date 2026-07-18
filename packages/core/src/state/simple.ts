@@ -77,6 +77,41 @@ export class SimpleStateBackend implements StateBackend {
     );
   }
 
+  /**
+   * Telemetry-exempt write path (Phase 194 / issue #234). See the
+   * `StateBackend` interface doc for the full rationale — this deliberately
+   * skips the `revision` compare-and-swap `commit()` performs so a
+   * telemetry-only counter bump can never throw `StateConflictError` or
+   * invalidate another writer's in-flight snapshot.
+   *
+   * Re-reads `state.json` fresh (never trusts a caller-held in-memory
+   * copy), bumps the named field on that snapshot, and writes the whole
+   * snapshot back — unconditionally, with no compare-and-swap. This
+   * narrows (versus the bug this exists to fix) but does not fully close
+   * one race: if a `commit()` elsewhere reads, checks, and writes in the
+   * gap between this method's own read and write, this write will still
+   * land and silently overwrite that commit's structural change with this
+   * method's stale copy plus the bumped counter — no error either side.
+   * That window is a single read→write round trip (this repo has no lock
+   * file), versus the multi-minute `host-cli` gate window that produced
+   * issue #234, so the residual risk is accepted as deliberately, vastly
+   * narrower than the bug being fixed — a trade-off made on purpose for a
+   * telemetry field nothing structural depends on, not an accidental side
+   * effect of skipping `commit()`'s guard.
+   */
+  async bumpSessionCounter(field: 'subagentSpawns', amount: number): Promise<void> {
+    const dir = await this.resolveStateDir();
+    const statePath = join(dir, 'state.json');
+    if (!existsSync(statePath)) {
+      // No state.json yet (pre-init) — nothing to attach telemetry to.
+      return;
+    }
+    const onDisk = await this.readState();
+    onDisk.session[field] = Math.max(0, onDisk.session[field] + amount);
+    await this.writeState(onDisk);
+    await atomicWriteText(join(dir, 'STATE.md'), renderStateMd(onDisk));
+  }
+
   /** Internal `state.json` primitive (Phase 41.1: private — use `commit`). */
   private async writeState(state: CadenceState): Promise<void> {
     const dir = await this.resolveStateDir();

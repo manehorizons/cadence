@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "draftId": "194-01",
+  "completedAt": "2026-07-18T20:18:55.302Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Regression test added exercising the real bumpSessionCounter fix path; asserts revision unchanged and the unrelated structural commit resolves. Reviewed and fix-round applied."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Added StateBackend.bumpSessionCounter (revision-exempt write path) and wired handleSubagentResult's telemetry-only early-return branch through it. Independently reviewed; doc comments tightened to accurately describe the narrow residual race and drop a reference to a gitignored local-only doc."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Added a structural-conflict test (loopPosition/openDrafts/activeTask) confirming commit()'s optimistic-concurrency guard is unchanged and the telemetry exemption did not widen."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "Full pnpm turbo run lint typecheck test build: 20/20 tasks green, 328 test files / 2835 tests passing."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  }
+}
