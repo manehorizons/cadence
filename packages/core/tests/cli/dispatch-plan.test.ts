@@ -49,7 +49,17 @@ describe('cadence dispatch plan', () => {
     expect(r.code).toBe(0);
     const parsed = JSON.parse(r.stdout);
     expect(parsed.waves).toEqual([
-      { wave: 1, tasks: [{ id: 'T1', name: expect.any(String), packet: expect.stringContaining('T1') }] },
+      {
+        wave: 1,
+        tasks: [
+          {
+            id: 'T1',
+            name: expect.any(String),
+            packet: expect.stringContaining('T1'),
+            recommendedIsolation: 'worktree',
+          },
+        ],
+      },
     ]);
   });
 

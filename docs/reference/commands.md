@@ -577,7 +577,7 @@ Compute the next dispatch wave(s) from the active BUILD draft
 
 | Option | Description |
 |---|---|
-| `--json` | Emit machine-readable JSON (`{ waves: [{ wave, tasks: [{ id, name, packet }] }] }`) instead of rendered text |
+| `--json` | Emit machine-readable JSON (`{ waves: [{ wave, tasks: [{ id, name, packet, recommendedIsolation }] }] }`) instead of rendered text |
 | `-h, --help` | Display help for command |
 
 **Behavior** — read-only; never mutates state. Reads the active BUILD draft +
@@ -592,8 +592,13 @@ agent is forbidden from running state-mutating `cadence` subcommands (e.g.
 `cadence build`/`cadence settle`), `git commit`/`git push`, `gh`/network
 actions, or invoking `AskUserQuestion` — once its verify condition is met
 (or it is blocked), it must stop and report back to the orchestrating
-session, which alone records the task's outcome. Tasks
-already `DONE`/`DONE_WITH_CONCERNS` are excluded from every wave.
+session, which alone records the task's outcome. Every task also carries a
+`recommendedIsolation` value of `'worktree'` or `'none'` — `'worktree'` when
+the task declares one or more `files:` (it will mutate the working tree),
+`'none'` when it declares none (read-only/no mutation expected) — surfaced
+both as the `recommendedIsolation` JSON field and as an advisory line in the
+rendered packet text itself. Tasks already `DONE`/`DONE_WITH_CONCERNS` are
+excluded from every wave.
 Outside BUILD (no active draft), reports "nothing to plan" at exit 0. When
 every task is already finished, reports "nothing to dispatch" at exit 0.
 

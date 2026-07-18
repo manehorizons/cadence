@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { renderPacket } from '../../src/dispatch/packet.js';
+import { renderPacket, recommendIsolation } from '../../src/dispatch/packet.js';
 import type { Draft, Task } from '@manehorizons/cadence-types';
 
 const draft: Draft = {
@@ -68,5 +68,28 @@ describe('renderPacket', () => {
   it('handles a task with no declared files', () => {
     const noFiles: Task = { ...task, files: [] };
     expect(() => renderPacket(noFiles, draft)).not.toThrow();
+  });
+
+  it('recommends worktree isolation in the packet text for a task with declared files', () => {
+    const packet = renderPacket(task, draft);
+    expect(packet.toLowerCase()).toContain('worktree');
+  });
+
+  it('recommends no isolation in the packet text for a task with no declared files', () => {
+    const noFiles: Task = { ...task, files: [] };
+    const packet = renderPacket(noFiles, draft);
+    expect(packet).toContain('**Recommended isolation:** none');
+    expect(packet).not.toContain('**Recommended isolation:** worktree');
+  });
+});
+
+describe('recommendIsolation', () => {
+  it('returns worktree when the task declares one or more files', () => {
+    expect(recommendIsolation(task)).toBe('worktree');
+  });
+
+  it('returns none when the task declares no files', () => {
+    const noFiles: Task = { ...task, files: [] };
+    expect(recommendIsolation(noFiles)).toBe('none');
   });
 });
