@@ -1207,34 +1207,29 @@
     },
     {
       "id": "rec-20260719-001",
-      "title": "No CLI writer to attach evidence to an existing recommendation",
-      "summary": "cadence recommendation add --evidence only sets a rec's evidence at creation time. There is no subcommand or flag to append a new evidence note to an EXISTING recommendation afterward -- e.g. when new information surfaces during a walk-back, review, or later investigation. The only path today is a raw hand-edit of two files in lockstep: append to .cadence/intelligence/evidence.json's evidence array AND append the new evidence id to the matching recommendation's evidenceIds array in recommendations.json. This second step is easy to miss and easy to get wrong: 'cadence intelligence reconcile' does NOT help here -- deriveRecommendationLinks (packages/core/src/intelligence/store/recommendations.ts:82-102) only re-derives assumptionIds/decisionIds from asLedger/decLedger; it never takes the evidence ledger as input, so evidenceIds is never re-derived from evidence.json and a hand-added evidence entry silently fails to show up in 'cadence recommendation show' until evidenceIds is ALSO hand-edited. Add a small CLI writer, e.g. 'cadence recommendation evidence add <recId> --note <text>' (mirroring assumption/decision's tied-record commands), that appends to both files atomically together.",
+      "title": "Impact-gated verification via Phenyx (radius-aware settle gate)",
+      "summary": "New settle/CI gate: compute blast radius on the phase's changed files via phenyx_graph_blast and REFUSE settle when radius-implicated tests were not in the run, printing the evidence chain as the refusal reason. Test-impact analysis exists elsewhere; impact REFUSAL with cross-plane provenance does not. Decision needed: hard dependency vs optional gate behind config (recommend optional: gate present only when a Phenyx index is reachable). Cross-ref phenyx rec scout-20260715-claude-roadmap-03 (edit-time sentinel, the ambient sibling).",
       "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
       "leverageScore": 5,
       "riskScore": 5,
       "confidence": 0.7,
       "decayState": "fresh",
       "affectedAreas": [
-        "cli",
-        "intelligence"
+        "settle-gates"
       ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/recommendation.ts",
-        "packages/core/src/intelligence/store/recommendations.ts",
-        "packages/core/src/intelligence/store/reconcile.ts"
-      ],
+      "affectedFiles": [],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260719-003"
+        "ev-20260719-005"
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "convertedToPhaseId": "199-recommendation-evidence-add-cli-writer",
-      "createdAt": "2026-07-19T19:28:00.320Z",
-      "updatedAt": "2026-07-19T20:36:43.685Z"
+      "createdAt": "2026-07-19T23:21:24.838Z",
+      "updatedAt": "2026-07-19T23:21:24.838Z",
+      "scoutId": "scout-20260715-claude-roadmap-02"
     }
   ],
   "archived": [
@@ -3209,6 +3204,68 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-18T04:59:39.282Z",
       "updatedAt": "2026-07-18T19:01:59.967Z"
+    },
+    {
+      "id": "rec-20260719-001",
+      "title": "No CLI writer to attach evidence to an existing recommendation",
+      "summary": "cadence recommendation add --evidence only sets a rec's evidence at creation time. There is no subcommand or flag to append a new evidence note to an EXISTING recommendation afterward -- e.g. when new information surfaces during a walk-back, review, or later investigation. The only path today is a raw hand-edit of two files in lockstep: append to .cadence/intelligence/evidence.json's evidence array AND append the new evidence id to the matching recommendation's evidenceIds array in recommendations.json. This second step is easy to miss and easy to get wrong: 'cadence intelligence reconcile' does NOT help here -- deriveRecommendationLinks (packages/core/src/intelligence/store/recommendations.ts:82-102) only re-derives assumptionIds/decisionIds from asLedger/decLedger; it never takes the evidence ledger as input, so evidenceIds is never re-derived from evidence.json and a hand-added evidence entry silently fails to show up in 'cadence recommendation show' until evidenceIds is ALSO hand-edited. Add a small CLI writer, e.g. 'cadence recommendation evidence add <recId> --note <text>' (mirroring assumption/decision's tied-record commands), that appends to both files atomically together.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/recommendation.ts",
+        "packages/core/src/intelligence/store/recommendations.ts",
+        "packages/core/src/intelligence/store/reconcile.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260719-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "199-recommendation-evidence-add-cli-writer",
+      "shippedRef": "PR #254",
+      "archivedAt": "2026-07-19T23:04:41.437Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-19T19:28:00.320Z",
+      "updatedAt": "2026-07-19T23:04:41.437Z"
+    },
+    {
+      "id": "rec-20260719-001",
+      "title": "Impact-gated verification via Phenyx (radius-aware settle gate)",
+      "summary": "New settle/CI gate: compute blast radius on the phase's changed files via phenyx_graph_blast and REFUSE settle when radius-implicated tests were not in the run, printing the evidence chain as the refusal reason. Test-impact analysis exists elsewhere; impact REFUSAL with cross-plane provenance does not. Decision needed: hard dependency vs optional gate behind config (recommend optional: gate present only when a Phenyx index is reachable). Cross-ref phenyx rec scout-20260715-claude-roadmap-03 (edit-time sentinel, the ambient sibling).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "settle-gates"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260719-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260715-claude-roadmap-02",
+      "archivedAt": "2026-07-19T23:21:17.033Z",
+      "archiveReason": "manual",
+      "createdAt": "2026-07-19T23:19:08.214Z",
+      "updatedAt": "2026-07-19T23:21:17.033Z"
     }
   ]
 }

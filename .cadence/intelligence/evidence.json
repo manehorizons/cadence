@@ -714,6 +714,20 @@
       "kind": "note",
       "summary": "Confirmed live 2026-07-19: hand-added ev-20260719-001 to evidence.json for rec-20260619-008; 'cadence recommendation show' still reported only 1 evidence item and 'cadence intelligence reconcile' did not pick it up, until evidenceIds was also hand-edited in recommendations.json.",
       "createdAt": "2026-07-19T19:28:00.320Z"
+    },
+    {
+      "id": "ev-20260719-004",
+      "recommendationId": "rec-20260719-001",
+      "kind": "note",
+      "summary": "Phenyx MCP read surface settled (phenyx phase 136); 403/403 workspace resolution on this repo (phase 137 shakedown); demo transcript docs/demo/cadence-transcript.md",
+      "createdAt": "2026-07-19T23:19:08.214Z"
+    },
+    {
+      "id": "ev-20260719-005",
+      "recommendationId": "rec-20260719-001",
+      "kind": "note",
+      "summary": "Phenyx MCP read surface settled (phenyx phase 136); 403/403 workspace resolution on this repo (phase 137 shakedown); demo transcript docs/demo/cadence-transcript.md",
+      "createdAt": "2026-07-19T23:21:24.838Z"
     }
   ]
 }

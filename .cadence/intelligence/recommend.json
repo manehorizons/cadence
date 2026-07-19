@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-19T18:22:25.913Z",
+  "generatedAt": "2026-07-19T23:01:07.643Z",
   "ranked": [
     {
       "id": "rec-20260619-008",
       "title": "Team rollout kit",
-      "raw": 12.7,
-      "score": 53,
-      "status": "candidate",
-      "readiness": "raw-idea",
+      "raw": 20.7,
+      "score": 65,
+      "status": "accepted",
+      "readiness": "needs-decision",
       "priority": "medium",
       "decayState": "fresh",
       "terms": [
@@ -25,12 +25,12 @@
           "value": -2.5
         },
         {
-          "label": "status candidate",
-          "value": 0
+          "label": "status accepted",
+          "value": 6
         },
         {
-          "label": "ready raw-idea",
-          "value": 0
+          "label": "ready needs-decision",
+          "value": 2
         },
         {
           "label": "decay fresh",
@@ -296,7 +296,7 @@
     },
     {
       "id": "rec-20260714-001",
-      "title": "milestone premortem: no CLI writer for the operator-authored outOfScope field",
+      "title": "milestone premortem: no CLI writer for any operator-authored field (likelyFailureModes, hiddenDependencies, outOfScope)",
       "raw": 12.7,
       "score": 53,
       "status": "candidate",
@@ -764,10 +764,10 @@
     "secondary": "cadence milestone propose"
   },
   "totals": {
-    "total": 41,
+    "total": 42,
     "ranked": 18,
     "parked": 1,
     "needsAttention": 0,
-    "excluded": 22
+    "excluded": 23
   }
 }

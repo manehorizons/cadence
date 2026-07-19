@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-19T18:22:25.913Z
+Generated at: 2026-07-19T23:01:07.643Z
 
 ## Advisory
 
@@ -13,9 +13,9 @@ Generated at: 2026-07-19T18:22:25.913Z
 
 ### rec-20260619-008 — Team rollout kit
 
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- score: 65/100 (raw 20.7)
+- status: accepted · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status accepted +6 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 20.7 (score 65)
 - next: cadence milestone propose
 
 ### rec-20260709-003 — cadence init --ci: generate + enforce a CI gate workflow for consumer repos
@@ -65,7 +65,7 @@ Generated at: 2026-07-19T18:22:25.913Z
 - scout: scout-20260712-1234
 - next: cadence milestone propose
 
-### rec-20260714-001 — milestone premortem: no CLI writer for the operator-authored outOfScope field
+### rec-20260714-001 — milestone premortem: no CLI writer for any operator-authored field (likelyFailureModes, hiddenDependencies, outOfScope)
 
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
@@ -155,4 +155,4 @@ None.
 
 ## Totals
 
-- total 41 · ranked 18 · parked 1 · needs-attention 0 · excluded 22
+- total 42 · ranked 18 · parked 1 · needs-attention 0 · excluded 23

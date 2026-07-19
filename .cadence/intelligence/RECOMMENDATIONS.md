@@ -643,18 +643,17 @@ settle run already detects and warns on files touched outside a task's declared 
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
 
-## rec-20260719-001 — No CLI writer to attach evidence to an existing recommendation
+## rec-20260719-001 — Impact-gated verification via Phenyx (radius-aware settle gate)
 
-- status: settle-pending
-- ready: raw-idea
-- priority: medium
+- status: candidate
+- ready: needs-decision
+- priority: high
 - leverage: 5/10
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
-- areas: cli, intelligence
-- files: packages/core/src/cli/commands/recommendation.ts, packages/core/src/intelligence/store/recommendations.ts, packages/core/src/intelligence/store/reconcile.ts
-- evidence: Confirmed live 2026-07-19: hand-added ev-20260719-001 to evidence.json for rec-20260619-008; 'cadence recommendation show' still reported only 1 evidence item and 'cadence intelligence reconcile' did not pick it up, until evidenceIds was also hand-edited in recommendations.json.
+- areas: settle-gates
+- evidence: Phenyx MCP read surface settled (phenyx phase 136); 403/403 workspace resolution on this repo (phase 137 shakedown); demo transcript docs/demo/cadence-transcript.md
 - next: cadence milestone propose
 
-cadence recommendation add --evidence only sets a rec's evidence at creation time. There is no subcommand or flag to append a new evidence note to an EXISTING recommendation afterward -- e.g. when new information surfaces during a walk-back, review, or later investigation. The only path today is a raw hand-edit of two files in lockstep: append to .cadence/intelligence/evidence.json's evidence array AND append the new evidence id to the matching recommendation's evidenceIds array in recommendations.json. This second step is easy to miss and easy to get wrong: 'cadence intelligence reconcile' does NOT help here -- deriveRecommendationLinks (packages/core/src/intelligence/store/recommendations.ts:82-102) only re-derives assumptionIds/decisionIds from asLedger/decLedger; it never takes the evidence ledger as input, so evidenceIds is never re-derived from evidence.json and a hand-added evidence entry silently fails to show up in 'cadence recommendation show' until evidenceIds is ALSO hand-edited. Add a small CLI writer, e.g. 'cadence recommendation evidence add <recId> --note <text>' (mirroring assumption/decision's tied-record commands), that appends to both files atomically together.
+New settle/CI gate: compute blast radius on the phase's changed files via phenyx_graph_blast and REFUSE settle when radius-implicated tests were not in the run, printing the evidence chain as the refusal reason. Test-impact analysis exists elsewhere; impact REFUSAL with cross-plane provenance does not. Decision needed: hard dependency vs optional gate behind config (recommend optional: gate present only when a Phenyx index is reachable). Cross-ref phenyx rec scout-20260715-claude-roadmap-03 (edit-time sentinel, the ambient sibling).
