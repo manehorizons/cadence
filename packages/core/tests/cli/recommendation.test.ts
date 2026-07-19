@@ -1059,4 +1059,60 @@ describe('cadence recommendation', () => {
       "recommendation list failed: duplicate flag letter: 'i'\n",
     );
   });
+
+  describe('evidence add', () => {
+    it('adds a note as evidence and links it to the recommendation', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_evidence_add_happy' });
+      const added = await run(
+        ['recommendation', 'add', '--title', 'A', '--summary', 's'],
+        active.root,
+      );
+      const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1];
+      expect(recId).toBeDefined();
+
+      const r = await run(
+        ['recommendation', 'evidence', 'add', recId as string, '--note', 'Saw it fail in CI'],
+        active.root,
+      );
+
+      expect(r.code).toBe(0);
+      expect(r.stderr).toBe('');
+      expect(r.stdout).toMatch(
+        new RegExp(`^Added ev-\\d{8}-\\d{3} to ${recId}: Saw it fail in CI\\n$`),
+      );
+
+      const recRaw = await readFile(
+        join(active.root, '.cadence', 'intelligence', 'recommendations.json'),
+        'utf8',
+      );
+      const recLedger = JSON.parse(recRaw);
+      const rec = recLedger.recommendations.find((x: { id: string }) => x.id === recId);
+      expect(rec).toBeDefined();
+
+      const evRaw = await readFile(
+        join(active.root, '.cadence', 'intelligence', 'evidence.json'),
+        'utf8',
+      );
+      const evLedger = JSON.parse(evRaw);
+      const newEvidence = evLedger.evidence.find(
+        (e: { summary: string }) => e.summary === 'Saw it fail in CI',
+      );
+      expect(newEvidence).toBeDefined();
+      expect(rec.evidenceIds).toContain(newEvidence.id);
+    });
+
+    it('refuses when the recommendation id does not exist', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_evidence_add_refused' });
+
+      const r = await run(
+        ['recommendation', 'evidence', 'add', 'rec-99999999-999', '--note', 'irrelevant'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(
+        /recommendation evidence add refused: recommendation rec-99999999-999 not found/,
+      );
+    });
+  });
 });

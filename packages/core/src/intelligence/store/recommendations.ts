@@ -79,6 +79,54 @@ export async function addRecommendation(
   return rec;
 }
 
+// Phase 199: tied-record writer. Appends a new Evidence entry and links its
+// id into the matching recommendation's `evidenceIds`, in one atomic write.
+export type AddEvidenceToRecommendationInput = {
+  recommendationId: string;
+  note: string;
+};
+
+export type AddEvidenceToRecommendationResult =
+  | { ok: true; evidence: Evidence; recommendation: Recommendation }
+  | { ok: false; error: string };
+
+export async function addEvidenceToRecommendation(
+  root: string,
+  input: AddEvidenceToRecommendationInput,
+): Promise<AddEvidenceToRecommendationResult> {
+  const ledger = await readRecommendationLedger(root);
+  const evidenceLedger = await readEvidenceLedger(root);
+  const target = ledger.recommendations.find((r) => r.id === input.recommendationId);
+  if (!target) {
+    return { ok: false, error: `recommendation ${input.recommendationId} not found` };
+  }
+  const now = new Date();
+  const ts = now.toISOString();
+  const evidence: Evidence = {
+    id: nextEvidenceId(evidenceLedger, now),
+    recommendationId: input.recommendationId,
+    kind: 'note',
+    // Choke point: raw evidence text may quote logs/diffs containing a live credential.
+    summary: redactSecrets(input.note),
+    createdAt: ts,
+  };
+  const updatedRec: Recommendation = {
+    ...target,
+    evidenceIds: [...target.evidenceIds, evidence.id],
+    updatedAt: ts,
+  };
+  evidenceLedger.evidence.push(evidence);
+  const ledgerOut: RecommendationLedger = {
+    schemaVersion: 1,
+    recommendations: ledger.recommendations.map((r) =>
+      r.id === input.recommendationId ? updatedRec : r,
+    ),
+    archived: ledger.archived,
+  };
+  await writeIntelligenceLedgers(root, ledgerOut, evidenceLedger);
+  return { ok: true, evidence, recommendation: updatedRec };
+}
+
 export function deriveRecommendationLinks(
   recLedger: RecommendationLedger,
   asLedger: AssumptionLedger,

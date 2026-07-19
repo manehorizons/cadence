@@ -15,6 +15,7 @@ import {
 } from '../../intelligence/store/io.js';
 import {
   addRecommendation,
+  addEvidenceToRecommendation,
   runRecommendationArchive,
   runRecommendationTransition,
   runRecommendationPromotion,
@@ -621,6 +622,41 @@ export function registerRecommendationCommand(program: Command): void {
       } catch (err) {
         process.stderr.write(
           `recommendation unarchive failed: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    });
+
+  // Phase 199 (T3): tied-record writer CLI surface — appends a note as
+  // Evidence and links it into the recommendation's evidenceIds in one
+  // atomic write (store-layer logic lives in addEvidenceToRecommendation).
+  const evidenceCmd = cmd
+    .command('evidence')
+    .description('Manage evidence tied to a recommendation');
+
+  evidenceCmd
+    .command('add <recId>')
+    .description('Add a note as evidence tied to a recommendation')
+    .requiredOption('--note <text>', 'Evidence note text')
+    .action(async (recId: string, opts: { note: string }) => {
+      try {
+        const result = await addEvidenceToRecommendation(process.cwd(), {
+          recommendationId: recId,
+          note: opts.note,
+        });
+        if (!result.ok) {
+          process.stderr.write(
+            `recommendation evidence add refused: ${result.error}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        process.stdout.write(
+          `Added ${result.evidence.id} to ${recId}: ${result.evidence.summary}\n`,
+        );
+      } catch (err) {
+        process.stderr.write(
+          `recommendation evidence add failed: ${err instanceof Error ? err.message : String(err)}\n`,
         );
         process.exitCode = 1;
       }

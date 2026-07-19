@@ -2,11 +2,12 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-18T03:33:53.584Z
+Generated at: 2026-07-19T18:22:25.913Z
 
 ## Advisory
 
-- cadence milestone propose
+- Finish in-flight CADENCE loop work first — cadence build task <id> --status=<DONE|...>  OR  cadence settle run --ac AC-1=pass.
+- then: cadence milestone propose
 
 ## Ranked
 
@@ -31,14 +32,6 @@ Generated at: 2026-07-18T03:33:53.584Z
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
 - scout: scout-20260710-0400
-- next: cadence milestone propose
-
-### rec-20260710-004 — Headless-CLI verifier: batching, fallback-chain, and model-passthrough behavior
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260710-2126
 - next: cadence milestone propose
 
 ### rec-20260711-004 — Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)
@@ -73,6 +66,27 @@ Generated at: 2026-07-18T03:33:53.584Z
 - next: cadence milestone propose
 
 ### rec-20260714-001 — milestone premortem: no CLI writer for the operator-authored outOfScope field
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: raw-idea · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- next: cadence milestone propose
+
+### rec-20260718-003 — Frame dispatched task boundaries as stop-conditions, not file-scope lists
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: raw-idea · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- next: cadence milestone propose
+
+### rec-20260718-004 — Surface files-outside-boundary anomalies per-task, not only at settle
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: raw-idea · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- next: cadence milestone propose
+
+### rec-20260718-005 — Document the invisible-background-subagent-AskUserQuestion gap in host-adapter/dispatch guidance
 
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
@@ -141,4 +155,4 @@ None.
 
 ## Totals
 
-- total 39 · ranked 16 · parked 1 · needs-attention 0 · excluded 22
+- total 41 · ranked 18 · parked 1 · needs-attention 0 · excluded 22
