@@ -10,6 +10,7 @@ import { selectSpecReviewVerifier } from '../verify/spec-review-factory.js';
 import { nextConvergence } from '../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../notify/spec-review.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -146,7 +147,7 @@ export async function specApproveService(
     io.out(`Approved spec ${id}; loopPosition=IDLE\n`);
     return { exitCode: 0, data: { id, approved: true, converged: res.pass, bypassed } };
   } catch (err) {
-    io.err(`spec approve failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('spec approve', err)}\n`);
     return { exitCode: 1 };
   }
 }

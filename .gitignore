@@ -47,3 +47,6 @@ OBJECTION-FAQ.md
 COMPETITIVE.md
 launch/
 .deja/
+# cadence-owned ephemeral state (see docs/concepts.md)
+.cadence/state.json
+.cadence/STATE.md

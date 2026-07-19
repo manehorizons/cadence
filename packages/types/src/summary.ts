@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TaskStatusZ, DecisionZ, DeferredItemZ } from './state.js';
+import { TaskStatusZ, DecisionZ, DeferredItemZ, LoopPositionZ } from './state.js';
 import { GateZ } from './profile.js';
 
 export const DeepVerdictZ = z.object({
@@ -127,5 +127,15 @@ export const SummaryZ = z.object({
   /** Phase 140: per-gate ran/skipped provenance. Optional for back-compat with
    *  pre-phase-140 records; every settle from this phase forward populates it. */
   gates: z.array(GateProvenanceZ).optional(),
+  /** issue #177: point-in-time loop-state snapshot, captured just before
+   *  settle resets state to IDLE. Replaces the audit-trail value a tracked
+   *  state.json used to carry incidentally. */
+  stateAtSettle: z
+    .object({
+      loopPositionBeforeSettle: LoopPositionZ,
+      revision: z.number().int().nonnegative(),
+      sessionSubagentSpawns: z.number().int().nonnegative(),
+    })
+    .optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

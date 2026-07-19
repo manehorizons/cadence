@@ -15,6 +15,7 @@ import { parseDraftMd } from '../parse/draft-parser.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { runPerTaskVerifyGate } from '../gates/per-task-verify.js';
 import { buildBuildContext } from '../gates/build-context.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -89,7 +90,7 @@ export async function buildTaskService(
     io.out(`Recorded ${args.taskId}: ${status}\n`);
     return { exitCode: 0, data: { taskId: args.taskId, status } };
   } catch (err) {
-    io.err(`build task failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('build task', err)}\n`);
     if (err instanceof LoopViolationError) {
       await emitLoopViolation(repoRoot, err, 'build.task');
     }

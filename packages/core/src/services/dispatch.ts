@@ -7,6 +7,7 @@ import { parseDraftMd } from '../parse/draft-parser.js';
 import { computeWaves } from '../dispatch/wave-planner.js';
 import { renderPacket, recommendIsolation } from '../dispatch/packet.js';
 import type { ProgressJson } from '../gates/types.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 interface DispatchTaskPlan {
@@ -98,7 +99,7 @@ export async function dispatchPlanService(
     }
     return { exitCode: 0, data: { waves: plan } };
   } catch (err) {
-    io.err(`dispatch plan failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('dispatch plan', err)}\n`);
     return { exitCode: 1 };
   }
 }

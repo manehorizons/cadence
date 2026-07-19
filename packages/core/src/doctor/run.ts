@@ -1,9 +1,10 @@
 import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { delimiter, join } from 'node:path';
 import { homedir } from 'node:os';
-import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
+import { MOCK_VERIFIER_NOTICE, CadenceStateZ, type CadenceState } from '@manehorizons/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
 import { assessReadiness } from '../activate/assess.js';
@@ -12,6 +13,7 @@ import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
 import { detectProjectLanguage } from '../init/plan.js';
 import { getProfileForExtension } from '../verify/coverage-profiles/registry.js';
+import { CADENCE_OWNED_GITIGNORE_ENTRIES } from '../init/gitignore.js';
 import {
   pass,
   fail,
@@ -66,9 +68,20 @@ async function checkState(root: string): Promise<DoctorCheck> {
       'Run any cadence command (e.g. `cadence progress`) to regenerate state, or `cadence init`.',
     );
   }
+  const stateRaw = await readFile(stateJson, 'utf8');
   try {
-    JSON.parse(await readFile(stateJson, 'utf8'));
+    JSON.parse(stateRaw);
   } catch (err) {
+    const conflictDiagnosis = diagnoseStateConflict(stateRaw);
+    if (conflictDiagnosis !== null) {
+      return fail(
+        'state',
+        'error',
+        `state.json has an unresolved git merge conflict. ${conflictDiagnosis}`,
+        'Run `cadence doctor --fix --resolve-state-conflict=local` (or `=incoming`) to pick a side.',
+        'resolve-state-conflict',
+      );
+    }
     return fail(
       'state',
       'error',
@@ -86,6 +99,162 @@ async function checkState(root: string): Promise<DoctorCheck> {
     );
   }
   return pass('state', 'state.json parses and STATE.md is present.');
+}
+
+const CONFLICT_START_MARKER = '<<<<<<<';
+const CONFLICT_SEP_MARKER = '=======';
+const CONFLICT_END_MARKER = '>>>>>>>';
+
+/**
+ * Splits raw `state.json` content into its "local"/"incoming" halves when it
+ * has git conflict-marker shape: a line starting with `<<<<<<<` (7 `<`s),
+ * later a line that is exactly `=======` (7 `=`s), later a line starting
+ * with `>>>>>>>` (7 `>`s) — in that order. Matches on the 7-character marker
+ * prefix, not the full line, since git appends an arbitrary ref/branch name
+ * after `<<<<<<<`/`>>>>>>>` (e.g. `<<<<<<< HEAD`). Returns `null` when the
+ * shape isn't present. Exported (T5, phase 196, issue #177) so the
+ * `--resolve-state-conflict` repair (`./fix.ts`) can re-split the raw file
+ * and pick a side without duplicating the marker-detection regex/logic — the
+ * character-level parsing lives here and only here.
+ */
+export function parseConflictMarkers(content: string): { local: string; incoming: string } | null {
+  // Strip a trailing \r per line so CRLF files still match the exact-line
+  // `=======` check.
+  const lines = content.split('\n').map((line) => line.replace(/\r$/, ''));
+  const startIdx = lines.findIndex((line) => line.startsWith(CONFLICT_START_MARKER));
+  if (startIdx === -1) return null;
+  const sepIdx = lines.findIndex((line, i) => i > startIdx && line === CONFLICT_SEP_MARKER);
+  if (sepIdx === -1) return null;
+  const endIdx = lines.findIndex((line, i) => i > sepIdx && line.startsWith(CONFLICT_END_MARKER));
+  if (endIdx === -1) return null;
+  return {
+    local: lines.slice(startIdx + 1, sepIdx).join('\n'),
+    incoming: lines.slice(sepIdx + 1, endIdx).join('\n'),
+  };
+}
+
+/** Parses `text` as JSON without throwing. */
+function tryParseJson(text: string): { ok: true; value: unknown } | { ok: false } {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch {
+    return { ok: false };
+  }
+}
+
+/** State fields (besides `session`, handled separately) worth calling out by name in a conflict diff, in report order. */
+const STATE_CONFLICT_DIFF_FIELDS = ['activePhase', 'loopPosition', 'activeDraft', 'revision'] as const;
+
+/** Renders a state field value for the conflict-diff message: strings print raw, everything else as JSON. */
+function formatStateConflictValue(value: unknown): string {
+  return typeof value === 'string' ? value : JSON.stringify(value);
+}
+
+/**
+ * Builds the field-by-field local/incoming diff string once both conflict
+ * sides have parsed and validated as `CadenceState`. Only fields that
+ * actually differ are included. `session` is an object — compared (and, if
+ * it differs, reported) wholesale via `JSON.stringify` equality rather than
+ * sub-diffed field-by-field.
+ */
+function buildStateConflictDiff(local: CadenceState, incoming: CadenceState): string {
+  const parts: string[] = [];
+  for (const field of STATE_CONFLICT_DIFF_FIELDS) {
+    const a = local[field];
+    const b = incoming[field];
+    if (a !== b) {
+      parts.push(
+        `${field}: local="${formatStateConflictValue(a)}" vs incoming="${formatStateConflictValue(b)}"`,
+      );
+    }
+  }
+  const localSession = JSON.stringify(local.session);
+  const incomingSession = JSON.stringify(incoming.session);
+  if (localSession !== incomingSession) {
+    parts.push(`session: local="${localSession}" vs incoming="${incomingSession}"`);
+  }
+  return parts.join('; ');
+}
+
+/**
+ * When `stateRaw` (content that already failed `JSON.parse`) has git
+ * conflict-marker shape AND both sides cleanly parse as JSON AND both
+ * validate against `CadenceStateZ`, returns the field-by-field diff detail
+ * string. Returns `null` for anything less clean — no markers, a
+ * non-JSON side, or a side that fails schema validation — so the caller
+ * falls back to the existing generic "not valid JSON" message rather than
+ * guessing at a more complex (e.g. multi-way) conflict or in-side
+ * corruption.
+ */
+function diagnoseStateConflict(stateRaw: string): string | null {
+  const split = parseConflictMarkers(stateRaw);
+  if (split === null) return null;
+  const localJson = tryParseJson(split.local);
+  const incomingJson = tryParseJson(split.incoming);
+  if (!localJson.ok || !incomingJson.ok) return null;
+  const localState = CadenceStateZ.safeParse(localJson.value);
+  const incomingState = CadenceStateZ.safeParse(incomingJson.value);
+  if (!localState.success || !incomingState.success) return null;
+  return buildStateConflictDiff(localState.data, incomingState.data);
+}
+
+const pexecFile = promisify(execFile);
+
+/**
+ * List of the CADENCE-owned ephemeral paths (`../init/gitignore.js`)
+ * currently tracked by git in `root`, via `git ls-files -- <paths>` — a
+ * read-only shell-out with a fixed arg array (never a shell string), mirroring
+ * `handoff/git-facts.ts`. Staged-but-uncommitted paths count as tracked
+ * (`git ls-files` reports the index, not just HEAD). Shared by
+ * `checkStateTracked` and the `untrack-state` repair (`./fix.ts`) so the
+ * git-shell-out logic lives in one place. Returns `null` — never throws —
+ * when the lookup itself fails (not a git repository, git unavailable, or any
+ * other error), so callers can tell "definitely none tracked" apart from
+ * "could not determine" (best-effort introspection convention).
+ */
+export async function listTrackedCadenceOwnedPaths(root: string): Promise<string[] | null> {
+  try {
+    const { stdout } = await pexecFile(
+      'git',
+      ['ls-files', '--', ...CADENCE_OWNED_GITIGNORE_ENTRIES],
+      { cwd: root, timeout: 5000, windowsHide: true },
+    );
+    return stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Phase 196 (issue #177): CADENCE-owned ephemeral state (`state.json`,
+ * `STATE.md`, `mcp-trust.json`, `intelligence/context/`) must never be a
+ * tracked file — tracking it guarantees a real git merge conflict the moment
+ * two CADENCE worktrees on different phases sync. Best-effort and never
+ * throws: outside a git repository (or with git unavailable) this degrades to
+ * a pass, since there is nothing to determine either way.
+ */
+async function checkStateTracked(root: string): Promise<DoctorCheck> {
+  const tracked = await listTrackedCadenceOwnedPaths(root);
+  if (tracked === null) {
+    return pass(
+      'state-tracked',
+      'Could not verify — not a git repository or git unavailable.',
+    );
+  }
+  if (tracked.length === 0) {
+    return pass('state-tracked', 'No CADENCE-owned ephemeral paths are tracked by git.');
+  }
+  return fail(
+    'state-tracked',
+    'warning',
+    `Tracked CADENCE-owned ephemeral path(s): ${tracked.join(', ')}. These hold ` +
+      'per-worktree loop state and WILL produce real git merge conflicts across worktrees.',
+    'Run `cadence doctor --fix` to gitignore and untrack them.',
+    'untrack-state',
+  );
 }
 
 // A run-line is non-portable if it contains an absolute path token: a POSIX
@@ -657,6 +826,7 @@ export async function runDoctor(
     checkNode(env),
     await checkInitialized(root),
     await checkState(root),
+    await checkStateTracked(root),
     await checkGitHooks(root),
     await checkHostHooks(root),
     await checkHostCommands(root),

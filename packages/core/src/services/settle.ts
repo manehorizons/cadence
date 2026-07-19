@@ -48,6 +48,7 @@ import { selectCodeReviewVerifier } from '../verify/code-review-factory.js';
 import { emitCodeReviewHigh, emitCodeReviewUnconverged } from '../notify/code-review.js';
 import { emitSkillAuditMiss } from '../notify/skill-audit.js';
 import { selectSecurityAuditVerifier } from '../verify/security-audit-factory.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 export interface SettleArgs {
@@ -542,6 +543,16 @@ export async function settleService(
       evidence: deriveAcEvidence(r.id, coverageForEvidence, coverageModeForEvidence, buildTestRan, deepVerify),
     }));
 
+    // issue #177: snapshot loop state as it stands DURING settle, before the
+    // reset-to-IDLE block below mutates it. This is the only place this data
+    // is durably recorded now that state.json/STATE.md are gitignored — see
+    // the field's doc comment in packages/types/src/summary.ts.
+    const stateAtSettle = {
+      loopPositionBeforeSettle: state.loopPosition,
+      revision: state.revision,
+      sessionSubagentSpawns: state.session.subagentSpawns,
+    };
+
     const summary: Summary = {
       schemaVersion: 1,
       draftId: state.activeDraft,
@@ -560,6 +571,7 @@ export async function settleService(
       ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),
       ...(boundaryScan ? { boundaryScan } : {}),
       ...(gateBypasses.length > 0 ? { gateBypasses } : {}),
+      stateAtSettle,
     };
 
     const summaryBase = join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`);
@@ -661,7 +673,7 @@ export async function settleService(
 
     return { exitCode: 0, data: { settled: draftId, acResults: acResultsWithEvidence } };
   } catch (err) {
-    io.err(`settle run failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('settle run', err)}\n`);
     if (err instanceof LoopViolationError) {
       await emitLoopViolation(cwd, err, 'settle.run');
     }

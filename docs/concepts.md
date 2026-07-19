@@ -160,7 +160,7 @@ A completed phase produces exactly two commits, in order:
 | Commit | Prefix | Contents |
 |---|---|---|
 | Feature commit | `feat:` / `docs:` / `fix:` etc. | Source changes, tests, and documentation |
-| Settle commit | `chore: settle` | Phase artifacts (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`, `-PLAN-REVIEW.json`, `STATE.md`, `state.json`) |
+| Settle commit | `chore: settle` | Phase artifacts (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`, `-PLAN-REVIEW.json`) — `STATE.md`/`state.json` are gitignored and never committed |
 
 **Why the split?** Keeping artifacts out of the feature commit means `git log
 --no-merges` stays readable, blame on source files is uncontaminated by
@@ -570,21 +570,25 @@ it. This is operational logging — separate from the user-behavior `telemetry`
 ## Worktrees & the single-writer assumption
 
 CADENCE's loop state is **file-based and lives in the working tree** —
-`.cadence/state.json`, `STATE.md`, and `.cadence/phases/*` are tracked files. Git
-worktrees share one `.git` but each has its own working tree, so **each worktree
-holds its own private copy of `.cadence/`**. Phase numbers are operator-supplied,
-and the "next: N" surfaced by `progress`/`recommend` is just a read of the
-committed snapshot. The loop implicitly assumes a **single writer** to the
-phase-number space.
+`.cadence/phases/*` (the DRAFT/SUMMARY/PROGRESS artifacts) are tracked files, but
+`.cadence/state.json` and `STATE.md` are **gitignored by default**, precisely
+because they re-stamp on every read: each is inherently single-writer and must
+never be merged across loops. Git worktrees share one `.git` but each has its
+own working tree, so **each worktree holds its own private copy of
+`.cadence/`**. Phase numbers are operator-supplied, and the "next: N" surfaced
+by `progress`/`recommend` is just a read of the local `state.json`. The loop
+implicitly assumes a **single writer** to the phase-number space.
 
 Two worktrees branched from the same commit can therefore both conclude "phase N
 is next." If they use the same slug (`30-foo` in both), you get a real git
 conflict at merge — loud. If they use *different* slugs (`30-auth` vs `30-cache`),
 the directories don't textually conflict, so git **silently merges both in** —
 two phase 30s and a broken invariant, no conflict marker. That quiet case is the
-dangerous one. (`state.json` re-stamps on every read, so concurrent worktrees'
-copies diverge constantly — that file is inherently single-writer and must never
-be merged across loops.)
+dangerous one. (`state.json` diverges constantly across concurrent worktrees'
+copies — untracking it removes the merge-conflict hazard outright rather than
+just documenting it. The settle-time audit-trail value that a tracked
+`state.json` used to carry incidentally now lives explicitly in the
+`stateAtSettle` field of `SUMMARY.json`/`SUMMARY.md`.)
 
 The **phase-collision guard** (v1.18, default-on) makes this loud. The
 coordination primitive already exists: `git worktree list` enumerates every

@@ -6,6 +6,7 @@ import { nextAction, type NextActionHints } from '../progress.js';
 import { resolveNextFreePhase } from '../phases/next-free.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 interface ProgressJson {
@@ -95,7 +96,7 @@ export async function progressService(
     }
     return { exitCode: 0, data };
   } catch (err) {
-    io.err(`progress failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('progress', err)}\n`);
     return { exitCode: 1 };
   }
 }

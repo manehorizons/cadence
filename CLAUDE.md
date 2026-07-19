@@ -170,8 +170,11 @@ session to do the same. The shape of a healthy session:
 6. **Two-commit settle convention.** A completed phase produces exactly two
    commits in order: the **feature commit** (`feat:`/`fix:`/`docs:` — source
    + tests + docs) then the **settle commit** (`chore: settle` — phase
-   artifacts + `state.json` + `STATE.md`). Operator-owned, not
-   hook-enforced. Keeps blame clean and `git log --no-merges` readable.
+   artifacts). `state.json` and `STATE.md` are gitignored by default and
+   never enter either commit — the `stateAtSettle` field in
+   `SUMMARY.json`/`SUMMARY.md` is their audit-trail replacement.
+   Operator-owned, not hook-enforced. Keeps blame clean and `git log
+   --no-merges` readable.
 7. **Land via branch + PR, squash-merged.** `main` is branch-protected: the
    `ci-success` check is required and `enforce_admins` is on, so even the
    owner cannot push a red commit directly. Conventional-commit subjects
@@ -265,10 +268,13 @@ the rule that prevents it — with the enforcement layer where one exists.
   why this is written down.)*
 - **The Hand-Edited STATE.md.** Fixing `.cadence/STATE.md` directly. → It is
   a derived render, regenerated on every state write; the edit is discarded
-  or committed as drift. Change state through the CLI.
-- **The Mid-Loop Sweep.** Committing or `git restore`-ing uncommitted
-  `.cadence/state.json` / `STATE.md` dirt while a loop is active. → That
-  dirt is live telemetry. Leave it until settle; the settle commit owns it.
+  on the next write. Change state through the CLI. (Gitignored by default —
+  the file is still live on disk and still gets clobbered by hand-edits.)
+- **The Mid-Loop Sweep.** `git restore`-ing or otherwise discarding
+  uncommitted `.cadence/state.json` / `STATE.md` dirt while a loop is
+  active. → That dirt is live telemetry — the current loop position. Both
+  files are gitignored by default and never committed; leave them alone
+  until the loop transitions naturally, don't hand-revert them mid-loop.
 - **The Helpful Stage.** `git add -A` sweeping in local-only files:
   `.agents/`, `launch/`, `.claude/scheduled_tasks.lock`, accumulated
   uncommitted `SESSION-*.md` handoffs (swept periodically in deliberate
