@@ -419,6 +419,79 @@ describe('cadence assumption (Slice 8)', () => {
     expect(arr.every((a: { text: string }) => /race condition/.test(a.text))).toBe(true);
   });
 
+  it('AC-1: oversized --filter-regex pattern is rejected before compilation', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'issue249_asn' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'race condition in handler'], active.root);
+    const overlong = 'a'.repeat(5000);
+    const r = await run(
+      ['assumption', 'list', '--filter-regex', overlong, '--format', 'json'],
+      active.root,
+    );
+    // No length guard exists yet: this currently compiles fine and succeeds
+    // (exit 0), instead of being refused before new RegExp() is ever called.
+    // Once T2 lands, this must become exit 1 with a validation error on stderr.
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/assumption list failed:.*(too long|exceeds|maximum length)/i);
+    expect(r.stdout).toBe('');
+  });
+
+  it('AC-2: boundary-adjacent (< 200 char) --filter-regex pattern still filters correctly', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'issue249_asn_ac2' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    // core is padded out to 197 chars so the anchored pattern below lands at
+    // 199 chars total — close to, but comfortably under, the 200-char cap.
+    const core = 'race condition in handler '.padEnd(197, 'x');
+    expect(core.length).toBe(197);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', core], active.root);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', 'unrelated memory leak'], active.root);
+    const pattern = `^${core}$`;
+    expect(pattern.length).toBe(199);
+    const r = await run(
+      ['assumption', 'list', '--filter-regex', pattern, '--format', 'json'],
+      active.root,
+    );
+    expect(r.code).toBe(0);
+    const arr = JSON.parse(r.stdout);
+    expect(arr).toHaveLength(1);
+    expect(arr[0].text).toBe(core);
+  });
+
+  it('AC-3: --filter-regex length boundary is enforced at exactly 200 vs 201 chars', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'issue249_asn_ac3' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const content = 'a'.repeat(200);
+    await run(['assumption', 'add', '--rec', rec.id, '--text', content], active.root);
+
+    const pattern200 = 'a'.repeat(200);
+    const r200 = await run(
+      ['assumption', 'list', '--filter-regex', pattern200, '--format', 'json'],
+      active.root,
+    );
+    expect(r200.code).toBe(0);
+    expect(JSON.parse(r200.stdout)).toHaveLength(1);
+
+    const pattern201 = 'a'.repeat(201);
+    const r201 = await run(
+      ['assumption', 'list', '--filter-regex', pattern201, '--format', 'json'],
+      active.root,
+    );
+    expect(r201.code).toBe(1);
+    expect(r201.stderr).toMatch(
+      /assumption list failed:.*201 characters exceeds the maximum length of 200/,
+    );
+    expect(r201.stdout).toBe('');
+  });
+
   it('Slice 35 AC-sort-1 (asn): --sort-by created returns entries by createdAt ascending', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice35_asn_sort1' });
     const rec = await addRecommendation(active.root, {

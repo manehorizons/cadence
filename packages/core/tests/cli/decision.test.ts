@@ -604,6 +604,67 @@ describe('cadence decision (Slice 8)', () => {
       expect(r.stdout).toBe('');
     });
 
+    it('AC-1: oversized --filter-regex pattern is rejected before compilation', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'issue249_dec' });
+      await run(['decision', 'add', '--title', 'use postgres', '--rationale', 'concurrency'], active.root);
+      const overlong = 'a'.repeat(5000);
+      const r = await run(
+        ['decision', 'list', '--filter-regex', overlong, '--format', 'json'],
+        active.root,
+      );
+      // No length guard exists yet: this currently compiles fine and succeeds
+      // (exit 0), instead of being refused before new RegExp() is ever called.
+      // Once T2 lands, this must become exit 1 with a validation error on stderr.
+      expect(r.code).toBe(1);
+      expect(r.stderr).toMatch(/decision list failed:.*(too long|exceeds|maximum length)/i);
+      expect(r.stdout).toBe('');
+    });
+
+    it('AC-2: boundary-adjacent (< 200 char) --filter-regex pattern still filters correctly', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'issue249_dec_ac2' });
+      // core is padded out to 197 chars so the anchored pattern below lands at
+      // 199 chars total — close to, but comfortably under, the 200-char cap.
+      const core = 'Use postgres for concurrency safety '.padEnd(197, 'x');
+      expect(core.length).toBe(197);
+      await run(['decision', 'add', '--title', core, '--rationale', 'r'], active.root);
+      await run(['decision', 'add', '--title', 'Other database choice', '--rationale', 'r'], active.root);
+      const pattern = `^${core}$`;
+      expect(pattern.length).toBe(199);
+      const r = await run(
+        ['decision', 'list', '--filter-regex', pattern, '--format', 'json'],
+        active.root,
+      );
+      expect(r.code).toBe(0);
+      const arr = JSON.parse(r.stdout);
+      expect(arr).toHaveLength(1);
+      expect(arr[0].title).toBe(core);
+    });
+
+    it('AC-3: --filter-regex length boundary is enforced at exactly 200 vs 201 chars', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'issue249_dec_ac3' });
+      const content = 'a'.repeat(200);
+      await run(['decision', 'add', '--title', content, '--rationale', 'r'], active.root);
+
+      const pattern200 = 'a'.repeat(200);
+      const r200 = await run(
+        ['decision', 'list', '--filter-regex', pattern200, '--format', 'json'],
+        active.root,
+      );
+      expect(r200.code).toBe(0);
+      expect(JSON.parse(r200.stdout)).toHaveLength(1);
+
+      const pattern201 = 'a'.repeat(201);
+      const r201 = await run(
+        ['decision', 'list', '--filter-regex', pattern201, '--format', 'json'],
+        active.root,
+      );
+      expect(r201.code).toBe(1);
+      expect(r201.stderr).toMatch(
+        /decision list failed:.*201 characters exceeds the maximum length of 200/,
+      );
+      expect(r201.stdout).toBe('');
+    });
+
     it('Slice 33 AC-6: invalid regex → exit 1 + invalid-regex stderr', async () => {
       active = await tempRepo({ initialized: true, projectName: 'slice33' });
       await run(['decision', 'add', '--title', 'x', '--rationale', 'r'], active.root);
