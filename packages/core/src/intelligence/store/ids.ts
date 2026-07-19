@@ -13,6 +13,7 @@ export function nextRecommendationId(ledger: RecommendationLedger, now: Date): s
   const prefix = `rec-${slugDate(now)}-`;
   const max = ledger.recommendations
     .map((r) => r.id)
+    .concat(ledger.archived.map((r) => r.id))
     .filter((id) => id.startsWith(prefix))
     .map((id) => Number.parseInt(id.slice(prefix.length), 10))
     .filter((n) => Number.isFinite(n))
