@@ -44,6 +44,17 @@ function parseRegexFlags(raw: string): { flags: string } | { error: string } {
   return { flags: raw };
 }
 
+const MAX_FILTER_REGEX_LENGTH = 200;
+
+function validateFilterRegexLength(pattern: string): { error: string } | undefined {
+  if (pattern.length > MAX_FILTER_REGEX_LENGTH) {
+    return {
+      error: `--filter-regex pattern is too long: ${pattern.length} characters exceeds the maximum length of ${MAX_FILTER_REGEX_LENGTH}`,
+    };
+  }
+  return undefined;
+}
+
 const ASN_SORT_KEYS = new Set(['created', 'status', 'text', 'rec']);
 
 const ASN_STATUS_ORDER: ReadonlyArray<Assumption['status']> = [
@@ -164,7 +175,7 @@ export function registerAssumptionCommand(program: Command): void {
     .option('--filter-rec <recId>', 'Filter to only entries tied to this recommendation')
     .option('--filter-text <substr>', 'Case-insensitive substring search on text. Mutually exclusive with --filter-text-exact and --filter-regex.')
     .option('--filter-text-exact <str>', 'Case-insensitive whole-field equality match on text. Mutually exclusive with --filter-text and --filter-regex.')
-    .option('--filter-regex <pattern>', 'Power-user regex filter on text (always case-sensitive by default; use --filter-regex-flags for case-insensitive/multiline/dotAll, or character classes like [Cc]ycle for one-off case-insensitivity). Mutually exclusive with --filter-text and --filter-text-exact.')
+    .option('--filter-regex <pattern>', `Power-user regex filter on text (always case-sensitive by default; use --filter-regex-flags for case-insensitive/multiline/dotAll, or character classes like [Cc]ycle for one-off case-insensitivity). Mutually exclusive with --filter-text and --filter-text-exact. Max length ${MAX_FILTER_REGEX_LENGTH} characters.`)
     .option('--filter-regex-flags <flags>', 'RegExp flag letters to apply to --filter-regex. Allowed: i (case-insensitive), m (multiline ^/$), s (dotAll .), u (unicode). Requires --filter-regex.')
     .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: created, status, text, rec.')
     .option('--reverse', 'Reverse the entry order (after filters, before offset/limit)')
@@ -246,6 +257,12 @@ export function registerAssumptionCommand(program: Command): void {
           regexFlags = parsed.flags;
         }
         if (opts.filterRegex !== undefined) {
+          const lengthError = validateFilterRegexLength(opts.filterRegex);
+          if (lengthError !== undefined) {
+            process.stderr.write(`assumption list failed: ${lengthError.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
           let regex: RegExp;
           try {
             regex = new RegExp(opts.filterRegex, regexFlags);

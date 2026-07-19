@@ -71,6 +71,17 @@ function parseRegexFlags(raw: string): { flags: string } | { error: string } {
   return { flags: raw };
 }
 
+const MAX_FILTER_REGEX_LENGTH = 200;
+
+function validateFilterRegexLength(pattern: string): { error: string } | undefined {
+  if (pattern.length > MAX_FILTER_REGEX_LENGTH) {
+    return {
+      error: `--filter-regex pattern is too long: ${pattern.length} characters exceeds the maximum length of ${MAX_FILTER_REGEX_LENGTH}`,
+    };
+  }
+  return undefined;
+}
+
 const REC_SORT_KEYS = new Set([
   'created',
   'updated',
@@ -263,7 +274,7 @@ export function registerRecommendationCommand(program: Command): void {
     .option('--filter-status <status>', 'Filter to only entries with this status')
     .option('--filter-text <substr>', 'Case-insensitive substring search on title or summary. Mutually exclusive with --filter-text-exact and --filter-regex.')
     .option('--filter-text-exact <str>', 'Case-insensitive whole-field equality match on title or summary. Mutually exclusive with --filter-text and --filter-regex.')
-    .option('--filter-regex <pattern>', 'Power-user regex filter on title or summary (always case-sensitive by default; use --filter-regex-flags for case-insensitive/multiline/dotAll, or character classes like [Cc]ycle for one-off case-insensitivity). Mutually exclusive with --filter-text and --filter-text-exact.')
+    .option('--filter-regex <pattern>', `Power-user regex filter on title or summary (always case-sensitive by default; use --filter-regex-flags for case-insensitive/multiline/dotAll, or character classes like [Cc]ycle for one-off case-insensitivity). Mutually exclusive with --filter-text and --filter-text-exact. Max length ${MAX_FILTER_REGEX_LENGTH} characters.`)
     .option('--filter-regex-flags <flags>', 'RegExp flag letters to apply to --filter-regex. Allowed: i (case-insensitive), m (multiline ^/$), s (dotAll .), u (unicode). Requires --filter-regex.')
     .option('--filter-converted-to <phaseId>', 'Reverse-lookup filter: only recommendations with convertedToPhaseId equal to <phaseId>. Implies status=converted (Slice 34.4).')
     .option('--sort-by <key>', 'Sort by a single key, optionally with :desc suffix. Allowed keys: created, updated, priority, status, title, leverage, risk, confidence, decay.')
@@ -348,6 +359,12 @@ export function registerRecommendationCommand(program: Command): void {
           regexFlags = parsed.flags;
         }
         if (opts.filterRegex !== undefined) {
+          const lengthError = validateFilterRegexLength(opts.filterRegex);
+          if (lengthError !== undefined) {
+            process.stderr.write(`recommendation list failed: ${lengthError.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
           let regex: RegExp;
           try {
             regex = new RegExp(opts.filterRegex, regexFlags);
