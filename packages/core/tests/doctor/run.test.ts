@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { writeFile, readFile } from 'node:fs/promises';
+import { writeFile, readFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { emptyState } from '@manehorizons/cadence-types';
@@ -58,6 +58,30 @@ describe('runDoctor', () => {
     });
     const node = report.checks.find((c) => c.name === 'node');
     expect(node?.severity).toBe('error');
+    expect(report.ok).toBe(false);
+  });
+
+  /**
+   * Phase 197, T3 (issue #177 fallout from phase 196): since state.json/
+   * STATE.md became gitignored and per-worktree, the old "run any cadence
+   * command, or `cadence init`" advice for a missing state.json no longer
+   * works — `cadence init` refuses outright when `.cadence/` already exists
+   * (the exact situation that produces this check). `cadence onboard` is the
+   * command built to bootstrap state.json for an already-`.cadence/`-
+   * committed checkout, so the fix suggestion must name it instead.
+   */
+  it('AC-3: missing state.json → error names `cadence onboard`, not `cadence init`, as the fix', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-missing' });
+    await unlink(join(active.root, '.cadence', 'state.json'));
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('error');
+    expect(check?.detail).toMatch(/state\.json is missing/);
+    expect(check?.remediation).toMatch(/cadence onboard/);
+    expect(check?.remediation).not.toMatch(/cadence progress/);
     expect(report.ok).toBe(false);
   });
 });

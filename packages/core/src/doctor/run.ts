@@ -65,7 +65,7 @@ async function checkState(root: string): Promise<DoctorCheck> {
       'state',
       'error',
       'state.json is missing.',
-      'Run any cadence command (e.g. `cadence progress`) to regenerate state, or `cadence init`.',
+      'Run `cadence onboard` to bootstrap a fresh state.json (safe for an existing .cadence/ dir — unlike `cadence init`, which refuses here).',
     );
   }
   const stateRaw = await readFile(stateJson, 'utf8');

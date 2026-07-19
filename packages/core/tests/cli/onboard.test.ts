@@ -5,6 +5,7 @@ import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { defaultConfig } from '@manehorizons/cadence-types';
 import { loadConfig, writeConfig } from '../../src/config/loader.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -167,5 +168,64 @@ describe('cadence onboard', () => {
     expect(parsed.ok).toBe(false);
     expect(parsed.error).toMatch(/cadence init/);
     expect(existsSync(join(root, '.cadence'))).toBe(false);
+  });
+});
+
+describe('cadence onboard — regression: .cadence/ committed but state.json absent (issue #177 fallout)', () => {
+  it('AC-1: onboard bootstraps state.json for a fresh worktree/clone so downstream commands work', async () => {
+    // Mirrors a fresh `git worktree add` / fresh clone of a repo that already
+    // has `.cadence/` committed, post phase-196 (state.json is gitignored and
+    // per-worktree, so it simply does not exist yet on disk). Built by hand
+    // (not `tempRepo({ initialized: true })`, which always writes state.json)
+    // to reproduce exactly that state-less shape.
+    active = await tempRepo();
+    const root = active.root;
+    const cadenceDir = join(root, '.cadence');
+    await mkdir(join(cadenceDir, 'phases'), { recursive: true });
+    await writeFile(join(cadenceDir, 'config.json'), JSON.stringify(defaultConfig, null, 2));
+    await writeFile(join(cadenceDir, 'PROJECT.md'), '# regression-project\n');
+    await writeFile(join(cadenceDir, 'ROADMAP.md'), '# Roadmap\n');
+    const statePath = join(cadenceDir, 'state.json');
+    expect(existsSync(statePath)).toBe(false);
+
+    const r = await run(['onboard'], root);
+    expect(r.code).toBe(0);
+
+    // onboard bootstraps a fresh IDLE state.json, deriving the project name
+    // from PROJECT.md's header, whenever one is missing.
+    expect(existsSync(statePath)).toBe(true);
+
+    // Confirms the downstream dead end this bug used to cause: `cadence
+    // progress` threw NotInitializedError against the very .cadence/ onboard
+    // just "handled". With state.json bootstrapped, this now succeeds.
+    const progress = await run(['progress'], root);
+    expect(progress.code).toBe(0);
+  });
+
+  it('AC-2: state.json already present with non-default values is left byte-for-byte unchanged by onboard', async () => {
+    // tempRepo({ initialized: true }) always writes a fresh state.json — mutate
+    // it afterward to distinctive, non-default values so a bootstrap-driven
+    // overwrite (T2's bug-fix path firing when it should NOT) would be caught.
+    active = await tempRepo({ initialized: true, projectName: 'existing-state-project' });
+    const root = active.root;
+    const statePath = join(root, '.cadence', 'state.json');
+    const original = JSON.parse(await readFile(statePath, 'utf8'));
+    const mutated = {
+      ...original,
+      loopPosition: 'BUILD',
+      activePhase: '99-distinctive-marker',
+      revision: 42,
+    };
+    await writeFile(statePath, JSON.stringify(mutated, null, 2));
+    const stateBefore = await readFile(statePath, 'utf8');
+
+    const r = await run(['onboard'], root);
+
+    expect(r.code).toBe(0);
+    const stateAfter = await readFile(statePath, 'utf8');
+    expect(stateAfter).toBe(stateBefore);
+    expect(JSON.parse(stateAfter)).toEqual(mutated);
+    // no "bootstrapped" notice — the file was never touched.
+    expect(r.stderr).not.toMatch(/bootstrapped/);
   });
 });

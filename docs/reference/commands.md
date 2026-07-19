@@ -1727,26 +1727,35 @@ Per-machine setup for a repo that already has .cadence/ committed (install host 
 | `--skip-host-wire` | Never wire the Claude Code host, even when `.claude/` is present |
 
 **Behavior** — the per-machine counterpart to `cadence init`: onboarding a
-*new machine* (or a fresh clone) onto a repo whose `.cadence/` is already
-committed, rather than scaffolding a new project. It never writes
-`.cadence/config.json`, `.cadence/state.json`, or any other loop state — it
-only (optionally) installs host hooks and reports verifier readiness. Refuses
-with exit code 2 when no `.cadence/` directory exists in the current working
-tree, pointing at `cadence init` to scaffold a new project instead.
+*new machine* (or a fresh clone/worktree) onto a repo whose `.cadence/` is
+already committed, rather than scaffolding a new project. It never writes
+`.cadence/config.json` — only (optionally) installs host hooks and reports
+verifier readiness there. Refuses with exit code 2 when no `.cadence/`
+directory exists in the current working tree, pointing at `cadence init` to
+scaffold a new project instead.
 
-On success it reads the existing project name from `.cadence/state.json`
-(best-effort — falls back to `"unnamed"` on a missing or unparsable file) and
-the gate profile from the loaded config, then reports verifier readiness via
-the same `assessReadiness` check `cadence doctor`'s `verification-readiness`
-check and `cadence activate` use. Host wiring reuses `cadence init`'s
-decision table: `--host <claude|codex>` or `--wire-host` wires unconditionally
-(no prompt); `--skip-host-wire` always opts out; with none of the three
-passed and a `.claude/` workspace detected, a TTY is offered the install
-interactively while a non-TTY skips it (the rendered summary's "host hooks"
-line reports the outcome either way). With `--json`, stdout is `{ ok: true,
-project, gateProfile, hostWire: { wired, offered }, verifier: { provider,
-keyPresent, ready, reason } }` on success, or `{ ok: false, error }` on the
-missing-`.cadence/` refusal.
+`state.json`/`STATE.md` are gitignored and per-worktree (Phase 196, issue
+#177), so a fresh worktree or fresh clone of an already-`.cadence/`-committed
+repo has no `state.json` yet. When `.cadence/state.json` is missing, `onboard`
+bootstraps a fresh one (`loopPosition: IDLE`, no active phase/draft/task,
+`revision: 0`), deriving the project name from `.cadence/PROJECT.md`'s
+first-line `# <name>` header (falling back to `"unnamed"` if that file is
+missing or doesn't match the expected shape), and prints a notice to stderr
+naming the bootstrapped project. When `state.json` already exists, it is left
+completely untouched — `onboard` instead reads the existing project name from
+it (best-effort — falls back to `"unnamed"` on a missing or unparsable file).
+
+Either way it then reads the gate profile from the loaded config and reports
+verifier readiness via the same `assessReadiness` check `cadence doctor`'s
+`verification-readiness` check and `cadence activate` use. Host wiring reuses
+`cadence init`'s decision table: `--host <claude|codex>` or `--wire-host`
+wires unconditionally (no prompt); `--skip-host-wire` always opts out; with
+none of the three passed and a `.claude/` workspace detected, a TTY is offered
+the install interactively while a non-TTY skips it (the rendered summary's
+"host hooks" line reports the outcome either way). With `--json`, stdout is
+`{ ok: true, project, gateProfile, hostWire: { wired, offered }, verifier: {
+provider, keyPresent, ready, reason } }` on success, or `{ ok: false, error }`
+on the missing-`.cadence/` refusal.
 
 **Exit codes** — `2` when `.cadence/` is missing; `1` on an unexpected error
 (e.g. a config load failure, reported to stderr); `0` on success.
