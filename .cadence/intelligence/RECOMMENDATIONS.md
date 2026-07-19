@@ -645,7 +645,7 @@ settle run already detects and warns on files touched outside a task's declared 
 
 ## rec-20260719-001 — No CLI writer to attach evidence to an existing recommendation
 
-- status: converted
+- status: settle-pending
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10

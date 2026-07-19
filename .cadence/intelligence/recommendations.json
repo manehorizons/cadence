@@ -1209,7 +1209,7 @@
       "title": "No CLI writer to attach evidence to an existing recommendation",
       "summary": "cadence recommendation add --evidence only sets a rec's evidence at creation time. There is no subcommand or flag to append a new evidence note to an EXISTING recommendation afterward -- e.g. when new information surfaces during a walk-back, review, or later investigation. The only path today is a raw hand-edit of two files in lockstep: append to .cadence/intelligence/evidence.json's evidence array AND append the new evidence id to the matching recommendation's evidenceIds array in recommendations.json. This second step is easy to miss and easy to get wrong: 'cadence intelligence reconcile' does NOT help here -- deriveRecommendationLinks (packages/core/src/intelligence/store/recommendations.ts:82-102) only re-derives assumptionIds/decisionIds from asLedger/decLedger; it never takes the evidence ledger as input, so evidenceIds is never re-derived from evidence.json and a hand-added evidence entry silently fails to show up in 'cadence recommendation show' until evidenceIds is ALSO hand-edited. Add a small CLI writer, e.g. 'cadence recommendation evidence add <recId> --note <text>' (mirroring assumption/decision's tied-record commands), that appends to both files atomically together.",
       "source": "manual",
-      "status": "converted",
+      "status": "settle-pending",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -1231,9 +1231,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "199-recommendation-evidence-add-cli-writer",
       "createdAt": "2026-07-19T19:28:00.320Z",
-      "updatedAt": "2026-07-19T20:08:36.206Z",
-      "convertedToPhaseId": "199-recommendation-evidence-add-cli-writer"
+      "updatedAt": "2026-07-19T20:36:43.685Z"
     }
   ],
   "archived": [
