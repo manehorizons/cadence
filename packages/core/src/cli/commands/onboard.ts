@@ -2,10 +2,11 @@ import type { Command } from 'commander';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Profile } from '@manehorizons/cadence-types';
+import { emptyState, type Profile } from '@manehorizons/cadence-types';
 import { loadConfig } from '../../config/loader.js';
 import { assessReadiness, type VerifierReadiness } from '../../activate/assess.js';
 import { maybeWireHost } from '../../init/host-wire.js';
+import { SimpleStateBackend } from '../../state/simple.js';
 import { ScriptedPrompter, StdinPrompter, type Prompter } from '../../verify/prompter.js';
 
 /**
@@ -49,6 +50,48 @@ async function readOnboardProject(cadenceDir: string): Promise<{ name: string }>
   } catch {
     /* fall back to default */
   }
+  return { name };
+}
+
+/**
+ * Best-effort project-name derivation from `.cadence/PROJECT.md`'s first-line
+ * `# <name>` header. Missing/unreadable/mismatched shape all degrade to the
+ * default name rather than throwing (same "never throw" contract as
+ * `readOnboardProject`).
+ */
+async function deriveNameFromProjectMd(cadenceDir: string): Promise<string> {
+  try {
+    const content = await readFile(join(cadenceDir, 'PROJECT.md'), 'utf8');
+    const firstLine = content.split('\n', 1)[0] ?? '';
+    const match = /^#\s+(.+?)\s*$/.exec(firstLine);
+    if (match?.[1]) return match[1];
+  } catch {
+    /* fall back to default */
+  }
+  return 'unnamed';
+}
+
+/**
+ * Issue #177 fallout (phase 196): `.cadence/state.json` is gitignored and
+ * per-worktree now, so a fresh clone/worktree of a repo with `.cadence/`
+ * already committed has a `.cadence/` dir but no `state.json`. `onboard` is
+ * built for exactly that "already committed" scenario, so silently reading
+ * `readOnboardProject`'s fallback default and never writing the file left
+ * every downstream command (`cadence progress`, etc.) throwing
+ * `NotInitializedError` right after onboard reported success. Bootstrap a
+ * fresh IDLE state.json in that case — a genuine bootstrap action, loudly
+ * announced on stderr, never a silent mutation of an existing file.
+ */
+async function bootstrapMissingState(
+  cwd: string,
+  cadenceDir: string,
+): Promise<{ name: string }> {
+  const name = await deriveNameFromProjectMd(cadenceDir);
+  const state = emptyState(name);
+  await new SimpleStateBackend(cwd).commit(state);
+  process.stderr.write(
+    `state.json was missing (fresh worktree/clone) — bootstrapped a new one for project "${name}" (loop position: IDLE).\n`,
+  );
   return { name };
 }
 
@@ -117,8 +160,11 @@ export function registerOnboardCommand(program: Command): void {
         }
 
         try {
+          const statePath = join(cadenceDir, 'state.json');
           const [{ name }, config] = await Promise.all([
-            readOnboardProject(cadenceDir),
+            existsSync(statePath)
+              ? readOnboardProject(cadenceDir)
+              : bootstrapMissingState(cwd, cadenceDir),
             loadConfig(cwd),
           ]);
           const verifier = assessReadiness(config, process.env, cwd);

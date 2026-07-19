@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "draftId": "197-01",
+  "completedAt": "2026-07-19T03:56:16.282Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Regression test added to onboard.test.ts: fresh worktree-shaped .cadence/ dir with no state.json, onboard should bootstrap it but currently doesn't. Fails at expected assertion (state.json still missing), 5 pre-existing tests pass. Reviewed independently, no findings."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "cadence onboard now bootstraps a fresh IDLE state.json when missing, deriving project name from PROJECT.md's header (not package.json). Existing state.json left byte-for-byte untouched (AC-2 test). 7/7 onboard tests pass. Reviewed independently, no blocking findings (one minor non-blocking edge case noted: pure-whitespace PROJECT.md header, cannot occur through real init flow)."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Doctor's missing-state.json remediation now names cadence onboard instead of the broken 'run any command / cadence init' advice. 106/106 doctor tests pass, incl. new assertion. Reviewed independently, no findings."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "Full core suite: 2888/2888 tests pass (333 files), typecheck clean, lint clean."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 6,
+    "sessionSubagentSpawns": 0
+  }
+}
