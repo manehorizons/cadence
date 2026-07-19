@@ -693,6 +693,27 @@
       "kind": "note",
       "summary": "deja repo, phase 78-php-gate-support, 2026-07-18: orchestrator told the user the fork acted 'without ever pausing to ask... the human user', which an independent transcript investigation proved false -- the human had been answering via a side channel the whole time",
       "createdAt": "2026-07-18T05:00:07.898Z"
+    },
+    {
+      "id": "ev-20260719-001",
+      "recommendationId": "rec-20260619-008",
+      "kind": "note",
+      "summary": "2026-07-19 walk-back: promoted straight to accepted/ready-for-milestone and had Opus independently pre-mortem the milestone; verdict was to send it back for evidence rather than DRAFT. Open decision: resolve the 'CI/PR-template guidance' vs 'cadence ci install' fork before re-promoting -- no cadence ci command exists today. Also flagged: files:.github is ambiguous (this repo's own CI config vs. template artifacts for other teams to copy -- the former is branch-protection-sensitive here); ongoing maintenance-burden risk for a solo maintainer; and an audience/traction risk (no actual team has asked for this, project is pre-traction/solo-operated). Demoted readiness raw-idea->accepted/ready-for-milestone->needs-decision; status left at accepted.",
+      "createdAt": "2026-07-19T19:20:08.000Z"
+    },
+    {
+      "id": "ev-20260719-002",
+      "recommendationId": "rec-20260714-001",
+      "kind": "note",
+      "summary": "2026-07-19: confirmed live while working mil-rec-rec-20260619-008's pre-mortem -- the gap is broader than outOfScope alone. 'cadence milestone premortem <id>' only refreshes deterministic signal (seedPreMortem/deepenPreMortem in milestone.ts); there is no CLI path for the operator to author real content in likelyFailureModes or hiddenDependencies either, not just outOfScope. Had to talk through real failure modes/dependencies with the operator and Opus, then hand-edit milestones.json for all three fields since no writer exists for any of them.",
+      "createdAt": "2026-07-19T19:27:15.000Z"
+    },
+    {
+      "id": "ev-20260719-003",
+      "recommendationId": "rec-20260719-001",
+      "kind": "note",
+      "summary": "Confirmed live 2026-07-19: hand-added ev-20260719-001 to evidence.json for rec-20260619-008; 'cadence recommendation show' still reported only 1 evidence item and 'cadence intelligence reconcile' did not pick it up, until evidenceIds was also hand-edited in recommendations.json.",
+      "createdAt": "2026-07-19T19:28:00.320Z"
     }
   ]
 }

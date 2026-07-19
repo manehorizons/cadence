@@ -990,6 +990,54 @@ Writes:
 - `.cadence/intelligence/evidence.json` when `--evidence` is provided
 - `.cadence/intelligence/RECOMMENDATIONS.md`
 
+#### recommendation evidence add
+
+Appends a new evidence note to an **existing** recommendation. Unlike
+`recommendation add --evidence`, which only attaches evidence at creation
+time, this is the tied-record writer for the post-creation case — today the
+only other path to attach evidence to a recommendation that already exists
+is a manual hand-edit of both ledger files in lockstep, which is easy to get
+out of sync (`cadence intelligence reconcile` does not help here: it only
+re-derives `assumptionIds`/`decisionIds`, never `evidenceIds`).
+
+```sh
+cadence recommendation evidence add <recId> --note "confirmed the behavior in a manual repro"
+```
+
+**Arguments**
+
+| Argument | Description |
+|---|---|
+| `<recId>` | Id of the recommendation to attach evidence to. Must already exist. |
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--note <text>` | Evidence note text. Required. Redacted the same way `recommendation add --evidence` is (see below) before it is persisted. |
+
+**Behavior** — reads both the recommendation and evidence ledgers, appends a
+new `Evidence` record (`kind: 'note'`) to `.cadence/intelligence/evidence.json`
+with `recommendationId` set to `<recId>`, and links its id into that
+recommendation's `evidenceIds` in `.cadence/intelligence/recommendations.json`
+— both files (and the derived `RECOMMENDATIONS.md`) are written atomically in
+a single `writeIntelligenceLedgers` call, so `cadence recommendation show
+<recId>` reflects the new evidence immediately, with no `reconcile` step
+needed. The recommendation's `updatedAt` is bumped. `--note` text passes
+through the same `redactSecrets` choke point `addRecommendation` uses for
+`--evidence` — a secret-shaped substring (e.g. an API key pattern) is
+replaced with `[REDACTED]` in the persisted `Evidence.summary`, never stored
+raw.
+
+**Exit codes**
+
+- `0` — evidence appended, both ledgers updated.
+- `1` — refused (unknown `<recId>`). Refusal goes to stderr as
+  `recommendation evidence add refused: recommendation <id> not found`; no
+  ledger mutation on refusal.
+
+---
+
 #### recommendation list
 
 Prints recorded recommendations in a compact table.

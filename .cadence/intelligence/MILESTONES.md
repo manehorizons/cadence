@@ -14,6 +14,7 @@ None.
 
 - mil-rec-rec-20260617-003 — Auto-derive phase id and collapse --ac syntax
 - mil-rec-rec-20260617-005 — Agent/non-TTY mode to kill the StdinPrompter minefield
+- mil-rec-rec-20260619-008 — Team rollout kit
 
 ## Exported
 

@@ -332,8 +332,8 @@ The rec lifecycle has no terminal status for work that has actually shipped. pro
 
 ## rec-20260619-008 — Team rollout kit
 
-- status: candidate
-- ready: raw-idea
+- status: accepted
+- ready: needs-decision
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -342,6 +342,7 @@ The rec lifecycle has no terminal status for work that has actually shipped. pro
 - areas: onboarding, team, ci, docs
 - files: README.md, docs/README.md, .github
 - evidence: 2026-06-19 adoption review: solo onboarding is now decent; team adoption needs a concrete rollout path.
+- evidence: 2026-07-19 walk-back: promoted straight to accepted/ready-for-milestone and had Opus independently pre-mortem the milestone; verdict was to send it back for evidence rather than DRAFT. Open decision: resolve the 'CI/PR-template guidance' vs 'cadence ci install' fork before re-promoting -- no cadence ci command exists today. Also flagged: files:.github is ambiguous (this repo's own CI config vs. template artifacts for other teams to copy -- the former is branch-protection-sensitive here); ongoing maintenance-burden risk for a solo maintainer; and an audience/traction risk (no actual team has asked for this, project is pre-traction/solo-operated). Demoted readiness raw-idea->accepted/ready-for-milestone->needs-decision; status left at accepted.
 - next: cadence milestone propose
 
 Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.
@@ -564,7 +565,7 @@ SECURITY.md already has a 'Scope and threat model' section (shell execution, LLM
 
 Verified: existing 'corrupt' references in tests (state/simple.test.ts, render-context.test.ts, context.test.ts) cover state.json corruption specifically, not the intelligence ledger (evidence.json/recommendations.json). No tests found for intelligence-store ledger corruption, offline settle behavior, or mcp-serve crash recovery. Add static failure-injection coverage for the intelligence store and runtime: a corrupt/partial ledger recovers or fails closed with a clear error, settle behaves predictably with no network, and mcp serve recovers from a crashed session. Mirrors the corrupt-DB/offline-start layer flagged for Lumen.
 
-## rec-20260714-001 — milestone premortem: no CLI writer for the operator-authored outOfScope field
+## rec-20260714-001 — milestone premortem: no CLI writer for any operator-authored field (likelyFailureModes, hiddenDependencies, outOfScope)
 
 - status: candidate
 - ready: raw-idea
@@ -576,9 +577,10 @@ Verified: existing 'corrupt' references in tests (state/simple.test.ts, render-c
 - areas: cli, intelligence
 - files: packages/core/src/cli/commands/milestone.ts, packages/core/src/intelligence/milestone.ts
 - evidence: Verified live 2026-07-14: ran 'cadence milestone premortem mil-rec-rec-20260712-011', all three derived fields correctly empty (no heuristic signal), outOfScope stayed [] with no CLI path to fill it; milestone.ts:90 and :188 confirm it's excluded from derivation by design.
+- evidence: 2026-07-19: confirmed live while working mil-rec-rec-20260619-008's pre-mortem -- the gap is broader than outOfScope alone. 'cadence milestone premortem <id>' only refreshes deterministic signal (seedPreMortem/deepenPreMortem in milestone.ts); there is no CLI path for the operator to author real content in likelyFailureModes or hiddenDependencies either, not just outOfScope. Had to talk through real failure modes/dependencies with the operator and Opus, then hand-edit milestones.json for all three fields since no writer exists for any of them.
 - next: cadence milestone propose
 
-cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/driftRisks deterministically from ledger heuristics (correctly empty when a milestone's recs trip no risk signal — e.g. mil-rec-rec-20260712-011: single high-confidence, accepted+ready-for-milestone, undecayed rec). outOfScope is explicitly excluded from that derivation (milestone.ts:90,188 — seedPreMortem hardcodes [], deepenPreMortem passes milestone.preMortem.outOfScope through unchanged) because it's meant to be operator-authored, not inferred. But there is no 'cadence milestone' subcommand to set it — the only path today is a raw hand-edit of .cadence/intelligence/milestones.json, which the project otherwise treats as a derived-state file. Add a small CLI writer, e.g. 'cadence milestone premortem <id> --out-of-scope <text>' (repeatable) or a dedicated 'cadence milestone scope <id>' subcommand, so pre-mortems can be completed without hand-editing ledger JSON.
+cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/driftRisks deterministically from ledger heuristics (correctly empty when a milestone's recs trip no risk signal — e.g. mil-rec-rec-20260712-011: single high-confidence, accepted+ready-for-milestone, undecayed rec). outOfScope is explicitly excluded from that derivation (milestone.ts:90,188 — seedPreMortem hardcodes [], deepenPreMortem passes milestone.preMortem.outOfScope through unchanged) because it's meant to be operator-authored, not inferred. But there is no 'cadence milestone' subcommand to set it — the only path today is a raw hand-edit of .cadence/intelligence/milestones.json, which the project otherwise treats as a derived-state file. Add a small CLI writer, e.g. 'cadence milestone premortem <id> --out-of-scope <text>' (repeatable) or a dedicated 'cadence milestone scope <id>' subcommand, so pre-mortems can be completed without hand-editing ledger JSON. Confirmed 2026-07-19 (mil-rec-rec-20260619-008 walk-back): the gap is not limited to outOfScope — there is likewise no CLI writer for likelyFailureModes or hiddenDependencies, since the deterministic refresh only derives heuristic-driven entries and nothing else. Any writer added should cover all three fields, not just outOfScope.
 
 ## rec-20260714-002 — draft add-task has no --name flag (add-ac does) — every appended task needs a hand-fix
 
@@ -640,3 +642,19 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
+
+## rec-20260719-001 — No CLI writer to attach evidence to an existing recommendation
+
+- status: converted
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, intelligence
+- files: packages/core/src/cli/commands/recommendation.ts, packages/core/src/intelligence/store/recommendations.ts, packages/core/src/intelligence/store/reconcile.ts
+- evidence: Confirmed live 2026-07-19: hand-added ev-20260719-001 to evidence.json for rec-20260619-008; 'cadence recommendation show' still reported only 1 evidence item and 'cadence intelligence reconcile' did not pick it up, until evidenceIds was also hand-edited in recommendations.json.
+- next: cadence milestone propose
+
+cadence recommendation add --evidence only sets a rec's evidence at creation time. There is no subcommand or flag to append a new evidence note to an EXISTING recommendation afterward -- e.g. when new information surfaces during a walk-back, review, or later investigation. The only path today is a raw hand-edit of two files in lockstep: append to .cadence/intelligence/evidence.json's evidence array AND append the new evidence id to the matching recommendation's evidenceIds array in recommendations.json. This second step is easy to miss and easy to get wrong: 'cadence intelligence reconcile' does NOT help here -- deriveRecommendationLinks (packages/core/src/intelligence/store/recommendations.ts:82-102) only re-derives assumptionIds/decisionIds from asLedger/decLedger; it never takes the evidence ledger as input, so evidenceIds is never re-derived from evidence.json and a hand-added evidence entry silently fails to show up in 'cadence recommendation show' until evidenceIds is ALSO hand-edited. Add a small CLI writer, e.g. 'cadence recommendation evidence add <recId> --note <text>' (mirroring assumption/decision's tied-record commands), that appends to both files atomically together.

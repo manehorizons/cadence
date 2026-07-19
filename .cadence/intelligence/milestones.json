@@ -369,6 +369,26 @@
       ],
       "createdAt": "2026-07-13T03:46:18.942Z",
       "updatedAt": "2026-07-14T03:14:47.612Z"
+    },
+    {
+      "id": "mil-rec-rec-20260619-008",
+      "name": "Team rollout kit",
+      "objective": "Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.",
+      "status": "deferred",
+      "recommendationIds": [
+        "rec-20260619-008"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [],
+      "createdAt": "2026-07-19T18:25:17.947Z",
+      "updatedAt": "2026-07-19T18:38:30.301Z"
     }
   ]
 }
