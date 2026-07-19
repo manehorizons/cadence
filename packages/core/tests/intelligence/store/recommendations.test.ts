@@ -147,7 +147,7 @@ describe('addEvidenceToRecommendation (phase 199 tied-record writer)', () => {
 
     const result = await addEvidenceToRecommendation(active.root, {
       recommendationId: rec.id,
-      note: 'found AKIAABCDEFGHIJKLMNOP hardcoded in config',
+      note: 'found AKIAABCDEFGHIJKLMNOP hardcoded in config', // gitleaks:allow — fake key, redaction fixture
     });
     expect(result.ok).toBe(true);
 
