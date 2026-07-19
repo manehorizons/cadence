@@ -16,6 +16,7 @@ import { phaseNumber } from '../phases/collision.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
 import { assertSafePhaseSlug, derivePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import { resolveNextFreePhase } from '../phases/next-free.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -145,7 +146,7 @@ export async function draftNewService(
     }
     return { exitCode: 0, data: { path, id, converted: args.fromRec !== undefined } };
   } catch (err) {
-    io.err(`draft new failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('draft new', err)}\n`);
     return { exitCode: 1 };
   }
 }

@@ -1,0 +1,5 @@
+---
+'@manehorizons/cadence-core': minor
+---
+
+Fixes `.cadence/state.json`/`STATE.md` tracked-file cross-worktree merge conflicts (#177): `cadence init` now gitignores the four CADENCE-owned ephemeral paths (`state.json`, `STATE.md`, `mcp-trust.json`, `intelligence/context/`) by default, and `cadence doctor`/`cadence doctor --fix` gain a `state-tracked` check + `untrack-state` auto-repair to migrate existing repos (this repo included). The audit-trail value a tracked `state.json` used to carry incidentally now lives in a new `stateAtSettle` field on `SUMMARY.json`/`SUMMARY.md`, captured immediately before each settle resets the loop to `IDLE`. `cadence doctor` also diagnoses an unresolved git conflict in `state.json` with a field-by-field local/incoming diff instead of a bare JSON-parse error, and `cadence doctor --fix --resolve-state-conflict=local|incoming` writes the chosen side through the normal state-commit path. Any command that hits a corrupted `state.json` now prints a pointer to `cadence doctor --fix` instead of a bare error. `docs/concepts.md`, `CLAUDE.md`, and `docs/reference/commands.md` are updated to describe the new convention.

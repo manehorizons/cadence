@@ -8,6 +8,7 @@ import { loadConfig } from '../config/loader.js';
 import { effectiveGateSet } from '../gates/engine.js';
 import { buildDraftContext } from '../gates/draft-context.js';
 import { emitCoherenceWarns, printAllCoherenceIssues } from '../gates/coherence.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -45,7 +46,7 @@ export async function draftCheckService(
     }
     return { exitCode: blocked ? 2 : 0, data: { ok: !blocked, issues } };
   } catch (err) {
-    io.err(`draft check failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('draft check', err)}\n`);
     return { exitCode: 1 };
   }
 }

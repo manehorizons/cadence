@@ -1,7 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { execFileSync } from 'node:child_process';
 import { writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { emptyState } from '@manehorizons/cadence-types';
 import { runDoctor } from '../../src/doctor/run.js';
 
 let active: Fixture | null = null;
@@ -138,5 +140,171 @@ describe('runDoctor — coverage-mode language support (phase 166 AC-4, phase 16
     const check = findCheck(report.checks, 'coverage-mode-language-support');
     expect(check).toBeDefined();
     expect(check?.severity).toBe('ok');
+  });
+});
+
+/**
+ * Phase 196 (issue #177): `.cadence/state.json`/`STATE.md` (and the other two
+ * CADENCE-owned ephemeral paths) are per-worktree loop state that must never
+ * be a tracked file — tracking any of them guarantees a real git merge
+ * conflict the moment two CADENCE worktrees on different phases sync.
+ */
+describe('runDoctor — state-tracked (phase 196, issue #177, AC-2)', () => {
+  it('AC-2: a tracked CADENCE-owned path fails, names the path, and is tagged fixId untrack-state', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-tracked' });
+    execFileSync('git', ['init', '-q'], { cwd: active.root });
+    // Staged-but-uncommitted still counts as tracked per `git ls-files`.
+    execFileSync('git', ['add', '.cadence/state.json'], { cwd: active.root });
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state-tracked');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('warning');
+    expect(check?.detail).toMatch(/\.cadence\/state\.json/);
+    expect(check?.remediation).toMatch(/cadence doctor --fix/);
+    expect(check?.fixId).toBe('untrack-state');
+    expect(report.ok).toBe(true); // warning, not error — must not fail the report
+  });
+
+  it('AC-2: none of the four CADENCE-owned paths tracked → passes', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-untracked' });
+    execFileSync('git', ['init', '-q'], { cwd: active.root });
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state-tracked');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('ok');
+    expect(check?.detail).toMatch(/No CADENCE-owned ephemeral paths/);
+  });
+
+  it('AC-2: outside a git repository, degrades to a pass and never throws', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-nogit' });
+    // Deliberately no `git init` — active.root is not a git repository.
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state-tracked');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('ok');
+    expect(check?.detail).toMatch(/could not verify/i);
+  });
+});
+
+/**
+ * Phase 196 (issue #177), T4: `checkState`'s corrupt-JSON fallback is
+ * sharpened specifically for the unresolved-git-merge-conflict shape — when
+ * `.cadence/state.json` still has literal `<<<<<<<`/`=======`/`>>>>>>>`
+ * markers (the AC-2 `state-tracked` check flags the underlying cause; this
+ * is the AC-5 diagnosis half for whoever already hit the conflict). Only
+ * sharpened when BOTH sides of the conflict cleanly parse as JSON AND
+ * validate against `CadenceStateZ` — anything less clean (invalid JSON on
+ * either side, or valid JSON that fails schema validation) falls all the way
+ * back to today's unchanged generic "not valid JSON" message, never a guess.
+ */
+describe('runDoctor — state conflict-marker diagnosis (phase 196, issue #177, AC-5)', () => {
+  function conflictBody(local: unknown, incoming: unknown, marker = 'HEAD', incomingMarker = 'worktree-branch'): string {
+    return [
+      `<<<<<<< ${marker}`,
+      JSON.stringify(local, null, 2),
+      '=======',
+      JSON.stringify(incoming, null, 2),
+      `>>>>>>> ${incomingMarker}`,
+      '',
+    ].join('\n');
+  }
+
+  it('both sides valid + schema-conformant → sharpened field-by-field diff, fixId resolve-state-conflict', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-conflict-clean' });
+    const local = { ...emptyState('doc-state-conflict-clean'), activePhase: '30', loopPosition: 'BUILD' as const };
+    const incoming = { ...emptyState('doc-state-conflict-clean'), activePhase: '31', loopPosition: 'SETTLE' as const };
+    await writeFile(join(active.root, '.cadence', 'state.json'), conflictBody(local, incoming));
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('error');
+    expect(check?.fixId).toBe('resolve-state-conflict');
+    expect(check?.detail).toMatch(/unresolved git merge conflict/i);
+    // Both differing fields, both sides' actual values, must be named.
+    expect(check?.detail).toContain('activePhase');
+    expect(check?.detail).toContain('30');
+    expect(check?.detail).toContain('31');
+    expect(check?.detail).toContain('loopPosition');
+    expect(check?.detail).toContain('BUILD');
+    expect(check?.detail).toContain('SETTLE');
+    expect(check?.remediation).toMatch(/cadence doctor --fix --resolve-state-conflict=local/);
+  });
+
+  it('only session differs between the two sides → diff detail names the session field', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-conflict-session' });
+    const base = emptyState('doc-state-conflict-session');
+    const local = { ...base, session: { ...base.session, tokenUtilization: 0 } };
+    const incoming = { ...base, session: { ...base.session, tokenUtilization: 0.5 } };
+    await writeFile(join(active.root, '.cadence', 'state.json'), conflictBody(local, incoming));
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state');
+    expect(check?.severity).toBe('error');
+    expect(check?.fixId).toBe('resolve-state-conflict');
+    expect(check?.detail).toContain('session');
+    expect(check?.detail).toContain('0.5');
+  });
+
+  it('conflict-shaped but one side is invalid JSON → falls back to the generic corrupt-JSON message, fixId not resolve-state-conflict', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-conflict-badjson' });
+    const local = emptyState('doc-state-conflict-badjson');
+    const raw = [
+      '<<<<<<< HEAD',
+      JSON.stringify(local, null, 2),
+      '=======',
+      '{ this is not valid json,,,',
+      '>>>>>>> worktree-branch',
+      '',
+    ].join('\n');
+    await writeFile(join(active.root, '.cadence', 'state.json'), raw);
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('error');
+    expect(check?.detail).toMatch(/state\.json is not valid JSON/);
+    expect(check?.fixId).not.toBe('resolve-state-conflict');
+    expect(check?.remediation).toMatch(/Restore \.cadence\/state\.json from version control, or re-init\./);
+  });
+
+  it('conflict-shaped, both sides valid JSON, but one fails CadenceStateZ schema validation → falls back to the generic message', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-conflict-badschema' });
+    const local = emptyState('doc-state-conflict-badschema');
+    // Missing the required `schemaVersion` literal field → fails CadenceStateZ.safeParse.
+    const incoming: Record<string, unknown> = { ...emptyState('doc-state-conflict-badschema') };
+    delete incoming.schemaVersion;
+    await writeFile(join(active.root, '.cadence', 'state.json'), conflictBody(local, incoming));
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('error');
+    expect(check?.detail).toMatch(/state\.json is not valid JSON/);
+    expect(check?.fixId).not.toBe('resolve-state-conflict');
+  });
+
+  it('plain garbage, not conflict-marker-shaped at all → unchanged regression guard on today\'s generic message', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-state-plain-garbage' });
+    await writeFile(join(active.root, '.cadence', 'state.json'), '{invalid json');
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+
+    const check = findCheck(report.checks, 'state');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('error');
+    expect(check?.detail).toMatch(/state\.json is not valid JSON/);
+    expect(check?.fixId).toBeNull();
+    expect(check?.remediation).toBe('Restore .cadence/state.json from version control, or re-init.');
   });
 });

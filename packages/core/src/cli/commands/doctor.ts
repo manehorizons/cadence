@@ -39,12 +39,17 @@ export function registerDoctorCommand(program: Command): void {
       'with --fix, also re-run host installs for host findings',
     )
     .option('--dry-run', 'with --fix, print the repair plan without writing anything')
+    .option(
+      '--resolve-state-conflict <side>',
+      "resolve an unresolved state.json git conflict: 'local' or 'incoming' (requires --fix)",
+    )
     .action(
       async (opts: {
         json?: boolean;
         fix?: boolean;
         wireHost?: boolean;
         dryRun?: boolean;
+        resolveStateConflict?: string;
       }) => {
         const cwd = process.cwd();
         const env = {
@@ -52,6 +57,29 @@ export function registerDoctorCommand(program: Command): void {
           platform: process.platform,
         };
         try {
+          // --resolve-state-conflict is a hard validation error (not a silent
+          // no-op like --wire-host/--dry-run without --fix): acting on a
+          // stale/wrong side would be actively harmful, so refuse loudly
+          // rather than ignore it.
+          let resolveStateConflictSide: 'local' | 'incoming' | undefined;
+          if (opts.resolveStateConflict !== undefined) {
+            if (!opts.fix) {
+              process.stderr.write(
+                '--resolve-state-conflict requires --fix (e.g. `cadence doctor --fix --resolve-state-conflict=local`).\n',
+              );
+              process.exitCode = 1;
+              return;
+            }
+            if (opts.resolveStateConflict !== 'local' && opts.resolveStateConflict !== 'incoming') {
+              process.stderr.write(
+                `--resolve-state-conflict must be 'local' or 'incoming' (got '${opts.resolveStateConflict}').\n`,
+              );
+              process.exitCode = 1;
+              return;
+            }
+            resolveStateConflictSide = opts.resolveStateConflict;
+          }
+
           // --wire-host / --dry-run only mean something alongside --fix.
           if (!opts.fix && (opts.wireHost || opts.dryRun)) {
             process.stderr.write(
@@ -85,6 +113,9 @@ export function registerDoctorCommand(program: Command): void {
 
           const fixesApplied = await applyFixes(cwd, fixPlan, {
             wireHost: !!opts.wireHost,
+            ...(resolveStateConflictSide !== undefined
+              ? { resolveStateConflict: resolveStateConflictSide }
+              : {}),
           });
           const postFixReport = await runDoctor(cwd, env);
 

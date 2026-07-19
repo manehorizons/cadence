@@ -54,6 +54,12 @@ export function renderSummaryMd(s: Summary): string {
     lines.push(`- ${r}: ${invoked.has(r) ? 'invoked' : 'NOT INVOKED'}`);
   }
   if (required.size === 0) lines.push('_(none)_');
+  if (s.stateAtSettle) {
+    lines.push('', '## State at settle', '');
+    lines.push(`- loop position before settle: ${s.stateAtSettle.loopPositionBeforeSettle}`);
+    lines.push(`- revision: ${s.stateAtSettle.revision}`);
+    lines.push(`- session subagent spawns: ${s.stateAtSettle.sessionSubagentSpawns}`);
+  }
   lines.push('');
   return lines.join('\n');
 }

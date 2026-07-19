@@ -359,3 +359,94 @@ describe('settleService persists a SUMMARY on the refused-settle path (phase 170
     expect(state.activeDraft).toBe('53-01');
   });
 });
+
+describe('settleService captures a stateAtSettle snapshot in SUMMARY (issue #177, phase 196 T3)', () => {
+  it('AC-4: SUMMARY.json contains stateAtSettle reflecting loop state as of immediately before the reset to IDLE', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '54-state-at-settle',
+      id: '54-01',
+      tier: 'standard',
+      config: defaultConfig,
+    });
+
+    // Overwrite the fixture's default state with a distinguishable
+    // pre-settle revision + subagentSpawns counter so the assertion below
+    // proves the snapshot was captured BEFORE settle's reset-to-IDLE block
+    // zeroes/nulls the loop-position fields, not from some post-reset value.
+    const statePath = join(root, '.cadence', 'state.json');
+    const preSettleState = JSON.parse(await readFile(statePath, 'utf8'));
+    preSettleState.revision = 7;
+    preSettleState.session.subagentSpawns = 3;
+    await writeFile(statePath, JSON.stringify(preSettleState, null, 2));
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '54-state-at-settle', '54-01-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as {
+      stateAtSettle?: {
+        loopPositionBeforeSettle: string;
+        revision: number;
+        sessionSubagentSpawns: number;
+      };
+    };
+
+    expect(summary.stateAtSettle).toEqual({
+      loopPositionBeforeSettle: 'BUILD',
+      revision: 7,
+      sessionSubagentSpawns: 3,
+    });
+
+    // The reset-to-IDLE block still ran normally — the snapshot is a copy,
+    // not a redirect of the reset itself.
+    const stateRaw = await readFile(statePath, 'utf8');
+    const stateAfter = JSON.parse(stateRaw) as { loopPosition: string };
+    expect(stateAfter.loopPosition).toBe('IDLE');
+  });
+
+  it('AC-4: SUMMARY.md renders a State at settle section with the snapshot fields', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '55-state-at-settle-md',
+      id: '55-01',
+      tier: 'standard',
+      config: defaultConfig,
+    });
+
+    const statePath = join(root, '.cadence', 'state.json');
+    const preSettleState = JSON.parse(await readFile(statePath, 'utf8'));
+    preSettleState.revision = 2;
+    preSettleState.session.subagentSpawns = 5;
+    await writeFile(statePath, JSON.stringify(preSettleState, null, 2));
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+
+    const summaryMdPath = join(
+      root, '.cadence', 'phases', '55-state-at-settle-md', '55-01-SUMMARY.md',
+    );
+    const mdRaw = await readFile(summaryMdPath, 'utf8');
+
+    expect(mdRaw).toContain('## State at settle');
+    expect(mdRaw).toContain('loop position before settle: BUILD');
+    expect(mdRaw).toContain('- revision: 2');
+    expect(mdRaw).toContain('- session subagent spawns: 5');
+  });
+});

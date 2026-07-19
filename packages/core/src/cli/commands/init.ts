@@ -30,6 +30,7 @@ import {
 import { writeContributingMd } from '../../init/contributing-md-template.js';
 import { renderDemoDraft } from '../../init/demo-draft.js';
 import { autoFlipNotice } from '../../init/gate-profile-notice.js';
+import { ensureGitignoreEntries } from '../../init/gitignore.js';
 import { maybeWireHost, hostWireDisplay } from '../../init/host-wire.js';
 import { draftNewService } from '../../services/draft-new.js';
 import type { CommandIO } from '../../services/io.js';
@@ -367,6 +368,12 @@ export function registerInitCommand(program: Command): void {
           join(cadenceDir, 'SPECIAL-FLOWS.md'),
           '# Special Flows\n\n_(none yet)_\n',
         );
+        // Phase 196 (issue #177) — gitignore the four CADENCE-owned ephemeral
+        // paths (per-worktree loop state, local trust decisions, the intel
+        // scratch cache) so tracking them can never produce a real merge
+        // conflict across worktrees. Idempotent; safe to call again later
+        // (e.g. `cadence doctor --fix`).
+        await ensureGitignoreEntries(cwd);
         await writeClaudeMd(cwd, {
           projectName: name,
           gateProfile,

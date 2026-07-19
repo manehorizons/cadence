@@ -190,7 +190,10 @@ Scaffold a new .cadence/ directory in the current working tree
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — writes `.cadence/config.json`, `.cadence/state.json`,
-`.cadence/PROJECT.md`, and a managed block in the repo-root `CLAUDE.md`. Init is
+`.cadence/PROJECT.md`, a managed block in the repo-root `CLAUDE.md`, and (as of
+phase 196) `.gitignore` entries for the four CADENCE-owned ephemeral paths
+(`state.json`, `STATE.md`, `mcp-trust.json`, `intelligence/context/`) so they
+stay untracked. Init is
 **zero-prompt**: it derives the project name and (via git history) the gate
 profile, asking nothing. The `--preset` flag selects a config preset;
 `--gate-profile` sets which quality gates fire by default. (`--profile` is a
@@ -869,6 +872,7 @@ Diagnose this project’s CADENCE setup and report problems
 | `--fix` | Apply safe, deterministic repairs for the fixable findings *(v1.34)* |
 | `--wire-host` | With `--fix`, also re-run host installs for host findings *(v1.34)* |
 | `--dry-run` | With `--fix`, print the repair plan without writing anything *(v1.34)* |
+| `--resolve-state-conflict <side>` | With `--fix`, resolves an unresolved `state.json` git merge conflict by writing the chosen side (`local` or `incoming`); requires `--fix` (errors without it) and is a no-op if `state.json` has no conflict-marker corruption to resolve *(phase 196)* |
 | `-h, --help` | Display help for command |
 
 **Behavior** — runs a set of deterministic, offline health checks on the
@@ -885,6 +889,7 @@ v1 check set:
 | `node` | Node major ≥ 20 (the `engines` floor) | error |
 | `initialized` | `.cadence/` exists and `config.json` is valid | error |
 | `state` | `state.json` parses; `STATE.md` (derived view) present | error / warning |
+| `state-tracked` | *(git repos)* none of the four CADENCE-owned ephemeral paths (`state.json`, `STATE.md`, `mcp-trust.json`, `intelligence/context/`) are tracked by git — tracking any guarantees a cross-worktree merge conflict *(phase 196)* | warning |
 | `git-hooks` | *(git repos)* `core.hooksPath` resolves to `.githooks` (the pre-push gate) | warning |
 | `host-hooks` | *(if `.claude/settings.json`)* CADENCE-managed hook entries present | warning |
 | `host-commands` | *(if `.claude/commands/`)* every managed `cadence-*.md` run-line is portable (no machine-absolute path) | warning |
@@ -926,7 +931,7 @@ never prompts):
 
 | Fix kind | Findings | What `--fix` does |
 |---|---|---|
-| **auto** | `git-hooks`, missing `STATE.md`, missing managed `AGENTS.md`, `handoff-retention` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`); regenerate `AGENTS.md`; set `handoff.retain` to the default (10) when unset and prune the `SESSION-*.md` archive down to that budget (the active `lastHandoff` doc is always kept) |
+| **auto** | `git-hooks`, missing `STATE.md`, missing managed `AGENTS.md`, `handoff-retention`, `state-tracked` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`); regenerate `AGENTS.md`; set `handoff.retain` to the default (10) when unset and prune the `SESSION-*.md` archive down to that budget (the active `lastHandoff` doc is always kept); write the four CADENCE-owned ephemeral paths to `.gitignore` and `git rm --cached` any that are tracked, without committing *(phase 196)* |
 | **wire-host** | `host-hooks`, `host-commands`, `codex-hooks`, `codex-prompts` | applied only with `--fix --wire-host` — re-runs the relevant host installer once per host repair id (deduped) to rewrite hooks/commands |
 | **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `codex-cadence-command`, user-owned prompt/agent files | never auto-applied — reported as guidance with the check's remediation |
 

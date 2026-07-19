@@ -1,12 +1,15 @@
 import { spawn } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { CadenceStateZ } from '@manehorizons/cadence-types';
 import { renderStateMd } from '../render/state-md.js';
 import { SimpleStateBackend } from '../state/simple.js';
-import { atomicWriteText } from '../state/atomic-write.js';
+import { atomicWriteText, atomicWriteJSON } from '../state/atomic-write.js';
 import { loadConfig, writeConfig } from '../config/loader.js';
 import { renderAgentsMd } from '../init/claude-md-template.js';
 import { pruneHandoffDir } from '../handoff/retention.js';
-import { HANDOFF_WARN_THRESHOLD } from './run.js';
+import { ensureGitignoreEntries } from '../init/gitignore.js';
+import { HANDOFF_WARN_THRESHOLD, listTrackedCadenceOwnedPaths, parseConflictMarkers } from './run.js';
 import type { DoctorReport } from './model.js';
 
 /**
@@ -39,6 +42,7 @@ const FIX_KIND: Record<string, Exclude<FixKind, 'manual'>> = {
   'codex-host-install': 'wire-host',
   'agents-md': 'auto',
   'handoff-retention': 'auto',
+  'untrack-state': 'auto',
 };
 
 const TITLES: Record<string, string> = {
@@ -48,18 +52,43 @@ const TITLES: Record<string, string> = {
   'codex-host-install': 'Re-run the Codex host install',
   'agents-md': 'Regenerate AGENTS.md',
   'handoff-retention': 'Set handoff.retain and prune excess SESSION docs',
+  'untrack-state': 'Untrack CADENCE-owned ephemeral state and gitignore it',
 };
+
+/** Repair id for the conflict-resolution repair — deliberately kept OUT of
+ *  `FIX_KIND`'s auto/wire-host map (see `planFixes`'s special-case below). */
+const RESOLVE_STATE_CONFLICT_FIX_ID = 'resolve-state-conflict';
 
 /**
  * Pure: classify every *failing* check into a fix action. A check with a known
  * repair `fixId` becomes an `auto`/`wire-host` action; anything else (no fixId,
  * or an unknown id) becomes a `manual` action carrying the check's remediation.
  * Report order is preserved.
+ *
+ * `resolve-state-conflict` (T5, phase 196, issue #177) is special-cased ahead
+ * of the generic lookup: it is ALWAYS classified `manual` here — never `auto`
+ * — because picking the wrong side of a state.json conflict is actively
+ * harmful, unlike every other repair in this file. `fixId` is still
+ * preserved (unlike a normal manual/unknown-fixId action, which nulls it
+ * out), so `applyFixes` can recognize this specific action and, only when
+ * the caller's `opts.resolveStateConflict` supplies a side, actually run the
+ * repair — driven by the CLI flag, never by the blanket "run every auto
+ * action" path `untrack-state` uses.
  */
 export function planFixes(report: DoctorReport): FixPlan {
   const actions: FixAction[] = [];
   for (const check of report.checks) {
     if (check.severity === 'ok') continue;
+    if (check.fixId === RESOLVE_STATE_CONFLICT_FIX_ID) {
+      actions.push({
+        check: check.name,
+        kind: 'manual',
+        fixId: check.fixId,
+        title: 'Resolve the state.json conflict (requires --resolve-state-conflict=local|incoming)',
+        detail: check.detail,
+      });
+      continue;
+    }
     const kind = check.fixId !== null ? FIX_KIND[check.fixId] : undefined;
     if (check.fixId !== null && kind !== undefined) {
       actions.push({
@@ -158,6 +187,104 @@ async function pruneHandoffRetention(root: string): Promise<void> {
   await pruneHandoffDir(join(root, '.cadence', 'handoff'), retain, state.session.lastHandoff ?? '');
 }
 
+/** `git rm --cached -- <paths>` in `root` (the untrack-state repair). Stages
+ *  removal from the index only — never touches the working tree files and
+ *  never commits. Mirrors `setGitHooksPath`'s injectable-`spawn`-free,
+ *  fixed-arg-array shape (never a shell string). */
+function gitRmCached(root: string, paths: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('git', ['rm', '--cached', '--', ...paths], { cwd: root });
+    let stderr = '';
+    child.stderr?.on('data', (d) => (stderr += d.toString()));
+    child.on('error', reject);
+    child.on('exit', (code) =>
+      code === 0 ? resolve() : reject(new Error(stderr.trim() || `git exited ${code}`)),
+    );
+  });
+}
+
+/**
+ * The `untrack-state` repair (phase 196, issue #177): write the four
+ * CADENCE-owned entries into `.gitignore` (idempotent — `ensureGitignoreEntries`
+ * no-ops when they're already present), then `git rm --cached` only whichever
+ * of those four paths are actually currently tracked. Nothing is committed —
+ * `git rm --cached` only stages the removal; the operator commits
+ * deliberately. Re-derives the tracked set rather than trusting the doctor
+ * report's detail string, so it stays correct even if the check's finding is
+ * stale by the time `--fix` runs.
+ */
+async function untrackCadenceOwnedState(root: string): Promise<void> {
+  await ensureGitignoreEntries(root);
+  const tracked = await listTrackedCadenceOwnedPaths(root);
+  if (tracked === null || tracked.length === 0) return;
+  await gitRmCached(root, tracked);
+}
+
+export interface ConflictRepairResult {
+  status: FixStatus;
+  message: string;
+}
+
+/**
+ * The `resolve-state-conflict` repair (T5, phase 196, issue #177): re-split
+ * the raw `state.json` (reusing `parseConflictMarkers` — the one place the
+ * marker-detection logic lives — never re-derived here), pick `side`,
+ * re-validate it fresh with `JSON.parse` + `CadenceStateZ.safeParse` (defense
+ * in depth: a `doctor --fix` invocation may run in a different process than
+ * the `checkState` that diagnosed the conflict, so the file could have
+ * changed in between), and write it through the state backend.
+ *
+ * Never throws for an expected failure mode (no markers / bad JSON / bad
+ * schema) — those come back as `skipped`/`failed` outcomes so a single bad
+ * repair doesn't take the rest of `--fix` down.
+ *
+ * `SimpleStateBackend.commit()` is the codebase's single public write path
+ * for `state.json` + `STATE.md` (see `StateBackend.commit`'s doc comment),
+ * but it unconditionally re-reads the CURRENT on-disk `state.json` to
+ * enforce optimistic concurrency — which would itself throw here, since the
+ * file is still conflict-marker text, not valid JSON, before `force` even
+ * comes into play. So the resolved JSON is written directly first (so
+ * `commit()` can read it back cleanly), then `commit()` performs the real,
+ * authoritative write — bumping `revision` and regenerating `STATE.md`.
+ * `force: true` because there is no meaningful "expected revision" to
+ * compare a conflict recovery against.
+ */
+async function resolveStateConflict(
+  root: string,
+  side: 'local' | 'incoming',
+): Promise<ConflictRepairResult> {
+  const statePath = join(root, '.cadence', 'state.json');
+  const raw = await readFile(statePath, 'utf8');
+  const split = parseConflictMarkers(raw);
+  if (split === null) {
+    return {
+      status: 'skipped',
+      message: 'state.json has no unresolved conflict markers — nothing to resolve.',
+    };
+  }
+  const chosenRaw = side === 'local' ? split.local : split.incoming;
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(chosenRaw);
+  } catch (err) {
+    return {
+      status: 'failed',
+      message: `the ${side} side of the conflict is not valid JSON: ${errMessage(err)}`,
+    };
+  }
+  const result = CadenceStateZ.safeParse(parsedJson);
+  if (!result.success) {
+    return {
+      status: 'failed',
+      message: `the ${side} side of the conflict failed schema validation: ${result.error.message}`,
+    };
+  }
+  const chosen = result.data;
+  await atomicWriteJSON(statePath, chosen);
+  await new SimpleStateBackend(root).commit(chosen, { force: true });
+  return { status: 'applied', message: `resolved state.json using the ${side} side` };
+}
+
 const HOST_WIRE_DISPLAY = 'npx @manehorizons/cadence-host-claude-code install';
 const CODEX_HOST_WIRE_DISPLAY = 'npx -y @manehorizons/cadence-host-codex install';
 
@@ -232,6 +359,8 @@ async function runRepair(root: string, fixId: string, deps: ApplyDeps): Promise<
       return regenerateAgentsMd(root);
     case 'handoff-retention':
       return pruneHandoffRetention(root);
+    case 'untrack-state':
+      return untrackCadenceOwnedState(root);
     case 'host-install': {
       const code = await (deps.hostInstall ?? defaultHostInstall)(root);
       if (code !== 0) throw new Error(`${HOST_WIRE_DISPLAY} exited ${code}`);
@@ -250,20 +379,42 @@ async function runRepair(root: string, fixId: string, deps: ApplyDeps): Promise<
 /**
  * Apply a fix plan, best-effort. `auto` actions always run; `wire-host` actions
  * run only when `opts.wireHost`; `manual` actions are never executed (reported as
- * guidance). Repairs sharing a `fixId` (e.g. host-install for both host checks)
- * run at most once — subsequent actions report as covered/skipped. A repair that
- * throws is reported `failed`; the rest still run.
+ * guidance) — EXCEPT the `resolve-state-conflict` fixId (classified `manual` in
+ * the plan on purpose, see `planFixes`), which this loop intercepts before the
+ * generic manual handling: it runs only when `opts.resolveStateConflict`
+ * supplies a side, and is skipped-with-guidance otherwise — driven by the CLI
+ * flag, never by a check's `kind`. Repairs sharing a `fixId` (e.g. host-install
+ * for both host checks) run at most once — subsequent actions report as
+ * covered/skipped. A repair that throws is reported `failed`; the rest still
+ * run.
  */
 export async function applyFixes(
   root: string,
   plan: FixPlan,
-  opts: { wireHost: boolean },
+  opts: { wireHost: boolean; resolveStateConflict?: 'local' | 'incoming' },
   deps: ApplyDeps = {},
 ): Promise<FixOutcome[]> {
   const outcomes: FixOutcome[] = [];
   const attempted = new Map<string, FixStatus>();
   for (const action of plan.actions) {
     const base = { check: action.check, fixId: action.fixId, kind: action.kind };
+    if (action.fixId === RESOLVE_STATE_CONFLICT_FIX_ID) {
+      if (opts.resolveStateConflict === undefined) {
+        outcomes.push({
+          ...base,
+          status: 'skipped',
+          message: `not applied — re-run with --resolve-state-conflict=local|incoming (${action.detail})`,
+        });
+        continue;
+      }
+      try {
+        const repaired = await resolveStateConflict(root, opts.resolveStateConflict);
+        outcomes.push({ ...base, status: repaired.status, message: repaired.message });
+      } catch (err) {
+        outcomes.push({ ...base, status: 'failed', message: errMessage(err) });
+      }
+      continue;
+    }
     if (action.kind === 'manual') {
       outcomes.push({ ...base, status: 'skipped', message: action.detail });
       continue;

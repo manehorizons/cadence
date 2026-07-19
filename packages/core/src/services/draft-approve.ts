@@ -12,6 +12,7 @@ import { runCoherenceGate, emitCoherenceWarns } from '../gates/coherence.js';
 import { runApproveGate } from '../gates/approve.js';
 import { runPlanReviewGate } from '../gates/plan-review.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -109,7 +110,7 @@ export async function draftApproveService(
     io.out(`Approved ${id}; loopPosition=BUILD\n`);
     return { exitCode: 0, data: { id, loopPosition: 'BUILD' } };
   } catch (err) {
-    io.err(`draft approve failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('draft approve', err)}\n`);
     return { exitCode: 1 };
   }
 }

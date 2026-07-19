@@ -8,6 +8,7 @@ import { loadConfig } from '../config/loader.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
+import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /** `cadence spec new <phase> <num>` — scaffold a SPEC.md (IDLE→SPEC). */
@@ -91,7 +92,7 @@ export async function specNewService(
     }
     return { exitCode: 0, data: { path, id, converted: args.fromRec !== undefined } };
   } catch (err) {
-    io.err(`spec new failed: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.err(`${formatCommandError('spec new', err)}\n`);
     return { exitCode: 1 };
   }
 }

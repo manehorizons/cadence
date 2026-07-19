@@ -1,9 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { emptyState } from '@manehorizons/cadence-types';
 
 const CADENCE_CLI = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -102,5 +103,99 @@ describe('cadence doctor', () => {
     expect(r.stdout).toMatch(/coverage-mode-language-support/);
     expect(r.stdout).toMatch(/coverageMode is 'assertion'/);
     expect(r.stdout).toMatch(/cadence config edit coverageMode/);
+  });
+});
+
+// Phase 196 (issue #177), T5: `cadence doctor --fix --resolve-state-conflict=local|incoming`
+// actually acts on T4's conflict-marker diagnosis, end to end through the real CLI.
+describe('cadence doctor --fix --resolve-state-conflict (phase 196, issue #177, AC-5)', () => {
+  function conflictBody(local: unknown, incoming: unknown): string {
+    return [
+      '<<<<<<< HEAD',
+      JSON.stringify(local, null, 2),
+      '=======',
+      JSON.stringify(incoming, null, 2),
+      '>>>>>>> worktree-branch',
+      '',
+    ].join('\n');
+  }
+
+  async function seedConflict(root: string, projectName: string): Promise<void> {
+    const base = emptyState(projectName);
+    await writeFile(
+      join(root, '.cadence', 'state.json'),
+      conflictBody(
+        { ...base, activePhase: '10', loopPosition: 'BUILD' as const },
+        { ...base, activePhase: '11', loopPosition: 'SETTLE' as const },
+      ),
+    );
+  }
+
+  it('--resolve-state-conflict=local writes the local side and regenerates STATE.md', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-cli-resolve-local' });
+    await seedConflict(active.root, 'doc-cli-resolve-local');
+
+    const r = await run(['doctor', '--fix', '--resolve-state-conflict=local'], active.root);
+    expect(r.code).toBe(0);
+
+    const state = JSON.parse(await readFile(join(active.root, '.cadence', 'state.json'), 'utf8'));
+    expect(state.activePhase).toBe('10');
+    expect(state.loopPosition).toBe('BUILD');
+
+    const stateMd = await readFile(join(active.root, '.cadence', 'STATE.md'), 'utf8');
+    expect(stateMd).toContain('10');
+  });
+
+  it('--resolve-state-conflict=incoming writes the incoming side and regenerates STATE.md', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-cli-resolve-incoming' });
+    await seedConflict(active.root, 'doc-cli-resolve-incoming');
+
+    const r = await run(['doctor', '--fix', '--resolve-state-conflict=incoming'], active.root);
+    expect(r.code).toBe(0);
+
+    const state = JSON.parse(await readFile(join(active.root, '.cadence', 'state.json'), 'utf8'));
+    expect(state.activePhase).toBe('11');
+    expect(state.loopPosition).toBe('SETTLE');
+
+    const stateMd = await readFile(join(active.root, '.cadence', 'STATE.md'), 'utf8');
+    expect(stateMd).toContain('11');
+  });
+
+  it('--resolve-state-conflict=local against an already-clean state.json is a no-op, not an error', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-cli-resolve-clean' });
+    const before = await readFile(join(active.root, '.cadence', 'state.json'), 'utf8');
+
+    const r = await run(['doctor', '--fix', '--resolve-state-conflict=local'], active.root);
+    expect(r.code).toBe(0);
+
+    const after = await readFile(join(active.root, '.cadence', 'state.json'), 'utf8');
+    expect(after).toBe(before);
+  });
+
+  it('--resolve-state-conflict=bogus → clear error, non-zero exit, nothing written', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-cli-resolve-bogus' });
+    await seedConflict(active.root, 'doc-cli-resolve-bogus');
+    const before = await readFile(join(active.root, '.cadence', 'state.json'), 'utf8');
+
+    const r = await run(['doctor', '--fix', '--resolve-state-conflict=bogus'], active.root);
+    expect(r.code).not.toBe(0);
+    expect(r.stderr).toMatch(/resolve-state-conflict/);
+    expect(r.stderr).toMatch(/local.*incoming|incoming.*local/i);
+
+    const after = await readFile(join(active.root, '.cadence', 'state.json'), 'utf8');
+    expect(after).toBe(before);
+  });
+
+  it('--resolve-state-conflict=local without --fix → clear error, non-zero exit, nothing written', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-cli-resolve-noflag' });
+    await seedConflict(active.root, 'doc-cli-resolve-noflag');
+    const before = await readFile(join(active.root, '.cadence', 'state.json'), 'utf8');
+
+    const r = await run(['doctor', '--resolve-state-conflict=local'], active.root);
+    expect(r.code).not.toBe(0);
+    expect(r.stderr).toMatch(/--fix/);
+
+    const after = await readFile(join(active.root, '.cadence', 'state.json'), 'utf8');
+    expect(after).toBe(before);
   });
 });
