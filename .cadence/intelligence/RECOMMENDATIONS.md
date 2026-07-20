@@ -567,7 +567,7 @@ Verified: existing 'corrupt' references in tests (state/simple.test.ts, render-c
 
 ## rec-20260714-001 — milestone premortem: no CLI writer for any operator-authored field (likelyFailureModes, hiddenDependencies, outOfScope)
 
-- status: candidate
+- status: settle-pending
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
