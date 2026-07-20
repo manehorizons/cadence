@@ -1140,36 +1140,6 @@
       "decisionIds": [],
       "createdAt": "2026-07-18T05:00:07.898Z",
       "updatedAt": "2026-07-18T05:00:07.898Z"
-    },
-    {
-      "id": "rec-20260720-001",
-      "title": "milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred",
-      "summary": "clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect — the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "intelligence",
-        "milestones",
-        "cli"
-      ],
-      "affectedFiles": [
-        "packages/core/src/intelligence/milestone.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260720-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "203-milestone-reopen-transition",
-      "createdAt": "2026-07-20T01:56:32.636Z",
-      "updatedAt": "2026-07-20T19:13:47.415Z"
     }
   ],
   "archived": [
@@ -3339,6 +3309,39 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-20T01:59:15.742Z",
       "updatedAt": "2026-07-20T18:20:40.555Z"
+    },
+    {
+      "id": "rec-20260720-001",
+      "title": "milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred",
+      "summary": "clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect — the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "intelligence",
+        "milestones",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/intelligence/milestone.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260720-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "203-milestone-reopen-transition",
+      "createdAt": "2026-07-20T01:56:32.636Z",
+      "updatedAt": "2026-07-20T19:39:48.215Z",
+      "shippedRef": "phase 203 / PR #265",
+      "archivedAt": "2026-07-20T19:39:48.215Z",
+      "archiveReason": "shipped"
     }
   ]
 }
