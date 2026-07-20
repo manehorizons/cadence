@@ -1,5 +1,0 @@
----
-'@manehorizons/cadence-core': minor
----
-
-Adds a CLI writer for a milestone's operator-authored pre-mortem fields (closes rec-20260714-001): `cadence milestone premortem <id>` now accepts repeatable `--add-out-of-scope <text...>`, `--add-likely-failure-mode <text...>`, and `--add-hidden-dependency <text...>` options that append operator-authored text without hand-editing `.cadence/intelligence/milestones.json`. Each value is refused (non-zero exit, clear stderr, nothing written) if empty or whitespace-only after trimming. Operator-authored `likelyFailureModes`/`hiddenDependencies` entries now survive a later plain `cadence milestone premortem <id>` refresh alongside the freshly-derived deterministic entries, mirroring the guarantee `outOfScope` already had. All operator-supplied text is newline-collapsed to a single line before being stored, matching how every other pre-mortem entry in the ledger is normalized (a raw embedded newline would otherwise break `MILESTONES.md`'s one-bullet-per-entry rendering).
