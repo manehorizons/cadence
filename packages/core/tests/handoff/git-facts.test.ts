@@ -16,7 +16,13 @@ function gitInit(root: string): void {
   execSync('git config commit.gpgsign false', { cwd: root, stdio: 'ignore' });
 }
 
-describe('readGitFacts', () => {
+describe(
+  'readGitFacts',
+  // AC-1 creates a local bare remote and runs git fetch; on Windows CI the
+  // git operations (init, add, commit, push, fetch) take ~80s due to FS + AV
+  // overhead. 120s gives headroom; non-win32 keeps the 20s global default.
+  { timeout: process.platform === 'win32' ? 120_000 : 20_000 },
+() => {
   it('AC-3: returns available facts with branch + head in a git repo', async () => {
     active = await tempRepo({ initialized: true });
     gitInit(active.root);

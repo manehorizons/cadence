@@ -72,7 +72,13 @@ async function seedAcCoverage(root: string, acId: string): Promise<void> {
   );
 }
 
-describe('cadence settle run (Phase 24.3 — code-review verifier gate)', () => {
+// AC-6 (standard×complex) spawns the CLI many times; macOS Node 20 runners are
+// slower than Node 22 and brush the 20s global ceiling. Match the pattern from
+// settle-security-audit.test.ts: 45s for non-win32, 90s for win32.
+describe(
+  'cadence settle run (Phase 24.3 — code-review verifier gate)',
+  { timeout: process.platform === 'win32' ? 90_000 : 45_000 },
+  () => {
   it('AC-4: refuses on HIGH findings (console.log diff)', async () => {
     active = await tempRepo({ initialized: true });
     await initGitRepo(active.root);

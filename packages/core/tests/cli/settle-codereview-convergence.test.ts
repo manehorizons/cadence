@@ -106,7 +106,13 @@ async function strictScaffold(
   await seedAcCoverage(root, 'AC-1');
 }
 
-describe('cadence settle run (Phase 37.1 — code-review convergence)', () => {
+// AC-4 (standard×complex) spawns the CLI many times; macOS Node 20 runners are
+// slower than Node 22 and brush the 20s global ceiling. Match the pattern from
+// settle-security-audit.test.ts: 45s for non-win32, 90s for win32.
+describe(
+  'cadence settle run (Phase 37.1 — code-review convergence)',
+  { timeout: process.platform === 'win32' ? 90_000 : 45_000 },
+  () => {
   it('AC-1: clean diff converges — settle proceeds, sidecar converged:true', async () => {
     active = await tempRepo({ initialized: true });
     await strictScaffold(active.root, CLEAN_SRC);
