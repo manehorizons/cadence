@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-19T23:01:07.643Z
+Generated at: 2026-07-20T01:39:01.877Z
 
 ## Advisory
 
@@ -11,11 +11,21 @@ Generated at: 2026-07-19T23:01:07.643Z
 
 ## Ranked
 
+(showing top 5 of 19 — run `cadence recommend` for the full list)
+
 ### rec-20260619-008 — Team rollout kit
 
 - score: 65/100 (raw 20.7)
 - status: accepted · ready: needs-decision · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status accepted +6 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 20.7 (score 65)
+- next: cadence milestone propose
+
+### rec-20260719-001 — Impact-gated verification via Phenyx (radius-aware settle gate)
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: scout-20260715-claude-roadmap-02
 - next: cadence milestone propose
 
 ### rec-20260709-003 — cadence init --ci: generate + enforce a CI gate workflow for consumer repos
@@ -41,110 +51,6 @@ Generated at: 2026-07-19T23:01:07.643Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
 - next: cadence milestone propose
 
-### rec-20260712-003 — Retro friction feeds back into Praxis recommendation scoring
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260712-0328
-- next: cadence milestone propose
-
-### rec-20260712-009 — Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
-
-### rec-20260712-014 — Add test-coverage reporting with enforced minimum thresholds to CI
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
-
-### rec-20260714-001 — milestone premortem: no CLI writer for any operator-authored field (likelyFailureModes, hiddenDependencies, outOfScope)
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- next: cadence milestone propose
-
-### rec-20260718-003 — Frame dispatched task boundaries as stop-conditions, not file-scope lists
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- next: cadence milestone propose
-
-### rec-20260718-004 — Surface files-outside-boundary anomalies per-task, not only at settle
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- next: cadence milestone propose
-
-### rec-20260718-005 — Document the invisible-background-subagent-AskUserQuestion gap in host-adapter/dispatch guidance
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- next: cadence milestone propose
-
-### rec-20260710-005 — Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- scout: scout-20260710-2126
-- next: cadence milestone propose
-
-### rec-20260712-004 — cadence draft new: num arg accepts nonsense with no sanity check
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- next: cadence milestone propose
-
-### rec-20260712-005 — add-ac/add-task silently append after a placeholder AC-1/T1
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- next: cadence milestone propose
-
-### rec-20260712-006 — Settle-internal refusal paths still write no SUMMARY
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- next: cadence milestone propose
-
-### rec-20260712-016 — Write a formal threat model covering MCP serve, hooks, host adapters, headless verifier, and ledger exposure
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
-
-### rec-20260712-017 — Add failure-injection tests: corrupt intelligence ledger, offline settle, mcp-serve crash recovery
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
-
-### rec-20260714-002 — draft add-task has no --name flag (add-ac does) — every appended task needs a hand-fix
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- next: cadence milestone propose
-
 ## Parked (deferred)
 
 - rec-20260710-003 — MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool (deferred, needs-evidence)
@@ -155,4 +61,4 @@ None.
 
 ## Totals
 
-- total 42 · ranked 18 · parked 1 · needs-attention 0 · excluded 23
+- total 42 · ranked 19 · parked 1 · needs-attention 0 · excluded 22

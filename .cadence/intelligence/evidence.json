@@ -728,6 +728,20 @@
       "kind": "note",
       "summary": "Phenyx MCP read surface settled (phenyx phase 136); 403/403 workspace resolution on this repo (phase 137 shakedown); demo transcript docs/demo/cadence-transcript.md",
       "createdAt": "2026-07-19T23:21:24.838Z"
+    },
+    {
+      "id": "ev-20260720-001",
+      "recommendationId": "rec-20260720-001",
+      "kind": "note",
+      "summary": "rec-20260619-008 / mil-rec-rec-20260619-008 stuck at needs-decision across sessions 2026-07-18 through 2026-07-20 with no CLI path to reopen after defer",
+      "createdAt": "2026-07-20T01:56:32.636Z"
+    },
+    {
+      "id": "ev-20260720-002",
+      "recommendationId": "rec-20260720-002",
+      "kind": "note",
+      "summary": "Restart of rec-20260619-008 (now archived) after its milestone (mil-rec-rec-20260619-008) got permanently stuck deferred with no CLI reopen path -- see rec-20260720-001 for the underlying gap.",
+      "createdAt": "2026-07-20T01:59:15.742Z"
     }
   ]
 }

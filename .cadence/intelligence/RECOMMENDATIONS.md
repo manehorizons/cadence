@@ -330,23 +330,6 @@ PlanZ/SpecZ id regex /^\d{2}-\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) r
 
 The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.
 
-## rec-20260619-008 — Team rollout kit
-
-- status: accepted
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, team, ci, docs
-- files: README.md, docs/README.md, .github
-- evidence: 2026-06-19 adoption review: solo onboarding is now decent; team adoption needs a concrete rollout path.
-- evidence: 2026-07-19 walk-back: promoted straight to accepted/ready-for-milestone and had Opus independently pre-mortem the milestone; verdict was to send it back for evidence rather than DRAFT. Open decision: resolve the 'CI/PR-template guidance' vs 'cadence ci install' fork before re-promoting -- no cadence ci command exists today. Also flagged: files:.github is ambiguous (this repo's own CI config vs. template artifacts for other teams to copy -- the former is branch-protection-sensitive here); ongoing maintenance-burden risk for a solo maintainer; and an audience/traction risk (no actual team has asked for this, project is pre-traction/solo-operated). Demoted readiness raw-idea->accepted/ready-for-milestone->needs-decision; status left at accepted.
-- next: cadence milestone propose
-
-Add a team adoption kit: CI/PR-template guidance or `cadence ci install` that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.
-
 ## rec-20260701-001 — Make the default install enforce what the tutorial demonstrates
 
 - status: converted
@@ -565,23 +548,6 @@ SECURITY.md already has a 'Scope and threat model' section (shell execution, LLM
 
 Verified: existing 'corrupt' references in tests (state/simple.test.ts, render-context.test.ts, context.test.ts) cover state.json corruption specifically, not the intelligence ledger (evidence.json/recommendations.json). No tests found for intelligence-store ledger corruption, offline settle behavior, or mcp-serve crash recovery. Add static failure-injection coverage for the intelligence store and runtime: a corrupt/partial ledger recovers or fails closed with a clear error, settle behaves predictably with no network, and mcp serve recovers from a crashed session. Mirrors the corrupt-DB/offline-start layer flagged for Lumen.
 
-## rec-20260714-001 — milestone premortem: no CLI writer for any operator-authored field (likelyFailureModes, hiddenDependencies, outOfScope)
-
-- status: settle-pending
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, intelligence
-- files: packages/core/src/cli/commands/milestone.ts, packages/core/src/intelligence/milestone.ts
-- evidence: Verified live 2026-07-14: ran 'cadence milestone premortem mil-rec-rec-20260712-011', all three derived fields correctly empty (no heuristic signal), outOfScope stayed [] with no CLI path to fill it; milestone.ts:90 and :188 confirm it's excluded from derivation by design.
-- evidence: 2026-07-19: confirmed live while working mil-rec-rec-20260619-008's pre-mortem -- the gap is broader than outOfScope alone. 'cadence milestone premortem <id>' only refreshes deterministic signal (seedPreMortem/deepenPreMortem in milestone.ts); there is no CLI path for the operator to author real content in likelyFailureModes or hiddenDependencies either, not just outOfScope. Had to talk through real failure modes/dependencies with the operator and Opus, then hand-edit milestones.json for all three fields since no writer exists for any of them.
-- next: cadence milestone propose
-
-cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/driftRisks deterministically from ledger heuristics (correctly empty when a milestone's recs trip no risk signal — e.g. mil-rec-rec-20260712-011: single high-confidence, accepted+ready-for-milestone, undecayed rec). outOfScope is explicitly excluded from that derivation (milestone.ts:90,188 — seedPreMortem hardcodes [], deepenPreMortem passes milestone.preMortem.outOfScope through unchanged) because it's meant to be operator-authored, not inferred. But there is no 'cadence milestone' subcommand to set it — the only path today is a raw hand-edit of .cadence/intelligence/milestones.json, which the project otherwise treats as a derived-state file. Add a small CLI writer, e.g. 'cadence milestone premortem <id> --out-of-scope <text>' (repeatable) or a dedicated 'cadence milestone scope <id>' subcommand, so pre-mortems can be completed without hand-editing ledger JSON. Confirmed 2026-07-19 (mil-rec-rec-20260619-008 walk-back): the gap is not limited to outOfScope — there is likewise no CLI writer for likelyFailureModes or hiddenDependencies, since the deterministic refresh only derives heuristic-driven entries and nothing else. Any writer added should cover all three fields, not just outOfScope.
-
 ## rec-20260714-002 — draft add-task has no --name flag (add-ac does) — every appended task needs a hand-fix
 
 - status: candidate
@@ -643,7 +609,7 @@ settle run already detects and warns on files touched outside a task's declared 
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
 
-## rec-20260719-001 — Impact-gated verification via Phenyx (radius-aware settle gate)
+## rec-20260720-001 — milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred
 
 - status: candidate
 - ready: needs-decision
@@ -652,8 +618,25 @@ settle run already detects and warns on files touched outside a task's declared 
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
-- areas: settle-gates
-- evidence: Phenyx MCP read surface settled (phenyx phase 136); 403/403 workspace resolution on this repo (phase 137 shakedown); demo transcript docs/demo/cadence-transcript.md
+- areas: intelligence, milestones, cli
+- files: packages/core/src/intelligence/milestone.ts
+- evidence: rec-20260619-008 / mil-rec-rec-20260619-008 stuck at needs-decision across sessions 2026-07-18 through 2026-07-20 with no CLI path to reopen after defer
 - next: cadence milestone propose
 
-New settle/CI gate: compute blast radius on the phase's changed files via phenyx_graph_blast and REFUSE settle when radius-implicated tests were not in the run, printing the evidence chain as the refusal reason. Test-impact analysis exists elsewhere; impact REFUSAL with cross-plane provenance does not. Decision needed: hard dependency vs optional gate behind config (recommend optional: gate present only when a Phenyx index is reachable). Cross-ref phenyx rec scout-20260715-claude-roadmap-03 (edit-time sentinel, the ambient sibling).
+clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect — the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.
+
+## rec-20260720-002 — Team rollout kit
+
+- status: accepted
+- ready: ready-for-milestone
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: onboarding, team, ci, docs
+- files: README.md, docs/README.md, .github
+- evidence: Restart of rec-20260619-008 (now archived) after its milestone (mil-rec-rec-20260619-008) got permanently stuck deferred with no CLI reopen path -- see rec-20260720-001 for the underlying gap.
+- next: cadence milestone propose
+
+Add a team adoption kit: CI/PR-template guidance or 'cadence ci install' that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.
