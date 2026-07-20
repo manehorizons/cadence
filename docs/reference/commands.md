@@ -1342,7 +1342,7 @@ Shape recommendations into milestone candidates (read-narrow; never transitions 
 | `accept <id>` | Mark a proposed milestone accepted |
 | `defer <id>` | Defer a proposed or accepted milestone |
 | `export <id> --to cadence` | Export an accepted milestone to a staged CADENCE SPEC draft |
-| `premortem <id> [--json]` | Recompute the deterministic pre-mortem for a `proposed`/`accepted` milestone in place (refuses other statuses) |
+| `premortem <id> [--json] [--add-out-of-scope <text...>] [--add-likely-failure-mode <text...>] [--add-hidden-dependency <text...>]` | Recompute the deterministic pre-mortem for a `proposed`/`accepted` milestone in place (refuses other statuses); the repeatable `--add-*` flags append operator-authored entries to the corresponding field and refuse (exit 1, no write) on any empty/whitespace-only value |
 | `status <id> [--json]` | Report each of the milestone's phases (derived from its recommendations' `convertedToPhaseId`) with its owning worktree, live loop position, and settled/not-settled state |
 | `list [--json]` | Show the current milestone ledger |
 
@@ -1371,7 +1371,15 @@ assumption ledgers, replaces that milestone's derived pre-mortem dimensions
 in place, bumps its `updatedAt`, and re-renders `MILESTONES.md`; the
 operator-owned `outOfScope` field is preserved verbatim and never derived.
 It is refused for an unknown id or any status other than `proposed`/
-`accepted`. `export <id> --to cadence` renders a deterministic CADENCE SPEC scaffold from an `accepted`
+`accepted`. The repeatable `--add-out-of-scope <text...>`,
+`--add-likely-failure-mode <text...>`, and `--add-hidden-dependency <text...>`
+options append operator-authored text to the corresponding `preMortem` field
+before the refresh runs; any empty/whitespace-only value refuses the whole
+command (exit 1, stderr message, no write) before touching the ledger.
+Operator-authored `likelyFailureModes`/`hiddenDependencies` entries added this
+way survive later plain refreshes (no `--add-*` flags) alongside the
+freshly-derived deterministic entries, the same way `outOfScope` already
+does. `export <id> --to cadence` renders a deterministic CADENCE SPEC scaffold from an `accepted`
 milestone's own facts, writes it to `.cadence/intelligence/exports/<id>/SPEC.md`, records an
 `exportTarget`, and flips the milestone to `exported`; it **never** runs `cadence spec new`,
 allocates a loop id, or writes `state.json` — the staged SPEC is promoted manually by the

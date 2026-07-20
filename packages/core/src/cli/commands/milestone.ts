@@ -1,4 +1,5 @@
 import type { Command } from 'commander';
+import type { PreMortemAdditions } from '../../intelligence/milestone.js';
 import {
   runMilestoneExport,
   runMilestonePreMortem,
@@ -141,26 +142,79 @@ export function registerMilestoneCommand(program: Command): void {
       'Refresh the deterministic pre-mortem for a proposed/accepted milestone',
     )
     .option('--json', 'emit machine-readable JSON instead of rendered text')
-    .action(async (id: string, opts: { json?: boolean }) => {
-      try {
-        const res = await runMilestonePreMortem(process.cwd(), id);
-        if (!res.ok) {
-          process.stderr.write(`milestone premortem refused: ${res.error}\n`);
+    .option(
+      '--add-out-of-scope <text...>',
+      'Append operator-authored out-of-scope entries (repeatable)',
+    )
+    .option(
+      '--add-likely-failure-mode <text...>',
+      'Append operator-authored likely-failure-mode entries; survives future refreshes (repeatable)',
+    )
+    .option(
+      '--add-hidden-dependency <text...>',
+      'Append operator-authored hidden-dependency entries; survives future refreshes (repeatable)',
+    )
+    .action(
+      async (
+        id: string,
+        opts: {
+          json?: boolean;
+          addOutOfScope?: string[];
+          addLikelyFailureMode?: string[];
+          addHiddenDependency?: string[];
+        },
+      ) => {
+        try {
+          const flagChecks: Array<[string, string[] | undefined]> = [
+            ['--add-out-of-scope', opts.addOutOfScope],
+            ['--add-likely-failure-mode', opts.addLikelyFailureMode],
+            ['--add-hidden-dependency', opts.addHiddenDependency],
+          ];
+          for (const [flag, values] of flagChecks) {
+            if (values !== undefined && values.some((v) => v.trim().length === 0)) {
+              process.stderr.write(`milestone premortem: ${flag} must not be empty\n`);
+              process.exitCode = 1;
+              return;
+            }
+          }
+
+          const additions: PreMortemAdditions = {
+            ...(opts.addOutOfScope !== undefined
+              ? { outOfScope: opts.addOutOfScope }
+              : {}),
+            ...(opts.addLikelyFailureMode !== undefined
+              ? { likelyFailureModes: opts.addLikelyFailureMode }
+              : {}),
+            ...(opts.addHiddenDependency !== undefined
+              ? { hiddenDependencies: opts.addHiddenDependency }
+              : {}),
+          };
+          const hasAdditions = Object.keys(additions).length > 0;
+
+          const res = await runMilestonePreMortem(
+            process.cwd(),
+            id,
+            new Date(),
+            hasAdditions ? additions : undefined,
+          );
+          if (!res.ok) {
+            process.stderr.write(`milestone premortem refused: ${res.error}\n`);
+            process.exitCode = 1;
+            return;
+          }
+          if (opts.json) {
+            process.stdout.write(JSON.stringify(res.ledger) + '\n');
+          } else {
+            process.stdout.write(`milestone ${id} → pre-mortem refreshed\n`);
+          }
+        } catch (err) {
+          process.stderr.write(
+            `milestone premortem failed: ${err instanceof Error ? err.message : String(err)}\n`,
+          );
           process.exitCode = 1;
-          return;
         }
-        if (opts.json) {
-          process.stdout.write(JSON.stringify(res.ledger) + '\n');
-        } else {
-          process.stdout.write(`milestone ${id} → pre-mortem refreshed\n`);
-        }
-      } catch (err) {
-        process.stderr.write(
-          `milestone premortem failed: ${err instanceof Error ? err.message : String(err)}\n`,
-        );
-        process.exitCode = 1;
-      }
-    });
+      },
+    );
 
   cmd
     .command('status <id>')

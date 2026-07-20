@@ -94,6 +94,27 @@ export function seedPreMortem(recs: Recommendation[]): MilestonePreMortem {
 const LEV_LOW = 3;
 const RISK_HIGH = 7;
 
+// Phase 201: operator-authored `likelyFailureModes`/`hiddenDependencies` entries are
+// marked with this prefix so `deepenPreMortem` can pass them through verbatim on every
+// subsequent refresh, the same way `outOfScope` already survives untouched today.
+const OPERATOR_ENTRY_PREFIX = '[operator] ';
+
+export function markOperatorEntry(text: string): string {
+  return `${OPERATOR_ENTRY_PREFIX}${text}`;
+}
+
+function operatorEntries(entries: readonly string[]): string[] {
+  return entries.filter((e) => e.startsWith(OPERATOR_ENTRY_PREFIX));
+}
+
+function dedupAppend(base: readonly string[], additions: readonly string[]): string[] {
+  const out = [...base];
+  for (const a of additions) {
+    if (!out.includes(a)) out.push(a);
+  }
+  return out;
+}
+
 const oneLine = (s: string): string => s.replace(/\s*[\r\n]+\s*/g, ' ').trim();
 const byIdAsc = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -182,8 +203,12 @@ export function deepenPreMortem(
       ...unvalidated,
       ...overestimated,
       ...missing,
+      ...operatorEntries(milestone.preMortem.likelyFailureModes),
     ],
-    hiddenDependencies: sharedFileDeps(members),
+    hiddenDependencies: [
+      ...sharedFileDeps(members),
+      ...operatorEntries(milestone.preMortem.hiddenDependencies),
+    ],
     driftRisks: docDriftRisk(members),
     outOfScope: milestone.preMortem.outOfScope,
   };
@@ -451,10 +476,54 @@ export type PreMortemResult =
   | { ok: true; ledger: MilestoneLedger }
   | { ok: false; error: string };
 
+export type PreMortemAdditions = {
+  outOfScope?: string[];
+  likelyFailureModes?: string[];
+  hiddenDependencies?: string[];
+};
+
+/**
+ * Phase 201: merges newly operator-supplied text into `target.preMortem` before it is
+ * handed to `deepenPreMortem`. Every addition is passed through `oneLine` — same as
+ * every deterministically-derived entry elsewhere in this file — so a value containing
+ * embedded newlines can't corrupt the one-entry-per-bullet Markdown rendering.
+ * `outOfScope` is already 100% operator-owned, so its (normalized) additions are
+ * appended as-is; `likelyFailureModes`/`hiddenDependencies` additions are additionally
+ * marked via `markOperatorEntry` so they survive future refreshes the same way.
+ * Exact-string repeats are deduped so re-adding identical text is a no-op.
+ */
+function mergeAdditions(
+  target: IntelligenceMilestone,
+  additions: PreMortemAdditions,
+): IntelligenceMilestone {
+  return {
+    ...target,
+    preMortem: {
+      ...target.preMortem,
+      outOfScope: additions.outOfScope
+        ? dedupAppend(target.preMortem.outOfScope, additions.outOfScope.map(oneLine))
+        : target.preMortem.outOfScope,
+      likelyFailureModes: additions.likelyFailureModes
+        ? dedupAppend(
+            target.preMortem.likelyFailureModes,
+            additions.likelyFailureModes.map((a) => markOperatorEntry(oneLine(a))),
+          )
+        : target.preMortem.likelyFailureModes,
+      hiddenDependencies: additions.hiddenDependencies
+        ? dedupAppend(
+            target.preMortem.hiddenDependencies,
+            additions.hiddenDependencies.map((a) => markOperatorEntry(oneLine(a))),
+          )
+        : target.preMortem.hiddenDependencies,
+    },
+  };
+}
+
 export async function runMilestonePreMortem(
   root: string,
   id: string,
   now: Date = new Date(),
+  additions?: PreMortemAdditions,
 ): Promise<PreMortemResult> {
   const ledger = await readMilestoneLedger(root);
   const target = ledger.milestones.find((m) => m.id === id);
@@ -468,7 +537,8 @@ export async function runMilestonePreMortem(
 
   const recs = (await readRecommendationLedger(root)).recommendations;
   const assumptions = (await readAssumptionLedger(root)).assumptions;
-  const preMortem = deepenPreMortem(target, recs, assumptions, now);
+  const mergedTarget = additions ? mergeAdditions(target, additions) : target;
+  const preMortem = deepenPreMortem(mergedTarget, recs, assumptions, now);
 
   const ts = now.toISOString();
   const next: MilestoneLedger = {

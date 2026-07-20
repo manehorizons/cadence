@@ -171,6 +171,137 @@ describe('cadence milestone', () => {
     expect(miss.stderr).toContain('milestone premortem refused: milestone nope not found');
   });
 
+  it('premortem --add-* flags append operator-authored entries and persist', async () => {
+    const t = await tempRepo({ initialized: true });
+    active = t;
+    await seedRecs(t.root);
+    expect((await run(['milestone', 'propose'], t.root)).code).toBe(0);
+    const list = JSON.parse((await run(['milestone', 'list', '--json'], t.root)).stdout);
+    const mid = list.milestones[0].id;
+    expect((await run(['milestone', 'accept', mid], t.root)).code).toBe(0);
+
+    const r = await run(
+      [
+        'milestone',
+        'premortem',
+        mid,
+        '--add-out-of-scope',
+        'text one',
+        'text two',
+        '--add-likely-failure-mode',
+        'text three',
+        '--add-hidden-dependency',
+        'text four',
+      ],
+      t.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+
+    const ledger = JSON.parse(
+      await readFile(join(t.root, '.cadence', 'intelligence', 'milestones.json'), 'utf8'),
+    );
+    const m = ledger.milestones.find((x: { id: string }) => x.id === mid);
+    expect(m.preMortem.outOfScope).toEqual(['text one', 'text two']);
+    expect(m.preMortem.likelyFailureModes).toContain('[operator] text three');
+    expect(m.preMortem.hiddenDependencies).toContain('[operator] text four');
+  });
+
+  it('premortem --add-* flags collapse embedded newlines (bug: raw newline broke MILESTONES.md bullets)', async () => {
+    const t = await tempRepo({ initialized: true });
+    active = t;
+    await seedRecs(t.root);
+    expect((await run(['milestone', 'propose'], t.root)).code).toBe(0);
+    const list = JSON.parse((await run(['milestone', 'list', '--json'], t.root)).stdout);
+    const mid = list.milestones[0].id;
+    expect((await run(['milestone', 'accept', mid], t.root)).code).toBe(0);
+
+    const r = await run(
+      [
+        'milestone',
+        'premortem',
+        mid,
+        '--add-out-of-scope',
+        'line one\nline two',
+        '--add-likely-failure-mode',
+        'fail one\nfail two',
+        '--add-hidden-dependency',
+        'dep one\ndep two',
+      ],
+      t.root,
+    );
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+
+    const ledger = JSON.parse(
+      await readFile(join(t.root, '.cadence', 'intelligence', 'milestones.json'), 'utf8'),
+    );
+    const m = ledger.milestones.find((x: { id: string }) => x.id === mid);
+    expect(m.preMortem.outOfScope).toEqual(['line one line two']);
+    expect(m.preMortem.outOfScope.some((s: string) => /[\r\n]/.test(s))).toBe(false);
+    expect(m.preMortem.likelyFailureModes).toContain('[operator] fail one fail two');
+    expect(
+      m.preMortem.likelyFailureModes.some((s: string) => /[\r\n]/.test(s)),
+    ).toBe(false);
+    expect(m.preMortem.hiddenDependencies).toContain('[operator] dep one dep two');
+    expect(
+      m.preMortem.hiddenDependencies.some((s: string) => /[\r\n]/.test(s)),
+    ).toBe(false);
+  });
+
+  it.each([
+    ['--add-out-of-scope', ''],
+    ['--add-out-of-scope', '   '],
+    ['--add-likely-failure-mode', ''],
+    ['--add-likely-failure-mode', '   '],
+    ['--add-hidden-dependency', ''],
+    ['--add-hidden-dependency', '   '],
+  ])(
+    'premortem refuses an empty/whitespace-only %s value %j and writes nothing',
+    async (flag, value) => {
+      const t = await tempRepo({ initialized: true });
+      active = t;
+      await seedRecs(t.root);
+      expect((await run(['milestone', 'propose'], t.root)).code).toBe(0);
+      const list = JSON.parse((await run(['milestone', 'list', '--json'], t.root)).stdout);
+      const mid = list.milestones[0].id;
+      expect((await run(['milestone', 'accept', mid], t.root)).code).toBe(0);
+
+      const ledgerPath = join(t.root, '.cadence', 'intelligence', 'milestones.json');
+      const before = await readFile(ledgerPath, 'utf8');
+
+      const r = await run(['milestone', 'premortem', mid, flag, value], t.root);
+      expect(r.code).toBe(1);
+      expect(r.stderr).toMatch(new RegExp(`${flag} must not be empty`));
+
+      const after = await readFile(ledgerPath, 'utf8');
+      expect(after).toBe(before);
+    },
+  );
+
+  it('premortem refuses when one value among several repeated flag values is blank', async () => {
+    const t = await tempRepo({ initialized: true });
+    active = t;
+    await seedRecs(t.root);
+    expect((await run(['milestone', 'propose'], t.root)).code).toBe(0);
+    const list = JSON.parse((await run(['milestone', 'list', '--json'], t.root)).stdout);
+    const mid = list.milestones[0].id;
+    expect((await run(['milestone', 'accept', mid], t.root)).code).toBe(0);
+
+    const ledgerPath = join(t.root, '.cadence', 'intelligence', 'milestones.json');
+    const before = await readFile(ledgerPath, 'utf8');
+
+    const r = await run(
+      ['milestone', 'premortem', mid, '--add-out-of-scope', 'valid one', '  '],
+      t.root,
+    );
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/--add-out-of-scope must not be empty/);
+
+    const after = await readFile(ledgerPath, 'utf8');
+    expect(after).toBe(before);
+  });
+
   it('export --to cadence stages a SPEC for an accepted milestone', async () => {
     active = await tempRepo({ initialized: true });
     const dir = join(active.root, '.cadence', 'intelligence');

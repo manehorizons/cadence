@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, rm, realpath, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Assumption, IntelligenceMilestone, MilestoneLedger, Recommendation } from '@manehorizons/cadence-types';
-import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport, runMilestonePreMortem, runMilestoneStatus } from '../../src/intelligence/milestone.js';
+import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport, runMilestonePreMortem, runMilestoneStatus, markOperatorEntry } from '../../src/intelligence/milestone.js';
 import { readMilestoneLedger } from '../../src/intelligence/store/milestones.js';
 import { isSameWorktree } from '../../src/git/worktrees.js';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
@@ -272,6 +272,31 @@ describe('deepenPreMortem', () => {
     } });
     const out = deepenPreMortem(m, [mkRec({ id: 'a' })], []);
     expect(out.outOfScope).toEqual(['operator boundary']);
+  });
+
+  it('operator-marked likelyFailureModes/hiddenDependencies entries survive a refresh alongside fresh derivations', () => {
+    const m = mkMilestone({
+      id: 'm',
+      recommendationIds: ['a'],
+      preMortem: {
+        likelyFailureModes: [markOperatorEntry('watch out for the vendor API rate limit')],
+        hiddenDependencies: [markOperatorEntry('depends on the ops team migration window')],
+        driftRisks: [],
+        outOfScope: [],
+      },
+    });
+    const out = deepenPreMortem(
+      m,
+      [mkRec({ id: 'a', decayState: 'stale', evidenceIds: ['e1'] })],
+      [],
+    );
+    expect(out.likelyFailureModes).toEqual([
+      'Decayed input: a (stale) — milestone rests on a recommendation that has drifted since propose.',
+      markOperatorEntry('watch out for the vendor API rate limit'),
+    ]);
+    expect(out.hiddenDependencies).toEqual([
+      markOperatorEntry('depends on the ops team migration window'),
+    ]);
   });
 
   it('oneLine collapses newlines in interpolated id', () => {
