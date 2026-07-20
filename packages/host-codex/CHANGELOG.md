@@ -1,5 +1,12 @@
 # @manehorizons/cadence-host-codex
 
+## 1.49.0
+
+### Patch Changes
+
+- Updated dependencies [e0b7f44]
+  - @manehorizons/cadence-core@1.49.0
+
 ## 1.48.0
 
 ### Patch Changes
