@@ -1,0 +1,37 @@
+{
+  "draftId": "202-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-20T02:37:23.911Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/202-team-rollout-kit/packages/core/src/cli/commands/summary.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/202-team-rollout-kit/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/202-team-rollout-kit/docs/team-rollout.md"
+      ],
+      "updatedAt": "2026-07-20T02:44:10.324Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-20T02:46:58.905Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/202-team-rollout-kit/packages/core/tests/cli/summary-render.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/202-team-rollout-kit/packages/core/src/services/summary-render.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/202-team-rollout-kit/packages/core/src/cli/commands/summary.ts"
+      ],
+      "updatedAt": "2026-07-20T02:54:29.662Z"
+    }
+  }
+}
