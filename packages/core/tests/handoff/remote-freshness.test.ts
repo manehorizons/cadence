@@ -13,7 +13,13 @@ function gitInit(root: string): void {
   execSync('git config commit.gpgsign false', { cwd: root, stdio: 'ignore' });
 }
 
-describe('checkRemoteFreshness', () => {
+describe(
+  'checkRemoteFreshness',
+  // AC-2 sets up a bare remote, clones it, pushes a new commit, and then runs
+  // git fetch. On Windows CI the series of git operations can take ~95s due to
+  // FS + AV overhead. 150s gives headroom; non-win32 keeps the 20s global default.
+  { timeout: process.platform === 'win32' ? 150_000 : 20_000 },
+() => {
   it('AC-2: reports behind>0 when origin has commits this clone lacks', async () => {
     active = await tempRepo({ initialized: true });
     gitInit(active.root);

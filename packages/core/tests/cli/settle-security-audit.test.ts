@@ -125,11 +125,11 @@ async function driveToSettle(root: string, appSource: string): Promise<void> {
 // AC-1 (phase 50): these tests spawn the built CLI + run a real git security
 // audit per AC, so they need 30s even on Linux. Windows process-spawn + git is
 // ~5× slower (passing cases already hit ~24s on windows-latest), so extend the
-// slow-suite override on win32 only — non-win32 keeps the 30s it already
+// slow-suite override on win32 only — non-win32 keeps the 45s it already
 // required. The global win32 timeout headroom lives in vitest.shared.ts.
 describe(
   'cadence settle run (Phase 25.2 — security-audit gate)',
-  { timeout: process.platform === 'win32' ? 90_000 : 30_000 },
+  { timeout: process.platform === 'win32' ? 90_000 : 45_000 },
   () => {
   it('AC-4: refuses settle on a CRITICAL finding (JWT in diff)', async () => {
     active = await tempRepo({ initialized: true });

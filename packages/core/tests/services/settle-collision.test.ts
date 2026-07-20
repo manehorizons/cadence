@@ -87,7 +87,13 @@ async function setupBuildRepo(parent: string, opts: { withSibling30: boolean }):
   return root;
 }
 
-describe('settle backstop phase-collision guard (AC-6)', () => {
+describe(
+  'settle backstop phase-collision guard (AC-6)',
+  // AC-6 (--allow-phase-collision) bypasses the guard and runs the full settle
+  // pipeline including git diffs and file writes. On Windows CI this can exceed
+  // the 60s global ceiling. 120s for win32; non-win32 keeps the 20s global default.
+  { timeout: process.platform === 'win32' ? 120_000 : 20_000 },
+() => {
   let parent: string;
   beforeAll(async () => {
     parent = await realpath(await mkdtemp(join(tmpdir(), 'cadence-settle-col-')));
