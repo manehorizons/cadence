@@ -569,6 +569,59 @@ describe('cadence milestone', () => {
     expect(r.stderr).toMatch(/milestone close refused: milestone nope not found/);
   });
 
+  it('AC-1: reopen transitions a deferred milestone back to proposed', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedRecs(active.root);
+    expect((await run(['milestone', 'propose'], active.root)).code).toBe(0);
+    const list = JSON.parse(
+      (await run(['milestone', 'list', '--json'], active.root)).stdout,
+    );
+    const mid = list.milestones[0].id;
+    expect((await run(['milestone', 'defer', mid], active.root)).code).toBe(0);
+
+    const r = await run(['milestone', 'reopen', mid], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toMatch(new RegExp(`milestone ${mid} → proposed`));
+
+    const led = JSON.parse(
+      await readFile(join(active.root, '.cadence', 'intelligence', 'milestones.json'), 'utf8'),
+    );
+    const m = led.milestones.find((x: { id: string }) => x.id === mid);
+    expect(m.status).toBe('proposed');
+  });
+
+  it('AC-2: reopen refuses a non-deferred milestone, naming its current status', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedRecs(active.root);
+    expect((await run(['milestone', 'propose'], active.root)).code).toBe(0);
+    const list = JSON.parse(
+      (await run(['milestone', 'list', '--json'], active.root)).stdout,
+    );
+    const mid = list.milestones[0].id;
+    expect((await run(['milestone', 'accept', mid], active.root)).code).toBe(0);
+
+    const r = await run(['milestone', 'reopen', mid], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(
+      /milestone reopen refused: cannot reopen milestone in status accepted/,
+    );
+
+    // no ledger write happened
+    const led = JSON.parse(
+      await readFile(join(active.root, '.cadence', 'intelligence', 'milestones.json'), 'utf8'),
+    );
+    const m = led.milestones.find((x: { id: string }) => x.id === mid);
+    expect(m.status).toBe('accepted');
+  });
+
+  it('AC-4: reopen refuses an unknown id', async () => {
+    active = await tempRepo({ initialized: true });
+    const r = await run(['milestone', 'reopen', 'nope'], active.root);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/milestone reopen refused: milestone nope not found/);
+  });
+
   async function seedStatusFixture(root: string): Promise<void> {
     const dir = join(root, '.cadence', 'intelligence');
     await mkdir(dir, { recursive: true });

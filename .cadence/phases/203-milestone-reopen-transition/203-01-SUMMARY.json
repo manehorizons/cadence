@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "draftId": "203-01",
+  "completedAt": "2026-07-20T19:13:47.409Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "reopen action added to applyTransition(); 57 tests pass, typecheck clean, independently re-verified + adversarially reviewed"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "CLI reopen subcommand wired into existing accept/defer loop; 30/30 CLI tests pass, manual live exercise confirmed exit codes + stderr format; reviewer flagged a transient bad state that was T3 reviewer's concurrent mutation-test artifact on T1's file, already confirmed restored"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "reclustering integration test added to milestone-propose.test.ts; reviewer did mutation testing (broke T1's nextStatus mapping temporarily) to prove non-vacuous, restored cleanly; 4/4 tests pass"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "docs updated in concepts.md + commands.md, verified verbatim against actual CLI strings; doc-content tests 14/14 green; one cosmetic line-wrap nit, non-blocking"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 24,
+    "sessionSubagentSpawns": 17
+  }
+}

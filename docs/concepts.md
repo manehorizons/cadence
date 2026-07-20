@@ -484,7 +484,8 @@ Recs are backed and constrained by three tied record types:
 A **milestone** clusters one or more `ready-for-milestone` /
 `ready-for-cadence-spec` recs destined for a single CADENCE phase. Lifecycle:
 `proposed` (clustered automatically; ephemeral) → `accepted` (persisted) →
-`exported` (a SPEC scaffold staged) | `deferred` | `closed`.
+`exported` (a SPEC scaffold staged) | `deferred` | `closed`; `deferred` →
+`proposed` via `cadence milestone reopen <id>`.
 
 Each milestone carries an operator-owned **pre-mortem** — likely failure modes,
 hidden dependencies, drift risks, and explicit out-of-scope — that is never
@@ -492,6 +493,19 @@ auto-derived. `cadence milestone export <id> --to cadence` renders a
 deterministic SPEC scaffold from the milestone's facts and stages it under
 `exports/`; it does **not** run `cadence spec new` and never allocates a loop
 id. Staging and entering the loop stay separate, deliberate steps.
+
+`clusterMilestones` treats every non-`proposed` milestone as a persisted
+survivor and permanently excludes its claimed `recommendationIds` from
+re-clustering — so before phase 203, `deferred` was a dead end with no CLI
+path back; the only escapes were a hand-edit of `milestones.json` or
+restarting the underlying recommendations from scratch. `cadence milestone
+reopen <id>` closes that gap: it transitions a `deferred` milestone back to
+`proposed`, dropping it out of the survivor set so its recommendationIds
+re-enter the eligible pool the next time `propose` runs. It refuses (exit 1)
+if the milestone isn't currently `deferred` (naming the current status), the
+id doesn't exist, or any of its recommendationIds is already claimed by
+another still-live milestone (any status other than `deferred`/`proposed`) —
+that claim would otherwise give the same recommendation two owners.
 
 ### Reading the ledger: recommend, inspect, context packets
 

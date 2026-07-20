@@ -42,13 +42,15 @@ export function registerMilestoneCommand(program: Command): void {
       }
     });
 
-  for (const action of ['accept', 'defer'] as const) {
+  for (const action of ['accept', 'defer', 'reopen'] as const) {
     cmd
       .command(`${action} <id>`)
       .description(
         action === 'accept'
           ? 'Mark a proposed milestone accepted'
-          : 'Defer a proposed or accepted milestone',
+          : action === 'defer'
+            ? 'Defer a proposed or accepted milestone'
+            : 'Reopen a deferred milestone back to proposed',
       )
       .action(async (id: string) => {
         try {
@@ -58,9 +60,9 @@ export function registerMilestoneCommand(program: Command): void {
             process.exitCode = 1;
             return;
           }
-          process.stdout.write(
-            `milestone ${id} → ${action === 'accept' ? 'accepted' : 'deferred'}\n`,
-          );
+          const statusLabel =
+            action === 'accept' ? 'accepted' : action === 'defer' ? 'deferred' : 'proposed';
+          process.stdout.write(`milestone ${id} → ${statusLabel}\n`);
         } catch (err) {
           process.stderr.write(
             `milestone ${action} failed: ${err instanceof Error ? err.message : String(err)}\n`,

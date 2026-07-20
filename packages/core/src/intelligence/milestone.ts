@@ -306,7 +306,7 @@ export function clusterMilestones(
   return [...survivors, ...fresh];
 }
 
-export type TransitionAction = 'accept' | 'defer' | 'close';
+export type TransitionAction = 'accept' | 'defer' | 'close' | 'reopen';
 export type TransitionResult =
   | { ok: true; ledger: MilestoneLedger; warning?: string }
   | { ok: false; error: string };
@@ -358,6 +358,7 @@ export function applyTransition(
     accept: ['proposed'],
     defer: ['proposed', 'accepted'],
     close: ['exported'],
+    reopen: ['deferred'],
   };
   if (!allowed[action].includes(target.status)) {
     return {
@@ -366,8 +367,34 @@ export function applyTransition(
     };
   }
 
+  // Phase 203: a reopened milestone re-enters the `proposed` pool and its
+  // recommendationIds become eligible for re-clustering again — but only if no
+  // *other, still-live* milestone (any status other than deferred/proposed) has
+  // already claimed one of those recs in the meantime. Refuse rather than create
+  // a second claim on the same recommendation.
+  if (action === 'reopen') {
+    for (const m of ledger.milestones) {
+      if (m.id === id) continue;
+      if (m.status === 'deferred' || m.status === 'proposed') continue;
+      for (const rid of target.recommendationIds) {
+        if (m.recommendationIds.includes(rid)) {
+          return {
+            ok: false,
+            error: `cannot reopen milestone ${id}: recommendation ${rid} is already claimed by milestone ${m.id} (status ${m.status})`,
+          };
+        }
+      }
+    }
+  }
+
   const nextStatus: IntelligenceMilestone['status'] =
-    action === 'accept' ? 'accepted' : action === 'defer' ? 'deferred' : 'closed';
+    action === 'accept'
+      ? 'accepted'
+      : action === 'defer'
+        ? 'deferred'
+        : action === 'reopen'
+          ? 'proposed'
+          : 'closed';
   const ts = now.toISOString();
   const ledgerOut: MilestoneLedger = {
     schemaVersion: 1,
