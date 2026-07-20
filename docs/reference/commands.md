@@ -1343,6 +1343,7 @@ Shape recommendations into milestone candidates (read-narrow; never transitions 
 | `propose [--json]` | Cluster eligible recommendations into proposed milestone candidates |
 | `accept <id>` | Mark a proposed milestone accepted |
 | `defer <id>` | Defer a proposed or accepted milestone |
+| `reopen <id>` | Reopen a deferred milestone back to proposed |
 | `export <id> --to cadence` | Export an accepted milestone to a staged CADENCE SPEC draft |
 | `premortem <id> [--json] [--add-out-of-scope <text...>] [--add-likely-failure-mode <text...>] [--add-hidden-dependency <text...>]` | Recompute the deterministic pre-mortem for a `proposed`/`accepted` milestone in place (refuses other statuses); the repeatable `--add-*` flags append operator-authored entries to the corresponding field and refuse (exit 1, no write) on any empty/whitespace-only value |
 | `status <id> [--json]` | Report each of the milestone's phases (derived from its recommendations' `convertedToPhaseId`) with its owning worktree, live loop position, and settled/not-settled state |
@@ -1365,8 +1366,14 @@ inputs); pre-mortem entries not covered by a deterministic seed — and
 `MILESTONES.md` for a human to fill.
 Re-running `propose` regenerates only `proposed` records; `accepted`/
 `deferred`/`exported`/`closed` milestones and their recommendations are never
-clobbered or re-proposed. `accept`/`defer` enforce guarded status
-transitions. `premortem <id>` re-runs a deepened deterministic pre-mortem
+clobbered or re-proposed. `accept`/`defer`/`reopen` enforce guarded status
+transitions. `reopen <id>` moves a `deferred` milestone back to `proposed`,
+so its `recommendationIds` re-enter the eligible pool the next time
+`propose` runs; it is refused (exit 1) if the milestone isn't currently
+`deferred` (the error names the current status), the id is unknown, or any
+of its `recommendationIds` is already claimed by another still-live
+milestone — one whose status is anything other than `deferred`/`proposed`
+(the error names the colliding milestone id and its status). `premortem <id>` re-runs a deepened deterministic pre-mortem
 (decay/erosion/open-assumption/overestimated-value signals) for one
 `proposed`/`accepted` milestone against the **current** recommendation and
 assumption ledgers, replaces that milestone's derived pre-mortem dimensions
@@ -1417,8 +1424,11 @@ the rendered text. Distinct from CADENCE's own execution-layer
 `.cadence/MILESTONES.md`.
 
 **Exit codes** — exits non-zero only on a genuine failure (artifact write
-error, or an illegal/unknown-id `accept`/`defer`, or an unknown-backend/unknown-id/non-accepted `export`, or an unknown-id/non-`proposed`/`accepted` `premortem`, or an unknown-id `status`). An empty/absent
-recommendation ledger degrades gracefully and still exits 0.
+error, or an illegal/unknown-id `accept`/`defer`/`reopen` (a `reopen` is also
+refused when a claimed recommendation collides with another still-live
+milestone), or an unknown-backend/unknown-id/non-accepted `export`, or an
+unknown-id/non-`proposed`/`accepted` `premortem`, or an unknown-id `status`).
+An empty/absent recommendation ledger degrades gracefully and still exits 0.
 
 ---
 

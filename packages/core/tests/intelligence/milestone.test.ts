@@ -633,6 +633,53 @@ describe('applyTransition', () => {
     const r3 = applyTransition(ledgerOf(mk('a', 'proposed')), 'zzz', 'accept', T);
     expect(r3).toEqual({ ok: false, error: 'milestone zzz not found' });
   });
+
+  it('reopen: deferred -> proposed, bumps updatedAt (AC-1)', () => {
+    const led = ledgerOf(mk('a', 'deferred'));
+    const res = applyTransition(led, 'a', 'reopen', T);
+    expect(res.ok).toBe(true); // AC-1: reopening a deferred milestone succeeds
+    if (!res.ok) throw new Error('unreachable');
+    const a = res.ledger.milestones.find((m) => m.id === 'a')!;
+    expect(a.status).toBe('proposed'); // AC-1: lands in status proposed
+    expect(a.updatedAt).toBe(T.toISOString());
+    // original ledger not mutated
+    expect(led.milestones.find((m) => m.id === 'a')!.status).toBe('deferred');
+  });
+
+  it('reopen: refuses from proposed/accepted/exported/closed, naming the current status (AC-2)', () => {
+    for (const status of ['proposed', 'accepted', 'exported', 'closed'] as const) {
+      const res = applyTransition(ledgerOf(mk('a', status)), 'a', 'reopen', T);
+      // AC-2: refusal names the milestone's current status
+      expect(res).toEqual({ ok: false, error: `cannot reopen milestone in status ${status}` });
+    }
+  });
+
+  it('reopen: unknown id refuses (AC-4)', () => {
+    const res = applyTransition(ledgerOf(mk('a', 'deferred')), 'zzz', 'reopen', T);
+    expect(res).toEqual({ ok: false, error: 'milestone zzz not found' }); // AC-4
+  });
+
+  it('reopen: refuses when a recommendationId collides with a live (non-deferred/proposed) survivor milestone, naming both ids', () => {
+    const target = mk('mil-dead', 'deferred'); // recommendationIds: ['rec-1']
+    const survivor = mk('mil-live', 'accepted'); // recommendationIds: ['rec-1'] — same rec, still claimed
+    const led = ledgerOf(target, survivor);
+    const res = applyTransition(led, 'mil-dead', 'reopen', T);
+    expect(res.ok).toBe(false);
+    if (res.ok) throw new Error('unreachable');
+    expect(res.error).toContain('mil-live');
+    expect(res.error).toContain('rec-1');
+    // unmodified: neither milestone changed
+    expect(led.milestones.find((m) => m.id === 'mil-dead')!.status).toBe('deferred');
+  });
+
+  it('reopen: does NOT treat another deferred or proposed milestone sharing a recommendationId as a collision', () => {
+    const target = mk('mil-dead', 'deferred');
+    const otherDeferred = mk('mil-other-dead', 'deferred'); // shares recommendationIds: ['rec-1']
+    const otherProposed = mk('mil-other-proposed', 'proposed'); // shares recommendationIds: ['rec-1']
+    const led = ledgerOf(target, otherDeferred, otherProposed);
+    const res = applyTransition(led, 'mil-dead', 'reopen', T);
+    expect(res.ok).toBe(true);
+  });
 });
 
 async function seedMilestones(root: string, ms: IntelligenceMilestone[]): Promise<void> {
