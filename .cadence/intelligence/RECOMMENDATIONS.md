@@ -611,8 +611,8 @@ settle run already detects and warns on files touched outside a task's declared 
 
 ## rec-20260720-001 — milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred
 
-- status: candidate
-- ready: needs-decision
+- status: settle-pending
+- ready: ready-for-milestone
 - priority: high
 - leverage: 5/10
 - risk: 5/10
@@ -624,19 +624,3 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect — the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.
-
-## rec-20260720-002 — Team rollout kit
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: onboarding, team, ci, docs
-- files: README.md, docs/README.md, .github
-- evidence: Restart of rec-20260619-008 (now archived) after its milestone (mil-rec-rec-20260619-008) got permanently stuck deferred with no CLI reopen path -- see rec-20260720-001 for the underlying gap.
-- next: cadence milestone propose
-
-Add a team adoption kit: CI/PR-template guidance or 'cadence ci install' that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.

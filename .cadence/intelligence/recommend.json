@@ -1,51 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-20T01:39:01.877Z",
+  "generatedAt": "2026-07-20T18:21:07.069Z",
   "ranked": [
     {
-      "id": "rec-20260619-008",
-      "title": "Team rollout kit",
-      "raw": 20.7,
-      "score": 65,
-      "status": "accepted",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status accepted",
-          "value": 6
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260719-001",
-      "title": "Impact-gated verification via Phenyx (radius-aware settle gate)",
+      "id": "rec-20260720-001",
+      "title": "milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred",
       "raw": 17.7,
       "score": 61,
       "status": "candidate",
@@ -82,8 +41,7 @@
           "value": 5
         }
       ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260715-claude-roadmap-02"
+      "suggestedBackendAction": "cadence milestone propose"
     },
     {
       "id": "rec-20260709-003",
@@ -209,6 +167,48 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260712-003",
+      "title": "Retro friction feeds back into Praxis recommendation scoring",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260712-0328"
     }
   ],
   "parked": [
@@ -221,13 +221,12 @@
   ],
   "needsAttention": [],
   "advisory": {
-    "kind": "finish-loop",
-    "primary": "Finish in-flight CADENCE loop work first — cadence build task <id> --status=<DONE|...>  OR  cadence settle run --ac AC-1=pass.",
-    "secondary": "cadence milestone propose"
+    "kind": "top-recommendation",
+    "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 42,
-    "ranked": 19,
+    "total": 40,
+    "ranked": 17,
     "parked": 1,
     "needsAttention": 0,
     "excluded": 22

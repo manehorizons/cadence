@@ -1146,8 +1146,8 @@
       "title": "milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred",
       "summary": "clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect — the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "status": "settle-pending",
+      "readiness": "ready-for-milestone",
       "priority": "high",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1167,40 +1167,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "203-milestone-reopen-transition",
       "createdAt": "2026-07-20T01:56:32.636Z",
-      "updatedAt": "2026-07-20T01:56:32.636Z"
-    },
-    {
-      "id": "rec-20260720-002",
-      "title": "Team rollout kit",
-      "summary": "Add a team adoption kit: CI/PR-template guidance or 'cadence ci install' that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.",
-      "source": "manual",
-      "status": "accepted",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "team",
-        "ci",
-        "docs"
-      ],
-      "affectedFiles": [
-        "README.md",
-        "docs/README.md",
-        ".github"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260720-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-20T01:59:15.742Z",
-      "updatedAt": "2026-07-20T01:59:27.487Z"
+      "updatedAt": "2026-07-20T19:13:47.415Z"
     }
   ],
   "archived": [
@@ -3329,12 +3298,47 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260715-claude-roadmap-02",
-      "createdAt": "2026-07-19T23:21:24.838Z",
-      "updatedAt": "2026-07-20T03:25:52.775Z",
       "shippedRef": "v1.48.0",
+      "scoutId": "scout-20260715-claude-roadmap-02",
       "archivedAt": "2026-07-20T03:25:52.775Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-19T23:21:24.838Z",
+      "updatedAt": "2026-07-20T03:25:52.775Z"
+    },
+    {
+      "id": "rec-20260720-002",
+      "title": "Team rollout kit",
+      "summary": "Add a team adoption kit: CI/PR-template guidance or 'cadence ci install' that normalizes SUMMARY artifacts in review and explains how teams should enforce or inspect CADENCE results without replacing CI or human review.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "team",
+        "ci",
+        "docs"
+      ],
+      "affectedFiles": [
+        "README.md",
+        "docs/README.md",
+        ".github"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260720-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "phase 202 / PR #260 / v1.49.0",
+      "archivedAt": "2026-07-20T18:20:40.555Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-20T01:59:15.742Z",
+      "updatedAt": "2026-07-20T18:20:40.555Z"
     }
   ]
 }
