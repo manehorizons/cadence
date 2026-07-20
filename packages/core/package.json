@@ -1,6 +1,6 @@
 {
   "name": "@manehorizons/cadence-core",
-  "version": "1.47.0",
+  "version": "1.48.0",
   "engines": {
     "node": ">=20"
   },
