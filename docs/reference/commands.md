@@ -43,6 +43,7 @@ Two CLIs are documented here:
   - [agent-prompt](#agent-prompt)
   - [verify](#verify)
   - [retro](#retro)
+  - [summary](#summary)
 - [cadence-host-claude-code](#cadence-host-claude-code)
   - [install](#install)
   - [hook (host)](#hook-host)
@@ -100,6 +101,7 @@ agent-prompt
 dispatch
 verify
 retro
+summary
 <!-- cadence:commands:end -->
 
 ---
@@ -2235,6 +2237,42 @@ friction (informational, like `intelligence stats` — not a pass/fail gate like
 `intelligence audit`). Exits `1` on an invalid `--format` value or a genuine
 unexpected error (e.g. a filesystem error other than a missing `.cadence/phases/`
 directory).
+
+---
+
+### summary
+
+```
+Usage: cadence summary [options] [command]
+
+Render a settled phase SUMMARY.json for humans (read-only)
+```
+
+**Subcommands**
+
+| Subcommand | Synopsis |
+|---|---|
+| `render <phase> <num>` | Print a deterministic, human-readable rendering of gate outcomes and per-AC status, suitable for pasting into a PR |
+
+**Behavior** — reads the settled phase's `<id>-SUMMARY.json` from
+`.cadence/phases/<phase>/`, validates it against the `SummaryZ` schema, and
+prints a deterministic Markdown rendering to stdout: acceptance-criteria
+pass/fail with evidence level, per-task terminal status, gate outcomes,
+gate bypasses (if any), decisions, and deferred items. Sections with no
+entries (e.g. no gate bypasses, no decisions) are omitted entirely rather
+than printed empty, so the output is ready to paste directly into a PR
+description or comment without manual trimming. It refuses with a clear
+stderr message and a non-zero exit on any problem reading or validating the
+file — a missing `<id>-SUMMARY.json` (file-not-found), malformed JSON
+(parse error), or JSON that doesn't conform to the `SummaryZ` schema
+(validation error) are each reported distinctly; it never crashes and never
+prints a partial render. `summary render` is read-only throughout: it never
+writes to `.cadence/state.json`, `STATE.md`, or any phase artifact, and
+never transitions the loop.
+
+**Exit codes** — exits `0` on a successful render. Exits `1` on an invalid
+phase slug, a missing `<id>-SUMMARY.json` file, invalid JSON, or a
+schema-validation failure.
 
 ---
 
