@@ -15,7 +15,7 @@ describe('planActivation (AC-2, AC-6)', () => {
 
   it('all scope flips every still-mock seam', () => {
     const p = planActivation({ provider: 'anthropic', scope: 'all', currentConfig: base });
-    expect(p.changes).toHaveLength(6);
+    expect(p.changes).toHaveLength(7);
   });
 
   it('is idempotent — re-running on an already-activated config is a no-op', () => {

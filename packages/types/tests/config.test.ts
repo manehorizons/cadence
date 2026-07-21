@@ -391,6 +391,11 @@ describe('CadenceConfigZ', () => {
     ).toThrow();
   });
 
+  // AC-1, AC-5 (Phase 205) — config.uiSpecReview: back-compat default.
+  it('defaults uiSpecReview to mock', () => {
+    expect(defaultConfig.uiSpecReview).toEqual({ provider: 'mock' });
+  });
+
   // AC-7 (Phase 80) — config.logging: optional block, back-compat default.
   it('logging defaults to level=silent when logging absent (back-compat) (AC-7)', () => {
     const { logging: _drop, ...withoutLogging } = defaultConfig;

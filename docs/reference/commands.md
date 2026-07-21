@@ -486,18 +486,25 @@ anthropic / local via `config.specReview`) — it tracks attempts in a
 anomaly. On pass it returns the loop to `IDLE` (so `cadence draft new`
 proceeds). `cadence draft new` refuses while a spec is active.
 
+`spec new --ui` additionally scaffolds an opt-in `<id>-UI-SPEC.md` sibling
+(rec-20260711-004); its mere presence is what makes `spec approve` also run
+the convergent `ui-spec-review` gate — see `docs/concepts.md`'s stage-scoped
+gates table for the gate mechanics.
+
 **Options (`spec new`)**
 
 | Option | Description |
 |---|---|
 | `--title <t>` | Spec title (defaults to "Untitled"). |
 | `--from-rec <recId>` | Praxis recommendation id. On success, the rec is auto-converted to this phase via the Slice 34.1 transition helper (status flips to `converted`, `convertedToPhaseId` records the link). Pre-flight: rec must exist with status `candidate` or `accepted`; otherwise refuses before any fs writes. If the chained convert fails after scaffold succeeded (race), stderr explains how to recover with `recommendation convert`. |
+| `--ui` | Also scaffold a sibling `<id>-UI-SPEC.md`; `cadence spec approve` will run `ui-spec-review` against it when present (rec-20260711-004). |
 
 **Options (`spec approve`)**
 
 | Option | Description |
 |---|---|
 | `--allow-spec-review-failure` | Proceed past a failing/unconverged spec-review (any verdict) instead of refusing; findings still printed, `bypassed:true` recorded. |
+| `--allow-ui-spec-review-failure` | Proceed past a failing/unconverged `ui-spec-review` instead of refusing; findings still printed. Only relevant when a sibling `<id>-UI-SPEC.md` exists. |
 
 The spec stage is **opt-in by use** — projects that never run `cadence spec
 new` are unaffected. There is no `spec discard` command; to abandon an active

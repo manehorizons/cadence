@@ -168,6 +168,12 @@ export const CadenceConfigZ = z.object({
       model: z.string().optional(),
     })
     .default({ provider: 'mock' }),
+  uiSpecReview: z
+    .object({
+      provider: z.enum(['mock', 'anthropic', 'local', 'host-cli']).default('mock'),
+      model: z.string().optional(),
+    })
+    .default({ provider: 'mock' }),
   tier: z.object({
     quickFix: z.object({ maxTasks: z.number().int(), maxFiles: z.number().int() }),
     standard: z.object({ maxTasks: z.number().int(), maxFiles: z.number().int() }),
@@ -483,6 +489,7 @@ export const defaultConfig: CadenceConfig = {
   skillAudit: { required: [] },
   convergence: { maxAttempts: 3 },
   specReview: { provider: 'mock' },
+  uiSpecReview: { provider: 'mock' },
   tier: {
     quickFix: { maxTasks: 1, maxFiles: 1 },
     standard: { maxTasks: 5, maxFiles: 8 },

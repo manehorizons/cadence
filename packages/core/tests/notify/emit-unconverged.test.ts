@@ -5,6 +5,7 @@ import { emitUnconverged } from '../../src/notify/emit-unconverged.js';
 import { emitPlanReviewUnconverged } from '../../src/notify/plan-review.js';
 import { emitSpecReviewUnconverged } from '../../src/notify/spec-review.js';
 import { emitCodeReviewUnconverged } from '../../src/notify/code-review.js';
+import { emitUiSpecReviewUnconverged } from '../../src/notify/ui-spec-review.js';
 
 /** Captures the single batch each emitter dispatches. */
 function capture(): { notifier: Notifier; batches: AnomalyEvent[][] } {
@@ -135,6 +136,36 @@ describe('emitUnconverged spine — code-review (Phase 42.1)', () => {
       provider: 'mock',
       model: 'opus',
     });
+  });
+});
+
+describe('emitUnconverged spine — ui-spec-review (rec-20260711-004)', () => {
+  it('emits one ui-spec-review-unconverged event with verbatim shape', async () => {
+    const { notifier, batches } = capture();
+    await emitUiSpecReviewUnconverged(notifier, {
+      specId: '205-01',
+      attempts: 3,
+      maxAttempts: 3,
+      findings: 2,
+      provider: 'mock',
+    });
+    expect(batches).toHaveLength(1);
+    const ev = batches[0]![0]!;
+    expect(ev.type).toBe('ui-spec-review-unconverged');
+    expect(ev.severity).toBe('error');
+    expect(ev.context.specId).toBe('205-01');
+  });
+
+  it('degrades a transport failure to one stderr warning, never throws', async () => {
+    await expect(
+      emitUiSpecReviewUnconverged(throwing('boom'), {
+        specId: '205-01',
+        attempts: 1,
+        maxAttempts: 3,
+        findings: 1,
+        provider: 'mock',
+      }),
+    ).resolves.toBeUndefined();
   });
 });
 

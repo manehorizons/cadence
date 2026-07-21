@@ -279,11 +279,13 @@ The 14 gates above are the profile × tier universe. A few **stage-scoped**,
 provider-backed review gates fire at a specific loop transition regardless of
 the active cell — they are deliberately *not* matrix cells because the stage
 itself (or the relevant tier) is the opt-in. `plan-review` (above) is one such
-gate; `spec-review` is the other.
+gate; `spec-review` and `ui-spec-review` are the other two — the latter
+opt-in by the UI-SPEC's own presence, not by tier or stage.
 
 | Gate | When it fires | Bypass flag |
 |---|---|---|
 | `spec-review` | Convergent AI spec-review runs at `cadence spec approve`; `pass=false` re-loops up to `convergence.maxAttempts`, then refuses approve | `--allow-spec-review-failure` (on `spec approve`) |
+| `ui-spec-review` | Convergent AI review runs at `cadence spec approve`, only when a sibling `<id>-UI-SPEC.md` exists; `pass=false` re-loops up to `convergence.maxAttempts`, then refuses approve | `--allow-ui-spec-review-failure` (on `spec approve`) |
 
 `spec-review` reuses the same convergence primitive as `plan-review` and is
 configured per provider in `.cadence/config.json` under the `specReview` key
@@ -304,6 +306,7 @@ choose to run `cadence spec approve`.
 | `--allow-code-review-failure` | `settle run` | `code-review` |
 | `--allow-plan-review-failure` | `draft approve` | `plan-review` |
 | `--allow-spec-review-failure` | `spec approve` | `spec-review` |
+| `--allow-ui-spec-review-failure` | `spec approve` | `ui-spec-review` |
 | `--allow-security-audit-failure` | `settle run` | `security-audit` |
 | `--allow-verifier-failure` | `settle run` | `deep-verify` transport errors |
 | `--force` | `settle run` | `deep-verify` / `interactive-verdict` / `code-review` / `security-audit` (all at once) |

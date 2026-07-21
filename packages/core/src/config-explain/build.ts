@@ -13,11 +13,12 @@ import type {
 const TIERS: Tier[] = ['quick-fix', 'standard', 'complex'];
 
 /**
- * The six provider config blocks and the gate (or SPEC verifier) each backs.
+ * The seven provider config blocks and the gate (or SPEC verifier) each backs.
  * Order is the order rows render in.
  */
 type ProviderBlockKey =
   | 'specReview'
+  | 'uiSpecReview'
   | 'verifier'
   | 'perTaskVerifier'
   | 'codeReview'
@@ -26,6 +27,7 @@ type ProviderBlockKey =
 
 const PROVIDER_BLOCKS: ReadonlyArray<{ block: ProviderBlockKey; gate: string }> = [
   { block: 'specReview', gate: 'spec-review' },
+  { block: 'uiSpecReview', gate: 'ui-spec-review' },
   { block: 'verifier', gate: 'deep-verify' },
   { block: 'perTaskVerifier', gate: 'per-task-verify' },
   { block: 'codeReview', gate: 'code-review' },
@@ -33,7 +35,7 @@ const PROVIDER_BLOCKS: ReadonlyArray<{ block: ProviderBlockKey; gate: string }> 
   { block: 'securityAudit', gate: 'security-audit' },
 ];
 
-/** Collapse the six provider blocks into one renderable row each. */
+/** Collapse the seven provider blocks into one renderable row each. */
 function providerRows(config: CadenceConfig): ProviderRow[] {
   return PROVIDER_BLOCKS.map(({ block, gate }) => {
     const provider = config[block].provider;

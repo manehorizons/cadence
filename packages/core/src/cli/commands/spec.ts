@@ -21,7 +21,8 @@ export function registerSpecCommand(program: Command): void {
     .option('--title <t>', 'Spec title', 'Untitled')
     .option('--from-rec <recId>', 'Praxis recommendation id; on success the rec is auto-converted to this phase (Slice 34.3)')
     .option('--allow-phase-collision', 'bypass the worktree phase-collision guard (Phase 83); the local same-dir existsSync refusal still applies')
-    .action(async (phase: string, num: string, opts: { title: string; fromRec?: string; allowPhaseCollision?: boolean }) => {
+    .option('--ui', 'also scaffold a sibling <id>-UI-SPEC.md; cadence spec approve will run ui-spec-review against it (rec-20260711-004)')
+    .action(async (phase: string, num: string, opts: { title: string; fromRec?: string; allowPhaseCollision?: boolean; ui?: boolean }) => {
       const { exitCode } = await specNewService(
         process.cwd(),
         {
@@ -30,6 +31,7 @@ export function registerSpecCommand(program: Command): void {
           title: opts.title,
           ...(opts.fromRec !== undefined ? { fromRec: opts.fromRec } : {}),
           ...(opts.allowPhaseCollision !== undefined ? { allowPhaseCollision: opts.allowPhaseCollision } : {}),
+          ...(opts.ui !== undefined ? { ui: opts.ui } : {}),
         },
         processIO(),
       );
@@ -62,19 +64,30 @@ export function registerSpecCommand(program: Command): void {
 
   cmd
     .command('approve <phase> <num>')
-    .description('Run the convergent spec-review gate; on pass leave the spec stage (SPEC→IDLE)')
+    .description(
+      'Run the convergent spec-review gate (and ui-spec-review, if a UI-SPEC.md is present); on pass leave the spec stage (SPEC→IDLE)',
+    )
     .option(
       '--allow-spec-review-failure',
       'proceed past a failing/unconverged spec-review instead of refusing; findings still printed',
     )
+    .option(
+      '--allow-ui-spec-review-failure',
+      'proceed past a failing/unconverged ui-spec-review instead of refusing; findings still printed (rec-20260711-004)',
+    )
     .action(
-      async (phase: string, num: string, opts: { allowSpecReviewFailure?: boolean }) => {
+      async (
+        phase: string,
+        num: string,
+        opts: { allowSpecReviewFailure?: boolean; allowUiSpecReviewFailure?: boolean },
+      ) => {
         const { exitCode } = await specApproveService(
           process.cwd(),
           {
             phase,
             num,
             ...(opts.allowSpecReviewFailure !== undefined ? { allowSpecReviewFailure: opts.allowSpecReviewFailure } : {}),
+            ...(opts.allowUiSpecReviewFailure !== undefined ? { allowUiSpecReviewFailure: opts.allowUiSpecReviewFailure } : {}),
           },
           processIO(),
         );

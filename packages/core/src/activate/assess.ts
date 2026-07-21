@@ -3,11 +3,12 @@ import type { VerifierProvider } from '../verify/verifier-factory.js';
 import { discoverKey } from './key-discovery.js';
 
 /**
- * The six verifier seam config blocks (parallels config-explain PROVIDER_BLOCKS).
+ * The seven verifier seam config blocks (parallels config-explain PROVIDER_BLOCKS).
  * Order matches config explain's render order.
  */
 export const VERIFIER_SEAMS = [
   'specReview',
+  'uiSpecReview',
   'verifier',
   'perTaskVerifier',
   'codeReview',

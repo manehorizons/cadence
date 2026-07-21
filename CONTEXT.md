@@ -72,10 +72,19 @@ the DRAFT plans *how*. Owns the bare word "SPEC"; the state is "the SPEC loop
 position."
 _Avoid_: requirements doc, the plan.
 
+**UI-SPEC**:
+An opt-in artifact (`<id>-UI-SPEC.md`), sibling to SPEC — a concrete
+per-component design contract (layout/token detail, responsive/interaction
+behavior) for a phase that touches UI surfaces. Scaffolded via `cadence spec
+new --ui`; its mere existence is the opt-in signal for the `ui-spec-review`
+gate at `cadence spec approve`. Owns the bare word "UI-SPEC."
+_Avoid_: design doc, UI spec (two words — ambiguous with the generic term).
+
 **Sidecar**:
 A per-slice JSON record a gate writes alongside the artifacts to track its own
 state across reloops — e.g. `<id>-PLAN-REVIEW.json`, `<id>-CODE-REVIEW.json`,
-`<id>-SPEC-REVIEW.json` (attempts + history for convergence).
+`<id>-SPEC-REVIEW.json`, `<id>-UI-SPEC-REVIEW.json` (attempts + history for
+convergence).
 _Avoid_: log, cache.
 
 **State files**:
@@ -146,7 +155,7 @@ A gate *added* by a cell on top of the always-fire set. Grouped by cost band
 **Stage-scoped gate**:
 A provider-backed review gate that fires at a specific loop transition because
 the stage (or tier) is the opt-in, not a matrix cell — `plan-review`,
-`spec-review`.
+`spec-review`, `ui-spec-review`.
 
 **Bypass flag**:
 A per-invocation CLI flag that skips one gate's refusal (`--allow-…`), or

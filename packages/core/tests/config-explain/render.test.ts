@@ -70,7 +70,7 @@ describe('renderText / renderJson (AC-3)', () => {
     expect(json.profile).toBe(exp.profile);
     expect(Array.isArray(json.tiers)).toBe(true);
     expect((json.tiers as unknown[]).length).toBe(3);
-    expect((json.providers as unknown[]).length).toBe(6);
+    expect((json.providers as unknown[]).length).toBe(7);
     expect(Array.isArray(json.warnings)).toBe(true);
     // round-trips through JSON without throwing (no functions / cycles).
     expect(() => JSON.stringify(json)).not.toThrow();

@@ -3,6 +3,7 @@ export * from './config.js';
 export * from './state.js';
 export * from './plan.js';
 export * from './spec.js';
+export * from './ui-spec.js';
 export * from './summary.js';
 export * from './retro.js';
 export * from './host.js';
