@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AnomalyEventZ } from '../src/anomaly.js';
+import { AnomalyEventZ, AnomalyTypeZ } from '../src/anomaly.js';
 
 // AC-1: typed anomaly event schema
 describe('AnomalyEventZ (AC-1)', () => {
@@ -213,6 +213,24 @@ describe('redundant-task-work anomaly type', () => {
         message: 'x',
         context: {},
         ts: '2026-07-06T00:00:00.000Z',
+      }),
+    ).not.toThrow();
+  });
+});
+
+describe('ui-spec-review-unconverged anomaly type (AC-5)', () => {
+  it("accepts 'ui-spec-review-unconverged'", () => {
+    expect(AnomalyTypeZ.parse('ui-spec-review-unconverged')).toBe('ui-spec-review-unconverged');
+  });
+
+  it('accepts type: "ui-spec-review-unconverged"', () => {
+    expect(() =>
+      AnomalyEventZ.parse({
+        type: 'ui-spec-review-unconverged',
+        severity: 'error',
+        message: 'ui-spec-review did not converge for 205-01 after 3/3 attempts (2 finding(s))',
+        context: { specId: '205-01', attempts: 3, maxAttempts: 3, findings: 2, provider: 'mock' },
+        ts: '2026-07-21T00:00:00.000Z',
       }),
     ).not.toThrow();
   });

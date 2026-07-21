@@ -2,6 +2,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseSpecMd } from '../parse/spec-parser.js';
+import { parseUiSpecMd } from '../parse/ui-spec-parser.js';
 import { renderDraftBody, frontmatterStatus } from '../parse/draft-scaffold.js';
 import {
   isDraftTemplateName,
@@ -18,6 +19,7 @@ import { assertSafePhaseSlug, derivePhaseSlug, derivePhaseTaskId } from '../phas
 import { resolveNextFreePhase } from '../phases/next-free.js';
 import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
+import type { UiSpec } from '@manehorizons/cadence-types';
 
 /**
  * `cadence draft new <phase> <num>` — scaffold a DRAFT.md (IDLE→DRAFT) and,
@@ -100,6 +102,25 @@ export async function draftNewService(
     }
     await mkdir(dir, { recursive: true });
     const specPath = join(dir, `${id}-SPEC.md`);
+    const uiSpecPath = join(dir, `${id}-UI-SPEC.md`);
+
+    async function loadApprovedUiSpec(): Promise<UiSpec | undefined> {
+      if (!existsSync(uiSpecPath)) return undefined;
+      const rawUiSpec = await readFile(uiSpecPath, 'utf8');
+      if (frontmatterStatus(rawUiSpec) !== 'APPROVED') {
+        io.err(`draft new: UI-SPEC ${id} present but not APPROVED — skipping UI Contract seed\n`);
+        return undefined;
+      }
+      try {
+        return parseUiSpecMd(rawUiSpec);
+      } catch (err) {
+        io.err(
+          `draft new: UI-SPEC ${id} APPROVED but unparseable (${err instanceof Error ? err.message : String(err)}) — skipping UI Contract seed\n`,
+        );
+        return undefined;
+      }
+    }
+
     let body: string;
     if (args.template !== undefined) {
       body = renderDraftTemplateBody(args.template, phase, id, tier, title);
@@ -108,8 +129,10 @@ export async function draftNewService(
       if (frontmatterStatus(rawSpec) === 'APPROVED') {
         try {
           const spec = parseSpecMd(rawSpec);
-          body = renderDraftBody(phase, id, tier, title, spec);
-          io.out(`draft new: seeded objective + ${spec.acceptanceCriteria.length} AC(s) from approved SPEC ${id}\n`);
+          const uiSpec = await loadApprovedUiSpec();
+          body = renderDraftBody(phase, id, tier, title, spec, uiSpec);
+          const uiNote = uiSpec ? ' + UI Contract' : '';
+          io.out(`draft new: seeded objective + ${spec.acceptanceCriteria.length} AC(s)${uiNote} from approved SPEC ${id}\n`);
         } catch (err) {
           io.err(`draft new: SPEC ${id} APPROVED but unparseable (${err instanceof Error ? err.message : String(err)}) — scaffolding empty\n`);
           body = renderDraftBody(phase, id, tier, title);

@@ -55,7 +55,7 @@ export interface ConfigExplanation {
   acDiscipline: CadenceConfig['acDiscipline'];
   /** One view per tier, in canonical order (quick-fix, standard, complex). */
   tiers: TierGateView[];
-  /** The six provider blocks, collapsed to one row each. */
+  /** The seven provider blocks, collapsed to one row each. */
   providers: ProviderRow[];
   /** Active foot-gun warnings; empty when the config is clean. */
   warnings: Warning[];

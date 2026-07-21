@@ -752,7 +752,7 @@
       "title": "Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)",
       "summary": "CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC captures component list and behavioral shape only (e.g. 'reuse StructuredWizardShell's visual language' as a precedent reference), with no concrete layout -- field spacing/grouping, exact design-token usage, responsive behavior, or per-field-type visual treatment. Left as-is, DRAFT tasks inherit only a loose behavioral pointer and whoever executes BUILD makes the real layout calls in the moment, looser than this project's own deliberate token-driven UI work. Proposal: an opt-in gate/step between SPEC and DRAFT for phases touching UI surfaces that produces a concrete design contract (component-level layout, token usage, responsive/interaction detail) before DRAFT tasks are written -- conceptually parallel to gsd-ui-phase's UI-SPEC.md but native to CADENCE's loop and gate model, not a GSD borrow. 'When applicable' is key: most CADENCE phases are not UI work and must not pay this cost.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -771,8 +771,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "205-ui-spec-gate",
       "createdAt": "2026-07-11T14:33:47.461Z",
-      "updatedAt": "2026-07-11T14:33:47.461Z"
+      "updatedAt": "2026-07-21T04:44:34.183Z"
     },
     {
       "id": "rec-20260712-003",
@@ -3340,12 +3341,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "204-cadence-init-ci-ci-gate-re-verification-for-consumer-repos",
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:41.842Z",
-      "updatedAt": "2026-07-21T01:33:31.857Z",
       "shippedRef": "phase 204 / PR #267",
+      "scoutId": "scout-20260709-1813",
       "archivedAt": "2026-07-21T01:33:31.857Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-09T23:23:41.842Z",
+      "updatedAt": "2026-07-21T01:33:31.857Z"
     }
   ]
 }

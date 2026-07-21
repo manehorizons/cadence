@@ -234,7 +234,7 @@ Bounds the convergent review loops (spec-review and plan-review).
 
 ## Gate provider blocks
 
-Six gates delegate to an AI verifier. Each block has the same shape:
+Seven gates delegate to an AI verifier. Each block has the same shape:
 
 ```jsonc
 {
@@ -246,13 +246,14 @@ Six gates delegate to an AI verifier. Each block has the same shape:
 | Field | Gate it controls | When the gate fires |
 |---|---|---|
 | `specReview` | `spec-review` | `cadence spec approve` (always runs at this step); convergent loop bounded by `convergence.maxAttempts`; non-passing/unconverged refuses approve unless `--allow-spec-review-failure` |
+| `uiSpecReview` | `ui-spec-review` | `cadence spec approve` (runs only when a sibling `<id>-UI-SPEC.md` is present); convergent loop bounded by `convergence.maxAttempts`; non-passing/unconverged refuses approve unless `--allow-ui-spec-review-failure` |
 | `verifier` | `deep-verify` | `cadence settle run` (when gate is in the active set) |
 | `perTaskVerifier` | `per-task-verify` | `cadence build task <id> --status=DONE` (when gate is in the active set: `strict × standard` or `strict × complex`) |
 | `codeReview` | `code-review` | `cadence settle run` (when gate is in the active set); HIGH findings refuse settle unless `--allow-code-review-failure` / `--force` |
 | `planReview` | `plan-review` | `cadence draft approve` (`strict × complex` only); `pass=false` refuses approve unless `--allow-plan-review-failure` |
 | `securityAudit` | `security-audit` | `cadence settle run` after code-review (`strict × complex` only); CRITICAL findings refuse settle unless `--allow-security-audit-failure` / `--force` |
 
-All six blocks default to `{ "provider": "mock" }`. Provider options:
+All seven blocks default to `{ "provider": "mock" }`. Provider options:
 
 | Provider | Description | Requires |
 |---|---|---|
@@ -648,7 +649,7 @@ The default view has five parts:
 
 1. **Profile & enforcement** — `profile`, `loopEnforcement`, `acDiscipline`, each with a one-line meaning.
 2. **Gates that fire, by tier** — the concrete gate set for quick-fix / standard / complex under your profile (the `← current` marker points at the active phase's tier when a phase is mid-loop). This is the profile × tier matrix resolved for *your* settings.
-3. **Verifier & gate providers** — the six provider blocks (`specReview`, `verifier`, `perTaskVerifier`, `codeReview`, `planReview`, `securityAudit`) collapsed into one table, flagging which run `mock` (offline — no real AI verification).
+3. **Verifier & gate providers** — the seven provider blocks (`specReview`, `uiSpecReview`, `verifier`, `perTaskVerifier`, `codeReview`, `planReview`, `securityAudit`) collapsed into one table, flagging which run `mock` (offline — no real AI verification).
 4. **Warnings** — config-semantic foot-guns, shown only when they apply:
    - a provider set to `anthropic`/`local` with its API key (`ANTHROPIC_API_KEY` / `CADENCE_LOCAL_API_KEY`) unset — it will silently fall back to `mock`;
    - a `hooks.*` flag enabled while the host adapter is not installed (no managed entry in `.claude/settings.json`) — the hook does nothing until `cadence-host-claude-code install`;

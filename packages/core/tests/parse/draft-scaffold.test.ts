@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { renderDraftBody, frontmatterStatus } from '../../src/parse/draft-scaffold.js';
 import { parseSpecMd } from '../../src/parse/spec-parser.js';
 import { parseDraftMd } from '../../src/parse/draft-parser.js';
-import type { Spec } from '@manehorizons/cadence-types';
+import type { Spec, UiSpec } from '@manehorizons/cadence-types';
 
 // Verbatim pre-#1b scaffold (draft.ts:77) for phase='p' id='99-01' tier='standard' title='T'.
 const LEGACY =
@@ -108,6 +108,56 @@ on its own wrapped second line
       when: 'an action happens\nacross two lines too',
       then: 'the outcome is observed\non its own wrapped second line',
     });
+  });
+});
+
+// rec-20260711-004 (Phase 205, T8) — UI Contract seed from an APPROVED
+// sibling UI-SPEC. Mirrors the spec-present-vs-absent structure above.
+const UI_SPEC: UiSpec = {
+  schemaVersion: 1,
+  id: '205-01',
+  phase: '205-ui-spec-gate',
+  components: [
+    {
+      name: 'ConfirmDialog',
+      detail: ['new'],
+      layoutTokens: ['spacing-4 between buttons', 'uses color.border.subtle'],
+      precedent: ['reuse existing shell'],
+    },
+  ],
+  responsiveInteraction: ['stacks buttons vertically below 480px'],
+  status: 'APPROVED',
+};
+
+describe('renderDraftBody — UI Contract seed (rec-20260711-004)', () => {
+  it('AC-6: seeds a ## UI Contract section with no nested markdown headings, between Acceptance Criteria and Tasks', () => {
+    const body = renderDraftBody('205-ui-spec-gate', '205-01', 'standard', 'demo', undefined, UI_SPEC);
+    expect(body).toContain('## UI Contract');
+    expect(body.indexOf('## Acceptance Criteria')).toBeLessThan(body.indexOf('## UI Contract'));
+    expect(body.indexOf('## UI Contract')).toBeLessThan(body.indexOf('## Tasks'));
+    expect(body).toContain('**ConfirmDialog**');
+    expect(body).toContain('spacing-4 between buttons');
+    expect(body).toContain('**Responsive & Interaction**');
+    expect(body).toContain('stacks buttons vertically below 480px');
+    // No nested ##/### headings inside the seeded content.
+    const uiSection = body.slice(body.indexOf('## UI Contract'), body.indexOf('## Tasks'));
+    expect(/\n###? /.test(uiSection)).toBe(false);
+  });
+
+  it('AC-6: parseDraftMd round-trip still extracts the four core sections identically with a UI Contract present', () => {
+    const body = renderDraftBody('205-ui-spec-gate', '205-01', 'standard', 'demo', undefined, UI_SPEC);
+    const withoutUi = renderDraftBody('205-ui-spec-gate', '205-01', 'standard', 'demo');
+    const draftWithUi = parseDraftMd(body);
+    const draftWithoutUi = parseDraftMd(withoutUi);
+    expect(draftWithUi.objective).toBe(draftWithoutUi.objective);
+    expect(draftWithUi.acceptanceCriteria).toEqual(draftWithoutUi.acceptanceCriteria);
+    expect(draftWithUi.tasks).toEqual(draftWithoutUi.tasks);
+    expect(draftWithUi.boundaries).toEqual(draftWithoutUi.boundaries);
+  });
+
+  it('omits the UI Contract section when no uiSpec is passed', () => {
+    const body = renderDraftBody('205-ui-spec-gate', '205-01', 'standard', 'demo');
+    expect(body).not.toContain('## UI Contract');
   });
 });
 

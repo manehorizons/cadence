@@ -1,0 +1,12 @@
+{
+  "bypasses": [
+    {
+      "gate": "soft-cap",
+      "flag": "--allow-auto-complex",
+      "reason": "auto × complex soft cap bypassed via --allow-auto-complex (DESIGN.md §4 M2)",
+      "severity": "warn"
+    }
+  ],
+  "roughTasks": [],
+  "findings": {}
+}

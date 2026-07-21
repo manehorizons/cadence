@@ -13,7 +13,7 @@ import type { selectNotifier } from './factory.js';
  * anomaly `type`, the `context` entity key (`draftId`/`specId`), and the
  * message prefix word — which is the `kind` verbatim.
  */
-export type UnconvergedKind = 'plan-review' | 'spec-review' | 'code-review';
+export type UnconvergedKind = 'plan-review' | 'spec-review' | 'ui-spec-review' | 'code-review';
 
 interface UnconvergedMeta {
   type: AnomalyType;
@@ -23,6 +23,7 @@ interface UnconvergedMeta {
 const KIND_META: Record<UnconvergedKind, UnconvergedMeta> = {
   'plan-review': { type: 'plan-review-unconverged', entityKey: 'draftId' },
   'spec-review': { type: 'spec-review-unconverged', entityKey: 'specId' },
+  'ui-spec-review': { type: 'ui-spec-review-unconverged', entityKey: 'specId' },
   'code-review': { type: 'code-review-unconverged', entityKey: 'draftId' },
 };
 

@@ -5,7 +5,9 @@ import { z } from 'zod';
  * `coherence-warn` (emitted from `cadence draft check`/`draft approve` per
  * warn issue). DESIGN.md §3.3 is the canonical list. Phase 187 adds
  * `auto-complex-override` (emitted when `--allow-auto-complex` bypasses the
- * settle/draft-approve soft cap).
+ * settle/draft-approve soft cap). Phase 205 adds `ui-spec-review-unconverged`
+ * (emitted when the `ui-spec-review` gate hard-escalates at `cadence spec
+ * approve`).
  *
  * Fired when the `'anomaly-notify'` gate is in the effective gate set
  * (auto + standard×{standard,complex} cells). Informational only —
@@ -25,6 +27,7 @@ export const AnomalyTypeZ = z.enum([
   'skill-audit-miss',
   'plan-review-unconverged',
   'spec-review-unconverged',
+  'ui-spec-review-unconverged',
   'code-review-unconverged',
   'redundant-task-work',
   'auto-complex-override',

@@ -7,8 +7,11 @@ import { atomicWriteText } from '../state/atomic-write.js';
 import { loadConfig } from '../config/loader.js';
 import { selectNotifier } from '../notify/factory.js';
 import { selectSpecReviewVerifier } from '../verify/spec-review-factory.js';
+import { parseUiSpecMd } from '../parse/ui-spec-parser.js';
+import { selectUiSpecReviewVerifier } from '../verify/ui-spec-review-factory.js';
 import { nextConvergence } from '../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../notify/spec-review.js';
+import { emitUiSpecReviewUnconverged } from '../notify/ui-spec-review.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
@@ -19,7 +22,12 @@ import type { CommandIO, CommandResult } from './io.js';
  */
 export async function specApproveService(
   repoRoot: string,
-  args: { phase: string; num: string; allowSpecReviewFailure?: boolean },
+  args: {
+    phase: string;
+    num: string;
+    allowSpecReviewFailure?: boolean;
+    allowUiSpecReviewFailure?: boolean;
+  },
   io: CommandIO,
 ): Promise<CommandResult> {
   try {
@@ -137,6 +145,118 @@ export async function specApproveService(
         );
         return { exitCode: 1 };
       }
+    }
+
+    // rec-20260711-004 — ui-spec-review, only when a UI-SPEC is present.
+    // Reached only when spec-review passed or was bypassed above (spec-review's
+    // own reloop/escalate branches already `return`ed) — see design doc §2.
+    const uiSpecPath = join(repoRoot, '.cadence', 'phases', phase, `${id}-UI-SPEC.md`);
+    const uiSidecarPath = join(repoRoot, '.cadence', 'phases', phase, `${id}-UI-SPEC-REVIEW.json`);
+    if (!existsSync(uiSpecPath) && existsSync(uiSidecarPath)) {
+      io.err(
+        `ui-spec-review: UI-SPEC-REVIEW sidecar present but UI-SPEC.md absent — ` +
+          `ui-spec-review skipped (spec-review's result alone determines this approve).\n`,
+      );
+    } else if (existsSync(uiSpecPath)) {
+      const rawUiSpec = await readFile(uiSpecPath, 'utf8');
+      const uiSpec = parseUiSpecMd(rawUiSpec);
+      const uiVerifier = selectUiSpecReviewVerifier(cfg, { cwd: repoRoot });
+      let uiAttemptsSoFar = 0;
+      let uiHistory: unknown[] = [];
+      if (existsSync(uiSidecarPath)) {
+        try {
+          const prior = JSON.parse(await readFile(uiSidecarPath, 'utf8'));
+          if (typeof prior.attempts === 'number') uiAttemptsSoFar = prior.attempts;
+          if (Array.isArray(prior.history)) uiHistory = prior.history;
+        } catch {
+          /* corrupt/legacy → fresh */
+        }
+      }
+
+      const uiRes = await uiVerifier.verify({ uiSpec });
+      const uiNv = nextConvergence(uiRes.pass, uiAttemptsSoFar, maxAttempts);
+      const uiNow = new Date().toISOString();
+      const uiBypassed = !uiRes.pass && args.allowUiSpecReviewFailure === true;
+
+      uiHistory.push({
+        at: uiNow,
+        pass: uiRes.pass,
+        findingsCount: uiRes.findings.length,
+        provider: uiRes.provider,
+        ...(uiRes.model ? { model: uiRes.model } : {}),
+        verdict: uiNv.verdict,
+        ...(uiBypassed ? { bypassed: true } : {}),
+      });
+      await atomicWriteText(
+        uiSidecarPath,
+        JSON.stringify(
+          {
+            specId: id,
+            converged: uiRes.pass,
+            attempts: uiNv.verdict === 'pass' ? uiAttemptsSoFar : uiNv.attempt,
+            maxAttempts,
+            history: uiHistory,
+            pass: uiRes.pass,
+            provider: uiRes.provider,
+            ...(uiRes.model ? { model: uiRes.model } : {}),
+            findings: uiRes.findings.length,
+            at: uiNow,
+          },
+          null,
+          2,
+        ) + '\n',
+      );
+
+      if (!uiRes.pass) {
+        for (const f of uiRes.findings) {
+          io.err(`ui-spec-review: ${f.severity} — ${f.message}\n`);
+          if (f.suggestedEdit) {
+            io.err(`  ↳ suggested: ${f.suggestedEdit}\n`);
+          }
+        }
+
+        if (args.allowUiSpecReviewFailure) {
+          if (uiNv.verdict === 'escalate') {
+            await emitUiSpecReviewUnconverged(selectNotifier(cfg), {
+              specId: id,
+              attempts: uiNv.attempt,
+              maxAttempts,
+              findings: uiRes.findings.length,
+              provider: uiRes.provider,
+              ...(uiRes.model ? { model: uiRes.model } : {}),
+              bypassed: true,
+            });
+          }
+          io.err(
+            `ui-spec-review: --allow-ui-spec-review-failure set; proceeding past ` +
+              `${uiRes.findings.length} finding(s).\n`,
+          );
+        } else if (uiNv.verdict === 'reloop') {
+          io.err(
+            `ui-spec-review: attempt ${uiNv.attempt}/${maxAttempts} did not pass — ` +
+              `fix the UI-SPEC and re-run \`cadence spec approve\`, ` +
+              `or pass --allow-ui-spec-review-failure to proceed anyway.\n`,
+          );
+          return { exitCode: 1 };
+        } else {
+          await emitUiSpecReviewUnconverged(selectNotifier(cfg), {
+            specId: id,
+            attempts: uiNv.attempt,
+            maxAttempts,
+            findings: uiRes.findings.length,
+            provider: uiRes.provider,
+            ...(uiRes.model ? { model: uiRes.model } : {}),
+          });
+          io.err(
+            `spec approve refused: ui-spec-review did NOT converge after ` +
+              `${maxAttempts} attempts — a human decision is required. ` +
+              `Re-scope the UI-SPEC, or pass --allow-ui-spec-review-failure to proceed anyway.\n`,
+          );
+          return { exitCode: 1 };
+        }
+      }
+
+      await atomicWriteText(uiSpecPath, rawUiSpec.replace(/^status: PENDING$/m, 'status: APPROVED'));
     }
 
     // Converged (or bypassed): mark APPROVED, leave the spec stage.
