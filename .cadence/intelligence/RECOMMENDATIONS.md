@@ -393,7 +393,7 @@ A headless host-CLI verifier subprocess has zero shared context with the calling
 
 ## rec-20260711-004 — Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)
 
-- status: candidate
+- status: settle-pending
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
