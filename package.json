@@ -29,5 +29,12 @@
     "turbo": "^2.10.5",
     "typescript": "^6.0.3",
     "vitest": "^2.1.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "brace-expansion@5.0.6": "^5.0.7",
+      "read-yaml-file@1.1.0": "^2.1.0",
+      "js-yaml@4.2.0": "^4.3.0"
+    }
   }
 }
