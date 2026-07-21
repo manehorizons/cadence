@@ -667,34 +667,6 @@
       "updatedAt": "2026-07-02T03:24:53.670Z"
     },
     {
-      "id": "rec-20260709-003",
-      "title": "cadence init --ci: generate + enforce a CI gate workflow for consumer repos",
-      "summary": "Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow that re-runs the gate suite on PRs, plus a one-shot recipe/script to make it a required branch-protection check. Closes the gap where gates exist locally but nothing enforces them in the team's actual PR flow.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "ci"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260709-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "204-cadence-init-ci-ci-gate-re-verification-for-consumer-repos",
-      "scoutId": "scout-20260709-1813",
-      "createdAt": "2026-07-09T23:23:41.842Z",
-      "updatedAt": "2026-07-21T00:52:12.085Z"
-    },
-    {
       "id": "rec-20260710-001",
       "title": "Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning",
       "summary": "Users running cadence inside a live Claude Code session assume that auth exempts them from ANTHROPIC_API_KEY for the anthropic verifier provider, since Claude Code itself doesn't require that env var to run. It doesn't: cadence's anthropic provider is a direct Anthropic SDK call authenticated with a separate API-billed key, with zero visibility into Claude Code's own OAuth/subscription credential store. Surfaced live by an external consumer (phenyx) hitting silent mock-fallback with no obvious cause. Add an explicit callout to docs/providers.md and the mock-fallback warning text (verifier-factory.ts MOCK_FALLBACK_BANNER) distinguishing 'logged into Claude Code' from 'ANTHROPIC_API_KEY set' so the fallback isn't mistaken for a bug.",
@@ -3343,6 +3315,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-20T01:56:32.636Z",
       "updatedAt": "2026-07-20T19:39:48.215Z"
+    },
+    {
+      "id": "rec-20260709-003",
+      "title": "cadence init --ci: generate + enforce a CI gate workflow for consumer repos",
+      "summary": "Detect GitHub/GitLab/etc in a consumer repo and emit a ready-to-commit workflow that re-runs the gate suite on PRs, plus a one-shot recipe/script to make it a required branch-protection check. Closes the gap where gates exist locally but nothing enforces them in the team's actual PR flow.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "ci"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260709-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "204-cadence-init-ci-ci-gate-re-verification-for-consumer-repos",
+      "scoutId": "scout-20260709-1813",
+      "createdAt": "2026-07-09T23:23:41.842Z",
+      "updatedAt": "2026-07-21T01:33:31.857Z",
+      "shippedRef": "phase 204 / PR #267",
+      "archivedAt": "2026-07-21T01:33:31.857Z",
+      "archiveReason": "shipped"
     }
   ]
 }
