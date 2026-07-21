@@ -1,0 +1,72 @@
+{
+  "draftId": "204-01",
+  "tasks": {
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-20T23:53:21.769Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-20T23:53:53.851Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-20T23:53:54.028Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/tmp/claude-1000/-home-thomas-projects-cadence/4f28ba0f-5a52-4e60-bb07-92b3b8b48481/scratchpad/glob-check.js",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/4f28ba0f-5a52-4e60-bb07-92b3b8b48481/scratchpad/bugcheck/run-check.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/4f28ba0f-5a52-4e60-bb07-92b3b8b48481/scratchpad/bugcheck/run-check2.mts",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/src/verify/phase-replay.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/tests/verify/phase-replay.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/tests/verify/_adhoc-review-check.test.ts"
+      ],
+      "updatedAt": "2026-07-21T00:05:51.432Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/tests/cli/verify-phase.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/src/cli/commands/verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/tests/init/ci-workflow.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/src/init/ci-workflow.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/tests/cli/init-ci.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/src/cli/commands/init.ts"
+      ],
+      "updatedAt": "2026-07-21T00:19:00.713Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/packages/core/src/cli/commands/init.ts"
+      ],
+      "updatedAt": "2026-07-21T00:20:44.655Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/204-cadence-init-ci/docs/team-rollout.md"
+      ],
+      "updatedAt": "2026-07-21T00:32:01.680Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-21T00:33:51.837Z"
+    }
+  }
+}

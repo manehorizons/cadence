@@ -18,8 +18,20 @@ area. Your CI still runs. Your reviewers still review. CADENCE just gives
 them one more piece of evidence to look at, in a format they don't have to
 go dig for by hand.
 
-(A tool that auto-scaffolds a CI gate around CADENCE's own checks —
-`cadence init --ci` — does not exist yet; see "Out of scope" below.)
+(As of phase 204, `cadence init --ci` scaffolds a narrow, separate piece: a
+GitHub Actions workflow that runs on every pull request and calls `cadence
+verify phase --changed` — a state-independent re-derivation of whether a
+settled phase's AC coverage still holds. The workflow itself has no `paths:`
+filter; `--changed` does its own `.cadence/phases/*/*-SUMMARY.json` git-diff
+scoping *inside* that command, after the job has already started, so it
+correctly no-ops ("nothing to verify") on a PR that never touched a
+`SUMMARY.json` rather than skipping the job entirely. `init --ci` also prints
+a `gh api` branch-protection recipe but never executes it. It is not a
+general CI bootstrap, it does not replace human review or the team's real CI,
+and it is unrelated to `cadence summary render` above. See
+`docs/reference/commands.md`'s `init`/`verify phase` sections for the full
+behavior, including the important limitation that a test-command failure it
+surfaces is suite-wide, not attributed to a specific AC.)
 
 ## The core workflow
 
@@ -118,9 +130,14 @@ all. Treat this snippet as a starting point, not a required format.
 
 This guide deliberately does not cover:
 
-- **Automated CI gate scaffolding.** A generator that wires CADENCE's own
-  checks into a CI workflow (tracked informally as `cadence init --ci`) is
-  a separate, not-yet-built feature. Nothing here builds or describes that.
+- **Automated CI gate scaffolding.** `cadence init --ci` (phase 204) is built,
+  but it is a separate feature from everything else in this guide, so it isn't
+  walked through here — see `docs/reference/commands.md` instead. In short: it
+  writes a GitHub Actions workflow that calls `cadence verify phase --changed`
+  on pull requests and prints (never executes) a branch-protection recipe.
+  It's GitHub-only (no GitLab/CircleCI support), it never runs `gh api` or any
+  other branch-protection call on your behalf, and its test-command signal is
+  suite-wide — it cannot attribute a failure to the specific AC that broke.
 - **Auto-posting to PRs.** `cadence summary render` is a plain CLI command
   you run by hand, or that a team can choose to wire into their own CI
   scripting if they want the output posted automatically — but that wiring
