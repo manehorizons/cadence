@@ -189,6 +189,7 @@ Scaffold a new .cadence/ directory in the current working tree
 | `--skip-host-wire` | — | Never wire the Claude Code host, even when `.claude/` is present |
 | `--claude-md` | — | Only (re)generate the managed CLAUDE.md block at the repo root; allowed on an already-initialized project |
 | `--agents-md` | — | Only (re)generate the managed AGENTS.md block at the repo root; allowed on an already-initialized project |
+| `--ci` | — | Generate a GitHub Actions workflow that runs `cadence verify phase --changed` on pull requests, plus a branch-protection recipe; allowed on an already-initialized project |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — writes `.cadence/config.json`, `.cadence/state.json`,
@@ -215,6 +216,23 @@ ready-to-approve demo phase so the very next commands are `draft approve
 01-demo 01` → `done T1` → `settle run --ac AC-1=pass`. `--activate` flips on
 real verification when a key is already in the environment.
 
+`--ci` (phase 204, rec-20260709-003) writes `.github/workflows/cadence-verify.yml`
+— a workflow that runs `npx cadence verify phase --changed --base "${{
+github.event.pull_request.base.sha }}"` on every pull request, using the install
+command detected by `detectInstallCommand` — which shares the same underlying
+lockfile-based `detectPackageManager` detection (`packages/core/src/init/plan.ts`)
+that `detectTestCommand` also uses for `--dry-run`'s test-command preview, though
+`--dry-run` itself never derives or displays an install command — and refuses
+(nonzero exit, no file written) if that path already exists; there is no `--force`/overwrite flag, matching `draft new`'s
+existing-file precedent. After writing the workflow it prints (never executes) a
+`gh api` branch-protection recipe requiring the `cadence-verify` check on the
+repo's default branch, substituting the real `<owner>/<repo>` when resolvable
+from `git remote get-url origin` (a GitHub-shaped remote) and the real default
+branch name when resolvable from `git symbolic-ref refs/remotes/origin/HEAD` —
+both fall back to placeholders (`<owner>/<repo>`, `main`) when not resolvable.
+Like `--claude-md`/`--agents-md`, `--ci` is permitted on an already-initialized
+project and only touches its one artifact.
+
 `--full` is sugar for `--wire-host --demo --activate` together: it composes
 all three per-step flags in one run and prints a single consolidated "Full
 setup summary" listing each as done or skipped-with-reason, printed in
@@ -229,14 +247,16 @@ repo. It writes nothing, honors the resolution flags (e.g. `--gate-profile`,
 `--activate`, `--demo`), and — unlike a real `init` — previews rather than
 refuses when `.cadence/` already exists, so it stays a safe pre-flight check.
 
-The `--claude-md` and `--agents-md` flags are the only `init` options permitted
-on an already-initialized project; they refresh managed agent-instruction blocks
-without re-scaffolding state.
+The `--claude-md`, `--agents-md`, and `--ci` flags are the only `init` options
+permitted on an already-initialized project; `--claude-md`/`--agents-md` refresh
+managed agent-instruction blocks and `--ci` (re)writes the CI workflow — none of
+the three re-scaffold state.
 
 **Exit codes** — exits non-zero if the directory is already initialized (without
-`--claude-md`, `--agents-md`, or `--dry-run`) or if required options are missing in a
+`--claude-md`, `--agents-md`, `--ci`, or `--dry-run`) or if required options are missing in a
 non-interactive context. `--dry-run` always exits 0 (even on an already-initialized
-repo); an invalid `--gate-profile` or `--host` exits 2.
+repo); an invalid `--gate-profile` or `--host` exits 2; `--ci` itself exits 2 (no file
+written) if `.github/workflows/cadence-verify.yml` already exists.
 
 ---
 
@@ -2177,6 +2197,7 @@ Read-only verification diagnostics
 | Subcommand | Description |
 |---|---|
 | `coverage --explain <acId>` | Explain why an AC does or does not satisfy coverage (read-only, no state mutation) |
+| `phase [phase] [num]` | Re-derive whether a settled phase's AC coverage still holds against the current working tree (read-only, no active loop state required) |
 
 **`coverage` options**
 
@@ -2204,6 +2225,69 @@ Diagnostics (config-load failures, an empty `--explain` value) go to stderr.
 **Exit codes** — `0` on a successful run (regardless of whether the AC is satisfied —
 this command diagnoses, it does not gate); `1` on a config-load failure or an empty
 `--explain` value.
+
+**`phase` options**
+
+| Option | Description |
+|---|---|
+| `[phase]` | Phase directory name (positional; paired with `[num]`) |
+| `[num]` | Phase id number (positional; paired with `[phase]`) |
+| `--changed` | Discover phases via `git diff` against `--base` instead of an explicit `[phase] [num]` |
+| `--base <ref>` | Base ref to diff against when `--changed` is set |
+| `--json` | Emit machine-readable JSON instead of a human-readable report |
+| `--no-test-run` | Skip the optional `verification.testCommand` re-run |
+
+**Behavior** (phase 204, T5) — a state-independent, phase-scoped re-derivation of
+whether a settled phase's recorded AC coverage still holds, closing
+rec-20260709-003. Unlike `verify coverage --explain`, it never requires an active
+BUILD/loop or `.cadence/state.json` — it reads only the target phase's committed
+`DRAFT.md` and `SUMMARY.json`, plus (unless `--no-test-run`) the current working
+tree and the configured `verification.testCommand`.
+
+Two modes: pass `[phase] [num]` directly to re-derive one phase, or `--changed
+--base <ref>` to discover every phase whose `SUMMARY.json` changed between
+`<ref>` and `HEAD` (via `git diff --name-only --diff-filter=ACMR`, which excludes
+deletions) and re-derive all of them — the shape `cadence init --ci`'s generated
+workflow invokes on every pull request. A git-diff failure (an unfetched base ref,
+a shallow clone, an invalid `--base`) fails loudly with a distinct stderr message
+and exit `2`, never silently treated as "nothing changed"; a genuinely empty diff
+instead prints `verify phase: nothing to verify — no changed SUMMARY.json files
+against the given base` and exits `0`.
+
+Coverage re-scanning is deliberately scoped to the file paths the phase's own
+DRAFT declared on its tasks (`draft.tasks[].files`) — never a whole-repo scan.
+`AC-N` ids are small integers that repeat across every phase this repo has run;
+scanning the whole repo would let an unrelated phase's identically-numbered AC
+test satisfy this phase's recheck purely by coincidence of numbering, masking
+real drift in the phase actually being replayed. A DRAFT that declares no task
+files refuses outright rather than silently widening the scan. Drift is reported
+per AC recorded in the phase's `SUMMARY.json`: an AC whose recorded result was
+`pass: true` with `evidence: 'executed'` but is no longer covered by its linked
+test is drift, printed as `<phase>/<id>: no drift` or `<phase>/<id>: N AC(s)
+drifted` followed by one line per drifted AC (`<id>: recorded PASS (executed), no
+longer covered by its linked test`).
+
+Separately from coverage drift, unless `--no-test-run` is passed, the configured
+`verification.testCommand` is re-run and its pass/fail reported on its own line:
+`test command: passed|FAILED (suite-wide result, not attributed to a specific
+AC)`. This is a real limitation, not just a caveat: a test-command failure means
+*some* test in the suite failed, not that the specific AC(s) this phase claimed
+are the ones that broke — there is no per-AC attribution of a whole-suite test
+failure. `--json` emits `{ mode, results, testRun }` on stdout in both
+single-phase and `--changed` modes: `mode` is `"single"` or `"changed"`, `results`
+is one `{ phase, id, perAc, driftCount }` entry per target phase, and `testRun` is
+one of three shapes: `null` when `--no-test-run` is passed (or when `--changed`
+finds nothing to verify), `{ ran: false }` (no `passed` key) when
+`verification.testCommand` isn't configured in `.cadence/config.json`, or
+`{ ran: true, passed }` when the command actually ran.
+
+**Exit codes** — `0` clean (no drift, and the test command passed or wasn't run);
+`1` when drift is found or the test command failed; `2` on a usage error (neither
+`[phase] [num]` nor `--changed` supplied, or `--changed` without `--base`) or an
+input error (git-diff failure, a missing/malformed/schema-invalid `SUMMARY.json`,
+a missing/unparseable `DRAFT.md`, a DRAFT that declares no task files to scope
+the scan to (`no-scoped-files`, refused rather than falling back to an unscoped
+whole-repo scan), or a config-load failure).
 
 ---
 

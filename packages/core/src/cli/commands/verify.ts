@@ -1,6 +1,10 @@
 import type { Command } from 'commander';
 import { loadConfig } from '../../config/loader.js';
 import { explainAcCoverage, type CoverageExplainResult } from '../../verify/coverage.js';
+import { replayPhaseCoverage, type PhaseReplayResult } from '../../verify/phase-replay.js';
+import { discoverChangedPhases, GitDiffError } from '../../git/diff-strict.js';
+import { runTestCommand } from '../../verify/test-runner.js';
+import { assertSafePhaseSlug, derivePhaseTaskId } from '../../phases/id.js';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
 
 /**
@@ -110,6 +114,140 @@ export async function runVerifyCoverage(
   return { exitCode: 0, data: result };
 }
 
+/**
+ * `cadence verify phase [phase] [num]` (phase 204, T5) — a state-independent,
+ * phase-scoped re-derivation of whether a settled phase's recorded AC
+ * coverage still holds, closing rec-20260709-003. Unlike `verify coverage
+ * --explain`, this never requires an active BUILD/loop and works against a
+ * fresh checkout that never ran the phase locally — it reads only the
+ * phase's committed `DRAFT.md` + `SUMMARY.json` (via `replayPhaseCoverage`)
+ * plus, optionally, the current working tree's test files and the
+ * configured `verification.testCommand`.
+ *
+ * Two modes:
+ * - single-phase: explicit `phase` + `num` args, re-derives that one phase.
+ * - `--changed --base <ref>`: discovers every phase whose `SUMMARY.json`
+ *   changed between `base` and `HEAD` (`discoverChangedPhases`) and
+ *   re-derives all of them — the shape `cadence init --ci`'s generated
+ *   workflow calls in CI.
+ *
+ * Exit codes are pinned: 0 clean (no drift, test command passed or wasn't
+ * run), 1 drift found or the test command failed, 2 usage error (neither
+ * mode selected, `--changed` without `--base`) or an input error (git diff
+ * failure, missing/malformed DRAFT or SUMMARY, config load failure).
+ */
+export interface VerifyPhaseArgs {
+  cwd: string;
+  phase?: string;
+  num?: string;
+  changed?: boolean;
+  base?: string;
+  json?: boolean;
+  /** Commander's --no-test-run negates this to false; default (undefined) means "run it". */
+  testRun?: boolean;
+}
+
+interface VerifyPhaseTestRun {
+  ran: boolean;
+  passed?: boolean;
+}
+
+interface VerifyPhaseJson {
+  mode: 'single' | 'changed';
+  results: PhaseReplayResult[];
+  testRun: VerifyPhaseTestRun | null;
+}
+
+export async function runVerifyPhase(args: VerifyPhaseArgs, io: CommandIO): Promise<CommandResult> {
+  let config;
+  try {
+    config = await loadConfig(args.cwd);
+  } catch (err) {
+    io.err(
+      `verify phase failed: could not load config: ${err instanceof Error ? err.message : String(err)}\n`,
+    );
+    return { exitCode: 2 };
+  }
+  const coverageMode = config.verification?.coverageMode ?? 'mention';
+  const mode: 'single' | 'changed' = args.changed ? 'changed' : 'single';
+
+  let targets: { phase: string; id: string }[];
+  if (args.changed) {
+    if (!args.base) {
+      io.err('verify phase failed: --changed requires --base <ref>\n');
+      return { exitCode: 2 };
+    }
+    try {
+      targets = discoverChangedPhases(args.cwd, args.base).map((c) => ({ phase: c.phase, id: c.id }));
+    } catch (err) {
+      const message = err instanceof GitDiffError ? err.message : String(err);
+      io.err(`verify phase failed: ${message}\n`);
+      return { exitCode: 2 };
+    }
+  } else if (args.phase && args.num) {
+    let safePhase: string;
+    try {
+      safePhase = assertSafePhaseSlug(args.phase);
+    } catch (err) {
+      io.err(`verify phase failed: ${err instanceof Error ? err.message : String(err)}\n`);
+      return { exitCode: 2 };
+    }
+    targets = [{ phase: safePhase, id: derivePhaseTaskId(safePhase, args.num) }];
+  } else {
+    io.err('verify phase failed: pass [phase] [num], or --changed --base <ref>\n');
+    return { exitCode: 2 };
+  }
+
+  if (targets.length === 0) {
+    io.out('verify phase: nothing to verify — no changed SUMMARY.json files against the given base\n');
+    const empty: VerifyPhaseJson = { mode, results: [], testRun: null };
+    if (args.json) io.out(JSON.stringify(empty, null, 2) + '\n');
+    return { exitCode: 0, data: empty };
+  }
+
+  const results: PhaseReplayResult[] = [];
+  for (const t of targets) {
+    const outcome = await replayPhaseCoverage(args.cwd, t.phase, t.id, { coverageMode });
+    if (!outcome.ok) {
+      io.err(`verify phase failed: ${outcome.message}\n`);
+      return { exitCode: 2 };
+    }
+    results.push(outcome.data);
+  }
+
+  let testRun: VerifyPhaseTestRun | null = null;
+  if (args.testRun !== false) {
+    const testResult = await runTestCommand(args.cwd, config.verification?.testCommand);
+    testRun = testResult.ran ? { ran: true, passed: testResult.ok } : { ran: false };
+    if (testResult.ran && !testResult.ok) {
+      io.err(`verify phase: test command failed: ${testResult.command} exited ${testResult.exitCode}\n`);
+    }
+  }
+
+  const driftFound = results.some((r) => r.driftCount > 0);
+  const testFailed = testRun?.ran === true && testRun.passed === false;
+
+  const payload: VerifyPhaseJson = { mode, results, testRun };
+  if (args.json) {
+    io.out(JSON.stringify(payload, null, 2) + '\n');
+  } else {
+    for (const r of results) {
+      io.out(`${r.phase}/${r.id}: ${r.driftCount === 0 ? 'no drift' : `${r.driftCount} AC(s) drifted`}\n`);
+      for (const ac of r.perAc.filter((a) => a.drift)) {
+        io.out(`  ${ac.id}: recorded PASS (executed), no longer covered by its linked test\n`);
+      }
+    }
+    if (testRun?.ran) {
+      io.out(
+        `test command: ${testRun.passed ? 'passed' : 'FAILED'} ` +
+          `(suite-wide result, not attributed to a specific AC)\n`,
+      );
+    }
+  }
+
+  return { exitCode: driftFound || testFailed ? 1 : 0, data: payload };
+}
+
 export function registerVerifyCommand(program: Command): void {
   const cmd = program
     .command('verify')
@@ -127,4 +265,35 @@ export function registerVerifyCommand(program: Command): void {
       );
       process.exitCode = res.exitCode;
     });
+
+  cmd
+    .command('phase [phase] [num]')
+    .description(
+      "Re-derive whether a settled phase's AC coverage still holds against the current working tree (read-only, no active loop state required)",
+    )
+    .option('--changed', 'discover phases via git diff against --base instead of an explicit phase/num')
+    .option('--base <ref>', 'base ref to diff against when --changed is set')
+    .option('--json', 'emit machine-readable JSON instead of a human-readable report')
+    .option('--no-test-run', 'skip the optional verification.testCommand re-run')
+    .action(
+      async (
+        phase: string | undefined,
+        num: string | undefined,
+        opts: { changed?: boolean; base?: string; json?: boolean; testRun?: boolean },
+      ) => {
+        const res = await runVerifyPhase(
+          {
+            cwd: process.cwd(),
+            ...(phase !== undefined ? { phase } : {}),
+            ...(num !== undefined ? { num } : {}),
+            ...(opts.changed !== undefined ? { changed: opts.changed } : {}),
+            ...(opts.base !== undefined ? { base: opts.base } : {}),
+            ...(opts.json !== undefined ? { json: opts.json } : {}),
+            ...(opts.testRun !== undefined ? { testRun: opts.testRun } : {}),
+          },
+          processIO(),
+        );
+        process.exitCode = res.exitCode;
+      },
+    );
 }

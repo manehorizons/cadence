@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -20,6 +19,7 @@ import { effectiveGateSet } from '../gates/engine.js';
 import { resolveInteractivity } from '../gates/interactivity.js';
 import { selectVerifier } from '../verify/factory.js';
 import { scanTestCoverage } from '../verify/coverage.js';
+import { runTestCommand } from '../verify/test-runner.js';
 import {
   resolveEffectiveProvider,
   MOCK_FALLBACK_BANNER,
@@ -364,18 +364,7 @@ export async function settleService(
           emitSkillAuditMiss(selectNotifier(cadenceConfig), payload),
       },
       runner: {
-        test: async () => {
-          const command = cadenceConfig?.verification?.testCommand;
-          if (!command) return { ran: false, ok: true };
-          try {
-            execSync(command, { cwd, stdio: 'ignore' });
-            return { ran: true, ok: true, exitCode: 0, command };
-          } catch (e) {
-            const status = (e as { status?: number }).status;
-            const exitCode = typeof status === 'number' ? status : 1;
-            return { ran: true, ok: false, exitCode, command };
-          }
-        },
+        test: () => runTestCommand(cwd, cadenceConfig?.verification?.testCommand),
       },
       prompter: {
         create: () => createDefaultPrompter(),

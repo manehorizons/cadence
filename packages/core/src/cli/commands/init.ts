@@ -1,4 +1,5 @@
 import type { Command } from 'commander';
+import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -12,6 +13,7 @@ import {
 import {
   deriveName,
   detectCoverageMode,
+  detectInstallCommand,
   detectProjectLanguage,
   detectTestCommand,
   detectTestGlobs,
@@ -20,6 +22,11 @@ import {
   resolveGateProfile,
   suggestGateProfile,
 } from '../../init/plan.js';
+import {
+  renderCiWorkflowYaml,
+  parseGitHubOwnerRepo,
+  renderBranchProtectionRecipe,
+} from '../../init/ci-workflow.js';
 import { atomicWriteJSON } from '../../state/atomic-write.js';
 import { SimpleStateBackend } from '../../state/simple.js';
 import {
@@ -151,6 +158,10 @@ export function registerInitCommand(program: Command): void {
       '--agents-md',
       'only (re)generate the managed AGENTS.md block at the repo root; allowed on an already-initialized project',
     )
+    .option(
+      '--ci',
+      'generate a GitHub Actions workflow that runs `cadence verify phase --changed` on pull requests, plus a branch-protection recipe; allowed on an already-initialized project',
+    )
     .option('--host <host>', 'wire a host during init: claude | codex')
     .option(
       '--wire-host',
@@ -184,6 +195,7 @@ export function registerInitCommand(program: Command): void {
         gateProfile?: string;
         claudeMd?: boolean;
         agentsMd?: boolean;
+        ci?: boolean;
         host?: string;
         wireHost?: boolean;
         skipHostWire?: boolean;
@@ -266,6 +278,48 @@ export function registerInitCommand(program: Command): void {
           } else {
             console.log(`${file} ${mode} (${src.name}, ${src.gateProfile}).`);
           }
+          return;
+        }
+
+        // Phase 204 (rec-20260709-003) — standalone CI-workflow regeneration,
+        // same "only this one artifact, allowed on an already-initialized
+        // project" shape as --claude-md/--agents-md above.
+        if (opts.ci) {
+          const workflowDir = join(cwd, '.github', 'workflows');
+          const workflowPath = join(workflowDir, 'cadence-verify.yml');
+          if (existsSync(workflowPath)) {
+            console.error(`init --ci refused: ${workflowPath} already exists`);
+            process.exit(2);
+            return;
+          }
+          const installCommand = detectInstallCommand(cwd);
+          await mkdir(workflowDir, { recursive: true });
+          await writeFile(workflowPath, renderCiWorkflowYaml(installCommand));
+          console.log(`Wrote ${workflowPath}`);
+
+          let ownerRepo: ReturnType<typeof parseGitHubOwnerRepo> = null;
+          try {
+            const remote = execFileSync('git', ['remote', 'get-url', 'origin'], {
+              cwd,
+              encoding: 'utf8',
+              stdio: ['ignore', 'pipe', 'ignore'],
+            });
+            ownerRepo = parseGitHubOwnerRepo(remote);
+          } catch {
+            ownerRepo = null;
+          }
+          let defaultBranch = 'main';
+          try {
+            const ref = execFileSync('git', ['symbolic-ref', 'refs/remotes/origin/HEAD'], {
+              cwd,
+              encoding: 'utf8',
+              stdio: ['ignore', 'pipe', 'ignore'],
+            });
+            defaultBranch = ref.trim().split('/').pop() ?? 'main';
+          } catch {
+            defaultBranch = 'main';
+          }
+          console.log('\n' + renderBranchProtectionRecipe(ownerRepo, defaultBranch));
           return;
         }
 

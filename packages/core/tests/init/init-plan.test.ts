@@ -3,7 +3,13 @@ import { mkdir, writeFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { planInit, renderInitPlan, detectTestCommand } from '../../src/init/plan.js';
+import {
+  planInit,
+  renderInitPlan,
+  detectTestCommand,
+  detectPackageManager,
+  detectInstallCommand,
+} from '../../src/init/plan.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {
@@ -342,5 +348,27 @@ describe('detectTestCommand (phase 139, AC-2/AC-3)', () => {
   it('returns null when there is no package.json at all', async () => {
     active = await tempRepo();
     expect(detectTestCommand(active.root)).toBeNull();
+  });
+});
+
+describe('detectPackageManager / detectInstallCommand', () => {
+  it('detects pnpm from pnpm-lock.yaml and returns its install command', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'pnpm-lock.yaml'), '');
+    expect(detectPackageManager(active.root)).toBe('pnpm');
+    expect(detectInstallCommand(active.root)).toBe('pnpm install --frozen-lockfile');
+  });
+
+  it('detects yarn from yarn.lock', async () => {
+    active = await tempRepo();
+    await writeFile(join(active.root, 'yarn.lock'), '');
+    expect(detectPackageManager(active.root)).toBe('yarn');
+    expect(detectInstallCommand(active.root)).toBe('yarn install --frozen-lockfile');
+  });
+
+  it('defaults to npm with no lockfile present', async () => {
+    active = await tempRepo();
+    expect(detectPackageManager(active.root)).toBe('npm');
+    expect(detectInstallCommand(active.root)).toBe('npm ci');
   });
 });

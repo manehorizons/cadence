@@ -150,18 +150,57 @@ export function detectCoverageMode(
   return lang === 'js' ? 'assertion' : 'mention';
 }
 
-/** Lockfile → package-manager run prefix, checked in this order. */
-const PM_LOCKFILES: readonly { file: string; run: string }[] = [
-  { file: 'pnpm-lock.yaml', run: 'pnpm test' },
-  { file: 'yarn.lock', run: 'yarn test' },
-  { file: 'bun.lockb', run: 'bun test' },
-  { file: 'package-lock.json', run: 'npm test' },
+export type PackageManager = 'pnpm' | 'yarn' | 'bun' | 'npm';
+
+/** Lockfile → detected package manager, checked in this order. */
+const PM_LOCKFILES: readonly { file: string; pm: PackageManager }[] = [
+  { file: 'pnpm-lock.yaml', pm: 'pnpm' },
+  { file: 'yarn.lock', pm: 'yarn' },
+  { file: 'bun.lockb', pm: 'bun' },
+  { file: 'package-lock.json', pm: 'npm' },
 ];
+
+const PM_TEST_COMMAND: Record<PackageManager, string> = {
+  pnpm: 'pnpm test',
+  yarn: 'yarn test',
+  bun: 'bun test',
+  npm: 'npm test',
+};
+
+const PM_INSTALL_COMMAND: Record<PackageManager, string> = {
+  pnpm: 'pnpm install --frozen-lockfile',
+  yarn: 'yarn install --frozen-lockfile',
+  bun: 'bun install --frozen-lockfile',
+  npm: 'npm ci',
+};
+
+/**
+ * Lockfile presence → package manager, defaulting to `npm` when none match
+ * (mirrors `detectTestCommand`'s existing no-lockfile fallback). Never
+ * throws. Split out of `detectTestCommand` so `cadence init --ci` (a
+ * separate task in this same phase) can derive an install command from the
+ * same single detection instead of a second, parallel one.
+ */
+export function detectPackageManager(cwd: string): PackageManager {
+  for (const { file, pm } of PM_LOCKFILES) {
+    if (existsSync(join(cwd, file))) return pm;
+  }
+  return 'npm';
+}
+
+/**
+ * Install command for the detected package manager. Unlike
+ * `detectTestCommand`, this always returns a value — installing
+ * dependencies doesn't depend on a `scripts.test` entry existing.
+ */
+export function detectInstallCommand(cwd: string): string {
+  return PM_INSTALL_COMMAND[detectPackageManager(cwd)];
+}
 
 /**
  * Derive `verification.testCommand` from the target repo's
  * `package.json#scripts.test`, prefixed with the package manager detected by
- * lockfile presence (`pnpm-lock.yaml` → `pnpm test`, `yarn.lock` →
+ * `detectPackageManager` (`pnpm-lock.yaml` → `pnpm test`, `yarn.lock` →
  * `yarn test`, `bun.lockb` → `bun test`, `package-lock.json` or no lockfile
  * found → `npm test`). Returns `null` when there's no `package.json` or no
  * `scripts.test` entry — never guesses a command, never throws (Phase 139,
@@ -176,11 +215,7 @@ export function detectTestCommand(cwd: string): string | null {
     hasTestScript = false;
   }
   if (!hasTestScript) return null;
-
-  for (const { file, run } of PM_LOCKFILES) {
-    if (existsSync(join(cwd, file))) return run;
-  }
-  return 'npm test';
+  return PM_TEST_COMMAND[detectPackageManager(cwd)];
 }
 
 /**
