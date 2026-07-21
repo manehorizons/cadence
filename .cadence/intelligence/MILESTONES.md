@@ -27,6 +27,7 @@ None.
 - mil-rec-rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry) → .cadence/intelligence/exports/mil-rec-rec-20260712-011/SPEC.md
 - mil-rec-rec-20260720-001 — milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred → .cadence/intelligence/exports/mil-rec-rec-20260720-001/SPEC.md
 - mil-rec-rec-20260720-002 — Team rollout kit → .cadence/intelligence/exports/mil-rec-rec-20260720-002/SPEC.md
+- mil-rec-rec-20260721-002 — cadence next: state-derived legal next moves at any loop position, human + --json agent contract → .cadence/intelligence/exports/mil-rec-rec-20260721-002/SPEC.md
 
 ## Closed
 

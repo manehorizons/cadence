@@ -391,21 +391,6 @@ Alternative to shelling out to the host CLI: instead run the host CLI headlessly
 
 A headless host-CLI verifier subprocess has zero shared context with the calling session -- arguably a stronger independence claim than today's same-session self-report or even a direct API call under the same account. Worth a docs/positioning pass tying this framing to the existing 'trustworthy verifier' wedge and the mock-default competitive risk, independent of which engineering direction (rec-20260710-002 direct-subprocess vs MCP-inversion sibling) ships.
 
-## rec-20260711-004 — Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)
-
-- status: settle-pending
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, draft, spec
-- evidence: External consumer project observation, 2026-07-11 (dumpfile): SPEC-stage UI gap noted mid-brainstorm for a BuilderShell/StructuredWizardShell modal component, where the design decided behavior+visual precedent but not concrete layout.
-- next: cadence milestone propose
-
-CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC captures component list and behavioral shape only (e.g. 'reuse StructuredWizardShell's visual language' as a precedent reference), with no concrete layout -- field spacing/grouping, exact design-token usage, responsive behavior, or per-field-type visual treatment. Left as-is, DRAFT tasks inherit only a loose behavioral pointer and whoever executes BUILD makes the real layout calls in the moment, looser than this project's own deliberate token-driven UI work. Proposal: an opt-in gate/step between SPEC and DRAFT for phases touching UI surfaces that produces a concrete design contract (component-level layout, token usage, responsive/interaction detail) before DRAFT tasks are written -- conceptually parallel to gsd-ui-phase's UI-SPEC.md but native to CADENCE's loop and gate model, not a GSD borrow. 'When applicable' is key: most CADENCE phases are not UI work and must not pay this cost.
-
 ## rec-20260712-003 — Retro friction feeds back into Praxis recommendation scoring
 
 - status: candidate
@@ -593,3 +578,35 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
+
+## rec-20260721-001 — Empty states and refusals must name the precondition, nearest candidates, and unblocking command
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli
+- files: packages/core/src/services/milestone-propose.ts
+- evidence: packages/core/src/services/milestone-propose.ts (eligibility doc-comment line 8: status accepted, readiness ready-for-milestone/ready-for-cadence-spec; output is bare 'Proposed milestones: N'); 2026-07-21 operator wall as the incident (cadence recommend -> cadence milestone propose returned nothing-was-proposed with no explanation); settle refusal messages (coverage gate) as the internal precedent proving the bar is achievable.
+- next: cadence milestone propose
+
+Establish and enforce a guidance invariant: every empty result or refusal in the intelligence layer (recommend, milestone propose, promote, retro, and any command that can return "nothing") must state (a) why the result is empty, (b) the unmet precondition in concrete terms, (c) the nearest-miss candidates from the already-loaded ledger with what each is missing, and (d) the exact command that would change the outcome. Example target output for the incident case: 'Proposed milestones: 0 — 14 recommendations exist; none eligible (requires status=accepted + readiness ready-for-milestone or ready-for-cadence-spec). Closest: rec-0041 (accepted, needs-decision). Try: cadence recommendation promote rec-0041 --readiness ready-for-milestone'. Acceptance bar for the eventual phase: an audit checklist of every intelligence-layer empty/zero path, each upgraded and tested; a doc'd guidance invariant so future commands inherit the bar. Cheap: the candidate data is already in memory at render time. This is the same bar settle refusals already meet, applied uniformly. (Sibling: shares one 'nearest legal move' computation with the cadence-next rec recorded alongside it.)
+
+## rec-20260721-002 — cadence next: state-derived legal next moves at any loop position, human + --json agent contract
+
+- status: converted
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli
+- decisions: dec-20260721-001 (active), dec-20260721-002 (active), dec-20260721-003 (active), dec-20260721-004 (active)
+- evidence: Same 2026-07-21 incident — the operator's literal action at the wall was asking Claude Code 'what should we do next?', a question whose answer is fully determined by ledger + loop state and therefore should not cost a model prompt; existing 'quickstart' read-only position rendering as the substrate to extend; sibling rec (actionable empty states) shares the same 'nearest legal move' computation — cross-referenced in both summaries.
+- next: cadence milestone propose
+
+A read-only command answering "what now?" deterministically from ground truth at any loop position — not milestone suggestion, literal next step. Computed from state the engine already holds: pending DRAFT -> the approve invocation; mid-BUILD -> remaining tasks (T-ids) + ACs still lacking coverage; all tasks DONE -> the settle invocation; settled -> next phase in milestone, else the promote->propose chain with real rec ids; empty ledgers -> draft-new/onboard paths. Output: current position + 1-3 ranked legal moves with exact commands (a map, not an autopilot — when multiple moves are legal, e.g. settle-now vs. add-discovered-task, it lists both). --json returns {position, remainingTasks, blockedOn, legalMoves[]} as a stable contract so agents consume loop position as ground truth instead of reconstructing it from conversation context — deterministic navigation for orchestrators; zero tokens, zero drift. Explicitly does NOT advise how to implement work (semantic, the agent's job); it names the door, the agent walks through it. Needs decisions: standalone command vs. also auto-appending its output as the footer of every empty state from the sibling actionable-empty-states rec (recommend: both — that rec's 'Try:' line is this command's logic scoped to one wall); relationship to quickstart (static map) — subsume, cross-link, or keep separate; --json schema versioning; whether host adapters surface it as a slash command (/cadence-next). Related but narrower: rec-20260605-002 (First-run 'what now?' nudge after cadence init) covers only the init-time case, not general loop-position navigation.

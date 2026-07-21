@@ -1,90 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-20T18:21:07.069Z",
+  "generatedAt": "2026-07-21T22:27:28.449Z",
   "ranked": [
-    {
-      "id": "rec-20260720-001",
-      "title": "milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred",
-      "raw": 17.7,
-      "score": 61,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio high",
-          "value": 5
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260709-003",
-      "title": "cadence init --ci: generate + enforce a CI gate workflow for consumer repos",
-      "raw": 12.7,
-      "score": 53,
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready raw-idea",
-          "value": 0
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260709-1813"
-    },
     {
       "id": "rec-20260710-001",
       "title": "Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning",
@@ -128,47 +45,6 @@
       "scoutId": "scout-20260710-0400"
     },
     {
-      "id": "rec-20260711-004",
-      "title": "Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)",
-      "raw": 12.7,
-      "score": 53,
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready raw-idea",
-          "value": 0
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
       "id": "rec-20260712-003",
       "title": "Retro friction feeds back into Praxis recommendation scoring",
       "raw": 12.7,
@@ -209,6 +85,131 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "scout-20260712-0328"
+    },
+    {
+      "id": "rec-20260712-009",
+      "title": "Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260712-1234"
+    },
+    {
+      "id": "rec-20260712-014",
+      "title": "Add test-coverage reporting with enforced minimum thresholds to CI",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260712-1234"
+    },
+    {
+      "id": "rec-20260718-003",
+      "title": "Frame dispatched task boundaries as stop-conditions, not file-scope lists",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
     }
   ],
   "parked": [
@@ -225,10 +226,10 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 40,
-    "ranked": 17,
+    "total": 38,
+    "ranked": 14,
     "parked": 1,
     "needsAttention": 0,
-    "excluded": 22
+    "excluded": 23
   }
 }
