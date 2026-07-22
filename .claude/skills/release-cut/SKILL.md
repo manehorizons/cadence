@@ -89,9 +89,10 @@ anything; only then consider a targeted republish.
 
 ## 7 — Close the loop
 
-- Settle the release phase (two-commit convention) if it ran as one.
-- Promote recommendations now shipped: `settle run --ship-ref "<PR/vX.Y.Z>"`
-  in the same settle, or `cadence recommendation promote <id>
-  --status=shipped --ref "..."` after the fact.
+- Settle the release phase (single-commit convention) if it ran as one.
+- Promote recommendations now shipped immediately, don't defer it:
+  `settle run --ship-ref "<PR/vX.Y.Z>"` in the same settle, or `cadence
+  recommendation promote <id> --status=shipped --ref "..."` right after
+  publish verification — in the same commit/push, not a later pass.
 - Write the session handoff: version live, bundle list, any slips or flakes
   encountered, next candidates.

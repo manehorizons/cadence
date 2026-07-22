@@ -91,12 +91,13 @@ _Avoid_: log, cache.
 The pair regenerated on every state write — `state.json` (machine-readable loop
 state) and `STATE.md` (the derived human view; never hand-edited).
 
-**Two-commit convention**:
-A completed slice produces exactly two commits in order — the **feature commit**
-(`feat:`/`fix:`/`docs:` … — source, tests, docs) then the **settle commit**
-(`chore: settle` — phase artifacts + state files). Operator-owned, not enforced
-by a hook.
-_Avoid_: calling the settle commit a "state commit."
+**Single-commit convention**:
+A completed slice produces exactly one commit — source, tests, docs, and phase
+artifacts land together once the loop's own gates have verified the work; no
+separate settle commit follows it. State files (`state.json`/`STATE.md`) stay
+gitignored and never enter it. Operator-owned, not enforced by a hook.
+_Avoid_: splitting the settle into a second commit; calling it a "feature
+commit" once it also carries the phase artifacts.
 
 ### The two axes
 

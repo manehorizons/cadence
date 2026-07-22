@@ -1,6 +1,6 @@
 ---
 name: phase-build
-description: Orchestrate a full CADENCE phase build end-to-end — worktree isolation, wave-based subagent dispatch from the approved DRAFT, an independent reviewer per task, main-thread re-verification of every completion claim, a whole-branch review, the two-commit settle, and a PR carrying its changeset. Use when a DRAFT is approved and the user says "build this phase", "execute the draft", "run the dispatch loop", or when resuming a partially built phase.
+description: Orchestrate a full CADENCE phase build end-to-end — worktree isolation, wave-based subagent dispatch from the approved DRAFT, an independent reviewer per task, main-thread re-verification of every completion claim, a whole-branch review, the single-commit settle, and a PR carrying its changeset. Use when a DRAFT is approved and the user says "build this phase", "execute the draft", "run the dispatch loop", or when resuming a partially built phase.
 ---
 
 # Phase build (subagent-driven, verification-first)
@@ -48,13 +48,15 @@ before it is recorded.
    pass catches real defects the per-task reviews miss (an ordering bug, doc
    prose describing a pre-fix algorithm, stale code comments) — do not skip
    it for "simple" phases.
-7. **Settle, two commits.** First the **feature commit** (`feat:`/`fix:` —
-   source + tests + docs + the `.changeset/*.md` for this phase; feature PRs
-   carry their own changeset, never deferred to the release PR). Then
-   `cadence settle run --auto` — if it refuses, the gate is right until
-   proven otherwise; fix the cause, don't reach for `--force`/`--allow-*`.
-   Then the **settle commit** (`chore: settle` — phase artifacts +
-   `state.json` + `STATE.md`).
+7. **Settle, one commit.** Run `cadence settle run --auto` — if it refuses,
+   the gate is right until proven otherwise; fix the cause, don't reach for
+   `--force`/`--allow-*`. Once it passes, stage everything together — source,
+   tests, docs, the `.changeset/*.md` for this phase (feature PRs carry their
+   own changeset, never deferred to the release PR), and the phase artifacts
+   (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`) — and make one commit
+   (`feat:`/`fix:`, phase id in the subject). `state.json`/`STATE.md` stay
+   gitignored, never committed. If the phase closes a Praxis recommendation,
+   promote it to `shipped` in this same commit.
 8. **Land.** Exit the worktree, then invoke the `pr-land` skill.
 
 ## Known failure modes to actively watch

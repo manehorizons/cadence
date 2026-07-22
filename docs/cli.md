@@ -32,7 +32,7 @@ exhaustive option lists (every flag and its default).
 - [progress — next recommended action](#progress--next-recommended-action)
 - [config — read and write config](#config--read-and-write-config)
 - [Hand the loop to your AI agent](#hand-the-loop-to-your-ai-agent)
-- [Two-commit convention in practice](#two-commit-convention-in-practice)
+- [Single-commit convention in practice](#single-commit-convention-in-practice)
 
 ---
 
@@ -365,9 +365,9 @@ a `<your goal>` placeholder. The same block also appears at the end of
 
 ---
 
-## Two-commit convention in practice
+## Single-commit convention in practice
 
-A completed phase produces exactly two commits. Here is what that looks like
+A completed phase produces exactly one commit. Here is what that looks like
 for a phase called `P05 / T2`:
 
 ```sh
@@ -378,22 +378,19 @@ cadence done T2 --notes "added edge-case test"
 # 2. Settle the loop. This writes SUMMARY.* and resets state to IDLE.
 cadence settle run --auto
 
-# 3. Feature commit: source changes only. Stage your source files.
-git add src/ tests/ docs/  # (not .cadence/)
-git commit -m "feat: add retry logic with exponential backoff"
-
-# 4. Settle commit: phase artifacts only.
-git add .cadence/
-git commit -m "chore: settle P05/T2 — add retry logic"
+# 3. One commit: source changes + phase artifacts together.
+git add src/ tests/ docs/ .cadence/
+git commit -m "feat: add retry logic with exponential backoff (P05/T2)"
 ```
 
-**Why two commits?** Source history stays clean: `git log --no-merges` shows
-only meaningful changes; blame on source files is uncontaminated by mechanical
-state writes. The settle commit is the single atomic record of gate outcomes
-and AC verdicts, making audit straightforward.
+**Why one commit?** The gates already re-verified the work in step 2 —
+there's nothing left to prove by splitting artifacts into a second commit.
+One commit is the single atomic record of both the code change and the gate
+outcomes/AC verdicts that backed it, keeping audit straightforward without
+adding a step.
 
 For the conceptual rationale, see
-[docs/concepts.md — Two-commit convention](concepts.md#two-commit-convention).
+[docs/concepts.md — Single-commit convention](concepts.md#single-commit-convention).
 
 ---
 

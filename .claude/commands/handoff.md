@@ -69,7 +69,7 @@ Update only docs that the session's work actually changed or made stale. Do not 
 - **Forward-reference reconciliation:** if this session shipped something a previous doc described as "a later slice / future work", find those forward-refs (`grep` prior specs/plans) and mark them shipped (strike-through + annotation, don't delete history).
 - **Canonical Praxis design** lives in the sibling **`C:\Users\digit\Documents\Projects\synth\`** (user's source of truth; `praxis/` is scratchpad only). If a design decision changed, note it — but only edit the sibling repo if the session's work actually altered the design contract; otherwise leave it and record the divergence in the handoff.
 
-Respect project conventions: plan-doc-first, two-commit-per-phase, no `.synth/`-branded artifacts in production.
+Respect project conventions: plan-doc-first, single-commit-per-phase, no `.synth/`-branded artifacts in production.
 
 ## Step 4 — Scaffold the SESSION handoff doc with `cadence handoff`, then fill the narrative
 
@@ -98,7 +98,7 @@ The doc is for an LLM with **no memory of this session** — keep it self-contai
 
 ## Step 5 — Commit & push
 
-Follow the two-commit-per-phase convention where it applies; for a pure handoff (no source change) a single commit is fine.
+Follow the single-commit-per-phase convention where it applies; for a pure handoff (no source change) a single commit is fine.
 
 - Stage deliberately by path (never blanket `git add -A`): handoff doc, changed docs, changed `.cadence/` artifacts/state. Source + tests + DESIGN/README/CHANGELOG go in their own `feat`/`fix` commit if this session also produced code that isn't yet committed.
 - Auto-memory under `C:\Users\digit\.claude\...` is **outside the repo** — it is not committed by git; updating the files (Step 2) is the persistence. Do not try to add it to the repo.

@@ -108,7 +108,7 @@ This package is the engine — the `cadence` CLI implements the DRAFT→BUILD→
 ## Full user guide
 
 - [Quickstart](https://github.com/manehorizons/cadence/blob/main/docs/quickstart.md) — no-install demo, first real template, and full loop walkthrough
-- [Concepts](https://github.com/manehorizons/cadence/blob/main/docs/concepts.md) — the loop, gates, profiles, and two-commit convention
+- [Concepts](https://github.com/manehorizons/cadence/blob/main/docs/concepts.md) — the loop, gates, profiles, and single-commit convention
 - [CLI guide](https://github.com/manehorizons/cadence/blob/main/docs/cli.md) — all subcommands and flags
 - [Claude Code integration](https://github.com/manehorizons/cadence/blob/main/docs/claude-code.md) — hooks and slash commands
 - [MCP server](https://github.com/manehorizons/cadence/blob/main/docs/mcp.md) — drive the loop from any MCP host
