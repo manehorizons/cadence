@@ -71,9 +71,15 @@ async function resolveIdleLedgerHints(
 
     // Same ranking `cadence recommend` surfaces as its top pick (raw score
     // desc, then createdAt asc, then id asc) — never re-derived independently.
+    // `ranked` also includes already-`accepted` recs (partitionLedger only
+    // excludes rejected/converted/shipped/settle-pending), but an accepted
+    // rec is no longer "available to promote" — restrict to `candidate` so
+    // an already-promoted top-scorer doesn't get suggested for promotion
+    // again.
     let topRecommendation: { id: string; title: string } | undefined;
     const { ranked } = partitionLedger(recLedger.recommendations);
-    const scored = ranked
+    const promotable = ranked.filter((rec) => rec.status === 'candidate');
+    const scored = promotable
       .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
       .sort((a, b) => {
         if (b.raw !== a.raw) return b.raw - a.raw;
