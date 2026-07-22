@@ -23,8 +23,9 @@ squash merge.
   + `STATE.md` dirt mid-loop (the settle commit owns those), `.agents/`,
   `launch/` (local-only by explicit decision), `.claude/scheduled_tasks.lock`,
   stray uncommitted `SESSION-*.md` handoffs.
-- Two-commit settle convention when a phase is closing: feature commit, then
-  `chore: settle`.
+- Single-commit settle convention when a phase is closing: source + tests +
+  docs + phase artifacts land together in one commit, no separate
+  `chore: settle` commit after it.
 - Feature PRs carry their `.changeset/*.md`. Conventional-commit subject with
   the phase id: `feat: <what> (phase NNN)`.
 

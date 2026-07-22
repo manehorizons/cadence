@@ -167,14 +167,18 @@ session to do the same. The shape of a healthy session:
    report. Releases likewise: after the Release workflow reports success,
    independently confirm `npm view` versions, the git tag, and the GitHub
    release.
-6. **Two-commit settle convention.** A completed phase produces exactly two
-   commits in order: the **feature commit** (`feat:`/`fix:`/`docs:` — source
-   + tests + docs) then the **settle commit** (`chore: settle` — phase
-   artifacts). `state.json` and `STATE.md` are gitignored by default and
-   never enter either commit — the `stateAtSettle` field in
-   `SUMMARY.json`/`SUMMARY.md` is their audit-trail replacement.
-   Operator-owned, not hook-enforced. Keeps blame clean and `git log
-   --no-merges` readable.
+6. **Single-commit settle convention.** A completed phase produces exactly
+   one commit: source + tests + docs + phase artifacts (`.cadence/phases/**`)
+   together, once the loop's own gates have verified the work — no separate
+   `chore: settle` commit after it. The moment verification passes, promote
+   any recommendation the phase closes to `shipped`
+   (`cadence recommendation promote <id> --status=shipped --ref "..."`) in
+   that same commit, then push — don't defer the promotion to a later pass.
+   `state.json` and `STATE.md` are gitignored by default and never enter the
+   commit — the `stateAtSettle` field in `SUMMARY.json`/`SUMMARY.md` is their
+   audit-trail replacement. Operator-owned, not hook-enforced. Supersedes
+   the prior two-commit split (feature commit, then a separate settle
+   commit) as of 2026-07-22.
 7. **Land via branch + PR, squash-merged.** `main` is branch-protected: the
    `ci-success` check is required and `enforce_admins` is on, so even the
    owner cannot push a red commit directly. Conventional-commit subjects
@@ -411,8 +415,10 @@ the rule that prevents it — with the enforcement layer where one exists.
   strength of a generic "continue" or "use best judgment". → Restate the
   exact command and its blast radius and get explicit operator confirmation
   first. No exceptions.
-- **The Mega Commit.** One commit mixing source, docs, and `.cadence/`
-  state. → Two-commit settle convention; one logical change per PR.
+- **The Multi-Phase Commit.** Bundling more than one phase's work into a
+  single commit or PR. → Single-commit settle convention means one
+  *phase's* source + tests + docs + artifacts land together — not multiple
+  phases squashed into one shot. One phase, one commit, one PR.
 - **The Deferred Changeset.** Merging a feature PR without a
   `.changeset/*.md`. → The feature PR carries its changeset; the release PR
   only consumes them.

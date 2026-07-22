@@ -20,7 +20,7 @@ adapters, and an MCP server — for four current entry points, not separate tool
 Read in this order:
 
 - **[Quickstart](quickstart.md)** — Try the no-install demo, start a real phase from a template, or walk the full loop end-to-end.
-- **[Concepts](concepts.md)** — Understand the loop, gates, profiles, and two-commit convention that everything else builds on.
+- **[Concepts](concepts.md)** — Understand the loop, gates, profiles, and single-commit convention that everything else builds on.
 - **[CLI guide](cli.md)** — Master the `cadence` command-line tool: all subcommands, flags, and workflows.
 - **[Claude Code integration](claude-code.md)** — Set up and use the Claude Code slash commands and understand how the adapter bridges the CLI engine.
 - **[Host adapters](host-adapters.md)** - Understand the shared adapter contract used by Claude Code and Codex.

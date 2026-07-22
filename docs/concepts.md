@@ -23,7 +23,7 @@ See [the user guide](README.md#one-engine-three-surface-categories) and
 ## Table of contents
 
 - [The loop](#the-loop) (incl. the optional [SPEC](#spec-optional) stage)
-- [Two-commit convention](#two-commit-convention)
+- [Single-commit convention](#single-commit-convention)
 - [Profiles × tiers](#profiles--tiers)
 - [The gate universe](#the-gate-universe)
 - [Providers](#providers)
@@ -153,22 +153,24 @@ doc read-only alongside live state. See
 
 ---
 
-## Two-commit convention
+## Single-commit convention
 
-A completed phase produces exactly two commits, in order:
+A completed phase produces exactly one commit, once the loop's own gates have
+verified the work:
 
 | Commit | Prefix | Contents |
 |---|---|---|
-| Feature commit | `feat:` / `docs:` / `fix:` etc. | Source changes, tests, and documentation |
-| Settle commit | `chore: settle` | Phase artifacts (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`, `-PLAN-REVIEW.json`) — `STATE.md`/`state.json` are gitignored and never committed |
+| Settle commit | `feat:` / `docs:` / `fix:` etc. | Source changes, tests, documentation, and phase artifacts (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`, `-PLAN-REVIEW.json`) together — `STATE.md`/`state.json` are gitignored and never committed |
 
-**Why the split?** Keeping artifacts out of the feature commit means `git log
---no-merges` stays readable, blame on source files is uncontaminated by
-mechanical state writes, and CI diffs are scoped to code. The settle commit is a
-single atomic record of the gate outcomes, making audit straightforward.
+**Why one commit?** The gates already re-verified the work before this
+point — there's nothing left to prove by holding artifacts back for a
+second commit afterward. If the phase closes a Praxis recommendation,
+promote it to `shipped` in this same commit rather than a later pass, so
+the recommendation ledger never drifts out of sync with what's actually
+landed.
 
-The split is enforced by CADENCE's own dogfooding process (the framework uses
-the convention on itself), not by a mechanical hook — you own the two commits.
+This is operator convention (CADENCE dogfoods it on itself), not a
+mechanical hook — you own the single commit.
 
 See `docs/cli.md` for the commands that drive each step.
 

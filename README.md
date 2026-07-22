@@ -173,7 +173,7 @@ Driving it from **another MCP host** (Claude Desktop, Cursor, an agent)? Point t
 See **[docs/README.md](./docs/README.md)** for the complete user guide:
 
 - [Quickstart](./docs/quickstart.md) — no-install demo, first real template, and full loop walkthrough
-- [Concepts](./docs/concepts.md) — the loop, gates, profiles, and two-commit convention
+- [Concepts](./docs/concepts.md) — the loop, gates, profiles, and single-commit convention
 - [CLI guide](./docs/cli.md) — all subcommands and flags
 - [Claude Code integration](./docs/claude-code.md) — hooks and slash commands
 - [MCP server](./docs/mcp.md) — drive the loop from any MCP host (`cadence mcp serve`)

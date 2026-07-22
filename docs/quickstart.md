@@ -38,7 +38,7 @@ New and not sure? Run `cadence start` for a guided menu that picks the right set
 - [Step 5 — Approve and enter BUILD](#step-5--approve-and-enter-build)
 - [Step 6 — Implement and record tasks](#step-6--implement-and-record-tasks)
 - [Step 7 — Settle the phase](#step-7--settle-the-phase)
-- [Step 8 — Two-commit wrap-up](#step-8--two-commit-wrap-up)
+- [Step 8 — Single-commit wrap-up](#step-8--single-commit-wrap-up)
 - [Claude Code surface](#claude-code-surface)
 - [MCP surface](#mcp-surface)
 
@@ -458,23 +458,20 @@ NEXT: cadence draft new <phase> <num> --title=…
 
 ---
 
-## Step 8 — Two-commit wrap-up
+## Step 8 — Single-commit wrap-up
 
-A completed phase produces exactly **two commits**, in order:
+A completed phase produces exactly **one commit**, once the gates have
+verified the work:
 
 ```sh
-# Commit 1 — your code change
-git add src/greet.js src/greet.test.js
-git commit -m "feat: add greeting module"
-
-# Commit 2 — phase artifacts
-git add .cadence/
-git commit -m "chore: settle 01-01 — add greeting module"
+git add src/greet.js src/greet.test.js .cadence/
+git commit -m "feat: add greeting module (01-01)"
 ```
 
-Why two commits? Source changes stay clean and blame-friendly; settle artifacts
-(SUMMARY, PROGRESS, state files) land in a single, atomic audit record. See
-[docs/concepts.md — Two-commit convention](concepts.md#two-commit-convention)
+Why one commit? The gates already re-verified the work before this point —
+source, tests, and settle artifacts (SUMMARY, PROGRESS) land together in a
+single, atomic record. See
+[docs/concepts.md — Single-commit convention](concepts.md#single-commit-convention)
 for the full rationale.
 
 ---
