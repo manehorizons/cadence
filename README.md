@@ -60,7 +60,9 @@ See [GitHub Releases](https://github.com/manehorizons/cadence/releases) for pack
 
 Cadence grew out of working with **GSD (Get Shit Done)** — a planning framework that produces genuinely disciplined work, but at a real cost in tokens, wall-clock time, and constant back-and-forth. I wanted that discipline without that cost.
 
-So Cadence isn't GSD-lite. It keeps the quality gates — they re-check your acceptance criteria and refuse to settle unverified work — but lets you choose which gates fire for a given change. A complex, risky change gets the full battery; a one-line fix doesn't pay for it. Same rigor, far less drag.
+But the cost wasn't the real trigger — it was what happened at the *end* of the loop. GSD and Superpowers both build in real discipline: planning up front, TDD cycles, checkpoints along the way. Both also ask the agent to verify its own work before calling it done. Neither, though, re-derives "done" from the actual state of the repo, independent of what the agent says it saw. An agent that's convinced itself the tests pass — or quietly gutted the one that didn't — still gets to mark the task complete, and nothing downstream catches it.
+
+That's the gap Cadence closes. It isn't GSD-lite: it keeps the quality gates that re-check your acceptance criteria, but adds a settle step that never takes the agent's self-report as proof — it re-derives each AC's PASS from real evidence (task state, test results, diffs) and refuses to close the loop when the evidence doesn't back the claim. The gate set is configurable per change too, so a complex, risky change gets the full battery and a one-line fix doesn't pay for it. Same rigor GSD has, plus the verification neither GSD nor Superpowers do, minus the drag.
 
 ## One engine, three surface categories
 
