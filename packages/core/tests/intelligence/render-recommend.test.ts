@@ -71,7 +71,7 @@ describe('renderRecommendMd', () => {
     expect(md).not.toMatch(/showing top/);
   });
 
-  it('renders the empty-ledger shape', () => {
+  it('AC-3: renders the empty-ledger shape ("none exist") distinctly from "none actionable"', () => {
     const md = renderRecommendMd({
       ...base,
       ranked: [],
@@ -80,11 +80,65 @@ describe('renderRecommendMd', () => {
       advisory: { kind: 'empty', primary: 'No actionable recommendations — add one with `cadence recommendation add`.' },
       totals: { total: 0, ranked: 0, parked: 0, needsAttention: 0, excluded: 0 },
     });
-    expect(md).toMatch(/No actionable recommendations\./);
+    expect(md).toMatch(/No recommendations exist yet\./);
+    expect(md).toMatch(/precondition: the ledger has zero recommendations\./);
+    expect(md).toMatch(/fix: `cadence recommendation add`.*or `cadence scout`/);
+    // the "none exist" copy must not be confusable with the "none actionable" copy
+    expect(md).not.toMatch(/No actionable recommendations\./);
     expect(md).toMatch(/## Ranked/);
     expect(md).toMatch(/## Parked \(deferred\)\n\nNone\./);
     expect(md).toMatch(/## Needs attention \(superseded \/ contradicted\)\n\nNone\./);
     expect(md).toMatch(/total 0 · ranked 0 · parked 0 · needs-attention 0 · excluded 0/);
+  });
+
+  it('AC-3: "none actionable" (candidates exist but filtered out) names the nearest parked candidate and the exact unblocking command', () => {
+    const md = renderRecommendMd({
+      ...base,
+      ranked: [],
+      parked: [
+        { id: 'rec-p1', title: 'shelved idea', status: 'deferred', readiness: 'needs-decision' },
+        { id: 'rec-p2', title: 'other shelved idea', status: 'deferred', readiness: 'raw-idea' },
+      ],
+      needsAttention: [],
+      advisory: { kind: 'empty', primary: 'No actionable recommendations — add one with `cadence recommendation add`.' },
+      totals: { total: 2, ranked: 0, parked: 2, needsAttention: 0, excluded: 0 },
+    });
+    expect(md).toMatch(/No actionable recommendations\./);
+    expect(md).toMatch(
+      /precondition: 2 recommendation\(s\) exist, but none are in the live\/scoreable partition — 2 parked \(deferred\), 0 flagged needs-attention, 0 excluded/,
+    );
+    expect(md).toMatch(/nearest: rec-p1 — shelved idea \(deferred, ready: needs-decision\)/);
+    expect(md).toMatch(/unblock: `cadence recommendation promote rec-p1 --status=candidate`/);
+    // not the "none exist" copy
+    expect(md).not.toMatch(/No recommendations exist yet\./);
+  });
+
+  it('AC-3: "none actionable" falls back to the nearest needs-attention candidate when nothing is parked', () => {
+    const md = renderRecommendMd({
+      ...base,
+      ranked: [],
+      parked: [],
+      needsAttention: [{ id: 'rec-na1', title: 'possibly stale', decayState: 'superseded' }],
+      advisory: { kind: 'empty', primary: 'No actionable recommendations — add one with `cadence recommendation add`.' },
+      totals: { total: 1, ranked: 0, parked: 0, needsAttention: 1, excluded: 0 },
+    });
+    expect(md).toMatch(/nearest: rec-na1 — possibly stale \(decay: superseded\)/);
+    expect(md).toMatch(/unblock: `cadence inspect` to review and revalidate it before it can rank again/);
+  });
+
+  it('AC-3: "none actionable" with only status-excluded recs names no candidate but still points at `cadence recommendation list`', () => {
+    const md = renderRecommendMd({
+      ...base,
+      ranked: [],
+      parked: [],
+      needsAttention: [],
+      advisory: { kind: 'empty', primary: 'No actionable recommendations — add one with `cadence recommendation add`.' },
+      totals: { total: 1, ranked: 0, parked: 0, needsAttention: 0, excluded: 1 },
+    });
+    expect(md).toMatch(/No actionable recommendations\./);
+    expect(md).toMatch(
+      /no nameable near-miss in this report — the rest are rejected\/converted\/shipped\/settle-pending; run `cadence recommendation list`/,
+    );
   });
 
   it('renders the finish-loop advisory secondary', () => {

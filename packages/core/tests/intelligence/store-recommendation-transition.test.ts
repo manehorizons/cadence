@@ -88,9 +88,18 @@ describe('applyRecommendationTransition (Slice 34.1 pure helper)', () => {
   });
 
   it.each([
-    ['deferred',  'cannot convert recommendation in status deferred'],
-    ['rejected',  'cannot convert recommendation in status rejected'],
-    ['converted', 'cannot convert recommendation in status converted'],
+    [
+      'deferred',
+      'cannot convert recommendation in status deferred — run `cadence recommendation promote rec-1 --status=accepted` to reach an eligible status, then retry `cadence recommendation convert`',
+    ],
+    [
+      'rejected',
+      'cannot convert recommendation in status rejected — run `cadence recommendation promote rec-1 --status=accepted` to reach an eligible status, then retry `cadence recommendation convert`',
+    ],
+    [
+      'converted',
+      'cannot convert recommendation in status converted — run `cadence recommendation promote rec-1 --status=accepted` to reach an eligible status, then retry `cadence recommendation convert`',
+    ],
   ] as const)('convert refused from %s', (status, expectedError) => {
     const ledger = mkLedger([mkRec('rec-1', status)]);
     const res = applyRecommendationTransition(ledger, 'rec-1', 'convert', '34.1-x', now);
@@ -100,7 +109,10 @@ describe('applyRecommendationTransition (Slice 34.1 pure helper)', () => {
   it('id not in ledger', () => {
     const ledger = mkLedger([]);
     const res = applyRecommendationTransition(ledger, 'rec-bogus', 'convert', '34.1-x', now);
-    expect(res).toEqual({ ok: false, error: 'recommendation rec-bogus not found' });
+    expect(res).toEqual({
+      ok: false,
+      error: 'recommendation rec-bogus not found. Run `cadence recommendation list` to browse.',
+    });
   });
 
   it('idempotency-by-refusal: re-convert refused because status is converted', () => {
@@ -110,7 +122,8 @@ describe('applyRecommendationTransition (Slice 34.1 pure helper)', () => {
     const res = applyRecommendationTransition(ledger, 'rec-1', 'convert', '34.1-y', now);
     expect(res).toEqual({
       ok: false,
-      error: 'cannot convert recommendation in status converted',
+      error:
+        'cannot convert recommendation in status converted — run `cadence recommendation promote rec-1 --status=accepted` to reach an eligible status, then retry `cadence recommendation convert`',
     });
   });
 
@@ -181,7 +194,11 @@ describe('runRecommendationTransition (Slice 34.1 I/O wrapper)', () => {
       'convert',
       'missing-phase',
     );
-    expect(res).toEqual({ ok: false, error: 'cannot convert: phase missing-phase not found' });
+    expect(res).toEqual({
+      ok: false,
+      error:
+        'cannot convert: phase missing-phase not found — create it first via `cadence draft new missing-phase`, or pass an existing --to-phase',
+    });
     expect(await readFile(jsonPath, 'utf8')).toBe(jsonBefore);
     expect(await readFile(mdPath, 'utf8')).toBe(mdBefore);
   });
@@ -195,7 +212,7 @@ describe('runRecommendationTransition (Slice 34.1 I/O wrapper)', () => {
     const res = await runRecommendationTransition(active.root, recId, 'convert', '34.1-x');
     expect(res).toEqual({
       ok: false,
-      error: 'cannot convert recommendation in status deferred',
+      error: `cannot convert recommendation in status deferred — run \`cadence recommendation promote ${recId} --status=accepted\` to reach an eligible status, then retry \`cadence recommendation convert\``,
     });
     expect(await readFile(jsonPath, 'utf8')).toBe(jsonBefore);
   });
@@ -206,7 +223,10 @@ describe('runRecommendationTransition (Slice 34.1 I/O wrapper)', () => {
     const jsonPath = join(active.root, '.cadence/intelligence/recommendations.json');
     expect(existsSync(jsonPath)).toBe(false);
     const res = await runRecommendationTransition(active.root, 'rec-bogus', 'convert', '34.1-x');
-    expect(res).toEqual({ ok: false, error: 'recommendation rec-bogus not found' });
+    expect(res).toEqual({
+      ok: false,
+      error: 'recommendation rec-bogus not found. Run `cadence recommendation list` to browse.',
+    });
     expect(existsSync(jsonPath)).toBe(false);
   });
 
@@ -214,7 +234,11 @@ describe('runRecommendationTransition (Slice 34.1 I/O wrapper)', () => {
     active = await tempRepo({ initialized: true, projectName: 'slice34_1' });
     // No phase dir; no recs.
     const res = await runRecommendationTransition(active.root, 'rec-bogus', 'convert', 'missing-phase');
-    expect(res).toEqual({ ok: false, error: 'cannot convert: phase missing-phase not found' });
+    expect(res).toEqual({
+      ok: false,
+      error:
+        'cannot convert: phase missing-phase not found — create it first via `cadence draft new missing-phase`, or pass an existing --to-phase',
+    });
   });
 
   it('FK rejects a file at the phase path (must be a directory)', async () => {
@@ -225,6 +249,10 @@ describe('runRecommendationTransition (Slice 34.1 I/O wrapper)', () => {
     await mkdir(join(active.root, '.cadence/phases'), { recursive: true });
     await writeFile(join(active.root, '.cadence/phases', 'not-a-dir'), 'sentinel', 'utf8');
     const res = await runRecommendationTransition(active.root, recId, 'convert', 'not-a-dir');
-    expect(res).toEqual({ ok: false, error: 'cannot convert: phase not-a-dir not found' });
+    expect(res).toEqual({
+      ok: false,
+      error:
+        'cannot convert: phase not-a-dir not found — create it first via `cadence draft new not-a-dir`, or pass an existing --to-phase',
+    });
   });
 });

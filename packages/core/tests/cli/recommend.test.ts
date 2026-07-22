@@ -67,11 +67,37 @@ describe('cadence recommend', () => {
     expect(Array.isArray(parsed.ranked)).toBe(true);
   });
 
-  it('degrades cleanly with no .cadence backend', async () => {
+  it('AC-3: degrades cleanly with no .cadence backend, distinguishing "none exist" from "none actionable"', async () => {
     active = await tempRepo({ initialized: false });
     const r = await run(['recommend'], active.root);
     expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/No recommendations exist yet\./);
+    expect(r.stdout).toMatch(/precondition: the ledger has zero recommendations\./);
+    expect(r.stdout).not.toMatch(/No actionable recommendations\./);
+  });
+
+  it('AC-3: "none actionable" — a deferred-only ledger names the nearest candidate and the exact unblocking command', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'recommend-none-actionable' });
+    const added = await run(
+      ['recommendation', 'add', '--title', 'shelved idea', '--summary', 's', '--readiness', 'needs-decision'],
+      active.root,
+    );
+    const id = /^Added (\S+):/.exec(added.stdout)?.[1];
+    expect(id).toBeTruthy();
+    const promoted = await run(
+      ['recommendation', 'promote', id!, '--status=deferred'],
+      active.root,
+    );
+    expect(promoted.code).toBe(0);
+
+    const r = await run(['recommend'], active.root);
+    expect(r.code).toBe(0);
     expect(r.stdout).toMatch(/No actionable recommendations\./);
+    expect(r.stdout).toMatch(
+      /precondition: 1 recommendation\(s\) exist, but none are in the live\/scoreable partition — 1 parked \(deferred\)/,
+    );
+    expect(r.stdout).toMatch(new RegExp(`nearest: ${id} — shelved idea \\(deferred, ready: needs-decision\\)`));
+    expect(r.stdout).toMatch(new RegExp(`unblock: \`cadence recommendation promote ${id} --status=candidate\``));
   });
 
   it('--top 1 shows only the top-ranked recommendation but totals.ranked reports the full count', async () => {

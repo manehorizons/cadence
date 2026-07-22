@@ -57,6 +57,40 @@ async function seedRecs(root: string): Promise<void> {
   );
 }
 
+// AC-2: seeds a single recommendation that is in the ledger's live partition
+// (status `candidate`) but fails the milestone-eligibility bar on both status
+// and readiness — the nearest-miss candidate `buildEmptyResultMessage` should
+// surface via `findNearestCandidates`.
+async function seedNearMissRec(root: string): Promise<string> {
+  const dir = join(root, '.cadence', 'intelligence');
+  await mkdir(dir, { recursive: true });
+  const rec = {
+    id: 'rec-near',
+    title: 'Almost there',
+    summary: 'A recommendation that has not yet been accepted or scoped',
+    source: 'manual',
+    status: 'candidate',
+    readiness: 'needs-decision',
+    priority: 'high',
+    leverageScore: 5,
+    riskScore: 2,
+    confidence: 0.8,
+    decayState: 'fresh',
+    affectedAreas: [],
+    affectedFiles: [],
+    evidenceIds: [],
+    assumptionIds: [],
+    decisionIds: [],
+    createdAt: '2026-05-17T00:00:00.000Z',
+    updatedAt: '2026-05-17T00:00:00.000Z',
+  };
+  await writeFile(
+    join(dir, 'recommendations.json'),
+    JSON.stringify({ schemaVersion: 1, recommendations: [rec] }, null, 2),
+  );
+  return rec.id;
+}
+
 let active: Fixture | null = null;
 afterEach(async () => {
   if (active) {
@@ -124,6 +158,103 @@ describe('cadence milestone', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toMatch(/## Proposed/);
     expect(r.stdout).toMatch(/None\./);
+    // AC-2: the real CLI command (not just the MCP tool) states the
+    // eligibility precondition in concrete terms even with a totally empty
+    // recommendation ledger (no nearest-miss candidate to name here).
+    expect(r.stdout).toContain('status=accepted');
+    expect(r.stdout).toContain('ready-for-milestone');
+    expect(r.stdout).toContain('ready-for-cadence-spec');
+    expect(r.stdout).not.toContain('cadence recommendation promote');
+  });
+
+  it('AC-2: propose CLI names the nearest-miss candidate and prints the exact fix command', async () => {
+    active = await tempRepo({ initialized: true });
+    const nearMissId = await seedNearMissRec(active.root);
+
+    const r = await run(['milestone', 'propose'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toMatch(/## Proposed/);
+    expect(r.stdout).toMatch(/None\./);
+    // States the eligibility precondition in concrete terms.
+    expect(r.stdout).toContain('status=accepted');
+    expect(r.stdout).toContain('ready-for-milestone');
+    expect(r.stdout).toContain('ready-for-cadence-spec');
+    // Names the nearest-miss candidate with what it's missing.
+    expect(r.stdout).toContain(nearMissId);
+    expect(r.stdout).toContain('candidate');
+    expect(r.stdout).toContain('needs-decision');
+    // Prints the exact fix command with the real id, not a placeholder.
+    expect(r.stdout).toContain(
+      `cadence recommendation promote ${nearMissId} --status=accepted --readiness=ready-for-milestone`,
+    );
+  });
+
+  it('AC-2: enrichment still fires when the ledger already has an old accepted milestone but zero NEW proposals this run', async () => {
+    active = await tempRepo({ initialized: true });
+    const dir = join(active.root, '.cadence', 'intelligence');
+    await mkdir(dir, { recursive: true });
+    // A milestone accepted in a prior run: ledger.milestones.length > 0, but
+    // it is NOT status `proposed`, so the wrong trigger condition
+    // (`ledger.milestones.length === 0`) would incorrectly suppress the
+    // enrichment here.
+    await writeFile(
+      join(dir, 'milestones.json'),
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          milestones: [
+            {
+              id: 'mil-old',
+              name: 'Old accepted milestone',
+              objective: 'already accepted in a prior run',
+              status: 'accepted',
+              recommendationIds: ['rec-old'],
+              preMortem: {
+                likelyFailureModes: [],
+                hiddenDependencies: [],
+                driftRisks: [],
+                outOfScope: [],
+              },
+              exportTargets: [],
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+    // No recommendations file at all -> zero eligible, zero pool this run.
+
+    const r = await run(['milestone', 'propose'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/## Accepted/);
+    expect(r.stdout).toMatch(/mil-old/); // old milestone still rendered as-is
+    expect(r.stdout).toMatch(/## Proposed/);
+    expect(r.stdout).toMatch(/None\./);
+    // The crux of the fix: enrichment fires even though ledger.milestones is
+    // non-empty, because zero NEW `proposed` milestones came out of this run.
+    expect(r.stdout).toContain('status=accepted');
+    expect(r.stdout).toContain('ready-for-milestone');
+    expect(r.stdout).toContain('ready-for-cadence-spec');
+  });
+
+  it('AC-2: propose --json output is completely unaffected by the empty-result enrichment', async () => {
+    active = await tempRepo({ initialized: true });
+    await seedNearMissRec(active.root);
+
+    const r = await run(['milestone', 'propose', '--json'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    // JSON.parse throws if any enrichment text leaked into stdout after the
+    // JSON payload — this is a stronger check than a substring match.
+    const parsed = JSON.parse(r.stdout);
+    expect(parsed.schemaVersion).toBe(1);
+    expect(parsed.milestones).toEqual([]);
+    expect(r.stdout).not.toContain('cadence recommendation promote');
+    expect(r.stdout).not.toContain('milestone-eligibility bar');
   });
 
   it('corrupt milestones.json -> list exits 1 and does not silently reset it', async () => {

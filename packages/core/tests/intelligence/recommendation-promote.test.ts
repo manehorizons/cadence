@@ -125,7 +125,10 @@ describe('applyRecommendationPromotion (phase 57 pure helper)', () => {
       { status: 'accepted' },
       now,
     );
-    expect(res).toEqual({ ok: false, error: 'recommendation rec-bogus not found' });
+    expect(res).toEqual({
+      ok: false,
+      error: 'recommendation rec-bogus not found. Run `cadence recommendation list` to browse.',
+    });
   });
 
   it('does not mutate the input ledger', () => {

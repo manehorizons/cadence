@@ -16,16 +16,21 @@ function mkRollup(overrides: Partial<RetroRollup> = {}): RetroRollup {
 }
 
 describe('renderRetroRollup', () => {
-  it('prints a "nothing to report" message for an all-zero rollup (totalPhases 0)', () => {
+  it('AC-6: names the unmet precondition and the check-loop-position command when zero phases have been scanned (totalPhases 0)', () => {
     const md = renderRetroRollup(mkRollup());
-    expect(md).toContain('0 phase(s) scanned, no friction to report.');
+    expect(md).toContain('No settled phases yet');
+    expect(md).toContain('cadence progress');
+    expect(md).not.toContain('no friction to report.');
     expect(md).not.toContain('## Gate bypasses');
     expect(md).not.toContain('### Recurring');
   });
 
-  it('prints a "nothing to report" message when phases were scanned but all dimensions are empty', () => {
+  it('AC-6: renders a distinct, non-error "clean result" message when phases were scanned but found zero friction', () => {
     const md = renderRetroRollup(mkRollup({ totalPhases: 3, phasesWithFriction: 0 }));
-    expect(md).toContain('no friction to report.');
+    expect(md).toContain('3 phase(s) scanned');
+    expect(md).toContain('no friction found');
+    expect(md).not.toContain('No settled phases yet');
+    expect(md).not.toContain('cadence progress');
     expect(md).not.toContain('## Gate bypasses');
   });
 
