@@ -87,6 +87,116 @@ describe('milestoneProposeService (phase 153)', () => {
     expect(data.milestones).toEqual([]);
   });
 
+  // AC-2: given zero recommendations meet the milestone-eligibility bar, the
+  // empty-result message must state the precondition in concrete terms, name
+  // the nearest-miss candidate with what it's missing, and print the exact
+  // `cadence recommendation promote <id> --status=... --readiness=...`
+  // command to fix the closest one — computed via the shared
+  // `findNearestCandidates` helper (packages/core/src/intelligence/
+  // nearest-candidate.ts) rather than a bare count.
+  it('AC-2: enriches the zero-eligible empty result with precondition, nearest miss, and fix command', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'milestone-propose-svc-ac2' });
+
+    // Seeded with `needs-decision` readiness and default `candidate` status —
+    // in the ledger's live partition, but fails the milestone-eligibility bar
+    // on both status and readiness, so it's the nearest miss.
+    const nearMissId = (
+      await addRecommendation(active.root, {
+        title: 'Almost there',
+        summary: 'A recommendation that has not yet been accepted or scoped',
+        priority: 'high',
+        readiness: 'needs-decision',
+        affectedAreas: [],
+        affectedFiles: [],
+      })
+    ).id;
+
+    const io = bufferIO();
+    const res = await milestoneProposeService(active.root, {}, io);
+
+    expect(res.exitCode).toBe(0);
+    const data = res.data as { milestones: unknown[] };
+    expect(data.milestones).toEqual([]);
+
+    const stdout = io.stdout();
+    // States the eligibility precondition in concrete terms.
+    expect(stdout).toContain('status=accepted');
+    expect(stdout).toContain('ready-for-milestone');
+    expect(stdout).toContain('ready-for-cadence-spec');
+    // Names the nearest-miss candidate with what it's missing.
+    expect(stdout).toContain(nearMissId);
+    expect(stdout).toContain('candidate');
+    expect(stdout).toContain('needs-decision');
+    // Prints the exact fix command with the real id, not a placeholder.
+    expect(stdout).toContain(
+      `cadence recommendation promote ${nearMissId} --status=accepted --readiness=ready-for-milestone`,
+    );
+  });
+
+  // AC-2 edge case: an empty ledger (no recommendations at all) has no
+  // nearest-miss candidate to name — the enrichment must still state the
+  // precondition without fabricating a candidate or command.
+  it('AC-2: empty ledger states the precondition without a fabricated nearest-miss or command', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'milestone-propose-svc-ac2-empty' });
+
+    const io = bufferIO();
+    const res = await milestoneProposeService(active.root, {}, io);
+
+    expect(res.exitCode).toBe(0);
+    const data = res.data as { milestones: unknown[] };
+    expect(data.milestones).toEqual([]);
+
+    const stdout = io.stdout();
+    expect(stdout).toContain('status=accepted');
+    expect(stdout).toContain('ready-for-milestone');
+    expect(stdout).not.toContain('cadence recommendation promote');
+  });
+
+  // AC-2 regression (whole-branch review, phase 207): `runProposeMilestones`
+  // returns the FULL historical ledger (survivors + freshly-clustered), not
+  // just this run's output, so `ledger.milestones.length === 0` is the wrong
+  // empty-this-run signal — it would wrongly suppress the enrichment
+  // whenever any old accepted/deferred/exported/closed milestone survives
+  // from a past run. The CLI's own call site (cli/commands/milestone.ts)
+  // was already fixed to key on "zero newly-proposed" instead; this test
+  // pins the same fix on the MCP-facing `milestoneProposeService`, which a
+  // first fix round missed because it was told not to touch this file.
+  it('AC-2: enrichment still fires when the ledger already has an old accepted milestone but zero NEW proposals this run', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'milestone-propose-svc-ac2-old' });
+    const recId = await seedEligibleRec(active.root);
+
+    const io = bufferIO();
+    const first = await milestoneProposeService(active.root, {}, io);
+    expect(first.exitCode).toBe(0);
+    const firstData = first.data as {
+      milestones: Array<{ id: string; status: string; recommendationIds: string[] }>;
+    };
+    const proposedMilestone = firstData.milestones.find(
+      (m) => m.status === 'proposed' && m.recommendationIds.includes(recId),
+    );
+    expect(proposedMilestone).toBeDefined();
+
+    // Accept it — now the ledger has one non-'proposed' (accepted) milestone,
+    // so `ledger.milestones.length` will be 1, not 0, on the next propose.
+    const accepted = await runMilestoneTransition(active.root, proposedMilestone!.id, 'accept');
+    expect(accepted.ok).toBe(true);
+
+    // Run propose again with zero new eligible recommendations.
+    const io2 = bufferIO();
+    const second = await milestoneProposeService(active.root, {}, io2);
+    expect(second.exitCode).toBe(0);
+    const secondData = second.data as { milestones: unknown[] };
+    // The old accepted milestone survives, so the ledger is NOT empty...
+    expect(secondData.milestones.length).toBe(1);
+
+    // ...but zero milestones were newly PROPOSED this run, so the
+    // enrichment must still fire (this is the exact predicate the bug got
+    // wrong — `.length === 0` would have been false here and suppressed it).
+    const stdout = io2.stdout();
+    expect(stdout).toContain('status=accepted');
+    expect(stdout).toContain('ready-for-milestone');
+  });
+
   // Phase 203 (T3): a milestone that is deferred then reopened must re-enter the
   // re-clustering pool on the next propose run, rather than being treated as a
   // permanent survivor whose recommendationIds stay claimed forever. This is an

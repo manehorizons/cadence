@@ -37,8 +37,16 @@ export function renderRetroRollup(rollup: RetroRollup): string {
     rollup.findingCategories.recurring.length === 0 &&
     rollup.findingCategories.oneOff.length === 0;
 
-  if (rollup.totalPhases === 0 || allDimensionsEmpty) {
-    return `# Retro Rollup\n\n${rollup.totalPhases} phase(s) scanned, no friction to report.\n`;
+  if (rollup.totalPhases === 0) {
+    return (
+      '# Retro Rollup\n\n' +
+      'No settled phases yet — there is nothing for retro to scan. ' +
+      "Run `cadence progress` to check the current loop position, then settle at least one phase before retrying `cadence retro`.\n"
+    );
+  }
+
+  if (allDimensionsEmpty) {
+    return `# Retro Rollup\n\n${rollup.totalPhases} phase(s) scanned, no friction found — clean result.\n`;
   }
 
   const lines: string[] = ['# Retro Rollup', ''];

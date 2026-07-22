@@ -6,7 +6,7 @@ import { loadStatus } from '../../status.js';
 import { resolveNextFreePhase } from '../../phases/next-free.js';
 import { readMilestoneLedger } from '../../intelligence/store/milestones.js';
 import { readRecommendationLedger } from '../../intelligence/store/io.js';
-import { partitionLedger, scoreRecommendation } from '../../intelligence/recommend.js';
+import { findNearestCandidates } from '../../intelligence/nearest-candidate.js';
 import { formatCommandError } from '../../services/format-command-error.js';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
 
@@ -70,25 +70,17 @@ async function resolveIdleLedgerHints(
     }
 
     // Same ranking `cadence recommend` surfaces as its top pick (raw score
-    // desc, then createdAt asc, then id asc) — never re-derived independently.
-    // `ranked` also includes already-`accepted` recs (partitionLedger only
-    // excludes rejected/converted/shipped/settle-pending), but an accepted
-    // rec is no longer "available to promote" — restrict to `candidate` so
-    // an already-promoted top-scorer doesn't get suggested for promotion
-    // again.
+    // desc, then createdAt asc, then id asc) — never re-derived
+    // independently, sourced via the shared `findNearestCandidates` helper
+    // (phase 207 T1). Its `ranked` partition also includes already-`accepted`
+    // recs (partitionLedger only excludes rejected/converted/shipped/
+    // settle-pending), but an accepted rec is no longer "available to
+    // promote" — the eligibility predicate restricts to `candidate` so an
+    // already-promoted top-scorer doesn't get suggested for promotion again.
     let topRecommendation: { id: string; title: string } | undefined;
-    const { ranked } = partitionLedger(recLedger.recommendations);
-    const promotable = ranked.filter((rec) => rec.status === 'candidate');
-    const scored = promotable
-      .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
-      .sort((a, b) => {
-        if (b.raw !== a.raw) return b.raw - a.raw;
-        if (a.rec.createdAt !== b.rec.createdAt) {
-          return a.rec.createdAt < b.rec.createdAt ? -1 : 1;
-        }
-        return a.rec.id < b.rec.id ? -1 : a.rec.id > b.rec.id ? 1 : 0;
-      });
-    const top = scored[0];
+    const { top } = findNearestCandidates(recLedger.recommendations, {
+      isEligible: (rec) => rec.status === 'candidate',
+    });
     if (top !== undefined) {
       topRecommendation = { id: top.rec.id, title: top.rec.title };
     }

@@ -561,6 +561,36 @@ loop id, or runs a gate.
 > concepts — see the project glossary, [`CONTEXT.md`](https://github.com/manehorizons/cadence/blob/main/CONTEXT.md), for the
 > canonical term for each (and the aliases to avoid).
 
+### Empty-result and refusal messages
+
+Any intelligence-layer command that can legitimately return "nothing" —
+`cadence recommend`, `cadence milestone propose`, `cadence recommendation
+promote`/`convert`/`list`, `cadence retro`, and future commands in this
+family — follows one invariant (established phase 207): every empty-result
+or refusal message states four things:
+
+- **why** — the reason nothing came back, in plain language.
+- **precondition** — the concrete unmet condition (e.g. "requires
+  status=accepted and readiness in {ready-for-milestone,
+  ready-for-cadence-spec}"), not a vague "no matches."
+- **nearest candidate(s)** — named from the ledger the command already
+  loaded, not a fresh query, so the message costs no extra I/O.
+- **exact command** — copy-pasteable with the real id/values already at
+  hand, not a placeholder.
+
+The preferred mechanism is the shared `findNearestCandidates` helper
+(`packages/core/src/intelligence/nearest-candidate.ts`), built on the same
+`partitionLedger` + `scoreRecommendation` ranking `cadence recommend` and
+`cadence next` already use, so a message's "nearest" never diverges from the
+ranking a user would see elsewhere. It isn't universal, though:
+`cadence recommend`'s own empty-ranked case is a documented exception — the
+report it renders from doesn't carry the raw scoring inputs the helper
+needs, so it names the first parked/needs-attention entry instead rather
+than standing up a second scoring path. When a command's "nearest" concept
+isn't ledger-ranking at all (an id typo, say), a small purpose-built matcher
+is fine too — recommendation-lookup refusals use an id prefix/substring
+matcher rather than the ranking helper or a general fuzzy-match library.
+
 ---
 
 ## Observability

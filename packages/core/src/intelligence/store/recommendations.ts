@@ -98,7 +98,10 @@ export async function addEvidenceToRecommendation(
   const evidenceLedger = await readEvidenceLedger(root);
   const target = ledger.recommendations.find((r) => r.id === input.recommendationId);
   if (!target) {
-    return { ok: false, error: `recommendation ${input.recommendationId} not found` };
+    return {
+      ok: false,
+      error: buildRecommendationNotFoundMessage(ledger, input.recommendationId),
+    };
   }
   const now = new Date();
   const ts = now.toISOString();
@@ -125,6 +128,77 @@ export async function addEvidenceToRecommendation(
   };
   await writeIntelligenceLedgers(root, ledgerOut, evidenceLedger);
   return { ok: true, evidence, recommendation: updatedRec };
+}
+
+// Phase 207 T4: shared "recommendation not found" message builder. Replaces the
+// near-duplicate `recommendation ${id} not found` sites below
+// (addEvidenceToRecommendation, applyRecommendationTransition,
+// applyRecommendationPromotion, archiveRecommendation, unarchiveRecommendation)
+// with one function so every refusal states: the id, an optional
+// distinguishing context (e.g. "in archived recommendations"), the nearest-ID
+// match already present in the loaded ledger, and the exact command to browse
+// and find the right id.
+export function buildRecommendationNotFoundMessage(
+  ledger: RecommendationLedger,
+  id: string,
+  context?: string,
+): string {
+  const candidateIds = [
+    ...ledger.recommendations.map((r) => r.id),
+    // `archived` carries a Zod `.default([])` — guard defensively in case a
+    // caller (e.g. a hand-built test ledger) omits it at the JS-object level.
+    ...(ledger.archived ?? []).map((r) => r.id),
+  ];
+  const nearest = nearestRecommendationId(id, candidateIds);
+  const contextSuffix = context ? ` ${context}` : '';
+  const suggestion = nearest ? ` Did you mean ${nearest}?` : '';
+  return `recommendation ${id} not found${contextSuffix}.${suggestion} Run \`cadence recommendation list\` to browse.`;
+}
+
+// Length of the literal `rec-YYYYMMDD-` date stem shared by every id minted
+// on the same day — the threshold below treats a shared stem this long as a
+// same-day match (the common typo: right date, wrong sequence number).
+const REC_ID_DATE_STEM_LENGTH = 'rec-YYYYMMDD-'.length;
+
+// Simple prefix/substring nearest-match — deliberately NOT a fuzzy-match /
+// Levenshtein library (out of scope for T4). Recommendation ids are the fixed
+// `rec-YYYYMMDD-NNN` shape, so:
+//   1. a long shared literal prefix (same `rec-YYYYMMDD-` date stem, wrong
+//      sequence number — the single most common typo) wins first, and
+//   2. a plain substring relationship (truncated id, partial paste) is the
+//      fallback.
+// `startsWith` alone is not enough here: two same-length ids differing only
+// in their trailing digits (the realistic "wrong sequence number" typo) are
+// never a prefix of one another, so the match is done by explicit common-
+// prefix length instead.
+function nearestRecommendationId(id: string, candidateIds: string[]): string | null {
+  const target = id.toLowerCase();
+  let bestPrefixMatch: string | null = null;
+  let bestPrefixLength = 0;
+  for (const candidate of candidateIds) {
+    const lower = candidate.toLowerCase();
+    if (lower === target) continue;
+    const prefixLength = commonPrefixLength(target, lower);
+    if (prefixLength > bestPrefixLength) {
+      bestPrefixLength = prefixLength;
+      bestPrefixMatch = candidate;
+    }
+  }
+  if (bestPrefixMatch && bestPrefixLength >= REC_ID_DATE_STEM_LENGTH) {
+    return bestPrefixMatch;
+  }
+  const substringMatch = candidateIds.find((c) => {
+    const lower = c.toLowerCase();
+    return lower !== target && (lower.includes(target) || target.includes(lower));
+  });
+  return substringMatch ?? null;
+}
+
+function commonPrefixLength(a: string, b: string): number {
+  const len = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < len && a[i] === b[i]) i++;
+  return i;
 }
 
 export function deriveRecommendationLinks(
@@ -180,11 +254,14 @@ export function applyRecommendationTransition(
   now: Date,
 ): RecommendationTransitionResult {
   const target = ledger.recommendations.find((r) => r.id === id);
-  if (!target) return { ok: false, error: `recommendation ${id} not found` };
+  if (!target) return { ok: false, error: buildRecommendationNotFoundMessage(ledger, id) };
   if (!RECOMMENDATION_TRANSITION_ALLOWED[action].includes(target.status)) {
     return {
       ok: false,
-      error: `cannot ${action} recommendation in status ${target.status}`,
+      error:
+        `cannot ${action} recommendation in status ${target.status}` +
+        ` — run \`cadence recommendation promote ${id} --status=accepted\` to reach an eligible` +
+        ` status, then retry \`cadence recommendation ${action}\``,
     };
   }
   const nextStatus = RECOMMENDATION_TRANSITION_NEXT[action];
@@ -232,32 +309,38 @@ export function applyRecommendationPromotion(
   now: Date,
 ): RecommendationTransitionResult {
   const target = ledger.recommendations.find((r) => r.id === id);
-  if (!target) return { ok: false, error: `recommendation ${id} not found` };
+  if (!target) return { ok: false, error: buildRecommendationNotFoundMessage(ledger, id) };
   if (changes.status === undefined && changes.readiness === undefined) {
     return {
       ok: false,
-      error: 'nothing to promote: provide --status and/or --readiness',
+      error:
+        'nothing to promote: provide --status and/or --readiness' +
+        ` (e.g. \`cadence recommendation promote ${id} --status=accepted --readiness=ready-for-milestone\`)`,
     };
   }
   if (changes.status === 'converted') {
     return {
       ok: false,
       error:
-        'cannot promote to converted — use `cadence recommendation convert` (it sets the phase link)',
+        `cannot promote to converted — use \`cadence recommendation convert ${id}` +
+        ` --to-phase <phaseId>\` (it sets the phase link)`,
     };
   }
   if (changes.status === 'settle-pending') {
     return {
       ok: false,
       error:
-        'cannot promote to settle-pending — it is set automatically when a converted recommendation\'s phase settles',
+        "cannot promote to settle-pending — it is set automatically when a converted recommendation's" +
+        ' phase settles (run `cadence settle run --auto` on that phase instead)',
     };
   }
   // Phase 100: `--ref` provenance is meaningful only for the shipped status.
   if (changes.shippedRef !== undefined && changes.status !== 'shipped') {
     return {
       ok: false,
-      error: 'shippedRef (--ref) is only valid when promoting to shipped',
+      error:
+        'shippedRef (--ref) is only valid when promoting to shipped' +
+        ` (use \`cadence recommendation promote ${id} --status=shipped --ref "<text>"\`)`,
     };
   }
   // Phase 100: `converted → shipped` is the sole transition out of an otherwise
@@ -273,9 +356,17 @@ export function applyRecommendationPromotion(
     !convertedToShipped &&
     !settlePendingToShipped
   ) {
+    // Phase 100/145: `converted`/`settle-pending` have exactly one sanctioned
+    // way out (promoting straight to shipped); `rejected`/`shipped` have none.
+    const canReachShipped =
+      target.status === 'converted' || target.status === 'settle-pending';
+    const hint = canReachShipped
+      ? ` — run \`cadence recommendation promote ${id} --status=shipped --ref "<text>"\`` +
+        ` (the sole transition out of ${target.status})`
+      : ` — no promotion is available from terminal status ${target.status}`;
     return {
       ok: false,
-      error: `cannot promote recommendation in terminal status ${target.status}`,
+      error: `cannot promote recommendation in terminal status ${target.status}${hint}`,
     };
   }
   const updatedAt = now.toISOString();
@@ -318,7 +409,10 @@ export function archiveRecommendation(
 ): RecommendationTransitionResult {
   const target = ledger.recommendations.find((r) => r.id === id);
   if (!target) {
-    return { ok: false, error: `recommendation ${id} not found in active recommendations` };
+    return {
+      ok: false,
+      error: buildRecommendationNotFoundMessage(ledger, id, 'in active recommendations'),
+    };
   }
   const stamp = now.toISOString();
   const archivedRec: Recommendation = {
@@ -348,7 +442,10 @@ export function unarchiveRecommendation(
 ): RecommendationTransitionResult {
   const target = ledger.archived.find((r) => r.id === id);
   if (!target) {
-    return { ok: false, error: `recommendation ${id} not found in archived recommendations` };
+    return {
+      ok: false,
+      error: buildRecommendationNotFoundMessage(ledger, id, 'in archived recommendations'),
+    };
   }
   // Drop the archive-only fields without leaving them set to undefined
   // (exactOptionalPropertyTypes forbids explicit undefined).
@@ -408,7 +505,12 @@ export async function runRecommendationTransition(
   // FK check FIRST so a missing phase is caught before any ledger read.
   // Mirrors Slice 28's --by precedence: validate FK before applying transition.
   if (!(await phaseDirectoryExists(root, toPhase))) {
-    return { ok: false, error: `cannot convert: phase ${toPhase} not found` };
+    return {
+      ok: false,
+      error:
+        `cannot convert: phase ${toPhase} not found` +
+        ` — create it first via \`cadence draft new ${toPhase}\`, or pass an existing --to-phase`,
+    };
   }
   const ledger = await readRecommendationLedger(root);
   const res = applyRecommendationTransition(ledger, id, action, toPhase, new Date());

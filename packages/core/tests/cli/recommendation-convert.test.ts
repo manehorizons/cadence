@@ -81,7 +81,9 @@ describe('cadence recommendation convert (Slice 34.1)', () => {
       active.root,
     );
     expect(r.code).toBe(1);
-    expect(r.stderr).toBe('recommendation convert refused: cannot convert: phase missing-phase not found\n');
+    expect(r.stderr).toBe(
+      'recommendation convert refused: cannot convert: phase missing-phase not found — create it first via `cadence draft new missing-phase`, or pass an existing --to-phase\n',
+    );
     expect(r.stdout).toBe('');
     expect(await readFile(jsonPath, 'utf8')).toBe(jsonBefore);
   });
@@ -94,7 +96,9 @@ describe('cadence recommendation convert (Slice 34.1)', () => {
       active.root,
     );
     expect(r.code).toBe(1);
-    expect(r.stderr).toBe('recommendation convert refused: recommendation rec-bogus not found\n');
+    expect(r.stderr).toBe(
+      'recommendation convert refused: recommendation rec-bogus not found. Run `cadence recommendation list` to browse.\n',
+    );
   });
 
   it('invalid from-status: deferred rec → exit 1, stderr reason', async () => {
@@ -111,7 +115,9 @@ describe('cadence recommendation convert (Slice 34.1)', () => {
       active.root,
     );
     expect(r.code).toBe(1);
-    expect(r.stderr).toBe('recommendation convert refused: cannot convert recommendation in status deferred\n');
+    expect(r.stderr).toBe(
+      `recommendation convert refused: cannot convert recommendation in status deferred — run \`cadence recommendation promote ${id} --status=accepted\` to reach an eligible status, then retry \`cadence recommendation convert\`\n`,
+    );
   });
 
   it('idempotency-by-refusal: second convert on already-converted rec is refused', async () => {
@@ -128,7 +134,9 @@ describe('cadence recommendation convert (Slice 34.1)', () => {
       active.root,
     );
     expect(refused.code).toBe(1);
-    expect(refused.stderr).toBe('recommendation convert refused: cannot convert recommendation in status converted\n');
+    expect(refused.stderr).toBe(
+      `recommendation convert refused: cannot convert recommendation in status converted — run \`cadence recommendation promote ${id} --status=accepted\` to reach an eligible status, then retry \`cadence recommendation convert\`\n`,
+    );
   });
 
   it('--to-phase is required: missing flag → exit 1 with commander error', async () => {

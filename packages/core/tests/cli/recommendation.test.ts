@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import type { Recommendation, RecommendationLedger } from '@manehorizons/cadence-types';
+import { applyRecommendationPromotion } from '../../src/intelligence/store/recommendations.js';
 
 const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
@@ -1113,6 +1115,302 @@ describe('cadence recommendation', () => {
       expect(r.stderr).toMatch(
         /recommendation evidence add refused: recommendation rec-99999999-999 not found/,
       );
+      // AC-4: even with no nearby ids in the (empty) ledger, the refusal still
+      // names the exact command to browse and find a valid id.
+      expect(r.stderr).toMatch(/Run `cadence recommendation list` to browse\./);
+    });
+
+    it('AC-4: not-found suggests the nearest-ID match from the loaded ledger', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_evidence_add_nearest' });
+      const added = await run(
+        ['recommendation', 'add', '--title', 'A', '--summary', 's'],
+        active.root,
+      );
+      const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1] as string;
+      expect(recId).toBeDefined();
+      // Same date prefix, wrong sequence number — a plausible typo of recId.
+      const nearMiss = recId.replace(/-(\d{3})$/, '-002');
+      expect(nearMiss).not.toBe(recId);
+
+      const r = await run(
+        ['recommendation', 'evidence', 'add', nearMiss, '--note', 'irrelevant'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(
+        new RegExp(
+          `recommendation evidence add refused: recommendation ${nearMiss} not found\\. Did you mean ${recId}\\? Run \`cadence recommendation list\` to browse\\.`,
+        ),
+      );
+    });
+  });
+
+  describe('T4: not-found and refusal message enrichment (AC-4/AC-5)', () => {
+    it('AC-4: recommendation convert routes not-found through the shared message + nearest match', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_convert_notfound' });
+      const added = await run(
+        ['recommendation', 'add', '--title', 'A', '--summary', 's'],
+        active.root,
+      );
+      const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1] as string;
+      const nearMiss = recId.replace(/-(\d{3})$/, '-777');
+      const { mkdir } = await import('node:fs/promises');
+      await mkdir(join(active.root, '.cadence/phases/t4-convert-phase'), { recursive: true });
+
+      const r = await run(
+        ['recommendation', 'convert', nearMiss, '--to-phase', 't4-convert-phase'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(
+        new RegExp(`recommendation ${nearMiss} not found\\. Did you mean ${recId}\\?`),
+      );
+      expect(r.stderr).toMatch(/Run `cadence recommendation list` to browse\./);
+    });
+
+    it('AC-4: recommendation promote routes not-found through the shared message + browse command', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_promote_notfound' });
+
+      const r = await run(
+        ['recommendation', 'promote', 'rec-99999999-042', '--status', 'accepted'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(/recommendation rec-99999999-042 not found\./);
+      expect(r.stderr).toMatch(/Run `cadence recommendation list` to browse\./);
+    });
+
+    it('AC-4: recommendation archive not-found names "in active recommendations" + browse command', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_archive_notfound' });
+
+      const r = await run(['recommendation', 'archive', 'rec-99999999-042'], active.root);
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(
+        /recommendation rec-99999999-042 not found in active recommendations\./,
+      );
+      expect(r.stderr).toMatch(/Run `cadence recommendation list` to browse\./);
+    });
+
+    it('AC-4: recommendation unarchive not-found names "in archived recommendations" + browse command', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_unarchive_notfound' });
+
+      const r = await run(['recommendation', 'unarchive', 'rec-99999999-042'], active.root);
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(
+        /recommendation rec-99999999-042 not found in archived recommendations\./,
+      );
+      expect(r.stderr).toMatch(/Run `cadence recommendation list` to browse\./);
+    });
+
+    it('AC-5: convert refusal keeps the concrete-status text and appends the unblocking promote command', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_convert_status' });
+      const added = await run(
+        ['recommendation', 'add', '--title', 'A', '--summary', 's'],
+        active.root,
+      );
+      const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1] as string;
+      const { mkdir } = await import('node:fs/promises');
+      await mkdir(join(active.root, '.cadence/phases/t4-status-phase'), { recursive: true });
+      // Mutate to 'deferred' — an ineligible source status for `convert`.
+      const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+      const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+      ledger.recommendations[0].status = 'deferred';
+      const { writeFile: wf } = await import('node:fs/promises');
+      await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+      const r = await run(
+        ['recommendation', 'convert', recId, '--to-phase', 't4-status-phase'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      // Existing concrete-status text retained verbatim.
+      expect(r.stderr).toMatch(/cannot convert recommendation in status deferred/);
+      // New: the exact unblocking command is appended.
+      expect(r.stderr).toMatch(
+        new RegExp(`cadence recommendation promote ${recId} --status=accepted`),
+      );
+    });
+
+    it('AC-5: convert refusal (phase FK miss) appends the exact phase-creation command', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_convert_phase_fk' });
+      const added = await run(
+        ['recommendation', 'add', '--title', 'A', '--summary', 's'],
+        active.root,
+      );
+      const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1] as string;
+
+      const r = await run(
+        ['recommendation', 'convert', recId, '--to-phase', 'no-such-phase'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(/cannot convert: phase no-such-phase not found/);
+      expect(r.stderr).toMatch(/cadence draft new no-such-phase/);
+    });
+
+    // AC-5: three of applyRecommendationPromotion's refusals are shadowed by
+    // the CLI's own earlier guard clauses (packages/core/src/cli/commands/
+    // recommendation.ts) and so are unreachable from the black-box CLI
+    // surface this file otherwise tests:
+    //   - no --status/--readiness at all → CLI prints its own
+    //     'recommendation promote: provide --status and/or --readiness'
+    //     before ever calling the store layer.
+    //   - `--status converted` / `--status settle-pending` → filtered out of
+    //     the CLI's `PROMOTE_STATUSES` allow-list ("invalid --status").
+    // Exercise the pure store-layer function directly instead (as the
+    // sibling unit test file `tests/intelligence/recommendation-promote.test.ts`
+    // already does for this same function) rather than asserting against a
+    // CLI-level message that isn't the one this task changed.
+    function mkRec(id: string, status: Recommendation['status']): Recommendation {
+      return {
+        id,
+        title: `${id} title`,
+        summary: `${id} summary`,
+        source: 'manual',
+        status,
+        readiness: 'raw-idea',
+        priority: 'medium',
+        leverageScore: 5,
+        riskScore: 5,
+        confidence: 0.5,
+        decayState: 'fresh',
+        affectedAreas: [],
+        affectedFiles: [],
+        evidenceIds: [],
+        assumptionIds: [],
+        decisionIds: [],
+        createdAt: '2026-05-25T00:00:00.000Z',
+        updatedAt: '2026-05-25T00:00:00.000Z',
+      };
+    }
+    function mkLedger(recs: Recommendation[]): RecommendationLedger {
+      return { schemaVersion: 1, recommendations: recs, archived: [] };
+    }
+
+    it('AC-5: "nothing to promote" refusal includes an example command', () => {
+      const ledger = mkLedger([mkRec('rec-1', 'candidate')]);
+      const res = applyRecommendationPromotion(
+        ledger,
+        'rec-1',
+        {},
+        new Date('2026-06-04T12:00:00.000Z'),
+      );
+      expect(res.ok).toBe(false);
+      if (res.ok) throw new Error('expected refusal');
+      // Existing concrete text retained verbatim.
+      expect(res.error).toMatch(/provide --status and\/or --readiness/);
+      // New: an example of the exact command shape.
+      expect(res.error).toMatch(/cadence recommendation promote rec-1 --status=accepted/);
+    });
+
+    it('AC-5: promote-to-converted refusal appends the full `convert --to-phase` command', () => {
+      const ledger = mkLedger([mkRec('rec-1', 'candidate')]);
+      const res = applyRecommendationPromotion(
+        ledger,
+        'rec-1',
+        { status: 'converted' },
+        new Date('2026-06-04T12:00:00.000Z'),
+      );
+      expect(res.ok).toBe(false);
+      if (res.ok) throw new Error('expected refusal');
+      // Existing concrete text retained verbatim.
+      expect(res.error).toMatch(/cannot promote to converted/);
+      // New: the exact unblocking command (with the real id and --to-phase).
+      expect(res.error).toMatch(/cadence recommendation convert rec-1 --to-phase <phaseId>/);
+    });
+
+    it('AC-5: promote-to-settle-pending refusal appends the `cadence settle run --auto` hint', () => {
+      const ledger = mkLedger([mkRec('rec-1', 'candidate')]);
+      const res = applyRecommendationPromotion(
+        ledger,
+        'rec-1',
+        { status: 'settle-pending' },
+        new Date('2026-06-04T12:00:00.000Z'),
+      );
+      expect(res.ok).toBe(false);
+      if (res.ok) throw new Error('expected refusal');
+      // Existing concrete text retained verbatim.
+      expect(res.error).toMatch(/cannot promote to settle-pending/);
+      // New: the exact unblocking command.
+      expect(res.error).toMatch(/cadence settle run --auto/);
+    });
+
+    it('AC-5: shippedRef-without-shipped refusal appends the exact `--status=shipped --ref` command', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_promote_shippedref' });
+      const added = await run(
+        ['recommendation', 'add', '--title', 'A', '--summary', 's'],
+        active.root,
+      );
+      const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1] as string;
+
+      const r = await run(
+        ['recommendation', 'promote', recId, '--status', 'accepted', '--ref', 'PR #1'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(/shippedRef \(--ref\) is only valid when promoting to shipped/);
+      expect(r.stderr).toMatch(
+        new RegExp(`cadence recommendation promote ${recId} --status=shipped --ref`),
+      );
+    });
+
+    it('AC-5: terminal-status refusal from a sole-exception status (converted) names the shipped escape hatch', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_promote_terminal_conv' });
+      const added = await run(
+        ['recommendation', 'add', '--title', 'A', '--summary', 's'],
+        active.root,
+      );
+      const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1] as string;
+      const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+      const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+      ledger.recommendations[0].status = 'converted';
+      ledger.recommendations[0].convertedToPhaseId = 't4-terminal-phase';
+      const { writeFile: wf } = await import('node:fs/promises');
+      await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+      const r = await run(
+        ['recommendation', 'promote', recId, '--status', 'accepted'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      // Existing concrete-status text retained verbatim.
+      expect(r.stderr).toMatch(/cannot promote recommendation in terminal status converted/);
+      // New: the sole sanctioned escape hatch is named explicitly.
+      expect(r.stderr).toMatch(
+        new RegExp(`cadence recommendation promote ${recId} --status=shipped --ref`),
+      );
+    });
+
+    it('AC-5: terminal-status refusal from a fully-terminal status (rejected) states no promotion is available', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'rec_t4_promote_terminal_rej' });
+      const added = await run(
+        ['recommendation', 'add', '--title', 'A', '--summary', 's'],
+        active.root,
+      );
+      const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1] as string;
+      const ledgerPath = join(active.root, '.cadence/intelligence/recommendations.json');
+      const ledger = JSON.parse(await readFile(ledgerPath, 'utf8'));
+      ledger.recommendations[0].status = 'rejected';
+      const { writeFile: wf } = await import('node:fs/promises');
+      await wf(ledgerPath, JSON.stringify(ledger, null, 2));
+
+      const r = await run(
+        ['recommendation', 'promote', recId, '--status', 'accepted'],
+        active.root,
+      );
+
+      expect(r.code).not.toBe(0);
+      expect(r.stderr).toMatch(/cannot promote recommendation in terminal status rejected/);
+      expect(r.stderr).toMatch(/no promotion is available from terminal status rejected/);
     });
   });
 });
