@@ -20,7 +20,7 @@ async function tempDir(): Promise<string> {
 }
 
 describe('installCommands', () => {
-  it('AC-1: writes 14 cadence-*.md files under .claude/commands/', async () => {
+  it('AC-1: writes 15 cadence-*.md files under .claude/commands/', async () => {
     const root = await tempDir();
     await installCommands(root);
     const entries = await readdir(join(root, '.claude/commands'));
@@ -34,6 +34,7 @@ describe('installCommands', () => {
       'cadence-draft.md',
       'cadence-handoff.md',
       'cadence-needs-context.md',
+      'cadence-next.md',
       'cadence-progress.md',
       'cadence-recommend.md',
       'cadence-resume.md',

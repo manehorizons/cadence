@@ -23,6 +23,10 @@ export const COMMAND_GUIDANCE = {
     description: "Show CADENCE's next suggested action",
     trailing: 'Read the output above and take the suggested next step.',
   },
+  'cadence-next': {
+    description: 'Show ranked legal next moves at the current loop position',
+    trailing: 'Read the ranked moves above and run the one that fits — this only names the door, not the path through it.',
+  },
   'cadence-draft': {
     description: 'Scaffold a new DRAFT.md for a phase task',
     trailing: 'Open the new DRAFT.md and fill in summary, ACs, and tasks.',

@@ -9,7 +9,7 @@ import type {
   TaskStatus,
   Tier,
 } from '@manehorizons/cadence-types';
-import { nextAction, type NextAction } from './progress.js';
+import { nextAction } from './progress.js';
 import { parseAcRefs } from './parse/ac-refs.js';
 import { parseDraftMd } from './parse/draft-parser.js';
 import { SimpleStateBackend } from './state/simple.js';
@@ -49,7 +49,15 @@ export interface StatusReport {
   draftTitle: string | null;
   tasks: TaskStatusEntry[];
   acs: AcStatus[];
-  next: NextAction;
+  /**
+   * Deliberately narrowed to `{command, reason}` (phase 206), not the full
+   * `NextAction` return: `nextAction()` now also carries a ranked
+   * `legalMoves[]` (phase 206 T1), which is `cadence next`'s surface, not
+   * `status`'s — mirrors `services/progress.ts`/`quickstart/build.ts`'s
+   * identical narrowing, so `cadence status --json`'s public contract
+   * doesn't silently grow a field.
+   */
+  next: { command: string; reason: string };
 }
 
 const PASS_STATUSES: TaskStatus[] = ['DONE', 'DONE_WITH_CONCERNS'];
@@ -79,6 +87,7 @@ export function gatherStatus(
   progress: ProgressFile | null,
   config: Pick<CadenceConfig, 'profile'> | null = null,
 ): StatusReport {
+  const { command, reason } = nextAction(state);
   const base: StatusReport = {
     schemaVersion: 1,
     project: state.project.name,
@@ -90,7 +99,7 @@ export function gatherStatus(
     draftTitle: null,
     tasks: [],
     acs: [],
-    next: nextAction(state),
+    next: { command, reason },
   };
   if (!draft) return base;
 

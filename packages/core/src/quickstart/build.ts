@@ -1,5 +1,5 @@
 import type { CadenceState } from '@manehorizons/cadence-types';
-import { nextAction, type NextAction, type NextActionHints } from '../progress.js';
+import { nextAction, type NextActionHints } from '../progress.js';
 
 /** What the CLI gathered about the current repo (impure layer fills this). */
 export interface QuickstartContext {
@@ -28,8 +28,15 @@ export interface Quickstart {
   header: string;
   /** Pre-init moves (init, tutorial). Empty when initialized. */
   nextMoves: QuickstartMove[];
-  /** Post-init next move — reused from `nextAction`, never re-derived. */
-  next?: NextAction;
+  /**
+   * Post-init next move — reused from `nextAction`, never re-derived.
+   * Deliberately narrowed to `{command, reason}` (phase 206) rather than the
+   * full `NextAction` return: `nextAction()` now also carries a ranked
+   * `legalMoves[]` (phase 206 T1), which is `cadence next`'s surface, not
+   * quickstart's — mirrors `services/progress.ts`'s identical narrowing, so
+   * `quickstart --json`'s public contract doesn't silently grow a field.
+   */
+  next?: { command: string; reason: string };
   /** Always-present map of the onboarding commands. */
   commandMap: QuickstartMapEntry[];
 }
@@ -69,11 +76,12 @@ export function buildQuickstart(ctx: QuickstartContext): Quickstart {
   const hints: NextActionHints | undefined =
     ctx.nextPhaseHint !== undefined ? { nextPhaseNumber: ctx.nextPhaseHint } : undefined;
   const phaseSuffix = state.activePhase !== null ? ` (phase ${state.activePhase})` : '';
+  const { command, reason } = nextAction(state, hints);
   return {
     status: 'initialized',
     header: `CADENCE — initialized · loop: ${state.loopPosition}${phaseSuffix}`,
     nextMoves: [],
-    next: nextAction(state, hints),
+    next: { command, reason },
     commandMap: COMMAND_MAP,
   };
 }

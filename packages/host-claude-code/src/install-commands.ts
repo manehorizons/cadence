@@ -52,6 +52,12 @@ const COMMANDS: CommandSpec[] = [
     trailing: g['cadence-progress'].trailing,
   },
   {
+    name: 'cadence-next',
+    description: g['cadence-next'].description,
+    cli: 'next',
+    trailing: g['cadence-next'].trailing,
+  },
+  {
     name: 'cadence-draft',
     description: g['cadence-draft'].description,
     argumentHint: '<phase-id> <task-num> [--title=<title>]',

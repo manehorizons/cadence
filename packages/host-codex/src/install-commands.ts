@@ -37,6 +37,7 @@ interface CommandSpec {
 const g = COMMAND_GUIDANCE;
 const COMMANDS: CommandSpec[] = [
   { name: 'cadence-progress', description: g['cadence-progress'].description, cli: 'progress', trailing: g['cadence-progress'].trailing },
+  { name: 'cadence-next', description: g['cadence-next'].description, cli: 'next', trailing: g['cadence-next'].trailing },
   { name: 'cadence-draft', description: g['cadence-draft'].description, argumentHint: '<phase-id> <task-num> [--title=<title>]', cli: 'draft new $ARGUMENTS', trailing: g['cadence-draft'].trailing },
   { name: 'cadence-approve', description: g['cadence-approve'].description, argumentHint: '<phase-id> <task-num>', cli: 'draft approve $ARGUMENTS', trailing: g['cadence-approve'].trailing },
   { name: 'cadence-check', description: g['cadence-check'].description, argumentHint: '<phase-id> <task-num>', cli: 'draft check $ARGUMENTS', trailing: g['cadence-check'].trailing },

@@ -32,7 +32,7 @@ the same `cadence hook <event>` dispatch path — without any special API surfac
   - [Options reference](#options-reference)
   - [The --local warning](#the---local-warning)
 - [Hook groups written by install](#hook-groups-written-by-install)
-- [The 14 slash commands](#the-14-slash-commands)
+- [The 15 slash commands](#the-15-slash-commands)
 - [How the agent drives CADENCE](#how-the-agent-drives-cadence)
 - [Gitignore guidance](#gitignore-guidance)
 
@@ -166,9 +166,9 @@ engine.
 
 ---
 
-## The 14 slash commands
+## The 15 slash commands
 
-`install` writes **14 slash commands** into `.claude/commands/`. Each file is
+`install` writes **15 slash commands** into `.claude/commands/`. Each file is
 tagged with `<!-- managed-by: cadence -->` so re-running install replaces them.
 If you remove that marker, install leaves the file untouched (treating it as
 user-customized).
@@ -180,6 +180,7 @@ keep this section in sync with it).
 | Slash command | Engine command invoked | Purpose |
 |---|---|---|
 | `/cadence-progress` | `cadence progress` | Show CADENCE's next suggested action |
+| `/cadence-next` | `cadence next` | Show ranked legal next moves at the current loop position |
 | `/cadence-draft` | `cadence draft new $ARGUMENTS` | Scaffold a new DRAFT.md for a phase task |
 | `/cadence-approve` | `cadence draft approve $ARGUMENTS` | Approve a draft and enter BUILD |
 | `/cadence-check` | `cadence draft check $ARGUMENTS` | Run structural coherence check on a draft |
