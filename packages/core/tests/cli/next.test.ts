@@ -234,6 +234,37 @@ describe('cadence next', () => {
     );
   });
 
+  it('AC-1: IDLE does not re-suggest promoting a recommendation that is already accepted', async () => {
+    active = await tempRepo({ initialized: true });
+    const added = await run(
+      ['recommendation', 'add', '--title', 'Adopt widget caching', '--summary', 'Cache widget lookups.'],
+      active.root,
+    );
+    expect(added.code).toBe(0);
+    const recId = added.stdout.match(/Added (rec-\d{8}-\d{3})/)?.[1] as string;
+    expect(recId).toBeDefined();
+
+    const promoted = await run(
+      ['recommendation', 'promote', recId, '--status=accepted', '--readiness=ready-for-milestone'],
+      active.root,
+    );
+    expect(promoted.code).toBe(0);
+
+    // Regression: an already-accepted recommendation is not "available to
+    // promote" — resolveIdleLedgerHints' topRecommendation must exclude it,
+    // not just re-surface the highest-scored ranked rec regardless of status.
+    const r = await run(['next'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toContain(`cadence recommendation promote ${recId}`);
+
+    const jsonR = await run(['next', '--json'], active.root);
+    expect(jsonR.code).toBe(0);
+    const parsed = JSON.parse(jsonR.stdout);
+    expect(parsed.legalMoves).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ position: 'promote-recommendation' })]),
+    );
+  });
+
   it('does not print implementation guidance — only the door (the command), never the path through it', async () => {
     active = await tempRepo({ initialized: true });
     await seedDraft(active.root, TWO_TASK_DRAFT);
