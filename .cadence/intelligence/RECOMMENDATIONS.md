@@ -578,19 +578,3 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
-
-## rec-20260721-001 — Empty states and refusals must name the precondition, nearest candidates, and unblocking command
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli
-- files: packages/core/src/services/milestone-propose.ts
-- evidence: packages/core/src/services/milestone-propose.ts (eligibility doc-comment line 8: status accepted, readiness ready-for-milestone/ready-for-cadence-spec; output is bare 'Proposed milestones: N'); 2026-07-21 operator wall as the incident (cadence recommend -> cadence milestone propose returned nothing-was-proposed with no explanation); settle refusal messages (coverage gate) as the internal precedent proving the bar is achievable.
-- next: cadence milestone propose
-
-Establish and enforce a guidance invariant: every empty result or refusal in the intelligence layer (recommend, milestone propose, promote, retro, and any command that can return "nothing") must state (a) why the result is empty, (b) the unmet precondition in concrete terms, (c) the nearest-miss candidates from the already-loaded ledger with what each is missing, and (d) the exact command that would change the outcome. Example target output for the incident case: 'Proposed milestones: 0 — 14 recommendations exist; none eligible (requires status=accepted + readiness ready-for-milestone or ready-for-cadence-spec). Closest: rec-0041 (accepted, needs-decision). Try: cadence recommendation promote rec-0041 --readiness ready-for-milestone'. Acceptance bar for the eventual phase: an audit checklist of every intelligence-layer empty/zero path, each upgraded and tested; a doc'd guidance invariant so future commands inherit the bar. Cheap: the candidate data is already in memory at render time. This is the same bar settle refusals already meet, applied uniformly. (Sibling: shares one 'nearest legal move' computation with the cadence-next rec recorded alongside it.)

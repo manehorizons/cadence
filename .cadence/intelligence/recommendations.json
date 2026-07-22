@@ -1086,34 +1086,6 @@
       "decisionIds": [],
       "createdAt": "2026-07-18T05:00:07.898Z",
       "updatedAt": "2026-07-18T05:00:07.898Z"
-    },
-    {
-      "id": "rec-20260721-001",
-      "title": "Empty states and refusals must name the precondition, nearest candidates, and unblocking command",
-      "summary": "Establish and enforce a guidance invariant: every empty result or refusal in the intelligence layer (recommend, milestone propose, promote, retro, and any command that can return \"nothing\") must state (a) why the result is empty, (b) the unmet precondition in concrete terms, (c) the nearest-miss candidates from the already-loaded ledger with what each is missing, and (d) the exact command that would change the outcome. Example target output for the incident case: 'Proposed milestones: 0 — 14 recommendations exist; none eligible (requires status=accepted + readiness ready-for-milestone or ready-for-cadence-spec). Closest: rec-0041 (accepted, needs-decision). Try: cadence recommendation promote rec-0041 --readiness ready-for-milestone'. Acceptance bar for the eventual phase: an audit checklist of every intelligence-layer empty/zero path, each upgraded and tested; a doc'd guidance invariant so future commands inherit the bar. Cheap: the candidate data is already in memory at render time. This is the same bar settle refusals already meet, applied uniformly. (Sibling: shares one 'nearest legal move' computation with the cadence-next rec recorded alongside it.)",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli"
-      ],
-      "affectedFiles": [
-        "packages/core/src/services/milestone-propose.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260721-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "claude-20260721-flow",
-      "createdAt": "2026-07-21T22:33:30.458Z",
-      "updatedAt": "2026-07-21T22:33:30.458Z"
     }
   ],
   "archived": [
@@ -3407,11 +3379,43 @@
         "dec-20260721-004"
       ],
       "convertedToPhaseId": "206-cadence-next",
-      "scoutId": "claude-20260721-flow",
-      "createdAt": "2026-07-21T22:33:42.499Z",
-      "updatedAt": "2026-07-22T00:35:42.475Z",
       "shippedRef": "206-cadence-next/feat/cadence-next-206",
+      "scoutId": "claude-20260721-flow",
       "archivedAt": "2026-07-22T00:35:42.475Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-21T22:33:42.499Z",
+      "updatedAt": "2026-07-22T00:35:42.475Z"
+    },
+    {
+      "id": "rec-20260721-001",
+      "title": "Empty states and refusals must name the precondition, nearest candidates, and unblocking command",
+      "summary": "Establish and enforce a guidance invariant: every empty result or refusal in the intelligence layer (recommend, milestone propose, promote, retro, and any command that can return \"nothing\") must state (a) why the result is empty, (b) the unmet precondition in concrete terms, (c) the nearest-miss candidates from the already-loaded ledger with what each is missing, and (d) the exact command that would change the outcome. Example target output for the incident case: 'Proposed milestones: 0 — 14 recommendations exist; none eligible (requires status=accepted + readiness ready-for-milestone or ready-for-cadence-spec). Closest: rec-0041 (accepted, needs-decision). Try: cadence recommendation promote rec-0041 --readiness ready-for-milestone'. Acceptance bar for the eventual phase: an audit checklist of every intelligence-layer empty/zero path, each upgraded and tested; a doc'd guidance invariant so future commands inherit the bar. Cheap: the candidate data is already in memory at render time. This is the same bar settle refusals already meet, applied uniformly. (Sibling: shares one 'nearest legal move' computation with the cadence-next rec recorded alongside it.)",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/milestone-propose.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260721-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "207-empty-states-name-precondition-and-command",
+      "scoutId": "claude-20260721-flow",
+      "createdAt": "2026-07-21T22:33:30.458Z",
+      "updatedAt": "2026-07-22T04:13:46.558Z",
+      "shippedRef": "207-empty-states-name-precondition-and-command/feat/empty-states-name-precondition-and-command",
+      "archivedAt": "2026-07-22T04:13:46.558Z",
       "archiveReason": "shipped"
     }
   ]
