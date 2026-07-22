@@ -1086,6 +1086,35 @@
       "decisionIds": [],
       "createdAt": "2026-07-18T05:00:07.898Z",
       "updatedAt": "2026-07-18T05:00:07.898Z"
+    },
+    {
+      "id": "rec-20260722-001",
+      "title": "Guard against concurrent-session collisions on the same phase/draft",
+      "summary": "Five session/worktree safety rules for CADENCE operation, learned across multi-PC/multi-session use: (1) Never run two sessions against the same phase/draft at once -- if resuming after a stuck/crashed session, confirm the old one is actually dead first, don't just spin up a fresh session/worktree against the same draft. (2) Resume in place (same worktree/session), not fresh elsewhere. (3) Check recency, not just status -- PROGRESS.json's per-task updatedAt, if very fresh, means someone's actively in this right now, regardless of recorded status. (4) If deliberately running parallel agents, isolate to worktree/branch from task 1 -- not only after noticing a conflict. (5) Re-check git status immediately before any shared-tree git op (stash/reset/checkout on main), not minutes before -- state can change between the check and the op.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "concurrency",
+        "worktrees",
+        "session-safety",
+        "resume",
+        "dispatch"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260722-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-22T19:13:31.313Z",
+      "updatedAt": "2026-07-22T19:13:31.313Z"
     }
   ],
   "archived": [
@@ -3411,12 +3440,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "207-empty-states-name-precondition-and-command",
-      "scoutId": "claude-20260721-flow",
-      "createdAt": "2026-07-21T22:33:30.458Z",
-      "updatedAt": "2026-07-22T04:13:46.558Z",
       "shippedRef": "207-empty-states-name-precondition-and-command/feat/empty-states-name-precondition-and-command",
+      "scoutId": "claude-20260721-flow",
       "archivedAt": "2026-07-22T04:13:46.558Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-21T22:33:30.458Z",
+      "updatedAt": "2026-07-22T04:13:46.558Z"
     }
   ]
 }
