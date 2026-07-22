@@ -594,19 +594,3 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 Establish and enforce a guidance invariant: every empty result or refusal in the intelligence layer (recommend, milestone propose, promote, retro, and any command that can return "nothing") must state (a) why the result is empty, (b) the unmet precondition in concrete terms, (c) the nearest-miss candidates from the already-loaded ledger with what each is missing, and (d) the exact command that would change the outcome. Example target output for the incident case: 'Proposed milestones: 0 — 14 recommendations exist; none eligible (requires status=accepted + readiness ready-for-milestone or ready-for-cadence-spec). Closest: rec-0041 (accepted, needs-decision). Try: cadence recommendation promote rec-0041 --readiness ready-for-milestone'. Acceptance bar for the eventual phase: an audit checklist of every intelligence-layer empty/zero path, each upgraded and tested; a doc'd guidance invariant so future commands inherit the bar. Cheap: the candidate data is already in memory at render time. This is the same bar settle refusals already meet, applied uniformly. (Sibling: shares one 'nearest legal move' computation with the cadence-next rec recorded alongside it.)
-
-## rec-20260721-002 — cadence next: state-derived legal next moves at any loop position, human + --json agent contract
-
-- status: converted
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli
-- decisions: dec-20260721-001 (active), dec-20260721-002 (active), dec-20260721-003 (active), dec-20260721-004 (active)
-- evidence: Same 2026-07-21 incident — the operator's literal action at the wall was asking Claude Code 'what should we do next?', a question whose answer is fully determined by ledger + loop state and therefore should not cost a model prompt; existing 'quickstart' read-only position rendering as the substrate to extend; sibling rec (actionable empty states) shares the same 'nearest legal move' computation — cross-referenced in both summaries.
-- next: cadence milestone propose
-
-A read-only command answering "what now?" deterministically from ground truth at any loop position — not milestone suggestion, literal next step. Computed from state the engine already holds: pending DRAFT -> the approve invocation; mid-BUILD -> remaining tasks (T-ids) + ACs still lacking coverage; all tasks DONE -> the settle invocation; settled -> next phase in milestone, else the promote->propose chain with real rec ids; empty ledgers -> draft-new/onboard paths. Output: current position + 1-3 ranked legal moves with exact commands (a map, not an autopilot — when multiple moves are legal, e.g. settle-now vs. add-discovered-task, it lists both). --json returns {position, remainingTasks, blockedOn, legalMoves[]} as a stable contract so agents consume loop position as ground truth instead of reconstructing it from conversation context — deterministic navigation for orchestrators; zero tokens, zero drift. Explicitly does NOT advise how to implement work (semantic, the agent's job); it names the door, the agent walks through it. Needs decisions: standalone command vs. also auto-appending its output as the footer of every empty state from the sibling actionable-empty-states rec (recommend: both — that rec's 'Try:' line is this command's logic scoped to one wall); relationship to quickstart (static map) — subsume, cross-link, or keep separate; --json schema versioning; whether host adapters surface it as a slash command (/cadence-next). Related but narrower: rec-20260605-002 (First-run 'what now?' nudge after cadence init) covers only the init-time case, not general loop-position navigation.

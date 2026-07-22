@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "draftId": "206-01",
+  "completedAt": "2026-07-22T00:35:42.462Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": ""
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "gateBypasses": [
+    {
+      "gate": "soft-cap",
+      "flag": "--allow-auto-complex",
+      "reason": "auto × complex soft cap bypassed via --allow-auto-complex (DESIGN.md §4 M2)",
+      "severity": "warn"
+    }
+  ],
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 53,
+    "sessionSubagentSpawns": 90
+  }
+}
