@@ -14,6 +14,8 @@ import { readRecommendationLedger } from '../intelligence/store/io.js';
 import { detectProjectLanguage } from '../init/plan.js';
 import { getProfileForExtension } from '../verify/coverage-profiles/registry.js';
 import { CADENCE_OWNED_GITIGNORE_ENTRIES } from '../init/gitignore.js';
+import { SimpleStateBackend } from '../state/simple.js';
+import { assessProgressFreshness } from '../phases/liveness.js';
 import {
   pass,
   fail,
@@ -818,6 +820,88 @@ export async function checkCoverageModeLanguageSupport(root: string): Promise<Do
   }
 }
 
+/**
+ * Warn threshold for {@link checkPhaseFreshness} (Phase 208, rec-20260722-001):
+ * a task `updatedAt` within this many ms of `now` is treated as possible
+ * live concurrent-session activity. 10 minutes. Hardcoded and documented,
+ * not config — matches `HANDOFF_WARN_THRESHOLD`'s pattern; a config knob was
+ * explicitly rejected for this phase (see the phase's DRAFT boundaries).
+ */
+export const PHASE_FRESHNESS_WARN_THRESHOLD_MS = 600_000;
+
+/** Shape this check needs from a `<activeDraft>-PROGRESS.json` file — see the full `ProgressJson` interface in `../build/record.ts`. */
+interface ProgressJsonShape {
+  tasks?: Record<string, { updatedAt?: unknown }>;
+}
+
+/**
+ * Warns when the active phase/draft's `PROGRESS.json` shows a task touched
+ * very recently — a possible live concurrent session working the same phase
+ * (Phase 208, rec-20260722-001). Read-only and best-effort: no active
+ * phase/draft, or no `PROGRESS.json` written yet, both degrade to `ok`
+ * rather than treating "nothing to check" as a problem. Delegates the actual
+ * freshness math to the pure `assessProgressFreshness` (`../phases/liveness.js`)
+ * so this function only does I/O + wiring. `now` is injectable for
+ * deterministic tests; never throws (doctor convention, mirrors
+ * `worktree-phases` / `handoff-retention`).
+ */
+export async function checkPhaseFreshness(
+  root: string,
+  now: Date = new Date(),
+): Promise<DoctorCheck> {
+  try {
+    const backend = new SimpleStateBackend(root);
+    let activePhase: string | null = null;
+    let activeDraft: string | null = null;
+    try {
+      const state = await backend.readState();
+      activePhase = state.activePhase;
+      activeDraft = state.activeDraft;
+    } catch {
+      /* not initialized / unreadable state.json — treated as no active phase/draft */
+    }
+    if (!activePhase || !activeDraft) {
+      return pass('phase-freshness', 'no active phase/draft.');
+    }
+
+    const progPath = join(
+      root,
+      '.cadence',
+      'phases',
+      activePhase,
+      `${activeDraft}-PROGRESS.json`,
+    );
+    if (!existsSync(progPath)) {
+      return pass('phase-freshness', 'no PROGRESS.json yet.');
+    }
+
+    const raw = JSON.parse(await readFile(progPath, 'utf8')) as ProgressJsonShape;
+    const tasks: Record<string, string> = {};
+    for (const [taskId, task] of Object.entries(raw.tasks ?? {})) {
+      if (typeof task?.updatedAt === 'string') tasks[taskId] = task.updatedAt;
+    }
+
+    const result = assessProgressFreshness(tasks, now, PHASE_FRESHNESS_WARN_THRESHOLD_MS);
+    if (result.isFresh && result.freshest) {
+      const minutes = Math.max(0, Math.round(result.freshest.ageMs / 60_000));
+      const unit = minutes === 1 ? 'minute' : 'minutes';
+      return fail(
+        'phase-freshness',
+        'warning',
+        `Task ${result.freshest.taskId} in ${activePhase}/${activeDraft} was updated ${minutes} ${unit} ago — a concurrent session may still be active on this phase/draft.`,
+        'Confirm no other session is actively working on this phase/draft before continuing. ' +
+          'If you are resuming after a stuck or crashed session, verify the old process is actually dead first.',
+      );
+    }
+    return pass(
+      'phase-freshness',
+      `No task activity in ${activePhase}/${activeDraft} within the last ${PHASE_FRESHNESS_WARN_THRESHOLD_MS / 60_000} minutes.`,
+    );
+  } catch {
+    return pass('phase-freshness', 'Phase freshness not determinable (best-effort) — skipped.');
+  }
+}
+
 export async function runDoctor(
   root: string,
   env: DoctorEnv,
@@ -835,6 +919,7 @@ export async function runDoctor(
     await checkCodexAgentsMd(root),
     await checkCodexCadenceCommand(root),
     await checkWorktreePhases(root),
+    await checkPhaseFreshness(root),
     await checkHandoffRetention(root),
     await checkVerificationReadiness(root),
     await checkRecommendationShippedDrift(root),

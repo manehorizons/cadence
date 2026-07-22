@@ -144,7 +144,11 @@ session to do the same. The shape of a healthy session:
    docs carry explicit "do not" lines and carry-forward gotchas — obey them;
    they override your instincts. Their state blocks say "pre-filled —
    verify, don't retype": check live git/npm/GitHub before trusting any
-   replayed fact.
+   replayed fact. Never run two sessions against the same phase/draft at
+   once; if resuming after a session that looks stuck or crashed, confirm
+   the old one is actually dead first, then resume in place — reattach to
+   its worktree/session — rather than spinning up a fresh session or
+   worktree against the same draft (see "The Zombie Session" below).
 2. **A unit of work is a phase, dogfooded.** New work is usually sourced
    from a Praxis recommendation (`cadence recommend`), converted to a phase,
    and run as SPEC/DRAFT → BUILD → SETTLE with real gates. Do not build
@@ -161,6 +165,8 @@ session to do the same. The shape of a healthy session:
    (`.claude/worktrees/<slug>`; prefer the native worktree tools over manual
    `git worktree add`): one implementer + one independent reviewer per task,
    then a final whole-branch review that must come back clean before merge.
+   When deliberately running parallel agents, isolate to a worktree/branch
+   from task 1, not reactively after noticing a `files:` conflict.
 5. **Every completion claim is re-verified independently.** Subagent (or
    your own) "done" is confirmed by reading the diff and re-running the full
    suite + typecheck + lint yourself — never by accepting the worker's
@@ -410,11 +416,26 @@ the rule that prevents it — with the enforcement layer where one exists.
   work belongs to a worktree (or vice versa) — a subagent has done exactly
   this. → Verify `git rev-parse --show-toplevel` and the branch before
   committing; phase worktrees live under `.claude/worktrees/`.
+- **The Zombie Session.** Resuming a stuck or crashed session by spinning up
+  a fresh session or worktree against the same phase/draft, instead of
+  confirming the old one is actually dead first. → Two sessions racing the
+  same draft corrupt `PROGRESS.json`/`state.json` non-deterministically.
+  Confirm the old session is dead (no live terminal/process still holding
+  it), then resume in place — reattach to the existing session/worktree —
+  rather than starting fresh elsewhere. `cadence doctor`'s `phase-freshness`
+  check flags very recent per-task `PROGRESS.json` activity as a signal to
+  go check, not proof either way.
 - **The Assumed Consent.** Running destructive git (`git reset --hard`,
   force-push, history rewrite) or self-merging a PR you opened, on the
   strength of a generic "continue" or "use best judgment". → Restate the
   exact command and its blast radius and get explicit operator confirmation
   first. No exceptions.
+- **The Stale Status Check.** Trusting a `git status` run minutes earlier
+  before a shared-tree git operation (stash, reset, checkout onto `main`)
+  that mutates state other work may now depend on. → Re-check `git status`
+  immediately before the operation, not from a check done earlier in the
+  session — an intervening subagent, background build, or second terminal
+  can change the tree in between.
 - **The Multi-Phase Commit.** Bundling more than one phase's work into a
   single commit or PR. → Single-commit settle convention means one
   *phase's* source + tests + docs + artifacts land together — not multiple

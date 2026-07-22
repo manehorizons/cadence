@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "draftId": "208-01",
+  "completedAt": "2026-07-22T20:35:18.956Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "pure assessProgressFreshness in phases/liveness.ts, 9 tests, re-verified independently"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "checkPhaseFreshness wired into runDoctor, 6 tests, re-verified independently (typecheck/lint clean, full doctor suite 95/95)"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "phase-freshness doctor-check row added to commands.md table, doc-content tests green"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "rules 1/2/4/5 folded into CLAUDE.md (2 new named failure modes), phase-build Isolate step, pr-land preflight step; grep anchors + doc tests confirmed"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 57,
+    "sessionSubagentSpawns": 38
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "draftId": "208-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "pure assessProgressFreshness in phases/liveness.ts, 9 tests, re-verified independently",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-22T20:13:13.891Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "checkPhaseFreshness wired into runDoctor, 6 tests, re-verified independently (typecheck/lint clean, full doctor suite 95/95)",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\packages\\core\\tests\\doctor\\phase-freshness.test.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\packages\\core\\src\\doctor\\run.ts"
+      ],
+      "updatedAt": "2026-07-22T20:18:54.677Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "phase-freshness doctor-check row added to commands.md table, doc-content tests green",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\docs\\reference\\commands.md",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\CLAUDE.md",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\skills\\phase-build\\SKILL.md",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\skills\\pr-land\\SKILL.md"
+      ],
+      "updatedAt": "2026-07-22T20:25:41.336Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "rules 1/2/4/5 folded into CLAUDE.md (2 new named failure modes), phase-build Isolate step, pr-land preflight step; grep anchors + doc tests confirmed",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-22T20:25:41.738Z"
+    }
+  }
+}
