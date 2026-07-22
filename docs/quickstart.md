@@ -505,11 +505,12 @@ The `--local` flag resolves the absolute paths of your local workspace builds.
 **Do not commit `.claude/settings.json`** when using `--local` — the paths are
 machine-specific.
 
-`install` writes 14 slash commands into `.claude/commands/`:
+`install` writes 15 slash commands into `.claude/commands/`:
 
 | Command | What it does |
 |---|---|
 | `/cadence-progress` | Show CADENCE's next suggested action |
+| `/cadence-next` | Show ranked legal next moves at the current loop position |
 | `/cadence-draft` | Scaffold a new DRAFT.md |
 | `/cadence-check` | Run coherence check on a draft |
 | `/cadence-approve` | Approve a draft and enter BUILD |

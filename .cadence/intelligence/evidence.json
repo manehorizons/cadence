@@ -742,6 +742,20 @@
       "kind": "note",
       "summary": "Restart of rec-20260619-008 (now archived) after its milestone (mil-rec-rec-20260619-008) got permanently stuck deferred with no CLI reopen path -- see rec-20260720-001 for the underlying gap.",
       "createdAt": "2026-07-20T01:59:15.742Z"
+    },
+    {
+      "id": "ev-20260721-001",
+      "recommendationId": "rec-20260721-001",
+      "kind": "note",
+      "summary": "packages/core/src/services/milestone-propose.ts (eligibility doc-comment line 8: status accepted, readiness ready-for-milestone/ready-for-cadence-spec; output is bare 'Proposed milestones: N'); 2026-07-21 operator wall as the incident (cadence recommend -> cadence milestone propose returned nothing-was-proposed with no explanation); settle refusal messages (coverage gate) as the internal precedent proving the bar is achievable.",
+      "createdAt": "2026-07-21T22:33:30.458Z"
+    },
+    {
+      "id": "ev-20260721-002",
+      "recommendationId": "rec-20260721-002",
+      "kind": "note",
+      "summary": "Same 2026-07-21 incident — the operator's literal action at the wall was asking Claude Code 'what should we do next?', a question whose answer is fully determined by ledger + loop state and therefore should not cost a model prompt; existing 'quickstart' read-only position rendering as the substrate to extend; sibling rec (actionable empty states) shares the same 'nearest legal move' computation — cross-referenced in both summaries.",
+      "createdAt": "2026-07-21T22:33:42.499Z"
     }
   ]
 }

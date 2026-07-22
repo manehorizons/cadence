@@ -78,6 +78,7 @@ block
 needs-context
 settle
 progress
+next
 status
 recommendation
 inspect
@@ -833,6 +834,42 @@ v1.18 guard's refusal. This is best-effort: in a non-git checkout, or if the
 occupancy read fails, `progress` falls back to the literal placeholder and never
 blocks. The same occupancy-aware suggestion surfaces in the recommend/Praxis
 backend's IDLE legal action.
+
+**Exit codes** — exits non-zero if `.cadence/` is missing or `state.json` is
+unreadable.
+
+---
+
+### next
+
+```
+Usage: cadence next [options]
+
+Show ranked legal next moves at the current loop position
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text |
+| `-h, --help` | Display help for command |
+
+**Behavior** — read-only, at any loop position: prints the current position
+plus 1-3 ranked legal moves with their exact commands, computed from the same
+underlying `nextAction()` logic [`cadence progress`](#progress) and
+[`cadence quickstart`](#quickstart) already use — not a parallel
+reimplementation. Unlike `progress`'s single suggestion, `next` surfaces every
+legal alternative at once (e.g. at `IDLE`, continuing an in-flight milestone
+ranks above promoting a recommendation, which ranks above a bare
+`draft new`). Names the door — the exact command — never advises *how* to
+implement the work behind it; that stays the agent's job.
+
+`--json` emits a stable, versioned contract:
+`{ schemaVersion: 1, position, remainingTasks, blockedOn, legalMoves: [{ position, command, reason, remainingTasks, blockedOn }] }`.
+`position` is the overall loop position; `remainingTasks`/`blockedOn` are
+top-level convenience fields mirroring the top-ranked move's own fields of the
+same name.
 
 **Exit codes** — exits non-zero if `.cadence/` is missing or `state.json` is
 unreadable.

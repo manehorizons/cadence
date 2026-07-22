@@ -57,6 +57,16 @@ describe('gatherStatus', () => {
     expect(r.next.command).toMatch(/cadence draft new/);
   });
 
+  // AC-3 (phase 206): `next` is deliberately narrowed to {command, reason} —
+  // nextAction()'s new legalMoves[] (phase 206 T1) is `cadence next`'s
+  // surface, not `status`'s. Mirrors the identical narrowing already pinned
+  // for services/progress.ts and quickstart/build.ts.
+  it('AC-3 (phase 206): next field is exactly {command, reason}, no legalMoves leak', () => {
+    const state = emptyState('demo');
+    const r = gatherStatus(state, null, null);
+    expect(Object.keys(r.next).sort()).toEqual(['command', 'reason']);
+  });
+
   it('BUILD with no PROGRESS.json — all tasks PENDING, all ACs pending', () => {
     const state = emptyState('demo');
     state.activePhase = '05-status-command';

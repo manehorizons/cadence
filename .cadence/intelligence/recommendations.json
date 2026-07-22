@@ -748,34 +748,6 @@
       "updatedAt": "2026-07-10T22:11:55.763Z"
     },
     {
-      "id": "rec-20260711-004",
-      "title": "Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)",
-      "summary": "CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC captures component list and behavioral shape only (e.g. 'reuse StructuredWizardShell's visual language' as a precedent reference), with no concrete layout -- field spacing/grouping, exact design-token usage, responsive behavior, or per-field-type visual treatment. Left as-is, DRAFT tasks inherit only a loose behavioral pointer and whoever executes BUILD makes the real layout calls in the moment, looser than this project's own deliberate token-driven UI work. Proposal: an opt-in gate/step between SPEC and DRAFT for phases touching UI surfaces that produces a concrete design contract (component-level layout, token usage, responsive/interaction detail) before DRAFT tasks are written -- conceptually parallel to gsd-ui-phase's UI-SPEC.md but native to CADENCE's loop and gate model, not a GSD borrow. 'When applicable' is key: most CADENCE phases are not UI work and must not pay this cost.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "draft",
-        "spec"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260711-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "205-ui-spec-gate",
-      "createdAt": "2026-07-11T14:33:47.461Z",
-      "updatedAt": "2026-07-21T04:44:34.183Z"
-    },
-    {
       "id": "rec-20260712-003",
       "title": "Retro friction feeds back into Praxis recommendation scoring",
       "summary": "Recurring friction identified by the post-settle retro feeds back into evidence.json to bump the scores of related recommendations (depends on the retro-artifact and rollup recommendations existing first). Landed via the same /cadence-scout session (scout-20260712-0328).",
@@ -1114,6 +1086,34 @@
       "decisionIds": [],
       "createdAt": "2026-07-18T05:00:07.898Z",
       "updatedAt": "2026-07-18T05:00:07.898Z"
+    },
+    {
+      "id": "rec-20260721-001",
+      "title": "Empty states and refusals must name the precondition, nearest candidates, and unblocking command",
+      "summary": "Establish and enforce a guidance invariant: every empty result or refusal in the intelligence layer (recommend, milestone propose, promote, retro, and any command that can return \"nothing\") must state (a) why the result is empty, (b) the unmet precondition in concrete terms, (c) the nearest-miss candidates from the already-loaded ledger with what each is missing, and (d) the exact command that would change the outcome. Example target output for the incident case: 'Proposed milestones: 0 — 14 recommendations exist; none eligible (requires status=accepted + readiness ready-for-milestone or ready-for-cadence-spec). Closest: rec-0041 (accepted, needs-decision). Try: cadence recommendation promote rec-0041 --readiness ready-for-milestone'. Acceptance bar for the eventual phase: an audit checklist of every intelligence-layer empty/zero path, each upgraded and tested; a doc'd guidance invariant so future commands inherit the bar. Cheap: the candidate data is already in memory at render time. This is the same bar settle refusals already meet, applied uniformly. (Sibling: shares one 'nearest legal move' computation with the cadence-next rec recorded alongside it.)",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/milestone-propose.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260721-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-20260721-flow",
+      "createdAt": "2026-07-21T22:33:30.458Z",
+      "updatedAt": "2026-07-21T22:33:30.458Z"
     }
   ],
   "archived": [
@@ -3347,6 +3347,72 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-09T23:23:41.842Z",
       "updatedAt": "2026-07-21T01:33:31.857Z"
+    },
+    {
+      "id": "rec-20260711-004",
+      "title": "Cadence-native UI-spec gate between SPEC and DRAFT (when applicable)",
+      "summary": "CADENCE has no equivalent of GSD's gsd-ui-phase: a UI-heavy phase's SPEC captures component list and behavioral shape only (e.g. 'reuse StructuredWizardShell's visual language' as a precedent reference), with no concrete layout -- field spacing/grouping, exact design-token usage, responsive behavior, or per-field-type visual treatment. Left as-is, DRAFT tasks inherit only a loose behavioral pointer and whoever executes BUILD makes the real layout calls in the moment, looser than this project's own deliberate token-driven UI work. Proposal: an opt-in gate/step between SPEC and DRAFT for phases touching UI surfaces that produces a concrete design contract (component-level layout, token usage, responsive/interaction detail) before DRAFT tasks are written -- conceptually parallel to gsd-ui-phase's UI-SPEC.md but native to CADENCE's loop and gate model, not a GSD borrow. 'When applicable' is key: most CADENCE phases are not UI work and must not pay this cost.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "draft",
+        "spec"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260711-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "205-ui-spec-gate",
+      "shippedRef": "205-ui-spec-gate/#269",
+      "archivedAt": "2026-07-21T22:52:15.885Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-11T14:33:47.461Z",
+      "updatedAt": "2026-07-21T22:52:15.885Z"
+    },
+    {
+      "id": "rec-20260721-002",
+      "title": "cadence next: state-derived legal next moves at any loop position, human + --json agent contract",
+      "summary": "A read-only command answering \"what now?\" deterministically from ground truth at any loop position — not milestone suggestion, literal next step. Computed from state the engine already holds: pending DRAFT -> the approve invocation; mid-BUILD -> remaining tasks (T-ids) + ACs still lacking coverage; all tasks DONE -> the settle invocation; settled -> next phase in milestone, else the promote->propose chain with real rec ids; empty ledgers -> draft-new/onboard paths. Output: current position + 1-3 ranked legal moves with exact commands (a map, not an autopilot — when multiple moves are legal, e.g. settle-now vs. add-discovered-task, it lists both). --json returns {position, remainingTasks, blockedOn, legalMoves[]} as a stable contract so agents consume loop position as ground truth instead of reconstructing it from conversation context — deterministic navigation for orchestrators; zero tokens, zero drift. Explicitly does NOT advise how to implement work (semantic, the agent's job); it names the door, the agent walks through it. Needs decisions: standalone command vs. also auto-appending its output as the footer of every empty state from the sibling actionable-empty-states rec (recommend: both — that rec's 'Try:' line is this command's logic scoped to one wall); relationship to quickstart (static map) — subsume, cross-link, or keep separate; --json schema versioning; whether host adapters surface it as a slash command (/cadence-next). Related but narrower: rec-20260605-002 (First-run 'what now?' nudge after cadence init) covers only the init-time case, not general loop-position navigation.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260721-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260721-001",
+        "dec-20260721-002",
+        "dec-20260721-003",
+        "dec-20260721-004"
+      ],
+      "convertedToPhaseId": "206-cadence-next",
+      "scoutId": "claude-20260721-flow",
+      "createdAt": "2026-07-21T22:33:42.499Z",
+      "updatedAt": "2026-07-22T00:35:42.475Z",
+      "shippedRef": "206-cadence-next/feat/cadence-next-206",
+      "archivedAt": "2026-07-22T00:35:42.475Z",
+      "archiveReason": "shipped"
     }
   ]
 }

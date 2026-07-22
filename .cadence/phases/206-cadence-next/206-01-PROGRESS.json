@@ -1,0 +1,47 @@
+{
+  "draftId": "206-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-21T23:51:16.573Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/core/src/cli/commands/next.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/core/src/cli/register.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/core/tests/cli/next.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-07-22T00:12:11.559Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/types/src/guidance.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/host-claude-code/src/install-commands.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/README.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/docs/quickstart.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/docs/claude-code.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/host-claude-code/tests/install-commands.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/core/tests/progress.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/core/tests/quickstart.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/host-claude-code/tests/fixtures/golden-root/.claude/commands/cadence-next.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/host-codex/src/install-commands.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/core/src/quickstart/build.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/206-cadence-next/packages/core/README.md"
+      ],
+      "updatedAt": "2026-07-22T00:24:41.846Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-22T00:24:42.033Z"
+    }
+  }
+}

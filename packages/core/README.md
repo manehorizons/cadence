@@ -87,7 +87,7 @@ This package is the engine — the `cadence` CLI implements the DRAFT→BUILD→
 | Surface | How | Package / command |
 |---|---|---|
 | **Terminal / any agent** | The `cadence` CLI (this package) | `npm i -g @manehorizons/cadence-core` |
-| **Claude Code** | Lifecycle hooks + 14 slash commands, incl. *ambient* edit-time gates (boundary checks, anomaly detection as you edit) | [`@manehorizons/cadence-host-claude-code`](https://www.npmjs.com/package/@manehorizons/cadence-host-claude-code) — `npx @manehorizons/cadence-host-claude-code install` |
+| **Claude Code** | Lifecycle hooks + 15 slash commands, incl. *ambient* edit-time gates (boundary checks, anomaly detection as you edit) | [`@manehorizons/cadence-host-claude-code`](https://www.npmjs.com/package/@manehorizons/cadence-host-claude-code) — `npx @manehorizons/cadence-host-claude-code install` |
 | **OpenAI Codex CLI** | Lifecycle hooks + global prompt commands | [`@manehorizons/cadence-host-codex`](https://www.npmjs.com/package/@manehorizons/cadence-host-codex) — or `cadence init --host codex` |
 | **Any MCP host** (Claude Desktop, Cursor, agents) | Local [MCP](https://modelcontextprotocol.io) server over stdio — imperative loop, no bespoke adapter needed | `cadence mcp serve` |
 

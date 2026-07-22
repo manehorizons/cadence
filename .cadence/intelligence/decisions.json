@@ -9,6 +9,42 @@
       "status": "active",
       "decidedAt": "2026-07-11T03:08:39.649Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260721-001",
+      "recommendationId": "rec-20260721-002",
+      "title": "cadence next extends nextAction(), does not subsume quickstart or reimplement",
+      "rationale": "nextAction() (packages/core/src/progress.ts:31) is upgraded to return ranked legalMoves[] (position, remainingTasks, blockedOn) instead of a single {command, reason} pair, keeping a single-command shape for back-compat. quickstart and progress continue calling nextAction() for their existing one-line view; cadence next is the new surface exposing the full ranked list + --json. quickstart's other state-summary content is not absorbed.",
+      "status": "active",
+      "decidedAt": "2026-07-21T22:47:29.452Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260721-002",
+      "recommendationId": "rec-20260721-002",
+      "title": "Shared legal-moves computation also powers empty-state footers (rec-20260721-001)",
+      "rationale": "One computation, two surfaces: rec-20260721-001's empty/refusal messages call the same underlying legal-moves logic for their 'Try:' line, and cadence next remains directly invocable standalone. Not standalone-only.",
+      "status": "active",
+      "decidedAt": "2026-07-21T22:47:29.636Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260721-003",
+      "recommendationId": "rec-20260721-002",
+      "title": "cadence next --json includes schemaVersion: 1",
+      "rationale": "Matches the established house convention already used in status.ts, milestone.ts, recommendations.ts, inspect.ts, settle.ts, etc. (resume.ts/run-resume.ts are the known gap, not the precedent to follow). Not test-enforced today, but consistency across all --json commands is the goal.",
+      "status": "active",
+      "decidedAt": "2026-07-21T22:47:29.830Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260721-004",
+      "recommendationId": "rec-20260721-002",
+      "title": "Ship /cadence-next slash command alongside the CLI command",
+      "rationale": "Registration is a single CommandSpec entry in packages/host-claude-code/src/install-commands.ts (14 -> 15) plus updating the doc-count test's expected number (docs-command-count.test.ts). Low cost, and this command is explicitly aimed at agent/host-driven navigation, so the slash-command surface matters at ship time rather than being deferred.",
+      "status": "active",
+      "decidedAt": "2026-07-21T22:47:30.023Z",
+      "supersedes": []
     }
   ]
 }
