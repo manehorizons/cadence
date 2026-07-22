@@ -1,5 +1,38 @@
 # @manehorizons/cadence-core
 
+## 1.50.0
+
+### Minor Changes
+
+- 30cd195: Adds `cadence verify phase [phase] [num]` — a state-independent, phase-scoped re-derivation of whether a settled phase's recorded AC coverage still holds against the current working tree, using only the phase's committed `DRAFT.md` and `SUMMARY.json` (no active loop state required). The coverage rescan is scoped to the phase's own declared task files, closing a cross-phase `AC-N` token collision that an unscoped repo-wide scan would otherwise be vulnerable to. `--changed --base <ref>` discovers phases via `git diff` for CI use; the optional `verification.testCommand` re-run reports a separate, suite-wide (not per-AC) pass/fail signal.
+
+  Adds `cadence init --ci`, which scaffolds a GitHub Actions workflow calling `cadence verify phase --changed` on every pull request, plus prints (never executes) a `gh api` recipe to make that check required on the default branch. Closes rec-20260709-003.
+
+- 42deb4b: Adds `cadence next`, a read-only command that answers "what now?" deterministically from live loop state at any position — 1-3 ranked legal moves with exact commands, plus a stable `--json` contract (`{schemaVersion: 1, position, remainingTasks, blockedOn, legalMoves[]}`) for agent orchestrators. Sourced from an extended `nextAction()` (`packages/core/src/progress.ts`), which now also computes ranked `legalMoves[]` alongside its existing `{command, reason}` shape — strictly additive; `cadence progress` and `cadence quickstart` are unchanged. Closes rec-20260721-002.
+
+  Registers `/cadence-next` as the 15th Claude Code slash command and the matching Codex prompt command (both host adapters share the `COMMAND_GUIDANCE` catalog in `@manehorizons/cadence-types`).
+
+  Also narrows `cadence status --json` and `cadence quickstart --json`'s `next` field to `{command, reason}` explicitly — both were passing `nextAction()`'s full return through unnarrowed, so the new `legalMoves[]` array would otherwise have silently leaked into those two commands' existing public JSON contracts (mirrors the narrowing `cadence progress` already had).
+
+- b2b8b6b: Empty-result and refusal messages across the intelligence-layer CLI surface (`cadence recommend`, `cadence milestone propose`, `cadence recommendation promote`/`convert`/`list`, `cadence retro`) now state why the result is empty, the concrete unmet precondition, the nearest-miss candidate from the already-loaded ledger, and the exact command that would change the outcome — closing rec-20260721-001.
+
+  Adds a shared `findNearestCandidates` helper (`packages/core/src/intelligence/nearest-candidate.ts`, extracted from `cadence next`'s existing ranking logic with no behavior change) as the preferred mechanism for "nearest eligible candidate" lookups, so a message's suggestion never diverges from `cadence recommend`/`cadence next`'s own ranking. `cadence milestone propose` gets this enrichment on both the CLI and the MCP-tool (`cadence_milestone_propose`) surfaces, keyed on "zero milestones newly proposed this run" rather than "the ledger is empty" so it still fires correctly when older accepted/deferred/exported milestones already exist. `cadence recommendation` not-found errors (5 near-duplicate sites) are consolidated behind one message builder with a nearest-ID suggestion; its 7 promote/convert status-refusal sites now append the exact unblocking command to their existing status text. `cadence retro` now distinguishes "no settled phases yet" from "phases scanned, zero friction found" instead of one ambiguous message for both.
+
+  `docs/concepts.md` documents the four-part invariant (why / precondition / nearest candidates / exact command) as the guidance bar for future intelligence-layer commands.
+
+- a09ee46: Adds `cadence milestone reopen <id>`, a CLI transition that moves a `deferred` milestone back to `proposed` so its claimed recommendations become eligible for re-clustering again. Previously `applyTransition()` had no path out of `deferred` — `clusterMilestones()` treats any non-`proposed` milestone as a permanent survivor and permanently excludes its claimed `recommendationId`s, so a deferred milestone stayed stuck forever with no CLI recourse short of hand-editing `milestones.json`. `reopen` refuses loudly (exit 1, no state mutation) if the milestone isn't currently `deferred` (naming its current status), the id doesn't exist, or the milestone's claimed recommendation(s) collide with another still-live (non-`deferred`/non-`proposed`) milestone.
+- 6e774d5: Adds an opt-in `<id>-UI-SPEC.md` artifact, sibling to the existing pre-DRAFT `SPEC.md`, for a phase that touches UI surfaces. `cadence spec new --ui` scaffolds it with a fixed shape — per-component `Layout & Tokens` and `Precedent References` nested under each `### <Component>`, plus a whole-slice `Responsive & Interaction` section — so a design contract can be locked down before DRAFT tasks are written, closing rec-20260711-004.
+
+  `cadence spec approve` runs a new convergent `ui-spec-review` gate after the existing `spec-review` gate, only when a sibling UI-SPEC is present: same `nextConvergence` primitive, its own `<id>-UI-SPEC-REVIEW.json` sidecar, its own unconditional `ui-spec-review-unconverged` anomaly, and its own independent `--allow-ui-spec-review-failure` bypass flag. `cadence draft new` seeds an approved UI-SPEC's content into a new `## UI Contract` DRAFT section (bold-text rendering, no nested headings) between Acceptance Criteria and Tasks.
+
+  No new loop position and no `state.json` schema change — opt-in purely by the UI-SPEC file's own presence, the same pattern the SPEC stage itself uses. The new `uiSpecReview` config key is wired into `cadence config explain` and `cadence activate` alongside the other six provider blocks.
+
+### Patch Changes
+
+- Updated dependencies [42deb4b]
+- Updated dependencies [6e774d5]
+  - @manehorizons/cadence-types@1.50.0
+
 ## 1.49.0
 
 ### Minor Changes
