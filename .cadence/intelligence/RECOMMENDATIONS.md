@@ -578,3 +578,18 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
+
+## rec-20260722-001 — Guard against concurrent-session collisions on the same phase/draft
+
+- status: candidate
+- ready: raw-idea
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: concurrency, worktrees, session-safety, resume, dispatch
+- evidence: Operator guidance from running CADENCE across multiple PCs/sessions concurrently; captures near-miss-class risks (stale session collision, race between git-status check and git op) before they cause real data loss.
+- next: cadence milestone propose
+
+Five session/worktree safety rules for CADENCE operation, learned across multi-PC/multi-session use: (1) Never run two sessions against the same phase/draft at once -- if resuming after a stuck/crashed session, confirm the old one is actually dead first, don't just spin up a fresh session/worktree against the same draft. (2) Resume in place (same worktree/session), not fresh elsewhere. (3) Check recency, not just status -- PROGRESS.json's per-task updatedAt, if very fresh, means someone's actively in this right now, regardless of recorded status. (4) If deliberately running parallel agents, isolate to worktree/branch from task 1 -- not only after noticing a conflict. (5) Re-check git status immediately before any shared-tree git op (stash/reset/checkout on main), not minutes before -- state can change between the check and the op.
