@@ -24,6 +24,14 @@ before it is recorded.
    `feat/<slug>`, worktree under `.claude/worktrees/<slug>`). Before *any*
    commit in this pipeline, confirm `git rev-parse --show-toplevel` points at
    the worktree — a subagent has committed to the primary checkout by mistake.
+   If this build is deliberately running parallel agents (this phase and
+   another in flight at once), isolate to a worktree/branch from task 1 —
+   before any subagent touches a file — not reactively after a `files:`
+   conflict is noticed. Also confirm no other live session already
+   holds this phase/draft (check for a running `cadence` process, an open
+   terminal, or recent `PROGRESS.json` activity via `cadence doctor`) before
+   dispatching into it; if one might still be running, resume that session in
+   place instead of starting a second one against the same draft.
 2. **Plan waves.** Run `cadence dispatch plan --json`. It computes dispatch
    waves from `depends:` edges and `files:`-overlap edges. Never parallelize
    two tasks whose `files:` overlap, even if the plan seems to allow it.

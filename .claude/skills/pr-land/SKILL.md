@@ -16,6 +16,11 @@ squash merge.
   are known environment issues (pnpm/tempRepo/spawn races) — if something
   fails only locally and the failure smells environmental, push and let the
   CI matrix decide rather than debugging the dev box.
+- Before any git operation that touches shared tree state — `stash`,
+  `reset`, `checkout` onto `main` — re-check `git status` immediately
+  beforehand, not from a check done minutes earlier in this same session.
+  Another process (a subagent, a background build, a second terminal) can
+  have changed the tree in between.
 
 ## 2 — Commit hygiene
 
