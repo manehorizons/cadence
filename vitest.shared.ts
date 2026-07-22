@@ -11,7 +11,13 @@ import { defineConfig } from 'vitest/config';
 // brush the 20s ceiling (CLI-spawning settle tests, the 105-write dispatcher
 // cap test). Scale the timeout up on win32 here — in the single source of
 // truth — rather than sprinkling per-test `{ timeout }` band-aids.
-const TIMEOUT_MS = process.platform === 'win32' ? 60000 : 20000;
+//
+// 60000 stopped being enough headroom under concurrent CI load: the
+// dispatcher cap test (105 sequential dispatch() calls, each doing multiple
+// disk read/writes) timed out twice in a row on windows-latest/Node 22 at
+// ~61s (2026-07-22, PR #278 post-merge run) while every other OS/Node leg
+// passed comfortably. Bumped to 90000 for more margin.
+const TIMEOUT_MS = process.platform === 'win32' ? 90000 : 20000;
 
 export default defineConfig({
   test: {
