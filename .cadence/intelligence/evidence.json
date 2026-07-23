@@ -763,6 +763,27 @@
       "kind": "note",
       "summary": "Operator guidance from running CADENCE across multiple PCs/sessions concurrently; captures near-miss-class risks (stale session collision, race between git-status check and git op) before they cause real data loss.",
       "createdAt": "2026-07-22T19:13:31.313Z"
+    },
+    {
+      "id": "ev-20260723-001",
+      "recommendationId": "rec-20260723-001",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on rec-20260710-001 (Claude Code auth vs ANTHROPIC_API_KEY confusion), 2026-07-23; siblings: rec-20260710-001, and the docs-callout + CLAUDECODE-aware-messaging recs landed in the same session",
+      "createdAt": "2026-07-23T01:08:31.539Z"
+    },
+    {
+      "id": "ev-20260723-002",
+      "recommendationId": "rec-20260723-002",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on rec-20260710-001, 2026-07-23; siblings: rec-20260710-001, and the fallback-warning-text + CLAUDECODE-aware-messaging recs landed in the same session",
+      "createdAt": "2026-07-23T01:08:31.748Z"
+    },
+    {
+      "id": "ev-20260723-003",
+      "recommendationId": "rec-20260723-003",
+      "kind": "note",
+      "summary": "Generated in /cadence-scout session on rec-20260710-001, 2026-07-23; siblings: rec-20260710-001, and the fallback-warning-text + docs-callout recs landed in the same session",
+      "createdAt": "2026-07-23T01:08:31.941Z"
     }
   ]
 }

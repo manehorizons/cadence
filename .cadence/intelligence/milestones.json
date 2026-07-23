@@ -472,6 +472,30 @@
       ],
       "createdAt": "2026-07-21T22:49:14.388Z",
       "updatedAt": "2026-07-21T23:06:31.144Z"
+    },
+    {
+      "id": "mil-rec-rec-20260723-001",
+      "name": "Add Claude-Code-vs-ANTHROPIC_API_KEY distinction to the anthropic-provider mock-fallback warning",
+      "objective": "The MOCK_FALLBACK_BANNER / anthropic-provider fallback warning (verifier-factory.ts) fires stderr-side at the exact moment a user hits silent mock-fallback, but says only 'ANTHROPIC_API_KEY is unset' with no hint that being logged into Claude Code doesn't satisfy this. Docs alone don't help since the user may never open them at the failure moment. Add the distinction inline to the warning text itself, mirroring the honesty-first pattern already used for MOCK_VERIFIER_NOTICE.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260723-001"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260723-001/SPEC.md",
+          "exportedAt": "2026-07-23T01:22:05.880Z"
+        }
+      ],
+      "createdAt": "2026-07-23T01:19:24.533Z",
+      "updatedAt": "2026-07-23T01:22:05.880Z"
     }
   ]
 }
