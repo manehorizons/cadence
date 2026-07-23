@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-21T22:27:28.449Z
+Generated at: 2026-07-23T01:12:14.908Z
 
 ## Advisory
 
@@ -10,50 +10,33 @@ Generated at: 2026-07-21T22:27:28.449Z
 
 ## Ranked
 
-(showing top 5 of 14 — run `cadence recommend` for the full list)
-
-### rec-20260710-001 — Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning
+### rec-20260723-001 — Add Claude-Code-vs-ANTHROPIC_API_KEY distinction to the anthropic-provider mock-fallback warning
 
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260710-0400
+- scout: scout-20260723-0108
 - next: cadence milestone propose
 
-### rec-20260712-003 — Retro friction feeds back into Praxis recommendation scoring
+### rec-20260723-002 — Docs callout: anthropic provider auth is separate from Claude Code's own login
 
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260712-0328
+- scout: scout-20260723-0108
 - next: cadence milestone propose
 
-### rec-20260712-009 — Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY
+### rec-20260723-003 — CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate
 
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
-
-### rec-20260712-014 — Add test-coverage reporting with enforced minimum thresholds to CI
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
-
-### rec-20260718-003 — Frame dispatched task boundaries as stop-conditions, not file-scope lists
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- score: 50/100 (raw 10.7)
+- status: candidate · ready: raw-idea · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
+- scout: scout-20260723-0108
 - next: cadence milestone propose
 
 ## Parked (deferred)
 
-- rec-20260710-003 — MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool (deferred, needs-evidence)
+None.
 
 ## Needs attention (superseded / contradicted)
 
@@ -61,4 +44,4 @@ None.
 
 ## Totals
 
-- total 38 · ranked 14 · parked 1 · needs-attention 0 · excluded 23
+- total 3 · ranked 3 · parked 0 · needs-attention 0 · excluded 0

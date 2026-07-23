@@ -578,3 +578,51 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
+
+## rec-20260723-001 — Add Claude-Code-vs-ANTHROPIC_API_KEY distinction to the anthropic-provider mock-fallback warning
+
+- status: converted
+- ready: ready-for-milestone
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify
+- files: packages/core/src/verify/verifier-factory.ts
+- evidence: Generated in /cadence-scout session on rec-20260710-001 (Claude Code auth vs ANTHROPIC_API_KEY confusion), 2026-07-23; siblings: rec-20260710-001, and the docs-callout + CLAUDECODE-aware-messaging recs landed in the same session
+- next: cadence milestone propose
+
+The MOCK_FALLBACK_BANNER / anthropic-provider fallback warning (verifier-factory.ts) fires stderr-side at the exact moment a user hits silent mock-fallback, but says only 'ANTHROPIC_API_KEY is unset' with no hint that being logged into Claude Code doesn't satisfy this. Docs alone don't help since the user may never open them at the failure moment. Add the distinction inline to the warning text itself, mirroring the honesty-first pattern already used for MOCK_VERIFIER_NOTICE.
+
+## rec-20260723-002 — Docs callout: anthropic provider auth is separate from Claude Code's own login
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs
+- files: docs/providers.md
+- evidence: Generated in /cadence-scout session on rec-20260710-001, 2026-07-23; siblings: rec-20260710-001, and the fallback-warning-text + CLAUDECODE-aware-messaging recs landed in the same session
+- next: cadence milestone propose
+
+docs/providers.md's anthropic section (~line 102-135) has no callout distinguishing 'logged into Claude Code' (OAuth/subscription) from 'ANTHROPIC_API_KEY set' (the anthropic provider's actual requirement, a direct Anthropic SDK call with zero visibility into Claude Code's credential store). The host-cli section already has an analogous, well-written distinction (quota-transparency notice, ~line 352-374) that can serve as the model for tone and placement.
+
+## rec-20260723-003 — CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify
+- files: packages/core/src/cli/commands/activate.ts
+- evidence: Generated in /cadence-scout session on rec-20260710-001, 2026-07-23; siblings: rec-20260710-001, and the fallback-warning-text + docs-callout recs landed in the same session
+- next: cadence milestone propose
+
+When provider:anthropic is configured, ANTHROPIC_API_KEY is missing, AND CLAUDECODE=1 is detected (i.e. cadence is running inside a live Claude Code session), cadence doctor's verification-readiness check and cadence activate's failure path currently print the same generic 'key missing, here's the export line' message as any other missing-key case. In this specific, detectable situation the message could instead name the actual confusion directly and proactively suggest host-cli as the provider that piggybacks off the session's own Claude Code auth with zero separate key. Higher scope/risk than the other two (new CLAUDECODE detection at doctor/activate time, not just at verifier-factory fallback time) -- evaluate whether the win justifies the added surface.
