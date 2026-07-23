@@ -1,0 +1,46 @@
+{
+  "draftId": "209-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T02:03:58.844Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T02:03:59.038Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/209-anthropic-fallback-warning-claude-code-distinction/packages/core/src/verify/verifier-factory.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/209-anthropic-fallback-warning-claude-code-distinction/packages/core/src/config-explain/build.ts"
+      ],
+      "updatedAt": "2026-07-23T02:06:07.538Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T02:06:07.727Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/209-anthropic-fallback-warning-claude-code-distinction/docs/providers.md"
+      ],
+      "updatedAt": "2026-07-23T02:08:50.832Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T02:08:51.024Z"
+    }
+  }
+}

@@ -127,7 +127,7 @@ anthropic` is configured, CADENCE emits a stderr warning and falls back to
 mock rather than failing hard:
 
 ```
-verifier: anthropic provider requested but ANTHROPIC_API_KEY is unset — falling back to mock provider.
+verifier: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.
 ```
 
 The same fallback applies to every gate (`per-task-verify`, `code-review`,

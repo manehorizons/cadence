@@ -61,7 +61,7 @@ function deriveWarnings(
     if (row.provider === 'anthropic' && !ctx.anthropicKeyPresent) {
       warnings.push({
         code: 'provider-no-key',
-        message: `${row.block} is set to 'anthropic' but ANTHROPIC_API_KEY is unset — it will silently fall back to 'mock'. Run cadence doctor to confirm provider health.`,
+        message: `${row.block} is set to 'anthropic' but ANTHROPIC_API_KEY is unset — it will silently fall back to 'mock'; a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key. Run cadence doctor to confirm provider health.`,
       });
     } else if (row.provider === 'local' && !ctx.localKeyPresent) {
       warnings.push({
