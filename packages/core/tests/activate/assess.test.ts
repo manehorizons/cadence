@@ -3,7 +3,12 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CadenceConfigZ, defaultConfig } from '@manehorizons/cadence-types';
-import { assessReadiness, credsPresent, VERIFIER_SEAMS } from '../../src/activate/assess.js';
+import {
+  assessReadiness,
+  credsPresent,
+  isClaudeCodeSession,
+  VERIFIER_SEAMS,
+} from '../../src/activate/assess.js';
 
 const cfg = (overrides: Record<string, unknown> = {}) =>
   CadenceConfigZ.parse({ ...defaultConfig, ...overrides });
@@ -114,5 +119,23 @@ describe('assessReadiness (AC-6)', () => {
     expect(r.keyPresent).toBe(true);
     expect(r.ready).toBe(true);
     expect(r.reason).toMatch(/host-cli/i);
+  });
+});
+
+describe('isClaudeCodeSession (AC-1, phase 211)', () => {
+  it('is true only when CLAUDECODE is exactly the string "1"', () => {
+    expect(isClaudeCodeSession({ CLAUDECODE: '1' })).toBe(true);
+  });
+
+  it('is false when CLAUDECODE is unset', () => {
+    expect(isClaudeCodeSession({})).toBe(false);
+  });
+
+  it('is false when CLAUDECODE is set to "0"', () => {
+    expect(isClaudeCodeSession({ CLAUDECODE: '0' })).toBe(false);
+  });
+
+  it('is false when CLAUDECODE is set to "true"', () => {
+    expect(isClaudeCodeSession({ CLAUDECODE: 'true' })).toBe(false);
   });
 });

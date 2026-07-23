@@ -7,7 +7,7 @@ import { homedir } from 'node:os';
 import { MOCK_VERIFIER_NOTICE, CadenceStateZ, type CadenceState } from '@manehorizons/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
-import { assessReadiness } from '../activate/assess.js';
+import { assessReadiness, isClaudeCodeSession } from '../activate/assess.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
@@ -706,6 +706,19 @@ export async function checkVerificationReadiness(
     }
     if (!r.keyPresent) {
       const envVar = r.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'CADENCE_LOCAL_BASE_URL';
+      if (r.provider === 'anthropic' && isClaudeCodeSession(env)) {
+        // Phase 211 AC-1: inside a live Claude Code session, a missing
+        // ANTHROPIC_API_KEY is a common confusion — being logged into Claude
+        // Code does not supply the separate `anthropic`-provider credential
+        // deep-verify needs. Name the confusion and steer to host-cli, which
+        // reuses that same Claude Code login instead of a standalone API key.
+        return fail(
+          'verification-readiness',
+          'warning',
+          `deep-verify is set to 'anthropic' but its credentials are missing — it will fall back to mock. Being logged into Claude Code does not supply ${envVar}; that is a separate credential.`,
+          `Set ${envVar}, or run \`cadence activate --provider host-cli\` to reuse your Claude Code login instead.`,
+        );
+      }
       return fail(
         'verification-readiness',
         'warning',

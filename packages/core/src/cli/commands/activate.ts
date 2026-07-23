@@ -7,7 +7,7 @@ import { CadenceConfigZ } from '@manehorizons/cadence-types';
 import { NotInitializedError } from '../../errors.js';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
 import { setPath } from '../../config-edit/apply.js';
-import { assessReadiness, credsPresent, DEEP_VERIFY_SEAM } from '../../activate/assess.js';
+import { assessReadiness, credsPresent, isClaudeCodeSession, DEEP_VERIFY_SEAM } from '../../activate/assess.js';
 import { planActivation, type ActivationScope } from '../../activate/plan.js';
 import { renderText, renderJson, type ActivationResult } from '../../activate/render.js';
 import { pingProvider, type ProviderPing } from '../../activate/ping.js';
@@ -84,7 +84,12 @@ export async function runActivate(
   const keyMissing = !credsPresent(provider, DEEP_VERIFY_SEAM, config, env, root);
 
   if (args.print === true) {
-    const result: ActivationResult = { plan, wrote: false, keyMissing };
+    const result: ActivationResult = {
+      plan,
+      wrote: false,
+      keyMissing,
+      ...(provider === 'anthropic' ? { claudeCodeSession: isClaudeCodeSession(env) } : {}),
+    };
     emit(io, args, result);
     return { exitCode: 0, data: renderJson(result) };
   }
@@ -119,6 +124,7 @@ export async function runActivate(
     wrote: plan.changes.length > 0,
     keyMissing,
     ...(pingResult !== undefined ? { ping: pingResult } : {}),
+    ...(provider === 'anthropic' ? { claudeCodeSession: isClaudeCodeSession(env) } : {}),
   };
   emit(io, args, result);
   return { exitCode, data: renderJson(result) };

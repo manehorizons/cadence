@@ -581,8 +581,8 @@ settle run already detects and warns on files touched outside a task's declared 
 
 ## rec-20260723-003 — CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate
 
-- status: candidate
-- ready: raw-idea
+- status: settle-pending
+- ready: ready-for-milestone
 - priority: low
 - leverage: 5/10
 - risk: 5/10
