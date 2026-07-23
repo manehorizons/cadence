@@ -1088,35 +1088,6 @@
       "updatedAt": "2026-07-18T05:00:07.898Z"
     },
     {
-      "id": "rec-20260723-001",
-      "title": "Add Claude-Code-vs-ANTHROPIC_API_KEY distinction to the anthropic-provider mock-fallback warning",
-      "summary": "The MOCK_FALLBACK_BANNER / anthropic-provider fallback warning (verifier-factory.ts) fires stderr-side at the exact moment a user hits silent mock-fallback, but says only 'ANTHROPIC_API_KEY is unset' with no hint that being logged into Claude Code doesn't satisfy this. Docs alone don't help since the user may never open them at the failure moment. Add the distinction inline to the warning text itself, mirroring the honesty-first pattern already used for MOCK_VERIFIER_NOTICE.",
-      "source": "manual",
-      "status": "converted",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/verifier-factory.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260723-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260723-0108",
-      "createdAt": "2026-07-23T01:08:31.539Z",
-      "updatedAt": "2026-07-23T01:28:21.521Z",
-      "convertedToPhaseId": "209-anthropic-fallback-warning-claude-code-distinction"
-    },
-    {
       "id": "rec-20260723-002",
       "title": "Docs callout: anthropic provider auth is separate from Claude Code's own login",
       "summary": "docs/providers.md's anthropic section (~line 102-135) has no callout distinguishing 'logged into Claude Code' (OAuth/subscription) from 'ANTHROPIC_API_KEY set' (the anthropic provider's actual requirement, a direct Anthropic SDK call with zero visibility into Claude Code's credential store). The host-cli section already has an analogous, well-written distinction (quota-transparency notice, ~line 352-374) that can serve as the model for tone and placement.",
@@ -3535,6 +3506,38 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-22T19:13:31.313Z",
       "updatedAt": "2026-07-22T20:36:05.639Z"
+    },
+    {
+      "id": "rec-20260723-001",
+      "title": "Add Claude-Code-vs-ANTHROPIC_API_KEY distinction to the anthropic-provider mock-fallback warning",
+      "summary": "The MOCK_FALLBACK_BANNER / anthropic-provider fallback warning (verifier-factory.ts) fires stderr-side at the exact moment a user hits silent mock-fallback, but says only 'ANTHROPIC_API_KEY is unset' with no hint that being logged into Claude Code doesn't satisfy this. Docs alone don't help since the user may never open them at the failure moment. Add the distinction inline to the warning text itself, mirroring the honesty-first pattern already used for MOCK_VERIFIER_NOTICE.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/verifier-factory.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260723-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "209-anthropic-fallback-warning-claude-code-distinction",
+      "scoutId": "scout-20260723-0108",
+      "createdAt": "2026-07-23T01:08:31.539Z",
+      "updatedAt": "2026-07-23T02:27:34.128Z",
+      "shippedRef": "PR #282 / phase 209",
+      "archivedAt": "2026-07-23T02:27:34.128Z",
+      "archiveReason": "shipped"
     }
   ]
 }
