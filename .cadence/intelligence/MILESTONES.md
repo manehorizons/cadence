@@ -29,6 +29,7 @@ None.
 - mil-rec-rec-20260720-002 — Team rollout kit → .cadence/intelligence/exports/mil-rec-rec-20260720-002/SPEC.md
 - mil-rec-rec-20260721-002 — cadence next: state-derived legal next moves at any loop position, human + --json agent contract → .cadence/intelligence/exports/mil-rec-rec-20260721-002/SPEC.md
 - mil-rec-rec-20260723-001 — Add Claude-Code-vs-ANTHROPIC_API_KEY distinction to the anthropic-provider mock-fallback warning → .cadence/intelligence/exports/mil-rec-rec-20260723-001/SPEC.md
+- mil-rec-rec-20260723-002 — Docs callout: anthropic provider auth is separate from Claude Code's own login → .cadence/intelligence/exports/mil-rec-rec-20260723-002/SPEC.md
 
 ## Closed
 

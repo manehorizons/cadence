@@ -101,6 +101,14 @@ If it prints nothing or `mock`, mock is active.
 
 ## anthropic — Anthropic API
 
+> **Not the same login as Claude Code.** Being logged into Claude Code (an
+> OAuth/subscription session) does not satisfy this provider. `anthropic`
+> calls the Anthropic SDK directly, with zero visibility into Claude Code's
+> own credential store, and requires a separately API-billed
+> `ANTHROPIC_API_KEY`. If you'd rather reuse your Claude Code or Codex CLI
+> login instead of a raw API key, see
+> [host-cli](#host-cli--headless-host-cli-claudecodex) below.
+
 Set the environment variable and configure the gate:
 
 ```sh

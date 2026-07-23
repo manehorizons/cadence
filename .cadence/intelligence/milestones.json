@@ -496,6 +496,32 @@
       ],
       "createdAt": "2026-07-23T01:19:24.533Z",
       "updatedAt": "2026-07-23T01:22:05.880Z"
+    },
+    {
+      "id": "mil-rec-rec-20260723-002",
+      "name": "Docs callout: anthropic provider auth is separate from Claude Code's own login",
+      "objective": "docs/providers.md's anthropic section (~line 102-135) has no callout distinguishing 'logged into Claude Code' (OAuth/subscription) from 'ANTHROPIC_API_KEY set' (the anthropic provider's actual requirement, a direct Anthropic SDK call with zero visibility into Claude Code's credential store). The host-cli section already has an analogous, well-written distinction (quota-transparency notice, ~line 352-374) that can serve as the model for tone and placement.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260723-002"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260723-002/SPEC.md",
+          "exportedAt": "2026-07-23T03:28:56.360Z"
+        }
+      ],
+      "createdAt": "2026-07-23T03:28:38.601Z",
+      "updatedAt": "2026-07-23T03:28:56.360Z"
     }
   ]
 }
