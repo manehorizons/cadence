@@ -581,8 +581,8 @@ settle run already detects and warns on files touched outside a task's declared 
 
 ## rec-20260723-002 — Docs callout: anthropic provider auth is separate from Claude Code's own login
 
-- status: candidate
-- ready: raw-idea
+- status: settle-pending
+- ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
 - risk: 5/10

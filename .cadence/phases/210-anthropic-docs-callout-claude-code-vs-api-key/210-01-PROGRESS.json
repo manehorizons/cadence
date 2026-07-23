@@ -1,0 +1,11 @@
+{
+  "draftId": "210-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added blockquote callout after the anthropic section heading in docs/providers.md distinguishing Claude Code login (OAuth/subscription) from the anthropic provider's ANTHROPIC_API_KEY requirement, cross-linking to the host-cli section; matches the docs' existing > **Label.** callout convention.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T03:31:35.534Z"
+    }
+  }
+}
