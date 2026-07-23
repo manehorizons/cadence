@@ -579,22 +579,6 @@ settle run already detects and warns on files touched outside a task's declared 
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
 
-## rec-20260723-002 — Docs callout: anthropic provider auth is separate from Claude Code's own login
-
-- status: settle-pending
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs
-- files: docs/providers.md
-- evidence: Generated in /cadence-scout session on rec-20260710-001, 2026-07-23; siblings: rec-20260710-001, and the fallback-warning-text + CLAUDECODE-aware-messaging recs landed in the same session
-- next: cadence milestone propose
-
-docs/providers.md's anthropic section (~line 102-135) has no callout distinguishing 'logged into Claude Code' (OAuth/subscription) from 'ANTHROPIC_API_KEY set' (the anthropic provider's actual requirement, a direct Anthropic SDK call with zero visibility into Claude Code's credential store). The host-cli section already has an analogous, well-written distinction (quota-transparency notice, ~line 352-374) that can serve as the model for tone and placement.
-
 ## rec-20260723-003 — CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate
 
 - status: candidate
