@@ -210,7 +210,7 @@ export function createVerifierFactory<C, V>(
       const apiKey = discoverKey('ANTHROPIC_API_KEY', env, cwd).value;
       if (!apiKey) {
         warn(
-          `${spec.label}: anthropic provider requested but ANTHROPIC_API_KEY is unset — falling back to mock provider.`,
+          `${spec.label}: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.`,
         );
         return spec.mock();
       }

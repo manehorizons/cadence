@@ -76,12 +76,12 @@ describe('createVerifierFactory', () => {
     expect(v).toEqual({ kind: 'anthropic', model: 'm1' });
   });
 
-  it('anthropic without a key falls back to mock with the labeled warning', () => {
+  it('AC-1: anthropic without a key falls back to mock with the labeled warning, naming Claude Code login as insufficient', () => {
     const warns: string[] = [];
     const v = select({ fake: { provider: 'anthropic' } }, { env: {}, warn: (m) => warns.push(m) });
     expect(v).toEqual({ kind: 'mock' });
     expect(warns).toEqual([
-      'fake: anthropic provider requested but ANTHROPIC_API_KEY is unset — falling back to mock provider.',
+      'fake: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.',
     ]);
   });
 

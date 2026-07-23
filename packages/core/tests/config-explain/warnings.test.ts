@@ -21,6 +21,21 @@ describe('buildExplanation — config-semantic warnings (AC-2)', () => {
     expect(codes(config, cleanCtx)).not.toContain('provider-no-key');
   });
 
+  // AC-2: the provider-no-key message for anthropic distinguishes a Claude Code
+  // login from the ANTHROPIC_API_KEY the provider actually requires.
+  it('AC-2: provider-no-key message for anthropic states a Claude Code login does not satisfy it', () => {
+    const config = { ...defaultConfig, verifier: { provider: 'anthropic' as const } };
+    const warnings = buildExplanation(config, { ...cleanCtx, anthropicKeyPresent: false }).warnings;
+    const warning = warnings.find((w) => w.code === 'provider-no-key');
+    expect(warning).toBeDefined();
+    expect(warning!.message).toContain(
+      "ANTHROPIC_API_KEY is unset — it will silently fall back to 'mock'",
+    );
+    expect(warning!.message).toContain(
+      'a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key',
+    );
+  });
+
   // AC-2: local provider keys off CADENCE_LOCAL_API_KEY, not the anthropic key.
   it('AC-2: provider-no-key fires for local without CADENCE_LOCAL_API_KEY', () => {
     const config = { ...defaultConfig, codeReview: { provider: 'local' as const } };
