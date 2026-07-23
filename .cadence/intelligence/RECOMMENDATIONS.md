@@ -579,22 +579,6 @@ settle run already detects and warns on files touched outside a task's declared 
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
 
-## rec-20260723-001 — Add Claude-Code-vs-ANTHROPIC_API_KEY distinction to the anthropic-provider mock-fallback warning
-
-- status: converted
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: verify
-- files: packages/core/src/verify/verifier-factory.ts
-- evidence: Generated in /cadence-scout session on rec-20260710-001 (Claude Code auth vs ANTHROPIC_API_KEY confusion), 2026-07-23; siblings: rec-20260710-001, and the docs-callout + CLAUDECODE-aware-messaging recs landed in the same session
-- next: cadence milestone propose
-
-The MOCK_FALLBACK_BANNER / anthropic-provider fallback warning (verifier-factory.ts) fires stderr-side at the exact moment a user hits silent mock-fallback, but says only 'ANTHROPIC_API_KEY is unset' with no hint that being logged into Claude Code doesn't satisfy this. Docs alone don't help since the user may never open them at the failure moment. Add the distinction inline to the warning text itself, mirroring the honesty-first pattern already used for MOCK_VERIFIER_NOTICE.
-
 ## rec-20260723-002 — Docs callout: anthropic provider auth is separate from Claude Code's own login
 
 - status: candidate
