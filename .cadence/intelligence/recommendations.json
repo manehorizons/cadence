@@ -1237,6 +1237,65 @@
       "decisionIds": [],
       "createdAt": "2026-07-24T23:11:35.333Z",
       "updatedAt": "2026-07-24T23:11:35.333Z"
+    },
+    {
+      "id": "rec-20260724-012",
+      "title": "pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented",
+      "summary": "Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "tooling",
+        "security",
+        "dependencies"
+      ],
+      "affectedFiles": [
+        "package.json",
+        "pnpm-workspace.yaml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-014"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-24T23:14:13.477Z",
+      "updatedAt": "2026-07-24T23:14:13.477Z"
+    },
+    {
+      "id": "rec-20260724-013",
+      "title": "cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json — can silently collide with a dangling evidence row",
+      "summary": "Discovered 2026-07-24 during a rebase-conflict repair: an earlier session's mis-resolved rebase conflict left .cadence/intelligence/RECOMMENDATIONS.md and evidence.json carrying a recommendation (id rec-20260724-011) with NO backing entry in recommendations.json (the actual source of truth) — a half-written recommendation from an interrupted/incomplete cadence recommendation add call, or a hand-edited conflict resolution. A later, unrelated cadence recommendation add call computed its next id purely from recommendations.json's current max id, correctly saw '010' as the ceiling, and re-minted 'rec-20260724-011' for a completely different finding — colliding with the orphaned evidence row (which still pointed 'recommendationId': 'rec-20260724-011' at the wrong content). Root cause: id-minting logic doesn't cross-check evidence.json's recommendationId references, so a dangling evidence row (with no matching recommendations.json entry) is invisible to it. Fix: either have id-minting take the max across both recommendations.json ids AND evidence.json's referenced recommendationIds, or add a cadence doctor check that flags evidence rows with no matching recommendation (which would have caught this drift immediately instead of it surviving 6 handoff commits unnoticed).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/recommendation-add.ts",
+        "packages/core/src/services/doctor.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-015"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-24T23:14:27.720Z",
+      "updatedAt": "2026-07-24T23:14:27.720Z"
     }
   ],
   "archived": [

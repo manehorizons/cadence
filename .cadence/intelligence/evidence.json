@@ -875,6 +875,20 @@
       "kind": "note",
       "summary": "Reproduced live in phase 213 session 2026-07-24: 'cadence done 213-01-T1' returned 'Recorded 213-01-T1: DONE' with exit 0, but cadence status still showed T1/T2/T3 as PENDING; PROGRESS.json contained both the stray '213-01-T1' key and, after correction, the real 'T1' key.",
       "createdAt": "2026-07-24T23:11:35.333Z"
+    },
+    {
+      "id": "ev-20260724-014",
+      "recommendationId": "rec-20260724-012",
+      "kind": "note",
+      "summary": "Empirically confirmed 2026-07-24: pre-existing brace-expansion override in package.json produced no effect (resolved version matched the un-overridden natural resolution); relocating to pnpm-workspace.yaml also produced no effect (no overrides section in regenerated pnpm-lock.yaml, resolved version unchanged). GHSA-mh99-v99m-4gvg documented as a time-boxed audit exception in the meantime (docs/security/audit-exceptions.md, expires 2026-08-20).",
+      "createdAt": "2026-07-24T23:14:13.477Z"
+    },
+    {
+      "id": "ev-20260724-015",
+      "recommendationId": "rec-20260724-013",
+      "kind": "note",
+      "summary": "Live repro 2026-07-24: fixed via git-history surgery on local main's unpushed commits (5 cherry-picked commits rebuilt from the last-consistent point) after an Opus forensic investigation traced the split to a specific earlier-session commit whose rebase conflict resolution touched recommendations.json, RECOMMENDATIONS.md, and evidence.json inconsistently (--ours for the JSON alone, --theirs for the other two). Full investigation transcript available in this session's conversation history.",
+      "createdAt": "2026-07-24T23:14:27.720Z"
     }
   ]
 }
