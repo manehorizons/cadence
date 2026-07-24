@@ -4,6 +4,483 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+> Accumulated changesets not yet cut into a release.
+
+### Added
+
+- **Close the trust envelope for `cadence_settle`** — the MCP `cadence_settle` tool is now gated by the same trust-envelope pre-check as `cadence_draft_approve`/`cadence_spec_approve`; a call with no valid grant is refused before `settleService` runs. `enforceApprovalBypassGrant` renamed to `enforceGatedToolGrant`. (Phase `216-settle-capability-gate`.)
+- **`gates.evidenceFloor`** — a new settle gate refuses `cadence settle run --auto` when any AC's `PASS` verdict rests on evidence ranked below a configured floor on the evidence ladder (`ai-verified` > `executed` > `assertion` > `mention` > `unverified`). Preset defaults: `solo` → `assertion`, `team`/`production` → `executed`. A named, per-AC, reason-required bypass (`--evidence-floor-bypass <AC-id:reason>`) is recorded in `SUMMARY.gateBypasses`. (Phase `214-evidence-floor-gate`.)
+- **`cadence doctor` `phase-freshness` check** — warns when the active phase/draft's `PROGRESS.json` has a task updated within the last 10 minutes, naming the task and its age, to catch a concurrent session working the same phase/draft. Read-only, best-effort.
+- **`cadence retro feedback`** — matches recurring cross-phase retro friction (gate bypasses, rough task statuses, finding categories) to recommendations by `affectedAreas`/`affectedFiles` overlap and records each match as auditable evidence; `cadence recommend`/`context`/`next` now factor linked friction into a transparent `frictionPts` scoring term.
+
+### Fixed
+
+- **Anthropic mock-fallback warning clarity** — the `anthropic`-provider mock-fallback warning and its `cadence config explain` counterpart now state plainly that being logged into Claude Code (or another host CLI session) does not satisfy `ANTHROPIC_API_KEY` — it's a separately-billed direct SDK call with no visibility into a host session's own credential store.
+- **CLAUDECODE-aware doctor/activate messaging** — `cadence doctor`'s verification-readiness check and `cadence activate`'s key-missing message now name the Claude-Code-login-doesn't-satisfy-this confusion directly when running inside a live Claude Code session, and suggest `cadence activate --provider host-cli` as the fix.
+
+## [1.50.0] - 2026-07-22
+
+> Published to npm 2026-07-22 via the `Release` workflow (provenance), tag `v1.50.0`. Per-package bumps managed by changesets.
+
+### Added
+
+- **`cadence verify phase [phase] [num]`** — a state-independent, phase-scoped re-derivation of whether a settled phase's recorded AC coverage still holds against the current working tree, using only the phase's committed `DRAFT.md`/`SUMMARY.json`. `--changed --base <ref>` discovers phases via `git diff` for CI use. `cadence init --ci` scaffolds a matching GitHub Actions workflow.
+- **`cadence next`** — a read-only command answering "what now?" deterministically from live loop state: 1-3 ranked legal moves with exact commands, plus a stable `--json` contract for agent orchestrators. Registered as the 15th Claude Code slash command (`/cadence-next`) and matching Codex prompt.
+- **`cadence draft add-task`'s empty-result/refusal messages** across the intelligence-layer CLI (`recommend`, `milestone propose`, `recommendation promote/convert/list`, `retro`) now state why a result is empty, the unmet precondition, the nearest-miss candidate, and the exact unblocking command.
+- **`cadence milestone reopen <id>`** — moves a `deferred` milestone back to `proposed` so its claimed recommendations become eligible for re-clustering.
+- **UI-SPEC design contracts** — `cadence spec new --ui` scaffolds an opt-in `<id>-UI-SPEC.md` sidecar for phases touching UI surfaces; `cadence spec approve` runs a new convergent `ui-spec-review` gate when one is present, and `cadence draft new` seeds its content into the DRAFT.
+
+## [1.49.0] - 2026-07-20
+
+> Published to npm 2026-07-20 via the `Release` workflow (provenance), tag `v1.49.0`.
+
+### Added
+
+- **`cadence summary render <phase> <num>`** — a read-only command that reads a settled phase's `SUMMARY.json` and prints a deterministic Markdown rendering (per-AC pass/fail with evidence level, per-task status, gate outcomes, bypasses) suitable for pasting into a PR. Refuses loudly on missing/invalid/schema-failing input.
+- **`docs/team-rollout.md`** — a guide for adopting CADENCE across a team in PR review without replacing existing CI or human review.
+
+## [1.48.0] - 2026-07-20
+
+> Published to npm 2026-07-20 via the `Release` workflow (provenance), tag `v1.48.0`.
+
+### Added
+
+- **Operator-authored milestone pre-mortem fields** — `cadence milestone premortem <id>` accepts repeatable `--add-out-of-scope`/`--add-likely-failure-mode`/`--add-hidden-dependency` flags that append text without hand-editing `milestones.json`; entries survive later automatic refreshes.
+- **`cadence recommendation evidence add <recId> --note <text>`** — appends a new evidence note to an existing recommendation and links it into `evidenceIds` atomically.
+
+### Fixed
+
+- **`.cadence/state.json`/`STATE.md` cross-worktree merge conflicts (#177)** — `cadence init` now gitignores the four CADENCE-owned ephemeral paths by default; `cadence doctor --fix` gains a `state-tracked` check and `untrack-state` auto-repair for existing repos. The audit-trail value a tracked `state.json` used to carry now lives in a new `stateAtSettle` field on `SUMMARY.json`/`SUMMARY.md`.
+
+## [1.47.0] - 2026-07-18
+
+> Published to npm 2026-07-18 via the `Release` workflow (provenance), tag `v1.47.0`.
+
+### Added
+
+- **`recommendedIsolation` on `cadence dispatch plan`** — every task in a dispatch plan now carries `'worktree'` or `'none'` based on whether it declares `files:`, surfaced in both `--json` output and the rendered packet text.
+
+### Fixed
+
+- **Dispatched-agent authorization overrun** — a real 2026-07-18 incident showed a dispatched fork agent running `cadence build`/`cadence settle` and `git commit` directly against `main`, self-authorized. Every rendered dispatch packet now includes a mandatory prohibition block forbidding state-mutating `cadence` subcommands, `git commit`/`push`, and network actions — the dispatched agent must stop and report, never self-record its own outcome.
+- **`StateConflictError` false-positives under `host-cli` verifiers** — a `SubagentStop` hook's telemetry-only `session.subagentSpawns` bump was routed through the same revision-guarded commit path as structural writes, so a long-running `host-cli` verifier call reliably collided with any overlapping subagent spawn (#234). `StateBackend` gains a separate `bumpSessionCounter()` write path that never touches the optimistic-concurrency `revision` field.
+
+## [1.46.0] - 2026-07-18
+
+> Published to npm 2026-07-18 via the `Release` workflow (provenance), tag `v1.46.0`.
+
+### Added
+
+- **`cadence onboard`** — one-command setup for the 2nd-Nth teammate cloning a repo that already has `.cadence/` committed: installs host hooks and reports project/provider readiness without re-scaffolding config or state.
+- **`cadence retro`** — read-only cross-phase rollup over every settled phase's retro artifact, splitting gate-bypass/task-status/finding-category friction into recurring (2+ phases) vs. one-off buckets.
+- **`cadence doctor --fix` handoff-retention auto-remediation** — sets `handoff.retain` to the default and prunes the archive when it's grown past the warn threshold.
+- **Real `host-cli` verifier wiring** — `spec-review`, `plan-review`, `code-review`, `security-audit`, and deep-verify now have working `host-cli` builders (previously only `per-task-verify` did; every other family with `provider: "host-cli"` silently fell back to `mock`).
+- **`cadence init --full`** — composes `--wire-host`, `--demo`, and `--activate` into one call, printing a consolidated setup summary.
+
+### Fixed
+
+- **`--allow-auto-complex` soft-cap invisibility** — bypassing the auto×complex soft cap now records a `gateBypasses` entry in `SUMMARY.json` and emits a new `auto-complex-override` anomaly.
+
+## [1.45.0] - 2026-07-15
+
+> Published to npm 2026-07-15 via the `Release` workflow (provenance), tag `v1.45.0`.
+
+### Added
+
+- **MCP tool-trust envelope** — constrains `cadence_draft_approve` and `cadence_spec_approve`, the two MCP tools where the tool call itself previously acted as the approval with no expiry/capability-scope/revoke logic. Every registered MCP tool is now tagged with a `capabilityClass`; the two `APPROVAL_BYPASS` tools refuse unless the caller holds a trust grant matching the tool's live def-hash, running CADENCE version, and an unexpired TTL. Grants are issued exclusively via `cadence mcp trust grant/revoke/list`, a CLI-only, real-TTY surface — never reachable from any MCP tool call. `cadence_settle` is classified `SETTLE` but was deliberately left ungated this phase (closed in `216-settle-capability-gate`, see Unreleased). (Phase `181-mcp-tool-trust-envelope`.)
+- **`cadence milestone status <id>`** — read-only reconciliation mapping a milestone's converted recommendations to their phases and each phase's live loop position, replacing N manual `cadence status` round-trips.
+
+### Fixed
+
+- **Verifier call cancellation + tracing** — an optional `{ signal, traceId }` now threads through the verifier call path so long verifier runs can be cancelled cleanly and correlated in logs (`security-audit` gate scoped first).
+- **`host-cli` provider hardening** — guards against invisible host-CLI quota consumption, an unguarded self-invocation loop when `cadence` is already running inside the CLI it would spawn, and a subprocess hang (new `CADENCE_HOST_CLI_TIMEOUT_MS`, default 3 minutes).
+- **Secret redaction in persisted ledgers** — `Evidence.summary` and `security-audit` findings now pass through a `redactSecrets` utility before being written; the four intelligence ledger JSON files are now written `0o600`.
+
+## [1.44.1] - 2026-07-13
+
+> Published to npm 2026-07-13 via the `Release` workflow (provenance), tag `v1.44.1`.
+
+### Fixed
+
+- **Uncaught gate-implementation exceptions** — a thrown exception from any settle gate previously escaped uncaught, printing to stderr and exiting 1 with no `SUMMARY` written (only `security-audit` normalized its own throws). All 9 settle-dispatched gates now funnel through a central wrapper that synthesizes a `refuse` outcome. Closes rec-20260712-007.
+- **Optimistic concurrency for `state.json` writes** — `CadenceState` gains a `revision` field; `SimpleStateBackend.commit()` refuses with a new `StateConflictError` on a revision mismatch instead of silently overwriting a concurrent writer's change (`{ force: true }` overrides). Root-fixes a real incident where two concurrent Claude Code sessions in one checkout stomped each other's uncommitted work.
+- **Post-settle retro artifact + GitHub issue offer** — every successful settle now writes a `<draftId>-RETRO.json`/`.md` friction digest (gate bypasses, rough task statuses, findings) and, when non-empty and interactive, offers to file a `needs-triage` GitHub issue for it.
+- **Refused-gate provenance + SUMMARY on refusal** — a refusing gate no longer silently drops out of provenance; `GateProvenanceZ.status` gains `'refused'`, and a refused `settle run` now persists a populated `SUMMARY.{json,md}` instead of writing nothing.
+
+## [1.44.0] - 2026-07-11
+
+> Published to npm 2026-07-11 via the `Release` workflow (provenance), tag `v1.44.0`.
+
+### Added
+
+- **Multi-language assertion-mode test-coverage spans** — real span parsing for Python, Go, Rust, and PHP (previously js/ts only), via a shared profile-parameterized scanning engine. `verification.coverageProfiles` lets an operator define a custom profile for an unsupported language. `cadence verify coverage --explain AC-N` is a new read-only diagnostic.
+
+### Fixed
+
+- **`coverageMode` defaulted to `'assertion'` for every language** — `cadence init` now detects project language and only defaults to `'assertion'` for js/ts; other languages default to `'mention'` with language-aware `testGlobs`. Closes the "permanently unsatisfiable gate" failure mode for non-JS projects (real span parsing for those languages is the separate Added item above).
+- **Skipped tests counted as covered in assertion mode** — an AC whose only linked test sits inside `test.skip`/`.todo`/`.failing` is no longer treated as covered; the gate now refuses with a distinct "only linked test is skipped" message.
+
+## [1.43.0] - 2026-07-11
+
+> Published to npm 2026-07-11 via the `Release` workflow (provenance), tag `v1.43.0`.
+
+### Added
+
+- **Codex zero-friction first run** — `cadence init --host codex` (with `--agents-md`) wires host hooks and generates `AGENTS.md` in one step; `cadence doctor` gained Codex readiness checks with `--fix` remediation.
+- **`host-cli` verifier provider** — a 4th verifier provider that shells out to your already-authenticated `claude`/`codex` CLI in headless mode instead of requiring `ANTHROPIC_API_KEY`. Falls back to `mock` with a loud warning on a missing binary or auth failure. This release wires only the per-task-verify family; the other families accept the config value but still fall back to mock until a follow-up (closed across `1.45.0`/`1.46.0`).
+
+### Fixed
+
+- **Handoff/resume gaps** — `cadence resume` now runs a best-effort origin-freshness probe before replaying a doc and warns when origin has commits the clone lacks; `cadence resume`/`cadence handoff --check` (new) detect scaffolded `<!-- FILL IN -->` sections left unfinished by a prior session.
+- **Verifier activation trustworthiness** — a verifier API key is now discovered from a repo-root `.env` file when not exported; `cadence activate`'s live check is no longer coincidentally skippable; the discovered-key path now reaches every real verifier-selection call site, including `cadence mcp serve --repo <path>`.
+
+## [1.42.0] - 2026-07-07
+
+> Published to npm 2026-07-07 via the `Release` workflow (provenance), tag `v1.42.0`.
+
+### Added
+
+- **`boundaryEnforcement: 'block'` mode** — `handlePreToolEdit` refuses an out-of-boundary edit at edit time instead of only warning (DRAFT-frontmatter overridable).
+- **`boundary-scan` settle gate** — closes the blind spot edit-time blocking can't see (a subagent-driven edit invisible to the pre-tool-edit hook); enumerates every file touched by the whole phase via git diff and refuses on a real offender.
+- **`redundantWorkEnforcement`** — catches a subagent (or human) touching a DRAFT task's declared files after that task is already DONE, live at edit time plus a `SubagentStop` safety net.
+- **`cadence dispatch plan [--json]`** — wave-based subagent dispatch groups computed from the active BUILD draft's task list (topological leveling over `depends:` and `files:`-overlap edges), plus a new `/cadence-dispatch` Claude Code slash command.
+
+### Fixed
+
+- **Multi-line DRAFT/SPEC parsing** — `parseSpecMd`/`parseDraftMd` previously truncated a multi-line Objective or Given/When/Then clause at the first line break.
+
+## [1.41.0] - 2026-07-04
+
+> Published to npm 2026-07-04 via the `Release` workflow (provenance), tag `v1.41.0`.
+
+### Added
+
+- **Three MCP tools closing the scout-to-phase dead-end** — `cadence_recommendation_convert`, `cadence_milestone_propose`, and `cadence_recommendation_archive`, plus a per-phase `SUMMARY.json` MCP resource.
+
+### Fixed
+
+- **`cadence_recommendation_promote`'s description** pointed at a CLI-only `milestone propose` command an MCP client had no way to invoke.
+
+## [1.40.0] - 2026-07-04
+
+> Published to npm 2026-07-04 via the `Release` workflow (provenance), tag `v1.40.0`.
+
+### Added
+
+- **`cadence draft set-objective`/`add-ac`/`add-task`** — three subcommands that mutate a PENDING `DRAFT.md`'s Objective/Acceptance Criteria/Tasks sections directly, round-tripping through the DRAFT parser so a hand-typed heading typo can no longer silently corrupt AC/Task id sequencing.
+
+### Fixed
+
+- **`parseAcceptanceCriteria`/`parseTasks` heading-regex bug** — a name-less `### AC-N:` heading bled the next line into the parsed name.
+
+## [1.39.0] - 2026-07-03
+
+> Published to npm 2026-07-03 via the `Release` workflow (provenance), tag `v1.39.0`.
+
+### Added
+
+- **`settle-pending` recommendation status (#126)** — when a `converted` recommendation's phase settles, it now moves to a non-terminal `settle-pending` status instead of silently archiving. A new `cadence doctor` `recommendation-shipped-drift` check surfaces recommendations awaiting ship confirmation.
+- **`/cadence-recommend` slash command + `cadence recommend --top <n>`** — caps the displayed ranked recommendation list.
+
+## [1.38.0] - 2026-07-03
+
+> Published to npm 2026-07-03 via the `Release` workflow (provenance), tag `v1.38.0`.
+
+### Added
+
+- **Cross-worktree handoff discovery for `cadence resume`** — discovers resumable handoff docs across all active git worktrees of a repo, not just the current checkout's own `.cadence/handoff/`, via a live `git worktree list` scan. New `--list`/`--pick <n>`/`--path <p>`/`--local` flags; a 2+-candidate nudge or (opt-in) auto-picker. Picking a sibling worktree's candidate is strictly read-only. (Phases `142`–`144`.)
+
+## [1.37.0] - 2026-07-02
+
+> Published to npm 2026-07-02 via the `Release` workflow (provenance), tag `v1.37.0`.
+
+### Added
+
+- **Assertion-mode coverage default for new inits** — `verification.coverageMode` now defaults to `assertion` for new inits across all three presets, closing the gap between what `cadence tutorial` demonstrates and what a fresh init delivers; `verification.testCommand` is derived from the target repo's `package.json` scripts.
+- **Auditable settle-verdict evidence** — `SUMMARY.json` now records per-gate `ran`/`skipped` (+ reason) provenance, and each `acResults[]` row carries an evidence class (`ai-verified`/`executed`/`assertion`/`mention`/`unverified`) — the strongest real evidence found for that AC.
+
+## [1.36.0] - 2026-07-02
+
+> Published to npm 2026-07-02 via the `Release` workflow (provenance), tag `v1.36.0`.
+
+### Fixed
+
+Onboarding-honesty wave 1 — six small, high-trust fixes from the 2026-07-01 audit:
+
+- `cadence doctor`'s git-hooks check now verifies `.githooks/` actually exists before flagging, and never auto-overwrites a pre-existing custom `hooksPath`. (Phase `133`.)
+- `cadence progress --json` added, mirroring `recommend --json`'s pattern. (Phase `134`.)
+- `init --demo` no longer prints the generic onboarding blocks (which immediately refuse in DRAFT) alongside the correct demo instructions. (Phase `135`.)
+- README's real-phase walkthrough gets an inline `--no-approve` pointer. (Phase `136`.)
+- BUILD-state `progress` now names the real first-pending task instead of an unrunnable compound command; `draft approve` on a missing `DRAFT.md` gives a clean guarded refusal instead of a raw `ENOENT`. (Phase `137`.)
+- Slash-command count reconciled to the code-true count across docs. (Phase `138`.)
+
+## [1.35.0] - 2026-06-27
+
+> Published to npm 2026-06-27 via the `Release` workflow (provenance), tag `v1.35.0`.
+
+### Added
+
+- **`cadence init --dry-run`** — a non-destructive fit-check that resolves everything init would (project name, gate profile, layout, test globs, verification/provider status, host surface) and prints a preview without touching the repo.
+
+## [1.34.0] - 2026-06-27
+
+> Published to npm 2026-06-27 via the `Release` workflow (provenance), tag `v1.34.0`.
+
+### Added
+
+- **`cadence doctor --fix`** — applies safe, deterministic repairs for fixable doctor findings (git-hooks → `core.hooksPath=.githooks`; regenerate a missing `STATE.md`), with a `--wire-host` opt-in and a `--dry-run` preview. Risky findings stay manual guidance.
+
+## [1.33.0] - 2026-06-26
+
+> Published to npm 2026-06-26 via the `Release` workflow (provenance), tag `v1.33.0`.
+
+### Added
+
+- **`cadence agent-prompt`** — hands the user a copy-paste prompt to scaffold the first real CADENCE phase with an AI agent (testable ACs, stop at approval); also surfaced as an `init` output block.
+
+## [1.32.0] - 2026-06-23
+
+> Published to npm 2026-06-23 via the `Release` workflow (provenance), tag `v1.32.0`.
+
+### Changed
+
+- **`cadence tutorial` rebuilt around the catch (refuse → fix → pass)** — the tutorial now stages a lie and lets settle catch it: marks a task DONE with a real implementation but no test, `settle run --auto` refuses (naming `AC-1`), then a real test is written and the second settle passes. The previous manual `--ac AC-1=pass` assertion and coverage bypass are gone — the refusal a newcomer needs to see is now the demo's centerpiece.
+
+## [1.31.0] - 2026-06-19
+
+> Published to npm 2026-06-19 via the `Release` workflow (provenance), tag `v1.31.0`.
+
+### Added
+
+- **First-real-task DRAFT templates** — `bugfix`/`feature`/`refactor` templates for `cadence draft new --template` generate editable Objective/AC/Tasks/Boundaries sections from a supplied title.
+- **Faster, more opinionated onboarding** — README leads with a no-install `npx` tutorial; `cadence init` prints template-first next steps; `cadence start` shows a state-aware recommended command before the full menu.
+
+## [1.30.0] - 2026-06-19
+
+> Published to npm 2026-06-19 via the `Release` workflow (provenance), tag `v1.30.0`.
+
+### Added
+
+- **`cadence draft new --title "..."`** can now derive the next free phase id and task number.
+- **Settle bypass audit trails** — `cadence settle run` now records and prints explicit gate-bypass audit entries for force/coverage/verifier-failure paths, exposed through `SUMMARY`.
+- **Codex host parity** — Codex prompts now source shared command guidance and install the `cadence-scout` prompt.
+
+## [1.29.0] - 2026-06-18
+
+> Published to npm 2026-06-18 via the `Release` workflow (provenance), tag `v1.29.0`.
+
+### Fixed
+
+- **Non-TTY hard-fail on the approve + interactive-verdict gates** — the two interactive loop gates no longer hard-fail in a non-TTY with `StdinPrompter: stdin is not a TTY`. `approve` now auto-passes loudly (stderr audit trail); `interactive-verdict` skips its walker and records `interactiveVerifySkipped: "non-tty"` in the SUMMARY — no human verdicts are fabricated. `CADENCE_REQUIRE_TTY=1` restores the strict refusal. (Phase `116`.)
+
+## [1.28.0] - 2026-06-18
+
+> Published to npm 2026-06-18 via the `Release` workflow (provenance), tag `v1.28.0`.
+
+### Added
+
+- **Coverage-gate assertion mode** (`verification.coverageMode: "assertion"`) — closes the test-coverage gate's "mentioned-but-not-tested" false positive: an `AC-N` token only counts when it sits inside an asserting `it()`/`test()` block. The default `mention` mode is unchanged. (Phase `108`.)
+- **`cadence start` as the single onboarding front door** — README leads with `cadence start` alone; `cadence doctor` ends with a `Next:` line. (Phase `113`.)
+
+### Fixed
+
+- **`auto` gate-profile heads-up** — `cadence init` now warns when a young repo gets the `auto` gate profile, since `draft approve` flips to interactive once the repo passes ~20 commits. `cadence handoff` now honors a `CADENCE_NOW` env override for reproducible SESSION-doc dates. (Phase `114`.)
+
+## [1.27.0] - 2026-06-17
+
+> Published to npm 2026-06-17 via the `Release` workflow (provenance), tag `v1.27.0`.
+
+### Added
+
+- **Zero-friction `cadence init`** — derives project name and gate profile with no prompts. (Phase `108`.)
+- **Auto-wire the host** — `--wire-host` runs the Claude Code adapter install in the same `init` step via subprocess spawn. (Phase `108`.)
+- **`init --demo`** — seeds a ready-to-approve demo phase for a full `approve → done → settle` loop with no hand-edit. (Phase `109`.)
+- **`init --activate`** — turns on real verification in the same `init` step when `ANTHROPIC_API_KEY` is present. (Phase `110`.)
+
+## [1.26.0] - 2026-06-14
+
+> Published to npm 2026-06-14 via the `Release` workflow (provenance), tag `v1.26.0`.
+
+### Added
+
+- **`cadence start`** — an interactive onboarding front door: "What are you doing?" → numbered pick → confirm → runs the matching setup command (tutorial, init, host install, MCP install, doctor). Scriptable via `--pick`/`--yes`/`--json`.
+
+## [1.25.0] - 2026-06-12
+
+> Published to npm 2026-06-12 via the `Release` workflow (provenance), tag `v1.25.0`.
+
+### Changed
+
+- **Mock verifier named honestly as a placeholder** — the `mock` verifier is now explicitly named a non-verifier placeholder across every surface (settle banner, `cadence doctor`, `cadence init`, `quickstart`/`config explain`, docs), closing the gap between the "real verification gate" pitch and the out-of-box mock default (the #1 finding of the 2026-06-11 competitive assessment; rec-20260611-003). Warning-only — mock stays the zero-config offline default.
+
+## [1.24.0] - 2026-06-11
+
+> Published to npm 2026-06-11 via the `Release` workflow (provenance), tag `v1.24.0`.
+
+### Added
+
+- **Recommendation retention** — `cadence recommendation archive <id>`/`unarchive <id>` and `recommendation list --archived` for manual soft-archival (recoverable, never deleted). A new `recommendations.autoArchive` config (default on) auto-archives a rec when it goes terminal.
+
+## [1.23.0] - 2026-06-11
+
+> Published to npm 2026-06-11 via the `Release` workflow (provenance), tag `v1.23.0`.
+
+### Added
+
+- **`shipped` terminal recommendation status** — a rec whose work has landed can now reach a truthful positive-terminal state via `cadence recommendation promote <id> --status=shipped [--ref "..."]`, instead of being stuck at `candidate`. (Phase `100`, from rec-20260611-001.)
+
+## [1.22.1] - 2026-06-11
+
+> Published to npm 2026-06-11 via the `Release` workflow (provenance), tag `v1.22.1`.
+
+### Fixed
+
+- **Phase-id ceiling** — widened the id schema from `^\d{2}-\d{2}$` to `^\d{2,}-\d{2,}$` and derived ids through a single `derivePhaseTaskId` helper, so phases >= 100 are representable end-to-end instead of being mangled into `10-100`. (rec-20260610-001.)
+
+## [1.22.0] - 2026-06-11
+
+> Published to npm 2026-06-11 via the `Release` workflow (provenance), tag `v1.22.0`.
+
+### Added
+
+- **`cadence activate`** — a guided command taking a project from all-mock verifiers to real verification: picks a provider, writes `verifier.provider`, validates the key with a minimal live ping, and never persists the key. `cadence doctor` gains a `verification-readiness` check.
+
+## [1.21.0] - 2026-06-10
+
+> Published to npm 2026-06-10 via the `Release` workflow (provenance), tag `v1.21.0`.
+
+### Added
+
+- **Quickstart-onboarding arc** — `cadence config explain` (in-CLI explanation of the active config), a deepened `config explain [field]`, `cadence config edit` (guided edit wizard), and `cadence quickstart` (state-aware onboarding front door that orients a user from any loop position).
+
+## [1.20.0] - 2026-06-09
+
+> Published to npm 2026-06-09 via the `Release` workflow (provenance), tag `v1.20.0`.
+
+### Added
+
+- **Handoff retention** — an opt-in `handoff.retain` config field keeps the N most-recent session handoffs and hard-deletes the rest at handoff-write time. A new `cadence doctor` `handoff-retention` check surfaces unmanaged accumulation.
+
+## [1.19.0] - 2026-06-08
+
+> Published to npm 2026-06-08 via the `Release` workflow (provenance), tag `v1.19.0`.
+
+### Added
+
+- **`cadence doctor` `worktree-phases` check** — warns when a sibling worktree claims a local phase number, naming the conflict and the next free number; the IDLE `draft new` suggestion now fills in the next free number automatically.
+
+## [1.18.0] - 2026-06-08
+
+> Published to npm 2026-06-08 via the `Release` workflow (provenance), tag `v1.18.0`.
+
+### Added
+
+- **Phase-collision guard** — observes ground truth (`git worktree list` + `origin/<integrationRef>`) and refuses to scaffold a phase number already claimed by a sibling worktree or upstream, naming the conflict and suggesting the next free number. Fires at `spec new`/`draft new` scaffold time and as a `settle run` backstop; `--allow-phase-collision` bypasses per-run.
+
+## [1.17.0] - 2026-06-07
+
+> Published to npm 2026-06-07 via the `Release` workflow (provenance), tag `v1.17.0`.
+
+### Added
+
+- **Structured operator-debugging logger** — a zero-dependency, default-off logger for diagnosing CADENCE itself, writing only to stderr, gated by `CADENCE_LOG_LEVEL`/`CADENCE_LOG_FORMAT`. Three seams instrumented: `gate`, `hook`, `verify` (including token usage; auth headers/keys never logged).
+
+## [1.16.0] - 2026-06-07
+
+> Published to npm 2026-06-07 via the `Release` workflow (provenance), tag `v1.16.0`.
+
+### Added
+
+- **MCP surface deepening** across four dimensions: `.cadence/` artifacts exposed as read-on-demand `cadence://` resources (Phase `75`); five more commands join the MCP tool set for session continuity and the full scout → rec → promote path over MCP, 15 tools total (Phase `76`); canonical command guidance and the `cadence-scout` dialogue move into a shared `cadence-types` module powering both the Claude Code slash commands and new MCP prompts (Phase `77`); `cadence mcp install [--print] [--client <c>]` non-destructively writes/merges a project `.mcp.json` (Phase `78`).
+
+## [1.15.0] - 2026-06-06
+
+> Published to npm 2026-06-06 via the `Release` workflow (provenance), tag `v1.15.0`.
+
+### Added
+
+- **Verifier provider hardening** — `anthropic` gains configurable `verifier.timeoutMs`/`maxRetries` so a transient 429/5xx/network blip in a settle gate retries before failing; `local` gains bearer-token auth. (Phase `72`.)
+- **Verifier selection + cost visibility** — `cadence settle run --verifier <mock|anthropic|local>` overrides the config-only provider selection; `SUMMARY`'s `deepVerifyMeta` gains optional token usage. (Phase `73`.)
+
+## [1.14.0] - 2026-06-06
+
+> Published to npm 2026-06-06 via the `Release` workflow (provenance), tag `v1.14.0`.
+
+### Fixed
+
+- **`deep-verify` sent an empty diff** — the gate now sends the AI verifier the actual phase diff (shared with `code-review`), bounded by a new `verifier.diffCapBytes` config, so deep verification judges the implementation rather than test-linkage alone. A `deepVerifyMeta` provenance record makes a verdict auditable; the mock-fallback banner now fires on gate-set membership too, not just `--deep`.
+
+## [1.13.0] - 2026-06-06
+
+> Published to npm 2026-06-06 via the `Release` workflow (provenance), tag `v1.13.0`.
+
+### Added
+
+- **`@manehorizons/cadence-host-codex`** — the second published consumer of the host-adapter contract (`ADAPTER_CONTRACT_VERSION = 1`, unchanged), proving the contract isn't Claude-Code-shaped. Ships `codexAdapter satisfies HostAdapter`, `cadence-host-codex install` (project `.codex/hooks.json` + global prompt files), and the runtime hook shim.
+
+## [1.12.0] - 2026-06-05
+
+> Published to npm 2026-06-05 via the `Release` workflow (provenance), tag `v1.12.0`.
+
+### Added
+
+- **`cadence tutorial`** — runs one real DRAFT→BUILD→SETTLE loop inside a throwaway sandbox, printing each step's command and real output. (Phase `63`.)
+- **`cadence explain [concept]`** — prints curated, terminal-sized explanations of core concepts from content embedded in the binary. (Phase `64`.)
+
+## [1.11.0] - 2026-06-05
+
+> Published to npm 2026-06-05 via the `Release` workflow (provenance), tag `v1.11.0`.
+
+### Added
+
+- **Scout-session grouping (`scoutId`)** — an optional `scoutId` on recommendations groups the recs landed by one `/cadence-scout` session, queryable via `--scout-id` on `recommendation add` and `recommend --scout-id`. (Phase `61`.)
+- **Guided first-loop nudge in `cadence init`** — a numbered "Your first loop" block (draft new → edit → approve → done → settle) replaces the thin `Next: edit ROADMAP.md` line. (Phase `62`.)
+
+## [1.10.0] - 2026-06-05
+
+> Published to npm 2026-06-05 via the `Release` workflow (provenance), tag `v1.10.0`.
+
+### Added
+
+- **Explicit, versioned host-adapter contract** — `@manehorizons/cadence-types` exports a first-class `HostAdapter` interface plus `HostCapabilitiesZ`, `ADAPTER_CONTRACT_VERSION`, and `ExtractedPayload`; `claudeCodeAdapter` conforms to it, and the docs portal gains a "write your own adapter" guide.
+
+## [1.9.0] - 2026-06-05
+
+> Published to npm 2026-06-05 via the `Release` workflow (provenance), tag `v1.9.0`.
+
+### Added
+
+- **`cadence resume` brief/full modes** — defaults to brief output when live state matches the handoff doc, and auto-promotes to full output (whole doc + live-context replay) on drift. `--full`/`--brief` force a mode; `--json` gains a `mode` field.
+
+## [1.8.0] - 2026-06-05
+
+> Published to npm 2026-06-05 via the `Release` workflow (provenance), tag `v1.8.0`.
+
+### Added
+
+- **`cadence mcp serve`** — a local Model Context Protocol server over stdio, so any MCP-capable host (Claude Desktop, Cursor, other agents) can drive the DRAFT→BUILD→SETTLE loop with no bespoke adapter. A third surface on the single engine (CLI · Claude-Code hooks · MCP), exposing 10 curated tools wrapping the same engine the CLI uses. Command-boundary gates run exactly as on the CLI; ambient edit-time gates require host hooks and aren't available over MCP. (Phase `58`.)
+
+## [1.7.0] - 2026-06-04
+
+> Published to npm 2026-06-04 via the `Release` workflow (provenance), tag `v1.7.0`.
+
+### Added
+
+- **`cadence doctor`** — a deterministic, offline, report-only command that health-checks a project (Node floor, `.cadence/` + config validity, state-file integrity, `.githooks` pre-push gate, Claude Code managed hooks, slash-command path portability), reporting `ok`/`warning`/`error` with remediation. `--json` for CI. (Phase `56`.)
+- **`cadence recommendation promote`** — advance a recommendation's status and/or readiness independently of `convert`, closing the gap where `milestone propose` was unreachable for manually-added recommendations. (Phase `57`.)
+
+### Fixed
+
+- **`install --local`'s machine-absolute-path warning** — previously named only `.claude/settings.json`; now enumerates every surface actually written (settings file and/or command files), since the slash-command files under `--local` were a silent offender.
+
+## [1.6.1] - 2026-06-04
+
+> Published to npm 2026-06-04 via the `Release` workflow (provenance), tag `v1.6.1`. Internal-only patch.
+
+### Changed
+
+- **Internal refactor: split `intelligence/store`** — the 985-LOC god-module was decomposed into ten single-responsibility modules under `intelligence/store/`, with `store.ts` kept as a thin re-export barrel. No user-facing or API change. (Phase `54`.)
+
 ## [1.6.0] - 2026-06-04
 
 > Published to npm 2026-06-04 via the `Release` workflow (provenance), tag `v1.6.0`. Per-package bumps managed by changesets.
