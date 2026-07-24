@@ -7,10 +7,11 @@ import type {
   ContextRec,
   ContextScope,
   Evidence,
+  EvidenceLedger,
   IntelligenceDecision,
   Recommendation,
 } from '@manehorizons/cadence-types';
-import { ContextPacketZ } from '@manehorizons/cadence-types';
+import { ContextPacketZ, emptyEvidenceLedger } from '@manehorizons/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { partitionLedger, scoreRecommendation } from './recommend.js';
 import { intelligenceDir } from './store/paths.js';
@@ -22,6 +23,7 @@ import {
 } from './store/io.js';
 import { cadenceBackend } from './backend/cadence.js';
 import { renderContextMd } from './render-context.js';
+import { countFrictionEvidence } from '../services/retro-feedback.js';
 
 const TOP_N_PHASE = 7;
 const TOP_N_HANDOFF = 5;
@@ -87,11 +89,15 @@ export function synthesizeContextPacket(
   scope: ContextScope,
   sources: ContextSources,
   now: Date = new Date(),
+  evidenceLedger: EvidenceLedger = emptyEvidenceLedger(),
 ): ContextPacket {
   const { ranked, needsAttention: attnBucket } = partitionLedger(sources.recommendations);
 
   const scored = ranked
-    .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
+    .map((rec) => ({
+      rec,
+      ...scoreRecommendation(rec, countFrictionEvidence(rec, evidenceLedger)),
+    }))
     .sort(compareScored);
 
   let selected: typeof scored;
@@ -119,7 +125,10 @@ export function synthesizeContextPacket(
   const needsAttention: ContextRec[] | undefined =
     scope === 'review'
       ? attnBucket
-          .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
+          .map((rec) => ({
+            rec,
+            ...scoreRecommendation(rec, countFrictionEvidence(rec, evidenceLedger)),
+          }))
           .sort(compareScored)
           .map((s) => toContextRec(s.rec, s.score))
       : undefined;
@@ -234,6 +243,7 @@ export async function runContext(
       backend,
     },
     now,
+    evLedger,
   );
 
   const dir = join(intelligenceDir(root), 'context');

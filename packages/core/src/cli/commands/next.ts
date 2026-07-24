@@ -5,7 +5,7 @@ import { nextAction, type LegalMove, type NextActionHints } from '../../progress
 import { loadStatus } from '../../status.js';
 import { resolveNextFreePhase } from '../../phases/next-free.js';
 import { readMilestoneLedger } from '../../intelligence/store/milestones.js';
-import { readRecommendationLedger } from '../../intelligence/store/io.js';
+import { readRecommendationLedger, readEvidenceLedger } from '../../intelligence/store/io.js';
 import { findNearestCandidates } from '../../intelligence/nearest-candidate.js';
 import { formatCommandError } from '../../services/format-command-error.js';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
@@ -43,9 +43,10 @@ async function resolveIdleLedgerHints(
   nextPhaseNumber: number | undefined,
 ): Promise<NextActionHints['ledger'] | undefined> {
   try {
-    const [milestoneLedger, recLedger] = await Promise.all([
+    const [milestoneLedger, recLedger, evidenceLedger] = await Promise.all([
       readMilestoneLedger(repoRoot),
       readRecommendationLedger(repoRoot),
+      readEvidenceLedger(repoRoot),
     ]);
     const recById = new Map(recLedger.recommendations.map((r) => [r.id, r] as const));
 
@@ -78,9 +79,11 @@ async function resolveIdleLedgerHints(
     // promote" — the eligibility predicate restricts to `candidate` so an
     // already-promoted top-scorer doesn't get suggested for promotion again.
     let topRecommendation: { id: string; title: string } | undefined;
-    const { top } = findNearestCandidates(recLedger.recommendations, {
-      isEligible: (rec) => rec.status === 'candidate',
-    });
+    const { top } = findNearestCandidates(
+      recLedger.recommendations,
+      { isEligible: (rec) => rec.status === 'candidate' },
+      evidenceLedger,
+    );
     if (top !== undefined) {
       topRecommendation = { id: top.rec.id, title: top.rec.title };
     }

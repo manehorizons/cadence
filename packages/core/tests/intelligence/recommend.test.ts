@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { BackendStatus, Recommendation } from '@manehorizons/cadence-types';
+import type { BackendStatus, Evidence, EvidenceLedger, Recommendation } from '@manehorizons/cadence-types';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import { scoreRecommendation, partitionLedger, buildAdvisory, synthesizeRecommendation, runRecommend } from '../../src/intelligence/recommend.js';
@@ -43,7 +43,12 @@ describe('scoreRecommendation', () => {
         priority: 'high',
       }),
     );
+    // raw is exactly the pre-phase-212 7-term value (frictionEvidenceCount
+    // defaults to 0 -> frictionPts is exactly 0, a genuine no-op on raw).
     expect(r.raw).toBe(32.3);
+    // score is unchanged from pre-phase-212: frictionPts=0 is a no-op on both
+    // raw and score, and SCORE_MIN/SCORE_MAX are unchanged (AC-3 invariant —
+    // zero friction evidence must score identically to today).
     expect(r.score).toBe(83);
     expect(r.terms.map((t) => t.label)).toEqual([
       'lev 7',
@@ -53,9 +58,11 @@ describe('scoreRecommendation', () => {
       'ready ready-for-milestone',
       'decay fresh',
       'prio high',
+      'friction 0',
     ]);
     expect(r.terms.find((t) => t.label === 'conf 0.80')?.value).toBe(4.8);
     expect(r.terms.find((t) => t.label === 'risk 3')?.value).toBe(-1.5);
+    expect(r.terms.find((t) => t.label === 'friction 0')?.value).toBe(0);
   });
 
   it('clamps the ranked-universe minimum to 0', () => {
@@ -74,7 +81,7 @@ describe('scoreRecommendation', () => {
     expect(r.score).toBe(0);
   });
 
-  it('clamps the ranked-universe maximum to 100', () => {
+  it('the 7-term maximum (raw 44, no friction) rescales to exactly 100 — SCORE_MAX unchanged', () => {
     const r = scoreRecommendation(
       mkRec({
         leverageScore: 10,
@@ -86,7 +93,31 @@ describe('scoreRecommendation', () => {
         priority: 'critical',
       }),
     );
+    // raw is byte-identical to the pre-phase-212 7-term max, and with
+    // SCORE_MAX still 44 (reverted from the rejected 48.5 widening), this
+    // rescales to exactly 100 — matching pre-phase-212 clamp behavior.
     expect(r.raw).toBe(44);
+    expect(r.score).toBe(100);
+  });
+
+  it('raw exceeding 44 purely because of added frictionPts also clamps to 100 — same clamp, different term', () => {
+    const r = scoreRecommendation(
+      mkRec({
+        leverageScore: 10,
+        confidence: 1,
+        riskScore: 0,
+        status: 'accepted',
+        readiness: 'ready-for-cadence-spec',
+        decayState: 'fresh',
+        priority: 'critical',
+      }),
+      3, // capped friction-evidence count -> +4.5, pushing raw past the 44 ceiling
+    );
+    // raw legitimately exceeds SCORE_MAX (44) now — the pre-existing
+    // Math.max(0, Math.min(100, ...)) clamp saturates score at 100, exactly
+    // as it already does today whenever any other combination of the 7
+    // original terms exceeds 44. Not a new bug class.
+    expect(r.raw).toBe(48.5);
     expect(r.score).toBe(100);
   });
 
@@ -96,6 +127,57 @@ describe('scoreRecommendation', () => {
     const fresh = scoreRecommendation(mkRec({ decayState: 'fresh' }));
     expect(fresh.raw - stale.raw).toBe(10); // +4 − (−6)
     expect(fresh.raw - nr.raw).toBe(9);     // +4 − (−5)
+  });
+
+  it('AC-3: frictionEvidenceCount=0 leaves raw byte-identical to the pre-phase-212 7-term formula', () => {
+    const inputs = {
+      leverageScore: 7,
+      confidence: 0.8,
+      riskScore: 3,
+      status: 'accepted' as const,
+      readiness: 'ready-for-milestone' as const,
+      decayState: 'fresh' as const,
+      priority: 'high' as const,
+    };
+    const oldFormulaRaw =
+      inputs.leverageScore * 1.0 +
+      inputs.confidence * 10 * 0.6 -
+      inputs.riskScore * 0.5 +
+      6 /* status accepted */ +
+      7 /* readiness ready-for-milestone */ +
+      4 /* decay fresh */ +
+      5 /* priority high */;
+    const r = scoreRecommendation(mkRec(inputs));
+    expect(r.raw).toBe(Math.round(oldFormulaRaw * 10) / 10);
+    expect(r.raw).toBe(32.3);
+  });
+
+  it('AC-3: a recommendation with N>0 linked friction evidence scores strictly higher (raw and score) than an otherwise-identical one with none', () => {
+    const base = mkRec({
+      leverageScore: 5,
+      confidence: 0.5,
+      riskScore: 5,
+      status: 'candidate',
+      readiness: 'needs-decision',
+      decayState: 'aging',
+      priority: 'medium',
+    });
+    const withoutFriction = scoreRecommendation(base, 0);
+    const withFriction = scoreRecommendation(base, 2);
+    expect(withFriction.raw).toBeGreaterThan(withoutFriction.raw);
+    expect(withFriction.score).toBeGreaterThan(withoutFriction.score);
+    expect(withFriction.raw - withoutFriction.raw).toBe(3); // 2 * 1.5
+    expect(withFriction.terms.find((t) => t.label === 'friction 2')?.value).toBe(3);
+  });
+
+  it('AC-3: frictionEvidenceCount caps at 3 — 5 linked entries scores the same as 3', () => {
+    const base = mkRec({ leverageScore: 4, priority: 'low' });
+    const at3 = scoreRecommendation(base, 3);
+    const at5 = scoreRecommendation(base, 5);
+    expect(at5.raw).toBe(at3.raw);
+    expect(at5.score).toBe(at3.score);
+    expect(at5.terms.find((t) => t.label.startsWith('friction'))?.label).toBe('friction 3');
+    expect(at3.terms.find((t) => t.label === 'friction 3')?.value).toBe(4.5);
   });
 });
 
@@ -316,6 +398,61 @@ describe('synthesizeRecommendation', () => {
     expect(report.ranked).toEqual([]);
     expect(report.totals.ranked).toBe(1);
     expect(report.advisory.kind).toBe('top-recommendation');
+  });
+
+  it('AC-3: an evidenceLedger with linked friction evidence ranks/scores that recommendation higher than an otherwise-identical one with none', () => {
+    const withFriction = mkRec({
+      id: 'rec-friction',
+      leverageScore: 5,
+      evidenceIds: ['ev-1'],
+      createdAt: '2026-05-16T00:00:00.000Z',
+    });
+    const withoutFriction = mkRec({
+      id: 'rec-plain',
+      leverageScore: 5,
+      evidenceIds: [],
+      createdAt: '2026-05-17T00:00:00.000Z',
+    });
+    const evidence: Evidence = {
+      id: 'ev-1',
+      recommendationId: 'rec-friction',
+      kind: 'note',
+      summary: '[retro-friction:bypasses:code-review] recurring gate bypass "code-review" seen across 2 phase(s): 170-a, 171-b.',
+      createdAt: '2026-05-16T00:00:00.000Z',
+    };
+    const evidenceLedger: EvidenceLedger = { schemaVersion: 1, evidence: [evidence] };
+
+    const report = synthesizeRecommendation(
+      [withFriction, withoutFriction],
+      idleBackend,
+      new Date(),
+      {},
+      evidenceLedger,
+    );
+
+    expect(report.ranked.map((r) => r.id)).toEqual(['rec-friction', 'rec-plain']);
+    const frictionRank = report.ranked.find((r) => r.id === 'rec-friction');
+    const plainRank = report.ranked.find((r) => r.id === 'rec-plain');
+    expect(frictionRank).toBeDefined();
+    expect(plainRank).toBeDefined();
+    expect(frictionRank!.raw).toBeGreaterThan(plainRank!.raw);
+    expect(frictionRank!.score).toBeGreaterThan(plainRank!.score);
+    expect(frictionRank!.terms.find((t) => t.label === 'friction 1')?.value).toBe(1.5);
+    expect(plainRank!.terms.find((t) => t.label === 'friction 0')?.value).toBe(0);
+  });
+
+  it('omitting evidenceLedger is a no-op — behaves identically to an explicit empty ledger', () => {
+    const recs = [mkRec({ id: 'a', leverageScore: 9 })];
+    const withDefault = synthesizeRecommendation(recs, idleBackend, new Date('2026-05-17T00:00:00.000Z'));
+    const withExplicitEmpty = synthesizeRecommendation(
+      recs,
+      idleBackend,
+      new Date('2026-05-17T00:00:00.000Z'),
+      {},
+      { schemaVersion: 1, evidence: [] },
+    );
+    expect(withDefault.ranked[0]?.raw).toBe(withExplicitEmpty.ranked[0]?.raw);
+    expect(withDefault.ranked[0]?.score).toBe(withExplicitEmpty.ranked[0]?.score);
   });
 });
 

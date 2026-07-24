@@ -1,5 +1,7 @@
-import type { Recommendation } from '@manehorizons/cadence-types';
+import { emptyEvidenceLedger } from '@manehorizons/cadence-types';
+import type { EvidenceLedger, Recommendation } from '@manehorizons/cadence-types';
 import { partitionLedger, scoreRecommendation } from './recommend.js';
+import { countFrictionEvidence } from '../services/retro-feedback.js';
 
 /**
  * A recommendation scored via `scoreRecommendation`, alongside the
@@ -67,14 +69,25 @@ function byRawDescThenCreatedAtAscThenIdAsc(
  * the already-loaded ledger and decide what "eligible" means for their own
  * precondition (e.g. `cadence next`'s "available to promote" is
  * `status === 'candidate'`).
+ *
+ * `evidenceLedger` (optional, defaults to empty) feeds `scoreRecommendation`
+ * the same `countFrictionEvidence` signal `runRecommend` wires in — so this
+ * ranking never diverges from `cadence recommend`'s (docs/concepts.md,
+ * "Empty-result and refusal messages"). Omitting it is a zero-friction case,
+ * not an error: existing callers that don't pass one keep compiling and
+ * behaving exactly as before.
  */
 export function findNearestCandidates(
   recs: Recommendation[],
   options: NearestCandidateOptions,
+  evidenceLedger: EvidenceLedger = emptyEvidenceLedger(),
 ): NearestCandidateResult {
   const { ranked } = partitionLedger(recs);
   const scored = ranked
-    .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
+    .map((rec) => ({
+      rec,
+      ...scoreRecommendation(rec, countFrictionEvidence(rec, evidenceLedger)),
+    }))
     .sort(byRawDescThenCreatedAtAscThenIdAsc);
 
   const eligible: ScoredCandidate[] = [];

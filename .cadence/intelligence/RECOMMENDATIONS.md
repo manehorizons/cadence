@@ -378,8 +378,8 @@ A headless host-CLI verifier subprocess has zero shared context with the calling
 
 ## rec-20260712-003 — Retro friction feeds back into Praxis recommendation scoring
 
-- status: candidate
-- ready: raw-idea
+- status: settle-pending
+- ready: ready-for-milestone
 - priority: medium
 - leverage: 5/10
 - risk: 5/10

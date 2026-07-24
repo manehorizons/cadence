@@ -1,8 +1,9 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { RecommendationReportZ } from '@manehorizons/cadence-types';
+import { RecommendationReportZ, emptyEvidenceLedger } from '@manehorizons/cadence-types';
 import type {
   BackendStatus,
+  EvidenceLedger,
   Recommendation,
   RecommendationAdvisory,
   RecommendationRank,
@@ -11,9 +12,10 @@ import type {
 } from '@manehorizons/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { intelligenceDir } from './store/paths.js';
-import { readRecommendationLedger } from './store/io.js';
+import { readRecommendationLedger, readEvidenceLedger } from './store/io.js';
 import { cadenceBackend } from './backend/cadence.js';
 import { renderRecommendMd } from './render-recommend.js';
+import { countFrictionEvidence } from '../services/retro-feedback.js';
 
 const STATUS_PTS: Record<Recommendation['status'], number> = {
   candidate: 0,
@@ -53,8 +55,24 @@ const PRIORITY_PTS: Record<Recommendation['priority'], number> = {
 };
 // Tight bounds given Zod field constraints: leverageScore/riskScore ∈ [0,10], confidence ∈ [0,1].
 // Update both when a status/readiness/decay/priority enum value is added with pts outside this range.
+// Phase 212 T2: frictionPts (below) adds into `raw` like every other term, but
+// deliberately does NOT widen [SCORE_MIN, SCORE_MAX] — doing so would shift the
+// normalized `score` for every recommendation, including ones with zero friction
+// evidence, violating the "zero friction evidence = identical score" invariant
+// (frictionPts=0 must be a no-op). When friction points push `raw` above this
+// pre-existing 44 ceiling, the Math.max(0, Math.min(100, ...)) clamp below simply
+// saturates `score` at 100 — the same clamp that already fires today whenever any
+// other combination of the 7 original terms exceeds 44. Not a new bug class.
 const SCORE_MIN = -23;
 const SCORE_MAX = 44;
+
+// Friction-evidence weighting (AC-3): capped at 3 linked friction-evidence
+// entries, weighted 1.5 pts each (max contribution +4.5). Deliberately
+// conservative — a recurring friction signal should nudge a recommendation
+// up, not let a handful of friction hits dominate the other 7 signals whose
+// individual max contributions range up to +10 (readiness) or +8 (priority).
+const FRICTION_EVIDENCE_CAP = 3;
+const FRICTION_EVIDENCE_WEIGHT = 1.5;
 
 function r1(n: number): number {
   return Math.round(n * 10) / 10;
@@ -62,7 +80,10 @@ function r1(n: number): number {
 
 export type ScoreResult = { raw: number; score: number; terms: ScoreTerm[] };
 
-export function scoreRecommendation(rec: Recommendation): ScoreResult {
+export function scoreRecommendation(
+  rec: Recommendation,
+  frictionEvidenceCount = 0,
+): ScoreResult {
   const lev = rec.leverageScore * 1.0;
   const conf = rec.confidence * 10 * 0.6;
   const risk = rec.riskScore * 0.5;
@@ -70,9 +91,14 @@ export function scoreRecommendation(rec: Recommendation): ScoreResult {
   const readinessPts = READINESS_PTS[rec.readiness];
   const decayPts = DECAY_PTS[rec.decayState];
   const priorityPts = PRIORITY_PTS[rec.priority];
+  // Capped count (not the raw input) both drives frictionPts and labels the
+  // term, so `friction N` in the breakdown always matches what was actually
+  // scored — a caller passing 5 sees "friction 3", not a misleading "friction 5".
+  const cappedFrictionCount = Math.min(FRICTION_EVIDENCE_CAP, frictionEvidenceCount);
+  const frictionPts = cappedFrictionCount * FRICTION_EVIDENCE_WEIGHT;
 
   const raw = r1(
-    lev + conf - risk + statusPts + readinessPts + decayPts + priorityPts,
+    lev + conf - risk + statusPts + readinessPts + decayPts + priorityPts + frictionPts,
   );
   const score = Math.max(
     0,
@@ -89,6 +115,7 @@ export function scoreRecommendation(rec: Recommendation): ScoreResult {
     { label: `ready ${rec.readiness}`, value: readinessPts },
     { label: `decay ${rec.decayState}`, value: decayPts },
     { label: `prio ${rec.priority}`, value: priorityPts },
+    { label: `friction ${cappedFrictionCount}`, value: r1(frictionPts) },
   ];
   return { raw, score, terms };
 }
@@ -174,6 +201,7 @@ export function synthesizeRecommendation(
   backend: BackendStatus,
   now: Date = new Date(),
   filter: { scoutId?: string; top?: number } = {},
+  evidenceLedger: EvidenceLedger = emptyEvidenceLedger(),
 ): RecommendationReport {
   // Phase 61: when a scoutId filter is set, scope the whole report to that
   // cluster before partition so totals reflect the scoped set.
@@ -184,7 +212,10 @@ export function synthesizeRecommendation(
     partitionLedger(scoped);
 
   const scored = ranked
-    .map((rec) => ({ rec, ...scoreRecommendation(rec) }))
+    .map((rec) => ({
+      rec,
+      ...scoreRecommendation(rec, countFrictionEvidence(rec, evidenceLedger)),
+    }))
     .sort((a, b) => {
       if (b.raw !== a.raw) return b.raw - a.raw;
       if (a.rec.createdAt !== b.rec.createdAt) {
@@ -257,12 +288,14 @@ export async function runRecommend(
   filter: { scoutId?: string; top?: number } = {},
 ): Promise<RecommendationReport> {
   const ledger = await readRecommendationLedger(root);
+  const evidenceLedger = await readEvidenceLedger(root);
   const backend = await cadenceBackend.readStatus(root);
   const report = synthesizeRecommendation(
     ledger.recommendations,
     backend,
     now,
     filter,
+    evidenceLedger,
   );
 
   const dir = intelligenceDir(root);

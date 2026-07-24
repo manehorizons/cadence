@@ -5,13 +5,19 @@ import type {
   Assumption,
   BackendStatus,
   Evidence,
+  EvidenceLedger,
   IntelligenceDecision,
   Recommendation,
 } from '@manehorizons/cadence-types';
 import { ContextPacketZ } from '@manehorizons/cadence-types';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { synthesizeContextPacket, runContext } from '../../src/intelligence/context.js';
-import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
+import { scoreRecommendation } from '../../src/intelligence/recommend.js';
+import { countFrictionEvidence } from '../../src/services/retro-feedback.js';
+import {
+  addRecommendation,
+  addEvidenceToRecommendation,
+} from '../../src/intelligence/store/recommendations.js';
 import {
   addAssumption,
   runAssumptionTransition,
@@ -209,6 +215,94 @@ describe('synthesizeContextPacket', () => {
       activeDraft: '40-01',
       nextAction: 'cadence done T1',
     });
+  });
+
+  it('phase 212 fix: an evidenceLedger with linked friction evidence produces the same score scoreRecommendation would directly (closes the recommend/context divergence)', () => {
+    const withFriction = mkRec({
+      id: 'rec-friction',
+      leverageScore: 5,
+      evidenceIds: ['ev-1'],
+      createdAt: '2026-05-16T00:00:00.000Z',
+    });
+    const withoutFriction = mkRec({
+      id: 'rec-plain',
+      leverageScore: 5,
+      evidenceIds: [],
+      createdAt: '2026-05-17T00:00:00.000Z',
+    });
+    const evidence: Evidence = {
+      id: 'ev-1',
+      recommendationId: 'rec-friction',
+      kind: 'note',
+      summary: '[retro-friction:bypasses:code-review] recurring gate bypass "code-review" seen across 2 phase(s): 170-a, 171-b.',
+      createdAt: '2026-05-16T00:00:00.000Z',
+    };
+    const evidenceLedger: EvidenceLedger = { schemaVersion: 1, evidence: [evidence] };
+
+    const packet = synthesizeContextPacket(
+      'phase',
+      {
+        recommendations: [withFriction, withoutFriction],
+        evidence: [],
+        assumptions: [],
+        decisions: [],
+        backend: noBackend,
+      },
+      NOW,
+      evidenceLedger,
+    );
+
+    const frictionExpected = scoreRecommendation(
+      withFriction,
+      countFrictionEvidence(withFriction, evidenceLedger),
+    );
+    const plainExpected = scoreRecommendation(
+      withoutFriction,
+      countFrictionEvidence(withoutFriction, evidenceLedger),
+    );
+
+    const frictionOut = packet.recommendations.find((r) => r.id === 'rec-friction');
+    const plainOut = packet.recommendations.find((r) => r.id === 'rec-plain');
+    expect(frictionOut).toBeDefined();
+    expect(plainOut).toBeDefined();
+    expect(frictionOut!.score).toBe(frictionExpected.score);
+    expect(plainOut!.score).toBe(plainExpected.score);
+    expect(frictionOut!.score).toBeGreaterThan(plainOut!.score);
+    // Ranking order (score desc) also matches — the friction-boosted rec sorts first.
+    expect(packet.recommendations.map((r) => r.id)).toEqual(['rec-friction', 'rec-plain']);
+  });
+
+  it('omitting evidenceLedger is a no-op — behaves identically to an explicit empty ledger', () => {
+    const rec = mkRec({ id: 'rec-a', leverageScore: 5, evidenceIds: ['ev-1'] });
+    const evidence: Evidence = {
+      id: 'ev-1',
+      recommendationId: 'rec-a',
+      kind: 'note',
+      summary: '[retro-friction:bypasses:code-review] recurring gate bypass "code-review" seen across 1 phase(s): 170-a.',
+      createdAt: NOW.toISOString(),
+    };
+    const withEmptyLedger = synthesizeContextPacket(
+      'phase',
+      { recommendations: [rec], evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+      { schemaVersion: 1, evidence: [] },
+    );
+    const withoutLedgerArg = synthesizeContextPacket(
+      'phase',
+      { recommendations: [rec], evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+    );
+    expect(withoutLedgerArg.recommendations[0]!.score).toBe(withEmptyLedger.recommendations[0]!.score);
+    // Sanity: that same rec DOES score higher when the friction-linked ledger is actually passed.
+    const withFrictionLedger = synthesizeContextPacket(
+      'phase',
+      { recommendations: [rec], evidence: [], assumptions: [], decisions: [], backend: noBackend },
+      NOW,
+      { schemaVersion: 1, evidence: [evidence] },
+    );
+    expect(withFrictionLedger.recommendations[0]!.score).toBeGreaterThan(
+      withoutLedgerArg.recommendations[0]!.score,
+    );
   });
 
   it('surfaces backend stateError without throwing', () => {
@@ -638,7 +732,11 @@ describe('byte-stability regression — phase + handoff frozen (Slice 7 / AC-5)'
   // Deterministic fixture: 3 ranked recs (scores 48 / 45 / 42 — see score
   // table in recommend.ts), 1 evidence, 1 open assumption, 1 decision, 2
   // affectedFile contributions, plus one superseded rec to confirm the frozen
-  // scopes never expose needsAttention.
+  // scopes never expose needsAttention. None of these recs carry any
+  // `[retro-friction:...]`-linked evidence (fixture's lone evidence entry's
+  // summary is plain 'e'), so frictionEvidenceCount is 0 for all three and
+  // scores are byte-identical to pre-phase-212 (AC-3's "zero friction
+  // evidence = identical score" invariant).
   const fixedNow = new Date('2026-05-18T00:00:00.000Z');
   const isoNow = '2026-05-18T00:00:00.000Z';
   const sources = {
@@ -766,6 +864,30 @@ describe('runContext', () => {
       'utf8',
     );
     expect(md).toMatch(/# CADENCE Context Packet — phase/);
+  });
+
+  it('phase 212 fix: reads the on-disk evidence ledger and applies friction-evidence scoring, same as cadence recommend', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'ctx-friction' });
+    const withFriction = await addRecommendation(active.root, {
+      title: 'friction rec', summary: 's', priority: 'low', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const withoutFriction = await addRecommendation(active.root, {
+      title: 'plain rec', summary: 's', priority: 'low', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    const written = await addEvidenceToRecommendation(active.root, {
+      recommendationId: withFriction.id,
+      note: '[retro-friction:bypasses:code-review] recurring gate bypass "code-review" seen across 1 phase(s): 170-a.',
+    });
+    expect(written.ok).toBe(true);
+
+    const packet = await runContext(active.root, 'phase', new Date('2026-05-20T00:00:00.000Z'));
+    const frictionOut = packet.recommendations.find((r) => r.id === withFriction.id);
+    const plainOut = packet.recommendations.find((r) => r.id === withoutFriction.id);
+    expect(frictionOut).toBeDefined();
+    expect(plainOut).toBeDefined();
+    expect(frictionOut!.score).toBeGreaterThan(plainOut!.score);
   });
 
   it('degrades cleanly with no .cadence backend', async () => {
