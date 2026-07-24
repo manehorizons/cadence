@@ -49,6 +49,24 @@ describe('checkVerificationReadiness (AC-1, AC-2)', () => {
     expect(c.severity).toBe('ok');
   });
 
+  // AC-1 (phase 211) — inside a live Claude Code session (CLAUDECODE=1),
+  // a missing ANTHROPIC_API_KEY is a common confusion: the operator is
+  // logged into Claude Code, but that login does not satisfy the
+  // separate anthropic-provider credential deep-verify needs. The detail/
+  // remediation must name that confusion directly and proactively suggest
+  // `host-cli` instead of the generic "export it" text.
+  it('AC-1: names the Claude-Code-login confusion and suggests host-cli when CLAUDECODE=1 and the anthropic key is missing', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, { ...cfg, verifier: { ...cfg.verifier, provider: 'anthropic' } });
+    const c = await checkVerificationReadiness(active.root, { CLAUDECODE: '1' });
+    expect(c.name).toBe('verification-readiness');
+    expect(c.severity).toBe('warning');
+    const combined = `${c.detail} ${c.remediation}`;
+    expect(combined).toMatch(/host-cli/);
+    expect(combined).toMatch(/Claude Code/);
+  });
+
   // T5 (phase 164 amendment) — `checkVerificationReadiness` must forward its
   // own `root` param to `assessReadiness` as `cwd`, not rely on the default
   // `process.cwd()`. Proven with a key that lives ONLY in a `.env` file at

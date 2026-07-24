@@ -9,6 +9,8 @@ export interface ActivationResult {
   keyMissing: boolean;
   /** Present iff a live ping ran. */
   ping?: PingResult;
+  /** True iff this run is inside a live Claude Code session (`CLAUDECODE=1`). */
+  claudeCodeSession?: boolean;
 }
 
 export function renderText(r: ActivationResult): string {
@@ -28,6 +30,10 @@ export function renderText(r: ActivationResult): string {
     lines.push('');
     lines.push(`  ⚠ ${plan.envVar} is not set — verification will fall back to mock until you set it:`);
     lines.push(`      export ${plan.envVar}=…`);
+    if (r.claudeCodeSession) {
+      lines.push(`  · Being logged into Claude Code does not supply ${plan.envVar} — that login is separate from this API credential.`);
+      lines.push(`  · Prefer real verification without a key? Try: cadence activate --provider host-cli`);
+    }
   } else if (r.ping) {
     lines.push('');
     if ('skipped' in r.ping) {
@@ -54,5 +60,6 @@ export function renderJson(r: ActivationResult): Record<string, unknown> {
     keyMissing: r.keyMissing,
     nextStep: r.plan.nextStep,
     ...(r.ping ? { ping: r.ping } : {}),
+    ...(r.keyMissing && r.claudeCodeSession ? { claudeCodeHostCliSuggested: true } : {}),
   };
 }

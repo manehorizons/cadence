@@ -65,6 +65,15 @@ export function credsPresent(
   return Boolean(discoverKey('CADENCE_LOCAL_BASE_URL', env, cwd).value) && Boolean(model);
 }
 
+/** True when this process is running inside a live Claude Code session — the
+ *  `CLAUDECODE` env var, documented at https://code.claude.com/docs/en/env-vars
+ *  (see `verify/host-cli-client.ts`'s `SELF_INVOCATION_ENV_VAR` for the fuller
+ *  citation). Used to disambiguate a Claude Code login (no bearing on the
+ *  `anthropic` provider's credentials) from an actually-missing API key. */
+export function isClaudeCodeSession(env: NodeJS.ProcessEnv): boolean {
+  return env.CLAUDECODE === '1';
+}
+
 /** Pure verifier-posture assessment. Shared by `activate` and `doctor`.
  *  `cwd` (default `process.cwd()`) is threaded to `credsPresent` for `.env` discovery. */
 export function assessReadiness(

@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "draftId": "211-01",
+  "completedAt": "2026-07-23T23:53:31.083Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Failing regression tests for isClaudeCodeSession + doctor AC-1, confirmed failing for the right reason, then confirmed passing after T2. Reviewed independently: PASS."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "isClaudeCodeSession exported from assess.ts; checkVerificationReadiness names Claude-Code-login confusion + suggests host-cli when provider=anthropic, key missing, CLAUDECODE=1. Tests/typecheck/lint independently re-verified green. Reviewed independently: PASS."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Failing regression tests for AC-2 (render.test.ts, activate.test.ts) confirmed failing for the right reason, then passing after T4."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "ActivationResult.claudeCodeSession threaded through runActivate + renderText/renderJson. Reviewer caught a real gap (the --print path omitted the field); fixed and re-reviewed: PASS. Full core suite (3080 tests) + typecheck independently re-verified green."
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "pnpm turbo run lint typecheck test build: 20/20 tasks succeeded, 352 test files / 3080 tests passed."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 19,
+    "sessionSubagentSpawns": 29
+  }
+}

@@ -522,6 +522,30 @@
       ],
       "createdAt": "2026-07-23T03:28:38.601Z",
       "updatedAt": "2026-07-23T03:28:56.360Z"
+    },
+    {
+      "id": "mil-rec-rec-20260723-003",
+      "name": "CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate",
+      "objective": "When provider:anthropic is configured, ANTHROPIC_API_KEY is missing, AND CLAUDECODE=1 is detected (i.e. cadence is running inside a live Claude Code session), cadence doctor's verification-readiness check and cadence activate's failure path currently print the same generic 'key missing, here's the export line' message as any other missing-key case. In this specific, detectable situation the message could instead name the actual confusion directly and proactively suggest host-cli as the provider that piggybacks off the session's own Claude Code auth with zero separate key. Higher scope/risk than the other two (new CLAUDECODE detection at doctor/activate time, not just at verifier-factory fallback time) -- evaluate whether the win justifies the added surface.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260723-003"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260723-003/SPEC.md",
+          "exportedAt": "2026-07-23T23:33:42.254Z"
+        }
+      ],
+      "createdAt": "2026-07-23T23:33:26.048Z",
+      "updatedAt": "2026-07-23T23:33:42.254Z"
     }
   ]
 }

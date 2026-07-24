@@ -1,0 +1,38 @@
+{
+  "draftId": "211-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Failing regression tests for isClaudeCodeSession + doctor AC-1, confirmed failing for the right reason, then confirmed passing after T2. Reviewed independently: PASS.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T23:45:41.575Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "isClaudeCodeSession exported from assess.ts; checkVerificationReadiness names Claude-Code-login confusion + suggests host-cli when provider=anthropic, key missing, CLAUDECODE=1. Tests/typecheck/lint independently re-verified green. Reviewed independently: PASS.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T23:45:46.376Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Failing regression tests for AC-2 (render.test.ts, activate.test.ts) confirmed failing for the right reason, then passing after T4.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/211-claudecode-aware-provider-messaging/packages/core/src/cli/commands/activate.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/211-claudecode-aware-provider-messaging/packages/core/tests/cli/activate.test.ts"
+      ],
+      "updatedAt": "2026-07-23T23:50:06.140Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "ActivationResult.claudeCodeSession threaded through runActivate + renderText/renderJson. Reviewer caught a real gap (the --print path omitted the field); fixed and re-reviewed: PASS. Full core suite (3080 tests) + typecheck independently re-verified green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T23:50:06.327Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "pnpm turbo run lint typecheck test build: 20/20 tasks succeeded, 352 test files / 3080 tests passed.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-23T23:50:55.764Z"
+    }
+  }
+}

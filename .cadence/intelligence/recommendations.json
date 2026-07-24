@@ -1092,8 +1092,8 @@
       "title": "CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate",
       "summary": "When provider:anthropic is configured, ANTHROPIC_API_KEY is missing, AND CLAUDECODE=1 is detected (i.e. cadence is running inside a live Claude Code session), cadence doctor's verification-readiness check and cadence activate's failure path currently print the same generic 'key missing, here's the export line' message as any other missing-key case. In this specific, detectable situation the message could instead name the actual confusion directly and proactively suggest host-cli as the provider that piggybacks off the session's own Claude Code auth with zero separate key. Higher scope/risk than the other two (new CLAUDECODE detection at doctor/activate time, not just at verifier-factory fallback time) -- evaluate whether the win justifies the added surface.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
+      "status": "settle-pending",
+      "readiness": "ready-for-milestone",
       "priority": "low",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1111,9 +1111,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "211-claudecode-aware-provider-messaging",
       "scoutId": "scout-20260723-0108",
       "createdAt": "2026-07-23T01:08:31.941Z",
-      "updatedAt": "2026-07-23T01:08:31.941Z"
+      "updatedAt": "2026-07-23T23:53:31.086Z"
     }
   ],
   "archived": [
@@ -3536,12 +3537,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "210-anthropic-docs-callout-claude-code-vs-api-key",
-      "scoutId": "scout-20260723-0108",
-      "createdAt": "2026-07-23T01:08:31.748Z",
-      "updatedAt": "2026-07-23T03:57:52.370Z",
       "shippedRef": "PR #285 / phase 210",
+      "scoutId": "scout-20260723-0108",
       "archivedAt": "2026-07-23T03:57:52.370Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-23T01:08:31.748Z",
+      "updatedAt": "2026-07-23T03:57:52.370Z"
     }
   ]
 }

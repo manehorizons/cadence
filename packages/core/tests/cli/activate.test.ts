@@ -134,6 +134,25 @@ describe('runActivate (AC-1, AC-2, AC-3, AC-4, AC-5)', () => {
     expect(io.stdout()).toMatch(/export ANTHROPIC_API_KEY/);
     expect((await loadConfig(root)).verifier.provider).toBe('mock'); // nothing written
   });
+
+  // AC-2 (Phase 211 regression) — the --print early-return path built its own
+  // ActivationResult literal that omitted claudeCodeSession entirely, so a
+  // Claude Code session previewing activation never got the host-cli-aware
+  // suggestion that the non-print path already renders.
+  it('AC-2: --print in a Claude Code session with no key suggests the host-cli provider (P211 regression)', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const io = bufferIO();
+    const res = await runActivate(
+      root,
+      { provider: 'anthropic', print: true, isTty: false },
+      io,
+      { ping: okPing, env: { CLAUDECODE: '1' } },
+    );
+    expect(res.exitCode).toBe(0);
+    expect(res.data).toMatchObject({ claudeCodeHostCliSuggested: true });
+    expect((await loadConfig(root)).verifier.provider).toBe('mock'); // still nothing written
+  });
 });
 
 // Phase: trustworthy-verifier-activation, task T3.
@@ -194,5 +213,48 @@ describe('runActivate — non-skippable activation smoke test (AC-2)', () => {
     );
     expect(calls).toBe(0);
     expect(res.exitCode).toBe(0);
+  });
+});
+
+// Phase 211-01, task T3. AC-2: `runActivate` must set `claudeCodeSession:
+// true` on the internal `ActivationResult` (per AC-2's `render.ts` contract)
+// when the resolved provider is `anthropic`, the key is missing, and the
+// process env carries `CLAUDECODE === '1'` — mirroring the AC-3 "key missing"
+// case above, with the Claude Code env var added. The internal flag is
+// externally observable only through `renderJson`'s derived
+// `claudeCodeHostCliSuggested: true` field (per AC-2), which is what the
+// emitted JSON result (`res.data`) is asserted against here.
+//
+// NOTE: `runActivate` does not set `claudeCodeSession` yet, and `renderJson`
+// does not emit `claudeCodeHostCliSuggested` yet (both are wired in a later
+// task) — this assertion is expected to fail until then.
+describe('runActivate — CLAUDECODE-aware activation result (AC-2)', () => {
+  it('AC-2: key missing + provider anthropic + CLAUDECODE=1 → emitted JSON result carries claudeCodeHostCliSuggested: true', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const io = bufferIO();
+    const res = await runActivate(
+      root,
+      { provider: 'anthropic', isTty: false },
+      io,
+      { ping: okPing, env: { CLAUDECODE: '1' } },
+    );
+    expect(res.exitCode).toBe(0);
+    expect((await loadConfig(root)).verifier.provider).toBe('anthropic');
+    expect(res.data).toMatchObject({ claudeCodeHostCliSuggested: true });
+  });
+
+  it('AC-2: key missing + provider anthropic + CLAUDECODE unset → emitted JSON result omits claudeCodeHostCliSuggested (unchanged from today)', async () => {
+    active = await tempRepo({ initialized: true });
+    const root = active.root;
+    const io = bufferIO();
+    const res = await runActivate(
+      root,
+      { provider: 'anthropic', isTty: false },
+      io,
+      { ping: okPing, env: {} },
+    );
+    expect(res.exitCode).toBe(0);
+    expect(res.data).not.toHaveProperty('claudeCodeHostCliSuggested');
   });
 });
