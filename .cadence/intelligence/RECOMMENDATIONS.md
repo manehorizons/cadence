@@ -533,21 +533,6 @@ settle run already detects and warns on files touched outside a task's declared 
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
 
-## rec-20260724-002 — P0 escape retro: externally-identified critical findings must land in the ledger at identification time
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: intelligence, process
-- evidence: Audit 2026-07-24: 34 tracked recs, none referencing assurance levels or a settle-equivalence gap; enforcement half remains unshipped
-- next: cadence milestone propose
-
-The assurance-levels P0 from the v1.47.0 audit appears nowhere in the ledger, roadmap, or source (the string assurance has zero hits repo-wide), yet half of it shipped under other names. A critical item was partially executed from memory rather than from the ledger, which is the exact failure mode the Praxis layer exists to prevent. Decide the mechanism: a standing rule that audit sessions end with same-session ingestion, a required scout-id per audit, or a ledger-diff step in the audit protocol itself.
-
 ## rec-20260724-003 — Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency
 
 - status: candidate

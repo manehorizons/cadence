@@ -603,6 +603,39 @@
       ],
       "createdAt": "2026-07-24T15:14:43.518Z",
       "updatedAt": "2026-07-24T15:38:02.677Z"
+    },
+    {
+      "id": "mil-rec-rec-20260724-002",
+      "name": "P0 escape retro: externally-identified critical findings must land in the ledger at identification time",
+      "objective": "The assurance-levels P0 from the v1.47.0 audit appears nowhere in the ledger, roadmap, or source (the string assurance has zero hits repo-wide), yet half of it shipped under other names. A critical item was partially executed from memory rather than from the ledger, which is the exact failure mode the Praxis layer exists to prevent. Decide the mechanism: a standing rule that audit sessions end with same-session ingestion, a required scout-id per audit, or a ledger-diff step in the audit protocol itself.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260724-002"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [
+          "[operator] The ledger-diff step is documented but not gated by anything mechanical -- an agent under time pressure could still skip it, same as the original P0 escape, unless it's wired into a checklist a session structurally can't skip (e.g. the audit skill's own closing step).",
+          "[operator] The keyword-match step (grep recommendations.json by title/area/evidence) is fuzzy -- a real finding could get a false-positive match against an unrelated existing rec and be waved through as 'already ledgered' when it isn't."
+        ],
+        "hiddenDependencies": [
+          "[operator] Assumes there is a concrete, edited artifact (an audit skill, a checklist in docs/agents/, or a CLAUDE.md section) that future audit sessions actually read -- if no such artifact exists yet, this phase must create one, not just describe the mechanism in the rec.",
+          "[operator] Assumes 'critical/P0 finding' is identifiable at audit time without another human-judgment gate -- the mechanism needs a concrete definition of what counts as critical enough to require the diff check."
+        ],
+        "driftRisks": [],
+        "outOfScope": [
+          "Retroactively auditing the existing 34+ tracked recommendations for other unlogged P0s from past audits -- this phase only prevents future escapes, it does not backfill.",
+          "Building automated tooling that runs the diff itself (e.g. a CLI subcommand) -- this phase documents/enforces a protocol step for the (usually AI) operator running an audit, not new cadence CLI surface."
+        ]
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260724-002/SPEC.md",
+          "exportedAt": "2026-07-24T19:27:14.143Z"
+        }
+      ],
+      "createdAt": "2026-07-24T19:25:05.037Z",
+      "updatedAt": "2026-07-24T19:27:14.143Z"
     }
   ]
 }

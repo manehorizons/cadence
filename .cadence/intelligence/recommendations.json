@@ -1004,33 +1004,6 @@
       "updatedAt": "2026-07-18T05:00:07.898Z"
     },
     {
-      "id": "rec-20260724-002",
-      "title": "P0 escape retro: externally-identified critical findings must land in the ledger at identification time",
-      "summary": "The assurance-levels P0 from the v1.47.0 audit appears nowhere in the ledger, roadmap, or source (the string assurance has zero hits repo-wide), yet half of it shipped under other names. A critical item was partially executed from memory rather than from the ledger, which is the exact failure mode the Praxis layer exists to prevent. Decide the mechanism: a standing rule that audit sessions end with same-session ingestion, a required scout-id per audit, or a ledger-diff step in the audit protocol itself.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "intelligence",
-        "process"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260724-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:35:07.778Z",
-      "updatedAt": "2026-07-24T14:35:07.778Z"
-    },
-    {
       "id": "rec-20260724-003",
       "title": "Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency",
       "summary": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) — roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
@@ -3854,11 +3827,44 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "214-evidence-floor-gate",
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:34:55.654Z",
-      "updatedAt": "2026-07-24T18:01:56.394Z",
       "shippedRef": "phase 214-evidence-floor-gate / PR #TBD",
+      "scoutId": "claude-cadence-audit-20260724",
       "archivedAt": "2026-07-24T18:01:56.394Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-24T14:34:55.654Z",
+      "updatedAt": "2026-07-24T18:01:56.394Z"
+    },
+    {
+      "id": "rec-20260724-002",
+      "title": "P0 escape retro: externally-identified critical findings must land in the ledger at identification time",
+      "summary": "The assurance-levels P0 from the v1.47.0 audit appears nowhere in the ledger, roadmap, or source (the string assurance has zero hits repo-wide), yet half of it shipped under other names. A critical item was partially executed from memory rather than from the ledger, which is the exact failure mode the Praxis layer exists to prevent. Decide the mechanism: a standing rule that audit sessions end with same-session ingestion, a required scout-id per audit, or a ledger-diff step in the audit protocol itself.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "intelligence",
+        "process"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260724-001"
+      ],
+      "convertedToPhaseId": "215-p0-escape-retro-ledger-diff",
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:35:07.778Z",
+      "updatedAt": "2026-07-24T19:56:38.406Z",
+      "shippedRef": "PR #295",
+      "archivedAt": "2026-07-24T19:56:38.406Z",
       "archiveReason": "shipped"
     }
   ]
