@@ -565,22 +565,6 @@ CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (publishe
 
 ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.
 
-## rec-20260724-005 — Close the trust envelope: gate the SETTLE capability class in MCP serve
-
-- status: candidate
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: mcp, security, gates
-- files: packages/types/src/mcp-trust.ts, packages/core/src/mcp/tools.ts
-- evidence: Audit 2026-07-24: Phase 181 comment in mcp-trust.ts — SETTLE is classified but left ungated this phase (see DRAFT Boundaries)
-- next: cadence milestone propose
-
-mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation — an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.
-
 ## rec-20260724-006 — Signed or tamper-evident SUMMARY attestations
 
 - status: candidate

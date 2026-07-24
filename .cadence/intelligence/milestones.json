@@ -636,6 +636,30 @@
       ],
       "createdAt": "2026-07-24T19:25:05.037Z",
       "updatedAt": "2026-07-24T19:27:14.143Z"
+    },
+    {
+      "id": "mil-rec-rec-20260724-005",
+      "name": "Close the trust envelope: gate the SETTLE capability class in MCP serve",
+      "objective": "mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation — an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260724-005"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260724-005/SPEC.md",
+          "exportedAt": "2026-07-24T21:05:48.921Z"
+        }
+      ],
+      "createdAt": "2026-07-24T21:05:13.143Z",
+      "updatedAt": "2026-07-24T21:05:48.921Z"
     }
   ]
 }
