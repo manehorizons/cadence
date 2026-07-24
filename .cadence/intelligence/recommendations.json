@@ -840,7 +840,7 @@
       "title": "Add test-coverage reporting with enforced minimum thresholds to CI",
       "summary": "vitest.config.ts already has a coverage block (reporter: text/html, include packages/*/src/**) but no thresholds field, and ci.yml's test job runs 'pnpm test' with no coverage flag or gate -- confirmed no enforcement anywhere. Add minimum thresholds wired into the gate, so coverage regressions surface in CI rather than silently.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -861,9 +861,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "213-coverage-thresholds-ci",
       "scoutId": "scout-20260712-1234",
       "createdAt": "2026-07-12T17:41:07.730Z",
-      "updatedAt": "2026-07-12T17:41:07.730Z"
+      "updatedAt": "2026-07-24T03:34:25.655Z"
     },
     {
       "id": "rec-20260712-016",
@@ -3547,12 +3548,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "212-retro-scoring-feedback",
-      "scoutId": "scout-20260712-0328",
-      "createdAt": "2026-07-12T04:24:07.244Z",
-      "updatedAt": "2026-07-24T02:26:36.035Z",
       "shippedRef": "PR #289 / phase 212",
+      "scoutId": "scout-20260712-0328",
       "archivedAt": "2026-07-24T02:26:36.035Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T04:24:07.244Z",
+      "updatedAt": "2026-07-24T02:26:36.035Z"
     }
   ]
 }

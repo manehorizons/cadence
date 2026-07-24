@@ -442,7 +442,7 @@ GateProvenanceZ (packages/types/src/summary.ts) currently enumerates only status
 
 ## rec-20260712-014 — Add test-coverage reporting with enforced minimum thresholds to CI
 
-- status: candidate
+- status: settle-pending
 - ready: raw-idea
 - priority: medium
 - leverage: 5/10
