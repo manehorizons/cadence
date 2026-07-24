@@ -202,9 +202,10 @@ session to do the same. The shape of a healthy session:
   runs `pnpm turbo run lint typecheck test build` before any push updating
   `refs/heads/main`. Bypass with `--no-verify` only when you mean it.
 - **`.githooks/pre-commit` — the doc-sync gate**: if a commit changes the
-  canonical version (`packages/core/package.json`), `CLAUDE.md` must mention
-  the new version string or the commit aborts. The pure checker is
-  `.githooks/check-doc-sync.sh`;
+  canonical version (`packages/core/package.json`), both `CLAUDE.md` (the
+  version line near the top) and `CHANGELOG.md` (its newest `## [x.y.z]`
+  heading) must mention the new version string or the commit aborts. The
+  pure checker is `.githooks/check-doc-sync.sh`;
   `packages/core/tests/docs/doc-sync-hook.test.ts` re-asserts the invariant
   in CI. The pre-push hook re-checks it as a backstop.
 - **CI** (`.github/workflows/ci.yml`): the same four-command pipeline on

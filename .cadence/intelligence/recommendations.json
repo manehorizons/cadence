@@ -1004,37 +1004,6 @@
       "updatedAt": "2026-07-18T05:00:07.898Z"
     },
     {
-      "id": "rec-20260724-003",
-      "title": "Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency",
-      "summary": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) — roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "release",
-        "docs",
-        "gates"
-      ],
-      "affectedFiles": [
-        "CHANGELOG.md",
-        ".github/workflows/release.yml"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260724-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:35:22.526Z",
-      "updatedAt": "2026-07-24T14:35:22.526Z"
-    },
-    {
       "id": "rec-20260724-004",
       "title": "Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger",
       "summary": "ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.",
@@ -3955,6 +3924,42 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-24T14:35:48.927Z",
       "updatedAt": "2026-07-24T21:36:22.187Z"
+    },
+    {
+      "id": "rec-20260724-003",
+      "title": "Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency",
+      "summary": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) — roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "release",
+        "docs",
+        "gates"
+      ],
+      "affectedFiles": [
+        "CHANGELOG.md",
+        ".github/workflows/release.yml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260724-002"
+      ],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:35:22.526Z",
+      "updatedAt": "2026-07-24T23:55:02.569Z",
+      "shippedRef": "phase 217-changelog-currency-gate / PR #TBD",
+      "archivedAt": "2026-07-24T23:55:02.569Z",
+      "archiveReason": "shipped"
     }
   ]
 }

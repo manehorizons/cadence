@@ -54,6 +54,15 @@
       "status": "active",
       "decidedAt": "2026-07-24T19:24:16.170Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260724-002",
+      "recommendationId": "rec-20260724-003",
+      "title": "Scope rec-20260724-003 to a CHANGELOG-currency gate only, defer auto-generation",
+      "rationale": "rec-20260724-003 proposed two things: (1) auto-generating CHANGELOG.md prose from settled phases' SUMMARY.json artifacts, and (2) a release-time gate refusing publish when the changelog lags the version bump. Scoping to (2) only: a doc-content test asserting CHANGELOG.md's newest '## [x.y.z]' heading matches packages/core/package.json's version, enforced the same way CLAUDE.md's version string is doc-sync-gated (packages/core/tests/docs/*.test.ts), plus a release-cut skill step calling it out explicitly. (1) is deferred, not rejected — auto-summarizing SUMMARY.json into readable changelog prose is a harder, more speculative problem (quality of generated prose, what to include/omit) that deserves its own design pass rather than being bundled into a mechanical CI gate. The 44-version backfill done 2026-07-24 (PR #297) proves the gate alone is sufficient to prevent recurrence of this specific drift.",
+      "status": "active",
+      "decidedAt": "2026-07-24T23:41:13.458Z",
+      "supersedes": []
     }
   ]
 }

@@ -46,6 +46,13 @@ Registration is a single CommandSpec entry in packages/host-claude-code/src/inst
 
 Chose a mechanical ledger-diff step over a documented standing rule or a scout-id requirement. A standing rule ('audit sessions end with same-session ingestion') is a promise an agent can silently skip -- the exact self-report-trust failure mode CADENCE's thesis exists to prevent. A required scout-id only makes gaps auditable in hindsight, after a P0 has already slipped. The ledger-diff step instead makes ingestion mechanically checkable at audit-close time: enumerate critical/P0 findings, grep recommendations.json for a matching rec by title/area/evidence keyword, and refuse to close the audit session on any unmatched finding until it is filed via 'cadence recommendation add'. This directly targets the failure that motivated the rec: the v1.47.0 audit's assurance-levels P0 was partially executed from memory and never reached the ledger.
 
+### dec-20260724-002 — Scope rec-20260724-003 to a CHANGELOG-currency gate only, defer auto-generation
+
+- recommendation: rec-20260724-003
+- decided: 2026-07-24T23:41:13.458Z
+
+rec-20260724-003 proposed two things: (1) auto-generating CHANGELOG.md prose from settled phases' SUMMARY.json artifacts, and (2) a release-time gate refusing publish when the changelog lags the version bump. Scoping to (2) only: a doc-content test asserting CHANGELOG.md's newest '## [x.y.z]' heading matches packages/core/package.json's version, enforced the same way CLAUDE.md's version string is doc-sync-gated (packages/core/tests/docs/*.test.ts), plus a release-cut skill step calling it out explicitly. (1) is deferred, not rejected — auto-summarizing SUMMARY.json into readable changelog prose is a harder, more speculative problem (quality of generated prose, what to include/omit) that deserves its own design pass rather than being bundled into a mechanical CI gate. The 44-version backfill done 2026-07-24 (PR #297) proves the gate alone is sufficient to prevent recurrence of this specific drift.
+
 ## Superseded
 
 _(none)_
