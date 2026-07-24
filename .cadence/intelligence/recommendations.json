@@ -836,37 +836,6 @@
       "updatedAt": "2026-07-12T17:40:28.618Z"
     },
     {
-      "id": "rec-20260712-014",
-      "title": "Add test-coverage reporting with enforced minimum thresholds to CI",
-      "summary": "vitest.config.ts already has a coverage block (reporter: text/html, include packages/*/src/**) but no thresholds field, and ci.yml's test job runs 'pnpm test' with no coverage flag or gate -- confirmed no enforcement anywhere. Add minimum thresholds wired into the gate, so coverage regressions surface in CI rather than silently.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "ci",
-        "testkit"
-      ],
-      "affectedFiles": [
-        ".github/workflows/ci.yml",
-        "vitest.config.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-014"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "213-coverage-thresholds-ci",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:41:07.730Z",
-      "updatedAt": "2026-07-24T03:34:25.655Z"
-    },
-    {
       "id": "rec-20260712-016",
       "title": "Write a formal threat model covering MCP serve, hooks, host adapters, headless verifier, and ledger exposure",
       "summary": "SECURITY.md already has a 'Scope and threat model' section (shell execution, LLM gate providers, generated/installed files, notification webhooks) but does not mention MCP serve trust, hooks/dispatcher, host-adapter boundaries, headless-verifier self-invocation loops, or local intelligence-ledger exposure at all. Extend SECURITY.md with a structured threat model: prompt injection into gates, MCP serve trust, hooks/dispatcher, host-adapter boundaries, headless-verifier self-invocation loops, release/update integrity, and local intelligence-ledger exposure. Names the surfaces and their mitigations in one place.",
@@ -3554,6 +3523,40 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-12T04:24:07.244Z",
       "updatedAt": "2026-07-24T02:26:36.035Z"
+    },
+    {
+      "id": "rec-20260712-014",
+      "title": "Add test-coverage reporting with enforced minimum thresholds to CI",
+      "summary": "vitest.config.ts already has a coverage block (reporter: text/html, include packages/*/src/**) but no thresholds field, and ci.yml's test job runs 'pnpm test' with no coverage flag or gate -- confirmed no enforcement anywhere. Add minimum thresholds wired into the gate, so coverage regressions surface in CI rather than silently.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "ci",
+        "testkit"
+      ],
+      "affectedFiles": [
+        ".github/workflows/ci.yml",
+        "vitest.config.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-014"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "213-coverage-thresholds-ci",
+      "scoutId": "scout-20260712-1234",
+      "createdAt": "2026-07-12T17:41:07.730Z",
+      "updatedAt": "2026-07-24T03:53:21.852Z",
+      "shippedRef": "PR #291 / phase 213",
+      "archivedAt": "2026-07-24T03:53:21.852Z",
+      "archiveReason": "shipped"
     }
   ]
 }

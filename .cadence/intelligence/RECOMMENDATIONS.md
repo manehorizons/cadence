@@ -440,22 +440,6 @@ Two settle-internal refusal paths — the --auto blocked-task refusal and the sk
 
 GateProvenanceZ (packages/types/src/summary.ts) currently enumerates only status: 'ran' | 'skipped' | 'refused' -- confirmed no 'failed' or 'timed-out' state distinct from 'refused', and no in-flight requested/started states. Extend SUMMARY to record a fuller gate lifecycle-state taxonomy so incident analysis and resume can reconstruct where a settle run stopped, including crash-mid-gate cases a synchronous refuse/pass pair can't distinguish. Pairs with the exit-code-taxonomy-as-public-contract work. Distinct from rec-20260611-001, which is about recommendation status lifecycle, not gate lifecycle.
 
-## rec-20260712-014 — Add test-coverage reporting with enforced minimum thresholds to CI
-
-- status: settle-pending
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: ci, testkit
-- files: .github/workflows/ci.yml, vitest.config.ts
-- evidence: Transferred from ChatGPT audit of manehorizons/lumen2, 2026-07-12 (CI: coverage thresholds). Verified vitest.config.ts collects but does not gate coverage, and ci.yml has no coverage step.
-- next: cadence milestone propose
-
-vitest.config.ts already has a coverage block (reporter: text/html, include packages/*/src/**) but no thresholds field, and ci.yml's test job runs 'pnpm test' with no coverage flag or gate -- confirmed no enforcement anywhere. Add minimum thresholds wired into the gate, so coverage regressions surface in CI rather than silently.
-
 ## rec-20260712-016 — Write a formal threat model covering MCP serve, hooks, host adapters, headless verifier, and ledger exposure
 
 - status: candidate
