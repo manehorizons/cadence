@@ -644,3 +644,51 @@ Organic search for cadence surfaces Uber Cadence Workflow, Flow Cadence language
 - next: cadence milestone propose
 
 cadence milestone premortem --add-likely-failure-mode/--add-hidden-dependency/--add-out-of-scope only appends and persists cumulatively across separate invocations (confirmed empirically 2026-07-24 while working mil-rec-rec-20260724-001: a stray debug string added via --add-out-of-scope survived a subsequent no-flag deterministic refresh and could not be removed by any CLI verb). Same class of gap as rec-20260720-001 (deferred milestones had no reopen path): an append-only mutator with no corresponding remove/edit, forcing a direct milestones.json hand-edit as the only escape hatch -- which this repo's own convention (see rec-20260720-001's objective text) treats as a violation. Add a 'cadence milestone premortem --remove-<field> <index-or-text>' (or equivalent) verb.
+
+## rec-20260724-011 — cadence build task / done <id> silently accepts a malformed task id instead of refusing
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli
+- files: packages/core/src/services/build-task.ts
+- evidence: Reproduced live in phase 213 session 2026-07-24: 'cadence done 213-01-T1' returned 'Recorded 213-01-T1: DONE' with exit 0, but cadence status still showed T1/T2/T3 as PENDING; PROGRESS.json contained both the stray '213-01-T1' key and, after correction, the real 'T1' key.
+- next: cadence milestone propose
+
+During phase 213's build, running 'cadence done 213-01-T1' (a fully-qualified-looking id, mirroring the DRAFT frontmatter's 213-01 phase/num prefix) succeeded silently and wrote a new orphaned '213-01-T1' key into PROGRESS.json's tasks map, instead of refusing because no task with that id exists in the active draft (real ids are bare 'T1'/'T2'/'T3'). cadence status/progress kept showing all tasks PENDING afterward with no error surfaced. This violates the repo's own 'Refuse + suggest, never silently mutate' and 'Quiet Fallback always prints a loud notice' conventions (CLAUDE.md). Caught only because status was checked immediately after; recovered by re-running done with the correct bare id and hand-editing PROGRESS.json to remove the 3 stray keys. Fix: cadence build task <id> should validate <id> against the active draft's known task ids and refuse (not silently create a new map entry) on an unknown id.
+
+## rec-20260724-012 — pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: tooling, security, dependencies
+- files: package.json, pnpm-workspace.yaml
+- evidence: Empirically confirmed 2026-07-24: pre-existing brace-expansion override in package.json produced no effect (resolved version matched the un-overridden natural resolution); relocating to pnpm-workspace.yaml also produced no effect (no overrides section in regenerated pnpm-lock.yaml, resolved version unchanged). GHSA-mh99-v99m-4gvg documented as a time-boxed audit exception in the meantime (docs/security/audit-exceptions.md, expires 2026-08-20).
+- next: cadence milestone propose
+
+Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.
+
+## rec-20260724-013 — cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json — can silently collide with a dangling evidence row
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, intelligence
+- files: packages/core/src/services/recommendation-add.ts, packages/core/src/services/doctor.ts
+- evidence: Live repro 2026-07-24: fixed via git-history surgery on local main's unpushed commits (5 cherry-picked commits rebuilt from the last-consistent point) after an Opus forensic investigation traced the split to a specific earlier-session commit whose rebase conflict resolution touched recommendations.json, RECOMMENDATIONS.md, and evidence.json inconsistently (--ours for the JSON alone, --theirs for the other two). Full investigation transcript available in this session's conversation history.
+- next: cadence milestone propose
+
+Discovered 2026-07-24 during a rebase-conflict repair: an earlier session's mis-resolved rebase conflict left .cadence/intelligence/RECOMMENDATIONS.md and evidence.json carrying a recommendation (id rec-20260724-011) with NO backing entry in recommendations.json (the actual source of truth) — a half-written recommendation from an interrupted/incomplete cadence recommendation add call, or a hand-edited conflict resolution. A later, unrelated cadence recommendation add call computed its next id purely from recommendations.json's current max id, correctly saw '010' as the ceiling, and re-minted 'rec-20260724-011' for a completely different finding — colliding with the orphaned evidence row (which still pointed 'recommendationId': 'rec-20260724-011' at the wrong content). Root cause: id-minting logic doesn't cross-check evidence.json's recommendationId references, so a dangling evidence row (with no matching recommendations.json entry) is invisible to it. Fix: either have id-minting take the max across both recommendations.json ids AND evidence.json's referenced recommendationIds, or add a cadence doctor check that flags evidence rows with no matching recommendation (which would have caught this drift immediately instead of it surviving 6 handoff commits unnoticed).
