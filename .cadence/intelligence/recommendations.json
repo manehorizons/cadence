@@ -1210,6 +1210,33 @@
       "scoutId": "claude-cadence-audit-20260724",
       "createdAt": "2026-07-24T15:23:58.655Z",
       "updatedAt": "2026-07-24T15:25:38.598Z"
+    },
+    {
+      "id": "rec-20260724-011",
+      "title": "cadence build task / done <id> silently accepts a malformed task id instead of refusing",
+      "summary": "During phase 213's build, running 'cadence done 213-01-T1' (a fully-qualified-looking id, mirroring the DRAFT frontmatter's 213-01 phase/num prefix) succeeded silently and wrote a new orphaned '213-01-T1' key into PROGRESS.json's tasks map, instead of refusing because no task with that id exists in the active draft (real ids are bare 'T1'/'T2'/'T3'). cadence status/progress kept showing all tasks PENDING afterward with no error surfaced. This violates the repo's own 'Refuse + suggest, never silently mutate' and 'Quiet Fallback always prints a loud notice' conventions (CLAUDE.md). Caught only because status was checked immediately after; recovered by re-running done with the correct bare id and hand-editing PROGRESS.json to remove the 3 stray keys. Fix: cadence build task <id> should validate <id> against the active draft's known task ids and refuse (not silently create a new map entry) on an unknown id.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/build-task.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-013"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-24T23:11:35.333Z",
+      "updatedAt": "2026-07-24T23:11:35.333Z"
     }
   ],
   "archived": [
@@ -3863,12 +3890,12 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:35:48.927Z",
-      "updatedAt": "2026-07-24T21:36:22.187Z",
       "shippedRef": "phase 216-settle-capability-gate / PR #TBD",
+      "scoutId": "claude-cadence-audit-20260724",
       "archivedAt": "2026-07-24T21:36:22.187Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-24T14:35:48.927Z",
+      "updatedAt": "2026-07-24T21:36:22.187Z"
     }
   ]
 }
