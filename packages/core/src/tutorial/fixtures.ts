@@ -41,6 +41,14 @@ export const SANDBOX_CONFIG: CadenceConfig = {
     testCommand: 'node --test',
     coverageProfiles: [],
   },
+  // Phase 214: solo's evidenceFloor default is 'assertion', but this sandbox
+  // deliberately runs coverageMode: 'mention' (a real AC-1 reference, not the
+  // assertion-mode span check) — deriveAcEvidence can never report better
+  // than 'mention' evidence here. Override the floor to match the sandbox's
+  // own intentional coverage mode so the tutorial's real gates (test-coverage,
+  // build-test-must-pass) stay the ones doing the refusing, not a floor
+  // mismatch unrelated to the walkthrough.
+  gates: { ...presets.solo.gates, evidenceFloor: 'mention' },
 };
 
 /** `sum.mjs` — the genuine, minimal implementation. */

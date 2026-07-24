@@ -40,7 +40,19 @@ async function stageToFirstSettle(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'cadence-tutorial-stage-'));
   const cadenceDir = join(root, '.cadence');
   await mkdir(join(cadenceDir, 'phases'), { recursive: true });
-  await atomicWriteJSON(join(cadenceDir, 'config.json'), SANDBOX_CONFIG);
+  // Phase 214: SANDBOX_CONFIG itself already overrides gates.evidenceFloor to
+  // 'mention' (fixtures.ts) to match its deliberate verification.coverageMode:
+  // 'mention' — deriveAcEvidence never reports better than 'mention' evidence
+  // under that mode, regardless of whether the AC's test genuinely executed.
+  // These two unit tests exercise refuse→fix→pass via `stageToFirstSettle`
+  // (not the evidence-floor gate itself), so relax the floor further to
+  // 'unverified' here to preserve their original intent unrelated to this
+  // gate. The real-CLI `runTutorial()` path (AC-4 below) runs unmodified
+  // SANDBOX_CONFIG and passes as-is — no gap.
+  await atomicWriteJSON(join(cadenceDir, 'config.json'), {
+    ...SANDBOX_CONFIG,
+    gates: { sealed: [], evidenceFloor: 'unverified' as const },
+  });
   await new SimpleStateBackend(root).commit(emptyState('tutorial-test'));
   const io = bufferIO();
   await draftNewService(

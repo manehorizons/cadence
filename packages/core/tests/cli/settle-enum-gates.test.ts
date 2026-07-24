@@ -53,6 +53,16 @@ async function seedBuild(root: string, taskStatus: string): Promise<void> {
   state.openDrafts = [{ id: '01-01', since: '2026-05-29T00:00:00.000Z' }];
   state.draftReadAt = null;
   await writeFile(statePath, JSON.stringify(state, null, 2));
+
+  // Phase 214 (T4): this fixture has no real test coverage matching
+  // verification.testGlobs and predates gates.evidenceFloor (defaultConfig's
+  // schema-level floor is 'mention') — relax it to 'unverified' so this
+  // file's structural-verifier/build-test-must-pass assertions aren't newly
+  // refused by the unrelated evidence-floor gate.
+  const configPath = join(root, '.cadence/config.json');
+  const config = JSON.parse(await readFile(configPath, 'utf8'));
+  config.gates = { ...(config.gates ?? {}), evidenceFloor: 'unverified' };
+  await writeFile(configPath, JSON.stringify(config, null, 2));
 }
 
 async function patchVerification(root: string, patch: Record<string, unknown>): Promise<void> {

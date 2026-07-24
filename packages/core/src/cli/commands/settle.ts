@@ -97,6 +97,10 @@ export function registerSettleCommand(program: Command): void {
       'bypass the worktree phase-collision backstop (Phase 83): settle even if a sibling worktree or upstream claims this phase number',
     )
     .option(
+      '--evidence-floor-bypass <ACid:reason...>',
+      'exempt exactly one AC id from the gates.evidenceFloor refusal (Phase 214), with a required reason; repeatable, never a blanket bypass',
+    )
+    .option(
       '--ship-ref <text>',
       "when the settling phase has a `converted` recommendation pointed at it, promote it straight to `shipped` with this text as the ref (e.g. \"PR #NNN\") instead of the default settle-pending advance (Phase 148)",
       parseShipRef,

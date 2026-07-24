@@ -257,6 +257,16 @@ These run on every phase regardless of profile or tier.
 | `test-coverage` | Each AC must have at least one test file that contains the token `AC-N`. A fresh `cadence init` writes `verification.coverageMode: "assertion"` (Phase 139, all presets) which requires the token inside an asserting `it()`/`test()` block — a comment-only mention refuses as a *weak link*, and an AC whose only linked test(s) are `it.skip`/`test.todo`/`.failing` (the "skip dodge") refuses distinctly as *skip-only linked* (Phase 169). `coverageMode: "mention"` (any occurrence anywhere in the file counts) remains the schema-level fallback for configs that predate this field. | `--allow-missing-coverage` (on `settle run`) |
 | `anomaly-notify` | Emit anomaly events (blocked tasks, out-of-boundary edits, coherence warns, loop violations, …) via the configured transport | No bypass — transport failures degrade gracefully |
 | `task-verify-required` | Settle refuses if any `DONE` task's DRAFT block has an empty or missing `- verify:` line (issue #206 / rec-20260712-001); names every offending task id | No bypass — add the missing `- verify:` line and re-settle |
+| `evidence-floor` | Refuses settle when any AC's `PASS` verdict rests on evidence ranked below the configured [`gates.evidenceFloor`](reference/config.md#gates) (Phase 214, AC-1) — the Phase 140 evidence ladder `ai-verified` > `executed` > `assertion` > `mention` > `unverified`. Names every offending AC id with its actual level vs. the required floor; only `PASS`-verdicted ACs are checked. | `--evidence-floor-bypass <AC-id:reason>` — exempts exactly the named AC, requires a non-empty reason, and is recorded in `SUMMARY.gateBypasses`; **never** a blanket, phase-wide bypass (on `settle run`) |
+
+> `evidence-floor` differs from the other gates in this table: it is not
+> selected by the `DELTAS` matrix in `engine.ts` and is not one of the 14
+> `GateZ` gate names — it evaluates unconditionally on every
+> `cadence settle run`, regardless of profile or tier, with its strength
+> controlled entirely by the [`gates.evidenceFloor`](reference/config.md#gates)
+> config value (schema-level default `mention` — a back-compat no-op floor;
+> the `solo`/`team`/`production` presets set stricter defaults — see
+> [Presets](reference/config.md#presets)).
 
 #### Medium
 
@@ -310,6 +320,7 @@ choose to run `cadence spec approve`.
 | `--allow-spec-review-failure` | `spec approve` | `spec-review` |
 | `--allow-ui-spec-review-failure` | `spec approve` | `ui-spec-review` |
 | `--allow-security-audit-failure` | `settle run` | `security-audit` |
+| `--evidence-floor-bypass <AC-id:reason>` | `settle run` | `evidence-floor` (named AC only — never a blanket bypass) |
 | `--allow-verifier-failure` | `settle run` | `deep-verify` transport errors |
 | `--force` | `settle run` | `deep-verify` / `interactive-verdict` / `code-review` / `security-audit` (all at once) |
 | `--no-interactive` | `settle run` | `interactive-verdict` (opt-out, not failure bypass) |

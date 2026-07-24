@@ -25,6 +25,16 @@ async function seedDraft(
   tier: 'quick-fix' | 'standard' | 'complex',
   profile?: 'auto' | 'standard' | 'strict',
 ): Promise<void> {
+  // Phase 214 (T4): no real AC-1 coverage seeded anywhere in this file, and
+  // it predates gates.evidenceFloor (defaultConfig's schema-level floor is
+  // 'mention') — relax it to 'unverified' so this file's soft-cap
+  // assertions aren't newly refused by the unrelated evidence-floor gate.
+  {
+    const cfgPath = join(root, '.cadence/config.json');
+    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+    cfg.gates = { ...(cfg.gates ?? {}), evidenceFloor: 'unverified' };
+    await writeFile(cfgPath, JSON.stringify(cfg, null, 2));
+  }
   const phaseDir = join(root, '.cadence/phases/01-foundation');
   await mkdir(phaseDir, { recursive: true });
   const profileLine = profile ? `profile: ${profile}\n` : '';

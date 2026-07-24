@@ -169,6 +169,11 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
 
   it('AC-1/AC-3: coverage bypass records summary audit and emits warning', async () => {
     active = await tempRepo({ initialized: true });
+    // Phase 214 (T4): no real AC-1 coverage seeded — predates
+    // gates.evidenceFloor. Relax to 'unverified' so this test's own
+    // test-coverage-bypass assertion (the sole gateBypasses entry) isn't
+    // joined by an unrelated evidence-floor bypass/refusal.
+    await patchConfig(active.root, { gates: { sealed: [], evidenceFloor: 'unverified' } });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);
@@ -199,6 +204,11 @@ describe('cadence settle anomaly notify (AC-5, AC-6)', () => {
 
   it('AC-1: --allow-auto-complex soft-cap override lands in SUMMARY.json gateBypasses', async () => {
     active = await tempRepo({ initialized: true });
+    // Phase 214 (T4): no real AC-1 coverage seeded — predates
+    // gates.evidenceFloor. Relax to 'unverified' so the soft-cap bypass
+    // assertion below isn't complicated by an unrelated evidence-floor
+    // refusal/bypass.
+    await patchConfig(active.root, { gates: { sealed: [], evidenceFloor: 'unverified' } });
     // auto profile (tempRepo default) x complex tier => gateSet.softCap === true.
     await seedDraft(active.root, 'complex');
     await run(

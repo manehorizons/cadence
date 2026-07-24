@@ -91,6 +91,11 @@ async function setupBuildRepo(
   const config = {
     ...defaultConfig,
     recommendations: { autoArchive: true },
+    // Phase 214 (T4): this fixture has no real AC-1 coverage and predates
+    // gates.evidenceFloor (defaultConfig's schema-level floor is 'mention')
+    // — relax it to 'unverified' so this file's --ship-ref assertions
+    // aren't newly refused by the unrelated evidence-floor gate.
+    gates: { sealed: [], evidenceFloor: 'unverified' as const },
   };
   await writeFile(join(root, '.cadence', 'config.json'), JSON.stringify(config, null, 2));
   const state = {

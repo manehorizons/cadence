@@ -784,6 +784,90 @@
       "kind": "note",
       "summary": "Generated in /cadence-scout session on rec-20260710-001, 2026-07-23; siblings: rec-20260710-001, and the fallback-warning-text + docs-callout recs landed in the same session",
       "createdAt": "2026-07-23T01:08:31.941Z"
+    },
+    {
+      "id": "ev-20260724-001",
+      "recommendationId": "rec-20260724-001",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: grep for minEvidence/evidenceFloor/floor across gates and config returns nothing; deriveAcEvidence output is rendered but never gated",
+      "createdAt": "2026-07-24T14:34:55.654Z"
+    },
+    {
+      "id": "ev-20260724-002",
+      "recommendationId": "rec-20260724-002",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: 34 tracked recs, none referencing assurance levels or a settle-equivalence gap; enforcement half remains unshipped",
+      "createdAt": "2026-07-24T14:35:07.778Z"
+    },
+    {
+      "id": "ev-20260724-003",
+      "recommendationId": "rec-20260724-003",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: grep of CHANGELOG version headers vs registry.npmjs.org dist-tags and repo tag count",
+      "createdAt": "2026-07-24T14:35:22.526Z"
+    },
+    {
+      "id": "ev-20260724-004",
+      "recommendationId": "rec-20260724-004",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: ROADMAP head describes v0.4 phase plans (23.x) against 225 settled phases on disk",
+      "createdAt": "2026-07-24T14:35:34.096Z"
+    },
+    {
+      "id": "ev-20260724-005",
+      "recommendationId": "rec-20260724-005",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: Phase 181 comment in mcp-trust.ts — SETTLE is classified but left ungated this phase (see DRAFT Boundaries)",
+      "createdAt": "2026-07-24T14:35:48.927Z"
+    },
+    {
+      "id": "ev-20260724-006",
+      "recommendationId": "rec-20260724-006",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: no signing/attestation code repo-wide; summary render validates schema only",
+      "createdAt": "2026-07-24T14:36:01.942Z"
+    },
+    {
+      "id": "ev-20260724-007",
+      "recommendationId": "rec-20260724-007",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: no merge/conflict/concurrency guidance found in docs; state.json is a single shared file",
+      "createdAt": "2026-07-24T14:36:14.304Z"
+    },
+    {
+      "id": "ev-20260724-008",
+      "recommendationId": "rec-20260724-008",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: fetched github.com/manehorizons/cadence rendered old README content against clone at commit 5451109",
+      "createdAt": "2026-07-24T14:36:27.035Z"
+    },
+    {
+      "id": "ev-20260724-009",
+      "recommendationId": "rec-20260724-009",
+      "kind": "note",
+      "summary": "Audit 2026-07-24: web search for cadence github ranks three large incumbent projects above manehorizons/cadence",
+      "createdAt": "2026-07-24T14:36:38.540Z"
+    },
+    {
+      "id": "ev-20260724-010",
+      "recommendationId": "rec-20260724-001",
+      "kind": "note",
+      "summary": "Decision 2026-07-24: rejecting the audit's original proposal (solo: mention, team: assertion, production: executed) after independent review (Fable model) found 'mention' indefensible as a default at any tier -- it is the exact self-report artifact ('The Token Drop') CADENCE exists to distrust, and agents will converge on the cheapest passing evidence if it's blessed by default. Adopted tightened defaults: solo: assertion, team: executed, production: executed + refuse/warn if the active verifier provider is not a real (non-mock) provider (closes a Mock Mirage gap in the original proposal). 'mention' remains reachable only via explicit config override or the named per-AC bypass, never as a preset default. Bypass must be per-AC (not blanket), must carry a required reason string recorded in gateBypasses, and repeated use should be flagged (doctor/recommend) so a bypass habit doesn't quietly become the real floor.",
+      "createdAt": "2026-07-24T15:14:22.672Z"
+    },
+    {
+      "id": "ev-20260724-011",
+      "recommendationId": "rec-20260724-010",
+      "kind": "note",
+      "summary": "Discovered 2026-07-24 during rec-20260724-001 milestone shaping: 'test-entry-debug' added to outOfScope via --add-out-of-scope during exploratory testing persisted across a subsequent no-flag premortem refresh, with no CLI path to remove it.",
+      "createdAt": "2026-07-24T15:23:58.655Z"
+    },
+    {
+      "id": "ev-20260724-012",
+      "recommendationId": "rec-20260724-010",
+      "kind": "note",
+      "summary": "Escalation 2026-07-24: found worse than initially scoped. 'cadence milestone propose' is not idempotent w.r.t. pre-mortem data -- rerunning it against an already-proposed milestone (e.g. mil-rec-rec-20260724-001) silently reset preMortem back to {likelyFailureModes:[],hiddenDependencies:[],driftRisks:[],outOfScope:[]}, discarding operator-authored entries added via a prior 'milestone premortem --add-*' call, with no warning or confirmation. Confirmed empirically: populate premortem -> verify via list (populated) -> run propose again -> re-check JSON (wiped). 'cadence milestone list' does NOT have this problem and is the safe read-only render. Recommend re-scoping this rec's fix to also make clusterMilestones()/propose preserve existing preMortem for already-proposed/accepted milestones it re-touches, not just adding a removal verb -- this is a data-loss bug, not only a missing-capability gap. Consider raising priority above 'low' given the destructive-on-rerun behavior.",
+      "createdAt": "2026-07-24T15:25:38.598Z"
     }
   ]
 }

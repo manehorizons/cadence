@@ -27,7 +27,8 @@ import {
 } from '../verify/verifier-factory.js';
 import type { VerifyTestRef } from '../verify/verifier.js';
 import { runSettleGates } from '../gates/registry.js';
-import { deriveAcEvidence } from '../gates/ac-evidence.js';
+import { deriveAcEvidence, checkEvidenceFloor } from '../gates/ac-evidence.js';
+import { effectiveEvidenceFloor, evidenceFloorRefusalReason } from '../gates/engine.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
 import {
   runAdvanceConvertedToSettlePendingForPhase,
@@ -80,6 +81,11 @@ export interface SettleArgs {
    *  settling phase is promoted straight to `shipped` (with this text as
    *  `shippedRef`) instead of the default `settle-pending` advance. */
   shipRef?: string;
+  /** Phase 214 (T4): per-AC evidence-floor bypass, `AC-id:reason` pairs
+   *  (repeatable). Exempts exactly the named AC from the `gates.evidenceFloor`
+   *  refusal — never a blanket "skip the floor for everything" flag. A
+   *  non-empty reason is required for every entry. */
+  evidenceFloorBypass?: string[];
 }
 
 function parseAcArg(arg: string): AcResult {
@@ -91,6 +97,29 @@ function parseAcArg(arg: string): AcResult {
   const verdict = colonIdx === -1 ? rest : rest.slice(0, colonIdx);
   const note = colonIdx === -1 ? undefined : rest.slice(colonIdx + 1).trim();
   return { id, pass: verdict === 'pass', ...(note ? { note } : {}) };
+}
+
+/**
+ * Phase 214 (T4): parse one `--evidence-floor-bypass AC-id:reason` entry.
+ * Mirrors `parseAcArg`'s plain-`Error`-on-malformed-input style (caught by
+ * `settleService`'s outer try/catch and formatted via `formatCommandError`,
+ * same as every other hand-parsed settle option). A non-empty reason is
+ * required — `AC-1:` or `AC-1` alone are both refused — so a bypass can
+ * never be recorded without an auditable justification.
+ */
+function parseEvidenceFloorBypassArg(arg: string): { id: string; reason: string } {
+  const colonIdx = arg.indexOf(':');
+  if (colonIdx === -1) {
+    throw new Error(`bad --evidence-floor-bypass syntax (expected AC-id:reason): ${arg}`);
+  }
+  const id = arg.slice(0, colonIdx).trim();
+  const reason = arg.slice(colonIdx + 1).trim();
+  if (id.length === 0 || reason.length === 0) {
+    throw new Error(
+      `bad --evidence-floor-bypass syntax: both AC-id and a non-empty reason are required: ${arg}`,
+    );
+  }
+  return { id, reason };
 }
 
 function mergePassShorthands(draftAcIds: string[], explicit: AcResult[], opts: SettleArgs): AcResult[] {
@@ -211,6 +240,11 @@ export async function settleService(
       opts,
     );
     const explicitIds = new Set(explicit.map((a) => a.id));
+
+    // Phase 214 (T4): parse --evidence-floor-bypass up front — fail fast on
+    // malformed syntax before any gate work (deep-verify calls, etc.) runs.
+    const evidenceFloorBypasses = (opts.evidenceFloorBypass ?? []).map(parseEvidenceFloorBypassArg);
+    const evidenceFloorBypassById = new Map(evidenceFloorBypasses.map((b) => [b.id, b.reason]));
 
     const cadenceConfig = await loadConfig(cwd);
 
@@ -532,6 +566,53 @@ export async function settleService(
       evidence: deriveAcEvidence(r.id, coverageForEvidence, coverageModeForEvidence, buildTestRan, deepVerify),
     }));
 
+    // Phase 214 (T4): the evidence-floor gate — refuses settle when any AC's
+    // PASS verdict rests on evidence weaker than the effective
+    // `gates.evidenceFloor`. Only PASS verdicts carry an evidentiary claim
+    // worth checking; a fail/blocked AC isn't asserting anything the floor
+    // needs to back up. `--evidence-floor-bypass AC-id:reason` exempts
+    // exactly the named AC (never all of them) — an offender with a bypass
+    // is dropped from the refusal, but recorded into SUMMARY.gateBypasses so
+    // the exemption is auditable.
+    const evidenceFloor = effectiveEvidenceFloor(cadenceConfig);
+    const floorCheck = checkEvidenceFloor(
+      acResultsWithEvidence.filter((r) => r.pass),
+      evidenceFloor,
+    );
+    const evidenceFloorBypassesUsed: GateBypass[] = [];
+    if (floorCheck.outcome === 'refuse') {
+      const remaining = floorCheck.offenders.filter((o) => !evidenceFloorBypassById.has(o.id));
+      for (const o of floorCheck.offenders) {
+        const reason = evidenceFloorBypassById.get(o.id);
+        if (reason === undefined) continue;
+        evidenceFloorBypassesUsed.push({
+          gate: `evidence-floor:${o.id}`,
+          flag: '--evidence-floor-bypass',
+          reason,
+          severity: 'warn',
+        });
+        io.err(
+          `settle bypass [warn] evidence-floor:${o.id}: ${reason} (--evidence-floor-bypass)\n`,
+        );
+      }
+      if (remaining.length > 0) {
+        const detail = remaining
+          .map((o) => `${o.id} is '${o.actual}', requires '${o.required}'`)
+          .join('; ');
+        const genericReason =
+          `settle run refused: evidence-floor requires at least '${evidenceFloor}' evidence for every AC, but ${detail}. ` +
+          'Strengthen the evidence (add/execute a qualifying test, or run a real deep-verify pass) or ' +
+          'apply a named, reason-required per-AC bypass (--evidence-floor-bypass AC-id:reason), then re-settle.';
+        // Phase 214 (T3): when the floor is 'ai-verified' under the mock
+        // provider, that evidence level is structurally unreachable (Phase
+        // 140 never counts a mock pass as ai-verified) — name that instead
+        // of the generic below-floor message, or every settle refuses
+        // forever with no hint why.
+        io.err(`${evidenceFloorRefusalReason(evidenceFloor, cadenceConfig, genericReason)}\n`);
+        return { exitCode: 1 };
+      }
+    }
+
     // issue #177: snapshot loop state as it stands DURING settle, before the
     // reset-to-IDLE block below mutates it. This is the only place this data
     // is durably recorded now that state.json/STATE.md are gitignored — see
@@ -559,7 +640,9 @@ export async function settleService(
       ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
       ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),
       ...(boundaryScan ? { boundaryScan } : {}),
-      ...(gateBypasses.length > 0 ? { gateBypasses } : {}),
+      ...(gateBypasses.length + evidenceFloorBypassesUsed.length > 0
+        ? { gateBypasses: [...gateBypasses, ...evidenceFloorBypassesUsed] }
+        : {}),
       stateAtSettle,
     };
 
