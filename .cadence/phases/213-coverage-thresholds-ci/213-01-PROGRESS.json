@@ -1,0 +1,26 @@
+{
+  "draftId": "213-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "measured coverage: types 96.26% core 75.47% host-claude-code 72.58% host-codex 63.10% testkit 89.47% (stmts); added @vitest/coverage-v8 devDep; re-verified core's 75.47% independently in main thread",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-24T03:28:32.381Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "coverage.enabled=true + provider v8 + per-package thresholds (keyed by path.basename(cwd)) added to vitest.shared.ts; dead root-only coverage block removed from vitest.config.ts (AC-3); independently re-verified: fresh pnpm typecheck (cached, unaffected), fresh pnpm lint, and force-fresh npx turbo run test --force -- 10/10 tasks green, all 5 packages' live coverage above their new thresholds",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/213-coverage-thresholds-ci/vitest.shared.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/213-coverage-thresholds-ci/vitest.config.ts"
+      ],
+      "updatedAt": "2026-07-24T03:28:37.440Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "independently re-verified: git diff --stat packages/core/tests is empty (clean revert confirmed), fresh force-run of core package test suite matches reported clean numbers exactly (353/353 files, 3109/3109 tests, 75.51% stmts)",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-24T03:28:42.743Z"
+    }
+  }
+}

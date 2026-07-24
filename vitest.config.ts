@@ -6,10 +6,6 @@ export default mergeConfig(
   defineConfig({
     test: {
       include: ['packages/*/tests/**/*.test.ts'],
-      coverage: {
-        reporter: ['text', 'html'],
-        include: ['packages/*/src/**'],
-      },
     },
   }),
 );
