@@ -66,6 +66,11 @@ async function setupRepo(
   const config = {
     ...defaultConfig,
     retro: { enabled: opts.retro?.enabled ?? true, offerGithubIssue: opts.retro?.offerGithubIssue ?? true },
+    // Phase 214 (T4): this fixture has no real AC-1 coverage and predates
+    // gates.evidenceFloor (defaultConfig's schema-level floor is 'mention')
+    // — relax it to 'unverified' so this file's retro-artifact assertions
+    // aren't newly refused by the unrelated evidence-floor gate.
+    gates: { sealed: [], evidenceFloor: 'unverified' as const },
   };
   await writeFile(join(root, '.cadence', 'config.json'), JSON.stringify(config, null, 2));
   const state = {

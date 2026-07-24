@@ -33,6 +33,7 @@ To change the behavior-shaping keys interactively, use [`cadence config edit`](.
 - [resume](#resume)
 - [recommendations](#recommendations)
 - [gates](#gates)
+  - [gates.evidenceFloor](#gatesevidencefloor)
 - [Reading your config — `cadence config explain`](#reading-your-config--cadence-config-explain)
 - [Presets](#presets)
 - [cadence init behavior](#cadence-init-behavior)
@@ -521,6 +522,7 @@ a `production`-tier project cares about most.
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `gates.sealed` | `string[]` | `[]` | Gate ids that cannot be bypassed at settle time. An empty array (the default) restores normal bypass behavior for every gate. |
+| `gates.evidenceFloor` | `"ai-verified" \| "executed" \| "assertion" \| "mention" \| "unverified"` | `"mention"` (schema-level, back-compat) | Minimum evidence class every `PASS`-verdicted AC must meet at settle, on the Phase 140 evidence ladder ranked strongest to weakest: `ai-verified` > `executed` > `assertion` > `mention` > `unverified`. See [evidenceFloor](#gatesevidencefloor) below. |
 
 Only two gate ids currently check `gates.sealed` and are meaningful here:
 
@@ -544,6 +546,78 @@ per-AC verification to the `interactive-verdict` human walker instead.
 ```
 
 See [docs/concepts.md — Gate bypass reference summary](../concepts.md#gate-bypass-reference-summary) for the full bypass-flag table these two entries interact with.
+
+### `gates.evidenceFloor`
+
+Minimum-evidence floor (Phase 214). Closes the enforcement gap left by the
+visibility-only Phase 140 evidence ladder: before this gate, a weak-evidence
+AC (e.g. a comment-only `AC-N` mention) was *reported* in
+`SUMMARY.json`/`.md` but never blocked settle. `gates.evidenceFloor` makes
+that ladder load-bearing — the `evidence-floor` gate (see
+[docs/concepts.md — the gate universe](../concepts.md#the-gate-universe))
+refuses settle when any `PASS`-verdicted AC's `deriveAcEvidence` result ranks
+below the configured floor, naming every offending AC id with its actual
+level vs. the required floor.
+
+The five-level ladder, ranked strongest to weakest:
+
+| Level | Meaning |
+|---|---|
+| `ai-verified` | A real (non-`mock`) `deep-verify` provider returned `pass: true` for the AC. A `mock`-provider pass never counts here — mock is a placeholder, not real verification (same v1.25 mock-honesty precedent `deriveAcEvidence` already applies). |
+| `executed` | The AC has a qualifying (assertion-mode) linked test **and** `build-test-must-pass` actually ran the suite this settle. |
+| `assertion` | The AC has a qualifying linked test (an `AC-N` token inside an asserting `it()`/`test()` block, per `verification.coverageMode: "assertion"`), but the suite wasn't confirmed to have run this settle. |
+| `mention` | The AC is only referenced by an `AC-N` token somewhere in a matched test file — including a comment, or a `coverageMode: "mention"` match with no assertion-block requirement. |
+| `unverified` | No linked test evidence at all. |
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `gates.evidenceFloor` | `"ai-verified" \| "executed" \| "assertion" \| "mention" \| "unverified"` | `"mention"` at the schema level | The minimum ladder level every `PASS`-verdicted AC must meet. `"mention"` is the weakest rung and is deliberately the schema-level default — it is a **back-compat no-op**: no config predating this field newly refuses. `cadence init` (all three presets) writes a stricter value, described next. |
+
+**Per-preset defaults** (set by `cadence init`, not the schema default above):
+
+| Preset | `gates.evidenceFloor` |
+|---|---|
+| `solo` | `"assertion"` |
+| `team` | `"executed"` |
+| `production` | `"executed"` |
+
+`ai-verified` is reachable only via an explicit config override — no preset
+defaults to it, since requiring a real (non-mock) `deep-verify` provider just
+to pass the floor was deliberately rejected as a preset default (independent
+review, `ev-20260724-010` on `rec-20260724-001`); a `production`-tier project
+that wants that stronger guarantee opts in explicitly.
+
+`mention` is reachable the same two ways as any looser-than-default value:
+an explicit `gates.evidenceFloor: "mention"` override, or a named, per-AC,
+reason-required bypass (below) — never as a preset default.
+
+**Bypass.** `--evidence-floor-bypass <AC-id:reason>` (repeatable) exempts
+exactly the named AC from the floor for that settle run — never a blanket,
+phase-wide bypass. A non-empty `reason` is required; the bypass (AC id +
+reason) is recorded in `SUMMARY.gateBypasses`, so an exemption is always
+auditable after the fact.
+
+```jsonc
+// .cadence/config.json — require a real deep-verify pass for every AC (explicit opt-in)
+{ "gates": { "evidenceFloor": "ai-verified" } }
+```
+
+> **Note:** `ai-verified` evidence is structurally unreachable while the
+> active `deep-verify` provider is `mock` (the schema/`cadence init` default)
+> — a mock pass never counts as `ai-verified`. Configuring this floor without
+> also running a real provider (`cadence activate`, or `--deep` with
+> `verifier.provider` set to something other than `mock`) makes every settle
+> refuse forever. The refusal names this specific structural reason rather
+> than the generic below-floor message, so the cause is diagnosable from the
+> CLI output alone.
+
+```bash
+# Settle past the floor for exactly AC-3, with a required reason:
+cadence settle run --auto --evidence-floor-bypass "AC-3:legacy AC, backfill test tracked in issue #300"
+```
+
+See [docs/concepts.md — the gate universe](../concepts.md#the-gate-universe)
+for the gate's place among the other 14 gates and its full bypass-flag entry.
 
 ---
 
@@ -678,8 +752,11 @@ The three share detection logic where they overlap (e.g. the host-hooks-installe
 | `commitCadence` | `"manual"` | `"draft"` | `"draft"` |
 | `hooks.preToolUseBuildGate` | `false` | `false` | `true` |
 | `gates.sealed` | `[]` | `[]` | `["test-coverage", "build-test-must-pass"]` |
+| `gates.evidenceFloor` | `"assertion"` | `"executed"` | `"executed"` |
 
 The `production` preset seals `test-coverage` and `build-test-must-pass` by default (see [gates](#gates)) — `solo`/`team` leave `gates.sealed` empty, so every gate's normal bypass flags still work.
+
+All three presets also set `gates.evidenceFloor` stricter than the schema-level `"mention"` back-compat default (see [gates.evidenceFloor](#gatesevidencefloor)) — `solo` to `"assertion"`, `team`/`production` to `"executed"`. `"ai-verified"` is never a preset default; it is reachable only via an explicit config override.
 
 All other fields are identical to `defaultConfig` across all three presets. After scaffolding, `cadence init` overlays the detected `profile`, `verification.testGlobs`, and `verification.coverageMode` regardless of preset (see below).
 

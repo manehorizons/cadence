@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
@@ -30,6 +30,20 @@ async function readState(root: string): Promise<{ loopPosition: string }> {
   return JSON.parse(await readFile(join(root, '.cadence/state.json'), 'utf8'));
 }
 
+/**
+ * Phase 214 (T4): these fixtures have no real AC coverage and predate
+ * gates.evidenceFloor (defaultConfig's schema-level floor is 'mention') —
+ * relax it to 'unverified' so a settle that only asserts on the
+ * PASS/evidence *value* (still 'unverified' — no coverage exists) isn't
+ * additionally refused by the unrelated evidence-floor gate.
+ */
+async function relaxEvidenceFloor(root: string): Promise<void> {
+  const configPath = join(root, '.cadence/config.json');
+  const config = JSON.parse(await readFile(configPath, 'utf8'));
+  config.gates = { ...(config.gates ?? {}), evidenceFloor: 'unverified' };
+  await writeFile(configPath, JSON.stringify(config, null, 2));
+}
+
 let active: Fixture | null = null;
 afterEach(async () => {
   if (active) {
@@ -41,6 +55,7 @@ afterEach(async () => {
 describe('cadence settle run --auto', () => {
   it('all tasks DONE → every AC recorded pass automatically', async () => {
     active = await tempRepo({ initialized: true });
+    await relaxEvidenceFloor(active.root);
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);
@@ -134,6 +149,7 @@ describe('cadence settle run --auto', () => {
   // value instead of rejecting it with InvalidArgumentError.
   it('accepts --verifier host-cli without rejecting it as an invalid provider (AC-1)', async () => {
     active = await tempRepo({ initialized: true });
+    await relaxEvidenceFloor(active.root);
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);

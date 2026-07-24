@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { deriveAcEvidence } from '../../src/gates/ac-evidence.js';
+import { deriveAcEvidence, rankEvidence, meetsEvidenceFloor, checkEvidenceFloor } from '../../src/gates/ac-evidence.js';
 import type { AcId, TestRef } from '../../src/verify/coverage.js';
-import type { DeepVerdict } from '@manehorizons/cadence-types';
+import type { AcEvidence, DeepVerdict } from '@manehorizons/cadence-types';
 
 const NONE = new Map<AcId, TestRef[]>();
 
@@ -58,5 +58,86 @@ describe('deriveAcEvidence (AC-2, AC-3, phase 140)', () => {
 
   it('AC-2: no refs at all yields unverified', () => {
     expect(deriveAcEvidence('AC-1', NONE, 'mention', false, undefined)).toBe('unverified');
+  });
+});
+
+// Phase 214 T2 (AC-1): the evidence ladder rank comparator + evidence-floor
+// gate step. `rankEvidence`/`meetsEvidenceFloor` are pure lookups over the
+// Phase 140 ladder; `checkEvidenceFloor` is the gate step itself, consuming
+// already-derived AC evidence (the shape `services/settle.ts` computes as
+// `acResultsWithEvidence`) rather than re-deriving it.
+describe('rankEvidence (Phase 214 T2)', () => {
+  it('ranks the ladder strongest to weakest: ai-verified > executed > assertion > mention > unverified', () => {
+    const order: AcEvidence[] = ['ai-verified', 'executed', 'assertion', 'mention', 'unverified'];
+    for (let i = 0; i < order.length - 1; i++) {
+      expect(rankEvidence(order[i] as AcEvidence)).toBeGreaterThan(rankEvidence(order[i + 1] as AcEvidence));
+    }
+  });
+});
+
+describe('meetsEvidenceFloor (Phase 214 T2)', () => {
+  it('an evidence level meets a floor of the same strength', () => {
+    expect(meetsEvidenceFloor('executed', 'executed')).toBe(true);
+  });
+
+  it('a stronger evidence level meets a weaker floor', () => {
+    expect(meetsEvidenceFloor('ai-verified', 'assertion')).toBe(true);
+  });
+
+  it('a weaker evidence level does not meet a stronger floor', () => {
+    expect(meetsEvidenceFloor('mention', 'executed')).toBe(false);
+  });
+});
+
+describe('checkEvidenceFloor (Phase 214 T2, AC-1)', () => {
+  it('AC-1: refuses and names the offending AC id plus its actual level vs. the required floor', () => {
+    const result = checkEvidenceFloor(
+      [
+        { id: 'AC-1', evidence: 'mention' },
+        { id: 'AC-2', evidence: 'executed' },
+      ],
+      'executed',
+    );
+
+    expect(result.outcome).toBe('refuse');
+    expect(result.offenders).toEqual([{ id: 'AC-1', actual: 'mention', required: 'executed' }]);
+    expect(result.reason).toContain('AC-1');
+    expect(result.reason).toContain('mention');
+    expect(result.reason).toContain('executed');
+  });
+
+  it('AC-1: names every offending AC when more than one falls below the floor', () => {
+    const result = checkEvidenceFloor(
+      [
+        { id: 'AC-1', evidence: 'unverified' },
+        { id: 'AC-2', evidence: 'mention' },
+      ],
+      'assertion',
+    );
+
+    expect(result.outcome).toBe('refuse');
+    expect(result.offenders.map((o) => o.id)).toEqual(['AC-1', 'AC-2']);
+    expect(result.reason).toContain('AC-1');
+    expect(result.reason).toContain('AC-2');
+  });
+
+  it('passes settle when every AC is at or above the floor', () => {
+    const result = checkEvidenceFloor(
+      [
+        { id: 'AC-1', evidence: 'executed' },
+        { id: 'AC-2', evidence: 'ai-verified' },
+      ],
+      'executed',
+    );
+
+    expect(result.outcome).toBe('pass');
+    expect(result.offenders).toEqual([]);
+    expect(result.reason).toBeUndefined();
+  });
+
+  it('treats a missing evidence field as unverified — the weakest rung', () => {
+    const result = checkEvidenceFloor([{ id: 'AC-1' }], 'mention');
+    expect(result.outcome).toBe('refuse');
+    expect(result.offenders).toEqual([{ id: 'AC-1', actual: 'unverified', required: 'mention' }]);
   });
 });

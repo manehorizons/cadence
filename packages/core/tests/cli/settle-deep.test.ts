@@ -39,6 +39,19 @@ afterEach(async () => {
   }
 });
 
+/**
+ * Phase 214 (T4): relax gates.evidenceFloor to 'unverified' for fixtures
+ * that deliberately have no real AC coverage and no ai-verified deep-verify
+ * pass (mock never counts as ai-verified) — they predate the evidence-floor
+ * gate and are testing deep-verify's own refusal/bypass behavior instead.
+ */
+async function relaxEvidenceFloor(root: string): Promise<void> {
+  const configPath = join(root, '.cadence/config.json');
+  const config = JSON.parse(await readFile(configPath, 'utf8'));
+  config.gates = { ...(config.gates ?? {}), evidenceFloor: 'unverified' };
+  await writeFile(configPath, JSON.stringify(config, null, 2));
+}
+
 async function seedCoverageTest(
   root: string,
   acIds: string[],
@@ -99,6 +112,7 @@ describe('settle --deep (Phase 15)', () => {
 
   it('explicit --ac override bypasses deep-verify refusal (AC-4)', async () => {
     active = await tempRepo({ initialized: true });
+    await relaxEvidenceFloor(active.root);
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);
@@ -129,6 +143,7 @@ describe('settle --deep (Phase 15)', () => {
 
   it('--force bypasses deep-verify refusal (AC-3)', async () => {
     active = await tempRepo({ initialized: true });
+    await relaxEvidenceFloor(active.root);
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);
@@ -156,6 +171,9 @@ describe('settle --deep (Phase 15)', () => {
     const cfgPath = join(active.root, '.cadence/config.json');
     const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
     cfg.verifier = { provider: 'local', model: 'tinytest' };
+    // Phase 214 (T4): no real AC coverage here — relax the evidence floor
+    // (see relaxEvidenceFloor's docstring above).
+    cfg.gates = { ...(cfg.gates ?? {}), evidenceFloor: 'unverified' };
     await writeFile(cfgPath, JSON.stringify(cfg, null, 2));
     const p = spawn(
       process.execPath,

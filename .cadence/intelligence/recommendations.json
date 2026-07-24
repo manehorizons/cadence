@@ -1002,6 +1002,272 @@
       "decisionIds": [],
       "createdAt": "2026-07-18T05:00:07.898Z",
       "updatedAt": "2026-07-18T05:00:07.898Z"
+    },
+    {
+      "id": "rec-20260724-002",
+      "title": "P0 escape retro: externally-identified critical findings must land in the ledger at identification time",
+      "summary": "The assurance-levels P0 from the v1.47.0 audit appears nowhere in the ledger, roadmap, or source (the string assurance has zero hits repo-wide), yet half of it shipped under other names. A critical item was partially executed from memory rather than from the ledger, which is the exact failure mode the Praxis layer exists to prevent. Decide the mechanism: a standing rule that audit sessions end with same-session ingestion, a required scout-id per audit, or a ledger-diff step in the audit protocol itself.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "intelligence",
+        "process"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:35:07.778Z",
+      "updatedAt": "2026-07-24T14:35:07.778Z"
+    },
+    {
+      "id": "rec-20260724-003",
+      "title": "Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency",
+      "summary": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) — roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "release",
+        "docs",
+        "gates"
+      ],
+      "affectedFiles": [
+        "CHANGELOG.md",
+        ".github/workflows/release.yml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:35:22.526Z",
+      "updatedAt": "2026-07-24T14:35:22.526Z"
+    },
+    {
+      "id": "rec-20260724-004",
+      "title": "Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger",
+      "summary": "ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        ".cadence/ROADMAP.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:35:34.096Z",
+      "updatedAt": "2026-07-24T14:35:34.096Z"
+    },
+    {
+      "id": "rec-20260724-005",
+      "title": "Close the trust envelope: gate the SETTLE capability class in MCP serve",
+      "summary": "mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation — an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "mcp",
+        "security",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/types/src/mcp-trust.ts",
+        "packages/core/src/mcp/tools.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:35:48.927Z",
+      "updatedAt": "2026-07-24T14:35:48.927Z"
+    },
+    {
+      "id": "rec-20260724-006",
+      "title": "Signed or tamper-evident SUMMARY attestations",
+      "summary": "SUMMARY.json is trusted-on-disk: a hand-edited artifact renders faithfully through summary render and reads as settled provenance in PRs. verify phase --changed partially mitigates by re-deriving AC coverage statelessly, but gate outcomes, bypasses, and provider provenance in the artifact carry no integrity protection. Options range from a content hash recorded in state at settle time (cheap, detects casual edits) to full signing (enterprise-grade). Carried forward from the v1.47.0 audit rec list; no ledger entry existed for it.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "verification",
+        "summary"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts",
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:36:01.942Z",
+      "updatedAt": "2026-07-24T14:36:01.942Z"
+    },
+    {
+      "id": "rec-20260724-007",
+      "title": "Define and document multi-contributor concurrency semantics for .cadence state",
+      "summary": "team-rollout.md covers PR visibility but not the mechanics of two contributors with phases in flight: merge behavior for state.json, the intelligence ledger, and phase directories. First verify whether current behavior is safe-by-construction (per-phase directories may already isolate most conflict surface), then document the answer or design the missing piece. This is the first question a second contributor asks and the team preset is now the default.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "state",
+        "team"
+      ],
+      "affectedFiles": [
+        "docs/team-rollout.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:36:14.304Z",
+      "updatedAt": "2026-07-24T14:36:14.304Z"
+    },
+    {
+      "id": "rec-20260724-008",
+      "title": "Spot-check the logged-out GitHub landing render against main README",
+      "summary": "A logged-out fetch of the repo page served the pre-1.50 README (billsplit headline, nine slash commands, no Codex/MCP/mermaid) while main carries the test-gutting version. Possibly CDN cache on the fetching side, but given the standing stale-rendered-pages lesson and the suite-reveal stakes on first impressions, verify from a logged-out browser and cache-bust if confirmed.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "positioning"
+      ],
+      "affectedFiles": [
+        "README.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:36:27.035Z",
+      "updatedAt": "2026-07-24T14:36:27.035Z"
+    },
+    {
+      "id": "rec-20260724-009",
+      "title": "SEO differentiation plan for the Cadence name collision ahead of the suite reveal",
+      "summary": "Organic search for cadence surfaces Uber Cadence Workflow, Flow Cadence language, and Cadence Design Systems before this repo. Renaming is off the table post-launch, so plan differentiation instead: consistent AI-agent-verification framing in every public surface, the docs portal, distinctive taglines, and topic tags. Permanent headwind to budget for in the Mane Horizons reveal, not a fixable defect.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "positioning",
+        "docs"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-009"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:36:38.540Z",
+      "updatedAt": "2026-07-24T14:36:38.540Z"
+    },
+    {
+      "id": "rec-20260724-010",
+      "title": "milestone premortem has no entry-removal/edit path once an operator-authored item is added",
+      "summary": "cadence milestone premortem --add-likely-failure-mode/--add-hidden-dependency/--add-out-of-scope only appends and persists cumulatively across separate invocations (confirmed empirically 2026-07-24 while working mil-rec-rec-20260724-001: a stray debug string added via --add-out-of-scope survived a subsequent no-flag deterministic refresh and could not be removed by any CLI verb). Same class of gap as rec-20260720-001 (deferred milestones had no reopen path): an append-only mutator with no corresponding remove/edit, forcing a direct milestones.json hand-edit as the only escape hatch -- which this repo's own convention (see rec-20260720-001's objective text) treats as a violation. Add a 'cadence milestone premortem --remove-<field> <index-or-text>' (or equivalent) verb.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/milestone.ts",
+        "packages/core/src/intelligence/milestone.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-011",
+        "ev-20260724-012"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T15:23:58.655Z",
+      "updatedAt": "2026-07-24T15:25:38.598Z"
     }
   ],
   "archived": [
@@ -3551,11 +3817,48 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "213-coverage-thresholds-ci",
-      "scoutId": "scout-20260712-1234",
-      "createdAt": "2026-07-12T17:41:07.730Z",
-      "updatedAt": "2026-07-24T03:53:21.852Z",
       "shippedRef": "PR #291 / phase 213",
+      "scoutId": "scout-20260712-1234",
       "archivedAt": "2026-07-24T03:53:21.852Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T17:41:07.730Z",
+      "updatedAt": "2026-07-24T03:53:21.852Z"
+    },
+    {
+      "id": "rec-20260724-001",
+      "title": "Minimum-evidence floor gate: refuse settle below a configured AC evidence level",
+      "summary": "The Phase 140 evidence ladder (ai-verified > executed > assertion > mention > unverified) is visibility-only: no gate acts on it, so a phase with every AC at mention or unverified settles exactly as green as an ai-verified one. Add a configurable floor (e.g. gates.evidenceFloor: executed) that refuses settle when any AC PASS rests on evidence below the floor, with per-preset defaults (solo: mention, team: assertion, production: executed) and a named bypass recorded in gateBypasses. This is the enforcement half of the assurance-levels P0 from the v1.47.0 audit; the visibility half shipped as Phase 140/70/73. Under the gate-vs-shape thesis, evidence levels are currently shape.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "critical",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "verification",
+        "config"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/ac-evidence.ts",
+        "packages/types/src/config.ts",
+        "packages/core/src/gates/engine.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-001",
+        "ev-20260724-010"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "214-evidence-floor-gate",
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:34:55.654Z",
+      "updatedAt": "2026-07-24T18:01:56.394Z",
+      "shippedRef": "phase 214-evidence-floor-gate / PR #TBD",
+      "archivedAt": "2026-07-24T18:01:56.394Z",
       "archiveReason": "shipped"
     }
   ]

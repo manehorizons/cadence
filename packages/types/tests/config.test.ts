@@ -730,7 +730,7 @@ describe('gates.sealed config (Phase 141 / AC-1)', () => {
   it('AC-1: applies gates: { sealed: [] } when gates is omitted (back-compat)', () => {
     const { gates: _drop, ...withoutGates } = defaultConfig;
     const parsed = CadenceConfigZ.parse(withoutGates);
-    expect(parsed.gates).toEqual({ sealed: [] });
+    expect(parsed.gates).toEqual({ sealed: [], evidenceFloor: 'mention' });
   });
 
   it('AC-1: defaultConfig carries gates.sealed as an empty array', () => {
@@ -766,6 +766,44 @@ describe('gates.sealed config (Phase 141 / AC-1)', () => {
     expect(presets.production.gates.sealed).toEqual(['test-coverage', 'build-test-must-pass']);
     expect(presets.solo.gates.sealed).toEqual([]);
     expect(presets.team.gates.sealed).toEqual([]);
+  });
+});
+
+describe('gates.evidenceFloor config (Phase 214 / AC-2)', () => {
+  it('AC-2: schema-level default is "mention" (back-compat) when gates is omitted', () => {
+    const { gates: _drop, ...withoutGates } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(withoutGates);
+    expect(parsed.gates.evidenceFloor).toBe('mention');
+  });
+
+  it('AC-2: defaultConfig itself carries evidenceFloor "mention"', () => {
+    expect(defaultConfig.gates.evidenceFloor).toBe('mention');
+  });
+
+  it('AC-2: accepts every evidence-ladder literal (ai-verified, executed, assertion, mention, unverified)', () => {
+    for (const tier of ['ai-verified', 'executed', 'assertion', 'mention', 'unverified'] as const) {
+      expect(() =>
+        CadenceConfigZ.parse({ ...defaultConfig, gates: { evidenceFloor: tier } }),
+      ).not.toThrow();
+    }
+  });
+
+  it('AC-2: rejects an unknown evidenceFloor literal', () => {
+    expect(() =>
+      CadenceConfigZ.parse({ ...defaultConfig, gates: { evidenceFloor: 'vibes' as never } }),
+    ).toThrow();
+  });
+
+  it('AC-2: solo preset defaults evidenceFloor to "assertion"', () => {
+    expect(presets.solo.gates.evidenceFloor).toBe('assertion');
+  });
+
+  it('AC-2: team preset defaults evidenceFloor to "executed"', () => {
+    expect(presets.team.gates.evidenceFloor).toBe('executed');
+  });
+
+  it('AC-2: production preset defaults evidenceFloor to "executed"', () => {
+    expect(presets.production.gates.evidenceFloor).toBe('executed');
   });
 });
 

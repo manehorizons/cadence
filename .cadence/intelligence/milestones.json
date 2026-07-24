@@ -570,6 +570,39 @@
       ],
       "createdAt": "2026-07-24T01:04:30.664Z",
       "updatedAt": "2026-07-24T01:04:35.367Z"
+    },
+    {
+      "id": "mil-rec-rec-20260724-001",
+      "name": "Minimum-evidence floor gate: refuse settle below a configured AC evidence level",
+      "objective": "The Phase 140 evidence ladder (ai-verified > executed > assertion > mention > unverified) is visibility-only: no gate acts on it, so a phase with every AC at mention or unverified settles exactly as green as an ai-verified one. Add a configurable floor (e.g. gates.evidenceFloor: executed) that refuses settle when any AC PASS rests on evidence below the floor, with per-preset defaults (solo: mention, team: assertion, production: executed) and a named bypass recorded in gateBypasses. This is the enforcement half of the assurance-levels P0 from the v1.47.0 audit; the visibility half shipped as Phase 140/70/73. Under the gate-vs-shape thesis, evidence levels are currently shape.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260724-001"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [
+          "[operator] Bypass normalization: if the per-AC evidenceFloor bypass is easy to reach, agents/operators may invoke it every settle rather than exceptionally, quietly becoming the real floor instead of the configured one (per Fable review 2026-07-24, see ev-20260724-010).",
+          "[operator] Team preset's 'executed' floor is only meaningful if build-test-must-pass reliably runs under the team preset; a team repo with no configured verification.testCommand can never reach 'executed' evidence, turning the gate into a permanent refusal rather than a real floor."
+        ],
+        "hiddenDependencies": [
+          "[operator] Requires deriveAcEvidence's existing buildTestRan signal to be trustworthy per preset -- the gate's 'executed' tier has no meaning if the suite never actually runs this settle.",
+          "[operator] Production tier's proposed non-mock-provider guard (closing the Mock Mirage gap) needs the deep-verify provider identity visible at gate-evaluation time -- the same signal deriveAcEvidence already reads to exclude mock from ai-verified."
+        ],
+        "driftRisks": [],
+        "outOfScope": [
+          "Not retroactively re-evaluating already-settled phases against the new floor -- applies going forward only.",
+          "Not changing the Phase 140 evidence ladder's ranking or definitions themselves -- only adding a gate that acts on the existing ladder."
+        ]
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260724-001/SPEC.md",
+          "exportedAt": "2026-07-24T15:38:02.677Z"
+        }
+      ],
+      "createdAt": "2026-07-24T15:14:43.518Z",
+      "updatedAt": "2026-07-24T15:38:02.677Z"
     }
   ]
 }

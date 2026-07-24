@@ -99,6 +99,17 @@ Then an outcome
  *  bypassed via `--allow-missing-coverage` at settle time, so no test fixture
  *  is seeded (a seeded fixture would itself be a second, unrelated offender). */
 async function driveToRefusal(root: string): Promise<void> {
+  // Phase 214 (T4): this fixture has no real test coverage matching
+  // verification.testGlobs and predates gates.evidenceFloor (defaultConfig's
+  // schema-level floor is 'mention') — relax it to 'unverified' so the
+  // boundary-scan assertions below aren't newly refused by the unrelated
+  // evidence-floor gate.
+  {
+    const configPath = join(root, '.cadence/config.json');
+    const config = JSON.parse(await readFile(configPath, 'utf8'));
+    config.gates = { ...(config.gates ?? {}), evidenceFloor: 'unverified' };
+    await writeFile(configPath, JSON.stringify(config, null, 2));
+  }
   await initGitRepo(root);
   await run(['draft', 'new', PHASE, '01', '--tier=standard'], root);
   await writeBlockModeDraft(root);

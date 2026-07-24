@@ -37,6 +37,20 @@ afterEach(async () => {
   }
 });
 
+/**
+ * Phase 214 (T4): relax gates.evidenceFloor to 'unverified' for fixtures in
+ * this file that deliberately have no real AC coverage (they're testing the
+ * test-coverage gate's own bypass/skip behavior, not evidence-floor) —
+ * without this, defaultConfig's schema-level 'mention' floor would newly
+ * refuse them since 'unverified' evidence never meets 'mention'.
+ */
+async function relaxEvidenceFloor(root: string): Promise<void> {
+  const configPath = join(root, '.cadence', 'config.json');
+  const config = JSON.parse(await readFile(configPath, 'utf8'));
+  config.gates = { ...(config.gates ?? {}), evidenceFloor: 'unverified' };
+  await writeFile(configPath, JSON.stringify(config, null, 2));
+}
+
 async function seedCoverageTest(
   root: string,
   acIds: string[],
@@ -101,6 +115,7 @@ describe('settle test-coverage gate (Phase 14)', () => {
 
   it('explicit --ac override bypasses the gate for that AC (AC-5)', async () => {
     active = await tempRepo({ initialized: true });
+    await relaxEvidenceFloor(active.root);
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);
@@ -114,6 +129,7 @@ describe('settle test-coverage gate (Phase 14)', () => {
 
   it('--allow-missing-coverage bypasses the gate entirely (AC-2)', async () => {
     active = await tempRepo({ initialized: true });
+    await relaxEvidenceFloor(active.root);
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
     await run(['build', 'task', 'T1', '--status=DONE'], active.root);
@@ -141,6 +157,7 @@ describe('settle test-coverage gate (Phase 14)', () => {
 
   it('gate is skipped under auto × quick-fix profile/tier (AC-3)', async () => {
     active = await tempRepo({ initialized: true });
+    await relaxEvidenceFloor(active.root);
     // Force quick-fix tier in the DRAFT — auto × quick-fix excludes test-coverage.
     await run(
       ['draft', 'new', '01-foundation', '01', '--title=Demo', '--tier=quick-fix'],

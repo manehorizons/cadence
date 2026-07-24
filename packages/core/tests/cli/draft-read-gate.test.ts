@@ -32,6 +32,11 @@ async function seedDraft(
   profile: 'auto' | 'standard' | 'strict',
   tier: 'quick-fix' | 'standard' | 'complex',
 ): Promise<string> {
+  // Phase 214 (T4): no real AC-1 coverage seeded anywhere in this file, and
+  // it predates gates.evidenceFloor (defaultConfig's schema-level floor is
+  // 'mention') — relax it to 'unverified' so this file's draft-read-mtime
+  // assertions aren't newly refused by the unrelated evidence-floor gate.
+  await patchConfig(root, { gates: { sealed: [], evidenceFloor: 'unverified' } });
   const phaseDir = join(root, '.cadence/phases/01-foundation');
   await mkdir(phaseDir, { recursive: true });
   const body = `---\nphase: 01-foundation\nid: 01-01\ntier: ${tier}\nprofile: ${profile}\nstatus: PENDING\n---\n\n# 01-01 — Demo\n\n## Objective\nDemo.\n\n## Acceptance Criteria\n\n### AC-1: ok\nGiven x\nWhen y\nThen z\n\n## Tasks\n\n### T1: do\n- files: \`src/x.ts\`\n- action: a\n- verify: v\n- done: AC-1\n\n## Boundaries\n\n- _(none)_\n`;

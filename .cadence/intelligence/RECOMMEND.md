@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-23T21:33:53.887Z
+Generated at: 2026-07-24T14:37:15.765Z
 
 ## Advisory
 
@@ -10,31 +10,63 @@ Generated at: 2026-07-23T21:33:53.887Z
 
 ## Ranked
 
-### rec-20260710-001 — Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning
+### rec-20260724-005 — Close the trust envelope: gate the SETTLE capability class in MCP serve
 
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260710-0400
+- score: 68/100 (raw 22.7)
+- status: candidate · ready: ready-for-milestone · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-milestone +7 · decay fresh +4 · prio high +5 ⇒ raw 22.7 (score 68)
+- scout: claude-cadence-audit-20260724
 - next: cadence milestone propose
 
-### rec-20260712-003 — Retro friction feeds back into Praxis recommendation scoring
+### rec-20260724-001 — Minimum-evidence floor gate: refuse settle below a configured AC evidence level
 
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260712-0328
+- score: 65/100 (raw 20.7)
+- status: candidate · ready: needs-decision · priority: critical · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio critical +8 ⇒ raw 20.7 (score 65)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
+
+### rec-20260724-003 — Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
+
+### rec-20260724-002 — P0 escape retro: externally-identified critical findings must land in the ledger at identification time
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
+
+### rec-20260724-004 — Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
+
+### rec-20260724-006 — Signed or tamper-evident SUMMARY attestations
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
+
+### rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
+
+- score: 55/100 (raw 13.7)
+- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
+- scout: claude-cadence-audit-20260724
 - next: cadence milestone propose
 
 ### rec-20260712-009 — Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260712-1234
-- next: cadence milestone propose
-
-### rec-20260712-014 — Add test-coverage reporting with enforced minimum thresholds to CI
 
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
@@ -61,6 +93,14 @@ Generated at: 2026-07-23T21:33:53.887Z
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
+- next: cadence milestone propose
+
+### rec-20260724-008 — Spot-check the logged-out GitHub landing render against main README
+
+- score: 52/100 (raw 11.7)
+- status: candidate · ready: needs-evidence · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio low +0 ⇒ raw 11.7 (score 52)
+- scout: claude-cadence-audit-20260724
 - next: cadence milestone propose
 
 ### rec-20260710-005 — Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report
@@ -115,12 +155,12 @@ Generated at: 2026-07-23T21:33:53.887Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
 - next: cadence milestone propose
 
-### rec-20260723-003 — CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate
+### rec-20260724-009 — SEO differentiation plan for the Cadence name collision ahead of the suite reveal
 
 - score: 50/100 (raw 10.7)
 - status: candidate · ready: raw-idea · priority: low · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- scout: scout-20260723-0108
+- scout: claude-cadence-audit-20260724
 - next: cadence milestone propose
 
 ## Parked (deferred)
@@ -133,4 +173,4 @@ None.
 
 ## Totals
 
-- total 38 · ranked 15 · parked 1 · needs-attention 0 · excluded 22
+- total 43 · ranked 20 · parked 1 · needs-attention 0 · excluded 22

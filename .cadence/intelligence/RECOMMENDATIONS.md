@@ -532,3 +532,146 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
+
+## rec-20260724-002 — P0 escape retro: externally-identified critical findings must land in the ledger at identification time
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: intelligence, process
+- evidence: Audit 2026-07-24: 34 tracked recs, none referencing assurance levels or a settle-equivalence gap; enforcement half remains unshipped
+- next: cadence milestone propose
+
+The assurance-levels P0 from the v1.47.0 audit appears nowhere in the ledger, roadmap, or source (the string assurance has zero hits repo-wide), yet half of it shipped under other names. A critical item was partially executed from memory rather than from the ledger, which is the exact failure mode the Praxis layer exists to prevent. Decide the mechanism: a standing rule that audit sessions end with same-session ingestion, a required scout-id per audit, or a ledger-diff step in the audit protocol itself.
+
+## rec-20260724-003 — Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: release, docs, gates
+- files: CHANGELOG.md, .github/workflows/release.yml
+- evidence: Audit 2026-07-24: grep of CHANGELOG version headers vs registry.npmjs.org dist-tags and repo tag count
+- next: cadence milestone propose
+
+CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) — roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.
+
+## rec-20260724-004 — Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, intelligence
+- files: .cadence/ROADMAP.md
+- evidence: Audit 2026-07-24: ROADMAP head describes v0.4 phase plans (23.x) against 225 settled phases on disk
+- next: cadence milestone propose
+
+ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.
+
+## rec-20260724-005 — Close the trust envelope: gate the SETTLE capability class in MCP serve
+
+- status: candidate
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: mcp, security, gates
+- files: packages/types/src/mcp-trust.ts, packages/core/src/mcp/tools.ts
+- evidence: Audit 2026-07-24: Phase 181 comment in mcp-trust.ts — SETTLE is classified but left ungated this phase (see DRAFT Boundaries)
+- next: cadence milestone propose
+
+mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation — an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.
+
+## rec-20260724-006 — Signed or tamper-evident SUMMARY attestations
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security, verification, summary
+- files: packages/types/src/summary.ts, packages/core/src/services/settle.ts
+- evidence: Audit 2026-07-24: no signing/attestation code repo-wide; summary render validates schema only
+- next: cadence milestone propose
+
+SUMMARY.json is trusted-on-disk: a hand-edited artifact renders faithfully through summary render and reads as settled provenance in PRs. verify phase --changed partially mitigates by re-deriving AC coverage statelessly, but gate outcomes, bypasses, and provider provenance in the artifact carry no integrity protection. Options range from a content hash recorded in state at settle time (cheap, detects casual edits) to full signing (enterprise-grade). Carried forward from the v1.47.0 audit rec list; no ledger entry existed for it.
+
+## rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, state, team
+- files: docs/team-rollout.md
+- evidence: Audit 2026-07-24: no merge/conflict/concurrency guidance found in docs; state.json is a single shared file
+- next: cadence milestone propose
+
+team-rollout.md covers PR visibility but not the mechanics of two contributors with phases in flight: merge behavior for state.json, the intelligence ledger, and phase directories. First verify whether current behavior is safe-by-construction (per-phase directories may already isolate most conflict surface), then document the answer or design the missing piece. This is the first question a second contributor asks and the team preset is now the default.
+
+## rec-20260724-008 — Spot-check the logged-out GitHub landing render against main README
+
+- status: candidate
+- ready: needs-evidence
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs, positioning
+- files: README.md
+- evidence: Audit 2026-07-24: fetched github.com/manehorizons/cadence rendered old README content against clone at commit 5451109
+- next: cadence milestone propose
+
+A logged-out fetch of the repo page served the pre-1.50 README (billsplit headline, nine slash commands, no Codex/MCP/mermaid) while main carries the test-gutting version. Possibly CDN cache on the fetching side, but given the standing stale-rendered-pages lesson and the suite-reveal stakes on first impressions, verify from a logged-out browser and cache-bust if confirmed.
+
+## rec-20260724-009 — SEO differentiation plan for the Cadence name collision ahead of the suite reveal
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: positioning, docs
+- evidence: Audit 2026-07-24: web search for cadence github ranks three large incumbent projects above manehorizons/cadence
+- next: cadence milestone propose
+
+Organic search for cadence surfaces Uber Cadence Workflow, Flow Cadence language, and Cadence Design Systems before this repo. Renaming is off the table post-launch, so plan differentiation instead: consistent AI-agent-verification framing in every public surface, the docs portal, distinctive taglines, and topic tags. Permanent headwind to budget for in the Mane Horizons reveal, not a fixable defect.
+
+## rec-20260724-010 — milestone premortem has no entry-removal/edit path once an operator-authored item is added
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, intelligence
+- files: packages/core/src/cli/commands/milestone.ts, packages/core/src/intelligence/milestone.ts
+- evidence: Discovered 2026-07-24 during rec-20260724-001 milestone shaping: 'test-entry-debug' added to outOfScope via --add-out-of-scope during exploratory testing persisted across a subsequent no-flag premortem refresh, with no CLI path to remove it.
+- evidence: Escalation 2026-07-24: found worse than initially scoped. 'cadence milestone propose' is not idempotent w.r.t. pre-mortem data -- rerunning it against an already-proposed milestone (e.g. mil-rec-rec-20260724-001) silently reset preMortem back to {likelyFailureModes:[],hiddenDependencies:[],driftRisks:[],outOfScope:[]}, discarding operator-authored entries added via a prior 'milestone premortem --add-*' call, with no warning or confirmation. Confirmed empirically: populate premortem -> verify via list (populated) -> run propose again -> re-check JSON (wiped). 'cadence milestone list' does NOT have this problem and is the safe read-only render. Recommend re-scoping this rec's fix to also make clusterMilestones()/propose preserve existing preMortem for already-proposed/accepted milestones it re-touches, not just adding a removal verb -- this is a data-loss bug, not only a missing-capability gap. Consider raising priority above 'low' given the destructive-on-rerun behavior.
+- next: cadence milestone propose
+
+cadence milestone premortem --add-likely-failure-mode/--add-hidden-dependency/--add-out-of-scope only appends and persists cumulatively across separate invocations (confirmed empirically 2026-07-24 while working mil-rec-rec-20260724-001: a stray debug string added via --add-out-of-scope survived a subsequent no-flag deterministic refresh and could not be removed by any CLI verb). Same class of gap as rec-20260720-001 (deferred milestones had no reopen path): an append-only mutator with no corresponding remove/edit, forcing a direct milestones.json hand-edit as the only escape hatch -- which this repo's own convention (see rec-20260720-001's objective text) treats as a violation. Add a 'cadence milestone premortem --remove-<field> <index-or-text>' (or equivalent) verb.

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
@@ -90,6 +90,19 @@ describe('cadence init --demo (phase 109, rec-20260617-002)', () => {
     active = await tempRepo();
     const init = await run(['init', '--name=demo', '--demo'], active.root);
     expect(init.code).toBe(0);
+
+    // Phase 214 (T4): the default init preset's gates.evidenceFloor
+    // ('executed'/'assertion' depending on preset) refuses an explicit
+    // --ac pass with no real coverage (--allow-missing-coverage doesn't
+    // touch evidence, only the test-coverage gate) — relax it to
+    // 'unverified' so this end-to-end settle assertion isn't newly refused
+    // by the unrelated evidence-floor gate.
+    {
+      const cfgPath = join(active.root, '.cadence/config.json');
+      const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
+      cfg.gates = { ...(cfg.gates ?? {}), evidenceFloor: 'unverified' };
+      writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+    }
 
     const approve = await run(['draft', 'approve', '01-demo', '01'], active.root);
     expect(approve.code).toBe(0);

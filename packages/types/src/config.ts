@@ -106,6 +106,17 @@ export const CoverageProfileConfigZ = z.object({
 
 export type CoverageProfileConfig = z.infer<typeof CoverageProfileConfigZ>;
 
+/**
+ * Phase 140 evidence ladder, ranked strongest to weakest:
+ * `ai-verified` > `executed` > `assertion` > `mention` > `unverified`. Hand-kept
+ * mirror of `AcEvidenceZ` (`packages/types/src/summary.ts`) rather than an
+ * import — `summary.ts` is a sibling task's file for this phase, and this
+ * package already establishes the hand-kept-enum-mirror pattern above
+ * (`CoverageProfileStrategyZ` mirroring core's `BlockStrategy`) for exactly
+ * this situation.
+ */
+export const EvidenceFloorZ = z.enum(['ai-verified', 'executed', 'assertion', 'mention', 'unverified']);
+
 export const CadenceConfigZ = z.object({
   $schema: z.string().optional(),
   schemaVersion: z.literal(1),
@@ -418,8 +429,22 @@ export const CadenceConfigZ = z.object({
   gates: z
     .object({
       sealed: z.array(z.string()).default([]),
+      /**
+       * Evidence floor per AC (Phase 214, closes the visibility-only Phase
+       * 108/140 evidence-ladder enforcement gap). Settle refuses when any
+       * AC's PASS verdict rests on evidence weaker than this floor on the
+       * `ai-verified > executed > assertion > mention > unverified` ladder.
+       * Schema-level default `mention` is the back-compat floor (today's
+       * behavior — nothing newly refuses for pre-existing configs); the
+       * `presets` export below sets the actually-decided per-preset floors
+       * (solo → `assertion`, team/production → `executed`) so only a fresh
+       * init or an explicit override sees the stricter behavior. `mention`
+       * is reachable only via explicit config override or a named,
+       * reason-required per-AC bypass — never as a preset default.
+       */
+      evidenceFloor: EvidenceFloorZ.default('mention'),
     })
-    .default({ sealed: [] }),
+    .default({ sealed: [], evidenceFloor: 'mention' }),
   /**
    * Resume cross-worktree discovery (Phase 142/143, v1.38 cross-worktree-handoff-discovery).
    * Configures `cadence resume` behavior when multiple handoff candidates exist across git
@@ -517,7 +542,7 @@ export const defaultConfig: CadenceConfig = {
   handoff: {},
   recommendations: { autoArchive: true },
   retro: { enabled: true, offerGithubIssue: true },
-  gates: { sealed: [] },
+  gates: { sealed: [], evidenceFloor: 'mention' as const },
   resume: { crossWorktree: true, autoList: false, remoteCheck: true },
   boundaryEnforcement: 'warn',
   redundantWorkEnforcement: 'warn',
@@ -529,13 +554,29 @@ export const presets = {
     loopEnforcement: 'reminder' as const,
     acDiscipline: 'optional' as const,
     commitCadence: 'manual' as const,
+    // Phase 214 (ev-20260724-010): solo's evidence floor is 'assertion' —
+    // stricter than the schema's back-compat 'mention' default, but looser
+    // than team/production since solo has no reviewer in the loop.
+    gates: { ...defaultConfig.gates, evidenceFloor: 'assertion' as const },
   },
-  team: { ...defaultConfig },
+  team: {
+    ...defaultConfig,
+    // Phase 214 (ev-20260724-010): team's evidence floor is 'executed'.
+    gates: { ...defaultConfig.gates, evidenceFloor: 'executed' as const },
+  },
   production: {
     ...defaultConfig,
     loopEnforcement: 'strict' as const,
     acDiscipline: 'strict' as const,
     hooks: { ...defaultConfig.hooks, preToolUseBuildGate: true },
-    gates: { sealed: ['test-coverage', 'build-test-must-pass'] },
+    // Phase 214 (ev-20260724-010): production's evidence floor is
+    // 'executed' (not 'ai-verified' — independent review found no preset
+    // should default to requiring a real, non-mock verifier just to pass
+    // the floor; that's enforced separately as a refusal/warning when the
+    // active verifier isn't a real provider, not via a stricter floor here).
+    gates: {
+      sealed: ['test-coverage', 'build-test-must-pass'],
+      evidenceFloor: 'executed' as const,
+    },
   },
 } satisfies Record<string, CadenceConfig>;

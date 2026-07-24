@@ -149,6 +149,16 @@ describe('MCP server surface (phase 58)', () => {
   // AC-3: write tools drive the loop end-to-end
   it('AC-3: draft_new → draft_approve → build_task → settle advances the loop to IDLE', async () => {
     active = await tempRepo({ initialized: true });
+    // Phase 214 (T4): no real AC-1 coverage seeded here and predates
+    // gates.evidenceFloor (defaultConfig's schema-level floor is 'mention')
+    // — relax it to 'unverified' so this end-to-end loop-advance assertion
+    // isn't newly refused by the unrelated evidence-floor gate.
+    {
+      const cfgPath = join(active.root, '.cadence', 'config.json');
+      const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+      cfg.gates = { ...(cfg.gates ?? {}), evidenceFloor: 'unverified' };
+      await writeFile(cfgPath, JSON.stringify(cfg, null, 2));
+    }
     const { client, close } = await connect(active.root);
     try {
       const dn = await call(client, 'cadence_draft_new', { phase: '01-foundation', num: '01', title: 'Demo' });

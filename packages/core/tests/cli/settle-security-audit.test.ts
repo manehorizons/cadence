@@ -213,6 +213,16 @@ describe(
 
   it('AC-4: auto profile (gate not in set) skips the gate entirely', async () => {
     active = await tempRepo({ initialized: true }); // default profile=auto
+    // Phase 214 (T4): no real AC coverage seeded here and predates
+    // gates.evidenceFloor — relax it to 'unverified' so this
+    // security-audit-gate-membership assertion isn't newly refused by the
+    // unrelated evidence-floor gate.
+    {
+      const cfgPath = join(active.root, '.cadence/config.json');
+      const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+      cfg.gates = { ...(cfg.gates ?? {}), evidenceFloor: 'unverified' };
+      await writeFile(cfgPath, JSON.stringify(cfg, null, 2));
+    }
     await initGitRepo(active.root);
     await run(['draft', 'new', PHASE, '02', '--tier=complex'], active.root);
     await writeComplexDraft(active.root);

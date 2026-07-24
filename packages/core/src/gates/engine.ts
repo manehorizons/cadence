@@ -1,4 +1,5 @@
 import type {
+  AcEvidence,
   CadenceConfig,
   CadenceState,
   Draft,
@@ -7,6 +8,7 @@ import type {
   Profile,
   Tier,
 } from '@manehorizons/cadence-types';
+import { resolveEffectiveProvider } from '../verify/verifier-factory.js';
 
 /**
  * Gates that always fire regardless of (tier × profile). Free per DESIGN.md
@@ -109,6 +111,78 @@ export function effectiveRedundantWorkEnforcement(
   if (draft?.redundantWorkEnforcement) return draft.redundantWorkEnforcement;
   if (config?.redundantWorkEnforcement) return config.redundantWorkEnforcement;
   return 'warn';
+}
+
+/**
+ * Resolve the effective `gates.evidenceFloor` for a phase (Phase 214, T2 —
+ * closes the visibility-only Phase 140 evidence-ladder enforcement gap).
+ * Unlike `effectiveProfile`/`effectiveBoundaryEnforcement` there is no
+ * per-draft override — DRAFT frontmatter never gained an `evidenceFloor`
+ * field — so this reads only `config.gates.evidenceFloor`, falling back to
+ * `'mention'`: the schema-level back-compat default from
+ * `CadenceConfigZ.gates.evidenceFloor` (`packages/types/src/config.ts`),
+ * which is deliberately the weakest rung so a config predating this gate
+ * never starts newly refusing. The `checkEvidenceFloor` gate step in
+ * `./ac-evidence.js` consumes this value.
+ */
+export function effectiveEvidenceFloor(
+  config: Pick<CadenceConfig, 'gates'> | null,
+): AcEvidence {
+  return config?.gates?.evidenceFloor ?? 'mention';
+}
+
+/**
+ * Phase 214 (T3, AC-3): the specific, named reason `gates.evidenceFloor:
+ * 'ai-verified'` is structurally unreachable while the active `--deep`
+ * verifier provider is `mock`. `deriveAcEvidence`
+ * (`./ac-evidence.js`) has always excluded a mock-provider deep-verify pass
+ * from counting as `ai-verified` (Phase 140's "Mock Mirage" precedent:
+ * `if (verdict?.pass === true && verdict.provider !== 'mock') return
+ * 'ai-verified';`) — so under this exact combination `checkEvidenceFloor`
+ * would refuse *every* settle attempt forever, with no evidence an operator
+ * could produce to satisfy it short of a bypass. That is a permanent,
+ * structural dead end, not an ordinary "strengthen the evidence" case, and
+ * the generic below-floor message (`checkEvidenceFloor`'s `reason`) doesn't
+ * say so.
+ */
+export const AI_VERIFIED_UNDER_MOCK_PROVIDER_REASON =
+  "`ai-verified` evidence is unreachable while the deep-verify provider is `mock` " +
+  '(Phase 140: a mock pass is never counted as ai-verified) — configure a real ' +
+  'provider via `cadence activate`, or lower `gates.evidenceFloor`.';
+
+/**
+ * Phase 214 (T3, AC-3): does effective `floor`/`provider` land on the
+ * structural ai-verified/mock trap described above? Pure predicate — the
+ * only two values that matter, already resolved by the caller.
+ */
+export function isEvidenceFloorStructurallyUnreachable(
+  floor: AcEvidence,
+  provider: ReturnType<typeof resolveEffectiveProvider>['provider'],
+): boolean {
+  return floor === 'ai-verified' && provider === 'mock';
+}
+
+/**
+ * Phase 214 (T3, AC-3): pick the evidence-floor refusal message. Swaps in
+ * `AI_VERIFIED_UNDER_MOCK_PROVIDER_REASON` exactly when
+ * `isEvidenceFloorStructurallyUnreachable` holds for the effective floor and
+ * the resolved `--deep` verifier provider; otherwise returns `genericReason`
+ * unchanged (the per-AC actual-vs-required text `checkEvidenceFloor`
+ * already produces — see `./ac-evidence.js`). Provider resolution reuses
+ * `resolveEffectiveProvider` (`../verify/verifier-factory.js`) rather than
+ * re-deriving the `?? 'mock'` fallback here, so this stays in lockstep with
+ * every other verifier-provider consumer in the codebase.
+ */
+export function evidenceFloorRefusalReason(
+  floor: AcEvidence,
+  config: Pick<CadenceConfig, 'verifier'> | null,
+  genericReason: string,
+): string {
+  const { provider } = resolveEffectiveProvider(config?.verifier ?? undefined);
+  if (isEvidenceFloorStructurallyUnreachable(floor, provider)) {
+    return AI_VERIFIED_UNDER_MOCK_PROVIDER_REASON;
+  }
+  return genericReason;
 }
 
 /**

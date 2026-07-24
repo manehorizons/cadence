@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
@@ -30,6 +30,17 @@ describe('end-to-end: empty repo → draft → build → settle via mock host', 
 
     await host.dispatchHook('session-start', { event: 'session-start', cwd: active.root });
     expect(host.calls[0]?.event).toBe('session-start');
+
+    // Phase 214 (T4): the default init preset's gates.evidenceFloor
+    // ('executed') refuses an explicit --ac pass with no real coverage —
+    // relax it to 'unverified' so this smoke test's end-to-end loop walk
+    // isn't newly refused by the unrelated evidence-floor gate.
+    {
+      const cfgPath = join(active.root, '.cadence/config.json');
+      const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+      cfg.gates = { ...(cfg.gates ?? {}), evidenceFloor: 'unverified' };
+      await writeFile(cfgPath, JSON.stringify(cfg, null, 2));
+    }
 
     expect((await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root)).code).toBe(0);
     expect((await run(['draft', 'approve', '01-foundation', '01'], active.root)).code).toBe(0);

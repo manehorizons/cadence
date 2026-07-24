@@ -32,6 +32,7 @@ None.
 - mil-rec-rec-20260723-001 — Add Claude-Code-vs-ANTHROPIC_API_KEY distinction to the anthropic-provider mock-fallback warning → .cadence/intelligence/exports/mil-rec-rec-20260723-001/SPEC.md
 - mil-rec-rec-20260723-002 — Docs callout: anthropic provider auth is separate from Claude Code's own login → .cadence/intelligence/exports/mil-rec-rec-20260723-002/SPEC.md
 - mil-rec-rec-20260723-003 — CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate → .cadence/intelligence/exports/mil-rec-rec-20260723-003/SPEC.md
+- mil-rec-rec-20260724-001 — Minimum-evidence floor gate: refuse settle below a configured AC evidence level → .cadence/intelligence/exports/mil-rec-rec-20260724-001/SPEC.md
 
 ## Closed
 

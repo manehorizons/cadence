@@ -68,6 +68,10 @@ async function arrange(
   await initGitRepo(root);
   if (opts.profile) await patchConfig(root, (c) => (c.profile = opts.profile));
   await patchConfig(root, (c) => (c.notify = { transport: 'file' }));
+  // Phase 214 (T4): no real AC-1 coverage seeded here — predates
+  // gates.evidenceFloor. Relax to 'unverified' so this file's skill-audit
+  // assertions aren't newly refused by the unrelated evidence-floor gate.
+  await patchConfig(root, (c) => (c.gates = { sealed: [], evidenceFloor: 'unverified' }));
   await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], root);
   const dp = join(root, '.cadence/phases/01-foundation/01-01-DRAFT.md');
   let body = await readFile(dp, 'utf8');
