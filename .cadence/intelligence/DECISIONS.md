@@ -39,6 +39,13 @@ Matches the established house convention already used in status.ts, milestone.ts
 
 Registration is a single CommandSpec entry in packages/host-claude-code/src/install-commands.ts (14 -> 15) plus updating the doc-count test's expected number (docs-command-count.test.ts). Low cost, and this command is explicitly aimed at agent/host-driven navigation, so the slash-command surface matters at ship time rather than being deferred.
 
+### dec-20260724-001 — Enforce ledger-diff at audit close, not a standing rule
+
+- recommendation: rec-20260724-002
+- decided: 2026-07-24T19:24:16.170Z
+
+Chose a mechanical ledger-diff step over a documented standing rule or a scout-id requirement. A standing rule ('audit sessions end with same-session ingestion') is a promise an agent can silently skip -- the exact self-report-trust failure mode CADENCE's thesis exists to prevent. A required scout-id only makes gaps auditable in hindsight, after a P0 has already slipped. The ledger-diff step instead makes ingestion mechanically checkable at audit-close time: enumerate critical/P0 findings, grep recommendations.json for a matching rec by title/area/evidence keyword, and refuse to close the audit session on any unmatched finding until it is filed via 'cadence recommendation add'. This directly targets the failure that motivated the rec: the v1.47.0 audit's assurance-levels P0 was partially executed from memory and never reached the ledger.
+
 ## Superseded
 
 _(none)_

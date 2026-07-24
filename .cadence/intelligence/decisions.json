@@ -45,6 +45,15 @@
       "status": "active",
       "decidedAt": "2026-07-21T22:47:30.023Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260724-001",
+      "recommendationId": "rec-20260724-002",
+      "title": "Enforce ledger-diff at audit close, not a standing rule",
+      "rationale": "Chose a mechanical ledger-diff step over a documented standing rule or a scout-id requirement. A standing rule ('audit sessions end with same-session ingestion') is a promise an agent can silently skip -- the exact self-report-trust failure mode CADENCE's thesis exists to prevent. A required scout-id only makes gaps auditable in hindsight, after a P0 has already slipped. The ledger-diff step instead makes ingestion mechanically checkable at audit-close time: enumerate critical/P0 findings, grep recommendations.json for a matching rec by title/area/evidence keyword, and refuse to close the audit session on any unmatched finding until it is filed via 'cadence recommendation add'. This directly targets the failure that motivated the rec: the v1.47.0 audit's assurance-levels P0 was partially executed from memory and never reached the ledger.",
+      "status": "active",
+      "decidedAt": "2026-07-24T19:24:16.170Z",
+      "supersedes": []
     }
   ]
 }

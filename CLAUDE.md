@@ -345,6 +345,21 @@ the rule that prevents it — with the enforcement layer where one exists.
   → State what was run and show the outcome; if tests fail, report the
   failure verbatim. In this repo the claim of done *is* the product surface
   under test.
+- **The Unlogged Audit Finding.** A strategic-audit session (an agent
+  auditing the existing codebase/implementation against prior findings)
+  surfacing a critical/P0 finding and then closing without filing it. →
+  Before closing an audit session, enumerate every critical/P0 finding it
+  identified and check each against
+  `.cadence/intelligence/recommendations.json` (matching by title/area/
+  evidence keyword — a mechanical `ledger-diff` step); file anything with no
+  matching rec via `cadence recommendation add` before the session ends.
+  Precedent: the v1.47.0 audit's assurance-levels P0 was partially executed
+  from memory and never reached the ledger — half of it later shipped under
+  other names before `rec-20260724-002` caught the gap and `dec-20260724-001`
+  picked this fix (2026-07-24). *(Operator
+  review only — no automated enforcement for the diff step itself; the
+  doc-content test only proves the instruction exists, not that a session
+  followed it.)*
 
 ### Code discipline
 
