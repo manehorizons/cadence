@@ -721,34 +721,6 @@
       "updatedAt": "2026-07-10T22:11:55.763Z"
     },
     {
-      "id": "rec-20260712-003",
-      "title": "Retro friction feeds back into Praxis recommendation scoring",
-      "summary": "Recurring friction identified by the post-settle retro feeds back into evidence.json to bump the scores of related recommendations (depends on the retro-artifact and rollup recommendations existing first). Landed via the same /cadence-scout session (scout-20260712-0328).",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "retro",
-        "praxis-scoring"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "212-retro-scoring-feedback",
-      "scoutId": "scout-20260712-0328",
-      "createdAt": "2026-07-12T04:24:07.244Z",
-      "updatedAt": "2026-07-24T02:08:14.437Z"
-    },
-    {
       "id": "rec-20260712-004",
       "title": "cadence draft new: num arg accepts nonsense with no sanity check",
       "summary": "cadence draft new's optional [num] positional argument silently accepts any string with no validation against the phase's existing 01-numbering convention. Omitting num already correctly defaults to 01; passing a bad value produces a nonsensical draft filename with no refusal or warning.",
@@ -3550,6 +3522,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-23T01:08:31.941Z",
       "updatedAt": "2026-07-24T00:13:15.524Z"
+    },
+    {
+      "id": "rec-20260712-003",
+      "title": "Retro friction feeds back into Praxis recommendation scoring",
+      "summary": "Recurring friction identified by the post-settle retro feeds back into evidence.json to bump the scores of related recommendations (depends on the retro-artifact and rollup recommendations existing first). Landed via the same /cadence-scout session (scout-20260712-0328).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "retro",
+        "praxis-scoring"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "212-retro-scoring-feedback",
+      "scoutId": "scout-20260712-0328",
+      "createdAt": "2026-07-12T04:24:07.244Z",
+      "updatedAt": "2026-07-24T02:26:36.035Z",
+      "shippedRef": "PR #289 / phase 212",
+      "archivedAt": "2026-07-24T02:26:36.035Z",
+      "archiveReason": "shipped"
     }
   ]
 }
