@@ -164,13 +164,13 @@ Two interactive gates are handled automatically for a programmatic caller: the
 interactive settle verdict walker is disabled (supply AC verdicts via the
 tool's `ac` argument or use `auto`), and the manual approve prompt itself
 would auto-pass over MCP's inherently-non-TTY transport — but for
-`cadence_draft_approve` and `cadence_spec_approve` that auto-pass is now
-constrained by an operator-issued **trust envelope**. Calling either tool
-without a valid grant is refused before any `state.json`/DRAFT/SPEC write,
-naming the failing check. A grant is created with `cadence mcp trust grant
---tool <name>` — run by an operator on a real terminal, never over MCP — and
-binds a hash of the tool's live definition, the CADENCE version, and an
-optional expiry; see
+`cadence_draft_approve`, `cadence_spec_approve`, and `cadence_settle` that
+auto-pass is now constrained by an operator-issued **trust envelope**.
+Calling any of the three without a valid grant is refused before any
+`state.json`/DRAFT/SPEC/SUMMARY write, naming the failing check. A grant is
+created with `cadence mcp trust grant --tool <name>` — run by an operator on
+a real terminal, never over MCP — and binds a hash of the tool's live
+definition, the CADENCE version, and an optional expiry; see
 [docs/concepts.md — MCP tool-trust envelope](concepts.md#mcp-tool-trust-envelope)
 and [docs/reference/commands.md — mcp](reference/commands.md#mcp) for the
 full model and CLI reference.

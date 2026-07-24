@@ -19,7 +19,7 @@ import { recommendationConvertService } from '../services/recommendation-convert
 import { recommendationArchiveService } from '../services/recommendation-archive.js';
 import { milestoneProposeService } from '../services/milestone-propose.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
-import { enforceApprovalBypassGrant } from './trust/enforce.js';
+import { enforceGatedToolGrant } from './trust/enforce.js';
 
 /**
  * One curated CADENCE command exposed as an MCP tool (phase 58). `run` calls the
@@ -32,14 +32,15 @@ import { enforceApprovalBypassGrant } from './trust/enforce.js';
  * write-tool descriptions say so.
  */
 /**
- * Capability class for the MCP tool-trust envelope (phase 181). READ_ONLY tools
- * never write; LEDGER_WRITE tools mutate the intelligence ledger (recommendations/
- * milestones) but not loop state; LOOP_WRITE tools mutate `state.json`/DRAFT/SPEC
- * artifacts but require no bypassed approval; APPROVAL_BYPASS tools skip the
- * interactive TTY approval prompt the CLI would otherwise show ("the tool call IS
- * the approval") and are the gated surface this phase's trust envelope targets;
- * SETTLE is `cadence_settle` alone, classified but deliberately left ungated this
- * phase (see DRAFT Boundaries).
+ * Capability class for the MCP tool-trust envelope (phase 181, extended phase
+ * 216). READ_ONLY tools never write; LEDGER_WRITE tools mutate the intelligence
+ * ledger (recommendations/milestones) but not loop state; LOOP_WRITE tools
+ * mutate `state.json`/DRAFT/SPEC artifacts but require no bypassed approval;
+ * APPROVAL_BYPASS tools skip the interactive TTY approval prompt the CLI
+ * would otherwise show ("the tool call IS the approval") and are gated by
+ * the trust envelope; SETTLE is `cadence_settle` alone — it closes the loop
+ * and writes SUMMARY.{json,md}, and is gated by the same trust-envelope
+ * mechanism as the two APPROVAL_BYPASS tools (`gatedRun`, below).
  */
 export type CapabilityClass =
   | 'READ_ONLY'
@@ -77,20 +78,21 @@ const optStrArr = (v: unknown): string[] | undefined =>
   Array.isArray(v) ? v.map(String) : undefined;
 
 /**
- * Wrap an `APPROVAL_BYPASS` tool's `run()` with the trust-envelope pre-check
- * (phase 181, T5). `enforceApprovalBypassGrant` runs BEFORE `originalRun` —
- * on refusal, `originalRun` (and therefore `draftApproveService`/
- * `specApproveService`) never executes: no `state.json`/DRAFT/SPEC write, no
- * gate-ladder run (AC-1). `toolName` is looked up in `TOOLS` lazily, at call
- * time, so this closure always sees the tool's live registered definition —
- * `TOOLS` is fully initialized by the time any `run()` is ever invoked.
+ * Wrap a gated tool's `run()` with the trust-envelope pre-check (phase 181,
+ * T5; extended to `cadence_settle` in phase 216). `enforceGatedToolGrant`
+ * runs BEFORE `originalRun` — on refusal, `originalRun` (and therefore
+ * `draftApproveService`/`specApproveService`/`settleService`) never
+ * executes: no `state.json`/DRAFT/SPEC/SUMMARY write, no gate-ladder run
+ * (AC-1). `toolName` is looked up in `TOOLS` lazily, at call time, so this
+ * closure always sees the tool's live registered definition — `TOOLS` is
+ * fully initialized by the time any `run()` is ever invoked.
  */
 function gatedRun(toolName: string, originalRun: ToolDef['run']): ToolDef['run'] {
   return async (repoRoot, args, io) => {
     const tool = TOOLS.find((t) => t.name === toolName);
     /* istanbul ignore next -- toolName is always one of this file's own TOOLS entries */
     if (!tool) throw new Error(`gatedRun: unknown tool "${toolName}"`);
-    const gate = await enforceApprovalBypassGrant(repoRoot, tool);
+    const gate = await enforceGatedToolGrant(repoRoot, tool);
     if (!gate.ok) {
       io.err(`${toolName} refused: ${gate.reason}\n`);
       return { exitCode: 1 };
@@ -234,7 +236,10 @@ export const TOOLS: ToolDef[] = [
     description:
       'Close the loop: run the settle gate stack, write SUMMARY.{json,md}, and return to IDLE. ' +
       'Runs the full command-boundary gate stack (coverage, structural verifier, etc.). The ' +
-      'interactive verdict walker is disabled over MCP; supply AC verdicts via "ac" or use "auto".',
+      'interactive verdict walker is disabled over MCP; supply AC verdicts via "ac" or use "auto". ' +
+      'Requires a valid, unexpired trust grant (matching def-hash and CADENCE version) issued via ' +
+      '`cadence mcp trust grant --tool cadence_settle` on a real terminal; without one the call is ' +
+      'refused before any state.json/SUMMARY write, naming the failing check.',
     capabilityClass: 'SETTLE',
     inputSchema: {
       ac: z
@@ -254,7 +259,7 @@ export const TOOLS: ToolDef[] = [
       allowSkillAuditMiss: z.boolean().optional().describe('Do not refuse when required skills were not invoked'),
       allowAutoComplex: z.boolean().optional().describe('Override the auto × complex soft cap'),
     },
-    run: (repoRoot, args, io) => {
+    run: gatedRun('cadence_settle', (repoRoot, args, io) => {
       const flags: Array<keyof typeof args> = [
         'auto', 'force', 'deep', 'allowMissingCoverage', 'allowOpenTasks', 'allowFailingBuild',
         'allowStaleDraft', 'allowVerifierFailure', 'allowCodeReviewFailure',
@@ -264,7 +269,7 @@ export const TOOLS: ToolDef[] = [
       if (Array.isArray(args.ac)) opts.ac = args.ac.map(String);
       for (const f of flags) if (isTrue(args[f])) opts[f] = true;
       return settleService(repoRoot, opts, io);
-    },
+    }),
   },
   {
     name: 'cadence_spec_new',

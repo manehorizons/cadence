@@ -5,12 +5,13 @@ import { readTrustLedger, writeTrustLedger } from '../mcp/trust/store.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
- * `cadence mcp trust grant/revoke/list` (phase 181, T4) — CLI-only, real-TTY,
- * operator-issued grants for the two `APPROVAL_BYPASS`-class MCP tools (plus
- * `SETTLE`, classified but left ungated this phase). Deliberately NOT exposed
- * as an MCP tool anywhere: an MCP client must never be able to self-attest or
- * self-grant its own trust — only a human on a real terminal, via this CLI
- * surface, can create a grant (DRAFT security constraint).
+ * `cadence mcp trust grant/revoke/list` (phase 181, T4; extended to `SETTLE`
+ * in phase 216) — CLI-only, real-TTY, operator-issued grants for the two
+ * `APPROVAL_BYPASS`-class MCP tools plus `SETTLE` (`cadence_settle`), all
+ * three actually enforced. Deliberately NOT exposed as an MCP tool anywhere:
+ * an MCP client must never be able to self-attest or self-grant its own
+ * trust — only a human on a real terminal, via this CLI surface, can create
+ * a grant (DRAFT security constraint).
  *
  * All three functions gather no facts of their own beyond what the CLI layer
  * (`cli/commands/mcp.ts`) passes in (`version`) — the impure/pure split this

@@ -37,7 +37,8 @@ describe('TOOLS capabilityClass (AC-1)', () => {
 
   it('SETTLE class contains exactly cadence_settle', () => {
     const settle = TOOLS.filter((t) => t.capabilityClass === 'SETTLE').map((t) => t.name);
-    // AC-1: cadence_settle is classified SETTLE but left ungated this phase
+    // AC-1: cadence_settle is the sole SETTLE-class tool; it is gated by the
+    // same trust-envelope mechanism as the APPROVAL_BYPASS tools (phase 216)
     expect(settle).toEqual(['cadence_settle']);
   });
 });

@@ -1064,37 +1064,6 @@
       "updatedAt": "2026-07-24T14:35:34.096Z"
     },
     {
-      "id": "rec-20260724-005",
-      "title": "Close the trust envelope: gate the SETTLE capability class in MCP serve",
-      "summary": "mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation — an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "mcp",
-        "security",
-        "gates"
-      ],
-      "affectedFiles": [
-        "packages/types/src/mcp-trust.ts",
-        "packages/core/src/mcp/tools.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260724-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:35:48.927Z",
-      "updatedAt": "2026-07-24T14:35:48.927Z"
-    },
-    {
       "id": "rec-20260724-006",
       "title": "Signed or tamper-evident SUMMARY attestations",
       "summary": "SUMMARY.json is trusted-on-disk: a hand-edited artifact renders faithfully through summary render and reads as settled provenance in PRs. verify phase --changed partially mitigates by re-deriving AC coverage statelessly, but gate outcomes, bypasses, and provider provenance in the artifact carry no integrity protection. Options range from a content hash recorded in state at settle time (cheap, detects casual edits) to full signing (enterprise-grade). Carried forward from the v1.47.0 audit rec list; no ledger entry existed for it.",
@@ -3860,11 +3829,45 @@
         "dec-20260724-001"
       ],
       "convertedToPhaseId": "215-p0-escape-retro-ledger-diff",
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:35:07.778Z",
-      "updatedAt": "2026-07-24T19:56:38.406Z",
       "shippedRef": "PR #295",
+      "scoutId": "claude-cadence-audit-20260724",
       "archivedAt": "2026-07-24T19:56:38.406Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-24T14:35:07.778Z",
+      "updatedAt": "2026-07-24T19:56:38.406Z"
+    },
+    {
+      "id": "rec-20260724-005",
+      "title": "Close the trust envelope: gate the SETTLE capability class in MCP serve",
+      "summary": "mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation — an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "mcp",
+        "security",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/types/src/mcp-trust.ts",
+        "packages/core/src/mcp/tools.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:35:48.927Z",
+      "updatedAt": "2026-07-24T21:36:22.187Z",
+      "shippedRef": "phase 216-settle-capability-gate / PR #TBD",
+      "archivedAt": "2026-07-24T21:36:22.187Z",
       "archiveReason": "shipped"
     }
   ]

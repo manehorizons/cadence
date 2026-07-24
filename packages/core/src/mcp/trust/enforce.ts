@@ -3,16 +3,20 @@ import { computeToolDefHash } from './def-hash.js';
 import { readTrustLedger } from './store.js';
 import { readPackageVersion } from '../../version.js';
 
-/** Result of `enforceApprovalBypassGrant` — `reason` names the FIRST failing check. */
+/** Result of `enforceGatedToolGrant` — `reason` names the FIRST failing check. */
 export type EnforceResult = { ok: true } | { ok: false; reason: string };
 
 /**
- * Pre-check gating the two `APPROVAL_BYPASS` MCP tools (`cadence_draft_approve`,
- * `cadence_spec_approve`) — phase 181, T5. Per `tools.ts`, "the tool call IS
- * the approval" for these two: the interactive TTY prompt the CLI would
- * otherwise show is skipped over MCP. This function is the re-constraint —
- * called from `tools.ts` BEFORE `draftApproveService`/`specApproveService`
- * ever runs, so a refusal here means no `state.json`/DRAFT/SPEC write and no
+ * Pre-check gating any tool routed through `gatedRun` in `tools.ts` — the two
+ * `APPROVAL_BYPASS` tools (`cadence_draft_approve`, `cadence_spec_approve`,
+ * phase 181 T5) plus the `SETTLE` tool (`cadence_settle`, phase 216). For the
+ * `APPROVAL_BYPASS` pair, "the tool call IS the approval": the interactive
+ * TTY prompt the CLI would otherwise show is skipped over MCP. For
+ * `cadence_settle`, an MCP call would otherwise run `settleService`
+ * immediately with no trust check at all. This function is the
+ * re-constraint in both cases — called from `tools.ts` BEFORE
+ * `draftApproveService`/`specApproveService`/`settleService` ever runs, so a
+ * refusal here means no `state.json`/DRAFT/SPEC/SUMMARY write and no
  * gate-ladder execution (AC-1).
  *
  * Checks run in order and stop at the first failure, so the returned reason
@@ -25,7 +29,7 @@ export type EnforceResult = { ok: true } | { ok: false; reason: string };
  *      (`readPackageVersion()`) — revoke-on-version-change
  *   4. the grant is not expired (`expiresAt === null`, or in the future)
  */
-export async function enforceApprovalBypassGrant(
+export async function enforceGatedToolGrant(
   repoRoot: string,
   tool: ToolDef,
 ): Promise<EnforceResult> {

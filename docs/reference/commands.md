@@ -1961,11 +1961,14 @@ paste-ready snippet plus a path hint and writes nothing.
 | `--json` | Print the raw trust ledger as JSON instead of the rendered table |
 | `-h, --help` | Display help for command |
 
-**`trust` behavior** — the MCP tool-trust envelope (phase 181). Two of the 18
-registered MCP tools are classified `APPROVAL_BYPASS` (`cadence_draft_approve`,
-`cadence_spec_approve`): calling either one over MCP skips the interactive
-manual-approve prompt the CLI would otherwise show. `cadence mcp trust
-grant/revoke/list` constrains that bypass instead of leaving it unconditional.
+**`trust` behavior** — the MCP tool-trust envelope (phase 181; extended to
+`SETTLE` in phase 216). Two of the 18 registered MCP tools are classified
+`APPROVAL_BYPASS` (`cadence_draft_approve`, `cadence_spec_approve`): calling
+either one over MCP skips the interactive manual-approve prompt the CLI
+would otherwise show. A third, `cadence_settle`, is classified `SETTLE` — it
+closes the loop and writes `SUMMARY.{json,md}`, and is gated by the same
+envelope. `cadence mcp trust grant/revoke/list` constrains all three instead
+of leaving them unconditional.
 A grant binds a sha256 structural hash of the tool's live definition (name +
 description + `inputSchema` shape), the CADENCE version it was granted
 against, and an optional expiry. `grant` refuses (exit 1, refuse+suggest) for
@@ -1977,7 +1980,7 @@ an MCP client can never self-attest or self-grant its own trust. `list`'s
 `valid` column is `yes` only when the grant's stored version matches the
 running CADENCE version and it is unexpired; it does not re-check the
 def-hash (that check runs at call time, inside `cadence_draft_approve` /
-`cadence_spec_approve` themselves). See
+`cadence_spec_approve` / `cadence_settle` themselves). See
 [Driving CADENCE over MCP](../mcp.md) for how a gated tool call is refused
 when no valid grant exists.
 

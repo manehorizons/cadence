@@ -62,7 +62,7 @@ function findTool(name: string): ToolDef {
 function grantFor(tool: ToolDef): McpTrustGrant {
   return {
     toolName: tool.name,
-    capabilityClass: 'APPROVAL_BYPASS',
+    capabilityClass: tool.capabilityClass,
     defHash: computeToolDefHash(tool),
     grantedAt: new Date().toISOString(),
     grantedVersion: readPackageVersion(),
@@ -173,6 +173,8 @@ describe('MCP server surface (phase 58)', () => {
       const bt = await call(client, 'cadence_build_task', { taskId: 'T1', status: 'DONE' });
       expect(bt.isError).toBeFalsy();
 
+      // Phase 216: cadence_settle is now gated by the trust envelope too.
+      await grantApprovalBypass(active.root, 'cadence_settle');
       const settle = await call(client, 'cadence_settle', { auto: true, allowMissingCoverage: true });
       expect(settle.isError).toBeFalsy();
       expect((settle.structuredContent as { settled?: string }).settled).toBe('01-01');
@@ -205,8 +207,12 @@ describe('MCP server surface (phase 58)', () => {
       await grantApprovalBypass(active.root, 'cadence_draft_approve');
       await call(client, 'cadence_draft_approve', { phase: '02-gate', num: '01' });
       await call(client, 'cadence_build_task', { taskId: 'T1', status: 'DONE' });
+      // Phase 216: grant cadence_settle's own envelope so this exercises the
+      // coverage gate specifically, not the (already-covered) trust refusal.
+      await grantApprovalBypass(active.root, 'cadence_settle');
       const settle = await call(client, 'cadence_settle', { auto: true }); // no allowMissingCoverage
       expect(settle.isError).toBe(true);
+      expect(text(settle)).toMatch(/coverage/i);
     } finally {
       await close();
     }

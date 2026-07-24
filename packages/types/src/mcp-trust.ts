@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
-// Phase 181: capability classes for MCP tools (`packages/core/src/mcp/tools.ts`).
-// `APPROVAL_BYPASS` and `SETTLE` are the classes whose calls skip the
-// interactive TTY approval prompt CLI usage would otherwise show — the trust
-// envelope (this file) is what re-constrains them. `SETTLE` is classified but
-// left ungated this phase (see DRAFT Boundaries).
+// Phase 181 (extended phase 216): capability classes for MCP tools
+// (`packages/core/src/mcp/tools.ts`). `APPROVAL_BYPASS` and `SETTLE` are the
+// classes whose calls skip the interactive TTY approval prompt CLI usage
+// would otherwise show — the trust envelope (this file) is what
+// re-constrains them. Both classes are enforced.
 export const McpCapabilityClassZ = z.enum([
   'READ_ONLY',
   'LEDGER_WRITE',

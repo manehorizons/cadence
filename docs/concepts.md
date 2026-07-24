@@ -393,14 +393,15 @@ can. `cadence mcp trust grant` itself refuses (capability-class check) for
 any tool that isn't `APPROVAL_BYPASS`/`SETTLE` — there is nothing to gate on
 a read-only, ledger-write, or loop-write tool.
 
-`cadence_settle` is classified `SETTLE`, which makes it grantable
-(`cadence mcp trust grant --tool cadence_settle` succeeds), but nothing in
-the MCP server actually enforces that grant yet — `cadence_settle`'s `run()`
-is not wrapped with the trust-envelope pre-check the way the two
-`APPROVAL_BYPASS` tools are. That is a deliberate phase-181 boundary, not an
-oversight: extending enforcement to `cadence_settle` is left to a follow-up
-recommendation. See [docs/reference/commands.md — mcp](reference/commands.md#mcp)
-for the full `trust grant`/`revoke`/`list` CLI reference.
+`cadence_settle` is classified `SETTLE`. Its `run()` is wrapped with the same
+trust-envelope pre-check as the two `APPROVAL_BYPASS` tools (phase 216): an
+MCP call to `cadence_settle` with no valid, matching, unexpired grant is
+refused before `settleService` ever runs — no `state.json`/`SUMMARY`
+write, no gate-ladder execution. A valid grant, issued via
+`cadence mcp trust grant --tool cadence_settle` on a real terminal, lets the
+call proceed exactly as before. See
+[docs/reference/commands.md — mcp](reference/commands.md#mcp) for the full
+`trust grant`/`revoke`/`list` CLI reference.
 
 ---
 
