@@ -346,21 +346,6 @@ The rec lifecycle has no terminal status for work that has actually shipped. pro
 
 Out-of-box enforcement chain is hollow: mention-mode coverage counts comments, init never derives verification.testCommand (build-test-must-pass passes silently), all verifier seams are mock. Fix: default coverageMode=assertion for new inits, derive testCommand from package.json scripts.test, print a loud settle notice when no testCommand exists.
 
-## rec-20260710-001 — Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning
-
-- status: candidate
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs, verify
-- evidence: User confusion in phenyx (external consumer project), 2026-07-10 session
-- next: cadence milestone propose
-
-Users running cadence inside a live Claude Code session assume that auth exempts them from ANTHROPIC_API_KEY for the anthropic verifier provider, since Claude Code itself doesn't require that env var to run. It doesn't: cadence's anthropic provider is a direct Anthropic SDK call authenticated with a separate API-billed key, with zero visibility into Claude Code's own OAuth/subscription credential store. Surfaced live by an external consumer (phenyx) hitting silent mock-fallback with no obvious cause. Add an explicit callout to docs/providers.md and the mock-fallback warning text (verifier-factory.ts MOCK_FALLBACK_BANNER) distinguishing 'logged into Claude Code' from 'ANTHROPIC_API_KEY set' so the fallback isn't mistaken for a bug.
-
 ## rec-20260710-003 — MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool
 
 - status: deferred
@@ -578,19 +563,3 @@ settle run already detects and warns on files touched outside a task's declared 
 - next: cadence milestone propose
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
-
-## rec-20260723-003 — CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate
-
-- status: settle-pending
-- ready: ready-for-milestone
-- priority: low
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: verify
-- files: packages/core/src/cli/commands/activate.ts
-- evidence: Generated in /cadence-scout session on rec-20260710-001, 2026-07-23; siblings: rec-20260710-001, and the fallback-warning-text + docs-callout recs landed in the same session
-- next: cadence milestone propose
-
-When provider:anthropic is configured, ANTHROPIC_API_KEY is missing, AND CLAUDECODE=1 is detected (i.e. cadence is running inside a live Claude Code session), cadence doctor's verification-readiness check and cadence activate's failure path currently print the same generic 'key missing, here's the export line' message as any other missing-key case. In this specific, detectable situation the message could instead name the actual confusion directly and proactively suggest host-cli as the provider that piggybacks off the session's own Claude Code auth with zero separate key. Higher scope/risk than the other two (new CLAUDECODE detection at doctor/activate time, not just at verifier-factory fallback time) -- evaluate whether the win justifies the added surface.

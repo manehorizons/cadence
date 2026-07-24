@@ -667,33 +667,6 @@
       "updatedAt": "2026-07-02T03:24:53.670Z"
     },
     {
-      "id": "rec-20260710-001",
-      "title": "Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning",
-      "summary": "Users running cadence inside a live Claude Code session assume that auth exempts them from ANTHROPIC_API_KEY for the anthropic verifier provider, since Claude Code itself doesn't require that env var to run. It doesn't: cadence's anthropic provider is a direct Anthropic SDK call authenticated with a separate API-billed key, with zero visibility into Claude Code's own OAuth/subscription credential store. Surfaced live by an external consumer (phenyx) hitting silent mock-fallback with no obvious cause. Add an explicit callout to docs/providers.md and the mock-fallback warning text (verifier-factory.ts MOCK_FALLBACK_BANNER) distinguishing 'logged into Claude Code' from 'ANTHROPIC_API_KEY set' so the fallback isn't mistaken for a bug.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs",
-        "verify"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260710-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260710-0400",
-      "createdAt": "2026-07-10T03:56:50.808Z",
-      "updatedAt": "2026-07-10T03:56:50.808Z"
-    },
-    {
       "id": "rec-20260710-003",
       "title": "MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool",
       "summary": "Alternative to shelling out to the host CLI: instead run the host CLI headlessly and have IT call into cadence's own MCP verify tool, using the host's native tool-calling to enforce the per-AC verdict schema rather than parsing freeform JSON from a subprocess. Worth prototyping against rec-20260710-002's direct-subprocess approach before committing -- tool-call-constrained output may be materially more reliable than prompt-and-parse, at the cost of a more unusual control-flow (host CLI as the driver, cadence as the callee).",
@@ -1086,35 +1059,6 @@
       "decisionIds": [],
       "createdAt": "2026-07-18T05:00:07.898Z",
       "updatedAt": "2026-07-18T05:00:07.898Z"
-    },
-    {
-      "id": "rec-20260723-003",
-      "title": "CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate",
-      "summary": "When provider:anthropic is configured, ANTHROPIC_API_KEY is missing, AND CLAUDECODE=1 is detected (i.e. cadence is running inside a live Claude Code session), cadence doctor's verification-readiness check and cadence activate's failure path currently print the same generic 'key missing, here's the export line' message as any other missing-key case. In this specific, detectable situation the message could instead name the actual confusion directly and proactively suggest host-cli as the provider that piggybacks off the session's own Claude Code auth with zero separate key. Higher scope/risk than the other two (new CLAUDECODE detection at doctor/activate time, not just at verifier-factory fallback time) -- evaluate whether the win justifies the added surface.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-milestone",
-      "priority": "low",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/activate.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260723-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "211-claudecode-aware-provider-messaging",
-      "scoutId": "scout-20260723-0108",
-      "createdAt": "2026-07-23T01:08:31.941Z",
-      "updatedAt": "2026-07-23T23:53:31.086Z"
     }
   ],
   "archived": [
@@ -3543,6 +3487,68 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-23T01:08:31.748Z",
       "updatedAt": "2026-07-23T03:57:52.370Z"
+    },
+    {
+      "id": "rec-20260710-001",
+      "title": "Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning",
+      "summary": "Users running cadence inside a live Claude Code session assume that auth exempts them from ANTHROPIC_API_KEY for the anthropic verifier provider, since Claude Code itself doesn't require that env var to run. It doesn't: cadence's anthropic provider is a direct Anthropic SDK call authenticated with a separate API-billed key, with zero visibility into Claude Code's own OAuth/subscription credential store. Surfaced live by an external consumer (phenyx) hitting silent mock-fallback with no obvious cause. Add an explicit callout to docs/providers.md and the mock-fallback warning text (verifier-factory.ts MOCK_FALLBACK_BANNER) distinguishing 'logged into Claude Code' from 'ANTHROPIC_API_KEY set' so the fallback isn't mistaken for a bug.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "verify"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260710-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "PR #282, #283, #285, #286 (phases 209, 210)",
+      "scoutId": "scout-20260710-0400",
+      "archivedAt": "2026-07-23T21:37:08.259Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-10T03:56:50.808Z",
+      "updatedAt": "2026-07-23T21:37:08.259Z"
+    },
+    {
+      "id": "rec-20260723-003",
+      "title": "CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate",
+      "summary": "When provider:anthropic is configured, ANTHROPIC_API_KEY is missing, AND CLAUDECODE=1 is detected (i.e. cadence is running inside a live Claude Code session), cadence doctor's verification-readiness check and cadence activate's failure path currently print the same generic 'key missing, here's the export line' message as any other missing-key case. In this specific, detectable situation the message could instead name the actual confusion directly and proactively suggest host-cli as the provider that piggybacks off the session's own Claude Code auth with zero separate key. Higher scope/risk than the other two (new CLAUDECODE detection at doctor/activate time, not just at verifier-factory fallback time) -- evaluate whether the win justifies the added surface.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/activate.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260723-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "211-claudecode-aware-provider-messaging",
+      "scoutId": "scout-20260723-0108",
+      "createdAt": "2026-07-23T01:08:31.941Z",
+      "updatedAt": "2026-07-24T00:13:15.524Z",
+      "shippedRef": "PR #287 (phase 211)",
+      "archivedAt": "2026-07-24T00:13:15.524Z",
+      "archiveReason": "shipped"
     }
   ]
 }

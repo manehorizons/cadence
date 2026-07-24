@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-23T03:21:41.796Z
+Generated at: 2026-07-23T21:33:53.887Z
 
 ## Advisory
 
@@ -61,14 +61,6 @@ Generated at: 2026-07-23T03:21:41.796Z
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- next: cadence milestone propose
-
-### rec-20260723-002 — Docs callout: anthropic provider auth is separate from Claude Code's own login
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- scout: scout-20260723-0108
 - next: cadence milestone propose
 
 ### rec-20260710-005 — Positioning: out-of-band host-CLI verification as MORE independent than same-session self-report
@@ -141,4 +133,4 @@ None.
 
 ## Totals
 
-- total 39 · ranked 16 · parked 1 · needs-attention 0 · excluded 22
+- total 38 · ranked 15 · parked 1 · needs-attention 0 · excluded 22
