@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-23T03:21:41.796Z",
+  "generatedAt": "2026-07-23T21:33:53.887Z",
   "ranked": [
     {
       "id": "rec-20260710-001",
@@ -292,48 +292,6 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260723-002",
-      "title": "Docs callout: anthropic provider auth is separate from Claude Code's own login",
-      "raw": 12.7,
-      "score": 53,
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready raw-idea",
-          "value": 0
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260723-0108"
     },
     {
       "id": "rec-20260710-005",
@@ -682,8 +640,8 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 39,
-    "ranked": 16,
+    "total": 38,
+    "ranked": 15,
     "parked": 1,
     "needsAttention": 0,
     "excluded": 22
