@@ -376,21 +376,6 @@ Alternative to shelling out to the host CLI: instead run the host CLI headlessly
 
 A headless host-CLI verifier subprocess has zero shared context with the calling session -- arguably a stronger independence claim than today's same-session self-report or even a direct API call under the same account. Worth a docs/positioning pass tying this framing to the existing 'trustworthy verifier' wedge and the mock-default competitive risk, independent of which engineering direction (rec-20260710-002 direct-subprocess vs MCP-inversion sibling) ships.
 
-## rec-20260712-003 — Retro friction feeds back into Praxis recommendation scoring
-
-- status: settle-pending
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: retro, praxis-scoring
-- evidence: Reconstructed stub: original entry (landed 2026-07-12 by a concurrent session's /cadence-scout retro, originally rec-20260712-006) was lost to an unrelated git reset --hard before being committed. Recreated from a handoff doc's prose summary.
-- next: cadence milestone propose
-
-Recurring friction identified by the post-settle retro feeds back into evidence.json to bump the scores of related recommendations (depends on the retro-artifact and rollup recommendations existing first). Landed via the same /cadence-scout session (scout-20260712-0328).
-
 ## rec-20260712-004 — cadence draft new: num arg accepts nonsense with no sanity check
 
 - status: candidate
