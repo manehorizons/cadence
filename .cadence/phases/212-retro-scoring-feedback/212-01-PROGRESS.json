@@ -1,0 +1,32 @@
+{
+  "draftId": "212-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-24T01:18:13.231Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/212-retro-scoring-feedback/packages/core/src/services/retro-feedback.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/212-retro-scoring-feedback/packages/core/src/intelligence/recommend.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/212-retro-scoring-feedback/packages/core/tests/intelligence/recommend.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/212-retro-scoring-feedback/packages/core/tests/services/retro-feedback.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/212-retro-scoring-feedback/packages/core/tests/intelligence/context.test.ts"
+      ],
+      "updatedAt": "2026-07-24T01:33:45.839Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/212-retro-scoring-feedback/packages/core/src/cli/commands/retro.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/212-retro-scoring-feedback/packages/core/tests/cli/retro.test.ts"
+      ],
+      "updatedAt": "2026-07-24T01:45:27.988Z"
+    }
+  }
+}

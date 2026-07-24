@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { Recommendation } from '@manehorizons/cadence-types';
+import type { EvidenceLedger, Recommendation } from '@manehorizons/cadence-types';
 import { scoreRecommendation } from '../../src/intelligence/recommend.js';
+import { countFrictionEvidence } from '../../src/services/retro-feedback.js';
 import { findNearestCandidates } from '../../src/intelligence/nearest-candidate.js';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
@@ -108,5 +109,65 @@ describe('findNearestCandidates', () => {
     expect(result.top).toBeUndefined();
     expect(result.ranked).toEqual([]);
     expect(result.nearestMiss?.rec.id).toBe('rec-2');
+  });
+
+  it('phase 212 fix: an evidenceLedger with linked friction evidence produces the same score scoreRecommendation would directly (closes the recommend/next divergence)', () => {
+    const withFriction = mkRec({
+      id: 'rec-friction',
+      leverageScore: 5,
+      evidenceIds: ['ev-1'],
+      createdAt: '2026-05-16T00:00:00.000Z',
+    });
+    const withoutFriction = mkRec({
+      id: 'rec-plain',
+      leverageScore: 5,
+      evidenceIds: [],
+      createdAt: '2026-05-17T00:00:00.000Z',
+    });
+    const evidenceLedger: EvidenceLedger = {
+      schemaVersion: 1,
+      evidence: [
+        {
+          id: 'ev-1',
+          recommendationId: 'rec-friction',
+          kind: 'note',
+          summary: '[retro-friction:bypasses:code-review] recurring gate bypass "code-review" seen across 2 phase(s): 170-a, 171-b.',
+          createdAt: '2026-05-16T00:00:00.000Z',
+        },
+      ],
+    };
+
+    const result = findNearestCandidates(
+      [withFriction, withoutFriction],
+      { isEligible: () => true },
+      evidenceLedger,
+    );
+
+    const frictionExpected = scoreRecommendation(
+      withFriction,
+      countFrictionEvidence(withFriction, evidenceLedger),
+    );
+    const plainExpected = scoreRecommendation(
+      withoutFriction,
+      countFrictionEvidence(withoutFriction, evidenceLedger),
+    );
+
+    expect(result.ranked.map((c) => c.rec.id)).toEqual(['rec-friction', 'rec-plain']);
+    const frictionOut = result.ranked.find((c) => c.rec.id === 'rec-friction');
+    const plainOut = result.ranked.find((c) => c.rec.id === 'rec-plain');
+    expect(frictionOut!.score).toBe(frictionExpected.score);
+    expect(plainOut!.score).toBe(plainExpected.score);
+    expect(frictionOut!.score).toBeGreaterThan(plainOut!.score);
+  });
+
+  it('omitting evidenceLedger is a no-op — behaves identically to an explicit empty ledger', () => {
+    const rec = mkRec({ id: 'rec-a', leverageScore: 5, evidenceIds: ['ev-1'] });
+    const withEmptyLedger = findNearestCandidates(
+      [rec],
+      { isEligible: () => true },
+      { schemaVersion: 1, evidence: [] },
+    );
+    const withoutLedgerArg = findNearestCandidates([rec], { isEligible: () => true });
+    expect(withoutLedgerArg.top?.score).toBe(withEmptyLedger.top?.score);
   });
 });

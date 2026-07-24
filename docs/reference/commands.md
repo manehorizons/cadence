@@ -2379,6 +2379,85 @@ directory).
 
 ---
 
+#### retro feedback
+
+Matches recurring retro friction to recommendations and records it as
+evidence — closing the loop from "this keeps going wrong across phases" to
+Praxis scoring without a manual `recommendation evidence add` per finding.
+
+```
+Usage: cadence retro feedback [options]
+
+Match recurring retro friction to recommendations and record it as evidence,
+boosting Praxis scores
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of rendered text lines. |
+| `-h, --help` | Display help for command |
+
+**Behavior** (phase 212) — recomputes the same rollup bare `cadence retro`
+computes (`scanRetroArtifacts` + `computeRetroRollup` over
+`.cadence/phases/*/*-RETRO.json`); the rollup is read fresh every run and
+never persisted. Only **recurring** friction is considered — a key that
+appears in 2 or more distinct phases, across the same three dimensions bare
+`retro` reports (gate bypasses, rough task statuses, finding categories).
+One-off friction from a single phase is never matched or recorded.
+
+For every recurring friction entry, a token-based heuristic matches it
+against each recommendation's `affectedAreas`/`affectedFiles` (every word
+token of the friction key must appear as an exact token of the candidate
+string — not a raw substring check). Each match becomes one line of output
+and, if new, one `Evidence` entry appended to
+`.cadence/intelligence/evidence.json` and linked into the matched
+recommendation's `evidenceIds` in `.cadence/intelligence/recommendations.json`
+— the same tied-record write path `recommendation evidence add` uses.
+Idempotent: a friction key already recorded against a given recommendation
+(detected by a stable `[retro-friction:<bucket>:<key>]` marker at the start
+of the evidence `summary`) is skipped on a later run rather than duplicated.
+Recorded friction evidence feeds a capped `frictionPts` term into `cadence
+recommend`'s scoring model — a recommendation tied to friction that keeps
+recurring ranks higher without any manual evidence entry.
+
+Each (recurring friction entry × matched recommendation) pair produces
+exactly one outcome:
+
+| Outcome | Meaning |
+|---|---|
+| `wrote` | New evidence recorded; both `.cadence/intelligence/evidence.json` and `.cadence/intelligence/recommendations.json` were updated. |
+| `skipped-already-recorded` | This friction key was already recorded as evidence against this recommendation on a prior run; no new write. |
+| `no-match` | The friction entry overlapped no recommendation's `affectedAreas`/`affectedFiles`; nothing recorded. One line per unmatched friction entry (not per recommendation). |
+| `error` | The evidence write failed for this match (e.g. the matched recommendation id was no longer present in the ledger snapshot read at the start of the run); reported rather than silently dropped, per this repo's no-quiet-fallback convention — not expected in normal operation. |
+
+Terminal output (the default) prints one line per outcome:
+
+```
+wrote evidence: [bypasses] "code-review" -> recommendation rec-20260701-002 (evidence ev-20260723-001)
+already recorded (skipped, no new evidence): [findingCategories] "security" -> recommendation rec-20260701-002
+no matching recommendation: [roughTaskStatuses] "BLOCKED"
+```
+
+With `--json`, the same outcomes are emitted as a single JSON array (one
+object per line above) with `frictionKey`, `frictionBucket`, `outcome`, and
+— where applicable — `recommendationId`, `evidenceId`, `error`.
+
+If no recurring friction is found at all — including when `.cadence/phases/`
+has no retro artifacts, or every friction key is one-off — it prints "No
+recurring friction found." (terminal) or `[]` (`--json`), and never reads
+the recommendation or evidence ledgers.
+
+**Exit codes** — exits `0` on a successful run, including the "no recurring
+friction found" case and a run where every entry lands in `no-match` or
+`skipped-already-recorded` (informational, same convention as bare `cadence
+retro`; a per-entry `error` outcome is reported in the output but does not
+by itself flip the process exit code). Exits `1` only on a genuine
+unexpected failure (e.g. an unreadable or malformed ledger file).
+
+---
+
 ### summary
 
 ```

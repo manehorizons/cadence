@@ -546,6 +546,30 @@
       ],
       "createdAt": "2026-07-23T23:33:26.048Z",
       "updatedAt": "2026-07-23T23:33:42.254Z"
+    },
+    {
+      "id": "mil-rec-rec-20260712-003",
+      "name": "Retro friction feeds back into Praxis recommendation scoring",
+      "objective": "Recurring friction identified by the post-settle retro feeds back into evidence.json to bump the scores of related recommendations (depends on the retro-artifact and rollup recommendations existing first). Landed via the same /cadence-scout session (scout-20260712-0328).",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260712-003"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260712-003/SPEC.md",
+          "exportedAt": "2026-07-24T01:04:35.367Z"
+        }
+      ],
+      "createdAt": "2026-07-24T01:04:30.664Z",
+      "updatedAt": "2026-07-24T01:04:35.367Z"
     }
   ]
 }

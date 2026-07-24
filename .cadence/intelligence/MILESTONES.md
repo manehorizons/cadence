@@ -24,6 +24,7 @@ None.
 - mil-rec-rec-20260701-012 — Boundary enforcement block mode, including subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260701-012/SPEC.md
 - mil-rec-rec-20260703-001 — Milestone-scoped worktree fan-out for independent phases → .cadence/intelligence/exports/mil-rec-rec-20260703-001/SPEC.md
 - mil-rec-rec-20260704-001 — Settle-time boundary diff scan (blocking) for subagent edits → .cadence/intelligence/exports/mil-rec-rec-20260704-001/SPEC.md
+- mil-rec-rec-20260712-003 — Retro friction feeds back into Praxis recommendation scoring → .cadence/intelligence/exports/mil-rec-rec-20260712-003/SPEC.md
 - mil-rec-rec-20260712-011 — Define an MCP tool-trust envelope for 'cadence mcp serve' (origin + def-hash + capability scope + expiry) → .cadence/intelligence/exports/mil-rec-rec-20260712-011/SPEC.md
 - mil-rec-rec-20260720-001 — milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred → .cadence/intelligence/exports/mil-rec-rec-20260720-001/SPEC.md
 - mil-rec-rec-20260720-002 — Team rollout kit → .cadence/intelligence/exports/mil-rec-rec-20260720-002/SPEC.md

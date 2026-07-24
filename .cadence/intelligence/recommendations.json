@@ -725,8 +725,8 @@
       "title": "Retro friction feeds back into Praxis recommendation scoring",
       "summary": "Recurring friction identified by the post-settle retro feeds back into evidence.json to bump the scores of related recommendations (depends on the retro-artifact and rollup recommendations existing first). Landed via the same /cadence-scout session (scout-20260712-0328).",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
+      "status": "settle-pending",
+      "readiness": "ready-for-milestone",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -743,9 +743,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "212-retro-scoring-feedback",
       "scoutId": "scout-20260712-0328",
       "createdAt": "2026-07-12T04:24:07.244Z",
-      "updatedAt": "2026-07-12T04:24:07.244Z"
+      "updatedAt": "2026-07-24T02:08:14.437Z"
     },
     {
       "id": "rec-20260712-004",
@@ -3543,12 +3544,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "211-claudecode-aware-provider-messaging",
-      "scoutId": "scout-20260723-0108",
-      "createdAt": "2026-07-23T01:08:31.941Z",
-      "updatedAt": "2026-07-24T00:13:15.524Z",
       "shippedRef": "PR #287 (phase 211)",
+      "scoutId": "scout-20260723-0108",
       "archivedAt": "2026-07-24T00:13:15.524Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-23T01:08:31.941Z",
+      "updatedAt": "2026-07-24T00:13:15.524Z"
     }
   ]
 }
