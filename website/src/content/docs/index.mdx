@@ -5,14 +5,14 @@ template: splash
 hero:
   tagline: The DRAFT → BUILD → SETTLE loop, with quality gates that refuse to settle broken work.
   image:
-    html: '<img src="https://raw.githubusercontent.com/manehorizons/cadence-demo-billsplit/main/billsplit.gif" alt="CADENCE refusing to settle a failing build" />'
+    html: '<img src="https://raw.githubusercontent.com/manehorizons/cadence/main/examples/demo-test-gutting/gutting.svg" alt="An agent guts a failing test to make the suite green; Cadence''s settle gate still refuses, then accepts once the bug is actually fixed" />'
   actions:
     - text: Quickstart
       link: /cadence/start/quickstart/
       icon: right-arrow
       variant: primary
-    - text: See the demo repo
-      link: https://github.com/manehorizons/cadence-demo-billsplit
+    - text: See the demo
+      link: https://github.com/manehorizons/cadence/blob/main/docs/DEMO.md
       icon: external
       variant: minimal
 ---
@@ -23,6 +23,16 @@ CADENCE scaffolds and runs the **DRAFT → BUILD → SETTLE** loop on your proje
 and uses that same loop on itself. Quality gates are configurable per profile and
 tier, and the always-fire build/test gate will refuse to close a phase whose tests
 do not pass, even when the AI marked the task done.
+
+> **"Your CI is green. Cadence still said no."** An agent hits a failing test, guts
+> the assertion, and leaves a plausible excuse. The suite goes green, tasks get
+> marked DONE. Then `cadence settle run --auto` refuses anyway — naming the specific
+> AC and the specific dodge. Real output, offline, mock verifier, zero npm deps:
+> [full 4-beat narrative](https://github.com/manehorizons/cadence/blob/main/docs/DEMO.md).
+>
+> Also see: [the $100/3 demo](https://github.com/manehorizons/cadence-demo-billsplit)
+> (arithmetic bugs, not agent cheating) — a lost-penny bill-split bug the
+> `build-test-must-pass` gate blocks even though the AI marked the task DONE.
 
 <CardGrid>
   <Card title="Start here" icon="rocket">
