@@ -3,8 +3,8 @@
   "milestones": [
     {
       "id": "mil-rec-rec-20260611-003",
-      "name": "Make real verification the felt default — close the gap between the enforcement wedge and the mock default",
-      "objective": "CADENCE's sharpest, most-defensible differentiator (a deterministic in-loop AC-linked gate that refuses to settle) currently ships with its WEAKEST implementation on by default: the mock verifier only checks that a linked test exists and references the AC. The public pitch is 'real verification gate'; the out-of-box experience is 'structural test-linkage'. Decide how to converge them — e.g. make 'cadence activate' (v1.22) a near-mandatory first-run step, surface a louder 'you are running mock = NOT real verification' state in settle/doctor/quickstart, and/or reframe docs so mock is explicitly named as a placeholder, not a verifier. This is the #1 strategic finding from the 2026-06-11 competitive assessment: the wedge and the default experience must stop diverging.",
+      "name": "Make real verification the felt default \u2014 close the gap between the enforcement wedge and the mock default",
+      "objective": "CADENCE's sharpest, most-defensible differentiator (a deterministic in-loop AC-linked gate that refuses to settle) currently ships with its WEAKEST implementation on by default: the mock verifier only checks that a linked test exists and references the AC. The public pitch is 'real verification gate'; the out-of-box experience is 'structural test-linkage'. Decide how to converge them \u2014 e.g. make 'cadence activate' (v1.22) a near-mandatory first-run step, surface a louder 'you are running mock = NOT real verification' state in settle/doctor/quickstart, and/or reframe docs so mock is explicitly named as a placeholder, not a verifier. This is the #1 strategic finding from the 2026-06-11 competitive assessment: the wedge and the default experience must stop diverging.",
       "status": "closed",
       "recommendationIds": [
         "rec-20260611-003"
@@ -149,7 +149,7 @@
         "likelyFailureModes": [],
         "hiddenDependencies": [],
         "driftRisks": [
-          "Milestone touches documentation surfaces — spec/doc drift risk."
+          "Milestone touches documentation surfaces \u2014 spec/doc drift risk."
         ],
         "outOfScope": []
       },
@@ -175,7 +175,7 @@
         "likelyFailureModes": [],
         "hiddenDependencies": [],
         "driftRisks": [
-          "Milestone touches documentation surfaces — spec/doc drift risk."
+          "Milestone touches documentation surfaces \u2014 spec/doc drift risk."
         ],
         "outOfScope": []
       },
@@ -205,10 +205,10 @@
       "preMortem": {
         "likelyFailureModes": [],
         "hiddenDependencies": [
-          "Shared file README.md edited by rec-20260701-006, rec-20260701-011 — ordering/coordination dependency."
+          "Shared file README.md edited by rec-20260701-006, rec-20260701-011 \u2014 ordering/coordination dependency."
         ],
         "driftRisks": [
-          "Milestone touches documentation surfaces — spec/doc drift risk."
+          "Milestone touches documentation surfaces \u2014 spec/doc drift risk."
         ],
         "outOfScope": []
       },
@@ -225,7 +225,7 @@
     {
       "id": "mil-rec-rec-20260701-012",
       "name": "Boundary enforcement block mode, including subagent edits",
-      "objective": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.",
+      "objective": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere \u2014 honest scoping for hosts where edit-time hooks cannot see subagents.",
       "status": "exported",
       "recommendationIds": [
         "rec-20260701-012"
@@ -332,7 +332,7 @@
         "likelyFailureModes": [],
         "hiddenDependencies": [],
         "driftRisks": [
-          "Milestone touches documentation surfaces — spec/doc drift risk."
+          "Milestone touches documentation surfaces \u2014 spec/doc drift risk."
         ],
         "outOfScope": []
       },
@@ -382,7 +382,7 @@
         "likelyFailureModes": [],
         "hiddenDependencies": [],
         "driftRisks": [
-          "Milestone touches documentation surfaces — spec/doc drift risk."
+          "Milestone touches documentation surfaces \u2014 spec/doc drift risk."
         ],
         "outOfScope": []
       },
@@ -402,7 +402,7 @@
         "likelyFailureModes": [],
         "hiddenDependencies": [],
         "driftRisks": [
-          "Milestone touches documentation surfaces — spec/doc drift risk."
+          "Milestone touches documentation surfaces \u2014 spec/doc drift risk."
         ],
         "outOfScope": []
       },
@@ -419,7 +419,7 @@
     {
       "id": "mil-rec-rec-20260720-001",
       "name": "milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred",
-      "objective": "clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect — the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.",
+      "objective": "clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect \u2014 the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.",
       "status": "exported",
       "recommendationIds": [
         "rec-20260720-001"
@@ -452,7 +452,7 @@
     {
       "id": "mil-rec-rec-20260721-002",
       "name": "cadence next: state-derived legal next moves at any loop position, human + --json agent contract",
-      "objective": "A read-only command answering \"what now?\" deterministically from ground truth at any loop position — not milestone suggestion, literal next step. Computed from state the engine already holds: pending DRAFT -> the approve invocation; mid-BUILD -> remaining tasks (T-ids) + ACs still lacking coverage; all tasks DONE -> the settle invocation; settled -> next phase in milestone, else the promote->propose chain with real rec ids; empty ledgers -> draft-new/onboard paths. Output: current position + 1-3 ranked legal moves with exact commands (a map, not an autopilot — when multiple moves are legal, e.g. settle-now vs. add-discovered-task, it lists both). --json returns {position, remainingTasks, blockedOn, legalMoves[]} as a stable contract so agents consume loop position as ground truth instead of reconstructing it from conversation context — deterministic navigation for orchestrators; zero tokens, zero drift. Explicitly does NOT advise how to implement work (semantic, the agent's job); it names the door, the agent walks through it. Needs decisions: standalone command vs. also auto-appending its output as the footer of every empty state from the sibling actionable-empty-states rec (recommend: both — that rec's 'Try:' line is this command's logic scoped to one wall); relationship to quickstart (static map) — subsume, cross-link, or keep separate; --json schema versioning; whether host adapters surface it as a slash command (/cadence-next). Related but narrower: rec-20260605-002 (First-run 'what now?' nudge after cadence init) covers only the init-time case, not general loop-position navigation.",
+      "objective": "A read-only command answering \"what now?\" deterministically from ground truth at any loop position \u2014 not milestone suggestion, literal next step. Computed from state the engine already holds: pending DRAFT -> the approve invocation; mid-BUILD -> remaining tasks (T-ids) + ACs still lacking coverage; all tasks DONE -> the settle invocation; settled -> next phase in milestone, else the promote->propose chain with real rec ids; empty ledgers -> draft-new/onboard paths. Output: current position + 1-3 ranked legal moves with exact commands (a map, not an autopilot \u2014 when multiple moves are legal, e.g. settle-now vs. add-discovered-task, it lists both). --json returns {position, remainingTasks, blockedOn, legalMoves[]} as a stable contract so agents consume loop position as ground truth instead of reconstructing it from conversation context \u2014 deterministic navigation for orchestrators; zero tokens, zero drift. Explicitly does NOT advise how to implement work (semantic, the agent's job); it names the door, the agent walks through it. Needs decisions: standalone command vs. also auto-appending its output as the footer of every empty state from the sibling actionable-empty-states rec (recommend: both \u2014 that rec's 'Try:' line is this command's logic scoped to one wall); relationship to quickstart (static map) \u2014 subsume, cross-link, or keep separate; --json schema versioning; whether host adapters surface it as a slash command (/cadence-next). Related but narrower: rec-20260605-002 (First-run 'what now?' nudge after cadence init) covers only the init-time case, not general loop-position navigation.",
       "status": "exported",
       "recommendationIds": [
         "rec-20260721-002"
@@ -509,7 +509,7 @@
         "likelyFailureModes": [],
         "hiddenDependencies": [],
         "driftRisks": [
-          "Milestone touches documentation surfaces — spec/doc drift risk."
+          "Milestone touches documentation surfaces \u2014 spec/doc drift risk."
         ],
         "outOfScope": []
       },
@@ -640,7 +640,7 @@
     {
       "id": "mil-rec-rec-20260724-005",
       "name": "Close the trust envelope: gate the SETTLE capability class in MCP serve",
-      "objective": "mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation — an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.",
+      "objective": "mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation \u2014 an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.",
       "status": "exported",
       "recommendationIds": [
         "rec-20260724-005"
@@ -664,7 +664,7 @@
     {
       "id": "mil-rec-rec-20260724-003",
       "name": "Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency",
-      "objective": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) — roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
+      "objective": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) \u2014 roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
       "status": "exported",
       "recommendationIds": [
         "rec-20260724-003"
@@ -673,7 +673,7 @@
         "likelyFailureModes": [],
         "hiddenDependencies": [],
         "driftRisks": [
-          "Milestone touches documentation surfaces — spec/doc drift risk."
+          "Milestone touches documentation surfaces \u2014 spec/doc drift risk."
         ],
         "outOfScope": []
       },
@@ -710,6 +710,30 @@
       ],
       "createdAt": "2026-07-25T01:10:25.649Z",
       "updatedAt": "2026-07-25T01:10:26.020Z"
+    },
+    {
+      "id": "mil-rec-rec-20260724-013",
+      "name": "cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json \u2014 can silently collide with a dangling evidence row",
+      "objective": "Discovered 2026-07-24 during a rebase-conflict repair: an earlier session's mis-resolved rebase conflict left .cadence/intelligence/RECOMMENDATIONS.md and evidence.json carrying a recommendation (id rec-20260724-011) with NO backing entry in recommendations.json (the actual source of truth) \u2014 a half-written recommendation from an interrupted/incomplete cadence recommendation add call, or a hand-edited conflict resolution. A later, unrelated cadence recommendation add call computed its next id purely from recommendations.json's current max id, correctly saw '010' as the ceiling, and re-minted 'rec-20260724-011' for a completely different finding \u2014 colliding with the orphaned evidence row (which still pointed 'recommendationId': 'rec-20260724-011' at the wrong content). Root cause: id-minting logic doesn't cross-check evidence.json's recommendationId references, so a dangling evidence row (with no matching recommendations.json entry) is invisible to it. Fix: either have id-minting take the max across both recommendations.json ids AND evidence.json's referenced recommendationIds, or add a cadence doctor check that flags evidence rows with no matching recommendation (which would have caught this drift immediately instead of it surviving 6 handoff commits unnoticed).",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260724-013"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260724-013/SPEC.md",
+          "exportedAt": "2026-07-25T02:51:42.323Z"
+        }
+      ],
+      "createdAt": "2026-07-25T02:51:24.431Z",
+      "updatedAt": "2026-07-25T02:51:42.323Z"
     },
     {
       "id": "mil-rec-rec-20260725-002",
