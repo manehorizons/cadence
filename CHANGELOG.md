@@ -4,19 +4,32 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
-> Accumulated changesets not yet cut into a release.
+## [1.51.0] - 2026-07-25
+
+> Published to npm 2026-07-25 via the `Release` workflow (provenance), tag `v1.51.0`. Per-package bumps managed by changesets.
 
 ### Added
 
 - **Close the trust envelope for `cadence_settle`** — the MCP `cadence_settle` tool is now gated by the same trust-envelope pre-check as `cadence_draft_approve`/`cadence_spec_approve`; a call with no valid grant is refused before `settleService` runs. `enforceApprovalBypassGrant` renamed to `enforceGatedToolGrant`. (Phase `216-settle-capability-gate`.)
 - **`gates.evidenceFloor`** — a new settle gate refuses `cadence settle run --auto` when any AC's `PASS` verdict rests on evidence ranked below a configured floor on the evidence ladder (`ai-verified` > `executed` > `assertion` > `mention` > `unverified`). Preset defaults: `solo` → `assertion`, `team`/`production` → `executed`. A named, per-AC, reason-required bypass (`--evidence-floor-bypass <AC-id:reason>`) is recorded in `SUMMARY.gateBypasses`. (Phase `214-evidence-floor-gate`.)
-- **`cadence doctor` `phase-freshness` check** — warns when the active phase/draft's `PROGRESS.json` has a task updated within the last 10 minutes, naming the task and its age, to catch a concurrent session working the same phase/draft. Read-only, best-effort.
-- **`cadence retro feedback`** — matches recurring cross-phase retro friction (gate bypasses, rough task statuses, finding categories) to recommendations by `affectedAreas`/`affectedFiles` overlap and records each match as auditable evidence; `cadence recommend`/`context`/`next` now factor linked friction into a transparent `frictionPts` scoring term.
+- **`cadence doctor` `phase-freshness` check** — warns when the active phase/draft's `PROGRESS.json` has a task updated within the last 10 minutes, naming the task and its age, to catch a concurrent session working the same phase/draft. Read-only, best-effort. (Phase `208`.)
+- **`cadence retro feedback`** — matches recurring cross-phase retro friction (gate bypasses, rough task statuses, finding categories) to recommendations by `affectedAreas`/`affectedFiles` overlap and records each match as auditable evidence; `cadence recommend`/`context`/`next` now factor linked friction into a transparent `frictionPts` scoring term. (Phase `212`.)
+- **CHANGELOG.md currency gate** — `.githooks/pre-commit`/`pre-push` now also refuse a version-bump commit whose `CHANGELOG.md` newest heading doesn't match, mirroring the existing `CLAUDE.md` check; re-asserted in CI via `doc-sync-hook.test.ts`. Closes the record-integrity gap that let this file itself fall 44 versions behind before today's backfill. (Phase `217-changelog-currency-gate`.)
+
+### Changed
+
+- **Minimum test-coverage thresholds enforced in CI** — `vitest.shared.ts` now wires real, per-package coverage thresholds (previously collected in `vitest.config.ts` but enforced nowhere), keyed by package cwd. (Phase `213`.)
 
 ### Fixed
 
-- **Anthropic mock-fallback warning clarity** — the `anthropic`-provider mock-fallback warning and its `cadence config explain` counterpart now state plainly that being logged into Claude Code (or another host CLI session) does not satisfy `ANTHROPIC_API_KEY` — it's a separately-billed direct SDK call with no visibility into a host session's own credential store.
-- **CLAUDECODE-aware doctor/activate messaging** — `cadence doctor`'s verification-readiness check and `cadence activate`'s key-missing message now name the Claude-Code-login-doesn't-satisfy-this confusion directly when running inside a live Claude Code session, and suggest `cadence activate --provider host-cli` as the fix.
+- **Anthropic mock-fallback warning clarity** — the `anthropic`-provider mock-fallback warning and its `cadence config explain` counterpart now state plainly that being logged into Claude Code (or another host CLI session) does not satisfy `ANTHROPIC_API_KEY` — it's a separately-billed direct SDK call with no visibility into a host session's own credential store. (Phase `209`.)
+- **CLAUDECODE-aware doctor/activate messaging** — `cadence doctor`'s verification-readiness check and `cadence activate`'s key-missing message now name the Claude-Code-login-doesn't-satisfy-this confusion directly when running inside a live Claude Code session, and suggest `cadence activate --provider host-cli` as the fix. (Phase `211`.)
+- **GitHub Pages demo + this file** — the docs-portal homepage hero was still showing an old demo after `README.md` moved on; re-synced. This file itself is now current through `1.50.0` (44 previously-unrecorded versions backfilled) instead of stopping at `1.6.0`.
+
+### Docs
+
+- Anthropic provider auth documented as separate from a Claude Code login (`docs/providers.md`). (Phase `210`.)
+- A mechanical ledger-diff step added to `CLAUDE.md`'s audit protocol, backed by a doc-content test. (Phase `215`.)
 
 ## [1.50.0] - 2026-07-22
 

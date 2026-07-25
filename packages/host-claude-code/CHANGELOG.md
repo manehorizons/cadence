@@ -1,5 +1,18 @@
 # @manehorizons/cadence-host-claude-code
 
+## 1.51.0
+
+### Patch Changes
+
+- Updated dependencies [11bda6b]
+- Updated dependencies [81b44fe]
+- Updated dependencies [a24506d]
+- Updated dependencies [35379fe]
+- Updated dependencies [2d8d5f8]
+- Updated dependencies [621f87f]
+  - @manehorizons/cadence-core@1.51.0
+  - @manehorizons/cadence-types@1.51.0
+
 ## 1.50.0
 
 ### Minor Changes
