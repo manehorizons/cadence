@@ -660,6 +660,32 @@
       ],
       "createdAt": "2026-07-24T21:05:13.143Z",
       "updatedAt": "2026-07-24T21:05:48.921Z"
+    },
+    {
+      "id": "mil-rec-rec-20260724-003",
+      "name": "Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency",
+      "objective": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) — roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260724-003"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260724-003/SPEC.md",
+          "exportedAt": "2026-07-24T23:41:26.662Z"
+        }
+      ],
+      "createdAt": "2026-07-24T23:41:22.345Z",
+      "updatedAt": "2026-07-24T23:41:26.662Z"
     }
   ]
 }

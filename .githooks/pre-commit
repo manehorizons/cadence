@@ -2,10 +2,12 @@
 # CADENCE doc-sync gate (commit-time).
 #
 # When a commit changes the canonical version (packages/core/package.json),
-# CLAUDE.md must mention the new version — otherwise the release narrative goes
-# stale (it once sat at 1.6.0 while npm was at 1.10.0). Fires only on the
-# version-bump commit; ordinary commits exit instantly. Bypass: git commit
-# --no-verify. The shared checker is .githooks/check-doc-sync.sh.
+# CLAUDE.md and CHANGELOG.md must both mention the new version — otherwise the
+# release narrative goes stale (CLAUDE.md once sat at 1.6.0 while npm was at
+# 1.10.0; CHANGELOG.md separately stalled at 1.6.0 while npm reached 1.50.0).
+# Fires only on the version-bump commit; ordinary commits exit instantly.
+# Bypass: git commit --no-verify. The shared checker is
+# .githooks/check-doc-sync.sh.
 set -euo pipefail
 
 hook_dir="$(dirname "$0")"
@@ -31,4 +33,10 @@ if ! git show ":CLAUDE.md" | "${hook_dir}/check-doc-sync.sh" "$staged_ver" "CLAU
   exit 1
 fi
 echo "pre-commit: CLAUDE.md mentions ${staged_ver} — doc-sync OK."
+
+echo "pre-commit: checking CHANGELOG.md is in sync…"
+if ! git show ":CHANGELOG.md" | "${hook_dir}/check-doc-sync.sh" "$staged_ver" "CHANGELOG.md"; then
+  exit 1
+fi
+echo "pre-commit: CHANGELOG.md mentions ${staged_ver} — doc-sync OK."
 exit 0

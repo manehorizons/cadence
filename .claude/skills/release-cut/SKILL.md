@@ -29,6 +29,11 @@ release PR, and firing the Release workflow. Neither happens on a generic
 - Update the version line near the top of `CLAUDE.md` to the new version
   string. The doc-sync pre-commit hook aborts the commit otherwise, and
   `packages/core/tests/docs/doc-sync-hook.test.ts` re-asserts it in CI.
+- Add a matching `## [x.y.z]` heading to `CHANGELOG.md` for the new version,
+  in the same commit. The same doc-sync pre-commit hook now checks
+  CHANGELOG.md too — it aborts the commit if the newest heading doesn't
+  match — and `packages/core/tests/docs/doc-sync-hook.test.ts` has a second
+  `describe` block that re-asserts it in CI.
 - Run the full pipeline locally: `pnpm turbo run lint typecheck test build`.
 
 ## 3 — Doc-sync verification (mandatory, not implied by the pipeline run)

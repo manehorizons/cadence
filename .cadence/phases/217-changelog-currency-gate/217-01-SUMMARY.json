@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "draftId": "217-01",
+  "completedAt": "2026-07-24T23:54:32.565Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Extended .githooks/pre-commit and .githooks/pre-push's existing CLAUDE.md doc-sync check with an identical parallel check against CHANGELOG.md, reusing check-doc-sync.sh unmodified. Added a cross-platform test in doc-sync-hook.test.ts asserting CHANGELOG.md's newest ## [x.y.z] heading (not just any mention) matches packages/core/package.json's version. Independently re-verified: bash -n syntax OK on both hooks, doc-sync-hook test 7/7 green, full pnpm turbo run lint typecheck test build 20/20 green."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Added a parallel CHANGELOG.md bullet to release-cut/SKILL.md's version-bump step, and broadened CLAUDE.md's doc-sync-gate enforcement-layer bullet to name both CLAUDE.md and CHANGELOG.md. Verified CLAUDE.md's version line and all other content untouched; diff scoped to exactly the two declared files."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 11,
+    "sessionSubagentSpawns": 13
+  }
+}

@@ -26,7 +26,8 @@ if [ "$gated" -ne 1 ]; then
 fi
 
 # Doc-sync backstop (cheap; runs before the turbo gate). If this push changes
-# the canonical core version on main, the pushed CLAUDE.md must mention it.
+# the canonical core version on main, the pushed CLAUDE.md and CHANGELOG.md
+# must both mention it.
 hook_dir="$(dirname "$0")"
 pkg="packages/core/package.json"
 ver_from() {
@@ -44,6 +45,11 @@ if [ -n "$tip_ver" ] && [ "$tip_ver" != "$remote_ver" ]; then
   echo "pre-push: core version ${remote_ver:-∅} → ${tip_ver} on main; checking CLAUDE.md…"
   if ! git show "${push_sha}:CLAUDE.md" | "${hook_dir}/check-doc-sync.sh" "$tip_ver" "CLAUDE.md"; then
     echo "pre-push: CLAUDE.md is stale — push to main aborted." >&2
+    exit 1
+  fi
+  echo "pre-push: checking CHANGELOG.md…"
+  if ! git show "${push_sha}:CHANGELOG.md" | "${hook_dir}/check-doc-sync.sh" "$tip_ver" "CHANGELOG.md"; then
+    echo "pre-push: CHANGELOG.md is stale — push to main aborted." >&2
     exit 1
   fi
 fi

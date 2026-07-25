@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const CHECKER = join(ROOT, '.githooks', 'check-doc-sync.sh');
 const CLAUDE_MD = join(ROOT, 'CLAUDE.md');
+const CHANGELOG_MD = join(ROOT, 'CHANGELOG.md');
 const CORE_PKG = join(ROOT, 'packages', 'core', 'package.json');
 
 const isWindows = process.platform === 'win32';
@@ -68,5 +69,24 @@ describe('CLAUDE.md tracks the canonical package version', () => {
     const version = JSON.parse(readFileSync(CORE_PKG, 'utf8')).version as string;
     const claudeMd = readFileSync(CLAUDE_MD, 'utf8');
     expect(claudeMd, `CLAUDE.md does not mention core version ${version}`).toContain(version);
+  });
+});
+
+// CHANGELOG.md's invariant is stricter than CLAUDE.md's: it's not enough for
+// the current version to appear *somewhere* in the file (a stale mid-file
+// mention from an old, already-superseded release would false-pass that
+// check) — the newest (topmost) `## [x.y.z]` release heading must equal the
+// current packages/core version exactly.
+describe('CHANGELOG.md tracks the canonical package version', () => {
+  it("the newest `## [x.y.z]` heading equals the current packages/core version", () => {
+    const version = JSON.parse(readFileSync(CORE_PKG, 'utf8')).version as string;
+    const changelog = readFileSync(CHANGELOG_MD, 'utf8');
+    const match = changelog.match(/^## \[(\d+\.\d+\.\d+)\]/m);
+    expect(match, 'CHANGELOG.md has no `## [x.y.z]` release heading').not.toBeNull();
+    const newestHeadingVersion = match?.[1];
+    expect(
+      newestHeadingVersion,
+      `CHANGELOG.md's newest heading is ${newestHeadingVersion}, expected core version ${version}`,
+    ).toBe(version);
   });
 });
