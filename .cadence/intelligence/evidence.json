@@ -889,6 +889,13 @@
       "kind": "note",
       "summary": "Live repro 2026-07-24: fixed via git-history surgery on local main's unpushed commits (5 cherry-picked commits rebuilt from the last-consistent point) after an Opus forensic investigation traced the split to a specific earlier-session commit whose rebase conflict resolution touched recommendations.json, RECOMMENDATIONS.md, and evidence.json inconsistently (--ours for the JSON alone, --theirs for the other two). Full investigation transcript available in this session's conversation history.",
       "createdAt": "2026-07-24T23:14:27.720Z"
+    },
+    {
+      "id": "ev-20260725-001",
+      "recommendationId": "rec-20260725-001",
+      "kind": "note",
+      "summary": "Live repro 2026-07-25: gh run view 30136637570 --log-failed showed 'npm view @manehorizons/cadence-host-codex failed after 3 attempts: ...is 1.50.0 on npm, expected 1.51.0' at 00:42:35Z, 5 seconds after the publish step completed. Independently re-verified moments later (and again ~15 minutes later): npm view + dist-tags.latest + git tag + gh release view all confirmed fully correct for all four packages. This is the documented 'Release workflow propagation flake' pattern, now root-caused to this specific retry budget.",
+      "createdAt": "2026-07-25T01:10:14.583Z"
     }
   ]
 }
