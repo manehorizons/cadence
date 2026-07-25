@@ -16,9 +16,16 @@ doc="$(cat)"
 
 # Match the version as a whole token: dots escaped, and not flanked by another
 # digit or dot — so "1.10.0" is satisfied by "`1.10.0`" but NOT by "1.1.0",
-# "11.10.0", or "1.10.01".
+# "11.10.0", or "1.10.01". Feed grep via a here-string, not a `printf | grep`
+# pipe: grep -q exits the moment it finds a match, and on a doc large enough
+# that the match sits before the producer finishes writing (CHANGELOG.md
+# after its 2026-07-24 backfill, ~97KB, match near the top), the producer
+# gets SIGPIPE — under `pipefail` that turns a real match into exit 141,
+# which this script would have misreported as "not found". A here-string
+# has bash write the full buffer before grep ever starts reading, so there's
+# no producer/consumer race to lose.
 escaped="${expected//./\\.}"
-if printf '%s' "$doc" | grep -Eq "(^|[^0-9.])${escaped}([^0-9.]|$)"; then
+if grep -Eq "(^|[^0-9.])${escaped}([^0-9.]|$)" <<< "$doc"; then
   exit 0
 fi
 

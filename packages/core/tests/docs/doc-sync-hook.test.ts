@@ -58,6 +58,22 @@ describe.skipIf(isWindows)('check-doc-sync.sh (pure version-freshness checker)',
     const { code } = runChecker('1.10.0', 'we are on `1.1.0` and `11.10.0x`');
     expect(code).not.toBe(0);
   });
+
+  // Regression: a `printf '%s' "$doc" | grep -Eq ...` pipe here previously
+  // caused a real false failure on any doc large enough (~97KB, CHANGELOG.md
+  // after its 2026-07-24 backfill) that the match sits near the top — grep -q
+  // exits the instant it finds a match, SIGPIPEing printf mid-write, and
+  // under `set -o pipefail` that surfaced as exit 141, which the checker
+  // reported as "version not found" even though it plainly was. Confirmed
+  // via `bash -x`: `escaped`/`doc` were both correct, only the grep pipeline's
+  // own exit code was wrong. Fixed by feeding grep via a here-string instead
+  // of a live pipe (bash writes the full buffer before grep starts reading,
+  // so there's no producer/consumer race to lose).
+  it('finds an early match in a document much larger than a typical pipe buffer (SIGPIPE/pipefail regression)', () => {
+    const big = `latest published version is \`1.10.0\` today\n${'x'.repeat(200_000)}`;
+    const { code } = runChecker('1.10.0', big);
+    expect(code).toBe(0);
+  });
 });
 
 // Cross-platform staleness canary: whatever the engine's canonical version is,

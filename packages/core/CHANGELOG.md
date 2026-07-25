@@ -1,5 +1,33 @@
 # @manehorizons/cadence-core
 
+## 1.51.0
+
+### Minor Changes
+
+- a24506d: Adds a `gates.evidenceFloor` gate that refuses `cadence settle run --auto` when any AC's `PASS` verdict rests on evidence ranked below a configured floor on the Phase 140 evidence ladder (`ai-verified` > `executed` > `assertion` > `mention` > `unverified`), closing the enforcement gap left when that ladder shipped visibility-only. Preset defaults: `solo` → `assertion`, `team` / `production` → `executed`; the schema-level default stays `mention` for back-compat. `ai-verified` is reachable only via an explicit config override — no preset defaults to it, since it is structurally unreachable while the active `deep-verify` provider is `mock`, and the refusal now names that specific reason instead of the generic below-floor message.
+
+  A named, per-AC, reason-required bypass (`--evidence-floor-bypass <AC-id:reason>` on `settle run`) exempts exactly the named AC and is recorded in `SUMMARY.gateBypasses` — never a blanket, phase-wide bypass.
+
+  Closes rec-20260724-001 (re-filed P0 from the 2026-07-24 external audit, enforcement half of the assurance-levels gap first raised in the v1.47.0 audit).
+
+- 35379fe: Adds a `phase-freshness` check to `cadence doctor`: warns when the active phase/draft's `PROGRESS.json` has a task `updatedAt` within the last 10 minutes, naming the task and its age, with remediation to confirm no other session is actively working on the same phase/draft before continuing — closing rec-20260722-001.
+
+  The freshness math lives in a new pure `assessProgressFreshness` (`packages/core/src/phases/liveness.ts`), following the existing `collision.ts` pure/impure split. Read-only and best-effort like the rest of `doctor`: no active phase/draft, or no `PROGRESS.json` yet, both degrade to `ok` rather than being treated as a problem.
+
+- 2d8d5f8: Adds `cadence retro feedback`: matches recurring cross-phase retro friction (gate bypasses, rough task statuses, finding categories — from the phase 174/186 retro artifacts and rollup) to recommendations by `affectedAreas`/`affectedFiles` overlap, and records each match as an auditable, idempotent evidence entry. `cadence recommend`, `cadence context`, and `cadence next` all now factor linked friction evidence into a new transparent `frictionPts` scoring term (capped, weighted, additive — a recommendation with zero friction evidence scores identically to before), so recommendations tied to real recurring pain rank consistently higher across every command that ranks recommendations. Closes rec-20260712-003.
+- 621f87f: Close the trust envelope: extend the MCP tool-trust enforcement added in phase 181 to `cadence_settle`. Phase 181 classified `cadence_settle` as capability class `SETTLE` and allowed `cadence mcp trust grant --tool cadence_settle` to succeed, but deliberately left the tool itself ungated — an MCP call to `cadence_settle` ran immediately with no trust check. It is now wrapped with the same trust-envelope pre-check as the two `APPROVAL_BYPASS` tools (`cadence_draft_approve`, `cadence_spec_approve`): a call with no valid, matching, unexpired grant is refused — naming the failing check — before `settleService` runs, so no `state.json`/`SUMMARY.{json,md}` write occurs and the loop position is unchanged. A valid grant, issued via `cadence mcp trust grant --tool cadence_settle` on a real terminal, lets the call proceed exactly as before. The shared enforcement function is renamed `enforceApprovalBypassGrant` → `enforceGatedToolGrant` to reflect that it now gates three tools, not two. Closes rec-20260724-005.
+
+### Patch Changes
+
+- 11bda6b: Clarifies the anthropic-provider mock-fallback warning (`verifier-factory.ts`) and its `cadence config explain` counterpart (`config-explain/build.ts`): both now state that being logged into Claude Code (or another IDE/host CLI session) does not satisfy the `anthropic` provider's `ANTHROPIC_API_KEY` requirement — it's a direct Anthropic SDK call needing a separately API-billed key, with no visibility into a host session's own credential store. Closes rec-20260723-001, surfaced by a real external consumer hitting silent mock-fallback with no obvious cause.
+
+  `docs/providers.md`'s quoted warning sample is updated to match.
+
+- 81b44fe: `cadence doctor`'s verification-readiness check and `cadence activate`'s key-missing message are now CLAUDECODE-aware: when the `anthropic` provider is selected, `ANTHROPIC_API_KEY` is missing, and the process is running inside a live Claude Code session (`CLAUDECODE=1`), both surfaces now name the Claude-Code-login-doesn't-satisfy-this confusion directly and proactively suggest `cadence activate --provider host-cli` as the way to reuse that session's own auth instead of a separate API key. Outside a Claude Code session (or for other providers), both surfaces are unchanged. Closes rec-20260723-003, sibling to the phase 209/210 work on the same underlying confusion.
+- Updated dependencies [a24506d]
+- Updated dependencies [621f87f]
+  - @manehorizons/cadence-types@1.51.0
+
 ## 1.50.0
 
 ### Minor Changes
