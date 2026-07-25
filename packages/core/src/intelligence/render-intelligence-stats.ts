@@ -22,6 +22,7 @@ const REC_READINESS_ORDER = [
 const EV_KIND_ORDER = ['file', 'command', 'cadence-artifact', 'note'] as const;
 const AS_STATUS_ORDER = ['open', 'validated', 'rejected'] as const;
 const DEC_STATUS_ORDER = ['active', 'superseded', 'rescinded'] as const;
+const MIL_STATUS_ORDER = ['proposed', 'accepted', 'exported', 'deferred', 'closed'] as const;
 
 function truncTitle(s: string, n = 40): string {
   if (s.length <= n) return s;
@@ -71,6 +72,13 @@ function renderAggregate(stats: IntelligenceStats): string {
     `- by status: ${DEC_STATUS_ORDER.map((s) => `${s} ${stats.decisions.byStatus[s]}`).join(', ')}`,
   );
   lines.push(`- untied: ${stats.decisions.untied}`);
+  lines.push('');
+
+  lines.push(`## Milestones (${stats.milestones.total})`);
+  lines.push('');
+  lines.push(
+    `- by status: ${MIL_STATUS_ORDER.map((s) => `${s} ${stats.milestones.byStatus[s]}`).join(', ')}`,
+  );
   lines.push('');
 
   lines.push('## Links');

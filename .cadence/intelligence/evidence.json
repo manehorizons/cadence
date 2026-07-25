@@ -896,6 +896,13 @@
       "kind": "note",
       "summary": "Live repro 2026-07-25: gh run view 30136637570 --log-failed showed 'npm view @manehorizons/cadence-host-codex failed after 3 attempts: ...is 1.50.0 on npm, expected 1.51.0' at 00:42:35Z, 5 seconds after the publish step completed. Independently re-verified moments later (and again ~15 minutes later): npm view + dist-tags.latest + git tag + gh release view all confirmed fully correct for all four packages. This is the documented 'Release workflow propagation flake' pattern, now root-caused to this specific retry budget.",
       "createdAt": "2026-07-25T01:10:14.583Z"
+    },
+    {
+      "id": "ev-20260725-002",
+      "recommendationId": "rec-20260725-002",
+      "kind": "note",
+      "summary": "Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #1, Strong. Two independent research passes converged on this from store-layer and CLI-layer duplication respectively.",
+      "createdAt": "2026-07-25T15:53:24.998Z"
     }
   ]
 }

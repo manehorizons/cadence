@@ -55,7 +55,7 @@ async function snapshotDir(dir: string): Promise<Map<string, string>> {
 }
 
 describe('cadence intelligence stats (Slice 18)', () => {
-  it('AC-8: populated workspace aggregate mode → exit 0, all 5 sections', async () => {
+  it('AC-8: populated workspace aggregate mode → exit 0, all 6 sections (Phase 220: + Milestones)', async () => {
     active = await tempRepo({ initialized: true, projectName: 'slice18' });
     const rec = await addRecommendation(active.root, {
       title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
@@ -72,6 +72,7 @@ describe('cadence intelligence stats (Slice 18)', () => {
     expect(r.stdout).toMatch(/## Evidence \(0\)/);
     expect(r.stdout).toMatch(/## Assumptions \(1\)/);
     expect(r.stdout).toMatch(/## Decisions \(1\)/);
+    expect(r.stdout).toMatch(/## Milestones \(0\)/);
     expect(r.stdout).toMatch(/## Links/);
   });
 
@@ -111,6 +112,22 @@ describe('cadence intelligence stats (Slice 18)', () => {
     expect(stats.assumptions.byStatus.open).toBe(1);
     expect(stats.links.brokenAssumptionLinks).toBe(0);
     expect(stats.perRec).toHaveLength(1);
+  });
+
+  it('Phase 220 T6: aggregate mode includes Milestones section; --format json includes milestones field', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'phase220' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A' });
+    const r = await run(['intelligence', 'stats'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/## Milestones \(0\)/);
+    const rJson = await run(['intelligence', 'stats', '--format', 'json'], active.root);
+    const stats = JSON.parse(rJson.stdout);
+    expect(stats.milestones.total).toBe(0);
+    expect(stats.milestones.byStatus.proposed).toBe(0);
   });
 
   it('AC-5: --format json empty workspace → JSON null', async () => {

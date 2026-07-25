@@ -1,8 +1,10 @@
-import type {
-  AssumptionLedger,
-  EvidenceLedger,
-  IntelligenceDecisionLedger,
-  RecommendationLedger,
+import {
+  emptyMilestoneLedger,
+  type AssumptionLedger,
+  type EvidenceLedger,
+  type IntelligenceDecisionLedger,
+  type MilestoneLedger,
+  type RecommendationLedger,
 } from '@manehorizons/cadence-types';
 
 export type IntelligenceAuditFinding =
@@ -13,7 +15,8 @@ export type IntelligenceAuditFinding =
   | { kind: 'orphan-decision'; decisionId: string; missingRecId: string }
   | { kind: 'orphan-evidence'; evidenceId: string; missingRecId: string }
   | { kind: 'stale-supersededby'; decisionId: string; missingTargetId: string }
-  | { kind: 'stale-converted-phase'; recommendationId: string; missingPhaseId: string };
+  | { kind: 'stale-converted-phase'; recommendationId: string; missingPhaseId: string }
+  | { kind: 'orphan-milestone'; milestoneId: string; missingRecId: string };
 
 export type IntelligenceAuditReport = {
   findings: IntelligenceAuditFinding[];
@@ -29,6 +32,7 @@ export const AUDIT_KINDS = [
   'orphan-evidence',
   'stale-supersededby',
   'stale-converted-phase',
+  'orphan-milestone',
 ] as const;
 
 export type AuditKind = (typeof AUDIT_KINDS)[number];
@@ -39,12 +43,16 @@ export function computeIntelligenceAudit(
   asLedger: AssumptionLedger,
   decLedger: IntelligenceDecisionLedger,
   existingPhaseIds: Set<string> = new Set(),
+  milestoneLedger: MilestoneLedger = emptyMilestoneLedger(),
 ): IntelligenceAuditReport {
   const findings: IntelligenceAuditFinding[] = [];
   const recIds = new Set(recLedger.recommendations.map((r) => r.id));
   const evIds = new Set(evLedger.evidence.map((e) => e.id));
   const asIds = new Set(asLedger.assumptions.map((a) => a.id));
   const decIds = new Set(decLedger.decisions.map((d) => d.id));
+  // Archived recs are recoverable via `unarchive` — only a genuinely deleted
+  // rec id (in neither array) makes a milestone reference orphan (AC-3).
+  const archivedRecIds = new Set((recLedger.archived ?? []).map((r) => r.id));
 
   for (const r of recLedger.recommendations) {
     for (const id of r.assumptionIds) {
@@ -115,6 +123,16 @@ export function computeIntelligenceAudit(
         recommendationId: r.id,
         missingPhaseId: r.convertedToPhaseId,
       });
+    }
+  }
+
+  // Phase 220 AC-3: a milestone's recommendationIds[] entry missing from BOTH
+  // the live and archived recommendation arrays is a broken reference.
+  for (const m of milestoneLedger.milestones) {
+    for (const id of m.recommendationIds) {
+      if (!recIds.has(id) && !archivedRecIds.has(id)) {
+        findings.push({ kind: 'orphan-milestone', milestoneId: m.id, missingRecId: id });
+      }
     }
   }
 

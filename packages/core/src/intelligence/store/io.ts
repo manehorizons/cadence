@@ -1,62 +1,51 @@
-import { mkdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import {
-  AssumptionLedgerZ,
   EvidenceLedgerZ,
-  IntelligenceDecisionLedgerZ,
-  RecommendationLedgerZ,
-  emptyAssumptionLedger,
   emptyEvidenceLedger,
-  emptyIntelligenceDecisionLedger,
-  emptyRecommendationLedger,
-  type AssumptionLedger,
+  type Evidence,
   type EvidenceLedger,
-  type IntelligenceDecisionLedger,
   type RecommendationLedger,
 } from '@manehorizons/cadence-types';
-import { atomicWriteJSON, atomicWriteText } from '../../state/atomic-write.js';
+import { atomicWriteText } from '../../state/atomic-write.js';
 import { renderRecommendationsMd } from '../render.js';
-import { renderAssumptionsMd } from '../render-assumption.js';
-import { renderDecisionsMd } from '../render-decision.js';
+import { readLedger, writeLedger, type SubjectLedgerSpec } from './ledger.js';
+import { evidencePath, recommendationsMdPath, recommendationsPath } from './paths.js';
+import { recommendationLedgerSpec, readRecommendationLedger } from './recommendations.js';
+import { readAssumptionLedger, writeAssumptionLedger } from './assumptions.js';
 import {
-  assumptionsMdPath,
-  assumptionsPath,
-  decisionsMdPath,
-  decisionsPath,
-  evidencePath,
-  intelligenceDir,
-  recommendationsMdPath,
-  recommendationsPath,
-} from './paths.js';
+  readIntelligenceDecisionLedger,
+  writeIntelligenceDecisionLedger,
+} from './decisions.js';
 
-export async function readRecommendationLedger(root: string): Promise<RecommendationLedger> {
-  const path = recommendationsPath(root);
-  if (!existsSync(path)) return emptyRecommendationLedger();
-  const raw = await readFile(path, 'utf8');
-  return RecommendationLedgerZ.parse(JSON.parse(raw));
-}
+// Retired (phase 220 T4): `readAssumptionLedger`/`writeAssumptionLedger` and
+// `readIntelligenceDecisionLedger`/`writeIntelligenceDecisionLedger` used to
+// be hand-rolled here too. `assumptions.ts`/`decisions.ts` now own the
+// canonical implementations (on top of `ledger.ts`'s shared primitives); this
+// module re-exports them so the ~7 external callers that already import these
+// names from `io.js` keep working unchanged.
+export { readAssumptionLedger, writeAssumptionLedger };
+export { readIntelligenceDecisionLedger, writeIntelligenceDecisionLedger };
+export { readRecommendationLedger };
+
+// Evidence has no dedicated subject file (unlike assumptions/decisions/
+// milestones/recommendations) — its spec and canonical read function live
+// here, next to `writeIntelligenceLedgers`, the only writer this subject has.
+export const evidenceLedgerSpec: SubjectLedgerSpec<Evidence, EvidenceLedger> = {
+  parse: (data) => EvidenceLedgerZ.parse(data),
+  empty: emptyEvidenceLedger,
+  idPrefix: 'ev',
+  idOf: (ev) => ev.id,
+  records: (ledger) => ({ live: ledger.evidence, archived: [] }),
+  withRecords: (ledger, records) => {
+    if (records.archived.length !== 0) {
+      throw new Error('evidence ledger has no archived array; refusing to drop non-empty archived records');
+    }
+    return { schemaVersion: 1, evidence: records.live };
+  },
+};
 
 export async function readEvidenceLedger(root: string): Promise<EvidenceLedger> {
-  const path = evidencePath(root);
-  if (!existsSync(path)) return emptyEvidenceLedger();
-  const raw = await readFile(path, 'utf8');
-  return EvidenceLedgerZ.parse(JSON.parse(raw));
-}
-
-export async function readAssumptionLedger(root: string): Promise<AssumptionLedger> {
-  const path = assumptionsPath(root);
-  if (!existsSync(path)) return emptyAssumptionLedger();
-  const raw = await readFile(path, 'utf8');
-  return AssumptionLedgerZ.parse(JSON.parse(raw));
-}
-
-export async function readIntelligenceDecisionLedger(
-  root: string,
-): Promise<IntelligenceDecisionLedger> {
-  const path = decisionsPath(root);
-  if (!existsSync(path)) return emptyIntelligenceDecisionLedger();
-  const raw = await readFile(path, 'utf8');
-  return IntelligenceDecisionLedgerZ.parse(JSON.parse(raw));
+  return readLedger(evidenceLedgerSpec, evidencePath(root));
 }
 
 export async function writeIntelligenceLedgers(
@@ -64,12 +53,8 @@ export async function writeIntelligenceLedgers(
   ledger: RecommendationLedger,
   evidenceLedger: EvidenceLedger,
 ): Promise<void> {
-  const dir = intelligenceDir(root);
-  await mkdir(dir, { recursive: true });
-  RecommendationLedgerZ.parse(ledger);
-  EvidenceLedgerZ.parse(evidenceLedger);
-  await atomicWriteJSON(recommendationsPath(root), ledger, { mode: 0o600 });
-  await atomicWriteJSON(evidencePath(root), evidenceLedger, { mode: 0o600 });
+  await writeLedger(recommendationLedgerSpec, recommendationsPath(root), ledger, { mode: 0o600 });
+  await writeLedger(evidenceLedgerSpec, evidencePath(root), evidenceLedger, { mode: 0o600 });
   // Read sibling ledgers so the rec MD renders status-annotated link bullets (Slice 15).
   const asLedger = await readAssumptionLedger(root);
   const decLedger = await readIntelligenceDecisionLedger(root);
@@ -77,23 +62,6 @@ export async function writeIntelligenceLedgers(
     recommendationsMdPath(root),
     renderRecommendationsMd(ledger, evidenceLedger, asLedger, decLedger),
   );
-}
-
-export async function writeAssumptionLedger(root: string, ledger: AssumptionLedger): Promise<void> {
-  AssumptionLedgerZ.parse(ledger);
-  await mkdir(intelligenceDir(root), { recursive: true });
-  await atomicWriteJSON(assumptionsPath(root), ledger, { mode: 0o600 });
-  await atomicWriteText(assumptionsMdPath(root), renderAssumptionsMd(ledger));
-}
-
-export async function writeIntelligenceDecisionLedger(
-  root: string,
-  ledger: IntelligenceDecisionLedger,
-): Promise<void> {
-  IntelligenceDecisionLedgerZ.parse(ledger);
-  await mkdir(intelligenceDir(root), { recursive: true });
-  await atomicWriteJSON(decisionsPath(root), ledger, { mode: 0o600 });
-  await atomicWriteText(decisionsMdPath(root), renderDecisionsMd(ledger));
 }
 
 export async function rerenderRecommendationsMdIfPresent(root: string): Promise<void> {

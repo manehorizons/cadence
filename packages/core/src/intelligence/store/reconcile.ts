@@ -10,6 +10,7 @@ import {
   decisionsPath,
   evidencePath,
   intelligenceDir,
+  milestonesPath,
   recommendationsPath,
 } from './paths.js';
 import {
@@ -20,6 +21,7 @@ import {
   writeIntelligenceDecisionLedger,
   writeIntelligenceLedgers,
 } from './io.js';
+import { readMilestoneLedger } from './milestones.js';
 import { deriveRecommendationLinks } from './recommendations.js';
 import { deriveDecisionInverseLinks } from './decisions.js';
 
@@ -28,6 +30,7 @@ export type IntelligenceReconcileResult = {
   recommendations: number;
   assumptions: number;
   decisions: number;
+  milestones: number;
 };
 
 export async function runIntelligenceReconcile(
@@ -37,13 +40,17 @@ export async function runIntelligenceReconcile(
   const evExists = existsSync(evidencePath(root));
   const asExists = existsSync(assumptionsPath(root));
   const decExists = existsSync(decisionsPath(root));
-  if (!recExists && !evExists && !asExists && !decExists) {
-    return { present: false, recommendations: 0, assumptions: 0, decisions: 0 };
+  const milExists = existsSync(milestonesPath(root));
+  if (!recExists && !evExists && !asExists && !decExists && !milExists) {
+    return { present: false, recommendations: 0, assumptions: 0, decisions: 0, milestones: 0 };
   }
   const recLedger = await readRecommendationLedger(root);
   const evLedger = await readEvidenceLedger(root);
   const asLedger = await readAssumptionLedger(root);
   const decLedger = await readIntelligenceDecisionLedger(root);
+  // Milestones have no derived link arrays to re-render — read-only here,
+  // included solely for count parity with the other four subjects (AC-3).
+  const milLedger = await readMilestoneLedger(root);
   // Re-derive rec link arrays from current subject ledgers (idempotent if already correct).
   const derivedRec = deriveRecommendationLinks(recLedger, asLedger, decLedger);
   // Slice 31: re-derive decision inverse-links (supersedes arrays) from
@@ -62,5 +69,6 @@ export async function runIntelligenceReconcile(
     recommendations: derivedRec.recommendations.length,
     assumptions: asLedger.assumptions.length,
     decisions: derivedDec.decisions.length,
+    milestones: milLedger.milestones.length,
   };
 }

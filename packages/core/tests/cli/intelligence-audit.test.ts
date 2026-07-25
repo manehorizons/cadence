@@ -4,7 +4,10 @@ import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
+import {
+  addRecommendation,
+  runRecommendationArchive,
+} from '../../src/intelligence/store/recommendations.js';
 import { addAssumption } from '../../src/intelligence/store/assumptions.js';
 
 const CADENCE_CLI = join(
@@ -213,6 +216,71 @@ describe('cadence intelligence audit (Slice 19)', () => {
     }
   });
 
+  describe('Phase 220 T6: orphan-milestone end-to-end', () => {
+    async function plantMilestone(root: string, recommendationIds: string[]): Promise<void> {
+      const milPath = join(root, '.cadence/intelligence/milestones.json');
+      await mkdir(dirname(milPath), { recursive: true });
+      const milestone = {
+        id: 'mil-grp-test',
+        name: 'test milestone',
+        objective: 'o',
+        status: 'proposed',
+        recommendationIds,
+        preMortem: {
+          likelyFailureModes: [],
+          hiddenDependencies: [],
+          driftRisks: [],
+          outOfScope: [],
+        },
+        exportTargets: [],
+        createdAt: '2026-05-20T00:00:00.000Z',
+        updatedAt: '2026-05-20T00:00:00.000Z',
+      };
+      await writeFile(
+        milPath,
+        JSON.stringify({ schemaVersion: 1, milestones: [milestone] }),
+      );
+    }
+
+    it('milestone referencing a fully-deleted rec id → orphan-milestone finding, exit 1', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'phase220' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      await plantMilestone(active.root, [rec.id, 'rec-never-existed']);
+      const r = await run(['intelligence', 'audit'], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toMatch(/## Orphan Milestones \(1\)/);
+      expect(r.stdout).toMatch(/mil-grp-test references missing rec: rec-never-existed/);
+    });
+
+    it('milestone referencing a merely-ARCHIVED rec id → NOT flagged, exit 0', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'phase220' });
+      const rec = await addRecommendation(active.root, {
+        title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+        affectedAreas: [], affectedFiles: [],
+      });
+      const archived = await runRecommendationArchive(active.root, rec.id, 'manual');
+      expect(archived.ok).toBe(true);
+      await plantMilestone(active.root, [rec.id]);
+      const r = await run(['intelligence', 'audit'], active.root);
+      expect(r.code).toBe(0);
+      expect(r.stdout).toBe('Audit clean: no integrity issues.\n');
+    });
+
+    it('JSON envelope carries orphan-milestone finding', async () => {
+      active = await tempRepo({ initialized: true, projectName: 'phase220' });
+      await plantMilestone(active.root, ['rec-never-existed']);
+      const r = await run(['intelligence', 'audit', '--format', 'json'], active.root);
+      expect(r.code).toBe(1);
+      const report = JSON.parse(r.stdout);
+      expect(report.byKind['orphan-milestone']).toEqual([
+        { kind: 'orphan-milestone', milestoneId: 'mil-grp-test', missingRecId: 'rec-never-existed' },
+      ]);
+    });
+  });
+
   describe('Slice 34.2: stale-converted-phase end-to-end', () => {
     it('rec converted to existing phase + phase dir present → clean audit (exit 0)', async () => {
       active = await tempRepo({ initialized: true, projectName: 'slice34_2' });
@@ -355,7 +423,7 @@ describe('cadence intelligence audit (Slice 19)', () => {
       const report = JSON.parse(r.stdout);
       expect(report.findings).toHaveLength(1);
       expect(report.findings[0].kind).toBe('orphan-assumption');
-      expect(Object.keys(report.byKind)).toHaveLength(8);
+      expect(Object.keys(report.byKind)).toHaveLength(9);
       expect(report.byKind['orphan-assumption']).toHaveLength(1);
       expect(report.byKind['broken-assumption-link']).toEqual([]);
       expect(report.byKind['stale-supersededby']).toEqual([]);
@@ -372,7 +440,7 @@ describe('cadence intelligence audit (Slice 19)', () => {
       const report = JSON.parse(r.stdout); // must be valid JSON, not the text echo
       expect(report).not.toBeNull();
       expect(report.findings).toEqual([]);
-      expect(Object.keys(report.byKind)).toHaveLength(8);
+      expect(Object.keys(report.byKind)).toHaveLength(9);
       expect(report.byKind['orphan-decision']).toEqual([]);
       expect(report.byKind['orphan-assumption']).toEqual([]);
     });
@@ -383,7 +451,7 @@ describe('cadence intelligence audit (Slice 19)', () => {
       expect(r.code).toBe(1);
       expect(r.stdout).toBe('');
       expect(r.stderr).toBe(
-        "intelligence audit failed: invalid kind: 'bogus' (allowed: broken-assumption-link, broken-decision-link, broken-evidence-link, orphan-assumption, orphan-decision, orphan-evidence, stale-supersededby, stale-converted-phase)\n",
+        "intelligence audit failed: invalid kind: 'bogus' (allowed: broken-assumption-link, broken-decision-link, broken-evidence-link, orphan-assumption, orphan-decision, orphan-evidence, stale-supersededby, stale-converted-phase, orphan-milestone)\n",
       );
     });
 

@@ -13,6 +13,7 @@ const SECTION_HEADERS: Record<IntelligenceAuditFinding['kind'], string> = {
   'orphan-evidence': 'Orphan Evidence',
   'stale-supersededby': 'Stale supersededBy Refs',
   'stale-converted-phase': 'Stale converted-to-phase Refs',
+  'orphan-milestone': 'Orphan Milestones',
 };
 
 const SECTION_ORDER: IntelligenceAuditFinding['kind'][] = [
@@ -24,6 +25,7 @@ const SECTION_ORDER: IntelligenceAuditFinding['kind'][] = [
   'orphan-evidence',
   'stale-supersededby',
   'stale-converted-phase',
+  'orphan-milestone',
 ];
 
 function renderFindingLine(f: IntelligenceAuditFinding): string {
@@ -44,6 +46,8 @@ function renderFindingLine(f: IntelligenceAuditFinding): string {
       return `- ${f.decisionId} supersededBy missing decision: ${f.missingTargetId}`;
     case 'stale-converted-phase':
       return `- ${f.recommendationId} convertedToPhaseId missing phase: ${f.missingPhaseId}`;
+    case 'orphan-milestone':
+      return `- ${f.milestoneId} references missing rec: ${f.missingRecId}`;
   }
 }
 
@@ -65,6 +69,7 @@ const REMEDIATION_BY_KIND: Record<AuditKind, string> = {
   'orphan-evidence': REMEDIATION_ORPHAN,
   'stale-supersededby': REMEDIATION_STALE_SUPERSEDED,
   'stale-converted-phase': REMEDIATION_STALE_CONVERTED,
+  'orphan-milestone': REMEDIATION_ORPHAN,
 };
 
 export function renderIntelligenceAudit(

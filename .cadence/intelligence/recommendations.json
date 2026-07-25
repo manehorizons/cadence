@@ -3991,10 +3991,52 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "219-recommendation-id-cross-check",
-      "createdAt": "2026-07-24T23:14:27.720Z",
-      "updatedAt": "2026-07-25T03:09:03.638Z",
       "shippedRef": "phase 219-recommendation-id-cross-check / PR #TBD",
       "archivedAt": "2026-07-25T03:09:03.638Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-24T23:14:27.720Z",
+      "updatedAt": "2026-07-25T03:09:03.638Z"
+    },
+    {
+      "id": "rec-20260725-002",
+      "title": "Deepen the Praxis ledger into one module",
+      "summary": "The 5 subject ledgers (recommendations/evidence/assumptions/decisions/milestones) each hand-roll their own read/write, id-minting, and status-transition logic instead of sharing one generic Ledger<T>. Id-minting collision-checking (Phase 219) was patched on recommendations only; the same collision class is still open on assumptions/decisions/evidence. Milestones is excluded from reconcile/audit/stats entirely. CLI list/filter pipelines are triplicated verbatim across recommendation.ts/decision.ts/assumption.ts.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "intelligence",
+        "praxis"
+      ],
+      "affectedFiles": [
+        "packages/core/src/intelligence/store/io.ts",
+        "packages/core/src/intelligence/store/ids.ts",
+        "packages/core/src/intelligence/store/recommendations.ts",
+        "packages/core/src/intelligence/store/assumptions.ts",
+        "packages/core/src/intelligence/store/decisions.ts",
+        "packages/core/src/intelligence/store/milestones.ts",
+        "packages/core/src/intelligence/reconcile.ts",
+        "packages/core/src/intelligence/audit.ts",
+        "packages/core/src/intelligence/stats.ts",
+        "packages/core/src/cli/commands/recommendation.ts",
+        "packages/core/src/cli/commands/decision.ts",
+        "packages/core/src/cli/commands/assumption.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-25T15:53:24.998Z",
+      "updatedAt": "2026-07-25T19:21:53.081Z",
+      "shippedRef": "phase 220-praxis-ledger-unify, DRAFT 220-01",
+      "archivedAt": "2026-07-25T19:21:53.081Z",
       "archiveReason": "shipped"
     }
   ]

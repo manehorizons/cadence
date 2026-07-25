@@ -5,10 +5,12 @@ import type {
   EvidenceLedger,
   IntelligenceDecision,
   IntelligenceDecisionLedger,
+  MilestoneLedger,
+  MilestoneStatus,
   Recommendation,
   RecommendationLedger,
 } from '@manehorizons/cadence-types';
-import { RecommendationStatusZ } from '@manehorizons/cadence-types';
+import { emptyMilestoneLedger, RecommendationStatusZ } from '@manehorizons/cadence-types';
 
 export type IntelligenceStats = {
   recommendations: {
@@ -28,6 +30,10 @@ export type IntelligenceStats = {
     total: number;
     byStatus: Record<IntelligenceDecision['status'], number>;
     untied: number;
+  };
+  milestones: {
+    total: number;
+    byStatus: Record<MilestoneStatus, number>;
   };
   links: {
     brokenAssumptionLinks: number;
@@ -63,12 +69,20 @@ const DEC_STATUSES: IntelligenceDecision['status'][] = [
   'superseded',
   'rescinded',
 ];
+const MIL_STATUSES: MilestoneStatus[] = [
+  'proposed',
+  'accepted',
+  'exported',
+  'deferred',
+  'closed',
+];
 
 export function computeIntelligenceStats(
   recLedger: RecommendationLedger,
   evLedger: EvidenceLedger,
   asLedger: AssumptionLedger,
   decLedger: IntelligenceDecisionLedger,
+  milestoneLedger: MilestoneLedger = emptyMilestoneLedger(),
 ): IntelligenceStats {
   const recByStatus = Object.fromEntries(
     REC_STATUSES.map((s) => [s, 0]),
@@ -99,6 +113,11 @@ export function computeIntelligenceStats(
     decByStatus[d.status]++;
     if (d.recommendationId === undefined) decUntied++;
   }
+
+  const milByStatus = Object.fromEntries(
+    MIL_STATUSES.map((s) => [s, 0]),
+  ) as Record<MilestoneStatus, number>;
+  for (const m of milestoneLedger.milestones) milByStatus[m.status]++;
 
   const asById = new Map(asLedger.assumptions.map((a) => [a.id, a] as const));
   const decById = new Map(decLedger.decisions.map((d) => [d.id, d] as const));
@@ -155,6 +174,10 @@ export function computeIntelligenceStats(
       total: decLedger.decisions.length,
       byStatus: decByStatus,
       untied: decUntied,
+    },
+    milestones: {
+      total: milestoneLedger.milestones.length,
+      byStatus: milByStatus,
     },
     links: { brokenAssumptionLinks, brokenDecisionLinks, brokenEvidenceLinks },
     perRec,

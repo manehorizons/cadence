@@ -53,4 +53,16 @@ describe('cadence intelligence reconcile (Slice 17)', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toBe('No intelligence ledgers present.\n');
   });
+
+  it('Phase 220 T6: stdout reports the milestones count alongside the other counts', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'phase220' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await addAssumption(active.root, { recommendationId: rec.id, text: 'A1' });
+    const r = await run(['intelligence', 'reconcile'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/Milestones: 0 present/);
+  });
 });
