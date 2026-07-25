@@ -3,10 +3,9 @@ import type { ConfigExplanation, ProviderRow, TierGateView } from './types.js';
 
 /**
  * One-line meanings for the three top-level posture fields. Authored here rather
- * than imported from `cli/commands/explain.ts`: that module only defines the four
+ * than imported from `services/explain.ts`: that module only defines the four
  * core concepts (loop/gates/tiers/profiles) — it has nothing for
- * `loopEnforcement`/`acDiscipline` — and a pure core module importing a CLI
- * command would invert the dependency. Kept terse and aligned with the `explain`
+ * `loopEnforcement`/`acDiscipline`. Kept terse and aligned with the `explain`
  * profile copy.
  */
 const PROFILE_MEANING: Record<string, string> = {

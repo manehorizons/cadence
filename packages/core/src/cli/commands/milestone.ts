@@ -12,7 +12,10 @@ import {
   renderMilestoneStatusMd,
   renderMilestonesMd,
 } from '../../intelligence/render-milestone.js';
-import { buildEmptyResultMessage } from '../../services/milestone-propose.js';
+import {
+  buildEmptyResultMessage,
+  hasNewlyProposedMilestone,
+} from '../../services/milestone-propose.js';
 
 export function registerMilestoneCommand(program: Command): void {
   const cmd = program
@@ -34,20 +37,21 @@ export function registerMilestoneCommand(program: Command): void {
           process.stdout.write(JSON.stringify(ledger) + '\n');
         } else {
           process.stdout.write(renderMilestonesMd(ledger));
-          // AC-2 (phase 207 T2, CLI-wiring fix): the markdown render always
-          // reflects the *whole* ledger — an already-accepted/deferred/
-          // exported/closed milestone from a past run still prints under its
-          // own section even when this run proposed nothing new. So the
-          // empty-eligibility signal is NOT `ledger.milestones.length === 0`
-          // (that would wrongly suppress the enrichment whenever any old
-          // milestone survives in the ledger) — it's specifically "zero
-          // `status === 'proposed'` milestones", i.e. the `## Proposed`
-          // section `renderMilestonesMd` just printed as empty. Reuses the
-          // same `buildEmptyResultMessage` enrichment already wired into the
-          // MCP-facing `milestoneProposeService` so the two surfaces never
-          // diverge in wording.
-          const hasNewlyProposed = ledger.milestones.some((m) => m.status === 'proposed');
-          if (!hasNewlyProposed) {
+          // AC-2 (phase 207 T2, CLI-wiring fix; deduplicated phase 221 T2):
+          // the markdown render always reflects the *whole* ledger — an
+          // already-accepted/deferred/exported/closed milestone from a past
+          // run still prints under its own section even when this run
+          // proposed nothing new. So the empty-eligibility signal is NOT
+          // `ledger.milestones.length === 0` (that would wrongly suppress the
+          // enrichment whenever any old milestone survives in the ledger) —
+          // it's specifically "zero `status === 'proposed'` milestones",
+          // i.e. the `## Proposed` section `renderMilestonesMd` just printed
+          // as empty. `hasNewlyProposedMilestone` is the single shared
+          // definition of that predicate (see services/milestone-propose.ts)
+          // and also gates the same `buildEmptyResultMessage` enrichment
+          // wired into the MCP-facing `milestoneProposeService`, so the two
+          // surfaces never diverge in wording or in the underlying check.
+          if (!hasNewlyProposedMilestone(ledger)) {
             process.stdout.write(await buildEmptyResultMessage(process.cwd()));
           }
         }

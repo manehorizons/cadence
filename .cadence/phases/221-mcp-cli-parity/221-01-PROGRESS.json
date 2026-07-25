@@ -1,0 +1,45 @@
+{
+  "draftId": "221-01",
+  "tasks": {
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-25T22:43:27.149Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-25T22:44:25.983Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/src/services/next.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/src/cli/commands/next.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/src/services/verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/src/cli/commands/verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/src/services/explain.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/src/cli/commands/explain.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/tests/cli/explain.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/tests/cli/verify-phase.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/src/mcp/tools.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/tests/mcp/mcp-server.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/tests/mcp/tools-capability-class.test.ts"
+      ],
+      "updatedAt": "2026-07-25T22:58:10.645Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/docs/mcp.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/221-mcp-cli-parity/packages/core/tests/mcp/mcp-server.test.ts"
+      ],
+      "updatedAt": "2026-07-25T23:10:38.341Z"
+    }
+  }
+}

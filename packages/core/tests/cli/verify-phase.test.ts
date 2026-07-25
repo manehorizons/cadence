@@ -11,7 +11,7 @@ import { describe, it, expect } from 'vitest';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, runGit } from '@manehorizons/cadence-testkit';
-import { runVerifyPhase } from '../../src/cli/commands/verify.js';
+import { runVerifyPhase } from '../../src/services/verify.js';
 
 function makeIo() {
   const out: string[] = [];
