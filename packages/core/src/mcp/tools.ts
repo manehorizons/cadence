@@ -18,6 +18,9 @@ import { recommendationPromoteService } from '../services/recommendation-promote
 import { recommendationConvertService } from '../services/recommendation-convert.js';
 import { recommendationArchiveService } from '../services/recommendation-archive.js';
 import { milestoneProposeService } from '../services/milestone-propose.js';
+import { nextService } from '../services/next.js';
+import { runVerifyCoverage, runVerifyPhase } from '../services/verify.js';
+import { runExplain } from '../services/explain.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import { enforceGatedToolGrant } from './trust/enforce.js';
 
@@ -127,6 +130,83 @@ export const TOOLS: ToolDef[] = [
       json: z.boolean().optional().describe('Return the raw recommend report instead of rendered text'),
     },
     run: (repoRoot, args, io) => recommendService(repoRoot, isTrue(args.json) ? { json: true } : {}, io),
+  },
+  {
+    name: 'cadence_next',
+    description:
+      'Show ranked legal next moves at the current loop position, with the same IDLE/BUILD ' +
+      'ledger hints as the CLI (read-only).',
+    capabilityClass: 'READ_ONLY',
+    inputSchema: {
+      json: z.boolean().optional().describe('Return the raw next report instead of rendered text'),
+    },
+    run: (repoRoot, args, io) => nextService(repoRoot, isTrue(args.json) ? { json: true } : {}, io),
+  },
+  {
+    name: 'cadence_verify_coverage',
+    description:
+      'Explain why an AC does or does not satisfy test coverage: matched test files, occurrences ' +
+      'of the AC token, and a plain-language reason per occurrence (read-only, no state mutation).',
+    capabilityClass: 'READ_ONLY',
+    inputSchema: {
+      explain: z.string().describe('AC id to explain, e.g. "AC-8"'),
+      json: z.boolean().optional().describe('Return the raw coverage report instead of rendered text'),
+    },
+    run: (repoRoot, args, io) =>
+      runVerifyCoverage(
+        {
+          cwd: repoRoot,
+          explain: str(args.explain),
+          ...(isTrue(args.json) ? { json: true } : {}),
+        },
+        io,
+      ),
+  },
+  {
+    name: 'cadence_verify_phase',
+    description:
+      'Re-derive whether a settled phase’s recorded AC coverage still holds against the current ' +
+      'working tree — either an explicit phase/num, or --changed against a base ref (read-only, ' +
+      'no active loop state required).',
+    capabilityClass: 'READ_ONLY',
+    inputSchema: {
+      phase: z.string().optional().describe('Phase slug, e.g. "58-mcp-server"'),
+      num: z.string().optional().describe('Two-digit unit number within the phase'),
+      changed: z.boolean().optional().describe('Discover phases via git diff against base instead'),
+      base: z.string().optional().describe('Base ref to diff against when changed is set'),
+      testRun: z
+        .boolean()
+        .optional()
+        .describe('Set false to skip the optional verification.testCommand re-run'),
+      json: z.boolean().optional().describe('Return the raw verify-phase report instead of rendered text'),
+    },
+    run: (repoRoot, args, io) =>
+      runVerifyPhase(
+        {
+          cwd: repoRoot,
+          ...(optStr(args.phase) !== undefined ? { phase: optStr(args.phase)! } : {}),
+          ...(optStr(args.num) !== undefined ? { num: optStr(args.num)! } : {}),
+          ...(isTrue(args.changed) ? { changed: true } : {}),
+          ...(optStr(args.base) !== undefined ? { base: optStr(args.base)! } : {}),
+          ...(args.testRun === false ? { testRun: false } : {}),
+          ...(isTrue(args.json) ? { json: true } : {}),
+        },
+        io,
+      ),
+  },
+  {
+    name: 'cadence_explain',
+    description:
+      'Print an in-terminal explanation of a CADENCE concept (loop | gates | tiers | profiles | ' +
+      'config), or list all explainable concepts when none is given (read-only).',
+    capabilityClass: 'READ_ONLY',
+    inputSchema: {
+      concept: z.string().optional().describe('Concept to explain (default: list all concepts)'),
+    },
+    run: (repoRoot, args, io) =>
+      Promise.resolve(
+        runExplain(optStr(args.concept) !== undefined ? { concept: optStr(args.concept)! } : {}, io),
+      ),
   },
   {
     name: 'cadence_draft_new',
@@ -407,6 +487,12 @@ export const TOOLS: ToolDef[] = [
       id: z.string().describe('Recommendation id, e.g. "rec-20260607-001"'),
       status: REC_STATUS.optional().describe('New status'),
       readiness: REC_READINESS.optional().describe('New readiness'),
+      ref: z
+        .string()
+        .optional()
+        .describe(
+          'Freeform provenance for a shipped rec (e.g. "PR #70 / v1.22.1"). Only valid with status=shipped.',
+        ),
     },
     run: (repoRoot, args, io) =>
       recommendationPromoteService(
@@ -415,6 +501,7 @@ export const TOOLS: ToolDef[] = [
           id: str(args.id),
           ...(optStr(args.status) !== undefined ? { status: optStr(args.status)! } : {}),
           ...(optStr(args.readiness) !== undefined ? { readiness: optStr(args.readiness)! } : {}),
+          ...(optStr(args.ref) !== undefined ? { ref: optStr(args.ref)! } : {}),
         },
         io,
       ),

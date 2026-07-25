@@ -1,7 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
@@ -45,6 +47,26 @@ async function call(
 const text = (r: ToolResult): string => r.content.map((c) => c.text ?? '').join('\n');
 
 /**
+ * Phase 221 (T4): CLI/MCP parity fixture — spawns the built CLI binary
+ * (`dist/cli/index.js`, same pattern as `tests/cli/next.test.ts` /
+ * `verify-coverage.test.ts` / `explain.test.ts`) against the exact same
+ * `tempRepo` fixture root a parity test already drove through the MCP tool,
+ * so the two code paths are compared against identical on-disk state.
+ */
+const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
+
+function runCli(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
+  return new Promise((resolve) => {
+    const p = spawn(process.execPath, [CADENCE_CLI, ...args], { cwd });
+    let stdout = '';
+    let stderr = '';
+    p.stdout.on('data', (d) => (stdout += d.toString()));
+    p.stderr.on('data', (d) => (stderr += d.toString()));
+    p.on('exit', (code) => resolve({ stdout, stderr, code: code ?? 0 }));
+  });
+}
+
+/**
  * Phase 181 (mcp-tool-trust-envelope): `cadence_draft_approve` and
  * `cadence_spec_approve` are `APPROVAL_BYPASS` tools and now refuse without a
  * valid trust grant on file (see `mcp/trust/enforce.ts`). Tests exercising
@@ -78,6 +100,11 @@ const EXPECTED_TOOLS = [
   'cadence_progress',
   'cadence_status',
   'cadence_recommend',
+  // phase 221 — MCP/CLI parity for next/verify/explain
+  'cadence_next',
+  'cadence_verify_coverage',
+  'cadence_verify_phase',
+  'cadence_explain',
   'cadence_draft_new',
   'cadence_draft_check',
   'cadence_draft_approve',
@@ -256,6 +283,158 @@ describe('MCP server surface (phase 58)', () => {
     } finally {
       await repoA.cleanup();
       await repoB.cleanup();
+    }
+  });
+});
+
+/**
+ * Phase 221 (T4): MCP/CLI behavior parity for the four tools T3 relocated
+ * into `services/{next,verify,explain}.ts` and registered in `mcp/tools.ts`
+ * (`cadence_next`, `cadence_verify_coverage`, `cadence_verify_phase`,
+ * `cadence_explain`). Each test drives both surfaces against the identical
+ * on-disk fixture state and asserts real output equality — not just that
+ * both "succeeded" — so a future edit that special-cases one call path
+ * (e.g. threading a new arg into the CLI wrapper but not the MCP tool, or
+ * vice versa) shows up as a real assertion failure here.
+ */
+const VERIFY_PHASE_DRAFT = `---
+phase: 200-example-phase
+id: 200-01
+tier: standard
+status: PENDING
+---
+
+# 200-01 — Example
+
+## Objective
+
+Example.
+
+## Acceptance Criteria
+
+### AC-1: example
+Given a precondition
+When an action
+Then an outcome
+
+## Tasks
+
+### T1: Implement
+- files: \`src/example.ts\`, \`src/example.test.ts\`
+- action: implement
+- verify: tests pass
+- done: AC-1
+
+## Boundaries
+
+- None.
+`;
+
+describe('MCP/CLI parity — next/verify/explain (phase 221 T4)', () => {
+  it('cadence_next: MCP structuredContent matches CLI `next --json` for the same IDLE repo state', async () => {
+    active = await tempRepo({ initialized: true });
+    const { client, close } = await connect(active.root);
+    try {
+      const mcp = await call(client, 'cadence_next', { json: true });
+      expect(mcp.isError).toBeFalsy();
+
+      const cli = await runCli(['next', '--json'], active.root);
+      expect(cli.code).toBe(0);
+      const cliParsed: unknown = JSON.parse(cli.stdout);
+
+      expect(mcp.structuredContent).toEqual(cliParsed);
+      expect((mcp.structuredContent as { schemaVersion?: number }).schemaVersion).toBe(1);
+      expect((mcp.structuredContent as { position?: string }).position).toBe('IDLE');
+    } finally {
+      await close();
+    }
+  });
+
+  it('cadence_verify_coverage: MCP structuredContent matches CLI `verify coverage --explain --json` for a real test-file fixture', async () => {
+    active = await tempRepo({ initialized: true });
+    await mkdir(join(active.root, 'packages/pkg'), { recursive: true });
+    await writeFile(
+      join(active.root, 'packages/pkg/a.test.ts'),
+      "it('doc (AC-8)', () => { expect(1).toBe(1); });\n",
+    );
+    const { client, close } = await connect(active.root);
+    try {
+      const mcp = await call(client, 'cadence_verify_coverage', { explain: 'AC-8', json: true });
+      expect(mcp.isError).toBeFalsy();
+
+      const cli = await runCli(['verify', 'coverage', '--explain', 'AC-8', '--json'], active.root);
+      expect(cli.code).toBe(0);
+      const cliParsed: unknown = JSON.parse(cli.stdout);
+
+      expect(mcp.structuredContent).toEqual(cliParsed);
+      expect((mcp.structuredContent as { satisfied?: boolean }).satisfied).toBe(true);
+    } finally {
+      await close();
+    }
+  });
+
+  it('cadence_verify_phase: MCP structuredContent matches CLI `verify phase --json --no-test-run` for a settled-phase fixture', async () => {
+    active = await tempRepo({ initialized: true });
+    const dir = join(active.root, '.cadence/phases/200-example-phase');
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, '200-01-DRAFT.md'), VERIFY_PHASE_DRAFT);
+    await writeFile(
+      join(dir, '200-01-SUMMARY.json'),
+      JSON.stringify({
+        schemaVersion: 1,
+        draftId: '200-01',
+        completedAt: '2026-07-20T00:00:00.000Z',
+        acResults: [{ id: 'AC-1', pass: true, evidence: 'executed' }],
+        taskResults: [{ id: 'T1', status: 'DONE', notes: '' }],
+        decisions: [],
+        deferred: [],
+        skillAudit: { required: [], invoked: [] },
+      }),
+    );
+    await mkdir(join(active.root, 'src'), { recursive: true });
+    await writeFile(join(active.root, 'src/example.ts'), 'export const x = 1;\n');
+    await writeFile(
+      join(active.root, 'src/example.test.ts'),
+      "it('covers AC-1', () => { expect(1).toBe(1); });\n",
+    );
+    const { client, close } = await connect(active.root);
+    try {
+      const mcp = await call(client, 'cadence_verify_phase', {
+        phase: '200-example-phase',
+        num: '01',
+        json: true,
+        testRun: false,
+      });
+      expect(mcp.isError).toBeFalsy();
+
+      const cli = await runCli(
+        ['verify', 'phase', '200-example-phase', '01', '--json', '--no-test-run'],
+        active.root,
+      );
+      expect(cli.code).toBe(0);
+      const cliParsed: unknown = JSON.parse(cli.stdout);
+
+      expect(mcp.structuredContent).toEqual(cliParsed);
+      expect((mcp.structuredContent as { mode?: string }).mode).toBe('single');
+    } finally {
+      await close();
+    }
+  });
+
+  it('cadence_explain: MCP text + structuredContent match CLI `explain <concept>` output', async () => {
+    active = await tempRepo({ initialized: true });
+    const { client, close } = await connect(active.root);
+    try {
+      const mcp = await call(client, 'cadence_explain', { concept: 'loop' });
+      expect(mcp.isError).toBeFalsy();
+
+      const cli = await runCli(['explain', 'loop'], active.root);
+      expect(cli.code).toBe(0);
+
+      expect(text(mcp)).toBe(cli.stdout.trimEnd());
+      expect(mcp.structuredContent).toEqual({ concept: 'loop' });
+    } finally {
+      await close();
     }
   });
 });

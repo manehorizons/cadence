@@ -5,9 +5,36 @@ import {
   runRecommendationPromotion,
 } from '../../src/intelligence/store/recommendations.js';
 import { readMilestoneLedger } from '../../src/intelligence/store/milestones.js';
-import { milestoneProposeService } from '../../src/services/milestone-propose.js';
+import {
+  hasNewlyProposedMilestone,
+  milestoneProposeService,
+} from '../../src/services/milestone-propose.js';
 import { runMilestoneTransition } from '../../src/intelligence/milestone.js';
 import { bufferIO } from '../../src/services/io.js';
+import { emptyMilestoneLedger, type MilestoneLedger } from '@manehorizons/cadence-types';
+
+function makeMilestone(
+  id: string,
+  status: MilestoneLedger['milestones'][number]['status'],
+): MilestoneLedger['milestones'][number] {
+  const now = new Date().toISOString();
+  return {
+    id,
+    name: `Milestone ${id}`,
+    objective: 'test objective',
+    status,
+    recommendationIds: ['rec-1'],
+    preMortem: {
+      likelyFailureModes: [],
+      hiddenDependencies: [],
+      driftRisks: [],
+      outOfScope: [],
+    },
+    exportTargets: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
 
 async function seedEligibleRec(root: string): Promise<string> {
   const r = await addRecommendation(root, {
@@ -264,5 +291,38 @@ describe('milestoneProposeService (phase 153)', () => {
     const persistedMatch = persisted.milestones.find((m) => m.id === milestoneId);
     expect(persistedMatch?.status).toBe('proposed');
     expect(persistedMatch?.recommendationIds).toContain(recId);
+  });
+});
+
+// AC-2 (phase 221 T2): `hasNewlyProposedMilestone` is the single shared
+// predicate now called from both `milestoneProposeService` (above) and
+// `cli/commands/milestone.ts`'s `propose` action — these unit tests exercise
+// it directly so a future edit to only one call site is structurally
+// impossible (there is only one call site to edit), not just discouraged by
+// comment.
+describe('hasNewlyProposedMilestone (phase 221 T2)', () => {
+  it('is true when the ledger has a milestone with status "proposed"', () => {
+    const ledger: MilestoneLedger = {
+      schemaVersion: 1,
+      milestones: [makeMilestone('m-1', 'proposed')],
+    };
+    expect(hasNewlyProposedMilestone(ledger)).toBe(true);
+  });
+
+  it('is false when every milestone is accepted/deferred/exported/closed and none is proposed', () => {
+    const ledger: MilestoneLedger = {
+      schemaVersion: 1,
+      milestones: [
+        makeMilestone('m-1', 'accepted'),
+        makeMilestone('m-2', 'deferred'),
+        makeMilestone('m-3', 'exported'),
+        makeMilestone('m-4', 'closed'),
+      ],
+    };
+    expect(hasNewlyProposedMilestone(ledger)).toBe(false);
+  });
+
+  it('is false for an empty ledger', () => {
+    expect(hasNewlyProposedMilestone(emptyMilestoneLedger())).toBe(false);
   });
 });

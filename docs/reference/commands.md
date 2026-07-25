@@ -2000,9 +2000,10 @@ server operates on the `.cadence/` of `--repo` (or the launch cwd), exactly like
 the CLI. See **[Driving CADENCE over MCP](../mcp.md)** for setup and the full
 tool list.
 
-The server advertises 18 tools that wrap the same engine the CLI does:
-`cadence_progress`, `cadence_status`, `cadence_recommend`, `cadence_doctor`,
-`cadence_resume` (read); `cadence_draft_new`, `cadence_draft_check`,
+The server advertises 22 tools that wrap the same engine the CLI does:
+`cadence_progress`, `cadence_status`, `cadence_recommend`, `cadence_next`,
+`cadence_verify_coverage`, `cadence_verify_phase`, `cadence_explain`,
+`cadence_doctor`, `cadence_resume` (read); `cadence_draft_new`, `cadence_draft_check`,
 `cadence_draft_approve`, `cadence_build_task`, `cadence_settle`,
 `cadence_spec_new`, `cadence_spec_approve`, `cadence_handoff`,
 `cadence_recommendation_add`, `cadence_recommendation_promote`,

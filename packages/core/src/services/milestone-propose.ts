@@ -2,6 +2,7 @@ import { isEligible, runProposeMilestones } from '../intelligence/milestone.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
 import { findNearestCandidates } from '../intelligence/nearest-candidate.js';
 import type { CommandIO, CommandResult } from './io.js';
+import type { MilestoneLedger } from '@manehorizons/cadence-types';
 
 const ELIGIBILITY_PRECONDITION =
   'requires status=accepted and readiness in {ready-for-milestone, ready-for-cadence-spec}';
@@ -39,6 +40,24 @@ export async function buildEmptyResultMessage(repoRoot: string): Promise<string>
 }
 
 /**
+ * AC-2 (phase 221 T2): the single shared definition of "did this run produce
+ * any newly-proposed milestones". `ledger.milestones` is the FULL historical
+ * ledger (clusterMilestones returns survivors + freshly-clustered), not just
+ * this run's output — `ledger.milestones.length === 0` would wrongly suppress
+ * the zero-eligible enrichment whenever any old accepted/deferred/exported/
+ * closed milestone survives from a past run. The correct empty-this-run
+ * signal is "zero newly-proposed milestones" (`status === 'proposed'`).
+ * Both `milestoneProposeService` below and `cli/commands/milestone.ts`'s
+ * `propose` action call this one function — a prior whole-branch review
+ * caught this exact predicate fixed on only one of the two call sites when
+ * they were kept as independent copies, so this export exists to make that
+ * mistake structurally impossible.
+ */
+export function hasNewlyProposedMilestone(ledger: MilestoneLedger): boolean {
+  return ledger.milestones.some((m) => m.status === 'proposed');
+}
+
+/**
  * `cadence milestone propose` as a service seam (phase 153) — MCP adapter over
  * the shared `runProposeMilestones` core. Takes no arguments: it re-reads the
  * recommendation + milestone ledgers, clusters newly eligible recommendations
@@ -58,16 +77,7 @@ export async function milestoneProposeService(
   try {
     const ledger = await runProposeMilestones(repoRoot);
     io.out(`Proposed milestones: ${ledger.milestones.length}\n`);
-    // `ledger.milestones` is the FULL historical ledger (clusterMilestones
-    // returns survivors + freshly-clustered), not just this run's output —
-    // `.length === 0` would wrongly suppress the enrichment whenever any
-    // old accepted/deferred/exported/closed milestone survives from a past
-    // run. The correct empty-this-run signal is "zero newly-proposed
-    // milestones" (mirrors the fix already applied to the CLI's own call
-    // site in cli/commands/milestone.ts — caught by whole-branch review
-    // when this predicate was found only fixed there, not here).
-    const hasNewlyProposed = ledger.milestones.some((m) => m.status === 'proposed');
-    if (!hasNewlyProposed) {
+    if (!hasNewlyProposedMilestone(ledger)) {
       io.out(await buildEmptyResultMessage(repoRoot));
     }
     return { exitCode: 0, data: ledger };

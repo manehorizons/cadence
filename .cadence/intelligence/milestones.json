@@ -744,6 +744,30 @@
       ],
       "createdAt": "2026-07-25T15:53:30.117Z",
       "updatedAt": "2026-07-25T15:53:40.870Z"
+    },
+    {
+      "id": "mil-rec-rec-20260725-003",
+      "name": "Give the MCP surface real \"one engine\" parity with the CLI",
+      "objective": "Seven services (recommendation-add/promote/convert/archive, handoff, resume, doctor) exist only for MCP -- no CLI command imports them. CLI and MCP each independently reimplement the same Praxis operations and have already diverged: CLI's promote --ref records a shipped ref; the MCP-only service has no such field. milestone propose's duplicated eligibility predicate (with its own prior whole-branch-review-caught note) is the same hazard reintroduced. verify.ts/next.ts/explain.ts already have the (args, io: CommandIO) service shape but live in cli/commands/ where MCP can't reach them.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260725-003"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260725-003/SPEC.md",
+          "exportedAt": "2026-07-25T22:26:11.229Z"
+        }
+      ],
+      "createdAt": "2026-07-25T22:25:59.551Z",
+      "updatedAt": "2026-07-25T22:26:11.229Z"
     }
   ]
 }

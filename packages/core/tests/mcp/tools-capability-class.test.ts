@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { TOOLS } from '../../src/mcp/tools.js';
 
 const EXPECTED_COUNTS: Record<string, number> = {
-  READ_ONLY: 6,
+  // phase 221 added 4 READ_ONLY tools (cadence_next, cadence_verify_coverage,
+  // cadence_verify_phase, cadence_explain) for CLI/MCP parity.
+  READ_ONLY: 10,
   LEDGER_WRITE: 5,
   LOOP_WRITE: 4,
   APPROVAL_BYPASS: 2,
@@ -18,12 +20,12 @@ describe('TOOLS capabilityClass (AC-1)', () => {
     }
   });
 
-  it('per-class counts match the researched mapping exactly (6/5/4/2/1)', () => {
+  it('per-class counts match the researched mapping exactly (10/5/4/2/1)', () => {
     const counts: Record<string, number> = {};
     for (const tool of TOOLS) {
       counts[tool.capabilityClass] = (counts[tool.capabilityClass] ?? 0) + 1;
     }
-    // AC-1: counts must be exactly READ_ONLY:6, LEDGER_WRITE:5, LOOP_WRITE:4, APPROVAL_BYPASS:2, SETTLE:1
+    // AC-1: counts must be exactly READ_ONLY:10, LEDGER_WRITE:5, LOOP_WRITE:4, APPROVAL_BYPASS:2, SETTLE:1
     expect(counts).toEqual(EXPECTED_COUNTS);
   });
 

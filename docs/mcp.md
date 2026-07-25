@@ -78,7 +78,7 @@ the repo as the working directory (or pass `--repo <path>`).
 
 ## Tools
 
-The server advertises 18 tools that wrap the same engine the CLI uses. Each
+The server advertises 22 tools that wrap the same engine the CLI uses. Each
 returns both human-readable text and structured content.
 
 | Tool | Wraps | Kind |
@@ -86,6 +86,10 @@ returns both human-readable text and structured content.
 | `cadence_progress` | `cadence progress` | read — next suggested action |
 | `cadence_status` | `cadence status` | read — loop position, active phase/draft, AC results |
 | `cadence_recommend` | `cadence recommend` | read — ranked recommendations |
+| `cadence_next` | `cadence next` | read — ranked legal next moves at the current loop position |
+| `cadence_verify_coverage` | `cadence verify coverage --explain <acId>` | read — explain why an AC does or does not satisfy test coverage |
+| `cadence_verify_phase` | `cadence verify phase [phase] [num] \| --changed --base <ref>` | read — re-derive whether a settled phase's recorded AC coverage still holds |
+| `cadence_explain` | `cadence explain [concept]` | read — print an in-terminal explanation of a CADENCE concept |
 | `cadence_doctor` | `cadence doctor` | read — project setup health |
 | `cadence_resume` | `cadence resume` | read — replay the freshest handoff |
 | `cadence_draft_new` | `cadence draft new` | write — scaffold a DRAFT (IDLE→DRAFT) |

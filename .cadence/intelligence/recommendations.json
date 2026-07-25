@@ -4033,10 +4033,46 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-07-25T15:53:24.998Z",
-      "updatedAt": "2026-07-25T19:21:53.081Z",
       "shippedRef": "phase 220-praxis-ledger-unify, DRAFT 220-01",
       "archivedAt": "2026-07-25T19:21:53.081Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-25T15:53:24.998Z",
+      "updatedAt": "2026-07-25T19:21:53.081Z"
+    },
+    {
+      "id": "rec-20260725-003",
+      "title": "Give the MCP surface real \"one engine\" parity with the CLI",
+      "summary": "Seven services (recommendation-add/promote/convert/archive, handoff, resume, doctor) exist only for MCP -- no CLI command imports them. CLI and MCP each independently reimplement the same Praxis operations and have already diverged: CLI's promote --ref records a shipped ref; the MCP-only service has no such field. milestone propose's duplicated eligibility predicate (with its own prior whole-branch-review-caught note) is the same hazard reintroduced. verify.ts/next.ts/explain.ts already have the (args, io: CommandIO) service shape but live in cli/commands/ where MCP can't reach them.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "mcp",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/mcp/tools/recommendation.ts",
+        "packages/core/src/cli/commands/recommendation.ts",
+        "packages/core/src/services/milestone.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "221-mcp-cli-parity",
+      "scoutId": "claude-cadence-audit-20260725",
+      "createdAt": "2026-07-25T22:25:52.595Z",
+      "updatedAt": "2026-07-25T23:17:47.425Z",
+      "shippedRef": "phase 221-mcp-cli-parity / PR #TBD",
+      "archivedAt": "2026-07-25T23:17:47.425Z",
       "archiveReason": "shipped"
     }
   ]

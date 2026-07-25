@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { runExplain, CONCEPTS } from '../../src/cli/commands/explain.js';
+import { runExplain, CONCEPTS } from '../../src/services/explain.js';
 import { bufferIO } from '../../src/services/io.js';
 
 /** The concepts the command advertises in its list, in canonical form. */
