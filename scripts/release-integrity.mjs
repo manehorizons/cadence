@@ -9,6 +9,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const CADENCE_SCOPE = '@manehorizons/cadence-';
 const DEFAULT_ROOT = fileURLToPath(new URL('..', import.meta.url));
 
+// Real incident, 2026-07-25: the v1.51.0 Release workflow run (30136637570)
+// failed its post-publish "verify registry" step because host-codex still
+// showed the OLD version on npm after only 3 quick retries (~1s + 2s of
+// backoff, ~3s total) — even though the publish had already succeeded; all
+// four packages were independently confirmed correctly live moments later.
+// npm's CDN can take longer than that to propagate a fresh publish to every
+// edge node. This budget is deliberately only used post-publish
+// (runReleaseIntegrity) — the pre-publish idempotency check
+// (verifyNpmPublished) keeps the fast default so a genuinely unpublished
+// package is still detected quickly.
+const POST_PUBLISH_VERIFY_ATTEMPTS = 10;
+
 export function normalizeVersion(raw) {
   const version = String(raw ?? '').trim().replace(/^v/, '');
   if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) {
@@ -207,15 +219,19 @@ function upsertGitHubRelease(root, tag, title, notesFile, env) {
   return 'created';
 }
 
-async function verifyNpmPackages(packages, version, root, env) {
+async function verifyNpmPackages(packages, version, root, env, attempts = 3) {
   await Promise.all(
     packages.map((pkg) =>
-      retry(`npm view ${pkg.name}`, async () => {
-        const published = runCommand('npm', ['view', pkg.name, 'version'], { cwd: root, env });
-        if (published !== version) {
-          throw new Error(`${pkg.name} is ${published} on npm, expected ${version}`);
-        }
-      }),
+      retry(
+        `npm view ${pkg.name}`,
+        async () => {
+          const published = runCommand('npm', ['view', pkg.name, 'version'], { cwd: root, env });
+          if (published !== version) {
+            throw new Error(`${pkg.name} is ${published} on npm, expected ${version}`);
+          }
+        },
+        attempts,
+      ),
     ),
   );
 }
@@ -274,7 +290,7 @@ export async function runReleaseIntegrity({ root = DEFAULT_ROOT, env = process.e
     writeFileSync(notesFile, plan.notes);
     assertRemoteTag(root, plan.tag, env);
     const action = upsertGitHubRelease(root, plan.tag, plan.tag, notesFile, env);
-    await verifyNpmPackages(plan.packages, plan.version, root, env);
+    await verifyNpmPackages(plan.packages, plan.version, root, env, POST_PUBLISH_VERIFY_ATTEMPTS);
     assertRemoteTag(root, plan.tag, env);
     const releaseUrl = verifyGitHubRelease(root, plan.tag, env);
     return { ...plan, action, releaseUrl };

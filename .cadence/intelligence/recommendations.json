@@ -3954,11 +3954,43 @@
       "decisionIds": [
         "dec-20260724-002"
       ],
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:35:22.526Z",
-      "updatedAt": "2026-07-24T23:55:02.569Z",
       "shippedRef": "phase 217-changelog-currency-gate / PR #TBD",
+      "scoutId": "claude-cadence-audit-20260724",
       "archivedAt": "2026-07-24T23:55:02.569Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-24T14:35:22.526Z",
+      "updatedAt": "2026-07-24T23:55:02.569Z"
+    },
+    {
+      "id": "rec-20260725-001",
+      "title": "release-integrity.mjs's post-publish npm verification retries too briefly, causing false-red Release workflow runs",
+      "summary": "verifyNpmPackages's retry() call uses the default 3 attempts with 1s/2s delays (~3s total patience) to confirm each package is live on npm after publish. This is far shorter than npm's CDN can take to propagate a fresh publish -- confirmed live 2026-07-25: the v1.51.0 Release workflow run (30136637570) failed its 'Create GitHub Release and verify registry' step because host-codex still showed 1.50.0 on npm 3 retries (~3s) after publish, even though the publish itself succeeded and all four packages were confirmed correctly live on independent re-check moments later. The same retry() helper is also used pre-publish (verifyNpmPublished, to skip an already-done publish) where a fast failure IS correct behavior -- so the fix isn't a blanket timeout bump, it's giving the post-publish verification call in runReleaseIntegrity a distinctly more patient budget (e.g. ~10 attempts with a few seconds' backoff each, ~1-2 minutes total) while leaving the pre-publish idempotency check fast.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "release",
+        "ci",
+        "tooling"
+      ],
+      "affectedFiles": [
+        "scripts/release-integrity.mjs"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-25T01:10:14.583Z",
+      "updatedAt": "2026-07-25T01:27:17.144Z",
+      "shippedRef": "phase 218-release-verify-retry-budget / PR #TBD",
+      "archivedAt": "2026-07-25T01:27:17.144Z",
       "archiveReason": "shipped"
     }
   ]

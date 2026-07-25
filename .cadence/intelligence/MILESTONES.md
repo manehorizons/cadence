@@ -36,6 +36,7 @@ None.
 - mil-rec-rec-20260724-002 — P0 escape retro: externally-identified critical findings must land in the ledger at identification time → .cadence/intelligence/exports/mil-rec-rec-20260724-002/SPEC.md
 - mil-rec-rec-20260724-003 — Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency → .cadence/intelligence/exports/mil-rec-rec-20260724-003/SPEC.md
 - mil-rec-rec-20260724-005 — Close the trust envelope: gate the SETTLE capability class in MCP serve → .cadence/intelligence/exports/mil-rec-rec-20260724-005/SPEC.md
+- mil-rec-rec-20260725-001 — release-integrity.mjs's post-publish npm verification retries too briefly, causing false-red Release workflow runs → .cadence/intelligence/exports/mil-rec-rec-20260725-001/SPEC.md
 
 ## Closed
 

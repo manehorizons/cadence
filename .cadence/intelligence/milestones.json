@@ -686,6 +686,30 @@
       ],
       "createdAt": "2026-07-24T23:41:22.345Z",
       "updatedAt": "2026-07-24T23:41:26.662Z"
+    },
+    {
+      "id": "mil-rec-rec-20260725-001",
+      "name": "release-integrity.mjs's post-publish npm verification retries too briefly, causing false-red Release workflow runs",
+      "objective": "verifyNpmPackages's retry() call uses the default 3 attempts with 1s/2s delays (~3s total patience) to confirm each package is live on npm after publish. This is far shorter than npm's CDN can take to propagate a fresh publish -- confirmed live 2026-07-25: the v1.51.0 Release workflow run (30136637570) failed its 'Create GitHub Release and verify registry' step because host-codex still showed 1.50.0 on npm 3 retries (~3s) after publish, even though the publish itself succeeded and all four packages were confirmed correctly live on independent re-check moments later. The same retry() helper is also used pre-publish (verifyNpmPublished, to skip an already-done publish) where a fast failure IS correct behavior -- so the fix isn't a blanket timeout bump, it's giving the post-publish verification call in runReleaseIntegrity a distinctly more patient budget (e.g. ~10 attempts with a few seconds' backoff each, ~1-2 minutes total) while leaving the pre-publish idempotency check fast.",
+      "status": "exported",
+      "recommendationIds": [
+        "rec-20260725-001"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260725-001/SPEC.md",
+          "exportedAt": "2026-07-25T01:10:26.020Z"
+        }
+      ],
+      "createdAt": "2026-07-25T01:10:25.649Z",
+      "updatedAt": "2026-07-25T01:10:26.020Z"
     }
   ]
 }
