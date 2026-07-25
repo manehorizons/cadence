@@ -2,13 +2,45 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-25T02:46:46.614Z
+Generated at: 2026-07-24T14:37:15.765Z
 
 ## Advisory
 
 - cadence milestone propose
 
 ## Ranked
+
+### rec-20260724-005 — Close the trust envelope: gate the SETTLE capability class in MCP serve
+
+- score: 68/100 (raw 22.7)
+- status: candidate · ready: ready-for-milestone · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-milestone +7 · decay fresh +4 · prio high +5 ⇒ raw 22.7 (score 68)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
+
+### rec-20260724-001 — Minimum-evidence floor gate: refuse settle below a configured AC evidence level
+
+- score: 65/100 (raw 20.7)
+- status: candidate · ready: needs-decision · priority: critical · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio critical +8 ⇒ raw 20.7 (score 65)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
+
+### rec-20260724-003 — Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 ⇒ raw 17.7 (score 61)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
+
+### rec-20260724-002 — P0 escape retro: externally-identified critical findings must land in the ledger at identification time
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 ⇒ raw 14.7 (score 56)
+- scout: claude-cadence-audit-20260724
+- next: cadence milestone propose
 
 ### rec-20260724-004 — Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger
 
@@ -34,20 +66,6 @@ Generated at: 2026-07-25T02:46:46.614Z
 - scout: claude-cadence-audit-20260724
 - next: cadence milestone propose
 
-### rec-20260724-012 — pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented
-
-- score: 55/100 (raw 13.7)
-- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
-- next: cadence milestone propose
-
-### rec-20260724-013 — cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json — can silently collide with a dangling evidence row
-
-- score: 55/100 (raw 13.7)
-- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 ⇒ raw 13.7 (score 55)
-- next: cadence milestone propose
-
 ### rec-20260712-009 — Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY
 
 - score: 53/100 (raw 12.7)
@@ -71,13 +89,6 @@ Generated at: 2026-07-25T02:46:46.614Z
 - next: cadence milestone propose
 
 ### rec-20260718-005 — Document the invisible-background-subagent-AskUserQuestion gap in host-adapter/dispatch guidance
-
-- score: 53/100 (raw 12.7)
-- status: candidate · ready: raw-idea · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 ⇒ raw 12.7 (score 53)
-- next: cadence milestone propose
-
-### rec-20260724-011 — cadence build task / done <id> silently accepts a malformed task id instead of refusing
 
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
@@ -145,14 +156,6 @@ Generated at: 2026-07-25T02:46:46.614Z
 - next: cadence milestone propose
 
 ### rec-20260724-009 — SEO differentiation plan for the Cadence name collision ahead of the suite reveal
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 ⇒ raw 10.7 (score 50)
-- scout: claude-cadence-audit-20260724
-- next: cadence milestone propose
-
-### rec-20260724-010 — milestone premortem has no entry-removal/edit path once an operator-authored item is added
 
 - score: 50/100 (raw 10.7)
 - status: candidate · ready: raw-idea · priority: low · decay: fresh

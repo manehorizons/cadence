@@ -36,7 +36,6 @@ None.
 - mil-rec-rec-20260724-002 — P0 escape retro: externally-identified critical findings must land in the ledger at identification time → .cadence/intelligence/exports/mil-rec-rec-20260724-002/SPEC.md
 - mil-rec-rec-20260724-003 — Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency → .cadence/intelligence/exports/mil-rec-rec-20260724-003/SPEC.md
 - mil-rec-rec-20260724-005 — Close the trust envelope: gate the SETTLE capability class in MCP serve → .cadence/intelligence/exports/mil-rec-rec-20260724-005/SPEC.md
-- mil-rec-rec-20260724-013 — cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json — can silently collide with a dangling evidence row → .cadence/intelligence/exports/mil-rec-rec-20260724-013/SPEC.md
 - mil-rec-rec-20260725-001 — release-integrity.mjs's post-publish npm verification retries too briefly, causing false-red Release workflow runs → .cadence/intelligence/exports/mil-rec-rec-20260725-001/SPEC.md
 - mil-rec-rec-20260725-002 — Deepen the Praxis ledger into one module → .cadence/intelligence/exports/mil-rec-rec-20260725-002/SPEC.md
 - mil-rec-rec-20260725-003 — Give the MCP surface real "one engine" parity with the CLI → .cadence/intelligence/exports/mil-rec-rec-20260725-003/SPEC.md
