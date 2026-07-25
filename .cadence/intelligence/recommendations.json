@@ -1236,35 +1236,6 @@
       "decisionIds": [],
       "createdAt": "2026-07-24T23:14:13.477Z",
       "updatedAt": "2026-07-24T23:14:13.477Z"
-    },
-    {
-      "id": "rec-20260724-013",
-      "title": "cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json — can silently collide with a dangling evidence row",
-      "summary": "Discovered 2026-07-24 during a rebase-conflict repair: an earlier session's mis-resolved rebase conflict left .cadence/intelligence/RECOMMENDATIONS.md and evidence.json carrying a recommendation (id rec-20260724-011) with NO backing entry in recommendations.json (the actual source of truth) — a half-written recommendation from an interrupted/incomplete cadence recommendation add call, or a hand-edited conflict resolution. A later, unrelated cadence recommendation add call computed its next id purely from recommendations.json's current max id, correctly saw '010' as the ceiling, and re-minted 'rec-20260724-011' for a completely different finding — colliding with the orphaned evidence row (which still pointed 'recommendationId': 'rec-20260724-011' at the wrong content). Root cause: id-minting logic doesn't cross-check evidence.json's recommendationId references, so a dangling evidence row (with no matching recommendations.json entry) is invisible to it. Fix: either have id-minting take the max across both recommendations.json ids AND evidence.json's referenced recommendationIds, or add a cadence doctor check that flags evidence rows with no matching recommendation (which would have caught this drift immediately instead of it surviving 6 handoff commits unnoticed).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "intelligence"
-      ],
-      "affectedFiles": [
-        "packages/core/src/services/recommendation-add.ts",
-        "packages/core/src/services/doctor.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260724-015"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-24T23:14:27.720Z",
-      "updatedAt": "2026-07-24T23:14:27.720Z"
     }
   ],
   "archived": [
@@ -3987,10 +3958,43 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-07-25T01:10:14.583Z",
-      "updatedAt": "2026-07-25T01:27:17.144Z",
       "shippedRef": "phase 218-release-verify-retry-budget / PR #TBD",
       "archivedAt": "2026-07-25T01:27:17.144Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-25T01:10:14.583Z",
+      "updatedAt": "2026-07-25T01:27:17.144Z"
+    },
+    {
+      "id": "rec-20260724-013",
+      "title": "cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json — can silently collide with a dangling evidence row",
+      "summary": "Discovered 2026-07-24 during a rebase-conflict repair: an earlier session's mis-resolved rebase conflict left .cadence/intelligence/RECOMMENDATIONS.md and evidence.json carrying a recommendation (id rec-20260724-011) with NO backing entry in recommendations.json (the actual source of truth) — a half-written recommendation from an interrupted/incomplete cadence recommendation add call, or a hand-edited conflict resolution. A later, unrelated cadence recommendation add call computed its next id purely from recommendations.json's current max id, correctly saw '010' as the ceiling, and re-minted 'rec-20260724-011' for a completely different finding — colliding with the orphaned evidence row (which still pointed 'recommendationId': 'rec-20260724-011' at the wrong content). Root cause: id-minting logic doesn't cross-check evidence.json's recommendationId references, so a dangling evidence row (with no matching recommendations.json entry) is invisible to it. Fix: either have id-minting take the max across both recommendations.json ids AND evidence.json's referenced recommendationIds, or add a cadence doctor check that flags evidence rows with no matching recommendation (which would have caught this drift immediately instead of it surviving 6 handoff commits unnoticed).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/recommendation-add.ts",
+        "packages/core/src/services/doctor.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-015"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "219-recommendation-id-cross-check",
+      "createdAt": "2026-07-24T23:14:27.720Z",
+      "updatedAt": "2026-07-25T03:09:03.638Z",
+      "shippedRef": "phase 219-recommendation-id-cross-check / PR #TBD",
+      "archivedAt": "2026-07-25T03:09:03.638Z",
       "archiveReason": "shipped"
     }
   ]

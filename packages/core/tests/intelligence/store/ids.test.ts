@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { emptyRecommendationLedger, type Recommendation } from '@manehorizons/cadence-types';
+import {
+  emptyEvidenceLedger,
+  emptyRecommendationLedger,
+  type Evidence,
+  type Recommendation,
+} from '@manehorizons/cadence-types';
 import { nextRecommendationId } from '../../../src/intelligence/store/ids.js';
 
 // Fixed clock so the day-prefix in generated ids is deterministic across
@@ -55,6 +60,20 @@ function activeRecommendation(id: string): Recommendation {
   };
 }
 
+// Simulates a dangling `evidence.json` row left behind by a bad rebase-conflict
+// resolution or an interrupted `cadence recommendation add` call: an Evidence
+// row whose `recommendationId` points at an id with NO matching entry in
+// `recommendations.json` (neither active nor archived).
+function danglingEvidence(recommendationId: string): Evidence {
+  return {
+    id: 'ev-20260724-001',
+    recommendationId,
+    kind: 'note',
+    summary: 'orphaned evidence row referencing an id no recommendation record has',
+    createdAt: NOW.toISOString(),
+  };
+}
+
 describe('nextRecommendationId', () => {
   it('AC-1: skips a sequence number already used by an archived same-day recommendation, never reissuing it', () => {
     const ledger = emptyRecommendationLedger();
@@ -81,5 +100,28 @@ describe('nextRecommendationId', () => {
     const id = nextRecommendationId(ledger, NOW);
 
     expect(id).toBe(`${TODAY_PREFIX}003`);
+  });
+
+  it('AC-1: nextRecommendationId does not collide with a dangling evidence.json recommendationId reference', () => {
+    // The recommendation ledger's highest same-day sequence number is 010 —
+    // both the active and archived buckets stop there.
+    const ledger = emptyRecommendationLedger();
+    ledger.recommendations.push(activeRecommendation(`${TODAY_PREFIX}010`));
+
+    // evidence.json has an orphaned row pointing one sequence number past the
+    // ledger's max — e.g. left behind by a bad rebase-conflict resolution or an
+    // interrupted `cadence recommendation add` call. Nothing in
+    // recommendations.json (active or archived) has this id.
+    const evidenceLedger = emptyEvidenceLedger();
+    evidenceLedger.evidence.push(danglingEvidence(`${TODAY_PREFIX}011`));
+
+    // Post-fix contract: nextRecommendationId must also cross-check the
+    // evidence ledger so it never re-mints an id a dangling evidence row
+    // already references. It must skip past 011 (dangling) straight to 012 —
+    // not silently collide with the orphaned evidence row's 011.
+    const id = nextRecommendationId(ledger, NOW, evidenceLedger);
+
+    expect(id).toBe(`${TODAY_PREFIX}012`);
+    expect(id).not.toBe(`${TODAY_PREFIX}011`);
   });
 });

@@ -9,15 +9,26 @@ function slugDate(now: Date): string {
   return now.toISOString().slice(0, 10).replaceAll('-', '');
 }
 
-export function nextRecommendationId(ledger: RecommendationLedger, now: Date): string {
+export function nextRecommendationId(
+  ledger: RecommendationLedger,
+  now: Date,
+  evidenceLedger?: EvidenceLedger,
+): string {
   const prefix = `rec-${slugDate(now)}-`;
-  const max = ledger.recommendations
+  const ledgerMax = ledger.recommendations
     .map((r) => r.id)
     .concat(ledger.archived.map((r) => r.id))
     .filter((id) => id.startsWith(prefix))
     .map((id) => Number.parseInt(id.slice(prefix.length), 10))
     .filter((n) => Number.isFinite(n))
     .reduce((a, b) => Math.max(a, b), 0);
+  const evidenceMax = (evidenceLedger?.evidence ?? [])
+    .map((ev) => ev.recommendationId)
+    .filter((id) => id.startsWith(prefix))
+    .map((id) => Number.parseInt(id.slice(prefix.length), 10))
+    .filter((n) => Number.isFinite(n))
+    .reduce((a, b) => Math.max(a, b), 0);
+  const max = Math.max(ledgerMax, evidenceMax);
   return `${prefix}${String(max + 1).padStart(3, '0')}`;
 }
 
