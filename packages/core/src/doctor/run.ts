@@ -10,7 +10,7 @@ import { loadConfig } from '../config/loader.js';
 import { assessReadiness, isClaudeCodeSession } from '../activate/assess.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
-import { readRecommendationLedger } from '../intelligence/store/io.js';
+import { readRecommendationLedger, readEvidenceLedger } from '../intelligence/store/io.js';
 import { detectProjectLanguage } from '../init/plan.js';
 import { getProfileForExtension } from '../verify/coverage-profiles/registry.js';
 import { CADENCE_OWNED_GITIGNORE_ENTRIES } from '../init/gitignore.js';
@@ -772,6 +772,47 @@ export async function checkRecommendationShippedDrift(root: string): Promise<Doc
   }
 }
 
+/**
+ * Surface `evidence.json` rows whose `recommendationId` matches neither the
+ * active `recommendations` array nor `archived` — a dangling FK that, left
+ * unnoticed, can silently collide with a freshly minted recommendation id
+ * (phase 219, T3). Read-only, best-effort, never throws (doctor convention,
+ * mirrors `recommendation-shipped-drift`): any read/parse error on either
+ * ledger degrades to "no finding" rather than blocking the rest of `doctor`.
+ */
+export async function checkOrphanedEvidence(root: string): Promise<DoctorCheck> {
+  try {
+    const recLedger = await readRecommendationLedger(root);
+    const evidenceLedger = await readEvidenceLedger(root);
+    const knownIds = new Set([
+      ...recLedger.recommendations.map((r) => r.id),
+      ...recLedger.archived.map((r) => r.id),
+    ]);
+    const orphaned = evidenceLedger.evidence.filter((e) => !knownIds.has(e.recommendationId));
+    if (orphaned.length === 0) {
+      return pass(
+        'orphaned-evidence',
+        'No evidence rows reference a missing recommendation.',
+      );
+    }
+    const detail = orphaned
+      .map((e) => `${e.id} references missing recommendation ${e.recommendationId}`)
+      .join('; ');
+    return fail(
+      'orphaned-evidence',
+      'warning',
+      `Orphaned evidence row(s): ${detail}.`,
+      'Investigate whether the referenced recommendation was deleted by hand or the evidence row was mis-linked; ' +
+        'restore the recommendation from version control or remove the stale evidence row from .cadence/intelligence/evidence.json.',
+    );
+  } catch {
+    return pass(
+      'orphaned-evidence',
+      'Orphaned-evidence check not determinable (best-effort) — skipped.',
+    );
+  }
+}
+
 /** A representative extension per `ProjectLanguage` (`../init/plan.js`), used
  * only to probe the live coverage-profile registry — not a duplicate source
  * of truth for which languages exist, since `getProfileForExtension` is the
@@ -936,6 +977,7 @@ export async function runDoctor(
     await checkHandoffRetention(root),
     await checkVerificationReadiness(root),
     await checkRecommendationShippedDrift(root),
+    await checkOrphanedEvidence(root),
     await checkCoverageModeLanguageSupport(root),
   ];
   return rollup(checks);

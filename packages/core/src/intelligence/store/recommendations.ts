@@ -39,7 +39,7 @@ export async function addRecommendation(
   const evidenceLedger = await readEvidenceLedger(root);
   const now = new Date();
   const ts = now.toISOString();
-  const recommendationId = nextRecommendationId(ledger, now);
+  const recommendationId = nextRecommendationId(ledger, now, evidenceLedger);
   const evidence: Evidence | null = input.evidenceSummary
     ? {
         id: nextEvidenceId(evidenceLedger, now),

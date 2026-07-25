@@ -660,19 +660,3 @@ During phase 213's build, running 'cadence done 213-01-T1' (a fully-qualified-lo
 - next: cadence milestone propose
 
 Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.
-
-## rec-20260724-013 — cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json — can silently collide with a dangling evidence row
-
-- status: candidate
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, intelligence
-- files: packages/core/src/services/recommendation-add.ts, packages/core/src/services/doctor.ts
-- evidence: Live repro 2026-07-24: fixed via git-history surgery on local main's unpushed commits (5 cherry-picked commits rebuilt from the last-consistent point) after an Opus forensic investigation traced the split to a specific earlier-session commit whose rebase conflict resolution touched recommendations.json, RECOMMENDATIONS.md, and evidence.json inconsistently (--ours for the JSON alone, --theirs for the other two). Full investigation transcript available in this session's conversation history.
-- next: cadence milestone propose
-
-Discovered 2026-07-24 during a rebase-conflict repair: an earlier session's mis-resolved rebase conflict left .cadence/intelligence/RECOMMENDATIONS.md and evidence.json carrying a recommendation (id rec-20260724-011) with NO backing entry in recommendations.json (the actual source of truth) — a half-written recommendation from an interrupted/incomplete cadence recommendation add call, or a hand-edited conflict resolution. A later, unrelated cadence recommendation add call computed its next id purely from recommendations.json's current max id, correctly saw '010' as the ceiling, and re-minted 'rec-20260724-011' for a completely different finding — colliding with the orphaned evidence row (which still pointed 'recommendationId': 'rec-20260724-011' at the wrong content). Root cause: id-minting logic doesn't cross-check evidence.json's recommendationId references, so a dangling evidence row (with no matching recommendations.json entry) is invisible to it. Fix: either have id-minting take the max across both recommendations.json ids AND evidence.json's referenced recommendationIds, or add a cadence doctor check that flags evidence rows with no matching recommendation (which would have caught this drift immediately instead of it surviving 6 handoff commits unnoticed).

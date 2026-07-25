@@ -1,0 +1,32 @@
+{
+  "draftId": "219-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Failing regression test added (ids.test.ts) proving nextRecommendationId collides with a dangling evidence.json recommendationId reference. Confirmed red for the expected reason (mints rec-...-011, colliding with orphaned evidence row, instead of the desired rec-...-012). Independently re-run: 1 failed as expected.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-25T02:59:21.706Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added checkOrphanedEvidence doctor check (packages/core/src/doctor/run.ts) + orphaned-evidence.test.ts (2 tests). Independently re-ran full doctor + intelligence-store suite: 18/19 files, 108/109 tests pass (only T1's intentionally-red regression test fails). Matches AC-2 exactly, best-effort try/catch degrade-to-pass on read errors.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-25T02:59:27.470Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "nextRecommendationId now takes an optional EvidenceLedger param and cross-checks evidence.json's recommendationId references (same day-prefix parsing as the existing lists); addRecommendation passes its already-loaded evidenceLedger through. Independently re-verified: tests/intelligence/store/ 3 files/11 tests pass (T1's regression test now green, mints rec-...-012 not -011), typecheck clean.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/219-recommendation-id-cross-check/packages/core/src/intelligence/store/ids.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/219-recommendation-id-cross-check/packages/core/src/intelligence/store/recommendations.ts"
+      ],
+      "updatedAt": "2026-07-25T03:01:00.080Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Full verification independently run in main thread: test (355 files / 3147 tests, exit 0), typecheck (clean, exit 0), lint (clean, exit 0), build (clean, exit 0).",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-25T03:03:41.848Z"
+    }
+  }
+}
