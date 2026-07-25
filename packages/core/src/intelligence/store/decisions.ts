@@ -1,19 +1,62 @@
 import {
+  IntelligenceDecisionLedgerZ,
+  emptyIntelligenceDecisionLedger,
   type IntelligenceDecision,
   type IntelligenceDecisionLedger,
   type RecommendationLedger,
 } from '@manehorizons/cadence-types';
+import { atomicWriteText } from '../../state/atomic-write.js';
+import { renderDecisionsMd } from '../render-decision.js';
+import { readLedger, writeLedger, type SubjectLedgerSpec } from './ledger.js';
 import { nextIntelligenceDecisionId } from './ids.js';
+import { decisionsMdPath, decisionsPath } from './paths.js';
 import {
   readAssumptionLedger,
   readEvidenceLedger,
-  readIntelligenceDecisionLedger,
   readRecommendationLedger,
   rerenderRecommendationsMdIfPresent,
-  writeIntelligenceDecisionLedger,
   writeIntelligenceLedgers,
 } from './io.js';
 import { deriveRecommendationLinks } from './recommendations.js';
+
+// The decision ledger's on-disk schema (packages/types/src/intelligence.ts)
+// has no `archived` array — only recommendations soft-archives. `records()`
+// maps that fixed-empty; `withRecords()` asserts nothing ever tries to
+// smuggle archived records back in (nothing in this subject produces any).
+export const decisionLedgerSpec: SubjectLedgerSpec<
+  IntelligenceDecision,
+  IntelligenceDecisionLedger,
+  IntelligenceDecision['status']
+> = {
+  parse: (data) => IntelligenceDecisionLedgerZ.parse(data),
+  empty: emptyIntelligenceDecisionLedger,
+  idPrefix: 'dec',
+  idOf: (d) => d.id,
+  records: (ledger) => ({ live: ledger.decisions, archived: [] }),
+  withRecords: (ledger, records) => {
+    if (records.archived.length !== 0) {
+      throw new Error('decision ledger has no archived array; refusing to drop non-empty archived records');
+    }
+    return { schemaVersion: 1, decisions: records.live };
+  },
+};
+
+// Exported (not just used internally) because these are the canonical
+// read/write functions for this subject — `io.ts` re-exports them rather
+// than keeping its own hand-rolled copies (phase 220 T4).
+export async function readIntelligenceDecisionLedger(
+  root: string,
+): Promise<IntelligenceDecisionLedger> {
+  return readLedger(decisionLedgerSpec, decisionsPath(root));
+}
+
+export async function writeIntelligenceDecisionLedger(
+  root: string,
+  ledger: IntelligenceDecisionLedger,
+): Promise<void> {
+  await writeLedger(decisionLedgerSpec, decisionsPath(root), ledger, { mode: 0o600 });
+  await atomicWriteText(decisionsMdPath(root), renderDecisionsMd(ledger));
+}
 
 export type AddIntelligenceDecisionInput = {
   recommendationId?: string;
@@ -39,7 +82,7 @@ export async function addIntelligenceDecision(
   // on reconcile. Keeps byte-equality between addIntelligenceDecision writes
   // and reconcile writes (relied on by Slice-17 AC-6).
   const out: IntelligenceDecision = {
-    id: nextIntelligenceDecisionId(decLedger, now),
+    id: nextIntelligenceDecisionId(decLedger, now, recLedger ?? undefined),
     ...(input.recommendationId !== undefined ? { recommendationId: input.recommendationId } : {}),
     title: input.title,
     rationale: input.rationale,

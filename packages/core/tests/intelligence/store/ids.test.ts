@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
+  emptyAssumptionLedger,
   emptyEvidenceLedger,
+  emptyIntelligenceDecisionLedger,
   emptyRecommendationLedger,
   type Evidence,
+  type IntelligenceDecision,
   type Recommendation,
 } from '@manehorizons/cadence-types';
-import { nextRecommendationId } from '../../../src/intelligence/store/ids.js';
+import {
+  nextAssumptionId,
+  nextEvidenceId,
+  nextIntelligenceDecisionId,
+  nextRecommendationId,
+} from '../../../src/intelligence/store/ids.js';
 
 // Fixed clock so the day-prefix in generated ids is deterministic across
 // runs/timezones — never Date.now() / new Date() with no args here.
@@ -123,5 +131,171 @@ describe('nextRecommendationId', () => {
 
     expect(id).toBe(`${TODAY_PREFIX}012`);
     expect(id).not.toBe(`${TODAY_PREFIX}011`);
+  });
+});
+
+// Phase 220 T5: same Phase 219 collision shape, generalized to the other
+// three id-minting subjects via `mintId` + each subject's spec.
+const EV_PREFIX = 'ev-20260719-';
+const AS_PREFIX = 'as-20260719-';
+const DEC_PREFIX = 'dec-20260719-';
+
+function recommendationWithLinks(
+  id: string,
+  links: Partial<Pick<Recommendation, 'evidenceIds' | 'assumptionIds' | 'decisionIds'>>,
+): Recommendation {
+  return { ...activeRecommendation(id), ...links };
+}
+
+// Unlike `danglingEvidence` above (fixed id, parameterized `recommendationId`
+// — built for the nextRecommendationId cross-check tests), this one seeds the
+// evidence ledger's own sequence with a parameterized `id`.
+function existingEvidence(id: string): Evidence {
+  return {
+    id,
+    recommendationId: `${TODAY_PREFIX}001`,
+    kind: 'note',
+    summary: 'seeds the evidence ledger for id-sequencing regression tests',
+    createdAt: NOW.toISOString(),
+  };
+}
+
+function decision(id: string, overrides: Partial<IntelligenceDecision> = {}): IntelligenceDecision {
+  return {
+    id,
+    title: 'synthetic decision',
+    rationale: 'used only to seed the decision ledger for id-sequencing regression tests',
+    status: 'active',
+    decidedAt: NOW.toISOString(),
+    supersedes: [],
+    ...overrides,
+  };
+}
+
+describe('nextEvidenceId', () => {
+  it('still picks the next id right after the ledger\'s own highest same-day sequence number', () => {
+    const ledger = emptyEvidenceLedger();
+    ledger.evidence.push(existingEvidence(`${EV_PREFIX}001`));
+
+    const id = nextEvidenceId(ledger, NOW);
+
+    expect(id).toBe(`${EV_PREFIX}002`);
+  });
+
+  it('AC-2: does not collide with a dangling recommendation.evidenceIds[] reference', () => {
+    // evidence.json's own highest same-day sequence number is 001.
+    const ledger = emptyEvidenceLedger();
+    ledger.evidence.push(existingEvidence(`${EV_PREFIX}001`));
+
+    // recommendations.json references a sequence number one past evidence.json's
+    // own max — e.g. an interrupted `cadence recommendation add` call left the
+    // recommendation's evidenceIds[] pointing at a row that never made it into
+    // evidence.json.
+    const recLedger = emptyRecommendationLedger();
+    recLedger.recommendations.push(
+      recommendationWithLinks(`${TODAY_PREFIX}001`, { evidenceIds: [`${EV_PREFIX}002`] }),
+    );
+
+    const id = nextEvidenceId(ledger, NOW, recLedger);
+
+    expect(id).toBe(`${EV_PREFIX}003`);
+    expect(id).not.toBe(`${EV_PREFIX}002`);
+  });
+});
+
+describe('nextAssumptionId', () => {
+  it('still picks the next id right after the ledger\'s own highest same-day sequence number', () => {
+    const ledger = emptyAssumptionLedger();
+    ledger.assumptions.push({
+      id: `${AS_PREFIX}001`,
+      recommendationId: `${TODAY_PREFIX}001`,
+      text: 'synthetic assumption',
+      status: 'open',
+      createdAt: NOW.toISOString(),
+    });
+
+    const id = nextAssumptionId(ledger, NOW);
+
+    expect(id).toBe(`${AS_PREFIX}002`);
+  });
+
+  it('AC-2: does not collide with a dangling recommendation.assumptionIds[] reference', () => {
+    // assumptions.json's own highest same-day sequence number is 001.
+    const ledger = emptyAssumptionLedger();
+    ledger.assumptions.push({
+      id: `${AS_PREFIX}001`,
+      recommendationId: `${TODAY_PREFIX}001`,
+      text: 'synthetic assumption',
+      status: 'open',
+      createdAt: NOW.toISOString(),
+    });
+
+    // recommendations.json references a sequence number one past assumptions.json's
+    // own max — a dangling assumptionIds[] entry left by a bad rebase-conflict
+    // resolution.
+    const recLedger = emptyRecommendationLedger();
+    recLedger.recommendations.push(
+      recommendationWithLinks(`${TODAY_PREFIX}001`, { assumptionIds: [`${AS_PREFIX}002`] }),
+    );
+
+    const id = nextAssumptionId(ledger, NOW, recLedger);
+
+    expect(id).toBe(`${AS_PREFIX}003`);
+    expect(id).not.toBe(`${AS_PREFIX}002`);
+  });
+});
+
+describe('nextIntelligenceDecisionId', () => {
+  it('still picks the next id right after the ledger\'s own highest same-day sequence number', () => {
+    const ledger = emptyIntelligenceDecisionLedger();
+    ledger.decisions.push(decision(`${DEC_PREFIX}001`));
+
+    const id = nextIntelligenceDecisionId(ledger, NOW);
+
+    expect(id).toBe(`${DEC_PREFIX}002`);
+  });
+
+  it('AC-2: does not collide with a dangling recommendation.decisionIds[] reference', () => {
+    // decisions.json's own highest same-day sequence number is 001.
+    const ledger = emptyIntelligenceDecisionLedger();
+    ledger.decisions.push(decision(`${DEC_PREFIX}001`));
+
+    // recommendations.json references a sequence number one past decisions.json's
+    // own max — a dangling decisionIds[] entry left by a bad rebase-conflict
+    // resolution.
+    const recLedger = emptyRecommendationLedger();
+    recLedger.recommendations.push(
+      recommendationWithLinks(`${TODAY_PREFIX}001`, { decisionIds: [`${DEC_PREFIX}002`] }),
+    );
+
+    const id = nextIntelligenceDecisionId(ledger, NOW, recLedger);
+
+    expect(id).toBe(`${DEC_PREFIX}003`);
+    expect(id).not.toBe(`${DEC_PREFIX}002`);
+  });
+
+  it('AC-2: does not collide with a dangling supersededBy reference on a sibling decision', () => {
+    // decisions.json's own highest same-day sequence number is 001, but that
+    // decision's own `supersededBy` points one sequence number past it — e.g.
+    // a superseding decision that was later deleted without updating this
+    // back-reference.
+    const ledger = emptyIntelligenceDecisionLedger();
+    ledger.decisions.push(decision(`${DEC_PREFIX}001`, { supersededBy: `${DEC_PREFIX}002` }));
+
+    const id = nextIntelligenceDecisionId(ledger, NOW);
+
+    expect(id).toBe(`${DEC_PREFIX}003`);
+    expect(id).not.toBe(`${DEC_PREFIX}002`);
+  });
+
+  it('AC-2: does not collide with a dangling supersedes reference on a sibling decision', () => {
+    // Same shape, via the inverse `supersedes` array instead.
+    const ledger = emptyIntelligenceDecisionLedger();
+    ledger.decisions.push(decision(`${DEC_PREFIX}001`, { supersedes: [`${DEC_PREFIX}002`] }));
+
+    const id = nextIntelligenceDecisionId(ledger, NOW);
+
+    expect(id).toBe(`${DEC_PREFIX}003`);
+    expect(id).not.toBe(`${DEC_PREFIX}002`);
   });
 });

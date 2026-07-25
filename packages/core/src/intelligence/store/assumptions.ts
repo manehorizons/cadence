@@ -1,18 +1,52 @@
 import {
+  AssumptionLedgerZ,
+  emptyAssumptionLedger,
   type Assumption,
   type AssumptionLedger,
 } from '@manehorizons/cadence-types';
+import { atomicWriteText } from '../../state/atomic-write.js';
+import { renderAssumptionsMd } from '../render-assumption.js';
+import { readLedger, writeLedger, type SubjectLedgerSpec } from './ledger.js';
 import { nextAssumptionId } from './ids.js';
+import { assumptionsMdPath, assumptionsPath } from './paths.js';
 import {
-  readAssumptionLedger,
   readEvidenceLedger,
   readIntelligenceDecisionLedger,
   readRecommendationLedger,
   rerenderRecommendationsMdIfPresent,
-  writeAssumptionLedger,
   writeIntelligenceLedgers,
 } from './io.js';
 import { deriveRecommendationLinks } from './recommendations.js';
+
+// The assumption ledger's on-disk schema (packages/types/src/intelligence.ts)
+// has no `archived` array — only recommendations soft-archives. `records()`
+// maps that fixed-empty; `withRecords()` asserts nothing ever tries to smuggle
+// archived records back in (nothing in this subject produces any).
+export const assumptionLedgerSpec: SubjectLedgerSpec<Assumption, AssumptionLedger, Assumption['status']> = {
+  parse: (data) => AssumptionLedgerZ.parse(data),
+  empty: emptyAssumptionLedger,
+  idPrefix: 'as',
+  idOf: (a) => a.id,
+  records: (ledger) => ({ live: ledger.assumptions, archived: [] }),
+  withRecords: (ledger, records) => {
+    if (records.archived.length !== 0) {
+      throw new Error('assumption ledger has no archived array; refusing to drop non-empty archived records');
+    }
+    return { schemaVersion: 1, assumptions: records.live };
+  },
+};
+
+// Exported (not just used internally) because these are the canonical
+// read/write functions for this subject — `io.ts` re-exports them rather
+// than keeping its own hand-rolled copies (phase 220 T4).
+export async function readAssumptionLedger(root: string): Promise<AssumptionLedger> {
+  return readLedger(assumptionLedgerSpec, assumptionsPath(root));
+}
+
+export async function writeAssumptionLedger(root: string, ledger: AssumptionLedger): Promise<void> {
+  await writeLedger(assumptionLedgerSpec, assumptionsPath(root), ledger, { mode: 0o600 });
+  await atomicWriteText(assumptionsMdPath(root), renderAssumptionsMd(ledger));
+}
 
 export type AddAssumptionInput = {
   recommendationId: string;
@@ -30,7 +64,7 @@ export async function addAssumption(
   const asLedger = await readAssumptionLedger(root);
   const now = new Date();
   const a: Assumption = {
-    id: nextAssumptionId(asLedger, now),
+    id: nextAssumptionId(asLedger, now, recLedger),
     recommendationId: input.recommendationId,
     text: input.text,
     status: 'open',

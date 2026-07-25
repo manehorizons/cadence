@@ -3,6 +3,8 @@ import type {
   AssumptionLedger,
   EvidenceLedger,
   IntelligenceDecisionLedger,
+  IntelligenceMilestone,
+  MilestoneLedger,
   Recommendation,
   RecommendationLedger,
 } from '@manehorizons/cadence-types';
@@ -26,6 +28,26 @@ function mkRec(overrides: Partial<Recommendation> = {}): Recommendation {
     evidenceIds: [],
     assumptionIds: [],
     decisionIds: [],
+    createdAt: '2026-05-20T00:00:00.000Z',
+    updatedAt: '2026-05-20T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function mkMilestone(overrides: Partial<IntelligenceMilestone> = {}): IntelligenceMilestone {
+  return {
+    id: 'mil-grp-x',
+    name: 'm',
+    objective: 'o',
+    status: 'proposed',
+    recommendationIds: ['rec-1'],
+    preMortem: {
+      likelyFailureModes: [],
+      hiddenDependencies: [],
+      driftRisks: [],
+      outOfScope: [],
+    },
+    exportTargets: [],
     createdAt: '2026-05-20T00:00:00.000Z',
     updatedAt: '2026-05-20T00:00:00.000Z',
     ...overrides,
@@ -350,6 +372,90 @@ describe('computeIntelligenceAudit (Slice 19)', () => {
       expect(r.byKind['stale-converted-phase']).toHaveLength(1);
       expect(r.byKind['stale-supersededby']).toHaveLength(1);
       expect(r.findings).toHaveLength(2);
+    });
+  });
+
+  describe('Phase 220 T6: orphan-milestone', () => {
+    it('milestone referencing a LIVE rec id → no finding', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [mkRec({ id: 'rec-1' })],
+      };
+      const milL: MilestoneLedger = {
+        schemaVersion: 1,
+        milestones: [mkMilestone({ id: 'mil-1', recommendationIds: ['rec-1'] })],
+      };
+      const r = computeIntelligenceAudit(recL, emptyEv, emptyAs, emptyDec, new Set(), milL);
+      expect(r.byKind['orphan-milestone']).toEqual([]);
+    });
+
+    it('milestone referencing a merely-ARCHIVED rec id → NOT a broken reference (no finding)', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [],
+        archived: [mkRec({ id: 'rec-archived' })],
+      };
+      const milL: MilestoneLedger = {
+        schemaVersion: 1,
+        milestones: [mkMilestone({ id: 'mil-1', recommendationIds: ['rec-archived'] })],
+      };
+      const r = computeIntelligenceAudit(recL, emptyEv, emptyAs, emptyDec, new Set(), milL);
+      expect(r.byKind['orphan-milestone']).toEqual([]);
+    });
+
+    it('milestone referencing a fully-deleted rec id (neither live nor archived) → one orphan-milestone finding', () => {
+      const milL: MilestoneLedger = {
+        schemaVersion: 1,
+        milestones: [mkMilestone({ id: 'mil-1', recommendationIds: ['rec-gone'] })],
+      };
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, emptyDec, new Set(), milL);
+      expect(r.byKind['orphan-milestone']).toEqual([
+        { kind: 'orphan-milestone', milestoneId: 'mil-1', missingRecId: 'rec-gone' },
+      ]);
+    });
+
+    it('mixed refs: one live, one archived, one deleted → only the deleted ref is a finding', () => {
+      const recL: RecommendationLedger = {
+        schemaVersion: 1,
+        recommendations: [mkRec({ id: 'rec-live' })],
+        archived: [mkRec({ id: 'rec-archived' })],
+      };
+      const milL: MilestoneLedger = {
+        schemaVersion: 1,
+        milestones: [
+          mkMilestone({
+            id: 'mil-1',
+            recommendationIds: ['rec-live', 'rec-archived', 'rec-gone'],
+          }),
+        ],
+      };
+      const r = computeIntelligenceAudit(recL, emptyEv, emptyAs, emptyDec, new Set(), milL);
+      expect(r.byKind['orphan-milestone']).toEqual([
+        { kind: 'orphan-milestone', milestoneId: 'mil-1', missingRecId: 'rec-gone' },
+      ]);
+    });
+
+    it('multiple milestones with broken refs → one finding per broken ref', () => {
+      const milL: MilestoneLedger = {
+        schemaVersion: 1,
+        milestones: [
+          mkMilestone({ id: 'mil-1', recommendationIds: ['rec-gone-1'] }),
+          mkMilestone({ id: 'mil-2', recommendationIds: ['rec-gone-2'] }),
+        ],
+      };
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, emptyDec, new Set(), milL);
+      expect(r.byKind['orphan-milestone']).toHaveLength(2);
+    });
+
+    it('byKind initialization includes orphan-milestone (empty array on clean ledger)', () => {
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, emptyDec);
+      expect(r.byKind).toHaveProperty('orphan-milestone');
+      expect(r.byKind['orphan-milestone']).toEqual([]);
+    });
+
+    it('pre-Phase-220 callers (5-arg signature) still work — milestoneLedger defaults to empty', () => {
+      const r = computeIntelligenceAudit(emptyRec, emptyEv, emptyAs, emptyDec, new Set());
+      expect(r.byKind['orphan-milestone']).toEqual([]);
     });
   });
 });

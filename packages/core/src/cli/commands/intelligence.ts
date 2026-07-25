@@ -8,6 +8,7 @@ import {
   readIntelligenceDecisionLedger,
   readRecommendationLedger,
 } from '../../intelligence/store/io.js';
+import { readMilestoneLedger } from '../../intelligence/store/milestones.js';
 import { computeIntelligenceStats } from '../../intelligence/store/stats.js';
 import {
   AUDIT_KINDS,
@@ -42,6 +43,9 @@ export function registerIntelligenceCommand(program: Command): void {
         process.stdout.write(
           'Updated: recommendations.json, RECOMMENDATIONS.md, ASSUMPTIONS.md, DECISIONS.md.\n',
         );
+        process.stdout.write(
+          `Milestones: ${res.milestones} present (read-only — reconcile does not re-derive milestone data).\n`,
+        );
       } catch (err) {
         process.stderr.write(
           `intelligence reconcile failed: ${err instanceof Error ? err.message : String(err)}\n`,
@@ -52,7 +56,7 @@ export function registerIntelligenceCommand(program: Command): void {
 
   cmd
     .command('stats')
-    .description('Summary counts across all 4 intelligence ledgers')
+    .description('Summary counts across all 5 intelligence ledgers')
     .option('--by-rec', 'Per-rec breakdown table instead of aggregate view', false)
     .option('--format <format>', 'Output format: terminal | json', 'terminal')
     .action(async (opts: { byRec?: boolean; format?: string }) => {
@@ -79,11 +83,13 @@ export function registerIntelligenceCommand(program: Command): void {
         const evLedger = await readEvidenceLedger(root);
         const asLedger = await readAssumptionLedger(root);
         const decLedger = await readIntelligenceDecisionLedger(root);
+        const milLedger = await readMilestoneLedger(root);
         if (
           recLedger.recommendations.length === 0 &&
           evLedger.evidence.length === 0 &&
           asLedger.assumptions.length === 0 &&
-          decLedger.decisions.length === 0
+          decLedger.decisions.length === 0 &&
+          milLedger.milestones.length === 0
         ) {
           if (format === 'json') {
             process.stdout.write('null\n');
@@ -97,6 +103,7 @@ export function registerIntelligenceCommand(program: Command): void {
           evLedger,
           asLedger,
           decLedger,
+          milLedger,
         );
         if (format === 'json') {
           process.stdout.write(JSON.stringify(stats, null, 2) + '\n');
@@ -160,11 +167,13 @@ export function registerIntelligenceCommand(program: Command): void {
         const evLedger = await readEvidenceLedger(root);
         const asLedger = await readAssumptionLedger(root);
         const decLedger = await readIntelligenceDecisionLedger(root);
+        const milLedger = await readMilestoneLedger(root);
         if (
           recLedger.recommendations.length === 0 &&
           evLedger.evidence.length === 0 &&
           asLedger.assumptions.length === 0 &&
-          decLedger.decisions.length === 0
+          decLedger.decisions.length === 0 &&
+          milLedger.milestones.length === 0
         ) {
           if (format === 'json') {
             process.stdout.write('null\n');
@@ -192,6 +201,7 @@ export function registerIntelligenceCommand(program: Command): void {
           asLedger,
           decLedger,
           existingPhaseIds,
+          milLedger,
         );
         const filterKind = opts.filterKind as AuditKind | undefined;
         const view: IntelligenceAuditReport =

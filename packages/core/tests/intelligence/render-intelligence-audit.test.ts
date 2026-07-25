@@ -15,6 +15,7 @@ function mkReport(findings: IntelligenceAuditFinding[]): IntelligenceAuditReport
     'orphan-evidence': [] as IntelligenceAuditFinding[],
     'stale-supersededby': [] as IntelligenceAuditFinding[],
     'stale-converted-phase': [] as IntelligenceAuditFinding[],
+    'orphan-milestone': [] as IntelligenceAuditFinding[],
   };
   for (const f of findings) byKind[f.kind].push(f);
   return { findings, byKind };
@@ -173,6 +174,51 @@ describe('renderIntelligenceAudit (Slice 19)', () => {
       expect(brokenDec).toBeLessThan(stale);
       expect(stale).toBeLessThan(converted);
       expect(converted).toBeLessThan(remediation);
+    });
+  });
+
+  describe('Phase 220 T6: orphan-milestone section', () => {
+    it('renders new `## Orphan Milestones (N)` section with one bullet per finding', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'orphan-milestone', milestoneId: 'mil-1', missingRecId: 'rec-gone-1' },
+          { kind: 'orphan-milestone', milestoneId: 'mil-2', missingRecId: 'rec-gone-2' },
+        ]),
+      );
+      expect(md).toMatch(/## Orphan Milestones \(2\)/);
+      expect(md).toMatch(/- mil-1 references missing rec: rec-gone-1/);
+      expect(md).toMatch(/- mil-2 references missing rec: rec-gone-2/);
+    });
+
+    it('remediation block reuses the orphan-subjects hint', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'orphan-milestone', milestoneId: 'mil-1', missingRecId: 'rec-gone' },
+        ]),
+      );
+      expect(md).toMatch(/For orphan subjects:/);
+    });
+
+    it('clean audit unchanged (no orphan-milestone mention in zero-finding output)', () => {
+      const md = renderIntelligenceAudit(mkReport([]));
+      expect(md).toBe('Audit clean: no integrity issues.\n');
+    });
+
+    it('mixed-kind: orphan-milestone renders LAST (after stale-converted-phase, before Remediation)', () => {
+      const md = renderIntelligenceAudit(
+        mkReport([
+          { kind: 'orphan-milestone', milestoneId: 'mil-1', missingRecId: 'rec-gone' },
+          { kind: 'stale-converted-phase', recommendationId: 'rec-1', missingPhaseId: 'phase-A' },
+          { kind: 'broken-decision-link', recId: 'rec-1', decisionId: 'dec-missing' },
+        ]),
+      );
+      const brokenDec = md.indexOf('## Broken Decision Links');
+      const converted = md.indexOf('## Stale converted-to-phase Refs');
+      const orphanMil = md.indexOf('## Orphan Milestones');
+      const remediation = md.indexOf('## Remediation');
+      expect(brokenDec).toBeLessThan(converted);
+      expect(converted).toBeLessThan(orphanMil);
+      expect(orphanMil).toBeLessThan(remediation);
     });
   });
 

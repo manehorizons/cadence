@@ -1,9 +1,12 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
+  RecommendationLedgerZ,
+  emptyRecommendationLedger,
   type ArchiveReason,
   type AssumptionLedger,
   type Evidence,
+  type EvidenceLedger,
   type IntelligenceDecisionLedger,
   type Recommendation,
   type RecommendationLedger,
@@ -14,11 +17,45 @@ import {
 import { loadConfig } from '../../config/loader.js';
 import { redactSecrets } from '../../security/redact.js';
 import { nextEvidenceId, nextRecommendationId } from './ids.js';
+import { readLedger, type SubjectLedgerSpec } from './ledger.js';
+import { recommendationsPath } from './paths.js';
 import {
   readEvidenceLedger,
-  readRecommendationLedger,
   writeIntelligenceLedgers,
 } from './io.js';
+
+// Unlike assumptions/decisions/milestones, recommendations have a real
+// `archived` array (Phase 101 soft-archival) — this is NOT the "archived: []"
+// special case the other four subjects use. `crossCheckIds` replicates
+// `nextRecommendationId`'s (ids.ts) Phase 219 cross-ledger safeguard: a
+// recommendation id can be "next" in this ledger yet still collide with a
+// dangling `evidence[].recommendationId` reference in evidence.json.
+export const recommendationLedgerSpec: SubjectLedgerSpec<
+  Recommendation,
+  RecommendationLedger,
+  Recommendation['status'],
+  string,
+  { evidenceLedger: EvidenceLedger }
+> = {
+  parse: (data) => RecommendationLedgerZ.parse(data),
+  empty: emptyRecommendationLedger,
+  idPrefix: 'rec',
+  idOf: (r) => r.id,
+  records: (ledger) => ({ live: ledger.recommendations, archived: ledger.archived }),
+  withRecords: (ledger, records) => ({
+    schemaVersion: 1,
+    recommendations: records.live,
+    archived: records.archived,
+  }),
+  crossCheckIds: (payload) => payload.evidenceLedger.evidence.map((ev) => ev.recommendationId),
+};
+
+// Exported (not just used internally) because this is the canonical read
+// function for this subject. `io.ts` re-exports it rather than keeping its
+// own hand-rolled copy (phase 220 T4).
+export async function readRecommendationLedger(root: string): Promise<RecommendationLedger> {
+  return readLedger(recommendationLedgerSpec, recommendationsPath(root));
+}
 
 export type AddRecommendationInput = {
   title: string;
@@ -42,7 +79,7 @@ export async function addRecommendation(
   const recommendationId = nextRecommendationId(ledger, now, evidenceLedger);
   const evidence: Evidence | null = input.evidenceSummary
     ? {
-        id: nextEvidenceId(evidenceLedger, now),
+        id: nextEvidenceId(evidenceLedger, now, ledger),
         recommendationId,
         kind: 'note',
         // Choke point: raw evidence text may quote logs/diffs containing a live credential.
@@ -106,7 +143,7 @@ export async function addEvidenceToRecommendation(
   const now = new Date();
   const ts = now.toISOString();
   const evidence: Evidence = {
-    id: nextEvidenceId(evidenceLedger, now),
+    id: nextEvidenceId(evidenceLedger, now, ledger),
     recommendationId: input.recommendationId,
     kind: 'note',
     // Choke point: raw evidence text may quote logs/diffs containing a live credential.

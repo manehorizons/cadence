@@ -24,6 +24,7 @@ import {
   type RecommendationPromotionChanges,
 } from '../../intelligence/store/recommendations.js';
 import { renderRecommendationDetail } from '../../intelligence/render-recommendation-detail.js';
+import { parseListFilterOptions, MAX_FILTER_REGEX_LENGTH } from '../list-filter.js';
 
 // Statuses settable via `promote`. `converted` is excluded — owned by `convert`.
 // `settle-pending` is excluded — owned by the settle hook (phase 145).
@@ -39,51 +40,7 @@ function csv(value: string | undefined): string[] {
     .filter((v) => v.length > 0);
 }
 
-type SortDir = 'asc' | 'desc';
-type ParsedSort = { key: string; dir: SortDir } | { error: string };
-
-function parseSortBy(raw: string): ParsedSort {
-  if (raw.length === 0) return { error: '--sort-by requires a key' };
-  const colon = raw.indexOf(':');
-  if (colon === -1) return { key: raw, dir: 'asc' };
-  const key = raw.slice(0, colon);
-  const dirRaw = raw.slice(colon + 1);
-  if (key.length === 0) return { error: '--sort-by requires a key' };
-  if (dirRaw !== 'asc' && dirRaw !== 'desc') {
-    return { error: `invalid sort direction: '${dirRaw}' (use 'asc' or 'desc')` };
-  }
-  return { key, dir: dirRaw };
-}
-
-const ALLOWED_REGEX_FLAGS = new Set(['i', 'm', 's', 'u']);
-
-function parseRegexFlags(raw: string): { flags: string } | { error: string } {
-  if (raw.length === 0) return { error: '--filter-regex-flags requires a non-empty value' };
-  const seen = new Set<string>();
-  for (const ch of raw) {
-    if (!ALLOWED_REGEX_FLAGS.has(ch)) {
-      return { error: `invalid flag letter: '${ch}' (allowed: i, m, s, u)` };
-    }
-    if (seen.has(ch)) {
-      return { error: `duplicate flag letter: '${ch}'` };
-    }
-    seen.add(ch);
-  }
-  return { flags: raw };
-}
-
-const MAX_FILTER_REGEX_LENGTH = 200;
-
-function validateFilterRegexLength(pattern: string): { error: string } | undefined {
-  if (pattern.length > MAX_FILTER_REGEX_LENGTH) {
-    return {
-      error: `--filter-regex pattern is too long: ${pattern.length} characters exceeds the maximum length of ${MAX_FILTER_REGEX_LENGTH}`,
-    };
-  }
-  return undefined;
-}
-
-const REC_SORT_KEYS = new Set([
+const REC_SORT_KEYS = [
   'created',
   'updated',
   'priority',
@@ -93,7 +50,7 @@ const REC_SORT_KEYS = new Set([
   'risk',
   'confidence',
   'decay',
-]);
+] as const;
 
 function compareRec(a: Recommendation, b: Recommendation, key: string): number {
   switch (key) {
@@ -342,40 +299,17 @@ export function registerRecommendationCommand(program: Command): void {
               r.summary.toLowerCase().includes(needle),
           );
         }
-        if (opts.filterRegexFlags !== undefined && opts.filterRegex === undefined) {
-          process.stderr.write(
-            `recommendation list failed: --filter-regex-flags requires --filter-regex to also be set\n`,
-          );
+        const listFilters = parseListFilterOptions(
+          { sortBy: opts.sortBy, filterRegex: opts.filterRegex, filterRegexFlags: opts.filterRegexFlags },
+          { commandLabel: 'recommendation list', sortKeys: REC_SORT_KEYS },
+        );
+        if (!listFilters.ok) {
+          process.stderr.write(`${listFilters.error}\n`);
           process.exitCode = 1;
           return;
         }
-        let regexFlags: string | undefined;
-        if (opts.filterRegexFlags !== undefined) {
-          const parsed = parseRegexFlags(opts.filterRegexFlags);
-          if ('error' in parsed) {
-            process.stderr.write(`recommendation list failed: ${parsed.error}\n`);
-            process.exitCode = 1;
-            return;
-          }
-          regexFlags = parsed.flags;
-        }
-        if (opts.filterRegex !== undefined) {
-          const lengthError = validateFilterRegexLength(opts.filterRegex);
-          if (lengthError !== undefined) {
-            process.stderr.write(`recommendation list failed: ${lengthError.error}\n`);
-            process.exitCode = 1;
-            return;
-          }
-          let regex: RegExp;
-          try {
-            regex = new RegExp(opts.filterRegex, regexFlags);
-          } catch (err) {
-            process.stderr.write(
-              `recommendation list failed: invalid regex: ${err instanceof Error ? err.message : String(err)}\n`,
-            );
-            process.exitCode = 1;
-            return;
-          }
+        if (listFilters.value.regex !== undefined) {
+          const regex = listFilters.value.regex;
           entries = entries.filter((r) => regex.test(r.title) || regex.test(r.summary));
         }
         if (opts.filterTextExact !== undefined) {
@@ -389,23 +323,8 @@ export function registerRecommendationCommand(program: Command): void {
         if (opts.filterConvertedTo !== undefined) {
           entries = entries.filter((r) => r.convertedToPhaseId === opts.filterConvertedTo);
         }
-        if (opts.sortBy !== undefined) {
-          const parsed = parseSortBy(opts.sortBy);
-          if ('error' in parsed) {
-            process.stderr.write(`recommendation list failed: ${parsed.error}\n`);
-            process.exitCode = 1;
-            return;
-          }
-          if (!REC_SORT_KEYS.has(parsed.key)) {
-            const allowed = [...REC_SORT_KEYS].join(', ');
-            process.stderr.write(
-              `recommendation list failed: invalid sort key: ${parsed.key} (allowed: ${allowed})\n`,
-            );
-            process.exitCode = 1;
-            return;
-          }
-          const sortKey = parsed.key;
-          const dir = parsed.dir;
+        if (listFilters.value.sortBy !== undefined) {
+          const { key: sortKey, dir } = listFilters.value.sortBy;
           entries = entries.slice().sort((a, b) =>
             dir === 'desc' ? -compareRec(a, b, sortKey) : compareRec(a, b, sortKey),
           );

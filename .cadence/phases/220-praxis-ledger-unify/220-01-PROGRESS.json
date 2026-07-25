@@ -1,0 +1,98 @@
+{
+  "draftId": "220-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-25T17:42:22.533Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/milestones.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/store/io.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/store/milestones.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/assumptions.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/cli/list-filter.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/decisions.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/cli/list-filter.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/cli/commands/recommendation.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/cli/commands/decision.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/cli/commands/assumption.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/e11534e6-2ad5-495e-b912-648b14f6073a/scratchpad/mode-check.mts"
+      ],
+      "updatedAt": "2026-07-25T18:16:28.001Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-25T18:18:48.550Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/assumptions.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/decisions.ts"
+      ],
+      "updatedAt": "2026-07-25T18:19:36.496Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/assumptions.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/decisions.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/recommendations.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/io.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/audit.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/render-intelligence-audit.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/stats.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/render-intelligence-stats.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/reconcile.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/cli/commands/intelligence.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/compute-intelligence-audit.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/render-intelligence-audit.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/cli/intelligence-audit.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/store-reconcile.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/cli/intelligence-reconcile.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/compute-intelligence-stats.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/render-intelligence-stats.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/cli/intelligence-stats.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-07-25T18:46:39.292Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/assumptions.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/decisions.ts"
+      ],
+      "updatedAt": "2026-07-25T18:48:18.695Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/store/io.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/ids.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/tests/intelligence/store/ids.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/assumptions.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/decisions.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/220-praxis-ledger-unify/packages/core/src/intelligence/store/recommendations.ts"
+      ],
+      "updatedAt": "2026-07-25T19:11:11.987Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-25T19:11:17.553Z"
+    }
+  }
+}

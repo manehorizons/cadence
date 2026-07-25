@@ -7,6 +7,7 @@ import { readRecommendationLedger } from '../../src/intelligence/store/io.js';
 import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import { addAssumption } from '../../src/intelligence/store/assumptions.js';
 import { addIntelligenceDecision } from '../../src/intelligence/store/decisions.js';
+import { readMilestoneLedger, writeMilestoneLedger } from '../../src/intelligence/store/milestones.js';
 import { runIntelligenceReconcile } from '../../src/intelligence/store/reconcile.js';
 
 let active: Fixture | null = null;
@@ -26,6 +27,7 @@ describe('runIntelligenceReconcile (Slice 17)', () => {
       recommendations: 0,
       assumptions: 0,
       decisions: 0,
+      milestones: 0,
     });
     expect(existsSync(join(active.root, '.cadence/intelligence/recommendations.json'))).toBe(false);
     expect(existsSync(join(active.root, '.cadence/intelligence/RECOMMENDATIONS.md'))).toBe(false);
@@ -46,9 +48,40 @@ describe('runIntelligenceReconcile (Slice 17)', () => {
     expect(res.recommendations).toBe(1);
     expect(res.assumptions).toBe(1);
     expect(res.decisions).toBe(1);
+    expect(res.milestones).toBe(0);
     expect(existsSync(join(active.root, '.cadence/intelligence/RECOMMENDATIONS.md'))).toBe(true);
     expect(existsSync(join(active.root, '.cadence/intelligence/ASSUMPTIONS.md'))).toBe(true);
     expect(existsSync(join(active.root, '.cadence/intelligence/DECISIONS.md'))).toBe(true);
+  });
+
+  it('Phase 220 T6: milestones present → counted in result, read-only (not re-derived)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'phase220' });
+    const rec = await addRecommendation(active.root, {
+      title: 't', summary: 's', priority: 'medium', readiness: 'raw-idea',
+      affectedAreas: [], affectedFiles: [],
+    });
+    await writeMilestoneLedger(active.root, {
+      schemaVersion: 1,
+      milestones: [
+        {
+          id: 'mil-grp-test',
+          name: 'm',
+          objective: 'o',
+          status: 'proposed',
+          recommendationIds: [rec.id],
+          preMortem: { likelyFailureModes: [], hiddenDependencies: [], driftRisks: [], outOfScope: [] },
+          exportTargets: [],
+          createdAt: '2026-05-20T00:00:00.000Z',
+          updatedAt: '2026-05-20T00:00:00.000Z',
+        },
+      ],
+    });
+    const before = await readMilestoneLedger(active.root);
+    const res = await runIntelligenceReconcile(active.root);
+    expect(res.present).toBe(true);
+    expect(res.milestones).toBe(1);
+    const after = await readMilestoneLedger(active.root);
+    expect(after).toEqual(before);
   });
 
   it('AC-3: idempotency — second call leaves all 4 files byte-equal to first', async () => {

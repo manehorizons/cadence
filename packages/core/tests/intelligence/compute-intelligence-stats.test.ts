@@ -3,6 +3,8 @@ import type {
   AssumptionLedger,
   EvidenceLedger,
   IntelligenceDecisionLedger,
+  IntelligenceMilestone,
+  MilestoneLedger,
   Recommendation,
   RecommendationLedger,
 } from '@manehorizons/cadence-types';
@@ -26,6 +28,26 @@ function mkRec(overrides: Partial<Recommendation> = {}): Recommendation {
     evidenceIds: [],
     assumptionIds: [],
     decisionIds: [],
+    createdAt: '2026-05-20T00:00:00.000Z',
+    updatedAt: '2026-05-20T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function mkMilestone(overrides: Partial<IntelligenceMilestone> = {}): IntelligenceMilestone {
+  return {
+    id: 'mil-grp-x',
+    name: 'm',
+    objective: 'o',
+    status: 'proposed',
+    recommendationIds: ['rec-1'],
+    preMortem: {
+      likelyFailureModes: [],
+      hiddenDependencies: [],
+      driftRisks: [],
+      outOfScope: [],
+    },
+    exportTargets: [],
     createdAt: '2026-05-20T00:00:00.000Z',
     updatedAt: '2026-05-20T00:00:00.000Z',
     ...overrides,
@@ -59,6 +81,7 @@ describe('computeIntelligenceStats (Slice 18)', () => {
     expect(s.assumptions.total).toBe(0);
     expect(s.decisions.total).toBe(0);
     expect(s.decisions.untied).toBe(0);
+    expect(s.milestones.total).toBe(0);
     expect(s.links.brokenAssumptionLinks).toBe(0);
     expect(s.links.brokenDecisionLinks).toBe(0);
     expect(s.links.brokenEvidenceLinks).toBe(0);
@@ -67,6 +90,28 @@ describe('computeIntelligenceStats (Slice 18)', () => {
     expect(s.recommendations.byStatus.candidate).toBe(0);
     expect(s.assumptions.byStatus.open).toBe(0);
     expect(s.decisions.byStatus.active).toBe(0);
+    expect(s.milestones.byStatus.proposed).toBe(0);
+  });
+
+  it('Phase 220 T6: milestones partitioned by status alongside the other four subjects', () => {
+    const milL: MilestoneLedger = {
+      schemaVersion: 1,
+      milestones: [
+        mkMilestone({ id: 'mil-1', status: 'proposed' }),
+        mkMilestone({ id: 'mil-2', status: 'accepted' }),
+        mkMilestone({ id: 'mil-3', status: 'accepted' }),
+      ],
+    };
+    const s = computeIntelligenceStats(emptyRec, emptyEv, emptyAs, emptyDec, milL);
+    expect(s.milestones.total).toBe(3);
+    expect(s.milestones.byStatus.proposed).toBe(1);
+    expect(s.milestones.byStatus.accepted).toBe(2);
+    expect(s.milestones.byStatus.exported).toBe(0);
+  });
+
+  it('Phase 220 T6: pre-existing 4-arg callers still work — milestoneLedger defaults to empty', () => {
+    const s = computeIntelligenceStats(emptyRec, emptyEv, emptyAs, emptyDec);
+    expect(s.milestones.total).toBe(0);
   });
 
   it('AC-2: partitions assumptions/decisions/evidence by status/kind', () => {

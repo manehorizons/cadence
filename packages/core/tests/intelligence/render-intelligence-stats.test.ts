@@ -19,6 +19,10 @@ function mkZeroStats(): IntelligenceStats {
     evidence: { total: 0, byKind: { file: 0, command: 0, 'cadence-artifact': 0, note: 0 } },
     assumptions: { total: 0, byStatus: { open: 0, validated: 0, rejected: 0 } },
     decisions: { total: 0, byStatus: { active: 0, superseded: 0, rescinded: 0 }, untied: 0 },
+    milestones: {
+      total: 0,
+      byStatus: { proposed: 0, accepted: 0, exported: 0, deferred: 0, closed: 0 },
+    },
     links: { brokenAssumptionLinks: 0, brokenDecisionLinks: 0, brokenEvidenceLinks: 0 },
     perRec: [],
   };
@@ -38,6 +42,8 @@ describe('renderIntelligenceStats (Slice 18)', () => {
     expect(md).toMatch(/## Decisions \(0\)/);
     expect(md).toMatch(/- by status: active 0, superseded 0, rescinded 0/);
     expect(md).toMatch(/- untied: 0/);
+    expect(md).toMatch(/## Milestones \(0\)/);
+    expect(md).toMatch(/- by status: proposed 0, accepted 0, exported 0, deferred 0, closed 0/);
     expect(md).toMatch(/## Links/);
     expect(md).toMatch(/- broken assumption links: 0/);
     expect(md).toMatch(/- broken decision links: 0/);
@@ -62,6 +68,16 @@ describe('renderIntelligenceStats (Slice 18)', () => {
     expect(md).toMatch(/## Assumptions \(5\)/);
     expect(md).toMatch(/open 3, validated 2/);
     expect(md).toMatch(/- untied: 1/);
+  });
+
+  it('Phase 220 T6: milestone counts surface correctly', () => {
+    const stats = mkZeroStats();
+    stats.milestones.total = 2;
+    stats.milestones.byStatus.proposed = 1;
+    stats.milestones.byStatus.accepted = 1;
+    const md = renderIntelligenceStats(stats);
+    expect(md).toMatch(/## Milestones \(2\)/);
+    expect(md).toMatch(/proposed 1, accepted 1/);
   });
 
   it('AC-7: per-rec mode emits markdown table with header + one row per rec', () => {
