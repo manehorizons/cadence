@@ -137,5 +137,19 @@ export const SummaryZ = z.object({
       sessionSubagentSpawns: z.number().int().nonnegative(),
     })
     .optional(),
+  /** Phase 223 (rec-20260724-006): settle-time content-hash provenance, so a
+   *  hand-edited settled SUMMARY.json is detectable instead of rendering
+   *  faithfully as if genuine. Optional — absent for pre-phase-223 records,
+   *  which `cadence summary verify` reports as a distinct "unverifiable"
+   *  outcome rather than a false MATCH. `algorithm` is a literal because only
+   *  sha256 is supported for now; `value` is the hex digest, format
+   *  unconstrained here. Detection only — no signing, no keys (dec-20260726-001;
+   *  full signing deferred to rec-20260726-001). */
+  contentHash: z
+    .object({
+      algorithm: z.literal('sha256'),
+      value: z.string(),
+    })
+    .optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

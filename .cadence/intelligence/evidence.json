@@ -917,6 +917,13 @@
       "kind": "note",
       "summary": "Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #4, Strong. Locked rule 'adapters translate lifecycle events only, never duplicate engine logic' confirmed intact -- no core-to-host import violation found.",
       "createdAt": "2026-07-25T23:56:04.355Z"
+    },
+    {
+      "id": "ev-20260726-001",
+      "recommendationId": "rec-20260726-001",
+      "kind": "note",
+      "summary": "Split from rec-20260724-006 2026-07-26 per dec-20260726-001; self-signing in the artifact's own trust domain was judged not meaningfully stronger than a hash",
+      "createdAt": "2026-07-26T01:59:31.156Z"
     }
   ]
 }

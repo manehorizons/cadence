@@ -53,6 +53,13 @@ Chose a mechanical ledger-diff step over a documented standing rule or a scout-i
 
 rec-20260724-003 proposed two things: (1) auto-generating CHANGELOG.md prose from settled phases' SUMMARY.json artifacts, and (2) a release-time gate refusing publish when the changelog lags the version bump. Scoping to (2) only: a doc-content test asserting CHANGELOG.md's newest '## [x.y.z]' heading matches packages/core/package.json's version, enforced the same way CLAUDE.md's version string is doc-sync-gated (packages/core/tests/docs/*.test.ts), plus a release-cut skill step calling it out explicitly. (1) is deferred, not rejected — auto-summarizing SUMMARY.json into readable changelog prose is a harder, more speculative problem (quality of generated prose, what to include/omit) that deserves its own design pass rather than being bundled into a mechanical CI gate. The 44-version backfill done 2026-07-24 (PR #297) proves the gate alone is sufficient to prevent recurrence of this specific drift.
 
+### dec-20260726-001 — Split SUMMARY.json attestation: content-hash now, full signing deferred to threat model
+
+- recommendation: rec-20260724-006
+- decided: 2026-07-26T01:59:18.580Z
+
+rec-20260724-006 (needs-decision) proposed a range from a settle-time content hash to full cryptographic signing. Full signing only provides real protection if the signer is a different trust domain than the artifact author (e.g. CI-identity signing via Sigstore keyless) -- self-signing in the same trust domain as SUMMARY.json's author is not meaningfully stronger than a hash. That trust-root decision has no grounding yet: the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger) is still parked. Decision: ship a content-hash/provenance chain in state.json now (phase 223) to close the silent-hand-edit gap, and defer full signing to a new recommendation gated on the threat-model rec landing first.
+
 ## Superseded
 
 _(none)_

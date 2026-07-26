@@ -2476,6 +2476,7 @@ Render a settled phase SUMMARY.json for humans (read-only)
 | Subcommand | Synopsis |
 |---|---|
 | `render <phase> <num>` | Print a deterministic, human-readable rendering of gate outcomes and per-AC status, suitable for pasting into a PR |
+| `verify <phase> <num>` | Recompute the sha256 content hash over a settled SUMMARY.json and compare it against the stored `contentHash`, to detect a hand-edited artifact |
 
 **Behavior** — reads the settled phase's `<id>-SUMMARY.json` from
 `.cadence/phases/<phase>/`, validates it against the `SummaryZ` schema, and
@@ -2496,6 +2497,25 @@ never transitions the loop.
 **Exit codes** — exits `0` on a successful render. Exits `1` on an invalid
 phase slug, a missing `<id>-SUMMARY.json` file, invalid JSON, or a
 schema-validation failure.
+
+`summary verify` (Phase 223) reads and validates `<id>-SUMMARY.json` the
+same way `render` does, then compares the `contentHash` a settle run
+attached (`.cadence/phases/223-summary-hash-attestation`) against a fresh
+recomputation over the same content, printing one of three verdicts to
+stdout: `MATCH: SUMMARY.json content hash verified (sha256)` — the content
+is unchanged since settle wrote it; `MISMATCH: stored hash does not match
+recomputed content — this SUMMARY.json may have been edited after settle`
+— the file was altered after settle without regenerating the hash;
+`NO_HASH: no contentHash present — pre-phase-223 record or a refused
+settle; cannot verify` — no `contentHash` field at all, a clean
+informational outcome rather than a false MATCH or a crash. Like `render`,
+it is read-only and never transitions the loop.
+
+**Exit codes** (`verify`) — exits `0` on `MATCH` and on `NO_HASH` (an
+informational, non-failing outcome). Exits `1` on `MISMATCH`, and on the
+same load errors as `render` (invalid phase slug, missing file, invalid
+JSON, schema-validation failure) — so `verify` is scriptable as a CI gate
+check.
 
 ---
 

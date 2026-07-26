@@ -16,6 +16,9 @@ export function renderSummaryForReview(s: Summary): string {
     `# CADENCE Summary — ${s.draftId}`,
     '',
     `**Completed:** ${s.completedAt}`,
+    ...(s.contentHash
+      ? [`**Content hash (${s.contentHash.algorithm}):** ${s.contentHash.value}`]
+      : []),
     '',
     '## Acceptance Criteria',
     '',

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "draftId": "223-01",
+  "completedAt": "2026-07-26T02:38:27.816Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "contentHash optional field added to SummaryZ (packages/types/src/summary.ts), 3 new tests, independent review APPROVE. pnpm --filter cadence-types test/build both green."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "summary-hash.ts: canonicalStringify (deep key-sort) + computeSummaryContentHash (sha256, strips contentHash before hashing) wired into settle.ts before SUMMARY writes; rendered in SUMMARY.md. Independent review APPROVE. Note: refused-settle SUMMARY.json path also lacks contentHash (correctly reads NO_HASH under T3, not a bug)."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "summary-verify.ts (MATCH/MISMATCH/NO_HASH) reusing T2's computeSummaryContentHash; cadence summary verify <phase> <num> subcommand added, reusing render's error-handling via extracted loadSummary(); docs/reference/commands.md updated. Independent review APPROVE (minor non-blocking note: verdict compares only contentHash.value, not .algorithm -- fine while only sha256 exists). Full core suite 361 files/3243 tests green."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 21,
+    "sessionSubagentSpawns": 33
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "6066a1aaef085d8896b696bfc4b9d88c6c69ed8a61bfa39587297da875483beb"
+  }
+}

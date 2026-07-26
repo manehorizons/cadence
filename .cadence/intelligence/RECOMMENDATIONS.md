@@ -551,8 +551,8 @@ ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0
 
 ## rec-20260724-006 — Signed or tamper-evident SUMMARY attestations
 
-- status: candidate
-- ready: needs-decision
+- status: settle-pending
+- ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -560,6 +560,7 @@ ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0
 - decay: fresh
 - areas: security, verification, summary
 - files: packages/types/src/summary.ts, packages/core/src/services/settle.ts
+- decisions: dec-20260726-001 (active)
 - evidence: Audit 2026-07-24: no signing/attestation code repo-wide; summary render validates schema only
 - next: cadence milestone propose
 
@@ -660,3 +661,19 @@ During phase 213's build, running 'cadence done 213-01-T1' (a fully-qualified-lo
 - next: cadence milestone propose
 
 Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.
+
+## rec-20260726-001 — Full cryptographic signing of SUMMARY.json (blocked on threat model)
+
+- status: candidate
+- ready: blocked
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security, verification, summary
+- files: packages/types/src/summary.ts, packages/core/src/services/settle.ts
+- evidence: Split from rec-20260724-006 2026-07-26 per dec-20260726-001; self-signing in the artifact's own trust domain was judged not meaningfully stronger than a hash
+- next: cadence milestone propose
+
+Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.

@@ -206,3 +206,32 @@ describe('SummaryZ.boundaryScan (AC-5, phase 156)', () => {
     expect(parsed.boundaryScan).toBeUndefined();
   });
 });
+
+describe('SummaryZ.contentHash (AC-1, phase 223)', () => {
+  it('accepts a summary carrying a contentHash', () => {
+    const result = SummaryZ.safeParse({
+      ...baseSummary,
+      contentHash: { algorithm: 'sha256', value: 'a'.repeat(64) },
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.contentHash).toEqual({ algorithm: 'sha256', value: 'a'.repeat(64) });
+    }
+  });
+
+  it('leaves contentHash undefined when absent (back-compat with pre-phase-223 records)', () => {
+    const result = SummaryZ.safeParse(baseSummary);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.contentHash).toBeUndefined();
+    }
+  });
+
+  it('rejects an unsupported algorithm', () => {
+    const result = SummaryZ.safeParse({
+      ...baseSummary,
+      contentHash: { algorithm: 'md5', value: 'deadbeef' },
+    });
+    expect(result.success).toBe(false);
+  });
+});

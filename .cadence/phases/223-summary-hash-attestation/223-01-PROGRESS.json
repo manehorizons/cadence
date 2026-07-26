@@ -1,0 +1,30 @@
+{
+  "draftId": "223-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "contentHash optional field added to SummaryZ (packages/types/src/summary.ts), 3 new tests, independent review APPROVE. pnpm --filter cadence-types test/build both green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T02:10:43.854Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "summary-hash.ts: canonicalStringify (deep key-sort) + computeSummaryContentHash (sha256, strips contentHash before hashing) wired into settle.ts before SUMMARY writes; rendered in SUMMARY.md. Independent review APPROVE. Note: refused-settle SUMMARY.json path also lacks contentHash (correctly reads NO_HASH under T3, not a bug).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/223-summary-hash-attestation/packages/core/src/services/summary-hash.ts"
+      ],
+      "updatedAt": "2026-07-26T02:20:21.700Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "summary-verify.ts (MATCH/MISMATCH/NO_HASH) reusing T2's computeSummaryContentHash; cadence summary verify <phase> <num> subcommand added, reusing render's error-handling via extracted loadSummary(); docs/reference/commands.md updated. Independent review APPROVE (minor non-blocking note: verdict compares only contentHash.value, not .algorithm -- fine while only sha256 exists). Full core suite 361 files/3243 tests green.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/223-summary-hash-attestation/packages/core/src/services/summary-verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/223-summary-hash-attestation/packages/core/src/cli/commands/summary.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/223-summary-hash-attestation/packages/core/tests/cli/summary-verify.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/223-summary-hash-attestation/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-07-26T02:30:40.185Z"
+    }
+  }
+}
