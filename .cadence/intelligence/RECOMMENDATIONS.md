@@ -708,3 +708,34 @@ Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so 
 - next: cadence milestone propose
 
 README.md's mermaid flowchart (lines ~34-55) names the four VerifierProvider values (mock/anthropic/local/host-cli) and the three entry surfaces (CLI, host adapters, MCP) inline as diagram labels. Unlike the version line, command counts, and config defaults -- each asserted against code truth by a doc-content test in packages/core/tests/docs/ -- nothing checks this diagram. Verified during the v1.51.1 release cut (2026-07-25) that it's currently still accurate, but the check was manual; if VerifierProvider (packages/core/src/verify/verifier-factory.ts) gains/loses a value, or a surface category changes shape, the diagram can silently drift with no test catching it -- the same Doc Drift class CLAUDE.md already names for other docs. Fix: a doc-content test (mirroring docs-command-count.test.ts's pattern) that greps README.md's mermaid block and asserts the verifier-provider list matches the VerifierProvider union and the surface list matches the host-adapter/CLI/MCP set.
+
+## rec-20260726-005 — coverage.ts's coverageBypassed is false-negative when a --force-only bypass overrides real coverage gaps in assertion mode
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates
+- files: packages/core/src/gates/coverage.ts, packages/core/src/gates/registry.ts
+- evidence: Traced boolean logic by hand: coverageBypassed = allowMissingCoverage===true && !sealed, but the assertion-mode pass-through at line ~127 is also reachable via force-only bypass of real gaps (guard: (issues) && (!force || sealed) being false via force=true).
+- next: cadence milestone propose
+
+In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts ~line 55-127), reaching the final pass return with real coverage gaps present but bypassed via bare --force (not --allow-missing-coverage) leaves coverageBypassed computed as 'ctx.opts.allowMissingCoverage === true && !sealed' — false in this case, since only --force was set. registry.ts's provenance therefore records this gate as status:'ran' even though a genuine --force bypass of real gaps just happened, hiding it from SUMMARY.json's audit trail. Discovered during phase 226's whole-branch review while verifying the reviewer's claim that build-test-must-pass/boundary-scan's new *Bypassed flags mirror coverage.ts's existing pattern exactly -- they do, faithfully, including this pre-existing imprecision (which phase 226 fixed for the two new gates in registry.ts by naming the actually-fired flag, but did not touch coverage.ts itself, out of scope for that phase). Pre-dates phase 226; not introduced by it.
+
+## rec-20260726-006 — boundary-scan is absent from docs/concepts.md's gate-universe matrix (14-gate table, stage-scoped gates section)
+
+- status: candidate
+- ready: needs-evidence
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 40%
+- decay: fresh
+- areas: docs
+- files: docs/concepts.md
+- next: cadence milestone propose
+
+boundary-scan shipped in Phase 156 but was never given a full 'when it fires / what it checks' row anywhere in docs/concepts.md's main gate-universe listing (the '14 gates: 3 always-fire + 11 delta' tables) or the 'Stage-scoped gates' section -- it only appears in the sealed-gate/bypass-summary material phase 226 fixed. Discovered during phase 226's whole-branch review; explicitly out of that phase's scope (its ACs covered gates.sealed discussion only, not the full gate-universe matrix).
