@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-23T21:33:53.887Z",
+  "generatedAt": "2026-07-26T02:15:04.530Z",
   "ranked": [
     {
-      "id": "rec-20260710-001",
-      "title": "Clarify Claude Code auth vs ANTHROPIC_API_KEY confusion in provider docs + fallback warning",
-      "raw": 12.7,
-      "score": 53,
+      "id": "rec-20260725-008",
+      "title": "Deepen the convergent-review protocol",
+      "raw": 22.7,
+      "score": 68,
       "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
       "decayState": "fresh",
       "terms": [
         {
@@ -29,28 +29,32 @@
           "value": 0
         },
         {
-          "label": "ready raw-idea",
-          "value": 0
+          "label": "ready ready-for-milestone",
+          "value": 7
         },
         {
           "label": "decay fresh",
           "value": 4
         },
         {
-          "label": "prio medium",
-          "value": 2
+          "label": "prio high",
+          "value": 5
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260710-0400"
+      "scoutId": "claude-cadence-audit-20260725"
     },
     {
-      "id": "rec-20260712-003",
-      "title": "Retro friction feeds back into Praxis recommendation scoring",
-      "raw": 12.7,
-      "score": 53,
+      "id": "rec-20260725-006",
+      "title": "Centralize gate bypass and seal policy in the settle driver",
+      "raw": 19.7,
+      "score": 64,
       "status": "candidate",
-      "readiness": "raw-idea",
+      "readiness": "ready-for-milestone",
       "priority": "medium",
       "decayState": "fresh",
       "terms": [
@@ -71,8 +75,8 @@
           "value": 0
         },
         {
-          "label": "ready raw-idea",
-          "value": 0
+          "label": "ready ready-for-milestone",
+          "value": 7
         },
         {
           "label": "decay fresh",
@@ -81,10 +85,287 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260725-007",
+      "title": "Split the settleService god function",
+      "raw": 19.7,
+      "score": 64,
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready ready-for-milestone",
+          "value": 7
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260726-001",
+      "title": "Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it",
+      "raw": 19.7,
+      "score": 64,
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready ready-for-milestone",
+          "value": 7
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-0328"
+      "scoutId": "claude-cadence-audit-20260725"
+    },
+    {
+      "id": "rec-20260724-004",
+      "title": "Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "claude-cadence-audit-20260724"
+    },
+    {
+      "id": "rec-20260724-006",
+      "title": "Signed or tamper-evident SUMMARY attestations",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "claude-cadence-audit-20260724"
+    },
+    {
+      "id": "rec-20260724-007",
+      "title": "Define and document multi-contributor concurrency semantics for .cadence state",
+      "raw": 13.7,
+      "score": 55,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "claude-cadence-audit-20260724"
+    },
+    {
+      "id": "rec-20260724-012",
+      "title": "pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented",
+      "raw": 13.7,
+      "score": 55,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
     },
     {
       "id": "rec-20260712-009",
@@ -123,48 +404,10 @@
         {
           "label": "prio medium",
           "value": 2
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260712-1234"
-    },
-    {
-      "id": "rec-20260712-014",
-      "title": "Add test-coverage reporting with enforced minimum thresholds to CI",
-      "raw": 12.7,
-      "score": 53,
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
         },
         {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
+          "label": "friction 0",
           "value": 0
-        },
-        {
-          "label": "ready raw-idea",
-          "value": 0
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -207,6 +450,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -248,6 +495,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -289,9 +540,104 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260724-011",
+      "title": "cadence build task / done <id> silently accepts a malformed task id instead of refusing",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260724-008",
+      "title": "Spot-check the logged-out GitHub landing render against main README",
+      "raw": 11.7,
+      "score": 52,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "claude-cadence-audit-20260724"
     },
     {
       "id": "rec-20260710-005",
@@ -329,6 +675,10 @@
         },
         {
           "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
           "value": 0
         }
       ],
@@ -372,6 +722,10 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -412,6 +766,10 @@
         },
         {
           "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
           "value": 0
         }
       ],
@@ -454,6 +812,10 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -494,6 +856,10 @@
         },
         {
           "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
           "value": 0
         }
       ],
@@ -537,6 +903,10 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -579,13 +949,17 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
     },
     {
-      "id": "rec-20260723-003",
-      "title": "CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion in doctor/activate",
+      "id": "rec-20260724-009",
+      "title": "SEO differentiation plan for the Cadence name collision ahead of the suite reveal",
       "raw": 10.7,
       "score": 50,
       "status": "candidate",
@@ -620,10 +994,60 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260723-0108"
+      "scoutId": "claude-cadence-audit-20260724"
+    },
+    {
+      "id": "rec-20260724-010",
+      "title": "milestone premortem has no entry-removal/edit path once an operator-authored item is added",
+      "raw": 10.7,
+      "score": 50,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "claude-cadence-audit-20260724"
     }
   ],
   "parked": [
@@ -640,8 +1064,8 @@
     "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 38,
-    "ranked": 15,
+    "total": 46,
+    "ranked": 23,
     "parked": 1,
     "needsAttention": 0,
     "excluded": 22

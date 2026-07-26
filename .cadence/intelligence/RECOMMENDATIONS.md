@@ -549,23 +549,6 @@ settle run already detects and warns on files touched outside a task's declared 
 
 ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.
 
-## rec-20260724-006 — Signed or tamper-evident SUMMARY attestations
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: security, verification, summary
-- files: packages/types/src/summary.ts, packages/core/src/services/settle.ts
-- decisions: dec-20260726-001 (active)
-- evidence: Audit 2026-07-24: no signing/attestation code repo-wide; summary render validates schema only
-- next: cadence milestone propose
-
-SUMMARY.json is trusted-on-disk: a hand-edited artifact renders faithfully through summary render and reads as settled provenance in PRs. verify phase --changed partially mitigates by re-deriving AC coverage statelessly, but gate outcomes, bypasses, and provider provenance in the artifact carry no integrity protection. Options range from a content hash recorded in state at settle time (cheap, detects casual edits) to full signing (enterprise-grade). Carried forward from the v1.47.0 audit rec list; no ledger entry existed for it.
-
 ## rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
 
 - status: candidate
@@ -662,6 +645,70 @@ During phase 213's build, running 'cadence done 213-01-T1' (a fully-qualified-lo
 
 Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.
 
+## rec-20260725-006 — Centralize gate bypass and seal policy in the settle driver
+
+- status: candidate
+- ready: ready-for-milestone
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates
+- files: packages/core/src/gates/types.ts, packages/core/src/gates/build-test-must-pass.ts, packages/core/src/gates/coverage.ts, packages/core/src/gates/boundary-scan.ts, packages/core/src/gates/security-audit.ts, packages/core/src/gates/code-review.ts, packages/core/src/gates/structural-verifier.ts, packages/core/src/gates/plan-review.ts, packages/core/src/gates/per-task-verify.ts, docs/reference/config.md
+- evidence: Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #5, Worth exploring.
+- next: cadence milestone propose
+
+gates.sealed reads as a universal config knob but only 3 of ~10 bypassable gates (build-test-must-pass, coverage, boundary-scan) consult isGateSealed; docs/reference/config.md still names only 2 of them -- stale since boundary-scan shipped (Phase 156), the exact Doc Drift class this repo's own doc tests exist to catch. Bypass-flag semantics (--force vs --allow-X) are decided independently per gate file with no declared policy, and registry.ts records bypass provenance for test-coverage only.
+
+## rec-20260725-007 — Split the settleService god function
+
+- status: candidate
+- ready: ready-for-milestone
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: services
+- files: packages/core/src/services/settle.ts
+- evidence: Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #6, Worth exploring.
+- next: cadence milestone propose
+
+settleService is a ~545-line function spanning at least 9 concerns (bypass-arg parsing, phase-collision backstop, mock-verifier banner, gate-registry loop, per-AC evidence derivation, evidence-floor gate, friction digest, recommendation ship-promotion, interactive GitHub-issue offer), distinguished only by inline Phase-number comments rather than function boundaries. The public interface (SettleArgs in, CommandResult out) is already right-sized -- cli/commands/settle.ts is a clean thin adapter and would not change.
+
+## rec-20260725-008 — Deepen the convergent-review protocol
+
+- status: candidate
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, verify
+- files: packages/core/src/verify/converge.ts, packages/core/src/gates/plan-review.ts, packages/core/src/gates/code-review.ts, packages/core/src/services/spec-approve.ts, packages/core/src/gates/types.ts
+- evidence: Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #2, Strong.
+- next: cadence milestone propose
+
+nextConvergence() is a shallow 6-line classifier; the real weight -- ConvergenceSidecar read/write, the history-entry shape, and the pass/reload/escalate branch -- is copy-pasted at all 4 call sites (plan-review, code-review, spec-approve x2). Evidence of drift: all four independently write an identically-redundant ternary. A runConvergentReview({label, sidecar, verify, bypassFlag, idField}) would absorb the clone.
+
+## rec-20260726-002 — Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it
+
+- status: candidate
+- ready: ready-for-milestone
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, init, worktree
+- files: packages/core/src/cli/commands/init.ts, packages/core/src/state/simple.ts
+- evidence: Hit live 2026-07-25 during phase 222 (shared-adapter-toolkit) build: 'cadence spec new' failed with 'CADENCE not initialized here' in a fresh EnterWorktree worktree despite .cadence/config.json/ROADMAP.md/phases/ all present and valid; cadence init --dry-run confirmed it would refuse ('.cadence/ already initialized'). Worked around by hand-writing state.json matching CadenceStateZ's schema.
+- next: cadence milestone propose
+
+EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.
+
 ## rec-20260726-001 — Full cryptographic signing of SUMMARY.json (blocked on threat model)
 
 - status: candidate
@@ -677,3 +724,19 @@ Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.j
 - next: cadence milestone propose
 
 Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.
+
+## rec-20260726-003 — cadence doctor check: detect cross-session recommendation/evidence/decision id collisions before push
+
+- status: candidate
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, intelligence, doctor, concurrency
+- files: packages/core/src/intelligence/store/ids.ts, packages/core/src/intelligence/store/ledger.ts, packages/core/src/cli/commands/doctor.ts, packages/core/src/doctor/run.ts
+- evidence: Live collision 2026-07-26: rec-20260726-001 independently minted by two sessions in the same primary checkout for unrelated findings; one already merged via PR #307 before discovery. Resolved manually via git merge + programmatic union-by-id JSON merge in PR #308 (re-minted the local-only one to rec-20260726-002). Related but distinct from rec-20260722-001 (same-phase/draft concurrent-session guard) -- this rec is specifically about ledger id-minting collisions across independently unpushed branches, not phase/draft races.
+- next: cadence milestone propose
+
+mintId (packages/core/src/intelligence/store/ids.ts -> ledger.ts) computes the next rec-YYYYMMDD-NNN / ev-YYYYMMDD-NNN / dec-YYYYMMDD-NNN purely from the local ledger on disk -- even the phase-219 cross-check (evidence.json <-> recommendations.json dangling refs) only looks within the same working tree. It has no visibility into ids minted by another unpushed branch/worktree/session. Hit live 2026-07-26: two independent sessions in the same primary checkout each minted rec-20260726-001 for unrelated recommendations; one had already merged to origin/main via PR #307 before the collision was discovered, requiring a manual git-merge + programmatic JSON union-by-id resolution (see PR #308) to fix. This is structurally unpreventable at mint time without either a central id-issuing service (against this repo's offline/zero-runtime-dependency design) or a higher-entropy id format (a disruptive, wide-reaching change to a convention referenced throughout docs/UI/tests). The practical, in-spirit fix is detection before damage: a new 'cadence doctor' check (e.g. 'ledger-remote-collision') that fetches origin/<default-branch> (best-effort, never throws per this repo's introspection convention) and diffs local's new-since-merge-base ledger ids (recommendations, evidence, decisions, assumptions) against origin's new-since-merge-base ids, refusing loudly on any overlap -- matching the existing 'refuse + suggest, never silently mutate' pattern. Should run as part of the operator's normal 'orient before acting' sequence (git fetch already happens there per CLAUDE.md) and/or be checked before any ledger-touching push.
