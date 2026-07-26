@@ -741,3 +741,19 @@ EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/
 - next: cadence milestone propose
 
 Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.
+
+## rec-20260726-003 — cadence doctor check: detect cross-session recommendation/evidence/decision id collisions before push
+
+- status: candidate
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, intelligence, doctor, concurrency
+- files: packages/core/src/intelligence/store/ids.ts, packages/core/src/intelligence/store/ledger.ts, packages/core/src/cli/commands/doctor.ts, packages/core/src/doctor/run.ts
+- evidence: Live collision 2026-07-26: rec-20260726-001 independently minted by two sessions in the same primary checkout for unrelated findings; one already merged via PR #307 before discovery. Resolved manually via git merge + programmatic union-by-id JSON merge in PR #308 (re-minted the local-only one to rec-20260726-002). Related but distinct from rec-20260722-001 (same-phase/draft concurrent-session guard) -- this rec is specifically about ledger id-minting collisions across independently unpushed branches, not phase/draft races.
+- next: cadence milestone propose
+
+mintId (packages/core/src/intelligence/store/ids.ts -> ledger.ts) computes the next rec-YYYYMMDD-NNN / ev-YYYYMMDD-NNN / dec-YYYYMMDD-NNN purely from the local ledger on disk -- even the phase-219 cross-check (evidence.json <-> recommendations.json dangling refs) only looks within the same working tree. It has no visibility into ids minted by another unpushed branch/worktree/session. Hit live 2026-07-26: two independent sessions in the same primary checkout each minted rec-20260726-001 for unrelated recommendations; one had already merged to origin/main via PR #307 before the collision was discovered, requiring a manual git-merge + programmatic JSON union-by-id resolution (see PR #308) to fix. This is structurally unpreventable at mint time without either a central id-issuing service (against this repo's offline/zero-runtime-dependency design) or a higher-entropy id format (a disruptive, wide-reaching change to a convention referenced throughout docs/UI/tests). The practical, in-spirit fix is detection before damage: a new 'cadence doctor' check (e.g. 'ledger-remote-collision') that fetches origin/<default-branch> (best-effort, never throws per this repo's introspection convention) and diffs local's new-since-merge-base ledger ids (recommendations, evidence, decisions, assumptions) against origin's new-since-merge-base ids, refusing loudly on any overlap -- matching the existing 'refuse + suggest, never silently mutate' pattern. Should run as part of the operator's normal 'orient before acting' sequence (git fetch already happens there per CLAUDE.md) and/or be checked before any ledger-touching push.
