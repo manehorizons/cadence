@@ -959,6 +959,13 @@
       "kind": "note",
       "summary": "Live collision 2026-07-26: rec-20260726-001 independently minted by two sessions in the same primary checkout for unrelated findings; one already merged via PR #307 before discovery. Resolved manually via git merge + programmatic union-by-id JSON merge in PR #308 (re-minted the local-only one to rec-20260726-002). Related but distinct from rec-20260722-001 (same-phase/draft concurrent-session guard) -- this rec is specifically about ledger id-minting collisions across independently unpushed branches, not phase/draft races.",
       "createdAt": "2026-07-26T03:49:50.285Z"
+    },
+    {
+      "id": "ev-20260726-004",
+      "recommendationId": "rec-20260726-004",
+      "kind": "note",
+      "summary": "Manual review during v1.51.1 release cut confirmed the diagram's verifier-provider and surface lists are currently accurate, but found no doc-content test asserting it -- the check was ad hoc.",
+      "createdAt": "2026-07-26T04:30:49.501Z"
     }
   ]
 }
