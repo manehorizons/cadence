@@ -313,6 +313,7 @@ choose to run `cadence spec approve`.
 |---|---|---|
 | `--allow-stale-draft` | `settle run` | `draft-read` |
 | `--allow-missing-coverage` | `settle run` | `test-coverage` |
+| `--allow-open-tasks` | `settle run` | `structural-verifier` |
 | `--no-approve` | `draft approve` | `approve` |
 | `--allow-per-task-failure` | `build task` | `per-task-verify` |
 | `--allow-code-review-failure` | `settle run` | `code-review` |
@@ -325,13 +326,56 @@ choose to run `cadence spec approve`.
 | `--force` | `settle run` | `deep-verify` / `interactive-verdict` / `code-review` / `security-audit` (all at once) |
 | `--no-interactive` | `settle run` | `interactive-verdict` (opt-out, not failure bypass) |
 | `--allow-auto-complex` | `draft approve` / `settle run` | `auto × complex` soft cap |
+| `--allow-failing-build` | `settle run` | `build-test-must-pass` |
+| `--allow-boundary-scan-failure` | `settle run` | `boundary-scan` |
 
-The bypass flags for `test-coverage` and `build-test-must-pass` in the table above stop
-working when the gate's id is listed in the [`gates.sealed`](reference/config.md#gates)
-config array (Phase 141) — `--force` and the gate's own `--allow-*` flag are both
-ignored, and settle refuses with a distinct message naming `gates.sealed`. This is
-config-driven, not a matrix change: the `production` preset seals both gates by
-default; `solo`/`team` seal nothing.
+The bypass flags for `test-coverage`, `build-test-must-pass`, and `boundary-scan` in
+the table above stop working when the gate's id is listed in the
+[`gates.sealed`](reference/config.md#gates) config array (Phase 141) — `--force` and
+the gate's own `--allow-*` flag are both ignored, and settle refuses with a distinct
+message naming `gates.sealed`. This is config-driven, not a matrix change: the
+`production` preset seals `test-coverage` and `build-test-must-pass` by default;
+`solo`/`team` seal nothing; `boundary-scan` can be added to `gates.sealed` manually
+but is not sealed by any preset.
+
+#### Bypass-flag naming policy
+
+Three shapes cover the table above. **`--force`** is the generic, blunt override —
+it exists for the build-correctness and verification-quality gates (`test-coverage`,
+`build-test-must-pass`, `boundary-scan`, `structural-verifier`, `code-review`,
+`security-audit`, `deep-verify`, `interactive-verdict`) and is documented per-gate as
+an alternate bypass alongside that gate's own flag, never as the only way to
+proceed. Every gate with a dedicated bypass otherwise uses
+**`--allow-<gate>-failure`** as its primary, self-documenting flag —
+`--allow-per-task-failure` (gate id `per-task-verify`) trims the redundant
+"-verify" for readability but is otherwise the same shape, not a deviation.
+
+Four flags don't fit that shape, for two different reasons. `--allow-missing-coverage`
+(`test-coverage`, Phase 14) and `--allow-stale-draft` (`draft-read`, Phase 23.1)
+genuinely **pre-date** the `--allow-<gate>-failure` convention, which started with
+`--allow-per-task-failure` in Phase 24.2 — both were already shipped before the
+convention existed. `--allow-failing-build` (`build-test-must-pass`) and
+`--allow-open-tasks` (`structural-verifier`) are different: both were introduced
+together in Phase 39.2, **two weeks after** the convention was established, and simply
+didn't follow it — an inconsistency at the time they were added, not a historical
+holdover. All four are kept as-is regardless of which reason applies: renaming any
+shipped flag is a breaking CLI change, so this is an accepted exception to fix by
+documenting, not by renaming.
+
+A few table entries sit outside both shapes by design, not by accident:
+`--no-approve` and `--no-interactive` opt a stage *out* entirely rather than
+proceeding past a failure; `--evidence-floor-bypass <AC-id:reason>` is a named,
+per-AC exemption that can never be a blanket bypass (see its entry above);
+`--allow-auto-complex` overrides the `auto × complex` tier soft cap, which isn't a
+gate refusal at all. `--allow-verifier-failure` is narrower still: it never
+overrides `deep-verify`'s AC verdicts, only transport failures against the verifier
+provider, so it's named after the failure class it recognizes rather than the gate
+id — a deliberate, narrow carve-out in the same spirit as `--evidence-floor-bypass`.
+
+With every flag in the table accounted for above, this audit found no gate flag
+that needs a follow-up rename recommendation — every deviation from
+`--allow-<gate>-failure` has an explicit, intentional reason rather than being
+silently absorbed.
 
 ### Non-TTY auto-bypass (agents & CI)
 

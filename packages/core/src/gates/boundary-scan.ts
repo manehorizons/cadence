@@ -18,6 +18,12 @@ const CADENCE_DIR_PREFIX = '.cadence/';
  * self-writes, and refuses when a file outside the declared `files:` union is
  * found — unless bypassed via `--force`/`--allow-boundary-scan-failure` and
  * the gate is not sealed.
+ *
+ * Phase 226 (T3): a genuine bypass (unsealed, `--force` or
+ * `--allow-boundary-scan-failure` set, past a real finding) now also carries
+ * `flags.boundaryScanBypassed: true` on the returned `GateResult` — mirroring
+ * `test-coverage`'s `coverageBypassed` — so the registry's gate-provenance
+ * collection can report this as "skipped (bypassed)" instead of "ran".
  */
 export const runBoundaryScanGate: GateImpl = async (ctx): Promise<GateResult> => {
   if (effectiveBoundaryEnforcement(ctx.config, ctx.draft) !== 'block') {
@@ -73,5 +79,9 @@ export const runBoundaryScanGate: GateImpl = async (ctx): Promise<GateResult> =>
 
   const flag = ctx.opts.force === true ? '--force' : '--allow-boundary-scan-failure';
   ctx.io.err(`boundary-scan: ${flag} set; proceeding past ${offenders.length} offending file(s).\n`);
-  return { outcome: 'pass', summaryPatch: { boundaryScan: { offenders } } };
+  return {
+    outcome: 'pass',
+    summaryPatch: { boundaryScan: { offenders } },
+    flags: { boundaryScanBypassed: bypassed },
+  };
 };

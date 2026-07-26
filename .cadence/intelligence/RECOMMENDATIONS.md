@@ -645,22 +645,6 @@ During phase 213's build, running 'cadence done 213-01-T1' (a fully-qualified-lo
 
 Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.
 
-## rec-20260725-006 — Centralize gate bypass and seal policy in the settle driver
-
-- status: candidate
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates
-- files: packages/core/src/gates/types.ts, packages/core/src/gates/build-test-must-pass.ts, packages/core/src/gates/coverage.ts, packages/core/src/gates/boundary-scan.ts, packages/core/src/gates/security-audit.ts, packages/core/src/gates/code-review.ts, packages/core/src/gates/structural-verifier.ts, packages/core/src/gates/plan-review.ts, packages/core/src/gates/per-task-verify.ts, docs/reference/config.md
-- evidence: Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #5, Worth exploring.
-- next: cadence milestone propose
-
-gates.sealed reads as a universal config knob but only 3 of ~10 bypassable gates (build-test-must-pass, coverage, boundary-scan) consult isGateSealed; docs/reference/config.md still names only 2 of them -- stale since boundary-scan shipped (Phase 156), the exact Doc Drift class this repo's own doc tests exist to catch. Bypass-flag semantics (--force vs --allow-X) are decided independently per gate file with no declared policy, and registry.ts records bypass provenance for test-coverage only.
-
 ## rec-20260725-007 — Split the settleService god function
 
 - status: candidate

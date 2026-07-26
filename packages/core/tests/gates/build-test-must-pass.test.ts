@@ -91,6 +91,9 @@ describe('runBuildTestGate', () => {
       ctx({ run: { ran: true, ok: false, exitCode: 2, command: 'pnpm test' }, allowFailingBuild: true }),
     );
     expect(res.outcome).toBe('pass');
+    // Phase 226 (T3): a genuine unsealed bypass carries flags.buildTestBypassed
+    // so the registry can record 'skipped (bypassed)' provenance instead of 'ran'.
+    expect(res.flags?.buildTestBypassed).toBe(true);
   });
 
   // AC-3: --force also bypasses a failing command
@@ -99,6 +102,17 @@ describe('runBuildTestGate', () => {
       ctx({ run: { ran: true, ok: false, exitCode: 1, command: 'pnpm test' }, force: true }),
     );
     expect(res.outcome).toBe('pass');
+    expect(res.flags?.buildTestBypassed).toBe(true);
+  });
+
+  // Phase 226 (T3): a genuinely passing run must NOT carry the bypass flag —
+  // it was never bypassed, it just passed.
+  it('does not set buildTestBypassed on a genuinely passing run', async () => {
+    const res = await runBuildTestGate(
+      ctx({ run: { ran: true, ok: true, exitCode: 0, command: 'pnpm test' } }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.flags?.buildTestBypassed).toBeUndefined();
   });
 
   // AC-1 (phase 140): no testCommand → still PASS, but the accumulator now
