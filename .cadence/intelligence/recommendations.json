@@ -1270,40 +1270,6 @@
       "updatedAt": "2026-07-25T15:09:13.547Z"
     },
     {
-      "id": "rec-20260725-008",
-      "title": "Deepen the convergent-review protocol",
-      "summary": "nextConvergence() is a shallow 6-line classifier; the real weight -- ConvergenceSidecar read/write, the history-entry shape, and the pass/reload/escalate branch -- is copy-pasted at all 4 call sites (plan-review, code-review, spec-approve x2). Evidence of drift: all four independently write an identically-redundant ternary. A runConvergentReview({label, sidecar, verify, bypassFlag, idField}) would absorb the clone.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/converge.ts",
-        "packages/core/src/gates/plan-review.ts",
-        "packages/core/src/gates/code-review.ts",
-        "packages/core/src/services/spec-approve.ts",
-        "packages/core/src/gates/types.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260725-008"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "225-convergent-review-runner",
-      "scoutId": "claude-cadence-audit-20260725",
-      "createdAt": "2026-07-25T23:51:51.327Z",
-      "updatedAt": "2026-07-26T17:57:46.236Z"
-    },
-    {
       "id": "rec-20260726-002",
       "title": "Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it",
       "summary": "EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.",
@@ -4347,6 +4313,43 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-26T03:49:50.285Z",
       "updatedAt": "2026-07-26T15:39:08.626Z"
+    },
+    {
+      "id": "rec-20260725-008",
+      "title": "Deepen the convergent-review protocol",
+      "summary": "nextConvergence() is a shallow 6-line classifier; the real weight -- ConvergenceSidecar read/write, the history-entry shape, and the pass/reload/escalate branch -- is copy-pasted at all 4 call sites (plan-review, code-review, spec-approve x2). Evidence of drift: all four independently write an identically-redundant ternary. A runConvergentReview({label, sidecar, verify, bypassFlag, idField}) would absorb the clone.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/converge.ts",
+        "packages/core/src/gates/plan-review.ts",
+        "packages/core/src/gates/code-review.ts",
+        "packages/core/src/services/spec-approve.ts",
+        "packages/core/src/gates/types.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "225-convergent-review-runner",
+      "scoutId": "claude-cadence-audit-20260725",
+      "createdAt": "2026-07-25T23:51:51.327Z",
+      "updatedAt": "2026-07-26T18:31:53.685Z",
+      "shippedRef": "PR #311",
+      "archivedAt": "2026-07-26T18:31:53.685Z",
+      "archiveReason": "shipped"
     }
   ]
 }

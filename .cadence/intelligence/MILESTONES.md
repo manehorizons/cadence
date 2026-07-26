@@ -39,7 +39,6 @@ None.
 - mil-rec-rec-20260725-001 — release-integrity.mjs's post-publish npm verification retries too briefly, causing false-red Release workflow runs → .cadence/intelligence/exports/mil-rec-rec-20260725-001/SPEC.md
 - mil-rec-rec-20260725-002 — Deepen the Praxis ledger into one module → .cadence/intelligence/exports/mil-rec-rec-20260725-002/SPEC.md
 - mil-rec-rec-20260725-003 — Give the MCP surface real "one engine" parity with the CLI → .cadence/intelligence/exports/mil-rec-rec-20260725-003/SPEC.md
-- mil-rec-rec-20260725-008 — Deepen the convergent-review protocol → .cadence/intelligence/exports/mil-rec-rec-20260725-008/SPEC.md
 
 ## Closed
 
@@ -49,3 +48,4 @@ None.
 - mil-rec-rec-20260617-004 — Fold activation into init when API key present (ref: phase 110-init-activate (already shipped; milestone ledger drift, closed retroactively 2026-07-16))
 - mil-rec-rec-20260708-002 — Mock milestone workflow proof for Codex first-run bootstrap (ref: proof workflow artifact: .cadence/intelligence/exports/mil-rec-rec-20260708-002/SPEC.md; phase 162 settled on feat/codex-first-run-recommendation)
 - mil-rec-rec-20260710-002 — Host-CLI headless verifier provider: reuse Claude Code/Codex's own auth instead of requiring a raw API key (ref: phase 165 / PR #164 / commit 1351044)
+- mil-rec-rec-20260725-008 — Deepen the convergent-review protocol (ref: PR #311)
