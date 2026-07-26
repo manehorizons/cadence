@@ -1033,40 +1033,6 @@
       "updatedAt": "2026-07-24T14:35:34.096Z"
     },
     {
-      "id": "rec-20260724-006",
-      "title": "Signed or tamper-evident SUMMARY attestations",
-      "summary": "SUMMARY.json is trusted-on-disk: a hand-edited artifact renders faithfully through summary render and reads as settled provenance in PRs. verify phase --changed partially mitigates by re-deriving AC coverage statelessly, but gate outcomes, bypasses, and provider provenance in the artifact carry no integrity protection. Options range from a content hash recorded in state at settle time (cheap, detects casual edits) to full signing (enterprise-grade). Carried forward from the v1.47.0 audit rec list; no ledger entry existed for it.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "security",
-        "verification",
-        "summary"
-      ],
-      "affectedFiles": [
-        "packages/types/src/summary.ts",
-        "packages/core/src/services/settle.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260724-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [
-        "dec-20260726-001"
-      ],
-      "convertedToPhaseId": "223-summary-hash-attestation",
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:36:01.942Z",
-      "updatedAt": "2026-07-26T02:38:27.818Z"
-    },
-    {
       "id": "rec-20260724-007",
       "title": "Define and document multi-contributor concurrency semantics for .cadence state",
       "summary": "team-rollout.md covers PR visibility but not the mechanics of two contributors with phases in flight: merge behavior for state.json, the intelligence ledger, and phase directories. First verify whether current behavior is safe-by-construction (per-phase directories may already isolate most conflict surface), then document the answer or design the missing piece. This is the first question a second contributor asks and the team preset is now the default.",
@@ -4312,6 +4278,43 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-25T23:56:04.355Z",
       "updatedAt": "2026-07-26T00:38:43.226Z"
+    },
+    {
+      "id": "rec-20260724-006",
+      "title": "Signed or tamper-evident SUMMARY attestations",
+      "summary": "SUMMARY.json is trusted-on-disk: a hand-edited artifact renders faithfully through summary render and reads as settled provenance in PRs. verify phase --changed partially mitigates by re-deriving AC coverage statelessly, but gate outcomes, bypasses, and provider provenance in the artifact carry no integrity protection. Options range from a content hash recorded in state at settle time (cheap, detects casual edits) to full signing (enterprise-grade). Carried forward from the v1.47.0 audit rec list; no ledger entry existed for it.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "verification",
+        "summary"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts",
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260726-001"
+      ],
+      "convertedToPhaseId": "223-summary-hash-attestation",
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:36:01.942Z",
+      "updatedAt": "2026-07-26T03:50:50.913Z",
+      "shippedRef": "PR #307",
+      "archivedAt": "2026-07-26T03:50:50.913Z",
+      "archiveReason": "shipped"
     }
   ]
 }

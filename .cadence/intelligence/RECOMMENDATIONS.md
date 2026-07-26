@@ -549,23 +549,6 @@ settle run already detects and warns on files touched outside a task's declared 
 
 ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.
 
-## rec-20260724-006 — Signed or tamper-evident SUMMARY attestations
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: security, verification, summary
-- files: packages/types/src/summary.ts, packages/core/src/services/settle.ts
-- decisions: dec-20260726-001 (active)
-- evidence: Audit 2026-07-24: no signing/attestation code repo-wide; summary render validates schema only
-- next: cadence milestone propose
-
-SUMMARY.json is trusted-on-disk: a hand-edited artifact renders faithfully through summary render and reads as settled provenance in PRs. verify phase --changed partially mitigates by re-deriving AC coverage statelessly, but gate outcomes, bypasses, and provider provenance in the artifact carry no integrity protection. Options range from a content hash recorded in state at settle time (cheap, detects casual edits) to full signing (enterprise-grade). Carried forward from the v1.47.0 audit rec list; no ledger entry existed for it.
-
 ## rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
 
 - status: candidate
