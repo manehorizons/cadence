@@ -63,6 +63,15 @@
       "status": "active",
       "decidedAt": "2026-07-24T23:41:13.458Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260726-001",
+      "recommendationId": "rec-20260724-006",
+      "title": "Split SUMMARY.json attestation: content-hash now, full signing deferred to threat model",
+      "rationale": "rec-20260724-006 (needs-decision) proposed a range from a settle-time content hash to full cryptographic signing. Full signing only provides real protection if the signer is a different trust domain than the artifact author (e.g. CI-identity signing via Sigstore keyless) -- self-signing in the same trust domain as SUMMARY.json's author is not meaningfully stronger than a hash. That trust-root decision has no grounding yet: the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger) is still parked. Decision: ship a content-hash/provenance chain in state.json now (phase 223) to close the silent-hand-edit gap, and defer full signing to a new recommendation gated on the threat-model rec landing first.",
+      "status": "active",
+      "decidedAt": "2026-07-26T01:59:18.580Z",
+      "supersedes": []
     }
   ]
 }

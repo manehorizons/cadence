@@ -1037,8 +1037,8 @@
       "title": "Signed or tamper-evident SUMMARY attestations",
       "summary": "SUMMARY.json is trusted-on-disk: a hand-edited artifact renders faithfully through summary render and reads as settled provenance in PRs. verify phase --changed partially mitigates by re-deriving AC coverage statelessly, but gate outcomes, bypasses, and provider provenance in the artifact carry no integrity protection. Options range from a content hash recorded in state at settle time (cheap, detects casual edits) to full signing (enterprise-grade). Carried forward from the v1.47.0 audit rec list; no ledger entry existed for it.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "status": "settle-pending",
+      "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1058,10 +1058,13 @@
         "ev-20260724-006"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260726-001"
+      ],
+      "convertedToPhaseId": "223-summary-hash-attestation",
       "scoutId": "claude-cadence-audit-20260724",
       "createdAt": "2026-07-24T14:36:01.942Z",
-      "updatedAt": "2026-07-24T14:36:01.942Z"
+      "updatedAt": "2026-07-26T02:38:27.818Z"
     },
     {
       "id": "rec-20260724-007",
@@ -1363,6 +1366,36 @@
       "scoutId": "claude-cadence-audit-20260725",
       "createdAt": "2026-07-26T01:03:37.796Z",
       "updatedAt": "2026-07-26T01:03:37.796Z"
+    },
+    {
+      "id": "rec-20260726-001",
+      "title": "Full cryptographic signing of SUMMARY.json (blocked on threat model)",
+      "summary": "Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "blocked",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "verification",
+        "summary"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts",
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260726-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-26T01:59:31.156Z",
+      "updatedAt": "2026-07-26T01:59:31.156Z"
     }
   ],
   "archived": [

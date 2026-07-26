@@ -2,8 +2,14 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mkdtemp, mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultConfig, emptyState, type CadenceConfig } from '@manehorizons/cadence-types';
+import {
+  defaultConfig,
+  emptyState,
+  type CadenceConfig,
+  type Summary,
+} from '@manehorizons/cadence-types';
 import type { CommandIO } from '../../src/services/io.js';
+import { computeSummaryContentHash, canonicalStringify } from '../../src/services/summary-hash.js';
 
 /**
  * T5 (phase 164): `settleService` threads `repoRoot` as `cwd` into all three
@@ -468,6 +474,85 @@ describe('settleService captures a stateAtSettle snapshot in SUMMARY (issue #177
     expect(mdRaw).toContain('loop position before settle: BUILD');
     expect(mdRaw).toContain('- revision: 2');
     expect(mdRaw).toContain('- session subagent spawns: 5');
+  });
+});
+
+describe('settleService computes a settle-time contentHash over SUMMARY (phase 223, T2)', () => {
+  it('AC-1: SUMMARY.json carries a contentHash that an independent recomputation via computeSummaryContentHash matches, and SUMMARY.md renders it', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '223-01-content-hash',
+      id: '223-01',
+      tier: 'standard',
+      // Phase 214 (T4): see the '51-code-review-verifier-cwd' comment above —
+      // this fixture has no real AC-1 coverage and predates evidence-floor.
+      config: { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } },
+    });
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '223-01-content-hash', '223-01-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    expect(summary.contentHash).toBeDefined();
+    expect(summary.contentHash?.algorithm).toBe('sha256');
+    expect(summary.contentHash?.value).toMatch(/^[0-9a-f]{64}$/);
+
+    // Independent recomputation from the SUMMARY.json's own other fields,
+    // via the SAME exported function T3's verify command will reuse — proves
+    // the stored hash genuinely reflects the settled content rather than
+    // being some unrelated/stubbed value.
+    const recomputed = computeSummaryContentHash(summary);
+    expect(recomputed.value).toBe(summary.contentHash?.value);
+    expect(recomputed.algorithm).toBe('sha256');
+
+    const summaryMdPath = join(
+      root, '.cadence', 'phases', '223-01-content-hash', '223-01-SUMMARY.md',
+    );
+    const mdRaw = await readFile(summaryMdPath, 'utf8');
+    // The full digest (or a visible prefix of it) must appear somewhere in
+    // the human-facing render — proven against a real prefix, not just "some
+    // string exists".
+    expect(mdRaw).toContain(summary.contentHash!.value.slice(0, 12));
+  });
+
+  it("AC-1: two structurally-identical summaries with different key insertion order hash the same (canonicalStringify is order-independent)", () => {
+    const a = { z: 1, nested: { y: 2, x: 1 }, list: [{ b: 2, a: 1 }, 3] };
+    const b = { nested: { x: 1, y: 2 }, z: 1, list: [{ a: 1, b: 2 }, 3] };
+
+    expect(canonicalStringify(a)).toBe(canonicalStringify(b));
+  });
+
+  it('AC-1: computeSummaryContentHash excludes any existing contentHash field from its own digest (no self-reference)', () => {
+    const base: Summary = {
+      schemaVersion: 1,
+      draftId: '223-01',
+      completedAt: '2026-07-25T00:00:00.000Z',
+      acResults: [],
+      taskResults: [],
+      decisions: [],
+      deferred: [],
+      skillAudit: { required: [], invoked: [] },
+    };
+
+    const withStaleHash: Summary = {
+      ...base,
+      contentHash: { algorithm: 'sha256', value: 'f'.repeat(64) },
+    };
+
+    expect(computeSummaryContentHash(base).value).toBe(
+      computeSummaryContentHash(withStaleHash).value,
+    );
   });
 });
 

@@ -945,6 +945,13 @@
       "kind": "note",
       "summary": "Hit live 2026-07-25 during phase 222 (shared-adapter-toolkit) build: 'cadence spec new' failed with 'CADENCE not initialized here' in a fresh EnterWorktree worktree despite .cadence/config.json/ROADMAP.md/phases/ all present and valid; cadence init --dry-run confirmed it would refuse ('.cadence/ already initialized'). Worked around by hand-writing state.json matching CadenceStateZ's schema.",
       "createdAt": "2026-07-26T01:03:37.796Z"
+    },
+    {
+      "id": "ev-20260726-001",
+      "recommendationId": "rec-20260726-001",
+      "kind": "note",
+      "summary": "Split from rec-20260724-006 2026-07-26 per dec-20260726-001; self-signing in the artifact's own trust domain was judged not meaningfully stronger than a hash",
+      "createdAt": "2026-07-26T01:59:31.156Z"
     }
   ]
 }

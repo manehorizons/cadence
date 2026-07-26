@@ -5,6 +5,9 @@ export function renderSummaryMd(s: Summary): string {
     `# SETTLE Summary — ${s.draftId}`,
     '',
     `**Completed:** ${s.completedAt}`,
+    ...(s.contentHash
+      ? [`**Content hash (${s.contentHash.algorithm}):** ${s.contentHash.value}`]
+      : []),
     '',
     '## Acceptance Criteria',
     '',

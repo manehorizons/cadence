@@ -9,6 +9,7 @@ import { assertSafePhaseSlug } from '../phases/id.js';
 import { assertNoPhaseCollision } from '../phases/guard.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { renderSummaryMd } from '../parse/summary-writer.js';
+import { computeSummaryContentHash } from './summary-hash.js';
 import { buildRetroDigest, writeRetroArtifacts, runRetroOffer } from './retro.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
@@ -645,6 +646,11 @@ export async function settleService(
         : {}),
       stateAtSettle,
     };
+
+    // Phase 223 (T2): compute the content hash over `summary` as built above
+    // (before this field is attached) and attach it — the digest never
+    // includes `contentHash` itself, so it is always computed first.
+    summary.contentHash = computeSummaryContentHash(summary);
 
     const summaryBase = join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`);
     await atomicWriteJSON(`${summaryBase}.json`, summary);
