@@ -679,7 +679,7 @@ settleService is a ~545-line function spanning at least 9 concerns (bypass-arg p
 
 ## rec-20260725-008 — Deepen the convergent-review protocol
 
-- status: candidate
+- status: settle-pending
 - ready: ready-for-milestone
 - priority: high
 - leverage: 5/10

@@ -9,7 +9,7 @@ import { selectNotifier } from '../notify/factory.js';
 import { selectSpecReviewVerifier } from '../verify/spec-review-factory.js';
 import { parseUiSpecMd } from '../parse/ui-spec-parser.js';
 import { selectUiSpecReviewVerifier } from '../verify/ui-spec-review-factory.js';
-import { nextConvergence } from '../verify/converge.js';
+import { runConvergentReview } from '../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../notify/spec-review.js';
 import { emitUiSpecReviewUnconverged } from '../notify/ui-spec-review.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
@@ -64,37 +64,24 @@ export async function specApproveService(
 
     const res = await verifier.verify({ spec });
     const maxAttempts = cfg?.convergence?.maxAttempts ?? 3;
-    const nv = nextConvergence(res.pass, attemptsSoFar, maxAttempts);
-    const now = new Date().toISOString();
     const bypassed = !res.pass && args.allowSpecReviewFailure === true;
 
-    history.push({
-      at: now,
+    const result = runConvergentReview({
       pass: res.pass,
       findingsCount: res.findings.length,
       provider: res.provider,
       ...(res.model ? { model: res.model } : {}),
-      verdict: nv.verdict,
-      ...(bypassed ? { bypassed: true } : {}),
+      attemptsSoFar,
+      history,
+      maxAttempts,
+      bypassed,
+      idField: 'specId',
+      idValue: id,
     });
+    const nv = result.nv;
     await atomicWriteText(
       sidecarPath,
-      JSON.stringify(
-        {
-          specId: id,
-          converged: res.pass,
-          attempts: nv.verdict === 'pass' ? attemptsSoFar : nv.attempt,
-          maxAttempts,
-          history,
-          pass: res.pass,
-          provider: res.provider,
-          ...(res.model ? { model: res.model } : {}),
-          findings: res.findings.length,
-          at: now,
-        },
-        null,
-        2,
-      ) + '\n',
+      JSON.stringify(result.sidecarJson, null, 2) + '\n',
     );
 
     if (!res.pass) {
@@ -174,37 +161,24 @@ export async function specApproveService(
       }
 
       const uiRes = await uiVerifier.verify({ uiSpec });
-      const uiNv = nextConvergence(uiRes.pass, uiAttemptsSoFar, maxAttempts);
-      const uiNow = new Date().toISOString();
       const uiBypassed = !uiRes.pass && args.allowUiSpecReviewFailure === true;
 
-      uiHistory.push({
-        at: uiNow,
+      const uiResult = runConvergentReview({
         pass: uiRes.pass,
         findingsCount: uiRes.findings.length,
         provider: uiRes.provider,
         ...(uiRes.model ? { model: uiRes.model } : {}),
-        verdict: uiNv.verdict,
-        ...(uiBypassed ? { bypassed: true } : {}),
+        attemptsSoFar: uiAttemptsSoFar,
+        history: uiHistory,
+        maxAttempts,
+        bypassed: uiBypassed,
+        idField: 'specId',
+        idValue: id,
       });
+      const uiNv = uiResult.nv;
       await atomicWriteText(
         uiSidecarPath,
-        JSON.stringify(
-          {
-            specId: id,
-            converged: uiRes.pass,
-            attempts: uiNv.verdict === 'pass' ? uiAttemptsSoFar : uiNv.attempt,
-            maxAttempts,
-            history: uiHistory,
-            pass: uiRes.pass,
-            provider: uiRes.provider,
-            ...(uiRes.model ? { model: uiRes.model } : {}),
-            findings: uiRes.findings.length,
-            at: uiNow,
-          },
-          null,
-          2,
-        ) + '\n',
+        JSON.stringify(uiResult.sidecarJson, null, 2) + '\n',
       );
 
       if (!uiRes.pass) {

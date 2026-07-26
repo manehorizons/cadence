@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "draftId": "225-01",
+  "completedAt": "2026-07-26T17:57:46.234Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "ran"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "ran"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "ran"
+    },
+    {
+      "gate": "security-audit",
+      "status": "ran"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Audited all 4 convergence call sites; added 16 characterization tests pinning exact sidecar JSON shape + pass/reloop/escalate/bypass branches for plan-review, code-review, spec-review, ui-spec-review. No source touched. Independently re-verified (diff read, tests/typecheck/lint re-run) + independent reviewer approved."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Extracted pure runConvergentReview primitive in converge.ts (no I/O, no ctx, no fs). Sidecar JSON shape + attempts formula + history non-mutation verified against T1's characterizations and the 3 real call sites. 12 new unit tests. Independently re-verified + independent reviewer approved (also confirmed design fitness for T3/T4/T5)."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Migrated plan-review.ts to runConvergentReview; byte-identical branch logic + sidecar shape preserved. Independently re-verified + reviewer approved."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "Migrated code-review.ts to runConvergentReview; collectHighFindings, try/catch, and OR-bypass all preserved unchanged. Independently re-verified + reviewer approved."
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "Migrated both spec-approve.ts call sites (spec-review + ui-spec-review) to runConvergentReview; both sidecars byte-identical. Independently re-verified + reviewer approved."
+    },
+    {
+      "id": "T6",
+      "status": "DONE",
+      "notes": "Full package regression: 362 test files / 3283 tests pass, typecheck clean, lint clean, build clean. All 4 call sites now delegate to runConvergentReview with byte-identical sidecar JSON and branch behavior."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "interactiveVerifySkipped": "non-tty",
+  "codeReview": {},
+  "securityAudit": [],
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 8,
+    "sessionSubagentSpawns": 0
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "0d4541224c43d4e6ff8c145660be3eb444379134b3c909fe1c6407b7e45d9d4a"
+  }
+}
