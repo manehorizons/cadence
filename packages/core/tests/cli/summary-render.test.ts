@@ -90,6 +90,42 @@ describe('cadence summary render', () => {
     expect(r2.stdout).toBe(r.stdout);
   });
 
+  it('displays the content hash when present (AC-1, phase 223)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify(
+        { ...VALID_SUMMARY, contentHash: { algorithm: 'sha256', value: 'deadbeef'.repeat(8) } },
+        null,
+        2,
+      ),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    // AC-1: `cadence summary render` — not just the settle-time SUMMARY.md
+    // sidecar — surfaces the content hash a caller would need to cross-check
+    // against `cadence summary verify`.
+    expect(r.stdout).toMatch(/Content hash \(sha256\):/);
+    expect(r.stdout).toMatch(new RegExp('deadbeef'.repeat(8)));
+  });
+
+  it('omits the content-hash line for a pre-phase-223 SUMMARY.json with no hash (AC-1)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify(VALID_SUMMARY, null, 2),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/Content hash/);
+  });
+
   it('omits empty gate-bypasses/decisions/deferred section headers (AC-1)', async () => {
     active = await tempRepo({ initialized: true });
     await writeSummary(
