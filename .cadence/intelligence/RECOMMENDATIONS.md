@@ -551,8 +551,8 @@ ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0
 
 ## rec-20260724-006 — Signed or tamper-evident SUMMARY attestations
 
-- status: candidate
-- ready: needs-decision
+- status: settle-pending
+- ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -560,6 +560,7 @@ ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0
 - decay: fresh
 - areas: security, verification, summary
 - files: packages/types/src/summary.ts, packages/core/src/services/settle.ts
+- decisions: dec-20260726-001 (active)
 - evidence: Audit 2026-07-24: no signing/attestation code repo-wide; summary render validates schema only
 - next: cadence milestone propose
 
@@ -724,3 +725,19 @@ nextConvergence() is a shallow 6-line classifier; the real weight -- Convergence
 - next: cadence milestone propose
 
 EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.
+
+## rec-20260726-001 — Full cryptographic signing of SUMMARY.json (blocked on threat model)
+
+- status: candidate
+- ready: blocked
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security, verification, summary
+- files: packages/types/src/summary.ts, packages/core/src/services/settle.ts
+- evidence: Split from rec-20260724-006 2026-07-26 per dec-20260726-001; self-signing in the artifact's own trust domain was judged not meaningfully stronger than a hash
+- next: cadence milestone propose
+
+Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.
