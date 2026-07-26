@@ -1,5 +1,116 @@
 # @manehorizons/cadence-core
 
+## 1.51.1
+
+### Patch Changes
+
+- e9f6556: Closes three confirmed CLI/MCP parity gaps in the Praxis-adjacent surfaces:
+
+  - `cadence_recommendation_promote` (MCP) now accepts a `ref` argument and
+    threads it into `shippedRef` exactly like the CLI's
+    `recommendation promote --status=shipped --ref "<text>"` already does —
+    previously the MCP tool silently dropped it. Also fixes a latent bug where
+    a `status=shipped` promotion (which auto-archives by default) always
+    returned `data: null` even on full success, because the lookup only
+    checked the live `recommendations` array, not `archived`.
+  - The "did this `milestone propose` run produce any newly-proposed
+    milestones" predicate — previously copy-pasted as an identical literal
+    expression in both `cli/commands/milestone.ts` and
+    `services/milestone-propose.ts`, a duplication class that had already
+    caused one whole-branch-review-caught drift bug — is now a single
+    exported `hasNewlyProposedMilestone()` both call sites invoke.
+  - `next`/`verify coverage`/`verify phase`/`explain` logic, which already had
+    the right `(repoRoot, args, io) => CommandResult` service shape but lived
+    in `cli/commands/` where the MCP surface couldn't reach it, is relocated
+    into `services/{next,verify,explain}.ts`. The MCP server now registers
+    `cadence_next`, `cadence_verify_coverage`, `cadence_verify_phase`, and
+    `cadence_explain` (all read-only), with test coverage asserting output
+    parity against their CLI counterparts. `docs/mcp.md` and
+    `docs/reference/commands.md` are updated for the new tool count (18→22).
+
+  No CLI-facing behavior, flags, or exit codes changed for any of the affected
+  commands — this is a parity/dedup fix, not a rewrite.
+
+- 655663e: Unify the five Praxis intelligence ledgers (recommendations, evidence,
+  assumptions, decisions, milestones) onto one shared read/write/id-minting
+  module (`intelligence/store/ledger.ts`) instead of five independently
+  hand-rolled implementations, so a safeguard added for one subject — like
+  phase 219's cross-ledger id-collision check, previously recommendations-only
+  — now applies to all four minting subjects (recommendations, evidence,
+  assumptions, decisions) instead of needing to be re-patched per subject.
+  Each subject's existing read/write/mint function names and signatures are
+  unchanged (thin wrappers over the shared primitives); bespoke per-subject
+  logic (recommendation promotion/archive/unarchive, decision supersession)
+  stays subject-specific rather than being forced into one generic shape.
+
+  Also fixes a real gap this refactor surfaced: `milestones.json` was the only
+  one of the five ledger files not written with `{ mode: 0o600 }`.
+
+  `cadence intelligence audit`/`reconcile`/`stats` now include milestones as a
+  fifth ledger: a new `orphan-milestone` finding kind catches a milestone
+  referencing a recommendation id that no longer exists in either the live or
+  archived recommendation arrays (a reference to a merely-archived, still
+  `unarchive`-recoverable recommendation is correctly NOT flagged).
+
+  `cadence recommendation/decision/assumption list`'s `--sort-by`/
+  `--filter-regex`/`--filter-regex-flags` validation is now one shared
+  pipeline instead of three independently maintained copies — behavior and
+  error wording are unchanged.
+
+  `cadence-types`, `cadence-host-claude-code`, and `cadence-host-codex` carry
+  version-alignment bumps only; none of the three changed.
+
+- e05922e: Fix `cadence recommendation add`'s id-minting to cross-check `evidence.json`
+  (phase 219, rec-20260724-013). `nextRecommendationId` previously derived the
+  next `rec-YYYYMMDD-NNN` id only from `recommendations.json`, so a dangling
+  `evidence.json` row left behind by a bad rebase-conflict resolution or an
+  interrupted `add` call — a `recommendationId` reference with no matching
+  `recommendations.json` entry — could silently collide with a freshly minted
+  id for an unrelated recommendation. The minted id is now guaranteed strictly
+  greater than both the `recommendations.json` max and the max
+  `recommendationId` referenced by `evidence.json` for the same date prefix.
+
+  Also adds a new `orphaned-evidence` `cadence doctor` check that surfaces any
+  `evidence.json` row whose `recommendationId` has no matching
+  `recommendations.json` entry, naming the evidence id and the missing
+  recommendation id — so this class of drift is caught immediately instead of
+  surviving unnoticed.
+
+  `cadence-types`, `cadence-host-claude-code`, and `cadence-host-codex` carry
+  version-alignment bumps only; none of the three changed.
+
+- 1f70e66: Extracts the logic host-claude-code and host-codex duplicated into a new
+  shared package, `@manehorizons/cadence-host-toolkit`:
+
+  - The hook-event routing algorithm's shape and the slash-command catalog
+    (`COMMANDS`) now live in `host-toolkit/src/routing.ts`. Both adapters
+    render their slash commands from this one catalog, which fixes a real
+    drift bug: host-codex's local copy had silently lost `cadence-dispatch`'s
+    `DISPATCH_DIALOGUE` body. Host-codex's own `mapEvent`/`extractPayload`/
+    `routeHookEvent` stay local — its `apply_patch`-based extraction is
+    genuinely different from host-claude-code's `file_path`-based extraction,
+    not just duplicated; only the structurally-identical `RouteResult` type is
+    shared.
+  - `install.ts`'s managed-marker merge logic and `locate-self.ts` are also
+    extracted into the toolkit, with one shared test suite; both adapters'
+    own `install.ts`/`locate-self.ts` are now thin wrappers.
+  - Core now enforces a new `HostCapabilities.agentIdentification` flag: a
+    host that declares it cannot supply `agentId`/`agentType` (Codex, whose
+    hook payload shape doesn't document one) causes core to notice loudly on
+    stderr instead of silently behaving as if no subagent were involved.
+    Codex's CLI now embeds its declared capabilities into the real hook
+    payload it sends to `cadence hook`, so the check is live end-to-end, not
+    just testable in isolation.
+
+  No CLI-facing behavior, flags, or exit codes changed for either adapter —
+  this is an internal dedup/extraction plus one new loud-notice-on-a-capability-
+  gap fix, not a rewrite. `HostAdapter`'s public contract is unchanged.
+
+- Updated dependencies [655663e]
+- Updated dependencies [e05922e]
+- Updated dependencies [1f70e66]
+  - @manehorizons/cadence-types@1.51.1
+
 ## 1.51.0
 
 ### Minor Changes

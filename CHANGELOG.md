@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.51.1] - 2026-07-25
+
+> Published to npm 2026-07-25 via the `Release` workflow (provenance), tag `v1.51.1`. Per-package bumps managed by changesets.
+
+### Added
+
+- **`@manehorizons/cadence-host-toolkit`** — first npm publish. A new shared package holding the hook-event routing algorithm's shape, the slash-command catalog, `install.ts`'s managed-marker merge logic, and `locate-self.ts`, extracted out of `host-claude-code`/`host-codex` to fix drift between the two adapters' duplicated copies (including a bug where host-codex's local catalog had silently lost `cadence-dispatch`'s `DISPATCH_DIALOGUE` body). Core now enforces a `HostCapabilities.agentIdentification` flag so a host that can't supply `agentId`/`agentType` (Codex) is noticed loudly instead of silently treated as no-subagent. (Phase `222-shared-adapter-toolkit`.)
+- **MCP/CLI parity** — `cadence_next`, `cadence_verify_coverage`, `cadence_verify_phase`, and `cadence_explain` are now registered as read-only MCP tools, backed by the same `services/*` functions as their CLI counterparts (tool count 18→22). `cadence_recommendation_promote` (MCP) now accepts a `ref` argument, matching the CLI's `--ref`. (Phase `221-mcp-cli-parity`, `rec-20260725-003`.)
+
+### Changed
+
+- **Unified Praxis intelligence ledgers** — the five ledgers (recommendations, evidence, assumptions, decisions, milestones) now share one read/write/id-minting module instead of five hand-rolled implementations, so a safeguard added for one subject applies to all. `cadence intelligence audit`/`reconcile`/`stats` gain a fifth `orphan-milestone` finding kind; `milestones.json` is now written with `{ mode: 0o600 }` like the other four ledgers. (Phase `220`.)
+
+### Fixed
+
+- **Recommendation id-minting cross-checks `evidence.json`** — `nextRecommendationId` previously derived the next `rec-YYYYMMDD-NNN` id only from `recommendations.json`, so a dangling `evidence.json` row (left by a bad rebase-conflict resolution or interrupted `add` call) could collide with a freshly minted id. `cadence doctor` gains an `orphaned-evidence` check. (Phase `219-recommendation-id-cross-check`, `rec-20260724-013`.)
+- **Post-publish npm verification retry budget** — `scripts/release-integrity.mjs`'s post-publish registry check now retries up to 10 times (was 3) to absorb npm CDN propagation lag; the pre-publish idempotency check keeps its original fast default. Fixes a real false-red on the `v1.51.0` Release workflow run. No changeset (repo tooling only, no `packages/*/src` touched). (Phase `218-release-verify-retry-budget`, `rec-20260725-001`.)
+- **CLI/MCP dedup** — the "did this `milestone propose` run produce a newly-proposed milestone" predicate, previously copy-pasted identically in `cli/commands/milestone.ts` and `services/milestone-propose.ts`, is now one exported `hasNewlyProposedMilestone()`. (Phase `221-mcp-cli-parity`.)
+
 ## [1.51.0] - 2026-07-25
 
 > Published to npm 2026-07-25 via the `Release` workflow (provenance), tag `v1.51.0`. Per-package bumps managed by changesets.
