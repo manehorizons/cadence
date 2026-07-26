@@ -917,6 +917,34 @@
       "kind": "note",
       "summary": "Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #4, Strong. Locked rule 'adapters translate lifecycle events only, never duplicate engine logic' confirmed intact -- no core-to-host import violation found.",
       "createdAt": "2026-07-25T23:56:04.355Z"
+    },
+    {
+      "id": "ev-20260725-006",
+      "recommendationId": "rec-20260725-006",
+      "kind": "note",
+      "summary": "Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #5, Worth exploring.",
+      "createdAt": "2026-07-25T15:09:13.354Z"
+    },
+    {
+      "id": "ev-20260725-007",
+      "recommendationId": "rec-20260725-007",
+      "kind": "note",
+      "summary": "Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #6, Worth exploring.",
+      "createdAt": "2026-07-25T15:09:13.547Z"
+    },
+    {
+      "id": "ev-20260725-008",
+      "recommendationId": "rec-20260725-008",
+      "kind": "note",
+      "summary": "Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #2, Strong.",
+      "createdAt": "2026-07-25T23:51:51.327Z"
+    },
+    {
+      "id": "ev-20260726-001",
+      "recommendationId": "rec-20260726-001",
+      "kind": "note",
+      "summary": "Hit live 2026-07-25 during phase 222 (shared-adapter-toolkit) build: 'cadence spec new' failed with 'CADENCE not initialized here' in a fresh EnterWorktree worktree despite .cadence/config.json/ROADMAP.md/phases/ all present and valid; cadence init --dry-run confirmed it would refuse ('.cadence/ already initialized'). Worked around by hand-writing state.json matching CadenceStateZ's schema.",
+      "createdAt": "2026-07-26T01:03:37.796Z"
     }
   ]
 }

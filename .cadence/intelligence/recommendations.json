@@ -1236,6 +1236,133 @@
       "decisionIds": [],
       "createdAt": "2026-07-24T23:14:13.477Z",
       "updatedAt": "2026-07-24T23:14:13.477Z"
+    },
+    {
+      "id": "rec-20260725-006",
+      "title": "Centralize gate bypass and seal policy in the settle driver",
+      "summary": "gates.sealed reads as a universal config knob but only 3 of ~10 bypassable gates (build-test-must-pass, coverage, boundary-scan) consult isGateSealed; docs/reference/config.md still names only 2 of them -- stale since boundary-scan shipped (Phase 156), the exact Doc Drift class this repo's own doc tests exist to catch. Bypass-flag semantics (--force vs --allow-X) are decided independently per gate file with no declared policy, and registry.ts records bypass provenance for test-coverage only.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/types.ts",
+        "packages/core/src/gates/build-test-must-pass.ts",
+        "packages/core/src/gates/coverage.ts",
+        "packages/core/src/gates/boundary-scan.ts",
+        "packages/core/src/gates/security-audit.ts",
+        "packages/core/src/gates/code-review.ts",
+        "packages/core/src/gates/structural-verifier.ts",
+        "packages/core/src/gates/plan-review.ts",
+        "packages/core/src/gates/per-task-verify.ts",
+        "docs/reference/config.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-25T15:09:13.354Z",
+      "updatedAt": "2026-07-25T15:09:13.354Z"
+    },
+    {
+      "id": "rec-20260725-007",
+      "title": "Split the settleService god function",
+      "summary": "settleService is a ~545-line function spanning at least 9 concerns (bypass-arg parsing, phase-collision backstop, mock-verifier banner, gate-registry loop, per-AC evidence derivation, evidence-floor gate, friction digest, recommendation ship-promotion, interactive GitHub-issue offer), distinguished only by inline Phase-number comments rather than function boundaries. The public interface (SettleArgs in, CommandResult out) is already right-sized -- cli/commands/settle.ts is a clean thin adapter and would not change.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "services"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-25T15:09:13.547Z",
+      "updatedAt": "2026-07-25T15:09:13.547Z"
+    },
+    {
+      "id": "rec-20260725-008",
+      "title": "Deepen the convergent-review protocol",
+      "summary": "nextConvergence() is a shallow 6-line classifier; the real weight -- ConvergenceSidecar read/write, the history-entry shape, and the pass/reload/escalate branch -- is copy-pasted at all 4 call sites (plan-review, code-review, spec-approve x2). Evidence of drift: all four independently write an identically-redundant ternary. A runConvergentReview({label, sidecar, verify, bypassFlag, idField}) would absorb the clone.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/converge.ts",
+        "packages/core/src/gates/plan-review.ts",
+        "packages/core/src/gates/code-review.ts",
+        "packages/core/src/services/spec-approve.ts",
+        "packages/core/src/gates/types.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260725",
+      "createdAt": "2026-07-25T23:51:51.327Z",
+      "updatedAt": "2026-07-25T23:51:51.327Z"
+    },
+    {
+      "id": "rec-20260726-001",
+      "title": "Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it",
+      "summary": "EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "init",
+        "worktree"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/state/simple.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260726-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-26T01:03:37.796Z",
+      "updatedAt": "2026-07-26T01:03:37.796Z",
+      "scoutId": "claude-cadence-audit-20260725"
     }
   ],
   "archived": [
@@ -4113,12 +4240,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "222-shared-adapter-toolkit",
-      "scoutId": "claude-cadence-audit-20260725",
-      "createdAt": "2026-07-25T23:56:04.355Z",
-      "updatedAt": "2026-07-26T00:38:43.226Z",
       "shippedRef": "phase 222-shared-adapter-toolkit / PR #TBD",
+      "scoutId": "claude-cadence-audit-20260725",
       "archivedAt": "2026-07-26T00:38:43.226Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-25T23:56:04.355Z",
+      "updatedAt": "2026-07-26T00:38:43.226Z"
     }
   ]
 }
