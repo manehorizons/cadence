@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "draftId": "224-01",
+  "completedAt": "2026-07-26T15:02:24.623Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Implemented findLedgerRemoteCollisions + gatherLedgerRemoteCollisionSnapshot + checkLedgerRemoteCollision in doctor/run.ts, wired into runDoctor. Independently re-verified: typecheck/build/lint clean, doctor --json surfaces the new check correctly (ok/no-upstream in this worktree)."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Added packages/core/tests/doctor/ledger-remote-collision.test.ts: 14 tests covering pure diff logic (incl. the critical already-at-merge-base non-collision case), all 5 AC-2 degrade-safely reasons via stub gather, collision/no-collision/throwing-gather cases, runDoctor wiring, and a real bare-origin+second-clone integration test reproducing the actual rec-id collision incident. Independently re-verified: 14/14 pass in isolation; full core suite 362 files / 3259 tests pass; typecheck/lint clean."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Added ledger-remote-collision row to the doctor v1 check-set table and to the manual fix-kind bucket. Independently verified diff matches shipped run.ts behavior exactly (fetch->merge-base->4-ledger id diff, warning severity, no auto-fix)."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 5,
+    "sessionSubagentSpawns": 0
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "8d6f873030e74876c5f54dc9b84212ae892d8d2fc739a7506e49cfd268b317b4"
+  }
+}

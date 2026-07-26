@@ -4,13 +4,28 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { delimiter, join } from 'node:path';
 import { homedir } from 'node:os';
-import { MOCK_VERIFIER_NOTICE, CadenceStateZ, type CadenceState } from '@manehorizons/cadence-types';
+import {
+  MOCK_VERIFIER_NOTICE,
+  CadenceStateZ,
+  RecommendationLedgerZ,
+  EvidenceLedgerZ,
+  AssumptionLedgerZ,
+  IntelligenceDecisionLedgerZ,
+  type CadenceState,
+} from '@manehorizons/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
 import { assessReadiness, isClaudeCodeSession } from '../activate/assess.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
-import { readRecommendationLedger, readEvidenceLedger } from '../intelligence/store/io.js';
+import {
+  readRecommendationLedger,
+  readEvidenceLedger,
+  readAssumptionLedger,
+  readIntelligenceDecisionLedger,
+} from '../intelligence/store/io.js';
+import { checkRemoteFreshness } from '../handoff/remote-freshness.js';
+import { gitBestEffort } from '../git/worktrees.js';
 import { detectProjectLanguage } from '../init/plan.js';
 import { getProfileForExtension } from '../verify/coverage-profiles/registry.js';
 import { CADENCE_OWNED_GITIGNORE_ENTRIES } from '../init/gitignore.js';
@@ -813,6 +828,246 @@ export async function checkOrphanedEvidence(root: string): Promise<DoctorCheck> 
   }
 }
 
+/**
+ * The four ledger-id subjects this check compares, as parallel id arrays.
+ * `recommendations` includes both live and archived ids (Phase 224) since
+ * either could collide with a freshly minted id.
+ */
+export interface LedgerIdSnapshot {
+  recommendations: string[];
+  evidence: string[];
+  decisions: string[];
+  assumptions: string[];
+}
+
+/** Relative (git-show form) path per `LedgerIdSnapshot` subject — mirrors the
+ *  constants in `../intelligence/store/paths.js`, which only exposes absolute
+ *  fs paths. */
+const LEDGER_GIT_PATHS: Record<keyof LedgerIdSnapshot, string> = {
+  recommendations: '.cadence/intelligence/recommendations.json',
+  evidence: '.cadence/intelligence/evidence.json',
+  decisions: '.cadence/intelligence/decisions.json',
+  assumptions: '.cadence/intelligence/assumptions.json',
+};
+
+/** Human label per `LedgerIdSnapshot` subject, for the doctor detail string. */
+const LEDGER_SUBJECT_LABEL: Record<keyof LedgerIdSnapshot, string> = {
+  recommendations: 'recommendations.json',
+  evidence: 'evidence.json',
+  decisions: 'decisions.json',
+  assumptions: 'assumptions.json',
+};
+
+const LEDGER_SUBJECTS: Array<keyof LedgerIdSnapshot> = [
+  'recommendations',
+  'evidence',
+  'decisions',
+  'assumptions',
+];
+
+/**
+ * Pure id-collision diff (Phase 224, T1). For each subject, ids present in
+ * `local` but not in `mergeBase` are "local-new"; ids present in `origin` but
+ * not in `mergeBase` are "origin-new". A collision is any id that is
+ * local-new AND origin-new — both sides independently minted the same id
+ * after diverging from their common ancestor, which `mintId`'s purely-local
+ * view cannot see coming. Deliberately id-overlap-only, no content-diffing
+ * (see this phase's DRAFT boundaries) — id overlap after divergence is
+ * already a sufficient, unambiguous signal.
+ */
+export function findLedgerRemoteCollisions(
+  local: LedgerIdSnapshot,
+  mergeBase: LedgerIdSnapshot,
+  origin: LedgerIdSnapshot,
+): Array<{ subject: keyof LedgerIdSnapshot; id: string }> {
+  const collisions: Array<{ subject: keyof LedgerIdSnapshot; id: string }> = [];
+  for (const subject of LEDGER_SUBJECTS) {
+    const base = new Set(mergeBase[subject]);
+    const localNew = local[subject].filter((id) => !base.has(id));
+    const originNew = new Set(origin[subject].filter((id) => !base.has(id)));
+    for (const id of localNew) {
+      if (originNew.has(id)) collisions.push({ subject, id });
+    }
+  }
+  return collisions;
+}
+
+/**
+ * Reads a `LedgerIdSnapshot` from the live filesystem at HEAD (includes
+ * uncommitted changes — deliberate, since this check evaluates what is about
+ * to be pushed). Best-effort per subject: a reader failure (missing/corrupt
+ * ledger file) degrades that one subject to an empty id array rather than
+ * throwing — "no ids on this side", not an error.
+ */
+async function readLocalLedgerIdSnapshot(root: string): Promise<LedgerIdSnapshot> {
+  const recommendations = await (async (): Promise<string[]> => {
+    try {
+      const ledger = await readRecommendationLedger(root);
+      return [...ledger.recommendations.map((r) => r.id), ...ledger.archived.map((r) => r.id)];
+    } catch {
+      return [];
+    }
+  })();
+  const evidence = await (async (): Promise<string[]> => {
+    try {
+      return (await readEvidenceLedger(root)).evidence.map((e) => e.id);
+    } catch {
+      return [];
+    }
+  })();
+  const decisions = await (async (): Promise<string[]> => {
+    try {
+      return (await readIntelligenceDecisionLedger(root)).decisions.map((d) => d.id);
+    } catch {
+      return [];
+    }
+  })();
+  const assumptions = await (async (): Promise<string[]> => {
+    try {
+      return (await readAssumptionLedger(root)).assumptions.map((a) => a.id);
+    } catch {
+      return [];
+    }
+  })();
+  return { recommendations, evidence, decisions, assumptions };
+}
+
+/**
+ * Reads a `LedgerIdSnapshot` at an arbitrary git ref via `git show
+ * <ref>:<path>` (through `gitBestEffort`, which already resolves to `''` for
+ * a path missing at that ref, or any other git failure — never throws). An
+ * empty read or a schema-parse failure degrades that one subject to an empty
+ * id array.
+ */
+async function readLedgerIdSnapshotAtRef(root: string, ref: string): Promise<LedgerIdSnapshot> {
+  async function idsAt<T>(
+    subject: keyof LedgerIdSnapshot,
+    schema: { parse: (data: unknown) => T },
+    idsOf: (parsed: T) => string[],
+  ): Promise<string[]> {
+    const raw = await gitBestEffort(root, ['show', `${ref}:${LEDGER_GIT_PATHS[subject]}`]);
+    if (raw.trim().length === 0) return [];
+    try {
+      return idsOf(schema.parse(JSON.parse(raw)));
+    } catch {
+      return [];
+    }
+  }
+
+  const [recommendations, evidence, decisions, assumptions] = await Promise.all([
+    idsAt('recommendations', RecommendationLedgerZ, (l) => [
+      ...l.recommendations.map((r) => r.id),
+      ...l.archived.map((r) => r.id),
+    ]),
+    idsAt('evidence', EvidenceLedgerZ, (l) => l.evidence.map((e) => e.id)),
+    idsAt('decisions', IntelligenceDecisionLedgerZ, (l) => l.decisions.map((d) => d.id)),
+    idsAt('assumptions', AssumptionLedgerZ, (l) => l.assumptions.map((a) => a.id)),
+  ]);
+  return { recommendations, evidence, decisions, assumptions };
+}
+
+/** Outcome of {@link gatherLedgerRemoteCollisionSnapshot}. `checked: false`
+ *  mirrors `RemoteFreshness`'s soft-degrade shape: no repo, detached HEAD, a
+ *  failed fetch, no upstream, or (new for this check) no discoverable
+ *  merge-base with the upstream ref. */
+export interface LedgerRemoteCollisionResult {
+  checked: boolean;
+  reason?: string;
+  branch?: string;
+  local?: LedgerIdSnapshot;
+  mergeBase?: LedgerIdSnapshot;
+  origin?: LedgerIdSnapshot;
+}
+
+/**
+ * Impure gatherer for {@link checkLedgerRemoteCollision} (Phase 224, T1).
+ * Reuses `checkRemoteFreshness` for the fetch + branch + upstream-existence
+ * probe; only when that reports `checked: true` does this resolve `git
+ * merge-base HEAD @{u}` and read the three ledger-id snapshots (local
+ * filesystem at HEAD, and `@{u}`/the merge-base sha via `git show`).
+ */
+export async function gatherLedgerRemoteCollisionSnapshot(
+  root: string,
+): Promise<LedgerRemoteCollisionResult> {
+  const freshness = await checkRemoteFreshness(root);
+  const branchField = freshness.branch !== undefined ? { branch: freshness.branch } : {};
+  if (!freshness.checked) {
+    return {
+      checked: false,
+      ...(freshness.reason !== undefined ? { reason: freshness.reason } : {}),
+      ...branchField,
+    };
+  }
+  const mergeBaseSha = (await gitBestEffort(root, ['merge-base', 'HEAD', '@{u}'])).trim();
+  if (mergeBaseSha.length === 0) {
+    return { checked: false, reason: 'no-merge-base', ...branchField };
+  }
+  const [local, mergeBase, origin] = await Promise.all([
+    readLocalLedgerIdSnapshot(root),
+    readLedgerIdSnapshotAtRef(root, mergeBaseSha),
+    readLedgerIdSnapshotAtRef(root, '@{u}'),
+  ]);
+  return { checked: true, ...branchField, local, mergeBase, origin };
+}
+
+/**
+ * Detects cross-session ledger id collisions before push (Phase 224,
+ * rec-20260726-003 — see this phase's DRAFT): `mintId` computes the next
+ * ledger id purely from the local ledger on disk, so two unpushed
+ * branches/worktrees/sessions can independently mint the same id for
+ * different content. This check fetches the tracked upstream (via the
+ * injectable `gather`, defaulting to {@link gatherLedgerRemoteCollisionSnapshot})
+ * and warns on any id both sides minted new-since-merge-base. Never
+ * auto-fixable (`fixId` stays `null`) — a human must pick which side
+ * re-mints, matching `worktree-phases`. Best-effort and never throws
+ * (doctor convention): any degrade-safely path from `gather`, or an
+ * unexpected error, reports `ok` with a `detail` naming why the comparison
+ * could not be made.
+ */
+export async function checkLedgerRemoteCollision(
+  root: string,
+  gather: (root: string) => Promise<LedgerRemoteCollisionResult> = gatherLedgerRemoteCollisionSnapshot,
+): Promise<DoctorCheck> {
+  try {
+    const snapshot = await gather(root);
+    if (
+      !snapshot.checked ||
+      snapshot.local === undefined ||
+      snapshot.mergeBase === undefined ||
+      snapshot.origin === undefined
+    ) {
+      const reason = snapshot.reason ?? 'not determinable';
+      return pass('ledger-remote-collision', `Not determinable (${reason}) — skipped.`);
+    }
+
+    const branchLabel = snapshot.branch !== undefined ? `origin/${snapshot.branch}` : 'the tracked upstream';
+    const collisions = findLedgerRemoteCollisions(snapshot.local, snapshot.mergeBase, snapshot.origin);
+    if (collisions.length === 0) {
+      return pass(
+        'ledger-remote-collision',
+        `No cross-session ledger id collisions vs ${branchLabel}.`,
+      );
+    }
+
+    const detail = collisions
+      .map((c) => `${c.id} (${LEDGER_SUBJECT_LABEL[c.subject]}) also newly minted on ${branchLabel}`)
+      .join('; ');
+    return fail(
+      'ledger-remote-collision',
+      'warning',
+      `Ledger id collision(s) vs ${branchLabel}: ${detail}.`,
+      'Re-mint the local-only entry under the next free id before pushing: diff the new-id sets, ' +
+        "keep the fuller side as-is, and re-add the other side's entry via the matching `cadence recommendation`/" +
+        'evidence/assumption/decision CLI command under a fresh id.',
+    );
+  } catch {
+    return pass(
+      'ledger-remote-collision',
+      'Ledger remote-collision check not determinable (best-effort) — skipped.',
+    );
+  }
+}
+
 /** A representative extension per `ProjectLanguage` (`../init/plan.js`), used
  * only to probe the live coverage-profile registry — not a duplicate source
  * of truth for which languages exist, since `getProfileForExtension` is the
@@ -978,6 +1233,7 @@ export async function runDoctor(
     await checkVerificationReadiness(root),
     await checkRecommendationShippedDrift(root),
     await checkOrphanedEvidence(root),
+    await checkLedgerRemoteCollision(root),
     await checkCoverageModeLanguageSupport(root),
   ];
   return rollup(checks);
