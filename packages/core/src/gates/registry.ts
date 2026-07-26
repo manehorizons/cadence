@@ -173,6 +173,15 @@ export async function runSettleGates(
       });
     } else if (gate === 'build-test-must-pass' && res.summaryPatch?.buildTestRan === false) {
       gates.push({ gate, status: 'skipped', skipReason: NO_TEST_COMMAND_NOTICE.message });
+    } else if (gate === 'build-test-must-pass' && res.flags?.buildTestBypassed === true) {
+      // Phase 226: buildTestBypassed is true for either --allow-failing-build
+      // or bare --force (see build-test-must-pass.ts) — name whichever one
+      // actually fired instead of always naming the gate's own flag.
+      const flag = ctx.opts.allowFailingBuild === true ? '--allow-failing-build' : '--force';
+      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}` });
+    } else if (gate === 'boundary-scan' && res.flags?.boundaryScanBypassed === true) {
+      const flag = ctx.opts.allowBoundaryScanFailure === true ? '--allow-boundary-scan-failure' : '--force';
+      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}` });
     } else if (gate === 'test-coverage' && res.flags?.coverageBypassed === true) {
       gates.push({ gate, status: 'skipped', skipReason: 'bypassed via --allow-missing-coverage' });
     } else {

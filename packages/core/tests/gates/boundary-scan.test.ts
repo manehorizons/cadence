@@ -119,6 +119,9 @@ describe('runBoundaryScanGate', () => {
     );
 
     expect(res.outcome).toBe('pass');
+    // Phase 226 (T3): a genuine pass (nothing to bypass) must not carry the
+    // bypass flag — it wasn't bypassed, there was simply nothing to refuse.
+    expect(res.flags?.boundaryScanBypassed).toBeUndefined();
   });
 
   // AC-4: a real out-of-boundary file refuses settle, naming the offender.
@@ -156,6 +159,9 @@ describe('runBoundaryScanGate', () => {
     expect(res.outcome).toBe('pass');
     expect(res.summaryPatch?.boundaryScan?.offenders).toEqual(['undeclared.ts']);
     expect(errs.join('')).toContain('--force set; proceeding past 1 offending file(s)');
+    // Phase 226 (T3): a genuine unsealed bypass carries flags.boundaryScanBypassed
+    // so the registry can record 'skipped (bypassed)' provenance instead of 'ran'.
+    expect(res.flags?.boundaryScanBypassed).toBe(true);
   });
 
   // AC-5: --allow-boundary-scan-failure bypasses the refusal the same way.
@@ -178,6 +184,7 @@ describe('runBoundaryScanGate', () => {
     expect(res.outcome).toBe('pass');
     expect(res.summaryPatch?.boundaryScan?.offenders).toEqual(['undeclared.ts']);
     expect(errs.join('')).toContain('--allow-boundary-scan-failure set; proceeding past 1 offending file(s)');
+    expect(res.flags?.boundaryScanBypassed).toBe(true);
   });
 
   // AC-5: a sealed gate ignores both bypass flags and still refuses.

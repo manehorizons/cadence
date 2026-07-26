@@ -1,0 +1,23 @@
+{
+  "draftId": "226-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Doc-content test derives sealed-gate list from real isGateSealed call sites; docs/reference/config.md + docs/concepts.md fixed to name all 3 gates + 2 missing bypass-table rows; one reviewer-found stale cross-reference ('these two entries') also fixed. Independently re-verified: 5/5 new tests, 101/101 full doc suite, typecheck/lint clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T21:08:46.579Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "build-test-must-pass.ts/boundary-scan.ts now set flags.*Bypassed on genuine unsealed bypass; registry.ts records matching skip reasons, mirroring test-coverage. Reviewer traced the boolean logic by hand (confirmed no behavior change) and found the new flags had zero direct gate-level test coverage (only synthetic registry stubs) unlike coverage.ts's precedent -- fixed by adding direct assertions to build-test-must-pass.test.ts (+1 negative case) and boundary-scan.test.ts. 253/253 gates suite, typecheck/lint clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T21:10:18.246Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Added bypass-flag naming policy subsection to docs/concepts.md. Reviewer found 3 real audit gaps (verified against source + git log before fixing): structural-verifier/--allow-open-tasks entirely missing from the table and --force gate list; --allow-failing-build wrongly claimed to pre-date the --allow-<gate>-failure convention (git log shows it shipped in Phase 39.2, 2 weeks AFTER Phase 24.3 introduced the convention -- only --allow-missing-coverage/Phase 14 and --allow-stale-draft/Phase 23.1 genuinely pre-date it); --allow-per-task-failure never given an exception note. Rewrote the section with verified dates/commits for all 4 non-conforming flags and added the missing table row. 101/101 doc-content tests still pass.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T21:21:29.822Z"
+    }
+  }
+}

@@ -208,6 +208,18 @@ export interface SettleContext {
 /** Cross-cutting flags a gate sets for the finalizers to read. */
 export interface GateFlags {
   coverageBypassed?: boolean;
+  /** Phase 226 (T3): true iff build-test-must-pass proceeded specifically
+   *  because a failing test run was let through via --allow-failing-build or
+   *  --force while the gate was NOT sealed — never set on a genuinely
+   *  passing run or a sealed refusal. Mirrors `coverageBypassed`'s role: lets
+   *  the registry's gate-provenance collection report "skipped (bypassed)"
+   *  instead of a misleading "ran". */
+  buildTestBypassed?: boolean;
+  /** Phase 226 (T3): true iff boundary-scan proceeded past a real
+   *  out-of-boundary finding via --force or --allow-boundary-scan-failure
+   *  while the gate was NOT sealed. Same provenance-parity role as
+   *  `coverageBypassed`/`buildTestBypassed` above. */
+  boundaryScanBypassed?: boolean;
   verifierFailure?: { message: string; provider?: string };
 }
 

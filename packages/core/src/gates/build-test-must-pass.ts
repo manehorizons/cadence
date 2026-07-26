@@ -18,6 +18,13 @@ import type { GateImpl, GateResult } from './types.js';
  * --force can bypass a failing test run — the refusal message is a distinct
  * "sealed, cannot be bypassed" message naming `gates.sealed` instead of the
  * normal bypass hint. Unsealed behavior (AC-5) is byte-for-byte unchanged.
+ *
+ * Phase 226 (T3): when a failing run is genuinely let through (unsealed,
+ * --allow-failing-build or --force set), the result now also carries
+ * `flags.buildTestBypassed: true` — mirroring `test-coverage`'s
+ * `coverageBypassed` — so the registry's gate-provenance collection can
+ * report this as "skipped (bypassed)" instead of a misleading "ran". Not set
+ * on a genuinely passing run or a sealed refusal.
  */
 export const runBuildTestGate: GateImpl = async (ctx): Promise<GateResult> => {
   const res = await ctx.runner.test();
@@ -36,6 +43,12 @@ export const runBuildTestGate: GateImpl = async (ctx): Promise<GateResult> => {
           'Pass --allow-failing-build to bypass, or --force to settle anyway.';
     ctx.io.err(`${reason}\n`);
     return { outcome: 'refuse', reason };
+  }
+  if (!res.ok) {
+    // Reaching here with a failing run means the refusal above did NOT fire —
+    // by that branch's condition, that only happens when unsealed AND a
+    // bypass flag was set. A genuine bypass, not a passing run.
+    return { outcome: 'pass', flags: { buildTestBypassed: true } };
   }
   return { outcome: 'pass' };
 };

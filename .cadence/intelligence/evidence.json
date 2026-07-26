@@ -966,6 +966,13 @@
       "kind": "note",
       "summary": "Manual review during v1.51.1 release cut confirmed the diagram's verifier-provider and surface lists are currently accurate, but found no doc-content test asserting it -- the check was ad hoc.",
       "createdAt": "2026-07-26T04:30:49.501Z"
+    },
+    {
+      "id": "ev-20260726-005",
+      "recommendationId": "rec-20260726-005",
+      "kind": "note",
+      "summary": "Traced boolean logic by hand: coverageBypassed = allowMissingCoverage===true && !sealed, but the assertion-mode pass-through at line ~127 is also reachable via force-only bypass of real gaps (guard: (issues) && (!force || sealed) being false via force=true).",
+      "createdAt": "2026-07-26T21:37:07.036Z"
     }
   ]
 }

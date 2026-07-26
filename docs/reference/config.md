@@ -524,16 +524,18 @@ a `production`-tier project cares about most.
 | `gates.sealed` | `string[]` | `[]` | Gate ids that cannot be bypassed at settle time. An empty array (the default) restores normal bypass behavior for every gate. |
 | `gates.evidenceFloor` | `"ai-verified" \| "executed" \| "assertion" \| "mention" \| "unverified"` | `"mention"` (schema-level, back-compat) | Minimum evidence class every `PASS`-verdicted AC must meet at settle, on the Phase 140 evidence ladder ranked strongest to weakest: `ai-verified` > `executed` > `assertion` > `mention` > `unverified`. See [evidenceFloor](#gatesevidencefloor) below. |
 
-Only two gate ids currently check `gates.sealed` and are meaningful here:
+Only three gate ids currently check `gates.sealed` and are meaningful here:
 
 | Gate id | Bypass flag(s) it seals shut |
 |---|---|
 | `test-coverage` | `--allow-missing-coverage`, `--force` |
 | `build-test-must-pass` | `--allow-failing-build`, `--force` |
+| `boundary-scan` | `--allow-boundary-scan-failure`, `--force` |
 
 Naming any other gate id in `gates.sealed` currently has no effect — only
-`test-coverage` and `build-test-must-pass` consult `isGateSealed`; the other
-gates' bypass flags are unaffected regardless of what's listed here.
+`test-coverage`, `build-test-must-pass`, and `boundary-scan` consult
+`isGateSealed`; the other gates' bypass flags are unaffected regardless of
+what's listed here.
 
 Sealing binds the **auto** settle path (`cadence settle run --auto`, the one
 agents and CI use) — `cadence settle run --interactive` (non-auto) still lets
@@ -545,7 +547,7 @@ per-AC verification to the `interactive-verdict` human walker instead.
 { "gates": { "sealed": ["test-coverage", "build-test-must-pass"] } }
 ```
 
-See [docs/concepts.md — Gate bypass reference summary](../concepts.md#gate-bypass-reference-summary) for the full bypass-flag table these two entries interact with.
+See [docs/concepts.md — Gate bypass reference summary](../concepts.md#gate-bypass-reference-summary) for the full bypass-flag table, covering all three sealed-eligible gates, that these config entries interact with.
 
 ### `gates.evidenceFloor`
 

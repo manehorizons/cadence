@@ -270,6 +270,78 @@ describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
     ]);
   });
 
+  // Phase 226 (T3): mirrors the test-coverage bypass-provenance case above —
+  // build-test-must-pass's own genuine-bypass flag must surface the same way.
+  it('records build-test-must-pass as skipped when bypassed via --allow-failing-build', async () => {
+    const ctx = { gateSet: { gates: ['build-test-must-pass'] }, opts: { allowFailingBuild: true } } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'build-test-must-pass': { outcome: 'pass', flags: { buildTestBypassed: true } },
+      }),
+      order: ['build-test-must-pass'],
+    });
+    expect(gates).toEqual([
+      { gate: 'build-test-must-pass', status: 'skipped', skipReason: 'bypassed via --allow-failing-build' },
+    ]);
+  });
+
+  // Phase 226 (whole-branch review finding): buildTestBypassed is true for
+  // EITHER --allow-failing-build or bare --force — the skip reason must name
+  // whichever one actually fired, not always the gate's own named flag.
+  it('names --force (not --allow-failing-build) when build-test-must-pass was bypassed via bare --force', async () => {
+    const ctx = { gateSet: { gates: ['build-test-must-pass'] }, opts: { force: true } } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'build-test-must-pass': { outcome: 'pass', flags: { buildTestBypassed: true } },
+      }),
+      order: ['build-test-must-pass'],
+    });
+    expect(gates).toEqual([
+      { gate: 'build-test-must-pass', status: 'skipped', skipReason: 'bypassed via --force' },
+    ]);
+  });
+
+  // Phase 226 (T3): same parity fix for boundary-scan. Uses the same
+  // boundaryEnforcement:'block' context as the "records boundary-scan as ran"
+  // test below, so the self-guard predicate doesn't short-circuit this case.
+  it('records boundary-scan as skipped when bypassed via --allow-boundary-scan-failure', async () => {
+    const ctx = {
+      gateSet: { gates: [] },
+      opts: { allowBoundaryScanFailure: true },
+      config: { boundaryEnforcement: 'block' },
+      draft: { tasks: [] },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'boundary-scan': { outcome: 'pass', flags: { boundaryScanBypassed: true } },
+      }),
+      order: ['boundary-scan'],
+    });
+    expect(gates).toEqual([
+      { gate: 'boundary-scan', status: 'skipped', skipReason: 'bypassed via --allow-boundary-scan-failure' },
+    ]);
+  });
+
+  // Phase 226 (whole-branch review finding): same --force-naming fix for
+  // boundary-scan as build-test-must-pass above.
+  it('names --force (not --allow-boundary-scan-failure) when boundary-scan was bypassed via bare --force', async () => {
+    const ctx = {
+      gateSet: { gates: [] },
+      opts: { force: true },
+      config: { boundaryEnforcement: 'block' },
+      draft: { tasks: [] },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'boundary-scan': { outcome: 'pass', flags: { boundaryScanBypassed: true } },
+      }),
+      order: ['boundary-scan'],
+    });
+    expect(gates).toEqual([
+      { gate: 'boundary-scan', status: 'skipped', skipReason: 'bypassed via --force' },
+    ]);
+  });
+
   it('returns a partial gates[] (earlier entries plus the refusing gate itself) on refusal (AC-1, phase 170)', async () => {
     const { gates, refused } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
       registry: recordingRegistry([], { 'test-coverage': { outcome: 'refuse' } }),
