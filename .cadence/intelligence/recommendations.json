@@ -1274,7 +1274,7 @@
       "title": "Deepen the convergent-review protocol",
       "summary": "nextConvergence() is a shallow 6-line classifier; the real weight -- ConvergenceSidecar read/write, the history-entry shape, and the pass/reload/escalate branch -- is copy-pasted at all 4 call sites (plan-review, code-review, spec-approve x2). Evidence of drift: all four independently write an identically-redundant ternary. A runConvergentReview({label, sidecar, verify, bypassFlag, idField}) would absorb the clone.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "ready-for-milestone",
       "priority": "high",
       "leverageScore": 5,
@@ -1298,9 +1298,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "225-convergent-review-runner",
       "scoutId": "claude-cadence-audit-20260725",
       "createdAt": "2026-07-25T23:51:51.327Z",
-      "updatedAt": "2026-07-25T23:51:51.327Z"
+      "updatedAt": "2026-07-26T17:57:46.236Z"
     },
     {
       "id": "rec-20260726-002",
@@ -4341,11 +4342,11 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "224-ledger-remote-collision-doctor",
-      "createdAt": "2026-07-26T03:49:50.285Z",
-      "updatedAt": "2026-07-26T15:39:08.626Z",
       "shippedRef": "PR #309",
       "archivedAt": "2026-07-26T15:39:08.626Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-26T03:49:50.285Z",
+      "updatedAt": "2026-07-26T15:39:08.626Z"
     }
   ]
 }

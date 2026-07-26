@@ -1,0 +1,71 @@
+{
+  "draftId": "225-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Audited all 4 convergence call sites; added 16 characterization tests pinning exact sidecar JSON shape + pass/reloop/escalate/bypass branches for plan-review, code-review, spec-review, ui-spec-review. No source touched. Independently re-verified (diff read, tests/typecheck/lint re-run) + independent reviewer approved.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T17:32:20.389Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 4 file(s), 35785 diff bytes",
+        "provider": "mock"
+      }
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Extracted pure runConvergentReview primitive in converge.ts (no I/O, no ctx, no fs). Sidecar JSON shape + attempts formula + history non-mutation verified against T1's characterizations and the 3 real call sites. 12 new unit tests. Independently re-verified + independent reviewer approved (also confirmed design fitness for T3/T4/T5).",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T17:37:06.457Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 1 file(s), 4998 diff bytes",
+        "provider": "mock"
+      }
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Migrated plan-review.ts to runConvergentReview; byte-identical branch logic + sidecar shape preserved. Independently re-verified + reviewer approved.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T17:49:08.634Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 1 file(s), 3049 diff bytes",
+        "provider": "mock"
+      }
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Migrated code-review.ts to runConvergentReview; collectHighFindings, try/catch, and OR-bypass all preserved unchanged. Independently re-verified + reviewer approved.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T17:49:08.824Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 1 file(s), 5328 diff bytes",
+        "provider": "mock"
+      }
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Migrated both spec-approve.ts call sites (spec-review + ui-spec-review) to runConvergentReview; both sidecars byte-identical. Independently re-verified + reviewer approved.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T17:49:09.009Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 1 file(s), 3827 diff bytes",
+        "provider": "mock"
+      }
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "Full package regression: 362 test files / 3283 tests pass, typecheck clean, lint clean, build clean. All 4 call sites now delegate to runConvergentReview with byte-identical sidecar JSON and branch behavior.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-26T17:50:56.850Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 1 file(s), 60912 diff bytes",
+        "provider": "mock"
+      }
+    }
+  }
+}

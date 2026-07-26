@@ -1,4 +1,4 @@
-import { nextConvergence } from '../verify/converge.js';
+import { runConvergentReview } from '../verify/converge.js';
 import type { DraftGateImpl } from './draft-types.js';
 import type { GateResult } from './types.js';
 
@@ -6,9 +6,9 @@ import type { GateResult } from './types.js';
  * Plan-review gate (Phase 25.1 + 35.1 bounded convergence). Extracted from
  * draft.ts (Phase 39.7). Fires when `'plan-review'` is in the effective gate set
  * (strict×complex). Runs against the parsed DRAFT (no diff/SUMMARY at approve
- * time). Reads prior attempts from the convergence sidecar, computes the next
- * convergence verdict, appends history + rewrites the sidecar (legacy 29.7
- * top-level fields preserved byte-for-byte), then on `!pass` reproduces the
+ * time). Reads prior attempts from the convergence sidecar, delegates the
+ * verdict/history/sidecar-shape computation to the shared
+ * `runConvergentReview` primitive (phase 225), then on `!pass` reproduces the
  * three arms exactly. Reaches the verifier / sidecar / notifier only through
  * `ctx` ports.
  */
@@ -21,41 +21,25 @@ export const runPlanReviewGate: DraftGateImpl = async (ctx): Promise<GateResult>
 
   const res = await ctx.verifiers.planReview.verify({ draft: ctx.draft });
   const maxAttempts = ctx.config?.convergence?.maxAttempts ?? 3;
-  const nv = nextConvergence(res.pass, attemptsSoFar, maxAttempts);
-  const now = new Date().toISOString();
   // `--allow-plan-review-failure` bypasses ANY failing plan-review (reloop OR
   // escalate) and proceeds to BUILD; `bypassed` = a failing review the flag
   // waved through, regardless of verdict.
   const bypassed = !res.pass && ctx.opts.allowPlanReviewFailure === true;
 
-  history.push({
-    at: now,
+  const result = runConvergentReview({
     pass: res.pass,
     findingsCount: res.findings.length,
     provider: res.provider,
     ...(res.model ? { model: res.model } : {}),
-    verdict: nv.verdict,
-    ...(bypassed ? { bypassed: true } : {}),
+    attemptsSoFar,
+    history,
+    maxAttempts,
+    bypassed,
+    idField: 'draftId',
+    idValue: ctx.id,
   });
-  await ctx.planReviewSidecar.write(
-    JSON.stringify(
-      {
-        draftId: ctx.id,
-        converged: res.pass,
-        attempts: nv.verdict === 'pass' ? attemptsSoFar : nv.attempt,
-        maxAttempts,
-        history,
-        // legacy 29.7 top-level fields preserved for old readers:
-        pass: res.pass,
-        provider: res.provider,
-        ...(res.model ? { model: res.model } : {}),
-        findings: res.findings.length,
-        at: now,
-      },
-      null,
-      2,
-    ) + '\n',
-  );
+  const nv = result.nv;
+  await ctx.planReviewSidecar.write(JSON.stringify(result.sidecarJson, null, 2) + '\n');
 
   if (!res.pass) {
     for (const f of res.findings) {

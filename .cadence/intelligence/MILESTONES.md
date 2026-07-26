@@ -39,6 +39,7 @@ None.
 - mil-rec-rec-20260725-001 — release-integrity.mjs's post-publish npm verification retries too briefly, causing false-red Release workflow runs → .cadence/intelligence/exports/mil-rec-rec-20260725-001/SPEC.md
 - mil-rec-rec-20260725-002 — Deepen the Praxis ledger into one module → .cadence/intelligence/exports/mil-rec-rec-20260725-002/SPEC.md
 - mil-rec-rec-20260725-003 — Give the MCP surface real "one engine" parity with the CLI → .cadence/intelligence/exports/mil-rec-rec-20260725-003/SPEC.md
+- mil-rec-rec-20260725-008 — Deepen the convergent-review protocol → .cadence/intelligence/exports/mil-rec-rec-20260725-008/SPEC.md
 
 ## Closed
 

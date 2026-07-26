@@ -15,7 +15,7 @@ import type { CommandIO } from '../../src/services/io.js';
  * real network call is ever made (the repo's zero-live-provider-test rule).
  */
 const constructedNames = vi.hoisted(() => [] as string[]);
-const specVerifyResult = vi.hoisted(() => ({ pass: true }));
+const specVerifyResult = vi.hoisted(() => ({ pass: true, model: undefined as string | undefined }));
 
 vi.mock('../../src/verify/spec-review-factory.js', async (importOriginal) => {
   const actual =
@@ -38,6 +38,7 @@ vi.mock('../../src/verify/spec-review-factory.js', async (importOriginal) => {
             ? []
             : [{ severity: 'high', message: 'stub spec-review finding' }],
           provider: real.name,
+          ...(specVerifyResult.model ? { model: specVerifyResult.model } : {}),
         }),
       };
     },
@@ -45,7 +46,7 @@ vi.mock('../../src/verify/spec-review-factory.js', async (importOriginal) => {
 });
 
 const uiConstructedNames = vi.hoisted(() => [] as string[]);
-const uiVerifyResult = vi.hoisted(() => ({ pass: true }));
+const uiVerifyResult = vi.hoisted(() => ({ pass: true, model: undefined as string | undefined }));
 
 vi.mock('../../src/verify/ui-spec-review-factory.js', async (importOriginal) => {
   const actual =
@@ -64,6 +65,7 @@ vi.mock('../../src/verify/ui-spec-review-factory.js', async (importOriginal) => 
           pass: uiVerifyResult.pass,
           findings: uiVerifyResult.pass ? [] : [{ severity: 'high', message: 'stub finding' }],
           provider: real.name,
+          ...(uiVerifyResult.model ? { model: uiVerifyResult.model } : {}),
         }),
       };
     },
@@ -134,8 +136,10 @@ let root: string | null = null;
 afterEach(async () => {
   constructedNames.length = 0;
   specVerifyResult.pass = true;
+  specVerifyResult.model = undefined;
   uiConstructedNames.length = 0;
   uiVerifyResult.pass = true;
+  uiVerifyResult.model = undefined;
   if (root) {
     await rm(root, { recursive: true, force: true }).catch(() => {});
     root = null;
@@ -353,6 +357,388 @@ describe('specApproveService — ui-spec-review (rec-20260711-004)', () => {
     expect(err.join('')).toMatch(/UI-SPEC-REVIEW sidecar present but UI-SPEC\.md absent/);
     // The stub verifier must never be constructed in this skip path.
     expect(uiConstructedNames).toEqual([]);
+  });
+});
+
+/**
+ * T1 (phase 225 audit) — no prior test in this file asserted the on-disk
+ * SPEC-REVIEW.json / UI-SPEC-REVIEW.json sidecar's exact JSON shape (keys,
+ * legacy top-level fields, history entry shape) for any branch, and no test
+ * exercised spec-review's own escalate branch at all (only ui-spec-review's
+ * was covered, by AC-5 above). These characterization tests pin today's real
+ * on-disk output for every pass/reloop/escalate/bypass branch of both
+ * sidecars, so a later extraction of a shared `runConvergentReview` can be
+ * diffed against them.
+ */
+describe('specApproveService — sidecar JSON shape characterization (T1 audit)', () => {
+  async function setup(withUiSpec: boolean): Promise<{ root: string; phaseDir: string }> {
+    const r = await mktemp();
+    const phaseDir = join(r, '.cadence', 'phases', '40-verifier-cwd');
+    await mkdir(phaseDir, { recursive: true });
+    await writeFile(join(phaseDir, '40-01-SPEC.md'), SPEC);
+    if (withUiSpec) await writeFile(join(phaseDir, '40-01-UI-SPEC.md'), UI_SPEC);
+    await writeFile(
+      join(r, '.cadence', 'state.json'),
+      JSON.stringify({ ...emptyState(), loopPosition: 'SPEC', activeSpec: '40-01' }),
+    );
+    return { root: r, phaseDir };
+  }
+
+  async function readSidecar(phaseDir: string, name: string): Promise<Record<string, unknown>> {
+    return JSON.parse(await readFile(join(phaseDir, name), 'utf8'));
+  }
+
+  it('spec-review pass: SPEC-REVIEW.json full shape', async () => {
+    const s = await setup(false);
+    root = s.root;
+    specVerifyResult.pass = true;
+    const { io } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(0);
+    expect(res.data).toEqual({ id: '40-01', approved: true, converged: true, bypassed: false });
+    const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: true,
+      attempts: 0,
+      maxAttempts: 3,
+      history: [
+        { at: expect.any(String), pass: true, findingsCount: 0, provider: 'mock', verdict: 'pass' },
+      ],
+      pass: true,
+      provider: 'mock',
+      findings: 0,
+      at: expect.any(String),
+    });
+  });
+
+  it('spec-review reloop (first failing attempt): SPEC-REVIEW.json full shape', async () => {
+    const s = await setup(false);
+    root = s.root;
+    specVerifyResult.pass = false;
+    const { io, err } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('attempt 1/3 did not pass');
+    const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: false,
+      attempts: 1,
+      maxAttempts: 3,
+      history: [
+        { at: expect.any(String), pass: false, findingsCount: 1, provider: 'mock', verdict: 'reloop' },
+      ],
+      pass: false,
+      provider: 'mock',
+      findings: 1,
+      at: expect.any(String),
+    });
+  });
+
+  it('spec-review escalate at the attempt ceiling: SPEC-REVIEW.json full shape (cumulative history) + refusal message', async () => {
+    const s = await setup(false);
+    root = s.root;
+    specVerifyResult.pass = false;
+    for (let i = 0; i < 2; i++) {
+      const { io } = captureIO();
+      const r = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+      expect(r.exitCode).toBe(1);
+    }
+    const { io, err } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toMatch(/spec approve refused: spec-review did NOT converge after 3 attempts/);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: false,
+      attempts: 3,
+      maxAttempts: 3,
+      history: [
+        { at: expect.any(String), pass: false, findingsCount: 1, provider: 'mock', verdict: 'reloop' },
+        { at: expect.any(String), pass: false, findingsCount: 1, provider: 'mock', verdict: 'reloop' },
+        { at: expect.any(String), pass: false, findingsCount: 1, provider: 'mock', verdict: 'escalate' },
+      ],
+      pass: false,
+      provider: 'mock',
+      findings: 1,
+      at: expect.any(String),
+    });
+  });
+
+  it('spec-review bypass at a reloop verdict: SPEC-REVIEW.json shape has bypassed:true, exitCode 0', async () => {
+    const s = await setup(false);
+    root = s.root;
+    specVerifyResult.pass = false;
+    const { io } = captureIO();
+    const res = await specApproveService(
+      s.root,
+      { phase: '40-verifier-cwd', num: '1', allowSpecReviewFailure: true },
+      io,
+    );
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: false,
+      attempts: 1,
+      maxAttempts: 3,
+      history: [
+        {
+          at: expect.any(String),
+          pass: false,
+          findingsCount: 1,
+          provider: 'mock',
+          verdict: 'reloop',
+          bypassed: true,
+        },
+      ],
+      pass: false,
+      provider: 'mock',
+      findings: 1,
+      at: expect.any(String),
+    });
+  });
+
+  it('spec-review bypass at the escalate verdict: SPEC-REVIEW.json shape has bypassed:true, exitCode 0', async () => {
+    const s = await setup(false);
+    root = s.root;
+    specVerifyResult.pass = false;
+    for (let i = 0; i < 2; i++) {
+      const { io } = captureIO();
+      const r = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+      expect(r.exitCode).toBe(1);
+    }
+    const { io } = captureIO();
+    const res = await specApproveService(
+      s.root,
+      { phase: '40-verifier-cwd', num: '1', allowSpecReviewFailure: true },
+      io,
+    );
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    expect(sidecar.attempts).toBe(3);
+    expect((sidecar.history as Array<Record<string, unknown>>).at(-1)).toEqual({
+      at: expect.any(String),
+      pass: false,
+      findingsCount: 1,
+      provider: 'mock',
+      verdict: 'escalate',
+      bypassed: true,
+    });
+  });
+
+  it('spec-review includes the model field (history + legacy top-level) when the verifier reports one', async () => {
+    const s = await setup(false);
+    root = s.root;
+    specVerifyResult.pass = true;
+    specVerifyResult.model = 'claude-x';
+    const { io } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: true,
+      attempts: 0,
+      maxAttempts: 3,
+      history: [
+        {
+          at: expect.any(String),
+          pass: true,
+          findingsCount: 0,
+          provider: 'mock',
+          model: 'claude-x',
+          verdict: 'pass',
+        },
+      ],
+      pass: true,
+      provider: 'mock',
+      model: 'claude-x',
+      findings: 0,
+      at: expect.any(String),
+    });
+  });
+
+  it('ui-spec-review pass: UI-SPEC-REVIEW.json full shape', async () => {
+    const s = await setup(true);
+    root = s.root;
+    specVerifyResult.pass = true;
+    uiVerifyResult.pass = true;
+    const { io } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: true,
+      attempts: 0,
+      maxAttempts: 3,
+      history: [
+        { at: expect.any(String), pass: true, findingsCount: 0, provider: 'mock', verdict: 'pass' },
+      ],
+      pass: true,
+      provider: 'mock',
+      findings: 0,
+      at: expect.any(String),
+    });
+  });
+
+  it('ui-spec-review reloop (first failing attempt): UI-SPEC-REVIEW.json full shape', async () => {
+    const s = await setup(true);
+    root = s.root;
+    specVerifyResult.pass = true;
+    uiVerifyResult.pass = false;
+    const { io, err } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('attempt 1/3 did not pass');
+    const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: false,
+      attempts: 1,
+      maxAttempts: 3,
+      history: [
+        { at: expect.any(String), pass: false, findingsCount: 1, provider: 'mock', verdict: 'reloop' },
+      ],
+      pass: false,
+      provider: 'mock',
+      findings: 1,
+      at: expect.any(String),
+    });
+  });
+
+  it('ui-spec-review escalate at the attempt ceiling: UI-SPEC-REVIEW.json full shape (cumulative history)', async () => {
+    const s = await setup(true);
+    root = s.root;
+    specVerifyResult.pass = true;
+    uiVerifyResult.pass = false;
+    for (let i = 0; i < 2; i++) {
+      const { io } = captureIO();
+      const r = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+      expect(r.exitCode).toBe(1);
+    }
+    const { io, err } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toMatch(
+      /spec approve refused: ui-spec-review did NOT converge after 3 attempts/,
+    );
+    const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: false,
+      attempts: 3,
+      maxAttempts: 3,
+      history: [
+        { at: expect.any(String), pass: false, findingsCount: 1, provider: 'mock', verdict: 'reloop' },
+        { at: expect.any(String), pass: false, findingsCount: 1, provider: 'mock', verdict: 'reloop' },
+        { at: expect.any(String), pass: false, findingsCount: 1, provider: 'mock', verdict: 'escalate' },
+      ],
+      pass: false,
+      provider: 'mock',
+      findings: 1,
+      at: expect.any(String),
+    });
+  });
+
+  it('ui-spec-review bypass at a reloop verdict: UI-SPEC-REVIEW.json shape has bypassed:true, exitCode 0', async () => {
+    const s = await setup(true);
+    root = s.root;
+    specVerifyResult.pass = true;
+    uiVerifyResult.pass = false;
+    const { io } = captureIO();
+    const res = await specApproveService(
+      s.root,
+      { phase: '40-verifier-cwd', num: '1', allowUiSpecReviewFailure: true },
+      io,
+    );
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: false,
+      attempts: 1,
+      maxAttempts: 3,
+      history: [
+        {
+          at: expect.any(String),
+          pass: false,
+          findingsCount: 1,
+          provider: 'mock',
+          verdict: 'reloop',
+          bypassed: true,
+        },
+      ],
+      pass: false,
+      provider: 'mock',
+      findings: 1,
+      at: expect.any(String),
+    });
+  });
+
+  it('ui-spec-review bypass at the escalate verdict: UI-SPEC-REVIEW.json shape has bypassed:true, exitCode 0', async () => {
+    const s = await setup(true);
+    root = s.root;
+    specVerifyResult.pass = true;
+    uiVerifyResult.pass = false;
+    for (let i = 0; i < 2; i++) {
+      const { io } = captureIO();
+      const r = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+      expect(r.exitCode).toBe(1);
+    }
+    const { io } = captureIO();
+    const res = await specApproveService(
+      s.root,
+      { phase: '40-verifier-cwd', num: '1', allowUiSpecReviewFailure: true },
+      io,
+    );
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    expect(sidecar.attempts).toBe(3);
+    expect((sidecar.history as Array<Record<string, unknown>>).at(-1)).toEqual({
+      at: expect.any(String),
+      pass: false,
+      findingsCount: 1,
+      provider: 'mock',
+      verdict: 'escalate',
+      bypassed: true,
+    });
+  });
+
+  it('ui-spec-review includes the model field (history + legacy top-level) when the verifier reports one', async () => {
+    const s = await setup(true);
+    root = s.root;
+    specVerifyResult.pass = true;
+    uiVerifyResult.pass = true;
+    uiVerifyResult.model = 'claude-x';
+    const { io } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: true,
+      attempts: 0,
+      maxAttempts: 3,
+      history: [
+        {
+          at: expect.any(String),
+          pass: true,
+          findingsCount: 0,
+          provider: 'mock',
+          model: 'claude-x',
+          verdict: 'pass',
+        },
+      ],
+      pass: true,
+      provider: 'mock',
+      model: 'claude-x',
+      findings: 0,
+      at: expect.any(String),
+    });
   });
 });
 

@@ -1,5 +1,5 @@
 import type { Finding } from '@manehorizons/cadence-types';
-import { nextConvergence } from '../verify/converge.js';
+import { runConvergentReview } from '../verify/converge.js';
 import type { GateImpl, GateResult } from './types.js';
 
 /** HIGH-only finding flattener. The convergence boolean + sidecar findingsCount
@@ -27,54 +27,40 @@ export function collectHighFindings(
  * Extracted from settle.ts verbatim (Phase 39.4). Fires on membership
  * ('code-review'). Runs the reviewer over the touched-file diff; "no HIGH
  * finding" is the convergence pass. Advances the CODE-REVIEW.json sidecar via
- * nextConvergence and branches bypass / reloop / escalate. Reaches git, the
- * reviewer, the notifier, and the sidecar only through ctx ports.
+ * the shared `runConvergentReview` primitive (phase 225) and branches bypass /
+ * reloop / escalate. Reaches git, the reviewer, the notifier, and the sidecar
+ * only through ctx ports.
  */
 export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
   const touched = [...ctx.touchedFiles];
   const diff = ctx.diff();
   try {
-    const result = await ctx.verifiers.codeReview.verify({ files: touched, diff });
-    const codeReviewFindings = result.findings;
-    const highs = collectHighFindings(result.findings);
+    const verifyResult = await ctx.verifiers.codeReview.verify({ files: touched, diff });
+    const codeReviewFindings = verifyResult.findings;
+    const highs = collectHighFindings(verifyResult.findings);
     const pass = highs.length === 0;
 
     const { attemptsSoFar, history } = await ctx.codeReviewSidecar.read();
     const maxAttempts = ctx.config?.convergence?.maxAttempts ?? 3;
-    const nv = nextConvergence(pass, attemptsSoFar, maxAttempts);
-    const now = new Date().toISOString();
     // Phase 24.3 contract preserved (NOT narrowed): --force OR
     // --allow-code-review-failure bypasses ANY failing code-review.
     const bypassed =
       !pass && (ctx.opts.allowCodeReviewFailure === true || ctx.opts.force === true);
 
-    history.push({
-      at: now,
+    const result = runConvergentReview({
       pass,
       findingsCount: highs.length,
-      provider: result.provider,
-      ...(result.model ? { model: result.model } : {}),
-      verdict: nv.verdict,
-      ...(bypassed ? { bypassed: true } : {}),
+      provider: verifyResult.provider,
+      ...(verifyResult.model ? { model: verifyResult.model } : {}),
+      attemptsSoFar,
+      history,
+      maxAttempts,
+      bypassed,
+      idField: 'draftId',
+      idValue: ctx.state.activeDraft as string,
     });
-    await ctx.codeReviewSidecar.write(
-      JSON.stringify(
-        {
-          draftId: ctx.state.activeDraft,
-          converged: pass,
-          attempts: nv.verdict === 'pass' ? attemptsSoFar : nv.attempt,
-          maxAttempts,
-          history,
-          pass,
-          provider: result.provider,
-          ...(result.model ? { model: result.model } : {}),
-          findings: highs.length,
-          at: now,
-        },
-        null,
-        2,
-      ) + '\n',
-    );
+    const nv = result.nv;
+    await ctx.codeReviewSidecar.write(JSON.stringify(result.sidecarJson, null, 2) + '\n');
 
     if (!pass) {
       for (const h of highs) {
@@ -89,8 +75,8 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
           `code-review: ${flag} set; proceeding past ${highs.length} HIGH finding(s).\n`,
         );
         if (ctx.gateSet.gates.includes('anomaly-notify')) {
-          await ctx.emit.codeReviewHigh(result.findings, {
-            provider: result.provider,
+          await ctx.emit.codeReviewHigh(verifyResult.findings, {
+            provider: verifyResult.provider,
             bypassed: true,
           });
         }
@@ -100,16 +86,16 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
             attempts: nv.attempt,
             maxAttempts,
             findings: highs.length,
-            provider: result.provider,
-            ...(result.model ? { model: result.model } : {}),
+            provider: verifyResult.provider,
+            ...(verifyResult.model ? { model: verifyResult.model } : {}),
             bypassed: true,
           });
         }
         // fall through → SUMMARY.codeReview recorded downstream.
       } else if (nv.verdict === 'reloop') {
         if (ctx.gateSet.gates.includes('anomaly-notify')) {
-          await ctx.emit.codeReviewHigh(result.findings, {
-            provider: result.provider,
+          await ctx.emit.codeReviewHigh(verifyResult.findings, {
+            provider: verifyResult.provider,
             bypassed: false,
           });
         }
@@ -124,8 +110,8 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
       } else {
         // nv.verdict === 'escalate', no bypass flag → hard refuse.
         if (ctx.gateSet.gates.includes('anomaly-notify')) {
-          await ctx.emit.codeReviewHigh(result.findings, {
-            provider: result.provider,
+          await ctx.emit.codeReviewHigh(verifyResult.findings, {
+            provider: verifyResult.provider,
             bypassed: false,
           });
         }
@@ -134,8 +120,8 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
           attempts: nv.attempt,
           maxAttempts,
           findings: highs.length,
-          provider: result.provider,
-          ...(result.model ? { model: result.model } : {}),
+          provider: verifyResult.provider,
+          ...(verifyResult.model ? { model: verifyResult.model } : {}),
         });
         {
           const reason =
