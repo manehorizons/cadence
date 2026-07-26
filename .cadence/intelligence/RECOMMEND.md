@@ -2,12 +2,11 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-27T03:20:04.025Z
+Generated at: 2026-07-27T04:08:29.848Z
 
 ## Advisory
 
-- Finish in-flight CADENCE loop work first — cadence draft approve 229-readme-mermaid-diagram-doc-test 01.
-- then: cadence milestone propose
+- cadence milestone propose
 
 ## Ranked
 
@@ -177,4 +176,4 @@ None.
 
 ## Totals
 
-- total 45 · ranked 21 · parked 1 · needs-attention 0 · excluded 23
+- total 44 · ranked 21 · parked 1 · needs-attention 0 · excluded 22

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-27T03:20:04.025Z",
+  "generatedAt": "2026-07-27T04:08:29.848Z",
   "ranked": [
     {
       "id": "rec-20260724-004",
@@ -883,15 +883,14 @@
   ],
   "needsAttention": [],
   "advisory": {
-    "kind": "finish-loop",
-    "primary": "Finish in-flight CADENCE loop work first — cadence draft approve 229-readme-mermaid-diagram-doc-test 01.",
-    "secondary": "cadence milestone propose"
+    "kind": "top-recommendation",
+    "primary": "cadence milestone propose"
   },
   "totals": {
-    "total": 45,
+    "total": 44,
     "ranked": 21,
     "parked": 1,
     "needsAttention": 0,
-    "excluded": 23
+    "excluded": 22
   }
 }
