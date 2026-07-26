@@ -1396,6 +1396,33 @@
       "convertedToPhaseId": "224-ledger-remote-collision-doctor",
       "createdAt": "2026-07-26T03:49:50.285Z",
       "updatedAt": "2026-07-26T15:02:24.626Z"
+    },
+    {
+      "id": "rec-20260726-004",
+      "title": "README's architecture mermaid diagram has no doc-content test verifying it against code truth",
+      "summary": "README.md's mermaid flowchart (lines ~34-55) names the four VerifierProvider values (mock/anthropic/local/host-cli) and the three entry surfaces (CLI, host adapters, MCP) inline as diagram labels. Unlike the version line, command counts, and config defaults -- each asserted against code truth by a doc-content test in packages/core/tests/docs/ -- nothing checks this diagram. Verified during the v1.51.1 release cut (2026-07-25) that it's currently still accurate, but the check was manual; if VerifierProvider (packages/core/src/verify/verifier-factory.ts) gains/loses a value, or a surface category changes shape, the diagram can silently drift with no test catching it -- the same Doc Drift class CLAUDE.md already names for other docs. Fix: a doc-content test (mirroring docs-command-count.test.ts's pattern) that greps README.md's mermaid block and asserts the verifier-provider list matches the VerifierProvider union and the surface list matches the host-adapter/CLI/MCP set.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/docs/"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260726-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-26T04:30:49.501Z",
+      "updatedAt": "2026-07-26T04:30:49.501Z"
     }
   ],
   "archived": [
