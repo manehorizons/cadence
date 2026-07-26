@@ -71,7 +71,7 @@ Node `>=20` is required. `package.json` pins `pnpm@9.12.0`. The local CLI is
 
 ## Architecture
 
-Five packages, one engine, three surface categories (CLI · host adapters ·
+Six packages, one engine, three surface categories (CLI · host adapters ·
 MCP). Source of truth is `pnpm-workspace.yaml` + each package's
 `package.json`.
 
@@ -81,13 +81,16 @@ MCP). Source of truth is `pnpm-workspace.yaml` + each package's
 | `@manehorizons/cadence-types` | Zod schemas + TypeScript types. Pure data layer — no logic, no I/O. Imported by every other package. |
 | `@manehorizons/cadence-host-claude-code` | Claude Code adapter (reference `HostAdapter`). Installs lifecycle hooks + slash commands; shims host events to the core dispatcher. |
 | `@manehorizons/cadence-host-codex` | OpenAI Codex CLI adapter, second `HostAdapter` contract consumer. |
+| `@manehorizons/cadence-host-toolkit` | Shared toolkit for the two host adapters (phase 222): the hook-routing algorithm's shape, the slash-command catalog, install.ts's managed-marker merge logic, and locate-self.ts. Depended on by both adapters as `workspace:*`; never imported by core. |
 | `@manehorizons/cadence-testkit` | `private`, dev-only. Mock host + ephemeral-repo fixtures + assertions used by every package's tests. Never published. |
 
-Four packages publish to npm; `testkit` is intentionally private. Releases
-are cut with [changesets](https://github.com/changesets/changesets) and the
-manual `Release` workflow (`.github/workflows/release.yml`,
-`workflow_dispatch`) — npm publish is always operator-triggered, never
-automatic.
+Five packages publish to npm; `testkit` is intentionally private. (Line 25's
+version line above still says "four published packages" — `host-toolkit` is
+new in the repo but has not yet had its first npm publish; it becomes the
+fifth on the next release.) Releases are cut with
+[changesets](https://github.com/changesets/changesets) and the manual
+`Release` workflow (`.github/workflows/release.yml`, `workflow_dispatch`) —
+npm publish is always operator-triggered, never automatic.
 
 Dependency arrows are strict: adapters **translate lifecycle events only**
 and never duplicate engine logic (`packages/host-claude-code/src/event-map.ts`
@@ -95,7 +98,9 @@ and never duplicate engine logic (`packages/host-claude-code/src/event-map.ts`
 action it spawns the host package as a subprocess (the `start` /
 `init --wire-host` launcher discipline). MCP (`cadence mcp serve`) exposes
 the imperative loop only, over stdio; ambient edit-time gates need host
-hooks.
+hooks. `host-toolkit` follows the same direction: both adapters depend on
+it, core never does — it holds host-adapter-shared plumbing, not engine
+logic.
 
 ### The loop and its artifacts
 

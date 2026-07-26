@@ -1,4 +1,4 @@
-import type { HookContext, CadenceConfig, CadenceState } from '@manehorizons/cadence-types';
+import { HostCapabilitiesZ, type HookContext, type CadenceConfig, type CadenceState } from '@manehorizons/cadence-types';
 import type { SimpleStateBackend } from '../state/simple.js';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
@@ -14,6 +14,41 @@ export interface HookResult {
   ok: boolean;
   blockMessage?: string;
   contextPayload?: string;
+}
+
+/**
+ * Phase 222 AC-3: a host adapter may embed the `HostCapabilities` it
+ * declared into the raw hook payload it sends to `cadence hook`, under a
+ * `hostCapabilities` key (`ctx.raw` is host-defined and unvalidated — see
+ * {@link HookContext.raw}). Best-effort: missing or malformed data yields
+ * `undefined`, never a throw (observation code must not break the hook).
+ */
+function readHostCapabilities(ctx: HookContext) {
+  if (!ctx.raw || typeof ctx.raw !== 'object') return undefined;
+  const candidate = (ctx.raw as { hostCapabilities?: unknown }).hostCapabilities;
+  if (candidate === undefined) return undefined;
+  const parsed = HostCapabilitiesZ.safeParse(candidate);
+  return parsed.success ? parsed.data : undefined;
+}
+
+/**
+ * Phase 222 AC-3: `ctx.agentId`/`ctx.agentType` are absent both for the
+ * ordinary main-thread case (no subagent involved — not worth a word) and
+ * for a host whose adapter declared it cannot supply agent identity at all
+ * (`capabilities.agentIdentification === false`, e.g. host-codex — see its
+ * `capabilities.ts`). The two are indistinguishable from `ctx.agentId` alone;
+ * this makes the second case loud instead of indistinguishable-from-silent,
+ * per the repo's "Quiet Fallback" anti-pattern. Never blocks — subagent
+ * task-redundancy monitoring degrades to "not tracked for this session", it
+ * does not fail the hook.
+ */
+function noticeIfAgentIdentificationUnsupported(ctx: HookContext, sourceEvent: string): void {
+  if (ctx.agentId) return;
+  const capabilities = readHostCapabilities(ctx);
+  if (capabilities?.agentIdentification !== false) return;
+  process.stderr.write(
+    `cadence: host capabilities declare agentIdentification=false (${sourceEvent}) — this host's hook payloads do not carry agentId/agentType, so per-subagent task-redundancy monitoring (baseline snapshot + touched-file tracking) cannot run for this session. Degrading: skipping subagent-scoped checks for this event.\n`,
+  );
 }
 
 export async function handleSessionStart(_ctx: HookContext, state: CadenceState): Promise<HookResult> {
@@ -218,6 +253,7 @@ export async function handleSubagentResult(
   const agentId = ctx.agentId;
   const baseline = agentId ? state.session.subagentBaselines[agentId] : undefined;
   if (!agentId || !baseline) {
+    noticeIfAgentIdentificationUnsupported(ctx, 'subagent-result');
     // Sole mutation on this path is the spawn-count telemetry increment —
     // route it through the revision-exempt path (issue #234) so a
     // long-running gate elsewhere can never see this as a structural
@@ -301,7 +337,11 @@ export async function handleSubagentStart(
   _config: CadenceConfig,
   backend: SimpleStateBackend,
 ): Promise<HookResult> {
-  if (!ctx.agentId || !state.activeDraft || !state.activePhase) return { ok: true };
+  if (!ctx.agentId) {
+    noticeIfAgentIdentificationUnsupported(ctx, 'subagent-start');
+    return { ok: true };
+  }
+  if (!state.activeDraft || !state.activePhase) return { ok: true };
   const draftPath = join(
     ctx.cwd,
     '.cadence/phases',

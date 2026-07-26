@@ -4,6 +4,21 @@ import type { AbstractEvent, ExtractedPayload } from '@manehorizons/cadence-type
 // in @manehorizons/cadence-types as part of the host-adapter contract.
 export type { ExtractedPayload };
 
+// NOTE (phase 222): the shared toolkit package, `@manehorizons/cadence-host-toolkit`,
+// exports a same-named `mapEvent`/`extractPayload`/`EDIT_TOOL_MATCHER` trio, but
+// those are built for Claude Code's hook shape — the edit tool is
+// `Edit|Write|MultiEdit|NotebookEdit`, payloads carry `tool_input.file_path`,
+// and there's a `Skill`-tool disambiguation branch. Codex's hook shape differs
+// for real: its sole edit tool is `apply_patch`, the touched paths live inside
+// a patch envelope string (scanned via `PATCH_MARKER` below) rather than a
+// `file_path` field, and Codex has no Skill-tool or SubagentStart mapping.
+// Re-exporting the toolkit's versions here would silently change routing
+// behavior (e.g. drop apply_patch boundary-check extraction entirely), so
+// this module keeps its own implementation — only the algorithm's *shape*
+// (8-step parse/validate/map/filter/extract) is shared conceptually, not the
+// code. See `packages/host-toolkit/src/routing.ts` for the Claude-Code-shaped
+// implementation host-claude-code migrated onto.
+
 /** Codex's edit tool. Unlike Claude (Edit/Write/…), all edits flow through one tool. */
 export const EDIT_TOOL_MATCHER = 'apply_patch';
 

@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@manehorizons/cadence-core": "workspace:*",
+    "@manehorizons/cadence-host-toolkit": "workspace:*",
     "@manehorizons/cadence-types": "workspace:*",
     "commander": "^14.0.0"
   },

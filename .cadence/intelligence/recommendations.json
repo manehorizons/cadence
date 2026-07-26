@@ -4068,11 +4068,56 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "221-mcp-cli-parity",
-      "scoutId": "claude-cadence-audit-20260725",
-      "createdAt": "2026-07-25T22:25:52.595Z",
-      "updatedAt": "2026-07-25T23:17:47.425Z",
       "shippedRef": "phase 221-mcp-cli-parity / PR #TBD",
+      "scoutId": "claude-cadence-audit-20260725",
       "archivedAt": "2026-07-25T23:17:47.425Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-25T22:25:52.595Z",
+      "updatedAt": "2026-07-25T23:17:47.425Z"
+    },
+    {
+      "id": "rec-20260725-004",
+      "title": "Extract the shared adapter toolkit for host-claude-code and host-codex",
+      "summary": "With 2 real host adapters now shipping, the seam they share is mostly hypothetical: routeHookEvent's 8-step algorithm, the 15-entry slash-command catalog (already drifted -- Codex silently lost its dispatch dialogue), install.ts's managed-marker merge, and locate-self.ts (byte-identical) are cloned rather than shared. HostCapabilities is declared and validated by both adapters' own tests but nothing in core ever reads it; Codex silently drops agentId/agentType with no capability flag and no notice.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "host-adapters"
+      ],
+      "affectedFiles": [
+        "packages/host-claude-code/src/shim.ts",
+        "packages/host-claude-code/src/event-map.ts",
+        "packages/host-claude-code/src/install.ts",
+        "packages/host-claude-code/src/install-commands.ts",
+        "packages/host-claude-code/src/locate-self.ts",
+        "packages/host-claude-code/src/capabilities.ts",
+        "packages/host-codex/src/shim.ts",
+        "packages/host-codex/src/event-map.ts",
+        "packages/host-codex/src/install.ts",
+        "packages/host-codex/src/install-commands.ts",
+        "packages/host-codex/src/locate-self.ts",
+        "packages/host-codex/src/capabilities.ts",
+        "packages/types/src/host.ts",
+        "packages/types/src/guidance.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "222-shared-adapter-toolkit",
+      "scoutId": "claude-cadence-audit-20260725",
+      "createdAt": "2026-07-25T23:56:04.355Z",
+      "updatedAt": "2026-07-26T00:38:43.226Z",
+      "shippedRef": "phase 222-shared-adapter-toolkit / PR #TBD",
+      "archivedAt": "2026-07-26T00:38:43.226Z",
       "archiveReason": "shipped"
     }
   ]

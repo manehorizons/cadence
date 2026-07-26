@@ -24,4 +24,13 @@ export const codexCapabilities: HostCapabilities = {
   blockingHooks: ['pre-tool-edit', 'session-stop'],
   subagentSpawn: 'native',
   streamingOutput: true,
+  // Phase 222 AC-3: unlike host-claude-code's event-map.ts (which reads
+  // `agent_id`/`agent_type` off the raw hook envelope), host-codex's
+  // extractPayload never extracts an agent identifier — the phase-65 spike's
+  // documented Codex hook stdin fields (session_id, cwd, hook_event_name,
+  // tool_name, tool_input, permission_mode) don't include one, and it's
+  // undocumented whether SubagentStop even carries one. Declared `false`
+  // rather than left unset so core can notice loudly instead of silently
+  // treating "no agentId" as "no active subagent" for this host.
+  agentIdentification: false,
 };
