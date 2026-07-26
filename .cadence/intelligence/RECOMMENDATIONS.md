@@ -709,7 +709,7 @@ settleService is a ~545-line function spanning at least 9 concerns (bypass-arg p
 
 nextConvergence() is a shallow 6-line classifier; the real weight -- ConvergenceSidecar read/write, the history-entry shape, and the pass/reload/escalate branch -- is copy-pasted at all 4 call sites (plan-review, code-review, spec-approve x2). Evidence of drift: all four independently write an identically-redundant ternary. A runConvergentReview({label, sidecar, verify, bypassFlag, idField}) would absorb the clone.
 
-## rec-20260726-001 — Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it
+## rec-20260726-002 — Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it
 
 - status: candidate
 - ready: ready-for-milestone

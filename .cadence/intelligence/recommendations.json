@@ -1334,7 +1334,7 @@
       "updatedAt": "2026-07-25T23:51:51.327Z"
     },
     {
-      "id": "rec-20260726-001",
+      "id": "rec-20260726-002",
       "title": "Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it",
       "summary": "EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.",
       "source": "manual",
@@ -1356,13 +1356,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260726-001"
+        "ev-20260726-002"
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260725",
       "createdAt": "2026-07-26T01:03:37.796Z",
-      "updatedAt": "2026-07-26T01:03:37.796Z",
-      "scoutId": "claude-cadence-audit-20260725"
+      "updatedAt": "2026-07-26T01:03:37.796Z"
     }
   ],
   "archived": [
