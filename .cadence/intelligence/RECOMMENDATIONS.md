@@ -661,22 +661,6 @@ Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.j
 
 settleService is a ~545-line function spanning at least 9 concerns (bypass-arg parsing, phase-collision backstop, mock-verifier banner, gate-registry loop, per-AC evidence derivation, evidence-floor gate, friction digest, recommendation ship-promotion, interactive GitHub-issue offer), distinguished only by inline Phase-number comments rather than function boundaries. The public interface (SettleArgs in, CommandResult out) is already right-sized -- cli/commands/settle.ts is a clean thin adapter and would not change.
 
-## rec-20260726-002 — Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it
-
-- status: candidate
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, init, worktree
-- files: packages/core/src/cli/commands/init.ts, packages/core/src/state/simple.ts
-- evidence: Hit live 2026-07-25 during phase 222 (shared-adapter-toolkit) build: 'cadence spec new' failed with 'CADENCE not initialized here' in a fresh EnterWorktree worktree despite .cadence/config.json/ROADMAP.md/phases/ all present and valid; cadence init --dry-run confirmed it would refuse ('.cadence/ already initialized'). Worked around by hand-writing state.json matching CadenceStateZ's schema.
-- next: cadence milestone propose
-
-EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.
-
 ## rec-20260726-001 — Full cryptographic signing of SUMMARY.json (blocked on threat model)
 
 - status: candidate

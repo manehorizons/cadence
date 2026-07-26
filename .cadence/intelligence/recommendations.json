@@ -1234,37 +1234,6 @@
       "updatedAt": "2026-07-25T15:09:13.547Z"
     },
     {
-      "id": "rec-20260726-002",
-      "title": "Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it",
-      "summary": "EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "init",
-        "worktree"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts",
-        "packages/core/src/state/simple.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260726-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "claude-cadence-audit-20260725",
-      "createdAt": "2026-07-26T01:03:37.796Z",
-      "updatedAt": "2026-07-26T01:03:37.796Z"
-    },
-    {
       "id": "rec-20260726-001",
       "title": "Full cryptographic signing of SUMMARY.json (blocked on threat model)",
       "summary": "Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.",
@@ -4407,6 +4376,40 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-25T15:09:13.354Z",
       "updatedAt": "2026-07-26T21:34:45.355Z"
+    },
+    {
+      "id": "rec-20260726-002",
+      "title": "Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it",
+      "summary": "EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "init",
+        "worktree"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/init.ts",
+        "packages/core/src/state/simple.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260726-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260725",
+      "createdAt": "2026-07-26T01:03:37.796Z",
+      "updatedAt": "2026-07-26T23:01:09.857Z",
+      "shippedRef": "phase 227",
+      "archivedAt": "2026-07-26T23:01:09.857Z",
+      "archiveReason": "shipped"
     }
   ]
 }

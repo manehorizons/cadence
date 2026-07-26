@@ -15,8 +15,18 @@ export class SimpleStateBackend implements StateBackend {
   }
 
   async readState(): Promise<CadenceState> {
-    const path = join(await this.resolveStateDir(), 'state.json');
+    const dir = await this.resolveStateDir();
+    const path = join(dir, 'state.json');
     if (!existsSync(path)) {
+      if (existsSync(dir)) {
+        // rec-20260726-002: a fresh git worktree/clone carries the committed
+        // .cadence/ scaffold but never state.json (gitignored since phase
+        // 196) — `cadence init` refuses here ("already initialized"), so
+        // point at `cadence onboard`, which bootstraps exactly this case.
+        throw new NotInitializedError(
+          '.cadence/ exists but state.json is missing (likely a fresh git worktree or clone — state.json is gitignored, not copied by git) — run `cadence onboard` to bootstrap it.',
+        );
+      }
       throw new NotInitializedError();
     }
     let raw: string;

@@ -57,6 +57,19 @@ describe('cadence init', () => {
     expect(r.stderr).toMatch(/already initialized/i);
   });
 
+  // rec-20260726-002 — a fresh worktree/clone has .cadence/ committed but
+  // never state.json (gitignored since phase 196); `init` must still refuse
+  // (never silently bootstrap), but point at `cadence onboard`, which already
+  // handles this case safely, instead of leaving a dead end.
+  it('refusal points at `cadence onboard` when .cadence/ exists but state.json does not', async () => {
+    active = await tempRepo({ initialized: true });
+    const { rm } = await import('node:fs/promises');
+    await rm(join(active.root, '.cadence/state.json'));
+    const r = await run(['init', '--name=demo'], active.root);
+    expect(r.code).not.toBe(0);
+    expect(r.stderr).toMatch(/cadence onboard/);
+  });
+
   it('AC-2: --gate-profile + --name still set name and profile explicitly', async () => {
     active = await tempRepo();
     const r = await run(['init', '--name=myproj', '--gate-profile=standard'], active.root);

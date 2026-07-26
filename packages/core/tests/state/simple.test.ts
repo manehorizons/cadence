@@ -37,6 +37,19 @@ describe('SimpleStateBackend', () => {
     await expect(backend.readState()).rejects.toThrow(/cadence init/);
   });
 
+  // AC-1 (rec-20260726-002) — a fresh worktree/clone has .cadence/ committed
+  // but never state.json (gitignored since phase 196) — the message must
+  // route to `cadence onboard`, which already bootstraps this safely,
+  // instead of the generic "run cadence init" advice (init refuses here).
+  it('throws NotInitializedError pointing at `cadence onboard` when .cadence/ exists but state.json does not', async () => {
+    active = await tempRepo({ initialized: true });
+    const { rm } = await import('node:fs/promises');
+    await rm(join(active.root, '.cadence/state.json'));
+    const backend = new SimpleStateBackend(active.root);
+    await expect(backend.readState()).rejects.toBeInstanceOf(NotInitializedError);
+    await expect(backend.readState()).rejects.toThrow(/cadence onboard/);
+  });
+
   it('throws StateCorruptError on invalid JSON', async () => {
     active = await tempRepo({ initialized: true });
     const { writeFile } = await import('node:fs/promises');
