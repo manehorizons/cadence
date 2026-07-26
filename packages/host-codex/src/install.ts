@@ -1,5 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { mergeManagedHookEntries } from '@manehorizons/cadence-host-toolkit/install-merge';
+import type { ManagedHookEntry } from '@manehorizons/cadence-host-toolkit/install-merge';
 import { EDIT_TOOL_MATCHER } from './event-map.js';
 import { resolveLocalPaths } from './locate-self.js';
 
@@ -28,18 +30,12 @@ export interface InstallOptions {
 // `tool_name` for Pre/PostToolUse, anchored so it matches only apply_patch.
 const PATCH_MATCHER = `^${EDIT_TOOL_MATCHER}$`;
 
-interface HookEntry {
-  matcher?: string;
-  hooks: Array<{ type: 'command'; command: string }>;
-  _managedBy?: string;
-}
+type HookEntry = ManagedHookEntry;
 
 interface HooksFile {
   hooks?: Record<string, HookEntry[]>;
   [key: string]: unknown;
 }
-
-const isCadenceEntry = (e: HookEntry): boolean => e._managedBy === 'cadence';
 
 /**
  * Write cadence-managed Codex hook entries into project-level
@@ -78,13 +74,7 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
     SubagentStop: [plain()],
   };
 
-  const hooks: Record<string, HookEntry[]> = current.hooks ?? {};
-  for (const [event, entries] of Object.entries(desired)) {
-    const kept = (hooks[event] ?? []).filter((e) => !isCadenceEntry(e));
-    kept.push(...entries);
-    hooks[event] = kept;
-  }
-  current.hooks = hooks;
+  current.hooks = mergeManagedHookEntries(current.hooks ?? {}, desired);
 
   await mkdir(dirname(hooksPath), { recursive: true });
   await writeFile(hooksPath, JSON.stringify(current, null, 2) + '\n', 'utf8');

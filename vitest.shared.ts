@@ -39,16 +39,28 @@ const TIMEOUT_MS = process.platform === 'win32' ? 90000 : 20000;
 //
 // Measured coverage at time of writing (statements / branches / functions /
 // lines): types 96.26/75.00/44.44/96.26, core 75.47/87.01/87.32/75.47,
-// host-claude-code 72.58/90.09/84.61/72.58, host-codex 63.10/91.25/85.71/
-// 63.10, testkit 89.47/83.33/83.33/89.47.
+// testkit 89.47/83.33/83.33/89.47.
+//
+// Re-measured 2026-07-25 (phase 222, final pass after T1/T2/T3 all landed):
+// extracting routeHookEvent/the slash-command catalog/install.ts's merge
+// logic/locate-self.ts out of host-claude-code's and host-codex's src/** into
+// the new `host-toolkit` package moved large, well-covered chunks of code out
+// of each adapter's own coverage denominator — nothing became less tested,
+// the extracted code is simply covered inside host-toolkit now (99.01/94.11/
+// 100/99.01). host-claude-code: 54.21/93.61/87.5/54.21. host-codex:
+// 58.09/93.24/91.66/58.09. Both remaining low statements/lines numbers are
+// dominated by each adapter's own `cli.ts` (0% — exercised only via spawned
+// subprocess tests, which v8 coverage of the parent process can't see; a
+// pre-existing characteristic, not introduced by this phase).
 const COVERAGE_THRESHOLDS: Record<
   string,
   { statements: number; branches: number; functions: number; lines: number }
 > = {
   types: { statements: 91, branches: 70, functions: 39, lines: 91 },
   core: { statements: 70, branches: 82, functions: 82, lines: 70 },
-  'host-claude-code': { statements: 67, branches: 85, functions: 79, lines: 67 },
-  'host-codex': { statements: 58, branches: 86, functions: 80, lines: 58 },
+  'host-claude-code': { statements: 49, branches: 88, functions: 82, lines: 49 },
+  'host-toolkit': { statements: 94, branches: 89, functions: 95, lines: 94 },
+  'host-codex': { statements: 53, branches: 88, functions: 86, lines: 53 },
   testkit: { statements: 84, branches: 78, functions: 78, lines: 84 },
 };
 
@@ -58,7 +70,7 @@ const COVERAGE_THRESHOLDS: Record<
 // from within that package's directory). Falls back to the lowest
 // per-metric threshold across all packages so a combined/aggregate run
 // can't spuriously fail against a number tuned for a single package.
-const FALLBACK_THRESHOLDS = { statements: 58, branches: 70, functions: 39, lines: 58 };
+const FALLBACK_THRESHOLDS = { statements: 49, branches: 70, functions: 39, lines: 49 };
 
 const currentPackage = path.basename(process.cwd());
 const coverageThresholds =

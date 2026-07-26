@@ -1,5 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { isCadenceManagedEntry, mergeManagedHookEntries } from '@manehorizons/cadence-host-toolkit/install-merge';
+import type { ManagedHookEntry } from '@manehorizons/cadence-host-toolkit/install-merge';
 import { EDIT_TOOL_MATCHER, SKILL_TOOL_MATCHER } from './event-map.js';
 import { resolveLocalPaths } from './locate-self.js';
 
@@ -25,19 +27,11 @@ export interface InstallOptions {
   local?: boolean;
 }
 
-interface HookEntry {
-  matcher?: string;
-  hooks: Array<{ type: 'command'; command: string }>;
-  _managedBy?: string;
-}
+type HookEntry = ManagedHookEntry;
 
 interface SettingsShape {
   hooks?: Record<string, HookEntry[]>;
   [key: string]: unknown;
-}
-
-function isCadenceEntry(entry: HookEntry): boolean {
-  return entry._managedBy === 'cadence';
 }
 
 /**
@@ -107,18 +101,11 @@ export async function installHooks(root: string, opts: InstallOptions = {}): Pro
     SubagentStart: [plain()],
   };
 
-  const hooks: Record<string, HookEntry[]> = current.hooks ?? {};
-
-  for (const [ccEvent, entries] of Object.entries(desired)) {
-    const existing = hooks[ccEvent] ?? [];
-    const filtered = existing.filter(
-      (e) => !isCadenceEntry(e) && !isLegacyKeelEntry(e),
-    );
-    filtered.push(...entries);
-    hooks[ccEvent] = filtered;
-  }
-
-  current.hooks = hooks;
+  current.hooks = mergeManagedHookEntries(
+    current.hooks ?? {},
+    desired,
+    (e) => isCadenceManagedEntry(e) || isLegacyKeelEntry(e),
+  );
 
   await mkdir(dirname(settingsPath), { recursive: true });
 

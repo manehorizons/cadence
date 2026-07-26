@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { installHooks, type InstallOptions } from './install.js';
 import { installCommands, resolveCodexHome, type InstallCommandsOptions } from './install-commands.js';
 import { routeHookEvent } from './shim.js';
+import { codexCapabilities } from './capabilities.js';
 
 // Read the real version from package.json so `--version` never drifts.
 const pkg = JSON.parse(
@@ -99,11 +100,27 @@ program
         process.exitCode = 1;
         return;
       }
+      // Phase 222 AC-3: embed this host's declared capabilities so core can
+      // check `agentIdentification` before relying on ctx.agentId/agentType
+      // (see packages/core/src/hooks/handlers.ts). Best-effort — if
+      // translatedStdin isn't a JSON object for some reason, send it through
+      // unmodified rather than throwing.
+      let stdinToSend = translatedStdin;
+      try {
+        const parsed: unknown = JSON.parse(translatedStdin);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          stdinToSend = JSON.stringify({ ...parsed, hostCapabilities: codexCapabilities });
+        }
+      } catch {
+        // translatedStdin wasn't valid JSON (routeHookEvent only guarantees
+        // this when abstractEvent !== null, which is already checked above,
+        // but degrade rather than assume) — send the original through.
+      }
       const child = spawn(exe, [...baseArgs, 'hook', abstractEvent], {
         stdio: ['pipe', 'inherit', 'inherit'],
         shell: process.platform === 'win32',
       });
-      child.stdin.write(translatedStdin);
+      child.stdin.write(stdinToSend);
       child.stdin.end();
       await new Promise<void>((resolve) => {
         child.on('exit', (code) => {

@@ -1,38 +1,40 @@
 {
-  "name": "@manehorizons/cadence-host-codex",
+  "name": "@manehorizons/cadence-host-toolkit",
   "version": "1.51.0",
   "engines": {
     "node": ">=20"
   },
-  "description": "OpenAI Codex CLI adapter for CADENCE — installs lifecycle hooks and slash commands that drive the CADENCE engine from inside Codex.",
+  "description": "Shared toolkit for CADENCE host adapters — the hook-event routing algorithm and the slash-command catalog used by host-claude-code and host-codex.",
   "license": "MIT",
   "author": "Thomas Powers",
   "homepage": "https://github.com/manehorizons/cadence#readme",
   "bugs": "https://github.com/manehorizons/cadence/issues",
   "keywords": [
     "cadence",
-    "codex",
-    "openai-codex",
-    "ai",
-    "agents",
+    "host-adapter",
+    "toolkit",
     "hooks",
     "slash-commands"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/routing.js",
+  "types": "./dist/routing.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/routing.js",
+      "types": "./dist/routing.d.ts"
+    },
+    "./locate-self": {
+      "import": "./dist/locate-self.js",
+      "types": "./dist/locate-self.d.ts"
+    },
+    "./install-merge": {
+      "import": "./dist/install-merge.js",
+      "types": "./dist/install-merge.d.ts"
     }
-  },
-  "bin": {
-    "cadence-host-codex": "./bin/cadence-host-codex.cjs"
   },
   "files": [
     "dist",
-    "bin",
     "!dist/tsconfig.tsbuildinfo"
   ],
   "publishConfig": {
@@ -41,7 +43,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/manehorizons/cadence.git",
-    "directory": "packages/host-codex"
+    "directory": "packages/host-toolkit"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -51,13 +53,9 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@manehorizons/cadence-core": "workspace:*",
-    "@manehorizons/cadence-host-toolkit": "workspace:*",
-    "@manehorizons/cadence-types": "workspace:*",
-    "commander": "^14.0.0"
+    "@manehorizons/cadence-types": "workspace:*"
   },
   "devDependencies": {
-    "@manehorizons/cadence-testkit": "workspace:*",
     "vitest": "^2.1.0"
   }
 }

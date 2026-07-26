@@ -15,6 +15,17 @@ export const HostCapabilitiesZ = z.object({
   blockingHooks: z.array(AbstractEventZ),
   subagentSpawn: z.enum(['native', 'shell-out', 'none']),
   streamingOutput: z.boolean(),
+  /**
+   * Whether this host's hook payloads can supply `agentId`/`agentType`
+   * (`ExtractedPayload`'s subagent-identity fields) on subagent-scoped
+   * events. Optional so adapters written before this flag existed keep
+   * parsing unchanged (their extraction behavior is untouched); a host
+   * SHOULD declare it explicitly once it's known whether the raw hook
+   * envelope carries agent identity. `false` means core cannot rely on
+   * `ctx.agentId`/`ctx.agentType` for this host and must degrade loudly —
+   * never silently — wherever it depends on them (phase 222 AC-3).
+   */
+  agentIdentification: z.boolean().optional(),
 });
 
 export type HostCapabilities = z.infer<typeof HostCapabilitiesZ>;

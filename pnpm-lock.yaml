@@ -81,6 +81,9 @@ importers:
       '@manehorizons/cadence-core':
         specifier: workspace:*
         version: link:../core
+      '@manehorizons/cadence-host-toolkit':
+        specifier: workspace:*
+        version: link:../host-toolkit
       '@manehorizons/cadence-types':
         specifier: workspace:*
         version: link:../types
@@ -100,6 +103,9 @@ importers:
       '@manehorizons/cadence-core':
         specifier: workspace:*
         version: link:../core
+      '@manehorizons/cadence-host-toolkit':
+        specifier: workspace:*
+        version: link:../host-toolkit
       '@manehorizons/cadence-types':
         specifier: workspace:*
         version: link:../types
@@ -110,6 +116,16 @@ importers:
       '@manehorizons/cadence-testkit':
         specifier: workspace:*
         version: link:../testkit
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@20.19.41)
+
+  packages/host-toolkit:
+    dependencies:
+      '@manehorizons/cadence-types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
       vitest:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.41)

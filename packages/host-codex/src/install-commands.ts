@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
+import { COMMANDS, type CommandSpec } from '@manehorizons/cadence-host-toolkit';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallCommandsOptions {
@@ -23,35 +23,12 @@ export interface InstallCommandsOptions {
 
 const MANAGED_MARKER = '<!-- managed-by: cadence -->';
 
-interface CommandSpec {
-  name: string;
-  description: string;
-  argumentHint?: string;
-  cli: string; // suffix appended to the cadence command; may include $ARGUMENTS
-  trailing?: string;
-  body?: string; // multi-line prompt template for dialogue commands
-}
-
-// The cadence slash-command catalog, rendered as Codex *prompts*. The prose is
-// shared with Claude/MCP; the host-specific CLI and prompt shape stay here.
-const g = COMMAND_GUIDANCE;
-const COMMANDS: CommandSpec[] = [
-  { name: 'cadence-progress', description: g['cadence-progress'].description, cli: 'progress', trailing: g['cadence-progress'].trailing },
-  { name: 'cadence-next', description: g['cadence-next'].description, cli: 'next', trailing: g['cadence-next'].trailing },
-  { name: 'cadence-draft', description: g['cadence-draft'].description, argumentHint: '<phase-id> <task-num> [--title=<title>]', cli: 'draft new $ARGUMENTS', trailing: g['cadence-draft'].trailing },
-  { name: 'cadence-approve', description: g['cadence-approve'].description, argumentHint: '<phase-id> <task-num>', cli: 'draft approve $ARGUMENTS', trailing: g['cadence-approve'].trailing },
-  { name: 'cadence-check', description: g['cadence-check'].description, argumentHint: '<phase-id> <task-num>', cli: 'draft check $ARGUMENTS', trailing: g['cadence-check'].trailing },
-  { name: 'cadence-build', description: g['cadence-build'].description, argumentHint: '<task-id> --status=<PASS|FAIL|BLOCKED|ESCALATED>', cli: 'build task $ARGUMENTS', trailing: g['cadence-build'].trailing },
-  { name: 'cadence-settle', description: g['cadence-settle'].description, argumentHint: '[--ac AC-1=pass ...]', cli: 'settle run $ARGUMENTS', trailing: g['cadence-settle'].trailing },
-  { name: 'cadence-done', description: g['cadence-done'].description, argumentHint: '<task-id> [--notes=<n>]', cli: 'done $ARGUMENTS', trailing: g['cadence-done'].trailing },
-  { name: 'cadence-block', description: g['cadence-block'].description, argumentHint: '<task-id> [--notes=<n>]', cli: 'block $ARGUMENTS', trailing: g['cadence-block'].trailing },
-  { name: 'cadence-needs-context', description: g['cadence-needs-context'].description, argumentHint: '<task-id> [--notes=<n>]', cli: 'needs-context $ARGUMENTS', trailing: g['cadence-needs-context'].trailing },
-  { name: 'cadence-handoff', description: g['cadence-handoff'].description, argumentHint: '[label]', cli: 'handoff $ARGUMENTS', trailing: g['cadence-handoff'].trailing },
-  { name: 'cadence-resume', description: g['cadence-resume'].description, cli: 'resume', trailing: g['cadence-resume'].trailing },
-  { name: 'cadence-recommend', description: g['cadence-recommend'].description, argumentHint: '[count]', cli: 'recommend --top 5', trailing: g['cadence-recommend'].trailing },
-  { name: 'cadence-scout', description: g['cadence-scout'].description, argumentHint: '[topic]', cli: 'recommend', body: SCOUT_DIALOGUE },
-  { name: 'cadence-dispatch', description: g['cadence-dispatch'].description, cli: 'dispatch plan --json', trailing: g['cadence-dispatch'].trailing },
-];
+// The command catalog (which commands exist, their description/cli/
+// argumentHint/trailing/body) now lives in the shared toolkit package,
+// `@manehorizons/cadence-host-toolkit` (phase 222), so both host adapters
+// render from the identical, undrifted catalog — including cadence-dispatch's
+// DISPATCH_DIALOGUE body, which this adapter's own copy had silently dropped.
+// The host-specific CLI/prompt rendering shape stays here.
 
 function renderFile(spec: CommandSpec, cadenceCommand: string): string {
   const fm: string[] = ['---', `description: ${spec.description}`];
