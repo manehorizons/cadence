@@ -677,22 +677,6 @@ gates.sealed reads as a universal config knob but only 3 of ~10 bypassable gates
 
 settleService is a ~545-line function spanning at least 9 concerns (bypass-arg parsing, phase-collision backstop, mock-verifier banner, gate-registry loop, per-AC evidence derivation, evidence-floor gate, friction digest, recommendation ship-promotion, interactive GitHub-issue offer), distinguished only by inline Phase-number comments rather than function boundaries. The public interface (SettleArgs in, CommandResult out) is already right-sized -- cli/commands/settle.ts is a clean thin adapter and would not change.
 
-## rec-20260725-008 — Deepen the convergent-review protocol
-
-- status: settle-pending
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, verify
-- files: packages/core/src/verify/converge.ts, packages/core/src/gates/plan-review.ts, packages/core/src/gates/code-review.ts, packages/core/src/services/spec-approve.ts, packages/core/src/gates/types.ts
-- evidence: Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #2, Strong.
-- next: cadence milestone propose
-
-nextConvergence() is a shallow 6-line classifier; the real weight -- ConvergenceSidecar read/write, the history-entry shape, and the pass/reload/escalate branch -- is copy-pasted at all 4 call sites (plan-review, code-review, spec-approve x2). Evidence of drift: all four independently write an identically-redundant ternary. A runConvergentReview({label, sidecar, verify, bypassFlag, idField}) would absorb the clone.
-
 ## rec-20260726-002 — Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it
 
 - status: candidate

@@ -773,7 +773,7 @@
       "id": "mil-rec-rec-20260725-008",
       "name": "Deepen the convergent-review protocol",
       "objective": "nextConvergence() is a shallow 6-line classifier; the real weight -- ConvergenceSidecar read/write, the history-entry shape, and the pass/reload/escalate branch -- is copy-pasted at all 4 call sites (plan-review, code-review, spec-approve x2). Evidence of drift: all four independently write an identically-redundant ternary. A runConvergentReview({label, sidecar, verify, bypassFlag, idField}) would absorb the clone.",
-      "status": "exported",
+      "status": "closed",
       "recommendationIds": [
         "rec-20260725-008"
       ],
@@ -803,7 +803,8 @@
         }
       ],
       "createdAt": "2026-07-26T17:11:55.257Z",
-      "updatedAt": "2026-07-26T17:12:16.709Z"
+      "updatedAt": "2026-07-26T18:32:06.723Z",
+      "closedRef": "PR #311"
     }
   ]
 }
