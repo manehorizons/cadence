@@ -727,7 +727,7 @@ Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so 
 
 ## rec-20260726-003 — cadence doctor check: detect cross-session recommendation/evidence/decision id collisions before push
 
-- status: candidate
+- status: settle-pending
 - ready: ready-for-milestone
 - priority: high
 - leverage: 5/10
