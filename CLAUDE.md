@@ -22,7 +22,7 @@ are an AI agent working inside the tool built to distrust AI agents — every
 rule in this manual follows from that thesis, and most of the failure modes
 listed at the bottom are some flavor of violating it.
 
-**Current version: `1.51.0`** across all four published packages (lockstep).
+**Current version: `1.51.1`** across all five published packages (lockstep).
 Do not reconstruct release history from memory or from this file — it lives
 in `packages/*/CHANGELOG.md`, [GitHub Releases](https://github.com/manehorizons/cadence/releases),
 `git log`, and `.cadence/phases/*/`. When a release bumps
@@ -84,10 +84,9 @@ MCP). Source of truth is `pnpm-workspace.yaml` + each package's
 | `@manehorizons/cadence-host-toolkit` | Shared toolkit for the two host adapters (phase 222): the hook-routing algorithm's shape, the slash-command catalog, install.ts's managed-marker merge logic, and locate-self.ts. Depended on by both adapters as `workspace:*`; never imported by core. |
 | `@manehorizons/cadence-testkit` | `private`, dev-only. Mock host + ephemeral-repo fixtures + assertions used by every package's tests. Never published. |
 
-Five packages publish to npm; `testkit` is intentionally private. (Line 25's
-version line above still says "four published packages" — `host-toolkit` is
-new in the repo but has not yet had its first npm publish; it becomes the
-fifth on the next release.) Releases are cut with
+Five packages publish to npm; `testkit` is intentionally private.
+`host-toolkit` had its first npm publish in the `1.51.1` release. Releases are
+cut with
 [changesets](https://github.com/changesets/changesets) and the manual
 `Release` workflow (`.github/workflows/release.yml`, `workflow_dispatch`) —
 npm publish is always operator-triggered, never automatic.
