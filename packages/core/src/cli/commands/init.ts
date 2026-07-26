@@ -325,6 +325,16 @@ export function registerInitCommand(program: Command): void {
 
         if (existsSync(cadenceDir)) {
           console.error('.cadence/ already initialized in this directory');
+          // rec-20260726-002: a fresh git worktree/clone carries the
+          // committed .cadence/ scaffold but never state.json (gitignored
+          // since phase 196) — `init` still must not silently bootstrap it
+          // (only the message changes), but point at `cadence onboard`,
+          // which already handles exactly this case.
+          if (!existsSync(join(cadenceDir, 'state.json'))) {
+            console.error(
+              'state.json is missing (likely a fresh git worktree or clone) — run `cadence onboard` to bootstrap it instead.',
+            );
+          }
           process.exit(2);
         }
         const presetCfg = presets[preset];
