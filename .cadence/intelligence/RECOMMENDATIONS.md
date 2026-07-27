@@ -645,22 +645,6 @@ During phase 213's build, running 'cadence done 213-01-T1' (a fully-qualified-lo
 
 Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.
 
-## rec-20260725-007 — Split the settleService god function
-
-- status: candidate
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: services
-- files: packages/core/src/services/settle.ts
-- evidence: Architecture review 2026-07-25 (improve-codebase-architecture skill), candidate #6, Worth exploring.
-- next: cadence milestone propose
-
-settleService is a ~545-line function spanning at least 9 concerns (bypass-arg parsing, phase-collision backstop, mock-verifier banner, gate-registry loop, per-AC evidence derivation, evidence-floor gate, friction digest, recommendation ship-promotion, interactive GitHub-issue offer), distinguished only by inline Phase-number comments rather than function boundaries. The public interface (SettleArgs in, CommandResult out) is already right-sized -- cli/commands/settle.ts is a clean thin adapter and would not change.
-
 ## rec-20260726-001 — Full cryptographic signing of SUMMARY.json (blocked on threat model)
 
 - status: candidate
