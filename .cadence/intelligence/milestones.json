@@ -805,6 +805,33 @@
       "createdAt": "2026-07-26T17:11:55.257Z",
       "updatedAt": "2026-07-26T18:32:06.723Z",
       "closedRef": "PR #311"
+    },
+    {
+      "id": "mil-rec-rec-20260725-006",
+      "name": "Centralize gate bypass and seal policy in the settle driver",
+      "objective": "gates.sealed reads as a universal config knob but only 3 of ~10 bypassable gates (build-test-must-pass, coverage, boundary-scan) consult isGateSealed; docs/reference/config.md still names only 2 of them -- stale since boundary-scan shipped (Phase 156), the exact Doc Drift class this repo's own doc tests exist to catch. Bypass-flag semantics (--force vs --allow-X) are decided independently per gate file with no declared policy, and registry.ts records bypass provenance for test-coverage only.",
+      "status": "closed",
+      "recommendationIds": [
+        "rec-20260725-006"
+      ],
+      "preMortem": {
+        "likelyFailureModes": [],
+        "hiddenDependencies": [],
+        "driftRisks": [
+          "Milestone touches documentation surfaces — spec/doc drift risk."
+        ],
+        "outOfScope": []
+      },
+      "exportTargets": [
+        {
+          "backend": "cadence",
+          "artifactPath": ".cadence/intelligence/exports/mil-rec-rec-20260725-006/SPEC.md",
+          "exportedAt": "2026-07-26T19:37:58.065Z"
+        }
+      ],
+      "createdAt": "2026-07-26T19:36:19.156Z",
+      "updatedAt": "2026-07-26T22:11:13.060Z",
+      "closedRef": "PR #313"
     }
   ]
 }
