@@ -691,3 +691,175 @@ In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts 
 - next: cadence milestone propose
 
 boundary-scan shipped in Phase 156 but was never given a full 'when it fires / what it checks' row anywhere in docs/concepts.md's main gate-universe listing (the '14 gates: 3 always-fire + 11 delta' tables) or the 'Stage-scoped gates' section -- it only appears in the sealed-gate/bypass-summary material phase 226 fixed. Discovered during phase 226's whole-branch review; explicitly out of that phase's scope (its ACs covered gates.sealed discussion only, not the full gate-universe matrix).
+
+## rec-20260727-001 — Assurance manifest: persist verifier family/model for code-review + security-audit
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: critical
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, types
+- files: packages/core/src/gates/types.ts, packages/types/src/summary.ts
+- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.4 and section 6 Slice 1
+- next: cadence milestone propose
+
+SUMMARY.codeReview/.securityAudit persist findings as bare arrays, discarding the provider/model captured in memory at collection time (unlike DeepVerifyMeta). Enrich GateProvenanceZ and stop dropping provider/model at persistence so a mock-family review and a real-provider review are distinguishable in the SUMMARY -- closes Cadence's sole surviving P0.
+
+## rec-20260727-002 — SUMMARY forward-compat read: accept schemaVersion 1|2, distinct "newer Cadence" outcome
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, types
+- files: packages/types/src/summary.ts, packages/core/src/cli/commands/summary.ts, packages/core/src/verify/phase-replay.ts
+- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.6, section 6 Slice 1, decision D6
+- next: cadence milestone propose
+
+SummaryZ.schemaVersion is z.literal(1); a future SUMMARY at schemaVersion 2 fails as an indistinguishable generic parse error rather than a legible 'written by a newer Cadence' outcome. Bump to 2, accept 1|2 on read, and add a pre-parse probe mirroring Phase 223's 'unverifiable' precedent (dec-20260726-001) rather than a false clean or false corrupt.
+
+## rec-20260727-003 — Kernel/verifier contract + lint rule against internal imports
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/types.ts, packages/core/src/gates/engine.ts
+- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md sections 1.2, 1.3, and section 6 Slice 2
+- next: cadence milestone propose
+
+GateImpl/GATE_REGISTRY totality and SettleContext.verifiers: VerifierPorts already form an unnamed plugin architecture. Name kernel/verifier/consumer as published contracts and add a lint rule failing the build if a verifier package imports kernel internals instead of the published contract, with zero GATE_ORDER changes and zero special cases across the five existing verifier-backed gates (code-review, plan-review, spec-review, security-audit, ui-spec-review).
+
+## rec-20260727-004 — Criteria-anchored review: extend CodeReviewInput with ACs/boundaries
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/verify/code-review.ts
+- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.8 (the single most important measured finding) and section 6 Slice 3
+- next: cadence milestone propose
+
+CodeReviewInput is only {files, diff} -- the review verifier structurally cannot see the DRAFT's acceptance criteria or boundaries, so criteria-anchored review requires a genuine contract change, not a prompt change. Extend CodeReviewInput to carry acceptance criteria, boundaries, and task-to-AC refs.
+
+## rec-20260727-005 — Anchor ladder as peer schema to evidence ladder
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: types, core
+- files: packages/types/src/summary.ts
+- evidence: Measured/spec'd in docs/handoffs/cadence-phase0-assurance-kernel-review.md decision D5 and section 7.1
+- next: cadence milestone propose
+
+Grade findings by anchor strength (executable > structured > declared > undeclared/criteria-gap), mirroring but not aliasing the AcEvidence 5-tier ladder. Without grading anchors, every anchored finding renders as equivalent regardless of anchor quality -- reproducing the same P0 in a new costume. Structured/declared tiers must be treated as weak by default (anchor-shopping is the adversarial case).
+
+## rec-20260727-006 — Finding identity: stable ids, dispositions, expiring waivers
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: types, core
+- files: packages/types/src/summary.ts, packages/core/src/verify/code-review.ts, packages/core/src/gates/types.ts
+- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.7, section 7.2, decision D9
+- next: cadence milestone propose
+
+Neither persisted Finding type (packages/types summary.ts vs packages/core verify/code-review.ts, already diverged in severity enum) has a stable id, anchor, disposition, or waiver. Add {id, target: artifact|verification, anchor, disposition, waiver{expiry}} and converge the two divergent Finding types onto one, discriminated by target (decision D9). A waiver with no expiry is a belief masquerading as knowledge.
+
+## rec-20260727-007 — Shared fingerprint primitive extraction from Deja
+
+- status: candidate
+- ready: needs-evidence
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: Reuse note in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 7.2
+- next: cadence milestone propose
+
+Finding-identity-survives-refactor is the same problem Deja already solved with bidirectional containment scoring (max wins, 20-token minimum floor). Evaluate extracting a shared fingerprint primitive before writing a second implementation for Cadence findings, rather than deriving identity from line numbers.
+
+## rec-20260727-008 — Invariant promotion from RetroRollup.findingCategories.recurring
+
+- status: candidate
+- ready: needs-evidence
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, types
+- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.10 and section 6 Slice 4
+- next: cadence milestone propose
+
+RetroRollupZ.findingCategories already defines 'recurring' as seen in 2+ distinct phases -- the frequency-analysis input layer for invariant promotion is built. Consume it to split recurring-unanchored (invariant candidate) from recurring-anchored (spec-quality/codebase-hostility signal) into different dispositions. Promotion stays explicit, never automatic.
+
+## rec-20260727-009 — Counter-verifier as kernel component with AC-weakness detection
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: Spec'd in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 4.3, decision D8
+- next: cadence milestone propose
+
+A component whose job is detecting an unearned settle can't itself be uninstallable -- its highest-value single job is flagging 'the ACs were too weak for this review to mean anything,' which is the mechanism that makes AC weakness costly. Shares substrate with review (anchor resolution, finding schema, ledger routing, verifier-family abstraction) but differs in target; one Finding type with a target discriminant, two policy layers -- one spine, two heads.
+
+## rec-20260727-010 — Conductor as CLI client; treat access gaps as CLI-completeness bugs
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: Spec'd in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 4.2, decision D7
+- next: cadence milestone propose
+
+Conductor should be a client, not a kernel peer: the decision test is 'can it be implemented entirely against public CLI commands?' A 'no' answer is a bug report about the public surface being incomplete, not a case for privileged access -- keeps the kernel small and lets Conductor live in its own repo on its own cadence, depending only on an already-published contract.
+
+## rec-20260727-011 — Extend RecommendationSourceZ with a review member
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: types
+- files: packages/types/src/intelligence.ts
+- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.11 (correction: no snag ledger exists) and section 7.3
+- next: cadence milestone propose
+
+RecommendationSourceZ has no 'review' or 'gate' member, so routing criteria-anchored-review findings into the recommendation ledger (section 7.3 of the source doc) currently loses provenance into 'manual'/'cadence'. Add a 'review' source member so Slice 3 findings can route with real provenance instead of being mislabeled.
