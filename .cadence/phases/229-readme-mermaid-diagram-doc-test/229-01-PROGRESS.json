@@ -1,0 +1,11 @@
+{
+  "draftId": "229-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "readme-architecture-diagram.test.ts added; 2 tests pass; full pnpm turbo run lint typecheck test build green",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-27T03:22:50.184Z"
+    }
+  }
+}

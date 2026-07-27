@@ -661,22 +661,6 @@ Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.j
 
 Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.
 
-## rec-20260726-004 — README's architecture mermaid diagram has no doc-content test verifying it against code truth
-
-- status: candidate
-- ready: ready-for-milestone
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs
-- files: packages/core/tests/docs/
-- evidence: Manual review during v1.51.1 release cut confirmed the diagram's verifier-provider and surface lists are currently accurate, but found no doc-content test asserting it -- the check was ad hoc.
-- next: cadence milestone propose
-
-README.md's mermaid flowchart (lines ~34-55) names the four VerifierProvider values (mock/anthropic/local/host-cli) and the three entry surfaces (CLI, host adapters, MCP) inline as diagram labels. Unlike the version line, command counts, and config defaults -- each asserted against code truth by a doc-content test in packages/core/tests/docs/ -- nothing checks this diagram. Verified during the v1.51.1 release cut (2026-07-25) that it's currently still accurate, but the check was manual; if VerifierProvider (packages/core/src/verify/verifier-factory.ts) gains/loses a value, or a surface category changes shape, the diagram can silently drift with no test catching it -- the same Doc Drift class CLAUDE.md already names for other docs. Fix: a doc-content test (mirroring docs-command-count.test.ts's pattern) that greps README.md's mermaid block and asserts the verifier-provider list matches the VerifierProvider union and the surface list matches the host-adapter/CLI/MCP set.
-
 ## rec-20260726-005 — coverage.ts's coverageBypassed is false-negative when a --force-only bypass overrides real coverage gaps in assertion mode
 
 - status: candidate
