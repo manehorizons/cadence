@@ -105,7 +105,7 @@ settle refuses to close a phase the tests don't back, then closes once they do:
 npx -y @manehorizons/cadence-core tutorial
 ```
 
-For daily use, install the CLI globally (requires Node ≥ 20):
+For daily use, install the CLI globally (requires Node ≥ 22):
 
 ```sh
 npm install -g @manehorizons/cadence-core
@@ -184,7 +184,7 @@ See **[docs/README.md](./docs/README.md)** for the complete user guide:
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs `lint → typecheck → test → build` on every PR and push to `main`, across Node 20 + 22 on Ubuntu.
+`.github/workflows/ci.yml` runs `lint → typecheck → test → build` on every PR and push to `main`, across Node 22 on Ubuntu.
 
 **Enforcing the gate.** A tracked hook `.githooks/pre-push` (wired via `git config core.hooksPath .githooks`) runs the full `pnpm turbo run lint typecheck test build` before any push that updates `main` and aborts on failure. Bypass deliberately with `git push --no-verify`.
 

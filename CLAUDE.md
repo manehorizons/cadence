@@ -66,7 +66,7 @@ pnpm --filter @manehorizons/cadence-core test -- path/to/file.test.ts
 pnpm --filter @manehorizons/cadence-core test -- -t "name fragment"
 ```
 
-Node `>=20` is required. `package.json` pins `pnpm@9.12.0`. The local CLI is
+Node `>=22` is required. `package.json` pins `pnpm@9.12.0`. The local CLI is
 `node packages/core/bin/cadence.cjs <subcommand>` (after `pnpm build`).
 
 ## Architecture
@@ -213,7 +213,7 @@ session to do the same. The shape of a healthy session:
   `packages/core/tests/docs/doc-sync-hook.test.ts` re-asserts the invariant
   in CI. The pre-push hook re-checks it as a backstop.
 - **CI** (`.github/workflows/ci.yml`): the same four-command pipeline on
-  Ubuntu + macOS + Windows × Node 20 + 22, aggregated into the required
+  Ubuntu + macOS + Windows on Node 22, aggregated into the required
   `ci-success` check.
 - **Doc-content tests** (`packages/core/tests/docs/*.test.ts` + host
   packages): executable assertions that named docs match code truth — the

@@ -2,7 +2,7 @@
   "name": "@manehorizons/cadence-host-toolkit",
   "version": "1.51.1",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "description": "Shared toolkit for CADENCE host adapters — the hook-event routing algorithm and the slash-command catalog used by host-claude-code and host-codex.",
   "license": "MIT",
