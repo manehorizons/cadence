@@ -1050,6 +1050,13 @@
       "kind": "note",
       "summary": "Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.11 (correction: no snag ledger exists) and section 7.3",
       "createdAt": "2026-07-27T18:47:52.825Z"
+    },
+    {
+      "id": "ev-20260727-012",
+      "recommendationId": "rec-20260727-012",
+      "kind": "note",
+      "summary": "ROADMAP.md Phase 231 entry (lines 1855-1881) is the pre-written spec; motivated by the 113-phase ROADMAP/MILESTONES drift discovered and backfilled in PR #321",
+      "createdAt": "2026-07-27T20:31:34.467Z"
     }
   ]
 }
