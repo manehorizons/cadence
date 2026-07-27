@@ -149,8 +149,8 @@ export function extractHighSeverityAdvisories(auditJson) {
 // because pnpm 11 refuses to run under corepack when package.json's
 // `packageManager` field names a different version — see pnpm/pnpm#11265's
 // resolution thread. pnpm v11 also requires Node >=22.13 (uses
-// `node:sqlite`), so the CI `audit` job's setup-node step is pinned to
-// Node 22 even though the rest of this repo's CI matrix includes Node 20.
+// `node:sqlite`), which is stricter than this repo's own >=22 engines floor,
+// so the CI `audit` job's setup-node step is pinned explicitly to 22.
 // Verified working end-to-end against this repo's real pnpm-lock.yaml
 // (phase 182): `pnpm dlx pnpm@<version>` was tried first and does NOT
 // actually switch versions (pnpm 9.12.0 silently keeps running itself), so

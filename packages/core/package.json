@@ -2,7 +2,7 @@
   "name": "@manehorizons/cadence-core",
   "version": "1.51.1",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "description": "CADENCE engine — the DRAFT→BUILD→SETTLE loop, configurable quality gates, and the host-agnostic `cadence` CLI for AI-assisted development.",
   "license": "MIT",

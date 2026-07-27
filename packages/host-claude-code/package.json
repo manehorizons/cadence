@@ -2,7 +2,7 @@
   "name": "@manehorizons/cadence-host-claude-code",
   "version": "1.51.1",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "description": "Claude Code adapter for CADENCE — installs lifecycle hooks and slash commands that drive the CADENCE engine from inside Claude Code.",
   "license": "MIT",

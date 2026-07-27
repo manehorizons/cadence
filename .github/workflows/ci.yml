@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
 
-# CI runs the full gate on ubuntu + macOS + windows across Node 20 + 22.
+# CI runs the full gate on ubuntu + macOS + windows on Node 22.
 # macOS was unblocked by realpath'ing the testkit mkdtemp root (phase 49);
 # windows by platform-aware test timeouts (vitest.shared.ts) + best-effort
 # temp cleanup that tolerates Windows handle-locking (phase 50). fail-fast is
@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node: [20, 22]
+        node: [22]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7

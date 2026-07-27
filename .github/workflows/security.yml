@@ -60,8 +60,9 @@ jobs:
           # pnpm <11 hits npm's retired legacy audit endpoint (410 Gone —
           # pnpm/pnpm#11265); check-audit-exceptions.mjs works around this by
           # running the audit itself via `corepack pnpm@11.x`, which requires
-          # Node >=22.13 (uses node:sqlite). Pinned to 22 here even though
-          # the rest of this repo's CI matrix (ci.yml) covers Node 20 too.
+          # Node >=22.13 (uses node:sqlite). Pinned explicitly to 22 here
+          # since that floor (22.13) is stricter than this repo's own
+          # >=22 floor (checkNodeMajor).
           node-version: 22
           cache: 'pnpm'
 
@@ -86,7 +87,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile

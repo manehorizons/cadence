@@ -2,7 +2,7 @@
   "name": "@manehorizons/cadence-types",
   "version": "1.51.1",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "description": "Zod schemas and TypeScript types for CADENCE — the pure data layer shared across every CADENCE package.",
   "license": "MIT",

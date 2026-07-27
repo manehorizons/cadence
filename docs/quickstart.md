@@ -46,7 +46,7 @@ New and not sure? Run `cadence start` for a guided menu that picks the right set
 
 ## Prerequisites
 
-- **Node.js ≥ 20**
+- **Node.js ≥ 22**
 - For a zero-install first touch — one real loop, including settle refusing a
   phase the tests don't back, then closing once they do:
 

@@ -14,7 +14,7 @@ afterEach(async () => {
   }
 });
 
-const HEALTHY_ENV = { nodeVersion: 'v20.11.0', platform: 'linux' as const };
+const HEALTHY_ENV = { nodeVersion: 'v22.11.0', platform: 'linux' as const };
 
 async function writeCoverageMode(root: string, coverageMode: 'assertion' | 'mention'): Promise<void> {
   const path = join(root, '.cadence', 'config.json');

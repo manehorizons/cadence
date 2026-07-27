@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
 import { runDoctor } from '../../src/doctor/run.js';
 
-const ENV = { nodeVersion: 'v20.11.0', platform: 'linux' as const };
+const ENV = { nodeVersion: 'v22.11.0', platform: 'linux' as const };
 
 let active: Fixture | null = null;
 afterEach(async () => {

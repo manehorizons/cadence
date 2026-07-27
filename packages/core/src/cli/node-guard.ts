@@ -5,7 +5,7 @@
  */
 export function checkNodeMajor(
   versionString: string,
-  min = 20,
+  min = 22,
 ): { ok: true } | { ok: false; message: string } {
   const major = Number.parseInt(versionString.replace(/^v/, ''), 10);
   if (!Number.isFinite(major) || major >= min) {
