@@ -1,0 +1,41 @@
+{
+  "draftId": "228-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-27T01:38:19.842Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/228-split-settle-service/packages/core/src/services/settle.ts"
+      ],
+      "updatedAt": "2026-07-27T01:48:09.845Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/228-split-settle-service/packages/core/src/services/settle.ts"
+      ],
+      "updatedAt": "2026-07-27T01:59:26.996Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/228-split-settle-service/packages/core/src/services/settle.ts"
+      ],
+      "updatedAt": "2026-07-27T02:09:50.931Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-27T02:10:02.628Z"
+    }
+  }
+}

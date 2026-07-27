@@ -1207,33 +1207,6 @@
       "updatedAt": "2026-07-24T23:14:13.477Z"
     },
     {
-      "id": "rec-20260725-007",
-      "title": "Split the settleService god function",
-      "summary": "settleService is a ~545-line function spanning at least 9 concerns (bypass-arg parsing, phase-collision backstop, mock-verifier banner, gate-registry loop, per-AC evidence derivation, evidence-floor gate, friction digest, recommendation ship-promotion, interactive GitHub-issue offer), distinguished only by inline Phase-number comments rather than function boundaries. The public interface (SettleArgs in, CommandResult out) is already right-sized -- cli/commands/settle.ts is a clean thin adapter and would not change.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "services"
-      ],
-      "affectedFiles": [
-        "packages/core/src/services/settle.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260725-007"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-25T15:09:13.547Z",
-      "updatedAt": "2026-07-25T15:09:13.547Z"
-    },
-    {
       "id": "rec-20260726-001",
       "title": "Full cryptographic signing of SUMMARY.json (blocked on threat model)",
       "summary": "Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.",
@@ -4404,11 +4377,41 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "claude-cadence-audit-20260725",
-      "createdAt": "2026-07-26T01:03:37.796Z",
-      "updatedAt": "2026-07-26T23:01:09.857Z",
       "shippedRef": "phase 227",
+      "scoutId": "claude-cadence-audit-20260725",
       "archivedAt": "2026-07-26T23:01:09.857Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-26T01:03:37.796Z",
+      "updatedAt": "2026-07-26T23:01:09.857Z"
+    },
+    {
+      "id": "rec-20260725-007",
+      "title": "Split the settleService god function",
+      "summary": "settleService is a ~545-line function spanning at least 9 concerns (bypass-arg parsing, phase-collision backstop, mock-verifier banner, gate-registry loop, per-AC evidence derivation, evidence-floor gate, friction digest, recommendation ship-promotion, interactive GitHub-issue offer), distinguished only by inline Phase-number comments rather than function boundaries. The public interface (SettleArgs in, CommandResult out) is already right-sized -- cli/commands/settle.ts is a clean thin adapter and would not change.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "services"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260725-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-25T15:09:13.547Z",
+      "updatedAt": "2026-07-27T02:13:11.986Z",
+      "shippedRef": "phase 228",
+      "archivedAt": "2026-07-27T02:13:11.986Z",
       "archiveReason": "shipped"
     }
   ]
