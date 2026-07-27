@@ -1848,11 +1848,13 @@ that says `code-review: ran` is indistinguishable between a real Anthropic revie
 deterministic mock that flags `console.log`.
 
 Slice 1 (phases 232–233) is **unconditionally valuable standalone** — it closes the P0 even
-if slices 2–4 are abandoned, which the spec's own tripwires explicitly permit. Phase 231
-(the `roadmap-currency` doctor check, below) lands first so this arc doesn't repeat the
-mistake it's part of fixing.
+if slices 2–4 are abandoned, which the spec's own tripwires explicitly permit. Two prep
+phases land first, unrelated to the assurance theme but staged here: Phase 231 (the
+`roadmap-currency` doctor check) so this arc doesn't repeat the mistake it's part of fixing,
+and Phase 238 (drop Node 20 support) — filed 2026-07-27 during the same session, ahead of
+kernel work starting. Neither blocks the other; the operator picks build order.
 
-### Phase 231 — `cadence doctor` check: roadmap-currency (rec TBD — file before drafting)
+### Phase 231 — `cadence doctor` check: roadmap-currency (rec-20260727-012)
 
 **Objective.** Add a warning-only, non-blocking `cadence doctor` check comparing the
 highest phase number under `.cadence/phases/` against the highest phase number referenced
@@ -1879,6 +1881,42 @@ never a hard failure, `fixId: null`. (3) The check degrades to a silent pass whe
 never sees this warning. (4) Best-effort: any read failure reports "not determinable" rather
 than throwing, matching `checkPhaseFreshness`'s existing idiom. (5) Paired doc edit in
 `docs/reference/commands.md`'s `doctor` section.
+
+### Phase 238 — Drop Node 20 support; raise engine floor to Node >=22 (rec-20260727-013)
+
+**Objective.** Retire the Node 20 CI leg and the `engines.node` floor across all five
+published packages plus `host-toolkit`, landing before Phase 0's kernel/assurance work
+begins. Unrelated to that arc's theme — grouped here only as pre-Phase-0 staging, same
+role as Phase 231 — and may ship in its own release rather than bundled with the
+assurance-manifest work depending on how release-cut timing falls.
+
+**Files.**
+- `.github/workflows/ci.yml` — matrix `node: [20, 22]` → `node: [22]` (6 test jobs → 3
+  across ubuntu/macos/windows).
+- `.github/workflows/security.yml` — the standalone `sbom` job's `node-version: 20` →
+  `22` for consistency (unrelated to the test matrix; just a tool-runner pin).
+- `package.json`, `packages/{core,types,host-claude-code,host-codex,host-toolkit}/package.json`
+  — `engines.node` `">=20"` → `">=22"`.
+- `packages/core/src/cli/node-guard.ts` — `checkNodeMajor`'s default `min = 20` → `22`.
+- `packages/core/tests/cli/node-guard.test.ts` — update the ~4 assertions/descriptions
+  pinned to the Node-20 floor.
+- Root `package.json` — `@types/node` `^20.14.0` → `^22.x`.
+- `.github/dependabot.yml` — reword the `@types/node` major-bump `ignore` rule + its
+  comment, which currently ties the exemption to the Node-20 floor explicitly.
+- `CLAUDE.md` (2 spots), `README.md`, `website/src/content/docs/start/install.md` — manual
+  prose sweep of "Node 20 + 22" mentions. **Not doc-test-gated** — no test asserts the
+  literal string "20" — so this is manual diligence, not an automated check.
+
+**Boundaries.** Do NOT touch `CHANGELOG.md`, `.cadence/ROADMAP.md`/`MILESTONES.md`, or any
+`.cadence/phases/**` DRAFT/SPEC/SUMMARY artifact that mentions Node 20 — those are frozen
+historical records, not current-state docs.
+
+**ACs.** (1) CI matrix runs only Node 22 across all three OSes; `ci-success` still passes.
+(2) All six `engines.node` fields read `>=22`; a changeset is filed since this is a real
+breaking change for consumers still on Node 20. (3) `checkNodeMajor` and its tests reflect
+the new floor. (4) `dependabot.yml`'s `@types/node` ignore rule and comment match the new
+floor's rationale. (5) The four named current-state docs no longer say "Node 20"; historical
+docs/artifacts are untouched. (6) `pnpm turbo run lint typecheck test build` green.
 
 ### Phase 232 — Gate provenance carries verifier identity; SUMMARY schemaVersion 2 (rec-20260727-001)
 
