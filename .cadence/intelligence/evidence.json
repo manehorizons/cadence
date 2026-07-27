@@ -1057,6 +1057,13 @@
       "kind": "note",
       "summary": "ROADMAP.md Phase 231 entry (lines 1855-1881) is the pre-written spec; motivated by the 113-phase ROADMAP/MILESTONES drift discovered and backfilled in PR #321",
       "createdAt": "2026-07-27T20:31:34.467Z"
+    },
+    {
+      "id": "ev-20260727-013",
+      "recommendationId": "rec-20260727-013",
+      "kind": "note",
+      "summary": "LOE assessment done interactively 2026-07-27: CI matrix + engines-floor + node-guard + dependabot + doc-prose sweep enumerated; no doc-content test gates the '20' string so the doc sweep is manual-diligence only",
+      "createdAt": "2026-07-27T20:55:55.298Z"
     }
   ]
 }
