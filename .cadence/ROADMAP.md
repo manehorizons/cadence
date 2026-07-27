@@ -845,3 +845,1168 @@ activate) + docs + release. *Out (deferred to v1.28):* rec-003 (auto-derive phas
 `--ac` syntax shorthands) and rec-005 (agent/non-TTY mode + `--preset agent`). *Out
 (YAGNI):* a full interactive init wizard; remembering host choices; non-Anthropic
 key-detection at init.
+
+---
+
+## Backfilled: phases 118–230 (2026-06-18 – 2026-07-27)
+
+The following sections were backfilled 2026-07-27, closing a gap where `.cadence/phases/`
+kept advancing (through phase 230) without ROADMAP.md/MILESTONES.md being updated to
+match, following the shipped-version retrospective convention this repo already uses for
+delivered milestones (see Phase 111 and earlier). Each backfilled phase's own settled
+artifacts under `.cadence/phases/<N>-<slug>/` are the record and were not modified by this
+backfill — these sections are an index into that record, not a replacement for it.
+
+## v1.30.0 – v1.32.0 — Hardening pass, draft/settle ergonomics, and release integrity — ✓ SHIPPED 2026-06-18 → 06-23
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/118–129`. None of
+these tags has a dedicated release phase, so the phase→version attribution below is
+**date-derived** (settle date vs tag date) and is approximate at the boundaries.*
+
+| tag | tagged | phases attributed (date-derived) |
+|---|---|---|
+| v1.30.0 | 2026-06-18 | 118–122 |
+| v1.31.0 | 2026-06-19 | 123 |
+| v1.32.0 | 2026-06-23 | 124, 129 |
+
+This arc opens with phase 118, a hardening review that turns prior review findings into
+fail-closed behavior: centralized phase-slug validation before every filesystem join (path
+traversal refusal), `execFileSync` argv git diff collection replacing shell-string
+interpolation (metacharacter injection), config loading that refuses invalid
+`.cadence/config.json` instead of silently falling back to defaults, and a docs pass
+reconciling README/DESIGN with the shipped (not archived) Codex adapter. The next phases are a
+DX pass on the loop's day-to-day surface: 119 lets `draft new` derive its own phase/task id and
+adds `--pass-all`/`--ac-pass` settle shorthands; 120 makes gate bypasses durably auditable — a
+`SUMMARY.json` `gateBypasses` array, a rendered Markdown section, and a loud settle-time stderr
+warning, closing a silent-bypass gap; 121 is a local-only, gitignored, sourced
+competitive-positioning note for launch prep with deliberately narrow claims; 122 closes the
+remaining Codex host-adapter test-parity gaps (local hook install roundtrip, prompts sourced
+from the shared `COMMAND_GUIDANCE`/`SCOUT_DIALOGUE` catalog). Phase 123 adds first-real-work
+DRAFT templates (`bugfix`/`feature`/`refactor`) to `draft new` so a newcomer's first real phase
+doesn't require hand-authoring Objective/AC/Tasks/Boundaries from scratch. Phase 124 hardens the
+release process itself: `scripts/release-integrity.mjs` creates/updates the GitHub Release for
+the published tag and verifies npm+tag+GitHub-Release agreement across every public package,
+failing loudly on mismatch instead of leaving an `untagged-*` draft. Phase 129, after the
+numbering gap, rebuilds `cadence tutorial` around a genuine refuse→fix→pass arc — the demo
+stages an unbacked AC-1 claim, lets settle's `test-coverage` gate really refuse it, then adds a
+real test and genuinely passes, making the refusal itself the tutorial's money moment, with zero
+engine changes. **No new DESIGN.md D-number** across this arc — all eight phases are additive to
+existing models (path/config safety, the draft/settle CLI surface, the Codex adapter, the
+release pipeline, the tutorial).
+
+- **Phase 118 — hardening review: fail-closed config, path-safe phases, shell-safe diffs** ✓ —
+  centralized phase-slug validation before filesystem joins across draft/spec approve/new,
+  settle, and MCP resource reads; replaced shell-string git diff collection with `execFileSync`
+  argv execution (regression-tested against shell-metacharacter filenames); invalid
+  `.cadence/config.json` now fails closed instead of falling back to defaults; reconciled
+  README/docs/DESIGN with the shipped Codex adapter; full local lint/typecheck/test/build gate
+  green.
+- **Phase 119 — auto-derived phase id + settle pass shorthands** ✓ — `cadence draft new --title
+  "..."` (positionals omitted) now derives the next-free phase slug and task id `01` itself;
+  added `--pass-all` and `--ac-pass <id...>` settle shorthands so ACs can be marked PASS without
+  the `AC-1=pass` syntax; `cadence progress` prints the simplified command. Existing explicit
+  `draft new <phase> <num>` and `--ac AC-1=pass` paths stay compatible.
+- **Phase 120 — loud bypass audit trail** ✓ — settle now records an optional `gateBypasses`
+  array in `SUMMARY.json` (gate, flag, reason), renders a `## Gate bypasses` section in
+  `SUMMARY.md`, and prints a `settle bypass [...]` stderr warning for each recorded bypass; clean
+  settles are unaffected — `gateBypasses` stays absent and the section is omitted.
+- **Phase 121 — competitive objection FAQ** ✓ — local-only, gitignored `COMPETITIVE.md`
+  launch-prep note: sourced positioning against Spec Kit, OpenSpec, BMad Method, CodeRabbit,
+  Greptile, Qodo, Graphite, and Thoughtworks Radar, a narrow in-loop-enforcement wedge claim, an
+  objection FAQ, and an explicit "overclaims to avoid" section.
+- **Phase 122 — Codex host adapter parity tests** ✓ — added Codex-equivalent local hook install
+  roundtrip coverage (`.codex/hooks.json` through the local shim) and re-sourced Codex prompt
+  prose from the shared `COMMAND_GUIDANCE`/`SCOUT_DIALOGUE` catalog (including `cadence-scout`),
+  with parity tests locking prompts to Codex-shaped frontmatter (no Claude `allowed-tools`/
+  autorun line).
+- **Phase 123 — draft templates for first real work** ✓ — `cadence draft new --template
+  <bugfix|feature|refactor>` renders a deterministic, non-placeholder Objective/AC/Tasks/
+  Boundaries body for a newcomer's first real DRAFT; validated against unknown template names
+  (refuses before writing) and against existing no-template/explicit-phase-id behavior; README/
+  quickstart/command reference document the first-real-phase command and that templates are
+  scaffolds to edit, not proof of correctness.
+- **Phase 124 — release integrity: GitHub releases stay in sync** ✓ — new
+  `scripts/release-integrity.mjs` discovers public packages, validates lockstep versions,
+  extracts the `packages/core/CHANGELOG.md` entry, and creates/updates the GitHub Release for the
+  pushed tag; the Release workflow runs it post-tag with `GH_TOKEN`/`NODE_AUTH_TOKEN`, failing
+  loudly (naming the mismatched package/tag/release) instead of leaving an `untagged-*` draft;
+  `docs/release.md` now defines "done" as npm + tag + GitHub Release + latest marker all
+  agreeing.
+- **Phase 129 — rebuild tutorial around the catch (refuse→fix→pass)** ✓ — `cadence tutorial` now
+  stages an unbacked AC-1 claim, lets `settle run --auto` genuinely refuse it (`test-coverage`
+  names AC-1, loop stays in BUILD), then adds a real `sum.test.mjs` and genuinely passes to IDLE
+  with a SUMMARY; the refusal renders as a visually distinct banner; no `--ac` manual assertion
+  or coverage-bypass flag anywhere in the tutorial path; zero engine changes.
+
+*(Phases 125–128 were never used — see the numbering ledger.)*
+
+## v1.33.0 – v1.36.0 — Onboarding trust: agent-prompt, doctor repairs, dry-run preview, and the onboarding-honesty wave — ✓ SHIPPED 2026-06-25 → 07-01
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/130–139`. None of
+these tags has a dedicated release phase inside this arc, so the phase→version attribution
+below is **date-derived** (settle date vs tag date) and is approximate at the boundaries.*
+
+| tag | tagged | phases attributed (date-derived) |
+|---|---|---|
+| v1.33.0 | 2026-06-25 | 130 |
+| v1.34.0 | 2026-06-26 | 131 |
+| v1.35.0 | 2026-06-26 | 132 |
+| v1.36.0 | 2026-07-01 | 133–139 |
+
+This arc runs two related campaigns back to back. Phases 130–132 build the first-run trust
+surfaces that let a new adopter see what CADENCE will do before it does it: `cadence
+agent-prompt` (a copy-paste prompt that hands a fresh user's AI agent the DRAFT-then-stop
+workflow, backed by one pure `renderAgentPrompt` shared by the command and `init`'s output),
+`doctor --fix`/`--wire-host`/`--dry-run` (best-effort auto-repair of onboarding drift —
+git-hooks, STATE.md, host install — classified `auto`/`wire-host`/`manual` via a pure
+`planFixes`), and `init --dry-run` (a pure `planInit` → `InitPlan` that resolves everything a
+real init would and prints a fit-check preview without writing anything, so `init` can be run
+safely inside a populated repo). Phases 133–139 are a different shape of work: they are the
+direct fix set from an onboarding-honesty audit (the `rec-20260701-00x` series, findings
+F2/F4/F5/F6/F9/F10), shipped together as v1.36.0 ("onboarding-honesty wave 1"). Each phase
+closes one concrete gap between what CADENCE claims about itself and what it actually does —
+`doctor`'s git-hooks check flagging a directory that was never there, `cadence progress`
+lacking `--json`, `init --demo` printing next-step blocks that immediately refuse because a
+demo phase is already open, the README's real-phase walkthrough missing an inline
+`--no-approve` pointer, three surfaces breaking the "always name a concrete next move" pattern,
+and a slash-command count published inconsistently across four docs. Phase 139 is the
+capstone and the largest single change in the arc: it flips the default `coverageMode` from
+`mention` to `assertion` for all three presets, derives a real `verification.testCommand` from
+the target repo's `package.json#scripts.test` + detected package manager, and makes
+`build-test-must-pass` print a loud stderr notice instead of passing silently when no test
+command is configured — closing the gap between what `cadence tutorial` demonstrates
+(real enforcement) and what a fresh `init` actually delivered. All published packages moved in
+lockstep across the four tags. **No new DESIGN.md D-number** in this window (git history on
+`DESIGN.md` has no commits in the 06-24 → 07-02 range).
+
+- **Phase 130 — `cadence agent-prompt` + init block** ✓ — pure `renderAgentPrompt(goal?)`
+  substitutes a supplied goal or falls back to `<your goal>`; the `agent-prompt` CLI command
+  and a new "Hand it to your AI agent" block in `init`'s output share the same renderer so they
+  cannot drift; the prompt teaches `cadence draft new --template`, AC tagging, and explicitly
+  tells the agent to stop before `draft approve`.
+- **Phase 131 — `doctor --fix`/`--wire-host`/`--dry-run`** ✓ (rec-20260619-004) — a pure
+  `planFixes(report)` classifies each non-ok doctor finding as `auto`/`wire-host`/`manual`;
+  `applyFixes` best-effort-repairs git-hooks (via `git config`) and STATE.md
+  (`renderStateMd`), host wiring is gated behind `--wire-host` and deduped by fix id, and
+  `--dry-run` previews without writing.
+- **Phase 132 — `init --dry-run` fit-check preview** ✓ (rec-20260619-005) — a pure
+  `planInit(cwd, opts, env)` composes the existing resolution helpers (`deriveName`,
+  `detectTestGlobs`, gate-profile suggestion, preset/activation/host decisions) into an
+  inspectable `InitPlan`; `--dry-run` short-circuits before any write and prints the rendered
+  plan, including on an already-`.cadence/`-initialized repo (previews instead of refusing).
+  Real write path left byte-for-byte unchanged.
+- **Phase 133 — doctor git-hooks check: verify dir before flagging/fixing** ✓
+  (rec-20260701-002, F2) — a missing `.githooks/` directory now reports not-applicable
+  instead of `warning`, and `--fix` never overwrites a pre-existing custom `core.hooksPath`
+  (e.g. a Husky `.husky` setup); happy path unchanged.
+- **Phase 134 — `cadence progress --json`** ✓ (rec-20260701-004, F4) — mirrors
+  `recommendService`'s `--json` pattern, emitting the same structured `{ command, reason }`
+  payload the service already returns instead of requiring callers to regex the rendered text.
+- **Phase 135 — `init --demo`: suppress conflicting next-step blocks** ✓ (rec-20260701-005,
+  F5) — the generic "Your first loop" and "Hand it to your AI agent" blocks (both of which
+  immediately refuse with `loopPosition is DRAFT` when a demo phase is already open) are
+  suppressed when `--demo` seeded a phase; the "Demo phase ready" (approve → done → settle)
+  block still prints unchanged.
+- **Phase 136 — README real-phase example: inline `--no-approve` pointer** ✓
+  (rec-20260701-006, F6) — investigation found the agent-prompt side of this finding already
+  fixed in phase 130; the remaining gap was the README's "drive a real phase yourself"
+  walkthrough showing a bare `draft approve` with no inline pointer to `--no-approve` for the
+  non-interactive/CI/agent case, now added.
+- **Phase 137 — Refusal trio: concrete next-move everywhere** ✓ (rec-20260701-007, F10) —
+  three fixes: BUILD-state `cadence progress` now names the actual first-pending task id (or
+  `settle run --auto`) instead of an unrunnable compound OR command; `draft approve` on a
+  missing DRAFT.md gives a clean guarded refusal (mirroring `spec approve`) instead of a raw
+  ENOENT; `settle run` out of position now names the actual next step via the same
+  `nextAction()` `cadence progress` uses.
+- **Phase 138 — Docs truth pass: slash-command counts + start menu completeness** ✓
+  (rec-20260701-011, F9–F10) — reconciled the slash-command count to code truth (12) across
+  README, quickstart, and claude-code.md (including a broken TOC anchor); added the 3 missing
+  commands to quickstart's table; added a 7th `cadence start` menu option ("Turn on real
+  verification" → `cadence activate`) so the guided front door reaches the remedy its own
+  mock-verifier banner recommends by name. The README flagship-walkthrough claim in the same
+  rec was live-tested and found already accurate — scoped out, no change needed.
+- **Phase 139 — Default install enforces what the tutorial demonstrates** ✓
+  (rec-20260701-001, wave 2, "enforcement wedge") — flips `verification.coverageMode` to
+  `'assertion'` by default for all three presets (`solo`/`team`/`production`); adds a pure
+  `detectTestCommand` helper (covers all 4 lockfile types + no-lockfile/no-scripts fallbacks)
+  wired into both `InitPlan` and the real `init.ts` write path; `build-test-must-pass` prints a
+  new `NO_TEST_COMMAND_NOTICE` via `ctx.io.err` instead of passing silently when no test
+  command is configured. Existing `.cadence/config.json` files are untouched — the flip only
+  applies to new inits.
+
+- **Scope guards (as built).** *In:* the full agent-prompt/doctor-fix/dry-run trust surfaces
+  (130–132) and the complete onboarding-honesty wave-1 fix set (133–139, all six audit
+  findings plus the enforcement-default flip). *Out:* `--host` variants or host
+  auto-detection in the agent prompt; refactoring `init`'s real write path to consume
+  `planInit`; `cadence init --json`; a `cadence explain` start-menu option (phase 138 noted no
+  equivalent forcing function existed, deferred); rec-003 (SUMMARY provenance) and rec-009
+  (sealed gates), explicitly called out in phase 139's DRAFT as separate, later phases.
+
+## v1.37.0 – v1.38.0 — SUMMARY gate provenance + sealed production gates — ✓ SHIPPED 2026-07-02 → 07-03
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/140–141`; those
+artifacts are the record and were not modified. Phase 140's attribution to v1.37.0 is
+**evidenced** (named explicitly in the v1.37.0 release commit and `packages/core/CHANGELOG.md`).
+Phase 141's attribution to v1.38.0 is **date-derived**: its merge commit (`f9205d16`, PR #123)
+landed 2026-07-02 20:28 (-0500), after the v1.37.0 tag (18:09 same day) and before the v1.38.0
+tag (2026-07-03 13:58) — but phase 141 shipped without its own changeset, so `gates.sealed`
+never appears in either release's CHANGELOG prose; v1.38.0's changelog entry names only phases
+142–144.*
+
+| tag | tagged | phases attributed |
+|---|---|---|
+| v1.37.0 | 2026-07-02 | 140 (evidenced) |
+| v1.38.0 | 2026-07-03 | 141 (date-derived; undocumented in changelog) |
+
+This arc closes the three-recommendation "enforcement-wedge wave 2" trio the operator opened
+with rec-20260701-001/-003/-009 — three separate gaps in the settle loop's honesty story.
+Phase 140 makes a settle's PASS verdicts auditable: `SUMMARY.json`'s new `gates[]` array records
+per-gate `ran`/`skipped` (+ reason) provenance for all 8 settle-dispatched gates in
+`GATE_ORDER`, each `acResults[]` row carries a per-AC `evidence` class (`ai-verified` /
+`executed` / `assertion` / `mention` / `unverified`) derived by a new pure
+`gates/ac-evidence.ts`, and a mock-provider deep-verify is now structurally prevented from ever
+reporting `ai-verified`; `SUMMARY.md` renders both a `## Gate provenance` section and per-AC
+evidence tags, and pre-phase SUMMARY records stay parseable. v1.37.0's own release commit
+titled itself "enforcement-wedge wave 2 (**partial**)" — phase 141, the trio's third leg, was
+still in flight at cut time. Phase 141 finishes it: the `production` gate-profile preset now
+seals `test-coverage` and `build-test-must-pass` via a new `gates.sealed: string[]` config
+field, and both gates refuse `--force`/their own `--allow-*` flag outright when sealed, with a
+refusal message that names `gates.sealed`. The phase's own follow-up commit records that
+shipping it closed "wave 2's enforcement-wedge trio (001/003/009 all shipped now)." No new
+DESIGN.md D-number resulted from either phase.
+
+- **Phase 140 — SUMMARY gate provenance** ✓ (rec-20260701-003) — `SUMMARY.json`'s `gates[]`
+  array records ran/skipped(+reason) provenance for all 8 settle-dispatched gates in
+  `GATE_ORDER`; `acResults[]` rows carry a derived `evidence` class; mock-provider deep-verify
+  never yields `ai-verified` (it falls through to that AC's test-coverage evidence instead);
+  `SUMMARY.md` renders the new `## Gate provenance` section plus per-AC evidence tags; pre-phase
+  SUMMARY records without the new fields still parse and render unchanged.
+- **Phase 141 — sealed gates: production preset makes named gates non-bypassable** ✓
+  (rec-20260701-009) — new `gates.sealed: string[]` config field (defaults `[]`, backward
+  compatible); the `production` preset sets it to `['test-coverage', 'build-test-must-pass']`
+  (`solo`/`team` presets unchanged, stay `[]`); a shared `isGateSealed(ctx, gateId)` predicate
+  makes both `coverage.ts` and `build-test-must-pass.ts` ignore `--force` and their per-gate
+  `--allow-*` flag when sealed, refusing with a message that names `gates.sealed`; unsealed
+  bypass behavior (and its bypass-notice logging) is byte-for-byte unchanged.
+
+- **Scope guards (as built).** *In:* per-gate/per-AC provenance rendering and evidence-class
+  derivation (140); the `gates.sealed` non-bypass mechanism, scoped to exactly `test-coverage`
+  and `build-test-must-pass` on the `production` preset only (141). *Out:* sealing any gate
+  besides those two, changing what makes either gate refuse in the first place, or touching the
+  `solo`/`team` presets' bypass posture — all three explicitly excluded in phase 141's
+  Boundaries.
+
+## v1.38.0 – v1.39.0 — Cross-worktree handoff picker + intelligence-ledger lifecycle — ✓ SHIPPED 2026-07-03
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/142–149`; those artifacts
+are the record and were not modified.*
+
+| tag | tagged | phases attributed |
+|---|---|---|
+| v1.38.0 | 2026-07-03 | 142–144 (**evidenced** — phase 144 is the release phase) |
+| v1.39.0 | 2026-07-03 | 145–149 (date-derived) |
+
+This arc closes two adjacent but distinct milestones on the same day. Phases 142–144 finish the
+cross-worktree handoff-picker line: 142 extracts the git-worktree-discovery plumbing the
+phase-collision guard already used (`parseWorktreePorcelain`, `normalizeWorktreePath`,
+`isSameWorktree`, `worktreeKey`) into a shared `packages/core/src/git/worktrees.ts` module and adds
+a new best-effort `gatherHandoffCandidates` primitive that live-scans local + sibling worktrees for
+resumable handoff docs, ranked freshest-first — deliberately no cached index, the same
+"observe ground truth" philosophy the collision guard already locked in; 143 wires that primitive
+into `cadence resume`'s CLI/service layer as an opt-in picker (`--list`/`--pick <n>`/`--path <p>`/
+`--local`, a `resume` config block, a strictly read-only sibling-resume path) while keeping
+single-worktree output byte-identical to pre-phase-143; 144 documents the full surface across
+commands.md/config.md/concepts.md, appends a DESIGN.md §13 addendum (explicitly no new D-number —
+this is a sibling application of §13's locked "ground truth, not a registry" decision, extended
+from phase numbers to handoff docs), and cuts the v1.38.0 lockstep release. Phases 145–149 then
+work through a batch of intelligence-ledger and CLI-ergonomics fixes that landed against the
+already-tagged v1.39.0 with no dedicated release phase of their own: 145 stops a settled phase's
+`converted` recommendation from silently vanishing into `ledger.archived`, routing it through a new
+visible `settle-pending` status instead (surfaced by `cadence doctor`/`cadence progress`, promotable
+only to `shipped`); 146 adds `--top <n>` truncation to `cadence recommend` plus a
+`/cadence-recommend` slash command for both hosts as a lightweight front door; 147 fixes issue
+#129 — the collision guard matched upstream occupancies on phase number alone, so a phase's own
+already-pushed SPEC/DRAFT reflected back from `origin` looked like a foreign conflict on the very
+next `draft new`/`settle run` — by exempting an upstream occupancy only when its full directory name
+(number + slug) exactly matches a local occupancy's, leaving sibling matching and genuinely
+different same-numbered upstream phases unaffected; 148 and 149 are direct follow-ons that 145's own
+boundaries explicitly deferred to "a later phase in this arc" — `settle run --ship-ref <text>`
+(issue #134) promotes a converted recommendation straight to `shipped` instead of the default
+settle-pending advance, and `cadence milestone close <id>` (issue #135) gives an `exported`
+milestone a `closed` terminal status with a non-blocking advisory on unshipped members. No new
+DESIGN.md D-number resulted from either half of this arc.
+
+- **Phase 142 — worktree-discovery extraction + handoff-candidate core** ✓ — extracted the
+  phase-collision guard's git-worktree-discovery plumbing into `packages/core/src/git/worktrees.ts`,
+  rewired `occupancy.ts` onto it with zero behavior change (regression-guarded by its own unmodified
+  test file), and added the unwired `gatherHandoffCandidates` primitive consumed starting phase 143.
+- **Phase 143 — CLI/service integration + picker for `cadence resume`** ✓ — wired
+  `gatherHandoffCandidates` into `cadence resume`: `--list`/`--pick`/`--path`/`--local` flags, a
+  `resume` config block (`crossWorktree` default true, `autoList` default false), a TTY-aware
+  picker, and a hard-invariant read-only sibling-resume path (no `lastHandoff` stamp, no writes to a
+  foreign `.cadence/`, `context: null` on `--full` for a sibling pick).
+- **Phase 144 — docs + release for cross-worktree handoff picker (v1.38.0)** ✓ — documented the
+  full `resume` flag surface in commands.md, a new `## resume` section in config.md, a
+  concepts.md addendum, and a DESIGN.md §13 addendum; cut the v1.38.0 lockstep release across all
+  four published packages.
+- **Phase 145 — settle-pending recommendation status** ✓ — a settling phase's `converted`
+  recommendation now transitions to a visible `settle-pending` status instead of being archived;
+  `settle-pending → shipped` is the only sanctioned promotion; `cadence doctor`/`cadence progress`
+  surface pending-ship recs with the exact promote command.
+- **Phase 146 — `cadence recommend --top <n>` + `/cadence-recommend` slash command** ✓ — core
+  truncation logic (`report.totals.ranked` still reports the pre-truncation count), a renderer
+  truncation note, the CLI flag, and a new `/cadence-recommend` slash command for both hosts
+  (auto-run `cadence recommend --top 5`), bumping Claude Code's installed-command count 12→13.
+- **Phase 147 — upstream self-authorship exemption for the phase-collision guard** ✓ (issue #129)
+  — exempts an `upstream` occupancy from conflicting only when its full directory name (number +
+  slug) exactly matches a `local` occupancy's name at the same number; a differently-named upstream
+  phase at the same number, and any `sibling` occupancy, still conflicts as before.
+- **Phase 148 — `settle run --ship-ref` shortcut** ✓ (issue #134) — opt-in `--ship-ref <text>`
+  promotes a settling phase's `converted` recommendation straight to `shipped` (setting
+  `shippedRef`), reusing the existing tested `converted → shipped` transition; omitting the flag
+  leaves settle's default behavior unchanged.
+- **Phase 149 — `cadence milestone close <id>` verb** ✓ (issue #135) — new transition (legal only
+  from `exported`) moves a milestone to `closed`, with an optional `--ref <text>` stored as
+  `closedRef` and rendered in MILESTONES.md's "## Closed" section; closing warns but does not block
+  on any linked recommendation that isn't yet `shipped`.
+
+- **Scope guards (as built).** *In:* cross-worktree handoff discovery + picker + docs + release
+  (v1.38.0); settle-pending ledger status, `recommend --top` + slash command, the collision-guard
+  self-match fix, the `--ship-ref` shortcut, and the milestone `close` verb (v1.39.0). *Out:* phase
+  143 left `cadence handoff`'s write path/retention pruning untouched; phase 145's boundaries
+  explicitly deferred both the `--ship-ref` flag and any `cadence milestone` command changes to
+  "a later phase in this arc" — fulfilled by 148 and 149 respectively; phase 149 explicitly declined
+  a `milestone reopen`/`unclose` verb as not requested by its source issue.
+
+## v1.40.0 – v1.41.0 — AC-ref parser fix, structured draft editing, MCP intelligence-lifecycle parity — ✓ SHIPPED 2026-07-04 → 07-04
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/150–154`; those
+artifacts are the record and were not modified. Phase→version boundaries **evidenced**
+(phase 152 is the release phase for v1.40.0, phase 154 for v1.41.0 — both tags shipped the same
+day).*
+
+| tag | tagged | phases attributed |
+|---|---|---|
+| v1.40.0 | 2026-07-04 | 150–152 (**evidenced** — phase 152 is the release phase) |
+| v1.41.0 | 2026-07-04 | 153–154 (**evidenced** — phase 154 is the release phase) |
+
+Two same-day releases closing out a legibility bug and opening a structured write path. Phase
+150 was found while dogfooding phase 149 (issue #135): `status.ts` and `notify/collect.ts` each
+carried a byte-identical private `parseAcRefs(done: string)` whose exact-match regex
+(`/^AC-\d+$/`) silently dropped any comma-token with trailing annotation text — e.g. `done: AC-1,
+AC-2, AC-3, AC-4 (core logic)` parsed to only three ids, leaving AC-4 stuck `pending` with no
+diagnostic pointing at the real cause. The fix de-duplicated both private copies into one shared,
+tested `packages/core/src/parse/ac-refs.ts` using a per-token prefix match. Phase 151 is the
+larger piece: three new additive `cadence draft` subcommands (`set-objective`, `add-ac`,
+`add-task`) that mutate a PENDING `DRAFT.md`'s sections from the CLI, round-tripping byte-exactly
+through `parseDraftMd`/`renderDraftBody` — hand-editing stays fully supported, this just closes
+the class of bug where a hand-typed heading typo silently corrupts AC/task id sequencing. Phase
+152 released v1.40.0, documenting the three subcommands in `commands.md` and bundling phases
+139-151. The second half of the arc, phase 153, closes MCP tool-parity gaps in the
+scout-to-phase intelligence lifecycle: an MCP-only client could add or promote a recommendation
+but not convert it to a phase, propose a milestone, or archive it. Three new thin-wrapper tools
+(`cadence_recommendation_convert`, `cadence_milestone_propose`, `cadence_recommendation_archive`)
+plus a `cadence://phase/{phase}/summary.json` resource close that gap, and the
+`cadence_recommendation_promote` tool description was rewritten to point at the two new tools
+instead of a CLI-only dead end. Phase 154 released v1.41.0, documenting the additions in
+`docs/mcp.md` and bumping the advertised tool count from 15 to 18. All four published packages
+bumped `1.39.0 → 1.40.0 → 1.41.0` in lockstep across the two releases. **No new DESIGN.md
+D-number** in either version (both additive to existing models: the draft-parsing model and the
+D11 MCP imperative-loop surface).
+
+- **Phase 150 — AC-ref parser drops ids after trailing annotation** ✓ — deduplicated the
+  byte-identical private `parseAcRefs` from `status.ts` and `notify/collect.ts` into a shared
+  `packages/core/src/parse/ac-refs.ts` using a per-token prefix match instead of the exact
+  whole-token match, so a trailing annotation after a valid `AC-N` id no longer silently drops it.
+- **Phase 151 — structured draft editing: `draft add-ac` / `add-task` / `set-objective`** ✓ —
+  three additive CLI subcommands that mutate a PENDING `DRAFT.md`'s Objective/AC/Tasks sections,
+  round-tripping byte-exactly through `parseDraftMd`; `add-task --done` refuses on an unknown AC
+  id, all three refuse outside `PENDING` status.
+- **Phase 152 — Release v1.40.0** ✓ — documented the three phase-151 subcommands in
+  `docs/reference/commands.md`; lockstep `1.39.0 → 1.40.0` across all four published packages;
+  bundled phases 139-151.
+- **Phase 153 — MCP parity for the intelligence lifecycle** ✓ — added
+  `cadence_recommendation_convert`, `cadence_milestone_propose`, `cadence_recommendation_archive`
+  as thin wrappers over the existing service/store functions, a `summary.json` MCP resource, and
+  rewrote the `cadence_recommendation_promote` description to name the two new tools as real
+  next steps.
+- **Phase 154 — Release v1.41.0** ✓ — documented phase 153's three tools + resource in
+  `docs/mcp.md` (tool count 15 → 18); lockstep `1.40.0 → 1.41.0` across all four published
+  packages.
+
+- **Scope guards (as built).** *In:* the AC-ref parser fix, the three structured-draft-editing
+  subcommands, the two release cuts, the three MCP intelligence-lifecycle tools, the
+  SUMMARY.json resource, the promote-description fix. *Out:* phase 153 explicitly declined
+  `cadence_recommendation_unarchive` and `cadence_milestone_accept/defer/export` MCP tools —
+  out of scope per rec-20260701-010's stated fix list, left as a follow-up recommendation if more
+  parity is wanted later.
+
+## v1.42.0 — Boundary enforcement + subagent dispatch — ✓ SHIPPED 2026-07-06
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/155–160`; those
+artifacts are the record and were not modified. Phase→version boundaries **evidenced**
+(phase 160 is the release phase for this tag).*
+
+`boundaryEnforcement` shipped warn-only: the pre-tool hook could see an edit land outside
+the DRAFT's declared `files:` and say so, but nothing refused, and settle never
+re-derived the violation from the diff — so a boundary was a suggestion at the moment it
+mattered most, the completion claim. This milestone closes both ends. The dispatch work
+is the other half of the same session-discipline problem: `cadence dispatch plan` turns
+the approved DRAFT's `depends:` graph into dependency-ordered waves, and phase 158 makes
+a worker that keeps editing *after* reporting DONE visible instead of silent. All six
+phases settled; all published packages bumped `1.41.0 → 1.42.0` in lockstep. **No new
+DESIGN.md D-number** (additive to the existing boundary + dispatch models).
+
+- **Phase 155 — boundary-enforcement `block` mode** ✓ (rec-20260704-001) — opt-in
+  `boundaryEnforcement: 'block'`; the pre-tool edit check refuses the edit rather than
+  warning. Default `warn` behavior byte-for-byte unchanged.
+- **Phase 156 — settle-time boundary diff scan** ✓ — direct follow-on to 155: settle
+  re-derives touched paths from the diff and compares them against the DRAFT's `files:`,
+  so a violation that dodged the edit-time hook is still caught at the completion claim.
+- **Phase 157 — multi-line Objective truncation fix** ✓ (rec-20260704-002) —
+  `parseSpecMd` kept only the first line of a multi-line `## Objective`, silently
+  discarding SPEC content downstream of the parse.
+- **Phase 158 — subagent task-redundancy monitoring** ✓ — post-DONE file touches
+  detected at edit time and at `SubagentStop`.
+- **Phase 159 — wave-based subagent dispatch** ✓ — `cadence dispatch plan` emits
+  dependency-ordered dispatch waves from the approved DRAFT.
+- **Phase 160 — Release v1.42.0** ✓ — changeset consumed; lockstep `1.41.0 → 1.42.0`;
+  CLAUDE.md narrative leads with `1.42.0`.
+
+- **Scope guards (as built).** *In:* both boundary-enforcement halves, the SPEC parser
+  fix, redundancy monitoring, dispatch waves, release. *Out:* `block` as the default
+  (`warn` remains default); automatic wave *execution* — `dispatch plan` emits the plan,
+  the operator/host runs it.
+
+## v1.43.0 – v1.44.1 — Trustworthy verification, gate/settle audit-trail integrity, onboarding polish — ✓ SHIPPED 2026-07-10 → 07-12
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/161–177`. None of
+these tags has a dedicated release phase, so the phase→version attribution below is
+**date-derived** (settle date vs tag date) and is approximate at the boundaries.*
+
+| tag | tagged | phases attributed (date-derived) |
+|---|---|---|
+| v1.43.0 | 2026-07-10 | 161–164 |
+| v1.44.0 | 2026-07-11 | 165–169 |
+| v1.44.1 | 2026-07-12 | 170, 171, 173, 174, 176, 177 |
+
+Three threads run through this window. The first is closing the "mock-default undercuts the
+enforcement wedge" competitive risk end to end: phase 164 makes verifier-key discovery reach
+beyond `export`ed env vars (`.env` file, committed provider config) and turns `cadence activate`
+into a real smoke-tested call instead of a key-string check; phase 165 adds a 4th verifier
+provider (`host-cli`) that shells out to the user's already-authenticated `claude`/`codex`
+binary so independent verification works with zero separately-configured API key; phases 166–167
+generalize assertion-mode coverage from a JS/TS-only scanner into a shared lexer engine with
+built-in python/go/rust/php profiles (167 is this arc's other complex-tier keystone, alongside
+163); phase 169 closes a real documented gap — a test hidden behind `.skip`/`.todo`/`.failing`
+no longer counts as qualifying coverage even with an intact assertion inside it. The second
+thread is settle/gate audit-trail integrity: phase 170 makes a refusing gate persist a SUMMARY
+instead of vanishing with only an ephemeral stderr line, phase 173 adds optimistic-concurrency
+revision checking to the single state-write choke point so two racing writers can't silently
+lose an update, and phase 176 closes the last gap in that story — a gate that *throws* (not just
+one that refuses) now also produces an audited SUMMARY. The third thread is onboarding and
+portfolio polish: phase 161 sweeps stale surface-model/Claude-Code-only doc claims and adds a
+CTO-facing README section, phase 162 makes Codex a one-command bootstrap target, phase 163
+(complex tier) hardens `cadence resume`/`handoff` with fetch-backed freshness checks and a
+completion gate, phase 171 fixes a real destructive-install incident (malformed
+`.claude/settings.json` silently wiped third-party hooks), and phase 174 adds a post-settle
+retro digest with an optional `gh issue` offer. The test-gutting demo becomes the README's
+flagship example across three phases: 168 lands it as a committed, deterministic example; 175
+(no phase directory — see numbering ledger) repositions the README hero to lead with it; a stale
+branch merge (PR #189) accidentally reverted that hero back to billsplit-only, and 177 restores
+it with an animated `gutting.svg` terminal recording. All published packages advanced
+`1.42.0 → 1.43.0 → 1.44.0 → 1.44.1` in lockstep across the three tags. **No new DESIGN.md
+D-number** (D12 predates this window at Phase 70; nothing here crossed a locked-decision
+boundary).
+
+- **Phase 161 — Portfolio readiness doc sync** ✓ — normalized "one engine, three surface
+  categories ... four current entry points" vocabulary across README/docs/DESIGN.md/CONTEXT.md,
+  removed stale "Claude Code only"/exclusive-ambient-gates claims (Codex now described as a
+  shipped host-adapter/conformance consumer), added a "For technical reviewers" section + Mermaid
+  architecture diagram + portfolio summary to README, backed by a new doc-content assertion test.
+- **Phase 162 — Codex first-run bootstrap** ✓ (rec-20260708-001) — added a Codex bootstrap entry
+  point that shells out to the Codex host installer, generalized the managed agent block so
+  `AGENTS.md` generates/regenerates alongside `CLAUDE.md`, added Codex readiness doctor
+  checks/fixes, and documented the pre-Codex first-run ordering with a CLI fallback.
+- **Phase 163 — Handoff/Resume hardening: freshness & completion gates** ✓ — fetch-backed git
+  facts (`readGitFacts` fetches by default, `--no-fetch` opt-out), an origin-ahead banner
+  (`checkRemoteFreshness`, `config.resume.remoteCheck`, `--offline`), unfilled
+  `<!-- FILL IN -->` section detection on resume, a new `cadence handoff --check` completion
+  gate (exit 0/1/3), and handoff's files-in-play capped to the same selected recs every other
+  scope uses.
+- **Phase 164 — Trustworthy verifier activation** ✓ — broader key discovery
+  (`discoverKey`: env var, then a repo-root `.env` file, no new runtime dependency), a
+  non-skippable activation smoke test gating `cadence activate`'s reported success on one real
+  provider call, and committed-provider-config inheritance so a teammate with the same kind of
+  key inherits real verification without running `activate` themselves; an as-built T5 amendment
+  threaded `cwd`/`repoRoot` into 6 real production verifier-selection call sites (doctor, settle
+  ×3, build/draft gates, spec-approve) after independent review found the unit-tested primitives
+  alone didn't reach `cadence mcp serve --repo <path>`.
+- **Phase 165 — Host-CLI headless verifier provider** ✓ (rec-20260710-002) — a 4th verifier
+  provider (`host-cli`) spawning the user's already-authenticated `claude`/`codex` binary in
+  headless mode; the JSON-extraction/schema-repair-retry harness was factored out of
+  `local-client.ts` into a shared transport-agnostic module reused by both providers; loud,
+  non-blocking mock fallback when the binary is missing/unauthenticated. As-built: only
+  `per-task-verify` got a real `hostCli` builder wired end-to-end — `deep-verify` and the other
+  4 review families still fall back to mock, narrowing AC-1's original scope. Per-gate-run
+  batching (rec-20260710-004) and the MCP-driven inversion alternative (rec-20260710-003) were
+  explicitly deferred.
+- **Phase 166 — Language-aware coverage defaults** ✓ — `cadence init` now defaults
+  `verification.coverageMode: 'assertion'` only for detected js/ts projects; every other/unknown
+  language defaults to `mention` with language-aware default test-file globs (python/go/rust/php);
+  the test-coverage gate's refusal message now distinguishes a glob-discovery miss from an
+  assertion-parsing miss, and `cadence doctor` flags assertion mode paired with a non-js/ts
+  detected language.
+- **Phase 167 — Shared-lexer multi-language assertion-coverage engine** ✓ — generalized
+  `findTestSpans` into one shared string/comment-aware engine parameterized by a per-language
+  profile (opener/assertion patterns, comment/string tables, one of four block-boundary
+  strategies), re-expressing js/ts with byte-identical behavior and shipping built-in
+  python/go/rust/php profiles, per-file dispatch with a strict zero-spans-on-unrecognized-shape
+  invariant, an add-only `verification.coverageProfiles` config escape hatch with load-time
+  validation, a `cadence verify coverage --explain` diagnostic, and a doc-tested supported-
+  language matrix. Zero new runtime dependency — homegrown lexer, no tree-sitter (dec-20260711-001,
+  LOCKED).
+- **Phase 168 — Land test-gutting demo as a committed example** ✓ — extracted
+  `docs/demo-test-gutting.zip` into `examples/demo-test-gutting/`, verified `run-demo.sh`
+  end-to-end against a locally built v1.43.0 CLI, reconciled `docs/DEMO.md`'s transcripts against
+  real v1.43 output (Beat 3's refusal message had drifted under phase 166's diagnostics),
+  confirmed determinism across two independent runs.
+- **Phase 169 — Assertion-mode coverage refuses the .skip/.todo/.failing dodge** ✓ — an AC
+  linked only to a `test.skip`/`.todo`/`.failing` block with an intact assertion call no longer
+  counts as qualifying; `findTestSpans` flags skip/todo/failing openers as non-asserting
+  regardless of assertion-token presence, and a new distinct refusal message ("only linked test
+  is skipped") separates this case from "no linked test" and "mentioned but not asserting."
+- **Phase 170 — Refused settle persists gate provenance + SUMMARY** ✓ — added a `refused`
+  `GateProvenance` status + `reason` field (additive, back-compat with pre-existing ran/skipped
+  records), threaded the refusal reason verbatim through all 9 settle-dispatched gate impls, and
+  a refused settle now persists `SUMMARY.json`/`.md` with the gates array populated through the
+  refusing entry and zero `loopPosition`/`activeDraft` mutation.
+- **Phase 171 — Installer destructive-recovery: preserve third-party settings on parse failure**
+  ✓ — fixes the real deja-hooks-wiped incident (31f1351 / PR #170): `installHooks()` now
+  distinguishes `ENOENT` (still starts fresh) from malformed JSON (now refuses the install
+  instead of resetting to `{}`), and every successful write goes through a timestamped backup +
+  atomic temp-file rename.
+- **Phase 173 — Optimistic concurrency for cadence state writes** ✓ — added a `revision` field
+  to `CadenceState` (default 0, backward-compatible) and an optimistic-concurrency check in
+  `SimpleStateBackend.commit()` — the single write choke point every writer (CLI, hooks, MCP)
+  shares — refusing a stale commit with a new `StateConflictError` naming both revisions, while a
+  single command's own sequential commits on one in-memory object never self-conflict. Lock
+  files/PID tracking were explicitly rejected during spec review in favor of pure in-process
+  comparison.
+- **Phase 174 — Post-settle retro artifact + GitHub issue offer** ✓ (rec-20260712-001) — every
+  successful settle now synthesizes a friction digest (gate bypasses, non-DONE tasks,
+  code-review/security-audit/boundary-scan findings) from data already in SUMMARY, writes it as
+  `<draftId>-RETRO.json`/`.md`, and — only for a friction-having digest on an interactive run —
+  offers to file a GitHub issue via `gh`; fully config-toggleable and non-fatal on any failure.
+  Cross-phase retro rollup and Praxis-scoring feedback (rec-20260712-002/003) explicitly deferred.
+- **Phase 175 — README leads with the test-gutting demo** ✓ (no phase directory — see numbering
+  ledger) — repositioned README's hero section to lead with the test-gutting demo (docs/DEMO.md's
+  "Your CI is green. Cadence still said no." framing) ahead of the existing $100/3 billsplit
+  demo, which was kept as a secondary example rather than deleted.
+
+*(Phase 172 was never used — see the numbering ledger.)*
+
+- **Phase 176 — Audit trail for settle gate throws** ✓ (rec-20260712-007) — `runSettleGates` now
+  catches any exception thrown by a gate impl (previously only `security-audit` self-normalized
+  its own throws) and converts it into a `refuse` `GateResult`, routing it through phase 170's
+  refusal path so a raw throw also produces an audited SUMMARY instead of escaping uncaught to
+  `settle.ts`'s outer catch with no record at all.
+- **Phase 177 — README embeds the animated test-gutting demo SVG** ✓ — restored README's
+  test-gutting-demo hero (accidentally reverted to the old billsplit-only version when PR #189
+  merged a stale branch over phase 175's PR #188), this time replacing the static Beat-3
+  transcript with a looping `gutting.svg` terminal recording of all 4 DEMO.md beats, and
+  committed the new recording assets (`gutting.svg`, `gutting.cast`, `record-demo.sh`).
+
+- **Scope guards (as built).** *In:* doc/portfolio polish, Codex onboarding, handoff/resume
+  freshness + completion gates, verifier-trustworthiness (broader key discovery + activation
+  smoke test + committed provider config), the host-cli verifier provider, language-aware
+  coverage defaults plus the full multi-language coverage engine (python/go/rust/php), closing
+  the `.skip` dodge, refused-settle and gate-throw SUMMARY persistence, installer parse-failure
+  recovery, optimistic-concurrency state writes, the post-settle retro artifact, and the
+  test-gutting demo becoming the README's flagship example. *Out:* OS keychain key discovery and
+  `local`-provider activation smoke-testing (phase 164); per-gate-run batching, quota-transparency
+  messaging, and the MCP-driven inversion alternative for the host-cli provider (phase 165); new
+  per-language assertion-span parsing beyond the four shipped profiles (phase 166); a
+  `--collect-all` "keep running all gates after a refusal" diagnostic mode (phase 170); an
+  explicit opt-in `install --repair` auto-fix path (phase 171); cross-phase retro rollup and
+  Praxis-scoring feedback from retro friction (phase 174).
+
+## v1.45.0 – v1.46.0 — Verifier/security hardening + onboarding ergonomics — ✓ SHIPPED 2026-07-15 → 07-17
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/178–191`. None of
+these tags has a dedicated release phase, so the phase→version attribution below is
+**date-derived** (settle date vs tag date) and is approximate at the boundaries.*
+
+| tag | tagged | phases attributed (date-derived) |
+|---|---|---|
+| v1.45.0 | 2026-07-15 | 178–185 |
+| v1.46.0 | 2026-07-17 | 186–191 |
+
+This arc's first half hardens the parts of CADENCE that talk to external processes or persist
+sensitive data: the headless host-CLI verifier gets a quota-transparency notice, a
+self-invocation guard, and a spawn timeout (178); a shared `redactSecrets` utility closes two
+verbatim-secret leak vectors — `Evidence.summary` and `security-audit` `Finding.message`
+(including a second stderr-logging leak the T3 implementer caught mid-task) — and restricts
+intelligence-ledger JSON files to `0o600` (180); MCP's two approval-bypass tools
+(`cadence_draft_approve`/`cadence_spec_approve`) gain a caller-issued trust envelope bound to
+origin, a structural tool-def hash, a capability class, and expiry, closing the "the tool call
+IS the approval" gap with no revoke/expiry logic (181, complex tier); a `security-audit`-scoped
+`AbortSignal`/`traceId` threads through `host-cli-client.ts`, the `Verifier` interface, and
+`SecurityAuditVerifier`, wired end-to-end for one real gate to prove it's connected, not orphaned
+(184); and CI gains CodeQL, gitleaks secret scanning, an npm-audit-exceptions policy, and
+SBOM/license-inventory generation, all on push/PR/weekly cron (182). Alongside the security
+theme, 179 adds `cadence milestone status` (read-only worktree fan-in reconciliation), 183
+extends the generated-docs drift-check discipline to per-command flags/config schema
+keys/exit-code taxonomy, and 185 makes the pre-release tarball smoke test exercise the real
+DRAFT→BUILD→SETTLE loop instead of just `--help`. All eight phases settled; published packages
+bumped to `1.45.0` in lockstep. The second half is a smaller, ops/DX-focused batch: a read-only
+`cadence retro` cross-phase friction rollup (186); a fix so `--allow-auto-complex` soft-cap
+overrides actually land in `SUMMARY.json`'s `gateBypasses` instead of being stderr-only (187); a
+new `init --full` mega-flag and a `cadence onboard` command for the 2nd-Nth teammate cloning an
+already-`.cadence/`-initialized repo (188, 189); `doctor --fix` auto-remediation for the
+handoff-retention check, reusing the existing pruning primitives (190); and host-cli builders
+wired for the 5 verifier families phase 165 left unwired — spec-review, plan-review, code-review,
+security-audit, and deep-verify — closing a real-world gap where a downstream project's
+`host-cli`-configured spec-review gate was silently rubber-stamping via mock fallback (191).
+Published packages bumped to `1.46.0` in lockstep. **No new DESIGN.md D-number** resulted from
+either version.
+
+- **Phase 178 — headless-verifier guardrails** ✓ (rec-20260710-006) — `host-cli-client.ts` gets a
+  once-per-process quota-transparency stderr notice, a self-invocation refusal (detects running
+  inside the same host-CLI family via its session env var, falls back to mock through the
+  existing `wrapWithFallback` path), and a configurable spawn timeout (`HostCliError({reason:
+  'timeout'})`). As-built: the self-invocation env-var check also fires for ordinary Claude-Code
+  subagent sessions (this repo's own standard workflow), so two more pre-existing test suites
+  needed `env: {}` pinning to stay deterministic.
+- **Phase 179 — `cadence milestone status`** ✓ — read-only fan-in command mapping a milestone's
+  converted recommendations to their owning worktree (local/sibling, via phase 142's
+  `gatherHandoffCandidates`) and that worktree's live loop position; unconverted recs and
+  unmatched phases are reported as `not-yet-converted`/`no-worktree-found`, never dropped.
+  Fan-out (automated worktree provisioning) stays explicitly out of scope.
+- **Phase 180 — secret redaction for evidence + security-audit findings** ✓ — new
+  `redactSecrets()` utility (AWS keys, GitHub tokens, bearer/basic auth headers, JWTs, PEM
+  blocks, generic `key=`/`token=`/`password=`/`secret=` assignments) applied at
+  `addRecommendation`'s evidence-summary write and the `security-audit` gate's `Finding.message`
+  write; intelligence ledger JSON files now write `0o600` on POSIX. As-built: also closed a
+  second leak the T3 implementer found — the gate's stderr critical-finding log was printing the
+  raw unredacted message even after the SUMMARY write was fixed.
+- **Phase 181 — MCP tool-trust envelope** ✓ — the 18 registered MCP tools get a `capabilityClass`
+  (`READ_ONLY`/`LEDGER_WRITE`/`LOOP_WRITE`/`APPROVAL_BYPASS`/`SETTLE`); a structural
+  `computeToolDefHash` fingerprints name+description+inputSchema; a file-backed
+  `.cadence/mcp-trust.json` grant ledger plus `cadence mcp trust grant/revoke/list` CLI; the two
+  `APPROVAL_BYPASS` tools now refuse without a valid, unexpired, def-hash-matching,
+  version-matching grant, naming the failing check. `cadence_settle` (`SETTLE` class) is
+  classified but deliberately left ungated this phase.
+- **Phase 182 — CI security automation** ✓ (rec-20260712-013) — new `codeql.yml`
+  (javascript-typescript, push/PR/weekly cron) and consolidated `security.yml` (gitleaks secret
+  scan, npm-audit-exceptions policy against `docs/security/audit-exceptions.md`, CycloneDX
+  SBOM + license inventory, all on push/PR/weekly cron). As-built: `pnpm audit` under the
+  repo's pinned pnpm hits npm's retired legacy audit endpoint, so the audit cross-check needed a
+  dedicated `scripts/check-audit-exceptions.mjs` running a pinned modern pnpm via corepack.
+- **Phase 183 — generated-docs drift check** ✓ (rec-20260712-012) — extends the existing
+  drift-guard discipline to per-command registered flags (`commands.md`), the config schema's
+  top-level key set (`config.md`), and a new `docs/reference/exit-codes.md` cross-checked against
+  every exit-code literal actually used in `packages/core/src`; all as vitest assertions under
+  the existing `ci-success` test job, no new workflow needed.
+- **Phase 184 — verifier AbortSignal/traceId plumbing** ✓ (rec-20260712-010) — optional
+  `signal`/`traceId` threaded through `host-cli-client.ts` (new `HostCliError` reason
+  `'aborted'`), the `Verifier` interface (`LocalVerifier` forwards to `fetch`, `MockVerifier`
+  ignores), and `SecurityAuditVerifier`; the `security-audit` gate generates a per-run
+  `crypto.randomUUID()` traceId and passes it through on its one real call site, proving the
+  plumbing is genuinely connected for at least one gate. `PerTaskVerifier`/`CodeReviewVerifier`/
+  `PlanReviewVerifier`/`SpecReviewVerifier` explicitly deferred to a future phase.
+- **Phase 185 — smoke-test the packed npm tarball** ✓ — `scripts/publish-proof.mjs`'s
+  post-install check now runs `cadence init` → `draft new` → `draft approve` → `build task
+  --status=DONE` → `settle run --auto` (5 steps — the approve step wasn't anticipated when AC-1
+  was drafted) against the verdaccio-installed CLI inside the clean temp project, not just
+  `--help`; teardown stays unconditional on a mid-loop failure. Not wired into CI in this phase.
+- **Phase 186 — cross-phase retro rollup** ✓ (rec-20260712-002) — read-only `cadence retro` scans
+  every settled phase's `*-RETRO.json`, computing gate-bypass/rough-task-status/finding-category
+  frequency counts with recurring-vs-one-off buckets so a 2+-phase pattern isn't buried under
+  one-off noise; empty/missing/malformed-artifact cases handled per the repo's best-effort
+  introspection convention. Feeding retro friction into Praxis scoring (rec-20260712-003) stays
+  explicitly out of scope.
+- **Phase 187 — `gateBypasses` records `--allow-auto-complex` overrides** ✓ — fixes
+  `settle.ts`'s and `draft-approve.ts`'s soft-cap override checks being stderr-only and invisible
+  to `SUMMARY.json`'s `gateBypasses`, contradicting CLAUDE.md's "every bypass is loud and
+  recorded" claim; new `auto-complex-override` `AnomalyType` wired through settle's
+  `gateBypassesFromAnomalies` and draft-approve's `anomaly-notify` notifier pathway.
+- **Phase 188 — `cadence init --full`** ✓ — collapses `--wire-host`/`--demo`/`--activate` into
+  one flag (`opts.wireHost ?? opts.full` per flag — an explicit flag still overrides `--full`'s
+  default), degrades safely when preconditions (host workspace, `ANTHROPIC_API_KEY`) are absent,
+  and prints a consolidated "what I did/skipped" summary alongside (not replacing) the existing
+  per-feature messages. Bare `cadence init` behavior is byte-for-byte unchanged.
+- **Phase 189 — `cadence onboard`** ✓ — one-command per-machine setup for a teammate cloning a
+  repo with `.cadence/` already committed: installs host hooks via a newly-extracted shared
+  `host-wire.ts` module (also used by `init --full`), reports project name/gate profile/
+  provider-readiness without touching `config.json`/`state.json`, and refuses cleanly with no
+  `.cadence/` present; `cadence init` now seeds a merge-idempotent `CONTRIBUTING.md` block
+  pointing the next contributor at it.
+- **Phase 190 — `doctor --fix` auto-remediates handoff retention** ✓ — a deliberately narrowed
+  slice of rec-20260709-002: when `handoff.retain` is unset and the SESSION-doc archive exceeds
+  the existing warn threshold, `--fix` now sets the default and prunes to budget via the
+  existing `pruneHandoffDir`/`selectPrunable` primitives (never reimplemented), always retaining
+  the current `lastHandoff` file. The other four manual-only checks (`worktree-phases`,
+  `verification-readiness`, `recommendation-shipped-drift`, `coverage-mode-language-support`)
+  stay manual — each needs a genuine judgment call doctor can't safely automate.
+- **Phase 191 — host-cli builders for the last 5 verifier families** ✓ — wires a real
+  `HostCli*Verifier` for spec-review, plan-review, code-review, security-audit, and deep-verify
+  (`Verifier`), each mirroring the existing `HostCliPerTaskVerifier` pattern against its family's
+  own prompt/schema; security-audit and deep-verify additionally thread `{signal, traceId}`
+  through to `hostCliJSON`. Closes a real gap surfaced by a downstream project ("necro") whose
+  `host-cli`-configured spec-review gate was silently mock-falling-back and rubber-stamping.
+
+- **Scope guards (as built).** *In:* headless-verifier guardrails, milestone worktree
+  reconciliation, secret redaction + ledger file permissions, the MCP trust envelope (minus
+  `cadence_settle`), CI security automation, docs-drift checks, abort-signal plumbing for
+  `security-audit`, a real-loop tarball smoke test, the retro rollup, the `gateBypasses` fix,
+  `init --full` + `cadence onboard`, doctor's handoff-retention auto-fix, and host-cli builders
+  for the remaining 5 verifier families. *Out:* MCP request batching (178); gating
+  `cadence_settle` under the trust envelope (181); retro-friction-feeds-Praxis-scoring
+  (rec-20260712-003, 186); abort-signal plumbing for `PerTaskVerifier`/`CodeReviewVerifier`/
+  `PlanReviewVerifier`/`SpecReviewVerifier` (184); wiring `publish-proof.mjs` into CI (185); the
+  other four manual-only doctor checks (190); adding `{signal, traceId}` to the four verifier
+  interfaces phase 184 didn't touch (191).
+
+## v1.47.0 – v1.48.0 — Dispatch-safety hardening, worktree-safe state tracking, and intelligence-ledger fixes — ✓ SHIPPED 2026-07-18 → 07-19
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/192–200`. Phase→version
+boundaries are **evidenced**, not date-derived — the two release commits (`1923f6bb` for
+v1.47.0, `0bec56bb` for v1.48.0) each enumerate their exact bundled phase list in the commit
+body. That evidence puts the split at 194/195, not 195/196 as a pure settle-date-vs-tag-date
+comparison would suggest (phase 195 settled 2026-07-18T22:50Z, before the v1.47.0 tag's commit
+time of 16:12Z-05:00 on the same calendar day but after the tag's UTC cut — the release commit
+is the disambiguating source of truth here). v1.48.0's release also bundled phase 201, one phase
+past this arc's boundary; it is out of scope for this fragment.
+
+| tag | tagged | phases attributed (evidenced via release-commit body) |
+|---|---|---|
+| v1.47.0 | 2026-07-18 | 192–194 |
+| v1.48.0 | 2026-07-19 | 195–200 (of the release's 195–201; 201 is outside this arc) |
+
+The arc opens with a real incident: on 2026-07-18, a dispatched fork agent in the deja repo
+self-recorded its own `cadence build`/`settle` outcome and committed directly to `main` four
+times, unsupervised, before any orchestrator review (rec-20260718-001). Phases 192–193 are the
+direct fix — a mandatory prohibition block in every rendered dispatch packet forbidding an agent
+from self-recording status, plus a `recommendIsolation` heuristic (rec-20260718-002) that
+surfaces `'worktree'|'none'` per task in `dispatch plan`'s output so isolation stops being pure
+human/skill convention. Phase 194 closes a live StateConflictError bug (issue #234): telemetry-only
+counters (`session.subagentSpawns`) were going through the same revision-guarded
+`SimpleStateBackend.commit()` as structural writes, so a long-running verifier gate could get
+invalidated by an unrelated `SubagentStop` telemetry bump; `bumpSessionCounter` gives telemetry a
+write path exempt from the optimistic-concurrency compare-and-swap while structural state keeps
+its existing guard unchanged. Phase 195 adds the `task-verify-required` settle gate (issue #206,
+rec-20260712-001) — settle no longer writes a bare `T1: DONE` into SUMMARY.md when a task's
+`- verify:` line was empty; gate count goes 13→14. Phase 196 is the arc's keystone: it fixes
+issue #177 (cross-worktree `.cadence/state.json`/`STATE.md` merge conflicts) by gitignoring the
+four CADENCE-owned ephemeral paths by default, adding a `doctor --fix` migration, preserving the
+audit-trail value of a tracked `state.json` via a new `stateAtSettle` SUMMARY snapshot, adding
+conflict-marker diagnosis + a `--resolve-state-conflict` repair flag, and self-migrating this
+repo's own tracked state. Phase 197 is 196's necessary fallout: making `state.json` per-worktree
+silently broke `cadence onboard`'s bootstrap path for a fresh worktree or clone, dead-ending every
+state-reading command in `NotInitializedError`; `onboard` now bootstraps a fresh IDLE
+`state.json`, deriving the project name from `PROJECT.md`'s header rather than `package.json`
+(which disagrees with it in this very repo). Phase 198 closes a CodeQL ReDoS finding (issue #249)
+by length-capping `--filter-regex` before compilation in `assumption`/`decision`/`recommendation`.
+Phases 199–200 round out the intelligence-ledger CLI: `recommendation evidence add` (issue-free,
+a genuine gap — the only prior path to attach evidence to an existing recommendation was a manual
+lockstep hand-edit of two files), and a fix for `nextRecommendationId` colliding with archived IDs
+once every same-day recommendation had been archived (issue #248). All nine phases settled;
+v1.47.0 and v1.48.0 both landed as `@manehorizons/cadence-core` minor bumps with the other three
+published packages patch-cascaded to match (a known, manual, recurring lockstep step per the
+v1.48.0 release commit — changesets' `fixed`/`linked` config is intentionally left empty). **No
+new DESIGN.md D-number** (D12 remains the latest entry; this arc's work is additive to the
+existing state-backend, gate-matrix, and dispatch-packet models).
+
+- **Phase 192 — dispatch-packet action-class prohibition boilerplate** ✓ (rec-20260718-001) —
+  mandatory prohibition block added to `renderPacket`'s output forbidding a dispatched agent
+  from self-recording its own `cadence build task --status=...` outcome; instructs it to stop
+  and report to the orchestrator instead. `docs/reference/commands.md`'s dispatch-plan Behavior
+  paragraph updated to match.
+- **Phase 193 — dispatch-plan worktree-isolation recommendation** ✓ (rec-20260718-002) — pure
+  `recommendIsolation(task)` heuristic (`'worktree'` when a task declares `files:`, `'none'`
+  otherwise) threaded into `renderPacket`'s text and into `dispatch plan --json`'s
+  `DispatchTaskPlan.recommendedIsolation` field.
+- **Phase 194 — telemetry-only session counters exempted from the revision guard** ✓ — new
+  `StateBackend.bumpSessionCounter` write path for `session.subagentSpawns` that bypasses
+  optimistic-concurrency compare-and-swap, fixing a deterministic `StateConflictError` (issue
+  #234) when a host-cli verifier gate overlapped a concurrent telemetry-only commit; structural
+  state's revision guard is unchanged (confirmed by a new structural-conflict regression test).
+- **Phase 195 — `task-verify-required` settle gate** ✓ (rec-20260712-001) — settle now refuses
+  to finalize a task as DONE when its DRAFT `- verify:` field is empty, closing issue #206;
+  registered in `standard`+`complex` tiers across all profiles; gate matrix count 13→14.
+- **Phase 196 — worktree-safe state tracking** ✓ — `state.json`, `STATE.md`, `mcp-trust.json`,
+  and `intelligence/context/` gitignored by default (issue #177) with a `doctor --fix` migration;
+  new `stateAtSettle` SUMMARY snapshot preserves the audit-trail value a tracked `state.json` used
+  to carry incidentally; conflict-marker diagnosis plus a `--resolve-state-conflict` repair flag
+  added; every non-conflict-repairing catch site funnels through a shared `formatCommandError`
+  pointer to the fix; this repo's own tracked `.cadence/` state self-migrated in the same phase.
+- **Phase 197 — `cadence onboard` bootstraps missing `state.json`** ✓ — closes the dead-end 196
+  left for a fresh worktree or a fresh clone of a repo with `.cadence/` already committed;
+  `onboard` now creates a fresh IDLE `state.json`, deriving the project name from `PROJECT.md`'s
+  header (not `package.json`, which disagrees with it here); `doctor`'s missing-state-json
+  remediation text corrected to point at the real fix.
+- **Phase 198 — `--filter-regex` length bound (ReDoS guard)** ✓ — closes issue #249 (CodeQL):
+  `assumption.ts`/`decision.ts`/`recommendation.ts` now reject oversized `--filter-regex`
+  patterns before compiling them with `new RegExp(...)`; guard duplicated per-file matching the
+  existing `parseRegexFlags` precedent, no new shared helper or runtime dependency.
+- **Phase 199 — `cadence recommendation evidence add` CLI writer** ✓ — new
+  `addEvidenceToRecommendation` store function atomically appends an evidence entry and links its
+  id into the target recommendation's `evidenceIds`, closing the only remaining path that
+  required a manual, easy-to-desync hand-edit of `evidence.json`/`recommendations.json` together.
+- **Phase 200 — recommendation-ID collision fix (archived IDs)** ✓ — `nextRecommendationId` now
+  scans `ledger.archived` as well as `ledger.recommendations` when computing the next same-day
+  sequence number, closing issue #248 (a day where every recommendation had been archived reset
+  the counter to `001` and collided with the first ID issued that day); the other three ledger
+  types' next-ID functions are unaffected by design.
+
+- **Scope guards (as built).** *In:* dispatch-packet self-record prohibition, the isolation
+  recommendation heuristic, the telemetry revision-guard exemption, the verify-evidence settle
+  gate, worktree-safe state tracking end-to-end (gitignore + migration + `stateAtSettle` +
+  conflict repair), the onboard bootstrap fallout fix, the ReDoS length guard, and both
+  intelligence-ledger CLI/store fixes. *Out (phase 192):* worktree-default isolation itself and
+  an `isolation` schema field — explicitly deferred to rec-20260718-002 (phase 193). *Out (phase
+  198):* a catastrophic-backtracking heuristic or a shared validator module — a fixed length cap
+  duplicated per-file was the chosen scope.
+
+## v1.49.0 – v1.50.0 — Praxis lifecycle UX + consumer-repo CI verification — ✓ SHIPPED 2026-07-20 → 07-22
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/201–211`. Neither tag has a dedicated release phase, so the phase→version attribution below is **date-derived** (settle date vs tag date) and is approximate at the boundaries.*
+
+| tag | tagged | phases attributed (date-derived) |
+|---|---|---|
+| v1.49.0 | 2026-07-20 | 201–203 |
+| v1.50.0 | 2026-07-22 | 204–211 |
+
+v1.49.0 closed out three long-standing gaps in the Praxis intelligence layer's own lifecycle tooling: a milestone pre-mortem had no CLI path for an operator to add judgment calls the deterministic heuristics can't derive (201), a deferred milestone had no way back to `proposed` short of hand-editing `milestones.json` (203), and reviewers had no deterministic way to see gate/settle results without opening raw `SUMMARY.json` (202, the first half of the "team rollout kit" rec — the CI-gate-generator half was explicitly deferred to a later phase). v1.50.0 is the larger of the two: its keystone is 204's `cadence verify phase` + `cadence init --ci` — phase-scoped, state-independent re-derivation of whether a settled phase's AC coverage still holds, plus a GitHub Actions scaffold that calls it — which is exactly the CI-gate half 202 deferred. Alongside it: an opt-in UI-SPEC gate between SPEC and DRAFT for UI-heavy phases (205), a `cadence next` command that surfaces `nextAction()`'s ranked legal moves at any loop position with a versioned `--json` contract (206), a sweep making every intelligence-layer empty-result/refusal message name its precondition, nearest candidates, and unblocking command (207, which also picks up the empty-state-footer integration 206 explicitly deferred), a `cadence doctor` check plus CLAUDE.md/skill guidance against concurrent-session collisions on the same phase/draft (208 — this is the origin of the "Zombie Session" named failure mode), and a three-phase split closing out the "Claude Code login ≠ `ANTHROPIC_API_KEY`" confusion across the runtime warning (209), the docs (210), and `doctor`/`activate`'s CLAUDECODE-aware messaging (211). **No new DESIGN.md D-number** in either tag — all eleven phases are additive to the existing gate/CLI/doc surfaces (the UI-SPEC gate is documented as a §4 gate-matrix delta, not a new locked decision).
+
+- **Phase 201 — milestone pre-mortem CLI writer for operator-authored fields** ✓ (rec-20260714-001) — `--add-out-of-scope`/`--add-likely-failure-mode`/`--add-hidden-dependency` repeatable flags on `cadence milestone premortem <id>`; operator-added `likelyFailureModes`/`hiddenDependencies` entries now survive a later deterministic refresh the same way `outOfScope` already did, via a marker-and-filter convention in `deepenPreMortem`.
+- **Phase 202 — team rollout kit** ✓ — `cadence summary render <phase> <num>` prints a deterministic human-readable rendering of a settled phase's gate/AC outcomes for pasting into PR review, refusing loudly on missing/malformed `SUMMARY.json`; paired with `docs/team-rollout.md` covering shared team conventions without replacing existing CI or human review.
+- **Phase 203 — milestone reopen: deferred → proposed transition** ✓ — `cadence milestone reopen <id>` adds the missing `applyTransition()` path out of `deferred`, guarded against `recommendationId` collision with any live survivor milestone, so a stuck milestone's claimed recs re-enter `clusterMilestones()`'s re-clustering pool instead of staying permanently excluded.
+- **Phase 204 — `cadence init --ci`: CI-gate re-verification for consumer repos** ✓ (rec-20260709-003) — `cadence verify phase` phase-scopes coverage re-derivation to a settled phase's own DRAFT task files against the current working tree (no active loop state required, no cross-phase AC-token collision), with `--changed --base` discovery and a test-command re-run reported as a line distinct from coverage drift; `cadence init --ci` scaffolds `.github/workflows/cadence-verify.yml` with a real install+test command and prints (never executes) the `gh api` branch-protection recipe.
+- **Phase 205 — UI-SPEC gate (`spec new --ui` / `ui-spec-review`)** ✓ (rec-20260711-004) — an opt-in `<id>-UI-SPEC.md` sibling to SPEC with per-component Layout/Tokens/Precedent-Reference sections, gated by a convergent `ui-spec-review` reusing the `nextConvergence` primitive; an APPROVED UI-SPEC seeds a `## UI Contract` section into the scaffolded DRAFT.
+- **Phase 206 — `cadence next`: state-derived legal next moves** ✓ (rec-20260721-002) — extends the engine's existing `nextAction()` (used by `quickstart`/`progress`) with ranked `legalMoves[]` rather than reimplementing it; `cadence next --json` exposes a versioned `schemaVersion: 1` contract; 15th slash command registered.
+- **Phase 207 — empty states and refusals name the precondition, nearest candidates, and unblocking command** ✓ (rec-20260721-001) — extracts `next.ts`'s ranked-candidate logic into a shared `intelligence/nearest-candidate.ts` and threads it through `milestone propose`, `recommend`, recommendation not-found/refusal messages, and the retro rollup's zero-phases case; documents the four-part invariant in `docs/concepts.md` as the bar for future intelligence-layer commands.
+- **Phase 208 — concurrent-session collision safety** ✓ (rec-20260722-001) — a `phase-freshness` `cadence doctor` check warns when the active phase's `PROGRESS.json` shows task activity within a 10-minute threshold (possible live concurrent session); the remaining behavioral guidance (confirm-dead-before-resume, resume-in-place, worktree isolation from task 1, immediate pre-op `git status`) is folded into `CLAUDE.md` and the `phase-build`/`pr-land` skills.
+- **Phase 209 — Claude-Code-vs-`ANTHROPIC_API_KEY` distinction in the mock-fallback warning** ✓ (rec-20260723-001) — the `anthropic`-provider mock-fallback warning (`verifier-factory.ts`) and `cadence config explain`'s `provider-no-key` warning both now state that a Claude Code login doesn't satisfy the provider's separately-billed API key, while preserving the exact `ANTHROPIC_API_KEY is unset` substring five sibling tests depend on.
+- **Phase 210 — docs callout: anthropic provider auth is separate from Claude Code's own login** ✓ (rec-20260723-002) — a callout in `docs/providers.md`'s `anthropic` section, modeled on the existing `host-cli` quota-transparency notice, stating the same login/key distinction before the `ANTHROPIC_API_KEY` setup snippet.
+- **Phase 211 — CLAUDECODE-aware messaging for anthropic provider + host-cli suggestion** ✓ (rec-20260723-003) — when `deep-verify`'s provider is `anthropic`, the key is missing, and `CLAUDECODE=1`, `cadence doctor`'s verification-readiness check and `cadence activate`'s key-missing message (`renderText`/`renderJson`, with a `claudeCodeHostCliSuggested` JSON field) proactively suggest `cadence activate --provider host-cli`, via a shared `isClaudeCodeSession(env)` helper — byte-identical to today outside that specific case.
+
+- **Scope guards (as built).** *In:* the full set above. *Out:* 202 explicitly deferred `cadence init --ci`/CI-gate-workflow scaffolding (picked up whole by 204); 206 explicitly deferred wiring its ranked-moves output into an empty-state footer (picked up by 207, which only exposes the computation for a later phase to consume, not the footer itself); 208 deliberately left the freshness threshold hardcoded (no config knob) and did not wire the check into `cadence resume` (stays read-only/doc-scoped per D10).
+
+
+## v1.51.0 – v1.51.1 — Evidence-floor + trust-envelope gates, Praxis ledger unification — ✓ SHIPPED 2026-07-24 → 07-25
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/212–221`; those artifacts are the record and were not modified. Phase→version boundaries **evidenced** via the release commits (`d7dedf12` tags v1.51.0 at phase-218's predecessor state, `f835470d` tags v1.51.1) cross-checked against `CHANGELOG.md`'s own `[1.51.0]`/`[1.51.1]` sections, which name every phase in this arc explicitly.*
+
+| tag | tagged | phases attributed (date-derived) |
+|---|---|---|
+| v1.51.0 | 2026-07-24 | 212–218 |
+| v1.51.1 | 2026-07-25 | 219–221 |
+
+This arc closes enforcement gaps at both ends of the loop CADENCE itself runs on. v1.51.0 tightens what "settled" is allowed to mean: `gates.evidenceFloor` (214) refuses a settle when an AC's PASS rests on evidence below a configured floor on the `ai-verified`>`executed`>`assertion`>`mention`>`unverified` ladder — closing the enforcement gap the Phase 140 ladder left as visibility-only — while phase 216 closes the matching MCP-surface gap by wrapping `cadence_settle` in the same `gatedRun` trust envelope already proven on the two `APPROVAL_BYPASS` tools. Around that keystone pair, 212 makes retro friction (phase 174/186's artifacts) feed back into Praxis scoring as a transparent `frictionPts` term, 213 turns on real per-package coverage thresholds in CI, 217 gates `CHANGELOG.md` currency the same way `CLAUDE.md`'s version line is already gated (closing the record-integrity gap that let the changelog silently stall at `1.6.0` for 44 versions), and 215 hardens the audit protocol itself — a new "The Unlogged Audit Finding" entry in `CLAUDE.md`, `dec-20260724-001`'s response to the v1.47.0 audit's P0 that never reached the ledger. v1.51.1 turns the release process's own rough edges and the Praxis ledgers' duplication into fixes: 218 gives post-publish npm verification a patient 10-attempt budget after the v1.51.0 Release workflow itself hit a CDN-propagation false-red, 219 closes an id-minting collision hole in `nextRecommendationId`, and 220 — the arc's largest phase — replaces all five subject ledgers' hand-rolled read/write/id-mint logic with one shared module, generalizing 219's safeguard to all four minting subjects and bringing milestones to parity in `audit`/`reconcile`/`stats`. 221 closes out three confirmed CLI/MCP parity gaps, including relocating `next`/`verify`/`explain` into `services/` so MCP can reach them. All published packages bumped `1.50.0 → 1.51.0 → 1.51.1` in lockstep across both tags. **No new DESIGN.md D-number** in this arc (both gates and the ledger unification are additive to existing models).
+
+- **Phase 212 — Retro friction feeds back into Praxis scoring** ✓ (rec-20260712-003) — `cadence retro feedback` matches recurring cross-phase friction (bypass gates, rough task statuses, finding categories from `computeRetroRollup`'s recurring bucket) against recommendations by `affectedAreas`/`affectedFiles` overlap, writes idempotent `evidence.json` entries, and `scoreRecommendation` gains a new, capped, transparent `frictionPts` term.
+- **Phase 213 — Coverage thresholds enforced in CI** ✓ (rec-20260712-014) — `vitest.shared.ts` gained real per-package `coverage.thresholds` (provider `v8`, `include: src/**`) derived from measured coverage with headroom; the dead root-only `vitest.config.ts` coverage block was removed; the gate was proven to actually fail on an injected regression before being confirmed clean.
+- **Phase 214 — `gates.evidenceFloor`** ✓ (rec-20260724-001) — new settle gate refuses when any AC's PASS evidence ranks below a configured floor; preset defaults `solo`→`assertion`, `team`/`production`→`executed`; an `ai-verified`-under-mock-provider refusal names the structural reason instead of a generic message; a required-reason per-AC bypass records into `SUMMARY.gateBypasses`.
+- **Phase 215 — P0 escape retro: ledger-diff step in CLAUDE.md** ✓ (rec-20260724-002, `dec-20260724-001`) — "The Unlogged Audit Finding" failure-mode entry added to CLAUDE.md's Verification-honesty section, requiring an audit session to check every critical/P0 finding against `recommendations.json` before closing; backed by a doc-content test asserting the entry's key phrases.
+- **Phase 216 — Close the trust envelope for `cadence_settle`** ✓ (rec-20260724-005) — `cadence_settle`'s MCP `run()` wrapped in the existing `gatedRun` trust-envelope check (same four checks already applied to the two `APPROVAL_BYPASS` tools); `enforceApprovalBypassGrant` renamed `enforceGatedToolGrant` since it now gates three tools, not two.
+- **Phase 217 — CHANGELOG.md currency gate** ✓ (rec-20260724-003) — extends the existing `check-doc-sync.sh` (unmodified) to also require `CHANGELOG.md`'s newest `## [x.y.z]` heading match a version bump, at pre-commit and pre-push, mirroring the `CLAUDE.md` check exactly.
+- **Phase 218 — Post-publish npm verification retry budget** ✓ (rec-20260725-001) — `release-integrity.mjs`'s `verifyNpmPackages` gets a distinctly more patient `POST_PUBLISH_VERIFY_ATTEMPTS=10` budget for the post-publish call only; `verifyNpmPublished`'s pre-publish fast-fail is untouched; fixes a real false-red on the v1.51.0 Release workflow run (30136637570) caused by npm CDN propagation lag.
+- **Phase 219 — Recommendation id-minting cross-checks evidence.json** ✓ (rec-20260724-013) — `nextRecommendationId` now takes the max across `recommendations.json` AND `evidence.json`'s referenced `recommendationId`s for the date prefix, so a dangling evidence row can no longer collide with a freshly minted id; `cadence doctor` gains an orphaned-evidence check.
+- **Phase 220 — Deepen the Praxis ledger into one module** ✓ (rec-20260725-002) — all five subject ledgers (recommendations/evidence/assumptions/decisions/milestones) now share one generic read/write/id-mint core (`store/ledger.ts`) with existing per-subject functions kept as thin wrappers; phase 219's cross-ledger id-collision safeguard generalizes to all four minting subjects; milestones reach parity in `intelligence audit`/`reconcile`/`stats` (new `orphan-milestone` finding kind) and gains the missing `{ mode: 0o600 }` write; a shared CLI list/filter pipeline replaces three independently maintained copies across `recommendation`/`decision`/`assumption` commands.
+- **Phase 221 — MCP/CLI parity** ✓ (rec-20260725-003) — `cadence_recommendation_promote` now threads a `ref` argument into `shippedRef` (matching the CLI's `--ref`) and rejects it on non-shipped promotions; the duplicated "newly-proposed milestone" predicate collapses into one exported `hasNewlyProposedMilestone`; `next`/`verify`/`explain` relocate from `cli/commands/` into `services/` and get registered as MCP tools — tool count 18→22.
+
+
+## Unreleased — dogfooding-driven hardening: adapter dedup, attestation, doctor coverage, convergent-review consolidation — phases 222–230 (settled, not yet published)
+
+*Backfilled 2026-07-27 from the settled artifacts under `.cadence/phases/222–230`; those
+artifacts are the record and were not modified. All 9 phases are confirmed on `main` via
+`git log` (commits `1f70e66b`…`65bcd73d`) but sit **after** the `v1.51.1` tag — `npm view
+@manehorizons/cadence-core version` still reports `1.51.1`. This work has not shipped in any
+release yet; treat every bullet below as landed-but-unpublished, not as a future plan.*
+
+This arc is a grab-bag of dogfooding-driven fixes and one deliberate consolidation push, mostly
+sourced from friction the repo's own recent phases surfaced. Phase 222 is the biggest single
+piece of mechanical work: it extracts the hook-routing/slash-command/install-merge/locate-self
+logic that `host-claude-code` and `host-codex` had been duplicating into a new
+`@manehorizons/cadence-host-toolkit` package, while deliberately keeping each adapter's payload-
+extraction logic (`mapEvent`/`extractPayload`/`routeHookEvent`) local where the two hosts
+genuinely differ — and along the way restores a previously-dropped `cadence-dispatch` dialogue
+body that had silently regressed when Codex's command catalog diverged from the shared one.
+Three phases close verification-honesty gaps directly: 223 gives `SUMMARY.json` a settle-time
+sha256 content hash plus a `cadence summary verify` command so a hand-edited settled artifact is
+now detectable (scope is detection only — signing is explicitly deferred behind
+`rec-20260726-001`, parked on a threat-model rec per `dec-20260726-001`); 224 adds a `cadence
+doctor` check, `ledger-remote-collision`, that fetches the tracked upstream and diffs new-
+since-merge-base ledger ids on both sides to catch the exact cross-session `mintId` collision
+class that had bitten a real session (see the memory `cadence-rec-id-collision-on-rebase`) —
+detection only, no central id-issuing service, matching the repo's offline/zero-runtime-
+dependency stance; and 226 closes three doc/provenance drifts around `gates.sealed` (docs
+undercounted which gates consult it, two bypass-table rows were missing, and
+`build-test-must-pass`/`boundary-scan` weren't recording skip-reason provenance the way
+`test-coverage` does) with a doc-content test asserting the sealed-gate doc list is a superset
+of every gate file that actually imports `isGateSealed`. Phase 225 is the arc's other big
+mechanical piece: `nextConvergence()`'s surrounding read-sidecar → verify → classify → push-
+history → write-sidecar → branch sequence, previously copy-pasted across `plan-review.ts`,
+`code-review.ts`, and `spec-approve.ts` (twice), is now a single `runConvergentReview` primitive
+all four call sites delegate to — a behavior-preserving refactor verified byte-identical against
+16 characterization tests pinned before the extraction began. The remaining phases are point
+fixes: 227 closes a dead-end hit live during phase 222 itself (a fresh `EnterWorktree` worktree
+has `.cadence/` but no gitignored `state.json`, and `cadence init`'s refusal used to send the
+user nowhere useful — both dead-ends now point at `cadence onboard`); 228 mechanically splits
+the ~555-line `settleService` into 10 named, behavior-preserving step functions (precondition/
+load, phase-collision backstop, gate-set resolution, `SettleContext` construction, evidence-
+floor gate, state-commit/retro-offer, etc.) with zero test-file edits as the correctness proof;
+229 adds a doc-content test guarding README's mermaid architecture diagram against drifting from
+the real `VerifierProvider`/entry-surface set; and 230 fixes the built-in Python coverage
+profile's opener regex, which previously produced zero coverage for an entire file when a test
+function carried a `-> None:`-style return-type annotation. **No new DESIGN.md D-number** —
+every phase here is additive/internal to existing models (host-adapter contract, gate/settle
+pipeline, doctor check-set, convergence protocol).
+
+- **Phase 222 — shared host-adapter toolkit** ✓ — new `@manehorizons/cadence-host-toolkit`
+  package carries `routeHookEvent`, the slash-command catalog, `install.ts`'s managed-marker
+  merge logic, and `locate-self.ts`, consumed by both `host-claude-code` and `host-codex`; each
+  adapter's genuinely-divergent payload-extraction logic stays local. Restores a dropped
+  `cadence-dispatch` dialogue body. Also adds `HostCapabilities.agentIdentification` so a host
+  that can't confirm `agentId` (Codex, undocumented hook payload shape) is noticed loudly
+  instead of silently, and wires `host-codex`'s CLI to actually populate it end-to-end.
+- **Phase 223 — settle-time SUMMARY content hash + `cadence summary verify`** ✓
+  (rec-20260724-006) — `computeSummaryContentHash` (canonical deep-key-sort + sha256) wired into
+  `settle.ts` before every SUMMARY write, rendered into `SUMMARY.md`; new `cadence summary verify
+  <phase> <num>` subcommand reports MATCH/MISMATCH/NO_HASH. Detection only — no signing, deferred
+  to rec-20260726-001 per dec-20260726-001.
+- **Phase 224 — `cadence doctor` ledger-remote-collision check** ✓ (rec-20260726-003) — fetches
+  the tracked upstream (reusing `checkRemoteFreshness`), diffs local's and origin's new-since-
+  merge-base recommendation/evidence/decision/assumption ids, warns on overlap; degrades to `ok`
+  (never `error`) on no-repo/no-upstream/failed-fetch/detached-HEAD/no-merge-base. `manual`
+  fixKind — no auto-repair, matching `worktree-phases`.
+- **Phase 225 — shared `runConvergentReview` primitive** ✓ (rec-20260725-008) — extracts the
+  read-sidecar → verify → `nextConvergence` → push-history → write-sidecar → branch sequence out
+  of `plan-review.ts`, `code-review.ts`, and both `spec-approve.ts` call sites into one function;
+  16 characterization tests pinned pre-refactor prove byte-identical sidecar JSON and per-site
+  branching (`code-review`'s OR-bypass + try/catch preserved).
+- **Phase 226 — centralize gate bypass and seal policy documentation + provenance** ✓ — fixes
+  `docs/reference/config.md` and `docs/concepts.md`'s bypass table to name all 3 `gates.sealed`-
+  consulting gates (was 2) and add the missing `--allow-failing-build`/
+  `--allow-boundary-scan-failure` rows; adds a bypass-flag naming-policy subsection with
+  git-log-verified dates correcting a stale claim about `--allow-failing-build`'s history;
+  `build-test-must-pass`/`boundary-scan` now record skip-reason provenance in `registry.ts` like
+  `test-coverage` already did.
+- **Phase 227 — point missing-state.json errors at `cadence onboard`** ✓ (rec-20260726-002) —
+  `SimpleStateBackend.readState()` and `cadence init`'s refusal now distinguish "`.cadence/`
+  never initialized" from "`.cadence/` exists but `state.json` is missing" (the fresh-worktree
+  shape) and route the latter to `cadence onboard` instead of a dead-end `cadence init` retry.
+  Message-routing only — `init` still refuses and exits non-zero; `onboard`'s bootstrap logic
+  untouched.
+- **Phase 228 — split `settleService` into named step functions** ✓ (rec-20260725-007) —
+  mechanical extraction of the ~555-line function's ~9-10 concerns (precondition/load,
+  phase-collision backstop, gate-set/banner/soft-cap, `SettleContext` construction via a new
+  `buildSettleContext` factory, gate-loop refusal SUMMARY, AC-result derivation, anomaly/skill-
+  audit, evidence-floor gate, summary/retro/promotion, state-commit/retro-offer) into named
+  step functions within the same file; zero test-file edits, `SettleArgs`/`CommandResult`
+  signature unchanged.
+- **Phase 229 — README architecture-diagram doc-test** ✓ (rec-20260726-004) — new
+  `readme-architecture-diagram.test.ts` guards README's mermaid diagram's named
+  `VerifierProvider` values and entry-surface list against drifting from code truth.
+- **Phase 230 — python coverage opener recognizes return-type annotations** ✓ — widened the
+  OPENER regex to accept an optional `-> <return type>` group before the trailing colon on
+  `def`/`async def` test functions, which previously produced zero coverage for the whole file;
+  4 regression tests added (plain, async, class-method, richer-type). Audited `js-ts.ts` for the
+  analogous gap and confirmed it doesn't apply (that opener matches the `it(`/`test(` call token,
+  not the callback signature).
+
+
+### Numbering ledger — phases 118–230 (backfilled 2026-07-27)
+
+Six phase numbers in this range have no directory under `.cadence/phases/`. They are
+recorded here so a future reader does not read the gap as missing data.
+
+- **125, 126, 127, 128** — never used. No directory, no commit, no artifact. Numbers
+  burned during parallel drafting (the phase-collision guard's contract is refuse +
+  suggest `max(observed)+1`, so a collision costs a number). Nothing shipped under them.
+- **172** — no trace anywhere: not on disk, not in `git log`. Same class as 125–128,
+  with no corroborating incident.
+- **175** — **real work, no artifact.** Commit `docs: README leads with the test-gutting
+  demo (phase 175) (#188)` is on `main`, and phase 177's DRAFT names "phase 175's PR
+  #188" as the stale-branch incident it reverted. The phase directory was lost with the
+  stale branch. Phase 177 restored the outcome; see arc G.
+
+
+## v1.52.0 (planned) — Assurance manifest: settle can tell mock from real — NEXT
+
+Sourced from the Phase 0 assurance/kernel/criteria-anchored-review spec
+(`docs/handoffs/cadence-phase0-assurance-kernel-review.md`) and 11 recommendations filed
+2026-07-27 (`rec-20260727-001` through `-011`, scout `scout-20260727-kernel-review-phase0`).
+Closes CADENCE's sole surviving P0: **settle cannot currently distinguish a `mock`-verified
+review from a real one.** `CodeReviewResult` already carries `provider` and `model`
+(`packages/core/src/verify/code-review.ts:30`), and `GateProvenanceZ`
+(`packages/types/src/summary.ts:63`) records only `{gate, status, skipReason, reason}` — so
+the identity of *who verified* is computed and then thrown away at persistence. A SUMMARY
+that says `code-review: ran` is indistinguishable between a real Anthropic review and the
+deterministic mock that flags `console.log`.
+
+Slice 1 (phases 232–233) is **unconditionally valuable standalone** — it closes the P0 even
+if slices 2–4 are abandoned, which the spec's own tripwires explicitly permit. Phase 231
+(the `roadmap-currency` doctor check, below) lands first so this arc doesn't repeat the
+mistake it's part of fixing.
+
+### Phase 231 — `cadence doctor` check: roadmap-currency (rec TBD — file before drafting)
+
+**Objective.** Add a warning-only, non-blocking `cadence doctor` check comparing the
+highest phase number under `.cadence/phases/` against the highest phase number referenced
+in `ROADMAP.md`/`MILESTONES.md`; warn when drift exceeds a threshold. Deliberately
+`fixId: null` — generating roadmap prose is exactly what must not be automated. Ships as its
+own small phase, ahead of Phase 0's Slice 1, so the anti-recurrence mechanism is live before
+new phase numbers start accumulating again.
+
+**Files.**
+- `packages/core/src/cli/commands/doctor/checks/roadmap-currency.ts` (new) —
+  `checkRoadmapCurrency(root): Promise<DoctorCheck>`, `ROADMAP_DRIFT_WARN_THRESHOLD = 10`.
+- `packages/core/src/cli/commands/doctor/registry.ts` (or wherever checks register) —
+  wire the new check in.
+- `packages/core/tests/cli/doctor-roadmap-currency.test.ts` (new).
+- `docs/reference/commands.md` — `doctor` section, paired doc edit.
+- `.cadence/skills/release-cut` (or equivalent) — add the roadmap-index-currency step
+  adjacent to the existing doc-sync verification step.
+
+**ACs.** (1) `cadence doctor` reports the drift between the highest on-disk phase number and
+the highest referenced in ROADMAP.md/MILESTONES.md (using `min` across the two files, so
+catching up one file doesn't mask the other). (2) Drift ≤ 10 → pass; drift > 10 → warning,
+never a hard failure, `fixId: null`. (3) The check degrades to a silent pass when
+`.cadence/phases/` is empty or ROADMAP.md is still the `init` stub — a fresh consumer repo
+never sees this warning. (4) Best-effort: any read failure reports "not determinable" rather
+than throwing, matching `checkPhaseFreshness`'s existing idiom. (5) Paired doc edit in
+`docs/reference/commands.md`'s `doctor` section.
+
+### Phase 232 — Gate provenance carries verifier identity; SUMMARY schemaVersion 2 (rec-20260727-001)
+
+**Objective.** Stop discarding verifier identity at persistence. Enrich `GateProvenanceZ`
+with the verifier family and model that actually ran a gate, and thread the already-computed
+`provider`/`model` from `CodeReviewResult` (and the security-audit equivalent) through to the
+persisted provenance entry instead of dropping them. This is a SUMMARY shape change, so bump
+`SummaryZ.schemaVersion` from the literal `1` to `1|2`: writers emit `2`, readers accept both,
+and a pre-parse probe reads the raw `schemaVersion` before Zod validation so an unknown
+*higher* version reports "written by a newer Cadence" rather than a corruption error. Zero
+`GATE_ORDER` changes; no gate behavior changes; no new refusals. Purely: the record stops
+lying by omission.
+
+**Files.**
+- `packages/types/src/summary.ts` — `GateProvenanceZ` gains optional verifier-identity
+  fields; `SummaryZ.schemaVersion` becomes `z.union([z.literal(1), z.literal(2)])`.
+- `packages/core/src/gates/code-review.ts` + `security-audit.ts` — pass the result's
+  `provider`/`model` into the provenance entry rather than discarding them.
+- `packages/core/src/services/settle.ts` (provenance persistence step, per phase 228's named
+  step functions) — write `schemaVersion: 2`.
+- SUMMARY reader — pre-parse `schemaVersion` probe + newer-version diagnostic.
+- `packages/core/tests/**` — round-trip on a v1 fixture, a v2 fixture, and an unknown v3.
+- `docs/concepts.md` (SUMMARY provenance) — paired doc edit.
+
+**ACs.** (1) A `code-review` gate run by a real provider persists that provider's family and
+model in its `GateProvenanceZ` entry; a `mock` run persists `mock` — the two SUMMARY records
+are distinguishable. (2) Same for `security-audit`. (3) New settles write `schemaVersion: 2`;
+every pre-existing `schemaVersion: 1` SUMMARY still parses unchanged (additive-schema rule).
+(4) A SUMMARY carrying an unrecognized higher `schemaVersion` produces a "written by a newer
+Cadence" diagnostic, not a parse/corruption error. (5) `GATE_ORDER`, gate verdicts, and
+refusal behavior are byte-for-byte unchanged — this phase adds no gate and changes no
+outcome.
+
+### Phase 233 — Per-settle assurance record (rec-20260727-002)
+
+**Objective.** With verifier identity persisted (phase 232), compute one **assurance
+record** per settle: a derived, whole-run answer to "how strongly was this settle actually
+verified?", composed from the per-gate verifier identities plus the existing per-AC
+`AcEvidenceZ` ranking (`ai-verified > executed > assertion > mention > unverified`). The
+record is *derived and reported*, not a new gate — it adds no refusal and no bypass flag.
+Its job is to make a settle whose gates all ran under `mock` visibly different, in the
+durable record, from one verified for real. This phase is also where the spec's first
+tripwire is evaluated.
+
+**Files.**
+- `packages/types/src/summary.ts` — the assurance-record schema, on `SummaryZ` (optional, so
+  v2 SUMMARYs without it stay valid).
+- `packages/core/src/gates/` — a pure derivation over the gate provenance array + AC evidence
+  classes; no I/O, no gate registration.
+- `packages/core/src/services/settle.ts` — one named step that computes and attaches it.
+- SUMMARY renderer + `cadence summary verify` (phase 223's attestation) — surface it.
+- `packages/core/tests/**`; `docs/concepts.md` — paired doc edit.
+
+**ACs.** (1) Every settle writes an assurance record derived from persisted gate provenance +
+per-AC evidence classes. (2) An all-`mock` run and an equivalent real-provider run produce
+**different** assurance records for an otherwise identical phase. (3) The derivation is a
+pure function of the provenance + evidence arrays — no gate-specific special-casing (this AC
+*is* the tripwire; see below). (4) Settle's pass/refuse outcome is unchanged — the record is
+reported, never gating. (5) The record is covered by phase 223's settle-time content hash, so
+it cannot be edited post-settle without invalidating the attestation.
+
+> **Tripwire (from the spec, binding).** If AC-3 cannot be met — if the assurance record
+> requires gate-specific special cases to express — **stop after phase 233 and abandon
+> slices 2–4.** Slice 1 is standalone-valuable; the later slices are premised on the
+> boundary being real, and a special-cased manifest is the evidence that it is not. Record
+> the outcome in the phase SUMMARY's decisions, and strike phases 234–237 below.
+
+### Phase 234 — Kernel / verifier / consumer boundary, lint-enforced *(sketch — contingent)*
+
+**Gate to entry.** Phase 233 settled with AC-3 met (no gate-specific special cases).
+
+**Objective (sketch).** The kernel/verifier/consumer split is already ~80% built and
+unnamed. Name the three as published contracts and add a lint rule that fails the build on
+an internal-import violation across them. **No package moves, no distribution work, zero
+`GATE_ORDER` changes** — this is naming and enforcing a boundary that already exists, in the
+same spirit as the core→host arrow. Maps to rec-20260727-003 (medium). Files/ACs at DRAFT
+time.
+
+> **Tripwire (from the spec, binding).** If the boundary extraction runs beyond a couple of
+> focused sessions, **revert it.** Overrun is the diagnosis, not a schedule problem: it means
+> this is a rewrite wearing a refactor's clothes, and the premise that the boundary is
+> already 80% built was wrong.
+
+### Phase 235 — Criteria-anchored review verifier: input + anchor ladder *(sketch — contingent)*
+
+**Gate to entry.** Phase 234 landed without tripping its overrun tripwire.
+
+**Objective (sketch).** `CodeReviewInput` is `{ files, diff }`
+(`packages/core/src/verify/code-review.ts:22`) — the review verifier **cannot see the
+DRAFT's acceptance criteria at all**, so it reviews code against general good practice rather
+than against what the phase committed to. Extend the input with ACs, boundaries, and task
+refs, and implement the anchor ladder (`executable > structured > declared >
+undeclared/criteria-gap`) so each finding is classified by the strength of the criterion it
+anchors to — including emitting explicit **criteria-gap** findings where the diff does work
+no AC covers. Maps to rec-20260727-004, rec-20260727-005 (medium, `needs-decision`).
+
+### Phase 236 — Finding identity, disposition, and ledger routing *(sketch — contingent)*
+
+**Gate to entry.** Phase 235 settled, **and** rec-20260727-007 (shared fingerprint primitive
+extraction from Déjà, `needs-evidence`) is resolved — stable finding identity is its
+dependent, and building a bespoke fingerprint before that investigation lands is how two
+incompatible ones get shipped.
+
+**Objective (sketch).** Give findings a stable identity (id + target discriminant), a
+disposition, and expiring waivers, then route them to the recommendation ledger — which
+requires extending `RecommendationSourceZ` (`packages/types/src/intelligence.ts:3`,
+currently `manual | code-analysis | impact | cadence | session`) with a `review` member.
+Maps to rec-20260727-006, rec-20260727-011 (medium, `needs-decision`).
+
+### Phase 237 — Invariant promotion from recurring findings *(sketch — contingent)*
+
+**Gate to entry.** Phase 236 settled and has produced enough routed findings for
+`RetroRollup.findingCategories.recurring` to be non-trivially populated. This is
+`needs-evidence` by design — entering early means promoting invariants from noise.
+
+**Objective (sketch).** Consume the already-built
+`RetroRollup.findingCategories.recurring` (phase 186) and split **recurring-unanchored** (an
+invariant candidate — something that keeps going wrong that no criterion names) from
+**recurring-anchored** (a spec-quality signal — criteria that keep being violated). Maps to
+rec-20260727-008 (low, `needs-evidence`).
+
+### Not yet phases
+
+- **rec-20260727-007** — shared fingerprint primitive extraction from Déjà
+  (`needs-evidence`). A prerequisite *investigation* for phase 236's finding identity, not a
+  phase of its own. Resolve before 236 is drafted.
+- **rec-20260727-009** — counter-verifier as a kernel component (`raw-idea`).
+- **rec-20260727-010** — Conductor as a CLI client (`raw-idea`).
+
+Both `raw-idea` items are architectural raw material. They are recorded here so the arc's
+shape is legible, and are deliberately **not** given phase numbers.
