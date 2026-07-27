@@ -1237,33 +1237,6 @@
       "updatedAt": "2026-07-26T01:59:31.156Z"
     },
     {
-      "id": "rec-20260726-004",
-      "title": "README's architecture mermaid diagram has no doc-content test verifying it against code truth",
-      "summary": "README.md's mermaid flowchart (lines ~34-55) names the four VerifierProvider values (mock/anthropic/local/host-cli) and the three entry surfaces (CLI, host adapters, MCP) inline as diagram labels. Unlike the version line, command counts, and config defaults -- each asserted against code truth by a doc-content test in packages/core/tests/docs/ -- nothing checks this diagram. Verified during the v1.51.1 release cut (2026-07-25) that it's currently still accurate, but the check was manual; if VerifierProvider (packages/core/src/verify/verifier-factory.ts) gains/loses a value, or a surface category changes shape, the diagram can silently drift with no test catching it -- the same Doc Drift class CLAUDE.md already names for other docs. Fix: a doc-content test (mirroring docs-command-count.test.ts's pattern) that greps README.md's mermaid block and asserts the verifier-provider list matches the VerifierProvider union and the surface list matches the host-adapter/CLI/MCP set.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs"
-      ],
-      "affectedFiles": [
-        "packages/core/tests/docs/"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260726-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-26T04:30:49.501Z",
-      "updatedAt": "2026-07-26T04:30:49.501Z"
-    },
-    {
       "id": "rec-20260726-005",
       "title": "coverage.ts's coverageBypassed is false-negative when a --force-only bypass overrides real coverage gaps in assertion mode",
       "summary": "In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts ~line 55-127), reaching the final pass return with real coverage gaps present but bypassed via bare --force (not --allow-missing-coverage) leaves coverageBypassed computed as 'ctx.opts.allowMissingCoverage === true && !sealed' — false in this case, since only --force was set. registry.ts's provenance therefore records this gate as status:'ran' even though a genuine --force bypass of real gaps just happened, hiding it from SUMMARY.json's audit trail. Discovered during phase 226's whole-branch review while verifying the reviewer's claim that build-test-must-pass/boundary-scan's new *Bypassed flags mirror coverage.ts's existing pattern exactly -- they do, faithfully, including this pre-existing imprecision (which phase 226 fixed for the two new gates in registry.ts by naming the actually-fired flag, but did not touch coverage.ts itself, out of scope for that phase). Pre-dates phase 226; not introduced by it.",
@@ -4408,10 +4381,41 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-07-25T15:09:13.547Z",
-      "updatedAt": "2026-07-27T02:13:11.986Z",
       "shippedRef": "phase 228",
       "archivedAt": "2026-07-27T02:13:11.986Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-25T15:09:13.547Z",
+      "updatedAt": "2026-07-27T02:13:11.986Z"
+    },
+    {
+      "id": "rec-20260726-004",
+      "title": "README's architecture mermaid diagram has no doc-content test verifying it against code truth",
+      "summary": "README.md's mermaid flowchart (lines ~34-55) names the four VerifierProvider values (mock/anthropic/local/host-cli) and the three entry surfaces (CLI, host adapters, MCP) inline as diagram labels. Unlike the version line, command counts, and config defaults -- each asserted against code truth by a doc-content test in packages/core/tests/docs/ -- nothing checks this diagram. Verified during the v1.51.1 release cut (2026-07-25) that it's currently still accurate, but the check was manual; if VerifierProvider (packages/core/src/verify/verifier-factory.ts) gains/loses a value, or a surface category changes shape, the diagram can silently drift with no test catching it -- the same Doc Drift class CLAUDE.md already names for other docs. Fix: a doc-content test (mirroring docs-command-count.test.ts's pattern) that greps README.md's mermaid block and asserts the verifier-provider list matches the VerifierProvider union and the surface list matches the host-adapter/CLI/MCP set.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/docs/"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260726-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "229-readme-mermaid-diagram-doc-test",
+      "createdAt": "2026-07-26T04:30:49.501Z",
+      "updatedAt": "2026-07-27T03:23:31.106Z",
+      "shippedRef": "phase 229",
+      "archivedAt": "2026-07-27T03:23:31.106Z",
       "archiveReason": "shipped"
     }
   ]

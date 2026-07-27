@@ -1,189 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-26T02:15:04.530Z",
+  "generatedAt": "2026-07-27T03:20:04.025Z",
   "ranked": [
-    {
-      "id": "rec-20260725-008",
-      "title": "Deepen the convergent-review protocol",
-      "raw": 22.7,
-      "score": 68,
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready ready-for-milestone",
-          "value": 7
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio high",
-          "value": 5
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "claude-cadence-audit-20260725"
-    },
-    {
-      "id": "rec-20260725-006",
-      "title": "Centralize gate bypass and seal policy in the settle driver",
-      "raw": 19.7,
-      "score": 64,
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready ready-for-milestone",
-          "value": 7
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260725-007",
-      "title": "Split the settleService god function",
-      "raw": 19.7,
-      "score": 64,
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready ready-for-milestone",
-          "value": 7
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
-      "id": "rec-20260726-001",
-      "title": "Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it",
-      "raw": 19.7,
-      "score": 64,
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready ready-for-milestone",
-          "value": 7
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "claude-cadence-audit-20260725"
-    },
     {
       "id": "rec-20260724-004",
       "title": "Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger",
@@ -221,18 +39,14 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "claude-cadence-audit-20260724"
     },
     {
-      "id": "rec-20260724-006",
-      "title": "Signed or tamper-evident SUMMARY attestations",
+      "id": "rec-20260726-005",
+      "title": "coverage.ts's coverageBypassed is false-negative when a --force-only bypass overrides real coverage gaps in assertion mode",
       "raw": 14.7,
       "score": 56,
       "status": "candidate",
@@ -267,14 +81,9 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "claude-cadence-audit-20260724"
+      "suggestedBackendAction": "cadence milestone propose"
     },
     {
       "id": "rec-20260724-007",
@@ -313,10 +122,6 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -359,10 +164,6 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -404,10 +205,6 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -450,10 +247,6 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -495,10 +288,6 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -540,10 +329,6 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -585,10 +370,6 @@
         {
           "label": "prio medium",
           "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -629,10 +410,6 @@
         },
         {
           "label": "prio low",
-          "value": 0
-        },
-        {
-          "label": "friction 0",
           "value": 0
         }
       ],
@@ -676,10 +453,6 @@
         {
           "label": "prio low",
           "value": 0
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -722,10 +495,6 @@
         {
           "label": "prio low",
           "value": 0
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -766,10 +535,6 @@
         },
         {
           "label": "prio low",
-          "value": 0
-        },
-        {
-          "label": "friction 0",
           "value": 0
         }
       ],
@@ -812,10 +577,6 @@
         {
           "label": "prio low",
           "value": 0
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -856,10 +617,6 @@
         },
         {
           "label": "prio low",
-          "value": 0
-        },
-        {
-          "label": "friction 0",
           "value": 0
         }
       ],
@@ -903,10 +660,6 @@
         {
           "label": "prio low",
           "value": 0
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -949,10 +702,6 @@
         {
           "label": "prio low",
           "value": 0
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -993,10 +742,6 @@
         },
         {
           "label": "prio low",
-          "value": 0
-        },
-        {
-          "label": "friction 0",
           "value": 0
         }
       ],
@@ -1040,14 +785,92 @@
         {
           "label": "prio low",
           "value": 0
-        },
-        {
-          "label": "friction 0",
-          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "claude-cadence-audit-20260724"
+    },
+    {
+      "id": "rec-20260726-006",
+      "title": "boundary-scan is absent from docs/concepts.md's gate-universe matrix (14-gate table, stage-scoped gates section)",
+      "raw": 9.9,
+      "score": 49,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.40",
+          "value": 2.4
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260726-001",
+      "title": "Full cryptographic signing of SUMMARY.json (blocked on threat model)",
+      "raw": 0.7,
+      "score": 35,
+      "status": "candidate",
+      "readiness": "blocked",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready blocked",
+          "value": -12
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
     }
   ],
   "parked": [
@@ -1060,14 +883,15 @@
   ],
   "needsAttention": [],
   "advisory": {
-    "kind": "top-recommendation",
-    "primary": "cadence milestone propose"
+    "kind": "finish-loop",
+    "primary": "Finish in-flight CADENCE loop work first — cadence draft approve 229-readme-mermaid-diagram-doc-test 01.",
+    "secondary": "cadence milestone propose"
   },
   "totals": {
-    "total": 46,
-    "ranked": 23,
+    "total": 45,
+    "ranked": 21,
     "parked": 1,
     "needsAttention": 0,
-    "excluded": 22
+    "excluded": 23
   }
 }
