@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "draftId": "230-01",
+  "completedAt": "2026-07-27T17:46:10.048Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Widened OPENER to accept an optional -> <return type> group before the trailing colon. Added 4 regression tests (plain, async, class-method, richer-type annotation); all 15 tests in coverage-profiles-python.test.ts pass, plus full core suite (364 files/3301 tests), typecheck, and lint all green. Audited js-ts.ts for the analogous callback-typing gap the report flagged as worth checking — none exists there since its opener matches on the it(/test( call token, not the callback's own signature."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 3,
+    "sessionSubagentSpawns": 0
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "d33b650c0375522564d209b6b03f206caf4db131711da8e21923358a9e1255fe"
+  }
+}

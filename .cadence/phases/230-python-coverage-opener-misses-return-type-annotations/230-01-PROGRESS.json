@@ -1,0 +1,11 @@
+{
+  "draftId": "230-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Widened OPENER to accept an optional -> <return type> group before the trailing colon. Added 4 regression tests (plain, async, class-method, richer-type annotation); all 15 tests in coverage-profiles-python.test.ts pass, plus full core suite (364 files/3301 tests), typecheck, and lint all green. Audited js-ts.ts for the analogous callback-typing gap the report flagged as worth checking — none exists there since its opener matches on the it(/test( call token, not the callback's own signature.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-27T17:45:14.141Z"
+    }
+  }
+}
