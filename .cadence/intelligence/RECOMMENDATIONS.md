@@ -863,3 +863,19 @@ Conductor should be a client, not a kernel peer: the decision test is 'can it be
 - next: cadence milestone propose
 
 RecommendationSourceZ has no 'review' or 'gate' member, so routing criteria-anchored-review findings into the recommendation ledger (section 7.3 of the source doc) currently loses provenance into 'manual'/'cadence'. Add a 'review' source member so Slice 3 findings can route with real provenance instead of being mislabeled.
+
+## rec-20260727-012 — cadence doctor check: roadmap-currency (anti-recurrence for ROADMAP/MILESTONES drift)
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, doctor, roadmap
+- files: .cadence/ROADMAP.md, packages/core/src/cli/commands/doctor/checks/roadmap-currency.ts, packages/core/src/cli/commands/doctor/registry.ts
+- evidence: ROADMAP.md Phase 231 entry (lines 1855-1881) is the pre-written spec; motivated by the 113-phase ROADMAP/MILESTONES drift discovered and backfilled in PR #321
+- next: cadence milestone propose
+
+Add a warning-only, non-blocking cadence doctor check comparing the highest phase number under .cadence/phases/ against the highest phase number referenced in ROADMAP.md/MILESTONES.md; warn when drift exceeds a threshold (10). fixId: null deliberately — generating roadmap prose must not be automated. Full spec already written in .cadence/ROADMAP.md's Phase 231 entry (files, ACs, threshold). Ships ahead of Phase 0 Slice 1 so this anti-recurrence mechanism is live before new phase numbers accumulate again — closes the same gap that caused the 113-phase/6-week ROADMAP drift fixed in PR #321.
