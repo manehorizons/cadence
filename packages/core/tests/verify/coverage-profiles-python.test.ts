@@ -125,6 +125,49 @@ describe('built-in python profile (phase 167 T2, AC-2)', () => {
     expect(assertIdx).toBeLessThanOrEqual(spans[0]!.end);
   });
 
+  it('a return-type-annotated def test_foo(x: Path) -> None: still matches as an opener (AC-1)', () => {
+    const t = ['def test_foo(x: int) -> None:', '    assert x == 1  # AC-1', ''].join('\n');
+    const spans = findSpansForProfile(t, pythonProfile);
+    expect(spans.length).toBe(1);
+    expect(spans[0]!.hasAssertion).toBe(true);
+    const acIdx = t.indexOf('AC-1');
+    expect(acIdx).toBeGreaterThanOrEqual(spans[0]!.start);
+    expect(acIdx).toBeLessThanOrEqual(spans[0]!.end);
+  });
+
+  it('async def test_foo() -> bool: still matches as an opener (AC-1)', () => {
+    const t = ['async def test_async_bool() -> bool:', '    assert True  # AC-1', ''].join('\n');
+    const spans = findSpansForProfile(t, pythonProfile);
+    expect(spans.length).toBe(1);
+    expect(spans[0]!.hasAssertion).toBe(true);
+    const acIdx = t.indexOf('AC-1');
+    expect(acIdx).toBeGreaterThanOrEqual(spans[0]!.start);
+    expect(acIdx).toBeLessThanOrEqual(spans[0]!.end);
+  });
+
+  it('an annotated class method (def test_bar(self) -> None:) still matches as an opener (AC-1)', () => {
+    const t = [
+      'class TestThing:',
+      '    def test_bar(self) -> None:',
+      '        value = compute()  # AC-1',
+      '        assert value == 42',
+      '',
+    ].join('\n');
+    const spans = findSpansForProfile(t, pythonProfile);
+    expect(spans.length).toBe(1);
+    expect(spans[0]!.hasAssertion).toBe(true);
+    const acIdx = t.indexOf('AC-1');
+    expect(acIdx).toBeGreaterThanOrEqual(spans[0]!.start);
+    expect(acIdx).toBeLessThanOrEqual(spans[0]!.end);
+  });
+
+  it('a richer return-type annotation (-> Optional[str]:) still matches as an opener (AC-1)', () => {
+    const t = ['def test_optional() -> Optional[str]:', '    assert True  # AC-1', ''].join('\n');
+    const spans = findSpansForProfile(t, pythonProfile);
+    expect(spans.length).toBe(1);
+    expect(spans[0]!.hasAssertion).toBe(true);
+  });
+
   it('sibling test functions are separated by the indentation boundary (AC-2)', () => {
     const t = [
       'def test_one():',

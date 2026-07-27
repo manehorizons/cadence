@@ -28,19 +28,28 @@
  * mis-bounds. A genuinely unclosed paren (a `SyntaxError` in real Python,
  * only reachable via a transiently mid-edit file) can merge two unrelated
  * functions into one span; this is a structural risk of any depth-unaware
- * opener scan, not unique to this profile.
+ * opener scan, not unique to this profile. The same caveat applies to the
+ * optional return-type annotation group: `[^:\n]+` is not bracket-depth-aware
+ * either, so a return type containing a bare `:` (not a realistic Python
+ * type expression) would under-match rather than mis-bound.
  */
 
 import type { LanguageProfile } from './types.js';
 
-/** Opener: `[async ]def test_<name>(...):`. Class-based methods match
- * identically — indentation is resolved relative to the opener's own line,
- * not any enclosing class. The optional `async` prefix must be part of the
- * match (not just permitted before it): `indentation-delimited` computes
- * indent as `matchStart - lineStart`, so if the match started at `def`
- * instead of `async`, an `async def` line's indent would be miscomputed as
- * `len('async ')` too deep, truncating the body to just the header line. */
-const OPENER = /(?:async\s+)?def\s+test_\w*\s*\([^)]*\)\s*:/y;
+/** Opener: `[async ]def test_<name>(...)[-> <return type>]:`. Class-based
+ * methods match identically — indentation is resolved relative to the
+ * opener's own line, not any enclosing class. The optional `async` prefix
+ * must be part of the match (not just permitted before it):
+ * `indentation-delimited` computes indent as `matchStart - lineStart`, so if
+ * the match started at `def` instead of `async`, an `async def` line's
+ * indent would be miscomputed as `len('async ')` too deep, truncating the
+ * body to just the header line. The optional `-> ...` group covers a
+ * return-type annotation between the parameter list and the final colon
+ * (e.g. `-> None:`, `-> Optional[str]:`); `[^:\n]+` matches up to the next
+ * `:` or newline, which covers real-world return-type expressions since
+ * none of them contain a bare `:`. Like `[^)]*` on the parameter list, this
+ * is not paren/bracket-depth-aware — an under-report, never a mis-bound. */
+const OPENER = /(?:async\s+)?def\s+test_\w*\s*\([^)]*\)\s*(?:->\s*[^:\n]+)?\s*:/y;
 
 /** Assertion: a standalone `assert` statement (word-bounded so identifiers
  * like `assert_that` never falsely qualify). */
