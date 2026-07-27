@@ -1004,35 +1004,6 @@
       "updatedAt": "2026-07-18T05:00:07.898Z"
     },
     {
-      "id": "rec-20260724-004",
-      "title": "Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger",
-      "summary": "ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs",
-        "intelligence"
-      ],
-      "affectedFiles": [
-        ".cadence/ROADMAP.md"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260724-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "claude-cadence-audit-20260724",
-      "createdAt": "2026-07-24T14:35:34.096Z",
-      "updatedAt": "2026-07-24T14:35:34.096Z"
-    },
-    {
       "id": "rec-20260724-007",
       "title": "Define and document multi-contributor concurrency semantics for .cadence state",
       "summary": "team-rollout.md covers PR visibility but not the mechanics of two contributors with phases in flight: merge behavior for state.json, the intelligence ledger, and phase directories. First verify whether current behavior is safe-by-construction (per-phase directories may already isolate most conflict surface), then document the answer or design the missing piece. This is the first question a second contributor asks and the team preset is now the default.",
@@ -1596,9 +1567,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "scoutId": "scout-20260727-kernel-review-phase0",
       "createdAt": "2026-07-27T18:47:52.825Z",
-      "updatedAt": "2026-07-27T18:47:52.825Z",
-      "scoutId": "scout-20260727-kernel-review-phase0"
+      "updatedAt": "2026-07-27T18:47:52.825Z"
     }
   ],
   "archived": [
@@ -4728,6 +4699,38 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-26T04:30:49.501Z",
       "updatedAt": "2026-07-27T03:23:31.106Z"
+    },
+    {
+      "id": "rec-20260724-004",
+      "title": "Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger",
+      "summary": "ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        ".cadence/ROADMAP.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "claude-cadence-audit-20260724",
+      "createdAt": "2026-07-24T14:35:34.096Z",
+      "updatedAt": "2026-07-27T20:24:58.731Z",
+      "shippedRef": "PR #321 (docs backfill, phases 118-230 + Phase 0 mapping)",
+      "archivedAt": "2026-07-27T20:24:58.731Z",
+      "archiveReason": "shipped"
     }
   ]
 }
