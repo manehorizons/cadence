@@ -72,8 +72,8 @@ async function seedAcCoverage(root: string, acId: string): Promise<void> {
   );
 }
 
-// AC-6 (standard×complex) spawns the CLI many times; macOS Node 20 runners are
-// slower than Node 22 and brush the 20s global ceiling. Match the pattern from
+// AC-6 (standard×complex) spawns the CLI many times; macOS runners can brush
+// the 20s global ceiling under load. Match the pattern from
 // settle-security-audit.test.ts: 45s for non-win32, 90s for win32.
 describe(
   'cadence settle run (Phase 24.3 — code-review verifier gate)',

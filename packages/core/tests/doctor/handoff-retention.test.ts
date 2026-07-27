@@ -13,7 +13,7 @@ afterEach(async () => {
   }
 });
 
-const ENV = { nodeVersion: 'v20.11.0', platform: 'linux' as const };
+const ENV = { nodeVersion: 'v22.11.0', platform: 'linux' as const };
 
 async function seed(root: string, count: number): Promise<void> {
   const dir = join(root, '.cadence', 'handoff');

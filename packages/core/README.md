@@ -21,7 +21,7 @@ npx -y @manehorizons/cadence-core tutorial
 
 ## Install
 
-Requires Node ≥ 20.
+Requires Node ≥ 22.
 
 ```sh
 npm install -g @manehorizons/cadence-core

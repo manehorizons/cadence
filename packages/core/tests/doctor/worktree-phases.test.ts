@@ -11,7 +11,7 @@ afterEach(async () => {
   }
 });
 
-const HEALTHY_ENV = { nodeVersion: 'v20.11.0', platform: 'linux' as const };
+const HEALTHY_ENV = { nodeVersion: 'v22.11.0', platform: 'linux' as const };
 
 /** A stub collector returning fixed occupancies (offline, deterministic). */
 const stub =

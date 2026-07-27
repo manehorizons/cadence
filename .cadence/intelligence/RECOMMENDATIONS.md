@@ -533,22 +533,6 @@ settle run already detects and warns on files touched outside a task's declared 
 
 2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
 
-## rec-20260724-004 — Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs, intelligence
-- files: .cadence/ROADMAP.md
-- evidence: Audit 2026-07-24: ROADMAP head describes v0.4 phase plans (23.x) against 225 settled phases on disk
-- next: cadence milestone propose
-
-ROADMAP.md still declares itself the single source of truth for the v0.3-to-v1.0 arc, frozen in the May planning era, while actual direction now lives in milestones and the recommendation ledger. Either regenerate it from current milestone state or replace its body with a pointer to the live sources so a contributor cannot mistake the stale document for direction.
-
 ## rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
 
 - status: candidate
@@ -879,19 +863,3 @@ RecommendationSourceZ has no 'review' or 'gate' member, so routing criteria-anch
 - next: cadence milestone propose
 
 Add a warning-only, non-blocking cadence doctor check comparing the highest phase number under .cadence/phases/ against the highest phase number referenced in ROADMAP.md/MILESTONES.md; warn when drift exceeds a threshold (10). fixId: null deliberately — generating roadmap prose must not be automated. Full spec already written in .cadence/ROADMAP.md's Phase 231 entry (files, ACs, threshold). Ships ahead of Phase 0 Slice 1 so this anti-recurrence mechanism is live before new phase numbers accumulate again — closes the same gap that caused the 113-phase/6-week ROADMAP drift fixed in PR #321.
-
-## rec-20260727-013 — Drop Node 20 support; raise engine floor to Node >=22
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: ci, engine-floor, docs
-- files: .github/workflows/ci.yml, .github/workflows/security.yml, package.json, packages/core/package.json, packages/types/package.json, packages/host-claude-code/package.json, packages/host-codex/package.json, packages/host-toolkit/package.json, packages/core/src/cli/node-guard.ts, packages/core/tests/cli/node-guard.test.ts, .github/dependabot.yml, CLAUDE.md, README.md, website/src/content/docs/start/install.md
-- evidence: LOE assessment done interactively 2026-07-27: CI matrix + engines-floor + node-guard + dependabot + doc-prose sweep enumerated; no doc-content test gates the '20' string so the doc sweep is manual-diligence only
-- next: cadence milestone propose
-
-Retire the Node 20 CI leg and engines floor across all 5 published packages plus host-toolkit, ahead of Phase 0 kernel work. Surface: (1) .github/workflows/ci.yml matrix [20,22] -> [22] (halves 6 jobs to 3 across ubuntu/macos/windows); security.yml's independent sbom job also pins node-version:20, bump for consistency; (2) six package.json engines.node '>=20' -> '>=22' -- a real breaking change for consumers still on Node 20, needs its own changeset and semver call, not a silent edit; (3) node-guard.ts's checkNodeMajor default min=20 -> 22, plus ~4 assertions in node-guard.test.ts; (4) root @types/node pinned ^20.14.0 -> ^22.x, and dependabot.yml's ignore rule (+ its comment) tying @types/node major-bump avoidance to the Node-20 floor needs rewording to the new floor; (5) manual doc-prose sweep (NOT doc-test-gated -- confirmed no test asserts the literal string '20'): CLAUDE.md (2 spots), README.md, website/src/content/docs/start/install.md say 'Node 20 + 22'. Do NOT touch CHANGELOG.md, .cadence/ROADMAP.md/MILESTONES.md, or .cadence/phases/** artifacts that mention Node 20 -- those are frozen historical records. Possible byproduct worth a glance (separate decision, out of scope): a CHANGELOG note ties --filter-regex's case-insensitivity gap to a Node 20/V8 regex-modifier-group limitation: Node 22 may lift it.

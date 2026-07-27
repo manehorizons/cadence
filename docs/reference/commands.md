@@ -952,7 +952,7 @@ v1 check set:
 
 | Check | What it verifies | Fail severity |
 |---|---|---|
-| `node` | Node major ≥ 20 (the `engines` floor) | error |
+| `node` | Node major ≥ 22 (the `engines` floor) | error |
 | `initialized` | `.cadence/` exists and `config.json` is valid | error |
 | `state` | `state.json` parses; `STATE.md` (derived view) present | error / warning |
 | `state-tracked` | *(git repos)* none of the four CADENCE-owned ephemeral paths (`state.json`, `STATE.md`, `mcp-trust.json`, `intelligence/context/`) are tracked by git — tracking any guarantees a cross-worktree merge conflict *(phase 196)* | warning |

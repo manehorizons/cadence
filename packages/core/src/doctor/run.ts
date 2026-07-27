@@ -44,8 +44,8 @@ import { hasManagedCadence } from './host-hooks.js';
 function checkNode(env: DoctorEnv): DoctorCheck {
   const r = checkNodeMajor(env.nodeVersion);
   return r.ok
-    ? pass('node', `Node ${env.nodeVersion} satisfies the >=20 floor.`)
-    : fail('node', 'error', r.message, 'Upgrade Node to >=20 and retry.');
+    ? pass('node', `Node ${env.nodeVersion} satisfies the >=22 floor.`)
+    : fail('node', 'error', r.message, 'Upgrade Node to >=22 and retry.');
 }
 
 async function checkInitialized(root: string): Promise<DoctorCheck> {

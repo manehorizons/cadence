@@ -13,7 +13,7 @@ afterEach(async () => {
   }
 });
 
-const ENV = { nodeVersion: 'v20.11.0', platform: 'linux' as const };
+const ENV = { nodeVersion: 'v22.11.0', platform: 'linux' as const };
 const NOW = new Date('2026-07-22T12:00:00.000Z');
 
 async function setActive(
