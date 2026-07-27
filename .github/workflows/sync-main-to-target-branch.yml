@@ -1,0 +1,67 @@
+name: Sync main into target branch
+
+# Keeps one long-lived, non-main branch caught up with main automatically.
+# Inert until the SYNC_TARGET_BRANCH repository variable is set to a real
+# branch name (Settings > Secrets and variables > Actions > Variables, or
+# `gh variable set SYNC_TARGET_BRANCH --body '<branch-name>'`). With no
+# variable set (and no manual target_branch input), the job skips cleanly.
+#
+# On a real merge conflict this never force-pushes or picks a side --
+# it aborts the merge and fails loudly so a human resolves it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to merge main into (overrides the SYNC_TARGET_BRANCH repo variable for this run)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve target branch
+        id: resolve
+        run: |
+          TARGET="${{ github.event.inputs.target_branch }}"
+          if [ -z "$TARGET" ]; then
+            TARGET="${{ vars.SYNC_TARGET_BRANCH }}"
+          fi
+          if [ -z "$TARGET" ]; then
+            echo "No target branch configured -- set the SYNC_TARGET_BRANCH repo variable, or pass target_branch on a manual run. Skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        if: steps.resolve.outputs.skip != 'true'
+        with:
+          ref: ${{ steps.resolve.outputs.target }}
+          fetch-depth: 0
+
+      - name: Merge main into target branch
+        if: steps.resolve.outputs.skip != 'true'
+        env:
+          TARGET: ${{ steps.resolve.outputs.target }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "Already up to date with main -- nothing to do."
+            exit 0
+          fi
+          if git merge --no-edit origin/main; then
+            git push origin "HEAD:refs/heads/$TARGET"
+          else
+            echo "::error::Merge conflict syncing main into '$TARGET' -- resolve manually (git checkout $TARGET && git merge origin/main)."
+            git merge --abort
+            exit 1
+          fi
