@@ -1950,7 +1950,13 @@ Cadence" diagnostic, not a parse/corruption error. (5) `GATE_ORDER`, gate verdic
 refusal behavior are byte-for-byte unchanged — this phase adds no gate and changes no
 outcome.
 
-### Phase 233 — Per-settle assurance record (rec-20260727-002)
+### Phase 233 — Per-settle assurance record (rec-20260728-001)
+
+> **As built (2026-07-28):** this heading originally cited `rec-20260727-002`, which was a
+> mislabel — that rec's actual content (SUMMARY `schemaVersion` 1|2 forward-compat) was
+> already delivered by phase 232 (AC-3/AC-4) and has been promoted to `shipped` against it.
+> The recommendation actually describing this phase's scope was never filed separately; it
+> is now filed as `rec-20260728-001`.
 
 **Objective.** With verifier identity persisted (phase 232), compute one **assurance
 record** per settle: a derived, whole-run answer to "how strongly was this settle actually

@@ -72,6 +72,14 @@
       "status": "active",
       "decidedAt": "2026-07-26T01:59:18.580Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260728-001",
+      "title": "Phase 233 AC-3 tripwire cleared: assurance-record derivation is gate-agnostic",
+      "rationale": "rec-20260728-001 (Per-settle assurance record), shipped via phase 233-per-settle-assurance-record. The derivation (packages/core/src/gates/assurance-record.ts, deriveAssuranceRecord) reads only gate-provenance provider/model fields and per-AC evidence classes -- never a specific gate name or id. Confirmed by the implementer, an independent per-task reviewer, and a fresh whole-branch reviewer, each reading the function directly and grepping for gate.gate/gate-name branching (none found). Per the phase 233 spec's binding tripwire, this clears phases 234-237 (kernel/verifier/consumer boundary work) to proceed on the premise that the kernel/verifier/consumer boundary is real, not a special-cased illusion. Non-blocking design-gap noted for those phases: only 2 of 10 GATE_ORDER gates (code-review, security-audit) currently populate verifier identity (phase 232's scope), so 'overall' has no signal from other gates that perform real verification (e.g. build-test-must-pass) -- worth addressing in a later slice, not a defect in phase 233 itself.",
+      "status": "active",
+      "decidedAt": "2026-07-28T02:33:14.475Z",
+      "supersedes": []
     }
   ]
 }

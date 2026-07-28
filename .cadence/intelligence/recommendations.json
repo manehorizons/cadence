@@ -1261,37 +1261,6 @@
       "updatedAt": "2026-07-26T21:37:14.232Z"
     },
     {
-      "id": "rec-20260727-002",
-      "title": "SUMMARY forward-compat read: accept schemaVersion 1|2, distinct \"newer Cadence\" outcome",
-      "summary": "SummaryZ.schemaVersion is z.literal(1); a future SUMMARY at schemaVersion 2 fails as an indistinguishable generic parse error rather than a legible 'written by a newer Cadence' outcome. Bump to 2, accept 1|2 on read, and add a pre-parse probe mirroring Phase 223's 'unverifiable' precedent (dec-20260726-001) rather than a false clean or false corrupt.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "types"
-      ],
-      "affectedFiles": [
-        "packages/types/src/summary.ts",
-        "packages/core/src/cli/commands/summary.ts",
-        "packages/core/src/verify/phase-replay.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260727-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:46:45.819Z",
-      "updatedAt": "2026-07-27T18:46:45.819Z"
-    },
-    {
       "id": "rec-20260727-003",
       "title": "Kernel/verifier contract + lint rule against internal imports",
       "summary": "GateImpl/GATE_REGISTRY totality and SettleContext.verifiers: VerifierPorts already form an unnamed plugin architecture. Name kernel/verifier/consumer as published contracts and add a lint rule failing the build if a verifier package imports kernel internals instead of the published contract, with zero GATE_ORDER changes and zero special cases across the five existing verifier-backed gates (code-review, plan-review, spec-review, security-audit, ui-spec-review).",
@@ -4806,11 +4775,81 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "232-gate-provenance-verifier-identity",
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:46:38.564Z",
-      "updatedAt": "2026-07-28T00:13:03.279Z",
       "shippedRef": "phase 232-gate-provenance-verifier-identity",
+      "scoutId": "scout-20260727-kernel-review-phase0",
       "archivedAt": "2026-07-28T00:13:03.279Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T18:46:38.564Z",
+      "updatedAt": "2026-07-28T00:13:03.279Z"
+    },
+    {
+      "id": "rec-20260727-002",
+      "title": "SUMMARY forward-compat read: accept schemaVersion 1|2, distinct \"newer Cadence\" outcome",
+      "summary": "SummaryZ.schemaVersion is z.literal(1); a future SUMMARY at schemaVersion 2 fails as an indistinguishable generic parse error rather than a legible 'written by a newer Cadence' outcome. Bump to 2, accept 1|2 on read, and add a pre-parse probe mirroring Phase 223's 'unverifiable' precedent (dec-20260726-001) rather than a false clean or false corrupt.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts",
+        "packages/core/src/cli/commands/summary.ts",
+        "packages/core/src/verify/phase-replay.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260727-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "phase 232-gate-provenance-verifier-identity (AC-3/AC-4 delivered schemaVersion 1|2 + newer-Cadence diagnostic as part of phase 232's scope)",
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "archivedAt": "2026-07-28T01:21:13.962Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T18:46:45.819Z",
+      "updatedAt": "2026-07-28T01:21:13.962Z"
+    },
+    {
+      "id": "rec-20260728-001",
+      "title": "Per-settle assurance record: derive strength-of-verification from gate provenance + AC evidence",
+      "summary": "With verifier identity persisted (phase 232), compute one assurance record per settle: a derived, whole-run answer to how strongly a settle was actually verified, composed from per-gate verifier identities plus the existing per-AC evidence ladder (ai-verified > executed > assertion > mention > unverified). Derived and reported only -- adds no gate, no refusal, no bypass flag. Makes an all-mock settle visibly distinguishable in the durable record from a real-provider-verified one. Binding tripwire: if the derivation requires gate-specific special-casing to express (AC-3), stop and do not proceed to the kernel/verifier/consumer boundary work premised on that boundary being real.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "critical",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts",
+        "packages/core/src/gates/",
+        "packages/core/src/services/settle.ts",
+        "docs/concepts.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260728-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "233-per-settle-assurance-record",
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "createdAt": "2026-07-28T01:21:32.876Z",
+      "updatedAt": "2026-07-28T02:32:24.759Z",
+      "shippedRef": "phase 233-per-settle-assurance-record",
+      "archivedAt": "2026-07-28T02:32:24.759Z",
       "archiveReason": "shipped"
     }
   ]
