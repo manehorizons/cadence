@@ -159,6 +159,116 @@ describe('GateProvenanceZ (AC-1, phase 140)', () => {
   });
 });
 
+describe('GateProvenanceZ verifier identity (AC-3, phase 232)', () => {
+  it('parses an entry carrying provider + model', () => {
+    const g = GateProvenanceZ.parse({
+      gate: 'code-review',
+      status: 'ran',
+      provider: 'anthropic',
+      model: 'claude-sonnet-4-6',
+    });
+    expect(g.provider).toBe('anthropic');
+    expect(g.model).toBe('claude-sonnet-4-6');
+  });
+
+  it('treats provider and model as optional (back-compat with pre-phase-232 entries)', () => {
+    const g = GateProvenanceZ.parse({ gate: 'security-audit', status: 'ran' });
+    expect(g.provider).toBeUndefined();
+    expect(g.model).toBeUndefined();
+  });
+});
+
+describe('SummaryZ.schemaVersion (AC-3, phase 232)', () => {
+  it('parses a schemaVersion 1 summary unchanged (pre-existing record)', () => {
+    const result = SummaryZ.safeParse({ ...baseSummary, schemaVersion: 1 });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.schemaVersion).toBe(1);
+    }
+  });
+
+  it('parses a schemaVersion 2 summary carrying gate provenance identity', () => {
+    const result = SummaryZ.safeParse({
+      ...baseSummary,
+      schemaVersion: 2,
+      gates: [{ gate: 'code-review', status: 'ran', provider: 'mock' }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.schemaVersion).toBe(2);
+      expect(result.data.gates?.[0]).toEqual({ gate: 'code-review', status: 'ran', provider: 'mock' });
+    }
+  });
+
+  it('rejects an unrecognized schemaVersion', () => {
+    const result = SummaryZ.safeParse({ ...baseSummary, schemaVersion: 3 });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('SummaryZ real historical artifact round-trip (AC-3, AC-4, phase 232)', () => {
+  // Pinned verbatim from .cadence/phases/140-summary-gate-provenance/140-01-SUMMARY.json
+  // — a real, previously-settled schemaVersion 1 record (predates phase 232's
+  // provider/model identity fields on `gates` entries). Proves the current
+  // SummaryZ still accepts a genuine historical artifact unmodified, not just
+  // a synthetic v1 object.
+  const realHistoricalSummary = {
+    schemaVersion: 1,
+    draftId: '140-01',
+    completedAt: '2026-07-02T22:23:49.993Z',
+    acResults: [
+      { id: 'AC-1', pass: true, evidence: 'assertion' },
+      { id: 'AC-2', pass: true, evidence: 'assertion' },
+      { id: 'AC-3', pass: true, evidence: 'assertion' },
+      { id: 'AC-4', pass: true, evidence: 'assertion' },
+      { id: 'AC-5', pass: true, evidence: 'assertion' },
+    ],
+    gates: [
+      { gate: 'draft-read', status: 'skipped', skipReason: 'not in the active tier × profile gate set' },
+      { gate: 'structural-verifier', status: 'ran' },
+      {
+        gate: 'build-test-must-pass',
+        status: 'skipped',
+        skipReason:
+          'no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement.',
+      },
+      { gate: 'test-coverage', status: 'ran' },
+      { gate: 'interactive-verdict', status: 'skipped', skipReason: 'not requested (no --deep / --interactive, not in gate set)' },
+      { gate: 'deep-verify', status: 'skipped', skipReason: 'not requested (no --deep / --interactive, not in gate set)' },
+      { gate: 'code-review', status: 'skipped', skipReason: 'not in the active tier × profile gate set' },
+      { gate: 'security-audit', status: 'skipped', skipReason: 'not in the active tier × profile gate set' },
+    ],
+    taskResults: [
+      { id: 'T1', status: 'DONE', notes: '' },
+      { id: 'T2', status: 'DONE', notes: '' },
+      { id: 'T3', status: 'DONE', notes: '' },
+      { id: 'T4', status: 'DONE', notes: '' },
+      { id: 'T5', status: 'DONE', notes: '' },
+      { id: 'T6', status: 'DONE', notes: '' },
+      { id: 'T7', status: 'DONE', notes: '' },
+      { id: 'T8', status: 'DONE', notes: '' },
+      { id: 'T9', status: 'DONE', notes: '' },
+      { id: 'T10', status: 'DONE', notes: '' },
+      { id: 'T11', status: 'DONE', notes: '' },
+    ],
+    decisions: [],
+    deferred: [],
+    skillAudit: { required: [], invoked: [] },
+  };
+
+  it('parses a real pre-existing settled SUMMARY.json (140-01, schemaVersion 1) unmodified', () => {
+    const result = SummaryZ.safeParse(realHistoricalSummary);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.schemaVersion).toBe(1);
+      expect(result.data.gates).toHaveLength(8);
+      expect(result.data.gates?.[1]).toEqual({ gate: 'structural-verifier', status: 'ran' });
+      // Pre-phase-232 gate entries carry no verifier identity.
+      expect(result.data.gates?.every((g) => g.provider === undefined && g.model === undefined)).toBe(true);
+    }
+  });
+});
+
 describe('AcEvidenceZ (AC-2, phase 140)', () => {
   it('accepts all five evidence classes', () => {
     for (const v of ['ai-verified', 'executed', 'assertion', 'mention', 'unverified']) {

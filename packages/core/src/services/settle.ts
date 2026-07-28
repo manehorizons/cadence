@@ -517,7 +517,7 @@ async function writeRefusedSettleSummary(
   gates: GateProvenance[],
 ): Promise<CommandResult> {
   const refusedSummary: Summary = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     draftId: state.activeDraft!,
     completedAt: new Date().toISOString(),
     acResults: [],
@@ -861,7 +861,7 @@ async function finalizeAndCloseSettle(
   };
 
   const summary: Summary = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     draftId: state.activeDraft!,
     completedAt: new Date().toISOString(),
     acResults: acResultsWithEvidence,

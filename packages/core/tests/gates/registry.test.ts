@@ -403,3 +403,113 @@ describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
     expect(gates).toEqual([{ gate: 'boundary-scan', status: 'ran' }]);
   });
 });
+
+describe('runSettleGates verifier-identity provenance merge (Phase 232, AC-1, AC-2, AC-5)', () => {
+  it('merges family/model onto a code-review "ran" provenance entry (AC-1)', async () => {
+    const { gates } = await runSettleGates(ctxWith(['code-review']), {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'pass',
+          flags: { verifierIdentity: { family: 'anthropic', model: 'claude-opus-4' } },
+        },
+      }),
+      order: ['code-review'],
+    });
+    expect(gates).toEqual([
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-opus-4' },
+    ]);
+  });
+
+  it('merges family (no model) onto a security-audit "ran" provenance entry when the verifier reports none (AC-2)', async () => {
+    const { gates } = await runSettleGates(ctxWith(['security-audit']), {
+      registry: recordingRegistry([], {
+        'security-audit': {
+          outcome: 'pass',
+          flags: { verifierIdentity: { family: 'mock' } },
+        },
+      }),
+      order: ['security-audit'],
+    });
+    expect(gates).toEqual([{ gate: 'security-audit', status: 'ran', provider: 'mock' }]);
+  });
+
+  it('merges family/model onto a code-review "refused" provenance entry alongside its reason (AC-1)', async () => {
+    const { gates } = await runSettleGates(ctxWith(['code-review']), {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'refuse',
+          reason: 'blocking findings',
+          flags: { verifierIdentity: { family: 'local', model: 'qwen2.5-coder' } },
+        },
+      }),
+      order: ['code-review'],
+    });
+    expect(gates).toEqual([
+      {
+        gate: 'code-review',
+        status: 'refused',
+        reason: 'blocking findings',
+        provider: 'local',
+        model: 'qwen2.5-coder',
+      },
+    ]);
+  });
+
+  it('merges family/model onto a security-audit "refused" provenance entry (AC-2)', async () => {
+    const { gates } = await runSettleGates(ctxWith(['security-audit']), {
+      registry: recordingRegistry([], {
+        'security-audit': {
+          outcome: 'refuse',
+          reason: 'blocking findings',
+          flags: { verifierIdentity: { family: 'anthropic', model: 'claude-opus-4' } },
+        },
+      }),
+      order: ['security-audit'],
+    });
+    expect(gates).toEqual([
+      {
+        gate: 'security-audit',
+        status: 'refused',
+        reason: 'blocking findings',
+        provider: 'anthropic',
+        model: 'claude-opus-4',
+      },
+    ]);
+  });
+
+  it('adds no provider/model keys to any other gate\'s provenance entry across the full order (AC-5)', async () => {
+    const { gates } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'pass',
+          flags: { verifierIdentity: { family: 'anthropic', model: 'claude-opus-4' } },
+        },
+        'security-audit': {
+          outcome: 'pass',
+          flags: { verifierIdentity: { family: 'anthropic', model: 'claude-opus-4' } },
+        },
+      }),
+    });
+    for (const entry of gates) {
+      if (entry.gate === 'code-review' || entry.gate === 'security-audit') {
+        expect(entry).toMatchObject({ provider: 'anthropic', model: 'claude-opus-4' });
+      } else {
+        expect('provider' in entry).toBe(false);
+        expect('model' in entry).toBe(false);
+      }
+    }
+  });
+
+  it('leaves provenance byte-for-byte unchanged when verifierIdentity is absent (AC-5)', async () => {
+    const { gates } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
+      registry: recordingRegistry([]),
+    });
+    expect(gates).toEqual(
+      EXPECTED_ORDER.map((gate) =>
+        gate === 'boundary-scan'
+          ? { gate, status: 'skipped', skipReason: 'boundaryEnforcement is not "block"' }
+          : { gate, status: 'ran' },
+      ),
+    );
+  });
+});

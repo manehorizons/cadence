@@ -41,7 +41,17 @@ export const runSecurityAuditGate: GateImpl = async (ctx): Promise<GateResult> =
           `settle run refused: security-audit reported ${criticals.length} CRITICAL finding(s). ` +
           'Pass --allow-security-audit-failure to record them and settle anyway, or --force to bypass.';
         ctx.io.err(`${reason}\n`);
-        return { outcome: 'refuse', summaryPatch: { securityAudit: securityAuditFindings }, reason };
+        return {
+          outcome: 'refuse',
+          summaryPatch: { securityAudit: securityAuditFindings },
+          reason,
+          flags: {
+            verifierIdentity: {
+              family: result.provider,
+              ...(result.model ? { model: result.model } : {}),
+            },
+          },
+        };
       }
       const flag =
         ctx.opts.force === true ? '--force' : '--allow-security-audit-failure';
@@ -49,7 +59,16 @@ export const runSecurityAuditGate: GateImpl = async (ctx): Promise<GateResult> =
         `security-audit: ${flag} set; proceeding past ${criticals.length} CRITICAL finding(s).\n`,
       );
     }
-    return { outcome: 'pass', summaryPatch: { securityAudit: securityAuditFindings } };
+    return {
+      outcome: 'pass',
+      summaryPatch: { securityAudit: securityAuditFindings },
+      flags: {
+        verifierIdentity: {
+          family: result.provider,
+          ...(result.model ? { model: result.model } : {}),
+        },
+      },
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const reason = `security-audit: verifier failed — ${message}. Pass --allow-security-audit-failure to continue.`;

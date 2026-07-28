@@ -67,6 +67,13 @@ export const GateProvenanceZ = z.object({
   skipReason: z.string().optional(),
   /** Present iff status === 'refused'. */
   reason: z.string().optional(),
+  /** Phase 232: verifier family/model that actually ran this gate (currently
+   *  populated only for `code-review` and `security-audit`; every other
+   *  gate's provenance entry omits both). Optional — not every gate's
+   *  provenance carries verifier identity. Named to match `DeepVerifyMetaZ`'s
+   *  `provider`/`model` and `GateFlags.verifierFailure.provider`. */
+  provider: z.string().optional(),
+  model: z.string().optional(),
 });
 export type GateProvenance = z.infer<typeof GateProvenanceZ>;
 
@@ -79,7 +86,10 @@ export const AcEvidenceZ = z.enum(['ai-verified', 'executed', 'assertion', 'ment
 export type AcEvidence = z.infer<typeof AcEvidenceZ>;
 
 export const SummaryZ = z.object({
-  schemaVersion: z.literal(1),
+  /** Phase 232: 2 adds `provider`/`model` identity onto `code-review` and
+   *  `security-audit` GateProvenanceZ entries — additive, not breaking.
+   *  Writers emit 2; readers still accept pre-phase-232 records at 1. */
+  schemaVersion: z.union([z.literal(1), z.literal(2)]),
   draftId: z.string(),
   completedAt: z.string(),
   acResults: z.array(
