@@ -2,10 +2,18 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/kernel-assurance-v2]
   pull_request:
-    branches: [main]
+    branches: [main, feat/kernel-assurance-v2]
 
+# feat/kernel-assurance-v2 is the kernel/assurance arc's long-lived branch
+# (phases 232+, see CLAUDE.md) -- per-slice PRs land there, not on main,
+# until the whole arc merges. Without this branch listed, GitHub Actions
+# reads only main's trigger config when deciding what to fire (the workflow
+# file is discovered from the default branch, not a PR's base), so PRs
+# targeting feat/kernel-assurance-v2 silently got zero CI (found while
+# landing phase 233, PR #328).
+#
 # CI runs the full gate on ubuntu + macOS + windows on Node 22.
 # macOS was unblocked by realpath'ing the testkit mkdtemp root (phase 49);
 # windows by platform-aware test timeouts (vitest.shared.ts) + best-effort
