@@ -587,6 +587,171 @@ describe('settleService writes schemaVersion 2 on the persisted SUMMARY (phase 2
   });
 });
 
+describe('settleService computes and attaches an assurance record on SUMMARY (phase 233, T3)', () => {
+  it('AC-1: a full auto settle run persists a SUMMARY with a populated assurance record (verifierRollup/evidenceTally/overall all present)', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '233-01-assurance-record',
+      id: '233-01',
+      tier: 'standard',
+      // Phase 214 (T4): see the '51-code-review-verifier-cwd' comment above —
+      // this fixture has no real AC-1 coverage and predates evidence-floor.
+      config: { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } },
+    });
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '233-01-assurance-record', '233-01-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    // verifierRollup/evidenceTally/overall must all be present — the whole
+    // point of T2's deriveAssuranceRecord being wired up rather than merely
+    // available.
+    expect(summary.assurance).toBeDefined();
+    expect(Array.isArray(summary.assurance?.verifierRollup)).toBe(true);
+    expect(summary.assurance?.evidenceTally).toBeDefined();
+    expect(
+      Object.keys(summary.assurance?.evidenceTally ?? {}).sort(),
+    ).toEqual(['ai-verified', 'assertion', 'executed', 'mention', 'unverified'].sort());
+    expect(['strong', 'mixed', 'weak', 'unverified']).toContain(summary.assurance?.overall);
+  });
+
+  it('AC-4: the PASS outcome and every gate verdict are unchanged by attaching the assurance record', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '233-02-assurance-pass',
+      id: '233-02',
+      tier: 'standard',
+      config: { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } },
+    });
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    // Same pass-path outcome the '232-01-schema-version' fixture above
+    // already proves: exit 0, every gate ran/skipped (never refused), every
+    // AC passed. Asserted again here, alongside the now-attached assurance
+    // record, to prove the new step never touches the decision path.
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '233-02-assurance-pass', '233-02-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    expect(summary.gates?.length).toBeGreaterThan(0);
+    expect(summary.gates?.every((g) => g.status === 'ran' || g.status === 'skipped')).toBe(true);
+    expect(summary.acResults.length).toBeGreaterThan(0);
+    expect(summary.acResults.every((a) => a.pass)).toBe(true);
+    // Reported alongside, never in place of, the real decision.
+    expect(summary.assurance).toBeDefined();
+  });
+
+  it('AC-4: the REFUSE outcome and every gate verdict are unchanged by attaching the assurance record', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '233-03-assurance-refuse',
+      id: '233-03',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        verification: {
+          ...defaultConfig.verification,
+          testCommand: 'node -e "process.exit(1)"',
+        },
+      },
+    });
+
+    const { io, err } = captureIO();
+    const res = await settleService(root, {}, io);
+
+    // Identical refusal shape to the '53-refused-settle-summary' fixture
+    // above (phase 170, T4): exit 1, build-test-must-pass refused, loop
+    // state left in BUILD. Re-asserted here to prove the same refusal
+    // fires byte-for-byte even though this settle now also computes and
+    // attaches an assurance record before the SUMMARY write.
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('build-test-must-pass:');
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '233-03-assurance-refuse', '233-03-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    expect(summary.acResults).toEqual([]);
+    const lastGate = summary.gates?.[summary.gates.length - 1];
+    expect(lastGate?.status).toBe('refused');
+    expect(lastGate?.gate).toBe('build-test-must-pass');
+
+    const stateRaw = await readFile(join(root, '.cadence', 'state.json'), 'utf8');
+    const state = JSON.parse(stateRaw) as { loopPosition: string; activeDraft: string | null };
+    expect(state.loopPosition).toBe('BUILD');
+    expect(state.activeDraft).toBe('233-03');
+
+    // The refusal path also carries an assurance record now (computed from
+    // the empty acResults + whatever gate provenance existed before the
+    // halt) — but it is purely reported: it never influenced the refusal
+    // decided above it.
+    expect(summary.assurance).toBeDefined();
+    expect(
+      Object.values(summary.assurance?.evidenceTally ?? {}).every((v) => v === 0),
+    ).toBe(true);
+  });
+});
+
+describe('settleService surfaces the assurance record in the rendered SUMMARY.md (phase 233, T4)', () => {
+  it('renders an Assurance section with the overall label and evidence tally', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '233-04-assurance-render',
+      id: '233-04',
+      tier: 'standard',
+      config: { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } },
+    });
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '233-04-assurance-render', '233-04-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+    expect(summary.assurance).toBeDefined();
+
+    const mdPath = join(
+      root, '.cadence', 'phases', '233-04-assurance-render', '233-04-SUMMARY.md',
+    );
+    const md = await readFile(mdPath, 'utf8');
+
+    // Human-readable surfacing: a labeled section carrying the `overall`
+    // rollup, not just the machine-readable SUMMARY.json.
+    expect(md).toContain('## Assurance');
+    expect(md).toContain(`overall: ${summary.assurance?.overall}`);
+  });
+});
+
 /**
  * Phase 214 (T4): a two-AC, two-task DRAFT/PROGRESS fixture, both tasks DONE
  * so `--auto` derives both ACs as `pass`. Neither AC has any real test

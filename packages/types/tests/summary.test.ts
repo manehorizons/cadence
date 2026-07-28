@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SummaryZ, DeepVerifyMetaZ, GateProvenanceZ, AcEvidenceZ } from '../src/summary.js';
+import { SummaryZ, DeepVerifyMetaZ, GateProvenanceZ, AcEvidenceZ, AssuranceRecordZ } from '../src/summary.js';
 
 // AC-4 (Phase 70): run-level deepVerifyMeta provenance — what the verifier saw.
 
@@ -343,5 +343,107 @@ describe('SummaryZ.contentHash (AC-1, phase 223)', () => {
       contentHash: { algorithm: 'md5', value: 'deadbeef' },
     });
     expect(result.success).toBe(false);
+  });
+});
+
+// evidenceTally's key schema is AcEvidenceZ (five classes: ai-verified,
+// executed, assertion, mention, unverified) instead of a bare z.string(), so
+// a full evidenceTally object must enumerate all five keys — z.record over
+// an enum key schema is exhaustive under zod v4.
+const zeroEvidenceTally = {
+  'ai-verified': 0,
+  executed: 0,
+  assertion: 0,
+  mention: 0,
+  unverified: 0,
+} as const;
+
+describe('AssuranceRecordZ (phase 233)', () => {
+  it('parses a full assurance record with all five evidence-class keys (AC-1)', () => {
+    const record = AssuranceRecordZ.parse({
+      verifierRollup: [
+        { provider: 'anthropic', model: 'claude-sonnet-4-6', gateCount: 2 },
+        { provider: 'mock', gateCount: 1 },
+      ],
+      evidenceTally: { ...zeroEvidenceTally, 'ai-verified': 1, assertion: 3, unverified: 1 },
+      overall: 'mixed',
+    });
+    expect(record.verifierRollup).toEqual([
+      { provider: 'anthropic', model: 'claude-sonnet-4-6', gateCount: 2 },
+      { provider: 'mock', gateCount: 1 },
+    ]);
+    expect(record.evidenceTally).toEqual({ ...zeroEvidenceTally, 'ai-verified': 1, assertion: 3, unverified: 1 });
+    expect(record.overall).toBe('mixed');
+  });
+
+  it('treats verifierRollup[].model as optional', () => {
+    const record = AssuranceRecordZ.parse({
+      verifierRollup: [{ provider: 'mock', gateCount: 4 }],
+      evidenceTally: zeroEvidenceTally,
+      overall: 'unverified',
+    });
+    expect(record.verifierRollup[0]?.model).toBeUndefined();
+  });
+
+  it('rejects an unknown overall label', () => {
+    expect(() =>
+      AssuranceRecordZ.parse({
+        verifierRollup: [],
+        evidenceTally: zeroEvidenceTally,
+        overall: 'vibes',
+      }),
+    ).toThrow();
+  });
+
+  it('rejects a typo-d evidence-class key instead of silently accepting it (AC-1)', () => {
+    const result = AssuranceRecordZ.safeParse({
+      verifierRollup: [],
+      // 'ai-verifed' (missing an 'i') is not a member of AcEvidenceZ.
+      evidenceTally: { ...zeroEvidenceTally, 'ai-verifed': 1 },
+      overall: 'weak',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an evidenceTally missing one of the five required evidence-class keys', () => {
+    const { unverified: _unverified, ...partialTally } = zeroEvidenceTally;
+    const result = AssuranceRecordZ.safeParse({
+      verifierRollup: [],
+      evidenceTally: partialTally,
+      overall: 'weak',
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('SummaryZ.assurance (phase 233)', () => {
+  it('accepts a summary carrying a populated assurance record (AC-1)', () => {
+    const parsed = SummaryZ.parse({
+      ...baseSummary,
+      assurance: {
+        verifierRollup: [{ provider: 'anthropic', model: 'claude-sonnet-4-6', gateCount: 3 }],
+        evidenceTally: { ...zeroEvidenceTally, 'ai-verified': 2, executed: 1 },
+        overall: 'strong',
+      },
+    });
+    expect(parsed.assurance?.overall).toBe('strong');
+    expect(parsed.assurance?.verifierRollup[0]?.provider).toBe('anthropic');
+    expect(parsed.assurance?.evidenceTally).toEqual({ ...zeroEvidenceTally, 'ai-verified': 2, executed: 1 });
+  });
+
+  it('leaves assurance undefined when absent — pre-existing SUMMARYs without the field still parse (AC-1)', () => {
+    const parsed = SummaryZ.parse(baseSummary);
+    expect(parsed.assurance).toBeUndefined();
+  });
+
+  it('still parses the real pre-existing schemaVersion 1 historical artifact without assurance (AC-1)', () => {
+    // Re-uses baseSummary's shape to confirm the new optional field never
+    // becomes load-bearing for older records — proven directly rather than
+    // duplicating the full 140-01 fixture above.
+    const result = SummaryZ.safeParse({ ...baseSummary, schemaVersion: 1 as const });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.assurance).toBeUndefined();
+    }
   });
 });

@@ -60,6 +60,12 @@ rec-20260724-003 proposed two things: (1) auto-generating CHANGELOG.md prose fro
 
 rec-20260724-006 (needs-decision) proposed a range from a settle-time content hash to full cryptographic signing. Full signing only provides real protection if the signer is a different trust domain than the artifact author (e.g. CI-identity signing via Sigstore keyless) -- self-signing in the same trust domain as SUMMARY.json's author is not meaningfully stronger than a hash. That trust-root decision has no grounding yet: the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger) is still parked. Decision: ship a content-hash/provenance chain in state.json now (phase 223) to close the silent-hand-edit gap, and defer full signing to a new recommendation gated on the threat-model rec landing first.
 
+### dec-20260728-001 — Phase 233 AC-3 tripwire cleared: assurance-record derivation is gate-agnostic
+
+- decided: 2026-07-28T02:33:14.475Z
+
+rec-20260728-001 (Per-settle assurance record), shipped via phase 233-per-settle-assurance-record. The derivation (packages/core/src/gates/assurance-record.ts, deriveAssuranceRecord) reads only gate-provenance provider/model fields and per-AC evidence classes -- never a specific gate name or id. Confirmed by the implementer, an independent per-task reviewer, and a fresh whole-branch reviewer, each reading the function directly and grepping for gate.gate/gate-name branching (none found). Per the phase 233 spec's binding tripwire, this clears phases 234-237 (kernel/verifier/consumer boundary work) to proceed on the premise that the kernel/verifier/consumer boundary is real, not a special-cased illusion. Non-blocking design-gap noted for those phases: only 2 of 10 GATE_ORDER gates (code-review, security-audit) currently populate verifier identity (phase 232's scope), so 'overall' has no signal from other gates that perform real verification (e.g. build-test-must-pass) -- worth addressing in a later slice, not a defect in phase 233 itself.
+
 ## Superseded
 
 _(none)_

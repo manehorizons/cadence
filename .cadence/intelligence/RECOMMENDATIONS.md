@@ -676,22 +676,6 @@ In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts 
 
 boundary-scan shipped in Phase 156 but was never given a full 'when it fires / what it checks' row anywhere in docs/concepts.md's main gate-universe listing (the '14 gates: 3 always-fire + 11 delta' tables) or the 'Stage-scoped gates' section -- it only appears in the sealed-gate/bypass-summary material phase 226 fixed. Discovered during phase 226's whole-branch review; explicitly out of that phase's scope (its ACs covered gates.sealed discussion only, not the full gate-universe matrix).
 
-## rec-20260727-002 — SUMMARY forward-compat read: accept schemaVersion 1|2, distinct "newer Cadence" outcome
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, types
-- files: packages/types/src/summary.ts, packages/core/src/cli/commands/summary.ts, packages/core/src/verify/phase-replay.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.6, section 6 Slice 1, decision D6
-- next: cadence milestone propose
-
-SummaryZ.schemaVersion is z.literal(1); a future SUMMARY at schemaVersion 2 fails as an indistinguishable generic parse error rather than a legible 'written by a newer Cadence' outcome. Bump to 2, accept 1|2 on read, and add a pre-parse probe mirroring Phase 223's 'unverifiable' precedent (dec-20260726-001) rather than a false clean or false corrupt.
-
 ## rec-20260727-003 — Kernel/verifier contract + lint rule against internal imports
 
 - status: candidate

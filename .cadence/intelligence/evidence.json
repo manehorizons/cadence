@@ -1064,6 +1064,13 @@
       "kind": "note",
       "summary": "LOE assessment done interactively 2026-07-27: CI matrix + engines-floor + node-guard + dependabot + doc-prose sweep enumerated; no doc-content test gates the '20' string so the doc sweep is manual-diligence only",
       "createdAt": "2026-07-27T20:55:55.298Z"
+    },
+    {
+      "id": "ev-20260728-001",
+      "recommendationId": "rec-20260728-001",
+      "kind": "note",
+      "summary": "ROADMAP.md Phase 233 section (lines ~1953-1985); rec-20260727-002 was mislabeled on this phase heading -- its actual content (SUMMARY schemaVersion 1|2 forward-compat) was already delivered by phase 232 AC-3/AC-4 and has been promoted to shipped separately",
+      "createdAt": "2026-07-28T01:21:32.876Z"
     }
   ]
 }

@@ -3,6 +3,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import type {
   AnomalyEvent,
+  AssuranceRecord,
   CadenceConfig,
   CadenceState,
   Draft,
@@ -37,6 +38,7 @@ import {
 import type { VerifyTestRef } from '../verify/verifier.js';
 import { runSettleGates } from '../gates/registry.js';
 import { deriveAcEvidence, checkEvidenceFloor } from '../gates/ac-evidence.js';
+import { deriveAssuranceRecord, type AssuranceAcResult } from '../gates/assurance-record.js';
 import { effectiveEvidenceFloor, evidenceFloorRefusalReason } from '../gates/engine.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
 import {
@@ -209,6 +211,25 @@ function buildTaskResults(
       : 'BLOCKED'),
     notes: progress.tasks[t.id]?.notes ?? '',
   }));
+}
+
+/**
+ * Concern 0 (phase 233 T3): derive the `assurance` field attached to
+ * SUMMARY — a thin, independently-named wrapper around T2's pure
+ * `deriveAssuranceRecord`, kept as its own step (matching the phase 228
+ * "named step function" convention used throughout this file) rather than
+ * inlined at each of the two SUMMARY-construction call sites below. Takes
+ * only the gate provenance array and per-AC results already computed
+ * earlier in the pipeline — no new I/O, no clock, no gate-name special-
+ * casing. Purely reported: its result is attached to `summary.assurance`
+ * strictly after each call site's PASS/REFUSE outcome is already decided,
+ * and is never read back by any gate-outcome or refusal logic (AC-4).
+ */
+function deriveSettleAssuranceRecord(
+  gates: readonly GateProvenance[],
+  acResults: readonly AssuranceAcResult[],
+): AssuranceRecord {
+  return deriveAssuranceRecord(gates, acResults);
 }
 
 /**
@@ -526,6 +547,7 @@ async function writeRefusedSettleSummary(
     decisions: [],
     deferred: [],
     skillAudit: state.skillAudit,
+    assurance: deriveSettleAssuranceRecord(gates, []),
   };
   const refusedSummaryBase = join(
     cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`,
@@ -881,6 +903,7 @@ async function finalizeAndCloseSettle(
       ? { gateBypasses: [...gateBypasses, ...evidenceFloorBypassesUsed] }
       : {}),
     stateAtSettle,
+    assurance: deriveSettleAssuranceRecord(gates, acResultsWithEvidence),
   };
 
   // Phase 223 (T2): compute the content hash over `summary` as built above

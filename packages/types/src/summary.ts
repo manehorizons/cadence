@@ -85,6 +85,46 @@ export type GateProvenance = z.infer<typeof GateProvenanceZ>;
 export const AcEvidenceZ = z.enum(['ai-verified', 'executed', 'assertion', 'mention', 'unverified']);
 export type AcEvidence = z.infer<typeof AcEvidenceZ>;
 
+/**
+ * Phase 233: derived, whole-run rollup over per-gate verifier identity
+ * (`GateProvenanceZ.provider`/`model`, phase 232) and per-AC evidence class
+ * (`AcEvidenceZ`, phase 140). Attached to `SummaryZ` as `assurance` —
+ * reported only; it adds no refusal path and no bypass flag. Deliberately
+ * gate-agnostic: `verifierRollup` groups by the `(provider, model)` pairs
+ * that already exist on `gates` entries, and `evidenceTally` counts by the
+ * `AcEvidenceZ` values already on `acResults[].evidence` — neither keys on a
+ * specific gate name or AC id, so the same shape covers any settle
+ * regardless of which gates ran or how many ACs exist.
+ */
+export const AssuranceRecordZ = z.object({
+  /** One entry per distinct `(provider, model)` pair observed across
+   *  `gates` provenance entries that carried verifier identity, with how
+   *  many gate entries carried it. `provider` mirrors
+   *  `GateProvenanceZ.provider` (e.g. `'mock'`, `'anthropic'`); `model`
+   *  mirrors `GateProvenanceZ.model` and is optional for the same reason. */
+  verifierRollup: z.array(
+    z.object({
+      provider: z.string(),
+      model: z.string().optional(),
+      gateCount: z.number().int().positive(),
+    }),
+  ),
+  /** Count of ACs at each evidence class, keyed by `AcEvidenceZ` itself
+   *  (ai-verified > executed > assertion > mention > unverified) rather than
+   *  a bare `z.string()` key, so a typo'd or otherwise bogus class name is
+   *  rejected at parse time instead of silently accepted. Sums to the
+   *  number of `acResults` entries that carried an `evidence` value; every
+   *  class key is present (0 for classes with no ACs) since `z.record` over
+   *  an enum key schema is exhaustive under zod v4. */
+  evidenceTally: z.record(AcEvidenceZ, z.number().int().nonnegative()),
+  /** Single deterministic label summarizing the two rollups above — the
+   *  weakest signal wins. `'unverified'` when no verifier identity was
+   *  found and no evidence stronger than `'unverified'` was recorded
+   *  anywhere in the settle. */
+  overall: z.enum(['strong', 'mixed', 'weak', 'unverified']),
+});
+export type AssuranceRecord = z.infer<typeof AssuranceRecordZ>;
+
 export const SummaryZ = z.object({
   /** Phase 232: 2 adds `provider`/`model` identity onto `code-review` and
    *  `security-audit` GateProvenanceZ entries — additive, not breaking.
@@ -161,5 +201,9 @@ export const SummaryZ = z.object({
       value: z.string(),
     })
     .optional(),
+  /** Phase 233: derived, whole-run assurance rollup over per-gate verifier
+   *  identity and per-AC evidence class — reported only, adds no refusal
+   *  path or bypass flag. Optional; absent for pre-phase-233 records. */
+  assurance: AssuranceRecordZ.optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

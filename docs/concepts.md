@@ -130,6 +130,31 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   genuinely unrecognized higher `schemaVersion` (written by a newer Cadence
   than the one reading it) is reported as its own diagnostic rather than a
   generic parse failure.
+- Phase 233: `SUMMARY.json` optionally carries `assurance` — one whole-run
+  record, *derived and reported only* (it adds no gate, no refusal path, and
+  no bypass flag), answering "how strongly was this settle actually
+  verified?" It has three parts: `verifierRollup` (one entry per distinct
+  `(provider, model)` pair observed across `gates[]` entries that carry
+  verifier identity, phase 232, with a `gateCount`), `evidenceTally` (a count
+  of `acResults[].evidence` classes — `ai-verified`/`executed`/`assertion`/
+  `mention`/`unverified`, phase 140 — bucketed across all ACs), and `overall`
+  (`'strong' | 'mixed' | 'weak' | 'unverified'`, a single deterministic label
+  computed from the other two: `'unverified'` when no gate carried verifier
+  identity and no AC evidence rose above `'unverified'`; `'strong'` when at
+  least one gate ran under a real, non-`mock` provider and at least half of
+  all ACs landed at `ai-verified`/`executed`; `'mixed'` when some real signal
+  exists but not enough to clear the `'strong'` bar; `'weak'` otherwise). The
+  derivation function (`packages/core/src/gates/assurance-record.ts`) is a
+  pure reduction over the `gates[]` and `acResults[]` arrays with no
+  gate-name special-casing, so it composes uniformly from existing gate
+  provenance and AC evidence rather than adding a new verification path.
+  `assurance` is covered by the same phase-223 settle-time content hash as
+  the rest of `SUMMARY.json` (the hash is computed generically over the
+  whole record), so a post-settle hand-edit to `assurance` is caught by
+  `cadence summary verify` exactly like any other field. It is surfaced in
+  both `cadence summary render` and the on-disk `SUMMARY.md` sidecar as an
+  "## Assurance" section (`overall`, the evidence tally, and any verifier
+  rollup entries).
 - `.cadence/phases/<phase>/<id>-SUMMARY.md` — human-readable rendered view
 - `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` — plan-review findings
   (written at `draft approve` when `plan-review` fires)
