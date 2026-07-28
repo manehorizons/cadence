@@ -556,6 +556,37 @@ describe('settleService computes a settle-time contentHash over SUMMARY (phase 2
   });
 });
 
+describe('settleService writes schemaVersion 2 on the persisted SUMMARY (phase 232, T4)', () => {
+  it('AC-3: a full settle run persists SUMMARY.json with schemaVersion 2', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '232-01-schema-version',
+      id: '232-01',
+      tier: 'standard',
+      // Phase 214 (T4): see the '51-code-review-verifier-cwd' comment above —
+      // this fixture has no real AC-1 coverage and predates evidence-floor.
+      config: { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } },
+    });
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '232-01-schema-version', '232-01-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    expect(summary.schemaVersion).toBe(2);
+  });
+});
+
 /**
  * Phase 214 (T4): a two-AC, two-task DRAFT/PROGRESS fixture, both tasks DONE
  * so `--auto` derives both ACs as `pass`. Neither AC has any real test

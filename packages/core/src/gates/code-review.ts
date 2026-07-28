@@ -105,7 +105,17 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
             'fix the flagged code and re-run `cadence settle run`, ' +
             'or pass --allow-code-review-failure to proceed anyway.';
           ctx.io.err(`${reason}\n`);
-          return { outcome: 'refuse', summaryPatch: { codeReview: codeReviewFindings }, reason };
+          return {
+            outcome: 'refuse',
+            summaryPatch: { codeReview: codeReviewFindings },
+            reason,
+            flags: {
+              verifierIdentity: {
+                family: verifyResult.provider,
+                ...(verifyResult.model ? { model: verifyResult.model } : {}),
+              },
+            },
+          };
         }
       } else {
         // nv.verdict === 'escalate', no bypass flag → hard refuse.
@@ -130,12 +140,31 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
             'Fix the flagged code, or pass --allow-code-review-failure ' +
             'to proceed anyway.';
           ctx.io.err(`${reason}\n`);
-          return { outcome: 'refuse', summaryPatch: { codeReview: codeReviewFindings }, reason };
+          return {
+            outcome: 'refuse',
+            summaryPatch: { codeReview: codeReviewFindings },
+            reason,
+            flags: {
+              verifierIdentity: {
+                family: verifyResult.provider,
+                ...(verifyResult.model ? { model: verifyResult.model } : {}),
+              },
+            },
+          };
         }
       }
     }
     // pass (converged) OR bypass fall-through → record findings, proceed.
-    return { outcome: 'pass', summaryPatch: { codeReview: codeReviewFindings } };
+    return {
+      outcome: 'pass',
+      summaryPatch: { codeReview: codeReviewFindings },
+      flags: {
+        verifierIdentity: {
+          family: verifyResult.provider,
+          ...(verifyResult.model ? { model: verifyResult.model } : {}),
+        },
+      },
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const reason = `code-review: verifier failed — ${message}. Pass --allow-code-review-failure to continue.`;

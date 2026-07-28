@@ -221,6 +221,11 @@ export interface GateFlags {
    *  `coverageBypassed`/`buildTestBypassed` above. */
   boundaryScanBypassed?: boolean;
   verifierFailure?: { message: string; provider?: string };
+  /** Phase 232: verifier identity that actually ran a gate (currently set
+   *  only by `code-review`/`security-audit`), for the registry to merge onto
+   *  that gate's persisted GateProvenance entry (`provider`/`model`) without
+   *  the registry importing gate-specific verifier types. */
+  verifierIdentity?: { family: string; model?: string };
 }
 
 /**

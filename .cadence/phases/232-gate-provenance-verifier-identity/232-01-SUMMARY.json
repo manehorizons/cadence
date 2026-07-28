@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 2,
+  "draftId": "232-01",
+  "completedAt": "2026-07-28T00:12:25.447Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Extended GateProvenanceZ with optional provider/model fields, GateFlags with verifierIdentity, SummaryZ.schemaVersion to 1|2 union. Independently verified: typecheck clean (types+core), full types suite 308/308 pass, diff matches report."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "code-review.ts/security-audit.ts gates now populate flags.verifierIdentity on every returned GateResult (pass/refuse/bypass). Independently verified: lint/typecheck/full core suite (3312/3312) green after combining with T4/T5."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "registry.ts's runSettleGates now merges res.flags?.verifierIdentity onto persisted GateProvenance entries via a flag-presence-driven helper (no gate-name special-casing, satisfies AC-5). Independently verified: lint/typecheck/full core suite (3318/3318) green."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "settle.ts's two SUMMARY-construction sites now write schemaVersion 2. Independently verified alongside T2/T5: full core suite green."
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "cli/commands/summary.ts + verify/phase-replay.ts gained a pre-parse schemaVersion probe reporting a distinct newer-Cadence diagnostic (kind: summary-newer-version) instead of a generic parse error; v1/v2 fixtures still parse. Independently verified alongside T2/T4: full core suite green."
+    },
+    {
+      "id": "T6",
+      "status": "DONE",
+      "notes": "Pinned real historical 140-01-SUMMARY.json (schemaVersion 1) as a fixture proving it still parses unmodified (byte-for-byte verified against the on-disk file); updated docs/concepts.md's SUMMARY provenance section for the new provider/model fields and schemaVersion 1|2. Independently verified: types 309/309, core 3318/3318, full turbo build clean."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 48,
+    "sessionSubagentSpawns": 60
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "83e5c9a5d3ec27521850c3b1d09e39daa5719fc921f7d907bd7c956c9ed022db"
+  }
+}

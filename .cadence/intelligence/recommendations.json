@@ -1261,36 +1261,6 @@
       "updatedAt": "2026-07-26T21:37:14.232Z"
     },
     {
-      "id": "rec-20260727-001",
-      "title": "Assurance manifest: persist verifier family/model for code-review + security-audit",
-      "summary": "SUMMARY.codeReview/.securityAudit persist findings as bare arrays, discarding the provider/model captured in memory at collection time (unlike DeepVerifyMeta). Enrich GateProvenanceZ and stop dropping provider/model at persistence so a mock-family review and a real-provider review are distinguishable in the SUMMARY -- closes Cadence's sole surviving P0.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "critical",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "types"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/types.ts",
-        "packages/types/src/summary.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260727-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:46:38.564Z",
-      "updatedAt": "2026-07-27T18:46:38.564Z"
-    },
-    {
       "id": "rec-20260727-002",
       "title": "SUMMARY forward-compat read: accept schemaVersion 1|2, distinct \"newer Cadence\" outcome",
       "summary": "SummaryZ.schemaVersion is z.literal(1); a future SUMMARY at schemaVersion 2 fails as an indistinguishable generic parse error rather than a legible 'written by a newer Cadence' outcome. Bump to 2, accept 1|2 on read, and add a pre-parse probe mirroring Phase 223's 'unverifiable' precedent (dec-20260726-001) rather than a false clean or false corrupt.",
@@ -4803,10 +4773,44 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "238-drop-node20-support",
-      "createdAt": "2026-07-27T20:55:55.298Z",
-      "updatedAt": "2026-07-27T22:20:56.904Z",
       "shippedRef": "phase 238-drop-node20-support",
       "archivedAt": "2026-07-27T22:20:56.904Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T20:55:55.298Z",
+      "updatedAt": "2026-07-27T22:20:56.904Z"
+    },
+    {
+      "id": "rec-20260727-001",
+      "title": "Assurance manifest: persist verifier family/model for code-review + security-audit",
+      "summary": "SUMMARY.codeReview/.securityAudit persist findings as bare arrays, discarding the provider/model captured in memory at collection time (unlike DeepVerifyMeta). Enrich GateProvenanceZ and stop dropping provider/model at persistence so a mock-family review and a real-provider review are distinguishable in the SUMMARY -- closes Cadence's sole surviving P0.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "critical",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/types.ts",
+        "packages/types/src/summary.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260727-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "232-gate-provenance-verifier-identity",
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "createdAt": "2026-07-27T18:46:38.564Z",
+      "updatedAt": "2026-07-28T00:13:03.279Z",
+      "shippedRef": "phase 232-gate-provenance-verifier-identity",
+      "archivedAt": "2026-07-28T00:13:03.279Z",
       "archiveReason": "shipped"
     }
   ]

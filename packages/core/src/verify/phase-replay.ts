@@ -29,6 +29,7 @@ export type PhaseReplayOutcome =
         | 'summary-missing'
         | 'summary-malformed'
         | 'summary-invalid'
+        | 'summary-newer-version'
         | 'no-scoped-files';
       message: string;
     };
@@ -39,6 +40,28 @@ export interface PhaseReplayConfig {
 
 function errMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
+}
+
+/** Highest `schemaVersion` this build's `SummaryZ` recognizes — see
+ *  `packages/types/src/summary.ts`'s `SummaryZ.schemaVersion` union. Kept in
+ *  sync by hand when that union grows (Phase 232). */
+const MAX_RECOGNIZED_SCHEMA_VERSION = 2;
+
+/**
+ * Read the raw `schemaVersion` off already-JSON.parse'd data, permissively
+ * and before any Zod validation, so a SUMMARY written by a newer Cadence
+ * (an unrecognized-but-higher `schemaVersion`) can be distinguished from a
+ * genuine schema violation. Returns `undefined` for anything that isn't
+ * `{ schemaVersion: <number> }` — missing, non-numeric, non-object, etc. —
+ * so every other malformed shape still falls through to the normal
+ * `safeParse` path and reads as `summary-invalid`, not as "newer".
+ */
+function readRawSchemaVersion(json: unknown): number | undefined {
+  if (typeof json !== 'object' || json === null || !('schemaVersion' in json)) {
+    return undefined;
+  }
+  const value = (json as { schemaVersion: unknown }).schemaVersion;
+  return typeof value === 'number' ? value : undefined;
 }
 
 /**
@@ -111,6 +134,18 @@ export async function replayPhaseCoverage(
       ok: false,
       kind: 'summary-malformed',
       message: `${summaryPath} is not valid JSON: ${errMessage(err)}`,
+    };
+  }
+
+  const rawSchemaVersion = readRawSchemaVersion(summaryJson);
+  if (rawSchemaVersion !== undefined && rawSchemaVersion > MAX_RECOGNIZED_SCHEMA_VERSION) {
+    return {
+      ok: false,
+      kind: 'summary-newer-version',
+      message:
+        `${summaryPath} was written by a newer version of Cadence (schemaVersion ` +
+        `${rawSchemaVersion}) than this build recognizes (max ${MAX_RECOGNIZED_SCHEMA_VERSION}) — ` +
+        'upgrade Cadence to read it.',
     };
   }
 

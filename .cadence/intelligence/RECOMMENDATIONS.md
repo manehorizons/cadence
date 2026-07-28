@@ -676,22 +676,6 @@ In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts 
 
 boundary-scan shipped in Phase 156 but was never given a full 'when it fires / what it checks' row anywhere in docs/concepts.md's main gate-universe listing (the '14 gates: 3 always-fire + 11 delta' tables) or the 'Stage-scoped gates' section -- it only appears in the sealed-gate/bypass-summary material phase 226 fixed. Discovered during phase 226's whole-branch review; explicitly out of that phase's scope (its ACs covered gates.sealed discussion only, not the full gate-universe matrix).
 
-## rec-20260727-001 — Assurance manifest: persist verifier family/model for code-review + security-audit
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: critical
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, types
-- files: packages/core/src/gates/types.ts, packages/types/src/summary.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.4 and section 6 Slice 1
-- next: cadence milestone propose
-
-SUMMARY.codeReview/.securityAudit persist findings as bare arrays, discarding the provider/model captured in memory at collection time (unlike DeepVerifyMeta). Enrich GateProvenanceZ and stop dropping provider/model at persistence so a mock-family review and a real-provider review are distinguishable in the SUMMARY -- closes Cadence's sole surviving P0.
-
 ## rec-20260727-002 — SUMMARY forward-compat read: accept schemaVersion 1|2, distinct "newer Cadence" outcome
 
 - status: candidate

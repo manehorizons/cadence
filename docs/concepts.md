@@ -120,6 +120,16 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   `SUMMARY.md` "Gate provenance" section prints a skipped gate's
   `skipReason` but does not yet print a refused gate's `reason`, so read the
   `.json` record for the refusal text.
+- Phase 232: `gates[]` entries also carry optional `provider`/`model` —
+  the verifier family/model that actually ran the gate — currently populated
+  only for the `code-review` and `security-audit` entries (`mock`, the
+  default provider, is recorded the same as a real provider); every other
+  gate's provenance entry still omits both fields. This bumps
+  `SUMMARY.json`'s `schemaVersion` to `1 | 2`: writers always emit `2` now,
+  and readers still accept pre-phase-232 records at `1` unchanged — a
+  genuinely unrecognized higher `schemaVersion` (written by a newer Cadence
+  than the one reading it) is reported as its own diagnostic rather than a
+  generic parse failure.
 - `.cadence/phases/<phase>/<id>-SUMMARY.md` — human-readable rendered view
 - `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` — plan-review findings
   (written at `draft approve` when `plan-review` fires)

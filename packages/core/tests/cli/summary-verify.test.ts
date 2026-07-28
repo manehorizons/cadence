@@ -147,4 +147,53 @@ describe('cadence summary verify', () => {
     expect(r.stdout).toBe('');
     expect(r.stderr).toMatch(/does not match the expected SUMMARY schema/i);
   });
+
+  it('reports "newer Cadence" (not a generic parse error) for an unrecognized higher schemaVersion (AC-4)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...BASE_SUMMARY, schemaVersion: 3 }),
+    );
+
+    const r = await run(['summary', 'verify', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).not.toBe(0);
+    expect(r.stdout).toBe('');
+    // AC-4: a distinct "newer Cadence" diagnostic, not the generic
+    // "does not match the expected SUMMARY schema" Zod-error message.
+    expect(r.stderr).toMatch(/newer version of Cadence/i);
+    expect(r.stderr).toMatch(/schemaVersion 3/);
+    expect(r.stderr).not.toMatch(/does not match the expected SUMMARY schema/i);
+  });
+
+  it('still parses a schemaVersion: 1 SUMMARY normally (regression, AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...BASE_SUMMARY, schemaVersion: 1 }),
+    );
+
+    const r = await run(['summary', 'verify', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toMatch(/^NO_HASH: no contentHash present/);
+  });
+
+  it('still parses a schemaVersion: 2 SUMMARY normally (AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...BASE_SUMMARY, schemaVersion: 2 }),
+    );
+
+    const r = await run(['summary', 'verify', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toMatch(/^NO_HASH: no contentHash present/);
+  });
 });
