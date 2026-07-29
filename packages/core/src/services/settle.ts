@@ -35,7 +35,7 @@ import {
   MOCK_FALLBACK_BANNER,
   type VerifierProvider,
 } from '../verify/verifier-factory.js';
-import type { VerifyTestRef } from '../verify/verifier.js';
+import type { VerifyTestRef } from '../contracts/index.js';
 import { runSettleGates } from '../gates/registry.js';
 import { deriveAcEvidence, checkEvidenceFloor } from '../gates/ac-evidence.js';
 import { deriveAssuranceRecord, type AssuranceAcResult } from '../gates/assurance-record.js';

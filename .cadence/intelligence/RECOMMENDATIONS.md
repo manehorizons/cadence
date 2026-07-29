@@ -676,22 +676,6 @@ In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts 
 
 boundary-scan shipped in Phase 156 but was never given a full 'when it fires / what it checks' row anywhere in docs/concepts.md's main gate-universe listing (the '14 gates: 3 always-fire + 11 delta' tables) or the 'Stage-scoped gates' section -- it only appears in the sealed-gate/bypass-summary material phase 226 fixed. Discovered during phase 226's whole-branch review; explicitly out of that phase's scope (its ACs covered gates.sealed discussion only, not the full gate-universe matrix).
 
-## rec-20260727-003 — Kernel/verifier contract + lint rule against internal imports
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/gates/types.ts, packages/core/src/gates/engine.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md sections 1.2, 1.3, and section 6 Slice 2
-- next: cadence milestone propose
-
-GateImpl/GATE_REGISTRY totality and SettleContext.verifiers: VerifierPorts already form an unnamed plugin architecture. Name kernel/verifier/consumer as published contracts and add a lint rule failing the build if a verifier package imports kernel internals instead of the published contract, with zero GATE_ORDER changes and zero special cases across the five existing verifier-backed gates (code-review, plan-review, spec-review, security-audit, ui-spec-review).
-
 ## rec-20260727-004 — Criteria-anchored review: extend CodeReviewInput with ACs/boundaries
 
 - status: candidate
@@ -831,3 +815,35 @@ RecommendationSourceZ has no 'review' or 'gate' member, so routing criteria-anch
 - next: cadence milestone propose
 
 Add a warning-only, non-blocking cadence doctor check comparing the highest phase number under .cadence/phases/ against the highest phase number referenced in ROADMAP.md/MILESTONES.md; warn when drift exceeds a threshold (10). fixId: null deliberately — generating roadmap prose must not be automated. Full spec already written in .cadence/ROADMAP.md's Phase 231 entry (files, ACs, threshold). Ships ahead of Phase 0 Slice 1 so this anti-recurrence mechanism is live before new phase numbers accumulate again — closes the same gap that caused the 113-phase/6-week ROADMAP drift fixed in PR #321.
+
+## rec-20260728-002 — Test files are never typechecked or linted
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, tooling
+- files: packages/core/tsconfig.json, tsconfig.base.json, packages/core/package.json
+- evidence: Phase 234 T1 adversarial review: mutated witness<IsAssignable<VerifierPorts['deep'], VerifierPort<number,string>>>(true) -- semantically false -- and vitest, typecheck, and eslint all exited 0. Independently confirmed the include/exclude and lint-script config.
+- next: cadence milestone propose
+
+packages/core/tsconfig.json has include: ["src/**/*"] and tsconfig.base.json excludes **/*.test.ts and tests/, while each package's lint script is 'eslint src'. No test file in the repo is typechecked or linted by any command CI runs, and vitest does not typecheck. Consequence: type-level assertions in tests (conformance witnesses, satisfies checks, expectTypeOf-style guards) are inert -- a provably false witness leaves vitest, typecheck and lint all green. Found during phase 234 T1 review, where a deliberately falsified assignability witness passed all three gates. Options: a tsconfig.test.json wired into the typecheck task, vitest --typecheck, or a convention that type-level guarantees must live in src/.
+
+## rec-20260729-001 — Kernel-assurance arc phases do not exercise their own assurance machinery at settle
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, process
+- files: packages/core/bin/cadence.cjs, packages/core/src/services/settle.ts
+- evidence: Phase 234 settle produced 234-01-SUMMARY.json with schemaVersion 1 and no assurance field; 233-01-SUMMARY.json on the same branch is identical in that respect. 'which cadence' -> /home/thomas/.local/bin/cadence (v1.51.1); the worktree build reports the same version string, so the shadowing is invisible from the version alone.
+- next: cadence milestone propose
+
+Phases 232 and 233 shipped SUMMARY schemaVersion 2 and the per-settle assurance record onto feat/kernel-assurance-v2, but every phase settled on that branch (233, 234) writes schemaVersion 1 with no assurance record -- because 'cadence settle' resolves to the globally-installed released CLI (v1.51.1, which predates the arc) rather than the branch's own build at packages/core/bin/cadence.cjs. Consequence: the arc's central deliverable is never dogfooded by the arc itself, and no phase SUMMARY on the branch demonstrates the assurance record working end to end. Options: settle arc phases via 'node packages/core/bin/cadence.cjs settle run --auto', or add a doctor/settle notice when the resolved CLI predates the repo's own build. Related to the known 'cadence on PATH is global, not worktree' hazard that previously bit phase 195.

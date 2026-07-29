@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
-import type { GateResult, SettleContext } from '../../src/gates/types.js';
+import type { GateImpl, GateResult, SettleContext } from '../../src/gates/types.js';
 import {
   GATE_ORDER,
   GATE_REGISTRY,
@@ -511,5 +511,64 @@ describe('runSettleGates verifier-identity provenance merge (Phase 232, AC-1, AC
           : { gate, status: 'ran' },
       ),
     );
+  });
+});
+
+/**
+ * Phase 234 (T5): pins that the kernel/verifier/consumer-boundary refactor
+ * (contracts/index.ts's VerifierPort<I, R>, the type-only restatement of
+ * gates/types.ts, draft-types.ts, and build-types.ts, and the four
+ * type-only import repoints in interactive.ts, deep-verify.ts, settle.ts,
+ * and notify/code-review.ts) left `GATE_ORDER` and `GATE_REGISTRY`
+ * untouched. The "GATE_ORDER is the canonical 10-gate execution order
+ * (AC-3)" test above already pins order+content against `EXPECTED_ORDER`;
+ * these two tests are deliberately independent of that shared fixture — a
+ * hand-written literal here plus the impl-identity check in one atomic
+ * assertion, and a totality/exclusion check that the same fixture doesn't
+ * exercise — so a change that broke this specific regression concern would
+ * be caught even if `EXPECTED_ORDER` itself were edited or removed later.
+ */
+describe('Phase 234 kernel/verifier/consumer-boundary refactor regression pin (AC-4)', () => {
+  it('GATE_ORDER content/order and every GATE_REGISTRY impl wiring are pinned as one atomic fingerprint (AC-4)', () => {
+    // Independently authored — NOT derived from EXPECTED_ORDER above — so
+    // this pin survives even if that fixture is later edited.
+    const PHASE_234_PIN: ReadonlyArray<{ gate: SettleGate; impl: GateImpl }> = [
+      { gate: 'draft-read', impl: runDraftReadGate },
+      { gate: 'structural-verifier', impl: runStructuralVerifierGate },
+      { gate: 'boundary-scan', impl: runBoundaryScanGate },
+      { gate: 'task-verify-required', impl: runTaskVerifyRequiredGate },
+      { gate: 'build-test-must-pass', impl: runBuildTestGate },
+      { gate: 'test-coverage', impl: runCoverageGate },
+      { gate: 'interactive-verdict', impl: runInteractiveGate },
+      { gate: 'deep-verify', impl: runDeepVerifyGate },
+      { gate: 'code-review', impl: runCodeReviewGate },
+      { gate: 'security-audit', impl: runSecurityAuditGate },
+    ];
+    expect(GATE_ORDER).toEqual(PHASE_234_PIN.map((p) => p.gate));
+    for (const { gate, impl } of PHASE_234_PIN) {
+      expect(GATE_REGISTRY[gate].impl).toBe(impl);
+    }
+  });
+
+  it('the settle-dispatched registry still excludes every DRAFT/BUILD-only gate the port-type restatement touched, and GATE_ORDER is exactly 10 gates long with no duplicates (AC-4)', () => {
+    // coherence-check/approve/plan-review/per-task-verify/anomaly-notify are
+    // the five Gate union members Excluded from SettleGate (registry.ts's
+    // own comment on the type) — none of them dispatch through settle, and
+    // the port-type restatement in draft-types.ts/build-types.ts touches
+    // exactly the DRAFT/BUILD-side gates that own those five names.
+    const excludedFromSettle = [
+      'coherence-check',
+      'approve',
+      'plan-review',
+      'per-task-verify',
+      'anomaly-notify',
+    ];
+    const registryKeys = Object.keys(GATE_REGISTRY);
+    for (const excluded of excludedFromSettle) {
+      expect(registryKeys).not.toContain(excluded);
+      expect(GATE_ORDER as readonly string[]).not.toContain(excluded);
+    }
+    expect(registryKeys).toHaveLength(10);
+    expect(new Set(GATE_ORDER).size).toBe(GATE_ORDER.length);
   });
 });

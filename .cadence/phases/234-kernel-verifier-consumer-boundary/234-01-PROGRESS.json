@@ -1,0 +1,59 @@
+{
+  "draftId": "234-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-28T23:04:12.594Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/gates/types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/gates/draft-types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/gates/build-types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/services/spec-approve-ports.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/services/spec-approve.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/tests/spec/spec-approve-ports.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/eslint.config.js",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/tests/lint/fixtures/internal-import-violation.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/tests/lint/boundary-rule.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/.cadence/phases/234-kernel-verifier-consumer-boundary/234-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/gates/interactive.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/gates/deep-verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/notify/code-review.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/b7bfa53a-eaed-43f1-946c-56141cd4f582/scratchpad/probe.mjs"
+      ],
+      "updatedAt": "2026-07-28T23:36:56.734Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-28T23:36:56.931Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/services/spec-approve-ports.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/tests/spec/spec-approve-ports.test.ts"
+      ],
+      "updatedAt": "2026-07-28T23:44:15.206Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/tests/gates/registry.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/tests/gates/boundary-regression.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/gates/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/234-kernel-verifier-consumer-boundary/packages/core/src/verify/phase-replay.ts"
+      ],
+      "updatedAt": "2026-07-29T00:04:31.960Z"
+    }
+  }
+}

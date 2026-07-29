@@ -4,9 +4,13 @@ import type {
   Draft,
   GateSet,
 } from '@manehorizons/cadence-types';
-import type { PerTaskInput, PerTaskResult } from '../verify/per-task.js';
 import type { PerTaskVerifyRecord } from '../build/record.js';
 import type { GateResult, IoPort } from './types.js';
+import type {
+  VerifierPort,
+  PerTaskInput,
+  PerTaskResult,
+} from '../contracts/index.js';
 
 /**
  * Build-surface gate contract (Phase 39.7). For the per-task-verify gate that
@@ -26,9 +30,18 @@ export interface BuildGateOpts {
   readonly allowPerTaskFailure?: boolean;
 }
 
-/** Per-task verifier port (Phase 39.7); lazily `selectPerTaskVerifier`. */
+/** Per-task verifier port (Phase 39.7), from `selectPerTaskVerifier`.
+ *  Phase 234: restated as the published `VerifierPort<I, R>` contract
+ *  (`../contracts/index.js`) — widens the type-level call signature by the
+ *  optional `VerifierCallOptions` second parameter the port carries
+ *  uniformly. Source-compatible: `build-context.ts` assigns the resolved
+ *  verifier straight to this port and the gate calls it with one argument,
+ *  so this changes no runtime behaviour. Unlike the draft surface — where
+ *  `draft-context.ts` defers selection behind a `planReviewMemo` closure —
+ *  the build surface resolves `selectPerTaskVerifier` eagerly when the
+ *  context is built; that predates Phase 234 and is unchanged by it. */
 export interface BuildVerifierPorts {
-  readonly perTask: { verify(input: PerTaskInput): Promise<PerTaskResult> };
+  readonly perTask: VerifierPort<PerTaskInput, PerTaskResult>;
 }
 
 /** Notification collaborator for the build gates. */

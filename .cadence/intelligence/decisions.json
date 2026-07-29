@@ -80,6 +80,24 @@
       "status": "active",
       "decidedAt": "2026-07-28T02:33:14.475Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260729-001",
+      "recommendationId": "rec-20260727-003",
+      "title": "Phase 234 AC-1 narrowed: contracts/ is the type-naming surface, not the resolution surface",
+      "rationale": "AC-1 originally read 'that module is the only surface through which a verifier is resolved'. That over-claimed relative to the design source: docs/handoffs/cadence-phase0-assurance-kernel-review.md section 6 Slice 2 asks only to name the three roles as published contracts and add a lint rule against importing kernel internals -- it never requires contracts/ to be the resolution surface, and architecturally it should not be. Verifier resolution legitimately happens by direct verify/*-factory.ts import at four composition roots (services/settle.ts, gates/build-context.ts, gates/draft-context.ts, services/spec-approve-ports.ts); two independent reviews judged that placement correct, and contracts/ re-exports only the VerifierProvider type from verifier-factory.js, never a select* function. Amended AC-1 to 'the only surface through which a verifier TYPE is named', which IS mechanically enforced: zero direct imports of the seven verifier-family modules remain in packages/core/src outside verify/ and contracts/. Operator-approved 2026-07-28.",
+      "status": "active",
+      "decidedAt": "2026-07-29T01:15:16.785Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260729-002",
+      "recommendationId": "rec-20260727-003",
+      "title": "Uniform opts? on VerifierPort is what makes zero-special-cases true",
+      "rationale": "The published VerifierPort<I,R> carries a uniform optional opts?: VerifierCallOptions. Before phase 234 only security-audit's PORT threaded opts (Phase 184); the other six ports -- deep-verify included -- were declared arity-1, so restating them widens their type-level call signature by one optional parameter. Accepted deliberately: it is source-compatible and runtime-identical (every real call site still passes one argument), and it is the mechanism by which AC-2's 'zero special cases' is literally true. The rejected alternative was two port shapes (arity-1 plus a cancellable variant), which is itself the special-casing AC-2 forbids and would have risked the phase's binding tripwire. Known cost: five families advertise a cancellation affordance they ignore. Operator-approved 2026-07-28.",
+      "status": "active",
+      "decidedAt": "2026-07-29T01:15:16.977Z",
+      "supersedes": []
     }
   ]
 }
