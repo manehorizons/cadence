@@ -1071,6 +1071,20 @@
       "kind": "note",
       "summary": "ROADMAP.md Phase 233 section (lines ~1953-1985); rec-20260727-002 was mislabeled on this phase heading -- its actual content (SUMMARY schemaVersion 1|2 forward-compat) was already delivered by phase 232 AC-3/AC-4 and has been promoted to shipped separately",
       "createdAt": "2026-07-28T01:21:32.876Z"
+    },
+    {
+      "id": "ev-20260728-002",
+      "recommendationId": "rec-20260728-002",
+      "kind": "note",
+      "summary": "Phase 234 T1 adversarial review: mutated witness<IsAssignable<VerifierPorts['deep'], VerifierPort<number,string>>>(true) -- semantically false -- and vitest, typecheck, and eslint all exited 0. Independently confirmed the include/exclude and lint-script config.",
+      "createdAt": "2026-07-28T22:57:34.634Z"
+    },
+    {
+      "id": "ev-20260729-001",
+      "recommendationId": "rec-20260729-001",
+      "kind": "note",
+      "summary": "Phase 234 settle produced 234-01-SUMMARY.json with schemaVersion 1 and no assurance field; 233-01-SUMMARY.json on the same branch is identical in that respect. 'which cadence' -> /home/thomas/.local/bin/cadence (v1.51.1); the worktree build reports the same version string, so the shadowing is invisible from the version alone.",
+      "createdAt": "2026-07-29T01:14:55.911Z"
     }
   ]
 }

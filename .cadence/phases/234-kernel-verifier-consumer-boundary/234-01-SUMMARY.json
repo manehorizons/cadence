@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "draftId": "234-01",
+  "completedAt": "2026-07-29T01:13:49.347Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": ""
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 106,
+    "sessionSubagentSpawns": 200
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "8fa17d1f718eb505d787ac24525f218044464b7704b85fb4f1fd307b46e1aee4"
+  }
+}

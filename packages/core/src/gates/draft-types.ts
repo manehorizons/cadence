@@ -6,10 +6,14 @@ import type {
   GateSet,
 } from '@manehorizons/cadence-types';
 import type { CoherenceResult } from '../coherence/check.js';
-import type { PlanReviewInput, PlanReviewResult } from '../verify/plan-review.js';
 import type { Prompter } from '../verify/prompter.js';
 import type { Interactivity } from './interactivity.js';
 import type { ConvergenceSidecar, GateResult, IoPort } from './types.js';
+import type {
+  VerifierPort,
+  PlanReviewInput,
+  PlanReviewResult,
+} from '../contracts/index.js';
 
 /**
  * Draft-surface gate contract (Phase 39.7). Parallel to the settle
@@ -28,9 +32,15 @@ export interface DraftGateOpts {
   readonly allowPlanReviewFailure?: boolean;
 }
 
-/** Plan-review verifier port (Phase 39.7); lazily `selectPlanReviewVerifier`. */
+/** Plan-review verifier port (Phase 39.7); lazily `selectPlanReviewVerifier`.
+ *  Phase 234: restated as the published `VerifierPort<I, R>` contract
+ *  (`../contracts/index.js`) — widens the type-level call signature by the
+ *  optional `VerifierCallOptions` second parameter the port carries
+ *  uniformly. Source-compatible: the gate and the draft-context memoized
+ *  closure both still call with one argument, so this changes no runtime
+ *  behaviour. */
 export interface DraftVerifierPorts {
-  readonly planReview: { verify(input: PlanReviewInput): Promise<PlanReviewResult> };
+  readonly planReview: VerifierPort<PlanReviewInput, PlanReviewResult>;
 }
 
 /** Notification collaborator for the draft gates. */

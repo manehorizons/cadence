@@ -1261,35 +1261,6 @@
       "updatedAt": "2026-07-26T21:37:14.232Z"
     },
     {
-      "id": "rec-20260727-003",
-      "title": "Kernel/verifier contract + lint rule against internal imports",
-      "summary": "GateImpl/GATE_REGISTRY totality and SettleContext.verifiers: VerifierPorts already form an unnamed plugin architecture. Name kernel/verifier/consumer as published contracts and add a lint rule failing the build if a verifier package imports kernel internals instead of the published contract, with zero GATE_ORDER changes and zero special cases across the five existing verifier-backed gates (code-review, plan-review, spec-review, security-audit, ui-spec-review).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/types.ts",
-        "packages/core/src/gates/engine.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260727-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:46:53.400Z",
-      "updatedAt": "2026-07-27T18:46:53.400Z"
-    },
-    {
       "id": "rec-20260727-004",
       "title": "Criteria-anchored review: extend CodeReviewInput with ACs/boundaries",
       "summary": "CodeReviewInput is only {files, diff} -- the review verifier structurally cannot see the DRAFT's acceptance criteria or boundaries, so criteria-anchored review requires a genuine contract change, not a prompt change. Extend CodeReviewInput to carry acceptance criteria, boundaries, and task-to-AC refs.",
@@ -1540,6 +1511,65 @@
       "decisionIds": [],
       "createdAt": "2026-07-27T20:31:34.467Z",
       "updatedAt": "2026-07-27T20:31:34.467Z"
+    },
+    {
+      "id": "rec-20260728-002",
+      "title": "Test files are never typechecked or linted",
+      "summary": "packages/core/tsconfig.json has include: [\"src/**/*\"] and tsconfig.base.json excludes **/*.test.ts and tests/, while each package's lint script is 'eslint src'. No test file in the repo is typechecked or linted by any command CI runs, and vitest does not typecheck. Consequence: type-level assertions in tests (conformance witnesses, satisfies checks, expectTypeOf-style guards) are inert -- a provably false witness leaves vitest, typecheck and lint all green. Found during phase 234 T1 review, where a deliberately falsified assignability witness passed all three gates. Options: a tsconfig.test.json wired into the typecheck task, vitest --typecheck, or a convention that type-level guarantees must live in src/.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "tooling"
+      ],
+      "affectedFiles": [
+        "packages/core/tsconfig.json",
+        "tsconfig.base.json",
+        "packages/core/package.json"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260728-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-28T22:57:34.634Z",
+      "updatedAt": "2026-07-28T22:57:34.634Z"
+    },
+    {
+      "id": "rec-20260729-001",
+      "title": "Kernel-assurance arc phases do not exercise their own assurance machinery at settle",
+      "summary": "Phases 232 and 233 shipped SUMMARY schemaVersion 2 and the per-settle assurance record onto feat/kernel-assurance-v2, but every phase settled on that branch (233, 234) writes schemaVersion 1 with no assurance record -- because 'cadence settle' resolves to the globally-installed released CLI (v1.51.1, which predates the arc) rather than the branch's own build at packages/core/bin/cadence.cjs. Consequence: the arc's central deliverable is never dogfooded by the arc itself, and no phase SUMMARY on the branch demonstrates the assurance record working end to end. Options: settle arc phases via 'node packages/core/bin/cadence.cjs settle run --auto', or add a doctor/settle notice when the resolved CLI predates the repo's own build. Related to the known 'cadence on PATH is global, not worktree' hazard that previously bit phase 195.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "process"
+      ],
+      "affectedFiles": [
+        "packages/core/bin/cadence.cjs",
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-29T01:14:55.911Z",
+      "updatedAt": "2026-07-29T01:14:55.911Z"
     }
   ],
   "archived": [
@@ -4845,11 +4875,47 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "233-per-settle-assurance-record",
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-28T01:21:32.876Z",
-      "updatedAt": "2026-07-28T02:32:24.759Z",
       "shippedRef": "phase 233-per-settle-assurance-record",
+      "scoutId": "scout-20260727-kernel-review-phase0",
       "archivedAt": "2026-07-28T02:32:24.759Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-28T01:21:32.876Z",
+      "updatedAt": "2026-07-28T02:32:24.759Z"
+    },
+    {
+      "id": "rec-20260727-003",
+      "title": "Kernel/verifier contract + lint rule against internal imports",
+      "summary": "GateImpl/GATE_REGISTRY totality and SettleContext.verifiers: VerifierPorts already form an unnamed plugin architecture. Name kernel/verifier/consumer as published contracts and add a lint rule failing the build if a verifier package imports kernel internals instead of the published contract, with zero GATE_ORDER changes and zero special cases across the five existing verifier-backed gates (code-review, plan-review, spec-review, security-audit, ui-spec-review).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/types.ts",
+        "packages/core/src/gates/engine.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260727-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260729-001",
+        "dec-20260729-002"
+      ],
+      "convertedToPhaseId": "234-kernel-verifier-consumer-boundary",
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "createdAt": "2026-07-27T18:46:53.400Z",
+      "updatedAt": "2026-07-29T01:28:58.405Z",
+      "shippedRef": "phase 234 — kernel/verifier/consumer boundary, lint-enforced",
+      "archivedAt": "2026-07-29T01:28:58.405Z",
       "archiveReason": "shipped"
     }
   ]

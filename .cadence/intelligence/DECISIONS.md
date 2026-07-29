@@ -66,6 +66,20 @@ rec-20260724-006 (needs-decision) proposed a range from a settle-time content ha
 
 rec-20260728-001 (Per-settle assurance record), shipped via phase 233-per-settle-assurance-record. The derivation (packages/core/src/gates/assurance-record.ts, deriveAssuranceRecord) reads only gate-provenance provider/model fields and per-AC evidence classes -- never a specific gate name or id. Confirmed by the implementer, an independent per-task reviewer, and a fresh whole-branch reviewer, each reading the function directly and grepping for gate.gate/gate-name branching (none found). Per the phase 233 spec's binding tripwire, this clears phases 234-237 (kernel/verifier/consumer boundary work) to proceed on the premise that the kernel/verifier/consumer boundary is real, not a special-cased illusion. Non-blocking design-gap noted for those phases: only 2 of 10 GATE_ORDER gates (code-review, security-audit) currently populate verifier identity (phase 232's scope), so 'overall' has no signal from other gates that perform real verification (e.g. build-test-must-pass) -- worth addressing in a later slice, not a defect in phase 233 itself.
 
+### dec-20260729-001 — Phase 234 AC-1 narrowed: contracts/ is the type-naming surface, not the resolution surface
+
+- recommendation: rec-20260727-003
+- decided: 2026-07-29T01:15:16.785Z
+
+AC-1 originally read 'that module is the only surface through which a verifier is resolved'. That over-claimed relative to the design source: docs/handoffs/cadence-phase0-assurance-kernel-review.md section 6 Slice 2 asks only to name the three roles as published contracts and add a lint rule against importing kernel internals -- it never requires contracts/ to be the resolution surface, and architecturally it should not be. Verifier resolution legitimately happens by direct verify/*-factory.ts import at four composition roots (services/settle.ts, gates/build-context.ts, gates/draft-context.ts, services/spec-approve-ports.ts); two independent reviews judged that placement correct, and contracts/ re-exports only the VerifierProvider type from verifier-factory.js, never a select* function. Amended AC-1 to 'the only surface through which a verifier TYPE is named', which IS mechanically enforced: zero direct imports of the seven verifier-family modules remain in packages/core/src outside verify/ and contracts/. Operator-approved 2026-07-28.
+
+### dec-20260729-002 — Uniform opts? on VerifierPort is what makes zero-special-cases true
+
+- recommendation: rec-20260727-003
+- decided: 2026-07-29T01:15:16.977Z
+
+The published VerifierPort<I,R> carries a uniform optional opts?: VerifierCallOptions. Before phase 234 only security-audit's PORT threaded opts (Phase 184); the other six ports -- deep-verify included -- were declared arity-1, so restating them widens their type-level call signature by one optional parameter. Accepted deliberately: it is source-compatible and runtime-identical (every real call site still passes one argument), and it is the mechanism by which AC-2's 'zero special cases' is literally true. The rejected alternative was two port shapes (arity-1 plus a cancellable variant), which is itself the special-casing AC-2 forbids and would have risked the phase's binding tripwire. Known cost: five families advertise a cancellation affordance they ignore. Operator-approved 2026-07-28.
+
 ## Superseded
 
 _(none)_

@@ -9,23 +9,20 @@ import type {
   Finding,
   GateSet,
 } from '@manehorizons/cadence-types';
-import type {
-  VerifyInput,
-  VerifyResult,
-  VerifyTestRef,
-} from '../verify/verifier.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
 import type { Interactivity } from './interactivity.js';
 import type { Prompter } from '../verify/prompter.js';
 import type {
+  VerifierPort,
+  VerifyInput,
+  VerifyResult,
+  VerifyTestRef,
   CodeReviewInput,
   CodeReviewResult,
-  Finding as CodeReviewFinding,
-} from '../verify/code-review.js';
-import type {
+  CodeReviewFinding,
   SecurityAuditInput,
   SecurityAuditResult,
-} from '../verify/security-audit.js';
+} from '../contracts/index.js';
 
 /** Canonical PROGRESS.json shape settle reads. settle.ts imports this (and
  *  AcResult below) rather than redefining them locally. */
@@ -56,21 +53,30 @@ export interface IoPort {
  * Injected verifier collaborators. Phase 40.1 consolidates behind this; gates
  * never import a *-factory directly. 39.1 defines ONLY `deep` (what it
  * exercises); 39.4/39.5 add members when those gates are extracted.
+ *
+ * Phase 234: each member is restated as the published `VerifierPort<I, R>`
+ * contract (`../contracts/index.js`) at that family's own input/result
+ * types — no member added, no member removed, no bespoke per-member call
+ * signature. Of the three members here, only `securityAudit`'s *port* already
+ * carried the optional `{ signal?; traceId? }` second parameter (Phase 184);
+ * `deep` and `codeReview` were both declared arity-1, so the restatement
+ * widens their type-level call signature by the port's optional
+ * `VerifierCallOptions`. Note the distinction: the underlying `Verifier`
+ * interface (`verify/verifier.ts`) that backs `deep` has always accepted
+ * `opts` — but this *port* did not expose it, and it is the port that is
+ * being restated. That widening is source-compatible (every real call site
+ * still passes one argument) and changes no runtime behaviour.
  */
 export interface VerifierPorts {
-  readonly deep: { verify(input: VerifyInput): Promise<VerifyResult> };
+  readonly deep: VerifierPort<VerifyInput, VerifyResult>;
   /** Code-review verifier (Phase 39.4), lazily `selectCodeReviewVerifier`. */
-  readonly codeReview: { verify(input: CodeReviewInput): Promise<CodeReviewResult> };
+  readonly codeReview: VerifierPort<CodeReviewInput, CodeReviewResult>;
   /** Security-audit verifier (Phase 39.5), lazily `selectSecurityAuditVerifier`.
    *  Phase 184: `opts` mirrors `SecurityAuditVerifier.verify`'s optional
    *  `{ signal?; traceId? }` second parameter — the real gate call site
-   *  passes a per-run `traceId`. */
-  readonly securityAudit: {
-    verify(
-      input: SecurityAuditInput,
-      opts?: { signal?: AbortSignal; traceId?: string },
-    ): Promise<SecurityAuditResult>;
-  };
+   *  passes a per-run `traceId`. Phase 234: that shape is now exactly the
+   *  published `VerifierCallOptions`, via `VerifierPort`. */
+  readonly securityAudit: VerifierPort<SecurityAuditInput, SecurityAuditResult>;
 }
 
 /**
