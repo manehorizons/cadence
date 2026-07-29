@@ -1,6 +1,33 @@
-import type { Finding } from '@manehorizons/cadence-types';
+import type { Draft, Finding } from '@manehorizons/cadence-types';
 import { runConvergentReview } from '../verify/converge.js';
+import { anchorFindings } from '../verify/criteria-gap.js';
+import type { CodeReviewInput, CodeReviewTaskRef } from '../contracts/index.js';
 import type { GateImpl, GateResult } from './types.js';
+
+/**
+ * Phase 235 (T3) — project `draft`'s acceptance criteria, boundaries[] and
+ * task->AC refs onto the additive optional `CodeReviewInput` fields, so the
+ * reviewer can see what the phase committed to instead of grading against
+ * general good practice alone. Pure and side-effect free; `runCodeReviewGate`
+ * is the only caller. Imports the input type through the phase 234 contract
+ * surface (`../contracts/index.js`), never a kernel internal.
+ */
+export function buildCodeReviewInput(draft: Draft, touched: string[], diff: string): CodeReviewInput {
+  const taskRefs: CodeReviewTaskRef[] = draft.tasks.map((t) => ({
+    id: t.id,
+    files: t.files,
+    verify: t.verify,
+    done: t.done,
+    ...(t.status !== undefined ? { status: t.status } : {}),
+  }));
+  return {
+    files: touched,
+    diff,
+    acceptanceCriteria: draft.acceptanceCriteria,
+    boundaries: draft.boundaries,
+    taskRefs,
+  };
+}
 
 /** HIGH-only finding flattener. The convergence boolean + sidecar findingsCount
  *  are HIGH-only (Phase 37.1 spec) — a conscious divergence from the 35.1
@@ -35,10 +62,49 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
   const touched = [...ctx.touchedFiles];
   const diff = ctx.diff();
   try {
-    const verifyResult = await ctx.verifiers.codeReview.verify({ files: touched, diff });
+    const input = buildCodeReviewInput(ctx.draft, touched, diff);
+    const verifyResult = await ctx.verifiers.codeReview.verify(input);
     const codeReviewFindings = verifyResult.findings;
     const highs = collectHighFindings(verifyResult.findings);
     const pass = highs.length === 0;
+
+    // Phase 235 (T4, dec-20260729-005 / D2) — tag every finding with its
+    // §7.1 anchor; a finding whose best anchor resolves to `undeclared` is a
+    // criteria gap (diff work no criterion or boundary covers). No second
+    // refusal primitive: `highs`/`pass` above are computed from the SAME raw
+    // `verifyResult.findings`, untouched — a HIGH-severity gap finding was
+    // already counted there and refuses through the pre-existing path.
+    // `gateProvenance` is `[]`: `SettleContext` does not expose prior-gate
+    // provenance to a single gate impl, so `executable` can never be
+    // (wrongly) reached from here — conservative by construction.
+    const gapResult = anchorFindings(
+      codeReviewFindings,
+      input.acceptanceCriteria ?? [],
+      input.boundaries ?? [],
+      ctx.draft.tasks,
+      [],
+    );
+    // D3 — declared unconditionally, regardless of pass/refuse/bypass below:
+    // config decides what stops the settle, never what is visible.
+    const { gapCount, severityDistribution } = gapResult.summary;
+    // D3 binds the declaration to be independent of the FLOOR OUTCOME — a gap
+    // is never hidden because the gate happened to pass or a bypass was used.
+    // It does not mean printing "0 gaps" on a settle that produced no findings
+    // at all: with nothing uncovered there is nothing to declare, and a
+    // clean-diff settle is specified to be quiet on stderr (asserted by
+    // `settle-code-review.test.ts` AC-4 and `settle-codereview-convergence.test.ts`
+    // AC-1, both of which predate this phase and neither of which AC-7 permits
+    // loosening). The substance of D3 is preserved unconditionally either way:
+    // the anchor-tagged findings and their tiers land in `summaryPatch.codeReview`
+    // on EVERY return path below, so gap count and severity distribution stay
+    // derivable from the persisted SUMMARY regardless of outcome.
+    if (gapCount > 0) {
+      ctx.io.err(
+        `code-review: criteria-gap — ${gapCount} finding(s) unanchored ` +
+          `(high=${severityDistribution.high}, medium=${severityDistribution.medium}, ` +
+          `low=${severityDistribution.low}).\n`,
+      );
+    }
 
     const { attemptsSoFar, history } = await ctx.codeReviewSidecar.read();
     const maxAttempts = ctx.config?.convergence?.maxAttempts ?? 3;
@@ -107,7 +173,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
           ctx.io.err(`${reason}\n`);
           return {
             outcome: 'refuse',
-            summaryPatch: { codeReview: codeReviewFindings },
+            summaryPatch: { codeReview: gapResult.findings },
             reason,
             flags: {
               verifierIdentity: {
@@ -142,7 +208,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
           ctx.io.err(`${reason}\n`);
           return {
             outcome: 'refuse',
-            summaryPatch: { codeReview: codeReviewFindings },
+            summaryPatch: { codeReview: gapResult.findings },
             reason,
             flags: {
               verifierIdentity: {
@@ -157,7 +223,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
     // pass (converged) OR bypass fall-through → record findings, proceed.
     return {
       outcome: 'pass',
-      summaryPatch: { codeReview: codeReviewFindings },
+      summaryPatch: { codeReview: gapResult.findings },
       flags: {
         verifierIdentity: {
           family: verifyResult.provider,

@@ -80,6 +80,34 @@ AC-1 originally read 'that module is the only surface through which a verifier i
 
 The published VerifierPort<I,R> carries a uniform optional opts?: VerifierCallOptions. Before phase 234 only security-audit's PORT threaded opts (Phase 184); the other six ports -- deep-verify included -- were declared arity-1, so restating them widens their type-level call signature by one optional parameter. Accepted deliberately: it is source-compatible and runtime-identical (every real call site still passes one argument), and it is the mechanism by which AC-2's 'zero special cases' is literally true. The rejected alternative was two port shapes (arity-1 plus a cancellable variant), which is itself the special-casing AC-2 forbids and would have risked the phase's binding tripwire. Known cost: five families advertise a cancellation affordance they ignore. Operator-approved 2026-07-28.
 
+### dec-20260729-003 — Phase 235 scope: criteria-anchoring is code-review only, not spec-review/ui-spec-review/plan-review
+
+- recommendation: rec-20260727-004
+- decided: 2026-07-29T22:09:00.176Z
+
+Resolves section 10 open question 3 of the phase-0 assurance-kernel review. Although spec-review, ui-spec-review and plan-review are already criteria-shaped, generalizing the anchor ladder to them in slice 3 is scope creep: it would widen the phase past its overrun tripwire and couple the anchor ladder to three more input contracts before the ladder has proven itself on one. Scope stays the code-review verifier only; the other three gates keep current behavior. Backfilled as a decision record 2026-07-29 -- the boundary was already asserted in the 235-01 DRAFT but never written to the ledger by the session that authored it.
+
+### dec-20260729-004 — Anchor executable tier: non-empty verify + build-test-must-pass ran, no prose heuristic
+
+- recommendation: rec-20260727-005
+- decided: 2026-07-29T22:25:05.265Z
+
+Section 7.1 defines executable as an AC referenced by a task whose verify is a runnable command AND build-test-must-pass actually ran. Nothing in the repo has a runnable-command predicate; the existing precedent (gates/task-verify-required.ts) tests only t.verify.trim().length. Implementing command-likeness as a heuristic would be fragile and could itself over-claim or under-claim. Decision: treat verify as runnable iff non-empty after trim, and rely on the gate-provenance condition (status === 'ran', never 'skipped' or 'refused') as the substantive corroboration that prevents over-claiming. That pairing is why 7.1 states two conditions rather than one. Residual known gap: a prose-only verify line on a phase whose suite ran elsewhere can still reach executable; refining that is a follow-up, not this slice.
+
+### dec-20260729-005 — Criteria-gap refusal reuses code-review's existing HIGH-severity refuse path, not gates.evidenceFloor
+
+- recommendation: rec-20260727-004
+- decided: 2026-07-29T22:44:26.595Z
+
+D1 and section 6 Slice 3 say gap findings block above a severity floor; D2 says they trip the existing evidenceFloor with no second refusal primitive. These conflict: gates.evidenceFloor ranks AcEvidence (ai-verified > executed > assertion > mention > unverified) per AC, while findings carry severity high|medium|low, and no severity-to-evidence mapping exists. Decision: read D2 as forbidding a NEW refusal primitive and a NEW config knob, not as naming the AcEvidence floor specifically. Gap findings are emitted into the finding stream code-review already refuses on (HIGH refuses settle unless --allow-code-review-failure). This satisfies D2 literally (no second primitive, no doubled config surface), matches D1's severity-floor wording, and preserves AC-7 (no change to per-AC evidence semantics or to pass/refuse behavior for finding classes that existed before this phase). Rejected: mapping severity onto AcEvidence (invents semantics and perturbs the phase-214 floor), and a dedicated gates.criteriaGapFloor knob (the exact second-primitive/config-doubling D2 rejects). Tripwire T4 retuning, if gap findings prove too noisy on real phases, therefore means retuning the code-review severity assignment, not adding a floor.
+
+### dec-20260729-006 — D3 unconditional declaration binds the floor outcome, not the empty-gap case
+
+- recommendation: rec-20260727-004
+- decided: 2026-07-29T23:06:44.137Z
+
+D3 says gap count and severity distribution are declared unconditionally; AC-4's operative text qualifies this as 'regardless of whether the floor stops the settle'. Read as: the declaration must not be suppressed by the floor OUTCOME (pass, refuse, or bypass via --allow-code-review-failure/--force) nor by config. It does not require printing a '0 finding(s) unanchored' stderr line into a settle that produced no findings at all. Implementation: gapResult is computed unconditionally on every gate run and the anchor-tagged findings land in summaryPatch.codeReview on all three return paths (pass, reloop-refuse, escalate-refuse), so gap count and severity distribution stay derivable from the persisted SUMMARY in every outcome; only the stderr convenience notice is guarded by gapCount > 0. Forced by AC-7: two pre-existing tests (tests/cli/settle-code-review.test.ts AC-4 and tests/cli/settle-codereview-convergence.test.ts AC-1) assert a clean-diff settle emits nothing matching /code-review:/ on stderr, and AC-7 forbids loosening an existing test to accommodate this phase. Independent review adjudicated this reading as non-weakening and verified both CLI suites pass with the guard in place. Recorded because the parallel D1/D2 tension got dec-20260729-005 and this one had been left implicit — a future reader could otherwise re-litigate it wrongly.
+
 ## Superseded
 
 _(none)_

@@ -1261,63 +1261,6 @@
       "updatedAt": "2026-07-26T21:37:14.232Z"
     },
     {
-      "id": "rec-20260727-004",
-      "title": "Criteria-anchored review: extend CodeReviewInput with ACs/boundaries",
-      "summary": "CodeReviewInput is only {files, diff} -- the review verifier structurally cannot see the DRAFT's acceptance criteria or boundaries, so criteria-anchored review requires a genuine contract change, not a prompt change. Extend CodeReviewInput to carry acceptance criteria, boundaries, and task-to-AC refs.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/code-review.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260727-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:46:59.861Z",
-      "updatedAt": "2026-07-27T18:46:59.861Z"
-    },
-    {
-      "id": "rec-20260727-005",
-      "title": "Anchor ladder as peer schema to evidence ladder",
-      "summary": "Grade findings by anchor strength (executable > structured > declared > undeclared/criteria-gap), mirroring but not aliasing the AcEvidence 5-tier ladder. Without grading anchors, every anchored finding renders as equivalent regardless of anchor quality -- reproducing the same P0 in a new costume. Structured/declared tiers must be treated as weak by default (anchor-shopping is the adversarial case).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "types",
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/types/src/summary.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260727-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:47:08.679Z",
-      "updatedAt": "2026-07-27T18:47:08.679Z"
-    },
-    {
       "id": "rec-20260727-006",
       "title": "Finding identity: stable ids, dispositions, expiring waivers",
       "summary": "Neither persisted Finding type (packages/types summary.ts vs packages/core verify/code-review.ts, already diverged in severity enum) has a stable id, anchor, disposition, or waiver. Add {id, target: artifact|verification, anchor, disposition, waiver{expiry}} and converge the two divergent Finding types onto one, discriminated by target (decision D9). A waiver with no expiry is a belief masquerading as knowledge.",
@@ -1570,6 +1513,152 @@
       "decisionIds": [],
       "createdAt": "2026-07-29T01:14:55.911Z",
       "updatedAt": "2026-07-29T01:14:55.911Z"
+    },
+    {
+      "id": "rec-20260729-002",
+      "title": "Thread gate provenance into SettleContext so the anchor ladder's executable tier is reachable in the live gate",
+      "summary": "Phase 235 shipped the full four-tier 7.1 anchor ladder as a pure resolver, but SettleContext exposes no gate-provenance array to a GateImpl (the accumulator lives only inside runSettleGates in gates/registry.ts). gates/code-review.ts therefore calls anchorFindings with gateProvenance: [], so the executable tier is structurally unreachable in production — every live finding caps at structured/declared/undeclared. The tier is covered only by T2's unit tests with injected provenance. Net effect: the ladder's top rung is dead in the real path, which is exactly the kind of claim-vs-reality gap CADENCE exists to surface. Fix: thread the in-flight provenance (read-only) into SettleContext so gates that need corroboration can see which gates have already run this settle.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/types.ts",
+        "packages/core/src/gates/registry.ts",
+        "packages/core/src/gates/code-review.ts",
+        "packages/core/src/verify/anchor.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-29T22:59:50.786Z",
+      "updatedAt": "2026-07-29T22:59:50.786Z"
+    },
+    {
+      "id": "rec-20260729-003",
+      "title": "Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap",
+      "summary": "Phase 235's anchorFindings (verify/criteria-gap.ts) resolves ONE anchor per file and tags every finding in that file with it, because the code-review verifier returns findings keyed by file with no per-finding criterion attribution. Consequence: a genuinely uncovered defect sitting in a file that some task happens to cover inherits that file's anchor and is NOT counted as a criteria gap — the gap detector under-reports precisely where a phase's ACs are thinnest. Phase 235 extended CodeReviewInput so the verifier can now SEE the ACs/boundaries, which is the prerequisite for the verifier itself citing the criterion it believes a finding violates; the mock does not exercise that. Fix: have the verifier return a per-finding anchor candidate (criterion citation) and grade that, keeping the file-level resolution only as the fallback when the verifier cites nothing.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/criteria-gap.ts",
+        "packages/core/src/verify/code-review.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-29T23:00:03.470Z",
+      "updatedAt": "2026-07-29T23:00:03.470Z"
+    },
+    {
+      "id": "rec-20260729-004",
+      "title": "test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests",
+      "summary": "scanTestCoverage (verify/coverage.ts) walks DEFAULT_GLOBS packages/**/*.test.ts across the WHOLE repo and links an AC purely by the presence of its bare AC-N token. AC ids are per-phase and restart at AC-1 every phase, so tokens collide globally: while building phase 235 I confirmed via 'cadence verify coverage --explain AC-2' that AC-2 was already satisfied by phase 211's tests/activate/render.test.ts, entirely unrelated to phase 235. Any AC-N from any past phase satisfies that same id for every future phase, so the coverage gate cannot actually attest that THIS phase's ACs are covered — it degrades to 'some test somewhere once mentioned this token inside an it() block'. assertion mode hardened WHERE the token sits but not WHICH phase it belongs to. Fix candidates: scope the scan to the phase's own test files (via task files:/git diff), or require a phase-qualified token, or have the gate report which files matched so a reviewer can see cross-phase satisfaction.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts",
+        "packages/core/src/gates/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-29T23:00:19.919Z",
+      "updatedAt": "2026-07-29T23:00:19.919Z"
+    },
+    {
+      "id": "rec-20260729-005",
+      "title": "Boundary-string anchors are granted by filename substring match, so an irrelevant boundary can mask a criteria gap",
+      "summary": "candidatesForFile (verify/criteria-gap.ts) proposes a boundary candidate whenever a free-text boundaries[] entry contains the filename as a substring, and resolveAnchor then 'verifies' it with boundaries.find(b => b === candidate.ref) — which is guaranteed to succeed because the ref was sourced from that same array by construction. The exact-match step therefore confirms only 'this string exists', not that the boundary has anything to do with the finding. Consequence: a boundary like 'DO NOT add a runtime dependency to packages/core/src/gates/code-review.ts' grants declared tier to ANY finding in that file, converting a would-be criteria gap into a (weak) anchored finding and hiding it from the gap count. Matches section 7.1's literal spec, which imposes no relevance requirement on a boundary anchor, and declared is documented as the weakest non-gap tier — so this is working-as-specified, not a code defect. But it is a real false-anchor path that suppresses gap reporting. Distinct from rec-20260729-003 (which is about per-file rather than per-finding granularity). Fix candidates: require the boundary to cite the file more strongly than substring containment, or treat a boundary-only anchor as a gap-with-weak-mitigation rather than a non-gap.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/criteria-gap.ts",
+        "packages/core/src/verify/anchor.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-29T23:06:59.209Z",
+      "updatedAt": "2026-07-29T23:06:59.209Z"
+    },
+    {
+      "id": "rec-20260729-006",
+      "title": "Retroactive audit: re-derive how many historical AC PASS records had genuine per-phase test coverage",
+      "summary": "Follow-on to rec-20260729-004 (repo-wide AC-N token collision). Because settle derives per-AC PASS from task terminal status PLUS coverage evidence, and the coverage leg is satisfiable by any past phase's identically-numbered AC token, per-AC PASS for a typical phase collapsed toward the agent's own DONE self-report — the exact signal the project exists to distrust. The settled SUMMARY corpus therefore carries an AC-coverage attestation stronger than the evidence behind it. This is a defect in the proof, not proof that the work was undone: build-test-must-pass, per-task verify commands, and the review gates were unaffected and provided real signal. Audit to run: for every settled phase, re-derive whether each AC's satisfying token actually sits in a test file belonging to THAT phase rather than an unrelated one, and report the count of AC PASS records with genuine per-phase coverage vs cross-phase-only satisfaction. cadence verify phase already re-derives settled coverage but needs the phase-scoping fix from rec-20260729-004 first to give a trustworthy answer. Operator decision 2026-07-29: run this in a fresh session after phase 235 lands, not inline.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts",
+        "packages/core/src/verify/phase-replay.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-29T23:25:34.102Z",
+      "updatedAt": "2026-07-29T23:25:34.102Z"
     }
   ],
   "archived": [
@@ -4911,11 +5000,82 @@
         "dec-20260729-002"
       ],
       "convertedToPhaseId": "234-kernel-verifier-consumer-boundary",
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:46:53.400Z",
-      "updatedAt": "2026-07-29T01:28:58.405Z",
       "shippedRef": "phase 234 — kernel/verifier/consumer boundary, lint-enforced",
+      "scoutId": "scout-20260727-kernel-review-phase0",
       "archivedAt": "2026-07-29T01:28:58.405Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T18:46:53.400Z",
+      "updatedAt": "2026-07-29T01:28:58.405Z"
+    },
+    {
+      "id": "rec-20260727-004",
+      "title": "Criteria-anchored review: extend CodeReviewInput with ACs/boundaries",
+      "summary": "CodeReviewInput is only {files, diff} -- the review verifier structurally cannot see the DRAFT's acceptance criteria or boundaries, so criteria-anchored review requires a genuine contract change, not a prompt change. Extend CodeReviewInput to carry acceptance criteria, boundaries, and task-to-AC refs.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/code-review.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260727-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260729-003",
+        "dec-20260729-005",
+        "dec-20260729-006"
+      ],
+      "convertedToPhaseId": "235-criteria-anchored-review-input",
+      "shippedRef": "phase 235 — criteria-anchored review verifier: CodeReviewInput carries ACs/boundaries/task refs",
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "archivedAt": "2026-07-29T23:39:21.010Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T18:46:59.861Z",
+      "updatedAt": "2026-07-29T23:39:21.010Z"
+    },
+    {
+      "id": "rec-20260727-005",
+      "title": "Anchor ladder as peer schema to evidence ladder",
+      "summary": "Grade findings by anchor strength (executable > structured > declared > undeclared/criteria-gap), mirroring but not aliasing the AcEvidence 5-tier ladder. Without grading anchors, every anchored finding renders as equivalent regardless of anchor quality -- reproducing the same P0 in a new costume. Structured/declared tiers must be treated as weak by default (anchor-shopping is the adversarial case).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "types",
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260727-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260729-004"
+      ],
+      "convertedToPhaseId": "235-criteria-anchored-review-input",
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "createdAt": "2026-07-27T18:47:08.679Z",
+      "updatedAt": "2026-07-29T23:39:21.170Z",
+      "shippedRef": "phase 235 — anchor ladder as peer schema to AcEvidenceZ (executable > structured > declared > undeclared)",
+      "archivedAt": "2026-07-29T23:39:21.170Z",
       "archiveReason": "shipped"
     }
   ]

@@ -342,6 +342,62 @@ currently wired for). Because the SPEC stage is itself optional, `spec-review`
 never fires unless you
 choose to run `cadence spec approve`.
 
+### Criteria-anchored `code-review` (phase 235)
+
+Every `code-review` finding is also tagged with an **anchor** — how strongly
+it ties back to something the phase's own DRAFT actually declared, on a
+four-tier ladder from strongest to weakest:
+
+| Tier | What it means |
+|---|---|
+| `executable` | The finding's file is covered by a task whose `done:` cites an AC, that task's `verify` command is non-empty, AND this settle's `build-test-must-pass` gate provenance shows `status: 'ran'` (the corroborating condition — a runnable-looking `verify` line is never trusted by itself). |
+| `structured` | The AC exists and its `given`/`when`/`then` are all non-empty. |
+| `declared` | The AC exists but is prose-only (empty or partial G/W/T), or the finding's file matches a `boundaries[]` entry exactly. |
+| `undeclared` | Nothing citable was found for the finding's file — this is a **criteria gap**: diff work no acceptance criterion and no boundary covers. |
+
+The pure ladder resolver is `resolveAnchor`
+(`packages/core/src/verify/anchor.ts`); `anchorFindings`
+(`packages/core/src/verify/criteria-gap.ts`) applies it per file — the
+verifier reports findings keyed by file, not by criterion — and tags every
+finding in that file with the result. The tag lands in the additive,
+optional `anchor` field on `FindingZ` (`packages/types/src/summary.ts`); a
+pre-phase-235 `SUMMARY.json` with no `anchor` on any finding still parses
+unchanged.
+
+A criteria gap adds **no new refusal path and no new bypass flag**: a gap
+finding flows into the exact same finding stream `code-review` already
+refuses on, so a HIGH-severity gap refuses through the pre-existing
+HIGH-finding contract (`--allow-code-review-failure` / `--force` still
+clear it, same as any other HIGH finding). Whenever at least one finding
+resolves to `undeclared`, settle prints a gap-count / severity-distribution
+notice to stderr — unconditionally, regardless of whether the gate ends up
+passing, refusing, or being bypassed, so the gap is never hidden by the
+floor outcome.
+
+Scope is deliberately narrow: only `code-review` is criteria-anchored.
+`spec-review`, `ui-spec-review`, and `plan-review` are unaffected
+(`dec-20260729-003`) — generalizing the ladder to them was ruled out of
+scope for this phase, not merely deferred silently.
+
+**Three shipped limitations**, tracked as open Praxis recommendations rather
+than glossed over:
+
+- The `executable` tier is not reachable in a real settle yet
+  (`rec-20260729-002`). `SettleContext` exposes no prior-gate provenance to
+  a single `GateImpl`, so `gates/code-review.ts` always calls the resolver
+  with `gateProvenance: []` — a live settle's findings therefore cap at
+  `structured`/`declared`/`undeclared`. `executable` is exercised only by
+  unit tests that inject provenance directly.
+- Anchoring is per-file, not per-finding (`rec-20260729-003`). One anchor is
+  resolved for a whole file and applied to every finding reported in it, so
+  a genuinely uncovered defect sitting in an otherwise-covered file does not
+  register as a criteria gap.
+- A boundary string that merely contains a finding's filename as a
+  substring grants `declared` tier to every finding in that file
+  (`rec-20260729-005`), which can mask a real gap — the check that follows
+  only confirms the candidate string is present in `boundaries[]`, not that
+  the boundary is actually relevant to the finding.
+
 ### Gate bypass reference summary
 
 | Flag | Command | Gate bypassed |

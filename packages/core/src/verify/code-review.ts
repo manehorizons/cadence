@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
+import type { AcceptanceCriterion, Task } from '@manehorizons/cadence-types';
 import { hostCliJSON, type SpawnFn } from './host-cli-client.js';
 import { localChatJSON } from './local-client.js';
 
@@ -19,11 +20,38 @@ export interface Finding {
   line?: number;
 }
 
+/**
+ * Phase 235 (T3) — a task->AC ref as seen by the review verifier: what a task
+ * touches, how it is verified, and which AC it claims to satisfy. A `Pick`
+ * over the DRAFT's own `Task` shape (`@manehorizons/cadence-types`) rather
+ * than a restated structural type, so it cannot drift from the schema.
+ */
+export type CodeReviewTaskRef = Pick<Task, 'id' | 'files' | 'verify' | 'done' | 'status'>;
+
 export interface CodeReviewInput {
   /** Touched files (from draft tasks). Used to scope diff parsing + Anthropic prompt. */
   files: string[];
   /** Unified diff (`git diff HEAD -- <files>`). May be empty. */
   diff: string;
+  /**
+   * Phase 235 (T3) — the DRAFT's acceptance criteria (`id`, `name`, `given`,
+   * `when`, `then`), so the reviewer can see what the phase committed to
+   * rather than grading against general good practice alone. Additive and
+   * optional: existing callers and all four providers keep compiling
+   * unchanged when it is omitted.
+   */
+  acceptanceCriteria?: AcceptanceCriterion[];
+  /**
+   * Phase 235 (T3) — the DRAFT's `## Boundaries` list ("Do NOT touch/add"
+   * prose). Additive and optional, same as `acceptanceCriteria`.
+   */
+  boundaries?: string[];
+  /**
+   * Phase 235 (T3) — task->AC refs (`Task.id`, `files`, `verify`, `done`,
+   * `status`) from the DRAFT's tasks. Additive and optional, same as
+   * `acceptanceCriteria`.
+   */
+  taskRefs?: CodeReviewTaskRef[];
 }
 
 export interface CodeReviewResult {
@@ -39,12 +67,47 @@ export interface CodeReviewVerifier {
 }
 
 /**
+ * Phase 235 (T5) — one opt-in extra diff marker beyond the built-in
+ * `console.log(` HIGH rule: a regex tested against each added line's body
+ * (the same slice(1) the console.log rule uses), and the severity/message to
+ * emit on a match. Exists so the §6 Slice 3 adversarial corpus (findings at
+ * severities other than HIGH, tied to specific synthetic defects) can be
+ * exercised offline through the mock's existing deterministic line-walk,
+ * without adding a second parsing pass or touching the console.log rule.
+ */
+export interface MockCodeReviewMarker {
+  pattern: RegExp;
+  severity: FindingSeverity;
+  message: string;
+}
+
+export interface MockCodeReviewVerifierOptions {
+  /**
+   * Phase 235 (T5) — additional recognized markers, checked in the same
+   * per-added-line loop as `console.log(`, after it, using the identical
+   * `postLine` bookkeeping so line numbers stay accurate. Additive and
+   * opt-in: omitted or empty (the default) means `new
+   * MockCodeReviewVerifier()` produces byte-for-byte the same output as
+   * before this option existed — the console.log→HIGH rule, its line-number
+   * arithmetic, and the empty-diff early return are all untouched.
+   */
+  extraMarkers?: readonly MockCodeReviewMarker[];
+}
+
+/**
  * Deterministic mock — flags every `console.log(...)` added in the diff as
  * a HIGH finding. Empty diff (or no matches) returns no findings. The rule
  * is intentionally narrow: real reviews live in the Anthropic provider.
+ * Phase 235 (T5): optionally takes `extraMarkers` to recognize additional
+ * diff patterns for offline corpus testing — see `MockCodeReviewVerifierOptions`.
  */
 export class MockCodeReviewVerifier implements CodeReviewVerifier {
   readonly name = 'mock';
+  private readonly extraMarkers: readonly MockCodeReviewMarker[];
+
+  constructor(options: MockCodeReviewVerifierOptions = {}) {
+    this.extraMarkers = options.extraMarkers ?? [];
+  }
 
   async verify(input: CodeReviewInput): Promise<CodeReviewResult> {
     const findings: Record<string, Finding[]> = {};
@@ -80,6 +143,24 @@ export class MockCodeReviewVerifier implements CodeReviewVerifier {
             message: 'console.log left in source',
             line: postLine,
           });
+        }
+        // Phase 235 (T5) — opt-in extra markers; no-op loop over `[]` when
+        // `extraMarkers` is omitted, so zero-config output is unchanged.
+        for (const marker of this.extraMarkers) {
+          // A `RegExp` carrying the `g` (or `y`) flag is STATEFUL: `.test()`
+          // advances `lastIndex`, so the same pattern applied to successive
+          // diff lines would match intermittently rather than independently
+          // per line. Reset before each test so a marker written the
+          // idiomatic-but-wrong way (`/pattern/g`) still behaves per-line.
+          // Same defense `verify/coverage.ts` already applies to AC_TOKEN_RE.
+          marker.pattern.lastIndex = 0;
+          if (marker.pattern.test(body)) {
+            (findings[currentFile] ??= []).push({
+              severity: marker.severity,
+              message: marker.message,
+              line: postLine,
+            });
+          }
         }
         postLine += 1;
       } else if (raw.startsWith('-')) {
