@@ -1659,6 +1659,36 @@
       "decisionIds": [],
       "createdAt": "2026-07-29T23:25:34.102Z",
       "updatedAt": "2026-07-29T23:25:34.102Z"
+    },
+    {
+      "id": "rec-20260729-007",
+      "title": "Criteria-anchoring has never run end-to-end: code-review is skipped at standard x standard, so phase 235 could not dogfood its own gate",
+      "summary": "Phase 235 enhanced the code-review gate (criteria-anchored findings, anchor ladder, criteria-gap emission) but settled under tier=standard x profile=standard, where code-review is not in the effective gate set — its SUMMARY gate provenance records 'code-review -> skipped: not in the active tier x profile gate set'. Combined with rec-20260729-002 (SettleContext exposes no provenance, so the live gate would pass gateProvenance: [] anyway), the consequence is that the anchoring code has executed ONLY in tests: never once against a real diff, a real DRAFT, and a real verifier in a real settle. The unit and gate-level tests are strong (3410 green, adversarial corpus, mutation-proved), but no end-to-end evidence exists. Worth doing before the arc leans further on anchoring: run a phase at strict x standard or standard x complex (or deliberately override the tier) and inspect the resulting SUMMARY's codeReview findings for real anchor tiers and a real gap count. This is the meta-tool failing to dogfood a change to itself, which is precisely the class of gap CADENCE exists to catch.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/code-review.ts",
+        "packages/core/src/verify/criteria-gap.ts",
+        "docs/concepts.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-29T23:42:20.928Z",
+      "updatedAt": "2026-07-29T23:42:20.928Z"
     }
   ],
   "archived": [
@@ -5071,12 +5101,12 @@
         "dec-20260729-004"
       ],
       "convertedToPhaseId": "235-criteria-anchored-review-input",
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:47:08.679Z",
-      "updatedAt": "2026-07-29T23:39:21.170Z",
       "shippedRef": "phase 235 — anchor ladder as peer schema to AcEvidenceZ (executable > structured > declared > undeclared)",
+      "scoutId": "scout-20260727-kernel-review-phase0",
       "archivedAt": "2026-07-29T23:39:21.170Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T18:47:08.679Z",
+      "updatedAt": "2026-07-29T23:39:21.170Z"
     }
   ]
 }

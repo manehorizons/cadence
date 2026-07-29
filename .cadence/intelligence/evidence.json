@@ -1120,6 +1120,13 @@
       "kind": "note",
       "summary": "Demonstrated live during phase 235: all seven of the phase's ACs were satisfied by 34-189 unrelated test files each, and AC-5/AC-6 (belonging to a task not yet implemented at the time) were already fully satisfied by 91 and 49 unrelated files. Sample matches include 'it(\"Slice 23 AC-6: unknown rec id -> empty result, exit 0\")' from unrelated recommendation-CLI slices.",
       "createdAt": "2026-07-29T23:25:34.102Z"
+    },
+    {
+      "id": "ev-20260729-007",
+      "recommendationId": "rec-20260729-007",
+      "kind": "note",
+      "summary": "Read directly from .cadence/phases/235-criteria-anchored-review-input/235-01-SUMMARY.json gate provenance after settling phase 235: code-review status 'skipped', skipReason 'not in the active tier x profile gate set'. Zero gate bypasses, 7/7 ACs at executed evidence, schemaVersion 2 with assurance record.",
+      "createdAt": "2026-07-29T23:42:20.928Z"
     }
   ]
 }
