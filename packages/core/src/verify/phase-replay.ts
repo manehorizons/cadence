@@ -35,6 +35,8 @@ export type PhaseReplayOutcome =
 
 export interface PhaseReplayConfig {
   coverageMode?: 'mention' | 'assertion';
+  /** Configured verification.testGlobs; defaults to the engine defaults when absent. */
+  testGlobs?: string[];
 }
 
 function errMessage(err: unknown): string {
@@ -64,21 +66,41 @@ function errMessage(err: unknown): string {
  *   happens to share a name. When a DRAFT declares no task files at all,
  *   this refuses outright (`no-scoped-files`) rather than silently widening
  *   the scan to the whole repo.
- * - **Phase-qualified** (`coverageScheme === 'phase-qualified'`): the scan
- *   is deliberately a whole-repo scan (`expectedQualifier: id`, no
- *   `globs` derived from the DRAFT), and `no-scoped-files` never fires.
- *   Under this scheme every AC reference in the repo must carry the
- *   `<id>/AC-N` prefix (`scanTestCoverage`'s `expectedQualifier`, phase 239
- *   T2) to count at all — a bare or foreign-phase token is dropped from the
- *   result before it ever reaches this function. That prefix makes the
- *   token itself globally unique, which is exactly the property file-scoping
- *   existed to fake: cross-phase collision becomes structurally impossible
- *   without needing the DRAFT's `files:` lines to be complete, and those
- *   lines chronically under-declare in practice (replaying phase 233 under
- *   the bare path reports 5 false drifts against a SUMMARY that recorded
- *   all five ACs as pass/executed, because its DRAFT never named every test
- *   file it actually wrote). Repo-wide scoping under the qualifier is
- *   therefore strictly safer than file-scoping, not a relaxation of it.
+ * - **Phase-qualified** (`coverageScheme === 'phase-qualified'`): the scan is
+ *   never scoped to the DRAFT's declared `tasks[].files` (`no-scoped-files`
+ *   never fires under this scheme); instead it is scoped to the configured
+ *   `verification.testGlobs` (`config.testGlobs`), or the engine's own
+ *   default globs when that config is absent (`scanTestCoverage`'s
+ *   `DEFAULT_GLOBS`) — whichever set is in force, matched by
+ *   `expectedQualifier: id`. That is a config-scoped scan, not a whole-repo
+ *   scan: a project whose real tests live outside the configured/default
+ *   globs is invisible to this branch just as it would be to the coverage
+ *   gate itself. `config.testGlobs` itself is supplied by the caller — as of
+ *   this task (phase 239 T7) no production caller passes it yet;
+ *   `services/verify.ts`'s `runVerifyPhase` is wired to read it from
+ *   `verification.testGlobs` at T8, not here. **Until that wiring lands,
+ *   every production replay of a phase-qualified phase takes the
+ *   `DEFAULT_GLOBS` branch**, regardless of what `verification.testGlobs`
+ *   is configured to. Under this scheme every AC reference within that
+ *   scope must carry the `<id>/AC-N` prefix (`scanTestCoverage`'s
+ *   `expectedQualifier`, phase 239 T2) to count at all — a bare or
+ *   foreign-phase token is dropped from the result before it ever reaches
+ *   this function. That prefix makes the token itself globally unique,
+ *   which is exactly the property file-scoping existed to fake:
+ *   cross-phase collision becomes structurally impossible without needing
+ *   the DRAFT's `files:` lines to be complete, and those lines chronically
+ *   under-declare in practice (replaying phase 233 — on
+ *   `feat/kernel-assurance-v2`, not reachable from this branch — under the
+ *   bare path reports 5 false drifts against a SUMMARY that recorded all
+ *   five ACs as pass/executed, because its DRAFT never named every test
+ *   file it actually wrote). Scoping by the configured/default test globs
+ *   under the qualifier is therefore safer than file-scoping by the
+ *   DRAFT's `files:` lines **in the common case** — though a task file
+ *   declared outside `testGlobs` is found by the bare path (which scans
+ *   exactly the DRAFT's declared paths) and missed by this one, so for a
+ *   phase whose DRAFT names a file outside the configured/default globs,
+ *   this path is actually *less* complete, not strictly safer. It is only
+ *   as complete as `testGlobs`/the defaults actually are.
  */
 export async function replayPhaseCoverage(
   repoRoot: string,
@@ -157,12 +179,15 @@ export async function replayPhaseCoverage(
   }
 
   const mode = config.coverageMode ?? 'mention';
-  // Qualified: repo-wide, matched by this phase's own token — never scoped
-  // to the DRAFT's declared files (see the doc comment above). Bare: scoped
-  // to `taskFiles`, unchanged from the pre-239 behavior.
+  // Qualified: scoped to the configured `verification.testGlobs` (or the
+  // engine defaults when unset) and matched by this phase's own token —
+  // never scoped to the DRAFT's declared files (see the doc comment above).
+  // Bare: scoped to `taskFiles`, unchanged from the pre-239 behavior.
   const coverage = await scanTestCoverage(
     repoRoot,
-    qualified ? { mode, expectedQualifier: id } : { globs: taskFiles, mode },
+    qualified
+      ? { mode, expectedQualifier: id, ...(config.testGlobs ? { globs: config.testGlobs } : {}) }
+      : { globs: taskFiles, mode },
   );
   // Derive the id set to re-check from the SUMMARY's own recorded AC results,
   // not from the current DRAFT's `## Acceptance Criteria` list. The DRAFT can

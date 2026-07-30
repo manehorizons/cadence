@@ -8,11 +8,12 @@ import { replayPhaseCoverage } from '../../src/verify/phase-replay.js';
 // `coverageScheme: "phase-qualified"` must replay repo-wide, matched by its
 // own qualified token, and must NEVER scope to `draft.tasks[].files` or
 // return `no-scoped-files`. This is the fix for `replayPhaseCoverage`'s
-// over-refusal: file-scoped replay under-declares constantly (phase 233
-// reported 5 false drifts against a SUMMARY that recorded all five as
-// pass/executed), because DRAFT.md's `files:` lines are chronically
-// incomplete. The qualifier makes the token itself globally unique, so
-// scoping is no longer needed to avoid cross-phase AC-N collisions.
+// over-refusal: file-scoped replay under-declares constantly (phase 233,
+// on `feat/kernel-assurance-v2` — not reachable from this branch — reported
+// 5 false drifts against a SUMMARY that recorded all five as pass/executed,
+// because DRAFT.md's `files:` lines are chronically incomplete). The
+// qualifier makes the token itself globally unique, so scoping is no
+// longer needed to avoid cross-phase AC-N collisions.
 //
 // FIXTURE TOKEN HYGIENE (same rule as tests/verify/coverage-explain-qualified.test.ts):
 // this file covers AC-8 only, and this comment block itself must not carry
@@ -248,6 +249,124 @@ describe('replayPhaseCoverage · phase-qualified scheme (phase 239 T7)', () => {
       );
 
       const outcome = await replayPhaseCoverage(fx.root, phase, id);
+      expect(outcome.ok).toBe(true);
+      if (outcome.ok) {
+        expect(outcome.data.driftCount).toBe(1);
+        expect(outcome.data.perAc[0]).toMatchObject({
+          id: 'AC-1',
+          currentlyCovered: false,
+          drift: true,
+        });
+      }
+    } finally {
+      await fx.cleanup();
+    }
+  });
+
+  it('239-01/AC-8: with config.testGlobs set, a qualified test file OUTSIDE packages/ is found and counts as covered', async () => {
+    const fx = await tempRepo();
+    try {
+      const phase = '233-sample';
+      const id = '233-01';
+      await writeDraft(fx.root, phase, id, '');
+      await writeSummary(
+        fx.root,
+        phase,
+        id,
+        [{ id: 'AC-1', pass: true, evidence: 'executed' }],
+        'phase-qualified',
+      );
+      // Outside packages/**, which the engine's DEFAULT_GLOBS never match —
+      // proof this test would fail without FIX 1's testGlobs wiring.
+      await writeSourceFile(
+        fx.root,
+        'src/foo.spec.ts',
+        `import { it } from 'vitest';\nit('covers ${id}/AC-1', () => {});\n`,
+      );
+
+      const outcome = await replayPhaseCoverage(fx.root, phase, id, {
+        testGlobs: ['src/**/*.spec.ts'],
+      });
+      expect(outcome.ok).toBe(true);
+      if (outcome.ok) {
+        expect(outcome.data.driftCount).toBe(0);
+        expect(outcome.data.perAc[0]).toMatchObject({
+          id: 'AC-1',
+          currentlyCovered: true,
+          drift: false,
+        });
+      }
+    } finally {
+      await fx.cleanup();
+    }
+  });
+
+  it('239-01/AC-8: with config.testGlobs ABSENT, a file outside packages/ is not found — engine defaults still used', async () => {
+    const fx = await tempRepo();
+    try {
+      const phase = '233-sample';
+      const id = '233-01';
+      await writeDraft(fx.root, phase, id, '');
+      await writeSummary(
+        fx.root,
+        phase,
+        id,
+        [{ id: 'AC-1', pass: true, evidence: 'executed' }],
+        'phase-qualified',
+      );
+      // Same fixture shape as the previous test, minus `testGlobs` — this
+      // must NOT be found, proving the config-absent path still falls back
+      // to the engine's default globs rather than silently widening to
+      // match everything.
+      await writeSourceFile(
+        fx.root,
+        'src/foo.spec.ts',
+        `import { it } from 'vitest';\nit('covers ${id}/AC-1', () => {});\n`,
+      );
+
+      const outcome = await replayPhaseCoverage(fx.root, phase, id);
+      expect(outcome.ok).toBe(true);
+      if (outcome.ok) {
+        expect(outcome.data.driftCount).toBe(1);
+        expect(outcome.data.perAc[0]).toMatchObject({
+          id: 'AC-1',
+          currentlyCovered: false,
+          drift: true,
+        });
+      }
+    } finally {
+      await fx.cleanup();
+    }
+  });
+
+  it("239-01/AC-8: config.testGlobs REPLACES the engine defaults rather than adding to them — a packages/**/*.test.ts file is not credited when testGlobs points elsewhere", async () => {
+    const fx = await tempRepo();
+    try {
+      const phase = '233-sample';
+      const id = '233-01';
+      await writeDraft(fx.root, phase, id, '');
+      await writeSummary(
+        fx.root,
+        phase,
+        id,
+        [{ id: 'AC-1', pass: true, evidence: 'executed' }],
+        'phase-qualified',
+      );
+      // This file matches DEFAULT_GLOBS (`packages/**/*.test.ts`) but NOT
+      // the configured `testGlobs` below. A mutant that unions
+      // `[...DEFAULT_GLOBS, ...(config.testGlobs ?? [])]` instead of
+      // replacing DEFAULT_GLOBS with `config.testGlobs` when set would
+      // still find this file and wrongly credit the AC — reintroducing
+      // gate/replay divergence the qualifier was meant to close.
+      await writeSourceFile(
+        fx.root,
+        'packages/legacy/old.test.ts',
+        `import { it } from 'vitest';\nit('covers ${id}/AC-1', () => {});\n`,
+      );
+
+      const outcome = await replayPhaseCoverage(fx.root, phase, id, {
+        testGlobs: ['src/**/*.spec.ts'],
+      });
       expect(outcome.ok).toBe(true);
       if (outcome.ok) {
         expect(outcome.data.driftCount).toBe(1);

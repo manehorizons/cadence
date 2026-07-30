@@ -543,8 +543,11 @@ function buildSettleContext(
  * spreadable fragment for both SUMMARY assembly sites. Emitted unconditionally
  * (both keys always present on new records) so a reader never has to guess
  * whether an absent field means "bare" or "written before phase 239" — absent
- * means pre-239, full stop. Deliberately NOT read back out of a parsed
- * SUMMARY anywhere: it is provenance, not an input.
+ * means pre-239, full stop. NOT read back out of a parsed SUMMARY anywhere
+ * in this file — it is provenance at emission time here, not an input to
+ * settle. It IS read back as an input elsewhere: `verify/phase-replay.ts`
+ * branches its coverage-scan scoping on `summary.coverageScheme` (phase 239
+ * T7). Don't simplify this emission on the assumption nothing reads it back.
  */
 function coverageProvenance(cadenceConfig: CadenceConfig): {
   coverageScheme: 'bare' | 'phase-qualified';

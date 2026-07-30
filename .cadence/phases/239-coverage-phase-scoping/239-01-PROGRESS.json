@@ -62,6 +62,20 @@
         "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/handoff/SESSION-2026-07-30-phase239-t6-implemented-not-recorded-t7-next.md"
       ],
       "updatedAt": "2026-07-30T03:15:35.723Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "Qualified-scheme replay scans by token instead of DRAFT file-scoping; no-scoped-files never fires under phase-qualified. Two independent adversarial reviews. Review 1 returned FAIL on a Critical: the branch passed no globs, silently falling back to hardcoded DEFAULT_GLOBS and ignoring verification.testGlobs — a non-monorepo consumer would settle green through the gate then have verify phase report every AC drifted. Fixed by threading an optional testGlobs through PhaseReplayConfig, with tests covering a fixture outside packages/ (set and absent). Review 2 returned PASS_WITH_CONCERNS and ruled AC-8's 'across the whole repo' wording specifies a defect, not a target: a literal whole-repo scan under mention mode credits AC-8 from this phase's own RECOMMENDATIONS.md, evidence.json and handoff doc — planning prose satisfying its own coverage replay. AC-8 amended rather than the code loosened. The Critical is closed at the function level but NOT end-to-end: services/verify.ts is unwired, so every production replay still takes DEFAULT_GLOBS. Routed to T8 as a mandatory action-line clause plus a required service-level test, done: gains AC-8, and a marker comment now sits at the call site. Main thread re-verified independently at every step: full pipeline 24/24 three times, coverage probe measured directly (AC-8 refs=1 qualifying=1, first ref an asserting it() title at line 127), and the union-mutant kill reproduced by hand — mutant applied, exactly the new test failed, reverted and confirmed green. Also fixed: three inaccuracies in the rewritten doc comment (unwired-caller gap, a false safer-than comparative with counterexample, an unverifiable phase-233 citation now sourced to feat/kernel-assurance-v2) and T6's falsified settle.ts comment. Filed rec-20260730-001 (coverageMode provenance ignored by replay) and rec-20260730-002 (dedup first-occurrence-wins zeroes an AC when a qualified token sits outside an asserting block — cost this task a full review round-trip).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/verify/phase-replay-qualified.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/verify/phase-replay.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/handoff/SESSION-2026-07-30-phase239-t7-reviewed-FAIL-critical-globs-fallback.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/phases/239-coverage-phase-scoping/239-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/services/settle.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/a1714e8e-ac59-4f98-b361-d10d97b4659a/scratchpad/fix1-proof.mjs",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/services/verify.ts"
+      ],
+      "updatedAt": "2026-07-30T23:46:20.604Z"
     }
   }
 }

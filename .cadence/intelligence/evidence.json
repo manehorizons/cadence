@@ -1064,6 +1064,20 @@
       "kind": "note",
       "summary": "LOE assessment done interactively 2026-07-27: CI matrix + engines-floor + node-guard + dependabot + doc-prose sweep enumerated; no doc-content test gates the '20' string so the doc sweep is manual-diligence only",
       "createdAt": "2026-07-27T20:55:55.298Z"
+    },
+    {
+      "id": "ev-20260730-001",
+      "recommendationId": "rec-20260730-001",
+      "kind": "note",
+      "summary": "Reproduced by phase 239 T7's independent review: SUMMARY.coverageMode='mention' replayed with config 'mention' => drift=0 covered=true; same SUMMARY replayed with config 'assertion' => drift=1 covered=false.",
+      "createdAt": "2026-07-30T23:24:04.105Z"
+    },
+    {
+      "id": "ev-20260730-002",
+      "recommendationId": "rec-20260730-002",
+      "kind": "note",
+      "summary": "Hit live during phase 239 T7 (2026-07-30). The new test file's own fixture-hygiene COMMENT contained a contiguous 239-01/AC-8 literal; it took the dedup slot and AC-8 measured refs=1 qualifying=0 while five asserting it() titles below carried the same qualified token. Full pipeline was 24/24 green throughout — only a direct scanTestCoverage probe surfaced it. Cost one full implement/review round-trip.",
+      "createdAt": "2026-07-30T23:24:17.740Z"
     }
   ]
 }

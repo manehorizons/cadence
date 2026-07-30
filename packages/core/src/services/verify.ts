@@ -257,6 +257,10 @@ export async function runVerifyPhase(args: VerifyPhaseArgs, io: CommandIO): Prom
 
   const results: PhaseReplayResult[] = [];
   for (const t of targets) {
+    // phase 239 T8: must also pass `testGlobs: config.verification?.testGlobs` here.
+    // Until wired, every production replay takes scanTestCoverage's DEFAULT_GLOBS
+    // branch, so a consumer whose tests live outside packages/** gets a green
+    // coverage gate and a red `verify phase` on the same commit.
     const outcome = await replayPhaseCoverage(args.cwd, t.phase, t.id, { coverageMode });
     if (!outcome.ok) {
       io.err(`verify phase failed: ${outcome.message}\n`);
