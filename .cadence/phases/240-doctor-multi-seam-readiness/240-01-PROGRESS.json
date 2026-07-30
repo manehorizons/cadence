@@ -1,0 +1,23 @@
+{
+  "draftId": "240-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "assess.ts: seamsDowngraded added to VerifierReadiness, computed inside the existing VERIFIER_SEAMS loop via the existing credsPresent (so host-cli/mock are never flagged); seamProvider exported for caller-side naming. seamsReal/seamsMock semantics untouched. 5 new tests in assess.test.ts.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-30T00:23:23.599Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "doctor/run.ts: new branch after the deep-verify ones returns warning naming each downgrading seam + its provider, with the phase-211 Claude-Code-login wording reused when an affected seam is anthropic under CLAUDECODE=1. Function doc comment corrected (it stated the deep-verify-only contract). 4 new tests in verification-readiness.test.ts.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-30T00:23:23.756Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "docs/reference/commands.md doctor-check row and docs/providers.md paragraph rewritten to the all-seam contract; patch changeset added for @manehorizons/cadence-core. Full workspace green: pnpm test 12/12 tasks (core 364 files / 3310 tests), pnpm typecheck 0, pnpm lint 0.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-30T00:23:23.916Z"
+    }
+  }
+}

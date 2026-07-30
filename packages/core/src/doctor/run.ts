@@ -15,7 +15,7 @@ import {
 } from '@manehorizons/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
-import { assessReadiness, isClaudeCodeSession } from '../activate/assess.js';
+import { assessReadiness, isClaudeCodeSession, seamProvider } from '../activate/assess.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
 import {
@@ -699,9 +699,14 @@ export async function checkHandoffRetention(root: string): Promise<DoctorCheck> 
 /**
  * Surface whether real verification is actually wired (v1.22). Reuses the pure
  * `assessReadiness` (shared with `cadence activate`). `warning` when deep-verify
- * is mock (remedy: `cadence activate`) or a real provider lacks its credentials;
- * `ok` otherwise. Read-only, best-effort, never throws (doctor convention). `env`
- * is injectable for deterministic tests.
+ * is mock (remedy: `cadence activate`), when deep-verify's provider lacks its
+ * credentials, or — phase 239 / issue #331 — when ANY other verifier seam is
+ * configured to a real provider whose credentials are absent and will therefore
+ * downgrade to mock. Before phase 239 only the deep-verify seam was
+ * credential-checked, so this check reported `ok` while a sibling seam was
+ * guaranteed to fall back to mock (a false green that `cadence config explain`
+ * caught and this did not). `ok` otherwise. Read-only, best-effort, never throws
+ * (doctor convention). `env` is injectable for deterministic tests.
  */
 export async function checkVerificationReadiness(
   root: string,
@@ -739,6 +744,29 @@ export async function checkVerificationReadiness(
         'warning',
         `deep-verify is set to '${r.provider}' but its credentials are missing — it will fall back to mock.`,
         `Set ${envVar} (or run \`cadence activate\`).`,
+      );
+    }
+    // Issue #331: deep-verify being healthy is NOT sufficient. Every other seam
+    // gates a real review too, and one configured to a real provider without
+    // credentials will silently downgrade to mock — the case that made this
+    // check report `ok` while `cadence config explain` warned. Reported after
+    // the deep-verify branches above so their (more specific) wording wins when
+    // deep-verify is itself the problem.
+    if (r.seamsDowngraded.length > 0) {
+      const named = r.seamsDowngraded
+        .map((seam) => `${seam} ('${seamProvider(config, seam)}')`)
+        .join(', ');
+      const plural = r.seamsDowngraded.length === 1 ? 'seam' : 'seams';
+      const claudeCodeHint =
+        r.seamsDowngraded.some((seam) => seamProvider(config, seam) === 'anthropic') &&
+        isClaudeCodeSession(env)
+          ? ' Being logged into Claude Code does not supply ANTHROPIC_API_KEY; that is a separate credential.'
+          : '';
+      return fail(
+        'verification-readiness',
+        'warning',
+        `${r.reason} But ${r.seamsDowngraded.length} other ${plural} will silently fall back to mock for want of credentials: ${named}.${claudeCodeHint}`,
+        `Supply the missing credentials, or run \`cadence activate --provider host-cli --all\` to reuse your host CLI login for every seam. \`cadence config explain\` lists each seam's effective provider.`,
       );
     }
     return pass('verification-readiness', r.reason);
