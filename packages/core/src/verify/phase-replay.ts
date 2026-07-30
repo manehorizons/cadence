@@ -48,18 +48,37 @@ function errMessage(err: unknown): string {
  * after the loop has moved past the phase, or in a fresh checkout that never
  * ran it locally at all (the point of `cadence verify phase` / `init --ci`).
  *
- * The coverage scan below is deliberately restricted to the file paths the
- * DRAFT's own tasks declared (`draft.tasks[].files`) — it is NEVER a
- * whole-repo scan. `AC-N` tokens are small integers that repeat across every
- * phase this repo has ever run (phase 7's AC-1, phase 42's AC-1, phase 200's
- * AC-1, ...); a whole-repo scan would let an unrelated phase's AC-1 test
- * satisfy this phase's AC-1 recheck purely by coincidence of numbering,
- * silently masking real drift in the phase actually being replayed. Scoping
- * the scan to only the files this phase's DRAFT named is what keeps a
- * replay result meaningful per-phase rather than a repo-wide token search
- * that happens to share a name. When a DRAFT declares no task files at all,
- * this refuses outright (`no-scoped-files`) rather than silently widening
- * the scan to the whole repo.
+ * The coverage scan takes one of two shapes depending on the scheme the
+ * SUMMARY itself recorded (`summary.coverageScheme`, phase 239 T6):
+ *
+ * - **Bare** (`coverageScheme` absent, or `'bare'`): the scan is restricted
+ *   to the file paths the DRAFT's own tasks declared
+ *   (`draft.tasks[].files`) — it is NEVER a whole-repo scan. `AC-N` tokens
+ *   are small integers that repeat across every phase this repo has ever
+ *   run (phase 7's AC-1, phase 42's AC-1, phase 200's AC-1, ...); a
+ *   whole-repo scan would let an unrelated phase's AC-1 test satisfy this
+ *   phase's AC-1 recheck purely by coincidence of numbering, silently
+ *   masking real drift in the phase actually being replayed. Scoping the
+ *   scan to only the files this phase's DRAFT named is what keeps a replay
+ *   result meaningful per-phase rather than a repo-wide token search that
+ *   happens to share a name. When a DRAFT declares no task files at all,
+ *   this refuses outright (`no-scoped-files`) rather than silently widening
+ *   the scan to the whole repo.
+ * - **Phase-qualified** (`coverageScheme === 'phase-qualified'`): the scan
+ *   is deliberately a whole-repo scan (`expectedQualifier: id`, no
+ *   `globs` derived from the DRAFT), and `no-scoped-files` never fires.
+ *   Under this scheme every AC reference in the repo must carry the
+ *   `<id>/AC-N` prefix (`scanTestCoverage`'s `expectedQualifier`, phase 239
+ *   T2) to count at all — a bare or foreign-phase token is dropped from the
+ *   result before it ever reaches this function. That prefix makes the
+ *   token itself globally unique, which is exactly the property file-scoping
+ *   existed to fake: cross-phase collision becomes structurally impossible
+ *   without needing the DRAFT's `files:` lines to be complete, and those
+ *   lines chronically under-declare in practice (replaying phase 233 under
+ *   the bare path reports 5 false drifts against a SUMMARY that recorded
+ *   all five ACs as pass/executed, because its DRAFT never named every test
+ *   file it actually wrote). Repo-wide scoping under the qualifier is
+ *   therefore strictly safer than file-scoping, not a relaxation of it.
  */
 export async function replayPhaseCoverage(
   repoRoot: string,
@@ -124,8 +143,9 @@ export async function replayPhaseCoverage(
   }
   const summary = parsedSummary.data;
 
+  const qualified = summary.coverageScheme === 'phase-qualified';
   const taskFiles = draft.tasks.flatMap((t) => t.files);
-  if (taskFiles.length === 0) {
+  if (!qualified && taskFiles.length === 0) {
     return {
       ok: false,
       kind: 'no-scoped-files',
@@ -137,7 +157,13 @@ export async function replayPhaseCoverage(
   }
 
   const mode = config.coverageMode ?? 'mention';
-  const coverage = await scanTestCoverage(repoRoot, { globs: taskFiles, mode });
+  // Qualified: repo-wide, matched by this phase's own token — never scoped
+  // to the DRAFT's declared files (see the doc comment above). Bare: scoped
+  // to `taskFiles`, unchanged from the pre-239 behavior.
+  const coverage = await scanTestCoverage(
+    repoRoot,
+    qualified ? { mode, expectedQualifier: id } : { globs: taskFiles, mode },
+  );
   // Derive the id set to re-check from the SUMMARY's own recorded AC results,
   // not from the current DRAFT's `## Acceptance Criteria` list. The DRAFT can
   // drift from the SUMMARY over time (that drift is the whole reason this

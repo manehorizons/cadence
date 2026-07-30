@@ -50,6 +50,18 @@
         "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/cli/init.test.ts"
       ],
       "updatedAt": "2026-07-30T02:28:43.328Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "SUMMARY records coverageScheme/coverageMode as additive optional fields (no Zod default — a default would break every historical SUMMARY's content hash), on both the success and refused paths. Made the shared memoized ctx.coverage() thunk scheme-aware, which fixes evidence derivation, deep-verify and interactive in one move; ac-evidence.ts needed no change because scanTestCoverage keeps bare AC-N map keys. Independent review PASS_WITH_CONCERNS; closed the Major by adding deep-verify qualified/bare tests, plus two comment fixes.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/summary-coverage-scheme.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/types/src/summary.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/gates/coverage.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/handoff/SESSION-2026-07-30-phase239-t6-implemented-not-recorded-t7-next.md"
+      ],
+      "updatedAt": "2026-07-30T03:15:35.723Z"
     }
   }
 }
