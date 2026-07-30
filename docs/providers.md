@@ -71,7 +71,9 @@ line. Preview without writing using `--print`.
 To confirm the resulting state at any time, run `cadence doctor` — its
 `verification-readiness` check reports `ok` once a real provider with valid
 credentials is wired, and `warning` (pointing back at `cadence activate`) while
-you are still on mock.
+you are still on mock. Since phase 239 it checks **every** seam, not just
+deep-verify: a seam left on a real provider whose credentials are absent is
+reported by name, because it will silently fall back to mock at call time.
 
 The manual steps below remain the source of truth for per-gate configuration,
 `local` setup, custom headers, and command-line provider selection.

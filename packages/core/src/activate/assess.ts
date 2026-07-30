@@ -27,12 +27,25 @@ export interface VerifierReadiness {
   keyPresent: boolean;
   seamsReal: VerifierSeam[];
   seamsMock: VerifierSeam[];
+  /**
+   * Seams whose configured provider is real but whose credentials are absent —
+   * guaranteed to fall back to `mock` at runtime (see the prerequisite branches
+   * in `verify/verifier-factory.ts`). Issue #331: this is the set
+   * `seamsReal`/`seamsMock` cannot express, because those partition by
+   * *configured provider name* and so classify a keyless `anthropic` seam as
+   * real. In `VERIFIER_SEAMS` order. Never includes a `mock` seam (not a
+   * downgrade — it announces itself) nor a `host-cli` seam (no required
+   * credential by design; see `credsPresent`).
+   */
+  seamsDowngraded: VerifierSeam[];
   /** deep-verify provider is real AND its credentials are present. */
   ready: boolean;
   reason: string;
 }
 
-function seamProvider(config: CadenceConfig, seam: VerifierSeam): VerifierProvider {
+/** The provider configured for `seam`. Exported so a caller reporting a seam
+ *  from `seamsDowngraded` can name the provider that will downgrade. */
+export function seamProvider(config: CadenceConfig, seam: VerifierSeam): VerifierProvider {
   return (config[seam] as { provider: VerifierProvider }).provider;
 }
 
@@ -83,8 +96,16 @@ export function assessReadiness(
 ): VerifierReadiness {
   const seamsReal: VerifierSeam[] = [];
   const seamsMock: VerifierSeam[] = [];
+  const seamsDowngraded: VerifierSeam[] = [];
   for (const seam of VERIFIER_SEAMS) {
-    (seamProvider(config, seam) === 'mock' ? seamsMock : seamsReal).push(seam);
+    const seamsProvider = seamProvider(config, seam);
+    (seamsProvider === 'mock' ? seamsMock : seamsReal).push(seam);
+    // Issue #331: credential-check EVERY real seam, not just deep-verify —
+    // otherwise a keyless `anthropic` seam sits in `seamsReal` and reads as
+    // healthy while being certain to downgrade.
+    if (seamsProvider !== 'mock' && !credsPresent(seamsProvider, seam, config, env, cwd)) {
+      seamsDowngraded.push(seam);
+    }
   }
   const provider = seamProvider(config, DEEP_VERIFY_SEAM);
   const keyPresent = credsPresent(provider, DEEP_VERIFY_SEAM, config, env, cwd);
@@ -95,5 +116,5 @@ export function assessReadiness(
       : keyPresent
         ? `deep-verify uses ${provider} with credentials present.`
         : `deep-verify is set to ${provider} but its credentials are missing.`;
-  return { provider, keyPresent, seamsReal, seamsMock, ready, reason };
+  return { provider, keyPresent, seamsReal, seamsMock, seamsDowngraded, ready, reason };
 }
