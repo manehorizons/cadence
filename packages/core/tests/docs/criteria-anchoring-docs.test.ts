@@ -184,10 +184,35 @@ describe('AC-7: docs/concepts.md documents the anchor ladder, criteria-gap behav
     expect(concepts).toContain('no new bypass flag');
   });
 
-  it('AC-7: states the executable tier is not reachable in a real settle yet (rec-20260729-002)', () => {
+  it('AC-7: states the executable tier is reachable in a live settle as of phase 241, closing rec-20260729-002, and still requires corroboration', () => {
     expect(concepts).toContain('rec-20260729-002');
-    expect(concepts).toMatch(/`executable`\s+tier is not reachable/i);
-    expect(concepts).toContain('gateProvenance: []');
+    expect(concepts).toMatch(/closed by phase 241/i);
+    // Whitespace-normalized so these assertions survive a reflow of the
+    // paragraph but still pin CONNECTED clauses. Asserting the fragments
+    // `executable is reachable`, `build-test-must-pass`, and `status: 'ran'`
+    // INDEPENDENTLY is not enough: prose claiming "reachable ... even without
+    // a `status: 'ran'` entry" satisfies all three in isolation while saying
+    // the opposite of what `verify/anchor.ts` implements. The conditional has
+    // to be matched as one clause, and the cap has to be asserted too.
+    const flat = concepts.replace(/\s+/g, ' ');
+    expect(flat).toMatch(
+      /`executable` is reachable in a live settle when both of the ladder's conditions hold/i,
+    );
+    // Condition (a) must be pinned too, not just (b). Without this, prose
+    // saying the AC "merely exists in the DRAFT" would satisfy every other
+    // assertion here while describing `structured`, not `executable`.
+    expect(flat).toMatch(/cited by a task with a non-empty `verify:`/i);
+    expect(flat).toMatch(
+      /provenance snapshot contains a `build-test-must-pass` entry with `status: 'ran'`/i,
+    );
+    // The other half of the truth: corroboration is required, not assumed.
+    expect(flat).toMatch(
+      /`skipped`, `refused`, or absent `build-test-must-pass` entry still caps the tier below `executable`/i,
+    );
+    // The old, now-false unqualified claim must be gone: any "not reachable"
+    // reference to `executable` may only appear scoped to the original-ship
+    // framing this bullet corrects, never as an unqualified present-tense claim.
+    expect(concepts).not.toMatch(/`executable`\s+tier is not reachable in a real settle yet/i);
   });
 
   it('AC-7: states anchoring is per-file, not per-finding (rec-20260729-003)', () => {

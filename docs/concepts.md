@@ -379,15 +379,21 @@ Scope is deliberately narrow: only `code-review` is criteria-anchored.
 (`dec-20260729-003`) — generalizing the ladder to them was ruled out of
 scope for this phase, not merely deferred silently.
 
-**Three shipped limitations**, tracked as open Praxis recommendations rather
-than glossed over:
+**Three limitations were disclosed when the ladder shipped**, tracked as
+Praxis recommendations rather than glossed over. The first is now closed by
+phase 241; the other two remain open:
 
-- The `executable` tier is not reachable in a real settle yet
-  (`rec-20260729-002`). `SettleContext` exposes no prior-gate provenance to
-  a single `GateImpl`, so `gates/code-review.ts` always calls the resolver
-  with `gateProvenance: []` — a live settle's findings therefore cap at
-  `structured`/`declared`/`undeclared`. `executable` is exercised only by
-  unit tests that inject provenance directly.
+- The `executable` tier was not reachable in a real settle as originally
+  shipped (`rec-20260729-002`, closed by phase 241). `SettleContext` now
+  carries a frozen, per-gate `gateProvenance` snapshot accumulated over the
+  course of the settle, and `gates/code-review.ts` passes it through
+  (`ctx.gateProvenance ?? []`) instead of a literal `[]`. `executable` is
+  reachable in a live settle when both of the ladder's conditions hold: the
+  finding's AC is cited by a task with a non-empty `verify:`, **and** the
+  provenance snapshot contains a `build-test-must-pass` entry with
+  `status: 'ran'`. A `skipped`, `refused`, or absent `build-test-must-pass`
+  entry still caps the tier below `executable` — this widened what is
+  reachable, it did not weaken what must be earned.
 - Anchoring is per-file, not per-finding (`rec-20260729-003`). One anchor is
   resolved for a whole file and applied to every finding reported in it, so
   a genuinely uncovered defect sitting in an otherwise-covered file does not
