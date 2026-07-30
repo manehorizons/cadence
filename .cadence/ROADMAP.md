@@ -2026,6 +2026,13 @@ extraction from Déjà, `needs-evidence`) is resolved — stable finding identit
 dependent, and building a bespoke fingerprint before that investigation lands is how two
 incompatible ones get shipped.
 
+> **Gate satisfied (2026-07-30).** Phase 235 settled as `c27bcb03`, and the
+> rec-20260727-007 investigation closed: rec **rejected**, `dec-20260730-001` records that
+> finding identity uses a pure anchor-derived content hash over
+> `(file, anchor.kind, anchor.ref, severity, normalized message)` — no fingerprint
+> primitive is extracted, and no runtime dependency is added. Evidence in
+> `ev-20260730-001`. **Phase 236 is unblocked and must not build a fingerprint.**
+
 **Objective (sketch).** Give findings a stable identity (id + target discriminant), a
 disposition, and expiring waivers, then route them to the recommendation ledger — which
 requires extending `RecommendationSourceZ` (`packages/types/src/intelligence.ts:3`,
@@ -2049,6 +2056,14 @@ rec-20260727-008 (low, `needs-evidence`).
 - **rec-20260727-007** — shared fingerprint primitive extraction from Déjà
   (`needs-evidence`). A prerequisite *investigation* for phase 236's finding identity, not a
   phase of its own. Resolve before 236 is drafted.
+  **Resolved 2026-07-30 — rejected** (`dec-20260730-001`, evidence `ev-20260730-001`).
+  Déjà is not consumable as a library (`main`/`exports` both null, unpublished under a name
+  Cadence could depend on); its normalization layer carries tree-sitter and its matching
+  layer carries better-sqlite3, both native, against core's zero-runtime-dependency bias;
+  and the problems differ in shape — Déjà solves *retrieval* over an indexed corpus, Cadence
+  needs *identity* across two small per-run sets. Reopen only if `undeclared`-tier findings
+  become a material share of routed ledger entries **and** identity churn across refactors
+  is measured rather than assumed.
 - **rec-20260727-009** — counter-verifier as a kernel component (`raw-idea`).
 - **rec-20260727-010** — Conductor as a CLI client (`raw-idea`).
 

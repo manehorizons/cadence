@@ -134,6 +134,15 @@
       "status": "active",
       "decidedAt": "2026-07-29T23:06:44.137Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260730-001",
+      "recommendationId": "rec-20260727-007",
+      "title": "Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja",
+      "rationale": "Phase 236 derives a finding's stable id from the anchor it already carries -- a pure content hash over (file, anchor.kind, anchor.ref, severity, normalized message) -- and adds no new runtime dependency. The Deja extraction evaluated by rec-20260727-007 is rejected on three grounds recorded in ev-20260730-001: Deja is not consumable as a library (main:null/exports:null, unpublished under a name Cadence could depend on); its normalization layer carries tree-sitter and its matching layer carries better-sqlite3, both native, against core's zero-runtime-dependency bias; and the two problems differ in shape -- Deja solves retrieval over an indexed corpus while Cadence needs identity across two small per-run sets, so the genuinely shared surface reduces to 83 pure lines plus a one-line containment formula. This satisfies the concern that motivated the rec -- do not ship two incompatible fingerprints -- by shipping zero. Fingerprinting only buys identity that survives a refactor moving the anchored code, and only for anchor.kind==='none' / undeclared-tier findings, which section 7.1 already treats as weak by default. REOPEN TRIGGER: revisit if undeclared-tier findings become a material share of routed ledger entries AND identity churn across refactors is measured rather than assumed; extraction would then start from Deja's fingerprint.ts alone (pure, node:crypto only), never normalize.ts or match.ts.",
+      "status": "active",
+      "decidedAt": "2026-07-30T03:19:30.060Z",
+      "supersedes": []
     }
   ]
 }
