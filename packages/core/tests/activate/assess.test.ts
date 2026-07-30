@@ -53,6 +53,64 @@ describe('assessReadiness (AC-6)', () => {
     expect(r.reason).toMatch(/missing/i);
   });
 
+  // Phase 239 (issue #331) — `seamsReal`/`seamsMock` partition by *configured*
+  // provider, which says nothing about whether that provider can actually run.
+  // `seamsDowngraded` names the seams whose configured provider WILL fall back
+  // to mock at runtime for want of credentials — the set that made
+  // `verification-readiness` report a false green.
+  it('seamsDowngraded names a non-deep-verify seam whose creds are missing', () => {
+    const r = assessReadiness(
+      cfg({ verifier: { provider: 'host-cli' }, specReview: { provider: 'anthropic' } }),
+      {},
+    );
+    // deep-verify itself is healthy — this is exactly the false-green shape.
+    expect(r.provider).toBe('host-cli');
+    expect(r.keyPresent).toBe(true);
+    expect(r.ready).toBe(true);
+    expect(r.seamsDowngraded).toEqual(['specReview']);
+    // The configured-provider partition is unchanged by this addition.
+    expect(r.seamsReal).toContain('specReview');
+  });
+
+  it('seamsDowngraded is empty when every real seam has its creds', () => {
+    const withKey = assessReadiness(
+      cfg({ verifier: { provider: 'anthropic' }, specReview: { provider: 'anthropic' } }),
+      { ANTHROPIC_API_KEY: 'sk-test' },
+    );
+    expect(withKey.seamsDowngraded).toEqual([]);
+  });
+
+  it('seamsDowngraded never flags host-cli or mock seams', () => {
+    // host-cli has no required credential by design (checked lazily at spawn),
+    // and a mock seam is not a downgrade — it announces itself.
+    const r = assessReadiness(
+      cfg({ verifier: { provider: 'host-cli' }, specReview: { provider: 'host-cli' } }),
+      {},
+    );
+    expect(r.seamsDowngraded).toEqual([]);
+  });
+
+  it('seamsDowngraded flags a local seam missing its base URL', () => {
+    const r = assessReadiness(
+      cfg({ verifier: { provider: 'host-cli' }, codeReview: { provider: 'local', model: 'm' } }),
+      {},
+    );
+    expect(r.seamsDowngraded).toEqual(['codeReview']);
+  });
+
+  it('seamsDowngraded lists every affected seam, in VERIFIER_SEAMS order', () => {
+    const r = assessReadiness(
+      cfg({
+        verifier: { provider: 'host-cli' },
+        specReview: { provider: 'anthropic' },
+        codeReview: { provider: 'anthropic' },
+        planReview: { provider: 'anthropic' },
+      }),
+      {},
+    );
+    expect(r.seamsDowngraded).toEqual(['specReview', 'codeReview', 'planReview']);
+  });
+
   it('local creds need a base URL and a model', () => {
     const c = cfg({ verifier: { provider: 'local', model: 'm' } });
     expect(credsPresent('local', 'verifier', c, {})).toBe(false);
