@@ -171,6 +171,7 @@ export type {
 export type {
   CodeReviewInput,
   CodeReviewResult,
+  CodeReviewTaskRef,
   CodeReviewVerifier,
   Finding as CodeReviewFinding,
   FindingSeverity as CodeReviewFindingSeverity,

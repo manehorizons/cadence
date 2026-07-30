@@ -32,6 +32,39 @@ export const DeepVerifyMetaZ = z.object({
 export type DeepVerifyMeta = z.infer<typeof DeepVerifyMetaZ>;
 
 /**
+ * Phase 235 (§7.1): the anchor ladder — how strongly a finding is tied to a
+ * criterion the phase actually declared, strongest to weakest. `executable`
+ * requires both that the AC is referenced by a task with a runnable
+ * `verify` command AND that `build-test-must-pass` actually ran (phase 232
+ * gate provenance corroborates it — never assumed from the DRAFT alone).
+ * `structured` is an AC with non-empty `given`/`when`/`then`. `declared` is
+ * a prose-only or empty-G/W/T AC, or a `boundaries[]` string. `undeclared`
+ * means no citable criterion — a criteria gap. Deliberately a peer schema
+ * to `AcEvidenceZ` (D5) — mirrors its five-tier shape without reusing or
+ * extending it; the two rank different things (evidence quality for an AC
+ * that already passed vs. how strongly a *finding* ties back to any
+ * criterion at all) and must stay independently evolvable.
+ */
+export const AnchorTierZ = z.enum(['executable', 'structured', 'declared', 'undeclared']);
+export type AnchorTier = z.infer<typeof AnchorTierZ>;
+
+/**
+ * Phase 235 (§7.1, AC-2): what a code-review finding is anchored to.
+ * `kind` is deliberately narrower than §7.2's future `Finding identity`
+ * shape (`'ac' | 'boundary' | 'invariant' | 'none'`) — `invariant` plus
+ * stable `id`/`disposition`/`waiver` are phase 236 scope, gated on the
+ * shared fingerprint primitive (`rec-20260727-007`); this phase declares
+ * only the three kinds AC-2 specifies. `ref` is optional because a `'none'`
+ * anchor (or an `undeclared`-tier gap) cites nothing.
+ */
+export const AnchorZ = z.object({
+  kind: z.enum(['ac', 'boundary', 'none']),
+  ref: z.string().optional(),
+  tier: AnchorTierZ,
+});
+export type Anchor = z.infer<typeof AnchorZ>;
+
+/**
  * Per-file / per-diff finding. Introduced for code-review (Phase 24.3,
  * high/medium/low). Phase 25.2 added `critical` for the security-audit
  * gate — additive; code-review still only emits high/medium/low.
@@ -40,6 +73,11 @@ export const FindingZ = z.object({
   severity: z.enum(['critical', 'high', 'medium', 'low']),
   message: z.string(),
   line: z.number().int().positive().optional(),
+  /** Phase 235: which criterion (if any) this finding is anchored to, and
+   *  how strongly. Optional — absent for every pre-phase-235 record and for
+   *  findings emitted by gates this phase deliberately does not touch
+   *  (`spec-review`, `ui-spec-review`, `plan-review`; `dec-20260729-003`). */
+  anchor: AnchorZ.optional(),
 });
 export type Finding = z.infer<typeof FindingZ>;
 

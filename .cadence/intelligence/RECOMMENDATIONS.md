@@ -676,38 +676,6 @@ In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts 
 
 boundary-scan shipped in Phase 156 but was never given a full 'when it fires / what it checks' row anywhere in docs/concepts.md's main gate-universe listing (the '14 gates: 3 always-fire + 11 delta' tables) or the 'Stage-scoped gates' section -- it only appears in the sealed-gate/bypass-summary material phase 226 fixed. Discovered during phase 226's whole-branch review; explicitly out of that phase's scope (its ACs covered gates.sealed discussion only, not the full gate-universe matrix).
 
-## rec-20260727-004 — Criteria-anchored review: extend CodeReviewInput with ACs/boundaries
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/verify/code-review.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.8 (the single most important measured finding) and section 6 Slice 3
-- next: cadence milestone propose
-
-CodeReviewInput is only {files, diff} -- the review verifier structurally cannot see the DRAFT's acceptance criteria or boundaries, so criteria-anchored review requires a genuine contract change, not a prompt change. Extend CodeReviewInput to carry acceptance criteria, boundaries, and task-to-AC refs.
-
-## rec-20260727-005 — Anchor ladder as peer schema to evidence ladder
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: types, core
-- files: packages/types/src/summary.ts
-- evidence: Measured/spec'd in docs/handoffs/cadence-phase0-assurance-kernel-review.md decision D5 and section 7.1
-- next: cadence milestone propose
-
-Grade findings by anchor strength (executable > structured > declared > undeclared/criteria-gap), mirroring but not aliasing the AcEvidence 5-tier ladder. Without grading anchors, every anchored finding renders as equivalent regardless of anchor quality -- reproducing the same P0 in a new costume. Structured/declared tiers must be treated as weak by default (anchor-shopping is the adversarial case).
-
 ## rec-20260727-006 — Finding identity: stable ids, dispositions, expiring waivers
 
 - status: candidate
@@ -847,3 +815,99 @@ packages/core/tsconfig.json has include: ["src/**/*"] and tsconfig.base.json exc
 - next: cadence milestone propose
 
 Phases 232 and 233 shipped SUMMARY schemaVersion 2 and the per-settle assurance record onto feat/kernel-assurance-v2, but every phase settled on that branch (233, 234) writes schemaVersion 1 with no assurance record -- because 'cadence settle' resolves to the globally-installed released CLI (v1.51.1, which predates the arc) rather than the branch's own build at packages/core/bin/cadence.cjs. Consequence: the arc's central deliverable is never dogfooded by the arc itself, and no phase SUMMARY on the branch demonstrates the assurance record working end to end. Options: settle arc phases via 'node packages/core/bin/cadence.cjs settle run --auto', or add a doctor/settle notice when the resolved CLI predates the repo's own build. Related to the known 'cadence on PATH is global, not worktree' hazard that previously bit phase 195.
+
+## rec-20260729-002 — Thread gate provenance into SettleContext so the anchor ladder's executable tier is reachable in the live gate
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, verify
+- files: packages/core/src/gates/types.ts, packages/core/src/gates/registry.ts, packages/core/src/gates/code-review.ts, packages/core/src/verify/anchor.ts
+- evidence: Verified directly: no provenance field in gates/types.ts SettleContext; gates/code-review.ts passes [] with an explanatory comment. Discovered during phase 235 T4, self-reported by the implementer.
+- next: cadence milestone propose
+
+Phase 235 shipped the full four-tier 7.1 anchor ladder as a pure resolver, but SettleContext exposes no gate-provenance array to a GateImpl (the accumulator lives only inside runSettleGates in gates/registry.ts). gates/code-review.ts therefore calls anchorFindings with gateProvenance: [], so the executable tier is structurally unreachable in production — every live finding caps at structured/declared/undeclared. The tier is covered only by T2's unit tests with injected provenance. Net effect: the ladder's top rung is dead in the real path, which is exactly the kind of claim-vs-reality gap CADENCE exists to surface. Fix: thread the in-flight provenance (read-only) into SettleContext so gates that need corroboration can see which gates have already run this settle.
+
+## rec-20260729-003 — Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, gates
+- files: packages/core/src/verify/criteria-gap.ts, packages/core/src/verify/code-review.ts
+- evidence: Read the implementation: bestAnchorForFile() is keyed on the file path and its result is spread onto every finding in that file (verify/criteria-gap.ts). Found by the orchestrator during phase 235 T4 re-verification, not self-reported.
+- next: cadence milestone propose
+
+Phase 235's anchorFindings (verify/criteria-gap.ts) resolves ONE anchor per file and tags every finding in that file with it, because the code-review verifier returns findings keyed by file with no per-finding criterion attribution. Consequence: a genuinely uncovered defect sitting in a file that some task happens to cover inherits that file's anchor and is NOT counted as a criteria gap — the gap detector under-reports precisely where a phase's ACs are thinnest. Phase 235 extended CodeReviewInput so the verifier can now SEE the ACs/boundaries, which is the prerequisite for the verifier itself citing the criterion it believes a finding violates; the mock does not exercise that. Fix: have the verifier return a per-finding anchor candidate (criterion citation) and grade that, keeping the file-level resolution only as the fallback when the verifier cites nothing.
+
+## rec-20260729-004 — test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, gates
+- files: packages/core/src/verify/coverage.ts, packages/core/src/gates/coverage.ts
+- evidence: Reproduced live during phase 235: 'node packages/core/bin/cadence.cjs verify coverage --explain AC-2' lists packages/core/tests/activate/render.test.ts (phase 211) with 'satisfies: true' for AC-2, alongside phase 235's own anchor.test.ts.
+- next: cadence milestone propose
+
+scanTestCoverage (verify/coverage.ts) walks DEFAULT_GLOBS packages/**/*.test.ts across the WHOLE repo and links an AC purely by the presence of its bare AC-N token. AC ids are per-phase and restart at AC-1 every phase, so tokens collide globally: while building phase 235 I confirmed via 'cadence verify coverage --explain AC-2' that AC-2 was already satisfied by phase 211's tests/activate/render.test.ts, entirely unrelated to phase 235. Any AC-N from any past phase satisfies that same id for every future phase, so the coverage gate cannot actually attest that THIS phase's ACs are covered — it degrades to 'some test somewhere once mentioned this token inside an it() block'. assertion mode hardened WHERE the token sits but not WHICH phase it belongs to. Fix candidates: scope the scan to the phase's own test files (via task files:/git diff), or require a phase-qualified token, or have the gate report which files matched so a reviewer can see cross-phase satisfaction.
+
+## rec-20260729-005 — Boundary-string anchors are granted by filename substring match, so an irrelevant boundary can mask a criteria gap
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify
+- files: packages/core/src/verify/criteria-gap.ts, packages/core/src/verify/anchor.ts
+- evidence: Surfaced by independent adversarial review of phase 235 T4, which traced the candidate-construction and exact-match paths and confirmed the guard is tautological by construction. Behavior is pinned intentionally by a test at tests/gates/code-review-criteria-gap.test.ts.
+- next: cadence milestone propose
+
+candidatesForFile (verify/criteria-gap.ts) proposes a boundary candidate whenever a free-text boundaries[] entry contains the filename as a substring, and resolveAnchor then 'verifies' it with boundaries.find(b => b === candidate.ref) — which is guaranteed to succeed because the ref was sourced from that same array by construction. The exact-match step therefore confirms only 'this string exists', not that the boundary has anything to do with the finding. Consequence: a boundary like 'DO NOT add a runtime dependency to packages/core/src/gates/code-review.ts' grants declared tier to ANY finding in that file, converting a would-be criteria gap into a (weak) anchored finding and hiding it from the gap count. Matches section 7.1's literal spec, which imposes no relevance requirement on a boundary anchor, and declared is documented as the weakest non-gap tier — so this is working-as-specified, not a code defect. But it is a real false-anchor path that suppresses gap reporting. Distinct from rec-20260729-003 (which is about per-file rather than per-finding granularity). Fix candidates: require the boundary to cite the file more strongly than substring containment, or treat a boundary-only anchor as a gap-with-weak-mitigation rather than a non-gap.
+
+## rec-20260729-006 — Retroactive audit: re-derive how many historical AC PASS records had genuine per-phase test coverage
+
+- status: candidate
+- ready: needs-evidence
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, gates
+- files: packages/core/src/verify/coverage.ts, packages/core/src/verify/phase-replay.ts
+- evidence: Demonstrated live during phase 235: all seven of the phase's ACs were satisfied by 34-189 unrelated test files each, and AC-5/AC-6 (belonging to a task not yet implemented at the time) were already fully satisfied by 91 and 49 unrelated files. Sample matches include 'it("Slice 23 AC-6: unknown rec id -> empty result, exit 0")' from unrelated recommendation-CLI slices.
+- next: cadence milestone propose
+
+Follow-on to rec-20260729-004 (repo-wide AC-N token collision). Because settle derives per-AC PASS from task terminal status PLUS coverage evidence, and the coverage leg is satisfiable by any past phase's identically-numbered AC token, per-AC PASS for a typical phase collapsed toward the agent's own DONE self-report — the exact signal the project exists to distrust. The settled SUMMARY corpus therefore carries an AC-coverage attestation stronger than the evidence behind it. This is a defect in the proof, not proof that the work was undone: build-test-must-pass, per-task verify commands, and the review gates were unaffected and provided real signal. Audit to run: for every settled phase, re-derive whether each AC's satisfying token actually sits in a test file belonging to THAT phase rather than an unrelated one, and report the count of AC PASS records with genuine per-phase coverage vs cross-phase-only satisfaction. cadence verify phase already re-derives settled coverage but needs the phase-scoping fix from rec-20260729-004 first to give a trustworthy answer. Operator decision 2026-07-29: run this in a fresh session after phase 235 lands, not inline.
+
+## rec-20260729-007 — Criteria-anchoring has never run end-to-end: code-review is skipped at standard x standard, so phase 235 could not dogfood its own gate
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, verify
+- files: packages/core/src/gates/code-review.ts, packages/core/src/verify/criteria-gap.ts, docs/concepts.md
+- evidence: Read directly from .cadence/phases/235-criteria-anchored-review-input/235-01-SUMMARY.json gate provenance after settling phase 235: code-review status 'skipped', skipReason 'not in the active tier x profile gate set'. Zero gate bypasses, 7/7 ACs at executed evidence, schemaVersion 2 with assurance record.
+- next: cadence milestone propose
+
+Phase 235 enhanced the code-review gate (criteria-anchored findings, anchor ladder, criteria-gap emission) but settled under tier=standard x profile=standard, where code-review is not in the effective gate set — its SUMMARY gate provenance records 'code-review -> skipped: not in the active tier x profile gate set'. Combined with rec-20260729-002 (SettleContext exposes no provenance, so the live gate would pass gateProvenance: [] anyway), the consequence is that the anchoring code has executed ONLY in tests: never once against a real diff, a real DRAFT, and a real verifier in a real settle. The unit and gate-level tests are strong (3410 green, adversarial corpus, mutation-proved), but no end-to-end evidence exists. Worth doing before the arc leans further on anchoring: run a phase at strict x standard or standard x complex (or deliberately override the tier) and inspect the resulting SUMMARY's codeReview findings for real anchor tiers and a real gap count. This is the meta-tool failing to dogfood a change to itself, which is precisely the class of gap CADENCE exists to catch.

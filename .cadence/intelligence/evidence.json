@@ -1085,6 +1085,48 @@
       "kind": "note",
       "summary": "Phase 234 settle produced 234-01-SUMMARY.json with schemaVersion 1 and no assurance field; 233-01-SUMMARY.json on the same branch is identical in that respect. 'which cadence' -> /home/thomas/.local/bin/cadence (v1.51.1); the worktree build reports the same version string, so the shadowing is invisible from the version alone.",
       "createdAt": "2026-07-29T01:14:55.911Z"
+    },
+    {
+      "id": "ev-20260729-002",
+      "recommendationId": "rec-20260729-002",
+      "kind": "note",
+      "summary": "Verified directly: no provenance field in gates/types.ts SettleContext; gates/code-review.ts passes [] with an explanatory comment. Discovered during phase 235 T4, self-reported by the implementer.",
+      "createdAt": "2026-07-29T22:59:50.786Z"
+    },
+    {
+      "id": "ev-20260729-003",
+      "recommendationId": "rec-20260729-003",
+      "kind": "note",
+      "summary": "Read the implementation: bestAnchorForFile() is keyed on the file path and its result is spread onto every finding in that file (verify/criteria-gap.ts). Found by the orchestrator during phase 235 T4 re-verification, not self-reported.",
+      "createdAt": "2026-07-29T23:00:03.470Z"
+    },
+    {
+      "id": "ev-20260729-004",
+      "recommendationId": "rec-20260729-004",
+      "kind": "note",
+      "summary": "Reproduced live during phase 235: 'node packages/core/bin/cadence.cjs verify coverage --explain AC-2' lists packages/core/tests/activate/render.test.ts (phase 211) with 'satisfies: true' for AC-2, alongside phase 235's own anchor.test.ts.",
+      "createdAt": "2026-07-29T23:00:19.919Z"
+    },
+    {
+      "id": "ev-20260729-005",
+      "recommendationId": "rec-20260729-005",
+      "kind": "note",
+      "summary": "Surfaced by independent adversarial review of phase 235 T4, which traced the candidate-construction and exact-match paths and confirmed the guard is tautological by construction. Behavior is pinned intentionally by a test at tests/gates/code-review-criteria-gap.test.ts.",
+      "createdAt": "2026-07-29T23:06:59.209Z"
+    },
+    {
+      "id": "ev-20260729-006",
+      "recommendationId": "rec-20260729-006",
+      "kind": "note",
+      "summary": "Demonstrated live during phase 235: all seven of the phase's ACs were satisfied by 34-189 unrelated test files each, and AC-5/AC-6 (belonging to a task not yet implemented at the time) were already fully satisfied by 91 and 49 unrelated files. Sample matches include 'it(\"Slice 23 AC-6: unknown rec id -> empty result, exit 0\")' from unrelated recommendation-CLI slices.",
+      "createdAt": "2026-07-29T23:25:34.102Z"
+    },
+    {
+      "id": "ev-20260729-007",
+      "recommendationId": "rec-20260729-007",
+      "kind": "note",
+      "summary": "Read directly from .cadence/phases/235-criteria-anchored-review-input/235-01-SUMMARY.json gate provenance after settling phase 235: code-review status 'skipped', skipReason 'not in the active tier x profile gate set'. Zero gate bypasses, 7/7 ACs at executed evidence, schemaVersion 2 with assurance record.",
+      "createdAt": "2026-07-29T23:42:20.928Z"
     }
   ]
 }
