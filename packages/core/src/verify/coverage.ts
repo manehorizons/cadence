@@ -36,11 +36,43 @@ export interface CoverageScanOptions {
    * `qualifying: false`.
    */
   mode?: 'mention' | 'assertion';
+  /**
+   * Phase 239 (phase-qualified coverage scheme): when set (a draft id, e.g.
+   * `'239-01'`), an AC token counts only if it is immediately preceded by
+   * `<expectedQualifier>/` — the prefix form `239-01/AC-3`. Bare and
+   * foreign-phase occurrences are dropped from the result entirely; map
+   * keys stay the bare `AC-N` id. Absent, the scan is byte-for-byte the
+   * historical bare behavior.
+   */
+  expectedQualifier?: string;
 }
 
 const DEFAULT_GLOBS = ['packages/**/*.test.ts', 'packages/**/*.test.tsx'];
 
 const AC_TOKEN_RE = /\bAC-\d+\b/g;
+
+/**
+ * Pure qualifier check (phase 239, T2). True iff the AC token starting at
+ * `tokenOffset` in `text` is immediately preceded by `` `${qualifier}/` ``,
+ * and that prefix is not itself the tail of a longer id (`1239-01/AC-3`
+ * must not satisfy qualifier `239-01`). Works on whatever string the caller
+ * matched the token in (whole file or a single line) — the prefix form
+ * never spans a newline, so a line-scoped check is equivalent.
+ */
+export function tokenHasExpectedQualifier(
+  text: string,
+  tokenOffset: number,
+  qualifier: string,
+): boolean {
+  const prefix = `${qualifier}/`;
+  const start = tokenOffset - prefix.length;
+  if (start < 0) return false;
+  if (text.slice(start, tokenOffset) !== prefix) return false;
+  // Boundary guard: the char before the prefix must not extend the id
+  // (non-global regex — no lastIndex statefulness to reset).
+  if (start > 0 && /[A-Za-z0-9_-]/.test(text.charAt(start - 1))) return false;
+  return true;
+}
 
 /**
  * Walk the repo and collect a map of AC ids → tests that reference them.
@@ -94,10 +126,20 @@ export async function scanTestCoverage(
       const seen = new Set<string>();
       for (const m of raw.matchAll(AC_TOKEN_RE)) {
         const id = m[0]!;
+        const offset = m.index ?? 0;
+        // Phase 239: under the qualified scheme an unprefixed (or foreign-
+        // prefixed) occurrence is not evidence at all — filter it BEFORE the
+        // per-file dedup add, so a bare occurrence earlier in the file can't
+        // consume the dedup slot of a later qualified one.
+        if (
+          opts.expectedQualifier !== undefined &&
+          !tokenHasExpectedQualifier(raw, offset, opts.expectedQualifier)
+        ) {
+          continue;
+        }
         const key = `${id}@${relPath}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        const offset = m.index ?? 0;
         const before = raw.slice(0, offset);
         const lineNo = before.split('\n').length;
         const lineText = (raw.split('\n')[lineNo - 1] ?? '').trim().slice(0, 120);
@@ -123,6 +165,15 @@ export async function scanTestCoverage(
       const matches = line.matchAll(AC_TOKEN_RE);
       for (const m of matches) {
         const id = m[0]!;
+        // Phase 239: same pre-dedup qualifier filter as the assertion
+        // branch; `m.index` is line-local, and the prefix form never spans
+        // a newline, so checking against `line` is equivalent.
+        if (
+          opts.expectedQualifier !== undefined &&
+          !tokenHasExpectedQualifier(line, m.index ?? 0, opts.expectedQualifier)
+        ) {
+          continue;
+        }
         const key = `${id}@${relPath}`;
         if (seenInFile.has(key)) continue;
         seenInFile.add(key);
@@ -285,6 +336,13 @@ export interface CoverageExplainResult {
   acId: string;
   /** Coverage mode in effect. */
   mode: 'mention' | 'assertion';
+  /**
+   * Phase 239 (T4, AC-6): the qualifier in effect under
+   * `verification.coverageScheme: 'phase-qualified'`, e.g. `'239-01'`.
+   * Absent under the bare scheme, which keeps the historical result shape
+   * (and the historical rendered report) unchanged.
+   */
+  expectedQualifier?: string;
   /** Glob patterns searched (resolved defaults if none configured). */
   globs: string[];
   /** Whether any file in the repo matched `globs` at all — distinguishes a
@@ -366,6 +424,48 @@ export async function explainAcCoverage(
       const line = offsetToLine(raw, offset);
       const snippet = (raw.split('\n')[line - 1] ?? '').trim().slice(0, 120);
 
+      // Phase 239 (T4, AC-6): the qualifier rule is checked FIRST, and
+      // independently of the mode rule, because the two are different
+      // failures with different fixes — a bare or foreign-phase token is not
+      // evidence for this phase at all (rewrite the token), whereas a
+      // correctly-qualified token outside an asserting block is a span
+      // problem (write an assertion). Reporting the qualifier failure as a
+      // span failure would send the operator to fix the wrong thing, and
+      // would contradict the gate, which refuses these for different stated
+      // reasons (`../gates/coverage.ts`, T3).
+      if (
+        opts.expectedQualifier !== undefined &&
+        !tokenHasExpectedQualifier(raw, offset, opts.expectedQualifier)
+      ) {
+        const containing =
+          mode === 'assertion'
+            ? (spans.find((s) => offset >= s.start && offset <= s.end) ?? null)
+            : null;
+        occurrences.push({
+          line,
+          snippet,
+          offset,
+          span:
+            containing === null
+              ? null
+              : {
+                  start: containing.start,
+                  end: containing.end,
+                  startLine: offsetToLine(raw, containing.start),
+                  endLine: offsetToLine(raw, containing.end),
+                  hasAssertion: containing.hasAssertion,
+                  skipped: containing.skipped,
+                },
+          satisfies: false,
+          reason:
+            `token is not qualified for this phase — expected ` +
+            `\`${opts.expectedQualifier}/${acId}\` (verification.coverageScheme is ` +
+            `'phase-qualified'). A bare or foreign-phase token is not evidence for this ` +
+            `phase, because AC ids restart at AC-1 every phase`,
+        });
+        continue;
+      }
+
       if (mode !== 'assertion') {
         occurrences.push({
           line,
@@ -429,6 +529,9 @@ export async function explainAcCoverage(
   return {
     acId,
     mode,
+    ...(opts.expectedQualifier !== undefined
+      ? { expectedQualifier: opts.expectedQualifier }
+      : {}),
     globs,
     anyFilesMatched: matchedRel.length > 0,
     files: results,

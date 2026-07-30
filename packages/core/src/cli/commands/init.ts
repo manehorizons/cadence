@@ -373,6 +373,15 @@ export function registerInitCommand(program: Command): void {
             ...presetCfg.verification,
             testGlobs,
             coverageMode,
+            // Phase 239: fresh inits opt in to phase-qualified coverage
+            // tokens. This overlay — not `defaultConfig` — is the opt-in
+            // point: `loadConfig` merges the user's config.json over
+            // `defaultConfig`, so a strict value there would silently flip
+            // every pre-existing consumer on upgrade; only init can
+            // distinguish a fresh project from an upgraded one. Written
+            // unconditionally (unlike the language-detected `coverageMode`
+            // above) — every fresh init gets the qualified scheme.
+            coverageScheme: 'phase-qualified' as const,
             ...(testCommand !== null ? { testCommand } : {}),
           },
         });

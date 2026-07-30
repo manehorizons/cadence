@@ -1,0 +1,55 @@
+{
+  "draftId": "239-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-30T01:03:59.724Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-30T01:04:00.485Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Wired test-coverage gate to verification.coverageScheme; qualified path scans with active draft id as expectedQualifier, bare path unchanged (byte-for-byte, proven). Malformed/missing draft id refuses loudly; --force passes with loud notice, coverageBypassed stays false. All refusals name literal expected token. Independent review PASS_WITH_CONCERNS: corrected a false docstring claim, removed dead conditionality, normalized schemeHint across all 5 refusal branches. As-built recorded in DRAFT; T6 scope extended to rewire evidence derivation (currently still bare-matched).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/config-edit/coverage-scheme-field.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/config-edit/fields.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/phases/239-coverage-phase-scoping/239-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/config-edit/fields.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/gates/coverage-qualified.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/handoff/SESSION-2026-07-30-phase239-midbuild-t1t2-done-t3-pending.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/gates/coverage.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/81e7d23f-9e11-499c-8c45-2cedfa525839/scratchpad/regex-check.js",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/81e7d23f-9e11-499c-8c45-2cedfa525839/scratchpad/msg-compare.js"
+      ],
+      "updatedAt": "2026-07-30T01:46:44.918Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Made verify coverage --explain scheme-aware. explainAcCoverage now checks the qualifier before the mode/span logic so a bare/foreign token reports a qualifier problem while a qualified token outside an asserting block still reports a span problem. CoverageExplainResult gained optional expectedQualifier (key omitted entirely under bare, so --json shape is unchanged). renderExplainHuman prints a scheme line only when qualified. runVerifyCoverage resolves the qualifier via a best-effort state.json read and prints a loud UNQUALIFIED notice when it cannot. DRAFT amended to declare verify/coverage.ts (third under-declaration of the config-ripple class). Independent review PASS; fixed a duplicate import and added a malformed-draft-id test. Reviewer proved --explain and the gate agree across 6 adversarial fixtures.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/phases/239-coverage-phase-scoping/239-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/verify/coverage-explain-qualified.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/verify/coverage.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/services/verify.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/81e7d23f-9e11-499c-8c45-2cedfa525839/scratchpad/prove-agreement.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/81e7d23f-9e11-499c-8c45-2cedfa525839/scratchpad/prove-backcompat.ts"
+      ],
+      "updatedAt": "2026-07-30T02:15:06.922Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Registered verification.coverageScheme in the config-edit field registry with both enum values; fields.test.ts count pin updated 7->8 and asserts defaultConfig holds 'bare' (the back-compat contract). Independent review PASS_WITH_CONCERNS, no Critical/Major. Closed AC-5 clause (b), which was implemented in T1's init.ts overlay but had zero asserting coverage anywhere: added an init.test.ts case spawning the real CLI and asserting the written config.json contains coverageScheme 'phase-qualified'. Mutation-verified — removing the overlay line makes it fail with 'bare', confirming the silent-no-op failure mode it guards. DRAFT amended to declare tests/cli/init.test.ts.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/phases/239-coverage-phase-scoping/239-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/cli/init.test.ts"
+      ],
+      "updatedAt": "2026-07-30T02:28:43.328Z"
+    }
+  }
+}

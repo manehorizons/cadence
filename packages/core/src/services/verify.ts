@@ -4,6 +4,7 @@ import { replayPhaseCoverage, type PhaseReplayResult } from '../verify/phase-rep
 import { discoverChangedPhases, GitDiffError } from '../git/diff-strict.js';
 import { runTestCommand } from '../verify/test-runner.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
+import { SimpleStateBackend } from '../state/simple.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -47,6 +48,13 @@ export function renderExplainHuman(result: CoverageExplainResult): string {
   lines.push(`cadence verify coverage --explain ${result.acId}`);
   lines.push('');
   lines.push(`mode: ${result.mode}`);
+  // Phase 239 (T4, AC-6): only rendered under the qualified scheme, so the
+  // bare report stays byte-for-byte what it has always been.
+  if (result.expectedQualifier !== undefined) {
+    lines.push(
+      `scheme: phase-qualified (expected token: ${result.expectedQualifier}/${result.acId})`,
+    );
+  }
   lines.push(`globs: ${result.globs.join(', ')}`);
   lines.push(`any files matched globs: ${result.anyFilesMatched}`);
   lines.push('');
@@ -78,10 +86,21 @@ export function renderExplainHuman(result: CoverageExplainResult): string {
 }
 
 /**
- * Thin service wrapper: gathers facts (config-derived globs/mode) and calls
- * the pure `explainAcCoverage` core, then renders. No state is read from or
- * written to `.cadence/state.json` — only `.cadence/config.json` (read-only)
- * and the glob-matched test files (read-only) are ever touched.
+ * Thin service wrapper: gathers facts (config-derived globs/mode/scheme) and
+ * calls the pure `explainAcCoverage` core, then renders. Nothing is ever
+ * written: `.cadence/config.json` and the glob-matched test files are read
+ * only.
+ *
+ * Phase 239 (T4, AC-6): under `verification.coverageScheme: 'phase-qualified'`
+ * this additionally performs a best-effort read of `.cadence/state.json` to
+ * recover the active draft id, which is the qualifier the gate itself uses.
+ * That read is the one state access here, it is read-only, and it degrades
+ * per the house rule for observation code — a missing, unreadable, or
+ * loop-less state contributes no qualifier rather than throwing. Because
+ * silently falling back to an unqualified explain would make this diagnostic
+ * disagree with the gate it exists to explain, the degraded path prints a
+ * loud stderr notice (CLAUDE.md: The Quiet Fallback) and says plainly that
+ * the report is unqualified.
  */
 export async function runVerifyCoverage(
   args: VerifyCoverageArgs,
@@ -95,10 +114,12 @@ export async function runVerifyCoverage(
 
   let globs: string[] | undefined;
   let mode: 'mention' | 'assertion' = 'mention';
+  let scheme: 'bare' | 'phase-qualified' = 'bare';
   try {
     const config = await loadConfig(args.cwd);
     globs = config.verification?.testGlobs;
     mode = config.verification?.coverageMode ?? 'mention';
+    scheme = config.verification?.coverageScheme ?? 'bare';
   } catch (err) {
     io.err(
       `verify coverage failed: could not load config: ${err instanceof Error ? err.message : String(err)}\n`,
@@ -106,7 +127,33 @@ export async function runVerifyCoverage(
     return { exitCode: 1 };
   }
 
-  const result = await explainAcCoverage(args.cwd, acId, { globs, mode });
+  // Phase 239 (T4): resolve the qualifier the gate would use. Best-effort by
+  // design — this diagnostic must stay usable outside an active loop.
+  let expectedQualifier: string | undefined;
+  if (scheme === 'phase-qualified') {
+    let activeDraft: string | null = null;
+    try {
+      activeDraft = (await new SimpleStateBackend(args.cwd).readState()).activeDraft;
+    } catch {
+      activeDraft = null;
+    }
+    if (typeof activeDraft === 'string' && /^[A-Za-z0-9._-]+$/.test(activeDraft)) {
+      expectedQualifier = activeDraft;
+    } else {
+      io.err(
+        `verify coverage: verification.coverageScheme is 'phase-qualified', but no usable ` +
+          `active draft id was found, so the expected token prefix cannot be built. The ` +
+          `report below is UNQUALIFIED and will not match what the settle gate enforces. ` +
+          `Run this from a repo with an active draft to see scheme-aware results.\n`,
+      );
+    }
+  }
+
+  const result = await explainAcCoverage(args.cwd, acId, {
+    globs,
+    mode,
+    ...(expectedQualifier !== undefined ? { expectedQualifier } : {}),
+  });
 
   if (args.json) {
     io.out(JSON.stringify(result, null, 2) + '\n');

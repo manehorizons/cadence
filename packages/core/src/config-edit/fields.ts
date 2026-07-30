@@ -111,6 +111,17 @@ export const EDITABLE_FIELDS: EditableField[] = [
     ],
     current: (c) => c.verification.coverageMode,
   },
+  {
+    name: 'coverageScheme',
+    dottedKey: 'verification.coverageScheme',
+    label: 'Coverage scheme',
+    help: 'Whether the test-coverage gate demands a phase-qualified AC token (`<draft-id>/AC-N`) or accepts the bare `AC-N` form. `phase-qualified` is what a fresh `cadence init` writes; `bare` is the back-compat default for upgraded configs.',
+    choices: [
+      { value: 'bare', blurb: 'bare AC-N tokens count (default; back-compat)' },
+      { value: 'phase-qualified', blurb: 'AC-N must carry this phase\'s draft-id prefix' },
+    ],
+    current: (c) => c.verification.coverageScheme,
+  },
 ];
 
 /** Short aliases → canonical field name (case-insensitive lookup). */

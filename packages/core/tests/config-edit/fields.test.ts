@@ -4,10 +4,12 @@ import { defaultConfig } from '@manehorizons/cadence-types';
 
 describe('config-edit fields', () => {
   // AC-1: the curated registry is exactly the behavior-shaping keys
-  // (Phase 102 added `autoArchive`; Phase 108 added `coverageMode` → count 7).
-  it('AC-1: registry holds exactly the curated 7 fields', () => {
+  // (Phase 102 added `autoArchive`; Phase 108 added `coverageMode` → count 7;
+  // Phase 239 added `coverageScheme` → count 8).
+  it('AC-1: registry holds exactly the curated 8 fields', () => {
     expect(EDITABLE_FIELDS.map((f) => f.name)).toEqual([
       'profile', 'loopEnforcement', 'acDiscipline', 'commitCadence', 'verifier', 'autoArchive', 'coverageMode',
+      'coverageScheme',
     ]);
     for (const f of EDITABLE_FIELDS) {
       expect(f.label.length, `${f.name} label`).toBeGreaterThan(0);
@@ -27,6 +29,11 @@ describe('config-edit fields', () => {
     expect(by.autoArchive).toBe('true');
     // Phase 139: defaultConfig's coverageMode flipped 'mention' → 'assertion'.
     expect(by.coverageMode).toBe('assertion');
+    // Phase 239: defaultConfig deliberately holds 'bare', NOT the strict
+    // scheme — `loadConfig` merges user config over defaultConfig, so a
+    // strict value here would silently flip every pre-existing consumer on
+    // upgrade. Fresh inits opt in via init.ts's verification overlay.
+    expect(by.coverageScheme).toBe('bare');
   });
 
   // Phase 108 / AC-1 (discoverability): coverageMode resolves + tracks the config value.

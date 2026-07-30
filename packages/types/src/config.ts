@@ -206,6 +206,26 @@ export const CadenceConfigZ = z.object({
        */
       coverageMode: z.enum(['mention', 'assertion']).default('mention'),
       /**
+       * Whether an AC test-coverage token must be phase-qualified (phase 239).
+       * `bare` (default) — the historical unqualified `AC-N` token, which
+       * every config predating this field keeps on upgrade.
+       * `phase-qualified` — the token must carry its phase-slice prefix
+       * (`239-01/AC-3`), making it globally unique across the repo's history.
+       *
+       * NOTE on where back-compat actually lives: this field-level
+       * `.default('bare')` is NOT the mechanism that keeps upgraders on
+       * 'bare'. Core's `loadConfig` merges the user's config.json over
+       * `defaultConfig` (below) before parsing, so on that path the key is
+       * always present and this default never fires — `defaultConfig`
+       * holding 'bare' is the real back-compat contract. This default only
+       * covers direct schema parses where `verification` is present but the
+       * key is absent. Both this default, the object-level `.default({...})`
+       * literal below, and `defaultConfig` must all carry 'bare'
+       * independently (in Zod 4 the object-level literal is returned as-is,
+       * not re-parsed through the inner field defaults).
+       */
+      coverageScheme: z.enum(['bare', 'phase-qualified']).default('bare'),
+      /**
        * Shell command the `build-test-must-pass` gate runs at settle time
        * (Phase 39.2). When set, settle runs it and refuses on a non-zero exit
        * unless `--allow-failing-build` / `--force`. When absent, the gate is
@@ -229,6 +249,7 @@ export const CadenceConfigZ = z.object({
     .default({
       testGlobs: ['packages/**/*.test.ts', 'packages/**/*.test.tsx'],
       coverageMode: 'mention',
+      coverageScheme: 'bare',
       coverageProfiles: [],
     }),
   verifier: z
@@ -527,6 +548,24 @@ export const defaultConfig: CadenceConfig = {
      *  above is unchanged — it's the backward-compat fallback for configs
      *  that predate this field, not what a fresh init writes. */
     coverageMode: 'assertion' as const,
+    /** Phase 239: 'bare' here IS the backward-compat mechanism, not a
+     *  mirror of the Zod default. Core's `loadConfig`
+     *  (`packages/core/src/config/loader.ts`) merges the user's
+     *  config.json OVER this object before Zod ever parses, so whatever
+     *  sits here is injected into every pre-existing config that lacks the
+     *  key — the field-level `.default('bare')` never fires on that path.
+     *  Do NOT "fix" this to 'phase-qualified' by copying the phase-139
+     *  `coverageMode` pattern above (lenient Zod default + strict
+     *  defaultConfig): that pattern only works because `cadence init`
+     *  writes `coverageMode` explicitly into every config.json, so the
+     *  user's own value wins the merge. No config predating phase 239
+     *  contains `coverageScheme`, so a strict value here would silently
+     *  flip every consumer to the strict scheme on upgrade. The
+     *  'phase-qualified' opt-in for fresh projects lives in `cadence
+     *  init`'s verification overlay (`packages/core/src/cli/commands/
+     *  init.ts`) instead — init is the only writer that can distinguish a
+     *  fresh project from an upgraded one. */
+    coverageScheme: 'bare' as const,
     /** Phase 167 T7: no custom profiles by default — every fresh init and
      *  every pre-existing config predating this field gets the empty list. */
     coverageProfiles: [],

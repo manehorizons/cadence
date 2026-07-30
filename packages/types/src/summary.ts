@@ -97,6 +97,20 @@ export const SummaryZ = z.object({
   decisions: z.array(DecisionZ),
   deferred: z.array(DeferredItemZ),
   skillAudit: z.object({ required: z.array(z.string()), invoked: z.array(z.string()) }),
+  /**
+   * Phase 239 (T6, AC-7): the coverage scheme and mode in force at settle, so
+   * a SUMMARY's `acResults[].evidence` can be read back knowing what rule
+   * produced it. Absent on every pre-phase-239 record.
+   *
+   * MUST stay `.optional()` with NO `.default(...)`. `cadence summary verify`
+   * Zod-parses the file and then content-hashes the PARSED object
+   * (`core/src/services/summary-hash.ts`), so a default here would be
+   * injected into every historical SUMMARY at parse time, change its digest,
+   * and report every past settle as tampered. A test in
+   * `core/tests/summary-coverage-scheme.test.ts` fails if a default is added.
+   */
+  coverageScheme: z.enum(['bare', 'phase-qualified']).optional(),
+  coverageMode: z.enum(['mention', 'assertion']).optional(),
   /** Phase 15: per-AC `--deep` verifier output. Present only when `--deep` ran. */
   deepVerify: z.record(z.string(), DeepVerdictZ).optional(),
   /** Phase 70: run-level provenance for the `--deep` pass (what the verifier saw). */
