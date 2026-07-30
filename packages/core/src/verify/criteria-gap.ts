@@ -119,9 +119,10 @@ function bestAnchorForFile(
  * Tag every finding with its resolved anchor and unconditionally declare the
  * gap count + severity distribution (D3). `gateProvenance` is threaded
  * through to `resolveAnchor` unchanged — pass `[]` when the caller has no
- * corroborating provenance available (this settle's `code-review` gate does
- * not: `SettleContext` does not expose prior-gate provenance to a single
- * gate impl), which conservatively can never inflate a tier to `executable`.
+ * corroborating provenance available (as of Phase 241, this settle's
+ * `code-review` gate does have provenance available and passes the real
+ * in-flight snapshot; `[]` remains the correct fallback for any other caller
+ * with none), which conservatively can never inflate a tier to `executable`.
  */
 export function anchorFindings(
   findings: Readonly<Record<string, readonly GapCandidateFinding[]>>,

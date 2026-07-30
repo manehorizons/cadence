@@ -74,15 +74,26 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
     // refusal primitive: `highs`/`pass` above are computed from the SAME raw
     // `verifyResult.findings`, untouched — a HIGH-severity gap finding was
     // already counted there and refuses through the pre-existing path.
-    // `gateProvenance` is `[]`: `SettleContext` does not expose prior-gate
-    // provenance to a single gate impl, so `executable` can never be
-    // (wrongly) reached from here — conservative by construction.
+    // Phase 241 (rec-20260729-002) — `ctx.gateProvenance` is the real
+    // two-level-frozen provenance snapshot `runSettleGates` has accumulated
+    // so far this settle (see `packages/core/src/gates/registry.ts`); since
+    // `code-review` runs 9th in `GATE_ORDER` and `build-test-must-pass` runs
+    // 5th, the snapshot already carries that gate's real `status` by the
+    // time this gate runs. Passing it through (falling back to `[]` when the
+    // optional field is absent) means the `executable` tier is now reachable
+    // — but only when the ladder's own two-condition check in
+    // `verify/anchor.ts` is satisfied: the AC must be cited by a task with a
+    // non-empty `verify`, AND a `build-test-must-pass` entry with
+    // `status: 'ran'` must be present in the snapshot. A `skipped`,
+    // `refused`, or absent test-gate entry still caps the tier below
+    // `executable` — this widens what is *reachable*, it does not weaken
+    // what must be *earned*.
     const gapResult = anchorFindings(
       codeReviewFindings,
       input.acceptanceCriteria ?? [],
       input.boundaries ?? [],
       ctx.draft.tasks,
-      [],
+      ctx.gateProvenance ?? [],
     );
     // D3 — declared unconditionally, regardless of pass/refuse/bypass below:
     // config decides what stops the settle, never what is visible.

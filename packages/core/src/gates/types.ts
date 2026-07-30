@@ -7,6 +7,7 @@ import type {
   DeepVerifyMeta,
   Draft,
   Finding,
+  GateProvenance,
   GateSet,
 } from '@manehorizons/cadence-types';
 import type { InteractiveVerdict } from '../verify/interactive.js';
@@ -209,6 +210,24 @@ export interface SettleContext {
   /** Code-review convergence sidecar (Phase 39.4). */
   readonly codeReviewSidecar: ConvergenceSidecar;
   readonly io: IoPort;
+  /** Phase 241 (T1): gate-provenance entries recorded so far this settle, in
+   *  GATE_ORDER. The registry (`runSettleGates`) populates a frozen snapshot
+   *  of its own accumulating `gates: GateProvenance[]` onto a per-gate copy
+   *  of this context before invoking each gate's `impl` — a gate reads only
+   *  what ran/was skipped/refused *before* its own turn, never what comes
+   *  after. Optional/additive so every existing `SettleContext` literal
+   *  (production and test) keeps compiling unchanged; absent or empty both
+   *  mean "nothing recorded yet" — a reader should treat a missing field the
+   *  same as an empty array, never as "unknown".
+   *
+   *  `Readonly<GateProvenance>` is deliberate, not decorative: `readonly T[]`
+   *  alone constrains the array's shape while leaving each entry's fields
+   *  writable, so `ctx.gateProvenance[0].status = 'refused'` would compile
+   *  cleanly with no cast and — before the registry's two-level freeze —
+   *  would have rewritten the entry that lands in `SUMMARY.json.gates`.
+   *  Marking the element type readonly makes that a compile error, so the
+   *  runtime freeze is a backstop rather than the only guard. */
+  readonly gateProvenance?: readonly Readonly<GateProvenance>[];
 }
 
 /** Cross-cutting flags a gate sets for the finalizers to read. */

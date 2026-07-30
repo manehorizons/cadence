@@ -12,21 +12,28 @@ import type { CodeReviewResult } from '../../src/contracts/index.js';
  * Phase 235 (T5) — §6 Slice 3 adversarial corpus, proven offline and
  * deterministic (mock provider only, no live network calls).
  *
- * Two test levels are used deliberately, per a known, filed limitation
- * (`rec-20260729-002`): `SettleContext` does not expose prior-gate
- * provenance to a single `GateImpl`, so `gates/code-review.ts` always calls
- * `anchorFindings(..., [])` — the `executable` tier can never actually occur
- * end-to-end through `runCodeReviewGate` today.
+ * Two test levels are used deliberately. As of phase 241, `SettleContext`
+ * carries a real, frozen `gateProvenance` snapshot and `gates/code-review.ts`
+ * passes it through (`ctx.gateProvenance ?? []`) instead of a literal `[]`,
+ * so the `executable` tier IS reachable end-to-end through
+ * `runCodeReviewGate` in a live settle (`rec-20260729-002` closed). This
+ * file's own `buildCtx` helper below, however, never sets `gateProvenance`
+ * on the `SettleContext` it builds, so `ctx.gateProvenance ?? []` still
+ * evaluates to `[]` inside the GATE-level tests in this file — an artifact
+ * of this test harness, not evidence that the live gate is still capped.
  *
  *  - UNIT level (`resolveAnchor` / `anchorFindings` called directly with an
- *    injected `GateProvenance[]`): the only way to reach `executable` today.
- *    Used for: "defect with executable AC", and the corroborated half of the
- *    anchor-shopping case.
+ *    injected `GateProvenance[]`): exercises the ladder's `executable`
+ *    condition directly. Used for: "defect with executable AC", and the
+ *    corroborated half of the anchor-shopping case.
  *  - GATE level (`runCodeReviewGate` over a `SettleContext` whose
  *    `codeReview` verifier is a real `MockCodeReviewVerifier` fed a
- *    synthetic diff): everything reachable in production today — structured,
- *    boundary, undeclared/gap, the non-blocking trivial finding, the
- *    uncorroborated half of anchor-shopping, and the AC-5 round trip.
+ *    synthetic diff): everything this file's `buildCtx` can reach given it
+ *    supplies no `gateProvenance` — structured, boundary, undeclared/gap,
+ *    the non-blocking trivial finding, the uncorroborated half of
+ *    anchor-shopping, and the AC-5 round trip. A real settle's own
+ *    `runSettleGates` DOES thread `gateProvenance`, so these GATE-level
+ *    results are a property of this harness, not a ceiling on production.
  */
 
 function ac(overrides: Partial<AcceptanceCriterion> = {}): AcceptanceCriterion {
@@ -194,7 +201,7 @@ describe('MockCodeReviewVerifier — extra-marker seam is additive (phase 235 T5
   });
 });
 
-describe('§6 Slice 3 corpus case 1 — defect with an executable AC (UNIT level: executable is unreachable through the live gate today, rec-20260729-002)', () => {
+describe('§6 Slice 3 corpus case 1 — defect with an executable AC (UNIT level: ladder test with injected provenance)', () => {
   it('AC-6: a finding on a file covered by a task->AC citation with a runnable verify, corroborated by an injected ran build-test-must-pass, anchors at executable', () => {
     const acceptanceCriteria = [ac({ id: 'AC-1', name: 'covered work' })];
     const tasks = [task({ id: 'T1', files: ['src/executable.ts'], done: 'AC-1', verify: 'pnpm test -- executable.test.ts' })];
@@ -399,8 +406,10 @@ describe('§6 Slice 3 corpus case 7 — AC-5 round trip: amending the DRAFT conv
     const anchored = res.summaryPatch!.codeReview!['src/roundtrip.ts']![0]!;
 
     // Anchored at the tier this new criterion genuinely earns (structured —
-    // the live gate threads no gate provenance, so executable is out of
-    // reach here regardless; see the case-1 UNIT-level test above).
+    // this file's buildCtx supplies no gateProvenance, so executable is out
+    // of reach in THIS test regardless; a real settle's runSettleGates does
+    // thread it, and the case-1 UNIT-level test above exercises that path
+    // directly with an injected provenance entry).
     expect(anchored.anchor).toEqual({ kind: 'ac', ref: 'AC-1', tier: 'structured' });
 
     // No longer a gap for this finding.

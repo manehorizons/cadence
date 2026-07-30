@@ -29,9 +29,11 @@ unchanged. Scope is deliberately narrow — only `code-review` is
 criteria-anchored; `spec-review`, `ui-spec-review`, and `plan-review` are
 untouched (`dec-20260729-003`).
 
-Three limitations are shipped and filed rather than papered over:
-`executable` is not reachable in a real settle yet because `SettleContext`
-exposes no prior-gate provenance to a single gate (`rec-20260729-002`);
+Three limitations were filed rather than papered over. The first —
+`executable` not being reachable in a real settle, because `SettleContext`
+exposed no prior-gate provenance to a single gate (`rec-20260729-002`) — is
+**resolved by phase 241 in this same release**, so it never reaches a
+published version; see that entry for the fix. The other two remain open:
 anchoring is resolved per-file rather than per-finding, so an uncovered
 defect in an otherwise-covered file can be missed (`rec-20260729-003`); and a
 boundary string that merely contains a finding's filename as a substring can
