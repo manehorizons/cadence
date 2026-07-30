@@ -1292,32 +1292,6 @@
       "updatedAt": "2026-07-27T18:47:21.926Z"
     },
     {
-      "id": "rec-20260727-007",
-      "title": "Shared fingerprint primitive extraction from Deja",
-      "summary": "Finding-identity-survives-refactor is the same problem Deja already solved with bidirectional containment scoring (max wins, 20-token minimum floor). Evaluate extracting a shared fingerprint primitive before writing a second implementation for Cadence findings, rather than deriving identity from line numbers.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "low",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260727-007"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:47:29.002Z",
-      "updatedAt": "2026-07-27T18:47:29.002Z"
-    },
-    {
       "id": "rec-20260727-008",
       "title": "Invariant promotion from RetroRollup.findingCategories.recurring",
       "summary": "RetroRollupZ.findingCategories already defines 'recurring' as seen in 2+ distinct phases -- the frequency-analysis input layer for invariant promotion is built. Consume it to split recurring-unanchored (invariant candidate) from recurring-anchored (spec-quality/codebase-hostility signal) into different dispositions. Promotion stays explicit, never automatic.",
@@ -5109,11 +5083,42 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-07-29T23:42:20.928Z",
-      "updatedAt": "2026-07-30T02:22:21.167Z",
       "shippedRef": "phase 241 / feat-kernel-assurance-v2 (release pending) — code-review ran at strict x standard, SUMMARY gate provenance 'ran'",
       "archivedAt": "2026-07-30T02:22:21.167Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-29T23:42:20.928Z",
+      "updatedAt": "2026-07-30T02:22:21.167Z"
+    },
+    {
+      "id": "rec-20260727-007",
+      "title": "Shared fingerprint primitive extraction from Deja",
+      "summary": "Finding-identity-survives-refactor is the same problem Deja already solved with bidirectional containment scoring (max wins, 20-token minimum floor). Evaluate extracting a shared fingerprint primitive before writing a second implementation for Cadence findings, rather than deriving identity from line numbers.",
+      "source": "manual",
+      "status": "rejected",
+      "readiness": "needs-evidence",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260727-007",
+        "ev-20260730-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260730-001"
+      ],
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "createdAt": "2026-07-27T18:47:29.002Z",
+      "updatedAt": "2026-07-30T03:19:43.733Z",
+      "archivedAt": "2026-07-30T03:19:43.733Z",
+      "archiveReason": "rejected"
     }
   ]
 }

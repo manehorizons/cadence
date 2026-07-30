@@ -692,21 +692,6 @@ boundary-scan shipped in Phase 156 but was never given a full 'when it fires / w
 
 Neither persisted Finding type (packages/types summary.ts vs packages/core verify/code-review.ts, already diverged in severity enum) has a stable id, anchor, disposition, or waiver. Add {id, target: artifact|verification, anchor, disposition, waiver{expiry}} and converge the two divergent Finding types onto one, discriminated by target (decision D9). A waiver with no expiry is a belief masquerading as knowledge.
 
-## rec-20260727-007 — Shared fingerprint primitive extraction from Deja
-
-- status: candidate
-- ready: needs-evidence
-- priority: low
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- evidence: Reuse note in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 7.2
-- next: cadence milestone propose
-
-Finding-identity-survives-refactor is the same problem Deja already solved with bidirectional containment scoring (max wins, 20-token minimum floor). Evaluate extracting a shared fingerprint primitive before writing a second implementation for Cadence findings, rather than deriving identity from line numbers.
-
 ## rec-20260727-008 — Invariant promotion from RetroRollup.findingCategories.recurring
 
 - status: candidate

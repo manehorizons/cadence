@@ -1127,6 +1127,13 @@
       "kind": "note",
       "summary": "Read directly from .cadence/phases/235-criteria-anchored-review-input/235-01-SUMMARY.json gate provenance after settling phase 235: code-review status 'skipped', skipReason 'not in the active tier x profile gate set'. Zero gate bypasses, 7/7 ACs at executed evidence, schemaVersion 2 with assurance record.",
       "createdAt": "2026-07-29T23:42:20.928Z"
+    },
+    {
+      "id": "ev-20260730-001",
+      "recommendationId": "rec-20260727-007",
+      "kind": "note",
+      "summary": "Investigation 2026-07-29 (resolves needs-evidence). Deja's primitive is three layers, only the middle one portable: normalize.ts (235 ln) is hard-coupled to tree-sitter + per-language normalizers; fingerprint.ts (83 ln, FNV-1a 64-bit k-gram k=7 + winnowing) is pure, node:crypto only; check/match.ts + check/tiers.ts (344 ln) are hard-coupled to a SQLite IndexDb, and ~90% of match.ts exists to fight corpus-scale false positives (idiom suppression, borderline-hash bands, thinEvidence, MIN_STRUCTURAL_FINGERPRINTS) that Cadence does not have. The containment score is one line: match.ts:226 Math.max(overlap/sizeA, overlap/sizeB). CORRECTION to this rec's summary: the floor is 25, not 20 -- GUARANTEE_THRESHOLD=25 in fingerprint.ts, minTokens:25 in extract.ts:81 and config.ts:87; the 19 is the winnowing window (25-7+1). Max-wins is correctly described. Blockers on extraction: (1) @necrotool/deja@0.1.0 has main:null and exports:null, only a bin -- not consumable as a library, and unpublished (npm 'deja' 0.1.12 is an unrelated package, @manehorizons/deja 404s); (2) its runtime deps include better-sqlite3 and tree-sitter + 3 grammars, all native, against Cadence core's four-dependency zero-runtime-dependency bias; (3) post-phase-235 a Finding already carries anchor {kind, ref?, tier} (AnchorZ, packages/types/src/summary.ts:60) plus file, so for anchor.kind==='ac' identity is a pure hash over (file, kind, ref, severity, normalized message) with no fingerprint needed. Problem shapes differ: Deja solves retrieval over an indexed corpus; Cadence needs identity across two small per-run sets.",
+      "createdAt": "2026-07-30T03:19:16.126Z"
     }
   ]
 }
