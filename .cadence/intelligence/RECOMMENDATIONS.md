@@ -895,3 +895,19 @@ replayPhaseCoverage takes mode from config.coverageMode ?? 'mention' while phase
 - next: cadence milestone propose
 
 scanTestCoverage dedups per AC-N@file on a first-occurrence-wins basis (verify/coverage.ts, the 'seen' set). Phase 239 T2 deliberately filters UNQUALIFIED occurrences before the dedup add so a bare token cannot consume the slot — but a correctly-qualified occurrence sitting outside an asserting block (a comment, a doc block, a describe() title) passes that filter, takes the slot, and is recorded qualifying:false. Every genuinely-qualifying occurrence later in the same file is then unreachable, and the AC reads as having zero coverage. Failure is silent: the suite stays green, the gate refuses at settle, and the refusal names a token the file demonstrably contains. Candidate fixes: prefer a qualifying occurrence over a non-qualifying one when filling the dedup slot, or keep all occurrences and let the consumer reduce.
+
+## rec-20260731-001 — cadence doctor: release-currency check (local package.json vs published npm)
+
+- status: candidate
+- ready: ready-for-milestone
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: doctor, release-process
+- files: packages/core/src/doctor/run.ts, .githooks/pre-push
+- evidence: npm view showed 1.51.1 engines:>=20 while local main package.json (same 1.51.1 tag) already had engines:>=22 -- confirmed via manual npm view + git log during the v1.52.0 release-cut session on 2026-07-31
+- next: cadence milestone propose
+
+Node>=22 engine floor (phase 238, PR #324, 2026-07-27) merged to main and sat unreleased for 4 days / 3 more phases while npm still published engines:>=20 under the same 1.51.1 version string -- no mechanical gate caught main drifting from what npm actually ships. Add a doctor check that runs npm view @manehorizons/cadence-core version (best-effort, degrades safely offline) and compares it to local package.json; if local is ahead and .changeset/*.md files are pending, warn and list them, escalating when any pending changeset bumps engines or is a major/minor bump. Same best-effort degrade-safe pattern as checkLedgerRemoteCollision.

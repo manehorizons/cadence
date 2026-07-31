@@ -1078,6 +1078,13 @@
       "kind": "note",
       "summary": "Hit live during phase 239 T7 (2026-07-30). The new test file's own fixture-hygiene COMMENT contained a contiguous 239-01/AC-8 literal; it took the dedup slot and AC-8 measured refs=1 qualifying=0 while five asserting it() titles below carried the same qualified token. Full pipeline was 24/24 green throughout — only a direct scanTestCoverage probe surfaced it. Cost one full implement/review round-trip.",
       "createdAt": "2026-07-30T23:24:17.740Z"
+    },
+    {
+      "id": "ev-20260731-001",
+      "recommendationId": "rec-20260731-001",
+      "kind": "note",
+      "summary": "npm view showed 1.51.1 engines:>=20 while local main package.json (same 1.51.1 tag) already had engines:>=22 -- confirmed via manual npm view + git log during the v1.52.0 release-cut session on 2026-07-31",
+      "createdAt": "2026-07-31T14:14:35.723Z"
     }
   ]
 }
