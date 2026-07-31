@@ -864,3 +864,20 @@ computeFindingId hashes (file, anchor.kind, anchor.ref, severity, normalized mes
 - next: cadence milestone propose
 
 The new 'Finding identity, disposition, and type convergence (phase 236)' subsection in docs/concepts.md cites ~10 hardcoded file.ts:NN-NN line ranges (e.g. summary.ts:70-114, finding-identity.ts:58-90, gates/code-review.ts:105, contracts/index.ts:167-186, intelligence.ts:3-15). All verified accurate as of the phase-236 commit, but no doc-content test pins them (unlike CLAUDE.md's 'The Hardcoded Count' precedent for command/slash-command counts) and docs/concepts.md had zero such citations before this commit. They will silently go stale on the next edit to any cited file. Surfaced by an Opus gap review (2026-07-30) of phase 236. Fix options: drop line numbers and cite file paths only, or add a lightweight doc-content test asserting the cited ranges still contain what they claim (matching this repo's existing docs test conventions in packages/core/tests/docs/).
+
+## rec-20260731-003 — Findings-to-ledger auto-routing: create Recommendation + Evidence entries from code-review findings during settle
+
+- status: converted
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, types
+- files: packages/core/src/services/settle.ts, packages/core/src/verify/finding-identity.ts, packages/core/src/intelligence/store/recommendations.ts, packages/types/src/intelligence.ts
+- decisions: dec-20260731-001 (active)
+- evidence: Source doc §7.3 (docs/handoffs/cadence-phase0-assurance-kernel-review.md); phase 236 ROADMAP.md 'As built' amendment explicitly splits this out; rec-20260727-006/-011 (shipped, schema-only) are the prerequisites this consumes; rec-20260731-001 (finding-id collision, needs-decision) must be designed around, not ignored
+- next: cadence milestone propose
+
+Phase 236 shipped finding identity (id/target/disposition/waiver on FindingZ, packages/core/src/verify/finding-identity.ts) and RecommendationSourceZ's 'review' member, but explicitly deferred the behavioral half: settle currently persists findings into the SUMMARY only, never into the recommendation ledger. Per the source doc (docs/handoffs/cadence-phase0-assurance-kernel-review.md §7.3) and phase 236's ROADMAP.md 'As built' amendment, this follow-on must: (1) route findings as Recommendation entries with EvidenceZ(kind:'cadence-artifact') pointing at the settle, sourced as 'review' not 'manual'/'cadence'; (2) reuse the existing scout-id convention for batch provenance (one scout id per settle's batch of routed findings, not one scout per finding); (3) key routing on FindingZ.id for ledger hygiene so a re-settle of an unchanged phase does not mint duplicate recommendations for the same finding -- this is the hard requirement the source doc names ('without stable identity and dispositions, repeated runs fill the ledger with undisposed items'); (4) account explicitly for rec-20260731-001 (computeFindingId collides for two same-severity/message findings in one file, no occurrence discriminant) rather than silently merging distinct findings under one ledger entry -- either add an occurrence ordinal to the hash or make merge-by-identity a documented, deliberate semantic. Scope is the settle-time writer only (a new named step in packages/core/src/services/settle.ts, per phase 228's step-function convention) -- no new gate, no GATE_ORDER change, no refusal semantics.

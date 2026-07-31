@@ -1148,6 +1148,13 @@
       "kind": "note",
       "summary": "Opus gap review, phase 236, 2026-07-30: git show HEAD~1:docs/concepts.md had 0 file:line citations, phase 236 introduced 10 unpinned ones",
       "createdAt": "2026-07-31T02:11:27.207Z"
+    },
+    {
+      "id": "ev-20260731-003",
+      "recommendationId": "rec-20260731-003",
+      "kind": "note",
+      "summary": "Source doc §7.3 (docs/handoffs/cadence-phase0-assurance-kernel-review.md); phase 236 ROADMAP.md 'As built' amendment explicitly splits this out; rec-20260727-006/-011 (shipped, schema-only) are the prerequisites this consumes; rec-20260731-001 (finding-id collision, needs-decision) must be designed around, not ignored",
+      "createdAt": "2026-07-31T22:02:11.174Z"
     }
   ]
 }

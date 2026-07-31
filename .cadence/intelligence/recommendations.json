@@ -1597,9 +1597,44 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "scoutId": "scout-20260730-opus-gap-review",
       "createdAt": "2026-07-31T02:11:27.207Z",
-      "updatedAt": "2026-07-31T02:11:27.207Z",
-      "scoutId": "scout-20260730-opus-gap-review"
+      "updatedAt": "2026-07-31T02:11:27.207Z"
+    },
+    {
+      "id": "rec-20260731-003",
+      "title": "Findings-to-ledger auto-routing: create Recommendation + Evidence entries from code-review findings during settle",
+      "summary": "Phase 236 shipped finding identity (id/target/disposition/waiver on FindingZ, packages/core/src/verify/finding-identity.ts) and RecommendationSourceZ's 'review' member, but explicitly deferred the behavioral half: settle currently persists findings into the SUMMARY only, never into the recommendation ledger. Per the source doc (docs/handoffs/cadence-phase0-assurance-kernel-review.md §7.3) and phase 236's ROADMAP.md 'As built' amendment, this follow-on must: (1) route findings as Recommendation entries with EvidenceZ(kind:'cadence-artifact') pointing at the settle, sourced as 'review' not 'manual'/'cadence'; (2) reuse the existing scout-id convention for batch provenance (one scout id per settle's batch of routed findings, not one scout per finding); (3) key routing on FindingZ.id for ledger hygiene so a re-settle of an unchanged phase does not mint duplicate recommendations for the same finding -- this is the hard requirement the source doc names ('without stable identity and dispositions, repeated runs fill the ledger with undisposed items'); (4) account explicitly for rec-20260731-001 (computeFindingId collides for two same-severity/message findings in one file, no occurrence discriminant) rather than silently merging distinct findings under one ledger entry -- either add an occurrence ordinal to the hash or make merge-by-identity a documented, deliberate semantic. Scope is the settle-time writer only (a new named step in packages/core/src/services/settle.ts, per phase 228's step-function convention) -- no new gate, no GATE_ORDER change, no refusal semantics.",
+      "source": "manual",
+      "status": "converted",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/settle.ts",
+        "packages/core/src/verify/finding-identity.ts",
+        "packages/core/src/intelligence/store/recommendations.ts",
+        "packages/types/src/intelligence.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260731-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260731-001"
+      ],
+      "convertedToPhaseId": "242-findings-to-ledger-auto-routing",
+      "scoutId": "scout-20260731-kernel-ledger-routing",
+      "createdAt": "2026-07-31T22:02:11.174Z",
+      "updatedAt": "2026-07-31T22:02:21.916Z"
     }
   ],
   "archived": [
