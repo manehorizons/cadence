@@ -8,9 +8,12 @@ import { replayPhaseCoverage } from '../../src/verify/phase-replay.js';
 // `coverageScheme: "phase-qualified"` must replay repo-wide, matched by its
 // own qualified token, and must NEVER scope to `draft.tasks[].files` or
 // return `no-scoped-files`. This is the fix for `replayPhaseCoverage`'s
-// over-refusal: file-scoped replay under-declares constantly (phase 233,
-// on `feat/kernel-assurance-v2` — not reachable from this branch — reported
-// 5 false drifts against a SUMMARY that recorded all five as pass/executed,
+// over-refusal: file-scoped replay under-declares constantly (phase 233, on
+// `feat/kernel-assurance-v2` — measured directly against that branch —
+// reports 5 false drifts under `assertion` mode, which is the mode
+// `cadence verify phase` actually runs under by default
+// (`defaultConfig.verification.coverageMode` is `'assertion'`, not
+// `mention`), against a SUMMARY that recorded all five as pass/executed,
 // because DRAFT.md's `files:` lines are chronically incomplete). The
 // qualifier makes the token itself globally unique, so scoping is no
 // longer needed to avoid cross-phase AC-N collisions.

@@ -10,6 +10,16 @@ export interface AcDrift {
   recordedEvidence?: string;
   currentlyCovered: boolean;
   drift: boolean;
+  /**
+   * Phase 239 T8 (AC-9): true when this AC's verdict was NOT computed because
+   * the SUMMARY recorded no coverage scheme at all (a pre-239 phase — real
+   * example: phase 233). `currentlyCovered` is meaningless in that case
+   * (always `false`, never scanned for) and `drift` is always `false` — the
+   * replay does not assert a verdict it cannot substantiate. Absent (not
+   * `false`) for every AC whose verdict WAS computed, so existing consumers
+   * that never read this field see no shape change.
+   */
+  indeterminate?: boolean;
 }
 
 export interface PhaseReplayResult {
@@ -17,6 +27,18 @@ export interface PhaseReplayResult {
   id: string;
   perAc: AcDrift[];
   driftCount: number;
+  /**
+   * Phase 239 T8: true when every entry in `perAc` is indeterminate because
+   * the SUMMARY recorded no coverage scheme. `driftCount` is always `0` in
+   * that case. Absent for a phase whose coverage was actually replayed.
+   */
+  indeterminate?: boolean;
+  /**
+   * Human-readable explanation, present only when `indeterminate` is true —
+   * surfaced by `services/verify.ts` so `cadence verify phase`'s output
+   * states plainly that pre-scheme coverage is not phase-attributable.
+   */
+  note?: string;
 }
 
 export type PhaseReplayOutcome =
@@ -50,11 +72,30 @@ function errMessage(err: unknown): string {
  * after the loop has moved past the phase, or in a fresh checkout that never
  * ran it locally at all (the point of `cadence verify phase` / `init --ci`).
  *
- * The coverage scan takes one of two shapes depending on the scheme the
+ * The coverage scan takes one of three shapes depending on the scheme the
  * SUMMARY itself recorded (`summary.coverageScheme`, phase 239 T6):
  *
- * - **Bare** (`coverageScheme` absent, or `'bare'`): the scan is restricted
- *   to the file paths the DRAFT's own tasks declared
+ * - **Indeterminate** (`coverageScheme` absent entirely, phase 239 T8,
+ *   AC-9): the SUMMARY predates the scheme — real example: phase 233, on
+ *   `feat/kernel-assurance-v2` (measured directly against that branch, not
+ *   the fixture equivalent — reachable, not merely cited). No scan runs at
+ *   all: its coverage evidence is not phase-attributable (nothing in a
+ *   pre-239 artifact records which phase a test belongs to), so no verdict
+ *   can be substantiated one way or the other. Every AC in `perAc` is
+ *   returned with `indeterminate: true` and `drift: false` rather than the
+ *   pre-T8 behavior of scanning file-scoped and asserting a verdict it
+ *   couldn't support (phase 233's SUMMARY records all five ACs as
+ *   pass/executed; the pre-T8 bare/file-scoped scan reports 5 false drifts
+ *   against it under `assertion` mode — the mode `cadence verify phase`
+ *   actually runs under by default, since `defaultConfig.verification.
+ *   coverageMode` is `'assertion'`, not this function's own `'mention'`
+ *   fallback — and 1 false drift under `mention` mode, because its DRAFT
+ *   under-declared its test files; see T7's As built amendment in the DRAFT
+ *   for the full account). This is the "instead of drifting" the task name
+ *   refers to.
+ * - **Bare** (`coverageScheme === 'bare'`, explicitly recorded — a
+ *   post-239 phase that settled under the bare scheme): the scan is
+ *   restricted to the file paths the DRAFT's own tasks declared
  *   (`draft.tasks[].files`) — it is NEVER a whole-repo scan. `AC-N` tokens
  *   are small integers that repeat across every phase this repo has ever
  *   run (phase 7's AC-1, phase 42's AC-1, phase 200's AC-1, ...); a
@@ -75,32 +116,25 @@ function errMessage(err: unknown): string {
  *   `expectedQualifier: id`. That is a config-scoped scan, not a whole-repo
  *   scan: a project whose real tests live outside the configured/default
  *   globs is invisible to this branch just as it would be to the coverage
- *   gate itself. `config.testGlobs` itself is supplied by the caller — as of
- *   this task (phase 239 T7) no production caller passes it yet;
- *   `services/verify.ts`'s `runVerifyPhase` is wired to read it from
- *   `verification.testGlobs` at T8, not here. **Until that wiring lands,
- *   every production replay of a phase-qualified phase takes the
- *   `DEFAULT_GLOBS` branch**, regardless of what `verification.testGlobs`
- *   is configured to. Under this scheme every AC reference within that
- *   scope must carry the `<id>/AC-N` prefix (`scanTestCoverage`'s
- *   `expectedQualifier`, phase 239 T2) to count at all — a bare or
- *   foreign-phase token is dropped from the result before it ever reaches
- *   this function. That prefix makes the token itself globally unique,
- *   which is exactly the property file-scoping existed to fake:
- *   cross-phase collision becomes structurally impossible without needing
- *   the DRAFT's `files:` lines to be complete, and those lines chronically
- *   under-declare in practice (replaying phase 233 — on
- *   `feat/kernel-assurance-v2`, not reachable from this branch — under the
- *   bare path reports 5 false drifts against a SUMMARY that recorded all
- *   five ACs as pass/executed, because its DRAFT never named every test
- *   file it actually wrote). Scoping by the configured/default test globs
- *   under the qualifier is therefore safer than file-scoping by the
- *   DRAFT's `files:` lines **in the common case** — though a task file
- *   declared outside `testGlobs` is found by the bare path (which scans
- *   exactly the DRAFT's declared paths) and missed by this one, so for a
- *   phase whose DRAFT names a file outside the configured/default globs,
- *   this path is actually *less* complete, not strictly safer. It is only
- *   as complete as `testGlobs`/the defaults actually are.
+ *   gate itself. `config.testGlobs` itself is supplied by the caller —
+ *   `services/verify.ts`'s `runVerifyPhase` reads it from
+ *   `verification.testGlobs` and passes it through as of phase 239 T8.
+ *   Under this scheme every AC reference within that scope must carry the
+ *   `<id>/AC-N` prefix (`scanTestCoverage`'s `expectedQualifier`, phase 239
+ *   T2) to count at all — a bare or foreign-phase token is dropped from the
+ *   result before it ever reaches this function. That prefix makes the
+ *   token itself globally unique, which is exactly the property
+ *   file-scoping existed to fake: cross-phase collision becomes
+ *   structurally impossible without needing the DRAFT's `files:` lines to
+ *   be complete, and those lines chronically under-declare in practice.
+ *   Scoping by the configured/default test globs under the qualifier is
+ *   therefore safer than file-scoping by the DRAFT's `files:` lines **in
+ *   the common case** — though a task file declared outside `testGlobs` is
+ *   found by the bare path (which scans exactly the DRAFT's declared
+ *   paths) and missed by this one, so for a phase whose DRAFT names a file
+ *   outside the configured/default globs, this path is actually *less*
+ *   complete, not strictly safer. It is only as complete as
+ *   `testGlobs`/the defaults actually are.
  */
 export async function replayPhaseCoverage(
   repoRoot: string,
@@ -164,6 +198,44 @@ export async function replayPhaseCoverage(
     };
   }
   const summary = parsedSummary.data;
+
+  // Phase 239 T8 (AC-9): a SUMMARY with no `coverageScheme` at all predates
+  // the scheme entirely — no phase-qualified token could exist, and the
+  // pre-239 file-scoped scan is exactly the false-drift bug this phase
+  // exists to remove (real example: phase 233, on
+  // `feat/kernel-assurance-v2`, measured directly — its SUMMARY records all
+  // five ACs pass/executed while the bare file-scoped replay reports 5
+  // false drifts under `assertion` mode, the mode `cadence verify phase`
+  // actually runs under by default (`defaultConfig.verification.
+  // coverageMode` is `'assertion'`), because its DRAFT under-declared its
+  // test files). Its coverage evidence is not phase-attributable, so no
+  // scan runs and no verdict is computed for it — Boundaries forbid
+  // asserting one. Every AC is reported `indeterminate` with `drift: false`
+  // instead.
+  if (summary.coverageScheme === undefined) {
+    const perAc: AcDrift[] = summary.acResults.map((r) => ({
+      id: r.id,
+      recordedPass: r.pass,
+      ...(r.evidence !== undefined ? { recordedEvidence: r.evidence } : {}),
+      currentlyCovered: false,
+      drift: false,
+      indeterminate: true,
+    }));
+    return {
+      ok: true,
+      data: {
+        phase,
+        id,
+        perAc,
+        driftCount: 0,
+        indeterminate: true,
+        note:
+          `${phase}/${id}'s SUMMARY.json records no coverage scheme — it predates phase 239. ` +
+          'Its coverage evidence is not phase-attributable and therefore unverifiable; every AC ' +
+          'is reported indeterminate rather than asserting drift this replay cannot substantiate.',
+      },
+    };
+  }
 
   const qualified = summary.coverageScheme === 'phase-qualified';
   const taskFiles = draft.tasks.flatMap((t) => t.files);

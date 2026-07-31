@@ -257,11 +257,10 @@ export async function runVerifyPhase(args: VerifyPhaseArgs, io: CommandIO): Prom
 
   const results: PhaseReplayResult[] = [];
   for (const t of targets) {
-    // phase 239 T8: must also pass `testGlobs: config.verification?.testGlobs` here.
-    // Until wired, every production replay takes scanTestCoverage's DEFAULT_GLOBS
-    // branch, so a consumer whose tests live outside packages/** gets a green
-    // coverage gate and a red `verify phase` on the same commit.
-    const outcome = await replayPhaseCoverage(args.cwd, t.phase, t.id, { coverageMode });
+    const outcome = await replayPhaseCoverage(args.cwd, t.phase, t.id, {
+      coverageMode,
+      ...(config.verification?.testGlobs ? { testGlobs: config.verification.testGlobs } : {}),
+    });
     if (!outcome.ok) {
       io.err(`verify phase failed: ${outcome.message}\n`);
       return { exitCode: 2 };
@@ -281,12 +280,45 @@ export async function runVerifyPhase(args: VerifyPhaseArgs, io: CommandIO): Prom
   const driftFound = results.some((r) => r.driftCount > 0);
   const testFailed = testRun?.ran === true && testRun.passed === false;
 
+  // Phase 239 T8 (AC-9, degradation-notice fix): an indeterminate result is
+  // a degraded verdict — no drift could be substantiated either way — and
+  // CLAUDE.md's "The Quiet Fallback" requires every degradation to print a
+  // loud stderr notice regardless of output mode. Emitted BEFORE the
+  // --json/human branch below so it reaches stderr in both: --json owns
+  // stdout as a contract, so a consumer piping/parsing stdout (or a CI
+  // workflow gating on exit code alone, e.g. `init/ci-workflow.ts`) would
+  // otherwise never see that the "no drift" it's trusting is unsubstantiated.
+  for (const r of results) {
+    if (r.indeterminate) {
+      io.err(
+        `verify phase: ${r.phase}/${r.id}: ${
+          r.note ?? 'pre-scheme coverage is not phase-attributable and therefore unverifiable'
+        }\n`,
+      );
+    }
+  }
+
   const payload: VerifyPhaseJson = { mode, results, testRun };
   if (args.json) {
     io.out(JSON.stringify(payload, null, 2) + '\n');
   } else {
     for (const r of results) {
-      io.out(`${r.phase}/${r.id}: ${r.driftCount === 0 ? 'no drift' : `${r.driftCount} AC(s) drifted`}\n`);
+      // Phase 239 T8 (AC-9, headline fix): "no drift" asserts a
+      // substantiated clean bill of health — an indeterminate phase has NO
+      // substantiated verdict either way, so the headline must say so
+      // explicitly rather than reuse the "no drift" wording that a
+      // `grep drifted` or `head -1` consumer would read as a real pass.
+      const headline = r.indeterminate
+        ? 'coverage NOT VERIFIED (SUMMARY records no coverage scheme)'
+        : r.driftCount === 0
+          ? 'no drift'
+          : `${r.driftCount} AC(s) drifted`;
+      io.out(`${r.phase}/${r.id}: ${headline}\n`);
+      if (r.indeterminate) {
+        io.out(
+          `  ${r.note ?? 'pre-scheme coverage is not phase-attributable and therefore unverifiable'}\n`,
+        );
+      }
       for (const ac of r.perAc.filter((a) => a.drift)) {
         io.out(`  ${ac.id}: recorded PASS (executed), no longer covered by its linked test\n`);
       }

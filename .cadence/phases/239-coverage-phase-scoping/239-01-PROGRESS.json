@@ -76,6 +76,42 @@
         "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/services/verify.ts"
       ],
       "updatedAt": "2026-07-30T23:46:20.604Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "Adds an indeterminate replay state for pre-scheme SUMMARYs (AC-9) and wires config.verification.testGlobs at the services/verify.ts call site, closing the T7 Critical end-to-end (AC-8). Discriminator is summary.coverageScheme === undefined only — an explicit 'bare' keeps the unchanged file-scoped path; review confirmed SummaryZ rejects null/invalid loudly so only genuine absence reaches the branch. Independent review PASS_WITH_CONCERNS, no functional defect. Three findings fixed: the headline said 'no drift' for a phase whose coverage was never verified (245 SUMMARYs lack the field; 21 phases previously reported as drifted now print clean — now 'coverage NOT VERIFIED'), the degradation notice never reached stderr and so violated the Quiet Fallback rule with the init --ci workflow gated on exit code alone (now emitted to stderr in BOTH human and --json modes, stdout still pure JSON), and a third un-schemed test fixture in mcp-server.test.ts left the MCP/CLI parity test comparing two identical short-circuits. Implementing AC-9 correctly broke 4 pre-existing tests and silently hollowed out 7 more into vacuous passes; fixed by a one-field coverageScheme: 'bare' fixture correction in three files, with no assertion weakened, plus a new test pinning the discriminator itself. Rejected one review finding on measurement: it claimed phase 233's '5 false drifts' was really 1, having measured via direct function call under mention mode; defaultConfig.verification.coverageMode is 'assertion' and the CLI passes the config's mode, so the shipped command reports 5 — verified by extracting feat/kernel-assurance-v2 with git archive and replaying the real artifacts (mention=1, assertion=5). All citations now name the mode. Main thread re-verified independently: pipeline 24/24 with 3373 tests, coverage probe AC-1..AC-9 all qualifying>=1, and live CLI stdout/stderr checked in both modes on a scratch pre-scheme repo.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/verify/phase-replay.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/src/services/verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/verify/phase-replay-indeterminate.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/phases/239-coverage-phase-scoping/239-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/verify/phase-replay.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/cli/verify-phase.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/mcp/mcp-server.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/verify/phase-replay-qualified.test.ts"
+      ],
+      "updatedAt": "2026-07-31T00:35:52.971Z"
+    },
+    "T9": {
+      "status": "DONE",
+      "notes": "Docs paired (concepts.md test-coverage row, config.md field table incl. corrected loadConfig-merge mechanism), all 6 commands.md drifts from T7/T8 reviews fixed conditionally (bare vs phase-qualified), new coverage-scheme-docs.test.ts (16 tests, verified non-vacuous against pre-T9 doc text), changeset covering core+types. Independent review round 1: FAIL (AC-10 zero qualifying coverage from describe()-title token dedup collision, backwards loadConfig mechanism claim in config.md, phase/slice terminology placeholder). Fix round applied by original implementer, re-reviewed by same independent reviewer: PASS_WITH_CONCERNS (one new non-blocking Minor: leftover bare AC-10 mentions in describe() parentheticals, inert under phase-qualified but a landmine if reverted to bare) — fixed directly by orchestrator. Main-thread re-verify: pnpm turbo run lint typecheck test build --force = 24/24 successful; AC-10 coverage probe independently re-run, all AC-1..AC-10 qualifying>=1.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/handoff/SESSION-2026-07-31-phase239-t8-landed-t9-t10-remain.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/docs/reference/config.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/packages/core/tests/docs/coverage-scheme-docs.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.changeset/coverage-phase-scoping.md"
+      ],
+      "updatedAt": "2026-07-31T01:49:35.841Z"
+    },
+    "T10": {
+      "status": "DONE",
+      "notes": "Flipped .cadence/config.json verification.coverageScheme to phase-qualified (single line, only file touched). Independent review PASS_WITH_CONCERNS: proved the flip is load-bearing via anti-degeneracy check (1372 AC-1 occurrences scanned, only the 3 genuine 239-01/AC-1 tokens satisfy; negative-control ACs 11-14 with asserting bare tokens correctly report unsatisfied) and negative control against foreign-phase/bare tokens correctly rejected even inside asserting blocks. T3's flagged risk (deriveEvidenceAndCheckFloor deriving from a bare memoized map) independently confirmed closed via reading settle.ts:409-449 and summary-coverage-scheme.test.ts's explicit-AC/foreign-token-derives-unverified assertions. Gate logic traced by hand against gates/coverage.ts: absent=[] weak=[] skippedOnly=[] under the resolved qualified scheme. Main-thread re-verify: git diff confirms exactly the one-line config change, pnpm turbo run lint typecheck test build --force = 24/24 successful. Two carry-forward items surfaced by review, deliberately deferred to whole-branch review / settle-time decision rather than actioned here: (1) draft-read gate will refuse at settle since DRAFT.md mtime > state.draftReadAt from the phase's 11 As-built amendments — remedy (re-approve vs --allow-stale-draft) deferred until after whole-branch review per advisor guidance, since a further amendment there would invalidate a re-approve done now; (2) stale AC-10 parenthetical mentions in coverage-scheme-docs.test.ts were already fixed during T9's fix round, reviewer's note was a carry-forward from memory, re-confirmed clean by direct grep.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/239-coverage-phase-scoping/.cadence/config.json"
+      ],
+      "updatedAt": "2026-07-31T02:08:28.351Z"
     }
   }
 }

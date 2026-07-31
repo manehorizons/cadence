@@ -42,7 +42,8 @@ export const SANDBOX_CONFIG: CadenceConfig = {
     // for the same reason it stays on coverageMode: 'mention' — its walkthrough
     // fixture test carries a plain `AC-1` token, and the tutorial teaches the
     // loop rather than this repo's phase-numbering convention. A fresh
-    // `cadence init` still writes 'phase-qualified' (defaultConfig).
+    // `cadence init` still writes 'phase-qualified' explicitly via its
+    // verification overlay — defaultConfig itself holds 'bare'.
     coverageScheme: 'bare',
     testCommand: 'node --test',
     coverageProfiles: [],
