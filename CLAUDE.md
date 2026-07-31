@@ -200,6 +200,45 @@ session to do the same. The shape of a healthy session:
    `cadence handoff` doc: TL;DR, what landed, carry-forward gotchas, next
    action. Assume the next reader is a fresh session with zero context.
 
+## Model selection
+
+Session default is Sonnet at `xhigh` effort with an Opus advisor available
+mid-turn (`~/.claude/settings.json`: `model: sonnet` + `advisorModel: opus` +
+`effortLevel: xhigh`, set 2026-07-30). The advisor reads the full conversation
+— every tool call, every result, every dead end — and returns judgment, not
+edits. General mechanics, escalation heuristics, and its tool-less limitation
+live in the global `~/.claude/CLAUDE.md` ("Opus advisor pattern"); this
+section covers only what's specific to working in CADENCE.
+
+**Escalate to the advisor** before committing to any of the judgment calls the
+gate matrix can't automate for you:
+
+- Authoring or amending a DRAFT's Acceptance Criteria / Task breakdown, or a
+  SPEC, before it goes to review
+- Interpreting a LOCKED `DESIGN.md` decision, resolving a phase-collision or
+  worktree-placement ambiguity, or deciding whether a gate bypass is
+  genuinely warranted
+- Reconciling conflicting subagent completion claims before trusting a "done"
+  report — see "The Self-Report Trust" below, the failure mode this whole
+  repo is built to catch
+- Two architectural approaches are live and the tiebreaker isn't mechanical
+- Before promoting a recommendation to `shipped` or writing a handoff — a
+  cheap second look before the record becomes durable
+
+**The advisor does not satisfy CADENCE's own independence requirements** —
+the whole-branch review before settle (item 4 above), or a second look on a
+subagent's "done" claim. It shares this session's transcript and therefore
+its blind spots. Get a real independent look from a fresh-context subagent
+(`Agent(..., model: "opus")`) or a separate host (`CADENCE_HOST_CLI_BIN=codex`)
+instead — never a self-review, and never an advisor consult standing in for
+one. This is the same reason `cadence spec approve`'s built-in review gate
+silently falls back to `mock` when run from inside a headless Claude Code
+session: it detects it's already nested in a headless `claude` invocation
+(`packages/core/src/verify/host-cli-client.ts`, the self-invocation guard)
+and refuses to spawn a second one rather than risk unbounded recursion. When
+that happens, dispatch a real independent review manually — don't treat the
+mock fallback's pass as one.
+
 ## Enforcement layers — what will stop you
 
 - **`.githooks/pre-push`** (wired via `git config core.hooksPath .githooks`):
