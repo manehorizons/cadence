@@ -67,6 +67,70 @@ describe('checkVerificationReadiness (AC-1, AC-2)', () => {
     expect(combined).toMatch(/Claude Code/);
   });
 
+  // Phase 239 (issue #331) — the check inspected ONLY the deep-verify seam
+  // despite its seven-seam name, so a seam configured to a real provider whose
+  // credentials are absent was reported as healthy while being guaranteed to
+  // fall back to mock. Reproduced against the real shape that surfaced it:
+  // deep-verify on host-cli (credential-free by design) with specReview on
+  // anthropic and no ANTHROPIC_API_KEY.
+  it('AC-1: warns when a non-deep-verify seam will downgrade, even though deep-verify is healthy', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, {
+      ...cfg,
+      verifier: { ...cfg.verifier, provider: 'host-cli' },
+      specReview: { ...cfg.specReview, provider: 'anthropic' },
+    });
+    const c = await checkVerificationReadiness(active.root, {});
+    expect(c.name).toBe('verification-readiness');
+    expect(c.severity).toBe('warning');
+    // Must name the offending seam — a generic "deep-verify is set to ..."
+    // message would send the operator to the wrong config block.
+    expect(`${c.detail} ${c.remediation}`).toMatch(/specReview/);
+  });
+
+  it('AC-2: names every downgrading seam, not just the first', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, {
+      ...cfg,
+      verifier: { ...cfg.verifier, provider: 'host-cli' },
+      specReview: { ...cfg.specReview, provider: 'anthropic' },
+      codeReview: { ...cfg.codeReview, provider: 'anthropic' },
+    });
+    const c = await checkVerificationReadiness(active.root, {});
+    expect(c.severity).toBe('warning');
+    const combined = `${c.detail} ${c.remediation}`;
+    expect(combined).toMatch(/specReview/);
+    expect(combined).toMatch(/codeReview/);
+  });
+
+  it('AC-3: still passes when every seam is real and credentialed', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, {
+      ...cfg,
+      verifier: { ...cfg.verifier, provider: 'host-cli' },
+      specReview: { ...cfg.specReview, provider: 'host-cli' },
+    });
+    const c = await checkVerificationReadiness(active.root, {});
+    expect(c.severity).toBe('ok');
+  });
+
+  it('AC-3: a seam left on mock is not treated as a downgrade', async () => {
+    // The repo's own committed config keeps most seams on mock deliberately.
+    // Only deep-verify being mock should drive the all-mock warning; a mock
+    // sibling seam must not invent a second one.
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, {
+      ...cfg,
+      verifier: { ...cfg.verifier, provider: 'host-cli' },
+    });
+    const c = await checkVerificationReadiness(active.root, {});
+    expect(c.severity).toBe('ok');
+  });
+
   // T5 (phase 164 amendment) — `checkVerificationReadiness` must forward its
   // own `root` param to `assessReadiness` as `cwd`, not rely on the default
   // `process.cwd()`. Proven with a key that lives ONLY in a `.env` file at
