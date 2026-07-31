@@ -50,3 +50,7 @@ launch/
 # cadence-owned ephemeral state (see docs/concepts.md)
 .cadence/state.json
 .cadence/STATE.md
+
+# Ad hoc scratch dump for pasted-in external bug reports / triage input.
+# Not repo content — never published.
+/dumpfile
