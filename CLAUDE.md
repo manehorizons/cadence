@@ -22,7 +22,7 @@ are an AI agent working inside the tool built to distrust AI agents — every
 rule in this manual follows from that thesis, and most of the failure modes
 listed at the bottom are some flavor of violating it.
 
-**Current version: `1.51.1`** across all five published packages (lockstep).
+**Current version: `1.52.0`** across all five published packages (lockstep).
 Do not reconstruct release history from memory or from this file — it lives
 in `packages/*/CHANGELOG.md`, [GitHub Releases](https://github.com/manehorizons/cadence/releases),
 `git log`, and `.cadence/phases/*/`. When a release bumps

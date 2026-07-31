@@ -1,5 +1,209 @@
 # @manehorizons/cadence-core
 
+## 1.52.0
+
+### Minor Changes
+
+- a58cac1: Closed three drifts around `gates.sealed` (rec-20260725-006). Docs now name all
+  three gates that actually consult `isGateSealed` (`test-coverage`,
+  `build-test-must-pass`, `boundary-scan` — `docs/reference/config.md` and
+  `docs/concepts.md` previously named only the first two, stale since
+  `boundary-scan` shipped in Phase 156), plus the missing `--allow-failing-build`
+  / `--allow-boundary-scan-failure` rows in the "Gate bypass reference summary"
+  table; a new doc-content test derives the sealed-gate set from the real
+  `isGateSealed` call sites so a future gate can't drift the same way again.
+  `docs/concepts.md` gains a "Bypass-flag naming policy" section explaining the
+  `--force` / `--allow-<gate>-failure` / `--allow-<verb>` split and auditing
+  every bypassable gate's flag against it. `runSettleGates`'s gate-provenance
+  collection now records a bypass-specific skip reason for `build-test-must-pass`
+  and `boundary-scan` (previously only `test-coverage`'s bypass was distinguished
+  from a normal "ran"), naming whichever flag actually fired (`--force` vs the
+  gate's own dedicated flag) rather than always naming the dedicated one. No
+  gate pass/refuse/seal decisions changed — this is documentation accuracy and
+  provenance-recording parity only.
+- 90e3ed9: Closed the phase-attributable AC coverage collision (phase 239). Nothing in a
+  settled phase's artifacts previously recorded which phase a test belonged to:
+  the `test-coverage` gate searched every `packages/**/*.test.ts` for the bare
+  `AC-N` token, so any past phase's `AC-3` satisfied every future phase's
+  `AC-3` (AC ids restart at `AC-1` every phase);
+  meanwhile `cadence verify phase`'s replay scoped its re-scan to only the files
+  the DRAFT declared, which chronically under-declares and produced false
+  "drifted" verdicts against phases whose tests genuinely still pass.
+
+  A new opt-in `verification.coverageScheme` config field (`"bare"` | `"phase-qualified"`,
+  schema default `"bare"`) closes both. Under `"phase-qualified"`, an `AC-N`
+  token must carry its phase-slice prefix (`239-01/AC-3`) to count as coverage
+  evidence — a bare or foreign-phase token no longer satisfies the gate, and
+  every refusal names the exact expected token. `cadence verify phase` drops
+  file-scoping entirely for a phase-qualified SUMMARY and instead matches by
+  that phase's own qualified token across the configured `verification.testGlobs`,
+  so an under-declared DRAFT no longer produces false drift. A phase
+  settled before the scheme existed has no phase-attributable evidence at all;
+  its replay now reports every AC `indeterminate` with `drift: false` rather
+  than asserting a verdict it cannot substantiate.
+
+  The field defaults to `"bare"` for every existing config (including one that
+  predates this field) — this is a two-layer default: `defaultConfig` itself
+  holds `"bare"` so `loadConfig`'s config.json-over-`defaultConfig` merge never
+  silently flips an upgraded consumer, and only a fresh `cadence init` writes
+  `"phase-qualified"` explicitly. Existing consumers on `@manehorizons/cadence-core@1.51.1`
+  are fully unaffected until they opt in via `cadence config edit coverageScheme`.
+  `SUMMARY.json` gains additive, optional `coverageScheme`/`coverageMode` fields
+  recording which scheme produced a settle's evidence; `cadence verify coverage
+--explain` reports per-occurrence whether a token satisfies the configured
+  scheme.
+
+- 127a06b: **BREAKING (engine floor): minimum supported Node.js raised from `>=20` to
+  `>=22`.** Node 20 reaches its scheduled end-of-life in April 2026, and Phase
+  238 retires the Node 20 CI/test leg across the monorepo (see
+  `.cadence/phases/238-drop-node20-support/`) — these packages are no longer
+  tested against, or guaranteed to work on, Node 20 or 21. Shipped as a minor
+  bump rather than major, matching the precedent set by the Zod v3→v4 upgrade
+  (`[1.4.0]`): no external adopters are affected at release time, and CADENCE
+  is reserving its first major/2.0.0 release for when the full coupling of
+  Cadence is complete.
+
+  Every published package's `package.json` now declares
+  `"engines": { "node": ">=22" }`. Consumers still on Node 20 or 21 should
+  upgrade their Node.js runtime before installing or running any package at
+  this version or later — by default, npm and pnpm only _warn_ on an
+  `engines` mismatch (this repo does not set `engine-strict`), but CI
+  pipelines or environments with `engine-strict` enabled will fail outright,
+  and pipelines pinned to Node 20 should bump their Node version to keep
+  using the `cadence` CLI, either host adapter, or
+  `@manehorizons/cadence-types`.
+
+- 92ae02e: `cadence doctor` gains a `ledger-remote-collision` check (rec-20260726-003):
+  `mintId` computes the next recommendation/evidence/decision/assumption id
+  purely from the local ledger on disk, so two unpushed branches/worktrees/
+  sessions can independently mint the same id for different content — this
+  happened for real on 2026-07-26 and required a manual git-merge + JSON-union
+  fix (PR #308).
+
+  The new check fetches the tracked upstream branch (reusing the existing
+  `checkRemoteFreshness` fetch plumbing), resolves `git merge-base HEAD @{u}`,
+  and diffs local's new-since-merge-base ledger ids against the upstream's
+  new-since-merge-base ids across all four ledgers, warning (never `error`) on
+  any overlap and naming the colliding id(s). It degrades safely to `ok` — no
+  git repository, no upstream, a failed fetch, a detached HEAD, or no
+  discoverable merge-base all skip the check rather than failing it. No
+  `--fix` auto-repair exists for this finding — resolving a real collision
+  needs a human to pick which side re-mints, matching `worktree-phases`.
+
+- d7d4239: `SUMMARY.json` gets a settle-time content hash, closing the "hand-edited
+  SUMMARY renders faithfully as if it were genuine" gap (rec-20260724-006).
+
+  - `Summary` (types) gains an optional, additive `contentHash: { algorithm:
+'sha256'; value: string }` field — existing SUMMARY.json records without
+    it keep parsing unchanged.
+  - `cadence settle run` now computes a sha256 digest over a canonical
+    (deep, stable-key-order) stringification of the settled summary and
+    attaches it before writing `SUMMARY.json`/`SUMMARY.md`. Both `cadence
+summary render` and the settle-time `SUMMARY.md` sidecar display it.
+  - New `cadence summary verify <phase> <num>` recomputes the digest and
+    reports `MATCH`, `MISMATCH` (non-zero exit — the stored hash doesn't
+    match the content, i.e. the file was edited after settle), or `NO_HASH`
+    (a pre-phase-223 or refused-settle record, reported cleanly rather than
+    a false pass).
+
+  This is detection only, not signing — self-signing in the same trust
+  domain as the artifact's author isn't meaningfully stronger than a hash.
+  Full cryptographic signing with an external trust root is deferred to
+  rec-20260726-001, gated on the parked MCP/hooks/host-adapter/verifier/
+  ledger threat-model rec (mil-rec-rec-20260712-016). See dec-20260726-001
+  for the full rationale.
+
+### Patch Changes
+
+- f88716c: Fixes rec-20260726-002: a fresh `EnterWorktree` git worktree (or a fresh
+  clone) carries the committed `.cadence/` scaffold but never `state.json`
+  (gitignored since phase 196), so every state-mutating command threw
+  `NotInitializedError` saying "run `cadence init`" — but `cadence init`
+  correctly refuses on an already-`.cadence/`-committed repo, a dead end that
+  had to be worked around by hand-authoring `state.json` (hit live during
+  phase 222). `cadence onboard` already bootstraps exactly this case safely
+  (phase 196 fallout, #177), but nothing in the failure path pointed at it.
+  `SimpleStateBackend.readState()`'s `NotInitializedError` now distinguishes
+  "`.cadence/` doesn't exist at all" (still names `cadence init`) from
+  "`.cadence/` exists but `state.json` is missing" (now names `cadence
+onboard`), and `cadence init`'s "already initialized" refusal prints an
+  additional line pointing at `cadence onboard` in the same missing-state.json
+  case. `cadence init` still refuses and writes nothing either way — only the
+  guidance changes.
+- 0e854cd: Extracted a shared `runConvergentReview` primitive (in `packages/core/src/verify/converge.ts`,
+  alongside `nextConvergence`) that all 4 bounded-convergence call sites
+  (`plan-review`, `code-review`, `spec-approve`'s spec-review and ui-spec-review)
+  now delegate to, instead of each independently re-implementing the same
+  read-sidecar → verify → verdict → history-append → write-sidecar → branch
+  sequence (rec-20260725-008). Purely internal — no change to the convergence
+  policy, sidecar JSON on-disk shape, or CLI-visible behavior; a future fifth
+  convergence call site (e.g. survey #4's settle-gate convergence) can now reuse
+  this primitive instead of copy-pasting a fifth time.
+- 84dc9bd: Fixes #331: `cadence doctor`'s `verification-readiness` check inspected only the
+  deep-verify seam despite its seven-seam name, so a seam configured to a real
+  provider whose credentials were absent was classified as real and never
+  credential-checked — `doctor` printed `✓ ok` while that gate was guaranteed to
+  silently fall back to `mock` at call time. `cadence config explain` already
+  caught this via its `provider-no-key` warning, and its remedy line says "Run
+  `cadence doctor` to confirm provider health" — pointing the operator at the
+  command that reported the green tick.
+
+  `assessReadiness` gains `seamsDowngraded`: the seams whose configured provider
+  is real but whose credentials are missing, in `VERIFIER_SEAMS` order. It never
+  includes a `mock` seam (not a downgrade — it announces itself) nor a `host-cli`
+  seam (no required credential by design). The existing `seamsReal`/`seamsMock`
+  partition, which classifies by configured provider name, is unchanged — the new
+  field expresses what that partition structurally cannot.
+
+  `checkVerificationReadiness` now warns when any non-deep-verify seam will
+  downgrade, naming each offending seam and its provider, and reusing the
+  Claude-Code-login confusion wording when an affected seam is `anthropic` inside
+  a live Claude Code session. The deep-verify branches are evaluated first so
+  their more specific wording still wins when deep-verify is itself the problem.
+  No check changes from `warning` to `error`, and no previously-warning
+  configuration now passes.
+
+  Found downstream: a project had `specReview` on `anthropic` with no key, so
+  `cadence spec approve` downgraded to mock and wrote a SPEC-REVIEW artifact
+  reading `pass: true, converged: true, findings: 0, attempts: 0, provider:
+"mock"` — a spec no model had read, recorded as a clean convergent pass, with
+  `doctor` reporting `ok` throughout.
+
+- 65bcd73: Fixed the built-in python coverage profile's opener regex to accept a
+  return-type annotation (e.g. `def test_foo(x: Path) -> None:`) between the
+  parameter list and the trailing colon. Previously any test function
+  annotated with a return type failed to match the opener at all, which
+  silently dropped the entire file's span table — `cadence verify coverage`
+  reported "no test block was recognized in this file" for real, passing,
+  assertion-bearing pytest suites whose team convention adds `-> None:` (or
+  any other return annotation) to every test function, indistinguishable from
+  "no tests exist." Files that happened not to use return-type annotations
+  were unaffected, which is what made the gap easy to miss. Also audited the
+  js/ts profile for an analogous blind spot on typed callback signatures —
+  none exists, since its opener matches on the `it(`/`test(` call token
+  itself, not the callback's own signature.
+- 7960bff: Refactors `rec-20260725-007`: `settleService` (`packages/core/src/services/settle.ts`)
+  was a single ~555-line function spanning at least 9 concerns — bypass-arg
+  parsing, the phase-collision backstop, the mock-verifier banner, gate-loop
+  handling, per-AC evidence derivation, the evidence-floor gate, the friction
+  digest, recommendation ship-promotion, and the interactive GitHub-issue
+  offer — distinguished only by inline `// Phase N` comments, not function
+  boundaries. It is now decomposed into 9 named, private, top-level step
+  functions (`loadSettlePreconditions`, `checkPhaseCollisionBackstop`,
+  `resolveSettleGateSet`, `buildSettleContext`, `writeRefusedSettleSummary`,
+  `deriveSettleAcResults`, `runAnomalyAndSkillAuditChecks`,
+  `deriveEvidenceAndCheckFloor`, `finalizeAndCloseSettle`), with
+  `settleService` itself reduced to a short, top-to-bottom orchestrator that
+  calls them in sequence. This is a pure, behavior-preserving extraction — no
+  logic, ordering, message text, or the `settleService`/`SettleArgs`/
+  `CommandResult` public interface changed, and no test files were edited;
+  the existing `settle*.test.ts` behavioral suites are unchanged and pass
+  exactly as before (363/363 files, 3295/3295 tests in `cadence-core`).
+- Updated dependencies [90e3ed9]
+- Updated dependencies [127a06b]
+- Updated dependencies [d7d4239]
+  - @manehorizons/cadence-types@1.52.0
+
 ## 1.51.1
 
 ### Patch Changes

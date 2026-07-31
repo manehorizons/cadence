@@ -4,6 +4,29 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.52.0] - 2026-07-31
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.52.0`. Per-package bumps managed by changesets.
+
+### Changed
+
+- **BREAKING (engine floor): minimum supported Node.js raised from `>=20` to `>=22`.** Node 20 reaches end-of-life in April 2026; the Node 20 CI/test leg is retired across the monorepo and every published package's `package.json` now declares `"engines": { "node": ">=22" }`. Shipped as a minor bump, not major, per the precedent set by the Zod v3→v4 upgrade — CADENCE reserves 2.0.0 for full Cadence coupling. (Phase `238-drop-node20-support`.)
+- **Phase-attributable AC coverage** — new opt-in `verification.coverageScheme` config field (`"bare"` | `"phase-qualified"`, default `"bare"`) closes a cross-phase AC-token collision: under `"phase-qualified"`, an `AC-N` token must carry its phase-slice prefix (`239-01/AC-3`) to count as evidence, and `cadence verify phase` matches by qualified token instead of file-scoping, eliminating false "drifted" verdicts on under-declared DRAFTs. (Phase `239`, closes the AC-token-collision gap.)
+- **Gate-sealed docs + provenance parity** — `docs/reference/config.md`/`docs/concepts.md` now name all three gates that actually consult `isGateSealed` (`test-coverage`, `build-test-must-pass`, `boundary-scan`); gate-provenance now records which bypass flag fired for all three sealed gates, not just `test-coverage`. (rec-20260725-006.)
+- `cadence doctor` gains a `ledger-remote-collision` check catching cross-branch/worktree id collisions in the four Praxis ledgers before push. (rec-20260726-003.)
+- `SUMMARY.json` gains a settle-time sha256 `contentHash`; new `cadence summary verify <phase> <num>` detects post-settle hand-edits. (rec-20260724-006.)
+
+### Fixed
+
+- `cadence doctor`'s `verification-readiness` check now inspects every verifier seam, not just deep-verify — a seam configured to a real provider with missing credentials was silently classified as real and downgraded to `mock` at call time without warning. (#331.)
+- Fresh `EnterWorktree`/clone `NotInitializedError` now points at `cadence onboard` (not `cadence init`, which correctly refuses) when `.cadence/` exists but `state.json` is missing. (rec-20260726-002.)
+- Python coverage profile's opener regex now accepts a return-type annotation (`-> None:`) between the parameter list and colon — previously silently dropped the whole file's span table. 
+
+### Internal
+
+- Extracted a shared `runConvergentReview` primitive used by all 4 bounded-convergence call sites. (rec-20260725-008.)
+- `settleService` decomposed from one ~555-line function into 9 named step functions; no behavior change. (rec-20260725-007.)
+
 ## [1.51.1] - 2026-07-25
 
 > Published to npm 2026-07-25 via the `Release` workflow (provenance), tag `v1.51.1`. Per-package bumps managed by changesets.

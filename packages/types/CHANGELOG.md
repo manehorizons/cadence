@@ -1,5 +1,84 @@
 # @manehorizons/cadence-types
 
+## 1.52.0
+
+### Minor Changes
+
+- 90e3ed9: Closed the phase-attributable AC coverage collision (phase 239). Nothing in a
+  settled phase's artifacts previously recorded which phase a test belonged to:
+  the `test-coverage` gate searched every `packages/**/*.test.ts` for the bare
+  `AC-N` token, so any past phase's `AC-3` satisfied every future phase's
+  `AC-3` (AC ids restart at `AC-1` every phase);
+  meanwhile `cadence verify phase`'s replay scoped its re-scan to only the files
+  the DRAFT declared, which chronically under-declares and produced false
+  "drifted" verdicts against phases whose tests genuinely still pass.
+
+  A new opt-in `verification.coverageScheme` config field (`"bare"` | `"phase-qualified"`,
+  schema default `"bare"`) closes both. Under `"phase-qualified"`, an `AC-N`
+  token must carry its phase-slice prefix (`239-01/AC-3`) to count as coverage
+  evidence — a bare or foreign-phase token no longer satisfies the gate, and
+  every refusal names the exact expected token. `cadence verify phase` drops
+  file-scoping entirely for a phase-qualified SUMMARY and instead matches by
+  that phase's own qualified token across the configured `verification.testGlobs`,
+  so an under-declared DRAFT no longer produces false drift. A phase
+  settled before the scheme existed has no phase-attributable evidence at all;
+  its replay now reports every AC `indeterminate` with `drift: false` rather
+  than asserting a verdict it cannot substantiate.
+
+  The field defaults to `"bare"` for every existing config (including one that
+  predates this field) — this is a two-layer default: `defaultConfig` itself
+  holds `"bare"` so `loadConfig`'s config.json-over-`defaultConfig` merge never
+  silently flips an upgraded consumer, and only a fresh `cadence init` writes
+  `"phase-qualified"` explicitly. Existing consumers on `@manehorizons/cadence-core@1.51.1`
+  are fully unaffected until they opt in via `cadence config edit coverageScheme`.
+  `SUMMARY.json` gains additive, optional `coverageScheme`/`coverageMode` fields
+  recording which scheme produced a settle's evidence; `cadence verify coverage
+--explain` reports per-occurrence whether a token satisfies the configured
+  scheme.
+
+- 127a06b: **BREAKING (engine floor): minimum supported Node.js raised from `>=20` to
+  `>=22`.** Node 20 reaches its scheduled end-of-life in April 2026, and Phase
+  238 retires the Node 20 CI/test leg across the monorepo (see
+  `.cadence/phases/238-drop-node20-support/`) — these packages are no longer
+  tested against, or guaranteed to work on, Node 20 or 21. Shipped as a minor
+  bump rather than major, matching the precedent set by the Zod v3→v4 upgrade
+  (`[1.4.0]`): no external adopters are affected at release time, and CADENCE
+  is reserving its first major/2.0.0 release for when the full coupling of
+  Cadence is complete.
+
+  Every published package's `package.json` now declares
+  `"engines": { "node": ">=22" }`. Consumers still on Node 20 or 21 should
+  upgrade their Node.js runtime before installing or running any package at
+  this version or later — by default, npm and pnpm only _warn_ on an
+  `engines` mismatch (this repo does not set `engine-strict`), but CI
+  pipelines or environments with `engine-strict` enabled will fail outright,
+  and pipelines pinned to Node 20 should bump their Node version to keep
+  using the `cadence` CLI, either host adapter, or
+  `@manehorizons/cadence-types`.
+
+- d7d4239: `SUMMARY.json` gets a settle-time content hash, closing the "hand-edited
+  SUMMARY renders faithfully as if it were genuine" gap (rec-20260724-006).
+
+  - `Summary` (types) gains an optional, additive `contentHash: { algorithm:
+'sha256'; value: string }` field — existing SUMMARY.json records without
+    it keep parsing unchanged.
+  - `cadence settle run` now computes a sha256 digest over a canonical
+    (deep, stable-key-order) stringification of the settled summary and
+    attaches it before writing `SUMMARY.json`/`SUMMARY.md`. Both `cadence
+summary render` and the settle-time `SUMMARY.md` sidecar display it.
+  - New `cadence summary verify <phase> <num>` recomputes the digest and
+    reports `MATCH`, `MISMATCH` (non-zero exit — the stored hash doesn't
+    match the content, i.e. the file was edited after settle), or `NO_HASH`
+    (a pre-phase-223 or refused-settle record, reported cleanly rather than
+    a false pass).
+
+  This is detection only, not signing — self-signing in the same trust
+  domain as the artifact's author isn't meaningfully stronger than a hash.
+  Full cryptographic signing with an external trust root is deferred to
+  rec-20260726-001, gated on the parked MCP/hooks/host-adapter/verifier/
+  ledger threat-model rec (mil-rec-rec-20260712-016). See dec-20260726-001
+  for the full rationale.
+
 ## 1.51.1
 
 ### Patch Changes
