@@ -1261,37 +1261,6 @@
       "updatedAt": "2026-07-26T21:37:14.232Z"
     },
     {
-      "id": "rec-20260727-006",
-      "title": "Finding identity: stable ids, dispositions, expiring waivers",
-      "summary": "Neither persisted Finding type (packages/types summary.ts vs packages/core verify/code-review.ts, already diverged in severity enum) has a stable id, anchor, disposition, or waiver. Add {id, target: artifact|verification, anchor, disposition, waiver{expiry}} and converge the two divergent Finding types onto one, discriminated by target (decision D9). A waiver with no expiry is a belief masquerading as knowledge.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "types",
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/types/src/summary.ts",
-        "packages/core/src/verify/code-review.ts",
-        "packages/core/src/gates/types.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260727-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:47:21.926Z",
-      "updatedAt": "2026-07-27T18:47:21.926Z"
-    },
-    {
       "id": "rec-20260727-008",
       "title": "Invariant promotion from RetroRollup.findingCategories.recurring",
       "summary": "RetroRollupZ.findingCategories already defines 'recurring' as seen in 2+ distinct phases -- the frequency-analysis input layer for invariant promotion is built. Consume it to split recurring-unanchored (invariant candidate) from recurring-anchored (spec-quality/codebase-hostility signal) into different dispositions. Promotion stays explicit, never automatic.",
@@ -1369,34 +1338,6 @@
       "scoutId": "scout-20260727-kernel-review-phase0",
       "createdAt": "2026-07-27T18:47:46.319Z",
       "updatedAt": "2026-07-27T18:47:46.319Z"
-    },
-    {
-      "id": "rec-20260727-011",
-      "title": "Extend RecommendationSourceZ with a review member",
-      "summary": "RecommendationSourceZ has no 'review' or 'gate' member, so routing criteria-anchored-review findings into the recommendation ledger (section 7.3 of the source doc) currently loses provenance into 'manual'/'cadence'. Add a 'review' source member so Slice 3 findings can route with real provenance instead of being mislabeled.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "types"
-      ],
-      "affectedFiles": [
-        "packages/types/src/intelligence.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260727-011"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:47:52.825Z",
-      "updatedAt": "2026-07-27T18:47:52.825Z"
     },
     {
       "id": "rec-20260727-012",
@@ -1602,6 +1543,63 @@
       "decisionIds": [],
       "createdAt": "2026-07-29T23:25:34.102Z",
       "updatedAt": "2026-07-29T23:25:34.102Z"
+    },
+    {
+      "id": "rec-20260731-001",
+      "title": "Finding id collision: two same-severity/message findings in one file share one id",
+      "summary": "computeFindingId hashes (file, anchor.kind, anchor.ref, severity, normalized message) per AC-3's exact spec, with no per-occurrence discriminant. Two distinct findings in the same file with identical anchor/severity/normalized-message (e.g. MockCodeReviewVerifier's 'console.log left in source' emitted twice in one file) collapse to the same id. Harmless today since findings are never keyed by id, but the follow-on ledger-routing phase (source doc section 7.3, phase 236's ROADMAP.md 'As built' amendment) must key on identity for ledger hygiene — it would currently mint one recommendation for N occurrences and a future disposition surface would waive them all together. Surfaced by an Opus gap review (2026-07-30) of phase 236, verified reachable via MockCodeReviewVerifier's literal duplicate-marker behavior. Undocumented anywhere; needs at minimum a doc note, and the ledger-routing phase's design should account for it explicitly (e.g. include occurrence count/ordinal in the hash, or accept it as a deliberate merge-by-identity semantic).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/finding-identity.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260731-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260730-opus-gap-review",
+      "createdAt": "2026-07-31T02:11:27.042Z",
+      "updatedAt": "2026-07-31T02:11:27.042Z"
+    },
+    {
+      "id": "rec-20260731-002",
+      "title": "docs/concepts.md phase-236 section has unpinned file:line citations that will rot",
+      "summary": "The new 'Finding identity, disposition, and type convergence (phase 236)' subsection in docs/concepts.md cites ~10 hardcoded file.ts:NN-NN line ranges (e.g. summary.ts:70-114, finding-identity.ts:58-90, gates/code-review.ts:105, contracts/index.ts:167-186, intelligence.ts:3-15). All verified accurate as of the phase-236 commit, but no doc-content test pins them (unlike CLAUDE.md's 'The Hardcoded Count' precedent for command/slash-command counts) and docs/concepts.md had zero such citations before this commit. They will silently go stale on the next edit to any cited file. Surfaced by an Opus gap review (2026-07-30) of phase 236. Fix options: drop line numbers and cite file paths only, or add a lightweight doc-content test asserting the cited ranges still contain what they claim (matching this repo's existing docs test conventions in packages/core/tests/docs/).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs"
+      ],
+      "affectedFiles": [
+        "docs/concepts.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260731-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-31T02:11:27.207Z",
+      "updatedAt": "2026-07-31T02:11:27.207Z",
+      "scoutId": "scout-20260730-opus-gap-review"
     }
   ],
   "archived": [
@@ -5115,10 +5113,77 @@
         "dec-20260730-001"
       ],
       "scoutId": "scout-20260727-kernel-review-phase0",
-      "createdAt": "2026-07-27T18:47:29.002Z",
-      "updatedAt": "2026-07-30T03:19:43.733Z",
       "archivedAt": "2026-07-30T03:19:43.733Z",
-      "archiveReason": "rejected"
+      "archiveReason": "rejected",
+      "createdAt": "2026-07-27T18:47:29.002Z",
+      "updatedAt": "2026-07-30T03:19:43.733Z"
+    },
+    {
+      "id": "rec-20260727-006",
+      "title": "Finding identity: stable ids, dispositions, expiring waivers",
+      "summary": "Neither persisted Finding type (packages/types summary.ts vs packages/core verify/code-review.ts, already diverged in severity enum) has a stable id, anchor, disposition, or waiver. Add {id, target: artifact|verification, anchor, disposition, waiver{expiry}} and converge the two divergent Finding types onto one, discriminated by target (decision D9). A waiver with no expiry is a belief masquerading as knowledge.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "types",
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts",
+        "packages/core/src/verify/code-review.ts",
+        "packages/core/src/gates/types.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260727-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "236-finding-identity-disposition-ledger-routing",
+      "shippedRef": "phase 236-finding-identity-disposition-ledger-routing (feat/kernel-assurance-v2 arc, PR pending)",
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "archivedAt": "2026-07-31T01:30:06.229Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T18:47:21.926Z",
+      "updatedAt": "2026-07-31T01:30:06.229Z"
+    },
+    {
+      "id": "rec-20260727-011",
+      "title": "Extend RecommendationSourceZ with a review member",
+      "summary": "RecommendationSourceZ has no 'review' or 'gate' member, so routing criteria-anchored-review findings into the recommendation ledger (section 7.3 of the source doc) currently loses provenance into 'manual'/'cadence'. Add a 'review' source member so Slice 3 findings can route with real provenance instead of being mislabeled.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/types/src/intelligence.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260727-011"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "236-finding-identity-disposition-ledger-routing",
+      "shippedRef": "phase 236-finding-identity-disposition-ledger-routing (feat/kernel-assurance-v2 arc, PR pending)",
+      "scoutId": "scout-20260727-kernel-review-phase0",
+      "archivedAt": "2026-07-31T01:30:06.397Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T18:47:52.825Z",
+      "updatedAt": "2026-07-31T01:30:06.397Z"
     }
   ]
 }

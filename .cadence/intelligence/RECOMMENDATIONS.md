@@ -676,22 +676,6 @@ In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts 
 
 boundary-scan shipped in Phase 156 but was never given a full 'when it fires / what it checks' row anywhere in docs/concepts.md's main gate-universe listing (the '14 gates: 3 always-fire + 11 delta' tables) or the 'Stage-scoped gates' section -- it only appears in the sealed-gate/bypass-summary material phase 226 fixed. Discovered during phase 226's whole-branch review; explicitly out of that phase's scope (its ACs covered gates.sealed discussion only, not the full gate-universe matrix).
 
-## rec-20260727-006 — Finding identity: stable ids, dispositions, expiring waivers
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: types, core
-- files: packages/types/src/summary.ts, packages/core/src/verify/code-review.ts, packages/core/src/gates/types.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.7, section 7.2, decision D9
-- next: cadence milestone propose
-
-Neither persisted Finding type (packages/types summary.ts vs packages/core verify/code-review.ts, already diverged in severity enum) has a stable id, anchor, disposition, or waiver. Add {id, target: artifact|verification, anchor, disposition, waiver{expiry}} and converge the two divergent Finding types onto one, discriminated by target (decision D9). A waiver with no expiry is a belief masquerading as knowledge.
-
 ## rec-20260727-008 — Invariant promotion from RetroRollup.findingCategories.recurring
 
 - status: candidate
@@ -736,22 +720,6 @@ A component whose job is detecting an unearned settle can't itself be uninstalla
 - next: cadence milestone propose
 
 Conductor should be a client, not a kernel peer: the decision test is 'can it be implemented entirely against public CLI commands?' A 'no' answer is a bug report about the public surface being incomplete, not a case for privileged access -- keeps the kernel small and lets Conductor live in its own repo on its own cadence, depending only on an already-published contract.
-
-## rec-20260727-011 — Extend RecommendationSourceZ with a review member
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: types
-- files: packages/types/src/intelligence.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.11 (correction: no snag ledger exists) and section 7.3
-- next: cadence milestone propose
-
-RecommendationSourceZ has no 'review' or 'gate' member, so routing criteria-anchored-review findings into the recommendation ledger (section 7.3 of the source doc) currently loses provenance into 'manual'/'cadence'. Add a 'review' source member so Slice 3 findings can route with real provenance instead of being mislabeled.
 
 ## rec-20260727-012 — cadence doctor check: roadmap-currency (anti-recurrence for ROADMAP/MILESTONES drift)
 
@@ -864,3 +832,35 @@ candidatesForFile (verify/criteria-gap.ts) proposes a boundary candidate wheneve
 - next: cadence milestone propose
 
 Follow-on to rec-20260729-004 (repo-wide AC-N token collision). Because settle derives per-AC PASS from task terminal status PLUS coverage evidence, and the coverage leg is satisfiable by any past phase's identically-numbered AC token, per-AC PASS for a typical phase collapsed toward the agent's own DONE self-report — the exact signal the project exists to distrust. The settled SUMMARY corpus therefore carries an AC-coverage attestation stronger than the evidence behind it. This is a defect in the proof, not proof that the work was undone: build-test-must-pass, per-task verify commands, and the review gates were unaffected and provided real signal. Audit to run: for every settled phase, re-derive whether each AC's satisfying token actually sits in a test file belonging to THAT phase rather than an unrelated one, and report the count of AC PASS records with genuine per-phase coverage vs cross-phase-only satisfaction. cadence verify phase already re-derives settled coverage but needs the phase-scoping fix from rec-20260729-004 first to give a trustworthy answer. Operator decision 2026-07-29: run this in a fresh session after phase 235 lands, not inline.
+
+## rec-20260731-001 — Finding id collision: two same-severity/message findings in one file share one id
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, types
+- files: packages/core/src/verify/finding-identity.ts
+- evidence: Opus gap review, phase 236, 2026-07-30: verified two findings differing only in line collapse to identical sha256 id via computeFindingId
+- next: cadence milestone propose
+
+computeFindingId hashes (file, anchor.kind, anchor.ref, severity, normalized message) per AC-3's exact spec, with no per-occurrence discriminant. Two distinct findings in the same file with identical anchor/severity/normalized-message (e.g. MockCodeReviewVerifier's 'console.log left in source' emitted twice in one file) collapse to the same id. Harmless today since findings are never keyed by id, but the follow-on ledger-routing phase (source doc section 7.3, phase 236's ROADMAP.md 'As built' amendment) must key on identity for ledger hygiene — it would currently mint one recommendation for N occurrences and a future disposition surface would waive them all together. Surfaced by an Opus gap review (2026-07-30) of phase 236, verified reachable via MockCodeReviewVerifier's literal duplicate-marker behavior. Undocumented anywhere; needs at minimum a doc note, and the ledger-routing phase's design should account for it explicitly (e.g. include occurrence count/ordinal in the hash, or accept it as a deliberate merge-by-identity semantic).
+
+## rec-20260731-002 — docs/concepts.md phase-236 section has unpinned file:line citations that will rot
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs
+- files: docs/concepts.md
+- evidence: Opus gap review, phase 236, 2026-07-30: git show HEAD~1:docs/concepts.md had 0 file:line citations, phase 236 introduced 10 unpinned ones
+- next: cadence milestone propose
+
+The new 'Finding identity, disposition, and type convergence (phase 236)' subsection in docs/concepts.md cites ~10 hardcoded file.ts:NN-NN line ranges (e.g. summary.ts:70-114, finding-identity.ts:58-90, gates/code-review.ts:105, contracts/index.ts:167-186, intelligence.ts:3-15). All verified accurate as of the phase-236 commit, but no doc-content test pins them (unlike CLAUDE.md's 'The Hardcoded Count' precedent for command/slash-command counts) and docs/concepts.md had zero such citations before this commit. They will silently go stale on the next edit to any cited file. Surfaced by an Opus gap review (2026-07-30) of phase 236. Fix options: drop line numbers and cite file paths only, or add a lightweight doc-content test asserting the cited ranges still contain what they claim (matching this repo's existing docs test conventions in packages/core/tests/docs/).

@@ -212,6 +212,31 @@ describe('runCodeReviewGate — criteria-gap findings (phase 235 T4)', () => {
     expect(errs.some((l) => /code-review:/.test(l))).toBe(false);
   });
 
+  it('AC-3: a persisted finding carries a stable id, target: "artifact", and disposition: "open" alongside its anchor', async () => {
+    const findings: Record<string, Finding[]> = {
+      'src/covered.ts': [{ severity: 'medium', message: 'covered defect', line: 1 }],
+    };
+    const res = await runCodeReviewGate(buildCtx({ findings }));
+    const patched = res.summaryPatch!.codeReview!;
+    const found = patched['src/covered.ts']![0]!;
+
+    expect(found.anchor).toBeDefined();
+    expect(typeof found.id).toBe('string');
+    expect(found.id!.length).toBeGreaterThan(0);
+    expect(found.target).toBe('artifact');
+    expect(found.disposition).toBe('open');
+
+    // Same (file, anchor, severity, message) inputs recomputed after an edit
+    // that only shifts the finding's line number must yield the identical id
+    // (AC-3's refactor-stability guarantee).
+    const shiftedLine: Record<string, Finding[]> = {
+      'src/covered.ts': [{ severity: 'medium', message: 'covered defect', line: 99 }],
+    };
+    const res2 = await runCodeReviewGate(buildCtx({ findings: shiftedLine }));
+    const found2 = res2.summaryPatch!.codeReview!['src/covered.ts']![0]!;
+    expect(found2.id).toBe(found.id);
+  });
+
   it('AC-4/D3: a gap is declared even when the gate PASSES (floor outcome never hides it)', async () => {
     const errs: string[] = [];
     // A medium-severity unanchored finding: no HIGH, so `pass` is true and the

@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
-import type { AcceptanceCriterion, Task } from '@manehorizons/cadence-types';
+import type { AcceptanceCriterion, Finding, Task } from '@manehorizons/cadence-types';
 import { hostCliJSON, type SpawnFn } from './host-cli-client.js';
 import { localChatJSON } from './local-client.js';
 
@@ -10,15 +10,14 @@ import { localChatJSON } from './local-client.js';
  * diff. Fires at `cadence settle run` when `'code-review'` is in the
  * effective gate set (strict×standard, strict×complex, standard×complex).
  * HIGH findings refuse settle unless `--force` / `--allow-code-review-failure`.
+ *
+ * Phase 236 (T5, D9) — `Finding` is the shared, persisted SUMMARY-schema type
+ * from `@manehorizons/cadence-types` (severity `critical|high|medium|low`,
+ * plus the optional `id`/`target`/`disposition`/`waiver`/`anchor` fields).
+ * This module used to declare its own local `Finding`/`FindingSeverity`
+ * (severity `high|medium|low` only) — that divergence is now converged; see
+ * `contracts/index.ts`'s `CodeReviewFinding` re-export for the compat name.
  */
-
-export type FindingSeverity = 'high' | 'medium' | 'low';
-
-export interface Finding {
-  severity: FindingSeverity;
-  message: string;
-  line?: number;
-}
 
 /**
  * Phase 235 (T3) — a task->AC ref as seen by the review verifier: what a task
@@ -77,7 +76,7 @@ export interface CodeReviewVerifier {
  */
 export interface MockCodeReviewMarker {
   pattern: RegExp;
-  severity: FindingSeverity;
+  severity: Finding['severity'];
   message: string;
 }
 
