@@ -71,18 +71,37 @@ describe('createVerifierFactory', () => {
     expect(v).toEqual({ kind: 'anthropic' });
   });
 
+  it('243-01/AC-2: unconfigured (default) and explicit-mock stay silent — no banner, no warning of any kind', () => {
+    const warnsUnset: string[] = [];
+    expect(select(null, { env: {}, warn: (m) => warnsUnset.push(m) })).toEqual({ kind: 'mock' });
+    expect(warnsUnset).toEqual([]);
+
+    const warnsExplicit: string[] = [];
+    expect(
+      select({ fake: { provider: 'mock' } }, { env: {}, warn: (m) => warnsExplicit.push(m) }),
+    ).toEqual({ kind: 'mock' });
+    expect(warnsExplicit).toEqual([]);
+  });
+
   it('anthropic with a key passes the configured model', () => {
     const v = select({ fake: { provider: 'anthropic', model: 'm1' } }, { env: { ANTHROPIC_API_KEY: 'k' } });
     expect(v).toEqual({ kind: 'anthropic', model: 'm1' });
   });
 
-  it('AC-1: anthropic without a key falls back to mock with the labeled warning, naming Claude Code login as insufficient', () => {
+  it('243-01/AC-1, 243-01/AC-4: anthropic without a key falls back to mock with the loud banner, naming the seam and Claude Code login as insufficient', () => {
     const warns: string[] = [];
     const v = select({ fake: { provider: 'anthropic' } }, { env: {}, warn: (m) => warns.push(m) });
     expect(v).toEqual({ kind: 'mock' });
-    expect(warns).toEqual([
-      'fake: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.',
-    ]);
+    expect(warns.length).toBe(1);
+    const banner = warns[0] ?? '';
+    expect(banner).toContain('NOT REAL VERIFICATION');
+    expect(banner).toContain('fake');
+    expect(banner).toContain('anthropic provider requested but ANTHROPIC_API_KEY is unset');
+    expect(banner).toContain('a Claude Code/IDE login does not satisfy this');
+    expect(banner).toContain('falling back to mock provider');
+    expect(banner).toContain('docs/providers.md');
+    // Multi-line banner, not the old bare one-liner.
+    expect(banner.split('\n').length).toBeGreaterThan(1);
   });
 
   it('local resolves baseURL + model (slice.model wins over env), no warning', () => {
@@ -103,13 +122,17 @@ describe('createVerifierFactory', () => {
     expect(v).toEqual({ kind: 'local', baseURL: 'http://x', model: 'env-model' });
   });
 
-  it('local without baseURL/model falls back to mock with the labeled warning', () => {
+  it('243-01/AC-1, 243-01/AC-4: local without baseURL/model falls back to mock with the loud banner', () => {
     const warns: string[] = [];
     const v = select({ fake: { provider: 'local' } }, { env: {}, warn: (m) => warns.push(m) });
     expect(v).toEqual({ kind: 'mock' });
-    expect(warns).toEqual([
-      'fake: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.',
-    ]);
+    expect(warns.length).toBe(1);
+    const banner = warns[0] ?? '';
+    expect(banner).toContain('NOT REAL VERIFICATION');
+    expect(banner).toContain('fake');
+    expect(banner).toContain('local provider requested but CADENCE_LOCAL_BASE_URL / model unset');
+    expect(banner).toContain('falling back to mock provider');
+    expect(banner.split('\n').length).toBeGreaterThan(1);
   });
 
   // AC-1 (Phase 72) — provider-hardening opts flow from the slice to anthropic.
@@ -189,6 +212,20 @@ describe('createVerifierFactory', () => {
     const v = select({ fake: { provider: 'anthropic' } }, { env: {}, warn: (m) => warns.push(m) });
     expect(v).toEqual({ kind: 'mock' });
     expect(warns.length).toBe(1);
+  });
+
+  it('243-01/AC-1, 243-01/AC-4: host-cli requested but this family never wired a hostCli builder falls back to mock with the loud banner', () => {
+    const warns: string[] = [];
+    // `select`'s spec (above) defines no `hostCli` builder for this fake family.
+    const v = select(null, { override: 'host-cli', env: {}, warn: (m) => warns.push(m) });
+    expect(v).toEqual({ kind: 'mock' });
+    expect(warns.length).toBe(1);
+    const banner = warns[0] ?? '';
+    expect(banner).toContain('NOT REAL VERIFICATION');
+    expect(banner).toContain('fake');
+    expect(banner).toContain('host-cli provider requested but this verifier family has not wired a host-cli builder yet');
+    expect(banner).toContain('falling back to mock provider');
+    expect(banner.split('\n').length).toBeGreaterThan(1);
   });
 });
 

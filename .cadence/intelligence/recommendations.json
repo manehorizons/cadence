@@ -1691,6 +1691,69 @@
       "decisionIds": [],
       "createdAt": "2026-07-31T14:14:35.723Z",
       "updatedAt": "2026-07-31T14:14:35.723Z"
+    },
+    {
+      "id": "rec-20260731-003",
+      "title": "Gate provenance doesn't distinguish a mock-downgraded AI review from a genuinely-ran one",
+      "summary": "GateProvenanceZ (packages/types/src/summary.ts:63-71) has only {gate, status: ran|skipped|refused, skipReason, reason} -- no field records which provider actually served a status:'ran' gate. registry.ts's fallback branch (line 187, gates.push({gate, status:'ran'})) records code-review/security-audit/deep-verify identically whether a real provider or a silently mock-downgraded one served them, unlike the skipReason pattern already used for buildTestBypassed/boundaryScanBypassed/coverageBypassed a few lines above. Verified on main 2026-07-31: no verifierIdentity or equivalent provider-carrying field exists yet in GateProvenanceZ -- issue #331 referenced 'phase 232' adding this, but that phase's artifacts live on the feat/kernel-assurance-v2 branch, not main. Overlaps rec-20260727-001 (SUMMARY.codeReview/.securityAudit persisting findings as bare arrays, discarding provider/model) -- that rec is about per-finding provenance inside the review result payload; this one is about the top-level GateProvenance ran/skipped record. Reconcile scope between the two before spec'ing either.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "types"
+      ],
+      "affectedFiles": [
+        "packages/types/src/summary.ts",
+        "packages/core/src/gates/registry.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260731-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-31T21:56:05.738Z",
+      "updatedAt": "2026-07-31T21:56:05.738Z"
+    },
+    {
+      "id": "rec-20260731-004",
+      "title": "docs/providers.md's host-cli 'per-task-verify only' scope claim is stale — all 7 factories now have host-cli wired",
+      "summary": "docs/providers.md ~L307-328 ('Current scope: per-task-verify only') claims 5 of 7 verifier seams (verifier/deep-verify, codeReview, planReview, securityAudit, specReview) 'have no host-cli builder yet' and that wiring them is a future follow-up. Verified false while working phase 243 (2026-07-31): every packages/core/src/verify/*-factory.ts (code-review-factory.ts, per-task-factory.ts, plan-review-factory.ts, security-audit-factory.ts, spec-review-factory.ts, ui-spec-review-factory.ts, factory.ts) already passes a hostCli builder to createVerifierFactory. This means createVerifierFactory's 'host-cli builder not wired for this family' degrade branch is now unreachable in production for any of the 7 seams (only exercisable via a deliberately-incomplete test spec) -- the doc section describes a limitation that no longer exists, without saying when it closed. Needs an audit of when each family's HostCli*Verifier class was added (git blame/log per file) and a doc rewrite -- possibly deleting the 'Current scope' section entirely if host-cli is now fully wired everywhere, or documenting the real remaining gap if any exists.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs"
+      ],
+      "affectedFiles": [
+        "docs/providers.md",
+        "packages/core/src/verify/code-review-factory.ts",
+        "packages/core/src/verify/per-task-factory.ts",
+        "packages/core/src/verify/plan-review-factory.ts",
+        "packages/core/src/verify/security-audit-factory.ts",
+        "packages/core/src/verify/spec-review-factory.ts",
+        "packages/core/src/verify/ui-spec-review-factory.ts",
+        "packages/core/src/verify/factory.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260731-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-07-31T22:35:48.874Z",
+      "updatedAt": "2026-07-31T22:35:48.874Z"
     }
   ],
   "archived": [
@@ -4898,6 +4961,41 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-27T20:55:55.298Z",
       "updatedAt": "2026-07-27T22:20:56.904Z"
+    },
+    {
+      "id": "rec-20260731-002",
+      "title": "MOCK_FALLBACK_BANNER fires only for deep-verify mock-downgrades, not the other 6 seams",
+      "summary": "packages/core/src/verify/verifier-factory.ts defines MOCK_FALLBACK_BANNER but it is only invoked from services/settle.ts (~L299-333), gated on deepWillRun && verifier===mock. The other 6 verifier seams (specReview, codeReview, securityAudit, etc.) get only a single-line stderr warning that scrolls past, not the loud banner, when their configured real provider silently downgrades to mock. Fix per issue #331's 'Related, lower priority' item 1: emit the banner generically from the per-seam factories (spec-review-factory.ts, code-review-factory.ts, security-audit-factory.ts, verifier-factory.ts) at the moment an explicitly-requested non-mock provider degrades -- covers all 7 seam families from one place. resolveEffectiveProvider().defaulted already distinguishes operator-chose-mock from operator-chose-real-and-got-mock, so the signal to trigger on already exists.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/verifier-factory.ts",
+        "packages/core/src/services/settle.ts",
+        "packages/core/src/verify/spec-review-factory.ts",
+        "packages/core/src/verify/code-review-factory.ts",
+        "packages/core/src/verify/security-audit-factory.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260731-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "243-untitled",
+      "createdAt": "2026-07-31T21:56:05.579Z",
+      "updatedAt": "2026-07-31T22:37:08.402Z",
+      "shippedRef": "PR #344",
+      "archivedAt": "2026-07-31T22:37:08.402Z",
+      "archiveReason": "shipped"
     }
   ]
 }

@@ -125,6 +125,26 @@ export const MOCK_FALLBACK_BANNER = [
 ].join('\n');
 
 /**
+ * Phase 243: same loud framing as `MOCK_FALLBACK_BANNER`, parameterized with
+ * the seam label and the specific missing prerequisite — for
+ * `createVerifierFactory`'s three selection-time degrade branches (an
+ * explicitly-requested real provider that can't be used), as opposed to
+ * `MOCK_FALLBACK_BANNER` itself, which settle.ts fires on a disjoint
+ * condition (the *configured* provider resolving to `mock` at all, default
+ * or explicit — never on a credential/prerequisite-missing downgrade).
+ */
+function buildDowngradeBanner(reason: string): string {
+  return [
+    '',
+    `  ⚠  ${MOCK_VERIFIER_NOTICE.label.toUpperCase()}`,
+    `     ${reason}`,
+    `     ${MOCK_VERIFIER_NOTICE.message}`,
+    `     ${PROVIDERS_DOC}`,
+    '',
+  ].join('\n');
+}
+
+/**
  * Phase 165 T3 — wraps a `host-cli`-backed verifier instance so that a
  * `HostCliError` (binary not found, spawn failure, non-zero exit, unparseable
  * output — see `host-cli-client.ts`) thrown/rejected by any of its methods is
@@ -210,7 +230,9 @@ export function createVerifierFactory<C, V>(
       const apiKey = discoverKey('ANTHROPIC_API_KEY', env, cwd).value;
       if (!apiKey) {
         warn(
-          `${spec.label}: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.`,
+          buildDowngradeBanner(
+            `${spec.label}: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.`,
+          ),
         );
         return spec.mock();
       }
@@ -230,7 +252,9 @@ export function createVerifierFactory<C, V>(
       const model = slice?.model ?? discoverKey('CADENCE_LOCAL_MODEL', env, cwd).value;
       if (!baseURL || !model) {
         warn(
-          `${spec.label}: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.`,
+          buildDowngradeBanner(
+            `${spec.label}: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.`,
+          ),
         );
         return spec.mock();
       }
@@ -242,7 +266,9 @@ export function createVerifierFactory<C, V>(
     if (provider === 'host-cli') {
       if (!spec.hostCli) {
         warn(
-          `${spec.label}: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.`,
+          buildDowngradeBanner(
+            `${spec.label}: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.`,
+          ),
         );
         return spec.mock();
       }

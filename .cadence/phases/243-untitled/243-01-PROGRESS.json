@@ -1,0 +1,23 @@
+{
+  "draftId": "243-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "verifier-factory.test.ts + effective-provider.test.ts: pinned new loud-banner wording for the 3 degrade branches + host-cli-not-wired case + deep-verify disjointness matrix. Confirmed red against pre-fix code.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-31T22:18:44.479Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "verifier-factory.ts: added buildDowngradeBanner() reusing MOCK_VERIFIER_NOTICE; wired into the anthropic-missing-key, local-missing-config, and host-cli-not-wired branches. Also updated settle-mock-banner.test.ts's 3 disjointness-testing CLI-level assertions (bannerCount helper) since they now legitimately share the NOT REAL VERIFICATION phrase with settle.ts's own pre-check banner -- confirmed exactly 1 banner fires per scenario, never 0 or 2. All 28 unit tests + 8 CLI tests green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-31T22:18:48.959Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "docs/providers.md: updated the 3 warning-example code blocks (anthropic, local, host-cli) to the new banner format. Added .changeset/mock-fallback-banner-all-seams.md (patch, @manehorizons/cadence-core). Full workspace green: pnpm build/typecheck/lint/test all pass (core 373 files/3400 tests, types/testkit/host-toolkit/host-claude-code/host-codex all green). Note: docs/providers.md's 'Current scope: per-task-verify only' section (line ~307) claims 5 seams lack host-cli wiring -- verified false, all 7 factories have it wired now -- pre-existing doc drift, out of scope for this phase, left untouched, flagging separately.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-31T22:18:54.955Z"
+    }
+  }
+}

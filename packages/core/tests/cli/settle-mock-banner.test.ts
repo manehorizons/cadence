@@ -60,6 +60,19 @@ afterEach(async () => {
   }
 });
 
+/**
+ * Phase 243: both settle.ts's deep-verify pre-check banner and
+ * `createVerifierFactory`'s credential-missing degrade banner render the same
+ * `MOCK_VERIFIER_NOTICE`-sourced marker line, so "contains the phrase" no
+ * longer distinguishes which one fired. Count occurrences instead — the two
+ * triggers are disjoint by construction (they branch on mutually exclusive
+ * resolved-provider values), so exactly one or the other should ever fire,
+ * never both.
+ */
+function bannerCount(stderr: string): number {
+  return (stderr.match(/⚠ {2}MOCK = NOT REAL VERIFICATION/g) ?? []).length;
+}
+
 // AC-3 — loud banner only on the silent mock-default path under --deep
 describe('settle run --deep mock-fallback banner', () => {
   it('warns loudly when --deep falls back to mock by default (AC-3)', async () => {
@@ -82,10 +95,11 @@ describe('settle run --deep mock-fallback banner', () => {
     expect(r.stderr).not.toMatch(/not real verification/i);
   });
 
-  it('does not show the banner when a real provider is configured (AC-3)', async () => {
+  it('243-01/AC-3: does not show settle.ts\'s own banner when a real provider is configured, only the factory\'s degrade banner (AC-3, Phase 243)', async () => {
     // anthropic configured (no key in this env): the verifier factory prints
-    // its own "falling back to mock" warning; our onboarding banner stays out
-    // of the way — provider config is a real provider, not mock.
+    // its own loud degrade banner (Phase 243); our onboarding pre-check banner
+    // stays out of the way — provider config is a real provider, not mock —
+    // so exactly one banner fires, never both.
     active = await tempRepo({ initialized: true });
     const cfgPath = join(active.root, '.cadence/config.json');
     const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
@@ -96,7 +110,7 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--deep', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).not.toMatch(/not real verification/i);
+    expect(bannerCount(r.stderr)).toBe(1);
   });
 
   // AC-1 (Phase 71) — banner fires when deep-verify is in the gate set, no --deep
@@ -140,18 +154,18 @@ describe('settle run --deep mock-fallback banner', () => {
 
   // AC-1/AC-2 (Phase 73) — --verifier anthropic overrides the silent mock default
   // so the onboarding banner suppresses (effective provider is real).
-  it('suppresses the banner when --verifier anthropic overrides the mock default (P73 AC-1)', async () => {
+  it('243-01/AC-3: suppresses settle.ts\'s own banner when --verifier anthropic overrides the mock default, leaving only the factory\'s degrade banner (P73 AC-1, Phase 243)', async () => {
     active = await tempRepo({ initialized: true }); // default config: no verifier slice → mock default
     await seedBuild(active.root);
     const r = await run(
       ['settle', 'run', '--auto', '--deep', '--verifier', 'anthropic', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).not.toMatch(/not real verification/i);
+    expect(bannerCount(r.stderr)).toBe(1);
   });
 
   // AC-2 (Phase 71) — banner silent on membership when a real provider is set
-  it('stays silent on gate-set membership when a real provider is configured (AC-2)', async () => {
+  it('243-01/AC-3: settle.ts\'s own gate-set-membership banner stays silent when a real provider is configured; the factory\'s degrade banner still fires once (AC-2, Phase 243)', async () => {
     active = await tempRepo({ initialized: true });
     const cfgPath = join(active.root, '.cadence/config.json');
     const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
@@ -165,6 +179,6 @@ describe('settle run --deep mock-fallback banner', () => {
       ['settle', 'run', '--auto', '--allow-missing-coverage', '--force'],
       active.root,
     );
-    expect(r.stderr).not.toMatch(/not real verification/i);
+    expect(bannerCount(r.stderr)).toBe(1);
   });
 });

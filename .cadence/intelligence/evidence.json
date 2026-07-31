@@ -1085,6 +1085,27 @@
       "kind": "note",
       "summary": "npm view showed 1.51.1 engines:>=20 while local main package.json (same 1.51.1 tag) already had engines:>=22 -- confirmed via manual npm view + git log during the v1.52.0 release-cut session on 2026-07-31",
       "createdAt": "2026-07-31T14:14:35.723Z"
+    },
+    {
+      "id": "ev-20260731-002",
+      "recommendationId": "rec-20260731-002",
+      "kind": "note",
+      "summary": "Follow-up from issue #331 (closed via phase 240 / PR #332, 2026-07-30) -- its 'Related, lower priority' item 1. Not filed as a recommendation when the core doctor bug shipped; verified still true on main 2026-07-31 (MOCK_FALLBACK_BANNER defined in verifier-factory.ts, only called from settle.ts:332).",
+      "createdAt": "2026-07-31T21:56:05.579Z"
+    },
+    {
+      "id": "ev-20260731-003",
+      "recommendationId": "rec-20260731-003",
+      "kind": "note",
+      "summary": "Follow-up from issue #331 (closed via phase 240 / PR #332, 2026-07-30) -- its 'Related, lower priority' item 2. Not filed as a recommendation when the core doctor bug shipped.",
+      "createdAt": "2026-07-31T21:56:05.738Z"
+    },
+    {
+      "id": "ev-20260731-004",
+      "recommendationId": "rec-20260731-004",
+      "kind": "note",
+      "summary": "Surfaced by the independent whole-branch reviewer during phase 243's pre-settle review (2026-07-31): flagged that phase 243's docs/providers.md edit was about to stamp a fresh 'Phase 243' attribution onto this false premise inside the same doc section; the phase 243 diff was reverted to leave the section exactly as stale as it was on main, and this rec files the underlying drift as its own follow-up instead of fixing it inline (scope discipline).",
+      "createdAt": "2026-07-31T22:35:48.874Z"
     }
   ]
 }

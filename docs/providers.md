@@ -133,16 +133,23 @@ cadence config set verifier.model claude-opus-4-6
 ```
 
 **Fallback behavior:** if `ANTHROPIC_API_KEY` is unset when `provider:
-anthropic` is configured, CADENCE emits a stderr warning and falls back to
-mock rather than failing hard:
+anthropic` is configured, CADENCE emits a loud multi-line stderr banner and
+falls back to mock rather than failing hard (Phase 243 — this credential-
+missing downgrade gets the same loud framing as the mock-verifier banner,
+not a bare one-liner):
 
 ```
-verifier: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.
+
+  ⚠  MOCK = NOT REAL VERIFICATION
+     verifier: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.
+     The `mock` verifier is a deterministic, offline placeholder that only checks each AC links to a test — it is NOT real verification. Run `cadence activate` to turn on a real AI verifier.
+     https://github.com/manehorizons/cadence/blob/main/docs/providers.md
+
 ```
 
 The same fallback applies to every gate (`per-task-verify`, `code-review`,
 `plan-review`, `security-audit`) — each emits a gate-prefixed version of the
-same warning.
+same banner.
 
 **Timeout + retries (deep-verify).** To make the `deep-verify` gate dependable
 when a settle depends on it, set a request timeout and a retry budget on the
@@ -229,13 +236,19 @@ secrets and are never logged. (Phase 72)
 
 If `CADENCE_LOCAL_BASE_URL` is unset, or if neither `config.<gate>.model`
 nor `CADENCE_LOCAL_MODEL` resolves to a value, CADENCE falls back to mock
-with a gate-prefixed warning, e.g.:
+with the same loud, gate-prefixed banner described above (Phase 243), e.g.:
 
 ```
-verifier: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.
-per-task-verify: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.
-code-review: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.
+
+  ⚠  MOCK = NOT REAL VERIFICATION
+     verifier: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.
+     The `mock` verifier is a deterministic, offline placeholder that only checks each AC links to a test — it is NOT real verification. Run `cadence activate` to turn on a real AI verifier.
+     https://github.com/manehorizons/cadence/blob/main/docs/providers.md
+
 ```
+
+(`per-task-verify` and `code-review` emit the equivalent banner with their
+own gate label in place of `verifier`.)
 
 ---
 

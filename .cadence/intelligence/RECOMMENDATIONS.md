@@ -911,3 +911,35 @@ scanTestCoverage dedups per AC-N@file on a first-occurrence-wins basis (verify/c
 - next: cadence milestone propose
 
 Node>=22 engine floor (phase 238, PR #324, 2026-07-27) merged to main and sat unreleased for 4 days / 3 more phases while npm still published engines:>=20 under the same 1.51.1 version string -- no mechanical gate caught main drifting from what npm actually ships. Add a doctor check that runs npm view @manehorizons/cadence-core version (best-effort, degrades safely offline) and compares it to local package.json; if local is ahead and .changeset/*.md files are pending, warn and list them, escalating when any pending changeset bumps engines or is a major/minor bump. Same best-effort degrade-safe pattern as checkLedgerRemoteCollision.
+
+## rec-20260731-003 — Gate provenance doesn't distinguish a mock-downgraded AI review from a genuinely-ran one
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, types
+- files: packages/types/src/summary.ts, packages/core/src/gates/registry.ts
+- evidence: Follow-up from issue #331 (closed via phase 240 / PR #332, 2026-07-30) -- its 'Related, lower priority' item 2. Not filed as a recommendation when the core doctor bug shipped.
+- next: cadence milestone propose
+
+GateProvenanceZ (packages/types/src/summary.ts:63-71) has only {gate, status: ran|skipped|refused, skipReason, reason} -- no field records which provider actually served a status:'ran' gate. registry.ts's fallback branch (line 187, gates.push({gate, status:'ran'})) records code-review/security-audit/deep-verify identically whether a real provider or a silently mock-downgraded one served them, unlike the skipReason pattern already used for buildTestBypassed/boundaryScanBypassed/coverageBypassed a few lines above. Verified on main 2026-07-31: no verifierIdentity or equivalent provider-carrying field exists yet in GateProvenanceZ -- issue #331 referenced 'phase 232' adding this, but that phase's artifacts live on the feat/kernel-assurance-v2 branch, not main. Overlaps rec-20260727-001 (SUMMARY.codeReview/.securityAudit persisting findings as bare arrays, discarding provider/model) -- that rec is about per-finding provenance inside the review result payload; this one is about the top-level GateProvenance ran/skipped record. Reconcile scope between the two before spec'ing either.
+
+## rec-20260731-004 — docs/providers.md's host-cli 'per-task-verify only' scope claim is stale — all 7 factories now have host-cli wired
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs
+- files: docs/providers.md, packages/core/src/verify/code-review-factory.ts, packages/core/src/verify/per-task-factory.ts, packages/core/src/verify/plan-review-factory.ts, packages/core/src/verify/security-audit-factory.ts, packages/core/src/verify/spec-review-factory.ts, packages/core/src/verify/ui-spec-review-factory.ts, packages/core/src/verify/factory.ts
+- evidence: Surfaced by the independent whole-branch reviewer during phase 243's pre-settle review (2026-07-31): flagged that phase 243's docs/providers.md edit was about to stamp a fresh 'Phase 243' attribution onto this false premise inside the same doc section; the phase 243 diff was reverted to leave the section exactly as stale as it was on main, and this rec files the underlying drift as its own follow-up instead of fixing it inline (scope discipline).
+- next: cadence milestone propose
+
+docs/providers.md ~L307-328 ('Current scope: per-task-verify only') claims 5 of 7 verifier seams (verifier/deep-verify, codeReview, planReview, securityAudit, specReview) 'have no host-cli builder yet' and that wiring them is a future follow-up. Verified false while working phase 243 (2026-07-31): every packages/core/src/verify/*-factory.ts (code-review-factory.ts, per-task-factory.ts, plan-review-factory.ts, security-audit-factory.ts, spec-review-factory.ts, ui-spec-review-factory.ts, factory.ts) already passes a hostCli builder to createVerifierFactory. This means createVerifierFactory's 'host-cli builder not wired for this family' degrade branch is now unreachable in production for any of the 7 seams (only exercisable via a deliberately-incomplete test spec) -- the doc section describes a limitation that no longer exists, without saying when it closed. Needs an audit of when each family's HostCli*Verifier class was added (git blame/log per file) and a doc rewrite -- possibly deleting the 'Current scope' section entirely if host-cli is now fully wired everywhere, or documenting the real remaining gap if any exists.
