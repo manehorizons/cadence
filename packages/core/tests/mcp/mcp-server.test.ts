@@ -389,6 +389,12 @@ describe('MCP/CLI parity — next/verify/explain (phase 221 T4)', () => {
         decisions: [],
         deferred: [],
         skillAudit: { required: [], invoked: [] },
+        // Phase 239 T8 (authorized fixture correction, not in T8's declared
+        // files): without this, coverageScheme is absent and the replay
+        // takes the indeterminate short-circuit — the src/example.test.ts
+        // written below would be dead weight and this MCP↔CLI parity test
+        // would compare two identical short-circuits instead of a real scan.
+        coverageScheme: 'bare',
       }),
     );
     await mkdir(join(active.root, 'src'), { recursive: true });

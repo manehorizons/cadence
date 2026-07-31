@@ -2266,12 +2266,29 @@ none did — every span the profile found, and, per occurrence of the AC token, 
 span (if any) contains it and a plain-language reason it does or doesn't satisfy the
 configured `coverageMode`, e.g. "token present but block not asserting" (`assertion`
 mode) vs. a straightforward mention (`mention` mode). Globs and mode are read from
-`.cadence/config.json` (defaults apply if absent); it does not require an active
-BUILD/phase and never reads or writes `.cadence/state.json`, `STATE.md`, or any other
-loop state — safe to run at any time, including outside the loop. `--json` emits the
-same facts as structured JSON on stdout (`{ acId, mode, globs, anyFilesMatched, files,
-satisfied }`); human mode prints an equivalent multi-line report, also on stdout.
-Diagnostics (config-load failures, an empty `--explain` value) go to stderr.
+`.cadence/config.json` (defaults apply if absent).
+
+Under `verification.coverageScheme: "phase-qualified"` (Phase 239, T4, AC-6) the
+per-occurrence reason additionally reports whether that occurrence satisfies the
+active phase's own qualifier, not just the coverage mode — e.g. an occurrence can
+now be reported unsatisfying because it's a bare or foreign-phase token even
+though it sits inside a fully asserting block. To resolve which qualifier is
+"active", this is the one case where the command reads (never writes)
+`.cadence/state.json`'s `activeDraft` — best-effort, and never a hard failure: if
+no state exists or no active draft is set, it prints a loud stderr warning that
+the report below is unqualified and won't match what the settle gate enforces,
+then falls back to the unqualified report rather than refusing outright. Under
+the `"bare"` scheme (the default), none of this applies — state is never read,
+and the report is byte-for-byte what it has always been. `--json` emits the same
+facts as structured JSON on stdout (`{ acId, mode, globs, anyFilesMatched, files,
+satisfied }`, plus an `expectedQualifier` key present only under the qualified
+scheme); human mode prints an equivalent multi-line report, also on stdout,
+gaining one `scheme: phase-qualified (expected token: <id>/<acId>)` line in that
+same case. It does not require an active BUILD/phase either way — a
+phase-qualified repo with no active draft still runs, just unqualified — so it
+stays safe to run at any time, including outside the loop. Diagnostics
+(config-load failures, an empty `--explain` value, the unresolvable-qualifier
+warning above) go to stderr.
 
 **Exit codes** — `0` on a successful run (regardless of whether the AC is satisfied —
 this command diagnoses, it does not gate); `1` on a config-load failure or an empty
@@ -2305,18 +2322,43 @@ and exit `2`, never silently treated as "nothing changed"; a genuinely empty dif
 instead prints `verify phase: nothing to verify — no changed SUMMARY.json files
 against the given base` and exits `0`.
 
-Coverage re-scanning is deliberately scoped to the file paths the phase's own
-DRAFT declared on its tasks (`draft.tasks[].files`) — never a whole-repo scan.
-`AC-N` ids are small integers that repeat across every phase this repo has run;
-scanning the whole repo would let an unrelated phase's identically-numbered AC
-test satisfy this phase's recheck purely by coincidence of numbering, masking
-real drift in the phase actually being replayed. A DRAFT that declares no task
-files refuses outright rather than silently widening the scan. Drift is reported
-per AC recorded in the phase's `SUMMARY.json`: an AC whose recorded result was
-`pass: true` with `evidence: 'executed'` but is no longer covered by its linked
-test is drift, printed as `<phase>/<id>: no drift` or `<phase>/<id>: N AC(s)
-drifted` followed by one line per drifted AC (`<id>: recorded PASS (executed), no
-longer covered by its linked test`).
+Coverage re-scanning takes one of three shapes, chosen by the `coverageScheme`
+(Phase 239) recorded in the **target phase's own** `SUMMARY.json` — not the
+current repo config:
+
+- **No scheme recorded** (a pre-Phase-239 `SUMMARY.json`, e.g. phase 233): the
+  phase's coverage evidence is not phase-attributable at all — nothing in a
+  pre-239 artifact records which phase a test belongs to — so no scan runs and
+  no verdict is computed. Every AC is reported `indeterminate` instead (see the
+  drift-reporting paragraph below).
+- **`coverageScheme: "bare"`**: re-scanning is deliberately scoped to the file
+  paths the phase's own DRAFT declared on its tasks (`draft.tasks[].files`) —
+  never a whole-repo scan. `AC-N` ids are small integers that repeat across
+  every phase this repo has run; scanning the whole repo would let an unrelated
+  phase's identically-numbered AC test satisfy this phase's recheck purely by
+  coincidence of numbering, masking real drift in the phase actually being
+  replayed. A DRAFT that declares no task files refuses outright
+  (`no-scoped-files`) rather than silently widening the scan.
+- **`coverageScheme: "phase-qualified"`**: re-scanning is scoped to the
+  configured `verification.testGlobs` (or the engine's built-in defaults when
+  that's absent) and matched by the slice's own `<slice-id>/AC-N` qualified
+  token (CONTEXT.md's *slice*, e.g. `239-01` — not the phase directory name)
+  — never scoped to the DRAFT's declared `tasks[].files`. The
+  `no-scoped-files` refusal can never fire under this scheme: the qualified
+  token makes the reference globally unique on its own, so file scoping (and
+  its "declares no task files" failure mode) is unnecessary and not applied.
+
+Drift is reported per AC recorded in the phase's `SUMMARY.json`. For a phase
+whose SUMMARY recorded a scheme (bare or phase-qualified), an AC whose recorded
+result was `pass: true` with `evidence: 'executed'` but is no longer covered by
+its linked test is drift, printed as `<phase>/<id>: no drift` or
+`<phase>/<id>: N AC(s) drifted` followed by one line per drifted AC (`<id>:
+recorded PASS (executed), no longer covered by its linked test`). For a phase
+whose SUMMARY recorded no scheme at all, no drift verdict is computed or
+printed — instead `<phase>/<id>: coverage NOT VERIFIED (SUMMARY records no
+coverage scheme)` is printed, followed by an explanatory line, and the same
+notice is always written to stderr regardless of `--json` (CLAUDE.md's "The
+Quiet Fallback": a degraded, unsubstantiated verdict is never silent).
 
 Separately from coverage drift, unless `--no-test-run` is passed, the configured
 `verification.testCommand` is re-run and its pass/fail reported on its own line:
@@ -2326,19 +2368,34 @@ AC)`. This is a real limitation, not just a caveat: a test-command failure means
 are the ones that broke — there is no per-AC attribution of a whole-suite test
 failure. `--json` emits `{ mode, results, testRun }` on stdout in both
 single-phase and `--changed` modes: `mode` is `"single"` or `"changed"`, `results`
-is one `{ phase, id, perAc, driftCount }` entry per target phase, and `testRun` is
-one of three shapes: `null` when `--no-test-run` is passed (or when `--changed`
-finds nothing to verify), `{ ran: false }` (no `passed` key) when
+is one `{ phase, id, perAc, driftCount, indeterminate?, note? }` entry per
+target phase — `indeterminate` (`true`) and `note` (the human-readable
+explanation) are present only when that phase's SUMMARY recorded no coverage
+scheme (Phase 239 T8); an ordinarily-replayed phase (bare or phase-qualified)
+omits both keys entirely rather than carrying `indeterminate: false`. `testRun`
+is one of three shapes: `null` when `--no-test-run` is passed (or when
+`--changed` finds nothing to verify), `{ ran: false }` (no `passed` key) when
 `verification.testCommand` isn't configured in `.cadence/config.json`, or
 `{ ran: true, passed }` when the command actually ran.
 
-**Exit codes** — `0` clean (no drift, and the test command passed or wasn't run);
-`1` when drift is found or the test command failed; `2` on a usage error (neither
-`[phase] [num]` nor `--changed` supplied, or `--changed` without `--base`) or an
-input error (git-diff failure, a missing/malformed/schema-invalid `SUMMARY.json`,
-a missing/unparseable `DRAFT.md`, a DRAFT that declares no task files to scope
-the scan to (`no-scoped-files`, refused rather than falling back to an unscoped
-whole-repo scan), or a config-load failure).
+**Exit codes** — `0` covers two materially different outcomes behind the same
+code, and the two must be told apart before trusting a `0` as a clean bill of
+health: (a) a clean replay — no drift found, and the test command passed or
+wasn't run; or (b) a phase whose SUMMARY recorded no coverage scheme, where no
+verdict could be computed at all (`indeterminate: true` in the JSON; the human
+output prints `coverage NOT VERIFIED` rather than `no drift`, and a stderr
+notice is always emitted for this case regardless of `--json`, per the
+drift-reporting paragraph above). `1` when drift is found or the test command
+failed. `2` on a usage error (neither `[phase] [num]` nor `--changed` supplied,
+or `--changed` without `--base`) or an input error (git-diff failure, a
+missing/malformed/schema-invalid `SUMMARY.json`, a missing/unparseable
+`DRAFT.md`, a config-load failure, or — under `coverageScheme: "bare"` only — a
+DRAFT that declares no task files to scope the scan to (`no-scoped-files`,
+refused rather than falling back to an unscoped whole-repo scan)). This last
+refusal cannot fire for a `phase-qualified` SUMMARY (that scheme is never
+file-scoped, so there is nothing to refuse over) or for a pre-scheme SUMMARY
+(the indeterminate branch above returns before the scoping guard is ever
+reached) — it is reachable only on the bare path.
 
 ---
 

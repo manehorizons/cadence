@@ -63,6 +63,16 @@ function summaryBody(id: string, acResults: AcResultFixture[]): string {
       decisions: [],
       deferred: [],
       skillAudit: { required: [], invoked: [] },
+      // Phase 239 T8: this file's fixtures represent a phase that settled
+      // under the (explicit) bare scheme, exercising the unchanged
+      // file-scoped replay path — NOT a pre-239 phase with no scheme
+      // recorded at all. `coverageScheme` absent entirely is a DIFFERENT,
+      // deliberately distinct case (`indeterminate`, see
+      // phase-replay-indeterminate.test.ts) that must never take this
+      // file's drift-computing path. Do not remove this field to "simplify"
+      // the fixture — every assertion below depends on the bare branch
+      // actually running.
+      coverageScheme: 'bare',
     },
     null,
     2,

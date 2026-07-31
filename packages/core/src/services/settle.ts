@@ -410,9 +410,39 @@ function buildSettleContext(
       if (!coverageMemo) {
         const globs = cadenceConfig?.verification?.testGlobs;
         const mode = cadenceConfig?.verification?.coverageMode;
+        // Phase 239 (T6): the shared scan is SCHEME-AWARE. Every consumer of
+        // this thunk — the evidence derivation below, `gates/deep-verify.ts`,
+        // `gates/interactive.ts` — must see the same AC↔test linkage the
+        // test-coverage gate enforced. Before this, the thunk always scanned
+        // bare, so under `phase-qualified` a settle could refuse an AC on
+        // qualified matching while still crediting it `assertion` evidence
+        // from a cross-phase bare token, and record that contradiction into
+        // SUMMARY. The qualifier is the active draft id, matching
+        // `gates/coverage.ts`. Map keys stay the bare `AC-N` id either way, so
+        // no consumer's lookup changes.
+        //
+        // On an unusable draft id this contributes NO qualifier, which looks
+        // like the silent bare fallback the gate explicitly refuses to make.
+        // It is not, because it is unreachable: `settleService` refuses before
+        // any gate runs when `state.activeDraft` is falsy, and
+        // `derivePhaseTaskId` only ever mints `\d+-\d+`, which always matches
+        // the regex below. Reaching this branch requires a hand-corrupted
+        // `state.json`, and in that case `gates/coverage.ts` refuses loudly
+        // first. If that precondition is ever weakened, this branch must gain
+        // its own loud notice rather than quietly scanning bare — the two
+        // branches resolving the same condition differently is the hazard.
+        const scheme = cadenceConfig?.verification?.coverageScheme ?? 'bare';
+        const activeDraft = state.activeDraft;
+        const qualifier =
+          scheme === 'phase-qualified' &&
+          typeof activeDraft === 'string' &&
+          /^[A-Za-z0-9._-]+$/.test(activeDraft)
+            ? activeDraft
+            : undefined;
         coverageMemo = scanTestCoverage(cwd, {
           ...(globs ? { globs } : {}),
           ...(mode ? { mode } : {}),
+          ...(qualifier !== undefined ? { expectedQualifier: qualifier } : {}),
         });
       }
       return coverageMemo;
@@ -508,6 +538,27 @@ function buildSettleContext(
  * finished running. Verbatim extraction of the former `settleService`
  * refusal branch — logic moved, not rewritten.
  */
+/**
+ * Phase 239 (T6, AC-7): the coverage scheme/mode in force at settle, as a
+ * spreadable fragment for both SUMMARY assembly sites. Emitted unconditionally
+ * (both keys always present on new records) so a reader never has to guess
+ * whether an absent field means "bare" or "written before phase 239" — absent
+ * means pre-239, full stop. NOT read back out of a parsed SUMMARY anywhere
+ * in this file — it is provenance at emission time here, not an input to
+ * settle. It IS read back as an input elsewhere: `verify/phase-replay.ts`
+ * branches its coverage-scan scoping on `summary.coverageScheme` (phase 239
+ * T7). Don't simplify this emission on the assumption nothing reads it back.
+ */
+function coverageProvenance(cadenceConfig: CadenceConfig): {
+  coverageScheme: 'bare' | 'phase-qualified';
+  coverageMode: 'mention' | 'assertion';
+} {
+  return {
+    coverageScheme: cadenceConfig?.verification?.coverageScheme ?? 'bare',
+    coverageMode: cadenceConfig?.verification?.coverageMode ?? 'mention',
+  };
+}
+
 async function writeRefusedSettleSummary(
   cwd: string,
   activePhase: string,
@@ -515,6 +566,7 @@ async function writeRefusedSettleSummary(
   draft: Draft,
   progress: ProgressJson,
   gates: GateProvenance[],
+  cadenceConfig: CadenceConfig,
 ): Promise<CommandResult> {
   const refusedSummary: Summary = {
     schemaVersion: 1,
@@ -526,6 +578,10 @@ async function writeRefusedSettleSummary(
     decisions: [],
     deferred: [],
     skillAudit: state.skillAudit,
+    // Phase 239 (T6, AC-7): a refused settle writes a SUMMARY too, and the
+    // scheme is exactly the context needed to interpret WHY a coverage gate
+    // refused — so record it here as well, not only on the success path.
+    ...coverageProvenance(cadenceConfig),
   };
   const refusedSummaryBase = join(
     cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`,
@@ -870,6 +926,7 @@ async function finalizeAndCloseSettle(
     decisions: [],
     deferred: [],
     skillAudit: state.skillAudit,
+    ...coverageProvenance(cadenceConfig),
     ...(deepVerify ? { deepVerify } : {}),
     ...(deepVerifyMeta ? { deepVerifyMeta } : {}),
     ...(interactiveVerify ? { interactiveVerify } : {}),
@@ -1048,7 +1105,9 @@ export async function settleService(
     );
     const { acc, refused, gates } = await runSettleGates(ctx);
     if (refused) {
-      return await writeRefusedSettleSummary(cwd, activePhase, state, draft, progress, gates);
+      return await writeRefusedSettleSummary(
+        cwd, activePhase, state, draft, progress, gates, cadenceConfig,
+      );
     }
 
     const acDerivation = deriveSettleAcResults(acc, draft, progress, explicit, explicitIds, gateSet, opts, io);

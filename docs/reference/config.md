@@ -4,7 +4,7 @@
 
 This page documents every field in the CADENCE configuration file. For conceptual explanations of profiles, gates, tiers, and providers, see [docs/concepts.md](../concepts.md). For provider setup (env vars, fallback behavior), see [docs/providers.md](../providers.md).
 
-`cadence init` writes an initial `config.json` from the chosen preset and then overlays several detected values: `profile` (from `--gate-profile` or git-history suggestion), `verification.testGlobs` (from repo layout and detected project language), and `verification.coverageMode` (from detected project language) — see [cadence init behavior](#cadence-init-behavior).
+`cadence init` writes an initial `config.json` from the chosen preset and then overlays several detected values: `profile` (from `--gate-profile` or git-history suggestion), `verification.testGlobs` (from repo layout and detected project language), and `verification.coverageMode` (from detected project language). It also writes `verification.coverageScheme: "phase-qualified"` unconditionally — not detected, always this value regardless of language or preset (Phase 239) — see [cadence init behavior](#cadence-init-behavior).
 
 > **Unsure what your config actually does?** Don't read this whole page — run [`cadence config explain`](#reading-your-config--cadence-config-explain). It renders your *active* configuration in plain language: which gates fire for each tier, which provider backs each gate, and any config-semantic foot-guns (e.g. a real provider set with no API key).
 
@@ -147,6 +147,7 @@ Boundary definitions for each tier. The coherence-check gate validates DRAFT fro
 | `verification.testGlobs` | `string[]` | `["packages/**/*.test.ts", "packages/**/*.test.tsx"]` | Glob patterns the test-coverage scanner walks when checking AC coverage. Supports `**` and `*`. Set by `cadence init` based on repo layout and detected project language (Phase 166) — see [cadence init behavior](#cadence-init-behavior). |
 | `verification.testCommand` | `string` (optional) | derived by `cadence init` — see [cadence init behavior](#cadence-init-behavior) | Shell command the `build-test-must-pass` gate runs at `cadence settle run`. When set, settle runs it and refuses on a non-zero exit unless `--allow-failing-build` / `--force`. When absent, the gate is evaluated but cannot enforce — it still passes, but (as of Phase 139) writes a loud, non-blocking stderr notice instead of passing silently. |
 | `verification.coverageMode` | `"mention"` \| `"assertion"` | `"assertion"` for a fresh `cadence init` when the detected project language is js/ts, `"mention"` for every other detected or unknown language (Phase 166); the schema-level fallback for configs that predate this field stays `"mention"` | How the `test-coverage` gate counts an `AC-N` token. `mention` counts any occurrence of the token anywhere in a matched test file, including comments. `assertion` counts it only when it sits inside an asserting test block for that file's language; a comment-only or assertion-less mention is reported as a *weak link* and the gate refuses with a distinct hint (closing the "mentioned-but-not-tested" false positive). `assertion` mode has real span-parsing support for five built-in languages — js/ts, python, go, rust, php — dispatched per file by extension; see the [supported-language matrix](#supported-language-matrix-assertion-mode). Edit it with `cadence config edit coverageMode`. |
+| `verification.coverageScheme` | `"bare"` \| `"phase-qualified"` | `"bare"` — both the schema-level default and what every config that predates this field (or has no config file at all) resolves to; `"phase-qualified"` for a fresh `cadence init`, written explicitly and unconditionally regardless of detected language or preset (Phase 239) — see [cadence init behavior](#cadence-init-behavior) | Whether the `test-coverage` gate's `AC-N` token match must also carry the active slice's own id prefix. `bare` is the historical unqualified token — any `AC-N` occurrence counts as evidence, including a different phase's identically-numbered AC, since AC ids restart at `AC-1` every phase. `phase-qualified` requires the literal `<slice-id>/AC-N` form (e.g. `239-01/AC-3` — CONTEXT.md's *slice* id, not the phase directory name); a bare or foreign-phase token is dropped and does not count as evidence, and `cadence verify phase`'s replay switches from file-scoped to config-scoped-by-token accordingly — see [`verify phase`](commands.md#verify). Edit it with `cadence config edit coverageScheme`. |
 | `verification.coverageProfiles` | `CoverageProfileConfig[]` | `[]` | Operator-defined custom assertion-mode profiles that extend `assertion` mode to a language with no built-in profile. Validated at config-load time — a bad regex, a missing required field, or an extension collision with a built-in profile refuses loudly, naming the offending field/collision and suggesting a fix. Add-only: a custom profile can never override a built-in's extensions. See [Custom coverage profiles](#custom-coverage-profiles). |
 
 ### Supported-language matrix (assertion mode)
@@ -760,7 +761,7 @@ The `production` preset seals `test-coverage` and `build-test-must-pass` by defa
 
 All three presets also set `gates.evidenceFloor` stricter than the schema-level `"mention"` back-compat default (see [gates.evidenceFloor](#gatesevidencefloor)) — `solo` to `"assertion"`, `team`/`production` to `"executed"`. `"ai-verified"` is never a preset default; it is reachable only via an explicit config override.
 
-All other fields are identical to `defaultConfig` across all three presets. After scaffolding, `cadence init` overlays the detected `profile`, `verification.testGlobs`, and `verification.coverageMode` regardless of preset (see below).
+All other fields are identical to `defaultConfig` across all three presets. After scaffolding, `cadence init` overlays the detected `profile`, `verification.testGlobs`, and `verification.coverageMode` regardless of preset, and unconditionally writes `verification.coverageScheme: "phase-qualified"` (Phase 239) regardless of preset or detected language (see below).
 
 ---
 
@@ -832,6 +833,33 @@ A fresh `cadence init` originally wrote `"assertion"` unconditionally for every 
 | `python`, `go`, `rust`, `php`, or `unknown` | `"mention"` — init also prints a stderr notice naming the detected language and explaining why `assertion` mode wasn't used |
 
 This table records what a **fresh `cadence init`** writes, not what `assertion` mode can actually parse — those are no longer the same thing. When Phase 166 shipped this table, `assertion` mode's span-finder understood JS/TS test files only, so defaulting a non-JS/TS project to `assertion` would have produced a gate that could never pass no matter how well-tested the code was. As of Phase 167, the span-finder is a shared multi-language engine with real built-in support for python, go, rust, and php too — see the [supported-language matrix](#supported-language-matrix-assertion-mode). Phase 167 deliberately left this init default table itself unchanged (it shipped the span-parsing, not a revisit of what a fresh `init` auto-writes): a fresh init still writes `"mention"` for every non-js detected language, and switching one of `python`/`go`/`rust`/`php` to `"assertion"` is now a manual, informed choice via `cadence config edit coverageMode` — real span support exists for them today, so the switch genuinely works rather than being permanently unsatisfiable. `unknown` still gets `"mention"` since there is no profile to dispatch to at all until an operator adds one via [`verification.coverageProfiles`](#custom-coverage-profiles).
+
+This only affects what a **new** `init` writes; existing `.cadence/config.json` files are never rewritten.
+
+### `verification.coverageScheme` (Phase 239)
+
+Unlike `coverageMode`, this is not language-dependent: a fresh `cadence init` writes `"phase-qualified"` unconditionally, for every preset and every detected project language.
+
+| Config source | Resolved/written `coverageScheme` |
+|---|---|
+| A `config.json` that predates this field, or no config file at all | `"bare"` — resolved through `loadConfig`'s two-layer default described below, not merely the Zod field-level default |
+| A fresh `cadence init` | `"phase-qualified"`, written explicitly into the `verification` overlay, unconditionally |
+
+The two-layer default exists because `loadConfig` (`packages/core/src/config/loader.ts`)
+deep-merges the user's `config.json` *over* `defaultConfig`'s `verification` object,
+key by key, before Zod ever parses the result — so `coverageScheme` is copied in
+from `defaultConfig` for any pre-existing config that doesn't specify it, and the
+key is therefore **always present** by the time Zod sees it. That makes the
+field-level `.default("bare")` a dead branch on this path: it can only fire when
+`CadenceConfigZ` parses an object directly, bypassing `loadConfig`'s merge entirely
+(e.g. a hand-built `verification` object in a test), never for a real
+`.cadence/config.json` read through the CLI. The load-bearing back-compat
+mechanism is therefore `defaultConfig` itself holding `"bare"` — if it held
+`"phase-qualified"` instead, that value would flow into every pre-existing config
+through the exact same merge and silently flip every consumer on upgrade.
+`cadence init`'s `verification` overlay is the only place that writes
+`"phase-qualified"` — it is the sole opt-in point for the whole scheme, since it
+is the only writer that can distinguish a fresh project from an upgraded one.
 
 This only affects what a **new** `init` writes; existing `.cadence/config.json` files are never rewritten.
 

@@ -42,6 +42,23 @@ describe('cadence init', () => {
     expect(cfg.loopEnforcement).toBe('soft');
   });
 
+  // Phase 239 (T5, AC-5 clause b): `defaultConfig` deliberately holds 'bare'
+  // for back-compat — `loadConfig` merges user config OVER it, so a strict
+  // value there would silently flip every pre-existing consumer on upgrade.
+  // That makes init's verification overlay the SOLE opt-in point for the
+  // whole phase-qualified scheme. Without this test, an overlay that quietly
+  // stopped writing the field would leave every fresh init on the bare
+  // scheme, turn the phase into a no-op for new projects, and keep the entire
+  // suite green. Asserts against the real spawned CLI and the config.json it
+  // actually wrote — not the schema in isolation.
+  it('239-01/AC-5: a fresh init writes coverageScheme: phase-qualified into config.json', async () => {
+    active = await tempRepo();
+    const r = await run(['init', '--name=demo'], active.root);
+    expect(r.code).toBe(0);
+    const cfg = JSON.parse(readFileSync(join(active.root, '.cadence/config.json'), 'utf8'));
+    expect(cfg.verification.coverageScheme).toBe('phase-qualified');
+  });
+
   it('applies --profile=production', async () => {
     active = await tempRepo();
     await run(['init', '--name=demo', '--profile=production'], active.root);

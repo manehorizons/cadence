@@ -62,6 +62,12 @@ function summaryJson(pass: boolean, evidence?: string): string {
     decisions: [],
     deferred: [],
     skillAudit: { required: [], invoked: [] },
+    // Phase 239 T8: this file exercises the (explicit) bare-scheme replay
+    // path via `runVerifyPhase`. `coverageScheme` absent entirely is a
+    // DIFFERENT case (`indeterminate`) that reports no drift regardless of
+    // real coverage — see phase-replay-indeterminate.test.ts. Every drift
+    // assertion in this file depends on the bare branch actually running.
+    coverageScheme: 'bare',
   });
 }
 
