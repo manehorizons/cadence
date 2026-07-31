@@ -2039,6 +2039,20 @@ requires extending `RecommendationSourceZ` (`packages/types/src/intelligence.ts:
 currently `manual | code-analysis | impact | cadence | session`) with a `review` member.
 Maps to rec-20260727-006, rec-20260727-011 (medium, `needs-decision`).
 
+> **As built (2026-07-30).** This slice shipped the schema and computation half of the
+> objective, not the routing half. Landed: `FindingZ` gains `id`/`target`/`disposition`/
+> `waiver` (additive, optional, back-compat verified — `packages/types/src/summary.ts`);
+> `id` is a pure content hash over `(file, anchor.kind, anchor.ref, severity, normalized
+> message)`, never a line number (`packages/core/src/verify/finding-identity.ts`);
+> `AnchorZ.kind` widens to include `'invariant'` (unused by any producer yet — phase 237
+> scope); and the two independently-declared `Finding` types (the persisted-schema
+> `FindingZ` and `verify/code-review.ts`'s local 3-severity type) converge onto one,
+> discriminated by `target`, per source-doc local D9. `RecommendationSourceZ` gains
+> `'review'` (schema-only). **Findings-to-ledger auto-routing — creating `Recommendation` +
+> `Evidence` entries from findings during settle — was explicitly NOT implemented in this
+> slice.** That is real behavioral I/O-port-threading work (a settle-time writer, not a
+> schema change), and is split to a follow-on phase, not yet numbered.
+
 ### Phase 237 — Invariant promotion from recurring findings *(sketch — contingent)*
 
 **Gate to entry.** Phase 236 settled and has produced enough routed findings for

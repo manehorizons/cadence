@@ -1,4 +1,10 @@
-import type { AcceptanceCriterion, Anchor, GateProvenance, Task } from '@manehorizons/cadence-types';
+import type {
+  AcceptanceCriterion,
+  Anchor,
+  Finding,
+  GateProvenance,
+  Task,
+} from '@manehorizons/cadence-types';
 import { resolveAnchor, type AnchorCandidate } from './anchor.js';
 import { parseAcRefs } from '../parse/ac-refs.js';
 
@@ -18,16 +24,29 @@ import { parseAcRefs } from '../parse/ac-refs.js';
  * pure-core/impure-shell split used throughout `gates/*` and `verify/*`.
  */
 
-/** Structural shape of a code-review finding, independent of which of the
- *  two divergent `Finding` types (persisted-schema vs. verifier) a caller
- *  holds — both satisfy this. Deliberately NOT imported from
- *  `verify/code-review.ts`: this module has no reason to depend on that
- *  file's shape beyond what it structurally needs, and the DRAFT's
- *  boundaries forbid converging the two `Finding` types. */
+/** Structural shape of a code-review finding. As of Phase 236 (T5, D9) there
+ *  is only one `Finding` type — `verify/code-review.ts` now imports the
+ *  shared, persisted `@manehorizons/cadence-types` `Finding` directly rather
+ *  than declaring its own — but this module still declares its own narrow
+ *  structural shape rather than importing `Finding` from `verify/code-review.ts`:
+ *  it has no reason to depend on that file's shape beyond what it
+ *  structurally needs (severity/message/line), and a structural type here
+ *  stays satisfied by any caller carrying a superset (extra `id`/`target`/
+ *  `disposition`/`waiver`/`anchor` fields included). `severity` is derived as
+ *  `Finding['severity']` (not restated as a hand-picked subset) so that the
+ *  post-T5 convergence — `verify/code-review.ts`'s `CodeReviewResult.findings`
+ *  now carries the full `critical|high|medium|low` union — keeps flowing
+ *  through `anchorFindings` without a widening mismatch at its call site in
+ *  `gates/code-review.ts`. `line` is likewise derived as `Finding['line']`
+ *  (`number | undefined`, not a hand-restated `number`) — under this repo's
+ *  `exactOptionalPropertyTypes`, the shared schema's optional `line` is a
+ *  distinct type from a bare `line?: number`, and only the derived form
+ *  accepts a real `Finding` object (which may carry `line: undefined`
+ *  explicitly) without a second mismatch. */
 export interface GapCandidateFinding {
-  readonly severity: 'high' | 'medium' | 'low';
+  readonly severity: Finding['severity'];
   readonly message: string;
-  readonly line?: number;
+  readonly line?: Finding['line'];
 }
 
 /** A finding tagged with its resolved §7.1 anchor. `anchor.tier ===
@@ -42,10 +61,15 @@ export interface AnchoredFinding extends GapCandidateFinding {
  *  whether the evidence floor stops the settle; config decides what stops
  *  you, never what is visible. `severityDistribution` tallies only the gap
  *  (undeclared-tier) findings — the population relevant to reasoning about
- *  whether the pre-existing HIGH-finding floor will refuse. */
+ *  whether the pre-existing HIGH-finding floor will refuse. Keyed by the full
+ *  `Finding['severity']` union (Phase 236, T5) so tallying a gap finding of
+ *  any severity — including `critical` — can never fall outside the Record's
+ *  declared keys; `critical` is not currently reachable through code-review's
+ *  own verifiers (they only ever emit `high|medium|low`), but the type must
+ *  stay sound for the full converged `Finding` shape regardless. */
 export interface CriteriaGapSummary {
   readonly gapCount: number;
-  readonly severityDistribution: Readonly<Record<'high' | 'medium' | 'low', number>>;
+  readonly severityDistribution: Readonly<Record<Finding['severity'], number>>;
 }
 
 export interface CriteriaGapResult {
@@ -132,7 +156,8 @@ export function anchorFindings(
   gateProvenance: readonly GateProvenance[],
 ): CriteriaGapResult {
   const tagged: Record<string, AnchoredFinding[]> = {};
-  const severityDistribution: Record<'high' | 'medium' | 'low', number> = {
+  const severityDistribution: Record<Finding['severity'], number> = {
+    critical: 0,
     high: 0,
     medium: 0,
     low: 0,

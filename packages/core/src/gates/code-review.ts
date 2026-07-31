@@ -1,6 +1,7 @@
 import type { Draft, Finding } from '@manehorizons/cadence-types';
 import { runConvergentReview } from '../verify/converge.js';
 import { anchorFindings } from '../verify/criteria-gap.js';
+import { attachFindingIdentity } from '../verify/finding-identity.js';
 import type { CodeReviewInput, CodeReviewTaskRef } from '../contracts/index.js';
 import type { GateImpl, GateResult } from './types.js';
 
@@ -95,6 +96,13 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
       ctx.draft.tasks,
       ctx.gateProvenance ?? [],
     );
+    // Phase 236 (T4, AC-3, dec-20260730-001) — stamp every anchored finding
+    // with its stable content-hash identity (`id`), `target: 'artifact'`, and
+    // a default `disposition: 'open'` before it lands in `summaryPatch`. Pure
+    // post-processing over the SAME `gapResult.findings` that `highs`/`pass`/
+    // `gapCount`/`severityDistribution` below are computed from — it changes
+    // only what is persisted, never the gate's refuse/pass/bypass decision.
+    const identifiedFindings = attachFindingIdentity(gapResult.findings);
     // D3 — declared unconditionally, regardless of pass/refuse/bypass below:
     // config decides what stops the settle, never what is visible.
     const { gapCount, severityDistribution } = gapResult.summary;
@@ -112,8 +120,8 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
     if (gapCount > 0) {
       ctx.io.err(
         `code-review: criteria-gap — ${gapCount} finding(s) unanchored ` +
-          `(high=${severityDistribution.high}, medium=${severityDistribution.medium}, ` +
-          `low=${severityDistribution.low}).\n`,
+          `(critical=${severityDistribution.critical}, high=${severityDistribution.high}, ` +
+          `medium=${severityDistribution.medium}, low=${severityDistribution.low}).\n`,
       );
     }
 
@@ -184,7 +192,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
           ctx.io.err(`${reason}\n`);
           return {
             outcome: 'refuse',
-            summaryPatch: { codeReview: gapResult.findings },
+            summaryPatch: { codeReview: identifiedFindings },
             reason,
             flags: {
               verifierIdentity: {
@@ -219,7 +227,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
           ctx.io.err(`${reason}\n`);
           return {
             outcome: 'refuse',
-            summaryPatch: { codeReview: gapResult.findings },
+            summaryPatch: { codeReview: identifiedFindings },
             reason,
             flags: {
               verifierIdentity: {
@@ -234,7 +242,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
     // pass (converged) OR bypass fall-through → record findings, proceed.
     return {
       outcome: 'pass',
-      summaryPatch: { codeReview: gapResult.findings },
+      summaryPatch: { codeReview: identifiedFindings },
       flags: {
         verifierIdentity: {
           family: verifyResult.provider,

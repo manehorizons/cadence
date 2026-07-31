@@ -164,18 +164,26 @@ export type {
   VerifyUsage,
 } from '../verify/verifier.js';
 
-/** code-review. Its `Finding`/`FindingSeverity` are the 3-severity
- *  (`high|medium|low`) code-review pair — distinct from security-audit's
- *  4-severity finding below — so both are published under disambiguated
- *  names (same convention as `gates/types.ts`). */
+/** code-review. Phase 236 (T5, D9) converged code-review's `Finding` onto the
+ *  shared, persisted SUMMARY-schema `Finding` from `@manehorizons/cadence-types`
+ *  (severity `critical|high|medium|low`) — it no longer declares its own
+ *  divergent 3-severity type. `CodeReviewFinding`/`CodeReviewFindingSeverity`
+ *  are kept as republished aliases of that same shared type, purely for
+ *  backward name-compat with existing consumers (`gates/types.ts`,
+ *  `notify/code-review.ts`); new code may import `Finding` directly from
+ *  `@manehorizons/cadence-types` instead. */
 export type {
   CodeReviewInput,
   CodeReviewResult,
   CodeReviewTaskRef,
   CodeReviewVerifier,
-  Finding as CodeReviewFinding,
-  FindingSeverity as CodeReviewFindingSeverity,
 } from '../verify/code-review.js';
+export type { Finding as CodeReviewFinding } from '@manehorizons/cadence-types';
+
+/** The severity union of a {@link CodeReviewFinding}, derived rather than
+ *  restated so it cannot drift from the schema (same convention as
+ *  {@link SecurityAuditFindingSeverity} below). */
+export type CodeReviewFindingSeverity = SummaryFinding['severity'];
 
 /** security-audit. */
 export type {

@@ -404,6 +404,104 @@ phase 241; the other two remain open:
   only confirms the candidate string is present in `boundaries[]`, not that
   the boundary is actually relevant to the finding.
 
+### Finding identity, disposition, and type convergence (phase 236)
+
+Phase 236 (`dec-20260730-001`) gives a finding a stable identity so it can be
+tracked across settles instead of being re-detected as new every time, and
+converges two independently-declared `Finding` types that had drifted apart.
+It is schema-and-computation only — see "What is deliberately not built yet"
+below for what is explicitly deferred.
+
+**Four new `FindingZ` fields** (`packages/types/src/summary.ts:70-114`), all
+additive and `.optional()` so a pre-phase-236 `Finding` record with none of
+them present still parses unchanged:
+
+| Field | Shape | Meaning |
+|---|---|---|
+| `id` | `string` | Stable content-hash identity — see below. |
+| `target` | `'artifact' \| 'verification'` | Which surface the finding was raised against. |
+| `disposition` | `'open' \| 'accepted' \| 'waived' \| 'fixed' \| 'superseded'` | Lifecycle state for a tracked finding. |
+| `waiver` | `{ expiry: string }` (ISO datetime, offset required) | Present only on a waived finding. |
+
+`waiver` is constrained bidirectionally by two `.refine()`s on `FindingZ`
+(`summary.ts:108-113`): `disposition: 'waived'` requires a `waiver`, and a
+`waiver` requires `disposition: 'waived'` — an orphaned waiver on a
+non-waived finding is never valid. The reasoning is stated inline in the
+schema comment: "a waiver with no expiry is a belief masquerading as
+knowledge." This slice only computes fresh identity and a default `open`
+disposition at detection time (see `attachFindingIdentity` below) — no code
+anywhere in the repo yet constructs `accepted`/`waived`/`fixed`/`superseded`;
+mutating a finding's disposition is a follow-on phase's CLI surface.
+
+**`id`'s formula.** `computeFindingId(file, anchor, severity, message)`
+(`packages/core/src/verify/finding-identity.ts:58-65`) is a sha256 hex
+digest, via `node:crypto` (already used elsewhere in this codebase — no new
+runtime dependency), over a stably-ordered, JSON-encoded tuple of
+`(file, anchor.kind, anchor.ref, severity, normalized message)` —
+deliberately **never a line number**. The message is whitespace-normalized
+first (`normalizeMessage`, `finding-identity.ts:33-35`) so incidental
+rewrapping doesn't mint a new id, but is not otherwise semantically folded —
+a genuinely different message still produces a different id. Excluding the
+line number is the whole point: an edit that only shifts where a finding
+sits (an unrelated diff earlier in the file, a refactor) must not make a
+tracked finding look new, or disposition/waiver state attached to it would
+silently reset every settle. `attachFindingIdentity`
+(`finding-identity.ts:77-90`) is the batch adapter `gates/code-review.ts`
+calls (`gates/code-review.ts:105`) before persisting: it stamps every
+anchored finding with its computed `id`, `target: 'artifact'` (code-review
+findings are always about the artifact being changed, never a verification
+claim), and `disposition: 'open'`, leaving every other field (severity,
+message, line, anchor) unchanged.
+
+**`AnchorZ.kind` widens to include `'invariant'`**
+(`summary.ts:58-62`), alongside the existing `'ac'|'boundary'|'none'`.
+No producer emits it yet — promoting a recurring finding into an invariant
+is phase 237's scope (contingent on phase 236 having routed enough findings
+for `RetroRollup.findingCategories.recurring` to be non-trivially populated;
+see the ROADMAP). Every pre-existing `'ac'`/`'boundary'`/`'none'` anchor
+continues to parse and resolve identically to before this change.
+
+**The two divergent `Finding` types converge into one.** Before this phase,
+`packages/types/src/summary.ts`'s persisted `FindingZ` (severity
+`critical|high|medium|low`) and `packages/core/src/verify/code-review.ts`'s
+locally-declared `Finding`/`FindingSeverity` (severity `high|medium|low`
+only) were two independently-maintained shapes for the same concept. Per the
+source design doc's local D9 ("one Finding type, discriminated by `target`"),
+`verify/code-review.ts` no longer declares its own type — it imports the
+shared `Finding` from `@manehorizons/cadence-types` directly
+(`verify/code-review.ts:4`), and every construction site (the mock walker,
+the Anthropic-response mapping) keeps emitting `'high'|'medium'|'low'`
+literals, a valid subtype of the wider shared severity union.
+`packages/core/src/contracts/index.ts` keeps `CodeReviewFinding` /
+`CodeReviewFindingSeverity` as re-exported aliases of the same shared type
+(`contracts/index.ts:167-186`) purely for name back-compat with existing
+consumers (`gates/types.ts`, `notify/code-review.ts`); new code can import
+`Finding` from `@manehorizons/cadence-types` directly instead.
+`security-audit`'s findings already used the shared `FindingZ` and are
+unaffected — they simply never populate the new `id`/`target`/`disposition`
+fields (wiring identity computation into `gates/security-audit.ts` is out of
+scope for this phase).
+
+**What is deliberately not built yet.** This slice is schema and pure
+computation only — no I/O, no ledger writes:
+
+- **Findings-to-ledger auto-routing is NOT implemented.** Nothing in this
+  phase creates `Recommendation`/`Evidence` entries from findings during
+  settle. `RecommendationSourceZ` gains a `'review'` member
+  (`packages/types/src/intelligence.ts:3-15`) purely so a future routing
+  phase has correct provenance to route with instead of mislabeling
+  code-review findings `'manual'`/`'cadence'` — no routing behavior reads or
+  writes that value yet. This is real I/O-port-threading work (a settle-time
+  writer that turns a finding into a ledger entry), deliberately split to a
+  follow-on phase and recorded as an inline "As built" amendment on the
+  phase 236 roadmap entry (`.cadence/ROADMAP.md`), not silently dropped.
+- **No disposition-management surface exists.** There is no CLI or mutation
+  path to accept/waive/fix/supersede a finding; every finding this phase
+  produces is stamped `disposition: 'open'` and stays there.
+- **`security-audit` findings are not identity-stamped.** They already share
+  the converged `Finding` schema, so the new fields simply stay absent on
+  them for now.
+
 ### Gate bypass reference summary
 
 | Flag | Command | Gate bypassed |

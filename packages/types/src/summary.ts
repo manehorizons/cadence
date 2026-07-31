@@ -49,16 +49,14 @@ export const AnchorTierZ = z.enum(['executable', 'structured', 'declared', 'unde
 export type AnchorTier = z.infer<typeof AnchorTierZ>;
 
 /**
- * Phase 235 (§7.1, AC-2): what a code-review finding is anchored to.
- * `kind` is deliberately narrower than §7.2's future `Finding identity`
- * shape (`'ac' | 'boundary' | 'invariant' | 'none'`) — `invariant` plus
- * stable `id`/`disposition`/`waiver` are phase 236 scope, gated on the
- * shared fingerprint primitive (`rec-20260727-007`); this phase declares
- * only the three kinds AC-2 specifies. `ref` is optional because a `'none'`
- * anchor (or an `undeclared`-tier gap) cites nothing.
+ * Phase 235 (§7.1, AC-2): what a code-review finding is anchored to. Phase
+ * 236 (§7.2, dec-20260730-001) widened `kind` to add `'invariant'` — unused
+ * by any producer yet (phase 237 scope) but now a valid value everywhere
+ * `AnchorZ` is parsed. `ref` is optional because a `'none'` anchor (or an
+ * `undeclared`-tier gap) cites nothing.
  */
 export const AnchorZ = z.object({
-  kind: z.enum(['ac', 'boundary', 'none']),
+  kind: z.enum(['ac', 'boundary', 'invariant', 'none']),
   ref: z.string().optional(),
   tier: AnchorTierZ,
 });
@@ -78,7 +76,41 @@ export const FindingZ = z.object({
    *  findings emitted by gates this phase deliberately does not touch
    *  (`spec-review`, `ui-spec-review`, `plan-review`; `dec-20260729-003`). */
   anchor: AnchorZ.optional(),
-});
+  /** Phase 236 (§7.2, dec-20260730-001): stable finding identity — a pure
+   *  content hash over (file, anchor.kind, anchor.ref, severity, normalized
+   *  message), never derived from a line number, so the same finding keeps
+   *  the same `id` across settles even after an edit shifts its line.
+   *  Optional — absent for every pre-phase-236 record and for finding
+   *  classes this phase deliberately does not wire identity into (e.g.
+   *  security-audit). */
+  id: z.string().optional(),
+  /** Phase 236: which surface this finding was raised against. Optional —
+   *  absent for every pre-phase-236 record. */
+  target: z.enum(['artifact', 'verification']).optional(),
+  /** Phase 236: lifecycle state for a tracked finding. Optional — absent
+   *  for every pre-phase-236 record and defaults to `'open'` in spirit
+   *  wherever a disposition hasn't been explicitly set. This slice only
+   *  computes fresh identity at detection time; disposition mutation
+   *  (accept/waive/fix/supersede) is a follow-on phase's CLI surface. */
+  disposition: z.enum(['open', 'accepted', 'waived', 'fixed', 'superseded']).optional(),
+  /** Phase 236: present only when `disposition === 'waived'` — the waiver's
+   *  expiry as an offset-qualified ISO datetime. Optional, but enforced
+   *  bidirectionally by the `.refine()`s below: a waiver with no expiry is a
+   *  belief masquerading as knowledge (source doc §7.2), so `disposition:
+   *  'waived'` requires a `waiver`, and a `waiver` implies `disposition:
+   *  'waived'` — an orphaned waiver on a non-waived finding is never valid. */
+  waiver: z
+    .object({
+      expiry: z.string().datetime({ offset: true }),
+    })
+    .optional(),
+})
+  .refine((f) => f.disposition !== 'waived' || f.waiver !== undefined, {
+    message: "waiver is required when disposition === 'waived'",
+  })
+  .refine((f) => f.waiver === undefined || f.disposition === 'waived', {
+    message: "waiver may only be present when disposition === 'waived'",
+  });
 export type Finding = z.infer<typeof FindingZ>;
 
 export const GateBypassZ = z.object({

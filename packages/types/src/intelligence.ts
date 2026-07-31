@@ -6,6 +6,11 @@ export const RecommendationSourceZ = z.enum([
   'impact',
   'cadence',
   'session',
+  // Phase 236: provenance for a future (not-this-slice) routing phase that
+  // carries code-review findings into the recommendation ledger, instead of
+  // mislabeling them `manual`/`cadence`. This slice is schema-only — no
+  // routing behavior is implemented here.
+  'review',
 ]);
 export type RecommendationSource = z.infer<typeof RecommendationSourceZ>;
 

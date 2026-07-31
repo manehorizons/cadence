@@ -3,6 +3,7 @@ import {
   InspectionZ,
   RecommendationLedgerZ,
   RecommendationReportZ,
+  RecommendationSourceZ,
   RecommendationZ,
   emptyRecommendationLedger,
   IntelligenceMilestoneZ,
@@ -225,6 +226,49 @@ describe('intelligence schemas', () => {
 
   it('101 AC-2: emptyRecommendationLedger seeds an empty archived array', () => {
     expect(emptyRecommendationLedger().archived).toEqual([]);
+  });
+});
+
+describe('AC-5: RecommendationSourceZ gains a review member', () => {
+  const sourceRecBase = {
+    id: 'rec-20260730-001',
+    title: 'phase 236 source coverage',
+    summary: 's',
+    status: 'candidate' as const,
+    readiness: 'raw-idea' as const,
+    priority: 'low' as const,
+    leverageScore: 5,
+    riskScore: 5,
+    confidence: 0.7,
+    decayState: 'fresh' as const,
+    affectedAreas: [],
+    affectedFiles: [],
+    evidenceIds: [],
+    assumptionIds: [],
+    decisionIds: [],
+    createdAt: '2026-07-30T00:00:00.000Z',
+    updatedAt: '2026-07-30T00:00:00.000Z',
+  };
+
+  it('AC-5: a Recommendation record with source: "review" parses successfully', () => {
+    const parsed = RecommendationZ.parse({
+      ...sourceRecBase,
+      source: 'review',
+    });
+    expect(parsed.source).toBe('review');
+  });
+
+  it.each(['manual', 'code-analysis', 'impact', 'cadence', 'session', 'review'] as const)(
+    'AC-5: every existing source value %s still parses',
+    (source) => {
+      expect(RecommendationSourceZ.parse(source)).toBe(source);
+      const parsed = RecommendationZ.parse({ ...sourceRecBase, source });
+      expect(parsed.source).toBe(source);
+    },
+  );
+
+  it('AC-5: rejects an unknown source value', () => {
+    expect(RecommendationSourceZ.safeParse('bogus').success).toBe(false);
   });
 });
 
