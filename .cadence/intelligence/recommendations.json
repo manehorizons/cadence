@@ -1690,43 +1690,6 @@
       "updatedAt": "2026-08-01T00:18:50.599Z"
     },
     {
-      "id": "rec-20260801-003",
-      "title": "Wire host-cli verifier support into the remaining 6 gate families (deep-verify, code-review, plan-review, security-audit, spec-review, ui-spec-review)",
-      "summary": "Confirmed 2026-08-01: this arc's .cadence/config.json had all 7 gate-provider blocks set to mock at HEAD (7ddc72a1) -- the entire kernel-assurance-v2 arc has settled under placeholder verification the whole time. Configured the one real option available today: perTaskVerifier -> host-cli with CADENCE_HOST_CLI_BIN=codex (codex is deliberately unguarded against self-invocation, unlike the claude default -- see host-cli-client.ts's SELF_INVOCATION_ENV_VAR comment; live-tested, codex responds correctly). IMPORTANT correction (caught by phase 244's whole-branch review): this configuration is NOT yet active in this repo's actual gate set. per-task-verify only appears in gates/engine.ts's DELTAS under the 'strict' profile; this repo runs profile:auto, whose resolved gate set is [coherence-check, structural-verifier, build-test-must-pass, test-coverage, anomaly-notify, task-verify-required] -- per-task-verify is not in it. So the seam is configured but inert until either a draft/config opts into profile:strict, or (more relevantly) host-cli gets wired into one of the seams that IS active under auto (e.g. codeReview or verifier/deep-verify -- see below). Per docs/providers.md, host-cli is currently wired for only 1 of 7 families (HostCliPerTaskVerifier in per-task.ts); the other six -- verifier (deep-verify), codeReview, planReview, securityAudit, specReview, uiSpecReview -- have no host-cli builder and silently fall back to mock with a stderr warning if pointed at it. Real coverage on those six today would require anthropic + a paid ANTHROPIC_API_KEY (not available in this environment) or a local model endpoint (not configured). Wiring host-cli builders for the remaining families (mirroring HostCliPerTaskVerifier's shape) would let a codex-authenticated environment get real verification across the whole gate matrix with zero incremental API cost -- and codeReview/verifier are the higher-leverage targets since they're actually in the auto-profile gate set, unlike per-task-verify. Options: wire all six in one phase, or prioritize deep-verify + code-review first, or additionally consider whether profile:strict should be adopted on this arc so the already-configured perTaskVerifier seam actually fires.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/factory.ts",
-        "packages/core/src/verify/per-task-factory.ts",
-        "packages/core/src/verify/spec-review-factory.ts",
-        "packages/core/src/verify/plan-review-factory.ts",
-        "packages/core/src/verify/security-audit-factory.ts",
-        "packages/core/src/verify/ui-spec-review-factory.ts",
-        "packages/core/src/verify/verifier-factory.ts",
-        "packages/core/src/verify/per-task.ts",
-        "packages/core/src/gates/engine.ts",
-        "docs/providers.md"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260801-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-01T03:13:02.155Z",
-      "updatedAt": "2026-08-01T03:13:02.155Z"
-    },
-    {
       "id": "rec-20260801-008",
       "title": "Finding-identity hash includes raw LLM message text -- real-provider re-wording defeats ledger dedup",
       "summary": "computeFindingId (packages/core/src/verify/finding-identity.ts) hashes (file, anchor.kind, anchor.ref, severity, normalizeMessage(message)) where normalizeMessage only strips/collapses whitespace -- explicitly no semantic normalization per its own docstring ('a genuinely different message must still produce a different id'). Under a real LLM-backed verifier (anthropic/local/host-cli), message and severity are live model output with no guarantee of identical wording across separate runs of the same underlying defect -- CADENCE's test suite is constitutionally mock-only (nothing may depend on anthropic or local), so this instability is structurally invisible to CI. Concrete failure: re-settling an unchanged phase under a real provider can mint a new id for an already-routed finding, and phase 242's deriveRoutingCandidates dedup (keyed on Finding.id) misses it, creating a duplicate Recommendation for the same underlying defect. Verified directly against source 2026-08-01 via independent review + spot-check.",
@@ -5599,6 +5562,47 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-29T01:14:55.911Z",
       "updatedAt": "2026-08-01T03:35:05.654Z"
+    },
+    {
+      "id": "rec-20260801-003",
+      "title": "Wire host-cli verifier support into the remaining 6 gate families (deep-verify, code-review, plan-review, security-audit, spec-review, ui-spec-review)",
+      "summary": "Confirmed 2026-08-01: this arc's .cadence/config.json had all 7 gate-provider blocks set to mock at HEAD (7ddc72a1) -- the entire kernel-assurance-v2 arc has settled under placeholder verification the whole time. Configured the one real option available today: perTaskVerifier -> host-cli with CADENCE_HOST_CLI_BIN=codex (codex is deliberately unguarded against self-invocation, unlike the claude default -- see host-cli-client.ts's SELF_INVOCATION_ENV_VAR comment; live-tested, codex responds correctly). IMPORTANT correction (caught by phase 244's whole-branch review): this configuration is NOT yet active in this repo's actual gate set. per-task-verify only appears in gates/engine.ts's DELTAS under the 'strict' profile; this repo runs profile:auto, whose resolved gate set is [coherence-check, structural-verifier, build-test-must-pass, test-coverage, anomaly-notify, task-verify-required] -- per-task-verify is not in it. So the seam is configured but inert until either a draft/config opts into profile:strict, or (more relevantly) host-cli gets wired into one of the seams that IS active under auto (e.g. codeReview or verifier/deep-verify -- see below). Per docs/providers.md, host-cli is currently wired for only 1 of 7 families (HostCliPerTaskVerifier in per-task.ts); the other six -- verifier (deep-verify), codeReview, planReview, securityAudit, specReview, uiSpecReview -- have no host-cli builder and silently fall back to mock with a stderr warning if pointed at it. Real coverage on those six today would require anthropic + a paid ANTHROPIC_API_KEY (not available in this environment) or a local model endpoint (not configured). Wiring host-cli builders for the remaining families (mirroring HostCliPerTaskVerifier's shape) would let a codex-authenticated environment get real verification across the whole gate matrix with zero incremental API cost -- and codeReview/verifier are the higher-leverage targets since they're actually in the auto-profile gate set, unlike per-task-verify. Options: wire all six in one phase, or prioritize deep-verify + code-review first, or additionally consider whether profile:strict should be adopted on this arc so the already-configured perTaskVerifier seam actually fires.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/factory.ts",
+        "packages/core/src/verify/per-task-factory.ts",
+        "packages/core/src/verify/spec-review-factory.ts",
+        "packages/core/src/verify/plan-review-factory.ts",
+        "packages/core/src/verify/security-audit-factory.ts",
+        "packages/core/src/verify/ui-spec-review-factory.ts",
+        "packages/core/src/verify/verifier-factory.ts",
+        "packages/core/src/verify/per-task.ts",
+        "packages/core/src/gates/engine.ts",
+        "docs/providers.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260801-003",
+        "ev-20260801-012"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-01T03:13:02.155Z",
+      "updatedAt": "2026-08-01T15:26:23.621Z",
+      "shippedRef": "Config activation only (builders already existed pre-arc, phases 191/205): verifier + codeReview set to host-cli on kernel-assurance-v2, 2026-08-01 resume session",
+      "archivedAt": "2026-08-01T15:26:23.621Z",
+      "archiveReason": "shipped"
     }
   ]
 }
