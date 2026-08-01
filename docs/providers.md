@@ -24,7 +24,7 @@ For a conceptual overview of providers and the gate universe they serve, see
   - [Warn + mock fallback](#warn--mock-fallback)
 - [host-cli — headless host CLI (`claude`/`codex`)](#host-cli--headless-host-cli-claudecodex)
   - [Binary discovery](#binary-discovery)
-  - [Current scope: per-task-verify only](#current-scope-per-task-verify-only)
+  - [Verifier family coverage](#verifier-family-coverage)
   - [Fallback behavior](#fallback-behavior)
   - [Quota-transparency notice](#quota-transparency-notice)
   - [Self-invocation guard](#self-invocation-guard)
@@ -266,28 +266,27 @@ transport differs (subprocess spawn/capture vs. an HTTP `fetch` call).
 
 It is selected per verifier family the same way as `mock`/`anthropic`/`local`
 (see [Per-gate provider configuration](#per-gate-provider-configuration)
-below). Today only the `per-task-verify` gate (`perTaskVerifier` config
-key) has a real `host-cli`-backed verifier wired up — see
-[Current scope](#current-scope-per-task-verify-only) — so that is the gate to
-point at it to get real host-CLI verification:
+below). Every verifier family has a real `host-cli`-backed verifier wired up
+— see [Verifier family coverage](#verifier-family-coverage) — so any of them
+can be pointed at it to get real host-CLI verification, e.g.:
 
 ```sh
 cadence config set perTaskVerifier.provider host-cli
 ```
 
-`cadence activate --provider host-cli` (no `--all`) only flips the
-top-level `verifier` seam (the `deep-verify` gate), which is **not** the
-wired family — use `--all` to also flip `perTaskVerifier` (and every other
-seam) to `host-cli` in one step:
+`cadence activate --provider host-cli --all` flips every seam to `host-cli`
+in one step; `cadence activate --provider host-cli` (no `--all`) flips only
+the top-level `verifier` seam (the `deep-verify` gate) — use `--all` if you
+want every family switched at once:
 
 ```sh
 cadence activate --provider host-cli --all
 ```
 
-`cadence settle run --deep --verifier host-cli` is accepted by the CLI (T5),
-but it overrides the `deep-verify` gate specifically, which has no `host-cli`
-builder yet — it will fall back to mock with a warning until that family is
-wired in a follow-up.
+`cadence settle run --deep --verifier host-cli` (T5) overrides the
+`deep-verify` gate specifically — like every other family, it has a real
+`host-cli` builder, so this is real host-CLI verification, not a mock
+fallback.
 
 ### Binary discovery
 
@@ -304,24 +303,29 @@ use, how to parse the output) is inferred from the binary's basename — a
 `codex`-named binary gets `codex exec --json …`; everything else is treated
 as `claude`.
 
-### Current scope: per-task-verify only
+### Verifier family coverage
 
-Only the `per-task-verify` gate (`perTaskVerifier` config key, the family
-that fires at `build task --status=DONE`) has a real `host-cli`-backed
-verifier class wired up so far (`HostCliPerTaskVerifier` in
-`packages/core/src/verify/per-task.ts`). The other five verifier
-families — the top-level `verifier` slice (the `deep-verify` gate),
-`codeReview`, `planReview`, `securityAudit`, and `specReview` — have no
-`host-cli` builder yet, so selecting `provider: 'host-cli'` on any of them
-falls back to `mock` with a stderr warning:
+Every verifier family has a real `host-cli`-backed verifier class wired up:
+`per-task-verify` (`HostCliPerTaskVerifier`, phase 165), `deep-verify`
+(`verifier` slice), `code-review`, `plan-review`, `security-audit`, and
+`spec-review` (all five wired together in phase 191, shipped v1.46.0), and
+`ui-spec-review` (`HostCliUiSpecReviewVerifier`, phase 205, wired from
+introduction). See [Per-gate provider
+configuration](#per-gate-provider-configuration) for the full family →
+config key → factory source mapping.
+
+The `hostCli` builder is optional per family at the type level
+(`VerifierFactorySpec.hostCli?`), precisely so a *future* family can land
+without every existing factory file changing in lockstep. A family that
+hasn't supplied one yet falls back to `mock` with a stderr warning:
 
 ```
-verifier: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.
-code-review: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.
+<family>: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.
 ```
 
-This is current scope for this provider, not a bug — wiring the remaining
-five families, including `deep-verify` itself, is a follow-up.
+No shipped family is in that state today — the line above is what you'd see
+if a new gate added a provider slice before its `host-cli` class landed, not
+a description of current scope.
 
 ### Fallback behavior
 
@@ -465,6 +469,7 @@ JSON directly.
 | `plan-review` | `planReview` | `packages/core/src/verify/plan-review-factory.ts` |
 | `security-audit` | `securityAudit` | `packages/core/src/verify/security-audit-factory.ts` |
 | `spec-review` | `specReview` | `packages/core/src/verify/spec-review-factory.ts` |
+| `ui-spec-review` | `uiSpecReview` | `packages/core/src/verify/ui-spec-review-factory.ts` |
 
 Example: run the deep verifier on Anthropic, per-task checks on a local model,
 and leave everything else on mock:
@@ -507,6 +512,7 @@ reference for provider-using gates:
 | `plan-review` | `planReview` | `draft approve` (in cells that include it) |
 | `security-audit` | `securityAudit` | `settle run` after code-review (in cells that include it) |
 | `spec-review` | `specReview` | `spec approve` (always, whenever the pre-DRAFT spec stage is used) |
+| `ui-spec-review` | `uiSpecReview` | `spec approve`, only when a sibling `<id>-UI-SPEC.md` exists |
 
 "Cells that include it" refers to the profile × tier intersection — e.g.
 `per-task-verify` fires in `strict × standard` and `strict × complex` but not
@@ -516,6 +522,12 @@ in `auto` or `quick-fix` rows. See the gate matrix for the full picture.
 unconditionally at `cadence spec approve` — opting into the pre-DRAFT spec
 stage *is* the opt-in. Bypass a failing/unconverged spec-review with
 `--allow-spec-review-failure`.
+
+`ui-spec-review` is also not a gate-matrix cell — it runs at `cadence spec
+approve` alongside `spec-review`, but only when the phase's DRAFT has a
+sibling `<id>-UI-SPEC.md` design contract; a phase with no UI-SPEC never
+triggers it, regardless of profile/tier. Bypass with
+`--allow-ui-spec-review-failure`.
 
 ---
 
