@@ -1990,7 +1990,7 @@ it cannot be edited post-settle without invalidating the attestation.
 > boundary being real, and a special-cased manifest is the evidence that it is not. Record
 > the outcome in the phase SUMMARY's decisions, and strike phases 234–237 below.
 
-### Phase 234 — Kernel / verifier / consumer boundary, lint-enforced *(built on `feat/kernel-assurance-v2`, unmerged to `main`)*
+### Phase 234 — Kernel / verifier / consumer boundary, lint-enforced *(built on `feat/kernel-assurance-v2`, merged to `main` 2026-08-01 via #353)*
 
 **Gate to entry.** Phase 233 settled with AC-3 met (no gate-specific special cases).
 
@@ -2011,7 +2011,7 @@ time.
 > internal-import violation across them. Zero `GATE_ORDER` changes, zero gate-behavior
 > changes, per the objective's own constraint.
 
-### Phase 235 — Criteria-anchored review verifier: input + anchor ladder *(built on `feat/kernel-assurance-v2`, unmerged to `main`)*
+### Phase 235 — Criteria-anchored review verifier: input + anchor ladder *(built on `feat/kernel-assurance-v2`, merged to `main` 2026-08-01 via #353)*
 
 **Gate to entry.** Phase 234 landed without tripping its overrun tripwire.
 
@@ -2031,7 +2031,7 @@ no AC covers. Maps to rec-20260727-004, rec-20260727-005 (medium, `needs-decisio
 > ladder's `executable` tier reachable in a live settle (it shipped structurally in 235 but
 > wasn't yet exercised end-to-end).
 
-### Phase 236 — Finding identity, disposition, and ledger routing *(built on `feat/kernel-assurance-v2`, unmerged to `main` — see "As built" note below)*
+### Phase 236 — Finding identity, disposition, and ledger routing *(built on `feat/kernel-assurance-v2`, merged to `main` 2026-08-01 via #353 — see "As built" note below)*
 
 **Gate to entry.** Phase 235 settled, **and** rec-20260727-007 (shared fingerprint primitive
 extraction from Déjà, `needs-evidence`) is resolved — stable finding identity is its

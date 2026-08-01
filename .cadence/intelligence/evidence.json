@@ -33,21 +33,21 @@
       "id": "ev-20260604-001",
       "recommendationId": "rec-20260604-001",
       "kind": "note",
-      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Highest ecosystem leverage of the session. Tension/sibling: 'Host-adapter authoring guide' (MCP may obsolete bespoke adapters — decide which path before building either).",
+      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Highest ecosystem leverage of the session. Tension/sibling: 'Host-adapter authoring guide' (MCP may obsolete bespoke adapters \u2014 decide which path before building either).",
       "createdAt": "2026-06-04T19:31:58.130Z"
     },
     {
       "id": "ev-20260604-002",
       "recommendationId": "rec-20260604-002",
       "kind": "note",
-      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Sibling: rec-20260604-001 (MCP surface) — decide MCP-vs-adapters direction first; this guide only pays off if bespoke adapters remain the path.",
+      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Sibling: rec-20260604-001 (MCP surface) \u2014 decide MCP-vs-adapters direction first; this guide only pays off if bespoke adapters remain the path.",
       "createdAt": "2026-06-04T19:32:11.371Z"
     },
     {
       "id": "ev-20260604-003",
       "recommendationId": "rec-20260604-003",
       "kind": "note",
-      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Concrete + well-scoped. Motivated directly by the 2026-06-04 broken-slash-command-path bug (committed --local Windows path) — a doctor check would have caught it. Siblings: rec-20260604-001, rec-20260604-002.",
+      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Concrete + well-scoped. Motivated directly by the 2026-06-04 broken-slash-command-path bug (committed --local Windows path) \u2014 a doctor check would have caught it. Siblings: rec-20260604-001, rec-20260604-002.",
       "createdAt": "2026-06-04T19:32:11.537Z"
     },
     {
@@ -117,14 +117,14 @@
       "id": "ev-20260607-006",
       "recommendationId": "rec-20260607-006",
       "kind": "note",
-      "summary": "Approved design 2026-06-07 §Instrumented seams",
+      "summary": "Approved design 2026-06-07 \u00a7Instrumented seams",
       "createdAt": "2026-06-07T18:41:51.887Z"
     },
     {
       "id": "ev-20260607-007",
       "recommendationId": "rec-20260607-007",
       "kind": "note",
-      "summary": "Approved design 2026-06-07 §Phasing + §DESIGN.md & docs",
+      "summary": "Approved design 2026-06-07 \u00a7Phasing + \u00a7DESIGN.md & docs",
       "createdAt": "2026-06-07T18:41:52.044Z"
     },
     {
@@ -327,7 +327,7 @@
       "id": "ev-20260701-002",
       "recommendationId": "rec-20260701-002",
       "kind": "note",
-      "summary": "2026-07-01 audit R-02/F2: reproduced in sandbox — fix applied hooksPath=.githooks with no .githooks dir, check then reported ok",
+      "summary": "2026-07-01 audit R-02/F2: reproduced in sandbox \u2014 fix applied hooksPath=.githooks with no .githooks dir, check then reported ok",
       "createdAt": "2026-07-01T23:56:35.969Z"
     },
     {
@@ -341,7 +341,7 @@
       "id": "ev-20260701-004",
       "recommendationId": "rec-20260701-004",
       "kind": "note",
-      "summary": "2026-07-01 audit R-04/F4: reproduced — cadence progress --json exits 1 with unknown option; 15 read commands support --json, zero loop-write commands do",
+      "summary": "2026-07-01 audit R-04/F4: reproduced \u2014 cadence progress --json exits 1 with unknown option; 15 read commands support --json, zero loop-write commands do",
       "createdAt": "2026-07-01T23:56:58.634Z"
     },
     {
@@ -404,7 +404,7 @@
       "id": "ev-20260703-001",
       "recommendationId": "rec-20260703-001",
       "kind": "note",
-      "summary": "Builds on shipped primitives: phase-collision guard (v1.18, DESIGN.md §13), doctor worktree-phases check + next-free allocation (v1.19), agent-prompt (v1.33), and phase 142's gatherHandoffCandidates/liveLoopPosition (settled 07-03, PR #125, unwired core awaiting a consumer).",
+      "summary": "Builds on shipped primitives: phase-collision guard (v1.18, DESIGN.md \u00a713), doctor worktree-phases check + next-free allocation (v1.19), agent-prompt (v1.33), and phase 142's gatherHandoffCandidates/liveLoopPosition (settled 07-03, PR #125, unwired core awaiting a consumer).",
       "createdAt": "2026-07-03T16:59:18.968Z"
     },
     {
@@ -754,7 +754,7 @@
       "id": "ev-20260721-002",
       "recommendationId": "rec-20260721-002",
       "kind": "note",
-      "summary": "Same 2026-07-21 incident — the operator's literal action at the wall was asking Claude Code 'what should we do next?', a question whose answer is fully determined by ledger + loop state and therefore should not cost a model prompt; existing 'quickstart' read-only position rendering as the substrate to extend; sibling rec (actionable empty states) shares the same 'nearest legal move' computation — cross-referenced in both summaries.",
+      "summary": "Same 2026-07-21 incident \u2014 the operator's literal action at the wall was asking Claude Code 'what should we do next?', a question whose answer is fully determined by ledger + loop state and therefore should not cost a model prompt; existing 'quickstart' read-only position rendering as the substrate to extend; sibling rec (actionable empty states) shares the same 'nearest legal move' computation \u2014 cross-referenced in both summaries.",
       "createdAt": "2026-07-21T22:33:42.499Z"
     },
     {
@@ -817,7 +817,7 @@
       "id": "ev-20260724-005",
       "recommendationId": "rec-20260724-005",
       "kind": "note",
-      "summary": "Audit 2026-07-24: Phase 181 comment in mcp-trust.ts — SETTLE is classified but left ungated this phase (see DRAFT Boundaries)",
+      "summary": "Audit 2026-07-24: Phase 181 comment in mcp-trust.ts \u2014 SETTLE is classified but left ungated this phase (see DRAFT Boundaries)",
       "createdAt": "2026-07-24T14:35:48.927Z"
     },
     {
@@ -1076,7 +1076,7 @@
       "id": "ev-20260730-002",
       "recommendationId": "rec-20260730-002",
       "kind": "note",
-      "summary": "Hit live during phase 239 T7 (2026-07-30). The new test file's own fixture-hygiene COMMENT contained a contiguous 239-01/AC-8 literal; it took the dedup slot and AC-8 measured refs=1 qualifying=0 while five asserting it() titles below carried the same qualified token. Full pipeline was 24/24 green throughout — only a direct scanTestCoverage probe surfaced it. Cost one full implement/review round-trip.",
+      "summary": "Hit live during phase 239 T7 (2026-07-30). The new test file's own fixture-hygiene COMMENT contained a contiguous 239-01/AC-8 literal; it took the dedup slot and AC-8 measured refs=1 qualifying=0 while five asserting it() titles below carried the same qualified token. Full pipeline was 24/24 green throughout \u2014 only a direct scanTestCoverage probe surfaced it. Cost one full implement/review round-trip.",
       "createdAt": "2026-07-30T23:24:17.740Z"
     },
     {
@@ -1195,7 +1195,7 @@
       "id": "ev-20260731-009",
       "recommendationId": "rec-20260731-009",
       "kind": "note",
-      "summary": "Source doc §7.3 (docs/handoffs/cadence-phase0-assurance-kernel-review.md); phase 236 ROADMAP.md 'As built' amendment explicitly splits this out; rec-20260727-006/-011 (shipped, schema-only) are the prerequisites this consumes; rec-20260731-007 (finding-id collision, needs-decision) must be designed around, not ignored",
+      "summary": "Source doc \u00a77.3 (docs/handoffs/cadence-phase0-assurance-kernel-review.md); phase 236 ROADMAP.md 'As built' amendment explicitly splits this out; rec-20260727-006/-011 (shipped, schema-only) are the prerequisites this consumes; rec-20260731-007 (finding-id collision, needs-decision) must be designed around, not ignored",
       "createdAt": "2026-07-31T22:02:11.174Z"
     },
     {
@@ -1220,14 +1220,14 @@
       "createdAt": "2026-07-31T23:58:21.435Z"
     },
     {
-      "id": "ev-20260801-001",
+      "id": "ev-20260801-014",
       "recommendationId": "rec-20260801-001",
       "kind": "note",
       "summary": "Surfaced during phase 242 T4 doc work (2026-07-31): confirmed docs/reference/commands.md:156 still says 'all five' while EDITABLE_FIELDS has 8 entries (profile, loopEnforcement, acDiscipline, commitCadence, verifier, autoArchive, coverageMode, autoRoute)",
       "createdAt": "2026-08-01T00:18:50.599Z"
     },
     {
-      "id": "ev-20260801-002",
+      "id": "ev-20260801-015",
       "recommendationId": "rec-20260801-002",
       "kind": "note",
       "summary": "ev: config.json@HEAD(7ddc72a1) had all 7 provider blocks=mock; docs/providers.md 'Current scope: per-task-verify only' confirms host-cli builder exists only for HostCliPerTaskVerifier; codex smoke-tested live 2026-08-01 (turn.completed, real token usage) confirming the missing piece is wiring, not auth/availability",
@@ -1309,6 +1309,20 @@
       "kind": "note",
       "summary": "Phase 245 (245-finding-identity-stability) settle, 2026-08-01 -- narrowed identity hash fixes the anchor/severity slice; message-text-drift slice explicitly out of scope, risk-accepted by operator",
       "createdAt": "2026-08-01T17:29:08.286Z"
+    },
+    {
+      "id": "ev-20260801-001",
+      "recommendationId": "rec-20260731-003",
+      "kind": "note",
+      "summary": "Investigated 2026-07-31: the provider-carrying field this rec asks for already exists on feat/kernel-assurance-v2 (phase 232, PR #327) as GateProvenanceZ.provider/model, populated generically via GateFlags.verifierIdentity from verifyResult.provider -- not gate-specific special-cased, so a credential-missing mock-downgrade naturally records provider:'mock' same as an explicitly-configured mock run. Phase 243 (the loud-banner fix, PR #344, main-only, unreleased) has NOT yet been synced into feat/kernel-assurance-v2, so the exact downgrade path this rec names is not yet confirmed end-to-end on that branch, but the mechanism strongly implies it resolves automatically once synced. Substantially overlaps/subsumed by rec-20260727-001 (top-level GateProvenance ask vs that rec's per-finding-array ask -- both satisfied by the same phase-232 change). Do not spec a standalone phase against main's GateProvenanceZ -- it would conflict with this unmerged branch work. Currently being evaluated for an early cherry-pick to main ahead of the rest of the kernel-assurance-v2 arc (see rec-20260727-001 for the merge-safety verdict).",
+      "createdAt": "2026-08-01T00:58:56.351Z"
+    },
+    {
+      "id": "ev-20260801-002",
+      "recommendationId": "rec-20260727-001",
+      "kind": "note",
+      "summary": "Investigated 2026-07-31/08-01: this rec is substantially shipped as phases 232+233 (Slice 1 of docs/handoffs/cadence-phase0-assurance-kernel-review.md) on feat/kernel-assurance-v2 -- unmerged to main. GateProvenanceZ.provider/model exist there, populated generically via GateFlags.verifierIdentity, not gate-specific special-cased. Cherry-pick safety spike (2026-08-01): cherry-picking 3b95218b+cfe582a5 onto current main resolves with only ledger-JSON conflicts (no real code conflicts against 232/233 alone); full workspace lint+typecheck+build+test (3430 core tests, 322 types tests) all pass clean on the result. BUT merge-back cost is real: merging origin/feat/kernel-assurance-v2 into that cherry-picked-main state produces genuine source conflicts (not just ledger noise) in code-review.ts, registry.ts, settle.ts, registry.test.ts, fields.test.ts -- because phases 234/235/236/241/242 build on top of 232/233 on the branch, so a cherry-pick creates duplicate-lineage history the eventual full-branch merge will have to reconcile. Slices 1-3 (phases 232-236, +241) are all done on the branch; only phase 237 (invariant promotion) remains, and it is needs-evidence-gated on phase 236's finding-routing accumulating real recurring findings -- which can't happen while the arc sits unmerged/unreleased. Also found: a rec-id collision -- main's rec-20260731-003 (this gate-provenance-adjacent ask) and the arc branch's rec-20260731-003 (phase 242, findings-to-ledger auto-routing, already merged to feat/kernel-assurance-v2 via PR #346) will collide when the branches reconcile, under any resolution path. Operator is weighing: early cherry-pick of Slice 1 alone vs. merging the whole arc branch to main now (only evidence-gated phase 237 remains) vs. holding per the original one-branch-merge-at-the-end decision (2026-07-27).",
+      "createdAt": "2026-08-01T01:14:25.097Z"
     }
   ]
 }
