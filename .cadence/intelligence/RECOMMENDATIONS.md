@@ -913,40 +913,6 @@ Phase 242's routing step (settle.ts, finalizeAndCloseSettle) writes each new rou
 
 docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, acDiscipline, commitCadence, or verifier. Omit to walk all five.') predates phase 102's autoArchive and phase 108's coverageMode additions to packages/core/src/config-edit/fields.ts's EDITABLE_FIELDS array, and now also predates phase 242's autoRoute addition -- three fields (autoArchive, coverageMode, autoRoute) are absent from this doc's field list and its 'walk all five' claim, though EDITABLE_FIELDS actually holds 8. Not caused by phase 242 -- the gap already existed for autoArchive/coverageMode before this phase; autoRoute is simply the third field to land in it. No doc-content test currently catches this (unlike the command-count/slash-command-count tests this repo already has for similar drift). Fix: update the field list and count, and consider adding a doc-content test deriving the list from EDITABLE_FIELDS.map(f => f.name) the same way docs-command-count.test.ts derives the registered command set, so this can't silently drift again.
 
-## rec-20260801-008 — Finding-identity hash includes raw LLM message text -- real-provider re-wording defeats ledger dedup
-
-- status: candidate
-- ready: needs-decision
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/verify/finding-identity.ts, packages/core/src/intelligence/finding-routing.ts
-- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source read
-- evidence: Re-minted from rec-20260801-002 during PR #347 rebase onto feat/kernel-assurance-v2 (2026-08-01): that id collided with an unrelated rec independently filed on the arc branch (host-cli verifier wiring, since archived/superseded by rec-20260801-003). Content/analysis unchanged; only the id (and this evidence entry's id, ev-20260801-002 -> ev-20260801-008) moved. See rec-20260801-009 for the paired re-mint of rec-20260801-003's collision.
-- next: cadence milestone propose
-
-computeFindingId (packages/core/src/verify/finding-identity.ts) hashes (file, anchor.kind, anchor.ref, severity, normalizeMessage(message)) where normalizeMessage only strips/collapses whitespace -- explicitly no semantic normalization per its own docstring ('a genuinely different message must still produce a different id'). Under a real LLM-backed verifier (anthropic/local/host-cli), message and severity are live model output with no guarantee of identical wording across separate runs of the same underlying defect -- CADENCE's test suite is constitutionally mock-only (nothing may depend on anthropic or local), so this instability is structurally invisible to CI. Concrete failure: re-settling an unchanged phase under a real provider can mint a new id for an already-routed finding, and phase 242's deriveRoutingCandidates dedup (keyed on Finding.id) misses it, creating a duplicate Recommendation for the same underlying defect. Verified directly against source 2026-08-01 via independent review + spot-check.
-
-## rec-20260801-009 — Finding id isn't stable across the DRAFT-amendment workflow AC-5 itself showcases
-
-- status: candidate
-- ready: needs-decision
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/verify/finding-identity.ts, packages/core/tests/verify/criteria-anchor-corpus.test.ts
-- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source + test read
-- evidence: Re-minted from rec-20260801-003 during PR #347 rebase onto feat/kernel-assurance-v2 (2026-08-01): that id collided with an unrelated rec independently filed on the arc branch (host-cli verifier wiring, since archived). Content/analysis unchanged; only the id (and this evidence entry's id, ev-20260801-003 -> ev-20260801-009) moved. See rec-20260801-008 for the paired re-mint of rec-20260801-002's collision.
-- next: cadence milestone propose
-
-computeFindingId hashes anchor.kind/anchor.ref into the identity. criteria-anchor-corpus.test.ts's own 'AC-5 round trip' test proves the SAME finding (identical file/message/severity/line) goes from anchor:{kind:'none'} to anchor:{kind:'ac',ref:'AC-1'} once the DRAFT is amended to cover it -- the test's own name says 'only the anchor changed, not the finding itself' -- but computeFindingId produces two different ids for this before/after pair since anchor.kind/ref are hash inputs. Verified: the test file has zero assertions on .id anywhere. Concrete failure: operator does exactly what AC-5 is designed to encourage (amend DRAFT to earn an anchor) -> the finding gets a new id -> phase 242's ledger dedup misses it -> duplicate Recommendation for the same bug. Directly undercuts finding-identity.ts's stated purpose ('the same finding keeps the same id across settles'), which holds for line-shift edits but not this anchor-earning path. Verified directly against source 2026-08-01.
-
 ## rec-20260801-004 — code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw
 
 - status: candidate
@@ -1010,3 +976,19 @@ assurance-record.ts documents 'weak' as covering '...or simply no ACs at all wit
 - next: cadence milestone propose
 
 (1) eslint.config.js's own comment candidly documents that dynamic import() of verifier family modules is invisible to the new kernel/verifier/consumer boundary rule -- a disclosed, real gap with no tracking recommendation until now. (2) deriveAssuranceRecord's verifierRollup key is an unseparated string join (${provider} ${model ?? ''}) -- theoretically collision-prone if a provider/model string ever contains a space (today's real values never do). (3) readRawSchemaVersion/MAX_RECOGNIZED_SCHEMA_VERSION is duplicated between verify/phase-replay.ts and cli/commands/summary.ts, hand-synced -- a third SummaryZ.safeParse call site would misreport a future schemaVersion-3 record as a generic parse failure instead of 'written by a newer Cadence.' None urgent; bundled as one low-priority rec per the independent review's own framing.
+
+## rec-20260801-010 — Finding-identity dedup still breaks on free-text message drift under real LLM providers
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/verify/finding-identity.ts, packages/core/src/intelligence/finding-routing.ts
+- evidence: Phase 245 (245-finding-identity-stability) settle, 2026-08-01 -- narrowed identity hash fixes the anchor/severity slice; message-text-drift slice explicitly out of scope, risk-accepted by operator
+- next: cadence milestone propose
+
+Supersedes rec-20260801-008, archived: phase 245 (245-finding-identity-stability) narrowed computeFindingId's hash to (file, normalized message) only, fixing the anchor/severity-drift slice of the original finding (rec-20260801-008/-009's shared root cause) -- but the message-text-drift half rec-20260801-008 also raised is unresolved and cannot be fixed the same way. normalizeMessage only strips/collapses whitespace, deliberately no semantic normalization (a genuinely different message must still produce a different id) -- so under a real LLM-backed verifier (anthropic/local/host-cli), a re-run's re-worded message for the same underlying defect still mints a new id, and phase 242's deriveRoutingCandidates dedup (keyed on Finding.id) still misses it, creating a duplicate Recommendation. Fixing this properly needs bounded near-duplicate/fuzzy matching at the routing layer (e.g. token-similarity within a matched file+group), which is a real feature with a genuine false-merge risk (over-aggressive matching could silently swallow a distinct finding as a duplicate -- worse than the current failure mode, which only produces recoverable duplicate noise), not a quick fix. Operator explicitly risk-accepted this gap for now (2026-08-01, phase 245 scoping) rather than build fuzzy matching speculatively -- real-provider routing is still new on this arc (host-cli activated for deep-verify/code-review only in PR #351, 2026-08-01).

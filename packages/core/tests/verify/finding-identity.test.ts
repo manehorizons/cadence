@@ -4,10 +4,13 @@ import { computeFindingId, attachFindingIdentity } from '../../src/verify/findin
 import type { AnchoredFinding } from '../../src/verify/criteria-gap.js';
 
 // Phase 236 (T3, §7.2, dec-20260730-001) — AC-3: code-review findings get a
-// computed, refactor-stable id at anchor time. The hash is a pure content
-// hash over (file, anchor.kind, anchor.ref, severity, normalized message) —
-// deliberately never over a line number, so an edit that only shifts a
-// finding's line leaves its id unchanged.
+// computed, refactor-stable id at anchor time. Phase 245 narrowed the hash
+// to a pure content hash over (file, normalized message) only — anchor and
+// severity are accepted as parameters for call-site compatibility but no
+// longer participate in identity, since both can legitimately change across
+// settles for the same underlying defect. The hash also deliberately never
+// includes a line number, so an edit that only shifts a finding's line
+// leaves its id unchanged.
 
 function anchor(overrides: Partial<Anchor> = {}): Anchor {
   return {
@@ -40,7 +43,7 @@ describe('computeFindingId — determinism (AC-3)', () => {
   });
 });
 
-describe('computeFindingId — each of the four inputs is load-bearing (AC-3)', () => {
+describe('computeFindingId — file and message are load-bearing; anchor and severity are not (AC-1/AC-2/AC-3)', () => {
   const baseFile = 'src/example.ts';
   const baseAnchor = anchor();
   const baseSeverity = 'high';
@@ -52,22 +55,28 @@ describe('computeFindingId — each of the four inputs is load-bearing (AC-3)', 
     expect(a).not.toBe(b);
   });
 
-  it('AC-3: changing anchor.kind (holding file/severity/message constant) changes the id', () => {
+  it('AC-1: changing anchor.kind (holding file/severity/message constant) does NOT change the id', () => {
     const a = computeFindingId(baseFile, baseAnchor, baseSeverity, baseMessage);
     const b = computeFindingId(baseFile, anchor({ kind: 'boundary' }), baseSeverity, baseMessage);
-    expect(a).not.toBe(b);
+    expect(a).toBe(b);
   });
 
-  it('AC-3: changing anchor.ref (holding file/severity/message constant) changes the id', () => {
+  it('AC-1: changing anchor.ref (holding file/severity/message constant) does NOT change the id', () => {
     const a = computeFindingId(baseFile, baseAnchor, baseSeverity, baseMessage);
     const b = computeFindingId(baseFile, anchor({ ref: 'AC-2' }), baseSeverity, baseMessage);
-    expect(a).not.toBe(b);
+    expect(a).toBe(b);
   });
 
-  it('AC-3: changing severity (holding file/anchor/message constant) changes the id', () => {
+  it('AC-1: a gap anchor (kind:none) and an earned AC anchor (kind:ac, ref:AC-1) produce the identical id — the anchor-earning workflow does not mint a new identity', () => {
+    const a = computeFindingId(baseFile, { kind: 'none', tier: 'undeclared' }, baseSeverity, baseMessage);
+    const b = computeFindingId(baseFile, anchor({ kind: 'ac', ref: 'AC-1' }), baseSeverity, baseMessage);
+    expect(a).toBe(b);
+  });
+
+  it('AC-2: changing severity (holding file/anchor/message constant) does NOT change the id', () => {
     const a = computeFindingId(baseFile, baseAnchor, baseSeverity, baseMessage);
     const b = computeFindingId(baseFile, baseAnchor, 'medium', baseMessage);
-    expect(a).not.toBe(b);
+    expect(a).toBe(b);
   });
 
   it('AC-3: changing message (holding file/anchor/severity constant) changes the id', () => {
@@ -96,8 +105,8 @@ describe('computeFindingId — message normalization', () => {
   });
 });
 
-describe('computeFindingId — anchor.ref absence is distinct from a present ref (AC-3)', () => {
-  it('AC-3: an anchor with no ref produces a different id than the same anchor with a ref set', () => {
+describe('computeFindingId — anchor.ref presence vs absence no longer affects identity (AC-1)', () => {
+  it('AC-1: an anchor with no ref produces the SAME id as the same anchor with a ref set', () => {
     const withoutRef = computeFindingId(
       'src/example.ts',
       { kind: 'none', tier: 'undeclared' },
@@ -110,7 +119,7 @@ describe('computeFindingId — anchor.ref absence is distinct from a present ref
       'high',
       'message',
     );
-    expect(withoutRef).not.toBe(withRef);
+    expect(withoutRef).toBe(withRef);
   });
 });
 

@@ -140,9 +140,10 @@
       "recommendationId": "rec-20260727-007",
       "title": "Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja",
       "rationale": "Phase 236 derives a finding's stable id from the anchor it already carries -- a pure content hash over (file, anchor.kind, anchor.ref, severity, normalized message) -- and adds no new runtime dependency. The Deja extraction evaluated by rec-20260727-007 is rejected on three grounds recorded in ev-20260730-001: Deja is not consumable as a library (main:null/exports:null, unpublished under a name Cadence could depend on); its normalization layer carries tree-sitter and its matching layer carries better-sqlite3, both native, against core's zero-runtime-dependency bias; and the two problems differ in shape -- Deja solves retrieval over an indexed corpus while Cadence needs identity across two small per-run sets, so the genuinely shared surface reduces to 83 pure lines plus a one-line containment formula. This satisfies the concern that motivated the rec -- do not ship two incompatible fingerprints -- by shipping zero. Fingerprinting only buys identity that survives a refactor moving the anchored code, and only for anchor.kind==='none' / undeclared-tier findings, which section 7.1 already treats as weak by default. REOPEN TRIGGER: revisit if undeclared-tier findings become a material share of routed ledger entries AND identity churn across refactors is measured rather than assumed; extraction would then start from Deja's fingerprint.ts alone (pure, node:crypto only), never normalize.ts or match.ts.",
-      "status": "active",
+      "status": "superseded",
       "decidedAt": "2026-07-30T03:19:30.060Z",
-      "supersedes": []
+      "supersedes": [],
+      "supersededBy": "dec-20260801-002"
     },
     {
       "id": "dec-20260731-001",
@@ -161,6 +162,16 @@
       "status": "active",
       "decidedAt": "2026-08-01T01:45:29.153Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260801-002",
+      "title": "Finding identity narrowed to (file, normalized message); anchor/severity dropped as identity inputs",
+      "rationale": "Narrows dec-20260730-001's anchor-inclusion conclusion; its Deja-fingerprint-extraction rejection (the decision's other, independent conclusion) is unaffected and still stands. Phase 236's anchor-derived hash included anchor.kind/anchor.ref alongside severity, on the theory that a finding's own anchor is a legitimate, already-available content signal. Independent review (2026-08-01) found this wrong in two concrete ways, filed as rec-20260801-008/rec-20260801-009 (rec-20260801-008 later archived, split into the now-shipped anchor/severity fix and rec-20260801-010's residual message-drift risk): (1) the DRAFT-amendment/anchor-earning workflow deliberately re-anchors a previously-unanchored finding once a criterion covers it -- criteria-anchor-corpus.test.ts's own AC-5 round-trip test already proved message/severity/line survive that transition unchanged, but the pre-245 hash still minted a new id purely because anchor changed; (2) severity is live LLM classification under real verifier providers (anthropic/local/host-cli), so a re-run can legitimately reclassify the same defect's severity, and the pre-245 hash treated that as a new finding too. Both caused phase 242's ledger dedup (keyed on Finding.id) to miss an already-routed finding and mint a duplicate Recommendation. Phase 245 (245-finding-identity-stability) narrowed computeFindingId to hash only (file, normalized message); anchor/severity remain real Finding fields, just no longer identity inputs. Message-text free-form drift under real providers (the harder half of the original finding) is NOT fixed by this decision -- tracked separately as rec-20260801-010, operator risk-accepted rather than built speculatively.",
+      "status": "active",
+      "decidedAt": "2026-08-01T17:29:57.283Z",
+      "supersedes": [
+        "dec-20260730-001"
+      ]
     }
   ]
 }

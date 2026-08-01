@@ -1184,12 +1184,12 @@ describe('settleService routes identified code-review findings into the recommen
     await rm(root1, { recursive: true, force: true }).catch(() => {});
 
     // Second, independent settle of the identical phase/finding shape (same
-    // file/severity/message ⇒ the same Finding.id, since computeFindingId is
-    // a pure hash over those inputs) — but this root pre-seeds the SAME
-    // finding id as an ARCHIVED rec, simulating a prior settle whose routed
-    // rec was later soft-archived (autoArchive defaults on) before this
-    // phase was ever re-settled. AC-2 requires checking `archived`, not just
-    // the active `recommendations` array.
+    // file/message ⇒ the same Finding.id — computeFindingId hashes only
+    // those two inputs; severity/anchor no longer participate) — but this
+    // root pre-seeds the SAME finding id as an ARCHIVED rec, simulating a
+    // prior settle whose routed rec was later soft-archived (autoArchive
+    // defaults on) before this phase was ever re-settled. AC-2 requires
+    // checking `archived`, not just the active `recommendations` array.
     root = await mktemp();
     await setupBuildRepo({
       root,
@@ -1327,9 +1327,9 @@ describe('settleService routes identified code-review findings into the recommen
       tier: 'standard',
       config: { ...defaultConfig, profile: 'strict', gates: { sealed: [], evidenceFloor: 'unverified' } },
     });
-    // Same file + same message + same (default) severity ⇒ computeFindingId
-    // hashes both to the identical id (it never inputs line number), exactly
-    // the collision dec-20260731-001/rec-20260731-001 describes.
+    // Same file + same message ⇒ computeFindingId hashes both to the
+    // identical id (it never inputs severity, anchor, or line number) —
+    // exactly the collision dec-20260731-001/rec-20260731-001 describes.
     const duplicateMessage = 'console.log left in source';
     constructed.codeReviewFindingsOverride = {
       'src/foo.ts': [mkFinding(duplicateMessage), mkFinding(duplicateMessage)],
