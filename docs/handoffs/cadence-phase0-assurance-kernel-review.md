@@ -420,10 +420,11 @@ Suggested scout id: `scout-20260727-kernel-review-phase0`
 
 - **Measured from source:** everything in §1, §2.
 - **Design settled, not built:** §4, §5.
-- **Built, unmerged to `main`:** §6 Slices 1–3 (phases 232–236, 241–242 —
-  gate provenance + assurance record, kernel/verifier/consumer boundary,
-  criteria-anchored review + anchor ladder, finding identity/disposition/
-  ledger routing — all landed on `feat/kernel-assurance-v2`). §7's schemas
+- **Built, merged to `main` (2026-08-01, PR #353):** §6 Slices 1–3 (phases
+  232–236, 241–242 — gate provenance + assurance record, kernel/verifier/
+  consumer boundary, criteria-anchored review + anchor ladder, finding
+  identity/disposition/ledger routing — landed on `feat/kernel-assurance-v2`,
+  then merged whole into `main` along with phases 244–245). §7's schemas
   (anchor ladder, finding identity, ledger routing) are likewise built, not
   merely spec'd.
 - **Not started:** §6 Slice 4 (phase 237, invariant promotion) —
