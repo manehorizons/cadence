@@ -1,0 +1,12 @@
+{
+  "bypasses": [
+    {
+      "gate": "evidence-floor:AC-1",
+      "flag": "--evidence-floor-bypass",
+      "reason": "Decision-only phase, no source code ships; there is no test file to carry an AC-1 mention. AC-1 is independently verified via 'cadence decision show dec-20260801-003', which confirms the rationale contains all three required elements (0/257 evidence, offline-analyzer next-step, 3-settle trigger).",
+      "severity": "warn"
+    }
+  ],
+  "roughTasks": [],
+  "findings": {}
+}

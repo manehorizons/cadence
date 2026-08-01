@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-01T01:42:11.137Z",
+  "generatedAt": "2026-08-01T21:07:13.078Z",
   "ranked": [
     {
       "id": "rec-20260727-012",
@@ -31,6 +31,51 @@
         {
           "label": "ready ready-for-cadence-spec",
           "value": 10
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260731-001",
+      "title": "cadence doctor: release-currency check (local package.json vs published npm)",
+      "raw": 22.7,
+      "score": 68,
+      "status": "candidate",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready ready-for-milestone",
+          "value": 7
         },
         {
           "label": "decay fresh",
@@ -96,6 +141,96 @@
     {
       "id": "rec-20260729-004",
       "title": "test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests",
+      "raw": 17.7,
+      "score": 61,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260730-001",
+      "title": "phase-replay ignores SUMMARY.coverageMode provenance, re-derives coverage under the live config's mode",
+      "raw": 17.7,
+      "score": 61,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260730-002",
+      "title": "Coverage dedup: a qualified AC token outside an asserting block silently zeroes that AC's coverage",
       "raw": 17.7,
       "score": 61,
       "status": "candidate",
@@ -274,51 +409,6 @@
       "suggestedBackendAction": "cadence milestone propose"
     },
     {
-      "id": "rec-20260729-001",
-      "title": "Kernel-assurance arc phases do not exercise their own assurance machinery at settle",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
       "id": "rec-20260729-003",
       "title": "Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap",
       "raw": 14.7,
@@ -409,7 +499,7 @@
       "suggestedBackendAction": "cadence milestone propose"
     },
     {
-      "id": "rec-20260731-001",
+      "id": "rec-20260731-007",
       "title": "Finding id collision: two same-severity/message findings in one file share one id",
       "raw": 14.7,
       "score": 56,
@@ -455,7 +545,52 @@
       "scoutId": "scout-20260730-opus-gap-review"
     },
     {
-      "id": "rec-20260731-004",
+      "id": "rec-20260731-003",
+      "title": "Gate provenance doesn't distinguish a mock-downgraded AI review from a genuinely-ran one",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260731-010",
       "title": "High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)",
       "raw": 14.7,
       "score": 56,
@@ -499,6 +634,144 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "scout-20260731-kernel-ledger-routing"
+    },
+    {
+      "id": "rec-20260801-004",
+      "title": "code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260801-0100"
+    },
+    {
+      "id": "rec-20260801-005",
+      "title": "A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260801-0100"
+    },
+    {
+      "id": "rec-20260801-010",
+      "title": "Finding-identity dedup still breaks on free-text message drift under real LLM providers",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260801-0100"
     },
     {
       "id": "rec-20260724-007",
@@ -549,6 +822,51 @@
     {
       "id": "rec-20260724-012",
       "title": "pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented",
+      "raw": 13.7,
+      "score": 55,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260731-004",
+      "title": "docs/providers.md's host-cli 'per-task-verify only' scope claim is stale — all 7 factories now have host-cli wired",
       "raw": 13.7,
       "score": 55,
       "status": "candidate",
@@ -908,6 +1226,98 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "scout-20260731-kernel-ledger-routing"
+    },
+    {
+      "id": "rec-20260801-006",
+      "title": "deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260801-0100"
+    },
+    {
+      "id": "rec-20260801-007",
+      "title": "Three small hygiene gaps from the kernel-arc independent review (2026-08-01)",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260801-0100"
     },
     {
       "id": "rec-20260724-008",
@@ -1504,7 +1914,7 @@
       "scoutId": "scout-20260727-kernel-review-phase0"
     },
     {
-      "id": "rec-20260731-002",
+      "id": "rec-20260731-008",
       "title": "docs/concepts.md phase-236 section has unpinned file:line citations that will rot",
       "raw": 10.7,
       "score": 50,
@@ -1654,8 +2064,8 @@
     "primary": "cadence spec new"
   },
   "totals": {
-    "total": 59,
-    "ranked": 36,
+    "total": 68,
+    "ranked": 45,
     "parked": 1,
     "needsAttention": 0,
     "excluded": 22

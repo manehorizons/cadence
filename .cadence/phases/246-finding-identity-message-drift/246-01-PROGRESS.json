@@ -1,0 +1,11 @@
+{
+  "draftId": "246-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Ran cadence decision add --rec rec-20260801-010, recording dec-20260801-003. Verified via 'cadence decision show dec-20260801-003' that the rationale contains all three AC-1 elements: (a) 0/257 SUMMARY.json files carry a persisted code-review finding, (b) offline analyzer over the SUMMARY corpus is the pre-committed next step (not in-loop telemetry or fuzzy-matching, both rejected with reasons), and (c) the trigger: >=3 non-mock-provider settles each persisting >=1 finding. No source files touched -- decision-only phase per SPEC revision after independent review found the original in-loop-telemetry design's grouping key inverted phase 245's exclusion and measured the wrong (intra-batch, not cross-settle) axis. rec-20260801-011 filed separately for the refused-settle SUMMARY-overwrite defect the review also surfaced.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-01T21:37:37.365Z"
+    }
+  }
+}
