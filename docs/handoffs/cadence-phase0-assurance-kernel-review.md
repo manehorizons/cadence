@@ -420,6 +420,21 @@ Suggested scout id: `scout-20260727-kernel-review-phase0`
 
 - **Measured from source:** everything in §1, §2.
 - **Design settled, not built:** §4, §5.
-- **Spec'd, not scheduled:** §6, §7.
+- **Built, unmerged to `main`:** §6 Slices 1–3 (phases 232–236, 241–242 —
+  gate provenance + assurance record, kernel/verifier/consumer boundary,
+  criteria-anchored review + anchor ladder, finding identity/disposition/
+  ledger routing — all landed on `feat/kernel-assurance-v2`). §7's schemas
+  (anchor ladder, finding identity, ledger routing) are likewise built, not
+  merely spec'd.
+- **Not started:** §6 Slice 4 (phase 237, invariant promotion) —
+  `needs-evidence`-gated on phase 236's routed findings accumulating real
+  recurring cases, which requires the arc to actually be in use.
+- **As-built note (2026-08-01):** no phase in this arc has yet settled under
+  a real (non-`mock`) verifier identity — `code-review`/`security-audit`
+  gates recorded `provider: mock` (phase 241) or carried no verifier
+  identity at all (235, 236, 242) on their own settles. The arc that exists
+  to distinguish mock-verified from real-verified review has not yet been
+  reviewed for real itself; treat "tests pass" and "independently reviewed"
+  as separate claims when deciding whether/how much of this to merge.
 - **Undecided:** §10.
 - **Corrected premise:** the snag ledger does not exist (§1.11).

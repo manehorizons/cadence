@@ -1990,7 +1990,7 @@ it cannot be edited post-settle without invalidating the attestation.
 > boundary being real, and a special-cased manifest is the evidence that it is not. Record
 > the outcome in the phase SUMMARY's decisions, and strike phases 234–237 below.
 
-### Phase 234 — Kernel / verifier / consumer boundary, lint-enforced *(sketch — contingent)*
+### Phase 234 — Kernel / verifier / consumer boundary, lint-enforced *(built on `feat/kernel-assurance-v2`, unmerged to `main`)*
 
 **Gate to entry.** Phase 233 settled with AC-3 met (no gate-specific special cases).
 
@@ -2006,7 +2006,12 @@ time.
 > this is a rewrite wearing a refactor's clothes, and the premise that the boundary is
 > already 80% built was wrong.
 
-### Phase 235 — Criteria-anchored review verifier: input + anchor ladder *(sketch — contingent)*
+> **As built (2026-07-28, `0726e405`).** Tripwire did not trip. Shipped as sketched: the
+> three roles named as published contracts and an ESLint rule added failing the build on an
+> internal-import violation across them. Zero `GATE_ORDER` changes, zero gate-behavior
+> changes, per the objective's own constraint.
+
+### Phase 235 — Criteria-anchored review verifier: input + anchor ladder *(built on `feat/kernel-assurance-v2`, unmerged to `main`)*
 
 **Gate to entry.** Phase 234 landed without tripping its overrun tripwire.
 
@@ -2019,7 +2024,14 @@ undeclared/criteria-gap`) so each finding is classified by the strength of the c
 anchors to — including emitting explicit **criteria-gap** findings where the diff does work
 no AC covers. Maps to rec-20260727-004, rec-20260727-005 (medium, `needs-decision`).
 
-### Phase 236 — Finding identity, disposition, and ledger routing *(sketch — contingent)*
+> **As built (2026-07-29, `c27bcb03`).** Shipped as sketched: `CodeReviewInput` extended
+> with ACs/boundaries/task refs, the anchor ladder implemented
+> (`executable > structured > declared > undeclared/criteria-gap`), and criteria-gap
+> findings emitted for unanchored work above the severity floor. Phase 241 later made the
+> ladder's `executable` tier reachable in a live settle (it shipped structurally in 235 but
+> wasn't yet exercised end-to-end).
+
+### Phase 236 — Finding identity, disposition, and ledger routing *(built on `feat/kernel-assurance-v2`, unmerged to `main` — see "As built" note below)*
 
 **Gate to entry.** Phase 235 settled, **and** rec-20260727-007 (shared fingerprint primitive
 extraction from Déjà, `needs-evidence`) is resolved — stable finding identity is its
