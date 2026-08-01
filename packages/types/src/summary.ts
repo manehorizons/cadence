@@ -32,6 +32,37 @@ export const DeepVerifyMetaZ = z.object({
 export type DeepVerifyMeta = z.infer<typeof DeepVerifyMetaZ>;
 
 /**
+ * Phase 235 (§7.1): the anchor ladder — how strongly a finding is tied to a
+ * criterion the phase actually declared, strongest to weakest. `executable`
+ * requires both that the AC is referenced by a task with a runnable
+ * `verify` command AND that `build-test-must-pass` actually ran (phase 232
+ * gate provenance corroborates it — never assumed from the DRAFT alone).
+ * `structured` is an AC with non-empty `given`/`when`/`then`. `declared` is
+ * a prose-only or empty-G/W/T AC, or a `boundaries[]` string. `undeclared`
+ * means no citable criterion — a criteria gap. Deliberately a peer schema
+ * to `AcEvidenceZ` (D5) — mirrors its five-tier shape without reusing or
+ * extending it; the two rank different things (evidence quality for an AC
+ * that already passed vs. how strongly a *finding* ties back to any
+ * criterion at all) and must stay independently evolvable.
+ */
+export const AnchorTierZ = z.enum(['executable', 'structured', 'declared', 'undeclared']);
+export type AnchorTier = z.infer<typeof AnchorTierZ>;
+
+/**
+ * Phase 235 (§7.1, AC-2): what a code-review finding is anchored to. Phase
+ * 236 (§7.2, dec-20260730-001) widened `kind` to add `'invariant'` — unused
+ * by any producer yet (phase 237 scope) but now a valid value everywhere
+ * `AnchorZ` is parsed. `ref` is optional because a `'none'` anchor (or an
+ * `undeclared`-tier gap) cites nothing.
+ */
+export const AnchorZ = z.object({
+  kind: z.enum(['ac', 'boundary', 'invariant', 'none']),
+  ref: z.string().optional(),
+  tier: AnchorTierZ,
+});
+export type Anchor = z.infer<typeof AnchorZ>;
+
+/**
  * Per-file / per-diff finding. Introduced for code-review (Phase 24.3,
  * high/medium/low). Phase 25.2 added `critical` for the security-audit
  * gate — additive; code-review still only emits high/medium/low.
@@ -40,7 +71,47 @@ export const FindingZ = z.object({
   severity: z.enum(['critical', 'high', 'medium', 'low']),
   message: z.string(),
   line: z.number().int().positive().optional(),
-});
+  /** Phase 235: which criterion (if any) this finding is anchored to, and
+   *  how strongly. Optional — absent for every pre-phase-235 record and for
+   *  findings emitted by gates this phase deliberately does not touch
+   *  (`spec-review`, `ui-spec-review`, `plan-review`; `dec-20260729-003`). */
+  anchor: AnchorZ.optional(),
+  /** Phase 236 (§7.2, dec-20260730-001): stable finding identity — a pure
+   *  content hash, never derived from a line number, so the same finding
+   *  keeps the same `id` across settles even after an edit shifts its line.
+   *  Phase 245 narrowed the hash to (file, normalized message) only —
+   *  `anchor`/`severity` are still real fields on a `Finding` but no longer
+   *  participate in the id. Optional — absent for every pre-phase-236
+   *  record and for finding classes this phase deliberately does not wire
+   *  identity into (e.g. security-audit). */
+  id: z.string().optional(),
+  /** Phase 236: which surface this finding was raised against. Optional —
+   *  absent for every pre-phase-236 record. */
+  target: z.enum(['artifact', 'verification']).optional(),
+  /** Phase 236: lifecycle state for a tracked finding. Optional — absent
+   *  for every pre-phase-236 record and defaults to `'open'` in spirit
+   *  wherever a disposition hasn't been explicitly set. This slice only
+   *  computes fresh identity at detection time; disposition mutation
+   *  (accept/waive/fix/supersede) is a follow-on phase's CLI surface. */
+  disposition: z.enum(['open', 'accepted', 'waived', 'fixed', 'superseded']).optional(),
+  /** Phase 236: present only when `disposition === 'waived'` — the waiver's
+   *  expiry as an offset-qualified ISO datetime. Optional, but enforced
+   *  bidirectionally by the `.refine()`s below: a waiver with no expiry is a
+   *  belief masquerading as knowledge (source doc §7.2), so `disposition:
+   *  'waived'` requires a `waiver`, and a `waiver` implies `disposition:
+   *  'waived'` — an orphaned waiver on a non-waived finding is never valid. */
+  waiver: z
+    .object({
+      expiry: z.string().datetime({ offset: true }),
+    })
+    .optional(),
+})
+  .refine((f) => f.disposition !== 'waived' || f.waiver !== undefined, {
+    message: "waiver is required when disposition === 'waived'",
+  })
+  .refine((f) => f.waiver === undefined || f.disposition === 'waived', {
+    message: "waiver may only be present when disposition === 'waived'",
+  });
 export type Finding = z.infer<typeof FindingZ>;
 
 export const GateBypassZ = z.object({
@@ -67,6 +138,13 @@ export const GateProvenanceZ = z.object({
   skipReason: z.string().optional(),
   /** Present iff status === 'refused'. */
   reason: z.string().optional(),
+  /** Phase 232: verifier family/model that actually ran this gate (currently
+   *  populated only for `code-review` and `security-audit`; every other
+   *  gate's provenance entry omits both). Optional — not every gate's
+   *  provenance carries verifier identity. Named to match `DeepVerifyMetaZ`'s
+   *  `provider`/`model` and `GateFlags.verifierFailure.provider`. */
+  provider: z.string().optional(),
+  model: z.string().optional(),
 });
 export type GateProvenance = z.infer<typeof GateProvenanceZ>;
 
@@ -78,8 +156,51 @@ export type GateProvenance = z.infer<typeof GateProvenanceZ>;
 export const AcEvidenceZ = z.enum(['ai-verified', 'executed', 'assertion', 'mention', 'unverified']);
 export type AcEvidence = z.infer<typeof AcEvidenceZ>;
 
+/**
+ * Phase 233: derived, whole-run rollup over per-gate verifier identity
+ * (`GateProvenanceZ.provider`/`model`, phase 232) and per-AC evidence class
+ * (`AcEvidenceZ`, phase 140). Attached to `SummaryZ` as `assurance` —
+ * reported only; it adds no refusal path and no bypass flag. Deliberately
+ * gate-agnostic: `verifierRollup` groups by the `(provider, model)` pairs
+ * that already exist on `gates` entries, and `evidenceTally` counts by the
+ * `AcEvidenceZ` values already on `acResults[].evidence` — neither keys on a
+ * specific gate name or AC id, so the same shape covers any settle
+ * regardless of which gates ran or how many ACs exist.
+ */
+export const AssuranceRecordZ = z.object({
+  /** One entry per distinct `(provider, model)` pair observed across
+   *  `gates` provenance entries that carried verifier identity, with how
+   *  many gate entries carried it. `provider` mirrors
+   *  `GateProvenanceZ.provider` (e.g. `'mock'`, `'anthropic'`); `model`
+   *  mirrors `GateProvenanceZ.model` and is optional for the same reason. */
+  verifierRollup: z.array(
+    z.object({
+      provider: z.string(),
+      model: z.string().optional(),
+      gateCount: z.number().int().positive(),
+    }),
+  ),
+  /** Count of ACs at each evidence class, keyed by `AcEvidenceZ` itself
+   *  (ai-verified > executed > assertion > mention > unverified) rather than
+   *  a bare `z.string()` key, so a typo'd or otherwise bogus class name is
+   *  rejected at parse time instead of silently accepted. Sums to the
+   *  number of `acResults` entries that carried an `evidence` value; every
+   *  class key is present (0 for classes with no ACs) since `z.record` over
+   *  an enum key schema is exhaustive under zod v4. */
+  evidenceTally: z.record(AcEvidenceZ, z.number().int().nonnegative()),
+  /** Single deterministic label summarizing the two rollups above — the
+   *  weakest signal wins. `'unverified'` when no verifier identity was
+   *  found and no evidence stronger than `'unverified'` was recorded
+   *  anywhere in the settle. */
+  overall: z.enum(['strong', 'mixed', 'weak', 'unverified']),
+});
+export type AssuranceRecord = z.infer<typeof AssuranceRecordZ>;
+
 export const SummaryZ = z.object({
-  schemaVersion: z.literal(1),
+  /** Phase 232: 2 adds `provider`/`model` identity onto `code-review` and
+   *  `security-audit` GateProvenanceZ entries — additive, not breaking.
+   *  Writers emit 2; readers still accept pre-phase-232 records at 1. */
+  schemaVersion: z.union([z.literal(1), z.literal(2)]),
   draftId: z.string(),
   completedAt: z.string(),
   acResults: z.array(
@@ -163,6 +284,28 @@ export const SummaryZ = z.object({
     .object({
       algorithm: z.literal('sha256'),
       value: z.string(),
+    })
+    .optional(),
+  /** Phase 233: derived, whole-run assurance rollup over per-gate verifier
+   *  identity and per-AC evidence class — reported only, adds no refusal
+   *  path or bypass flag. Optional; absent for pre-phase-233 records. */
+  assurance: AssuranceRecordZ.optional(),
+  /** Phase 244 (T2, rec-20260729-001): set only when this settle actually
+   *  ran through a `cadence` binary whose realpath resolves OUTSIDE this
+   *  repo's own checkout despite the repo having its own local build (a
+   *  stale globally-installed binary silently shadowing
+   *  `packages/core/bin/cadence.cjs` — confirmed on phases 233/234, where it
+   *  produced a downgraded `schemaVersion: 1` SUMMARY with no `assurance`
+   *  record). See `detectForeignCadenceBinary` in `services/settle.ts`.
+   *  Reported only — never a refusal path or bypass flag, matching
+   *  `assurance` above. Absent (never `false`/`null`) whenever the running
+   *  binary and repo agree, the common case — its mere presence is the
+   *  signal, auditable from the artifact alone without having watched
+   *  stderr live. */
+  foreignBinaryMismatch: z
+    .object({
+      runningBinaryPath: z.string(),
+      repoToplevel: z.string(),
     })
     .optional(),
 });

@@ -7,25 +7,23 @@ import type {
   DeepVerifyMeta,
   Draft,
   Finding,
+  GateProvenance,
   GateSet,
 } from '@manehorizons/cadence-types';
-import type {
-  VerifyInput,
-  VerifyResult,
-  VerifyTestRef,
-} from '../verify/verifier.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
 import type { Interactivity } from './interactivity.js';
 import type { Prompter } from '../verify/prompter.js';
 import type {
+  VerifierPort,
+  VerifyInput,
+  VerifyResult,
+  VerifyTestRef,
   CodeReviewInput,
   CodeReviewResult,
-  Finding as CodeReviewFinding,
-} from '../verify/code-review.js';
-import type {
+  CodeReviewFinding,
   SecurityAuditInput,
   SecurityAuditResult,
-} from '../verify/security-audit.js';
+} from '../contracts/index.js';
 
 /** Canonical PROGRESS.json shape settle reads. settle.ts imports this (and
  *  AcResult below) rather than redefining them locally. */
@@ -56,21 +54,30 @@ export interface IoPort {
  * Injected verifier collaborators. Phase 40.1 consolidates behind this; gates
  * never import a *-factory directly. 39.1 defines ONLY `deep` (what it
  * exercises); 39.4/39.5 add members when those gates are extracted.
+ *
+ * Phase 234: each member is restated as the published `VerifierPort<I, R>`
+ * contract (`../contracts/index.js`) at that family's own input/result
+ * types — no member added, no member removed, no bespoke per-member call
+ * signature. Of the three members here, only `securityAudit`'s *port* already
+ * carried the optional `{ signal?; traceId? }` second parameter (Phase 184);
+ * `deep` and `codeReview` were both declared arity-1, so the restatement
+ * widens their type-level call signature by the port's optional
+ * `VerifierCallOptions`. Note the distinction: the underlying `Verifier`
+ * interface (`verify/verifier.ts`) that backs `deep` has always accepted
+ * `opts` — but this *port* did not expose it, and it is the port that is
+ * being restated. That widening is source-compatible (every real call site
+ * still passes one argument) and changes no runtime behaviour.
  */
 export interface VerifierPorts {
-  readonly deep: { verify(input: VerifyInput): Promise<VerifyResult> };
+  readonly deep: VerifierPort<VerifyInput, VerifyResult>;
   /** Code-review verifier (Phase 39.4), lazily `selectCodeReviewVerifier`. */
-  readonly codeReview: { verify(input: CodeReviewInput): Promise<CodeReviewResult> };
+  readonly codeReview: VerifierPort<CodeReviewInput, CodeReviewResult>;
   /** Security-audit verifier (Phase 39.5), lazily `selectSecurityAuditVerifier`.
    *  Phase 184: `opts` mirrors `SecurityAuditVerifier.verify`'s optional
    *  `{ signal?; traceId? }` second parameter — the real gate call site
-   *  passes a per-run `traceId`. */
-  readonly securityAudit: {
-    verify(
-      input: SecurityAuditInput,
-      opts?: { signal?: AbortSignal; traceId?: string },
-    ): Promise<SecurityAuditResult>;
-  };
+   *  passes a per-run `traceId`. Phase 234: that shape is now exactly the
+   *  published `VerifierCallOptions`, via `VerifierPort`. */
+  readonly securityAudit: VerifierPort<SecurityAuditInput, SecurityAuditResult>;
 }
 
 /**
@@ -203,6 +210,24 @@ export interface SettleContext {
   /** Code-review convergence sidecar (Phase 39.4). */
   readonly codeReviewSidecar: ConvergenceSidecar;
   readonly io: IoPort;
+  /** Phase 241 (T1): gate-provenance entries recorded so far this settle, in
+   *  GATE_ORDER. The registry (`runSettleGates`) populates a frozen snapshot
+   *  of its own accumulating `gates: GateProvenance[]` onto a per-gate copy
+   *  of this context before invoking each gate's `impl` — a gate reads only
+   *  what ran/was skipped/refused *before* its own turn, never what comes
+   *  after. Optional/additive so every existing `SettleContext` literal
+   *  (production and test) keeps compiling unchanged; absent or empty both
+   *  mean "nothing recorded yet" — a reader should treat a missing field the
+   *  same as an empty array, never as "unknown".
+   *
+   *  `Readonly<GateProvenance>` is deliberate, not decorative: `readonly T[]`
+   *  alone constrains the array's shape while leaving each entry's fields
+   *  writable, so `ctx.gateProvenance[0].status = 'refused'` would compile
+   *  cleanly with no cast and — before the registry's two-level freeze —
+   *  would have rewritten the entry that lands in `SUMMARY.json.gates`.
+   *  Marking the element type readonly makes that a compile error, so the
+   *  runtime freeze is a backstop rather than the only guard. */
+  readonly gateProvenance?: readonly Readonly<GateProvenance>[];
 }
 
 /** Cross-cutting flags a gate sets for the finalizers to read. */
@@ -221,6 +246,11 @@ export interface GateFlags {
    *  `coverageBypassed`/`buildTestBypassed` above. */
   boundaryScanBypassed?: boolean;
   verifierFailure?: { message: string; provider?: string };
+  /** Phase 232: verifier identity that actually ran a gate (currently set
+   *  only by `code-review`/`security-audit`), for the registry to merge onto
+   *  that gate's persisted GateProvenance entry (`provider`/`model`) without
+   *  the registry importing gate-specific verifier types. */
+  verifierIdentity?: { family: string; model?: string };
 }
 
 /**

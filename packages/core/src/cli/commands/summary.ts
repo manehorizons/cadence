@@ -20,6 +20,28 @@ function summarizeZodError(err: ZodError): string {
     .join('; ');
 }
 
+/** Highest `schemaVersion` this build's `SummaryZ` recognizes — see
+ *  `packages/types/src/summary.ts`'s `SummaryZ.schemaVersion` union. Kept in
+ *  sync by hand when that union grows (Phase 232). */
+const MAX_RECOGNIZED_SCHEMA_VERSION = 2;
+
+/**
+ * Read the raw `schemaVersion` off already-JSON.parse'd data, permissively
+ * and before any Zod validation, so a SUMMARY written by a newer Cadence
+ * (an unrecognized-but-higher `schemaVersion`) can be distinguished from a
+ * genuine schema violation. Returns `undefined` for anything that isn't
+ * `{ schemaVersion: <number> }` — missing, non-numeric, non-object, etc. —
+ * so every other malformed shape still falls through to the normal
+ * `safeParse` path and reads as corruption, not as "newer".
+ */
+function readRawSchemaVersion(json: unknown): number | undefined {
+  if (typeof json !== 'object' || json === null || !('schemaVersion' in json)) {
+    return undefined;
+  }
+  const value = (json as { schemaVersion: unknown }).schemaVersion;
+  return typeof value === 'number' ? value : undefined;
+}
+
 /**
  * Reads, JSON-parses, and `SummaryZ`-validates a phase's `<id>-SUMMARY.json`
  * from disk, distinguishing each failure mode (missing file / invalid JSON /
@@ -55,6 +77,17 @@ async function loadSummary(
     return {
       ok: false,
       message: `${commandLabel} failed: ${path} is not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+
+  const rawSchemaVersion = readRawSchemaVersion(parsedJson);
+  if (rawSchemaVersion !== undefined && rawSchemaVersion > MAX_RECOGNIZED_SCHEMA_VERSION) {
+    return {
+      ok: false,
+      message:
+        `${commandLabel} failed: ${path} was written by a newer version of Cadence ` +
+        `(schemaVersion ${rawSchemaVersion}) than this build recognizes ` +
+        `(max ${MAX_RECOGNIZED_SCHEMA_VERSION}) — upgrade Cadence to read it.`,
     };
   }
 

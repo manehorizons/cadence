@@ -6,9 +6,12 @@ import { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteText } from '../state/atomic-write.js';
 import { loadConfig } from '../config/loader.js';
 import { selectNotifier } from '../notify/factory.js';
-import { selectSpecReviewVerifier } from '../verify/spec-review-factory.js';
 import { parseUiSpecMd } from '../parse/ui-spec-parser.js';
-import { selectUiSpecReviewVerifier } from '../verify/ui-spec-review-factory.js';
+import {
+  resolveSpecReviewPort,
+  resolveUiSpecReviewPort,
+  type SpecApproveVerifierPorts,
+} from './spec-approve-ports.js';
 import { runConvergentReview } from '../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../notify/spec-review.js';
 import { emitUiSpecReviewUnconverged } from '../notify/ui-spec-review.js';
@@ -29,6 +32,7 @@ export async function specApproveService(
     allowUiSpecReviewFailure?: boolean;
   },
   io: CommandIO,
+  ports: Partial<SpecApproveVerifierPorts> = {},
 ): Promise<CommandResult> {
   try {
     const backend = new SimpleStateBackend(repoRoot);
@@ -48,7 +52,7 @@ export async function specApproveService(
     const spec = parseSpecMd(rawSpec);
     const cfg = await loadConfig(repoRoot);
 
-    const verifier = selectSpecReviewVerifier(cfg, { cwd: repoRoot });
+    const verifier = resolveSpecReviewPort(ports.specReview, cfg, repoRoot);
     const sidecarPath = join(repoRoot, '.cadence', 'phases', phase, `${id}-SPEC-REVIEW.json`);
     let attemptsSoFar = 0;
     let history: unknown[] = [];
@@ -147,7 +151,7 @@ export async function specApproveService(
     } else if (existsSync(uiSpecPath)) {
       const rawUiSpec = await readFile(uiSpecPath, 'utf8');
       const uiSpec = parseUiSpecMd(rawUiSpec);
-      const uiVerifier = selectUiSpecReviewVerifier(cfg, { cwd: repoRoot });
+      const uiVerifier = resolveUiSpecReviewPort(ports.uiSpecReview, cfg, repoRoot);
       let uiAttemptsSoFar = 0;
       let uiHistory: unknown[] = [];
       if (existsSync(uiSidecarPath)) {

@@ -40,6 +40,17 @@ export function renderSummaryMd(s: Summary): string {
       lines.push(`- ${b.severity.toUpperCase()} ${b.gate} via ${b.flag}: ${b.reason}`);
     }
   }
+  if (s.assurance) {
+    lines.push('', '## Assurance', '');
+    lines.push(`- overall: ${s.assurance.overall}`);
+    const tally = s.assurance.evidenceTally;
+    lines.push(
+      `- evidence tally: ai-verified=${tally['ai-verified']}, executed=${tally.executed}, assertion=${tally.assertion}, mention=${tally.mention}, unverified=${tally.unverified}`,
+    );
+    for (const v of s.assurance.verifierRollup) {
+      lines.push(`- verifier: ${v.provider}${v.model ? ` ${v.model}` : ''} (${v.gateCount} gate(s))`);
+    }
+  }
   lines.push('', '## Decisions', '');
   if (s.decisions.length === 0) lines.push('_(none)_');
   for (const d of s.decisions) {

@@ -88,6 +88,8 @@ describe('runCodeReviewGate', () => {
     const res = await runCodeReviewGate(ctx({ findings: CLEAN, calls }));
     expect(res.outcome).toBe('pass');
     expect(res.summaryPatch?.codeReview).toEqual(CLEAN);
+    // AC-1: passing path reports verifier identity via flags.verifierIdentity.
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
     expect(calls.writes[0]).toContain('"converged": true');
     expect(calls.high).toEqual([]);
     // Full exact-shape characterization (legacy fields preserved alongside the
@@ -121,6 +123,8 @@ describe('runCodeReviewGate', () => {
     const calls: Calls = { high: [], unconverged: 0, writes: [], unconvergedInfo: [] };
     const res = await runCodeReviewGate(ctx({ findings: HIGH, anomalyNotify: true, errs, calls }));
     expect(res.outcome).toBe('refuse');
+    // AC-1: reloop refusal also reports verifier identity via flags.verifierIdentity.
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
     expect(errs).toContain('code-review: src/x.ts:3 high — bad\n');
     expect(errs.join('')).toContain('attempt 1/3 did not pass');
     expect(calls.high).toEqual([{ provider: 'mock', bypassed: false }]);
@@ -159,6 +163,8 @@ describe('runCodeReviewGate', () => {
       ctx({ findings: HIGH, attemptsSoFar: 2, maxAttempts: 3, anomalyNotify: true, calls }),
     );
     expect(res.outcome).toBe('refuse');
+    // AC-1: escalate refusal also reports verifier identity via flags.verifierIdentity.
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
     expect(calls.high).toEqual([{ provider: 'mock', bypassed: false }]);
     expect(calls.unconverged).toBe(1);
     expect(calls.unconvergedInfo[0]).not.toHaveProperty('bypassed');
@@ -293,6 +299,8 @@ describe('runCodeReviewGate', () => {
     const res = await runCodeReviewGate(ctx({ findings: HIGH, force: true, errs }));
     expect(res.outcome).toBe('pass');
     expect(errs.join('')).toContain('--force set; proceeding past 1 HIGH finding(s)');
+    // AC-1: bypass fall-through also reports verifier identity via flags.verifierIdentity.
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
   });
 
   // Characterization gap found in audit: no prior test set a `model` on the
@@ -305,6 +313,8 @@ describe('runCodeReviewGate', () => {
       ctx({ findings: CLEAN, provider: 'anthropic', model: 'claude-x', calls }),
     );
     expect(res.outcome).toBe('pass');
+    // AC-1: verifierIdentity carries both family and model when reported.
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'anthropic', model: 'claude-x' });
     expect(JSON.parse(calls.writes[0]!)).toEqual({
       draftId: '01-01',
       converged: true,
@@ -338,6 +348,9 @@ describe('runCodeReviewGate', () => {
     expect(res.reason).toBe(
       'code-review: verifier failed — boom. Pass --allow-code-review-failure to continue.',
     );
+    // No verifier ran (it threw before returning a result), so there is no
+    // identity to report.
+    expect(res.flags).toBeUndefined();
   });
 
   // AC-5: verifier throws + bypass → pass

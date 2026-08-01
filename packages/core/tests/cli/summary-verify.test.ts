@@ -147,4 +147,115 @@ describe('cadence summary verify', () => {
     expect(r.stdout).toBe('');
     expect(r.stderr).toMatch(/does not match the expected SUMMARY schema/i);
   });
+
+  it('reports "newer Cadence" (not a generic parse error) for an unrecognized higher schemaVersion (AC-4)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...BASE_SUMMARY, schemaVersion: 3 }),
+    );
+
+    const r = await run(['summary', 'verify', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).not.toBe(0);
+    expect(r.stdout).toBe('');
+    // AC-4: a distinct "newer Cadence" diagnostic, not the generic
+    // "does not match the expected SUMMARY schema" Zod-error message.
+    expect(r.stderr).toMatch(/newer version of Cadence/i);
+    expect(r.stderr).toMatch(/schemaVersion 3/);
+    expect(r.stderr).not.toMatch(/does not match the expected SUMMARY schema/i);
+  });
+
+  it('still parses a schemaVersion: 1 SUMMARY normally (regression, AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...BASE_SUMMARY, schemaVersion: 1 }),
+    );
+
+    const r = await run(['summary', 'verify', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toMatch(/^NO_HASH: no contentHash present/);
+  });
+
+  it('still parses a schemaVersion: 2 SUMMARY normally (AC-3)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...BASE_SUMMARY, schemaVersion: 2 }),
+    );
+
+    const r = await run(['summary', 'verify', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stderr).toBe('');
+    expect(r.stdout).toMatch(/^NO_HASH: no contentHash present/);
+  });
+
+  describe('assurance-record tamper evidence (phase 233, AC-5)', () => {
+    /** Same shape a real settle attaches (T3) — a populated `assurance`
+     *  record derived from gate provenance + AC evidence. */
+    const WITH_ASSURANCE = {
+      ...BASE_SUMMARY,
+      schemaVersion: 2,
+      assurance: {
+        verifierRollup: [{ provider: 'anthropic', model: 'claude-x', gateCount: 1 }],
+        evidenceTally: {
+          'ai-verified': 0,
+          executed: 1,
+          assertion: 1,
+          mention: 0,
+          unverified: 0,
+        },
+        overall: 'mixed',
+      },
+    };
+
+    it('verifies clean (MATCH) when the assurance record is untouched (AC-5)', async () => {
+      active = await tempRepo({ initialized: true });
+
+      // Compute the hash the same way settle does: over the full summary,
+      // including the already-attached `assurance` field (T3 sequencing).
+      const withHash = {
+        ...WITH_ASSURANCE,
+        contentHash: computeSummaryContentHash(WITH_ASSURANCE as unknown as Summary),
+      };
+      await writeSummary(active.root, '77-team-rollout-kit', '77-01', JSON.stringify(withHash, null, 2));
+
+      const r = await run(['summary', 'verify', '77-team-rollout-kit', '01'], active.root);
+      expect(r.code).toBe(0);
+      expect(r.stdout).toMatch(/^MATCH: SUMMARY\.json content hash verified \(sha256\)/);
+    });
+
+    it('reports MISMATCH when only the assurance record is edited post-settle (AC-5)', async () => {
+      active = await tempRepo({ initialized: true });
+
+      const withHash = {
+        ...WITH_ASSURANCE,
+        contentHash: computeSummaryContentHash(WITH_ASSURANCE as unknown as Summary),
+      };
+      // Tamper with ONLY the assurance record — flip `overall` to a stronger
+      // label and bump an evidenceTally count — without recomputing the
+      // stored hash, exactly as a hand-edit after settle would.
+      const tampered = {
+        ...withHash,
+        assurance: {
+          ...withHash.assurance,
+          overall: 'strong',
+          evidenceTally: { ...withHash.assurance.evidenceTally, executed: 2 },
+        },
+      };
+      await writeSummary(active.root, '77-team-rollout-kit', '77-01', JSON.stringify(tampered, null, 2));
+
+      const r = await run(['summary', 'verify', '77-team-rollout-kit', '01'], active.root);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toMatch(/^MISMATCH: stored hash does not match recomputed content/);
+      expect(r.stdout).toMatch(/edited after settle/);
+    });
+  });
 });

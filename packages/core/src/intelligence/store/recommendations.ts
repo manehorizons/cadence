@@ -12,6 +12,7 @@ import {
   type RecommendationLedger,
   type RecommendationPriority,
   type RecommendationReadiness,
+  type RecommendationSource,
   type RecommendationStatus,
 } from '@manehorizons/cadence-types';
 import { loadConfig } from '../../config/loader.js';
@@ -57,6 +58,17 @@ export async function readRecommendationLedger(root: string): Promise<Recommenda
   return readLedger(recommendationLedgerSpec, recommendationsPath(root));
 }
 
+// Phase 242 T1: a structured evidence override, self-contained (never combined
+// with `evidenceSummary`) — the caller supplies both the artifact path and the
+// evidence summary text in one object, so a routing candidate is one object to
+// pass through, and there is no silent no-evidence case when `evidenceSummary`
+// is omitted alongside it.
+export type RecommendationEvidenceOverride = {
+  kind: 'cadence-artifact';
+  summary: string;
+  path: string;
+};
+
 export type AddRecommendationInput = {
   title: string;
   summary: string;
@@ -66,6 +78,15 @@ export type AddRecommendationInput = {
   affectedFiles: string[];
   evidenceSummary?: string;
   scoutId?: string;
+  // Phase 242 T1: provenance for a routed rec. Defaults to 'manual' — every
+  // existing caller omits this and keeps today's behavior unchanged.
+  source?: RecommendationSource;
+  // Phase 242 T1: FK back to the routed Finding.id (dedup lookup lives in T2).
+  sourceFindingId?: string;
+  // Phase 242 T1: overrides the always-hardcoded `kind: 'note'` free-text
+  // evidence row with a structured `cadence-artifact` one. Takes precedence
+  // over `evidenceSummary` when both are supplied (they shouldn't be).
+  evidence?: RecommendationEvidenceOverride;
 };
 
 export async function addRecommendation(
@@ -77,27 +98,40 @@ export async function addRecommendation(
   const now = new Date();
   const ts = now.toISOString();
   const recommendationId = nextRecommendationId(ledger, now, evidenceLedger);
-  const evidence: Evidence | null = input.evidenceSummary
+  const hasEvidence = Boolean(input.evidence) || Boolean(input.evidenceSummary);
+  const evidence: Evidence | null = input.evidence
     ? {
         id: nextEvidenceId(evidenceLedger, now, ledger),
         recommendationId,
-        kind: 'note',
+        kind: input.evidence.kind,
         // Choke point: raw evidence text may quote logs/diffs containing a live credential.
-        summary: redactSecrets(input.evidenceSummary),
+        summary: redactSecrets(input.evidence.summary),
+        // path is a repo-relative artifact path (e.g. a SUMMARY.json location), never
+        // free-text — no redaction choke point applies to it, unlike `summary` above.
+        path: input.evidence.path,
         createdAt: ts,
       }
-    : null;
+    : input.evidenceSummary
+      ? {
+          id: nextEvidenceId(evidenceLedger, now, ledger),
+          recommendationId,
+          kind: 'note',
+          // Choke point: raw evidence text may quote logs/diffs containing a live credential.
+          summary: redactSecrets(input.evidenceSummary),
+          createdAt: ts,
+        }
+      : null;
   const rec: Recommendation = {
     id: recommendationId,
     title: input.title,
     summary: input.summary,
-    source: 'manual',
+    source: input.source ?? 'manual',
     status: 'candidate',
     readiness: input.readiness,
     priority: input.priority,
     leverageScore: 5,
     riskScore: 5,
-    confidence: input.evidenceSummary ? 0.7 : 0.4,
+    confidence: hasEvidence ? 0.7 : 0.4,
     decayState: 'fresh',
     affectedAreas: input.affectedAreas,
     affectedFiles: input.affectedFiles,
@@ -108,8 +142,9 @@ export async function addRecommendation(
     createdAt: ts,
     updatedAt: ts,
   };
-  // Phase 61: exact-optional — only set the key when supplied.
+  // Phase 61 / Phase 242 T1: exact-optional — only set the key when supplied.
   if (input.scoutId) rec.scoutId = input.scoutId;
+  if (input.sourceFindingId) rec.sourceFindingId = input.sourceFindingId;
   if (evidence) evidenceLedger.evidence.push(evidence);
   ledger.recommendations.push(rec);
   await writeIntelligenceLedgers(root, ledger, evidenceLedger);

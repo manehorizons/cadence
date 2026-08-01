@@ -52,10 +52,14 @@ Then an outcome
 `;
 }
 
-function summaryBody(id: string, acResults: AcResultFixture[]): string {
+function summaryBody(
+  id: string,
+  acResults: AcResultFixture[],
+  schemaVersion: number = 1,
+): string {
   return JSON.stringify(
     {
-      schemaVersion: 1,
+      schemaVersion,
       draftId: id,
       completedAt: '2026-07-20T00:00:00.000Z',
       acResults,
@@ -95,10 +99,15 @@ async function writeSummary(
   phase: string,
   id: string,
   acResults: AcResultFixture[],
+  schemaVersion: number = 1,
 ): Promise<void> {
   const dir = join(root, '.cadence', 'phases', phase);
   await mkdir(dir, { recursive: true });
-  await writeFile(join(dir, `${id}-SUMMARY.json`), summaryBody(id, acResults), 'utf8');
+  await writeFile(
+    join(dir, `${id}-SUMMARY.json`),
+    summaryBody(id, acResults, schemaVersion),
+    'utf8',
+  );
 }
 
 async function writeSourceFile(root: string, relPath: string, content: string): Promise<void> {
@@ -277,6 +286,94 @@ describe('replayPhaseCoverage', () => {
       expect(outcome.ok).toBe(false);
       if (!outcome.ok) {
         expect(outcome.kind).toBe('summary-invalid');
+      }
+    } finally {
+      await fx.cleanup();
+    }
+  });
+
+  it('returns summary-newer-version (not summary-invalid) for an unrecognized higher schemaVersion (AC-4)', async () => {
+    const fx = await tempRepo();
+    try {
+      const phase = '200-sample';
+      const id = '200-01';
+      await writeDraft(fx.root, phase, id, '`src/example.ts`, `src/example.test.ts`');
+      await writeSummary(
+        fx.root,
+        phase,
+        id,
+        [{ id: 'AC-1', pass: true, evidence: 'executed' }],
+        3,
+      );
+
+      const outcome = await replayPhaseCoverage(fx.root, phase, id);
+      expect(outcome.ok).toBe(false);
+      if (!outcome.ok) {
+        // AC-4: a distinct kind — a newer Cadence wrote this file, not a
+        // schema violation — and the message says so, not a generic Zod dump.
+        expect(outcome.kind).toBe('summary-newer-version');
+        expect(outcome.message).toMatch(/newer version of Cadence/i);
+        expect(outcome.message).toMatch(/schemaVersion 3/);
+      }
+    } finally {
+      await fx.cleanup();
+    }
+  });
+
+  it('still replays a schemaVersion: 1 SUMMARY normally (regression, AC-3)', async () => {
+    const fx = await tempRepo();
+    try {
+      const phase = '200-sample';
+      const id = '200-01';
+      await writeDraft(fx.root, phase, id, '`src/example.ts`, `src/example.test.ts`');
+      await writeSummary(
+        fx.root,
+        phase,
+        id,
+        [{ id: 'AC-1', pass: true, evidence: 'executed' }],
+        1,
+      );
+      await writeSourceFile(fx.root, 'src/example.ts', 'export const x = 1;\n');
+      await writeSourceFile(
+        fx.root,
+        'src/example.test.ts',
+        "import { it } from 'vitest';\nit('covers AC-1', () => {});\n",
+      );
+
+      const outcome = await replayPhaseCoverage(fx.root, phase, id);
+      expect(outcome.ok).toBe(true);
+      if (outcome.ok) {
+        expect(outcome.data.driftCount).toBe(0);
+      }
+    } finally {
+      await fx.cleanup();
+    }
+  });
+
+  it('still replays a schemaVersion: 2 SUMMARY normally (AC-3)', async () => {
+    const fx = await tempRepo();
+    try {
+      const phase = '200-sample';
+      const id = '200-01';
+      await writeDraft(fx.root, phase, id, '`src/example.ts`, `src/example.test.ts`');
+      await writeSummary(
+        fx.root,
+        phase,
+        id,
+        [{ id: 'AC-1', pass: true, evidence: 'executed' }],
+        2,
+      );
+      await writeSourceFile(fx.root, 'src/example.ts', 'export const x = 1;\n');
+      await writeSourceFile(
+        fx.root,
+        'src/example.test.ts',
+        "import { it } from 'vitest';\nit('covers AC-1', () => {});\n",
+      );
+
+      const outcome = await replayPhaseCoverage(fx.root, phase, id);
+      expect(outcome.ok).toBe(true);
+      if (outcome.ok) {
+        expect(outcome.data.driftCount).toBe(0);
       }
     } finally {
       await fx.cleanup();

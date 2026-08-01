@@ -1,0 +1,35 @@
+{
+  "draftId": "233-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "AssuranceRecordZ added to packages/types/src/summary.ts, optional on SummaryZ. evidenceTally keyed by AcEvidenceZ (exhaustive under zod 4.4.3). Independent review: 1 fix round (evidenceTally enum-keying, AC-1 token placement), then APPROVE. Main-thread re-verify: typecheck clean, 317/317 tests pass, summary.ts 100% coverage, diff confirmed scoped to the two claimed files.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-28T01:54:26.272Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "deriveAssuranceRecord added at packages/core/src/gates/assurance-record.ts, packages/core/tests/gates/assurance-record.test.ts. AC-3 tripwire evaluated and did NOT trip: function reads only provider/model, never gate.gate; confirmed by grep + manual read + registry.ts cross-check. AC-2 proven by a test showing mock vs real-provider inputs produce differing overall. Independent review: APPROVE, no fix round needed. Reviewer flagged a non-blocking design-gap for future phases: only 2/10 GATE_ORDER gates currently carry verifier identity (phase 232's scope), so overall has no signal from other gates that do real verification (e.g. build-test-must-pass) -- carrying forward as a note for phases 234-237, not a defect in this task. Main-thread re-verify: typecheck clean, 365/365 test files, 3324/3324 tests pass, diff read directly and confirmed gate-agnostic.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-28T02:06:05.269Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "deriveSettleAssuranceRecord named-step wired into both SUMMARY-construction call sites in settle.ts (writeRefusedSettleSummary with acResults=[], finalizeAndCloseSettle with real acResultsWithEvidence, placed before computeSummaryContentHash so the hash covers it). Purely additive diff, no decision-path logic touched -- traced by reviewer and independently confirmed by reading the diff directly. 3 new tests (AC-1, AC-4 pass-path, AC-4 refuse-path) genuinely re-prove pre-existing pass/refuse outcomes are unchanged, tokens inside real it() spans. Independent review: APPROVE, no findings. Main-thread re-verify: typecheck clean, 365/365 test files, 3327/3327 tests pass, diff read directly and confirmed additive-only + correct hash ordering.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-28T02:17:12.557Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Attestation coverage confirmed automatic (computeSummaryContentHash hashes the whole canonicalized summary object, no field allowlist -- verified directly by reading summary-hash.ts) rather than requiring a settle.ts change; proved with a real spawn-based cadence summary verify tamper test (MISMATCH on mutated assurance, MATCH on untouched). Surfaced via new '## Assurance' section in both summary-render.ts and summary-writer.ts, guarded on presence so pre-233 SUMMARYs render unaffected. docs/concepts.md extended with substantive prose on shape/derivation/coverage. Legitimate deviation from the DRAFT's guessed T4 files: line (settle.ts needed no change; real renderer files were summary-render.ts/summary-writer.ts, not commands/summary.ts) -- verified the underlying claim, not just the deviation. Independent review: APPROVE, no findings. Main-thread re-verify: typecheck clean, 365/365 test files, 3330/3330 tests, lint clean, docs diff read directly and confirmed substantive, content-hash genericness confirmed by reading summary-hash.ts myself.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/233-per-settle-assurance-record/packages/core/tests/cli/summary-verify.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/233-per-settle-assurance-record/packages/core/src/services/summary-render.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/233-per-settle-assurance-record/packages/core/src/parse/summary-writer.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/233-per-settle-assurance-record/packages/core/tests/services/settle.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/233-per-settle-assurance-record/docs/concepts.md"
+      ],
+      "updatedAt": "2026-07-28T02:27:36.859Z"
+    }
+  }
+}

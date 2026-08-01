@@ -676,118 +676,6 @@ In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts 
 
 boundary-scan shipped in Phase 156 but was never given a full 'when it fires / what it checks' row anywhere in docs/concepts.md's main gate-universe listing (the '14 gates: 3 always-fire + 11 delta' tables) or the 'Stage-scoped gates' section -- it only appears in the sealed-gate/bypass-summary material phase 226 fixed. Discovered during phase 226's whole-branch review; explicitly out of that phase's scope (its ACs covered gates.sealed discussion only, not the full gate-universe matrix).
 
-## rec-20260727-001 — Assurance manifest: persist verifier family/model for code-review + security-audit
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: critical
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, types
-- files: packages/core/src/gates/types.ts, packages/types/src/summary.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.4 and section 6 Slice 1
-- evidence: Investigated 2026-07-31/08-01: this rec is substantially shipped as phases 232+233 (Slice 1 of docs/handoffs/cadence-phase0-assurance-kernel-review.md) on feat/kernel-assurance-v2 -- unmerged to main. GateProvenanceZ.provider/model exist there, populated generically via GateFlags.verifierIdentity, not gate-specific special-cased. Cherry-pick safety spike (2026-08-01): cherry-picking 3b95218b+cfe582a5 onto current main resolves with only ledger-JSON conflicts (no real code conflicts against 232/233 alone); full workspace lint+typecheck+build+test (3430 core tests, 322 types tests) all pass clean on the result. BUT merge-back cost is real: merging origin/feat/kernel-assurance-v2 into that cherry-picked-main state produces genuine source conflicts (not just ledger noise) in code-review.ts, registry.ts, settle.ts, registry.test.ts, fields.test.ts -- because phases 234/235/236/241/242 build on top of 232/233 on the branch, so a cherry-pick creates duplicate-lineage history the eventual full-branch merge will have to reconcile. Slices 1-3 (phases 232-236, +241) are all done on the branch; only phase 237 (invariant promotion) remains, and it is needs-evidence-gated on phase 236's finding-routing accumulating real recurring findings -- which can't happen while the arc sits unmerged/unreleased. Also found: a rec-id collision -- main's rec-20260731-003 (this gate-provenance-adjacent ask) and the arc branch's rec-20260731-003 (phase 242, findings-to-ledger auto-routing, already merged to feat/kernel-assurance-v2 via PR #346) will collide when the branches reconcile, under any resolution path. Operator is weighing: early cherry-pick of Slice 1 alone vs. merging the whole arc branch to main now (only evidence-gated phase 237 remains) vs. holding per the original one-branch-merge-at-the-end decision (2026-07-27).
-- next: cadence milestone propose
-
-SUMMARY.codeReview/.securityAudit persist findings as bare arrays, discarding the provider/model captured in memory at collection time (unlike DeepVerifyMeta). Enrich GateProvenanceZ and stop dropping provider/model at persistence so a mock-family review and a real-provider review are distinguishable in the SUMMARY -- closes Cadence's sole surviving P0.
-
-## rec-20260727-002 — SUMMARY forward-compat read: accept schemaVersion 1|2, distinct "newer Cadence" outcome
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, types
-- files: packages/types/src/summary.ts, packages/core/src/cli/commands/summary.ts, packages/core/src/verify/phase-replay.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.6, section 6 Slice 1, decision D6
-- next: cadence milestone propose
-
-SummaryZ.schemaVersion is z.literal(1); a future SUMMARY at schemaVersion 2 fails as an indistinguishable generic parse error rather than a legible 'written by a newer Cadence' outcome. Bump to 2, accept 1|2 on read, and add a pre-parse probe mirroring Phase 223's 'unverifiable' precedent (dec-20260726-001) rather than a false clean or false corrupt.
-
-## rec-20260727-003 — Kernel/verifier contract + lint rule against internal imports
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/gates/types.ts, packages/core/src/gates/engine.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md sections 1.2, 1.3, and section 6 Slice 2
-- next: cadence milestone propose
-
-GateImpl/GATE_REGISTRY totality and SettleContext.verifiers: VerifierPorts already form an unnamed plugin architecture. Name kernel/verifier/consumer as published contracts and add a lint rule failing the build if a verifier package imports kernel internals instead of the published contract, with zero GATE_ORDER changes and zero special cases across the five existing verifier-backed gates (code-review, plan-review, spec-review, security-audit, ui-spec-review).
-
-## rec-20260727-004 — Criteria-anchored review: extend CodeReviewInput with ACs/boundaries
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/verify/code-review.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.8 (the single most important measured finding) and section 6 Slice 3
-- next: cadence milestone propose
-
-CodeReviewInput is only {files, diff} -- the review verifier structurally cannot see the DRAFT's acceptance criteria or boundaries, so criteria-anchored review requires a genuine contract change, not a prompt change. Extend CodeReviewInput to carry acceptance criteria, boundaries, and task-to-AC refs.
-
-## rec-20260727-005 — Anchor ladder as peer schema to evidence ladder
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: types, core
-- files: packages/types/src/summary.ts
-- evidence: Measured/spec'd in docs/handoffs/cadence-phase0-assurance-kernel-review.md decision D5 and section 7.1
-- next: cadence milestone propose
-
-Grade findings by anchor strength (executable > structured > declared > undeclared/criteria-gap), mirroring but not aliasing the AcEvidence 5-tier ladder. Without grading anchors, every anchored finding renders as equivalent regardless of anchor quality -- reproducing the same P0 in a new costume. Structured/declared tiers must be treated as weak by default (anchor-shopping is the adversarial case).
-
-## rec-20260727-006 — Finding identity: stable ids, dispositions, expiring waivers
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: types, core
-- files: packages/types/src/summary.ts, packages/core/src/verify/code-review.ts, packages/core/src/gates/types.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.7, section 7.2, decision D9
-- next: cadence milestone propose
-
-Neither persisted Finding type (packages/types summary.ts vs packages/core verify/code-review.ts, already diverged in severity enum) has a stable id, anchor, disposition, or waiver. Add {id, target: artifact|verification, anchor, disposition, waiver{expiry}} and converge the two divergent Finding types onto one, discriminated by target (decision D9). A waiver with no expiry is a belief masquerading as knowledge.
-
-## rec-20260727-007 — Shared fingerprint primitive extraction from Deja
-
-- status: candidate
-- ready: needs-evidence
-- priority: low
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- evidence: Reuse note in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 7.2
-- next: cadence milestone propose
-
-Finding-identity-survives-refactor is the same problem Deja already solved with bidirectional containment scoring (max wins, 20-token minimum floor). Evaluate extracting a shared fingerprint primitive before writing a second implementation for Cadence findings, rather than deriving identity from line numbers.
-
 ## rec-20260727-008 — Invariant promotion from RetroRollup.findingCategories.recurring
 
 - status: candidate
@@ -832,22 +720,6 @@ A component whose job is detecting an unearned settle can't itself be uninstalla
 - next: cadence milestone propose
 
 Conductor should be a client, not a kernel peer: the decision test is 'can it be implemented entirely against public CLI commands?' A 'no' answer is a bug report about the public surface being incomplete, not a case for privileged access -- keeps the kernel small and lets Conductor live in its own repo on its own cadence, depending only on an already-published contract.
-
-## rec-20260727-011 — Extend RecommendationSourceZ with a review member
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: types
-- files: packages/types/src/intelligence.ts
-- evidence: Measured in docs/handoffs/cadence-phase0-assurance-kernel-review.md section 1.11 (correction: no snag ledger exists) and section 7.3
-- next: cadence milestone propose
-
-RecommendationSourceZ has no 'review' or 'gate' member, so routing criteria-anchored-review findings into the recommendation ledger (section 7.3 of the source doc) currently loses provenance into 'manual'/'cadence'. Add a 'review' source member so Slice 3 findings can route with real provenance instead of being mislabeled.
 
 ## rec-20260727-012 — cadence doctor check: roadmap-currency (anti-recurrence for ROADMAP/MILESTONES drift)
 
@@ -945,3 +817,259 @@ GateProvenanceZ (packages/types/src/summary.ts:63-71) has only {gate, status: ra
 - next: cadence milestone propose
 
 docs/providers.md ~L307-328 ('Current scope: per-task-verify only') claims 5 of 7 verifier seams (verifier/deep-verify, codeReview, planReview, securityAudit, specReview) 'have no host-cli builder yet' and that wiring them is a future follow-up. Verified false while working phase 243 (2026-07-31): every packages/core/src/verify/*-factory.ts (code-review-factory.ts, per-task-factory.ts, plan-review-factory.ts, security-audit-factory.ts, spec-review-factory.ts, ui-spec-review-factory.ts, factory.ts) already passes a hostCli builder to createVerifierFactory. This means createVerifierFactory's 'host-cli builder not wired for this family' degrade branch is now unreachable in production for any of the 7 seams (only exercisable via a deliberately-incomplete test spec) -- the doc section describes a limitation that no longer exists, without saying when it closed. Needs an audit of when each family's HostCli*Verifier class was added (git blame/log per file) and a doc rewrite -- possibly deleting the 'Current scope' section entirely if host-cli is now fully wired everywhere, or documenting the real remaining gap if any exists.
+
+## rec-20260728-002 — Test files are never typechecked or linted
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, tooling
+- files: packages/core/tsconfig.json, tsconfig.base.json, packages/core/package.json
+- evidence: Phase 234 T1 adversarial review: mutated witness<IsAssignable<VerifierPorts['deep'], VerifierPort<number,string>>>(true) -- semantically false -- and vitest, typecheck, and eslint all exited 0. Independently confirmed the include/exclude and lint-script config.
+- next: cadence milestone propose
+
+packages/core/tsconfig.json has include: ["src/**/*"] and tsconfig.base.json excludes **/*.test.ts and tests/, while each package's lint script is 'eslint src'. No test file in the repo is typechecked or linted by any command CI runs, and vitest does not typecheck. Consequence: type-level assertions in tests (conformance witnesses, satisfies checks, expectTypeOf-style guards) are inert -- a provably false witness leaves vitest, typecheck and lint all green. Found during phase 234 T1 review, where a deliberately falsified assignability witness passed all three gates. Options: a tsconfig.test.json wired into the typecheck task, vitest --typecheck, or a convention that type-level guarantees must live in src/.
+
+## rec-20260729-003 — Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, gates
+- files: packages/core/src/verify/criteria-gap.ts, packages/core/src/verify/code-review.ts
+- evidence: Read the implementation: bestAnchorForFile() is keyed on the file path and its result is spread onto every finding in that file (verify/criteria-gap.ts). Found by the orchestrator during phase 235 T4 re-verification, not self-reported.
+- next: cadence milestone propose
+
+Phase 235's anchorFindings (verify/criteria-gap.ts) resolves ONE anchor per file and tags every finding in that file with it, because the code-review verifier returns findings keyed by file with no per-finding criterion attribution. Consequence: a genuinely uncovered defect sitting in a file that some task happens to cover inherits that file's anchor and is NOT counted as a criteria gap — the gap detector under-reports precisely where a phase's ACs are thinnest. Phase 235 extended CodeReviewInput so the verifier can now SEE the ACs/boundaries, which is the prerequisite for the verifier itself citing the criterion it believes a finding violates; the mock does not exercise that. Fix: have the verifier return a per-finding anchor candidate (criterion citation) and grade that, keeping the file-level resolution only as the fallback when the verifier cites nothing.
+
+## rec-20260729-004 — test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, gates
+- files: packages/core/src/verify/coverage.ts, packages/core/src/gates/coverage.ts
+- evidence: Reproduced live during phase 235: 'node packages/core/bin/cadence.cjs verify coverage --explain AC-2' lists packages/core/tests/activate/render.test.ts (phase 211) with 'satisfies: true' for AC-2, alongside phase 235's own anchor.test.ts.
+- next: cadence milestone propose
+
+scanTestCoverage (verify/coverage.ts) walks DEFAULT_GLOBS packages/**/*.test.ts across the WHOLE repo and links an AC purely by the presence of its bare AC-N token. AC ids are per-phase and restart at AC-1 every phase, so tokens collide globally: while building phase 235 I confirmed via 'cadence verify coverage --explain AC-2' that AC-2 was already satisfied by phase 211's tests/activate/render.test.ts, entirely unrelated to phase 235. Any AC-N from any past phase satisfies that same id for every future phase, so the coverage gate cannot actually attest that THIS phase's ACs are covered — it degrades to 'some test somewhere once mentioned this token inside an it() block'. assertion mode hardened WHERE the token sits but not WHICH phase it belongs to. Fix candidates: scope the scan to the phase's own test files (via task files:/git diff), or require a phase-qualified token, or have the gate report which files matched so a reviewer can see cross-phase satisfaction.
+
+## rec-20260729-005 — Boundary-string anchors are granted by filename substring match, so an irrelevant boundary can mask a criteria gap
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify
+- files: packages/core/src/verify/criteria-gap.ts, packages/core/src/verify/anchor.ts
+- evidence: Surfaced by independent adversarial review of phase 235 T4, which traced the candidate-construction and exact-match paths and confirmed the guard is tautological by construction. Behavior is pinned intentionally by a test at tests/gates/code-review-criteria-gap.test.ts.
+- next: cadence milestone propose
+
+candidatesForFile (verify/criteria-gap.ts) proposes a boundary candidate whenever a free-text boundaries[] entry contains the filename as a substring, and resolveAnchor then 'verifies' it with boundaries.find(b => b === candidate.ref) — which is guaranteed to succeed because the ref was sourced from that same array by construction. The exact-match step therefore confirms only 'this string exists', not that the boundary has anything to do with the finding. Consequence: a boundary like 'DO NOT add a runtime dependency to packages/core/src/gates/code-review.ts' grants declared tier to ANY finding in that file, converting a would-be criteria gap into a (weak) anchored finding and hiding it from the gap count. Matches section 7.1's literal spec, which imposes no relevance requirement on a boundary anchor, and declared is documented as the weakest non-gap tier — so this is working-as-specified, not a code defect. But it is a real false-anchor path that suppresses gap reporting. Distinct from rec-20260729-003 (which is about per-file rather than per-finding granularity). Fix candidates: require the boundary to cite the file more strongly than substring containment, or treat a boundary-only anchor as a gap-with-weak-mitigation rather than a non-gap.
+
+## rec-20260729-006 — Retroactive audit: re-derive how many historical AC PASS records had genuine per-phase test coverage
+
+- status: candidate
+- ready: needs-evidence
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, gates
+- files: packages/core/src/verify/coverage.ts, packages/core/src/verify/phase-replay.ts
+- evidence: Demonstrated live during phase 235: all seven of the phase's ACs were satisfied by 34-189 unrelated test files each, and AC-5/AC-6 (belonging to a task not yet implemented at the time) were already fully satisfied by 91 and 49 unrelated files. Sample matches include 'it("Slice 23 AC-6: unknown rec id -> empty result, exit 0")' from unrelated recommendation-CLI slices.
+- next: cadence milestone propose
+
+Follow-on to rec-20260729-004 (repo-wide AC-N token collision). Because settle derives per-AC PASS from task terminal status PLUS coverage evidence, and the coverage leg is satisfiable by any past phase's identically-numbered AC token, per-AC PASS for a typical phase collapsed toward the agent's own DONE self-report — the exact signal the project exists to distrust. The settled SUMMARY corpus therefore carries an AC-coverage attestation stronger than the evidence behind it. This is a defect in the proof, not proof that the work was undone: build-test-must-pass, per-task verify commands, and the review gates were unaffected and provided real signal. Audit to run: for every settled phase, re-derive whether each AC's satisfying token actually sits in a test file belonging to THAT phase rather than an unrelated one, and report the count of AC PASS records with genuine per-phase coverage vs cross-phase-only satisfaction. cadence verify phase already re-derives settled coverage but needs the phase-scoping fix from rec-20260729-004 first to give a trustworthy answer. Operator decision 2026-07-29: run this in a fresh session after phase 235 lands, not inline.
+
+## rec-20260731-007 — Finding id collision: two same-severity/message findings in one file share one id
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, types
+- files: packages/core/src/verify/finding-identity.ts
+- evidence: Opus gap review, phase 236, 2026-07-30: verified two findings differing only in line collapse to identical sha256 id via computeFindingId
+- next: cadence milestone propose
+
+computeFindingId hashes (file, anchor.kind, anchor.ref, severity, normalized message) per AC-3's exact spec, with no per-occurrence discriminant. Two distinct findings in the same file with identical anchor/severity/normalized-message (e.g. MockCodeReviewVerifier's 'console.log left in source' emitted twice in one file) collapse to the same id. Harmless today since findings are never keyed by id, but the follow-on ledger-routing phase (source doc section 7.3, phase 236's ROADMAP.md 'As built' amendment) must key on identity for ledger hygiene — it would currently mint one recommendation for N occurrences and a future disposition surface would waive them all together. Surfaced by an Opus gap review (2026-07-30) of phase 236, verified reachable via MockCodeReviewVerifier's literal duplicate-marker behavior. Undocumented anywhere; needs at minimum a doc note, and the ledger-routing phase's design should account for it explicitly (e.g. include occurrence count/ordinal in the hash, or accept it as a deliberate merge-by-identity semantic).
+
+## rec-20260731-008 — docs/concepts.md phase-236 section has unpinned file:line citations that will rot
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs
+- files: docs/concepts.md
+- evidence: Opus gap review, phase 236, 2026-07-30: git show HEAD~1:docs/concepts.md had 0 file:line citations, phase 236 introduced 10 unpinned ones
+- next: cadence milestone propose
+
+The new 'Finding identity, disposition, and type convergence (phase 236)' subsection in docs/concepts.md cites ~10 hardcoded file.ts:NN-NN line ranges (e.g. summary.ts:70-114, finding-identity.ts:58-90, gates/code-review.ts:105, contracts/index.ts:167-186, intelligence.ts:3-15). All verified accurate as of the phase-236 commit, but no doc-content test pins them (unlike CLAUDE.md's 'The Hardcoded Count' precedent for command/slash-command counts) and docs/concepts.md had zero such citations before this commit. They will silently go stale on the next edit to any cited file. Surfaced by an Opus gap review (2026-07-30) of phase 236. Fix options: drop line numbers and cite file paths only, or add a lightweight doc-content test asserting the cited ranges still contain what they claim (matching this repo's existing docs test conventions in packages/core/tests/docs/).
+
+## rec-20260731-010 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/services/settle.ts, packages/core/src/gates/code-review.ts
+- evidence: Surfaced by independent review of phase 242 T3 (2026-07-31), verified live: a forced high-severity settle exits 1 with lastGate.reason naming code-review, no codeReview key in the refused SUMMARY, no ledger entry
+- next: cadence milestone propose
+
+Phase 242's finding-to-ledger routing (settle.ts, finalizeAndCloseSettle) only ever runs on a settle that reaches finalization. collectHighFindings (gates/code-review.ts) fails the code-review gate on any 'high' severity finding, so settle takes the writeRefusedSettleSummary path instead -- finalizeAndCloseSettle, and therefore the routing step, is never reached. Verified live: a settle with a high-severity finding exits 1, the refused SUMMARY has no codeReview key at all (the findings aren't even persisted), and no ledger entry is created. The findings only route if the operator bypasses via --force/--allow-code-review-failure. This is consistent with phase 242's DRAFT (AC-1 says 'when settle finalizes'), so it is not a phase-242 defect -- but it means the single most severe class of finding is the one class the routing feature never captures by default. Worth a decision: should a refused settle still route the findings from its failed attempt (there is real diagnostic value in a high-severity finding landing in the ledger even though the phase didn't settle), or is 'only route on a clean settle' the deliberately narrower, safer scope?
+
+## rec-20260731-005 — Archived finding-routing recs permanently suppress recurrence of the same finding id
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/services/settle.ts, packages/core/src/verify/finding-identity.ts
+- evidence: Surfaced by independent review of phase 242 T3 (2026-07-31): dedup-set construction from ledger.recommendations + ledger.archived is correct per AC-2, but archiveReason is not distinguished when building that set
+- next: cadence milestone propose
+
+Phase 242's AC-2 dedup correctly checks both the ledger's active recommendations array AND its archived array before routing a finding (a previously-routed rec can be soft-archived -- e.g. after being shipped/rejected, since recommendations.autoArchive defaults true -- before the phase is ever re-settled). But this has a real consequence worth a conscious decision: computeFindingId (phase 236, finding-identity.ts) deliberately excludes line number from its hash, so a finding that is fixed, whose rec is archived (possibly as 'rejected'), and which later regresses -- same file/anchor/severity/normalized-message reintroduced -- computes to the byte-identical id and will never be re-routed, silently, forever. This is correct per AC-2 exactly as specified (dedup across settles), but 'permanently' may not be the intended lifetime for a rejected-and-recurred finding. Options: exempt archiveReason: 'rejected' from the dedup set (only 'shipped'/'converted' archival suppresses recurrence), or accept this as the deliberate semantic and document it explicitly next to AC-2.
+
+## rec-20260731-006 — Finding-ledger routing has no per-settle cap: O(N) sequential ledger rewrites, and it now dirties a git-tracked file every settle
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/services/settle.ts, packages/core/src/intelligence/store/recommendations.ts
+- evidence: Surfaced by independent review of phase 242 T3 (2026-07-31): verified empirically that Promise.all races on id-minting (3 concurrent calls -> 1 written rec), confirming the sequential loop is necessary but leaves an unbounded-N cost profile; recommendations.json/evidence.json confirmed git-tracked in this repo
+- next: cadence milestone propose
+
+Phase 242's routing step (settle.ts, finalizeAndCloseSettle) writes each new routing candidate via a sequential for-of + await addRecommendation loop -- correct and necessary (Promise.all would race on id-minting, verified empirically: 3 concurrent calls collapsed to 1 written rec instead of 3), but each call re-reads and rewrites both ledger files in full, so N candidates cost O(N) full ledger read+writes with no upper bound on N per settle. A real (non-mock) reviewer producing many findings in one settle could mint many recommendations in one step. Separately: .cadence/intelligence/recommendations.json (and evidence.json) are git-tracked in this repo, so routing now dirties a tracked file on every settle that has code-review findings -- widening the existing rec-id-collision-on-rebase surface (two branches/worktrees independently minting new rec ids before either pushes) beyond what manual recommendation add usage already created. Worth a decision: cap candidates per settle (e.g. route only the top-N by severity, log the rest as dropped per this repo's no-silent-caps convention), or accept unbounded routing as intentional since findings are already bounded by the review verifier's own output size.
+
+## rec-20260801-001 — docs/reference/commands.md config edit section lists only 5 fields; EDITABLE_FIELDS has 8
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, docs
+- files: docs/reference/commands.md, packages/core/src/config-edit/fields.ts
+- evidence: Surfaced during phase 242 T4 doc work (2026-07-31): confirmed docs/reference/commands.md:156 still says 'all five' while EDITABLE_FIELDS has 8 entries (profile, loopEnforcement, acDiscipline, commitCadence, verifier, autoArchive, coverageMode, autoRoute)
+- next: cadence milestone propose
+
+docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, acDiscipline, commitCadence, or verifier. Omit to walk all five.') predates phase 102's autoArchive and phase 108's coverageMode additions to packages/core/src/config-edit/fields.ts's EDITABLE_FIELDS array, and now also predates phase 242's autoRoute addition -- three fields (autoArchive, coverageMode, autoRoute) are absent from this doc's field list and its 'walk all five' claim, though EDITABLE_FIELDS actually holds 8. Not caused by phase 242 -- the gap already existed for autoArchive/coverageMode before this phase; autoRoute is simply the third field to land in it. No doc-content test currently catches this (unlike the command-count/slash-command-count tests this repo already has for similar drift). Fix: update the field list and count, and consider adding a doc-content test deriving the list from EDITABLE_FIELDS.map(f => f.name) the same way docs-command-count.test.ts derives the registered command set, so this can't silently drift again.
+
+## rec-20260801-004 — code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/code-review.ts, packages/core/src/gates/security-audit.ts, packages/core/src/gates/registry.ts
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source read
+- next: cadence milestone propose
+
+code-review.ts and security-audit.ts's catch(err) blocks return {outcome:'pass'} with no flags at all when --allow-code-review-failure/--allow-security-audit-failure/--force bypasses a real-provider throw (revoked key, rate limit, network blip). Unlike build-test-must-pass/boundary-scan/test-coverage (which set a dedicated bypass flag registry.ts turns into an explicit skipReason provenance entry) or deep-verify.ts (which sets flags.verifierFailure={message,provider} on its own throw path), these two gates set nothing. verifierIdentityProvenance(res) then returns {} since res.flags?.verifierIdentity is undefined. Verified directly against source 2026-08-01: the persisted SUMMARY.gates[] entry reads as {gate:'code-review',status:'ran'} -- indistinguishable from a clean real-provider pass, with no skipReason explaining a failure was bypassed. This lands on exactly the two gates phase 232 exists to make trustworthy. deriveAssuranceRecord under-reports (drops the gate from verifierRollup) rather than over-reports, so it is not a spoofing risk, but the raw gates[] provenance record is actively misleading about what 'ran' means here.
+
+## rec-20260801-005 — A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/registry.ts, packages/core/src/services/settle.ts
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), not yet independently re-verified by a second pass
+- next: cadence milestone propose
+
+runSettleGates calls mergeInto(acc, res) (registry.ts) BEFORE the refuse check, so acc.codeReview (anchored + identified findings, including criteria-gap findings) is populated even when a later gate in GATE_ORDER refuses. But writeRefusedSettleSummary (settle.ts) takes only gates provenance, never acc -- codeReview is absent from the persisted SUMMARY on every refused settle, not just the 'code-review itself refuses' case rec-20260731-010 already names. Example: code-review passes with a declared gap, then security-audit (runs later in GATE_ORDER) refuses -- the gap prints to stderr once and then vanishes from the artifact, contradicting code-review.ts's own comment that findings land in summaryPatch.codeReview 'on EVERY return path.' Agent-reported 2026-08-01 via independent review, not yet independently re-verified line-by-line -- verify before scoping a fix.
+
+## rec-20260801-006 — deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/assurance-record.ts, packages/core/tests/gates/assurance-record.test.ts
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01)
+- next: cadence milestone propose
+
+assurance-record.ts documents 'weak' as covering '...or simply no ACs at all with no verifier signal either,' but zero ACs with zero verifier identity actually trips the first branch (vacuously true when acResults is empty) and returns 'unverified', not 'weak' -- doc and code disagree with no test pinning either. Also untested: deriveAssuranceRecord(realProviderGates, []) (zero ACs, real verifier) traces by hand to 'mixed', but the one test exercising this shape only asserts verifierRollup, never .overall. Agent-reported 2026-08-01.
+
+## rec-20260801-007 — Three small hygiene gaps from the kernel-arc independent review (2026-08-01)
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/assurance-record.ts, packages/core/src/verify/phase-replay.ts, packages/core/src/cli/commands/summary.ts, eslint.config.js
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01)
+- next: cadence milestone propose
+
+(1) eslint.config.js's own comment candidly documents that dynamic import() of verifier family modules is invisible to the new kernel/verifier/consumer boundary rule -- a disclosed, real gap with no tracking recommendation until now. (2) deriveAssuranceRecord's verifierRollup key is an unseparated string join (${provider} ${model ?? ''}) -- theoretically collision-prone if a provider/model string ever contains a space (today's real values never do). (3) readRawSchemaVersion/MAX_RECOGNIZED_SCHEMA_VERSION is duplicated between verify/phase-replay.ts and cli/commands/summary.ts, hand-synced -- a third SummaryZ.safeParse call site would misreport a future schemaVersion-3 record as a generic parse failure instead of 'written by a newer Cadence.' None urgent; bundled as one low-priority rec per the independent review's own framing.
+
+## rec-20260801-010 — Finding-identity dedup still breaks on free-text message drift under real LLM providers
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/verify/finding-identity.ts, packages/core/src/intelligence/finding-routing.ts
+- evidence: Phase 245 (245-finding-identity-stability) settle, 2026-08-01 -- narrowed identity hash fixes the anchor/severity slice; message-text-drift slice explicitly out of scope, risk-accepted by operator
+- next: cadence milestone propose
+
+Supersedes rec-20260801-008, archived: phase 245 (245-finding-identity-stability) narrowed computeFindingId's hash to (file, normalized message) only, fixing the anchor/severity-drift slice of the original finding (rec-20260801-008/-009's shared root cause) -- but the message-text-drift half rec-20260801-008 also raised is unresolved and cannot be fixed the same way. normalizeMessage only strips/collapses whitespace, deliberately no semantic normalization (a genuinely different message must still produce a different id) -- so under a real LLM-backed verifier (anthropic/local/host-cli), a re-run's re-worded message for the same underlying defect still mints a new id, and phase 242's deriveRoutingCandidates dedup (keyed on Finding.id) still misses it, creating a duplicate Recommendation. Fixing this properly needs bounded near-duplicate/fuzzy matching at the routing layer (e.g. token-similarity within a matched file+group), which is a real feature with a genuine false-merge risk (over-aggressive matching could silently swallow a distinct finding as a duplicate -- worse than the current failure mode, which only produces recoverable duplicate noise), not a quick fix. Operator explicitly risk-accepted this gap for now (2026-08-01, phase 245 scoping) rather than build fuzzy matching speculatively -- real-provider routing is still new on this arc (host-cli activated for deep-verify/code-review only in PR #351, 2026-08-01).

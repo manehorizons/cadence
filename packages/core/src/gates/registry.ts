@@ -115,6 +115,25 @@ const SELF_GUARD_SKIP_REASON: Partial<Record<SettleGate, string>> = {
 };
 
 /**
+ * Phase 232 (T3): lifts a gate's reported `flags.verifierIdentity` (populated
+ * only by `code-review`/`security-audit`, see T2) onto the `provider`/`model`
+ * fields of the `GateProvenance` entry being pushed for it. Checked generically
+ * by flag presence rather than gate name — any future gate that starts
+ * reporting `verifierIdentity` picks this up for free, and every gate that
+ * doesn't set it (all of them today, besides those two) gets back `{}`, so no
+ * stray keys land on its provenance entry (AC-5, `exactOptionalPropertyTypes`
+ * safe: never spreads an explicit `undefined`).
+ */
+function verifierIdentityProvenance(res: GateResult): Pick<GateProvenance, 'provider' | 'model'> {
+  const identity = res.flags?.verifierIdentity;
+  if (!identity) return {};
+  return {
+    provider: identity.family,
+    ...(identity.model !== undefined ? { model: identity.model } : {}),
+  };
+}
+
+/**
  * Drive the settle gate sequence (Phase 44.1). Walks `GATE_ORDER`, invoking a
  * gate iff it is `selfGuarded` or present in `ctx.gateSet.gates`, merging each
  * `GateResult` into the accumulator. The first refusing gate halts the loop —
@@ -148,9 +167,38 @@ export async function runSettleGates(
       gates.push({ gate, status: 'skipped', skipReason: 'not in the active tier × profile gate set' });
       continue;
     }
+    // Phase 241 (T1): a per-gate context carrying a frozen snapshot of the
+    // provenance recorded so far (never including this gate's own
+    // not-yet-computed entry). Shallow-spread deliberately: `coverage()`,
+    // `draftMtimeMs()`, and `diff()` on `ctx` are plain object properties
+    // holding closures (not `this`-bound method shorthand — see
+    // `buildSettleContext` in services/settle.ts), so the spread copies
+    // those function references BY IDENTITY rather than re-creating them —
+    // their per-settle memoization survives.
+    //
+    // The freeze is deliberately TWO-LEVEL, and the second level is the
+    // load-bearing one. Freezing only the array would leave its elements as
+    // the very same object references this loop's `gates` accumulator holds,
+    // so `ctx.gateProvenance[0].status = 'refused'` from inside any gate
+    // would rewrite the live entry. Copying defends against that even for a
+    // gate that casts away the compile-time guard: the field is declared
+    // `readonly Readonly<GateProvenance>[]` in `types.ts`, which already makes
+    // the bare assignment a type error, so the two guards are belt and
+    // braces rather than one doing both jobs. (A plain `readonly T[]` would
+    // NOT be enough — it constrains the array's shape, not its elements'
+    // fields, which is why the element type is wrapped.) That
+    // accumulator is persisted as `SUMMARY.json.gates` and feeds the phase-233
+    // assurance record, so a gate-writable audit trail would undercut exactly
+    // the integrity record this seam exists to strengthen. Copying each entry
+    // (`{ ...g }`) and freezing the copy means a gate can mutate nothing that
+    // outlives its own invocation.
+    const gateCtx: SettleContext = {
+      ...ctx,
+      gateProvenance: Object.freeze(gates.map((g) => Object.freeze({ ...g }))),
+    };
     let res: GateResult;
     try {
-      res = await entry.impl(ctx);
+      res = await entry.impl(gateCtx);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const reason = `${gate}: threw — ${message}`;
@@ -161,31 +209,43 @@ export async function runSettleGates(
     mergeInto(acc, res);
     if (res.outcome === 'refuse') {
       log.warn('gate refused', { gate, outcome: res.outcome });
-      gates.push({ gate, status: 'refused', ...(res.reason !== undefined ? { reason: res.reason } : {}) });
+      gates.push({
+        gate,
+        status: 'refused',
+        ...(res.reason !== undefined ? { reason: res.reason } : {}),
+        ...verifierIdentityProvenance(res),
+      });
       return { acc, refused: true, gates };
     }
+    // Phase 241 (T1): every read below goes through `gateCtx`, the same
+    // context the impl was handed, not the outer `ctx`. The two are
+    // interchangeable today (`opts` is shared by reference through the
+    // spread, and no self-guard predicate reads `gateProvenance`), but a
+    // future predicate that does would silently observe `undefined` if it
+    // were still passed the outer context.
     const predicate = SELF_GUARD_PREDICATES[gate];
-    if (predicate && !predicate(ctx)) {
+    if (predicate && !predicate(gateCtx)) {
       gates.push({
         gate,
         status: 'skipped',
         skipReason: SELF_GUARD_SKIP_REASON[gate] ?? 'not requested',
+        ...verifierIdentityProvenance(res),
       });
     } else if (gate === 'build-test-must-pass' && res.summaryPatch?.buildTestRan === false) {
-      gates.push({ gate, status: 'skipped', skipReason: NO_TEST_COMMAND_NOTICE.message });
+      gates.push({ gate, status: 'skipped', skipReason: NO_TEST_COMMAND_NOTICE.message, ...verifierIdentityProvenance(res) });
     } else if (gate === 'build-test-must-pass' && res.flags?.buildTestBypassed === true) {
       // Phase 226: buildTestBypassed is true for either --allow-failing-build
       // or bare --force (see build-test-must-pass.ts) — name whichever one
       // actually fired instead of always naming the gate's own flag.
-      const flag = ctx.opts.allowFailingBuild === true ? '--allow-failing-build' : '--force';
-      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}` });
+      const flag = gateCtx.opts.allowFailingBuild === true ? '--allow-failing-build' : '--force';
+      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}`, ...verifierIdentityProvenance(res) });
     } else if (gate === 'boundary-scan' && res.flags?.boundaryScanBypassed === true) {
-      const flag = ctx.opts.allowBoundaryScanFailure === true ? '--allow-boundary-scan-failure' : '--force';
-      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}` });
+      const flag = gateCtx.opts.allowBoundaryScanFailure === true ? '--allow-boundary-scan-failure' : '--force';
+      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}`, ...verifierIdentityProvenance(res) });
     } else if (gate === 'test-coverage' && res.flags?.coverageBypassed === true) {
-      gates.push({ gate, status: 'skipped', skipReason: 'bypassed via --allow-missing-coverage' });
+      gates.push({ gate, status: 'skipped', skipReason: 'bypassed via --allow-missing-coverage', ...verifierIdentityProvenance(res) });
     } else {
-      gates.push({ gate, status: 'ran' });
+      gates.push({ gate, status: 'ran', ...verifierIdentityProvenance(res) });
     }
     log.debug('gate passed', { gate, outcome: res.outcome });
   }

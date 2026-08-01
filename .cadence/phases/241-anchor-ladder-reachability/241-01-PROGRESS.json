@@ -1,0 +1,60 @@
+{
+  "draftId": "241-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-30T01:46:26.228Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 3 file(s), 6094 diff bytes",
+        "provider": "mock"
+      }
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/.cadence/phases/241-anchor-ladder-reachability/241-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/packages/core/src/gates/code-review.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/packages/core/src/verify/criteria-gap.ts"
+      ],
+      "updatedAt": "2026-07-30T01:53:13.275Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 2 file(s), 3263 diff bytes",
+        "provider": "mock"
+      }
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/packages/core/tests/docs/criteria-anchoring-docs.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/packages/core/tests/cli/settle-code-review-anchor-e2e.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/packages/core/tests/verify/criteria-anchor-corpus.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/packages/core/tests/docs/concepts-anchor-tier.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/241-anchor-ladder-reachability/packages/core/src/gates/code-review.ts"
+      ],
+      "updatedAt": "2026-07-30T02:09:15.677Z",
+      "perTaskVerify": {
+        "verdict": "concerns",
+        "reason": "mock: no diff since last task",
+        "provider": "mock"
+      }
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-30T02:09:15.843Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "mock: 4 file(s), 9030 diff bytes",
+        "provider": "mock"
+      }
+    }
+  }
+}

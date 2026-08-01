@@ -120,6 +120,87 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   `SUMMARY.md` "Gate provenance" section prints a skipped gate's
   `skipReason` but does not yet print a refused gate's `reason`, so read the
   `.json` record for the refusal text.
+- Phase 232: `gates[]` entries also carry optional `provider`/`model` —
+  the verifier family/model that actually ran the gate — currently populated
+  only for the `code-review` and `security-audit` entries (`mock`, the
+  default provider, is recorded the same as a real provider); every other
+  gate's provenance entry still omits both fields. This bumps
+  `SUMMARY.json`'s `schemaVersion` to `1 | 2`: writers always emit `2` now,
+  and readers still accept pre-phase-232 records at `1` unchanged — a
+  genuinely unrecognized higher `schemaVersion` (written by a newer Cadence
+  than the one reading it) is reported as its own diagnostic rather than a
+  generic parse failure.
+- Phase 233: `SUMMARY.json` optionally carries `assurance` — one whole-run
+  record, *derived and reported only* (it adds no gate, no refusal path, and
+  no bypass flag), answering "how strongly was this settle actually
+  verified?" It has three parts: `verifierRollup` (one entry per distinct
+  `(provider, model)` pair observed across `gates[]` entries that carry
+  verifier identity, phase 232, with a `gateCount`), `evidenceTally` (a count
+  of `acResults[].evidence` classes — `ai-verified`/`executed`/`assertion`/
+  `mention`/`unverified`, phase 140 — bucketed across all ACs), and `overall`
+  (`'strong' | 'mixed' | 'weak' | 'unverified'`, a single deterministic label
+  computed from the other two: `'unverified'` when no gate carried verifier
+  identity and no AC evidence rose above `'unverified'`; `'strong'` when at
+  least one gate ran under a real, non-`mock` provider and at least half of
+  all ACs landed at `ai-verified`/`executed`; `'mixed'` when some real signal
+  exists but not enough to clear the `'strong'` bar; `'weak'` otherwise). The
+  derivation function (`packages/core/src/gates/assurance-record.ts`) is a
+  pure reduction over the `gates[]` and `acResults[]` arrays with no
+  gate-name special-casing, so it composes uniformly from existing gate
+  provenance and AC evidence rather than adding a new verification path.
+  `assurance` is covered by the same phase-223 settle-time content hash as
+  the rest of `SUMMARY.json` (the hash is computed generically over the
+  whole record), so a post-settle hand-edit to `assurance` is caught by
+  `cadence summary verify` exactly like any other field. It is surfaced in
+  both `cadence summary render` and the on-disk `SUMMARY.md` sidecar as an
+  "## Assurance" section (`overall`, the evidence tally, and any verifier
+  rollup entries).
+- Phase 244: `SUMMARY.json` optionally carries `foreignBinaryMismatch` — a
+  sibling provenance field to `assurance` above, set only when this settle
+  actually ran through a `cadence` binary whose realpath resolves OUTSIDE
+  the current repo checkout, despite that repo having its own local build
+  (recognizably the CADENCE monorepo itself: both
+  `packages/core/bin/cadence.cjs` and `.cadence/` present at its root).
+  This is `rec-20260729-001`, confirmed on phases 233/234: a stale
+  globally-installed `cadence` binary silently shadowed the checkout's own
+  build and wrote a downgraded `schemaVersion: 1` SUMMARY with no
+  `assurance` record — and the two binaries reported an *identical*
+  `--version` string, so detection cannot key on version comparison. This
+  guard only runs in code that contains it, so it could not have caught
+  233/234 themselves and will not catch settles run through an
+  already-published binary that predates this fix — it protects settles
+  going forward, once a release built from this code is what operators
+  actually have installed. `detectForeignCadenceBinary`
+  (`packages/core/src/services/settle.ts`) is realpath-based instead: is
+  the binary actually executing this settle located inside the repo's own
+  toplevel. Like `assurance`, this is reported only — it adds no gate, no
+  refusal path, and no bypass flag; settle still completes normally either
+  way, matching this repo's Quiet Fallback convention (loud notice, never a
+  silent or blocking fallback). It is recorded on **both** paths a settle
+  can take: a normal completion *and* the refused-settle SUMMARY described
+  above (a refused settle's running binary is just as foreign as a
+  successful one's would have been) — though only the normal-completion
+  path's SUMMARY gets a content hash at all (`writeRefusedSettleSummary`
+  computes none, same as `assurance`). When present, the field is a
+  two-key object — `runningBinaryPath` (the resolved realpath of the
+  binary that actually executed) and `repoToplevel` (the settle
+  invocation's `cwd`, which this repo already treats as its root
+  throughout `settle.ts`); when absent (not `false`/`null` —
+  `exactOptionalPropertyTypes`, the key is omitted), the running binary
+  and the repo agreed, which is the common/correct case, including every
+  phase settled correctly. On the normal-completion path it is attached
+  before `computeSummaryContentHash` runs, so it's covered by the same
+  phase-223 content hash as the rest of that record — but unlike
+  `assurance` it has no rendered `SUMMARY.md` section yet; it is JSON-only
+  so far (the same limitation the phase-170 `reason` field above has) —
+  read the `.json` record to see it. On a mismatch, a loud stderr banner —
+  "SETTLING VIA A FOREIGN CADENCE BINARY"
+  (`buildForeignBinaryBanner` in `packages/core/src/verify/verifier-factory.ts`),
+  same shape/placement convention as `MOCK_FALLBACK_BANNER` — names both
+  paths and suggests the fix (re-run via
+  `node packages/core/bin/cadence.cjs settle run --auto`), so the mismatch
+  is visible live on stderr even for a session that never inspects the
+  JSON record.
 - `.cadence/phases/<phase>/<id>-SUMMARY.md` — human-readable rendered view
 - `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` — plan-review findings
   (written at `draft approve` when `plan-review` fires)
@@ -307,6 +388,233 @@ currently wired for). Because the SPEC stage is itself optional, `spec-review`
 never fires unless you
 choose to run `cadence spec approve`.
 
+### Criteria-anchored `code-review` (phase 235)
+
+Every `code-review` finding is also tagged with an **anchor** — how strongly
+it ties back to something the phase's own DRAFT actually declared, on a
+four-tier ladder from strongest to weakest:
+
+| Tier | What it means |
+|---|---|
+| `executable` | The finding's file is covered by a task whose `done:` cites an AC, that task's `verify` command is non-empty, AND this settle's `build-test-must-pass` gate provenance shows `status: 'ran'` (the corroborating condition — a runnable-looking `verify` line is never trusted by itself). |
+| `structured` | The AC exists and its `given`/`when`/`then` are all non-empty. |
+| `declared` | The AC exists but is prose-only (empty or partial G/W/T), or the finding's file matches a `boundaries[]` entry exactly. |
+| `undeclared` | Nothing citable was found for the finding's file — this is a **criteria gap**: diff work no acceptance criterion and no boundary covers. |
+
+The pure ladder resolver is `resolveAnchor`
+(`packages/core/src/verify/anchor.ts`); `anchorFindings`
+(`packages/core/src/verify/criteria-gap.ts`) applies it per file — the
+verifier reports findings keyed by file, not by criterion — and tags every
+finding in that file with the result. The tag lands in the additive,
+optional `anchor` field on `FindingZ` (`packages/types/src/summary.ts`); a
+pre-phase-235 `SUMMARY.json` with no `anchor` on any finding still parses
+unchanged.
+
+A criteria gap adds **no new refusal path and no new bypass flag**: a gap
+finding flows into the exact same finding stream `code-review` already
+refuses on, so a HIGH-severity gap refuses through the pre-existing
+HIGH-finding contract (`--allow-code-review-failure` / `--force` still
+clear it, same as any other HIGH finding). Whenever at least one finding
+resolves to `undeclared`, settle prints a gap-count / severity-distribution
+notice to stderr — unconditionally, regardless of whether the gate ends up
+passing, refusing, or being bypassed, so the gap is never hidden by the
+floor outcome.
+
+Scope is deliberately narrow: only `code-review` is criteria-anchored.
+`spec-review`, `ui-spec-review`, and `plan-review` are unaffected
+(`dec-20260729-003`) — generalizing the ladder to them was ruled out of
+scope for this phase, not merely deferred silently.
+
+**Three limitations were disclosed when the ladder shipped**, tracked as
+Praxis recommendations rather than glossed over. The first is now closed by
+phase 241; the other two remain open:
+
+- The `executable` tier was not reachable in a real settle as originally
+  shipped (`rec-20260729-002`, closed by phase 241). `SettleContext` now
+  carries a frozen, per-gate `gateProvenance` snapshot accumulated over the
+  course of the settle, and `gates/code-review.ts` passes it through
+  (`ctx.gateProvenance ?? []`) instead of a literal `[]`. `executable` is
+  reachable in a live settle when both of the ladder's conditions hold: the
+  finding's AC is cited by a task with a non-empty `verify:`, **and** the
+  provenance snapshot contains a `build-test-must-pass` entry with
+  `status: 'ran'`. A `skipped`, `refused`, or absent `build-test-must-pass`
+  entry still caps the tier below `executable` — this widened what is
+  reachable, it did not weaken what must be earned.
+- Anchoring is per-file, not per-finding (`rec-20260729-003`). One anchor is
+  resolved for a whole file and applied to every finding reported in it, so
+  a genuinely uncovered defect sitting in an otherwise-covered file does not
+  register as a criteria gap.
+- A boundary string that merely contains a finding's filename as a
+  substring grants `declared` tier to every finding in that file
+  (`rec-20260729-005`), which can mask a real gap — the check that follows
+  only confirms the candidate string is present in `boundaries[]`, not that
+  the boundary is actually relevant to the finding.
+
+### Finding identity, disposition, and type convergence (phase 236)
+
+Phase 236 (`dec-20260730-001`) gives a finding a stable identity so it can be
+tracked across settles instead of being re-detected as new every time, and
+converges two independently-declared `Finding` types that had drifted apart.
+It is schema-and-computation only — see "What is deliberately not built yet"
+below for what is explicitly deferred.
+
+**Four new `FindingZ` fields** (`packages/types/src/summary.ts:70-114`), all
+additive and `.optional()` so a pre-phase-236 `Finding` record with none of
+them present still parses unchanged:
+
+| Field | Shape | Meaning |
+|---|---|---|
+| `id` | `string` | Stable content-hash identity — see below. |
+| `target` | `'artifact' \| 'verification'` | Which surface the finding was raised against. |
+| `disposition` | `'open' \| 'accepted' \| 'waived' \| 'fixed' \| 'superseded'` | Lifecycle state for a tracked finding. |
+| `waiver` | `{ expiry: string }` (ISO datetime, offset required) | Present only on a waived finding. |
+
+`waiver` is constrained bidirectionally by two `.refine()`s on `FindingZ`
+(`summary.ts:108-113`): `disposition: 'waived'` requires a `waiver`, and a
+`waiver` requires `disposition: 'waived'` — an orphaned waiver on a
+non-waived finding is never valid. The reasoning is stated inline in the
+schema comment: "a waiver with no expiry is a belief masquerading as
+knowledge." This slice only computes fresh identity and a default `open`
+disposition at detection time (see `attachFindingIdentity` below) — no code
+anywhere in the repo yet constructs `accepted`/`waived`/`fixed`/`superseded`;
+mutating a finding's disposition is a follow-on phase's CLI surface.
+
+**`id`'s formula.** `computeFindingId(file, anchor, severity, message)`
+(`packages/core/src/verify/finding-identity.ts:62-69`) is a sha256 hex
+digest, via `node:crypto` (already used elsewhere in this codebase — no new
+runtime dependency), over a stably-ordered, JSON-encoded tuple of
+`(file, normalized message)` **only** — deliberately **never a line
+number**. Phase 245 narrowed the formula to just these two inputs:
+`anchor` and `severity` are still accepted as parameters (call-site
+compatibility — `attachFindingIdentity` and its callers pass them
+unchanged), but no longer participate in the hash, because both can
+legitimately change across settles for the same underlying defect
+(re-anchoring via the DRAFT-amendment workflow, live LLM severity
+classification under real providers), and including them previously minted
+a new `id` — and a duplicate Recommendation — for an unchanged defect. The
+message is whitespace-normalized first (`normalizeMessage`,
+`finding-identity.ts:37-39`) so incidental rewrapping doesn't mint a new id,
+but is not otherwise semantically folded — a genuinely different message
+still produces a different id. Excluding the line number is the whole
+point: an edit that only shifts where a finding sits (an unrelated diff
+earlier in the file, a refactor) must not make a tracked finding look new,
+or disposition/waiver state attached to it would silently reset every
+settle. `attachFindingIdentity` (`finding-identity.ts:81-94`) is the batch
+adapter `gates/code-review.ts` calls (`gates/code-review.ts:105`) before
+persisting: it stamps every anchored finding with its computed `id`,
+`target: 'artifact'` (code-review findings are always about the artifact
+being changed, never a verification claim), and `disposition: 'open'`,
+leaving every other field (severity, message, line, anchor) unchanged.
+
+**`AnchorZ.kind` widens to include `'invariant'`**
+(`summary.ts:58-62`), alongside the existing `'ac'|'boundary'|'none'`.
+No producer emits it yet — promoting a recurring finding into an invariant
+is phase 237's scope (contingent on phase 236 having routed enough findings
+for `RetroRollup.findingCategories.recurring` to be non-trivially populated;
+see the ROADMAP). Every pre-existing `'ac'`/`'boundary'`/`'none'` anchor
+continues to parse and resolve identically to before this change.
+
+**The two divergent `Finding` types converge into one.** Before this phase,
+`packages/types/src/summary.ts`'s persisted `FindingZ` (severity
+`critical|high|medium|low`) and `packages/core/src/verify/code-review.ts`'s
+locally-declared `Finding`/`FindingSeverity` (severity `high|medium|low`
+only) were two independently-maintained shapes for the same concept. Per the
+source design doc's local D9 ("one Finding type, discriminated by `target`"),
+`verify/code-review.ts` no longer declares its own type — it imports the
+shared `Finding` from `@manehorizons/cadence-types` directly
+(`verify/code-review.ts:4`), and every construction site (the mock walker,
+the Anthropic-response mapping) keeps emitting `'high'|'medium'|'low'`
+literals, a valid subtype of the wider shared severity union.
+`packages/core/src/contracts/index.ts` keeps `CodeReviewFinding` /
+`CodeReviewFindingSeverity` as re-exported aliases of the same shared type
+(`contracts/index.ts:167-186`) purely for name back-compat with existing
+consumers (`gates/types.ts`, `notify/code-review.ts`); new code can import
+`Finding` from `@manehorizons/cadence-types` directly instead.
+`security-audit`'s findings already used the shared `FindingZ` and are
+unaffected — they simply never populate the new `id`/`target`/`disposition`
+fields (wiring identity computation into `gates/security-audit.ts` is out of
+scope for this phase).
+
+**What is deliberately not built yet.** This slice is schema and pure
+computation only — no I/O, no ledger writes:
+
+- **Findings-to-ledger auto-routing was NOT implemented in this phase-236
+  slice — it now is, as of phase 242.** Nothing in phase 236 itself created
+  `Recommendation`/`Evidence` entries from findings during settle.
+  `RecommendationSourceZ` gained a `'review'` member
+  (`packages/types/src/intelligence.ts:3-15`) purely so a future routing
+  phase would have correct provenance to route with instead of mislabeling
+  code-review findings `'manual'`/`'cadence'` — at the time, no routing
+  behavior read or wrote that value yet. This was real I/O-port-threading
+  work (a settle-time writer that turns a finding into a ledger entry),
+  deliberately split to a follow-on phase and recorded as an inline "As
+  built" amendment on the phase 236 roadmap entry (`.cadence/ROADMAP.md`).
+  That follow-on is now numbered and shipped — see "Findings-to-ledger
+  auto-routing (phase 242)" directly below for what it built.
+- **No disposition-management surface exists.** There is no CLI or mutation
+  path to accept/waive/fix/supersede a finding; every finding this phase
+  produces is stamped `disposition: 'open'` and stays there.
+- **`security-audit` findings are not identity-stamped.** They already share
+  the converged `Finding` schema, so the new fields simply stay absent on
+  them for now.
+
+### Findings-to-ledger auto-routing (phase 242)
+
+Phase 242 implements the behavioral half phase 236 deliberately deferred —
+the source design doc's §7.3 (`docs/handoffs/cadence-phase0-assurance-kernel-review.md`):
+identified code-review findings now route into the recommendation ledger at
+settle time, as ordinary `Recommendation`/`Evidence` records.
+
+**`deriveRoutingCandidates`** (`packages/core/src/intelligence/finding-routing.ts:237-278`)
+is the pure derivation, taking the settle's `codeReview` findings, the set of
+already-routed `Finding.id`s, and settle-pointer facts — no fs, no clock read
+(`now` is injected). It groups findings by `Finding.id` first
+(`dec-20260731-001`): two or more findings that collide on identity within
+one settle (the collision rec-20260731-001 found — same file/anchor/
+severity/normalized-message, no occurrence discriminant) merge into a single
+candidate, whose summary and evidence text explicitly record the occurrence
+count — never silently minting one entry with no trace of the collapsed
+duplicates, and never minting *N* separate entries for one id. A finding
+with no stable `id` is skipped rather than force-routed — today that means
+every `security-audit` finding, since identity is not wired into that gate
+(phase 236's boundary, still true). Exactly one `scoutId` (the existing
+`scout-YYYYMMDD-HHMM` convention) is minted per call and shared across the
+whole batch, never one per finding.
+
+**`finalizeAndCloseSettle`** (`packages/core/src/services/settle.ts:943-990`)
+wires the derivation in as one named step, right after the SUMMARY is
+written, matching the existing retro-digest step's shape exactly. It is
+gated on `recommendations.autoRoute` (`z.boolean().default(true)`,
+`packages/types/src/config.ts:411-416`) and skipped entirely when the
+code-review gate didn't run at all. It reads the current recommendation
+ledger's **both** `recommendations` and `archived` arrays to build the
+already-routed-id set — a previously-routed finding can already be
+soft-archived (`recommendations.autoArchive` defaults on) by the time its
+phase is re-settled, so checking only the active array would let a re-settle
+silently re-route it (AC-2). The step is best-effort: a caught failure (e.g.
+a ledger write error) never blocks or fails settle, and always prints a
+stderr notice — `io.err('note: finding-ledger routing failed — …')` — rather
+than a silent `catch {}`.
+
+Each routed candidate becomes a `Recommendation` with `source: 'review'`,
+written via the extended `addRecommendation`
+(`packages/core/src/intelligence/store/recommendations.ts:66-70, 92-152`),
+linked to an `Evidence` entry of `kind: 'cadence-artifact'` whose `path`
+points at that settle's `<draftId>-SUMMARY.json` and whose `summary` names
+the phase id, draft id, and SUMMARY `contentHash`.
+
+**Explicitly still out of scope**, matching phase 236's own boundary:
+disposition mutation (accept / waive / fix / supersede) still has no CLI
+surface — every routed finding stays `disposition: 'open'`; `security-audit`
+findings still have no identity wired in; and there is no per-settle cap on
+how many candidates a single batch can route. **A `high`/`critical`
+code-review finding does not route on a normal settle at all** — the
+code-review gate refuses on any `high` finding (`collectHighFindings`,
+`gates/code-review.ts`), so settle takes the `writeRefusedSettleSummary`
+path and never reaches `finalizeAndCloseSettle`, where this step lives. Such
+findings only route when the operator bypasses the gate (`--force` /
+`--allow-code-review-failure`) — see `rec-20260731-004`.
+
 ### Gate bypass reference summary
 
 | Flag | Command | Gate bypassed |
@@ -483,9 +791,11 @@ strategic-intelligence layer that decides *what is worth doing* and feeds the
 loop, without ever touching loop state.
 
 The two layers are deliberately decoupled. Praxis is **read-narrow**: it reads
-the repo and the loop's state but writes only its own records. The loop never
-reads or writes Praxis. They meet at exactly one seam, described at the end of
-this section.
+the repo and the loop's state but writes only its own records. The loop's own
+execution — which gate runs, what passes or refuses — never reads Praxis to
+decide anything, and Praxis never writes loop state. They meet on a narrow,
+mostly one-way seam, described at the end of this section (as of phase 242,
+two paths wide in the loop→Praxis direction, not one).
 
 All Praxis records live under `.cadence/intelligence/` as versioned JSON, each
 with an auto-generated Markdown render for humans.
@@ -590,8 +900,8 @@ Three read-only views turn the ledger into something actionable:
 
 ### The seam — how Praxis feeds the loop
 
-Praxis is strategic input; the loop is execution. They connect on exactly one
-path, in one direction at a time:
+Praxis is strategic input; the loop is execution. Their primary connection is
+one path, in one direction at a time — a rec's journey into a phase and back:
 
 ```
 rec (readiness → ready-for-cadence-spec)
@@ -601,9 +911,17 @@ rec (readiness → ready-for-cadence-spec)
         → recommendation convert --to-phase  ⟶  rec status = converted   [loop → Praxis]
 ```
 
-Praxis never writes loop state; the loop never writes the ledger. The only
-coupling is the staged SPEC scaffold (Praxis → loop) and the terminal convert
-link (loop → Praxis). `convert` is one-way — there is no unconvert.
+Praxis never writes loop state, and the loop's own execution decisions —
+which gate runs, what passes or refuses — never depend on ledger content. But
+the loop→Praxis direction is now two paths, not one: the terminal `convert`
+link above, and — as of phase 242 — a second, best-effort settle-time writer
+that reads the ledger only to dedup (skip a finding already routed in a prior
+settle) and then mints new `source: 'review'` `Recommendation` entries from
+identified code-review findings (see "Findings-to-ledger auto-routing (phase
+242)" above). Both paths are one-way: `convert` has no unconvert, and the
+finding-routing writer never re-reads its own output within a settle to
+change what the loop does. The staged SPEC scaffold (Praxis → loop) remains
+the only coupling running the other direction.
 
 ### Scouting recs into the ledger
 
