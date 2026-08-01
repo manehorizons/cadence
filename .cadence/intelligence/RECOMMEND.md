@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-08-01T01:42:11.137Z
+Generated at: 2026-08-01T21:07:13.078Z
 
 ## Advisory
 
@@ -17,6 +17,13 @@ Generated at: 2026-08-01T01:42:11.137Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio high +5 · friction 0 +0 ⇒ raw 25.7 (score 73)
 - next: cadence milestone propose
 
+### rec-20260731-001 — cadence doctor: release-currency check (local package.json vs published npm)
+
+- score: 68/100 (raw 22.7)
+- status: candidate · ready: ready-for-milestone · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-milestone +7 · decay fresh +4 · prio high +5 · friction 0 +0 ⇒ raw 22.7 (score 68)
+- next: cadence milestone propose
+
 ### rec-20260801-001 — docs/reference/commands.md config edit section lists only 5 fields; EDITABLE_FIELDS has 8
 
 - score: 65/100 (raw 20.7)
@@ -26,6 +33,20 @@ Generated at: 2026-08-01T01:42:11.137Z
 - next: cadence milestone propose
 
 ### rec-20260729-004 — test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 · friction 0 +0 ⇒ raw 17.7 (score 61)
+- next: cadence milestone propose
+
+### rec-20260730-001 — phase-replay ignores SUMMARY.coverageMode provenance, re-derives coverage under the live config's mode
+
+- score: 61/100 (raw 17.7)
+- status: candidate · ready: needs-decision · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio high +5 · friction 0 +0 ⇒ raw 17.7 (score 61)
+- next: cadence milestone propose
+
+### rec-20260730-002 — Coverage dedup: a qualified AC token outside an asserting block silently zeroes that AC's coverage
 
 - score: 61/100 (raw 17.7)
 - status: candidate · ready: needs-decision · priority: high · decay: fresh
@@ -53,13 +74,6 @@ Generated at: 2026-08-01T01:42:11.137Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
 - next: cadence milestone propose
 
-### rec-20260729-001 — Kernel-assurance arc phases do not exercise their own assurance machinery at settle
-
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
-- next: cadence milestone propose
-
 ### rec-20260729-003 — Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap
 
 - score: 56/100 (raw 14.7)
@@ -74,7 +88,7 @@ Generated at: 2026-08-01T01:42:11.137Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
 - next: cadence milestone propose
 
-### rec-20260731-001 — Finding id collision: two same-severity/message findings in one file share one id
+### rec-20260731-007 — Finding id collision: two same-severity/message findings in one file share one id
 
 - score: 56/100 (raw 14.7)
 - status: candidate · ready: needs-decision · priority: medium · decay: fresh
@@ -82,12 +96,43 @@ Generated at: 2026-08-01T01:42:11.137Z
 - scout: scout-20260730-opus-gap-review
 - next: cadence milestone propose
 
-### rec-20260731-004 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)
+### rec-20260731-003 — Gate provenance doesn't distinguish a mock-downgraded AI review from a genuinely-ran one
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
+- next: cadence milestone propose
+
+### rec-20260731-010 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)
 
 - score: 56/100 (raw 14.7)
 - status: candidate · ready: needs-decision · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
 - scout: scout-20260731-kernel-ledger-routing
+- next: cadence milestone propose
+
+### rec-20260801-004 — code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
+- scout: scout-20260801-0100
+- next: cadence milestone propose
+
+### rec-20260801-005 — A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
+- scout: scout-20260801-0100
+- next: cadence milestone propose
+
+### rec-20260801-010 — Finding-identity dedup still breaks on free-text message drift under real LLM providers
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
+- scout: scout-20260801-0100
 - next: cadence milestone propose
 
 ### rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
@@ -99,6 +144,13 @@ Generated at: 2026-08-01T01:42:11.137Z
 - next: cadence milestone propose
 
 ### rec-20260724-012 — pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented
+
+- score: 55/100 (raw 13.7)
+- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 13.7 (score 55)
+- next: cadence milestone propose
+
+### rec-20260731-004 — docs/providers.md's host-cli 'per-task-verify only' scope claim is stale — all 7 factories now have host-cli wired
 
 - score: 55/100 (raw 13.7)
 - status: candidate · ready: needs-evidence · priority: medium · decay: fresh
@@ -155,6 +207,22 @@ Generated at: 2026-08-01T01:42:11.137Z
 - status: candidate · ready: needs-decision · priority: low · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio low +0 · friction 0 +0 ⇒ raw 12.7 (score 53)
 - scout: scout-20260731-kernel-ledger-routing
+- next: cadence milestone propose
+
+### rec-20260801-006 — deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: needs-decision · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio low +0 · friction 0 +0 ⇒ raw 12.7 (score 53)
+- scout: scout-20260801-0100
+- next: cadence milestone propose
+
+### rec-20260801-007 — Three small hygiene gaps from the kernel-arc independent review (2026-08-01)
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: needs-decision · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio low +0 · friction 0 +0 ⇒ raw 12.7 (score 53)
+- scout: scout-20260801-0100
 - next: cadence milestone propose
 
 ### rec-20260724-008 — Spot-check the logged-out GitHub landing render against main README
@@ -257,7 +325,7 @@ Generated at: 2026-08-01T01:42:11.137Z
 - scout: scout-20260727-kernel-review-phase0
 - next: cadence milestone propose
 
-### rec-20260731-002 — docs/concepts.md phase-236 section has unpinned file:line citations that will rot
+### rec-20260731-008 — docs/concepts.md phase-236 section has unpinned file:line citations that will rot
 
 - score: 50/100 (raw 10.7)
 - status: candidate · ready: raw-idea · priority: low · decay: fresh
@@ -289,4 +357,4 @@ None.
 
 ## Totals
 
-- total 59 · ranked 36 · parked 1 · needs-attention 0 · excluded 22
+- total 68 · ranked 45 · parked 1 · needs-attention 0 · excluded 22

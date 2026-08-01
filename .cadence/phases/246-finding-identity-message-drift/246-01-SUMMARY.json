@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 2,
+  "draftId": "246-01",
+  "completedAt": "2026-08-01T21:39:22.923Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "unverified"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Ran cadence decision add --rec rec-20260801-010, recording dec-20260801-003. Verified via 'cadence decision show dec-20260801-003' that the rationale contains all three AC-1 elements: (a) 0/257 SUMMARY.json files carry a persisted code-review finding, (b) offline analyzer over the SUMMARY corpus is the pre-committed next step (not in-loop telemetry or fuzzy-matching, both rejected with reasons), and (c) the trigger: >=3 non-mock-provider settles each persisting >=1 finding. No source files touched -- decision-only phase per SPEC revision after independent review found the original in-loop-telemetry design's grouping key inverted phase 245's exclusion and measured the wrong (intra-batch, not cross-settle) axis. rec-20260801-011 filed separately for the refused-settle SUMMARY-overwrite defect the review also surfaced."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "gateBypasses": [
+    {
+      "gate": "evidence-floor:AC-1",
+      "flag": "--evidence-floor-bypass",
+      "reason": "Decision-only phase, no source code ships; there is no test file to carry an AC-1 mention. AC-1 is independently verified via 'cadence decision show dec-20260801-003', which confirms the rationale contains all three required elements (0/257 evidence, offline-analyzer next-step, 3-settle trigger).",
+      "severity": "warn"
+    }
+  ],
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 265,
+    "sessionSubagentSpawns": 227
+  },
+  "assurance": {
+    "verifierRollup": [],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 0,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 1
+    },
+    "overall": "unverified"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "2505e86526cd882d8cf8941c3eeb6c691d5f182ed0aa3b6c9b112205c95f7d3b"
+  }
+}
