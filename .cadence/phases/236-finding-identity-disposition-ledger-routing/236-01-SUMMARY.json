@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 2,
+  "draftId": "236-01",
+  "completedAt": "2026-07-31T01:29:23.004Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "AnchorZ.kind widened + FindingZ gains id/target/disposition/waiver (additive/optional, back-compat verified). Independent review flagged a real gap: waiver had no cross-field constraint tying it to disposition==='waived'. Fixed directly (orchestrator, post-review): added two .refine()s on FindingZ enforcing the biconditional (waived requires waiver, waiver requires waived) per source doc §7.2 ('a waiver with no expiry is a belief masquerading as knowledge'). Adjusted one pre-existing test loop that asserted bare disposition:'waived' with no waiver, added 2 new rejection tests. Re-verified independently: 22/22 anchor.test.ts, 347/347 full types-package suite, typecheck clean. No other code in the repo yet constructs disposition/waiver (grepped), so this tightening has zero fallout."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "RecommendationSourceZ gains 'review' (additive enum extension). Implemented + independently reviewed + main-thread re-verified: 50/50 tests pass, diff is 5+/44+ insertions only, no deletions."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "New pure module verify/finding-identity.ts: computeFindingId (sha256 over JSON.stringify([file, anchor.kind, anchor.ref??null, severity, normalizeMessage(message)]), never a line number) + attachFindingIdentity batch adapter (stamps id/target:artifact/disposition:open onto AnchoredFinding[] -> Finding[]). Independently reviewed (hash-collision-safety of the JSON encoding specifically scrutinized, confirmed sound) and independently re-verified: 15/15 tests, typecheck clean."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "Wired attachFindingIdentity into gates/code-review.ts: called once right after gapResult is computed, result used consistently on all 3 summaryPatch.codeReview return paths (reloop-refuse, hard-refuse, pass/bypass). highs/pass (from raw verifyResult.findings) and gapCount/severityDistribution (from gapResult.summary) are structurally unaffected -- traced line by line, both independently and by the reviewer. Independently re-verified: 27/27 across code-review-criteria-gap/code-review/settle-code-review/settle-code-review-anchor-e2e test files, typecheck clean."
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "Converged code-review.ts's local Finding/FindingSeverity onto the shared cadence-types Finding (D9: one Finding type, discriminated by target). CodeReviewFinding/CodeReviewFindingSeverity kept as backward-compat re-exports in contracts/index.ts (2 real consumers: gates/types.ts, notify/code-review.ts). criteria-gap.ts's GapCandidateFinding/CriteriaGapSummary necessarily widened (severity/line derived from Finding['severity']/Finding['line']) to accommodate the wider type at anchorFindings' call site -- confirmed purely type-level (severity only ever tallied, never branched on; code-review's own verifiers never emit 'critical'; FindingResponseSchema LLM contract left unchanged at high|medium|low). Independently re-verified: build clean, 35/35 targeted tests, typecheck clean (reviewer additionally ran the full 3445-test core suite, all green)."
+    },
+    {
+      "id": "T6",
+      "status": "DONE",
+      "notes": "Documented phase 236's changes in docs/concepts.md (new subsection after phase-235's, doc-accuracy verified line-by-line against real source by reviewer) and added a purely additive inline 'As built' amendment to ROADMAP.md's phase 236 entry recording the ledger-routing split (0 deletions confirmed via git diff). Independently re-ran pnpm turbo run lint typecheck test build --force: 24 successful, 24 total, 0 cached (genuine full run). Backward compat independently spot-checked against 5 real pre-phase-236 SUMMARY.json fixtures (phases 67/167/220/234/235) -- all parse."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 45,
+    "sessionSubagentSpawns": 80
+  },
+  "assurance": {
+    "verifierRollup": [],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 5,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "mixed"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "6bc6457746614614d136ad7c0c914ce5cfd55c6dfdde97861cc42b310b8e6824"
+  }
+}

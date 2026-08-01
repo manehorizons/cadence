@@ -49,6 +49,20 @@ export function renderSummaryForReview(s: Summary): string {
     }
   }
 
+  if (s.assurance) {
+    lines.push('', '## Assurance', '');
+    lines.push(`- overall: ${s.assurance.overall}`);
+    const tally = s.assurance.evidenceTally;
+    lines.push(
+      `- evidence tally: ai-verified=${tally['ai-verified']}, executed=${tally.executed}, assertion=${tally.assertion}, mention=${tally.mention}, unverified=${tally.unverified}`,
+    );
+    if (s.assurance.verifierRollup.length > 0) {
+      for (const v of s.assurance.verifierRollup) {
+        lines.push(`- verifier: ${v.provider}${v.model ? ` ${v.model}` : ''} (${v.gateCount} gate(s))`);
+      }
+    }
+  }
+
   if (s.decisions.length > 0) {
     lines.push('', '## Decisions', '');
     for (const d of s.decisions) {

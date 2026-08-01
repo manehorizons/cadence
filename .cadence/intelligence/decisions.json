@@ -80,6 +80,106 @@
       "status": "active",
       "decidedAt": "2026-07-30T00:16:43.028Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260728-001",
+      "title": "Phase 233 AC-3 tripwire cleared: assurance-record derivation is gate-agnostic",
+      "rationale": "rec-20260728-001 (Per-settle assurance record), shipped via phase 233-per-settle-assurance-record. The derivation (packages/core/src/gates/assurance-record.ts, deriveAssuranceRecord) reads only gate-provenance provider/model fields and per-AC evidence classes -- never a specific gate name or id. Confirmed by the implementer, an independent per-task reviewer, and a fresh whole-branch reviewer, each reading the function directly and grepping for gate.gate/gate-name branching (none found). Per the phase 233 spec's binding tripwire, this clears phases 234-237 (kernel/verifier/consumer boundary work) to proceed on the premise that the kernel/verifier/consumer boundary is real, not a special-cased illusion. Non-blocking design-gap noted for those phases: only 2 of 10 GATE_ORDER gates (code-review, security-audit) currently populate verifier identity (phase 232's scope), so 'overall' has no signal from other gates that perform real verification (e.g. build-test-must-pass) -- worth addressing in a later slice, not a defect in phase 233 itself.",
+      "status": "active",
+      "decidedAt": "2026-07-28T02:33:14.475Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260729-001",
+      "recommendationId": "rec-20260727-003",
+      "title": "Phase 234 AC-1 narrowed: contracts/ is the type-naming surface, not the resolution surface",
+      "rationale": "AC-1 originally read 'that module is the only surface through which a verifier is resolved'. That over-claimed relative to the design source: docs/handoffs/cadence-phase0-assurance-kernel-review.md section 6 Slice 2 asks only to name the three roles as published contracts and add a lint rule against importing kernel internals -- it never requires contracts/ to be the resolution surface, and architecturally it should not be. Verifier resolution legitimately happens by direct verify/*-factory.ts import at four composition roots (services/settle.ts, gates/build-context.ts, gates/draft-context.ts, services/spec-approve-ports.ts); two independent reviews judged that placement correct, and contracts/ re-exports only the VerifierProvider type from verifier-factory.js, never a select* function. Amended AC-1 to 'the only surface through which a verifier TYPE is named', which IS mechanically enforced: zero direct imports of the seven verifier-family modules remain in packages/core/src outside verify/ and contracts/. Operator-approved 2026-07-28.",
+      "status": "active",
+      "decidedAt": "2026-07-29T01:15:16.785Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260729-002",
+      "recommendationId": "rec-20260727-003",
+      "title": "Uniform opts? on VerifierPort is what makes zero-special-cases true",
+      "rationale": "The published VerifierPort<I,R> carries a uniform optional opts?: VerifierCallOptions. Before phase 234 only security-audit's PORT threaded opts (Phase 184); the other six ports -- deep-verify included -- were declared arity-1, so restating them widens their type-level call signature by one optional parameter. Accepted deliberately: it is source-compatible and runtime-identical (every real call site still passes one argument), and it is the mechanism by which AC-2's 'zero special cases' is literally true. The rejected alternative was two port shapes (arity-1 plus a cancellable variant), which is itself the special-casing AC-2 forbids and would have risked the phase's binding tripwire. Known cost: five families advertise a cancellation affordance they ignore. Operator-approved 2026-07-28.",
+      "status": "active",
+      "decidedAt": "2026-07-29T01:15:16.977Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260729-003",
+      "recommendationId": "rec-20260727-004",
+      "title": "Phase 235 scope: criteria-anchoring is code-review only, not spec-review/ui-spec-review/plan-review",
+      "rationale": "Resolves section 10 open question 3 of the phase-0 assurance-kernel review. Although spec-review, ui-spec-review and plan-review are already criteria-shaped, generalizing the anchor ladder to them in slice 3 is scope creep: it would widen the phase past its overrun tripwire and couple the anchor ladder to three more input contracts before the ladder has proven itself on one. Scope stays the code-review verifier only; the other three gates keep current behavior. Backfilled as a decision record 2026-07-29 -- the boundary was already asserted in the 235-01 DRAFT but never written to the ledger by the session that authored it.",
+      "status": "active",
+      "decidedAt": "2026-07-29T22:09:00.176Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260729-004",
+      "recommendationId": "rec-20260727-005",
+      "title": "Anchor executable tier: non-empty verify + build-test-must-pass ran, no prose heuristic",
+      "rationale": "Section 7.1 defines executable as an AC referenced by a task whose verify is a runnable command AND build-test-must-pass actually ran. Nothing in the repo has a runnable-command predicate; the existing precedent (gates/task-verify-required.ts) tests only t.verify.trim().length. Implementing command-likeness as a heuristic would be fragile and could itself over-claim or under-claim. Decision: treat verify as runnable iff non-empty after trim, and rely on the gate-provenance condition (status === 'ran', never 'skipped' or 'refused') as the substantive corroboration that prevents over-claiming. That pairing is why 7.1 states two conditions rather than one. Residual known gap: a prose-only verify line on a phase whose suite ran elsewhere can still reach executable; refining that is a follow-up, not this slice.",
+      "status": "active",
+      "decidedAt": "2026-07-29T22:25:05.265Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260729-005",
+      "recommendationId": "rec-20260727-004",
+      "title": "Criteria-gap refusal reuses code-review's existing HIGH-severity refuse path, not gates.evidenceFloor",
+      "rationale": "D1 and section 6 Slice 3 say gap findings block above a severity floor; D2 says they trip the existing evidenceFloor with no second refusal primitive. These conflict: gates.evidenceFloor ranks AcEvidence (ai-verified > executed > assertion > mention > unverified) per AC, while findings carry severity high|medium|low, and no severity-to-evidence mapping exists. Decision: read D2 as forbidding a NEW refusal primitive and a NEW config knob, not as naming the AcEvidence floor specifically. Gap findings are emitted into the finding stream code-review already refuses on (HIGH refuses settle unless --allow-code-review-failure). This satisfies D2 literally (no second primitive, no doubled config surface), matches D1's severity-floor wording, and preserves AC-7 (no change to per-AC evidence semantics or to pass/refuse behavior for finding classes that existed before this phase). Rejected: mapping severity onto AcEvidence (invents semantics and perturbs the phase-214 floor), and a dedicated gates.criteriaGapFloor knob (the exact second-primitive/config-doubling D2 rejects). Tripwire T4 retuning, if gap findings prove too noisy on real phases, therefore means retuning the code-review severity assignment, not adding a floor.",
+      "status": "active",
+      "decidedAt": "2026-07-29T22:44:26.595Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260729-006",
+      "recommendationId": "rec-20260727-004",
+      "title": "D3 unconditional declaration binds the floor outcome, not the empty-gap case",
+      "rationale": "D3 says gap count and severity distribution are declared unconditionally; AC-4's operative text qualifies this as 'regardless of whether the floor stops the settle'. Read as: the declaration must not be suppressed by the floor OUTCOME (pass, refuse, or bypass via --allow-code-review-failure/--force) nor by config. It does not require printing a '0 finding(s) unanchored' stderr line into a settle that produced no findings at all. Implementation: gapResult is computed unconditionally on every gate run and the anchor-tagged findings land in summaryPatch.codeReview on all three return paths (pass, reloop-refuse, escalate-refuse), so gap count and severity distribution stay derivable from the persisted SUMMARY in every outcome; only the stderr convenience notice is guarded by gapCount > 0. Forced by AC-7: two pre-existing tests (tests/cli/settle-code-review.test.ts AC-4 and tests/cli/settle-codereview-convergence.test.ts AC-1) assert a clean-diff settle emits nothing matching /code-review:/ on stderr, and AC-7 forbids loosening an existing test to accommodate this phase. Independent review adjudicated this reading as non-weakening and verified both CLI suites pass with the guard in place. Recorded because the parallel D1/D2 tension got dec-20260729-005 and this one had been left implicit — a future reader could otherwise re-litigate it wrongly.",
+      "status": "active",
+      "decidedAt": "2026-07-29T23:06:44.137Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260730-002",
+      "recommendationId": "rec-20260727-007",
+      "title": "Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja",
+      "rationale": "Phase 236 derives a finding's stable id from the anchor it already carries -- a pure content hash over (file, anchor.kind, anchor.ref, severity, normalized message) -- and adds no new runtime dependency. The Deja extraction evaluated by rec-20260727-007 is rejected on three grounds recorded in ev-20260730-003: Deja is not consumable as a library (main:null/exports:null, unpublished under a name Cadence could depend on); its normalization layer carries tree-sitter and its matching layer carries better-sqlite3, both native, against core's zero-runtime-dependency bias; and the two problems differ in shape -- Deja solves retrieval over an indexed corpus while Cadence needs identity across two small per-run sets, so the genuinely shared surface reduces to 83 pure lines plus a one-line containment formula. This satisfies the concern that motivated the rec -- do not ship two incompatible fingerprints -- by shipping zero. Fingerprinting only buys identity that survives a refactor moving the anchored code, and only for anchor.kind==='none' / undeclared-tier findings, which section 7.1 already treats as weak by default. REOPEN TRIGGER: revisit if undeclared-tier findings become a material share of routed ledger entries AND identity churn across refactors is measured rather than assumed; extraction would then start from Deja's fingerprint.ts alone (pure, node:crypto only), never normalize.ts or match.ts.",
+      "status": "superseded",
+      "decidedAt": "2026-07-30T03:19:30.060Z",
+      "supersedes": [],
+      "supersededBy": "dec-20260801-002"
+    },
+    {
+      "id": "dec-20260731-001",
+      "recommendationId": "rec-20260731-009",
+      "title": "Findings-to-ledger routing merges same-identity findings by design; the identity hash itself is not changed",
+      "rationale": "rec-20260731-007 found that computeFindingId (phase 236, finding-identity.ts) collapses two distinct findings in one file that share (file, anchor.kind, anchor.ref, severity, normalized message) — no occurrence discriminant. Phase 242 (findings-to-ledger auto-routing, source doc §7.3) must key routing on Finding.id for ledger hygiene (dedup across re-settles), so this collision surfaces directly in routing: N same-id occurrences would otherwise mint one ledger entry with no record that N occurrences existed. Decision: keep the identity hash unchanged (out of phase 242's scope -- changing it is a phase-236-owned concern with its own downstream fallout to assess separately) and instead have the routing step's derivation merge same-id findings within one settle into a single Recommendation, recording the occurrence count explicitly in that entry's evidence/summary text. This is a deliberate merge-by-identity semantic, not silent data loss: a ledger reader sees 'N occurrences' rather than one bare finding. Revisit only if occurrence-level waiving (waiving one of N occurrences but not the others) becomes a real requirement -- today's FindingZ.disposition/waiver model waives by id, i.e. by the whole merged group, which is consistent with this decision.",
+      "status": "active",
+      "decidedAt": "2026-07-31T22:08:58.679Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260801-001",
+      "recommendationId": "rec-20260729-001",
+      "title": "Add a settle-time guard for global-CLI-shadowing-branch-build; interim rule is settle via the local build",
+      "rationale": "Swept 233/234/235/236/241/242 SUMMARYs: 233 and 234 are schemaVersion 1 with no assurance record (the bug, confirmed); 235 onward are all schemaVersion 2 with an assurance record -- the arc already informally adopted 'settle via node packages/core/bin/cadence.cjs' as of phase 235, so the gap did not recur after 234 despite no code fix existing yet. Per this repo's Quiet Fallback rule, a silent version mismatch needs a loud guard, not just tribal-knowledge discipline. --version is identical between the global npm install and any branch build (both report the same string), so the guard cannot key on version -- it must compare resolved binary realpath (or a build fingerprint) against the current git worktree root at settle time, and print a loud stderr notice (banner pattern, matching phase 243's precedent on main, db225ace) when they diverge rather than silently downgrading to schemaVersion 1. Scope: settle.ts's schemaVersion/assurance-record write path, not a general CLI-resolution redesign.",
+      "status": "active",
+      "decidedAt": "2026-08-01T01:45:29.153Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260801-002",
+      "title": "Finding identity narrowed to (file, normalized message); anchor/severity dropped as identity inputs",
+      "rationale": "Narrows dec-20260730-002's anchor-inclusion conclusion; its Deja-fingerprint-extraction rejection (the decision's other, independent conclusion) is unaffected and still stands. Phase 236's anchor-derived hash included anchor.kind/anchor.ref alongside severity, on the theory that a finding's own anchor is a legitimate, already-available content signal. Independent review (2026-08-01) found this wrong in two concrete ways, filed as rec-20260801-008/rec-20260801-009 (rec-20260801-008 later archived, split into the now-shipped anchor/severity fix and rec-20260801-010's residual message-drift risk): (1) the DRAFT-amendment/anchor-earning workflow deliberately re-anchors a previously-unanchored finding once a criterion covers it -- criteria-anchor-corpus.test.ts's own AC-5 round-trip test already proved message/severity/line survive that transition unchanged, but the pre-245 hash still minted a new id purely because anchor changed; (2) severity is live LLM classification under real verifier providers (anthropic/local/host-cli), so a re-run can legitimately reclassify the same defect's severity, and the pre-245 hash treated that as a new finding too. Both caused phase 242's ledger dedup (keyed on Finding.id) to miss an already-routed finding and mint a duplicate Recommendation. Phase 245 (245-finding-identity-stability) narrowed computeFindingId to hash only (file, normalized message); anchor/severity remain real Finding fields, just no longer identity inputs. Message-text free-form drift under real providers (the harder half of the original finding) is NOT fixed by this decision -- tracked separately as rec-20260801-010, operator risk-accepted rather than built speculatively.",
+      "status": "active",
+      "decidedAt": "2026-08-01T17:29:57.283Z",
+      "supersedes": [
+        "dec-20260730-002"
+      ]
     }
   ]
 }

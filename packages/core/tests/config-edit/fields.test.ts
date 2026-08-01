@@ -5,10 +5,12 @@ import { defaultConfig } from '@manehorizons/cadence-types';
 describe('config-edit fields', () => {
   // AC-1: the curated registry is exactly the behavior-shaping keys
   // (Phase 102 added `autoArchive`; Phase 108 added `coverageMode` → count 7;
-  // Phase 239 added `coverageScheme` → count 8).
-  it('AC-1: registry holds exactly the curated 8 fields', () => {
+  // Phase 239 added `coverageScheme` and Phase 242 added `autoRoute` — the two
+  // landed independently on `main` and on the kernel-assurance arc branch, so
+  // each read the count as 8 in isolation; merged, the registry holds 9).
+  it('AC-1: registry holds exactly the curated 9 fields', () => {
     expect(EDITABLE_FIELDS.map((f) => f.name)).toEqual([
-      'profile', 'loopEnforcement', 'acDiscipline', 'commitCadence', 'verifier', 'autoArchive', 'coverageMode',
+      'profile', 'loopEnforcement', 'acDiscipline', 'commitCadence', 'verifier', 'autoArchive', 'autoRoute', 'coverageMode',
       'coverageScheme',
     ]);
     for (const f of EDITABLE_FIELDS) {
@@ -27,6 +29,7 @@ describe('config-edit fields', () => {
     expect(by.commitCadence).toBe('draft');
     expect(by.verifier).toBe('mock');
     expect(by.autoArchive).toBe('true');
+    expect(by.autoRoute).toBe('true');
     // Phase 139: defaultConfig's coverageMode flipped 'mention' → 'assertion'.
     expect(by.coverageMode).toBe('assertion');
     // Phase 239: defaultConfig deliberately holds 'bare', NOT the strict
@@ -49,8 +52,15 @@ describe('config-edit fields', () => {
   // Phase 102 / AC-1 (discoverability): autoArchive resolves + reads its config value.
   it('102 AC-1: autoArchive is editable and current() tracks the config', () => {
     expect(resolveField('autoArchive')?.dottedKey).toBe('recommendations.autoArchive');
-    const off = { ...defaultConfig, recommendations: { autoArchive: false } };
+    const off = { ...defaultConfig, recommendations: { autoArchive: false, autoRoute: true } };
     expect(resolveField('autoArchive')?.current(off)).toBe('false');
+  });
+
+  // 242-01/AC-1 (discoverability): autoRoute resolves + reads its config value.
+  it('242-01/AC-1: autoRoute is editable and current() tracks the config', () => {
+    expect(resolveField('autoRoute')?.dottedKey).toBe('recommendations.autoRoute');
+    const off = { ...defaultConfig, recommendations: { autoArchive: true, autoRoute: false } };
+    expect(resolveField('autoRoute')?.current(off)).toBe('false');
   });
 
   // AC-2: resolveField handles the canonical name, the alias, and casing.

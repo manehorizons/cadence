@@ -1,5 +1,5 @@
 import type { AnomalyEvent } from '@manehorizons/cadence-types';
-import type { Finding } from '../verify/code-review.js';
+import type { CodeReviewFinding } from '../contracts/index.js';
 import type { selectNotifier } from './factory.js';
 import { emitUnconverged } from './emit-unconverged.js';
 
@@ -11,7 +11,7 @@ import { emitUnconverged } from './emit-unconverged.js';
  */
 export async function emitCodeReviewHigh(
   notifier: ReturnType<typeof selectNotifier>,
-  findings: Record<string, Finding[]>,
+  findings: Record<string, CodeReviewFinding[]>,
   ctx: { provider: string; bypassed: boolean },
 ): Promise<void> {
   const events: AnomalyEvent[] = [];
