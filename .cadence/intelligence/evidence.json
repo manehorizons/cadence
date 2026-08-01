@@ -1148,6 +1148,41 @@
       "kind": "note",
       "summary": "Opus gap review, phase 236, 2026-07-30: git show HEAD~1:docs/concepts.md had 0 file:line citations, phase 236 introduced 10 unpinned ones",
       "createdAt": "2026-07-31T02:11:27.207Z"
+    },
+    {
+      "id": "ev-20260731-003",
+      "recommendationId": "rec-20260731-003",
+      "kind": "note",
+      "summary": "Source doc §7.3 (docs/handoffs/cadence-phase0-assurance-kernel-review.md); phase 236 ROADMAP.md 'As built' amendment explicitly splits this out; rec-20260727-006/-011 (shipped, schema-only) are the prerequisites this consumes; rec-20260731-001 (finding-id collision, needs-decision) must be designed around, not ignored",
+      "createdAt": "2026-07-31T22:02:11.174Z"
+    },
+    {
+      "id": "ev-20260731-004",
+      "recommendationId": "rec-20260731-004",
+      "kind": "note",
+      "summary": "Surfaced by independent review of phase 242 T3 (2026-07-31), verified live: a forced high-severity settle exits 1 with lastGate.reason naming code-review, no codeReview key in the refused SUMMARY, no ledger entry",
+      "createdAt": "2026-07-31T23:57:57.980Z"
+    },
+    {
+      "id": "ev-20260731-005",
+      "recommendationId": "rec-20260731-005",
+      "kind": "note",
+      "summary": "Surfaced by independent review of phase 242 T3 (2026-07-31): dedup-set construction from ledger.recommendations + ledger.archived is correct per AC-2, but archiveReason is not distinguished when building that set",
+      "createdAt": "2026-07-31T23:58:08.617Z"
+    },
+    {
+      "id": "ev-20260731-006",
+      "recommendationId": "rec-20260731-006",
+      "kind": "note",
+      "summary": "Surfaced by independent review of phase 242 T3 (2026-07-31): verified empirically that Promise.all races on id-minting (3 concurrent calls -> 1 written rec), confirming the sequential loop is necessary but leaves an unbounded-N cost profile; recommendations.json/evidence.json confirmed git-tracked in this repo",
+      "createdAt": "2026-07-31T23:58:21.435Z"
+    },
+    {
+      "id": "ev-20260801-001",
+      "recommendationId": "rec-20260801-001",
+      "kind": "note",
+      "summary": "Surfaced during phase 242 T4 doc work (2026-07-31): confirmed docs/reference/commands.md:156 still says 'all five' while EDITABLE_FIELDS has 8 entries (profile, loopEnforcement, acDiscipline, commitCadence, verifier, autoArchive, coverageMode, autoRoute)",
+      "createdAt": "2026-08-01T00:18:50.599Z"
     }
   ]
 }

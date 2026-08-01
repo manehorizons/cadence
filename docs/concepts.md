@@ -485,22 +485,82 @@ scope for this phase).
 **What is deliberately not built yet.** This slice is schema and pure
 computation only — no I/O, no ledger writes:
 
-- **Findings-to-ledger auto-routing is NOT implemented.** Nothing in this
-  phase creates `Recommendation`/`Evidence` entries from findings during
-  settle. `RecommendationSourceZ` gains a `'review'` member
+- **Findings-to-ledger auto-routing was NOT implemented in this phase-236
+  slice — it now is, as of phase 242.** Nothing in phase 236 itself created
+  `Recommendation`/`Evidence` entries from findings during settle.
+  `RecommendationSourceZ` gained a `'review'` member
   (`packages/types/src/intelligence.ts:3-15`) purely so a future routing
-  phase has correct provenance to route with instead of mislabeling
-  code-review findings `'manual'`/`'cadence'` — no routing behavior reads or
-  writes that value yet. This is real I/O-port-threading work (a settle-time
-  writer that turns a finding into a ledger entry), deliberately split to a
-  follow-on phase and recorded as an inline "As built" amendment on the
-  phase 236 roadmap entry (`.cadence/ROADMAP.md`), not silently dropped.
+  phase would have correct provenance to route with instead of mislabeling
+  code-review findings `'manual'`/`'cadence'` — at the time, no routing
+  behavior read or wrote that value yet. This was real I/O-port-threading
+  work (a settle-time writer that turns a finding into a ledger entry),
+  deliberately split to a follow-on phase and recorded as an inline "As
+  built" amendment on the phase 236 roadmap entry (`.cadence/ROADMAP.md`).
+  That follow-on is now numbered and shipped — see "Findings-to-ledger
+  auto-routing (phase 242)" directly below for what it built.
 - **No disposition-management surface exists.** There is no CLI or mutation
   path to accept/waive/fix/supersede a finding; every finding this phase
   produces is stamped `disposition: 'open'` and stays there.
 - **`security-audit` findings are not identity-stamped.** They already share
   the converged `Finding` schema, so the new fields simply stay absent on
   them for now.
+
+### Findings-to-ledger auto-routing (phase 242)
+
+Phase 242 implements the behavioral half phase 236 deliberately deferred —
+the source design doc's §7.3 (`docs/handoffs/cadence-phase0-assurance-kernel-review.md`):
+identified code-review findings now route into the recommendation ledger at
+settle time, as ordinary `Recommendation`/`Evidence` records.
+
+**`deriveRoutingCandidates`** (`packages/core/src/intelligence/finding-routing.ts:237-278`)
+is the pure derivation, taking the settle's `codeReview` findings, the set of
+already-routed `Finding.id`s, and settle-pointer facts — no fs, no clock read
+(`now` is injected). It groups findings by `Finding.id` first
+(`dec-20260731-001`): two or more findings that collide on identity within
+one settle (the collision rec-20260731-001 found — same file/anchor/
+severity/normalized-message, no occurrence discriminant) merge into a single
+candidate, whose summary and evidence text explicitly record the occurrence
+count — never silently minting one entry with no trace of the collapsed
+duplicates, and never minting *N* separate entries for one id. A finding
+with no stable `id` is skipped rather than force-routed — today that means
+every `security-audit` finding, since identity is not wired into that gate
+(phase 236's boundary, still true). Exactly one `scoutId` (the existing
+`scout-YYYYMMDD-HHMM` convention) is minted per call and shared across the
+whole batch, never one per finding.
+
+**`finalizeAndCloseSettle`** (`packages/core/src/services/settle.ts:943-990`)
+wires the derivation in as one named step, right after the SUMMARY is
+written, matching the existing retro-digest step's shape exactly. It is
+gated on `recommendations.autoRoute` (`z.boolean().default(true)`,
+`packages/types/src/config.ts:411-416`) and skipped entirely when the
+code-review gate didn't run at all. It reads the current recommendation
+ledger's **both** `recommendations` and `archived` arrays to build the
+already-routed-id set — a previously-routed finding can already be
+soft-archived (`recommendations.autoArchive` defaults on) by the time its
+phase is re-settled, so checking only the active array would let a re-settle
+silently re-route it (AC-2). The step is best-effort: a caught failure (e.g.
+a ledger write error) never blocks or fails settle, and always prints a
+stderr notice — `io.err('note: finding-ledger routing failed — …')` — rather
+than a silent `catch {}`.
+
+Each routed candidate becomes a `Recommendation` with `source: 'review'`,
+written via the extended `addRecommendation`
+(`packages/core/src/intelligence/store/recommendations.ts:66-70, 92-152`),
+linked to an `Evidence` entry of `kind: 'cadence-artifact'` whose `path`
+points at that settle's `<draftId>-SUMMARY.json` and whose `summary` names
+the phase id, draft id, and SUMMARY `contentHash`.
+
+**Explicitly still out of scope**, matching phase 236's own boundary:
+disposition mutation (accept / waive / fix / supersede) still has no CLI
+surface — every routed finding stays `disposition: 'open'`; `security-audit`
+findings still have no identity wired in; and there is no per-settle cap on
+how many candidates a single batch can route. **A `high`/`critical`
+code-review finding does not route on a normal settle at all** — the
+code-review gate refuses on any `high` finding (`collectHighFindings`,
+`gates/code-review.ts`), so settle takes the `writeRefusedSettleSummary`
+path and never reaches `finalizeAndCloseSettle`, where this step lives. Such
+findings only route when the operator bypasses the gate (`--force` /
+`--allow-code-review-failure`) — see `rec-20260731-004`.
 
 ### Gate bypass reference summary
 
@@ -678,9 +738,11 @@ strategic-intelligence layer that decides *what is worth doing* and feeds the
 loop, without ever touching loop state.
 
 The two layers are deliberately decoupled. Praxis is **read-narrow**: it reads
-the repo and the loop's state but writes only its own records. The loop never
-reads or writes Praxis. They meet at exactly one seam, described at the end of
-this section.
+the repo and the loop's state but writes only its own records. The loop's own
+execution — which gate runs, what passes or refuses — never reads Praxis to
+decide anything, and Praxis never writes loop state. They meet on a narrow,
+mostly one-way seam, described at the end of this section (as of phase 242,
+two paths wide in the loop→Praxis direction, not one).
 
 All Praxis records live under `.cadence/intelligence/` as versioned JSON, each
 with an auto-generated Markdown render for humans.
@@ -785,8 +847,8 @@ Three read-only views turn the ledger into something actionable:
 
 ### The seam — how Praxis feeds the loop
 
-Praxis is strategic input; the loop is execution. They connect on exactly one
-path, in one direction at a time:
+Praxis is strategic input; the loop is execution. Their primary connection is
+one path, in one direction at a time — a rec's journey into a phase and back:
 
 ```
 rec (readiness → ready-for-cadence-spec)
@@ -796,9 +858,17 @@ rec (readiness → ready-for-cadence-spec)
         → recommendation convert --to-phase  ⟶  rec status = converted   [loop → Praxis]
 ```
 
-Praxis never writes loop state; the loop never writes the ledger. The only
-coupling is the staged SPEC scaffold (Praxis → loop) and the terminal convert
-link (loop → Praxis). `convert` is one-way — there is no unconvert.
+Praxis never writes loop state, and the loop's own execution decisions —
+which gate runs, what passes or refuses — never depend on ledger content. But
+the loop→Praxis direction is now two paths, not one: the terminal `convert`
+link above, and — as of phase 242 — a second, best-effort settle-time writer
+that reads the ledger only to dedup (skip a finding already routed in a prior
+settle) and then mints new `source: 'review'` `Recommendation` entries from
+identified code-review findings (see "Findings-to-ledger auto-routing (phase
+242)" above). Both paths are one-way: `convert` has no unconvert, and the
+finding-routing writer never re-reads its own output within a settle to
+change what the loop does. The staged SPEC scaffold (Praxis → loop) remains
+the only coupling running the other direction.
 
 ### Scouting recs into the ledger
 

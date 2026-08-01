@@ -399,12 +399,21 @@ export const CadenceConfigZ = z.object({
    * Archival is recoverable (`recommendation unarchive`), so unlike `handoff.retain`
    * (a hard delete, opt-in) this defaults on. Set `false` to keep terminal recs in
    * the active ledger; manual `recommendation archive` still works either way.
+   *
+   * `autoRoute` (Phase 242, default `true`) is the settle-time writer that turns
+   * identified code-review findings into `source: 'review'` recommendations
+   * instead of leaving them stranded in the SUMMARY. Routing is dedup-safe
+   * (keyed on `Finding.id`, never mints a duplicate) and best-effort (a routing
+   * failure never blocks settle), so — like `autoArchive` — it defaults on. Set
+   * `false` to keep settle's ledger writes limited to the existing auto-archive
+   * hook.
    */
   recommendations: z
     .object({
       autoArchive: z.boolean().default(true),
+      autoRoute: z.boolean().default(true),
     })
-    .default({ autoArchive: true }),
+    .default({ autoArchive: true, autoRoute: true }),
   /**
    * Post-settle retro artifact (Phase 174, rec-20260712-001). `enabled`
    * (default `true`) is the master switch: on every successful settle,
@@ -540,7 +549,7 @@ export const defaultConfig: CadenceConfig = {
   phaseGuard: { enabled: true, integrationRef: 'main' },
   logging: { level: 'silent' as const },
   handoff: {},
-  recommendations: { autoArchive: true },
+  recommendations: { autoArchive: true, autoRoute: true },
   retro: { enabled: true, offerGithubIssue: true },
   gates: { sealed: [], evidenceFloor: 'mention' as const },
   resume: { crossWorktree: true, autoList: false, remoteCheck: true },

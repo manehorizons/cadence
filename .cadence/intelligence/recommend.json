@@ -1,15 +1,106 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-27T04:08:29.848Z",
+  "generatedAt": "2026-08-01T00:33:27.231Z",
   "ranked": [
     {
-      "id": "rec-20260724-004",
-      "title": "Refresh .cadence/ROADMAP.md or formally deprecate it in favor of milestones plus ledger",
-      "raw": 14.7,
-      "score": 56,
+      "id": "rec-20260727-012",
+      "title": "cadence doctor check: roadmap-currency (anti-recurrence for ROADMAP/MILESTONES drift)",
+      "raw": 25.7,
+      "score": 73,
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready ready-for-cadence-spec",
+          "value": 10
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260801-001",
+      "title": "docs/reference/commands.md config edit section lists only 5 fields; EDITABLE_FIELDS has 8",
+      "raw": 20.7,
+      "score": 65,
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready ready-for-cadence-spec",
+          "value": 10
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260731-kernel-ledger-routing"
+    },
+    {
+      "id": "rec-20260729-004",
+      "title": "test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests",
+      "raw": 17.7,
+      "score": 61,
       "status": "candidate",
       "readiness": "needs-decision",
-      "priority": "medium",
+      "priority": "high",
       "decayState": "fresh",
       "terms": [
         {
@@ -37,12 +128,60 @@
           "value": 4
         },
         {
-          "label": "prio medium",
-          "value": 2
+          "label": "prio high",
+          "value": 5
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "claude-cadence-audit-20260724"
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260729-006",
+      "title": "Retroactive audit: re-derive how many historical AC PASS records had genuine per-phase test coverage",
+      "raw": 16.7,
+      "score": 59,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
     },
     {
       "id": "rec-20260726-005",
@@ -81,9 +220,285 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260728-002",
+      "title": "Test files are never typechecked or linted",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260729-001",
+      "title": "Kernel-assurance arc phases do not exercise their own assurance machinery at settle",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260729-003",
+      "title": "Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260729-005",
+      "title": "Boundary-string anchors are granted by filename substring match, so an irrelevant boundary can mask a criteria gap",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260731-001",
+      "title": "Finding id collision: two same-severity/message findings in one file share one id",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260730-opus-gap-review"
+    },
+    {
+      "id": "rec-20260731-004",
+      "title": "High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260731-kernel-ledger-routing"
     },
     {
       "id": "rec-20260724-007",
@@ -122,6 +537,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -164,6 +583,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -205,6 +628,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -247,6 +674,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -288,6 +719,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -329,6 +764,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -370,9 +809,105 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260731-005",
+      "title": "Archived finding-routing recs permanently suppress recurrence of the same finding id",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260731-kernel-ledger-routing"
+    },
+    {
+      "id": "rec-20260731-006",
+      "title": "Finding-ledger routing has no per-settle cap: O(N) sequential ledger rewrites, and it now dirties a git-tracked file every settle",
+      "raw": 12.7,
+      "score": 53,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260731-kernel-ledger-routing"
     },
     {
       "id": "rec-20260724-008",
@@ -411,10 +946,60 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "claude-cadence-audit-20260724"
+    },
+    {
+      "id": "rec-20260727-008",
+      "title": "Invariant promotion from RetroRollup.findingCategories.recurring",
+      "raw": 11.7,
+      "score": 52,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260727-kernel-review-phase0"
     },
     {
       "id": "rec-20260710-005",
@@ -452,6 +1037,10 @@
         },
         {
           "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
           "value": 0
         }
       ],
@@ -495,6 +1084,10 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -535,6 +1128,10 @@
         },
         {
           "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
           "value": 0
         }
       ],
@@ -577,6 +1174,10 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -617,6 +1218,10 @@
         },
         {
           "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
           "value": 0
         }
       ],
@@ -660,6 +1265,10 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
@@ -702,6 +1311,10 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -742,6 +1355,10 @@
         },
         {
           "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
           "value": 0
         }
       ],
@@ -785,10 +1402,152 @@
         {
           "label": "prio low",
           "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "claude-cadence-audit-20260724"
+    },
+    {
+      "id": "rec-20260727-009",
+      "title": "Counter-verifier as kernel component with AC-weakness detection",
+      "raw": 10.7,
+      "score": 50,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260727-kernel-review-phase0"
+    },
+    {
+      "id": "rec-20260727-010",
+      "title": "Conductor as CLI client; treat access gaps as CLI-completeness bugs",
+      "raw": 10.7,
+      "score": 50,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260727-kernel-review-phase0"
+    },
+    {
+      "id": "rec-20260731-002",
+      "title": "docs/concepts.md phase-236 section has unpinned file:line citations that will rot",
+      "raw": 10.7,
+      "score": 50,
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready raw-idea",
+          "value": 0
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260730-opus-gap-review"
     },
     {
       "id": "rec-20260726-006",
@@ -826,6 +1585,10 @@
         },
         {
           "label": "prio low",
+          "value": 0
+        },
+        {
+          "label": "friction 0",
           "value": 0
         }
       ],
@@ -868,6 +1631,10 @@
         {
           "label": "prio medium",
           "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
@@ -883,12 +1650,12 @@
   ],
   "needsAttention": [],
   "advisory": {
-    "kind": "top-recommendation",
-    "primary": "cadence milestone propose"
+    "kind": "spec-new",
+    "primary": "cadence spec new"
   },
   "totals": {
-    "total": 44,
-    "ranked": 21,
+    "total": 59,
+    "ranked": 36,
     "parked": 1,
     "needsAttention": 0,
     "excluded": 22

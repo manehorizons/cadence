@@ -30,7 +30,7 @@ import type { AnchoredFinding } from './criteria-gap.js';
  * case-folding, no punctuation stripping) — a genuinely different message
  * must still produce a different id.
  */
-function normalizeMessage(message: string): string {
+export function normalizeMessage(message: string): string {
   return message.trim().replace(/\s+/g, ' ');
 }
 
