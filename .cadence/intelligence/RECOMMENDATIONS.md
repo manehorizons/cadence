@@ -753,23 +753,6 @@ Add a warning-only, non-blocking cadence doctor check comparing the highest phas
 
 packages/core/tsconfig.json has include: ["src/**/*"] and tsconfig.base.json excludes **/*.test.ts and tests/, while each package's lint script is 'eslint src'. No test file in the repo is typechecked or linted by any command CI runs, and vitest does not typecheck. Consequence: type-level assertions in tests (conformance witnesses, satisfies checks, expectTypeOf-style guards) are inert -- a provably false witness leaves vitest, typecheck and lint all green. Found during phase 234 T1 review, where a deliberately falsified assignability witness passed all three gates. Options: a tsconfig.test.json wired into the typecheck task, vitest --typecheck, or a convention that type-level guarantees must live in src/.
 
-## rec-20260729-001 — Kernel-assurance arc phases do not exercise their own assurance machinery at settle
-
-- status: settle-pending
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, process
-- files: packages/core/bin/cadence.cjs, packages/core/src/services/settle.ts
-- decisions: dec-20260801-001 (active)
-- evidence: Phase 234 settle produced 234-01-SUMMARY.json with schemaVersion 1 and no assurance field; 233-01-SUMMARY.json on the same branch is identical in that respect. 'which cadence' -> /home/thomas/.local/bin/cadence (v1.51.1); the worktree build reports the same version string, so the shadowing is invisible from the version alone.
-- next: cadence milestone propose
-
-Phases 232 and 233 shipped SUMMARY schemaVersion 2 and the per-settle assurance record onto feat/kernel-assurance-v2, but every phase settled on that branch (233, 234) writes schemaVersion 1 with no assurance record -- because 'cadence settle' resolves to the globally-installed released CLI (v1.51.1, which predates the arc) rather than the branch's own build at packages/core/bin/cadence.cjs. Consequence: the arc's central deliverable is never dogfooded by the arc itself, and no phase SUMMARY on the branch demonstrates the assurance record working end to end. Options: settle arc phases via 'node packages/core/bin/cadence.cjs settle run --auto', or add a doctor/settle notice when the resolved CLI predates the repo's own build. Related to the known 'cadence on PATH is global, not worktree' hazard that previously bit phase 195.
-
 ## rec-20260729-003 — Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap
 
 - status: candidate

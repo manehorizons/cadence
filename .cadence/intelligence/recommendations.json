@@ -1401,38 +1401,6 @@
       "updatedAt": "2026-07-28T22:57:34.634Z"
     },
     {
-      "id": "rec-20260729-001",
-      "title": "Kernel-assurance arc phases do not exercise their own assurance machinery at settle",
-      "summary": "Phases 232 and 233 shipped SUMMARY schemaVersion 2 and the per-settle assurance record onto feat/kernel-assurance-v2, but every phase settled on that branch (233, 234) writes schemaVersion 1 with no assurance record -- because 'cadence settle' resolves to the globally-installed released CLI (v1.51.1, which predates the arc) rather than the branch's own build at packages/core/bin/cadence.cjs. Consequence: the arc's central deliverable is never dogfooded by the arc itself, and no phase SUMMARY on the branch demonstrates the assurance record working end to end. Options: settle arc phases via 'node packages/core/bin/cadence.cjs settle run --auto', or add a doctor/settle notice when the resolved CLI predates the repo's own build. Related to the known 'cadence on PATH is global, not worktree' hazard that previously bit phase 195.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "process"
-      ],
-      "affectedFiles": [
-        "packages/core/bin/cadence.cjs",
-        "packages/core/src/services/settle.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260729-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [
-        "dec-20260801-001"
-      ],
-      "convertedToPhaseId": "244-settle-time-guard-for-global-cli-shadowing-branch-build",
-      "createdAt": "2026-07-29T01:14:55.911Z",
-      "updatedAt": "2026-08-01T03:15:55.242Z"
-    },
-    {
       "id": "rec-20260729-003",
       "title": "Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap",
       "summary": "Phase 235's anchorFindings (verify/criteria-gap.ts) resolves ONE anchor per file and tags every finding in that file with it, because the code-review verifier returns findings keyed by file with no per-finding criterion attribution. Consequence: a genuinely uncovered defect sitting in a file that some task happens to cover inherits that file's anchor and is NOT counted as a criteria gap — the gap detector under-reports precisely where a phase's ACs are thinnest. Phase 235 extended CodeReviewInput so the verifier can now SEE the ACs/boundaries, which is the prerequisite for the verifier itself citing the criterion it believes a finding violates; the mock does not exercise that. Fix: have the verifier return a per-finding anchor candidate (criterion citation) and grade that, keeping the file-level resolution only as the fallback when the verifier cites nothing.",
@@ -5417,6 +5385,41 @@
       "archiveReason": "manual",
       "createdAt": "2026-08-01T02:02:57.182Z",
       "updatedAt": "2026-08-01T03:12:45.630Z"
+    },
+    {
+      "id": "rec-20260729-001",
+      "title": "Kernel-assurance arc phases do not exercise their own assurance machinery at settle",
+      "summary": "Phases 232 and 233 shipped SUMMARY schemaVersion 2 and the per-settle assurance record onto feat/kernel-assurance-v2, but every phase settled on that branch (233, 234) writes schemaVersion 1 with no assurance record -- because 'cadence settle' resolves to the globally-installed released CLI (v1.51.1, which predates the arc) rather than the branch's own build at packages/core/bin/cadence.cjs. Consequence: the arc's central deliverable is never dogfooded by the arc itself, and no phase SUMMARY on the branch demonstrates the assurance record working end to end. Options: settle arc phases via 'node packages/core/bin/cadence.cjs settle run --auto', or add a doctor/settle notice when the resolved CLI predates the repo's own build. Related to the known 'cadence on PATH is global, not worktree' hazard that previously bit phase 195.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "process"
+      ],
+      "affectedFiles": [
+        "packages/core/bin/cadence.cjs",
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260801-001"
+      ],
+      "convertedToPhaseId": "244-settle-time-guard-for-global-cli-shadowing-branch-build",
+      "createdAt": "2026-07-29T01:14:55.911Z",
+      "updatedAt": "2026-08-01T03:35:05.654Z",
+      "shippedRef": "phase 244-settle-time-guard-for-global-cli-shadowing-branch-build (feat/kernel-assurance-v2 arc, PR #348, merged bff35bf4)",
+      "archivedAt": "2026-08-01T03:35:05.654Z",
+      "archiveReason": "shipped"
     }
   ]
 }
