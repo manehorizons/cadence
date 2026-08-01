@@ -1,0 +1,56 @@
+{
+  "draftId": "244-01",
+  "tasks": {
+    "244-01/T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-01T02:20:47.548Z"
+    },
+    "244-01/T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/packages/core/src/verify/verifier-factory.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/packages/types/src/summary.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/packages/core/tests/services/settle-foreign-binary-wiring.test.ts"
+      ],
+      "updatedAt": "2026-08-01T02:39:01.990Z"
+    },
+    "244-01/T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/.changeset/settle-time-foreign-binary-guard.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/packages/core/tests/services/settle-binary-guard.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/packages/core/tests/services/settle-foreign-binary-wiring.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/.cadence/phases/244-settle-time-guard-for-global-cli-shadowing-branch-build/244-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-01T02:57:15.891Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-arc-work/.changeset/settle-time-foreign-binary-guard.md"
+      ],
+      "updatedAt": "2026-08-01T03:15:47.502Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-01T03:15:47.660Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-01T03:15:47.815Z"
+    }
+  }
+}

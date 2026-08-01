@@ -45,6 +45,9 @@
   "specReview": {
     "provider": "mock"
   },
+  "uiSpecReview": {
+    "provider": "mock"
+  },
   "tier": {
     "quickFix": {
       "maxTasks": 1,
@@ -65,14 +68,15 @@
       "packages/**/*.test.tsx"
     ],
     "coverageMode": "assertion",
-    "testCommand": "pnpm test"
+    "testCommand": "pnpm test",
+    "coverageProfiles": []
   },
   "verifier": {
     "provider": "mock",
     "diffCapBytes": 262144
   },
   "perTaskVerifier": {
-    "provider": "mock"
+    "provider": "host-cli"
   },
   "codeReview": {
     "provider": "mock"
@@ -97,14 +101,21 @@
     "retain": 10
   },
   "recommendations": {
-    "autoArchive": true
+    "autoArchive": true,
+    "autoRoute": true
+  },
+  "retro": {
+    "enabled": true,
+    "offerGithubIssue": true
   },
   "gates": {
-    "sealed": []
+    "sealed": [],
+    "evidenceFloor": "mention"
   },
   "resume": {
     "crossWorktree": true,
-    "autoList": false
+    "autoList": false,
+    "remoteCheck": true
   },
   "boundaryEnforcement": "warn",
   "redundantWorkEnforcement": "warn"

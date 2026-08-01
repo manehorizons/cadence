@@ -122,6 +122,13 @@ Phase 236 derives a finding's stable id from the anchor it already carries -- a 
 
 rec-20260731-001 found that computeFindingId (phase 236, finding-identity.ts) collapses two distinct findings in one file that share (file, anchor.kind, anchor.ref, severity, normalized message) — no occurrence discriminant. Phase 242 (findings-to-ledger auto-routing, source doc §7.3) must key routing on Finding.id for ledger hygiene (dedup across re-settles), so this collision surfaces directly in routing: N same-id occurrences would otherwise mint one ledger entry with no record that N occurrences existed. Decision: keep the identity hash unchanged (out of phase 242's scope -- changing it is a phase-236-owned concern with its own downstream fallout to assess separately) and instead have the routing step's derivation merge same-id findings within one settle into a single Recommendation, recording the occurrence count explicitly in that entry's evidence/summary text. This is a deliberate merge-by-identity semantic, not silent data loss: a ledger reader sees 'N occurrences' rather than one bare finding. Revisit only if occurrence-level waiving (waiving one of N occurrences but not the others) becomes a real requirement -- today's FindingZ.disposition/waiver model waives by id, i.e. by the whole merged group, which is consistent with this decision.
 
+### dec-20260801-001 — Add a settle-time guard for global-CLI-shadowing-branch-build; interim rule is settle via the local build
+
+- recommendation: rec-20260729-001
+- decided: 2026-08-01T01:45:29.153Z
+
+Swept 233/234/235/236/241/242 SUMMARYs: 233 and 234 are schemaVersion 1 with no assurance record (the bug, confirmed); 235 onward are all schemaVersion 2 with an assurance record -- the arc already informally adopted 'settle via node packages/core/bin/cadence.cjs' as of phase 235, so the gap did not recur after 234 despite no code fix existing yet. Per this repo's Quiet Fallback rule, a silent version mismatch needs a loud guard, not just tribal-knowledge discipline. --version is identical between the global npm install and any branch build (both report the same string), so the guard cannot key on version -- it must compare resolved binary realpath (or a build fingerprint) against the current git worktree root at settle time, and print a loud stderr notice (banner pattern, matching phase 243's precedent on main, db225ace) when they diverge rather than silently downgrading to schemaVersion 1. Scope: settle.ts's schemaVersion/assurance-record write path, not a general CLI-resolution redesign.
+
 ## Superseded
 
 _(none)_

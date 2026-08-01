@@ -155,6 +155,52 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   both `cadence summary render` and the on-disk `SUMMARY.md` sidecar as an
   "## Assurance" section (`overall`, the evidence tally, and any verifier
   rollup entries).
+- Phase 244: `SUMMARY.json` optionally carries `foreignBinaryMismatch` — a
+  sibling provenance field to `assurance` above, set only when this settle
+  actually ran through a `cadence` binary whose realpath resolves OUTSIDE
+  the current repo checkout, despite that repo having its own local build
+  (recognizably the CADENCE monorepo itself: both
+  `packages/core/bin/cadence.cjs` and `.cadence/` present at its root).
+  This is `rec-20260729-001`, confirmed on phases 233/234: a stale
+  globally-installed `cadence` binary silently shadowed the checkout's own
+  build and wrote a downgraded `schemaVersion: 1` SUMMARY with no
+  `assurance` record — and the two binaries reported an *identical*
+  `--version` string, so detection cannot key on version comparison. This
+  guard only runs in code that contains it, so it could not have caught
+  233/234 themselves and will not catch settles run through an
+  already-published binary that predates this fix — it protects settles
+  going forward, once a release built from this code is what operators
+  actually have installed. `detectForeignCadenceBinary`
+  (`packages/core/src/services/settle.ts`) is realpath-based instead: is
+  the binary actually executing this settle located inside the repo's own
+  toplevel. Like `assurance`, this is reported only — it adds no gate, no
+  refusal path, and no bypass flag; settle still completes normally either
+  way, matching this repo's Quiet Fallback convention (loud notice, never a
+  silent or blocking fallback). It is recorded on **both** paths a settle
+  can take: a normal completion *and* the refused-settle SUMMARY described
+  above (a refused settle's running binary is just as foreign as a
+  successful one's would have been) — though only the normal-completion
+  path's SUMMARY gets a content hash at all (`writeRefusedSettleSummary`
+  computes none, same as `assurance`). When present, the field is a
+  two-key object — `runningBinaryPath` (the resolved realpath of the
+  binary that actually executed) and `repoToplevel` (the settle
+  invocation's `cwd`, which this repo already treats as its root
+  throughout `settle.ts`); when absent (not `false`/`null` —
+  `exactOptionalPropertyTypes`, the key is omitted), the running binary
+  and the repo agreed, which is the common/correct case, including every
+  phase settled correctly. On the normal-completion path it is attached
+  before `computeSummaryContentHash` runs, so it's covered by the same
+  phase-223 content hash as the rest of that record — but unlike
+  `assurance` it has no rendered `SUMMARY.md` section yet; it is JSON-only
+  so far (the same limitation the phase-170 `reason` field above has) —
+  read the `.json` record to see it. On a mismatch, a loud stderr banner —
+  "SETTLING VIA A FOREIGN CADENCE BINARY"
+  (`buildForeignBinaryBanner` in `packages/core/src/verify/verifier-factory.ts`),
+  same shape/placement convention as `MOCK_FALLBACK_BANNER` — names both
+  paths and suggests the fix (re-run via
+  `node packages/core/bin/cadence.cjs settle run --auto`), so the mismatch
+  is visible live on stderr even for a session that never inspects the
+  JSON record.
 - `.cadence/phases/<phase>/<id>-SUMMARY.md` — human-readable rendered view
 - `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` — plan-review findings
   (written at `draft approve` when `plan-review` fires)
