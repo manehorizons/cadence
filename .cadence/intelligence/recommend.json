@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-01T21:07:13.078Z",
+  "generatedAt": "2026-08-01T22:26:17.972Z",
   "ranked": [
     {
       "id": "rec-20260727-012",
@@ -728,8 +728,8 @@
       "scoutId": "scout-20260801-0100"
     },
     {
-      "id": "rec-20260801-010",
-      "title": "Finding-identity dedup still breaks on free-text message drift under real LLM providers",
+      "id": "rec-20260801-011",
+      "title": "Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings",
       "raw": 14.7,
       "score": 56,
       "status": "candidate",
@@ -771,7 +771,53 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260801-0100"
+      "scoutId": "scout-20260801-phase246-review"
+    },
+    {
+      "id": "rec-20260801-012",
+      "title": "Real-provider code-review findings are structurally unreachable under default profile + agent-driven settles",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260801-phase246-review"
     },
     {
       "id": "rec-20260724-007",
@@ -2064,8 +2110,8 @@
     "primary": "cadence spec new"
   },
   "totals": {
-    "total": 68,
-    "ranked": 45,
+    "total": 69,
+    "ranked": 46,
     "parked": 1,
     "needsAttention": 0,
     "excluded": 22

@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-08-01T21:07:13.078Z
+Generated at: 2026-08-01T22:26:17.972Z
 
 ## Advisory
 
@@ -127,12 +127,20 @@ Generated at: 2026-08-01T21:07:13.078Z
 - scout: scout-20260801-0100
 - next: cadence milestone propose
 
-### rec-20260801-010 — Finding-identity dedup still breaks on free-text message drift under real LLM providers
+### rec-20260801-011 — Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings
 
 - score: 56/100 (raw 14.7)
 - status: candidate · ready: needs-decision · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
-- scout: scout-20260801-0100
+- scout: scout-20260801-phase246-review
+- next: cadence milestone propose
+
+### rec-20260801-012 — Real-provider code-review findings are structurally unreachable under default profile + agent-driven settles
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
+- scout: scout-20260801-phase246-review
 - next: cadence milestone propose
 
 ### rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
@@ -357,4 +365,4 @@ None.
 
 ## Totals
 
-- total 68 · ranked 45 · parked 1 · needs-attention 0 · excluded 22
+- total 69 · ranked 46 · parked 1 · needs-attention 0 · excluded 22
