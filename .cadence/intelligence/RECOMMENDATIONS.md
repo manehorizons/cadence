@@ -1058,23 +1058,6 @@ assurance-record.ts documents 'weak' as covering '...or simply no ACs at all wit
 
 (1) eslint.config.js's own comment candidly documents that dynamic import() of verifier family modules is invisible to the new kernel/verifier/consumer boundary rule -- a disclosed, real gap with no tracking recommendation until now. (2) deriveAssuranceRecord's verifierRollup key is an unseparated string join (${provider} ${model ?? ''}) -- theoretically collision-prone if a provider/model string ever contains a space (today's real values never do). (3) readRawSchemaVersion/MAX_RECOGNIZED_SCHEMA_VERSION is duplicated between verify/phase-replay.ts and cli/commands/summary.ts, hand-synced -- a third SummaryZ.safeParse call site would misreport a future schemaVersion-3 record as a generic parse failure instead of 'written by a newer Cadence.' None urgent; bundled as one low-priority rec per the independent review's own framing.
 
-## rec-20260801-010 — Finding-identity dedup still breaks on free-text message drift under real LLM providers
-
-- status: settle-pending
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/verify/finding-identity.ts, packages/core/src/intelligence/finding-routing.ts
-- decisions: dec-20260801-003 (active)
-- evidence: Phase 245 (245-finding-identity-stability) settle, 2026-08-01 -- narrowed identity hash fixes the anchor/severity slice; message-text-drift slice explicitly out of scope, risk-accepted by operator
-- next: cadence milestone propose
-
-Supersedes rec-20260801-008, archived: phase 245 (245-finding-identity-stability) narrowed computeFindingId's hash to (file, normalized message) only, fixing the anchor/severity-drift slice of the original finding (rec-20260801-008/-009's shared root cause) -- but the message-text-drift half rec-20260801-008 also raised is unresolved and cannot be fixed the same way. normalizeMessage only strips/collapses whitespace, deliberately no semantic normalization (a genuinely different message must still produce a different id) -- so under a real LLM-backed verifier (anthropic/local/host-cli), a re-run's re-worded message for the same underlying defect still mints a new id, and phase 242's deriveRoutingCandidates dedup (keyed on Finding.id) still misses it, creating a duplicate Recommendation. Fixing this properly needs bounded near-duplicate/fuzzy matching at the routing layer (e.g. token-similarity within a matched file+group), which is a real feature with a genuine false-merge risk (over-aggressive matching could silently swallow a distinct finding as a duplicate -- worse than the current failure mode, which only produces recoverable duplicate noise), not a quick fix. Operator explicitly risk-accepted this gap for now (2026-08-01, phase 245 scoping) rather than build fuzzy matching speculatively -- real-provider routing is still new on this arc (host-cli activated for deep-verify/code-review only in PR #351, 2026-08-01).
-
 ## rec-20260801-011 — Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings
 
 - status: candidate

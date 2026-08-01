@@ -1963,38 +1963,6 @@
       "updatedAt": "2026-08-01T02:40:44.959Z"
     },
     {
-      "id": "rec-20260801-010",
-      "title": "Finding-identity dedup still breaks on free-text message drift under real LLM providers",
-      "summary": "Supersedes rec-20260801-008, archived: phase 245 (245-finding-identity-stability) narrowed computeFindingId's hash to (file, normalized message) only, fixing the anchor/severity-drift slice of the original finding (rec-20260801-008/-009's shared root cause) -- but the message-text-drift half rec-20260801-008 also raised is unresolved and cannot be fixed the same way. normalizeMessage only strips/collapses whitespace, deliberately no semantic normalization (a genuinely different message must still produce a different id) -- so under a real LLM-backed verifier (anthropic/local/host-cli), a re-run's re-worded message for the same underlying defect still mints a new id, and phase 242's deriveRoutingCandidates dedup (keyed on Finding.id) still misses it, creating a duplicate Recommendation. Fixing this properly needs bounded near-duplicate/fuzzy matching at the routing layer (e.g. token-similarity within a matched file+group), which is a real feature with a genuine false-merge risk (over-aggressive matching could silently swallow a distinct finding as a duplicate -- worse than the current failure mode, which only produces recoverable duplicate noise), not a quick fix. Operator explicitly risk-accepted this gap for now (2026-08-01, phase 245 scoping) rather than build fuzzy matching speculatively -- real-provider routing is still new on this arc (host-cli activated for deep-verify/code-review only in PR #351, 2026-08-01).",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/finding-identity.ts",
-        "packages/core/src/intelligence/finding-routing.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260801-013"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [
-        "dec-20260801-003"
-      ],
-      "convertedToPhaseId": "246-finding-identity-message-drift",
-      "scoutId": "scout-20260801-0100",
-      "createdAt": "2026-08-01T17:29:08.286Z",
-      "updatedAt": "2026-08-01T21:39:22.926Z"
-    },
-    {
       "id": "rec-20260801-011",
       "title": "Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings",
       "summary": "settle.ts's refused-settle path (~line 778) and its success path (~line 1150) both write to the identical `${activePhase}/${activeDraft}-SUMMARY.json` path derived from `state.activeDraft`. In a convergence re-loop, attempt-1's refused SUMMARY (and any code-review findings it recorded) is silently overwritten the moment attempt-2 succeeds -- no snapshot, no history. Surfaced during independent review of phase 246 (rec-20260801-010 scoping): a reloop pair is plausibly the cheapest real-provider evidence that an LLM verifier re-words the same defect across attempts (the exact drift phase-246's trigger needs to observe), and it is currently destroyed by design rather than preserved. Needs a decision: is losing attempt-1 findings acceptable (nothing consumes them today), or should refused-settle SUMMARYs be preserved (e.g. a per-attempt suffix) before anything is built on top of that data.",
@@ -5859,6 +5827,41 @@
       "archiveReason": "manual",
       "createdAt": "2026-08-01T02:40:13.507Z",
       "updatedAt": "2026-08-01T17:28:56.400Z"
+    },
+    {
+      "id": "rec-20260801-010",
+      "title": "Finding-identity dedup still breaks on free-text message drift under real LLM providers",
+      "summary": "Supersedes rec-20260801-008, archived: phase 245 (245-finding-identity-stability) narrowed computeFindingId's hash to (file, normalized message) only, fixing the anchor/severity-drift slice of the original finding (rec-20260801-008/-009's shared root cause) -- but the message-text-drift half rec-20260801-008 also raised is unresolved and cannot be fixed the same way. normalizeMessage only strips/collapses whitespace, deliberately no semantic normalization (a genuinely different message must still produce a different id) -- so under a real LLM-backed verifier (anthropic/local/host-cli), a re-run's re-worded message for the same underlying defect still mints a new id, and phase 242's deriveRoutingCandidates dedup (keyed on Finding.id) still misses it, creating a duplicate Recommendation. Fixing this properly needs bounded near-duplicate/fuzzy matching at the routing layer (e.g. token-similarity within a matched file+group), which is a real feature with a genuine false-merge risk (over-aggressive matching could silently swallow a distinct finding as a duplicate -- worse than the current failure mode, which only produces recoverable duplicate noise), not a quick fix. Operator explicitly risk-accepted this gap for now (2026-08-01, phase 245 scoping) rather than build fuzzy matching speculatively -- real-provider routing is still new on this arc (host-cli activated for deep-verify/code-review only in PR #351, 2026-08-01).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/finding-identity.ts",
+        "packages/core/src/intelligence/finding-routing.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260801-013"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260801-003"
+      ],
+      "convertedToPhaseId": "246-finding-identity-message-drift",
+      "scoutId": "scout-20260801-0100",
+      "createdAt": "2026-08-01T17:29:08.286Z",
+      "updatedAt": "2026-08-01T21:40:14.142Z",
+      "shippedRef": "PR #356",
+      "archivedAt": "2026-08-01T21:40:14.142Z",
+      "archiveReason": "shipped"
     }
   ]
 }
