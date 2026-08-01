@@ -1405,7 +1405,7 @@
       "title": "Kernel-assurance arc phases do not exercise their own assurance machinery at settle",
       "summary": "Phases 232 and 233 shipped SUMMARY schemaVersion 2 and the per-settle assurance record onto feat/kernel-assurance-v2, but every phase settled on that branch (233, 234) writes schemaVersion 1 with no assurance record -- because 'cadence settle' resolves to the globally-installed released CLI (v1.51.1, which predates the arc) rather than the branch's own build at packages/core/bin/cadence.cjs. Consequence: the arc's central deliverable is never dogfooded by the arc itself, and no phase SUMMARY on the branch demonstrates the assurance record working end to end. Options: settle arc phases via 'node packages/core/bin/cadence.cjs settle run --auto', or add a doctor/settle notice when the resolved CLI predates the repo's own build. Related to the known 'cadence on PATH is global, not worktree' hazard that previously bit phase 195.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
@@ -1425,9 +1425,12 @@
         "ev-20260729-001"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260801-001"
+      ],
+      "convertedToPhaseId": "244-settle-time-guard-for-global-cli-shadowing-branch-build",
       "createdAt": "2026-07-29T01:14:55.911Z",
-      "updatedAt": "2026-07-29T01:14:55.911Z"
+      "updatedAt": "2026-08-01T03:15:55.242Z"
     },
     {
       "id": "rec-20260729-003",
@@ -1717,6 +1720,43 @@
       "scoutId": "scout-20260731-kernel-ledger-routing",
       "createdAt": "2026-08-01T00:18:50.599Z",
       "updatedAt": "2026-08-01T00:18:50.599Z"
+    },
+    {
+      "id": "rec-20260801-003",
+      "title": "Wire host-cli verifier support into the remaining 6 gate families (deep-verify, code-review, plan-review, security-audit, spec-review, ui-spec-review)",
+      "summary": "Confirmed 2026-08-01: this arc's .cadence/config.json had all 7 gate-provider blocks set to mock at HEAD (7ddc72a1) -- the entire kernel-assurance-v2 arc has settled under placeholder verification the whole time. Configured the one real option available today: perTaskVerifier -> host-cli with CADENCE_HOST_CLI_BIN=codex (codex is deliberately unguarded against self-invocation, unlike the claude default -- see host-cli-client.ts's SELF_INVOCATION_ENV_VAR comment; live-tested, codex responds correctly). IMPORTANT correction (caught by phase 244's whole-branch review): this configuration is NOT yet active in this repo's actual gate set. per-task-verify only appears in gates/engine.ts's DELTAS under the 'strict' profile; this repo runs profile:auto, whose resolved gate set is [coherence-check, structural-verifier, build-test-must-pass, test-coverage, anomaly-notify, task-verify-required] -- per-task-verify is not in it. So the seam is configured but inert until either a draft/config opts into profile:strict, or (more relevantly) host-cli gets wired into one of the seams that IS active under auto (e.g. codeReview or verifier/deep-verify -- see below). Per docs/providers.md, host-cli is currently wired for only 1 of 7 families (HostCliPerTaskVerifier in per-task.ts); the other six -- verifier (deep-verify), codeReview, planReview, securityAudit, specReview, uiSpecReview -- have no host-cli builder and silently fall back to mock with a stderr warning if pointed at it. Real coverage on those six today would require anthropic + a paid ANTHROPIC_API_KEY (not available in this environment) or a local model endpoint (not configured). Wiring host-cli builders for the remaining families (mirroring HostCliPerTaskVerifier's shape) would let a codex-authenticated environment get real verification across the whole gate matrix with zero incremental API cost -- and codeReview/verifier are the higher-leverage targets since they're actually in the auto-profile gate set, unlike per-task-verify. Options: wire all six in one phase, or prioritize deep-verify + code-review first, or additionally consider whether profile:strict should be adopted on this arc so the already-configured perTaskVerifier seam actually fires.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/factory.ts",
+        "packages/core/src/verify/per-task-factory.ts",
+        "packages/core/src/verify/spec-review-factory.ts",
+        "packages/core/src/verify/plan-review-factory.ts",
+        "packages/core/src/verify/security-audit-factory.ts",
+        "packages/core/src/verify/ui-spec-review-factory.ts",
+        "packages/core/src/verify/verifier-factory.ts",
+        "packages/core/src/verify/per-task.ts",
+        "packages/core/src/gates/engine.ts",
+        "docs/providers.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260801-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-01T03:13:02.155Z",
+      "updatedAt": "2026-08-01T03:13:02.155Z"
     }
   ],
   "archived": [
@@ -5333,12 +5373,50 @@
         "dec-20260731-001"
       ],
       "convertedToPhaseId": "242-findings-to-ledger-auto-routing",
-      "scoutId": "scout-20260731-kernel-ledger-routing",
-      "createdAt": "2026-07-31T22:02:11.174Z",
-      "updatedAt": "2026-08-01T00:32:38.968Z",
       "shippedRef": "phase 242-findings-to-ledger-auto-routing (feat/kernel-assurance-v2 arc, PR pending)",
+      "scoutId": "scout-20260731-kernel-ledger-routing",
       "archivedAt": "2026-08-01T00:32:38.968Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-31T22:02:11.174Z",
+      "updatedAt": "2026-08-01T00:32:38.968Z"
+    },
+    {
+      "id": "rec-20260801-002",
+      "title": "Wire host-cli verifier support into the remaining 6 gate families (deep-verify, code-review, plan-review, security-audit, spec-review, ui-spec-review)",
+      "summary": "Confirmed 2026-08-01: this arc's .cadence/config.json had all 7 gate-provider blocks set to mock at HEAD (7ddc72a1) -- the entire kernel-assurance-v2 arc has settled under placeholder verification the whole time. Activated the one real option available today: perTaskVerifier -> host-cli with CADENCE_HOST_CLI_BIN=codex (codex is deliberately unguarded against self-invocation, unlike the claude default -- see host-cli-client.ts's SELF_INVOCATION_ENV_VAR comment). But per docs/providers.md, host-cli is currently wired for only 1 of 7 families (HostCliPerTaskVerifier in per-task.ts); the other six -- verifier (deep-verify), codeReview, planReview, securityAudit, specReview, uiSpecReview -- have no host-cli builder and silently fall back to mock with a stderr warning if pointed at it. Real coverage on those six today would require anthropic + a paid ANTHROPIC_API_KEY (not available in this environment) or a local model endpoint (not configured). Wiring host-cli builders for the remaining families (mirroring HostCliPerTaskVerifier's shape) would let a codex-authenticated environment get real verification across the whole gate matrix with zero incremental API cost. Options: wire all six in one phase, or prioritize deep-verify + code-review first (the two gates with the most settle-time leverage) and defer the rest.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/factory.ts",
+        "packages/core/src/verify/per-task-factory.ts",
+        "packages/core/src/verify/spec-review-factory.ts",
+        "packages/core/src/verify/plan-review-factory.ts",
+        "packages/core/src/verify/security-audit-factory.ts",
+        "packages/core/src/verify/ui-spec-review-factory.ts",
+        "packages/core/src/verify/verifier-factory.ts",
+        "packages/core/src/verify/per-task.ts",
+        "docs/providers.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260801-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "archivedAt": "2026-08-01T03:12:45.630Z",
+      "archiveReason": "manual",
+      "createdAt": "2026-08-01T02:02:57.182Z",
+      "updatedAt": "2026-08-01T03:12:45.630Z"
     }
   ]
 }

@@ -275,5 +275,23 @@ export const SummaryZ = z.object({
    *  identity and per-AC evidence class — reported only, adds no refusal
    *  path or bypass flag. Optional; absent for pre-phase-233 records. */
   assurance: AssuranceRecordZ.optional(),
+  /** Phase 244 (T2, rec-20260729-001): set only when this settle actually
+   *  ran through a `cadence` binary whose realpath resolves OUTSIDE this
+   *  repo's own checkout despite the repo having its own local build (a
+   *  stale globally-installed binary silently shadowing
+   *  `packages/core/bin/cadence.cjs` — confirmed on phases 233/234, where it
+   *  produced a downgraded `schemaVersion: 1` SUMMARY with no `assurance`
+   *  record). See `detectForeignCadenceBinary` in `services/settle.ts`.
+   *  Reported only — never a refusal path or bypass flag, matching
+   *  `assurance` above. Absent (never `false`/`null`) whenever the running
+   *  binary and repo agree, the common case — its mere presence is the
+   *  signal, auditable from the artifact alone without having watched
+   *  stderr live. */
+  foreignBinaryMismatch: z
+    .object({
+      runningBinaryPath: z.string(),
+      repoToplevel: z.string(),
+    })
+    .optional(),
 });
 export type Summary = z.infer<typeof SummaryZ>;

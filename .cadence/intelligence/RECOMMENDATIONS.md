@@ -755,7 +755,7 @@ packages/core/tsconfig.json has include: ["src/**/*"] and tsconfig.base.json exc
 
 ## rec-20260729-001 — Kernel-assurance arc phases do not exercise their own assurance machinery at settle
 
-- status: candidate
+- status: settle-pending
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10
@@ -764,6 +764,7 @@ packages/core/tsconfig.json has include: ["src/**/*"] and tsconfig.base.json exc
 - decay: fresh
 - areas: core, process
 - files: packages/core/bin/cadence.cjs, packages/core/src/services/settle.ts
+- decisions: dec-20260801-001 (active)
 - evidence: Phase 234 settle produced 234-01-SUMMARY.json with schemaVersion 1 and no assurance field; 233-01-SUMMARY.json on the same branch is identical in that respect. 'which cadence' -> /home/thomas/.local/bin/cadence (v1.51.1); the worktree build reports the same version string, so the shadowing is invisible from the version alone.
 - next: cadence milestone propose
 
@@ -928,3 +929,19 @@ Phase 242's routing step (settle.ts, finalizeAndCloseSettle) writes each new rou
 - next: cadence milestone propose
 
 docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, acDiscipline, commitCadence, or verifier. Omit to walk all five.') predates phase 102's autoArchive and phase 108's coverageMode additions to packages/core/src/config-edit/fields.ts's EDITABLE_FIELDS array, and now also predates phase 242's autoRoute addition -- three fields (autoArchive, coverageMode, autoRoute) are absent from this doc's field list and its 'walk all five' claim, though EDITABLE_FIELDS actually holds 8. Not caused by phase 242 -- the gap already existed for autoArchive/coverageMode before this phase; autoRoute is simply the third field to land in it. No doc-content test currently catches this (unlike the command-count/slash-command-count tests this repo already has for similar drift). Fix: update the field list and count, and consider adding a doc-content test deriving the list from EDITABLE_FIELDS.map(f => f.name) the same way docs-command-count.test.ts derives the registered command set, so this can't silently drift again.
+
+## rec-20260801-003 — Wire host-cli verifier support into the remaining 6 gate families (deep-verify, code-review, plan-review, security-audit, spec-review, ui-spec-review)
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, verify
+- files: packages/core/src/verify/factory.ts, packages/core/src/verify/per-task-factory.ts, packages/core/src/verify/spec-review-factory.ts, packages/core/src/verify/plan-review-factory.ts, packages/core/src/verify/security-audit-factory.ts, packages/core/src/verify/ui-spec-review-factory.ts, packages/core/src/verify/verifier-factory.ts, packages/core/src/verify/per-task.ts, packages/core/src/gates/engine.ts, docs/providers.md
+- evidence: ev: config.json@HEAD(7ddc72a1) had all 7 provider blocks=mock; docs/providers.md 'Current scope: per-task-verify only' confirms host-cli builder exists only for HostCliPerTaskVerifier; codex smoke-tested live 2026-08-01 (turn.completed, real token usage); phase 244 whole-branch review empirically confirmed per-task-verify is absent from profile:auto's resolved gate set (gates/engine.ts DELTAS, strict-only)
+- next: cadence milestone propose
+
+Confirmed 2026-08-01: this arc's .cadence/config.json had all 7 gate-provider blocks set to mock at HEAD (7ddc72a1) -- the entire kernel-assurance-v2 arc has settled under placeholder verification the whole time. Configured the one real option available today: perTaskVerifier -> host-cli with CADENCE_HOST_CLI_BIN=codex (codex is deliberately unguarded against self-invocation, unlike the claude default -- see host-cli-client.ts's SELF_INVOCATION_ENV_VAR comment; live-tested, codex responds correctly). IMPORTANT correction (caught by phase 244's whole-branch review): this configuration is NOT yet active in this repo's actual gate set. per-task-verify only appears in gates/engine.ts's DELTAS under the 'strict' profile; this repo runs profile:auto, whose resolved gate set is [coherence-check, structural-verifier, build-test-must-pass, test-coverage, anomaly-notify, task-verify-required] -- per-task-verify is not in it. So the seam is configured but inert until either a draft/config opts into profile:strict, or (more relevantly) host-cli gets wired into one of the seams that IS active under auto (e.g. codeReview or verifier/deep-verify -- see below). Per docs/providers.md, host-cli is currently wired for only 1 of 7 families (HostCliPerTaskVerifier in per-task.ts); the other six -- verifier (deep-verify), codeReview, planReview, securityAudit, specReview, uiSpecReview -- have no host-cli builder and silently fall back to mock with a stderr warning if pointed at it. Real coverage on those six today would require anthropic + a paid ANTHROPIC_API_KEY (not available in this environment) or a local model endpoint (not configured). Wiring host-cli builders for the remaining families (mirroring HostCliPerTaskVerifier's shape) would let a codex-authenticated environment get real verification across the whole gate matrix with zero incremental API cost -- and codeReview/verifier are the higher-leverage targets since they're actually in the auto-profile gate set, unlike per-task-verify. Options: wire all six in one phase, or prioritize deep-verify + code-review first, or additionally consider whether profile:strict should be adopted on this arc so the already-configured perTaskVerifier seam actually fires.

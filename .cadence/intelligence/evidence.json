@@ -1183,6 +1183,20 @@
       "kind": "note",
       "summary": "Surfaced during phase 242 T4 doc work (2026-07-31): confirmed docs/reference/commands.md:156 still says 'all five' while EDITABLE_FIELDS has 8 entries (profile, loopEnforcement, acDiscipline, commitCadence, verifier, autoArchive, coverageMode, autoRoute)",
       "createdAt": "2026-08-01T00:18:50.599Z"
+    },
+    {
+      "id": "ev-20260801-002",
+      "recommendationId": "rec-20260801-002",
+      "kind": "note",
+      "summary": "ev: config.json@HEAD(7ddc72a1) had all 7 provider blocks=mock; docs/providers.md 'Current scope: per-task-verify only' confirms host-cli builder exists only for HostCliPerTaskVerifier; codex smoke-tested live 2026-08-01 (turn.completed, real token usage) confirming the missing piece is wiring, not auth/availability",
+      "createdAt": "2026-08-01T02:02:57.182Z"
+    },
+    {
+      "id": "ev-20260801-003",
+      "recommendationId": "rec-20260801-003",
+      "kind": "note",
+      "summary": "ev: config.json@HEAD(7ddc72a1) had all 7 provider blocks=mock; docs/providers.md 'Current scope: per-task-verify only' confirms host-cli builder exists only for HostCliPerTaskVerifier; codex smoke-tested live 2026-08-01 (turn.completed, real token usage); phase 244 whole-branch review empirically confirmed per-task-verify is absent from profile:auto's resolved gate set (gates/engine.ts DELTAS, strict-only)",
+      "createdAt": "2026-08-01T03:13:02.155Z"
     }
   ]
 }
