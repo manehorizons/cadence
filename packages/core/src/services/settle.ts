@@ -1,8 +1,9 @@
-import { join } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { readFile, stat } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import type {
   AnomalyEvent,
+  AssuranceRecord,
   CadenceConfig,
   CadenceState,
   Draft,
@@ -32,18 +33,25 @@ import { runTestCommand } from '../verify/test-runner.js';
 import {
   resolveEffectiveProvider,
   MOCK_FALLBACK_BANNER,
+  buildForeignBinaryBanner,
   type VerifierProvider,
 } from '../verify/verifier-factory.js';
-import type { VerifyTestRef } from '../verify/verifier.js';
+import type { VerifyTestRef } from '../contracts/index.js';
 import { runSettleGates } from '../gates/registry.js';
 import { deriveAcEvidence, checkEvidenceFloor } from '../gates/ac-evidence.js';
+import { deriveAssuranceRecord, type AssuranceAcResult } from '../gates/assurance-record.js';
 import { effectiveEvidenceFloor, evidenceFloorRefusalReason } from '../gates/engine.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
 import {
+  addRecommendation,
   runAdvanceConvertedToSettlePendingForPhase,
   runRecommendationPromotion,
 } from '../intelligence/store/recommendations.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
+import {
+  deriveRoutingCandidates,
+  type RoutingSettlePointer,
+} from '../intelligence/finding-routing.js';
 import {
   type SettleContext,
   type ProgressJson,
@@ -212,6 +220,25 @@ function buildTaskResults(
 }
 
 /**
+ * Concern 0 (phase 233 T3): derive the `assurance` field attached to
+ * SUMMARY — a thin, independently-named wrapper around T2's pure
+ * `deriveAssuranceRecord`, kept as its own step (matching the phase 228
+ * "named step function" convention used throughout this file) rather than
+ * inlined at each of the two SUMMARY-construction call sites below. Takes
+ * only the gate provenance array and per-AC results already computed
+ * earlier in the pipeline — no new I/O, no clock, no gate-name special-
+ * casing. Purely reported: its result is attached to `summary.assurance`
+ * strictly after each call site's PASS/REFUSE outcome is already decided,
+ * and is never read back by any gate-outcome or refusal logic (AC-4).
+ */
+function deriveSettleAssuranceRecord(
+  gates: readonly GateProvenance[],
+  acResults: readonly AssuranceAcResult[],
+): AssuranceRecord {
+  return deriveAssuranceRecord(gates, acResults);
+}
+
+/**
  * Concern 1 (phase 228 T1): precondition + load. Reads state, refuses with a
  * `LoopViolationError` unless `loopPosition==='BUILD'` with an active
  * draft/phase, then parses the active phase, the DRAFT.md, and the
@@ -287,11 +314,143 @@ async function checkPhaseCollisionBackstop(
   return null;
 }
 
+/**
+ * Phase 244 (T1): pure detector for rec-20260729-001 — `cadence settle run`
+ * silently writing a downgraded SUMMARY (`schemaVersion: 1`, no `assurance`
+ * record) when the process actually executing it is a globally-installed
+ * `cadence` binary that predates this repo's own build, rather than this
+ * checkout's `packages/core/bin/cadence.cjs` (confirmed on phases 233/234).
+ * The two binaries report an IDENTICAL `--version` string on an unreleased
+ * branch (unbumped `package.json` matches whatever is currently published),
+ * so version comparison cannot detect the mismatch — DO NOT key detection on
+ * it. This checks instead whether the binary that is actually executing
+ * lives inside this repo's own git worktree.
+ *
+ * Deliberately pure: takes already-resolved facts as plain string/boolean
+ * arguments — no `process`/filesystem access inside the function itself, per
+ * this repo's pure-core/impure-shell convention (CLAUDE.md) — so it is
+ * directly unit-testable without fixtures. Both `runningBinaryRealpath` and
+ * `repoToplevel` are expected CANONICAL (symlink-resolved), not merely
+ * absolute — `isPathInside` below only normalizes via `path.resolve`, which
+ * does not follow symlinks, so a symlinked `repoToplevel` passed in
+ * unresolved can produce a false mismatch against an already-realpath'd
+ * binary. `resolveForeignBinaryFacts` (the wired caller, T2) realpaths both.
+ * `repoHasOwnCadenceBuild` (does `repoToplevel` have both
+ * `packages/core/bin/cadence.cjs` and `.cadence/` at its root — i.e. is this
+ * recognizably the CADENCE monorepo itself, not a consumer project) is the
+ * caller's other responsibility before calling in.
+ *
+ * Reports a mismatch ONLY when BOTH are true: the running binary sits
+ * outside `repoToplevel`, AND the repo is recognizably CADENCE's own
+ * monorepo. An ordinary consumer repo settling via a globally-installed
+ * `cadence` is never a mismatch — `repoHasOwnCadenceBuild` gates that off
+ * (244-01's first acceptance criterion's false-positive-avoidance case). A
+ * binary resolved from inside `repoToplevel` is never a mismatch either,
+ * regardless of `repoHasOwnCadenceBuild` (the true-positive case only fires
+ * on the conjunction, not on either condition alone).
+ *
+ * Wired into `resolveSettleGateSet` below (T2) via `resolveForeignBinaryFacts`.
+ */
+export function detectForeignCadenceBinary(
+  runningBinaryRealpath: string,
+  repoToplevel: string,
+  repoHasOwnCadenceBuild: boolean,
+): boolean {
+  if (!repoHasOwnCadenceBuild) {
+    return false;
+  }
+  return !isPathInside(runningBinaryRealpath, repoToplevel);
+}
+
+/**
+ * True when `candidate` resolves to a path at or under `root`. Both inputs
+ * are expected already-absolute AND canonical/symlink-resolved (a realpath
+ * and a realpath'd repo toplevel, per this module's callers) — `resolve()`
+ * here only normalizes a trailing-slash difference between two already-
+ * canonical paths; it does not follow symlinks, so feeding it an unresolved
+ * symlinked path can produce a false result. It is not a promise to handle
+ * relative inputs either (that would read `process.cwd()`, breaking this
+ * function's purity). Containment is checked via `path.relative` (not a
+ * naive `startsWith` string compare) so a sibling directory whose name
+ * happens to share `root`'s prefix — e.g. candidate
+ * `/repo-other/bin/cadence.cjs` against root `/repo` — is correctly reported
+ * as outside rather than as a false "inside" match.
+ */
+function isPathInside(candidate: string, root: string): boolean {
+  const rel = relative(resolve(root), resolve(candidate));
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+}
+
+/**
+ * Phase 244 (T2): resolves the two facts `detectForeignCadenceBinary` needs
+ * beyond `repoToplevel` (already available to callers as `cwd`) — whether
+ * `cwd` is recognizably CADENCE's own monorepo checkout (both
+ * `packages/core/bin/cadence.cjs` and `.cadence/` present at its root), and
+ * the running binary's realpath. Takes `argv1` as an explicit parameter
+ * (never reads `process.argv` itself) so a test can pass any string —
+ * including an unresolvable one — without needing to mutate global state.
+ * The one caller that reads `process.argv` for real,
+ * `resolveSettleGateSet` below, does so via its own `argv1` parameter's
+ * default value, keeping that read in one place and overridable. Mirrors
+ * `settleService` itself taking `repoRoot` instead of reading `process.cwd()`
+ * (CLAUDE.md's pure-core/impure-shell split).
+ *
+ * Returns `null` whenever there is no mismatch to report — `argv1` is
+ * missing/unresolvable (best-effort: an unresolvable path degrades to "no
+ * mismatch", never a false alarm — CLAUDE.md's "Throwing Observer" convention
+ * for introspection code), `cwd` doesn't look like CADENCE's own build, or
+ * the running binary genuinely is inside `cwd` — so callers can use
+ * `foreignBinaryMismatch ? { foreignBinaryMismatch } : {}` directly for the
+ * `exactOptionalPropertyTypes`-safe SUMMARY spread, with no separate boolean
+ * to keep in sync.
+ *
+ * `cwd` is best-effort realpath'd before the containment check (never
+ * before the `repoHasOwnCadenceBuild` check — `existsSync` already follows
+ * symlinks fine there): `detectForeignCadenceBinary` requires both its path
+ * arguments canonical, and `argv1` already is (via `realpathSync` below), so
+ * a symlinked `cwd` — e.g. `cadence mcp serve --repo` pointed through a
+ * symlink — would otherwise compare a canonical binary path against a
+ * non-canonical repo path and report a false mismatch for a settle that is
+ * genuinely running this repo's own build. The *returned* `repoToplevel`
+ * stays the original `cwd` (what the operator/caller actually passed), not
+ * the realpath — this field is for a human/audit trail, and resolving fails
+ * closed (falls back to the original `cwd`) rather than throwing, matching
+ * this function's existing best-effort-degrade shape.
+ */
+export function resolveForeignBinaryFacts(
+  cwd: string,
+  argv1: string | undefined,
+): { runningBinaryPath: string; repoToplevel: string } | null {
+  const repoHasOwnCadenceBuild =
+    existsSync(join(cwd, 'packages/core/bin/cadence.cjs')) && existsSync(join(cwd, '.cadence'));
+
+  if (!argv1) return null;
+  let runningBinaryRealpath: string;
+  try {
+    runningBinaryRealpath = realpathSync(argv1);
+  } catch {
+    return null;
+  }
+
+  let cwdCanonical = cwd;
+  try {
+    cwdCanonical = realpathSync(cwd);
+  } catch {
+    // Best-effort: fall back to the unresolved cwd rather than throwing.
+  }
+
+  if (!detectForeignCadenceBinary(runningBinaryRealpath, cwdCanonical, repoHasOwnCadenceBuild)) {
+    return null;
+  }
+  return { runningBinaryPath: runningBinaryRealpath, repoToplevel: cwd };
+}
+
 type GateSetResolutionResult =
   | {
       ok: true;
       gateSet: ReturnType<typeof effectiveGateSet>;
       verifierOverride: { override: VerifierProvider } | Record<string, never>;
+      foreignBinaryMismatch: { runningBinaryPath: string; repoToplevel: string } | null;
     }
   | { ok: false; result: CommandResult };
 
@@ -304,13 +463,23 @@ type GateSetResolutionResult =
  * Also returns `verifierOverride` — computed here from `opts.verifier` but
  * still needed by the (not-yet-extracted) `SettleContext` construction below
  * it in `settleService`.
+ *
+ * Phase 244 (T2): also resolves and reports the foreign-binary mismatch
+ * (rec-20260729-001) here, right alongside `MOCK_FALLBACK_BANNER` — both are
+ * settle-time "loud notice, never a refusal" banners keyed off facts
+ * available at this exact point in the pipeline. Never refuses: matches this
+ * repo's Quiet Fallback convention (a loud stderr banner + recorded SUMMARY
+ * provenance, settle still completes) rather than a new refuse-and-suggest
+ * gate — see 244-01's Boundaries.
  */
 function resolveSettleGateSet(
+  cwd: string,
   state: CadenceState,
   cadenceConfig: CadenceConfig,
   draft: Draft,
   opts: SettleArgs,
   io: CommandIO,
+  argv1: string | undefined = process.argv[1],
 ): GateSetResolutionResult {
   const gateSet = effectiveGateSet(state, cadenceConfig, draft);
 
@@ -332,6 +501,19 @@ function resolveSettleGateSet(
     io.err(MOCK_FALLBACK_BANNER + '\n');
   }
 
+  // Phase 244 (T2): rec-20260729-001 — settle is executing through a
+  // `cadence` binary that resolves outside this repo's own checkout despite
+  // the repo having its own local build.
+  const foreignBinaryMismatch = resolveForeignBinaryFacts(cwd, argv1);
+  if (foreignBinaryMismatch) {
+    io.err(
+      buildForeignBinaryBanner(
+        foreignBinaryMismatch.runningBinaryPath,
+        foreignBinaryMismatch.repoToplevel,
+      ) + '\n',
+    );
+  }
+
   // DESIGN.md §4 M2 — soft cap on auto × complex.
   if (gateSet.softCap && !opts.allowAutoComplex) {
     io.err(
@@ -343,7 +525,7 @@ function resolveSettleGateSet(
     io.err('settle: --allow-auto-complex set; proceeding past soft cap (auto × complex).\n');
   }
 
-  return { ok: true, gateSet, verifierOverride };
+  return { ok: true, gateSet, verifierOverride, foreignBinaryMismatch };
 }
 
 /**
@@ -537,6 +719,13 @@ function buildSettleContext(
  * recommendation-promotion — none of those apply before gates have actually
  * finished running. Verbatim extraction of the former `settleService`
  * refusal branch — logic moved, not rewritten.
+ *
+ * Phase 244 (T2): `foreignBinaryMismatch` is threaded in from the caller
+ * (already computed by `resolveSettleGateSet`, which runs before the gate
+ * loop that can produce this refusal) rather than re-resolved here — a
+ * refused settle still writes a SUMMARY, and the same provenance applies to
+ * it: if the running binary was foreign, that is just as true of the refused
+ * attempt as it would be of a successful one.
  */
 /**
  * Phase 239 (T6, AC-7): the coverage scheme/mode in force at settle, as a
@@ -567,9 +756,10 @@ async function writeRefusedSettleSummary(
   progress: ProgressJson,
   gates: GateProvenance[],
   cadenceConfig: CadenceConfig,
+  foreignBinaryMismatch: { runningBinaryPath: string; repoToplevel: string } | null,
 ): Promise<CommandResult> {
   const refusedSummary: Summary = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     draftId: state.activeDraft!,
     completedAt: new Date().toISOString(),
     acResults: [],
@@ -582,6 +772,8 @@ async function writeRefusedSettleSummary(
     // scheme is exactly the context needed to interpret WHY a coverage gate
     // refused — so record it here as well, not only on the success path.
     ...coverageProvenance(cadenceConfig),
+    assurance: deriveSettleAssuranceRecord(gates, []),
+    ...(foreignBinaryMismatch ? { foreignBinaryMismatch } : {}),
   };
   const refusedSummaryBase = join(
     cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`,
@@ -882,6 +1074,11 @@ async function deriveEvidenceAndCheckFloor(
  * run strictly *after* `backend.commit(state)`, not before or interleaved.
  * Verbatim extraction of the former `settleService` tail — logic moved, not
  * rewritten.
+ *
+ * Phase 244 (T2): `foreignBinaryMismatch` (already computed by
+ * `resolveSettleGateSet`, before the gate loop) is attached onto `summary`
+ * before `computeSummaryContentHash` runs, so a mismatch is covered by the
+ * content-hash digest like every other field, not silently excluded from it.
  */
 async function finalizeAndCloseSettle(
   cwd: string,
@@ -905,6 +1102,7 @@ async function finalizeAndCloseSettle(
   opts: SettleArgs,
   interactivity: ReturnType<typeof resolveInteractivity>,
   io: CommandIO,
+  foreignBinaryMismatch: { runningBinaryPath: string; repoToplevel: string } | null,
 ): Promise<CommandResult> {
   // issue #177: snapshot loop state as it stands DURING settle, before the
   // reset-to-IDLE block below mutates it. This is the only place this data
@@ -917,7 +1115,7 @@ async function finalizeAndCloseSettle(
   };
 
   const summary: Summary = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     draftId: state.activeDraft!,
     completedAt: new Date().toISOString(),
     acResults: acResultsWithEvidence,
@@ -938,6 +1136,8 @@ async function finalizeAndCloseSettle(
       ? { gateBypasses: [...gateBypasses, ...evidenceFloorBypassesUsed] }
       : {}),
     stateAtSettle,
+    assurance: deriveSettleAssuranceRecord(gates, acResultsWithEvidence),
+    ...(foreignBinaryMismatch ? { foreignBinaryMismatch } : {}),
   };
 
   // Phase 223 (T2): compute the content hash over `summary` as built above
@@ -967,6 +1167,55 @@ async function finalizeAndCloseSettle(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     io.err(`note: retro artifact failed to write — ${msg}\n`);
+  }
+
+  // Phase 242 (T3, §7.3): route identified code-review findings into the
+  // recommendation ledger as `source: 'review'` recs. Best-effort — matches
+  // the retro-digest block above exactly: a failure here (e.g. a ledger
+  // write error) never blocks or fails settle, and is never silent (AC-5).
+  // Config-gated on `recommendations.autoRoute` (default on, same precedent
+  // as `autoArchive` below). Skipped entirely when the code-review gate
+  // didn't run at all (`codeReviewFindings` is `undefined` — never for the
+  // gate having run with zero findings, which is `{}` and derives to no
+  // candidates anyway) — no ledger read for a settle that never ran the gate.
+  if (cadenceConfig?.recommendations.autoRoute !== false && codeReviewFindings) {
+    try {
+      const routingLedger = await readRecommendationLedger(cwd);
+      // AC-2: a previously-routed finding can already be soft-archived
+      // (`autoArchive` defaults on) by the time this phase is re-settled —
+      // check BOTH arrays, or a re-settle would silently re-route it.
+      const alreadyRoutedIds = new Set<string>();
+      for (const rec of routingLedger.recommendations) {
+        if (rec.sourceFindingId) alreadyRoutedIds.add(rec.sourceFindingId);
+      }
+      for (const rec of routingLedger.archived) {
+        if (rec.sourceFindingId) alreadyRoutedIds.add(rec.sourceFindingId);
+      }
+      const pointer: RoutingSettlePointer = {
+        phaseId: activePhase,
+        draftId: summary.draftId,
+        contentHash: summary.contentHash?.value ?? '',
+        // Repo-relative, forward-slash artifact path — matches the existing
+        // `kind: 'file'` Evidence.path convention elsewhere in the ledger
+        // (e.g. `src/foo.ts`), not an absolute filesystem path.
+        summaryPath: `.cadence/phases/${activePhase}/${state.activeDraft}-SUMMARY.json`,
+      };
+      const candidates = deriveRoutingCandidates(
+        codeReviewFindings,
+        alreadyRoutedIds,
+        pointer,
+        new Date(),
+      );
+      // Sequential, not Promise.all: addRecommendation re-reads the ledger
+      // and mints the next id from what it read each call — concurrent
+      // writes would collide ids and lose writes.
+      for (const candidate of candidates) {
+        await addRecommendation(cwd, candidate);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      io.err(`note: finding-ledger routing failed — ${msg}\n`);
+    }
   }
 
   // Phase 145: advance any recommendation converted into the phase that just
@@ -1078,9 +1327,9 @@ export async function settleService(
     const collisionRefusal = await checkPhaseCollisionBackstop(cwd, activePhase, cadenceConfig, opts, io);
     if (collisionRefusal) return collisionRefusal;
 
-    const gateSetResult = resolveSettleGateSet(state, cadenceConfig, draft, opts, io);
+    const gateSetResult = resolveSettleGateSet(cwd, state, cadenceConfig, draft, opts, io);
     if (!gateSetResult.ok) return gateSetResult.result;
-    const { gateSet, verifierOverride } = gateSetResult;
+    const { gateSet, verifierOverride, foreignBinaryMismatch } = gateSetResult;
 
     const touchedFiles = Array.from(new Set(draft.tasks.flatMap((t) => t.files)));
     // Phase 174: computed once and reused by both the gate-registry ctx below
@@ -1106,7 +1355,7 @@ export async function settleService(
     const { acc, refused, gates } = await runSettleGates(ctx);
     if (refused) {
       return await writeRefusedSettleSummary(
-        cwd, activePhase, state, draft, progress, gates, cadenceConfig,
+        cwd, activePhase, state, draft, progress, gates, cadenceConfig, foreignBinaryMismatch,
       );
     }
 
@@ -1177,6 +1426,7 @@ export async function settleService(
       opts,
       interactivity,
       io,
+      foreignBinaryMismatch,
     );
   } catch (err) {
     io.err(`${formatCommandError('settle run', err)}\n`);

@@ -1950,7 +1950,13 @@ Cadence" diagnostic, not a parse/corruption error. (5) `GATE_ORDER`, gate verdic
 refusal behavior are byte-for-byte unchanged — this phase adds no gate and changes no
 outcome.
 
-### Phase 233 — Per-settle assurance record (rec-20260727-002)
+### Phase 233 — Per-settle assurance record (rec-20260728-001)
+
+> **As built (2026-07-28):** this heading originally cited `rec-20260727-002`, which was a
+> mislabel — that rec's actual content (SUMMARY `schemaVersion` 1|2 forward-compat) was
+> already delivered by phase 232 (AC-3/AC-4) and has been promoted to `shipped` against it.
+> The recommendation actually describing this phase's scope was never filed separately; it
+> is now filed as `rec-20260728-001`.
 
 **Objective.** With verifier identity persisted (phase 232), compute one **assurance
 record** per settle: a derived, whole-run answer to "how strongly was this settle actually
@@ -1984,7 +1990,7 @@ it cannot be edited post-settle without invalidating the attestation.
 > boundary being real, and a special-cased manifest is the evidence that it is not. Record
 > the outcome in the phase SUMMARY's decisions, and strike phases 234–237 below.
 
-### Phase 234 — Kernel / verifier / consumer boundary, lint-enforced *(sketch — contingent)*
+### Phase 234 — Kernel / verifier / consumer boundary, lint-enforced *(built on `feat/kernel-assurance-v2`, unmerged to `main`)*
 
 **Gate to entry.** Phase 233 settled with AC-3 met (no gate-specific special cases).
 
@@ -2000,7 +2006,12 @@ time.
 > this is a rewrite wearing a refactor's clothes, and the premise that the boundary is
 > already 80% built was wrong.
 
-### Phase 235 — Criteria-anchored review verifier: input + anchor ladder *(sketch — contingent)*
+> **As built (2026-07-28, `0726e405`).** Tripwire did not trip. Shipped as sketched: the
+> three roles named as published contracts and an ESLint rule added failing the build on an
+> internal-import violation across them. Zero `GATE_ORDER` changes, zero gate-behavior
+> changes, per the objective's own constraint.
+
+### Phase 235 — Criteria-anchored review verifier: input + anchor ladder *(built on `feat/kernel-assurance-v2`, unmerged to `main`)*
 
 **Gate to entry.** Phase 234 landed without tripping its overrun tripwire.
 
@@ -2013,18 +2024,104 @@ undeclared/criteria-gap`) so each finding is classified by the strength of the c
 anchors to — including emitting explicit **criteria-gap** findings where the diff does work
 no AC covers. Maps to rec-20260727-004, rec-20260727-005 (medium, `needs-decision`).
 
-### Phase 236 — Finding identity, disposition, and ledger routing *(sketch — contingent)*
+> **As built (2026-07-29, `c27bcb03`).** Shipped as sketched: `CodeReviewInput` extended
+> with ACs/boundaries/task refs, the anchor ladder implemented
+> (`executable > structured > declared > undeclared/criteria-gap`), and criteria-gap
+> findings emitted for unanchored work above the severity floor. Phase 241 later made the
+> ladder's `executable` tier reachable in a live settle (it shipped structurally in 235 but
+> wasn't yet exercised end-to-end).
+
+### Phase 236 — Finding identity, disposition, and ledger routing *(built on `feat/kernel-assurance-v2`, unmerged to `main` — see "As built" note below)*
 
 **Gate to entry.** Phase 235 settled, **and** rec-20260727-007 (shared fingerprint primitive
 extraction from Déjà, `needs-evidence`) is resolved — stable finding identity is its
 dependent, and building a bespoke fingerprint before that investigation lands is how two
 incompatible ones get shipped.
 
+> **Gate satisfied (2026-07-30).** Phase 235 settled as `c27bcb03`, and the
+> rec-20260727-007 investigation closed: rec **rejected**, `dec-20260730-001` records that
+> finding identity uses a pure anchor-derived content hash over
+> `(file, anchor.kind, anchor.ref, severity, normalized message)` — no fingerprint
+> primitive is extracted, and no runtime dependency is added. Evidence in
+> `ev-20260730-001`. **Phase 236 is unblocked and must not build a fingerprint.**
+
 **Objective (sketch).** Give findings a stable identity (id + target discriminant), a
 disposition, and expiring waivers, then route them to the recommendation ledger — which
 requires extending `RecommendationSourceZ` (`packages/types/src/intelligence.ts:3`,
 currently `manual | code-analysis | impact | cadence | session`) with a `review` member.
 Maps to rec-20260727-006, rec-20260727-011 (medium, `needs-decision`).
+
+> **As built (2026-07-30).** This slice shipped the schema and computation half of the
+> objective, not the routing half. Landed: `FindingZ` gains `id`/`target`/`disposition`/
+> `waiver` (additive, optional, back-compat verified — `packages/types/src/summary.ts`);
+> `id` is a pure content hash over `(file, anchor.kind, anchor.ref, severity, normalized
+> message)`, never a line number (`packages/core/src/verify/finding-identity.ts`);
+> `AnchorZ.kind` widens to include `'invariant'` (unused by any producer yet — phase 237
+> scope); and the two independently-declared `Finding` types (the persisted-schema
+> `FindingZ` and `verify/code-review.ts`'s local 3-severity type) converge onto one,
+> discriminated by `target`, per source-doc local D9. `RecommendationSourceZ` gains
+> `'review'` (schema-only). **Findings-to-ledger auto-routing — creating `Recommendation` +
+> `Evidence` entries from findings during settle — was explicitly NOT implemented in this
+> slice.** That is real behavioral I/O-port-threading work (a settle-time writer, not a
+> schema change), and was split to a follow-on phase. **That follow-on is phase 242
+> (below), which shipped it 2026-07-31.**
+
+### Phase 242 — Findings-to-ledger auto-routing (rec-20260731-003)
+
+**Gate to entry.** Phase 236 settled: `id`/`target`/`disposition`/`waiver` identity exists on
+`FindingZ`, and `RecommendationSourceZ` already carries the `'review'` member, schema-only,
+per the phase 236 "As built" amendment above.
+
+**Objective.** Implement the behavioral half phase 236 deliberately deferred — the source
+design doc's §7.3 (`docs/handoffs/cadence-phase0-assurance-kernel-review.md`): route
+identified code-review findings into the recommendation ledger at settle time as
+`Recommendation`/`Evidence` entries, keyed on `Finding.id` so a re-settle of an unchanged
+phase never mints a duplicate entry for the same finding, and batched under one `scoutId`
+per settle rather than one per finding. Findings with no stable id (security-audit; identity
+is not wired in there) are skipped, never force-routed. Settle-time writer only — no new
+gate, no `GATE_ORDER` change, no refusal semantics, and no disposition-mutation CLI (still a
+follow-on phase's surface, per phase 236's own boundary). Maps to rec-20260731-003.
+
+> **Design decision (`dec-20260731-001`).** rec-20260731-001 found that `computeFindingId`
+> collapses two distinct findings that share `(file, anchor.kind, anchor.ref, severity,
+> normalized message)` with no occurrence discriminant. Resolved without touching the
+> identity hash: the routing step merges same-id findings within one settle into a single
+> `Recommendation`, recording the occurrence count explicitly in its evidence/summary text —
+> a deliberate merge-by-identity semantic, not silent data loss.
+
+**Files.**
+- `packages/types/src/intelligence.ts` — `RecommendationZ.sourceFindingId` (optional FK back
+  to the routed `Finding.id`).
+- `packages/types/src/config.ts` — `recommendations.autoRoute` (`boolean`, default `true`),
+  alongside the existing `autoArchive`.
+- `packages/core/src/intelligence/store/recommendations.ts` — `addRecommendation` extended
+  with an optional `source` / `sourceFindingId` / structured `cadence-artifact` evidence
+  override.
+- `packages/core/src/intelligence/finding-routing.ts` (new) — the pure derivation,
+  `deriveRoutingCandidates`.
+- `packages/core/src/services/settle.ts` — one named step in `finalizeAndCloseSettle`, wired
+  in right after the SUMMARY is written, best-effort and config-gated.
+- `packages/core/tests/**`; `docs/concepts.md`, `docs/reference/config.md` — paired doc edit.
+
+> **As built — one file beyond the list above.** `packages/core/src/verify/finding-identity.ts`
+> (phase 236) gained one line: `normalizeMessage` widened from module-private to `export`, no
+> change to any hash input. Independent review of T2 (the routing derivation) surfaced that
+> routing must embed the same whitespace-normalized message `computeFindingId` hashed over, or
+> a routed ledger entry would disagree with its own identity — reusing phase 236's existing
+> normalization function was the fix, in preference to duplicating it.
+
+**As built (2026-07-31).** Shipped as designed. `deriveRoutingCandidates`
+(`packages/core/src/intelligence/finding-routing.ts`) groups findings by id first (merging
+same-id occurrences per `dec-20260731-001` and recording the occurrence count), skips
+un-identified findings, and mints exactly one `scoutId` per settle batch.
+`finalizeAndCloseSettle` (`packages/core/src/services/settle.ts`) wires it in gated on
+`recommendations.autoRoute`, reads both the active and archived ledger arrays to dedup across
+re-settles (a previously-routed finding can already be soft-archived by `autoArchive` before a
+re-settle), and never blocks or fails settle on a routing failure — a stderr notice fires
+instead, matching the existing retro-digest step's shape. `GATE_ORDER` and every gate's
+pass/refuse verdict are byte-for-byte unchanged. Disposition mutation (accept / waive / fix /
+supersede) still has no CLI surface, and `security-audit` findings still have no identity
+wired in — both stay follow-on scope, per phase 236's boundary.
 
 ### Phase 237 — Invariant promotion from recurring findings *(sketch — contingent)*
 
@@ -2043,6 +2140,14 @@ rec-20260727-008 (low, `needs-evidence`).
 - **rec-20260727-007** — shared fingerprint primitive extraction from Déjà
   (`needs-evidence`). A prerequisite *investigation* for phase 236's finding identity, not a
   phase of its own. Resolve before 236 is drafted.
+  **Resolved 2026-07-30 — rejected** (`dec-20260730-001`, evidence `ev-20260730-001`).
+  Déjà is not consumable as a library (`main`/`exports` both null, unpublished under a name
+  Cadence could depend on); its normalization layer carries tree-sitter and its matching
+  layer carries better-sqlite3, both native, against core's zero-runtime-dependency bias;
+  and the problems differ in shape — Déjà solves *retrieval* over an indexed corpus, Cadence
+  needs *identity* across two small per-run sets. Reopen only if `undeclared`-tier findings
+  become a material share of routed ledger entries **and** identity churn across refactors
+  is measured rather than assumed.
 - **rec-20260727-009** — counter-verifier as a kernel component (`raw-idea`).
 - **rec-20260727-010** — Conductor as a CLI client (`raw-idea`).
 

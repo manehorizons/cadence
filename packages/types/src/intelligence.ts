@@ -6,6 +6,11 @@ export const RecommendationSourceZ = z.enum([
   'impact',
   'cadence',
   'session',
+  // Phase 236: provenance for a future (not-this-slice) routing phase that
+  // carries code-review findings into the recommendation ledger, instead of
+  // mislabeling them `manual`/`cadence`. This slice is schema-only — no
+  // routing behavior is implemented here.
+  'review',
 ]);
 export type RecommendationSource = z.infer<typeof RecommendationSourceZ>;
 
@@ -90,6 +95,11 @@ export const RecommendationZ = z.object({
   // `/cadence-scout` session. Loose validation (non-empty string); the
   // `scout-YYYYMMDD-HHMM` convention lives in the scout prompt + docs, not here.
   scoutId: z.string().min(1).optional(),
+  // Phase 242 T1: optional FK back to the routed code-review Finding.id this
+  // recommendation was minted from (settle-time auto-routing, source: 'review').
+  // Absent on every rec that isn't routed from a finding — additive, exact-optional.
+  // The dedup lookup that reads this field back lives in phase 242 T2.
+  sourceFindingId: z.string().min(1).optional(),
   // Phase 101 (v1.24): soft-archival provenance. Both absent on a live rec (one
   // in the ledger's `recommendations` array); both set on an archived rec (one in
   // the `archived` array). Set/cleared only by `archiveRecommendation` /

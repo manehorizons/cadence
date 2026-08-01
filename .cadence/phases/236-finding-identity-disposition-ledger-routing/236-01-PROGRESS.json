@@ -1,0 +1,58 @@
+{
+  "draftId": "236-01",
+  "tasks": {
+    "T2": {
+      "status": "DONE",
+      "notes": "RecommendationSourceZ gains 'review' (additive enum extension). Implemented + independently reviewed + main-thread re-verified: 50/50 tests pass, diff is 5+/44+ insertions only, no deletions.",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-31T00:44:32.850Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "AnchorZ.kind widened + FindingZ gains id/target/disposition/waiver (additive/optional, back-compat verified). Independent review flagged a real gap: waiver had no cross-field constraint tying it to disposition==='waived'. Fixed directly (orchestrator, post-review): added two .refine()s on FindingZ enforcing the biconditional (waived requires waiver, waiver requires waived) per source doc §7.2 ('a waiver with no expiry is a belief masquerading as knowledge'). Adjusted one pre-existing test loop that asserted bare disposition:'waived' with no waiver, added 2 new rejection tests. Re-verified independently: 22/22 anchor.test.ts, 347/347 full types-package suite, typecheck clean. No other code in the repo yet constructs disposition/waiver (grepped), so this tightening has zero fallout.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/types/src/summary.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/types/tests/anchor.test.ts"
+      ],
+      "updatedAt": "2026-07-31T00:46:29.080Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "New pure module verify/finding-identity.ts: computeFindingId (sha256 over JSON.stringify([file, anchor.kind, anchor.ref??null, severity, normalizeMessage(message)]), never a line number) + attachFindingIdentity batch adapter (stamps id/target:artifact/disposition:open onto AnchoredFinding[] -> Finding[]). Independently reviewed (hash-collision-safety of the JSON encoding specifically scrutinized, confirmed sound) and independently re-verified: 15/15 tests, typecheck clean.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/core/tests/verify/finding-identity.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/core/src/verify/finding-identity.ts"
+      ],
+      "updatedAt": "2026-07-31T00:52:49.795Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Wired attachFindingIdentity into gates/code-review.ts: called once right after gapResult is computed, result used consistently on all 3 summaryPatch.codeReview return paths (reloop-refuse, hard-refuse, pass/bypass). highs/pass (from raw verifyResult.findings) and gapCount/severityDistribution (from gapResult.summary) are structurally unaffected -- traced line by line, both independently and by the reviewer. Independently re-verified: 27/27 across code-review-criteria-gap/code-review/settle-code-review/settle-code-review-anchor-e2e test files, typecheck clean.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/core/src/gates/code-review.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/core/tests/gates/code-review-criteria-gap.test.ts"
+      ],
+      "updatedAt": "2026-07-31T00:58:17.036Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Converged code-review.ts's local Finding/FindingSeverity onto the shared cadence-types Finding (D9: one Finding type, discriminated by target). CodeReviewFinding/CodeReviewFindingSeverity kept as backward-compat re-exports in contracts/index.ts (2 real consumers: gates/types.ts, notify/code-review.ts). criteria-gap.ts's GapCandidateFinding/CriteriaGapSummary necessarily widened (severity/line derived from Finding['severity']/Finding['line']) to accommodate the wider type at anchorFindings' call site -- confirmed purely type-level (severity only ever tallied, never branched on; code-review's own verifiers never emit 'critical'; FindingResponseSchema LLM contract left unchanged at high|medium|low). Independently re-verified: build clean, 35/35 targeted tests, typecheck clean (reviewer additionally ran the full 3445-test core suite, all green).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/core/src/verify/code-review.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/core/src/contracts/index.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/packages/core/src/verify/criteria-gap.ts"
+      ],
+      "updatedAt": "2026-07-31T01:09:34.792Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "Documented phase 236's changes in docs/concepts.md (new subsection after phase-235's, doc-accuracy verified line-by-line against real source by reviewer) and added a purely additive inline 'As built' amendment to ROADMAP.md's phase 236 entry recording the ledger-routing split (0 deletions confirmed via git diff). Independently re-ran pnpm turbo run lint typecheck test build --force: 24 successful, 24 total, 0 cached (genuine full run). Backward compat independently spot-checked against 5 real pre-phase-236 SUMMARY.json fixtures (phases 67/167/220/234/235) -- all parse.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/236-finding-identity/.cadence/ROADMAP.md",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/fa54d942-3574-4b12-a182-6ee27062164a/scratchpad/parse-check.mjs"
+      ],
+      "updatedAt": "2026-07-31T01:22:24.860Z"
+    }
+  }
+}

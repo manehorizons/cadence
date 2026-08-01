@@ -18,6 +18,8 @@ function ctx(over: {
   allowSecurityAuditFailure?: boolean;
   force?: boolean;
   errs?: string[];
+  provider?: string;
+  model?: string;
   captureOpts?: (opts: { signal?: AbortSignal; traceId?: string } | undefined) => void;
 }): SettleContext {
   const errs = over.errs ?? [];
@@ -47,7 +49,11 @@ function ctx(over: {
         ) => {
           over.captureOpts?.(calledWithOpts);
           if (over.verifyThrows) throw new Error(over.verifyThrows);
-          return { findings: over.findings ?? [], provider: 'mock' };
+          return {
+            findings: over.findings ?? [],
+            provider: over.provider ?? 'mock',
+            ...(over.model ? { model: over.model } : {}),
+          };
         },
       },
     },
@@ -65,6 +71,8 @@ describe('runSecurityAuditGate', () => {
     const res = await runSecurityAuditGate(ctx({ findings: [] }));
     expect(res.outcome).toBe('pass');
     expect(res.summaryPatch?.securityAudit).toEqual([]);
+    // AC-2: passing path reports verifier identity via flags.verifierIdentity.
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
   });
 
   // AC-3: non-critical findings → pass + patch, no refusal
@@ -88,6 +96,8 @@ describe('runSecurityAuditGate', () => {
       'settle run refused: security-audit reported 1 CRITICAL finding(s). ' +
         'Pass --allow-security-audit-failure to record them and settle anyway, or --force to bypass.',
     );
+    // AC-2: refusing path also reports verifier identity via flags.verifierIdentity.
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
   });
 
   // AC-4: CRITICAL + --allow-security-audit-failure → pass + proceed line
@@ -99,6 +109,8 @@ describe('runSecurityAuditGate', () => {
     expect(res.outcome).toBe('pass');
     expect(res.summaryPatch?.securityAudit).toEqual(CRIT);
     expect(errs.join('')).toContain('--allow-security-audit-failure set; proceeding past 1 CRITICAL finding(s)');
+    // AC-2: bypass fall-through also reports verifier identity via flags.verifierIdentity.
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
   });
 
   // AC-4: CRITICAL + --force → pass with the --force arm
@@ -107,6 +119,7 @@ describe('runSecurityAuditGate', () => {
     const res = await runSecurityAuditGate(ctx({ findings: CRIT, force: true, errs }));
     expect(res.outcome).toBe('pass');
     expect(errs.join('')).toContain('--force set; proceeding past 1 CRITICAL finding(s)');
+    expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
   });
 
   // AC-4: verifier throws, no bypass → refuse with failure stderr
@@ -119,6 +132,9 @@ describe('runSecurityAuditGate', () => {
     expect(res.reason).toBe(
       'security-audit: verifier failed — boom. Pass --allow-security-audit-failure to continue.',
     );
+    // No verifier ran (it threw before returning a result), so there is no
+    // identity to report.
+    expect(res.flags).toBeUndefined();
   });
 
   // AC-4: verifier throws + bypass → pass
@@ -161,6 +177,22 @@ describe('runSecurityAuditGate', () => {
   it('leaves a non-secret finding message unchanged', async () => {
     const res = await runSecurityAuditGate(ctx({ findings: CRIT }));
     expect(res.summaryPatch?.securityAudit).toEqual(CRIT);
+  });
+
+  // AC-2: verifierIdentity carries both family and model when the verifier
+  // reports one, on both the pass and refuse paths.
+  it('includes the model field in verifierIdentity when the verifier reports one', async () => {
+    const pass = await runSecurityAuditGate(
+      ctx({ findings: [], provider: 'anthropic', model: 'claude-x' }),
+    );
+    expect(pass.outcome).toBe('pass');
+    expect(pass.flags?.verifierIdentity).toEqual({ family: 'anthropic', model: 'claude-x' });
+
+    const refuse = await runSecurityAuditGate(
+      ctx({ findings: CRIT, provider: 'anthropic', model: 'claude-x' }),
+    );
+    expect(refuse.outcome).toBe('refuse');
+    expect(refuse.flags?.verifierIdentity).toEqual({ family: 'anthropic', model: 'claude-x' });
   });
 
   // Phase 184 (AC-3): the gate must generate a per-run traceId and pass it

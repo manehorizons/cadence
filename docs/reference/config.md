@@ -466,6 +466,7 @@ never deleted — keeping the active ledger lean while preserving provenance.
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `recommendations.autoArchive` | `boolean` | `true` | Automatically soft-archive a rec **immediately** when it reaches a terminal state (`shipped`/`rejected`) via [`recommendation promote`](commands.md#recommendation-promote). Also gates the settle-time transition of a `converted` rec to `settle-pending` (see below) — off leaves such a rec at `converted` through settle. Set `false` to leave terminal recs in the active ledger. Manual [`recommendation archive`](commands.md#recommendation-archive)/`unarchive` work regardless. |
+| `recommendations.autoRoute` | `boolean` | `true` | Automatically route identified code-review findings into the recommendation ledger at settle time (Phase 242), as `Recommendation` entries with `source: 'review'`. Keyed on `Finding.id`, so a re-settle of an unchanged phase never mints a duplicate entry for a finding already routed. Set `false` to leave settle's ledger writes limited to the existing auto-archive hook. |
 
 Unlike [`handoff.retain`](#handoff) (a hard delete, so opt-in/off), auto-archival is
 **recoverable** and so defaults **on**. Archiving itself is only ever
@@ -480,6 +481,20 @@ archive is viewable with `cadence recommendation list --archived`.
 ```jsonc
 // .cadence/config.json — keep terminal recs in the active ledger (disable auto-archive)
 { "recommendations": { "autoArchive": false } }
+```
+
+`autoRoute` gates a separate settle-time writer: turning identified
+code-review findings (ones that carry a stable `Finding.id`, per phase 236's
+identity work) into ledger `Recommendation`/`Evidence` entries, so real
+findings stop being stranded in the SUMMARY. A finding with no stable id
+(e.g. a `security-audit` finding, which has no identity wired in) is skipped,
+never force-routed. Like `autoArchive`, this is best-effort — a routing
+failure (e.g. a ledger write error) never blocks or fails settle, and always
+prints a stderr notice rather than failing silently.
+
+```jsonc
+// .cadence/config.json — never auto-route findings into the ledger
+{ "recommendations": { "autoRoute": false } }
 ```
 
 ---

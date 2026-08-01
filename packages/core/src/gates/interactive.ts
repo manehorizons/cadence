@@ -1,6 +1,6 @@
 import { walkAcsInteractively, type InteractiveVerdict } from '../verify/interactive.js';
 import type { Prompter } from '../verify/prompter.js';
-import type { VerifyTestRef } from '../verify/verifier.js';
+import type { VerifyTestRef } from '../contracts/index.js';
 import { SETTLE_BYPASS_NOTICE } from './interactivity.js';
 import type { GateImpl, GateResult, SettleContext } from './types.js';
 

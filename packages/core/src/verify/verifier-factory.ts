@@ -145,6 +145,35 @@ function buildDowngradeBanner(reason: string): string {
 }
 
 /**
+ * Phase 244 (T2, rec-20260729-001): prominent stderr banner for a settle
+ * that is actually executing through a `cadence` binary whose realpath
+ * resolves OUTSIDE this repo's own checkout, despite the repo having its
+ * own local build — e.g. a stale globally-installed binary silently
+ * shadowing this checkout's `packages/core/bin/cadence.cjs` (confirmed on
+ * phases 233/234: the written SUMMARY silently downgraded to
+ * `schemaVersion: 1` with no `assurance` record). See
+ * `detectForeignCadenceBinary` in `services/settle.ts` for the detection
+ * logic. Unlike `MOCK_FALLBACK_BANNER` above, this has no fixed text — the
+ * mismatch is only actionable if the operator can see exactly which two
+ * paths disagree — so it is a builder function, not a static constant,
+ * following the same multi-line array-join shape.
+ */
+export function buildForeignBinaryBanner(runningBinaryPath: string, repoToplevel: string): string {
+  return [
+    '',
+    '  ⚠  SETTLING VIA A FOREIGN CADENCE BINARY',
+    '     This repo has its own local build, but the binary executing this',
+    '     settle resolves OUTSIDE this checkout — the written SUMMARY may',
+    '     silently downgrade (missing schemaVersion 2 fields, no assurance).',
+    `     running binary: ${runningBinaryPath}`,
+    `     repo toplevel:  ${repoToplevel}`,
+    '     Re-run via the local build in this checkout, e.g.:',
+    '       node packages/core/bin/cadence.cjs settle run --auto',
+    '',
+  ].join('\n');
+}
+
+/**
  * Phase 165 T3 — wraps a `host-cli`-backed verifier instance so that a
  * `HostCliError` (binary not found, spawn failure, non-zero exit, unparseable
  * output — see `host-cli-client.ts`) thrown/rejected by any of its methods is
