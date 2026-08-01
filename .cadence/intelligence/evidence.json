@@ -1253,6 +1253,13 @@
       "kind": "note",
       "summary": "Re-minted from rec-20260801-003 during PR #347 rebase onto feat/kernel-assurance-v2 (2026-08-01): that id collided with an unrelated rec independently filed on the arc branch (host-cli verifier wiring, since archived). Content/analysis unchanged; only the id (and this evidence entry's id, ev-20260801-003 -> ev-20260801-009) moved. See rec-20260801-008 for the paired re-mint of rec-20260801-002's collision.",
       "createdAt": "2026-08-01T14:15:55.389Z"
+    },
+    {
+      "id": "ev-20260801-012",
+      "recommendationId": "rec-20260801-003",
+      "kind": "note",
+      "summary": "CORRECTION (2026-08-01, resume session): this rec's core premise is false. Verified directly against code (not docs/providers.md, which is stale on both this arc and main): all 7 verifier factories (factory.ts, code-review-factory.ts, plan-review-factory.ts, security-audit-factory.ts, spec-review-factory.ts, ui-spec-review-factory.ts, per-task-factory.ts) already supply a real hostCli() builder, and each corresponding class calls hostCliJSON() once -- confirmed real, not stub. Wiring shipped in two prior phases well before this arc: phase 191 (eecc5259, PR #223, 2026-07-17) wired 5 families (verifier/deep-verify, codeReview, planReview, securityAudit, specReview); phase 205 (6e774d51, PR #269) wired the 6th (uiSpecReview) when that gate was introduced. verifier-factory.ts's dispatch has no per-family allowlist beyond 'does spec.hostCli exist' -- it does for all 7. The remaining actionable gap was ONLY config activation (all 6 non-per-task blocks still set to mock), not builder wiring. docs/providers.md's stale 'Current scope: per-task-verify only' section is what misled this rec's filing session; that doc fix is being handled separately (main, another session in progress). This session activated host-cli for verifier + codeReview only (the 2 of 6 actually in profile:auto's resolved gate set) -- see commit in this same push.",
+      "createdAt": "2026-08-01T15:25:20.537Z"
     }
   ]
 }

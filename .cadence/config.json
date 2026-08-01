@@ -72,14 +72,14 @@
     "coverageProfiles": []
   },
   "verifier": {
-    "provider": "mock",
+    "provider": "host-cli",
     "diffCapBytes": 262144
   },
   "perTaskVerifier": {
     "provider": "host-cli"
   },
   "codeReview": {
-    "provider": "mock"
+    "provider": "host-cli"
   },
   "planReview": {
     "provider": "mock"
