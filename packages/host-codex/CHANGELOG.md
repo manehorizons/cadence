@@ -1,5 +1,23 @@
 # @manehorizons/cadence-host-codex
 
+## 1.53.0
+
+### Patch Changes
+
+- Updated dependencies [eddfc6b]
+- Updated dependencies [c27bcb0]
+- Updated dependencies [5cc4085]
+- Updated dependencies [0d6aea6]
+- Updated dependencies [7ddc72a]
+- Updated dependencies [3b95218]
+- Updated dependencies [0726e40]
+- Updated dependencies [db225ac]
+- Updated dependencies [cfe582a]
+- Updated dependencies [bff35bf]
+  - @manehorizons/cadence-core@1.53.0
+  - @manehorizons/cadence-types@1.53.0
+  - @manehorizons/cadence-host-toolkit@1.52.1
+
 ## 1.52.0
 
 ### Minor Changes

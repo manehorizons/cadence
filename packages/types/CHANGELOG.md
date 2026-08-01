@@ -1,5 +1,203 @@
 # @manehorizons/cadence-types
 
+## 1.53.0
+
+### Minor Changes
+
+- c27bcb0: `code-review` findings are now criteria-anchored (Phase 235, `rec-20260727-004`
+  / `rec-20260727-005`): every finding is tagged with how strongly it ties back
+  to something the phase's DRAFT actually declared, on a four-tier ladder —
+  `executable` > `structured` > `declared` > `undeclared` — resolved by a new
+  pure `resolveAnchor` (`packages/core/src/verify/anchor.ts`). A finding whose
+  best anchor resolves to `undeclared` is a **criteria gap**: diff work no
+  acceptance criterion and no boundary covers.
+
+  `GateProvenanceZ`-adjacent `SummaryZ` gains an additive `AnchorZ` peer schema
+  (`{ kind: 'ac' | 'boundary' | 'none', ref?, tier }`, deliberately independent
+  of the existing `AcEvidenceZ` ladder — the two rank different things) and
+  `FindingZ` gains an optional `anchor` field. Both are purely additive: a
+  pre-phase-235 `SUMMARY.json` with no `anchor` on any finding still parses
+  unchanged.
+
+  A criteria gap adds **no new refusal path and no new bypass flag** — a gap
+  finding flows into the exact same finding stream `code-review` already
+  refuses on, so a HIGH-severity gap refuses through the pre-existing
+  HIGH-finding contract (`dec-20260729-005`); gap count and severity
+  distribution are declared to stderr unconditionally, independent of whether
+  the gate passes, refuses, or is bypassed (`dec-20260729-006`). `GATE_ORDER`
+  and every gate's pass/refuse semantics for pre-existing finding classes are
+  unchanged. Scope is deliberately narrow — only `code-review` is
+  criteria-anchored; `spec-review`, `ui-spec-review`, and `plan-review` are
+  untouched (`dec-20260729-003`).
+
+  Three limitations were filed rather than papered over. The first —
+  `executable` not being reachable in a real settle, because `SettleContext`
+  exposed no prior-gate provenance to a single gate (`rec-20260729-002`) — is
+  **resolved by phase 241 in this same release**, so it never reaches a
+  published version; see that entry for the fix. The other two remain open:
+  anchoring is resolved per-file rather than per-finding, so an uncovered
+  defect in an otherwise-covered file can be missed (`rec-20260729-003`); and a
+  boundary string that merely contains a finding's filename as a substring can
+  mask a real gap by granting `declared` tier too broadly (`rec-20260729-005`).
+
+- 5cc4085: Findings now carry a stable identity (Phase 236, `rec-20260727-006`): `FindingZ`
+  gains additive `id`, `target: 'artifact' | 'verification'`, `disposition: 'open'
+| 'accepted' | 'waived' | 'fixed' | 'superseded'`, and `waiver: { expiry }`
+  fields. `id` is a pure content hash over `(file, normalized message)` —
+  deliberately never a line number, so the same finding keeps the same `id`
+  across settles even after an unrelated edit shifts which line it sits on
+  (`packages/core/src/verify/finding-identity.ts`). `anchor`/`severity` are
+  accepted as parameters for call-site compatibility but do not participate in
+  the hash (Phase 245 narrowed the formula from an original `(file, anchor.kind,
+anchor.ref, severity, normalized message)`, after independent review found
+  both anchor and severity can legitimately change across settles for the same
+  underlying defect). A
+  `waiver` is only valid when `disposition === 'waived'`, enforced by a
+  cross-field schema refine — a waiver with no expiry is a belief masquerading
+  as knowledge, and an orphaned waiver on a non-waived finding is never valid.
+  `AnchorZ.kind` widens to also accept `'invariant'`, unused by any producer yet
+  (a follow-on phase's scope).
+
+  The `code-review` verifier's persisted findings (`gates/code-review.ts`) now
+  carry this identity: `id`, `target: 'artifact'`, and a default
+  `disposition: 'open'`, alongside their existing §7.1 anchor tag. This required
+  converging code-review's previously-local 3-severity `Finding`/`FindingSeverity`
+  type onto the shared, persisted 4-severity `Finding` from `@manehorizons/cadence-types`
+  (`rec-20260727-006`'s design-doc decision D9 — "one `Finding` type,
+  discriminated by `target`"). `CodeReviewFinding`/`CodeReviewFindingSeverity`
+  remain available from `packages/core/src/contracts/index.ts` as backward-compat
+  aliases of the now-shared type — `CodeReviewFindingSeverity` correspondingly
+  widens from `'high' | 'medium' | 'low'` to the full `'critical' | 'high' |
+'medium' | 'low'` union, though no code-review provider constructs `'critical'`
+  today.
+
+  `RecommendationSourceZ` gains a `'review'` member (`rec-20260727-011`), so a
+  future phase that routes code-review findings into the recommendation ledger
+  can carry real provenance instead of mislabeling them `manual`/`cadence`.
+
+  All schema changes are purely additive — every pre-phase-236 `SUMMARY.json`
+  still parses unchanged. This phase is deliberately schema-and-computation
+  only: findings-to-ledger auto-routing (creating `Recommendation` + `Evidence`
+  entries from findings during settle) is **not** implemented here — that
+  behavioral work is split to a follow-on phase, recorded inline in
+  `.cadence/ROADMAP.md`'s Phase 236 entry.
+
+- 7ddc72a: Identified code-review findings now route into the recommendation ledger at
+  settle time (Phase 242, `rec-20260731-003`) — the behavioral half Phase 236
+  deliberately deferred. Each finding that carries a stable `Finding.id` (Phase
+  236 identity) becomes a `Recommendation` with `source: 'review'`, linked to a
+  `cadence-artifact` `Evidence` entry whose `path` is that settle's
+  `<draftId>-SUMMARY.json` and whose `summary` names the phase id, draft id, and
+  SUMMARY `contentHash`. Routing is keyed on `Finding.id`, so a re-settle of an
+  unchanged phase never mints a duplicate entry for a finding already routed,
+  and one freshly-minted `scoutId` covers a whole settle's batch rather than one
+  per finding. Findings with no stable id (e.g. `security-audit`, which has no
+  identity wired in yet) are skipped, never force-routed.
+
+  `RecommendationZ` gains an optional `sourceFindingId` (the dedup key), and
+  `addRecommendation` gains optional `source` and a structured `cadence-artifact`
+  evidence override — both backward compatible; every existing caller keeps
+  today's `source: 'manual'`, free-text-evidence behavior unchanged. Two or more
+  findings that collide on identity within one settle (`rec-20260731-001`'s
+  known collision — same file/anchor/severity/normalized-message, no occurrence
+  discriminant) merge into a single `Recommendation` rather than mint one entry
+  with no trace of the duplicates or _N_ separate entries for one id; per
+  `dec-20260731-001`, the identity hash itself is untouched — the merge records
+  the occurrence count explicitly in the entry's evidence/summary text.
+
+  A new `recommendations.autoRoute` config field (`boolean`, default `true`,
+  alongside the existing `autoArchive`) gates the step. Like the existing
+  retro-digest and auto-archive steps, routing is best-effort: a failure (e.g. a
+  ledger write error) never blocks or fails settle, and always prints a stderr
+  notice rather than failing silently. This is a settle-time writer only — no
+  new gate, no `GATE_ORDER` change, and no refusal semantics; every existing
+  gate's pass/refuse verdict is byte-for-byte unchanged. Disposition mutation
+  (accept / waive / fix / supersede) still has no CLI surface — that stays a
+  follow-on phase's scope, per Phase 236's own boundary.
+
+- 3b95218: Settle can now tell a `mock`-verified `code-review`/`security-audit` gate
+  from a real-provider one — closing CADENCE's sole surviving P0 (Phase 232,
+  `rec-20260727-001`). Previously `CodeReviewResult`/`SecurityAuditResult`
+  computed `provider`/`model` in memory but discarded both before persistence,
+  so a SUMMARY could record only _that_ a review ran, never _what_ ran it.
+
+  `GateProvenanceZ` gains optional `provider`/`model` fields, populated only
+  for the `code-review` and `security-audit` gate entries (every other gate's
+  entry is unchanged). `GateFlags` gains an internal `verifierIdentity` field
+  that gate implementations use to report this identity generically — the
+  gate registry merges it onto the persisted provenance entry by flag
+  presence, not by gate name, so no gate-specific special-casing was needed
+  to express it.
+
+  This is a SUMMARY shape change, so `SummaryZ.schemaVersion` moves from the
+  literal `1` to `1 | 2`: writers now emit `2`; readers still accept
+  pre-existing `1` records unchanged. A SUMMARY written by a genuinely newer
+  Cadence (an unrecognized higher `schemaVersion`) now reports a distinct
+  "written by a newer Cadence" diagnostic instead of a generic parse/corruption
+  error, mirroring Phase 223's `contentHash` "unverifiable" precedent.
+
+  No `GATE_ORDER` changes, no gate pass/refuse behavior changes, no new
+  refusals — this is purely provenance the record was silently dropping.
+
+- cfe582a: Every settle now derives and reports one whole-run **assurance record** —
+  a durable answer to "how strongly was this settle actually verified?"
+  (Phase 233, `rec-20260728-001`). Composed from the per-gate verifier identity
+  persisted in Phase 232 plus the existing per-AC evidence-class ladder
+  (`ai-verified > executed > assertion > mention > unverified`), it makes a
+  settle whose gates all ran under `mock` visibly different, in the durable
+  record, from one verified for real.
+
+  `SummaryZ` gains an optional `assurance` field: `verifierRollup` (one entry
+  per distinct `(provider, model)` pair observed across gate provenance),
+  `evidenceTally` (an exhaustive count over all five evidence classes), and
+  `overall` (`'strong' | 'mixed' | 'weak' | 'unverified'`, a single
+  deterministic label). The derivation (`deriveAssuranceRecord`) is a pure
+  function of the gate-provenance array and the AC-evidence array only — no
+  gate-specific special-casing was needed to express it, clearing this phase's
+  binding tripwire and leaving the door open for further kernel/verifier/
+  consumer boundary work.
+
+  `assurance` is reported only: it adds no gate, no refusal path, and no
+  bypass flag, and settle's pass/refuse outcome is byte-for-byte unchanged.
+  It is covered by Phase 223's settle-time content hash, so a post-settle
+  hand-edit to it is caught by `cadence summary verify` exactly like any other
+  field, and it is surfaced as an `## Assurance` section in both
+  `cadence summary render` and the `SUMMARY.md` sidecar.
+
+- bff35bf: `cadence settle` now detects when it is actually executing through a
+  `cadence` binary that resolves OUTSIDE the current repo checkout, despite
+  that repo having its own local build (`rec-20260729-001`). This is the exact
+  bug confirmed on phases 233/234: a stale globally-installed `cadence` binary
+  silently shadowed the checkout's own `packages/core/bin/cadence.cjs`,
+  producing a downgraded `schemaVersion: 1` SUMMARY with no `assurance`
+  record — and the two binaries reported an _identical_ `--version` string on
+  the unreleased branch, so version comparison can't catch it.
+
+  Detection (`detectForeignCadenceBinary`, `packages/core/src/services/
+settle.ts`) is a pure, unit-tested function: is the realpath of the binary
+  actually executing this settle located inside the repo's own toplevel, given
+  that the repo is recognizably CADENCE's own monorepo (`packages/core/bin/
+cadence.cjs` + `.cadence/` both present at its root). An ordinary consumer
+  project settling via a globally-installed `cadence` is never a false
+  positive — that gate is what keeps this narrow.
+
+  On a mismatch, settle prints a loud stderr banner ("SETTLING VIA A FOREIGN
+  CADENCE BINARY", `buildForeignBinaryBanner` — same shape/placement
+  convention as the existing `MOCK_FALLBACK_BANNER`) naming both paths and
+  suggesting the fix, and `SummaryZ` gains an optional `foreignBinaryMismatch`
+  field (`{ runningBinaryPath, repoToplevel }`) recording the same provenance
+  on the written SUMMARY so the condition is auditable from the artifact alone.
+  Like `assurance` (phase 233), this is reported only — no gate, no refusal
+  path, no bypass flag; settle still completes normally either way. The field
+  is genuinely absent (never `false`/`null`) on a matched invocation, which is
+  the common/correct case.
+
+  This guard only runs in code that contains it, so it could not have caught
+  233/234 themselves, and it will not catch a settle run through an
+  already-published `cadence` binary that predates this release — it protects
+  settles going forward, once operators are actually running a build that
+  includes this fix.
+
 ## 1.52.0
 
 ### Minor Changes

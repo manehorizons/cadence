@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.53.0] - 2026-08-01
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.53.0`. Per-package bumps managed by changesets. Lands the `feat/kernel-assurance-v2` arc (phases 232-236, 241-245, open since 2026-07-27) merged whole into `main` per `dec-20260727-001`.
+
+### Added
+
+- **Gate provenance carries verifier identity** — settle can now tell a mock-verified `code-review`/`security-audit` gate from a real-provider one; `SUMMARY.schemaVersion` moves to `1 | 2`. Closes CADENCE's sole surviving P0. (Phase `232`, rec-20260727-001.)
+- **Per-settle assurance record** — every settle derives a whole-run `assurance` record (`verifierRollup`, `evidenceTally`, `overall: strong|mixed|weak|unverified`) from gate provenance plus the per-AC evidence ladder. (Phase `233`, rec-20260728-001.)
+- **Kernel/verifier/consumer boundary, lint-enforced** — the ~80%-already-built plugin architecture is named and published as `contracts/`; an ESLint rule fails the build on any module outside `verify/`/`contracts/` importing a verifier family directly. `spec-review`/`ui-spec-review` gain injection seams. (Phase `234`, rec-20260727-003.)
+- **Criteria-anchored code-review findings** — every finding is tagged on a four-tier anchor ladder (`executable` > `structured` > `declared` > `undeclared`); an `undeclared` finding is a criteria gap with no new refusal path or bypass flag. (Phase `235`, rec-20260727-004/-005.)
+- **Anchor ladder's `executable` tier reachable in a real settle** — `SettleContext` now threads prior-gate provenance (frozen, two levels deep) into `code-review`, closing phase 235's structurally-dead top rung. (Phase `241`, rec-20260729-002/-007.)
+- **Finding identity, disposition, and Finding-type convergence** — findings carry a stable content-hash `id`, `target`, `disposition`, and `waiver`; `code-review`'s local 3-severity `Finding` type converges onto the shared, persisted 4-severity type (decision D9). (Phase `236`, rec-20260727-006/-011.)
+- **Findings-to-ledger auto-routing** — identified `code-review` findings route into the recommendation ledger at settle time, deduped by `Finding.id`, batched under one `scoutId` per settle. New `recommendations.autoRoute` config field (default `true`). (Phase `242`, rec-20260731-003.)
+- **Settle-time foreign-binary guard** — detects a settle actually executing through a `cadence` binary that resolves outside the repo's own checkout despite a local build (the exact bug that silently downgraded phases 233/234's SUMMARYs); loud stderr banner plus a `foreignBinaryMismatch` SUMMARY field. (Phase `244`, rec-20260729-001.)
+- **Loud banner on every seam's credential-missing downgrade** — all 7 verifier seams, not just deep-verify, now emit the same loud multi-line banner on a selection-time mock fallback (missing API key, missing local-model config, unwired host-cli family). (Phase `243`, rec-20260731-002 follow-up.)
+
+### Fixed
+
+- Finding identity no longer hashes `anchor.kind`/`anchor.ref`/`severity` — both can legitimately change across settles for the same underlying defect (the DRAFT-amendment anchor-earning workflow re-anchors a previously-unanchored finding; severity is live LLM classification under real verifier providers), which was defeating phase 242's ledger dedup and minting duplicate recommendations. Identity is now a pure hash over `(file, normalized message)`. (Phase `245`, rec-20260801-009.)
+
 ## [1.52.0] - 2026-07-31
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.52.0`. Per-package bumps managed by changesets.
