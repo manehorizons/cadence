@@ -1106,6 +1106,20 @@
       "kind": "note",
       "summary": "Surfaced by the independent whole-branch reviewer during phase 243's pre-settle review (2026-07-31): flagged that phase 243's docs/providers.md edit was about to stamp a fresh 'Phase 243' attribution onto this false premise inside the same doc section; the phase 243 diff was reverted to leave the section exactly as stale as it was on main, and this rec files the underlying drift as its own follow-up instead of fixing it inline (scope discipline).",
       "createdAt": "2026-07-31T22:35:48.874Z"
+    },
+    {
+      "id": "ev-20260801-001",
+      "recommendationId": "rec-20260731-003",
+      "kind": "note",
+      "summary": "Investigated 2026-07-31: the provider-carrying field this rec asks for already exists on feat/kernel-assurance-v2 (phase 232, PR #327) as GateProvenanceZ.provider/model, populated generically via GateFlags.verifierIdentity from verifyResult.provider -- not gate-specific special-cased, so a credential-missing mock-downgrade naturally records provider:'mock' same as an explicitly-configured mock run. Phase 243 (the loud-banner fix, PR #344, main-only, unreleased) has NOT yet been synced into feat/kernel-assurance-v2, so the exact downgrade path this rec names is not yet confirmed end-to-end on that branch, but the mechanism strongly implies it resolves automatically once synced. Substantially overlaps/subsumed by rec-20260727-001 (top-level GateProvenance ask vs that rec's per-finding-array ask -- both satisfied by the same phase-232 change). Do not spec a standalone phase against main's GateProvenanceZ -- it would conflict with this unmerged branch work. Currently being evaluated for an early cherry-pick to main ahead of the rest of the kernel-assurance-v2 arc (see rec-20260727-001 for the merge-safety verdict).",
+      "createdAt": "2026-08-01T00:58:56.351Z"
+    },
+    {
+      "id": "ev-20260801-002",
+      "recommendationId": "rec-20260727-001",
+      "kind": "note",
+      "summary": "Investigated 2026-07-31/08-01: this rec is substantially shipped as phases 232+233 (Slice 1 of docs/handoffs/cadence-phase0-assurance-kernel-review.md) on feat/kernel-assurance-v2 -- unmerged to main. GateProvenanceZ.provider/model exist there, populated generically via GateFlags.verifierIdentity, not gate-specific special-cased. Cherry-pick safety spike (2026-08-01): cherry-picking 3b95218b+cfe582a5 onto current main resolves with only ledger-JSON conflicts (no real code conflicts against 232/233 alone); full workspace lint+typecheck+build+test (3430 core tests, 322 types tests) all pass clean on the result. BUT merge-back cost is real: merging origin/feat/kernel-assurance-v2 into that cherry-picked-main state produces genuine source conflicts (not just ledger noise) in code-review.ts, registry.ts, settle.ts, registry.test.ts, fields.test.ts -- because phases 234/235/236/241/242 build on top of 232/233 on the branch, so a cherry-pick creates duplicate-lineage history the eventual full-branch merge will have to reconcile. Slices 1-3 (phases 232-236, +241) are all done on the branch; only phase 237 (invariant promotion) remains, and it is needs-evidence-gated on phase 236's finding-routing accumulating real recurring findings -- which can't happen while the arc sits unmerged/unreleased. Also found: a rec-id collision -- main's rec-20260731-003 (this gate-provenance-adjacent ask) and the arc branch's rec-20260731-003 (phase 242, findings-to-ledger auto-routing, already merged to feat/kernel-assurance-v2 via PR #346) will collide when the branches reconcile, under any resolution path. Operator is weighing: early cherry-pick of Slice 1 alone vs. merging the whole arc branch to main now (only evidence-gated phase 237 remains) vs. holding per the original one-branch-merge-at-the-end decision (2026-07-27).",
+      "createdAt": "2026-08-01T01:14:25.097Z"
     }
   ]
 }

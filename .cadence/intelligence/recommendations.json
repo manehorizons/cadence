@@ -1282,13 +1282,14 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260727-001"
+        "ev-20260727-001",
+        "ev-20260801-002"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "scoutId": "scout-20260727-kernel-review-phase0",
       "createdAt": "2026-07-27T18:46:38.564Z",
-      "updatedAt": "2026-07-27T18:46:38.564Z"
+      "updatedAt": "2026-08-01T01:14:25.097Z"
     },
     {
       "id": "rec-20260727-002",
@@ -1714,12 +1715,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260731-003"
+        "ev-20260731-003",
+        "ev-20260801-001"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-07-31T21:56:05.738Z",
-      "updatedAt": "2026-07-31T21:56:05.738Z"
+      "updatedAt": "2026-08-01T00:58:56.351Z"
     },
     {
       "id": "rec-20260731-004",
@@ -4991,11 +4993,11 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "243-untitled",
-      "createdAt": "2026-07-31T21:56:05.579Z",
-      "updatedAt": "2026-07-31T22:37:08.402Z",
       "shippedRef": "PR #344",
       "archivedAt": "2026-07-31T22:37:08.402Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-31T21:56:05.579Z",
+      "updatedAt": "2026-07-31T22:37:08.402Z"
     }
   ]
 }
