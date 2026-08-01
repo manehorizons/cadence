@@ -1,0 +1,45 @@
+{
+  "draftId": "242-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-07-31T22:48:38.467Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-ledger-routing/packages/core/tests/intelligence/finding-routing.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-ledger-routing/packages/core/src/intelligence/finding-routing.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/27ba4341-fa55-4bd7-9c9d-f582ea759bd1/scratchpad/probe.mjs",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/27ba4341-fa55-4bd7-9c9d-f582ea759bd1/scratchpad/probe2.mjs",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-ledger-routing/packages/core/src/verify/finding-identity.ts"
+      ],
+      "updatedAt": "2026-07-31T23:19:27.059Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-ledger-routing/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-ledger-routing/packages/core/tests/services/settle.test.ts",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/27ba4341-fa55-4bd7-9c9d-f582ea759bd1/scratchpad/review-t3-probe.mjs",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/27ba4341-fa55-4bd7-9c9d-f582ea759bd1/scratchpad/review-t3-probe2.mjs",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/27ba4341-fa55-4bd7-9c9d-f582ea759bd1/scratchpad/review-t3-probe3.mjs"
+      ],
+      "updatedAt": "2026-07-31T23:59:27.946Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-ledger-routing/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-ledger-routing/docs/reference/config.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/kernel-ledger-routing/.cadence/ROADMAP.md"
+      ],
+      "updatedAt": "2026-08-01T00:18:57.478Z"
+    }
+  }
+}

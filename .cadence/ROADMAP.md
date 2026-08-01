@@ -2051,7 +2051,65 @@ Maps to rec-20260727-006, rec-20260727-011 (medium, `needs-decision`).
 > `'review'` (schema-only). **Findings-to-ledger auto-routing — creating `Recommendation` +
 > `Evidence` entries from findings during settle — was explicitly NOT implemented in this
 > slice.** That is real behavioral I/O-port-threading work (a settle-time writer, not a
-> schema change), and is split to a follow-on phase, not yet numbered.
+> schema change), and was split to a follow-on phase. **That follow-on is phase 242
+> (below), which shipped it 2026-07-31.**
+
+### Phase 242 — Findings-to-ledger auto-routing (rec-20260731-003)
+
+**Gate to entry.** Phase 236 settled: `id`/`target`/`disposition`/`waiver` identity exists on
+`FindingZ`, and `RecommendationSourceZ` already carries the `'review'` member, schema-only,
+per the phase 236 "As built" amendment above.
+
+**Objective.** Implement the behavioral half phase 236 deliberately deferred — the source
+design doc's §7.3 (`docs/handoffs/cadence-phase0-assurance-kernel-review.md`): route
+identified code-review findings into the recommendation ledger at settle time as
+`Recommendation`/`Evidence` entries, keyed on `Finding.id` so a re-settle of an unchanged
+phase never mints a duplicate entry for the same finding, and batched under one `scoutId`
+per settle rather than one per finding. Findings with no stable id (security-audit; identity
+is not wired in there) are skipped, never force-routed. Settle-time writer only — no new
+gate, no `GATE_ORDER` change, no refusal semantics, and no disposition-mutation CLI (still a
+follow-on phase's surface, per phase 236's own boundary). Maps to rec-20260731-003.
+
+> **Design decision (`dec-20260731-001`).** rec-20260731-001 found that `computeFindingId`
+> collapses two distinct findings that share `(file, anchor.kind, anchor.ref, severity,
+> normalized message)` with no occurrence discriminant. Resolved without touching the
+> identity hash: the routing step merges same-id findings within one settle into a single
+> `Recommendation`, recording the occurrence count explicitly in its evidence/summary text —
+> a deliberate merge-by-identity semantic, not silent data loss.
+
+**Files.**
+- `packages/types/src/intelligence.ts` — `RecommendationZ.sourceFindingId` (optional FK back
+  to the routed `Finding.id`).
+- `packages/types/src/config.ts` — `recommendations.autoRoute` (`boolean`, default `true`),
+  alongside the existing `autoArchive`.
+- `packages/core/src/intelligence/store/recommendations.ts` — `addRecommendation` extended
+  with an optional `source` / `sourceFindingId` / structured `cadence-artifact` evidence
+  override.
+- `packages/core/src/intelligence/finding-routing.ts` (new) — the pure derivation,
+  `deriveRoutingCandidates`.
+- `packages/core/src/services/settle.ts` — one named step in `finalizeAndCloseSettle`, wired
+  in right after the SUMMARY is written, best-effort and config-gated.
+- `packages/core/tests/**`; `docs/concepts.md`, `docs/reference/config.md` — paired doc edit.
+
+> **As built — one file beyond the list above.** `packages/core/src/verify/finding-identity.ts`
+> (phase 236) gained one line: `normalizeMessage` widened from module-private to `export`, no
+> change to any hash input. Independent review of T2 (the routing derivation) surfaced that
+> routing must embed the same whitespace-normalized message `computeFindingId` hashed over, or
+> a routed ledger entry would disagree with its own identity — reusing phase 236's existing
+> normalization function was the fix, in preference to duplicating it.
+
+**As built (2026-07-31).** Shipped as designed. `deriveRoutingCandidates`
+(`packages/core/src/intelligence/finding-routing.ts`) groups findings by id first (merging
+same-id occurrences per `dec-20260731-001` and recording the occurrence count), skips
+un-identified findings, and mints exactly one `scoutId` per settle batch.
+`finalizeAndCloseSettle` (`packages/core/src/services/settle.ts`) wires it in gated on
+`recommendations.autoRoute`, reads both the active and archived ledger arrays to dedup across
+re-settles (a previously-routed finding can already be soft-archived by `autoArchive` before a
+re-settle), and never blocks or fails settle on a routing failure — a stderr notice fires
+instead, matching the existing retro-digest step's shape. `GATE_ORDER` and every gate's
+pass/refuse verdict are byte-for-byte unchanged. Disposition mutation (accept / waive / fix /
+supersede) still has no CLI surface, and `security-audit` findings still have no identity
+wired in — both stay follow-on scope, per phase 236's boundary.
 
 ### Phase 237 — Invariant promotion from recurring findings *(sketch — contingent)*
 

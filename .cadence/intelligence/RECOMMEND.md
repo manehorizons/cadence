@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-07-31T22:00:58.651Z
+Generated at: 2026-08-01T00:33:27.231Z
 
 ## Advisory
 
@@ -15,6 +15,14 @@ Generated at: 2026-07-31T22:00:58.651Z
 - score: 73/100 (raw 25.7)
 - status: candidate · ready: ready-for-cadence-spec · priority: high · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio high +5 · friction 0 +0 ⇒ raw 25.7 (score 73)
+- next: cadence milestone propose
+
+### rec-20260801-001 — docs/reference/commands.md config edit section lists only 5 fields; EDITABLE_FIELDS has 8
+
+- score: 65/100 (raw 20.7)
+- status: candidate · ready: ready-for-cadence-spec · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio low +0 · friction 0 +0 ⇒ raw 20.7 (score 65)
+- scout: scout-20260731-kernel-ledger-routing
 - next: cadence milestone propose
 
 ### rec-20260729-004 — test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests
@@ -74,6 +82,14 @@ Generated at: 2026-07-31T22:00:58.651Z
 - scout: scout-20260730-opus-gap-review
 - next: cadence milestone propose
 
+### rec-20260731-004 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
+- scout: scout-20260731-kernel-ledger-routing
+- next: cadence milestone propose
+
 ### rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
 
 - score: 55/100 (raw 13.7)
@@ -123,6 +139,22 @@ Generated at: 2026-07-31T22:00:58.651Z
 - score: 53/100 (raw 12.7)
 - status: candidate · ready: raw-idea · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 12.7 (score 53)
+- next: cadence milestone propose
+
+### rec-20260731-005 — Archived finding-routing recs permanently suppress recurrence of the same finding id
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: needs-decision · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio low +0 · friction 0 +0 ⇒ raw 12.7 (score 53)
+- scout: scout-20260731-kernel-ledger-routing
+- next: cadence milestone propose
+
+### rec-20260731-006 — Finding-ledger routing has no per-settle cap: O(N) sequential ledger rewrites, and it now dirties a git-tracked file every settle
+
+- score: 53/100 (raw 12.7)
+- status: candidate · ready: needs-decision · priority: low · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio low +0 · friction 0 +0 ⇒ raw 12.7 (score 53)
+- scout: scout-20260731-kernel-ledger-routing
 - next: cadence milestone propose
 
 ### rec-20260724-008 — Spot-check the logged-out GitHub landing render against main README
@@ -257,4 +289,4 @@ None.
 
 ## Totals
 
-- total 55 · ranked 32 · parked 1 · needs-attention 0 · excluded 22
+- total 59 · ranked 36 · parked 1 · needs-attention 0 · excluded 22

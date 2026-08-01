@@ -101,6 +101,17 @@ export const EDITABLE_FIELDS: EditableField[] = [
     current: (c) => String(c.recommendations.autoArchive),
   },
   {
+    name: 'autoRoute',
+    dottedKey: 'recommendations.autoRoute',
+    label: 'Findings-to-ledger auto-routing',
+    help: 'Auto-route identified code-review findings into the recommendation ledger at settle time (source: review). Best-effort; never blocks settle.',
+    choices: [
+      { value: 'true', blurb: 'route identified findings automatically (default)' },
+      { value: 'false', blurb: 'never auto-route findings into the ledger' },
+    ],
+    current: (c) => String(c.recommendations.autoRoute),
+  },
+  {
     name: 'coverageMode',
     dottedKey: 'verification.coverageMode',
     label: 'Coverage mode',

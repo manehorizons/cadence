@@ -522,6 +522,41 @@ describe('recommendations auto-archive config (Phase 102 / AC-1)', () => {
   });
 });
 
+describe('recommendations auto-route config (Phase 242 T1 / AC-1)', () => {
+  it('242-01/AC-1: applies autoRoute=true when the block is omitted (pre-v1.53)', () => {
+    const { recommendations: _drop, ...without } = defaultConfig;
+    const parsed = CadenceConfigZ.parse(without);
+    expect(parsed.recommendations.autoRoute).toBe(true);
+  });
+
+  it('242-01/AC-1: applies autoRoute=true when recommendations is an empty object', () => {
+    const parsed = CadenceConfigZ.parse({ ...defaultConfig, recommendations: {} });
+    expect(parsed.recommendations.autoRoute).toBe(true);
+  });
+
+  it('242-01/AC-1: defaultConfig carries recommendations.autoRoute=true', () => {
+    expect(defaultConfig.recommendations.autoRoute).toBe(true);
+  });
+
+  it('242-01/AC-1: round-trips an explicit autoRoute=false alongside autoArchive', () => {
+    const parsed = CadenceConfigZ.parse({
+      ...defaultConfig,
+      recommendations: { autoArchive: true, autoRoute: false },
+    });
+    expect(parsed.recommendations.autoArchive).toBe(true);
+    expect(parsed.recommendations.autoRoute).toBe(false);
+  });
+
+  it('242-01/AC-1: rejects a non-boolean autoRoute', () => {
+    expect(() =>
+      CadenceConfigZ.parse({
+        ...defaultConfig,
+        recommendations: { autoRoute: 'yes' as never },
+      }),
+    ).toThrow();
+  });
+});
+
 describe('verification.coverageMode (phase 108)', () => {
   it('defaults to "mention" when omitted (AC-1)', () => {
     const { verification: _drop, ...withoutVerification } = defaultConfig;

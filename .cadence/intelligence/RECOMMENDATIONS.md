@@ -865,19 +865,66 @@ computeFindingId hashes (file, anchor.kind, anchor.ref, severity, normalized mes
 
 The new 'Finding identity, disposition, and type convergence (phase 236)' subsection in docs/concepts.md cites ~10 hardcoded file.ts:NN-NN line ranges (e.g. summary.ts:70-114, finding-identity.ts:58-90, gates/code-review.ts:105, contracts/index.ts:167-186, intelligence.ts:3-15). All verified accurate as of the phase-236 commit, but no doc-content test pins them (unlike CLAUDE.md's 'The Hardcoded Count' precedent for command/slash-command counts) and docs/concepts.md had zero such citations before this commit. They will silently go stale on the next edit to any cited file. Surfaced by an Opus gap review (2026-07-30) of phase 236. Fix options: drop line numbers and cite file paths only, or add a lightweight doc-content test asserting the cited ranges still contain what they claim (matching this repo's existing docs test conventions in packages/core/tests/docs/).
 
-## rec-20260731-003 — Findings-to-ledger auto-routing: create Recommendation + Evidence entries from code-review findings during settle
+## rec-20260731-004 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)
 
-- status: converted
-- ready: ready-for-cadence-spec
+- status: candidate
+- ready: needs-decision
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
-- areas: core, types
-- files: packages/core/src/services/settle.ts, packages/core/src/verify/finding-identity.ts, packages/core/src/intelligence/store/recommendations.ts, packages/types/src/intelligence.ts
-- decisions: dec-20260731-001 (active)
-- evidence: Source doc §7.3 (docs/handoffs/cadence-phase0-assurance-kernel-review.md); phase 236 ROADMAP.md 'As built' amendment explicitly splits this out; rec-20260727-006/-011 (shipped, schema-only) are the prerequisites this consumes; rec-20260731-001 (finding-id collision, needs-decision) must be designed around, not ignored
+- areas: core
+- files: packages/core/src/services/settle.ts, packages/core/src/gates/code-review.ts
+- evidence: Surfaced by independent review of phase 242 T3 (2026-07-31), verified live: a forced high-severity settle exits 1 with lastGate.reason naming code-review, no codeReview key in the refused SUMMARY, no ledger entry
 - next: cadence milestone propose
 
-Phase 236 shipped finding identity (id/target/disposition/waiver on FindingZ, packages/core/src/verify/finding-identity.ts) and RecommendationSourceZ's 'review' member, but explicitly deferred the behavioral half: settle currently persists findings into the SUMMARY only, never into the recommendation ledger. Per the source doc (docs/handoffs/cadence-phase0-assurance-kernel-review.md §7.3) and phase 236's ROADMAP.md 'As built' amendment, this follow-on must: (1) route findings as Recommendation entries with EvidenceZ(kind:'cadence-artifact') pointing at the settle, sourced as 'review' not 'manual'/'cadence'; (2) reuse the existing scout-id convention for batch provenance (one scout id per settle's batch of routed findings, not one scout per finding); (3) key routing on FindingZ.id for ledger hygiene so a re-settle of an unchanged phase does not mint duplicate recommendations for the same finding -- this is the hard requirement the source doc names ('without stable identity and dispositions, repeated runs fill the ledger with undisposed items'); (4) account explicitly for rec-20260731-001 (computeFindingId collides for two same-severity/message findings in one file, no occurrence discriminant) rather than silently merging distinct findings under one ledger entry -- either add an occurrence ordinal to the hash or make merge-by-identity a documented, deliberate semantic. Scope is the settle-time writer only (a new named step in packages/core/src/services/settle.ts, per phase 228's step-function convention) -- no new gate, no GATE_ORDER change, no refusal semantics.
+Phase 242's finding-to-ledger routing (settle.ts, finalizeAndCloseSettle) only ever runs on a settle that reaches finalization. collectHighFindings (gates/code-review.ts) fails the code-review gate on any 'high' severity finding, so settle takes the writeRefusedSettleSummary path instead -- finalizeAndCloseSettle, and therefore the routing step, is never reached. Verified live: a settle with a high-severity finding exits 1, the refused SUMMARY has no codeReview key at all (the findings aren't even persisted), and no ledger entry is created. The findings only route if the operator bypasses via --force/--allow-code-review-failure. This is consistent with phase 242's DRAFT (AC-1 says 'when settle finalizes'), so it is not a phase-242 defect -- but it means the single most severe class of finding is the one class the routing feature never captures by default. Worth a decision: should a refused settle still route the findings from its failed attempt (there is real diagnostic value in a high-severity finding landing in the ledger even though the phase didn't settle), or is 'only route on a clean settle' the deliberately narrower, safer scope?
+
+## rec-20260731-005 — Archived finding-routing recs permanently suppress recurrence of the same finding id
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/services/settle.ts, packages/core/src/verify/finding-identity.ts
+- evidence: Surfaced by independent review of phase 242 T3 (2026-07-31): dedup-set construction from ledger.recommendations + ledger.archived is correct per AC-2, but archiveReason is not distinguished when building that set
+- next: cadence milestone propose
+
+Phase 242's AC-2 dedup correctly checks both the ledger's active recommendations array AND its archived array before routing a finding (a previously-routed rec can be soft-archived -- e.g. after being shipped/rejected, since recommendations.autoArchive defaults true -- before the phase is ever re-settled). But this has a real consequence worth a conscious decision: computeFindingId (phase 236, finding-identity.ts) deliberately excludes line number from its hash, so a finding that is fixed, whose rec is archived (possibly as 'rejected'), and which later regresses -- same file/anchor/severity/normalized-message reintroduced -- computes to the byte-identical id and will never be re-routed, silently, forever. This is correct per AC-2 exactly as specified (dedup across settles), but 'permanently' may not be the intended lifetime for a rejected-and-recurred finding. Options: exempt archiveReason: 'rejected' from the dedup set (only 'shipped'/'converted' archival suppresses recurrence), or accept this as the deliberate semantic and document it explicitly next to AC-2.
+
+## rec-20260731-006 — Finding-ledger routing has no per-settle cap: O(N) sequential ledger rewrites, and it now dirties a git-tracked file every settle
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/services/settle.ts, packages/core/src/intelligence/store/recommendations.ts
+- evidence: Surfaced by independent review of phase 242 T3 (2026-07-31): verified empirically that Promise.all races on id-minting (3 concurrent calls -> 1 written rec), confirming the sequential loop is necessary but leaves an unbounded-N cost profile; recommendations.json/evidence.json confirmed git-tracked in this repo
+- next: cadence milestone propose
+
+Phase 242's routing step (settle.ts, finalizeAndCloseSettle) writes each new routing candidate via a sequential for-of + await addRecommendation loop -- correct and necessary (Promise.all would race on id-minting, verified empirically: 3 concurrent calls collapsed to 1 written rec instead of 3), but each call re-reads and rewrites both ledger files in full, so N candidates cost O(N) full ledger read+writes with no upper bound on N per settle. A real (non-mock) reviewer producing many findings in one settle could mint many recommendations in one step. Separately: .cadence/intelligence/recommendations.json (and evidence.json) are git-tracked in this repo, so routing now dirties a tracked file on every settle that has code-review findings -- widening the existing rec-id-collision-on-rebase surface (two branches/worktrees independently minting new rec ids before either pushes) beyond what manual recommendation add usage already created. Worth a decision: cap candidates per settle (e.g. route only the top-N by severity, log the rest as dropped per this repo's no-silent-caps convention), or accept unbounded routing as intentional since findings are already bounded by the review verifier's own output size.
+
+## rec-20260801-001 — docs/reference/commands.md config edit section lists only 5 fields; EDITABLE_FIELDS has 8
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, docs
+- files: docs/reference/commands.md, packages/core/src/config-edit/fields.ts
+- evidence: Surfaced during phase 242 T4 doc work (2026-07-31): confirmed docs/reference/commands.md:156 still says 'all five' while EDITABLE_FIELDS has 8 entries (profile, loopEnforcement, acDiscipline, commitCadence, verifier, autoArchive, coverageMode, autoRoute)
+- next: cadence milestone propose
+
+docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, acDiscipline, commitCadence, or verifier. Omit to walk all five.') predates phase 102's autoArchive and phase 108's coverageMode additions to packages/core/src/config-edit/fields.ts's EDITABLE_FIELDS array, and now also predates phase 242's autoRoute addition -- three fields (autoArchive, coverageMode, autoRoute) are absent from this doc's field list and its 'walk all five' claim, though EDITABLE_FIELDS actually holds 8. Not caused by phase 242 -- the gap already existed for autoArchive/coverageMode before this phase; autoRoute is simply the third field to land in it. No doc-content test currently catches this (unlike the command-count/slash-command-count tests this repo already has for similar drift). Fix: update the field list and count, and consider adding a doc-content test deriving the list from EDITABLE_FIELDS.map(f => f.name) the same way docs-command-count.test.ts derives the registered command set, so this can't silently drift again.

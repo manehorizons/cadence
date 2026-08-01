@@ -42,10 +42,15 @@ import { deriveAssuranceRecord, type AssuranceAcResult } from '../gates/assuranc
 import { effectiveEvidenceFloor, evidenceFloorRefusalReason } from '../gates/engine.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
 import {
+  addRecommendation,
   runAdvanceConvertedToSettlePendingForPhase,
   runRecommendationPromotion,
 } from '../intelligence/store/recommendations.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
+import {
+  deriveRoutingCandidates,
+  type RoutingSettlePointer,
+} from '../intelligence/finding-routing.js';
 import {
   type SettleContext,
   type ProgressJson,
@@ -933,6 +938,55 @@ async function finalizeAndCloseSettle(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     io.err(`note: retro artifact failed to write — ${msg}\n`);
+  }
+
+  // Phase 242 (T3, §7.3): route identified code-review findings into the
+  // recommendation ledger as `source: 'review'` recs. Best-effort — matches
+  // the retro-digest block above exactly: a failure here (e.g. a ledger
+  // write error) never blocks or fails settle, and is never silent (AC-5).
+  // Config-gated on `recommendations.autoRoute` (default on, same precedent
+  // as `autoArchive` below). Skipped entirely when the code-review gate
+  // didn't run at all (`codeReviewFindings` is `undefined` — never for the
+  // gate having run with zero findings, which is `{}` and derives to no
+  // candidates anyway) — no ledger read for a settle that never ran the gate.
+  if (cadenceConfig?.recommendations.autoRoute !== false && codeReviewFindings) {
+    try {
+      const routingLedger = await readRecommendationLedger(cwd);
+      // AC-2: a previously-routed finding can already be soft-archived
+      // (`autoArchive` defaults on) by the time this phase is re-settled —
+      // check BOTH arrays, or a re-settle would silently re-route it.
+      const alreadyRoutedIds = new Set<string>();
+      for (const rec of routingLedger.recommendations) {
+        if (rec.sourceFindingId) alreadyRoutedIds.add(rec.sourceFindingId);
+      }
+      for (const rec of routingLedger.archived) {
+        if (rec.sourceFindingId) alreadyRoutedIds.add(rec.sourceFindingId);
+      }
+      const pointer: RoutingSettlePointer = {
+        phaseId: activePhase,
+        draftId: summary.draftId,
+        contentHash: summary.contentHash?.value ?? '',
+        // Repo-relative, forward-slash artifact path — matches the existing
+        // `kind: 'file'` Evidence.path convention elsewhere in the ledger
+        // (e.g. `src/foo.ts`), not an absolute filesystem path.
+        summaryPath: `.cadence/phases/${activePhase}/${state.activeDraft}-SUMMARY.json`,
+      };
+      const candidates = deriveRoutingCandidates(
+        codeReviewFindings,
+        alreadyRoutedIds,
+        pointer,
+        new Date(),
+      );
+      // Sequential, not Promise.all: addRecommendation re-reads the ledger
+      // and mints the next id from what it read each call — concurrent
+      // writes would collide ids and lose writes.
+      for (const candidate of candidates) {
+        await addRecommendation(cwd, candidate);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      io.err(`note: finding-ledger routing failed — ${msg}\n`);
+    }
   }
 
   // Phase 145: advance any recommendation converted into the phase that just
