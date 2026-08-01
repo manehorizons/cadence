@@ -22,12 +22,17 @@ import { normalizeMessage } from '../verify/finding-identity.js';
  *      findings that collide on identity within this one call merge into a
  *      single candidate, whose summary text records how many occurrences
  *      were collapsed. `computeFindingId` (`verify/finding-identity.ts`)
- *      hashes `(file, anchor.kind, anchor.ref, severity, normalized
- *      message)`, so a shared id can only arise from the same file — the
- *      merged candidate's `file`/`line` are taken from the *first*
- *      occurrence encountered, and that is safe because every occurrence in
- *      the group already agrees on file/anchor/severity/message by
- *      construction.
+ *      hashes `(file, normalized message)` only (phase 245 narrowed this —
+ *      `anchor`/`severity` no longer participate), so a shared id can only
+ *      arise from the same file and message — but occurrences CAN
+ *      legitimately disagree on `severity` (and therefore `anchor`/`line`),
+ *      since neither is a hash input anymore. The group's canonical
+ *      `finding` starts as the first occurrence encountered but is replaced
+ *      whenever a strictly more severe later occurrence arrives (see
+ *      `SEVERITY_RANK` below), so the merged candidate's
+ *      `severity`/`priority`/`file`/`line` always reflect the most severe
+ *      occurrence in the group — never silently whichever came first
+ *      (AC-5, phase 245).
  *   2. Skip any finding with no `id` at all (AC-3) — un-identified findings
  *      (e.g. security-audit, which has no identity wired in yet) are
  *      deliberately never force-routed. An empty-string id is treated the
@@ -105,6 +110,25 @@ const SEVERITY_TO_PRIORITY: Record<Finding['severity'], RecommendationPriority> 
 };
 
 /**
+ * Severity rank, most to least severe, for comparing two occurrences of the
+ * same finding id (phase 245): since `computeFindingId` no longer hashes
+ * `severity`, two occurrences sharing an id can legitimately disagree on it,
+ * and the merge in `deriveRoutingCandidates` must keep the group's canonical
+ * `finding` at the most severe value seen — never silently the first one
+ * encountered, since `priority` (derived from `finding.severity` via
+ * `SEVERITY_TO_PRIORITY` above) drives ledger triage and under-reporting
+ * severity is the wrong failure direction. Order matches
+ * `SEVERITY_TO_PRIORITY`'s key order above; there is no other severity-rank
+ * utility elsewhere in the codebase to reuse.
+ */
+const SEVERITY_RANK: Record<Finding['severity'], number> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
+/**
  * Readiness is fixed at `'needs-decision'` for every routed candidate: a
  * routed finding already carries its evidence (the finding itself, anchored
  * to a settle) — what's missing is an operator decision (accept / waive /
@@ -161,11 +185,21 @@ interface FindingGroup {
   // than asserted.
   id: string;
   file: string;
+  // Phase 245: pre-narrowing, `computeFindingId` hashed `severity` too, so
+  // every occurrence in a group was guaranteed to already agree on it — this
+  // field could safely stay pinned to whichever occurrence arrived first.
+  // That guarantee is gone: `severity` (and therefore `anchor`/`line`) can
+  // now legitimately vary across occurrences of one id, so `finding` is no
+  // longer frozen at first-seen — the merge loop replaces it wholesale
+  // whenever a strictly more severe occurrence arrives (AC-5), so it always
+  // names the most severe occurrence seen so far, and `buildCandidate`'s
+  // reads of `finding.severity`/`.line`/`.message` stay mutually consistent.
   finding: Finding;
   occurrences: number;
   // One entry per occurrence, in encounter order, including the first — used
   // only to list every occurrence's line when merged (F2); the primary
-  // `location` string still comes from `finding` (the first occurrence).
+  // `location` string comes from `finding`, which names the most severe
+  // occurrence seen (not necessarily the first — see above).
   lines: Array<number | undefined>;
 }
 
@@ -261,6 +295,15 @@ export function deriveRoutingCandidates(
       if (existing) {
         existing.occurrences += 1;
         existing.lines.push(finding.line);
+        // Phase 245 (AC-5): severity is no longer a computeFindingId hash
+        // input, so this occurrence CAN legitimately be more (or less)
+        // severe than the group's current canonical finding. Replace the
+        // whole `finding` reference — not just `.severity` — whenever this
+        // occurrence outranks it, so `buildCandidate`'s severity/message/
+        // line reads all come from the same, now-most-severe, occurrence.
+        if (SEVERITY_RANK[finding.severity] > SEVERITY_RANK[existing.finding.severity]) {
+          existing.finding = finding;
+        }
       } else {
         groups.set(key, { id: finding.id, file, finding, occurrences: 1, lines: [finding.line] });
       }

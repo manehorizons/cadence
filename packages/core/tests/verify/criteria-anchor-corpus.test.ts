@@ -420,7 +420,7 @@ describe('§6 Slice 3 corpus case 7 — AC-5 round trip: amending the DRAFT conv
     expect(gapCount).toBe(0);
   });
 
-  it('AC-5: the exact same message/severity/line survive unanchored -> anchored — only the anchor changed, not the finding itself', async () => {
+  it('AC-5/AC-4: the exact same message/severity/line survive unanchored -> anchored — only the anchor changed, not the finding\'s identity, message, severity, or line', async () => {
     const draftBefore = baseDraft();
     const draftAfter = baseDraft({
       acceptanceCriteria: [ac({ id: 'AC-1' })],
@@ -439,5 +439,15 @@ describe('§6 Slice 3 corpus case 7 — AC-5 round trip: amending the DRAFT conv
     expect(beforeFinding.anchor).not.toEqual(afterFinding.anchor);
     expect(beforeFinding.anchor!.tier).toBe('undeclared');
     expect(afterFinding.anchor!.tier).toBe('structured');
+
+    // AC-4 (phase 245): the anchor-earning workflow re-anchors the SAME
+    // underlying defect, not a new one — its id must survive unchanged
+    // even though its anchor just did. Pre-phase-245, computeFindingId
+    // hashed anchor.kind/anchor.ref (and severity) alongside file/message,
+    // so this exact BEFORE -> AFTER transition minted a fresh id for an
+    // unchanged defect; the ledger dedup phase 242 added (keyed on
+    // Finding.id) would have missed it and phase 245 narrowed the hash to
+    // (file, normalized message) specifically to fix that.
+    expect(beforeFinding.id).toBe(afterFinding.id);
   });
 });

@@ -6,10 +6,15 @@
 Findings now carry a stable identity (Phase 236, `rec-20260727-006`): `FindingZ`
 gains additive `id`, `target: 'artifact' | 'verification'`, `disposition: 'open'
 | 'accepted' | 'waived' | 'fixed' | 'superseded'`, and `waiver: { expiry }`
-fields. `id` is a pure content hash over `(file, anchor.kind, anchor.ref,
-severity, normalized message)` — deliberately never a line number, so the same
-finding keeps the same `id` across settles even after an unrelated edit shifts
-which line it sits on (`packages/core/src/verify/finding-identity.ts`). A
+fields. `id` is a pure content hash over `(file, normalized message)` —
+deliberately never a line number, so the same finding keeps the same `id`
+across settles even after an unrelated edit shifts which line it sits on
+(`packages/core/src/verify/finding-identity.ts`). `anchor`/`severity` are
+accepted as parameters for call-site compatibility but do not participate in
+the hash (Phase 245 narrowed the formula from an original `(file, anchor.kind,
+anchor.ref, severity, normalized message)`, after independent review found
+both anchor and severity can legitimately change across settles for the same
+underlying defect). A
 `waiver` is only valid when `disposition === 'waived'`, enforced by a
 cross-field schema refine — a waiver with no expiry is a belief masquerading
 as knowledge, and an orphaned waiver on a non-waived finding is never valid.

@@ -11,6 +11,10 @@ import {
 // Covers AC-2 (dedup across settles via an already-routed id set), AC-3 (skip
 // findings with no stable id), AC-4 (one scoutId per batch), AC-7 (merge
 // same-id findings within one settle, recording the occurrence count).
+// Phase 245 (245-01, T4) adds AC-5: since computeFindingId no longer hashes
+// severity, a same-id merge group can now legitimately disagree on severity
+// — the merge must take the most severe value seen, not whichever occurrence
+// arrived first.
 
 function finding(overrides: Partial<Finding> = {}): Finding {
   return {
@@ -157,6 +161,61 @@ describe('deriveRoutingCandidates — AC-7: same-id findings merge with an occur
     );
     expect(result[0]?.summary).not.toContain('occurrences merged');
     expect(result[0]?.evidence.summary).not.toContain('occurrences merged');
+  });
+});
+
+describe('deriveRoutingCandidates — AC-5: same-id/different-severity merge takes the most severe', () => {
+  // Phase 245 narrowed computeFindingId to (file, normalized message) only,
+  // so two occurrences of the same id can now legitimately disagree on
+  // severity (previously impossible — severity was a hash input). The merge
+  // must never silently keep whichever severity happened to arrive first,
+  // since priority (derived from severity) drives ledger triage.
+  it('245-01/AC-5: a medium occurrence followed by a critical occurrence of the same id merges to priority critical', () => {
+    const first = finding({ id: 'id-severity-drift', message: 'same message', severity: 'medium', line: 10 });
+    const second = finding({ id: 'id-severity-drift', message: 'same message', severity: 'critical', line: 20 });
+    const result = deriveRoutingCandidates(
+      { 'src/a.ts': [first, second] },
+      new Set(),
+      pointer(),
+      NOW,
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]?.priority).toBe('critical');
+    expect(result[0]?.title).toContain('critical');
+    // Occurrence/line bookkeeping must stay correct regardless of which
+    // occurrence became canonical.
+    expect(result[0]?.summary).toContain('2 occurrences merged');
+    expect(result[0]?.summary).toContain('lines 10, 20');
+  });
+
+  it('245-01/AC-5: the same pair in reverse order (critical first, medium second) still merges to priority critical — the less-severe later occurrence never downgrades the group', () => {
+    const first = finding({ id: 'id-severity-drift-rev', message: 'same message', severity: 'critical', line: 20 });
+    const second = finding({ id: 'id-severity-drift-rev', message: 'same message', severity: 'medium', line: 10 });
+    const result = deriveRoutingCandidates(
+      { 'src/a.ts': [first, second] },
+      new Set(),
+      pointer(),
+      NOW,
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]?.priority).toBe('critical');
+    expect(result[0]?.title).toContain('critical');
+    expect(result[0]?.summary).toContain('2 occurrences merged');
+    expect(result[0]?.summary).toContain('lines 20, 10');
+  });
+
+  it('245-01/AC-5: three occurrences (medium, low, high) merge to the highest severity seen (high), not the first or the last', () => {
+    const a = finding({ id: 'id-severity-triple', message: 'same message', severity: 'medium', line: 1 });
+    const b = finding({ id: 'id-severity-triple', message: 'same message', severity: 'low', line: 2 });
+    const c = finding({ id: 'id-severity-triple', message: 'same message', severity: 'high', line: 3 });
+    const result = deriveRoutingCandidates(
+      { 'src/a.ts': [a, b, c] },
+      new Set(),
+      pointer(),
+      NOW,
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]?.priority).toBe('high');
   });
 });
 

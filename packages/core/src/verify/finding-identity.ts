@@ -4,12 +4,16 @@ import type { AnchoredFinding } from './criteria-gap.js';
 
 /**
  * Phase 236 (T3, §7.2, dec-20260730-001) — pure content-hash finding
- * identity. `computeFindingId` hashes (file, anchor.kind, anchor.ref,
- * severity, normalized message) — deliberately NEVER a line number, so a
- * finding keeps the same `id` across settles even after an edit shifts
- * which line it sits on. `attachFindingIdentity` is the batch adapter that
- * stamps that id (plus `target`/`disposition`) onto every finding coming out
- * of `anchorFindings` (`verify/criteria-gap.ts`).
+ * identity. Phase 245 narrowed the hash inputs to (file, normalized
+ * message) only: `anchor` and `severity` legitimately change across settles
+ * for the same underlying defect (re-anchoring, live LLM severity
+ * classification), so including them minted a new id — and a duplicate
+ * Recommendation — for an unchanged defect. `computeFindingId` deliberately
+ * NEVER hashes a line number either, so a finding keeps the same `id`
+ * across settles even after an edit shifts which line it sits on.
+ * `attachFindingIdentity` is the batch adapter that stamps that id (plus
+ * `target`/`disposition`) onto every finding coming out of `anchorFindings`
+ * (`verify/criteria-gap.ts`).
  *
  * Pure, dependency-injected — no fs, no clock, no I/O — matching the house
  * pure-core/impure-shell split used throughout `verify/*` (`resolveAnchor`,
@@ -35,25 +39,25 @@ export function normalizeMessage(message: string): string {
 }
 
 /**
- * Stable, ordered, unambiguous string form of the four identity inputs, fed
+ * Stable, ordered, unambiguous string form of the two identity inputs, fed
  * to the hash. Built with `JSON.stringify` over a fixed-order tuple rather
  * than plain string concatenation: JSON escapes any delimiter-like
- * characters that happen to appear inside `file`/`message`/etc., so e.g.
- * `file: 'a', ref: 'bc'` can never collide with `file: 'ab', ref: 'c'` the
- * way naive concatenation could. `anchor.ref` is encoded as `null` (a value
- * no real ref can ever equal) when absent, rather than being coerced to a
- * string sentinel that some real ref-shaped string could theoretically
- * collide with.
+ * characters that happen to appear inside `file`/`message`, so e.g.
+ * `file: 'a', message: 'bc'` can never collide with `file: 'ab', message:
+ * 'c'` the way naive concatenation could.
  */
-function identityKey(file: string, anchor: Anchor, severity: string, message: string): string {
-  return JSON.stringify([file, anchor.kind, anchor.ref ?? null, severity, normalizeMessage(message)]);
+function identityKey(file: string, message: string): string {
+  return JSON.stringify([file, normalizeMessage(message)]);
 }
 
 /**
- * A stable sha256 hex digest over (file, anchor.kind, anchor.ref, severity,
- * normalized message). Deliberately excludes any notion of line number —
- * that is the whole point of this function existing: the same finding keeps
- * the same id across settles even after an unrelated edit shifts its line.
+ * A stable sha256 hex digest over (file, normalized message) only.
+ * `anchor` and `severity` are accepted for call-site compatibility but are
+ * deliberately NOT part of the hash (phase 245): both can legitimately
+ * change across settles for the same underlying defect, so including them
+ * minted a new id for an unchanged defect. Also deliberately excludes any
+ * notion of line number — the same finding keeps the same id across settles
+ * even after an unrelated edit shifts its line.
  */
 export function computeFindingId(
   file: string,
@@ -61,7 +65,7 @@ export function computeFindingId(
   severity: string,
   message: string,
 ): string {
-  return createHash('sha256').update(identityKey(file, anchor, severity, message)).digest('hex');
+  return createHash('sha256').update(identityKey(file, message)).digest('hex');
 }
 
 /**

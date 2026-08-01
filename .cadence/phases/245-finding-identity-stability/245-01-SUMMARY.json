@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 2,
+  "draftId": "245-01",
+  "completedAt": "2026-08-01T17:26:50.573Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Narrowed identityKey to (file, normalized message). Independently re-verified: typecheck clean, lint clean, 3483/3487 core tests pass — the 4 failures are exactly the pre-existing anchor/severity-changes-id assertions in finding-identity.test.ts that T2 will rewrite. Manual behavior check confirms same-anchor/same-severity collapse and file/message sensitivity are both correct."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Rewrote finding-identity.test.ts's anchor/severity assertions from changes-the-id to does-NOT-change-the-id, including the anchor.ref-absence describe block T1's implementer flagged. Added a literal AC-1 anchor-earning-workflow test (kind:none vs kind:ac/ref:AC-1). Independently re-verified: typecheck clean, lint clean (src via package script + tests file directly via npx eslint), full core suite 381/381 files, 3488/3488 tests pass."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Added expect(beforeFinding.id).toBe(afterFinding.id) to the AC-5 round-trip test in criteria-anchor-corpus.test.ts, proving finding identity survives the DRAFT-amendment anchor-earning workflow. Independently re-verified: typecheck clean, lint clean, full core suite 381/381 files, 3488/3488 tests pass."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "Added SEVERITY_RANK; merge loop now replaces the group's canonical finding when a strictly more severe occurrence arrives, keeping severity/priority/message/line mutually consistent. Fixed stale by-construction comments in finding-routing.ts and the old 5-input formula in docs/concepts.md (incl. corrected line-number citations). 3 new regression tests. Independently re-verified: typecheck clean, lint clean (src + test file directly), full core suite 381/381 files, 3491/3491 tests pass."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 40,
+    "sessionSubagentSpawns": 102
+  },
+  "assurance": {
+    "verifierRollup": [],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 5,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "mixed"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "3fd78fc730c0f9a35b47f5ed8173c8a6691293613d94797f398a213114aa412b"
+  }
+}

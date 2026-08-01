@@ -77,12 +77,13 @@ export const FindingZ = z.object({
    *  (`spec-review`, `ui-spec-review`, `plan-review`; `dec-20260729-003`). */
   anchor: AnchorZ.optional(),
   /** Phase 236 (§7.2, dec-20260730-001): stable finding identity — a pure
-   *  content hash over (file, anchor.kind, anchor.ref, severity, normalized
-   *  message), never derived from a line number, so the same finding keeps
-   *  the same `id` across settles even after an edit shifts its line.
-   *  Optional — absent for every pre-phase-236 record and for finding
-   *  classes this phase deliberately does not wire identity into (e.g.
-   *  security-audit). */
+   *  content hash, never derived from a line number, so the same finding
+   *  keeps the same `id` across settles even after an edit shifts its line.
+   *  Phase 245 narrowed the hash to (file, normalized message) only —
+   *  `anchor`/`severity` are still real fields on a `Finding` but no longer
+   *  participate in the id. Optional — absent for every pre-phase-236
+   *  record and for finding classes this phase deliberately does not wire
+   *  identity into (e.g. security-audit). */
   id: z.string().optional(),
   /** Phase 236: which surface this finding was raised against. Optional —
    *  absent for every pre-phase-236 record. */

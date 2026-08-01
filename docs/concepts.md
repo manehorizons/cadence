@@ -480,24 +480,31 @@ anywhere in the repo yet constructs `accepted`/`waived`/`fixed`/`superseded`;
 mutating a finding's disposition is a follow-on phase's CLI surface.
 
 **`id`'s formula.** `computeFindingId(file, anchor, severity, message)`
-(`packages/core/src/verify/finding-identity.ts:58-65`) is a sha256 hex
+(`packages/core/src/verify/finding-identity.ts:62-69`) is a sha256 hex
 digest, via `node:crypto` (already used elsewhere in this codebase — no new
 runtime dependency), over a stably-ordered, JSON-encoded tuple of
-`(file, anchor.kind, anchor.ref, severity, normalized message)` —
-deliberately **never a line number**. The message is whitespace-normalized
-first (`normalizeMessage`, `finding-identity.ts:33-35`) so incidental
-rewrapping doesn't mint a new id, but is not otherwise semantically folded —
-a genuinely different message still produces a different id. Excluding the
-line number is the whole point: an edit that only shifts where a finding
-sits (an unrelated diff earlier in the file, a refactor) must not make a
-tracked finding look new, or disposition/waiver state attached to it would
-silently reset every settle. `attachFindingIdentity`
-(`finding-identity.ts:77-90`) is the batch adapter `gates/code-review.ts`
-calls (`gates/code-review.ts:105`) before persisting: it stamps every
-anchored finding with its computed `id`, `target: 'artifact'` (code-review
-findings are always about the artifact being changed, never a verification
-claim), and `disposition: 'open'`, leaving every other field (severity,
-message, line, anchor) unchanged.
+`(file, normalized message)` **only** — deliberately **never a line
+number**. Phase 245 narrowed the formula to just these two inputs:
+`anchor` and `severity` are still accepted as parameters (call-site
+compatibility — `attachFindingIdentity` and its callers pass them
+unchanged), but no longer participate in the hash, because both can
+legitimately change across settles for the same underlying defect
+(re-anchoring via the DRAFT-amendment workflow, live LLM severity
+classification under real providers), and including them previously minted
+a new `id` — and a duplicate Recommendation — for an unchanged defect. The
+message is whitespace-normalized first (`normalizeMessage`,
+`finding-identity.ts:37-39`) so incidental rewrapping doesn't mint a new id,
+but is not otherwise semantically folded — a genuinely different message
+still produces a different id. Excluding the line number is the whole
+point: an edit that only shifts where a finding sits (an unrelated diff
+earlier in the file, a refactor) must not make a tracked finding look new,
+or disposition/waiver state attached to it would silently reset every
+settle. `attachFindingIdentity` (`finding-identity.ts:81-94`) is the batch
+adapter `gates/code-review.ts` calls (`gates/code-review.ts:105`) before
+persisting: it stamps every anchored finding with its computed `id`,
+`target: 'artifact'` (code-review findings are always about the artifact
+being changed, never a verification claim), and `disposition: 'open'`,
+leaving every other field (severity, message, line, anchor) unchanged.
 
 **`AnchorZ.kind` widens to include `'invariant'`**
 (`summary.ts:58-62`), alongside the existing `'ac'|'boundary'|'none'`.
