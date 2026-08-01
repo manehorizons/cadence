@@ -928,3 +928,101 @@ docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, ac
 - next: cadence milestone propose
 
 Confirmed 2026-08-01: this arc's .cadence/config.json had all 7 gate-provider blocks set to mock at HEAD (7ddc72a1) -- the entire kernel-assurance-v2 arc has settled under placeholder verification the whole time. Configured the one real option available today: perTaskVerifier -> host-cli with CADENCE_HOST_CLI_BIN=codex (codex is deliberately unguarded against self-invocation, unlike the claude default -- see host-cli-client.ts's SELF_INVOCATION_ENV_VAR comment; live-tested, codex responds correctly). IMPORTANT correction (caught by phase 244's whole-branch review): this configuration is NOT yet active in this repo's actual gate set. per-task-verify only appears in gates/engine.ts's DELTAS under the 'strict' profile; this repo runs profile:auto, whose resolved gate set is [coherence-check, structural-verifier, build-test-must-pass, test-coverage, anomaly-notify, task-verify-required] -- per-task-verify is not in it. So the seam is configured but inert until either a draft/config opts into profile:strict, or (more relevantly) host-cli gets wired into one of the seams that IS active under auto (e.g. codeReview or verifier/deep-verify -- see below). Per docs/providers.md, host-cli is currently wired for only 1 of 7 families (HostCliPerTaskVerifier in per-task.ts); the other six -- verifier (deep-verify), codeReview, planReview, securityAudit, specReview, uiSpecReview -- have no host-cli builder and silently fall back to mock with a stderr warning if pointed at it. Real coverage on those six today would require anthropic + a paid ANTHROPIC_API_KEY (not available in this environment) or a local model endpoint (not configured). Wiring host-cli builders for the remaining families (mirroring HostCliPerTaskVerifier's shape) would let a codex-authenticated environment get real verification across the whole gate matrix with zero incremental API cost -- and codeReview/verifier are the higher-leverage targets since they're actually in the auto-profile gate set, unlike per-task-verify. Options: wire all six in one phase, or prioritize deep-verify + code-review first, or additionally consider whether profile:strict should be adopted on this arc so the already-configured perTaskVerifier seam actually fires.
+
+## rec-20260801-008 — Finding-identity hash includes raw LLM message text -- real-provider re-wording defeats ledger dedup
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/verify/finding-identity.ts, packages/core/src/intelligence/finding-routing.ts
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source read
+- evidence: Re-minted from rec-20260801-002 during PR #347 rebase onto feat/kernel-assurance-v2 (2026-08-01): that id collided with an unrelated rec independently filed on the arc branch (host-cli verifier wiring, since archived/superseded by rec-20260801-003). Content/analysis unchanged; only the id (and this evidence entry's id, ev-20260801-002 -> ev-20260801-008) moved. See rec-20260801-009 for the paired re-mint of rec-20260801-003's collision.
+- next: cadence milestone propose
+
+computeFindingId (packages/core/src/verify/finding-identity.ts) hashes (file, anchor.kind, anchor.ref, severity, normalizeMessage(message)) where normalizeMessage only strips/collapses whitespace -- explicitly no semantic normalization per its own docstring ('a genuinely different message must still produce a different id'). Under a real LLM-backed verifier (anthropic/local/host-cli), message and severity are live model output with no guarantee of identical wording across separate runs of the same underlying defect -- CADENCE's test suite is constitutionally mock-only (nothing may depend on anthropic or local), so this instability is structurally invisible to CI. Concrete failure: re-settling an unchanged phase under a real provider can mint a new id for an already-routed finding, and phase 242's deriveRoutingCandidates dedup (keyed on Finding.id) misses it, creating a duplicate Recommendation for the same underlying defect. Verified directly against source 2026-08-01 via independent review + spot-check.
+
+## rec-20260801-009 — Finding id isn't stable across the DRAFT-amendment workflow AC-5 itself showcases
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/verify/finding-identity.ts, packages/core/tests/verify/criteria-anchor-corpus.test.ts
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source + test read
+- evidence: Re-minted from rec-20260801-003 during PR #347 rebase onto feat/kernel-assurance-v2 (2026-08-01): that id collided with an unrelated rec independently filed on the arc branch (host-cli verifier wiring, since archived). Content/analysis unchanged; only the id (and this evidence entry's id, ev-20260801-003 -> ev-20260801-009) moved. See rec-20260801-008 for the paired re-mint of rec-20260801-002's collision.
+- next: cadence milestone propose
+
+computeFindingId hashes anchor.kind/anchor.ref into the identity. criteria-anchor-corpus.test.ts's own 'AC-5 round trip' test proves the SAME finding (identical file/message/severity/line) goes from anchor:{kind:'none'} to anchor:{kind:'ac',ref:'AC-1'} once the DRAFT is amended to cover it -- the test's own name says 'only the anchor changed, not the finding itself' -- but computeFindingId produces two different ids for this before/after pair since anchor.kind/ref are hash inputs. Verified: the test file has zero assertions on .id anywhere. Concrete failure: operator does exactly what AC-5 is designed to encourage (amend DRAFT to earn an anchor) -> the finding gets a new id -> phase 242's ledger dedup misses it -> duplicate Recommendation for the same bug. Directly undercuts finding-identity.ts's stated purpose ('the same finding keeps the same id across settles'), which holds for line-shift edits but not this anchor-earning path. Verified directly against source 2026-08-01.
+
+## rec-20260801-004 — code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/code-review.ts, packages/core/src/gates/security-audit.ts, packages/core/src/gates/registry.ts
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source read
+- next: cadence milestone propose
+
+code-review.ts and security-audit.ts's catch(err) blocks return {outcome:'pass'} with no flags at all when --allow-code-review-failure/--allow-security-audit-failure/--force bypasses a real-provider throw (revoked key, rate limit, network blip). Unlike build-test-must-pass/boundary-scan/test-coverage (which set a dedicated bypass flag registry.ts turns into an explicit skipReason provenance entry) or deep-verify.ts (which sets flags.verifierFailure={message,provider} on its own throw path), these two gates set nothing. verifierIdentityProvenance(res) then returns {} since res.flags?.verifierIdentity is undefined. Verified directly against source 2026-08-01: the persisted SUMMARY.gates[] entry reads as {gate:'code-review',status:'ran'} -- indistinguishable from a clean real-provider pass, with no skipReason explaining a failure was bypassed. This lands on exactly the two gates phase 232 exists to make trustworthy. deriveAssuranceRecord under-reports (drops the gate from verifierRollup) rather than over-reports, so it is not a spoofing risk, but the raw gates[] provenance record is actively misleading about what 'ran' means here.
+
+## rec-20260801-005 — A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/registry.ts, packages/core/src/services/settle.ts
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), not yet independently re-verified by a second pass
+- next: cadence milestone propose
+
+runSettleGates calls mergeInto(acc, res) (registry.ts) BEFORE the refuse check, so acc.codeReview (anchored + identified findings, including criteria-gap findings) is populated even when a later gate in GATE_ORDER refuses. But writeRefusedSettleSummary (settle.ts) takes only gates provenance, never acc -- codeReview is absent from the persisted SUMMARY on every refused settle, not just the 'code-review itself refuses' case rec-20260731-004 already names. Example: code-review passes with a declared gap, then security-audit (runs later in GATE_ORDER) refuses -- the gap prints to stderr once and then vanishes from the artifact, contradicting code-review.ts's own comment that findings land in summaryPatch.codeReview 'on EVERY return path.' Agent-reported 2026-08-01 via independent review, not yet independently re-verified line-by-line -- verify before scoping a fix.
+
+## rec-20260801-006 — deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/assurance-record.ts, packages/core/tests/gates/assurance-record.test.ts
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01)
+- next: cadence milestone propose
+
+assurance-record.ts documents 'weak' as covering '...or simply no ACs at all with no verifier signal either,' but zero ACs with zero verifier identity actually trips the first branch (vacuously true when acResults is empty) and returns 'unverified', not 'weak' -- doc and code disagree with no test pinning either. Also untested: deriveAssuranceRecord(realProviderGates, []) (zero ACs, real verifier) traces by hand to 'mixed', but the one test exercising this shape only asserts verifierRollup, never .overall. Agent-reported 2026-08-01.
+
+## rec-20260801-007 — Three small hygiene gaps from the kernel-arc independent review (2026-08-01)
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/assurance-record.ts, packages/core/src/verify/phase-replay.ts, packages/core/src/cli/commands/summary.ts, eslint.config.js
+- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01)
+- next: cadence milestone propose
+
+(1) eslint.config.js's own comment candidly documents that dynamic import() of verifier family modules is invisible to the new kernel/verifier/consumer boundary rule -- a disclosed, real gap with no tracking recommendation until now. (2) deriveAssuranceRecord's verifierRollup key is an unseparated string join (${provider} ${model ?? ''}) -- theoretically collision-prone if a provider/model string ever contains a space (today's real values never do). (3) readRawSchemaVersion/MAX_RECOGNIZED_SCHEMA_VERSION is duplicated between verify/phase-replay.ts and cli/commands/summary.ts, hand-synced -- a third SummaryZ.safeParse call site would misreport a future schemaVersion-3 record as a generic parse failure instead of 'written by a newer Cadence.' None urgent; bundled as one low-priority rec per the independent review's own framing.

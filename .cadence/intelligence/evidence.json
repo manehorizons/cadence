@@ -1197,6 +1197,62 @@
       "kind": "note",
       "summary": "ev: config.json@HEAD(7ddc72a1) had all 7 provider blocks=mock; docs/providers.md 'Current scope: per-task-verify only' confirms host-cli builder exists only for HostCliPerTaskVerifier; codex smoke-tested live 2026-08-01 (turn.completed, real token usage); phase 244 whole-branch review empirically confirmed per-task-verify is absent from profile:auto's resolved gate set (gates/engine.ts DELTAS, strict-only)",
       "createdAt": "2026-08-01T03:13:02.155Z"
+    },
+    {
+      "id": "ev-20260801-008",
+      "recommendationId": "rec-20260801-008",
+      "kind": "note",
+      "summary": "Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source read",
+      "createdAt": "2026-08-01T02:40:13.507Z"
+    },
+    {
+      "id": "ev-20260801-009",
+      "recommendationId": "rec-20260801-009",
+      "kind": "note",
+      "summary": "Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source + test read",
+      "createdAt": "2026-08-01T02:40:13.670Z"
+    },
+    {
+      "id": "ev-20260801-004",
+      "recommendationId": "rec-20260801-004",
+      "kind": "note",
+      "summary": "Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source read",
+      "createdAt": "2026-08-01T02:40:28.981Z"
+    },
+    {
+      "id": "ev-20260801-005",
+      "recommendationId": "rec-20260801-005",
+      "kind": "note",
+      "summary": "Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), not yet independently re-verified by a second pass",
+      "createdAt": "2026-08-01T02:40:29.145Z"
+    },
+    {
+      "id": "ev-20260801-006",
+      "recommendationId": "rec-20260801-006",
+      "kind": "note",
+      "summary": "Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01)",
+      "createdAt": "2026-08-01T02:40:44.776Z"
+    },
+    {
+      "id": "ev-20260801-007",
+      "recommendationId": "rec-20260801-007",
+      "kind": "note",
+      "summary": "Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01)",
+      "createdAt": "2026-08-01T02:40:44.959Z"
+    },
+    {
+      "id": "ev-20260801-010",
+      "recommendationId": "rec-20260801-008",
+      "kind": "note",
+      "summary": "Re-minted from rec-20260801-002 during PR #347 rebase onto feat/kernel-assurance-v2 (2026-08-01): that id collided with an unrelated rec independently filed on the arc branch (host-cli verifier wiring, since archived/superseded by rec-20260801-003). Content/analysis unchanged; only the id (and this evidence entry's id, ev-20260801-002 -> ev-20260801-008) moved. See rec-20260801-009 for the paired re-mint of rec-20260801-003's collision.",
+      "createdAt": "2026-08-01T14:15:48.728Z"
+    },
+    {
+      "id": "ev-20260801-011",
+      "recommendationId": "rec-20260801-009",
+      "kind": "note",
+      "summary": "Re-minted from rec-20260801-003 during PR #347 rebase onto feat/kernel-assurance-v2 (2026-08-01): that id collided with an unrelated rec independently filed on the arc branch (host-cli verifier wiring, since archived). Content/analysis unchanged; only the id (and this evidence entry's id, ev-20260801-003 -> ev-20260801-009) moved. See rec-20260801-008 for the paired re-mint of rec-20260801-002's collision.",
+      "createdAt": "2026-08-01T14:15:55.389Z"
     }
   ]
 }
