@@ -7,16 +7,16 @@ describe('start render', () => {
     const text = renderMenu(false);
     expect(text).toContain('What are you doing?');
     expect(text).toContain('1. Try Cadence in a throwaway sandbox');
-    expect(text).toContain('→ npx @manehorizons/cadence-host-codex install');
+    expect(text).toContain('→ npx @thomas-powers-jr/cadence-host-codex install');
     expect(text).toContain('q. Quit');
   });
 
   it('shows an opinionated recommended command when provided', () => {
     const text = renderMenu(false, {
-      command: 'npx -y @manehorizons/cadence-core tutorial',
+      command: 'npx -y @thomas-powers-jr/cadence-core tutorial',
       reason: 'Fastest first touch.',
     });
-    expect(text).toContain('Recommended: npx -y @manehorizons/cadence-core tutorial');
+    expect(text).toContain('Recommended: npx -y @thomas-powers-jr/cadence-core tutorial');
     expect(text).toContain('Fastest first touch.');
   });
 

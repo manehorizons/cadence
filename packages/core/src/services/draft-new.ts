@@ -19,7 +19,7 @@ import { assertSafePhaseSlug, derivePhaseSlug, derivePhaseTaskId } from '../phas
 import { resolveNextFreePhase } from '../phases/next-free.js';
 import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
-import type { UiSpec } from '@manehorizons/cadence-types';
+import type { UiSpec } from '@thomas-powers-jr/cadence-types';
 
 /**
  * `cadence draft new <phase> <num>` — scaffold a DRAFT.md (IDLE→DRAFT) and,

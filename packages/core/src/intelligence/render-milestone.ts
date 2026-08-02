@@ -2,7 +2,7 @@ import type {
   IntelligenceMilestone,
   MilestoneLedger,
   MilestonePreMortem,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import type {
   MilestoneStatusPhaseEntry,
   MilestoneStatusResult,

@@ -1,4 +1,4 @@
-import type { Draft, Task } from '@manehorizons/cadence-types';
+import type { Draft, Task } from '@thomas-powers-jr/cadence-types';
 
 /**
  * Recommends whether a task should be dispatched into an isolated git

@@ -1,11 +1,11 @@
-import { resolveAdapterLocalPaths } from '@manehorizons/cadence-host-toolkit/locate-self';
-import type { LocalPaths } from '@manehorizons/cadence-host-toolkit/locate-self';
+import { resolveAdapterLocalPaths } from '@thomas-powers-jr/cadence-host-toolkit/locate-self';
+import type { LocalPaths } from '@thomas-powers-jr/cadence-host-toolkit/locate-self';
 
 export type { LocalPaths };
 
 /**
  * Resolve absolute paths to the local (workspace) builds of this adapter and
- * `@manehorizons/cadence-core`. Works both at runtime (running from
+ * `@thomas-powers-jr/cadence-core`. Works both at runtime (running from
  * `packages/host-codex/dist/locate-self.js`) and under vitest (running from
  * `packages/host-codex/src/locate-self.ts`). Mirrors the Claude adapter.
  *

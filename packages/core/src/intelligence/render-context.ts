@@ -1,4 +1,4 @@
-import type { ContextPacket } from '@manehorizons/cadence-types';
+import type { ContextPacket } from '@thomas-powers-jr/cadence-types';
 
 export function renderContextMd(packet: ContextPacket): string {
   const lines: string[] = [

@@ -3,8 +3,8 @@
 CADENCE has **one engine and three categories of surfaces**: the host-agnostic
 `cadence` CLI, host adapters that wire a coding agent's lifecycle into that
 engine, and the MCP server for MCP-capable hosts. The shipped host adapters today
-are `@manehorizons/cadence-host-claude-code` and
-`@manehorizons/cadence-host-codex`. This guide documents the
+are `@thomas-powers-jr/cadence-host-claude-code` and
+`@thomas-powers-jr/cadence-host-codex`. This guide documents the
 **host-adapter contract** so the adapter shape is explicit, versioned, and
 reproducible.
 
@@ -12,7 +12,7 @@ reproducible.
 
 ## The contract at a glance
 
-The contract lives in `@manehorizons/cadence-types` as the `HostAdapter`
+The contract lives in `@thomas-powers-jr/cadence-types` as the `HostAdapter`
 interface. An adapter provides six things:
 
 | Member | Purpose |
@@ -25,7 +25,7 @@ interface. An adapter provides six things:
 | `installCommands` | Install the host's slash-command (or equivalent) surface, under a project `root`. |
 
 ```ts
-import type { HostAdapter } from '@manehorizons/cadence-types';
+import type { HostAdapter } from '@thomas-powers-jr/cadence-types';
 
 // Install option shapes are host-specific, so they are type parameters —
 // the contract never couples to any one host's installer.
@@ -61,7 +61,7 @@ these. Anything your host can't express, it simply never emits.
 schema (`HostCapabilitiesZ`) — validate your descriptor against it in a test.
 
 ```ts
-import type { HostCapabilities } from '@manehorizons/cadence-types';
+import type { HostCapabilities } from '@thomas-powers-jr/cadence-types';
 
 export const myHostCapabilities: HostCapabilities = {
   hooks: ['session-start', 'user-prompt', 'pre-tool-edit', 'post-tool-edit', 'session-stop'],
@@ -130,7 +130,7 @@ import {
   ADAPTER_CONTRACT_VERSION,
   HostCapabilitiesZ,
   type HostAdapter,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 
 // Compile-time: `satisfies` is the conformance proof.
 export const myAdapter = {

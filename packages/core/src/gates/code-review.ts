@@ -1,4 +1,4 @@
-import type { Draft, Finding } from '@manehorizons/cadence-types';
+import type { Draft, Finding } from '@thomas-powers-jr/cadence-types';
 import { runConvergentReview } from '../verify/converge.js';
 import { anchorFindings } from '../verify/criteria-gap.js';
 import { attachFindingIdentity } from '../verify/finding-identity.js';

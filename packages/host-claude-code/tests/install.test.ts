@@ -41,7 +41,7 @@ describe('installHooks', () => {
     const root = await tempDir();
     await installHooks(root);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
-    const expected = 'npx @manehorizons/cadence-host-claude-code hook';
+    const expected = 'npx @thomas-powers-jr/cadence-host-claude-code hook';
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(expected);
     expect(cfg.hooks.UserPromptSubmit[0].hooks[0].command).toBe(expected);
     expect(cfg.hooks.PreToolUse[0].hooks[0].command).toBe(expected);
@@ -55,7 +55,7 @@ describe('installHooks', () => {
     await installHooks(root, { cadenceCommand: 'node /abs/cadence.js' });
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'npx @manehorizons/cadence-host-claude-code hook --cadence "node /abs/cadence.js"',
+      'npx @thomas-powers-jr/cadence-host-claude-code hook --cadence "node /abs/cadence.js"',
     );
   });
 
@@ -329,7 +329,7 @@ describe('installHooks', () => {
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0]._managedBy).toBe('cadence');
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'npx @manehorizons/cadence-host-claude-code hook',
+      'npx @thomas-powers-jr/cadence-host-claude-code hook',
     );
   });
 

@@ -1,4 +1,4 @@
-import { presets, type CadenceConfig } from '@manehorizons/cadence-types';
+import { presets, type CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import { derivePhaseTaskId } from '../phases/id.js';
 
 /**

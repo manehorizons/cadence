@@ -7,7 +7,7 @@ import type {
   GateSet,
   Profile,
   Tier,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { resolveEffectiveProvider } from '../verify/verifier-factory.js';
 
 /**

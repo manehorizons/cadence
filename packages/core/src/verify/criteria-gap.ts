@@ -4,7 +4,7 @@ import type {
   Finding,
   GateProvenance,
   Task,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { resolveAnchor, type AnchorCandidate } from './anchor.js';
 import { parseAcRefs } from '../parse/ac-refs.js';
 
@@ -26,7 +26,7 @@ import { parseAcRefs } from '../parse/ac-refs.js';
 
 /** Structural shape of a code-review finding. As of Phase 236 (T5, D9) there
  *  is only one `Finding` type — `verify/code-review.ts` now imports the
- *  shared, persisted `@manehorizons/cadence-types` `Finding` directly rather
+ *  shared, persisted `@thomas-powers-jr/cadence-types` `Finding` directly rather
  *  than declaring its own — but this module still declares its own narrow
  *  structural shape rather than importing `Finding` from `verify/code-review.ts`:
  *  it has no reason to depend on that file's shape beyond what it

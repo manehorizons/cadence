@@ -8,7 +8,7 @@ import type {
   Profile,
   TaskStatus,
   Tier,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { nextAction } from './progress.js';
 import { parseAcRefs } from './parse/ac-refs.js';
 import { parseDraftMd } from './parse/draft-parser.js';

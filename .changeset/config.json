@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@manehorizons/cadence-testkit"]
+  "ignore": ["@thomas-powers-jr/cadence-testkit"]
 }

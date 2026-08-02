@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
-import type { AcceptanceCriterion, Finding, Task } from '@manehorizons/cadence-types';
+import type { AcceptanceCriterion, Finding, Task } from '@thomas-powers-jr/cadence-types';
 import { hostCliJSON, type SpawnFn } from './host-cli-client.js';
 import { localChatJSON } from './local-client.js';
 
@@ -12,7 +12,7 @@ import { localChatJSON } from './local-client.js';
  * HIGH findings refuse settle unless `--force` / `--allow-code-review-failure`.
  *
  * Phase 236 (T5, D9) — `Finding` is the shared, persisted SUMMARY-schema type
- * from `@manehorizons/cadence-types` (severity `critical|high|medium|low`,
+ * from `@thomas-powers-jr/cadence-types` (severity `critical|high|medium|low`,
  * plus the optional `id`/`target`/`disposition`/`waiver`/`anchor` fields).
  * This module used to declare its own local `Finding`/`FindingSeverity`
  * (severity `high|medium|low` only) — that divergence is now converged; see
@@ -22,7 +22,7 @@ import { localChatJSON } from './local-client.js';
 /**
  * Phase 235 (T3) — a task->AC ref as seen by the review verifier: what a task
  * touches, how it is verified, and which AC it claims to satisfy. A `Pick`
- * over the DRAFT's own `Task` shape (`@manehorizons/cadence-types`) rather
+ * over the DRAFT's own `Task` shape (`@thomas-powers-jr/cadence-types`) rather
  * than a restated structural type, so it cannot drift from the schema.
  */
 export type CodeReviewTaskRef = Pick<Task, 'id' | 'files' | 'verify' | 'done' | 'status'>;

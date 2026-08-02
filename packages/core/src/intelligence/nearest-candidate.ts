@@ -1,5 +1,5 @@
-import { emptyEvidenceLedger } from '@manehorizons/cadence-types';
-import type { EvidenceLedger, Recommendation } from '@manehorizons/cadence-types';
+import { emptyEvidenceLedger } from '@thomas-powers-jr/cadence-types';
+import type { EvidenceLedger, Recommendation } from '@thomas-powers-jr/cadence-types';
 import { partitionLedger, scoreRecommendation } from './recommend.js';
 import { countFrictionEvidence } from '../services/retro-feedback.js';
 

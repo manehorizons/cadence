@@ -5,7 +5,7 @@ import {
   type IntelligenceDecisionLedger,
   type MilestoneLedger,
   type RecommendationLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 
 export type IntelligenceAuditFinding =
   | { kind: 'broken-assumption-link'; recId: string; assumptionId: string }

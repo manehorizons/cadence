@@ -1,5 +1,5 @@
 {
-  "name": "@manehorizons/cadence-host-toolkit",
+  "name": "@thomas-powers-jr/cadence-host-toolkit",
   "version": "1.53.0",
   "engines": {
     "node": ">=22"
@@ -53,7 +53,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@manehorizons/cadence-types": "workspace:*"
+    "@thomas-powers-jr/cadence-types": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.0"

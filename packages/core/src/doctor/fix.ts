@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { CadenceStateZ } from '@manehorizons/cadence-types';
+import { CadenceStateZ } from '@thomas-powers-jr/cadence-types';
 import { renderStateMd } from '../render/state-md.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { atomicWriteText, atomicWriteJSON } from '../state/atomic-write.js';
@@ -285,8 +285,8 @@ async function resolveStateConflict(
   return { status: 'applied', message: `resolved state.json using the ${side} side` };
 }
 
-const HOST_WIRE_DISPLAY = 'npx @manehorizons/cadence-host-claude-code install';
-const CODEX_HOST_WIRE_DISPLAY = 'npx -y @manehorizons/cadence-host-codex install';
+const HOST_WIRE_DISPLAY = 'npx @thomas-powers-jr/cadence-host-claude-code install';
+const CODEX_HOST_WIRE_DISPLAY = 'npx -y @thomas-powers-jr/cadence-host-codex install';
 
 /**
  * Spawn the Claude Code host install (the host-install repair). Core never
@@ -310,7 +310,7 @@ function defaultHostInstall(root: string): Promise<number> {
     }
   } else {
     cmd = 'npx';
-    args = ['@manehorizons/cadence-host-claude-code', 'install'];
+    args = ['@thomas-powers-jr/cadence-host-claude-code', 'install'];
     // npx is npx.cmd on Windows; spawn() needs a shell to resolve it. Args are
     // static literals (no user input), so shell is safe here (as in init.ts).
     useShell = process.platform === 'win32';
@@ -339,7 +339,7 @@ function defaultCodexHostInstall(root: string): Promise<number> {
     }
   } else {
     cmd = 'npx';
-    args = ['-y', '@manehorizons/cadence-host-codex', 'install'];
+    args = ['-y', '@thomas-powers-jr/cadence-host-codex', 'install'];
     useShell = process.platform === 'win32';
   }
   return new Promise((resolve) => {

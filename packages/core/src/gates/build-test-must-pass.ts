@@ -1,4 +1,4 @@
-import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
+import { NO_TEST_COMMAND_NOTICE } from '@thomas-powers-jr/cadence-types';
 import { isGateSealed } from './types.js';
 import type { GateImpl, GateResult } from './types.js';
 

@@ -1,0 +1,49 @@
+{
+  "draftId": "250-01",
+  "tasks": {
+    "T2": {
+      "status": "DONE",
+      "notes": "Independently reviewed READY (6 package.json name fields + workspace deps renamed, homepage/bugs/repository.url correctly untouched, pnpm-lock.yaml regenerated and internally consistent). Re-verified: pnpm build/typecheck pass.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T17:59:11.688Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Independently reviewed READY (178 import specifiers codemodded across 6 packages, embedded-NUL-byte edge case in assurance-record.ts found and fixed, 4 files T4 owns correctly left untouched). Re-verified: pnpm typecheck/build pass across all 6 packages.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T17:59:11.846Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Independent review found one real gap (cli.test.ts:127 stale literal assertion, unblocked, should have been fixed by T4 itself) -- fixed directly by orchestrator, re-verified 11/11 tests pass. Core 4-file source change independently confirmed correct (host-wire.ts had both display + args literals needing fix, contrary to initial DRAFT assumption).",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T17:59:12.010Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "Independently reviewed READY. Doc-content test suite partial-red (3 suites) confirmed to be test-file import-resolution failures outside T7's scope, correctly deferred to T6 per dependency graph.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T17:59:12.172Z"
+    },
+    "T9": {
+      "status": "DONE",
+      "notes": "As-built amendment task (discovered T7's original DRAFT scope missed 12 docs files with real npm-scope content). Independently reviewed READY, clean 1:1 substitution, zero stray refs.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T17:59:12.339Z"
+    },
+    "T10": {
+      "status": "DONE",
+      "notes": "As-built amendment task (start/menu.ts had a real spawn args array, doctor/run.ts had 6 remediation messages, both adapters' cli.ts had functional option defaults). Independent review confirmed the safety-critical menu.ts args-array fix is correct; found one stray old-scope string in render.test.ts:16,19 (a copy of the pre-fix real default, would fail AC-1's sweep since not on the documented exception list) -- fixed directly by orchestrator, re-verified 5/5 tests pass, zero remaining refs in all 7 owned files.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase-npm-scope-rename/packages/core/tests/start/render.test.ts"
+      ],
+      "updatedAt": "2026-08-02T18:00:08.256Z"
+    },
+    "T11": {
+      "status": "DONE",
+      "notes": "Comment/JSDoc-only sweep across 18 files. Independent review confirmed zero occurrences were real code (the specific risk this task's boundary was designed to prevent); split cleanly into 25 comment lines + 21 import/export specifier lines within T3's already-covered glob, both verified correct. pnpm typecheck/build clean.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T18:01:48.481Z"
+    }
+  }
+}

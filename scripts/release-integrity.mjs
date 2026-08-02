@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const CADENCE_SCOPE = '@manehorizons/cadence-';
+const CADENCE_SCOPE = '@thomas-powers-jr/cadence-';
 const DEFAULT_ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 // Real incident, 2026-07-25: the v1.51.0 Release workflow run (30136637570)

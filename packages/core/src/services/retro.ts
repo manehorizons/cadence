@@ -1,4 +1,4 @@
-import type { CadenceConfig, RetroDigest, Summary } from '@manehorizons/cadence-types';
+import type { CadenceConfig, RetroDigest, Summary } from '@thomas-powers-jr/cadence-types';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';

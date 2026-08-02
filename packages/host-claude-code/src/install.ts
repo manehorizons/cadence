@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { isCadenceManagedEntry, mergeManagedHookEntries } from '@manehorizons/cadence-host-toolkit/install-merge';
-import type { ManagedHookEntry } from '@manehorizons/cadence-host-toolkit/install-merge';
+import { isCadenceManagedEntry, mergeManagedHookEntries } from '@thomas-powers-jr/cadence-host-toolkit/install-merge';
+import type { ManagedHookEntry } from '@thomas-powers-jr/cadence-host-toolkit/install-merge';
 import { EDIT_TOOL_MATCHER, SKILL_TOOL_MATCHER } from './event-map.js';
 import { resolveLocalPaths } from './locate-self.js';
 
@@ -9,13 +9,13 @@ export interface InstallOptions {
   /**
    * Shim command that Claude Code invokes for every hook event. The shim
    * reads stdin, translates payloads, and spawns the core CLI.
-   * Default: `npx @manehorizons/cadence-host-claude-code hook`.
+   * Default: `npx @thomas-powers-jr/cadence-host-claude-code hook`.
    */
   command?: string;
   /**
-   * Base command the shim itself should use to invoke `@manehorizons/cadence-core`.
+   * Base command the shim itself should use to invoke `@thomas-powers-jr/cadence-core`.
    * If set, appended as `--cadence "<cmd>"` to the shim command.
-   * Default: shim's own default (`npx @manehorizons/cadence-core`).
+   * Default: shim's own default (`npx @thomas-powers-jr/cadence-core`).
    */
   cadenceCommand?: string;
   /** Path to settings file relative to root. Defaults to `.claude/settings.json`. */
@@ -46,7 +46,7 @@ function isLegacyKeelEntry(entry: HookEntry): boolean {
 export async function installHooks(root: string, opts: InstallOptions = {}): Promise<void> {
   const local = opts.local ? resolveLocalPaths() : null;
   const base =
-    opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @manehorizons/cadence-host-claude-code hook');
+    opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @thomas-powers-jr/cadence-host-claude-code hook');
   const cadenceCommand = opts.cadenceCommand ?? (local ? `node ${local.coreCli}` : undefined);
   const command = cadenceCommand ? `${base} --cadence "${cadenceCommand}"` : base;
   const settingsPath = join(root, opts.settingsPath ?? '.claude/settings.json');

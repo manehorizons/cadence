@@ -2,7 +2,7 @@ import type { Command } from 'commander';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { emptyState, type Profile } from '@manehorizons/cadence-types';
+import { emptyState, type Profile } from '@thomas-powers-jr/cadence-types';
 import { loadConfig } from '../../config/loader.js';
 import { assessReadiness, type VerifierReadiness } from '../../activate/assess.js';
 import { maybeWireHost } from '../../init/host-wire.js';

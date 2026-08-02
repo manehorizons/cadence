@@ -1,4 +1,4 @@
-import type { CadenceState } from '@manehorizons/cadence-types';
+import type { CadenceState } from '@thomas-powers-jr/cadence-types';
 import { nextAction, type NextActionHints } from '../progress.js';
 
 /** What the CLI gathered about the current repo (impure layer fills this). */

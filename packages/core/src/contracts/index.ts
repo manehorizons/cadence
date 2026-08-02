@@ -19,7 +19,7 @@
  * `contracts/` instead of `verify/`.
  */
 
-import type { Finding as SummaryFinding } from '@manehorizons/cadence-types';
+import type { Finding as SummaryFinding } from '@thomas-powers-jr/cadence-types';
 
 // ---------------------------------------------------------------------------
 // Roles
@@ -165,20 +165,20 @@ export type {
 } from '../verify/verifier.js';
 
 /** code-review. Phase 236 (T5, D9) converged code-review's `Finding` onto the
- *  shared, persisted SUMMARY-schema `Finding` from `@manehorizons/cadence-types`
+ *  shared, persisted SUMMARY-schema `Finding` from `@thomas-powers-jr/cadence-types`
  *  (severity `critical|high|medium|low`) — it no longer declares its own
  *  divergent 3-severity type. `CodeReviewFinding`/`CodeReviewFindingSeverity`
  *  are kept as republished aliases of that same shared type, purely for
  *  backward name-compat with existing consumers (`gates/types.ts`,
  *  `notify/code-review.ts`); new code may import `Finding` directly from
- *  `@manehorizons/cadence-types` instead. */
+ *  `@thomas-powers-jr/cadence-types` instead. */
 export type {
   CodeReviewInput,
   CodeReviewResult,
   CodeReviewTaskRef,
   CodeReviewVerifier,
 } from '../verify/code-review.js';
-export type { Finding as CodeReviewFinding } from '@manehorizons/cadence-types';
+export type { Finding as CodeReviewFinding } from '@thomas-powers-jr/cadence-types';
 
 /** The severity union of a {@link CodeReviewFinding}, derived rather than
  *  restated so it cannot drift from the schema (same convention as
@@ -194,11 +194,11 @@ export type {
 
 /**
  * The element type of `SecurityAuditResult.findings`. It is the shared
- * SUMMARY-schema `Finding` from `@manehorizons/cadence-types` (severities
+ * SUMMARY-schema `Finding` from `@thomas-powers-jr/cadence-types` (severities
  * `critical | high | medium | low`), not code-review's — republished here so
  * naming the contents of a `SecurityAuditResult` needs no second import.
  */
-export type { Finding as SecurityAuditFinding } from '@manehorizons/cadence-types';
+export type { Finding as SecurityAuditFinding } from '@thomas-powers-jr/cadence-types';
 
 /** The severity union of a {@link SecurityAuditFinding}, derived rather than
  *  restated so it cannot drift from the schema. */

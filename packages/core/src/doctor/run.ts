@@ -12,7 +12,7 @@ import {
   AssumptionLedgerZ,
   IntelligenceDecisionLedgerZ,
   type CadenceState,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
 import { assessReadiness, isClaudeCodeSession, seamProvider } from '../activate/assess.js';
@@ -446,7 +446,7 @@ async function checkCodexHooks(root: string): Promise<DoctorCheck> {
       'codex-hooks',
       'warning',
       '.codex/hooks.json is missing.',
-      'Run `npx -y @manehorizons/cadence-host-codex install` to write Codex lifecycle hooks.',
+      'Run `npx -y @thomas-powers-jr/cadence-host-codex install` to write Codex lifecycle hooks.',
       'codex-host-install',
     );
   }
@@ -459,7 +459,7 @@ async function checkCodexHooks(root: string): Promise<DoctorCheck> {
       'codex-hooks',
       'warning',
       'No CADENCE-managed (_managedBy: "cadence") hook entries found in .codex/hooks.json.',
-      'Run `npx -y @manehorizons/cadence-host-codex install` to rewrite Codex lifecycle hooks.',
+      'Run `npx -y @thomas-powers-jr/cadence-host-codex install` to rewrite Codex lifecycle hooks.',
       'codex-host-install',
     );
   } catch (err) {
@@ -467,7 +467,7 @@ async function checkCodexHooks(root: string): Promise<DoctorCheck> {
       'codex-hooks',
       'warning',
       `.codex/hooks.json is not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
-      'Fix or regenerate it with `npx -y @manehorizons/cadence-host-codex install`.',
+      'Fix or regenerate it with `npx -y @thomas-powers-jr/cadence-host-codex install`.',
       'codex-host-install',
     );
   }
@@ -484,7 +484,7 @@ async function checkCodexPrompts(root: string): Promise<DoctorCheck> {
       'codex-prompts',
       'warning',
       `Codex prompt commands are missing from ${promptsDir}.`,
-      'Run `npx -y @manehorizons/cadence-host-codex install` before opening Codex.',
+      'Run `npx -y @thomas-powers-jr/cadence-host-codex install` before opening Codex.',
       'codex-host-install',
     );
   }
@@ -496,7 +496,7 @@ async function checkCodexPrompts(root: string): Promise<DoctorCheck> {
       'codex-prompts',
       'warning',
       `Could not read ${progress}: ${err instanceof Error ? err.message : String(err)}`,
-      'Fix or regenerate Codex prompts with `npx -y @manehorizons/cadence-host-codex install`.',
+      'Fix or regenerate Codex prompts with `npx -y @thomas-powers-jr/cadence-host-codex install`.',
       'codex-host-install',
     );
   }
@@ -548,7 +548,7 @@ async function checkCodexCadenceCommand(root: string): Promise<DoctorCheck> {
     'codex-cadence-command',
     'warning',
     '`cadence` is not available on PATH; Codex prompts may not be able to run it.',
-    'Install @manehorizons/cadence-core globally or reinstall Codex prompts with an explicit --cadence command.',
+    'Install @thomas-powers-jr/cadence-core globally or reinstall Codex prompts with an explicit --cadence command.',
   );
 }
 

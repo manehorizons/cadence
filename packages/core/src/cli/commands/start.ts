@@ -65,7 +65,7 @@ async function defaultRecommendation(
 ): Promise<StartRecommendation> {
   if (!initialized) {
     return {
-      command: 'npx -y @manehorizons/cadence-core tutorial',
+      command: 'npx -y @thomas-powers-jr/cadence-core tutorial',
       reason: 'Fastest first touch: runs a real loop in a throwaway sandbox and writes nothing here.',
     };
   }

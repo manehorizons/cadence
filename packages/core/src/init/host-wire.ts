@@ -26,8 +26,8 @@ export type InitHostTarget = 'claude' | 'codex';
 
 export function hostWireDisplay(target: InitHostTarget): string {
   return target === 'codex'
-    ? 'npx -y @manehorizons/cadence-host-codex install'
-    : 'npx @manehorizons/cadence-host-claude-code install';
+    ? 'npx -y @thomas-powers-jr/cadence-host-codex install'
+    : 'npx @thomas-powers-jr/cadence-host-claude-code install';
 }
 
 // deja:new relocating spawnHostWire verbatim out of cli/commands/init.ts into
@@ -56,8 +56,8 @@ export async function spawnHostWire(cwd: string, target: InitHostTarget): Promis
     cmd = 'npx';
     args =
       target === 'codex'
-        ? ['-y', '@manehorizons/cadence-host-codex', 'install']
-        : ['@manehorizons/cadence-host-claude-code', 'install'];
+        ? ['-y', '@thomas-powers-jr/cadence-host-codex', 'install']
+        : ['@thomas-powers-jr/cadence-host-claude-code', 'install'];
     // npx is npx.cmd on Windows; spawn() needs a shell to resolve it. Args are
     // static literals (no user input), so shell is safe here (as in start.ts).
     useShell = process.platform === 'win32';

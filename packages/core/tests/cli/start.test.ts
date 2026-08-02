@@ -34,7 +34,7 @@ describe('runStart', () => {
     const res = await runStart('/repo', { isTty: false }, io, d);
     expect(res.exitCode).toBe(0);
     expect(io.stdout()).toContain('What are you doing?');
-    expect(io.stdout()).toContain('Recommended: npx -y @manehorizons/cadence-core tutorial');
+    expect(io.stdout()).toContain('Recommended: npx -y @thomas-powers-jr/cadence-core tutorial');
     expect(d.spawned).toHaveLength(0);
   });
 
@@ -78,7 +78,7 @@ describe('runStart', () => {
     await runStart('/repo', { pick: 3, yes: true, isTty: false }, io, d);
     expect(d.spawned[0]).toMatchObject({
       runner: 'npx',
-      args: ['-y', '@manehorizons/cadence-host-claude-code', 'install'],
+      args: ['-y', '@thomas-powers-jr/cadence-host-claude-code', 'install'],
     });
   });
 

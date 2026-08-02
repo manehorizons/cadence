@@ -1,4 +1,4 @@
-import type { AcceptanceCriterion, Task, GateProvenance, Anchor } from '@manehorizons/cadence-types';
+import type { AcceptanceCriterion, Task, GateProvenance, Anchor } from '@thomas-powers-jr/cadence-types';
 import { parseAcRefs } from '../parse/ac-refs.js';
 
 /**

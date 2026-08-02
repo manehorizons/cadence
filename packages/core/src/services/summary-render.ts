@@ -1,4 +1,4 @@
-import type { Summary } from '@manehorizons/cadence-types';
+import type { Summary } from '@thomas-powers-jr/cadence-types';
 
 // deja:new distinct renderer for `cadence summary render` (phase 202, T1) —
 // intentionally NOT the same renderer as `parse/summary-writer.ts`'s

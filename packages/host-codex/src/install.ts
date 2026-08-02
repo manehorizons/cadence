@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { mergeManagedHookEntries } from '@manehorizons/cadence-host-toolkit/install-merge';
-import type { ManagedHookEntry } from '@manehorizons/cadence-host-toolkit/install-merge';
+import { mergeManagedHookEntries } from '@thomas-powers-jr/cadence-host-toolkit/install-merge';
+import type { ManagedHookEntry } from '@thomas-powers-jr/cadence-host-toolkit/install-merge';
 import { EDIT_TOOL_MATCHER } from './event-map.js';
 import { resolveLocalPaths } from './locate-self.js';
 
@@ -9,11 +9,11 @@ export interface InstallOptions {
   /**
    * Shim command Codex invokes for every hook event. The shim reads stdin,
    * translates the payload, and spawns the core CLI.
-   * Default: `npx @manehorizons/cadence-host-codex hook`.
+   * Default: `npx @thomas-powers-jr/cadence-host-codex hook`.
    */
   command?: string;
   /**
-   * Base command the shim itself uses to invoke `@manehorizons/cadence-core`.
+   * Base command the shim itself uses to invoke `@thomas-powers-jr/cadence-core`.
    * If set, appended as `--cadence "<cmd>"`. Default: the shim's own default.
    */
   cadenceCommand?: string;
@@ -45,7 +45,7 @@ interface HooksFile {
  */
 export async function installHooks(root: string, opts: InstallOptions = {}): Promise<void> {
   const local = opts.local ? resolveLocalPaths() : null;
-  const base = opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @manehorizons/cadence-host-codex hook');
+  const base = opts.command ?? (local ? `node ${local.shimCli} hook` : 'npx @thomas-powers-jr/cadence-host-codex hook');
   const cadenceCommand = opts.cadenceCommand ?? (local ? `node ${local.coreCli}` : undefined);
   const command = cadenceCommand ? `${base} --cadence "${cadenceCommand}"` : base;
   const hooksPath = join(root, opts.hooksPath ?? '.codex/hooks.json');

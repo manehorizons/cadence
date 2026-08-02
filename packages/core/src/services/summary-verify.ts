@@ -1,4 +1,4 @@
-import type { Summary } from '@manehorizons/cadence-types';
+import type { Summary } from '@thomas-powers-jr/cadence-types';
 import { computeSummaryContentHash } from './summary-hash.js';
 
 /**

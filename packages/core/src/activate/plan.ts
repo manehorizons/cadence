@@ -1,4 +1,4 @@
-import type { CadenceConfig } from '@manehorizons/cadence-types';
+import type { CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import type { VerifierProvider } from '../verify/verifier-factory.js';
 import { VERIFIER_SEAMS, DEEP_VERIFY_SEAM, type VerifierSeam } from './assess.js';
 

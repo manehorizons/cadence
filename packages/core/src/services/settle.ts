@@ -10,8 +10,8 @@ import type {
   GateBypass,
   GateProvenance,
   Summary,
-} from '@manehorizons/cadence-types';
-import { TaskStatusZ, defaultConfig } from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
+import { TaskStatusZ, defaultConfig } from '@thomas-powers-jr/cadence-types';
 import { nextAction } from '../progress.js';
 import { phaseNumber } from '../phases/collision.js';
 import { assertSafePhaseSlug } from '../phases/id.js';

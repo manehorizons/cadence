@@ -2,7 +2,7 @@ import type { Command } from 'commander';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadConfig, writeConfig } from '../../config/loader.js';
-import { CadenceConfigZ } from '@manehorizons/cadence-types';
+import { CadenceConfigZ } from '@thomas-powers-jr/cadence-types';
 import { NotInitializedError } from '../../errors.js';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
 import { buildExplanation } from '../../config-explain/build.js';

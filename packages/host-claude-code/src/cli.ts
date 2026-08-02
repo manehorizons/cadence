@@ -24,8 +24,8 @@ program
   .command('install')
   .description('Write Claude Code hook entries and slash commands into the project')
   .option('--cwd <dir>', 'project root', process.cwd())
-  .option('--command <cmd>', 'base command for the shim (default: "npx @manehorizons/cadence-host-claude-code")')
-  .option('--cadence <cmd>', 'base command the shim uses to invoke core (default: "npx @manehorizons/cadence-core")')
+  .option('--command <cmd>', 'base command for the shim (default: "npx @thomas-powers-jr/cadence-host-claude-code")')
+  .option('--cadence <cmd>', 'base command the shim uses to invoke core (default: "npx @thomas-powers-jr/cadence-core")')
   .option('--settings <path>', 'settings file path relative to cwd', '.claude/settings.json')
   .option('--no-hooks', 'skip writing hooks to settings.json')
   .option('--no-commands', 'skip writing slash commands to .claude/commands/')
@@ -90,7 +90,7 @@ program
 program
   .command('hook')
   .description('Shim invoked by Claude Code hooks: translates stdin and calls cadence hook <event>')
-  .option('--cadence <cmd>', 'base command to invoke core (default: "npx @manehorizons/cadence-core")', 'npx @manehorizons/cadence-core')
+  .option('--cadence <cmd>', 'base command to invoke core (default: "npx @thomas-powers-jr/cadence-core")', 'npx @thomas-powers-jr/cadence-core')
   .action(async (opts: { cadence: string }) => {
     try {
       let raw = '';

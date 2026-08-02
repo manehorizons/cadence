@@ -1,4 +1,4 @@
-import type { RecommendationReport } from '@manehorizons/cadence-types';
+import type { RecommendationReport } from '@thomas-powers-jr/cadence-types';
 
 /**
  * Phase 207 T3 (AC-3): the `## Ranked` section's empty-result copy. Two

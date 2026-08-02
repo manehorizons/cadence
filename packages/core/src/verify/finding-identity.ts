@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { Anchor, Finding } from '@manehorizons/cadence-types';
+import type { Anchor, Finding } from '@thomas-powers-jr/cadence-types';
 import type { AnchoredFinding } from './criteria-gap.js';
 
 /**

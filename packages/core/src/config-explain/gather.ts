@@ -1,4 +1,4 @@
-import type { Tier } from '@manehorizons/cadence-types';
+import type { Tier } from '@thomas-powers-jr/cadence-types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { hostHooksInstalled } from '../doctor/host-hooks.js';
 import type { ExplainContext } from './types.js';

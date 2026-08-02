@@ -3,7 +3,7 @@ import type {
   CadenceState,
   Draft,
   GateSet,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import type { PerTaskVerifyRecord } from '../build/record.js';
 import type { GateResult, IoPort } from './types.js';
 import type {

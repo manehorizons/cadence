@@ -1,4 +1,4 @@
-import type { Draft } from '@manehorizons/cadence-types';
+import type { Draft } from '@thomas-powers-jr/cadence-types';
 import { CadenceError } from '../errors.js';
 import type { ProgressJson } from '../gates/types.js';
 

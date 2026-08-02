@@ -1,4 +1,4 @@
-import type { EvidenceLedger, Recommendation, RetroRollup } from '@manehorizons/cadence-types';
+import type { EvidenceLedger, Recommendation, RetroRollup } from '@thomas-powers-jr/cadence-types';
 import { redactSecrets } from '../security/redact.js';
 import { addEvidenceToRecommendation } from '../intelligence/store/recommendations.js';
 

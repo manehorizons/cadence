@@ -15,9 +15,9 @@ describe('start menu catalog', () => {
   it('routes host options through npx with install args (AC-1)', () => {
     expect(resolvePick(3)).toMatchObject({
       runner: 'npx',
-      args: ['-y', '@manehorizons/cadence-host-claude-code', 'install'],
+      args: ['-y', '@thomas-powers-jr/cadence-host-claude-code', 'install'],
     });
-    expect(resolvePick(4)?.args).toContain('@manehorizons/cadence-host-codex');
+    expect(resolvePick(4)?.args).toContain('@thomas-powers-jr/cadence-host-codex');
   });
 
   it('returns undefined for an out-of-range pick (AC-2)', () => {

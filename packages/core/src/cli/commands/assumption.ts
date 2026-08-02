@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { type Assumption, AssumptionZ } from '@manehorizons/cadence-types';
+import { type Assumption, AssumptionZ } from '@thomas-powers-jr/cadence-types';
 import {
   readAssumptionLedger,
   readRecommendationLedger,

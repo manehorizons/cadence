@@ -1,4 +1,4 @@
-import type { CadenceConfig } from '@manehorizons/cadence-types';
+import type { CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import type { VerifierProvider } from '../verify/verifier-factory.js';
 import { discoverKey } from './key-discovery.js';
 

@@ -9,7 +9,7 @@ import type {
   Finding,
   GateProvenance,
   GateSet,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import type { InteractiveVerdict } from '../verify/interactive.js';
 import type { Interactivity } from './interactivity.js';
 import type { Prompter } from '../verify/prompter.js';

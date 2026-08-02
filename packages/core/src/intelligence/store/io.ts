@@ -5,7 +5,7 @@ import {
   type Evidence,
   type EvidenceLedger,
   type RecommendationLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { atomicWriteText } from '../../state/atomic-write.js';
 import { renderRecommendationsMd } from '../render.js';
 import { readLedger, writeLedger, type SubjectLedgerSpec } from './ledger.js';

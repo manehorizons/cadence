@@ -14,7 +14,7 @@ import {
   type RecommendationReadiness,
   type RecommendationSource,
   type RecommendationStatus,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { loadConfig } from '../../config/loader.js';
 import { redactSecrets } from '../../security/redact.js';
 import { nextEvidenceId, nextRecommendationId } from './ids.js';

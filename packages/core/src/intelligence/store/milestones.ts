@@ -3,7 +3,7 @@ import {
   emptyMilestoneLedger,
   type IntelligenceMilestone,
   type MilestoneLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { atomicWriteText } from '../../state/atomic-write.js';
 import { renderMilestonesMd } from '../render-milestone.js';
 import { milestonesMdPath, milestonesPath } from './paths.js';

@@ -2,7 +2,7 @@ import { isEligible, runProposeMilestones } from '../intelligence/milestone.js';
 import { readRecommendationLedger } from '../intelligence/store/io.js';
 import { findNearestCandidates } from '../intelligence/nearest-candidate.js';
 import type { CommandIO, CommandResult } from './io.js';
-import type { MilestoneLedger } from '@manehorizons/cadence-types';
+import type { MilestoneLedger } from '@thomas-powers-jr/cadence-types';
 
 const ELIGIBILITY_PRECONDITION =
   'requires status=accepted and readiness in {ready-for-milestone, ready-for-cadence-spec}';

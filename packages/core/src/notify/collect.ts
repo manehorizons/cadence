@@ -2,7 +2,7 @@ import type {
   AnomalyEvent,
   DeepVerdict,
   Draft,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import type { ProgressFile } from '../status.js';
 import type { InteractiveVerdict } from '../verify/interactive.js';
 import { runBoundaryCheck } from '../checks/boundary.js';

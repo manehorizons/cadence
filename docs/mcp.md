@@ -24,7 +24,7 @@ same deployment story as the CLI itself.
 Setup is "install the package, then point your host at the command."
 
 ```bash
-npm i -g @manehorizons/cadence-core   # puts `cadence` on PATH
+npm i -g @thomas-powers-jr/cadence-core   # puts `cadence` on PATH
 ```
 
 ### Easiest: `cadence mcp install`

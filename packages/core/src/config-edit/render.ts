@@ -1,5 +1,5 @@
 // packages/core/src/config-edit/render.ts
-import type { CadenceConfig } from '@manehorizons/cadence-types';
+import type { CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import type { EditableField } from './fields.js';
 import type { ConfigChange } from './apply.js';
 

@@ -1,6 +1,6 @@
 // packages/core/src/cli/prompt.ts
 import * as readline from 'node:readline/promises';
-import type { CadenceConfig } from '@manehorizons/cadence-types';
+import type { CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import type { Ask, Confirm } from '../config-edit/wizard.js';
 import { renderPrompt, renderChanges } from '../config-edit/render.js';
 

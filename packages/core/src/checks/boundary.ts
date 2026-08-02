@@ -1,5 +1,5 @@
 import { isAbsolute, relative } from 'node:path';
-import type { AnomalyEvent } from '@manehorizons/cadence-types';
+import type { AnomalyEvent } from '@thomas-powers-jr/cadence-types';
 
 /** The single line both emission points use for a stray file. */
 export const boundaryMessage = (file: string): string =>

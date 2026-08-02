@@ -1,6 +1,6 @@
 import { mkdir, appendFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import type { AnomalyEvent } from '@manehorizons/cadence-types';
+import type { AnomalyEvent } from '@thomas-powers-jr/cadence-types';
 import type { Notifier } from './notifier.js';
 
 /**

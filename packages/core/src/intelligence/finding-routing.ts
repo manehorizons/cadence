@@ -2,7 +2,7 @@ import type {
   Finding,
   RecommendationPriority,
   RecommendationReadiness,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { redactSecrets } from '../security/redact.js';
 import { normalizeMessage } from '../verify/finding-identity.js';
 

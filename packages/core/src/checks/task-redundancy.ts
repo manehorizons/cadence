@@ -1,5 +1,5 @@
 import { isAbsolute, relative } from 'node:path';
-import type { AnomalyEvent } from '@manehorizons/cadence-types';
+import type { AnomalyEvent } from '@thomas-powers-jr/cadence-types';
 
 /** Task statuses treated as "already finished" — an edit touching either's files is flagged. */
 export const TERMINAL_TASK_STATUSES: ReadonlySet<string> = new Set(['DONE', 'DONE_WITH_CONCERNS']);

@@ -102,13 +102,13 @@ No install, no repo writes — watch one real loop run, including the moment
 settle refuses to close a phase the tests don't back, then closes once they do:
 
 ```sh
-npx -y @manehorizons/cadence-core tutorial
+npx -y @thomas-powers-jr/cadence-core tutorial
 ```
 
 For daily use, install the CLI globally (requires Node ≥ 22):
 
 ```sh
-npm install -g @manehorizons/cadence-core
+npm install -g @thomas-powers-jr/cadence-core
 ```
 
 New to CADENCE? Run `cadence start` — a guided menu that picks the right setup
@@ -152,7 +152,7 @@ cadence settle run --ac AC-1=pass
 Driving CADENCE from **Claude Code**? Wire the adapter into a project:
 
 ```sh
-npx @manehorizons/cadence-host-claude-code install
+npx @thomas-powers-jr/cadence-host-claude-code install
 ```
 
 Driving it from **another MCP host** (Claude Desktop, Cursor, an agent)? Point the host at the MCP server — no adapter needed:

@@ -1,5 +1,5 @@
-import type { CadenceConfig, Tier } from '@manehorizons/cadence-types';
-import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
+import type { CadenceConfig, Tier } from '@thomas-powers-jr/cadence-types';
+import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
 import { effectiveProfile, gatesFor } from '../gates/engine.js';
 import type {
   ConfigExplanation,

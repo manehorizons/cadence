@@ -1,7 +1,7 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { McpTrustLedgerZ, emptyMcpTrustLedger, type McpTrustLedger } from '@manehorizons/cadence-types';
+import { McpTrustLedgerZ, emptyMcpTrustLedger, type McpTrustLedger } from '@thomas-powers-jr/cadence-types';
 import { atomicWriteText } from '../../state/atomic-write.js';
 
 /** `.cadence/mcp-trust.json` — a sibling of `state.json`/`intelligence/*.json`,

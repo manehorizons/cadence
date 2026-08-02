@@ -1,4 +1,4 @@
-import type { RetroFrequencyBuckets, RetroRollup } from '@manehorizons/cadence-types';
+import type { RetroFrequencyBuckets, RetroRollup } from '@thomas-powers-jr/cadence-types';
 
 // deja:new distinct renderer for RetroRollup (cross-phase aggregate), not
 // retro-writer.ts's single-phase RetroDigest renderer — mirrors its

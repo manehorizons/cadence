@@ -1,4 +1,4 @@
-import type { CadenceConfig, Gate, Profile, Tier } from '@manehorizons/cadence-types';
+import type { CadenceConfig, Gate, Profile, Tier } from '@thomas-powers-jr/cadence-types';
 import type { VerifierProvider } from '../verify/verifier-factory.js';
 
 /**

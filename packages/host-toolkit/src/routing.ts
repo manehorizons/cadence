@@ -1,8 +1,8 @@
-import type { AbstractEvent, ExtractedPayload } from '@manehorizons/cadence-types';
-import { COMMAND_GUIDANCE, DISPATCH_DIALOGUE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
+import type { AbstractEvent, ExtractedPayload } from '@thomas-powers-jr/cadence-types';
+import { COMMAND_GUIDANCE, DISPATCH_DIALOGUE, SCOUT_DIALOGUE } from '@thomas-powers-jr/cadence-types';
 
 // Re-exported for convenience: the canonical definition lives in
-// @manehorizons/cadence-types as part of the host-adapter contract.
+// @thomas-powers-jr/cadence-types as part of the host-adapter contract.
 export type { ExtractedPayload };
 
 // ---------------------------------------------------------------------------
@@ -161,7 +161,7 @@ export interface CommandSpec {
 }
 
 // Guidance prose (description/trailing) + the dialogue bodies live in the
-// shared `@manehorizons/cadence-types` guidance module (phase 77) so the MCP
+// shared `@thomas-powers-jr/cadence-types` guidance module (phase 77) so the MCP
 // prompts and these slash commands share one source of truth. The
 // command-shape fields (cli, argumentHint, which commands carry a dialogue
 // body) live here so both host adapters render from the identical catalog.

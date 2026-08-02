@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { type IntelligenceDecision, IntelligenceDecisionZ } from '@manehorizons/cadence-types';
+import { type IntelligenceDecision, IntelligenceDecisionZ } from '@thomas-powers-jr/cadence-types';
 import {
   readIntelligenceDecisionLedger,
   readRecommendationLedger,
