@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { mkdtemp, mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, rm, realpath, readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import {
   defaultConfig,
   emptyState,
@@ -12,9 +14,12 @@ import {
   type RecommendationLedger,
   type Summary,
 } from '@manehorizons/cadence-types';
+import { tempRepo, runGit } from '@manehorizons/cadence-testkit';
 import type { CommandIO } from '../../src/services/io.js';
 import { computeSummaryContentHash, canonicalStringify } from '../../src/services/summary-hash.js';
 import { GATE_ORDER } from '../../src/gates/registry.js';
+import { buildCadenceMcpServer } from '../../src/mcp/server.js';
+import { discoverChangedPhases } from '../../src/git/diff-strict.js';
 
 /**
  * T5 (phase 164): `settleService` threads `repoRoot` as `cwd` into all three
@@ -52,6 +57,16 @@ const constructed = vi.hoisted(() => ({
    * verifier call itself is stubbed).
    */
   codeReviewFindingsOverride: null as Record<string, Finding[]> | null,
+  /**
+   * Phase 247 (T4, review follow-up): per-test override for the mocked
+   * security-audit verifier's `findings` return value, mirroring
+   * `codeReviewFindingsOverride` above. Without this seam nothing in this
+   * file could drive `writeRefusedSettleSummary`'s `securityAuditFindings`
+   * branch (it was always `[]`) — a whole-branch review of this phase
+   * flagged that gap: inverting the `hasSecurityAuditFindings` truthiness
+   * check would still have left the full suite green.
+   */
+  securityAuditFindingsOverride: null as Finding[] | null,
 }));
 
 vi.mock('../../src/verify/factory.js', async (importOriginal) => {
@@ -115,14 +130,14 @@ vi.mock('../../src/verify/security-audit-factory.js', async (importOriginal) => 
           verifyOpts?: Parameters<typeof real.verify>[1],
         ) => {
           constructed.securityAuditOpts.push(verifyOpts);
-          return { findings: [], provider: real.name };
+          return { findings: constructed.securityAuditFindingsOverride ?? [], provider: real.name };
         },
       };
     },
   };
 });
 
-const { settleService } = await import('../../src/services/settle.js');
+const { settleService, refusedSnapshotArtifactBase } = await import('../../src/services/settle.js');
 
 function captureIO(): { io: CommandIO; out: string[]; err: string[] } {
   const out: string[] = [];
@@ -209,6 +224,7 @@ afterEach(async () => {
   constructed.securityAudit.length = 0;
   constructed.securityAuditOpts.length = 0;
   constructed.codeReviewFindingsOverride = null;
+  constructed.securityAuditFindingsOverride = null;
   if (origKey !== undefined) {
     process.env.ANTHROPIC_API_KEY = origKey;
   } else {
@@ -399,6 +415,461 @@ describe('settleService persists a SUMMARY on the refused-settle path (phase 170
     const state = JSON.parse(stateRaw) as { loopPosition: string; activeDraft: string | null };
     expect(state.loopPosition).toBe('BUILD');
     expect(state.activeDraft).toBe('53-01');
+  });
+});
+
+describe('settleService threads acc-accumulated findings into the refused SUMMARY (phase 247, T1)', () => {
+  it('247-01/AC-1: a refused code-review gate (HIGH finding, no bypass flag) records codeReview + a contentHash in the refused SUMMARY', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-01-refused-code-review',
+      id: '247-01',
+      tier: 'standard',
+      // strict×standard's delta includes 'code-review' (engine.ts DELTAS);
+      // gates.sealed: [] + evidenceFloor: 'unverified' mirrors the
+      // '51-code-review-verifier-cwd' fixture above — this test never
+      // reaches the evidence-floor check (the gate loop halts at
+      // code-review, before settle.ts's post-loop AC-merge code runs it).
+      config: {
+        ...defaultConfig,
+        profile: 'strict',
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+      },
+    });
+    constructed.codeReviewFindingsOverride = {
+      'src/foo.ts': [mkFinding('console.log left in source', 'high')],
+    };
+
+    const { io, err } = captureIO();
+    // Deliberately NO --force / --allow-code-review-failure: either would
+    // set `bypassed: true` in the code-review gate and fall through to
+    // `outcome: 'pass'` instead of refusing (gates/code-review.ts) — the
+    // whole point of this test is to exercise the refuse path.
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true },
+      io,
+    );
+
+    // Default convergence.maxAttempts is 3; a single failing attempt
+    // (attemptsSoFar 0 → attempt 1) yields verdict 'reloop', which ALSO
+    // returns `outcome: 'refuse'` (gates/code-review.ts) — no need to force
+    // an 'escalate' verdict via convergence.maxAttempts:1 for this AC.
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('code-review:');
+
+    const summaryPath = join(
+      root, '.cadence/phases/247-01-refused-code-review/247-01-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    const lastGate = summary.gates?.[summary.gates.length - 1];
+    expect(lastGate).toMatchObject({ gate: 'code-review', status: 'refused' });
+
+    expect(summary.codeReview?.['src/foo.ts']).toHaveLength(1);
+    expect(summary.codeReview?.['src/foo.ts']?.[0]).toMatchObject({
+      severity: 'high',
+      message: 'console.log left in source',
+    });
+    expect(summary.contentHash?.algorithm).toBe('sha256');
+    expect(summary.contentHash?.value).toMatch(/^[0-9a-f]{64}$/);
+    // Independent recomputation, not just presence — proves the stored
+    // hash genuinely reflects this refused SUMMARY's content (a hash
+    // computed over the wrong object, or a stale variable, would still
+    // pass a bare truthy check but fail this).
+    const recomputed = computeSummaryContentHash(summary);
+    expect(recomputed.value).toBe(summary.contentHash?.value);
+  });
+
+  it('a refused build-test-must-pass settle with no code-review/security-audit findings gains no codeReview/securityAudit/contentHash keys (no regression)', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-02-refused-no-findings',
+      id: '247-02',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        verification: { ...defaultConfig.verification, testCommand: 'node -e "process.exit(1)"' },
+      },
+    });
+
+    const { io } = captureIO();
+    const res = await settleService(root, {}, io);
+    expect(res.exitCode).toBe(1);
+
+    const summaryPath = join(
+      root, '.cadence/phases/247-02-refused-no-findings/247-02-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Record<string, unknown>;
+
+    // Hard constraint (SPEC AC-1): a findings-free refusal produces the
+    // exact same output as before this phase — no new keys at all, not
+    // even present-but-undefined ones.
+    expect('codeReview' in summary).toBe(false);
+    expect('securityAudit' in summary).toBe(false);
+    expect('contentHash' in summary).toBe(false);
+  });
+
+  it('247-01/AC-1: a refused security-audit gate (CRITICAL finding, code-review clean) records securityAudit + codeReview:{} + a contentHash in the refused SUMMARY (review follow-up)', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-03-refused-security-audit',
+      id: '247-03',
+      tier: 'complex',
+      config: {
+        ...defaultConfig,
+        // strict×complex is the only cell where security-audit fires
+        // (gates/engine.ts DELTAS) — code-review also fires in this cell
+        // and runs first in GATE_ORDER, so leaving codeReviewFindingsOverride
+        // unset (code-review returns `{}`, clean) exercises exactly the
+        // "codeReview: {} present, securityAudit is what refuses" case the
+        // T1 comment above describes.
+        profile: 'strict',
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+      },
+    });
+    constructed.securityAuditFindingsOverride = [mkFinding('hardcoded secret', 'critical')];
+
+    const { io, err } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('security-audit:');
+
+    const summaryPath = join(
+      root, '.cadence/phases/247-03-refused-security-audit/247-03-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    const lastGate = summary.gates?.[summary.gates.length - 1];
+    expect(lastGate).toMatchObject({ gate: 'security-audit', status: 'refused' });
+
+    // code-review ran and passed clean before security-audit refused —
+    // `codeReview: {}` is present (per the success-path-mirroring spread),
+    // even though it holds no findings itself.
+    expect(summary.codeReview).toEqual({});
+    expect(summary.securityAudit).toHaveLength(1);
+    expect(summary.securityAudit?.[0]).toMatchObject({
+      severity: 'critical',
+      message: 'hardcoded secret',
+    });
+    expect(summary.contentHash?.value).toMatch(/^[0-9a-f]{64}$/);
+    const recomputed = computeSummaryContentHash(summary);
+    expect(recomputed.value).toBe(summary.contentHash?.value);
+
+    // The sibling snapshot is written for this path too (identical
+    // condition to the codeReview-refusal case).
+    const entries = await readdir(join(root, '.cadence/phases/247-03-refused-security-audit'));
+    expect(entries.some((e) => e.includes('SUMMARY-snapshot'))).toBe(true);
+  });
+});
+
+describe('settleService threads an injectable clock seam for completedAt (phase 247, T2)', () => {
+  it('247-01/AC-3: a fixed injected now() produces an exact completedAt on the success-path SUMMARY', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-03-clock-seam-success',
+      id: '247-03',
+      tier: 'standard',
+      // Phase 214 (T4): see the '51-code-review-verifier-cwd' comment above —
+      // this fixture has no real AC-1 coverage and predates evidence-floor.
+      config: { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } },
+    });
+
+    const fixedNow = '2026-01-01T00:00:00.000Z';
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      {
+        auto: true,
+        interactive: false,
+        allowMissingCoverage: true,
+        force: true,
+        now: () => fixedNow,
+      },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '247-03-clock-seam-success', '247-03-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    expect(summary.completedAt).toBe(fixedNow);
+  });
+
+  it('247-01/AC-3: a fixed injected now() produces an exact completedAt on the refused-settle SUMMARY', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-04-clock-seam-refused',
+      id: '247-04',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        verification: {
+          ...defaultConfig.verification,
+          testCommand: 'node -e "process.exit(1)"',
+        },
+      },
+    });
+
+    const fixedNow = '2026-02-02T12:34:56.000Z';
+    const { io } = captureIO();
+    const res = await settleService(root, { now: () => fixedNow }, io);
+
+    expect(res.exitCode).toBe(1);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '247-04-clock-seam-refused', '247-04-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    expect(summary.completedAt).toBe(fixedNow);
+  });
+});
+
+describe('settleService writes an additive per-attempt sibling snapshot on a findings-present refusal (phase 247, T3)', () => {
+  it('247-01/AC-2: a refused code-review gate with findings writes a SUMMARY-snapshot sibling pair identical to the canonical refused SUMMARY', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-05-sibling-present',
+      id: '247-05',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        profile: 'strict',
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+      },
+    });
+    constructed.codeReviewFindingsOverride = {
+      'src/foo.ts': [mkFinding('console.log left in source', 'high')],
+    };
+
+    const fixedNow = '2026-03-03T09:08:07.000Z';
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, now: () => fixedNow },
+      io,
+    );
+
+    expect(res.exitCode).toBe(1);
+
+    const phaseDir = join(root, '.cadence/phases/247-05-sibling-present');
+    const summaryPath = join(phaseDir, '247-05-SUMMARY.json');
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+    expect(summary.completedAt).toBe(fixedNow);
+
+    const snapshotBase = refusedSnapshotArtifactBase('247-05', fixedNow);
+    const siblingJsonPath = join(phaseDir, `${snapshotBase}.json`);
+    const siblingMdPath = join(phaseDir, `${snapshotBase}.md`);
+
+    expect(existsSync(siblingJsonPath)).toBe(true);
+    expect(existsSync(siblingMdPath)).toBe(true);
+
+    const siblingSummary = JSON.parse(await readFile(siblingJsonPath, 'utf8')) as Summary;
+    expect(siblingSummary).toEqual(summary);
+
+    const siblingMd = await readFile(siblingMdPath, 'utf8');
+    const canonicalMd = await readFile(join(phaseDir, '247-05-SUMMARY.md'), 'utf8');
+    expect(siblingMd).toBe(canonicalMd);
+  });
+
+  it('247-01/AC-2: a findings-free refusal (build-test-must-pass alone) writes no SUMMARY-snapshot sibling', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-06-sibling-absent',
+      id: '247-06',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        verification: { ...defaultConfig.verification, testCommand: 'node -e "process.exit(1)"' },
+      },
+    });
+
+    const { io } = captureIO();
+    const res = await settleService(root, {}, io);
+    expect(res.exitCode).toBe(1);
+
+    const phaseDir = join(root, '.cadence/phases/247-06-sibling-absent');
+    const entries = await readdir(phaseDir);
+    expect(entries.some((e) => e.includes('SUMMARY-snapshot'))).toBe(false);
+  });
+
+  it('247-01/AC-2: a sibling-write failure is swallowed via io.err and never affects the canonical SUMMARY or settle exit code', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-07-sibling-failure',
+      id: '247-07',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        profile: 'strict',
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+      },
+    });
+    constructed.codeReviewFindingsOverride = {
+      'src/foo.ts': [mkFinding('console.log left in source', 'high')],
+    };
+
+    const fixedNow = '2026-04-04T10:20:30.000Z';
+    const phaseDir = join(root, '.cadence/phases/247-07-sibling-failure');
+    // Force the sibling write to throw: pre-create a DIRECTORY at the exact
+    // sibling .json path settle will try to atomically write to — renaming a
+    // temp file onto an existing directory throws EISDIR (same fault-
+    // injection idiom as the '242-12-routing-failure' test above; the fixed
+    // `now()` clock seam from T2 makes the sibling's exact path predictable).
+    await mkdir(
+      join(phaseDir, `${refusedSnapshotArtifactBase('247-07', fixedNow)}.json`),
+      { recursive: true },
+    );
+
+    const { io, err } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, now: () => fixedNow },
+      io,
+    );
+
+    // The canonical write already happened before the sibling write was
+    // attempted — a sibling-write failure must never change the outcome.
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toMatch(/note: refused-settle sibling snapshot failed to write —/);
+
+    const summaryPath = join(phaseDir, '247-07-SUMMARY.json');
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+    expect(summary.codeReview?.['src/foo.ts']).toHaveLength(1);
+    expect(summary.contentHash?.value).toBeTruthy();
+  });
+});
+
+describe('settleService sibling snapshots are distinct across repeated attempts and invisible to SUMMARY discovery (phase 247, T4)', () => {
+  it('247-01/AC-3: two refused attempts for the same draft, at different injected timestamps, produce two distinct siblings — neither overwrites the other', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '247-08-multi-attempt',
+      id: '247-08',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        profile: 'strict',
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+      },
+    });
+    constructed.codeReviewFindingsOverride = {
+      'src/foo.ts': [mkFinding('console.log left in source', 'high')],
+    };
+
+    const phaseDir = join(root, '.cadence/phases/247-08-multi-attempt');
+    const firstNow = '2026-05-01T00:00:00.000Z';
+    const secondNow = '2026-05-01T00:05:00.000Z';
+
+    const attempt1 = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, now: () => firstNow },
+      captureIO().io,
+    );
+    expect(attempt1.exitCode).toBe(1);
+
+    const attempt2 = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, now: () => secondNow },
+      captureIO().io,
+    );
+    expect(attempt2.exitCode).toBe(1);
+
+    const firstSiblingPath = join(phaseDir, `${refusedSnapshotArtifactBase('247-08', firstNow)}.json`);
+    const secondSiblingPath = join(phaseDir, `${refusedSnapshotArtifactBase('247-08', secondNow)}.json`);
+
+    // Both attempts' siblings survive on disk — attempt 2 never overwrites
+    // attempt 1's forensic record.
+    expect(existsSync(firstSiblingPath)).toBe(true);
+    expect(existsSync(secondSiblingPath)).toBe(true);
+    expect(firstSiblingPath).not.toBe(secondSiblingPath);
+
+    const firstSibling = JSON.parse(await readFile(firstSiblingPath, 'utf8')) as Summary;
+    const secondSibling = JSON.parse(await readFile(secondSiblingPath, 'utf8')) as Summary;
+    expect(firstSibling.completedAt).toBe(firstNow);
+    expect(secondSibling.completedAt).toBe(secondNow);
+
+    // The canonical SUMMARY.json reflects only the latest (2nd) attempt —
+    // existing overwrite-on-reloop behavior is unchanged by sibling writes.
+    const canonicalSummary = JSON.parse(
+      await readFile(join(phaseDir, '247-08-SUMMARY.json'), 'utf8'),
+    ) as Summary;
+    expect(canonicalSummary.completedAt).toBe(secondNow);
+  });
+
+  it('247-01/AC-2: the sibling filename is invisible to mcp/resources.ts\'s SUMMARY discovery, even when it would sort after the canonical file', async () => {
+    root = await mktemp();
+    const phaseDir = join(root, '.cadence/phases/247-09-mcp-discovery');
+    await mkdir(phaseDir, { recursive: true });
+    const canonical = { draftId: '247-09', schemaVersion: 2 };
+    await writeFile(join(phaseDir, '247-09-SUMMARY.json'), JSON.stringify(canonical));
+    // Deliberately a DIFFERENT payload, and a name that sorts AFTER the
+    // canonical file's ('S' < 'r' in ASCII, so '...-refused-...' sorts
+    // later than '...-SUMMARY.json') — proving resources.ts's
+    // `.sort().at(-1)` never gets a chance to pick this one, because
+    // `endsWith('-SUMMARY.json')` excludes it from the candidate set
+    // entirely (it ends in `-SUMMARY-snapshot.json`, not `-SUMMARY.json`).
+    const sibling = { draftId: '247-09', schemaVersion: 2, decoy: true };
+    const siblingName = `${refusedSnapshotArtifactBase('247-09', '2026-05-01T00:05:00.000Z')}.json`;
+    await writeFile(join(phaseDir, siblingName), JSON.stringify(sibling));
+
+    const server = buildCadenceMcpServer(root, '1.16.0-test');
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    const client = new Client({ name: 'test-client', version: '0.0.0' });
+    await client.connect(clientTransport);
+    try {
+      const res = await client.readResource({ uri: 'cadence://phase/247-09-mcp-discovery/summary.json' });
+      const text = (res.contents[0] as { text?: string }).text ?? '';
+      expect(JSON.parse(text)).toEqual(canonical);
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
+
+  it('247-01/AC-2: the sibling filename never matches diff-strict.ts\'s SUMMARY_PATH_RE / git pathspec discovery', async () => {
+    const fx = await tempRepo();
+    try {
+      runGit(fx.root, ['init', '-q']);
+      runGit(fx.root, ['config', 'user.email', 'test@example.com']);
+      runGit(fx.root, ['config', 'user.name', 'Test']);
+      await writeFile(join(fx.root, 'README.md'), '# test\n');
+      runGit(fx.root, ['add', '-A']);
+      runGit(fx.root, ['commit', '-q', '-m', 'base']);
+      const baseSha = runGit(fx.root, ['rev-parse', 'HEAD']).trim();
+
+      const phaseDir = join(fx.root, '.cadence', 'phases', '247-10-diff-strict');
+      await mkdir(phaseDir, { recursive: true });
+      // Only the sibling snapshot changes — no genuine SUMMARY.json change.
+      const siblingName = `${refusedSnapshotArtifactBase('247-10', '2026-05-01T00:05:00.000Z')}.json`;
+      await writeFile(join(phaseDir, siblingName), '{}');
+      runGit(fx.root, ['add', '-A']);
+      runGit(fx.root, ['commit', '-q', '-m', 'add sibling snapshot only']);
+
+      const result = discoverChangedPhases(fx.root, baseSha);
+      expect(result).toEqual([]);
+    } finally {
+      await fx.cleanup();
+    }
   });
 });
 

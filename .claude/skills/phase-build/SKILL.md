@@ -61,7 +61,9 @@ before it is recorded.
    `--force`/`--allow-*`. Once it passes, stage everything together — source,
    tests, docs, the `.changeset/*.md` for this phase (feature PRs carry their
    own changeset, never deferred to the release PR), and the phase artifacts
-   (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`) — and make one commit
+   (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`, and `-SUMMARY-snapshot.*`
+   if the phase produced any refused-attempt siblings — phase 247) —
+   and make one commit
    (`feat:`/`fix:`, phase id in the subject). `state.json`/`STATE.md` stay
    gitignored, never committed. If the phase closes a Praxis recommendation,
    promote it to `shipped` in this same commit.
