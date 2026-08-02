@@ -11,11 +11,14 @@ import { computeSummaryContentHash } from './summary-hash.js';
  *   differs: the file was hand-edited after settle (or otherwise altered)
  *   without regenerating the hash.
  * - `NO_HASH` — no `contentHash` field at all: either a pre-phase-223
- *   record (T1 added the field as optional/additive) or a REFUSED-settle
- *   SUMMARY.json (`settle.ts`'s `refusedSummary` path never attaches one).
- *   This is a clean, informational outcome — not an error — per this
- *   repo's "no silent fallback" rule it must still be reported loudly, just
- *   without a failing exit code.
+ *   record (phase 223's T1 added the field as optional/additive) or a
+ *   REFUSED-settle SUMMARY.json that recorded no `codeReview`/
+ *   `securityAudit` findings (phase 247: `settle.ts`'s `refusedSummary`
+ *   path attaches a `contentHash` exactly when it recorded those findings,
+ *   and omits one — same as before — when it didn't). This is a clean,
+ *   informational outcome — not an error — per this repo's "no silent
+ *   fallback" rule it must still be reported loudly, just without a
+ *   failing exit code.
  */
 export type SummaryVerifyVerdict = 'MATCH' | 'MISMATCH' | 'NO_HASH';
 

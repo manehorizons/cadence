@@ -2564,10 +2564,13 @@ stdout: `MATCH: SUMMARY.json content hash verified (sha256)` — the content
 is unchanged since settle wrote it; `MISMATCH: stored hash does not match
 recomputed content — this SUMMARY.json may have been edited after settle`
 — the file was altered after settle without regenerating the hash;
-`NO_HASH: no contentHash present — pre-phase-223 record or a refused
-settle; cannot verify` — no `contentHash` field at all, a clean
-informational outcome rather than a false MATCH or a crash. Like `render`,
-it is read-only and never transitions the loop.
+`NO_HASH: no contentHash present — pre-phase-223 record, or a refused
+settle that recorded no findings; cannot verify` — no `contentHash` field
+at all, a clean informational outcome rather than a false MATCH or a crash.
+(Phase 247: a refused settle now gets a `contentHash` exactly when it
+recorded `codeReview`/`securityAudit` findings; a refusal with no findings
+still gets none, hence `NO_HASH`.) Like `render`, it is read-only and never
+transitions the loop.
 
 **Exit codes** (`verify`) — exits `0` on `MATCH` and on `NO_HASH` (an
 informational, non-failing outcome). Exits `1` on `MISMATCH`, and on the

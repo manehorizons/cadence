@@ -165,7 +165,7 @@ export function registerSummaryCommand(program: Command): void {
             break;
           case 'NO_HASH':
             process.stdout.write(
-              'NO_HASH: no contentHash present — pre-phase-223 record or a refused settle; cannot verify\n',
+              'NO_HASH: no contentHash present — pre-phase-223 record, or a refused settle that recorded no findings; cannot verify\n',
             );
             break;
         }

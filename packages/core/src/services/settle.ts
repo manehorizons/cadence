@@ -104,6 +104,15 @@ export interface SettleArgs {
    *  refusal — never a blanket "skip the floor for everything" flag. A
    *  non-empty reason is required for every entry. */
   evidenceFloorBypass?: string[];
+  /** Phase 247 (T2): injectable clock for `completedAt`, mirroring
+   *  `verify/converge.ts`'s `now?: () => string` seam — lets a test inject a
+   *  fixed timestamp instead of depending on real wall-clock spacing.
+   *  Defaults to `() => new Date().toISOString()` when absent. Used for
+   *  `completedAt` on BOTH the success path (`finalizeAndCloseSettle`) and
+   *  the refused-settle path (`writeRefusedSettleSummary`) — the two stay
+   *  symmetric so a later phase (T3) can build N-sibling-SUMMARY support on
+   *  top of a clock seam that already covers both call sites. */
+  now?: () => string;
 }
 
 function parseAcArg(arg: string): AcResult {
@@ -748,6 +757,22 @@ function coverageProvenance(cadenceConfig: CadenceConfig): {
   };
 }
 
+/**
+ * Phase 247 (T3/T4): the base filename (no extension) for a refused
+ * settle's per-attempt sibling snapshot. Exported so tests can derive the
+ * exact name settle.ts produces rather than hardcoding a copy that could
+ * silently drift from the real naming scheme — a review of this phase
+ * flagged that risk (two consumer-invisibility tests asserted against a
+ * literal, not this function). Deliberately does NOT end in
+ * `-SUMMARY.json`/`-SUMMARY.md`: `mcp/resources.ts`'s readdir+endsWith
+ * SUMMARY discovery and `git/diff-strict.ts`'s `-SUMMARY\.json$` regex/
+ * pathspec must never pick it up.
+ */
+export function refusedSnapshotArtifactBase(draftId: string, completedAt: string): string {
+  const slug = completedAt.replace(/[:.]/g, '-');
+  return `${draftId}-refused-${slug}-SUMMARY-snapshot`;
+}
+
 async function writeRefusedSettleSummary(
   cwd: string,
   activePhase: string,
@@ -755,13 +780,17 @@ async function writeRefusedSettleSummary(
   draft: Draft,
   progress: ProgressJson,
   gates: GateProvenance[],
+  codeReviewFindings: SettleAccumulator['codeReview'],
+  securityAuditFindings: SettleAccumulator['securityAudit'],
   cadenceConfig: CadenceConfig,
   foreignBinaryMismatch: { runningBinaryPath: string; repoToplevel: string } | null,
+  now: () => string,
+  io: CommandIO,
 ): Promise<CommandResult> {
   const refusedSummary: Summary = {
     schemaVersion: 2,
     draftId: state.activeDraft!,
-    completedAt: new Date().toISOString(),
+    completedAt: now(),
     acResults: [],
     gates,
     taskResults: buildTaskResults(draft, progress),
@@ -772,14 +801,79 @@ async function writeRefusedSettleSummary(
     // scheme is exactly the context needed to interpret WHY a coverage gate
     // refused — so record it here as well, not only on the success path.
     ...coverageProvenance(cadenceConfig),
+    // Phase 247 (T1, AC-1): `runSettleGates` merges each gate's
+    // `summaryPatch` into `acc` BEFORE checking for a refusal
+    // (`registry.ts`'s `mergeInto(acc, res)` runs ahead of the
+    // `outcome === 'refuse'` short-circuit), so whatever code-review/
+    // security-audit findings accumulated before the refusing gate halted
+    // the loop are already sitting in `acc` by the time this function is
+    // called — mirrors the success path's exact conditional-spread shape
+    // (settle.ts's `finalizeAndCloseSettle`, `~1132`) instead of silently
+    // dropping them as before this phase.
+    ...(codeReviewFindings ? { codeReview: codeReviewFindings } : {}),
+    ...(securityAuditFindings ? { securityAudit: securityAuditFindings } : {}),
     assurance: deriveSettleAssuranceRecord(gates, []),
     ...(foreignBinaryMismatch ? { foreignBinaryMismatch } : {}),
   };
+  // Phase 247 (T1, AC-1): a contentHash is attached only when there is
+  // something worth being tamper-evident about — at least one NON-EMPTY
+  // findings collection. Deliberately NOT plain truthiness on the two
+  // params above: `codeReviewFindings` can be `{}` (code-review ran, zero
+  // findings) and `securityAuditFindings` can be `[]` (security-audit ran,
+  // zero findings) — both truthy, neither worth hashing, and both reachable
+  // on a refused settle (e.g. strict×complex: code-review passes clean,
+  // security-audit is what refuses). A refusal where NEITHER gate recorded
+  // any findings at all (both params `undefined` — e.g. a bare
+  // build-test-must-pass refusal) keeps producing the exact same output as
+  // before this phase: no `codeReview`/`securityAudit`/`contentHash` keys
+  // at all. A refusal where one gate ran clean and a LATER gate refused
+  // (e.g. `codeReview: {}` present, `securityAudit` is what refused) is new
+  // relative to pre-phase-247 output, but per spec (AC-1 mirrors the
+  // success path's conditional spread exactly) — only the "zero findings
+  // anywhere" case is held byte-identical, not "no gate present."
+  const hasCodeReviewFindings =
+    codeReviewFindings !== undefined &&
+    Object.values(codeReviewFindings).some((findings) => findings.length > 0);
+  const hasSecurityAuditFindings =
+    securityAuditFindings !== undefined && securityAuditFindings.length > 0;
+  if (hasCodeReviewFindings || hasSecurityAuditFindings) {
+    refusedSummary.contentHash = computeSummaryContentHash(refusedSummary);
+  }
   const refusedSummaryBase = join(
     cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`,
   );
   await atomicWriteJSON(`${refusedSummaryBase}.json`, refusedSummary);
   await atomicWriteText(`${refusedSummaryBase}.md`, renderSummaryMd(refusedSummary));
+
+  // Phase 247 (T3, AC-2): an additive, best-effort per-attempt sibling —
+  // written only when there is something worth being tamper-evident about
+  // (identical condition to the contentHash attach above; a findings-free
+  // refusal writes no sibling at all). Named so it deliberately does NOT end
+  // in `-SUMMARY.json`/`-SUMMARY.md`: `mcp/resources.ts`'s readdir+endsWith
+  // SUMMARY discovery and `git/diff-strict.ts`'s `-SUMMARY\.json$` regex/
+  // pathspec must never pick it up (it's a `-SUMMARY-snapshot.json`/`.md`
+  // pair, not a `-SUMMARY.json`/`.md` one). Reuses `refusedSummary.
+  // completedAt` for the slug rather than calling `now()` a second time —
+  // a second call could drift under the real clock and disagree with the
+  // in-file timestamp. Written strictly AFTER the canonical write above has
+  // already completed, and wrapped in try/catch matching the retro-digest
+  // precedent (~1200) and the phase-242 finding-routing precedent (~1216):
+  // a sibling-write failure can never affect the canonical record already on
+  // disk, and never changes settle's exit code.
+  if (hasCodeReviewFindings || hasSecurityAuditFindings) {
+    try {
+      const snapshotBase = join(
+        cwd, '.cadence/phases', activePhase,
+        refusedSnapshotArtifactBase(state.activeDraft!, refusedSummary.completedAt),
+      );
+      await atomicWriteJSON(`${snapshotBase}.json`, refusedSummary);
+      await atomicWriteText(`${snapshotBase}.md`, renderSummaryMd(refusedSummary));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      io.err(`note: refused-settle sibling snapshot failed to write — ${msg}\n`);
+    }
+  }
+
   return { exitCode: 1 };
 }
 
@@ -1103,6 +1197,7 @@ async function finalizeAndCloseSettle(
   interactivity: ReturnType<typeof resolveInteractivity>,
   io: CommandIO,
   foreignBinaryMismatch: { runningBinaryPath: string; repoToplevel: string } | null,
+  now: () => string,
 ): Promise<CommandResult> {
   // issue #177: snapshot loop state as it stands DURING settle, before the
   // reset-to-IDLE block below mutates it. This is the only place this data
@@ -1117,7 +1212,7 @@ async function finalizeAndCloseSettle(
   const summary: Summary = {
     schemaVersion: 2,
     draftId: state.activeDraft!,
-    completedAt: new Date().toISOString(),
+    completedAt: now(),
     acResults: acResultsWithEvidence,
     gates,
     taskResults: buildTaskResults(draft, progress),
@@ -1352,10 +1447,16 @@ export async function settleService(
       verifierOverride,
       io,
     );
+    // Phase 247 (T2): resolve the clock seam once, here, so both the refused
+    // and success paths below share the exact same default-vs-injected
+    // resolution rather than each independently re-deriving it.
+    const now = opts.now ?? (() => new Date().toISOString());
+
     const { acc, refused, gates } = await runSettleGates(ctx);
     if (refused) {
       return await writeRefusedSettleSummary(
-        cwd, activePhase, state, draft, progress, gates, cadenceConfig, foreignBinaryMismatch,
+        cwd, activePhase, state, draft, progress, gates,
+        acc.codeReview, acc.securityAudit, cadenceConfig, foreignBinaryMismatch, now, io,
       );
     }
 
@@ -1427,6 +1528,7 @@ export async function settleService(
       interactivity,
       io,
       foreignBinaryMismatch,
+      now,
     );
   } catch (err) {
     io.err(`${formatCommandError('settle run', err)}\n`);

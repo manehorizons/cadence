@@ -1,0 +1,46 @@
+{
+  "draftId": "247-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-01T23:30:41.104Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Independently re-verified 2026-08-01: doc-content test suite (20 files, 133 tests) green, no stale 'refused settle never gets a content hash' phrasing remains repo-wide.",
+      "touchedFiles": [
+        "/home/thomas/.claude/plans/read-docs-handoffs-cadence-arc-finding-d-rosy-lampson.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase247-refused-settle-summary/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase247-refused-settle-summary/packages/core/tests/services/settle.test.ts"
+      ],
+      "updatedAt": "2026-08-01T23:52:24.873Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase247-refused-settle-summary/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase247-refused-settle-summary/packages/core/tests/services/settle.test.ts"
+      ],
+      "updatedAt": "2026-08-01T23:47:46.397Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Independently re-verified 2026-08-02: build clean, settle.test.ts 43/43 pass (all 3 T3 tests: sibling-present, sibling-absent, sibling-write-failure-swallowed), docs 133/133 pass, lint clean. Picked up from an abandoned concurrent session; code matches DRAFT T3 spec exactly (correct naming, try/catch precedent, completedAt reuse).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase247-refused-settle-summary/packages/core/src/services/settle.ts"
+      ],
+      "updatedAt": "2026-08-02T00:13:38.946Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Implemented from scratch (not present in the abandoned session's work): multi-attempt distinctness test in settle.test.ts (two refused attempts, two injected timestamps, both siblings survive, canonical reflects latest only), plus two reader-safety unit tests extending the untouched mcp/resources.test.ts and git/diff-strict.test.ts patterns (proving the sibling name is invisible to both discovery mechanisms, including the lexicographic-sort edge case). Full suite verified: 390/390 test files, 3592/3592 tests, typecheck clean, lint clean, coverage thresholds met.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase247-refused-settle-summary/packages/core/tests/services/settle.test.ts"
+      ],
+      "updatedAt": "2026-08-02T00:18:35.968Z"
+    }
+  }
+}

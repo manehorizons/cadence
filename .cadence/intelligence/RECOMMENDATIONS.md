@@ -1010,22 +1010,6 @@ docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, ac
 
 code-review.ts and security-audit.ts's catch(err) blocks return {outcome:'pass'} with no flags at all when --allow-code-review-failure/--allow-security-audit-failure/--force bypasses a real-provider throw (revoked key, rate limit, network blip). Unlike build-test-must-pass/boundary-scan/test-coverage (which set a dedicated bypass flag registry.ts turns into an explicit skipReason provenance entry) or deep-verify.ts (which sets flags.verifierFailure={message,provider} on its own throw path), these two gates set nothing. verifierIdentityProvenance(res) then returns {} since res.flags?.verifierIdentity is undefined. Verified directly against source 2026-08-01: the persisted SUMMARY.gates[] entry reads as {gate:'code-review',status:'ran'} -- indistinguishable from a clean real-provider pass, with no skipReason explaining a failure was bypassed. This lands on exactly the two gates phase 232 exists to make trustworthy. deriveAssuranceRecord under-reports (drops the gate from verifierRollup) rather than over-reports, so it is not a spoofing risk, but the raw gates[] provenance record is actively misleading about what 'ran' means here.
 
-## rec-20260801-005 — A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/gates/registry.ts, packages/core/src/services/settle.ts
-- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), not yet independently re-verified by a second pass
-- next: cadence milestone propose
-
-runSettleGates calls mergeInto(acc, res) (registry.ts) BEFORE the refuse check, so acc.codeReview (anchored + identified findings, including criteria-gap findings) is populated even when a later gate in GATE_ORDER refuses. But writeRefusedSettleSummary (settle.ts) takes only gates provenance, never acc -- codeReview is absent from the persisted SUMMARY on every refused settle, not just the 'code-review itself refuses' case rec-20260731-010 already names. Example: code-review passes with a declared gap, then security-audit (runs later in GATE_ORDER) refuses -- the gap prints to stderr once and then vanishes from the artifact, contradicting code-review.ts's own comment that findings land in summaryPatch.codeReview 'on EVERY return path.' Agent-reported 2026-08-01 via independent review, not yet independently re-verified line-by-line -- verify before scoping a fix.
-
 ## rec-20260801-006 — deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case
 
 - status: candidate
@@ -1057,19 +1041,3 @@ assurance-record.ts documents 'weak' as covering '...or simply no ACs at all wit
 - next: cadence milestone propose
 
 (1) eslint.config.js's own comment candidly documents that dynamic import() of verifier family modules is invisible to the new kernel/verifier/consumer boundary rule -- a disclosed, real gap with no tracking recommendation until now. (2) deriveAssuranceRecord's verifierRollup key is an unseparated string join (${provider} ${model ?? ''}) -- theoretically collision-prone if a provider/model string ever contains a space (today's real values never do). (3) readRawSchemaVersion/MAX_RECOGNIZED_SCHEMA_VERSION is duplicated between verify/phase-replay.ts and cli/commands/summary.ts, hand-synced -- a third SummaryZ.safeParse call site would misreport a future schemaVersion-3 record as a generic parse failure instead of 'written by a newer Cadence.' None urgent; bundled as one low-priority rec per the independent review's own framing.
-
-## rec-20260801-011 — Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/services/settle.ts
-- evidence: Verified 2026-08-01: refusedSummaryBase and summaryBase both resolve to join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`) -- settle.ts lines ~778-781 (refused) and ~1148-1150 (success).
-- next: cadence milestone propose
-
-settle.ts's refused-settle path (~line 778) and its success path (~line 1150) both write to the identical `${activePhase}/${activeDraft}-SUMMARY.json` path derived from `state.activeDraft`. In a convergence re-loop, attempt-1's refused SUMMARY (and any code-review findings it recorded) is silently overwritten the moment attempt-2 succeeds -- no snapshot, no history. Surfaced during independent review of phase 246 (rec-20260801-010 scoping): a reloop pair is plausibly the cheapest real-provider evidence that an LLM verifier re-words the same defect across attempts (the exact drift phase-246's trigger needs to observe), and it is currently destroyed by design rather than preserved. Needs a decision: is losing attempt-1 findings acceptable (nothing consumes them today), or should refused-settle SUMMARYs be preserved (e.g. a per-attempt suffix) before anything is built on top of that data.

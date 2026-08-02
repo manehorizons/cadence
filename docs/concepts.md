@@ -179,9 +179,12 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   silent or blocking fallback). It is recorded on **both** paths a settle
   can take: a normal completion *and* the refused-settle SUMMARY described
   above (a refused settle's running binary is just as foreign as a
-  successful one's would have been) — though only the normal-completion
-  path's SUMMARY gets a content hash at all (`writeRefusedSettleSummary`
-  computes none, same as `assurance`). When present, the field is a
+  successful one's would have been) — though a content hash is
+  unconditional only on the normal-completion path: phase 247 attaches one
+  to a refused settle exactly when at least one of `codeReview`/
+  `securityAudit` is non-empty, and none when both are empty or absent, as
+  before (`assurance` is a separate field, derived on both paths and
+  unchanged). When present, the field is a
   two-key object — `runningBinaryPath` (the resolved realpath of the
   binary that actually executed) and `repoToplevel` (the settle
   invocation's `cwd`, which this repo already treats as its root
@@ -204,6 +207,28 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
 - `.cadence/phases/<phase>/<id>-SUMMARY.md` — human-readable rendered view
 - `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` — plan-review findings
   (written at `draft approve` when `plan-review` fires)
+- Phase 247: when a refused settle recorded non-empty `codeReview`/
+  `securityAudit` findings (the case above that gets a `contentHash`), it
+  additionally writes an immutable per-attempt sibling pair —
+  `.cadence/phases/<phase>/<id>-refused-<completedAt-slug>-SUMMARY-
+  snapshot.json`/`.md`, timestamp-slugged from that attempt's own
+  `completedAt` — containing identical content to the canonical refused
+  record at that moment. A later settle attempt for the same draft
+  overwrites the canonical `<id>-SUMMARY.json`/`.md` as before, but never
+  touches a prior attempt's sibling, so a convergence reloop's earlier
+  refused findings survive on disk even after a later attempt succeeds or
+  refuses again. The name is deliberately NOT `<id>-SUMMARY.json`/`.md` —
+  every current SUMMARY-discovery consumer (`mcp/resources.ts`'s
+  `endsWith`-based lookup, `git/diff-strict.ts`'s regex and git pathspec,
+  `cadence summary render`/`verify`'s and `verify phase`'s exact-path
+  construction) is invisible to it by construction, so include the wider
+  `-SUMMARY-snapshot.*` glob (not just `-SUMMARY.*`) when staging a
+  settle commit that produced one — see the single-commit convention
+  below. Best-effort: a sibling-write failure is reported on stderr but
+  never changes the canonical write or settle's exit code. The exported
+  `refusedSnapshotArtifactBase` (`packages/core/src/services/settle.ts`)
+  is the one place this naming scheme is defined — reuse it rather than
+  reconstructing the pattern.
 
 ### State files
 
@@ -241,7 +266,7 @@ verified the work:
 
 | Commit | Prefix | Contents |
 |---|---|---|
-| Settle commit | `feat:` / `docs:` / `fix:` etc. | Source changes, tests, documentation, and phase artifacts (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`, `-PLAN-REVIEW.json`) together — `STATE.md`/`state.json` are gitignored and never committed |
+| Settle commit | `feat:` / `docs:` / `fix:` etc. | Source changes, tests, documentation, and phase artifacts (`-DRAFT.md`, `-PROGRESS.json`, `-SUMMARY.*`, `-SUMMARY-snapshot.*` when a refused attempt recorded findings — phase 247, `-PLAN-REVIEW.json`) together — `STATE.md`/`state.json` are gitignored and never committed |
 
 **Why one commit?** The gates already re-verified the work before this
 point — there's nothing left to prove by holding artifacts back for a

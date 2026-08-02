@@ -1874,35 +1874,6 @@
       "updatedAt": "2026-08-01T02:40:28.981Z"
     },
     {
-      "id": "rec-20260801-005",
-      "title": "A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle",
-      "summary": "runSettleGates calls mergeInto(acc, res) (registry.ts) BEFORE the refuse check, so acc.codeReview (anchored + identified findings, including criteria-gap findings) is populated even when a later gate in GATE_ORDER refuses. But writeRefusedSettleSummary (settle.ts) takes only gates provenance, never acc -- codeReview is absent from the persisted SUMMARY on every refused settle, not just the 'code-review itself refuses' case rec-20260731-010 already names. Example: code-review passes with a declared gap, then security-audit (runs later in GATE_ORDER) refuses -- the gap prints to stderr once and then vanishes from the artifact, contradicting code-review.ts's own comment that findings land in summaryPatch.codeReview 'on EVERY return path.' Agent-reported 2026-08-01 via independent review, not yet independently re-verified line-by-line -- verify before scoping a fix.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/registry.ts",
-        "packages/core/src/services/settle.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260801-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260801-0100",
-      "createdAt": "2026-08-01T02:40:29.145Z",
-      "updatedAt": "2026-08-01T02:40:29.145Z"
-    },
-    {
       "id": "rec-20260801-006",
       "title": "deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case",
       "summary": "assurance-record.ts documents 'weak' as covering '...or simply no ACs at all with no verifier signal either,' but zero ACs with zero verifier identity actually trips the first branch (vacuously true when acResults is empty) and returns 'unverified', not 'weak' -- doc and code disagree with no test pinning either. Also untested: deriveAssuranceRecord(realProviderGates, []) (zero ACs, real verifier) traces by hand to 'mixed', but the one test exercising this shape only asserts verifierRollup, never .overall. Agent-reported 2026-08-01.",
@@ -1961,34 +1932,6 @@
       "scoutId": "scout-20260801-0100",
       "createdAt": "2026-08-01T02:40:44.959Z",
       "updatedAt": "2026-08-01T02:40:44.959Z"
-    },
-    {
-      "id": "rec-20260801-011",
-      "title": "Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings",
-      "summary": "settle.ts's refused-settle path (~line 778) and its success path (~line 1150) both write to the identical `${activePhase}/${activeDraft}-SUMMARY.json` path derived from `state.activeDraft`. In a convergence re-loop, attempt-1's refused SUMMARY (and any code-review findings it recorded) is silently overwritten the moment attempt-2 succeeds -- no snapshot, no history. Surfaced during independent review of phase 246 (rec-20260801-010 scoping): a reloop pair is plausibly the cheapest real-provider evidence that an LLM verifier re-words the same defect across attempts (the exact drift phase-246's trigger needs to observe), and it is currently destroyed by design rather than preserved. Needs a decision: is losing attempt-1 findings acceptable (nothing consumes them today), or should refused-settle SUMMARYs be preserved (e.g. a per-attempt suffix) before anything is built on top of that data.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/services/settle.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260801-016"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260801-phase246-review",
-      "createdAt": "2026-08-01T21:34:26.911Z",
-      "updatedAt": "2026-08-01T21:34:26.911Z"
     }
   ],
   "archived": [
@@ -5856,11 +5799,75 @@
         "dec-20260801-003"
       ],
       "convertedToPhaseId": "246-finding-identity-message-drift",
-      "scoutId": "scout-20260801-0100",
-      "createdAt": "2026-08-01T17:29:08.286Z",
-      "updatedAt": "2026-08-01T21:40:14.142Z",
       "shippedRef": "PR #356",
+      "scoutId": "scout-20260801-0100",
       "archivedAt": "2026-08-01T21:40:14.142Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-01T17:29:08.286Z",
+      "updatedAt": "2026-08-01T21:40:14.142Z"
+    },
+    {
+      "id": "rec-20260801-011",
+      "title": "Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings",
+      "summary": "settle.ts's refused-settle path (~line 778) and its success path (~line 1150) both write to the identical `${activePhase}/${activeDraft}-SUMMARY.json` path derived from `state.activeDraft`. In a convergence re-loop, attempt-1's refused SUMMARY (and any code-review findings it recorded) is silently overwritten the moment attempt-2 succeeds -- no snapshot, no history. Surfaced during independent review of phase 246 (rec-20260801-010 scoping): a reloop pair is plausibly the cheapest real-provider evidence that an LLM verifier re-words the same defect across attempts (the exact drift phase-246's trigger needs to observe), and it is currently destroyed by design rather than preserved. Needs a decision: is losing attempt-1 findings acceptable (nothing consumes them today), or should refused-settle SUMMARYs be preserved (e.g. a per-attempt suffix) before anything is built on top of that data.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260801-016"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "247-refused-settle-summary-preservation",
+      "shippedRef": "phase 247-refused-settle-summary-preservation (PR pending)",
+      "scoutId": "scout-20260801-phase246-review",
+      "archivedAt": "2026-08-02T00:40:14.869Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-01T21:34:26.911Z",
+      "updatedAt": "2026-08-02T00:40:14.869Z"
+    },
+    {
+      "id": "rec-20260801-005",
+      "title": "A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle",
+      "summary": "runSettleGates calls mergeInto(acc, res) (registry.ts) BEFORE the refuse check, so acc.codeReview (anchored + identified findings, including criteria-gap findings) is populated even when a later gate in GATE_ORDER refuses. But writeRefusedSettleSummary (settle.ts) takes only gates provenance, never acc -- codeReview is absent from the persisted SUMMARY on every refused settle, not just the 'code-review itself refuses' case rec-20260731-010 already names. Example: code-review passes with a declared gap, then security-audit (runs later in GATE_ORDER) refuses -- the gap prints to stderr once and then vanishes from the artifact, contradicting code-review.ts's own comment that findings land in summaryPatch.codeReview 'on EVERY return path.' Agent-reported 2026-08-01 via independent review, not yet independently re-verified line-by-line -- verify before scoping a fix.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/registry.ts",
+        "packages/core/src/services/settle.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260801-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260801-0100",
+      "createdAt": "2026-08-01T02:40:29.145Z",
+      "updatedAt": "2026-08-02T00:40:15.033Z",
+      "shippedRef": "phase 247-refused-settle-summary-preservation (PR pending) — same writer-threading fix as rec-20260801-011's T1",
+      "archivedAt": "2026-08-02T00:40:15.033Z",
       "archiveReason": "shipped"
     }
   ]
