@@ -1393,6 +1393,27 @@
       "kind": "note",
       "summary": "Empirically verified 2026-08-02 during phase 247's independent whole-branch review: grep for codeReview/securityAudit in summary-render.ts returns zero hits; a hand-built refused SUMMARY with a HIGH finding, rendered via the real CLI, omits the finding entirely from SUMMARY.md while the JSON carries it correctly.",
       "createdAt": "2026-08-02T00:36:54.293Z"
+    },
+    {
+      "id": "ev-20260802-009",
+      "recommendationId": "rec-20260731-010",
+      "kind": "note",
+      "summary": "Persistence half shipped via phase 247 (PR #357, main@afcb90a, re-verified unchanged at main@59a2116e): writeRefusedSettleSummary now threads acc.codeReview/acc.securityAudit with the success path's conditional-spread shape, attaches contentHash when findings are non-empty, and preserves findings-bearing refused attempts as immutable -SUMMARY-snapshot siblings. The summary's claim that a refused settle's findings are not even persisted is stale as of 247. Routing half is disposed by dec-20260802-003 (already recorded, superseding the decision text originally sketched for this rec) — ledger routing stays finalize-only, trigger amended to name rec-20260801-012's finding that real-provider gate throws are structurally unreachable under this repo's normal auto-profile, headless-agent operating mode.",
+      "createdAt": "2026-08-02T02:20:34.309Z"
+    },
+    {
+      "id": "ev-20260802-010",
+      "recommendationId": "rec-20260712-006",
+      "kind": "note",
+      "summary": "Joined to the finding-durability cluster. Verified at main@afcb90a: the post-gate-loop refusal families in services/settle.ts still return exitCode 1 with no SUMMARY write (map each ok:false exit site to its owning family before drafting — expected members: AC derivation, anomaly/skill-audit, evidence floor). Phase 247 sharpened the asymmetry: a gate-loop refusal now persists findings, a contentHash, and a tamper-evident sibling, while an evidence-floor refusal later in the same service persists nothing. Fix is now trivially specified: those families call the writer 247 hardened. Scoped as phase 249.",
+      "createdAt": "2026-08-02T02:20:40.502Z"
+    },
+    {
+      "id": "ev-20260802-011",
+      "recommendationId": "rec-20260801-004",
+      "kind": "note",
+      "summary": "Re-verified at main@afcb90a (confirmed unchanged at main@59a2116e): both catch blocks unchanged by phase 247 — a bypassed verifier throw still returns bare outcome pass with no flags, and registry persists status ran with empty verifier identity. Urgency shifted: codeReview.provider has been host-cli in this repo's live config since PR #351 (confirmed still host-cli), so a credential expiry or network failure plus --force is now a reachable daily-dogfooding event that records as a clean real-provider pass. Scoped as phase 248; land before real-provider reloop dogfooding accumulates any such records.",
+      "createdAt": "2026-08-02T02:20:47.769Z"
     }
   ]
 }

@@ -782,7 +782,7 @@
       "summary": "Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.",
       "source": "manual",
       "status": "candidate",
-      "readiness": "raw-idea",
+      "readiness": "ready-for-cadence-spec",
       "priority": "low",
       "leverageScore": 5,
       "riskScore": 5,
@@ -797,12 +797,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260712-006"
+        "ev-20260712-006",
+        "ev-20260802-010"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-07-12T04:25:17.712Z",
-      "updatedAt": "2026-07-12T04:25:17.712Z"
+      "updatedAt": "2026-08-02T02:20:40.663Z"
     },
     {
       "id": "rec-20260712-009",
@@ -1731,7 +1732,7 @@
       "title": "High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)",
       "summary": "Phase 242's finding-to-ledger routing (settle.ts, finalizeAndCloseSettle) only ever runs on a settle that reaches finalization. collectHighFindings (gates/code-review.ts) fails the code-review gate on any 'high' severity finding, so settle takes the writeRefusedSettleSummary path instead -- finalizeAndCloseSettle, and therefore the routing step, is never reached. Verified live: a settle with a high-severity finding exits 1, the refused SUMMARY has no codeReview key at all (the findings aren't even persisted), and no ledger entry is created. The findings only route if the operator bypasses via --force/--allow-code-review-failure. This is consistent with phase 242's DRAFT (AC-1 says 'when settle finalizes'), so it is not a phase-242 defect -- but it means the single most severe class of finding is the one class the routing feature never captures by default. Worth a decision: should a refused settle still route the findings from its failed attempt (there is real diagnostic value in a high-severity finding landing in the ledger even though the phase didn't settle), or is 'only route on a clean settle' the deliberately narrower, safer scope?",
       "source": "manual",
-      "status": "candidate",
+      "status": "deferred",
       "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
@@ -1747,7 +1748,8 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260731-010"
+        "ev-20260731-010",
+        "ev-20260802-009"
       ],
       "assumptionIds": [],
       "decisionIds": [
@@ -1755,7 +1757,7 @@
       ],
       "scoutId": "scout-20260731-kernel-ledger-routing",
       "createdAt": "2026-07-31T23:57:57.980Z",
-      "updatedAt": "2026-07-31T23:57:57.980Z"
+      "updatedAt": "2026-08-02T02:21:43.503Z"
     },
     {
       "id": "rec-20260731-005",
@@ -1851,7 +1853,7 @@
       "summary": "code-review.ts and security-audit.ts's catch(err) blocks return {outcome:'pass'} with no flags at all when --allow-code-review-failure/--allow-security-audit-failure/--force bypasses a real-provider throw (revoked key, rate limit, network blip). Unlike build-test-must-pass/boundary-scan/test-coverage (which set a dedicated bypass flag registry.ts turns into an explicit skipReason provenance entry) or deep-verify.ts (which sets flags.verifierFailure={message,provider} on its own throw path), these two gates set nothing. verifierIdentityProvenance(res) then returns {} since res.flags?.verifierIdentity is undefined. Verified directly against source 2026-08-01: the persisted SUMMARY.gates[] entry reads as {gate:'code-review',status:'ran'} -- indistinguishable from a clean real-provider pass, with no skipReason explaining a failure was bypassed. This lands on exactly the two gates phase 232 exists to make trustworthy. deriveAssuranceRecord under-reports (drops the gate from verifierRollup) rather than over-reports, so it is not a spoofing risk, but the raw gates[] provenance record is actively misleading about what 'ran' means here.",
       "source": "manual",
       "status": "candidate",
-      "readiness": "needs-decision",
+      "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1867,13 +1869,14 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260801-004"
+        "ev-20260801-004",
+        "ev-20260802-011"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "scoutId": "scout-20260801-0100",
       "createdAt": "2026-08-01T02:40:28.981Z",
-      "updatedAt": "2026-08-01T02:40:28.981Z"
+      "updatedAt": "2026-08-02T02:20:47.935Z"
     },
     {
       "id": "rec-20260801-006",

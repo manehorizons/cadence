@@ -411,7 +411,7 @@ cadence draft add-ac and add-task never warn when appending a new AC/task after 
 ## rec-20260712-006 — Settle-internal refusal paths still write no SUMMARY
 
 - status: candidate
-- ready: raw-idea
+- ready: ready-for-cadence-spec
 - priority: low
 - leverage: 5/10
 - risk: 5/10
@@ -420,6 +420,7 @@ cadence draft add-ac and add-task never warn when appending a new AC/task after 
 - areas: core, settle
 - files: packages/core/src/parse/summary-writer.ts
 - evidence: Reconstructed stub: original entry (rec-20260712-003, logged during the phase 170 session, 2026-07-12) was lost to an unrelated git reset --hard before being committed. Recreated from context earlier in this session.
+- evidence: Joined to the finding-durability cluster. Verified at main@afcb90a: the post-gate-loop refusal families in services/settle.ts still return exitCode 1 with no SUMMARY write (map each ok:false exit site to its owning family before drafting — expected members: AC derivation, anomaly/skill-audit, evidence floor). Phase 247 sharpened the asymmetry: a gate-loop refusal now persists findings, a contentHash, and a tamper-evident sibling, while an evidence-floor refusal later in the same service persists nothing. Fix is now trivially specified: those families call the writer 247 hardened. Scoped as phase 249.
 - next: cadence milestone propose
 
 Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.
@@ -932,7 +933,7 @@ The new 'Finding identity, disposition, and type convergence (phase 236)' subsec
 
 ## rec-20260731-010 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)
 
-- status: candidate
+- status: deferred
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10
@@ -943,6 +944,7 @@ The new 'Finding identity, disposition, and type convergence (phase 236)' subsec
 - files: packages/core/src/services/settle.ts, packages/core/src/gates/code-review.ts
 - decisions: dec-20260802-003 (active)
 - evidence: Surfaced by independent review of phase 242 T3 (2026-07-31), verified live: a forced high-severity settle exits 1 with lastGate.reason naming code-review, no codeReview key in the refused SUMMARY, no ledger entry
+- evidence: Persistence half shipped via phase 247 (PR #357, main@afcb90a, re-verified unchanged at main@59a2116e): writeRefusedSettleSummary now threads acc.codeReview/acc.securityAudit with the success path's conditional-spread shape, attaches contentHash when findings are non-empty, and preserves findings-bearing refused attempts as immutable -SUMMARY-snapshot siblings. The summary's claim that a refused settle's findings are not even persisted is stale as of 247. Routing half is disposed by dec-20260802-003 (already recorded, superseding the decision text originally sketched for this rec) — ledger routing stays finalize-only, trigger amended to name rec-20260801-012's finding that real-provider gate throws are structurally unreachable under this repo's normal auto-profile, headless-agent operating mode.
 - next: cadence milestone propose
 
 Phase 242's finding-to-ledger routing (settle.ts, finalizeAndCloseSettle) only ever runs on a settle that reaches finalization. collectHighFindings (gates/code-review.ts) fails the code-review gate on any 'high' severity finding, so settle takes the writeRefusedSettleSummary path instead -- finalizeAndCloseSettle, and therefore the routing step, is never reached. Verified live: a settle with a high-severity finding exits 1, the refused SUMMARY has no codeReview key at all (the findings aren't even persisted), and no ledger entry is created. The findings only route if the operator bypasses via --force/--allow-code-review-failure. This is consistent with phase 242's DRAFT (AC-1 says 'when settle finalizes'), so it is not a phase-242 defect -- but it means the single most severe class of finding is the one class the routing feature never captures by default. Worth a decision: should a refused settle still route the findings from its failed attempt (there is real diagnostic value in a high-severity finding landing in the ledger even though the phase didn't settle), or is 'only route on a clean settle' the deliberately narrower, safer scope?
@@ -998,7 +1000,7 @@ docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, ac
 ## rec-20260801-004 — code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw
 
 - status: candidate
-- ready: needs-decision
+- ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -1007,6 +1009,7 @@ docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, ac
 - areas: core
 - files: packages/core/src/gates/code-review.ts, packages/core/src/gates/security-audit.ts, packages/core/src/gates/registry.ts
 - evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source read
+- evidence: Re-verified at main@afcb90a (confirmed unchanged at main@59a2116e): both catch blocks unchanged by phase 247 — a bypassed verifier throw still returns bare outcome pass with no flags, and registry persists status ran with empty verifier identity. Urgency shifted: codeReview.provider has been host-cli in this repo's live config since PR #351 (confirmed still host-cli), so a credential expiry or network failure plus --force is now a reachable daily-dogfooding event that records as a clean real-provider pass. Scoped as phase 248; land before real-provider reloop dogfooding accumulates any such records.
 - next: cadence milestone propose
 
 code-review.ts and security-audit.ts's catch(err) blocks return {outcome:'pass'} with no flags at all when --allow-code-review-failure/--allow-security-audit-failure/--force bypasses a real-provider throw (revoked key, rate limit, network blip). Unlike build-test-must-pass/boundary-scan/test-coverage (which set a dedicated bypass flag registry.ts turns into an explicit skipReason provenance entry) or deep-verify.ts (which sets flags.verifierFailure={message,provider} on its own throw path), these two gates set nothing. verifierIdentityProvenance(res) then returns {} since res.flags?.verifierIdentity is undefined. Verified directly against source 2026-08-01: the persisted SUMMARY.gates[] entry reads as {gate:'code-review',status:'ran'} -- indistinguishable from a clean real-provider pass, with no skipReason explaining a failure was bypassed. This lands on exactly the two gates phase 232 exists to make trustworthy. deriveAssuranceRecord under-reports (drops the gate from verifierRollup) rather than over-reports, so it is not a spoofing risk, but the raw gates[] provenance record is actively misleading about what 'ran' means here.
