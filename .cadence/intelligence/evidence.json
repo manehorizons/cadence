@@ -1414,6 +1414,13 @@
       "kind": "note",
       "summary": "Re-verified at main@afcb90a (confirmed unchanged at main@59a2116e): both catch blocks unchanged by phase 247 — a bypassed verifier throw still returns bare outcome pass with no flags, and registry persists status ran with empty verifier identity. Urgency shifted: codeReview.provider has been host-cli in this repo's live config since PR #351 (confirmed still host-cli), so a credential expiry or network failure plus --force is now a reachable daily-dogfooding event that records as a clean real-provider pass. Scoped as phase 248; land before real-provider reloop dogfooding accumulates any such records.",
       "createdAt": "2026-08-02T02:20:47.769Z"
+    },
+    {
+      "id": "ev-20260802-012",
+      "recommendationId": "rec-20260802-003",
+      "kind": "note",
+      "summary": "cadence intelligence audit at main@59a2116e (2026-08-02): 20 orphan decisions + 125 orphan evidence entries, oldest dated 2026-06-11; sample checked (rec-20260711-001) confirmed absent from both recommendations[] (69 entries) and archived[] (115 entries).",
+      "createdAt": "2026-08-02T02:22:38.945Z"
     }
   ]
 }

@@ -1093,3 +1093,19 @@ One arc, decided (dec-20260802-001/002/003) and partially landed as phase 247 (w
 - next: cadence milestone propose
 
 Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/services/summary-render.ts renders AC / Tasks / Gates / Gate bypasses / Assurance / Decisions / Deferred sections but has zero handling for the codeReview or securityAudit fields, for ANY SUMMARY (success or refused) -- this predates phase 247 and is not scoped to it. Phase 247 makes the gap newly consequential: it now writes an immutable per-attempt sibling .md specifically so a human can inspect what a refused/abandoned attempt found, but the .md half of that record is byte-identical to the canonical refused SUMMARY.md and renders none of the findings that caused the refusal -- verified empirically: a hand-built refused-shaped SUMMARY with one HIGH code-review finding, rendered via the real cadence summary render, shows the content hash and the refused gate but not one word of the finding. The data is JSON-only. Fix is out of phase 247's DRAFT scope (Boundaries did not ask for a render change) and was not built. Worth a dedicated phase: add a codeReview/securityAudit findings section to summary-render.ts, following the same JSON-only-so-far -> now-rendered precedent as the phase-170 gates[].reason field (docs/concepts.md notes this exact pattern already).
+
+## rec-20260802-003 — Intelligence ledger has 145 orphan decision/evidence links to recs absent from both active and archived arrays
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, intelligence
+- files: .cadence/intelligence/recommendations.json
+- evidence: cadence intelligence audit at main@59a2116e (2026-08-02): 20 orphan decisions + 125 orphan evidence entries, oldest dated 2026-06-11; sample checked (rec-20260711-001) confirmed absent from both recommendations[] (69 entries) and archived[] (115 entries).
+- next: cadence milestone propose
+
+cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence entries whose referenced rec ids exist in neither the 69-entry active recommendations array nor the 115-entry archived array in .cadence/intelligence/recommendations.json — e.g. rec-20260711-001, referenced by dec-20260711-001 and ev-20260711-*, is genuinely absent from both, not merely archived. Orphans date back to 2026-06-11, so this predates any known reconciliation pass. Verified at main@59a2116e (this session's own Part 1 evidence/decision additions — ev-20260802-009/010/011, dec-20260802-003 — were checked and are NOT part of this orphan set, so the finding is pre-existing and unrelated to that work). The audit tool's own remediation text calls restore-or-remove an operator decision; 'cadence intelligence reconcile' only re-derives rec-side link arrays and does not resolve orphan subjects. Needs scoping: how far back the gap goes, whether it's from lost commits (git reset --hard has bitten this ledger before per rec-20260712-006's own evidence) or a reconcile bug, and whether restoring vs. pruning is right per orphan.

@@ -2025,6 +2025,34 @@
       "scoutId": "scout-20260801-claude-finding-durability",
       "createdAt": "2026-08-02T00:36:54.293Z",
       "updatedAt": "2026-08-02T00:36:54.293Z"
+    },
+    {
+      "id": "rec-20260802-003",
+      "title": "Intelligence ledger has 145 orphan decision/evidence links to recs absent from both active and archived arrays",
+      "summary": "cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence entries whose referenced rec ids exist in neither the 69-entry active recommendations array nor the 115-entry archived array in .cadence/intelligence/recommendations.json — e.g. rec-20260711-001, referenced by dec-20260711-001 and ev-20260711-*, is genuinely absent from both, not merely archived. Orphans date back to 2026-06-11, so this predates any known reconciliation pass. Verified at main@59a2116e (this session's own Part 1 evidence/decision additions — ev-20260802-009/010/011, dec-20260802-003 — were checked and are NOT part of this orphan set, so the finding is pre-existing and unrelated to that work). The audit tool's own remediation text calls restore-or-remove an operator decision; 'cadence intelligence reconcile' only re-derives rec-side link arrays and does not resolve orphan subjects. Needs scoping: how far back the gap goes, whether it's from lost commits (git reset --hard has bitten this ledger before per rec-20260712-006's own evidence) or a reconcile bug, and whether restoring vs. pruning is right per orphan.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        ".cadence/intelligence/recommendations.json"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260802-012"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-02T02:22:38.945Z",
+      "updatedAt": "2026-08-02T02:22:38.945Z"
     }
   ],
   "archived": [
