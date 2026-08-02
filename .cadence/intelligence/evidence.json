@@ -1332,8 +1332,99 @@
       "createdAt": "2026-08-01T21:34:26.911Z"
     },
     {
+      "id": "ev-20260801-017",
+      "recommendationId": "rec-20260801-012",
+      "kind": "note",
+      "summary": "Verified 2026-08-01: config.json profile=auto; engine.ts DELTAS.auto.{quick-fix,standard,complex} all omit 'code-review' (only DELTAS.standard.complex and DELTAS.strict.{standard,complex} include it); host-cli-client.ts:333 isSelfInvocation() checked inside spawnCapture(), the shared spawn path for every host-cli call, not scoped to spec-review.",
+      "createdAt": "2026-08-01T22:24:37.054Z"
+    },
+    {
       "id": "ev-20260802-001",
+      "recommendationId": "rec-20260731-010",
+      "kind": "note",
+      "summary": "Persistence half now recorded as dec-20260802-001 (attached to rec-20260801-005, which subsumed this rec's persistence mechanism -- both are the same writer-threading fix in writeRefusedSettleSummary, shipped via phase 247 T1). Routing half recorded separately as dec-20260802-003 (this rec).",
+      "createdAt": "2026-08-02T00:04:41.749Z"
+    },
+    {
+      "id": "ev-20260802-002",
+      "recommendationId": "rec-20260801-005",
+      "kind": "note",
+      "summary": "Independently re-verified against main@361f6490 (2026-08-02; zero source drift from the 98b6a15 pin, confirmed via git diff on registry.ts/settle.ts across the 3 intervening handoff/ranking-chore commits). registry.ts:209 runs mergeInto before the refuse check at ~211-218, code-review's refuse paths return summaryPatch.codeReview on every path, and writeRefusedSettleSummary (settle.ts:751, sole call site settle.ts:1357) received gates but not acc -- confirmed as a pure writer-threading gap, not a collection gap. The 'verify before scoping' caveat on this rec's original evidence is now discharged. Fix recorded as dec-20260802-001 and shipped via phase 247 (worktree phase247-refused-settle-summary, DRAFT 247-01) T1 -- independently re-run: 34/34 settle.test.ts tests pass including the two new phase-247 T1 tests.",
+      "createdAt": "2026-08-02T00:05:48.301Z"
+    },
+    {
+      "id": "ev-20260802-003",
+      "recommendationId": "rec-20260731-010",
+      "kind": "note",
+      "summary": "Mechanism re-verified against main@361f6490 (2026-08-02, zero drift from the original 2026-07-31 finding). Both halves now decided: persistence half via dec-20260802-001 (shared fix with rec-20260801-005, phase 247 T1, independently test-verified); routing half via dec-20260802-003 (stays finalize-only, trigger amended per rec-20260801-012's real-provider-unreachability finding).",
+      "createdAt": "2026-08-02T00:05:48.468Z"
+    },
+    {
+      "id": "ev-20260802-004",
+      "recommendationId": "rec-20260712-006",
+      "kind": "note",
+      "summary": "Joined to the finding-durability cluster (scout-20260801-claude-finding-durability). The three post-gate refusal families (deriveSettleAcResults ~867, runAnomalyAndSkillAuditChecks ~965, deriveEvidenceAndCheckFloor ~1059 at main@361f6490, unchanged from the original 98b6a15 verification) still return exitCode 1 with no SUMMARY write -- confirmed via grep: writeRefusedSettleSummary has exactly one call site (settle.ts:1357), the gate-loop refusal only. Phase 247 (dec-20260802-001, dec-20260802-002) fixed the gate-loop refusal family only and explicitly excludes this one (2026-08-02 operator decision: keep phase 247's scope tight, avoid the Multi-Phase Commit failure mode on a DRAFT already mid-BUILD). This rec's fix is deliberately scoped as ITS OWN follow-on phase, to land after phase 247 settles, reusing the same acc-threading pattern dec-20260802-001 established.",
+      "createdAt": "2026-08-02T00:05:48.649Z"
+    },
+    {
+      "id": "ev-20260802-005",
+      "recommendationId": "rec-20260801-004",
+      "kind": "note",
+      "summary": "Re-verified at main@361f6490 (2026-08-02, zero source drift from the 98b6a15 pin): both code-review.ts and security-audit.ts catch blocks return bare {outcome:'pass'} on a bypassed throw -- no flags, no summaryPatch -- so registry.ts:248 persists status:'ran' with empty verifier identity. Non-bypassed throw path refuses honestly; only the bypass branch misreports. Independent of phase 247's Slice 2/3 work (in progress under a separate concurrent session on the same worktree) -- can be drafted as its own phase in parallel or next, unblocked.",
+      "createdAt": "2026-08-02T00:05:48.812Z"
+    },
+    {
+      "id": "ev-20260802-006",
+      "recommendationId": "rec-20260801-011",
+      "kind": "note",
+      "summary": "Fix recorded as dec-20260802-002 (timestamp-slugged sibling artifact, V-b-confirmed safe against every current SUMMARY consumer). Implementation status as of 2026-08-02: T1 (finding-threading, shared with rec-20260801-005) and T2 (clock seam) done; T3 (sibling write) and T4 (multi-attempt tests) in progress under a second, concurrent Claude Code session in the same worktree (phase247-refused-settle-summary) -- not built by this session, to avoid a two-sessions-same-draft collision.",
+      "createdAt": "2026-08-02T00:05:48.976Z"
+    },
+    {
+      "id": "ev-20260802-007",
       "recommendationId": "rec-20260802-001",
+      "kind": "note",
+      "summary": "Five-rec cluster verified line-by-line at main@361f6490 (re-verified from the original 98b6a15 pin, zero source drift): acc payloads discarded at writeRefusedSettleSummary until phase 247's T1 fix, three silent post-gate refusal families still unaddressed (rec-20260712-006, follow-on), same-path SUMMARY overwrite on reloop now fixed by phase 247's T2/T3 (T3 in progress), and bare {outcome:'pass'} bypass catches in both review gates (rec-20260801-004, not yet started). Data loss was anti-correlated with severity: the cleanest settles kept the most complete records.",
+      "createdAt": "2026-08-02T00:06:05.610Z"
+    },
+    {
+      "id": "ev-20260802-008",
+      "recommendationId": "rec-20260802-002",
+      "kind": "note",
+      "summary": "Empirically verified 2026-08-02 during phase 247's independent whole-branch review: grep for codeReview/securityAudit in summary-render.ts returns zero hits; a hand-built refused SUMMARY with a HIGH finding, rendered via the real CLI, omits the finding entirely from SUMMARY.md while the JSON carries it correctly.",
+      "createdAt": "2026-08-02T00:36:54.293Z"
+    },
+    {
+      "id": "ev-20260802-009",
+      "recommendationId": "rec-20260731-010",
+      "kind": "note",
+      "summary": "Persistence half shipped via phase 247 (PR #357, main@afcb90a, re-verified unchanged at main@59a2116e): writeRefusedSettleSummary now threads acc.codeReview/acc.securityAudit with the success path's conditional-spread shape, attaches contentHash when findings are non-empty, and preserves findings-bearing refused attempts as immutable -SUMMARY-snapshot siblings. The summary's claim that a refused settle's findings are not even persisted is stale as of 247. Routing half is disposed by dec-20260802-003 (already recorded, superseding the decision text originally sketched for this rec) — ledger routing stays finalize-only, trigger amended to name rec-20260801-012's finding that real-provider gate throws are structurally unreachable under this repo's normal auto-profile, headless-agent operating mode.",
+      "createdAt": "2026-08-02T02:20:34.309Z"
+    },
+    {
+      "id": "ev-20260802-010",
+      "recommendationId": "rec-20260712-006",
+      "kind": "note",
+      "summary": "Joined to the finding-durability cluster. Verified at main@afcb90a: the post-gate-loop refusal families in services/settle.ts still return exitCode 1 with no SUMMARY write (map each ok:false exit site to its owning family before drafting — expected members: AC derivation, anomaly/skill-audit, evidence floor). Phase 247 sharpened the asymmetry: a gate-loop refusal now persists findings, a contentHash, and a tamper-evident sibling, while an evidence-floor refusal later in the same service persists nothing. Fix is now trivially specified: those families call the writer 247 hardened. Scoped as phase 249.",
+      "createdAt": "2026-08-02T02:20:40.502Z"
+    },
+    {
+      "id": "ev-20260802-011",
+      "recommendationId": "rec-20260801-004",
+      "kind": "note",
+      "summary": "Re-verified at main@afcb90a (confirmed unchanged at main@59a2116e): both catch blocks unchanged by phase 247 — a bypassed verifier throw still returns bare outcome pass with no flags, and registry persists status ran with empty verifier identity. Urgency shifted: codeReview.provider has been host-cli in this repo's live config since PR #351 (confirmed still host-cli), so a credential expiry or network failure plus --force is now a reachable daily-dogfooding event that records as a clean real-provider pass. Scoped as phase 248; land before real-provider reloop dogfooding accumulates any such records.",
+      "createdAt": "2026-08-02T02:20:47.769Z"
+    },
+    {
+      "id": "ev-20260802-012",
+      "recommendationId": "rec-20260802-003",
+      "kind": "note",
+      "summary": "cadence intelligence audit at main@59a2116e (2026-08-02): 20 orphan decisions + 125 orphan evidence entries, oldest dated 2026-06-11; sample checked (rec-20260711-001) confirmed absent from both recommendations[] (69 entries) and archived[] (115 entries).",
+      "createdAt": "2026-08-02T02:22:38.945Z"
+    },
+    {
+      "id": "ev-20260802-013",
+      "recommendationId": "rec-20260802-004",
       "kind": "note",
       "summary": "Surfaced during phase 248's SPEC authoring (2026-08-02): registry.ts's dispatch loop has no branch reading res.flags?.verifierFailure at all — confirmed by reading the full bypass-ladder chain (self-guard predicate, build-test-must-pass x2, boundary-scan, test-coverage, code-review/security-audit's new reviewVerifierFailure branch) and finding none match deep-verify's own verifierFailure flag.",
       "createdAt": "2026-08-02T04:09:25.988Z"

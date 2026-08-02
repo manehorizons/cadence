@@ -411,7 +411,7 @@ cadence draft add-ac and add-task never warn when appending a new AC/task after 
 ## rec-20260712-006 — Settle-internal refusal paths still write no SUMMARY
 
 - status: candidate
-- ready: raw-idea
+- ready: ready-for-cadence-spec
 - priority: low
 - leverage: 5/10
 - risk: 5/10
@@ -420,6 +420,7 @@ cadence draft add-ac and add-task never warn when appending a new AC/task after 
 - areas: core, settle
 - files: packages/core/src/parse/summary-writer.ts
 - evidence: Reconstructed stub: original entry (rec-20260712-003, logged during the phase 170 session, 2026-07-12) was lost to an unrelated git reset --hard before being committed. Recreated from context earlier in this session.
+- evidence: Joined to the finding-durability cluster. Verified at main@afcb90a: the post-gate-loop refusal families in services/settle.ts still return exitCode 1 with no SUMMARY write (map each ok:false exit site to its owning family before drafting — expected members: AC derivation, anomaly/skill-audit, evidence floor). Phase 247 sharpened the asymmetry: a gate-loop refusal now persists findings, a contentHash, and a tamper-evident sibling, while an evidence-floor refusal later in the same service persists nothing. Fix is now trivially specified: those families call the writer 247 hardened. Scoped as phase 249.
 - next: cadence milestone propose
 
 Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.
@@ -932,7 +933,7 @@ The new 'Finding identity, disposition, and type convergence (phase 236)' subsec
 
 ## rec-20260731-010 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)
 
-- status: candidate
+- status: deferred
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10
@@ -941,7 +942,9 @@ The new 'Finding identity, disposition, and type convergence (phase 236)' subsec
 - decay: fresh
 - areas: core
 - files: packages/core/src/services/settle.ts, packages/core/src/gates/code-review.ts
+- decisions: dec-20260802-003 (active)
 - evidence: Surfaced by independent review of phase 242 T3 (2026-07-31), verified live: a forced high-severity settle exits 1 with lastGate.reason naming code-review, no codeReview key in the refused SUMMARY, no ledger entry
+- evidence: Persistence half shipped via phase 247 (PR #357, main@afcb90a, re-verified unchanged at main@59a2116e): writeRefusedSettleSummary now threads acc.codeReview/acc.securityAudit with the success path's conditional-spread shape, attaches contentHash when findings are non-empty, and preserves findings-bearing refused attempts as immutable -SUMMARY-snapshot siblings. The summary's claim that a refused settle's findings are not even persisted is stale as of 247. Routing half is disposed by dec-20260802-003 (already recorded, superseding the decision text originally sketched for this rec) — ledger routing stays finalize-only, trigger amended to name rec-20260801-012's finding that real-provider gate throws are structurally unreachable under this repo's normal auto-profile, headless-agent operating mode.
 - next: cadence milestone propose
 
 Phase 242's finding-to-ledger routing (settle.ts, finalizeAndCloseSettle) only ever runs on a settle that reaches finalization. collectHighFindings (gates/code-review.ts) fails the code-review gate on any 'high' severity finding, so settle takes the writeRefusedSettleSummary path instead -- finalizeAndCloseSettle, and therefore the routing step, is never reached. Verified live: a settle with a high-severity finding exits 1, the refused SUMMARY has no codeReview key at all (the findings aren't even persisted), and no ledger entry is created. The findings only route if the operator bypasses via --force/--allow-code-review-failure. This is consistent with phase 242's DRAFT (AC-1 says 'when settle finalizes'), so it is not a phase-242 defect -- but it means the single most severe class of finding is the one class the routing feature never captures by default. Worth a decision: should a refused settle still route the findings from its failed attempt (there is real diagnostic value in a high-severity finding landing in the ledger even though the phase didn't settle), or is 'only route on a clean settle' the deliberately narrower, safer scope?
@@ -1026,7 +1029,71 @@ assurance-record.ts documents 'weak' as covering '...or simply no ACs at all wit
 
 (1) eslint.config.js's own comment candidly documents that dynamic import() of verifier family modules is invisible to the new kernel/verifier/consumer boundary rule -- a disclosed, real gap with no tracking recommendation until now. (2) deriveAssuranceRecord's verifierRollup key is an unseparated string join (${provider} ${model ?? ''}) -- theoretically collision-prone if a provider/model string ever contains a space (today's real values never do). (3) readRawSchemaVersion/MAX_RECOGNIZED_SCHEMA_VERSION is duplicated between verify/phase-replay.ts and cli/commands/summary.ts, hand-synced -- a third SummaryZ.safeParse call site would misreport a future schemaVersion-3 record as a generic parse failure instead of 'written by a newer Cadence.' None urgent; bundled as one low-priority rec per the independent review's own framing.
 
-## rec-20260802-001 — deep-verify.ts's own bypassed-throw case has the identical registry-side provenance gap phase 248 just fixed for code-review/security-audit
+## rec-20260801-012 — Real-provider code-review findings are structurally unreachable under default profile + agent-driven settles
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/verify/host-cli-client.ts
+- evidence: Verified 2026-08-01: config.json profile=auto; engine.ts DELTAS.auto.{quick-fix,standard,complex} all omit 'code-review' (only DELTAS.standard.complex and DELTAS.strict.{standard,complex} include it); host-cli-client.ts:333 isSelfInvocation() checked inside spawnCapture(), the shared spawn path for every host-cli call, not scoped to spec-review.
+- next: cadence milestone propose
+
+Two independent, verified blockers mean phase 237's entry gate and dec-20260801-003's revisit trigger (>=3 non-mock settles each persisting >=1 code-review finding) may never be satisfied under this repo's actual default operation: (1) config.json's profile is 'auto', and gates/engine.ts's DELTAS matrix shows 'code-review' is absent from ALL THREE auto-profile tiers (quick-fix/standard/complex) -- only 'standard' profile (complex tier) or 'strict' profile (standard+complex tiers) include it, so a phase needs an explicit DRAFT-level profile override just to run code-review at all. (2) Even when code-review does run under host-cli (activated PR #351), host-cli-client.ts's spawnCapture (the shared low-level spawn function used by every host-cli call, not just spec-review) contains a self-invocation guard (isSelfInvocation, checked via CLAUDECODE=1) that falls back to mock whenever cadence itself is invoked from inside a headless Claude Code session -- which describes essentially every agent-driven settle in this repo's normal workflow. So even a profile-overridden phase settled by an agent still produces mock findings, not real ones. Net effect: the evidence dec-20260801-003 is waiting for can only be generated by a human operator running 'cadence settle run' on a standard/strict-profile phase from a real interactive terminal, never from an agent session under default config -- and nothing currently surfaces this as a blocker (cadence doctor doesn't check it, and dec-20260801-003 doesn't mention it).
+
+## rec-20260802-001 — Finding-durability arc: complete, attempt-addressable settle records on every exit path
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, types
+- files: packages/core/src/services/settle.ts, packages/core/src/gates/registry.ts, packages/core/src/gates/code-review.ts, packages/core/src/gates/security-audit.ts
+- evidence: Five-rec cluster verified line-by-line at main@361f6490 (re-verified from the original 98b6a15 pin, zero source drift): acc payloads discarded at writeRefusedSettleSummary until phase 247's T1 fix, three silent post-gate refusal families still unaddressed (rec-20260712-006, follow-on), same-path SUMMARY overwrite on reloop now fixed by phase 247's T2/T3 (T3 in progress), and bare {outcome:'pass'} bypass catches in both review gates (rec-20260801-004, not yet started). Data loss was anti-correlated with severity: the cleanest settles kept the most complete records.
+- next: cadence milestone propose
+
+One arc, decided (dec-20260802-001/002/003) and partially landed as phase 247 (worktree phase247-refused-settle-summary, DRAFT 247-01, in BUILD as of 2026-08-02): (S1) bypassed verifier throws still need an honest skipped-with-reason provenance entry instead of a clean 'ran' (rec-20260801-004, independent, unblocked, not yet started); (S2) the gate-loop refusal family now threads acc's codeReview/securityAudit findings into a conditionally-hashed refused SUMMARY (rec-20260801-005, rec-20260731-010 persistence half -- dec-20260802-001, phase 247 T1, DONE and independently test-verified); the three post-gate refusal families (rec-20260712-006) remain silent and are scoped as a dedicated follow-on phase, deliberately excluded from 247 to keep its single-commit-settle convention intact; (S3) refused-attempt SUMMARYs are preserved as timestamp-slugged sibling artifacts, invisible to every current SUMMARY consumer by construction (rec-20260801-011 -- dec-20260802-002, phase 247 T1/T2 DONE, T3/T4 in progress under a concurrent session). Routing-on-refusal deliberately excluded per dec-20260802-003 (finalize-only routing; revisit trigger amended to name its rec-20260801-012 precondition -- real-provider findings are structurally unreachable under this repo's normal agent-driven, auto-profile operation).
+
+## rec-20260802-002 — SUMMARY.md never renders codeReview/securityAudit findings — a refused-attempt sibling shows nothing an operator opens it to see
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/services/summary-render.ts
+- evidence: Empirically verified 2026-08-02 during phase 247's independent whole-branch review: grep for codeReview/securityAudit in summary-render.ts returns zero hits; a hand-built refused SUMMARY with a HIGH finding, rendered via the real CLI, omits the finding entirely from SUMMARY.md while the JSON carries it correctly.
+- next: cadence milestone propose
+
+Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/services/summary-render.ts renders AC / Tasks / Gates / Gate bypasses / Assurance / Decisions / Deferred sections but has zero handling for the codeReview or securityAudit fields, for ANY SUMMARY (success or refused) -- this predates phase 247 and is not scoped to it. Phase 247 makes the gap newly consequential: it now writes an immutable per-attempt sibling .md specifically so a human can inspect what a refused/abandoned attempt found, but the .md half of that record is byte-identical to the canonical refused SUMMARY.md and renders none of the findings that caused the refusal -- verified empirically: a hand-built refused-shaped SUMMARY with one HIGH code-review finding, rendered via the real cadence summary render, shows the content hash and the refused gate but not one word of the finding. The data is JSON-only. Fix is out of phase 247's DRAFT scope (Boundaries did not ask for a render change) and was not built. Worth a dedicated phase: add a codeReview/securityAudit findings section to summary-render.ts, following the same JSON-only-so-far -> now-rendered precedent as the phase-170 gates[].reason field (docs/concepts.md notes this exact pattern already).
+
+## rec-20260802-003 — Intelligence ledger has 145 orphan decision/evidence links to recs absent from both active and archived arrays
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, intelligence
+- files: .cadence/intelligence/recommendations.json
+- evidence: cadence intelligence audit at main@59a2116e (2026-08-02): 20 orphan decisions + 125 orphan evidence entries, oldest dated 2026-06-11; sample checked (rec-20260711-001) confirmed absent from both recommendations[] (69 entries) and archived[] (115 entries).
+- next: cadence milestone propose
+
+cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence entries whose referenced rec ids exist in neither the 69-entry active recommendations array nor the 115-entry archived array in .cadence/intelligence/recommendations.json — e.g. rec-20260711-001, referenced by dec-20260711-001 and ev-20260711-*, is genuinely absent from both, not merely archived. Orphans date back to 2026-06-11, so this predates any known reconciliation pass. Verified at main@59a2116e (this session's own Part 1 evidence/decision additions — ev-20260802-009/010/011, dec-20260802-003 — were checked and are NOT part of this orphan set, so the finding is pre-existing and unrelated to that work). The audit tool's own remediation text calls restore-or-remove an operator decision; 'cadence intelligence reconcile' only re-derives rec-side link arrays and does not resolve orphan subjects. Needs scoping: how far back the gap goes, whether it's from lost commits (git reset --hard has bitten this ledger before per rec-20260712-006's own evidence) or a reconcile bug, and whether restoring vs. pruning is right per orphan.
+
+## rec-20260802-004 — deep-verify.ts's own bypassed-throw case has the identical registry-side provenance gap phase 248 just fixed for code-review/security-audit
 
 - status: candidate
 - ready: needs-evidence
