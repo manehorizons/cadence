@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildQuickstart } from '../../src/quickstart/build.js';
-import { emptyState } from '@manehorizons/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 
 describe('buildQuickstart', () => {
   // AC-1: uninitialized → init+tutorial moves, no `next`, map present.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderSummaryMd } from '../../src/parse/summary-writer.js';
-import type { Summary } from '@manehorizons/cadence-types';
+import type { Summary } from '@thomas-powers-jr/cadence-types';
 
 const SAMPLE: Summary = {
   schemaVersion: 1,

@@ -1,5 +1,5 @@
 ---
-'@manehorizons/cadence-core': minor
+'@thomas-powers-jr/cadence-core': minor
 ---
 
 Fixed a provenance-honesty gap: when a `code-review` or `security-audit`

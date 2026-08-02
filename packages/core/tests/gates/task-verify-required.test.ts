@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 // gate that has not been built yet.
 import { runTaskVerifyRequiredGate } from '../../src/gates/task-verify-required.js';
 import type { SettleContext } from '../../src/gates/types.js';
-import type { Task } from '@manehorizons/cadence-types';
+import type { Task } from '@thomas-powers-jr/cadence-types';
 
 /**
  * A DRAFT task whose `- verify:` line was omitted. `draft-parser.ts`

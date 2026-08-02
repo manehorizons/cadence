@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { AnomalyEvent } from '@manehorizons/cadence-types';
+import type { AnomalyEvent } from '@thomas-powers-jr/cadence-types';
 import type { Notifier } from '../../src/notify/notifier.js';
 import { emitUnconverged } from '../../src/notify/emit-unconverged.js';
 import { emitPlanReviewUnconverged } from '../../src/notify/plan-review.js';

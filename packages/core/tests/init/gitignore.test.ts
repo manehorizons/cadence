@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import {
   CADENCE_OWNED_GITIGNORE_ENTRIES,
   planGitignoreEntries,

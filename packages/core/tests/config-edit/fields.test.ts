@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { EDITABLE_FIELDS, resolveField, nearestField } from '../../src/config-edit/fields.js';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 
 describe('config-edit fields', () => {
   // AC-1: the curated registry is exactly the behavior-shaping keys

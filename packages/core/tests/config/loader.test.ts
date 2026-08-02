@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { loadConfig, writeConfig } from '../../src/config/loader.js';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 import { ConfigInvalidError } from '../../src/errors.js';
 
 let active: Fixture | null = null;

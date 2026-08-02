@@ -3,8 +3,8 @@ import { execFileSync } from 'node:child_process';
 import { readFile, rm, mkdir, writeFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { emptyState } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 import { runDoctor, HANDOFF_WARN_THRESHOLD } from '../../src/doctor/run.js';
 import { planFixes, applyFixes, type FixPlan } from '../../src/doctor/fix.js';
 

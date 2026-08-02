@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CadenceConfigZ, defaultConfig } from '@manehorizons/cadence-types';
+import { CadenceConfigZ, defaultConfig } from '@thomas-powers-jr/cadence-types';
 import { buildQuickstart } from '../../src/quickstart/build.js';
 import { buildExplanation } from '../../src/config-explain/build.js';
 

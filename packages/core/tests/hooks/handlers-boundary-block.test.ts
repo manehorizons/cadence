@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { HookDispatcher } from '../../src/hooks/dispatcher.js';
 
 // Phase 155 T2 — boundaryEnforcement: 'block' mode (AC-2, AC-3, AC-4).

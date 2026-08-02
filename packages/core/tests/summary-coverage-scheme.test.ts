@@ -3,8 +3,8 @@ import { spawn } from 'node:child_process';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { SummaryZ } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { SummaryZ } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { computeSummaryContentHash } from '../src/services/summary-hash.js';
 
 // Phase 239 (T6, AC-7): SUMMARY.json records the coverage scheme and mode in

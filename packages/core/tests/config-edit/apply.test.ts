@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { setPath, coerce, assembleConfig, diffConfig, validateCandidate } from '../../src/config-edit/apply.js';
 import { EDITABLE_FIELDS } from '../../src/config-edit/fields.js';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 
 describe('config-edit apply', () => {
   // AC-4: lifted setPath writes nested paths; coerce preserves config-set behavior.

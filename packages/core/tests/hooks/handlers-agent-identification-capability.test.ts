@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import type { HostCapabilities } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import type { HostCapabilities } from '@thomas-powers-jr/cadence-types';
 import { HookDispatcher } from '../../src/hooks/dispatcher.js';
 
 // AC-3 (phase 222): core must actually consult HostCapabilities before

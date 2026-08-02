@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import type { McpTrustLedger } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import type { McpTrustLedger } from '@thomas-powers-jr/cadence-types';
 import { readTrustLedger, writeTrustLedger, trustLedgerPath } from '../../../src/mcp/trust/store.js';
 
 describe('mcp trust store', () => {

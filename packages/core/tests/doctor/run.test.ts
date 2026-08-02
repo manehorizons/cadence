@@ -2,8 +2,8 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { writeFile, readFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { emptyState } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 import { runDoctor } from '../../src/doctor/run.js';
 
 let active: Fixture | null = null;

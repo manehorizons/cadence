@@ -2,7 +2,7 @@ import { describe, expect, it, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { collectGitDiff } from '../../src/git/diff.js';
 
 let active: Fixture | null = null;

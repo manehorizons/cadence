@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { runWizard, type Ask, type Confirm } from '../../src/config-edit/wizard.js';
 import { EDITABLE_FIELDS } from '../../src/config-edit/fields.js';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 import { bufferIO } from '../../src/services/io.js';
 
 /** Build an `ask` that returns the queued answer for each field in order. */

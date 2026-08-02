@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { EvidenceLedger, Recommendation } from '@manehorizons/cadence-types';
+import type { EvidenceLedger, Recommendation } from '@thomas-powers-jr/cadence-types';
 import { scoreRecommendation } from '../../src/intelligence/recommend.js';
 import { countFrictionEvidence } from '../../src/services/retro-feedback.js';
 import { findNearestCandidates } from '../../src/intelligence/nearest-candidate.js';

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderPrompt, renderChanges } from '../../src/config-edit/render.js';
 import { EDITABLE_FIELDS } from '../../src/config-edit/fields.js';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 
 describe('config-edit render', () => {
   // AC-7: a prompt shows label, numbered choices, and marks the current value.

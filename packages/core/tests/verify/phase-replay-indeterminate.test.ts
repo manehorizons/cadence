@@ -46,7 +46,7 @@
 import { describe, it, expect } from 'vitest';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo } from '@manehorizons/cadence-testkit';
+import { tempRepo } from '@thomas-powers-jr/cadence-testkit';
 import { replayPhaseCoverage } from '../../src/verify/phase-replay.js';
 import { runVerifyPhase } from '../../src/services/verify.js';
 

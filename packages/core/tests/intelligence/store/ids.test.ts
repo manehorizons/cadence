@@ -7,7 +7,7 @@ import {
   type Evidence,
   type IntelligenceDecision,
   type Recommendation,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import {
   nextAssumptionId,
   nextEvidenceId,

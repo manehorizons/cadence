@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Summary } from '@manehorizons/cadence-types';
+import type { Summary } from '@thomas-powers-jr/cadence-types';
 import { buildRetroDigest, isDigestEmpty, retroFrictionCount } from '../../src/services/retro.js';
 import { mkdtemp, mkdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -255,7 +255,7 @@ describe('addIssueLabel', () => {
 
 import { ScriptedPrompter, type Prompter } from '../../src/verify/prompter.js';
 import { askRetroIssueVerdict, runRetroOffer } from '../../src/services/retro.js';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 
 describe('askRetroIssueVerdict', () => {
   it('names the target repo in the question and accepts y/yes/n/no case-insensitively', async () => {

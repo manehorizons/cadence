@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
 import { Command } from 'commander';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 // Subagent task-redundancy monitoring (Task 6): the `cadence hook` CLI
 // command promotes `agentId`/`agentType` from the parsed stdin JSON onto the

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Anchor } from '@manehorizons/cadence-types';
+import type { Anchor } from '@thomas-powers-jr/cadence-types';
 import { computeFindingId, attachFindingIdentity } from '../../src/verify/finding-identity.js';
 import type { AnchoredFinding } from '../../src/verify/criteria-gap.js';
 

@@ -8,9 +8,9 @@ import type {
   EvidenceLedger,
   IntelligenceDecision,
   Recommendation,
-} from '@manehorizons/cadence-types';
-import { ContextPacketZ } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+} from '@thomas-powers-jr/cadence-types';
+import { ContextPacketZ } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { synthesizeContextPacket, runContext } from '../../src/intelligence/context.js';
 import { scoreRecommendation } from '../../src/intelligence/recommend.js';
 import { countFrictionEvidence } from '../../src/services/retro-feedback.js';

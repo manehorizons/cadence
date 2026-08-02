@@ -4,7 +4,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, runGit, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, runGit, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CADENCE_CLI = join(__dirname, '../../dist/cli/index.js');

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderPacket, recommendIsolation } from '../../src/dispatch/packet.js';
-import type { Draft, Task } from '@manehorizons/cadence-types';
+import type { Draft, Task } from '@thomas-powers-jr/cadence-types';
 
 const draft: Draft = {
   schemaVersion: 1,

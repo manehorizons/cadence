@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Draft } from '@manehorizons/cadence-types';
+import type { Draft } from '@thomas-powers-jr/cadence-types';
 import { runCodeReviewGate } from '../../src/gates/code-review.js';
 import type { SettleContext } from '../../src/gates/types.js';
 import type { CodeReviewInput, CodeReviewResult } from '../../src/contracts/index.js';

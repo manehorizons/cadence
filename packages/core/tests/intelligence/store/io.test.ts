@@ -3,14 +3,14 @@ import { existsSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import {
   emptyAssumptionLedger,
   emptyEvidenceLedger,
   emptyIntelligenceDecisionLedger,
   emptyRecommendationLedger,
   emptyMilestoneLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import {
   readAssumptionLedger,
   readEvidenceLedger,

@@ -10,7 +10,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtemp, mkdir, writeFile, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { emptyState } from '@manehorizons/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 import { draftNewService } from '../../src/services/draft-new.js';
 import { SimpleStateBackend } from '../../src/state/simple.js';
 import type { CommandIO } from '../../src/services/io.js';

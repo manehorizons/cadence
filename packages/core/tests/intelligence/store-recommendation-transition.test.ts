@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import type { Recommendation, RecommendationLedger } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import type { Recommendation, RecommendationLedger } from '@thomas-powers-jr/cadence-types';
 import { readRecommendationLedger } from '../../src/intelligence/store/io.js';
 import {
   addRecommendation,

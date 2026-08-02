@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
+import { NO_TEST_COMMAND_NOTICE } from '@thomas-powers-jr/cadence-types';
 import type { GateImpl, GateResult, SettleContext } from '../../src/gates/types.js';
 import {
   GATE_ORDER,

@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { loadConfig } from '../../src/config/loader.js';
 import { runActivate } from '../../src/cli/commands/activate.js';
 import { bufferIO } from '../../src/services/io.js';

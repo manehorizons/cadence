@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Draft, Spec, UiSpec } from '@manehorizons/cadence-types';
+import type { Draft, Spec, UiSpec } from '@thomas-powers-jr/cadence-types';
 import {
   CONTRACT_ROLES,
   GOVERNING_RULE,

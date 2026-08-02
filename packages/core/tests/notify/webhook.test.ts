@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { AnomalyEvent } from '@manehorizons/cadence-types';
+import type { AnomalyEvent } from '@thomas-powers-jr/cadence-types';
 import { WebhookNotifier } from '../../src/notify/webhook.js';
 import { selectNotifier } from '../../src/notify/factory.js';
 

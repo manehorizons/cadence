@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { UiSpec } from '@manehorizons/cadence-types';
+import type { UiSpec } from '@thomas-powers-jr/cadence-types';
 import {
   MockUiSpecReviewVerifier,
   AnthropicUiSpecReviewVerifier,

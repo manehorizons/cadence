@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, it, expect, afterEach } from 'vitest';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import { readRecommendationLedger } from '../../src/intelligence/store/io.js';
 import { recommendationConvertService } from '../../src/services/recommendation-convert.js';

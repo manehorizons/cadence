@@ -3,7 +3,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { mkdtempSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { tempRepo as tempCadenceRepo } from '@manehorizons/cadence-testkit';
+import { tempRepo as tempCadenceRepo } from '@thomas-powers-jr/cadence-testkit';
 import { explainAcCoverage } from '../../src/verify/coverage.js';
 import { renderExplainHuman, runVerifyCoverage } from '../../src/services/verify.js';
 

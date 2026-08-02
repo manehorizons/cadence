@@ -1,8 +1,8 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { RepoScanZ } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { RepoScanZ } from '@thomas-powers-jr/cadence-types';
 import { scanRepo } from '../../src/intelligence/scan.js';
 
 let active: Fixture | null = null;

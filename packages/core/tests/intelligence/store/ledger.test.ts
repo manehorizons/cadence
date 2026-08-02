@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { stat } from 'node:fs/promises';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import {
   mintId,
   readLedger,

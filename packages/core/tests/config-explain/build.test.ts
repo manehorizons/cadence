@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultConfig, presets } from '@manehorizons/cadence-types';
+import { defaultConfig, presets } from '@thomas-powers-jr/cadence-types';
 import { gatesFor } from '../../src/gates/engine.js';
 import { buildExplanation } from '../../src/config-explain/build.js';
 import type { ExplainContext } from '../../src/config-explain/types.js';

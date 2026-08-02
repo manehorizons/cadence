@@ -6,7 +6,7 @@ import {
 } from '../../src/gates/coherence.js';
 import type { DraftGateContext } from '../../src/gates/draft-types.js';
 import type { CoherenceIssue } from '../../src/coherence/check.js';
-import type { AnomalyEvent } from '@manehorizons/cadence-types';
+import type { AnomalyEvent } from '@thomas-powers-jr/cadence-types';
 
 const BLOCK: CoherenceIssue = { severity: 'block', code: 'C1', message: 'boom' };
 const WARN: CoherenceIssue = { severity: 'warn', code: 'C2', message: 'meh' };

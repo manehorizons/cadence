@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { deriveAcEvidence, rankEvidence, meetsEvidenceFloor, checkEvidenceFloor } from '../../src/gates/ac-evidence.js';
 import type { AcId, TestRef } from '../../src/verify/coverage.js';
-import type { AcEvidence, DeepVerdict } from '@manehorizons/cadence-types';
+import type { AcEvidence, DeepVerdict } from '@thomas-powers-jr/cadence-types';
 
 const NONE = new Map<AcId, TestRef[]>();
 

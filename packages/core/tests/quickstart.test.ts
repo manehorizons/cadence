@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { emptyState } from '@manehorizons/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 import { buildQuickstart } from '../src/quickstart/build.js';
 import { renderText } from '../src/quickstart/render.js';
 

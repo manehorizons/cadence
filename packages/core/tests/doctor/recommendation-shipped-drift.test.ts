@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import { runAdvanceConvertedToSettlePendingForPhase } from '../../src/intelligence/store/recommendations.js';
 import { runRecommendationTransition } from '../../src/intelligence/store/recommendations.js';

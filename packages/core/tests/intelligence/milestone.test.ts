@@ -3,11 +3,11 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, realpath, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Assumption, IntelligenceMilestone, MilestoneLedger, Recommendation } from '@manehorizons/cadence-types';
+import type { Assumption, IntelligenceMilestone, MilestoneLedger, Recommendation } from '@thomas-powers-jr/cadence-types';
 import { applyTransition, clusterMilestones, deepenPreMortem, isEligible, seedPreMortem, runProposeMilestones, runMilestoneTransition, runMilestoneExport, runMilestonePreMortem, runMilestoneStatus, markOperatorEntry } from '../../src/intelligence/milestone.js';
 import { readMilestoneLedger } from '../../src/intelligence/store/milestones.js';
 import { isSameWorktree } from '../../src/git/worktrees.js';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 function mkRec(p: Partial<Recommendation> = {}): Recommendation {
   return {

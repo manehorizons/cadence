@@ -5,7 +5,7 @@ import { AnthropicVerifier } from '../../src/verify/anthropic-verifier.js';
 import { localChatJSON } from '../../src/verify/local-client.js';
 import type { VerifyInput } from '../../src/verify/verifier.js';
 import { Logger, setLogger, resetLogger } from '../../src/logging/logger.js';
-import type { LogLevel } from '@manehorizons/cadence-types';
+import type { LogLevel } from '@thomas-powers-jr/cadence-types';
 
 function captureRecords(level: LogLevel = 'debug'): Array<Record<string, unknown>> {
   const recs: Array<Record<string, unknown>> = [];

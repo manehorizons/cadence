@@ -44,9 +44,9 @@ several repo docs (`DESIGN.md`, `docs/*`) carry version references with no
 test covering them.
 
 - Run the doc-content test surface explicitly and confirm it's green:
-  `pnpm --filter @manehorizons/cadence-core test -- tests/docs`,
-  `pnpm --filter @manehorizons/cadence-host-claude-code test -- docs-command-count docs-published`,
-  `pnpm --filter @manehorizons/cadence-host-codex test -- docs-published`.
+  `pnpm --filter @thomas-powers-jr/cadence-core test -- tests/docs`,
+  `pnpm --filter @thomas-powers-jr/cadence-host-claude-code test -- docs-command-count docs-published`,
+  `pnpm --filter @thomas-powers-jr/cadence-host-codex test -- docs-published`.
 - Grep the whole repo for the **previous** version string and triage every
   hit: `grep -rn "<old-version>" --include="*.md" . | grep -v node_modules |
   grep -v CHANGELOG | grep -v '\.cadence/' | grep -v '\.changeset/'`. A hit
@@ -77,10 +77,10 @@ test covering them.
 Run all three, regardless of what the workflow says:
 
 ```bash
-npm view @manehorizons/cadence-core version
-npm view @manehorizons/cadence-types version
-npm view @manehorizons/cadence-host-claude-code version
-npm view @manehorizons/cadence-host-codex version
+npm view @thomas-powers-jr/cadence-core version
+npm view @thomas-powers-jr/cadence-types version
+npm view @thomas-powers-jr/cadence-host-claude-code version
+npm view @thomas-powers-jr/cadence-host-codex version
 git ls-remote --tags origin | grep vX.Y.Z
 gh release view vX.Y.Z
 ```

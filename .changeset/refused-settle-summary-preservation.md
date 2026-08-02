@@ -1,5 +1,5 @@
 ---
-'@manehorizons/cadence-core': minor
+'@thomas-powers-jr/cadence-core': minor
 ---
 
 Fixed two compounding data-loss gaps in a refused (failed) `cadence settle`:

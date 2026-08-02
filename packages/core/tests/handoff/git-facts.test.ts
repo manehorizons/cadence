@@ -1,7 +1,7 @@
 // packages/core/tests/handoff/git-facts.test.ts
 import { afterEach, describe, expect, it } from 'vitest';
 import { execSync } from 'node:child_process';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { readGitFacts } from '../../src/handoff/git-facts.js';
 
 let active: Fixture | null = null;

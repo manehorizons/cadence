@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { LogRecord } from '@manehorizons/cadence-types';
+import type { LogRecord } from '@thomas-powers-jr/cadence-types';
 import { formatJson, formatPretty } from '../../src/logging/format.js';
 
 const base: LogRecord = {

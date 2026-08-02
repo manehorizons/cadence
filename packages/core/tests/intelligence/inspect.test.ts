@@ -1,8 +1,8 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import type { RepoScan, BackendStatus } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import type { RepoScan, BackendStatus } from '@thomas-powers-jr/cadence-types';
 import { synthesizeInspection, runInspect } from '../../src/intelligence/inspect.js';
 
 const cleanScan: RepoScan = {

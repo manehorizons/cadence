@@ -37,7 +37,7 @@ function writePackage(root: string, dir: string, pkg: Record<string, unknown>) {
 function writeCoreChangelog(root: string, version: string) {
   writeFileSync(
     join(root, 'packages', 'core', 'CHANGELOG.md'),
-    ['# @manehorizons/cadence-core', '', `## ${version}`, '', '- release-integrity retry budget note', ''].join(
+    ['# @thomas-powers-jr/cadence-core', '', `## ${version}`, '', '- release-integrity retry budget note', ''].join(
       '\n',
     ),
   );
@@ -119,7 +119,7 @@ describe('release-integrity helper', () => {
   it('extracts the exact core changelog entry for a version (AC-5)', () => {
     const entry = script.extractChangelogEntry(
       [
-        '# @manehorizons/cadence-core',
+        '# @thomas-powers-jr/cadence-core',
         '',
         '## 1.31.0',
         '',
@@ -143,27 +143,27 @@ describe('release-integrity helper', () => {
     expect(() =>
       script.validatePackageVersions(
         [
-          { name: '@manehorizons/cadence-core', version: '1.31.0' },
-          { name: '@manehorizons/cadence-types', version: '1.30.0' },
+          { name: '@thomas-powers-jr/cadence-core', version: '1.31.0' },
+          { name: '@thomas-powers-jr/cadence-types', version: '1.30.0' },
         ],
         '1.31.0',
       ),
-    ).toThrow('@manehorizons/cadence-types@1.30.0');
+    ).toThrow('@thomas-powers-jr/cadence-types@1.30.0');
   });
 
-  it('discovers every public @manehorizons/cadence-* package and skips private packages (AC-3)', async () => {
+  it('discovers every public @thomas-powers-jr/cadence-* package and skips private packages (AC-3)', async () => {
     const root = tempRoot();
     try {
       writePackage(root, 'core', {
-        name: '@manehorizons/cadence-core',
+        name: '@thomas-powers-jr/cadence-core',
         version: '1.31.0',
       });
       writePackage(root, 'types', {
-        name: '@manehorizons/cadence-types',
+        name: '@thomas-powers-jr/cadence-types',
         version: '1.31.0',
       });
       writePackage(root, 'testkit', {
-        name: '@manehorizons/cadence-testkit',
+        name: '@thomas-powers-jr/cadence-testkit',
         version: '1.31.0',
         private: true,
       });
@@ -175,8 +175,8 @@ describe('release-integrity helper', () => {
       const packages = await script.discoverPublicPackages(root);
 
       expect(packages.map((pkg: { name: string }) => pkg.name)).toEqual([
-        '@manehorizons/cadence-core',
-        '@manehorizons/cadence-types',
+        '@thomas-powers-jr/cadence-core',
+        '@thomas-powers-jr/cadence-types',
       ]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -187,8 +187,8 @@ describe('release-integrity helper', () => {
     const notes = script.buildReleaseNotes({
       version: '1.31.0',
       packages: [
-        { name: '@manehorizons/cadence-core' },
-        { name: '@manehorizons/cadence-types' },
+        { name: '@thomas-powers-jr/cadence-core' },
+        { name: '@thomas-powers-jr/cadence-types' },
       ],
       changelogEntry: '### Minor Changes\n\n- Make releases agree.',
       runUrl: 'https://github.com/manehorizons/cadence/actions/runs/123',
@@ -196,7 +196,7 @@ describe('release-integrity helper', () => {
 
     expect(notes).toContain('## Package Changelog');
     expect(notes).toContain('Make releases agree.');
-    expect(notes).toContain('`@manehorizons/cadence-core`');
+    expect(notes).toContain('`@thomas-powers-jr/cadence-core`');
     expect(notes).toContain('https://github.com/manehorizons/cadence/actions/runs/123');
     expect(notes).toContain('GitHub Release metadata are verified');
   });
@@ -213,7 +213,7 @@ describe('npm verification retry budget (post-publish vs pre-publish)', () => {
     const tag = `v${version}`;
     const root = tempRoot();
     try {
-      writePackage(root, 'core', { name: '@manehorizons/cadence-core', version });
+      writePackage(root, 'core', { name: '@thomas-powers-jr/cadence-core', version });
       writeCoreChangelog(root, version);
 
       // Fails on attempts 1-4, succeeds on attempt 5 — exhausts the OLD
@@ -248,7 +248,7 @@ describe('npm verification retry budget (post-publish vs pre-publish)', () => {
     const version = '9.9.2';
     const root = tempRoot();
     try {
-      writePackage(root, 'core', { name: '@manehorizons/cadence-core', version });
+      writePackage(root, 'core', { name: '@thomas-powers-jr/cadence-core', version });
       writeCoreChangelog(root, version);
 
       // Same flakiness as the post-publish test: fails on attempts 1-4,

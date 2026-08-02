@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type Anthropic from '@anthropic-ai/sdk';
-import type { Draft } from '@manehorizons/cadence-types';
+import type { Draft } from '@thomas-powers-jr/cadence-types';
 import {
   AnthropicPlanReviewVerifier,
   HostCliPlanReviewVerifier,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { RetroRollup } from '@manehorizons/cadence-types';
+import type { RetroRollup } from '@thomas-powers-jr/cadence-types';
 import { renderRetroRollup } from '../../src/parse/render-retro-rollup.js';
 
 const EMPTY_BUCKETS = { recurring: [], oneOff: [] };

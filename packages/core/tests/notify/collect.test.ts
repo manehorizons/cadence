@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import type { Draft } from '@manehorizons/cadence-types';
-import { AnomalyEventZ } from '@manehorizons/cadence-types';
+import type { Draft } from '@thomas-powers-jr/cadence-types';
+import { AnomalyEventZ } from '@thomas-powers-jr/cadence-types';
 import { collectAnomalies, type CollectAnomaliesContext } from '../../src/notify/collect.js';
 import type { ProgressFile } from '../../src/status.js';
 

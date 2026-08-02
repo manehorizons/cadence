@@ -3,8 +3,8 @@ import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import type { RetroDigest } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import type { RetroDigest } from '@thomas-powers-jr/cadence-types';
 import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import { readEvidenceLedger, readRecommendationLedger } from '../../src/intelligence/store/io.js';
 

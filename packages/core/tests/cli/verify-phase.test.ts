@@ -10,7 +10,7 @@
 import { describe, it, expect } from 'vitest';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, runGit } from '@manehorizons/cadence-testkit';
+import { tempRepo, runGit } from '@thomas-powers-jr/cadence-testkit';
 import { runVerifyPhase } from '../../src/services/verify.js';
 
 function makeIo() {

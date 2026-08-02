@@ -3,8 +3,8 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import type { Recommendation, RecommendationLedger } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import type { Recommendation, RecommendationLedger } from '@thomas-powers-jr/cadence-types';
 import { applyRecommendationPromotion } from '../../src/intelligence/store/recommendations.js';
 
 const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');

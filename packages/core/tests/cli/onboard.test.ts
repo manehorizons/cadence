@@ -4,8 +4,8 @@ import { existsSync, readdirSync } from 'node:fs';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 import { loadConfig, writeConfig } from '../../src/config/loader.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

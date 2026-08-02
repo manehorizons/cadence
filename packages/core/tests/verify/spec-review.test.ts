@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import type { Spec } from '@manehorizons/cadence-types';
+import type { Spec } from '@thomas-powers-jr/cadence-types';
 import {
   HostCliSpecReviewVerifier,
   MockSpecReviewVerifier,

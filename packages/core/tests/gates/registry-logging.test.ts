@@ -6,7 +6,7 @@ import {
 } from '../../src/gates/registry.js';
 import type { GateResult, SettleContext } from '../../src/gates/types.js';
 import { Logger, setLogger, resetLogger } from '../../src/logging/logger.js';
-import type { LogLevel } from '@manehorizons/cadence-types';
+import type { LogLevel } from '@thomas-powers-jr/cadence-types';
 
 const ALL_GATES: SettleGate[] = [
   'draft-read',

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import type { Evidence, EvidenceLedger, Recommendation, RetroRollup } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import type { Evidence, EvidenceLedger, Recommendation, RetroRollup } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import { readEvidenceLedger, readRecommendationLedger } from '../../src/intelligence/store/io.js';
 import {

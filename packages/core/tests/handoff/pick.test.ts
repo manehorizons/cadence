@@ -1,6 +1,6 @@
 // packages/core/tests/handoff/pick.test.ts
 import { describe, expect, it } from 'vitest';
-import type { HandoffCandidate } from '@manehorizons/cadence-types';
+import type { HandoffCandidate } from '@thomas-powers-jr/cadence-types';
 import { renderCandidateMenu, resolvePick, promptForPick } from '../../src/handoff/pick.js';
 import { ScriptedPrompter } from '../../src/verify/prompter.js';
 import type { CommandIO } from '../../src/services/io.js';

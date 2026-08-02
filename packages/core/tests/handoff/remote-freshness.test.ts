@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { execSync } from 'node:child_process';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { checkRemoteFreshness } from '../../src/handoff/remote-freshness.js';
 
 let active: Fixture | null = null;

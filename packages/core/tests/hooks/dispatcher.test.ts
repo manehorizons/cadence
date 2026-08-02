@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { HookDispatcher } from '../../src/hooks/dispatcher.js';
 import { SimpleStateBackend } from '../../src/state/simple.js';
 

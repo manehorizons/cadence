@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
+import { NO_TEST_COMMAND_NOTICE } from '@thomas-powers-jr/cadence-types';
 import { runBuildTestGate } from '../../src/gates/build-test-must-pass.js';
 import type { SettleContext, TestRunResult } from '../../src/gates/types.js';
 

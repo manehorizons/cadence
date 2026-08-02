@@ -1,6 +1,6 @@
 // packages/core/tests/handoff/render-session.test.ts
 import { describe, it, expect } from 'vitest';
-import type { ContextPacket, GitFacts } from '@manehorizons/cadence-types';
+import type { ContextPacket, GitFacts } from '@thomas-powers-jr/cadence-types';
 import { renderSession } from '../../src/handoff/render-session.js';
 
 const PACKET: ContextPacket = {

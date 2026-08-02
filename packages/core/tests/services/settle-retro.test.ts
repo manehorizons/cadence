@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, readFile, rm, realpath, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultConfig, emptyState } from '@manehorizons/cadence-types';
+import { defaultConfig, emptyState } from '@thomas-powers-jr/cadence-types';
 import { settleService } from '../../src/services/settle.js';
 import type { CommandIO } from '../../src/services/io.js';
 

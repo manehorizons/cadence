@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { emptyState } from '@manehorizons/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 import { nextAction } from '../src/progress.js';
 
 describe('nextAction — legacy {command, reason} shape (unchanged)', () => {

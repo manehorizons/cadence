@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GateZ, type Gate } from '@manehorizons/cadence-types';
+import { GateZ, type Gate } from '@thomas-powers-jr/cadence-types';
 
 /**
  * AC-9 — total enum coverage tracking. Every `Gate` enum member must be

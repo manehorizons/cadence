@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
+import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
 import { MOCK_FALLBACK_BANNER } from '../../src/verify/verifier-factory.js';
 
 // AC-2 (phase 104): the settle mock banner renders from the single

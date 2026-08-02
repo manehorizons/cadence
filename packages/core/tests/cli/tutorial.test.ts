@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { emptyState } from '@manehorizons/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 import { runTutorial } from '../../src/cli/commands/tutorial.js';
 import { bufferIO } from '../../src/services/io.js';
 import { SimpleStateBackend } from '../../src/state/simple.js';

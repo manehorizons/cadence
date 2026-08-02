@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { checkWorktreePhases, runDoctor } from '../../src/doctor/run.js';
 import type { Occupancy } from '../../src/phases/collision.js';
 

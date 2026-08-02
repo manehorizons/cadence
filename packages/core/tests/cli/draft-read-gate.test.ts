@@ -4,7 +4,7 @@ import { readFile, writeFile, mkdir, utimes } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 // AC-3, AC-4, AC-5 (Phase 23.1) — DRAFT-read mtime gate.
 

@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { GateBypass, PhaseRetroEntry, RetroDigest, RetroTask } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import type { GateBypass, PhaseRetroEntry, RetroDigest, RetroTask } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { bufferIO } from '../../src/services/io.js';
 import { computeRetroRollup, scanRetroArtifacts } from '../../src/services/retro-rollup.js';
 

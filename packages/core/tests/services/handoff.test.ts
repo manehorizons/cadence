@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { defaultConfig } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { handoffService } from '../../src/services/handoff.js';
 import { bufferIO } from '../../src/services/io.js';
 

@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CADENCE_CLI = join(__dirname, '../../dist/cli/index.js');
@@ -157,7 +157,7 @@ describe('cadence init --full (phase 188)', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toContain('Full setup summary');
     expect(r.stdout).toContain(
-      'host wire     done: npx @manehorizons/cadence-host-claude-code install',
+      'host wire     done: npx @thomas-powers-jr/cadence-host-claude-code install',
     );
     expect(r.stdout).toContain('demo phase    done: 01-demo');
     expect(r.stdout).toContain('activation    done: anthropic');
