@@ -997,23 +997,6 @@ Phase 242's routing step (settle.ts, finalizeAndCloseSettle) writes each new rou
 
 docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, acDiscipline, commitCadence, or verifier. Omit to walk all five.') predates phase 102's autoArchive and phase 108's coverageMode additions to packages/core/src/config-edit/fields.ts's EDITABLE_FIELDS array, and now also predates phase 242's autoRoute addition -- three fields (autoArchive, coverageMode, autoRoute) are absent from this doc's field list and its 'walk all five' claim, though EDITABLE_FIELDS actually holds 8. Not caused by phase 242 -- the gap already existed for autoArchive/coverageMode before this phase; autoRoute is simply the third field to land in it. No doc-content test currently catches this (unlike the command-count/slash-command-count tests this repo already has for similar drift). Fix: update the field list and count, and consider adding a doc-content test deriving the list from EDITABLE_FIELDS.map(f => f.name) the same way docs-command-count.test.ts derives the registered command set, so this can't silently drift again.
 
-## rec-20260801-004 — code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/gates/code-review.ts, packages/core/src/gates/security-audit.ts, packages/core/src/gates/registry.ts
-- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01), confirmed by direct source read
-- evidence: Re-verified at main@afcb90a (confirmed unchanged at main@59a2116e): both catch blocks unchanged by phase 247 — a bypassed verifier throw still returns bare outcome pass with no flags, and registry persists status ran with empty verifier identity. Urgency shifted: codeReview.provider has been host-cli in this repo's live config since PR #351 (confirmed still host-cli), so a credential expiry or network failure plus --force is now a reachable daily-dogfooding event that records as a clean real-provider pass. Scoped as phase 248; land before real-provider reloop dogfooding accumulates any such records.
-- next: cadence milestone propose
-
-code-review.ts and security-audit.ts's catch(err) blocks return {outcome:'pass'} with no flags at all when --allow-code-review-failure/--allow-security-audit-failure/--force bypasses a real-provider throw (revoked key, rate limit, network blip). Unlike build-test-must-pass/boundary-scan/test-coverage (which set a dedicated bypass flag registry.ts turns into an explicit skipReason provenance entry) or deep-verify.ts (which sets flags.verifierFailure={message,provider} on its own throw path), these two gates set nothing. verifierIdentityProvenance(res) then returns {} since res.flags?.verifierIdentity is undefined. Verified directly against source 2026-08-01: the persisted SUMMARY.gates[] entry reads as {gate:'code-review',status:'ran'} -- indistinguishable from a clean real-provider pass, with no skipReason explaining a failure was bypassed. This lands on exactly the two gates phase 232 exists to make trustworthy. deriveAssuranceRecord under-reports (drops the gate from verifierRollup) rather than over-reports, so it is not a spoofing risk, but the raw gates[] provenance record is actively misleading about what 'ran' means here.
-
 ## rec-20260801-006 — deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case
 
 - status: candidate
@@ -1109,3 +1092,19 @@ Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/se
 - next: cadence milestone propose
 
 cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence entries whose referenced rec ids exist in neither the 69-entry active recommendations array nor the 115-entry archived array in .cadence/intelligence/recommendations.json — e.g. rec-20260711-001, referenced by dec-20260711-001 and ev-20260711-*, is genuinely absent from both, not merely archived. Orphans date back to 2026-06-11, so this predates any known reconciliation pass. Verified at main@59a2116e (this session's own Part 1 evidence/decision additions — ev-20260802-009/010/011, dec-20260802-003 — were checked and are NOT part of this orphan set, so the finding is pre-existing and unrelated to that work). The audit tool's own remediation text calls restore-or-remove an operator decision; 'cadence intelligence reconcile' only re-derives rec-side link arrays and does not resolve orphan subjects. Needs scoping: how far back the gap goes, whether it's from lost commits (git reset --hard has bitten this ledger before per rec-20260712-006's own evidence) or a reconcile bug, and whether restoring vs. pruning is right per orphan.
+
+## rec-20260802-004 — deep-verify.ts's own bypassed-throw case has the identical registry-side provenance gap phase 248 just fixed for code-review/security-audit
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/deep-verify.ts, packages/core/src/gates/registry.ts
+- evidence: Surfaced during phase 248's SPEC authoring (2026-08-02): registry.ts's dispatch loop has no branch reading res.flags?.verifierFailure at all — confirmed by reading the full bypass-ladder chain (self-guard predicate, build-test-must-pass x2, boundary-scan, test-coverage, code-review/security-audit's new reviewVerifierFailure branch) and finding none match deep-verify's own verifierFailure flag.
+- next: cadence milestone propose
+
+Phase 248 fixed code-review/security-audit: a bypassed verifier throw (--allow-verifier-failure equivalents) now records an honest SUMMARY.gates[] status:'skipped' entry instead of a bare status:'ran' with empty identity. deep-verify.ts (packages/core/src/gates/deep-verify.ts) has the structurally identical bug: on a bypassed throw it already sets flags.verifierFailure = { message, provider }, but registry.ts's runSettleGates dispatch loop has no branch that reads verifierFailure — so it falls through to the same generic status:'ran' with empty identity that phase 248 fixed for the other two gates. Deliberately NOT folded into phase 248 (rec-20260801-004 scoped to code-review/security-audit only per its own files: list) and NOT a copy-paste fix: verifierFailure is load-bearing for notify/collect.ts's anomaly emission and SUMMARY.gateBypasses (hardcoded to attribute failures to 'deep-verify' — which is actually correct for this gate, unlike the false-attribution risk that made phase 248 use a distinct reviewVerifierFailure field instead of reusing verifierFailure). So the registry.ts fix here can consume the existing verifierFailure flag directly, but the new branch's interaction with the anomaly-emission pipeline (does printing a loud stderr notice AND recording gates[] status:'skipped' double-count with the existing anomaly/gateBypasses record for the same event?) needs its own scoping pass before drafting, not an assumption that phase 248's exact pattern transfers unchanged.

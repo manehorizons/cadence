@@ -76,6 +76,33 @@ export const runSecurityAuditGate: GateImpl = async (ctx): Promise<GateResult> =
     if (ctx.opts.allowSecurityAuditFailure !== true && ctx.opts.force !== true) {
       return { outcome: 'refuse', reason };
     }
-    return { outcome: 'pass' };
+    // Phase 248 (T3): bypassed-throw branch only — the refuse branch above
+    // stays byte-identical (res.flags remains undefined there, AC-2). Sets
+    // the distinct reviewVerifierFailure flag (never verifierFailure — see
+    // GateFlags doc-comment) so the registry can record an honest
+    // status: 'skipped' entry instead of falling through to 'ran' with no
+    // identity. Flag-naming precedence mirrors registry.ts's own bypass-
+    // ladder convention (e.g. `allowFailingBuild === true ? '--allow-...'
+    // : '--force'`): name the gate-specific flag when it was explicitly
+    // set, --force only when it alone triggered the bypass. NOT the same
+    // precedence as the findings-bypass notice above (line 57, which
+    // prefers --force when both are set) — the inversion is deliberate,
+    // do not "harmonize" the two.
+    const flag =
+      ctx.opts.allowSecurityAuditFailure === true
+        ? '--allow-security-audit-failure'
+        : '--force';
+    ctx.io.err(
+      `security-audit: ${flag} set; proceeding past a verifier failure (${message}).\n`,
+    );
+    return {
+      outcome: 'pass',
+      flags: {
+        reviewVerifierFailure: {
+          message,
+          provider: ctx.config?.securityAudit?.provider ?? 'mock',
+        },
+      },
+    };
   }
 };

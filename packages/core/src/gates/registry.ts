@@ -244,6 +244,38 @@ export async function runSettleGates(
       gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}`, ...verifierIdentityProvenance(res) });
     } else if (gate === 'test-coverage' && res.flags?.coverageBypassed === true) {
       gates.push({ gate, status: 'skipped', skipReason: 'bypassed via --allow-missing-coverage', ...verifierIdentityProvenance(res) });
+    } else if (res.flags?.reviewVerifierFailure) {
+      // Phase 248 (T4): a code-review/security-audit verifier THROW (the call
+      // itself never returned) bypassed via --force or the gate-specific
+      // --allow-*-failure flag. No gate-name disjunction needed in the
+      // condition — only these two gates ever set reviewVerifierFailure (see
+      // gates/types.ts) — but the flag-naming ternary below still needs one,
+      // mirroring the build-test-must-pass/boundary-scan precedent above:
+      // name the gate-specific flag when it was explicitly set, --force only
+      // when it alone triggered the bypass.
+      const { message, provider } = res.flags.reviewVerifierFailure;
+      const flag =
+        gate === 'code-review'
+          ? gateCtx.opts.allowCodeReviewFailure === true
+            ? '--allow-code-review-failure'
+            : '--force'
+          : gateCtx.opts.allowSecurityAuditFailure === true
+            ? '--allow-security-audit-failure'
+            : '--force';
+      gates.push({
+        gate,
+        status: 'skipped',
+        // `provider` is optional on `reviewVerifierFailure` only because the
+        // `GateFlags` field shape mirrors `verifierFailure`'s; in practice
+        // both code-review.ts and security-audit.ts always populate it
+        // (`ctx.config?.<gate>?.provider ?? 'mock'`), so this fallback is
+        // unreachable today. If it ever weren't set, 'mock' would fabricate
+        // a specific configured provider nobody configured — 'unknown' is
+        // the honest gap-filler, matching this phase's own provenance-
+        // honesty thesis.
+        skipReason: `bypassed via ${flag} — verifier failure bypassed (${message}), configured provider: ${provider ?? 'unknown'}`,
+        ...verifierIdentityProvenance(res),
+      });
     } else {
       gates.push({ gate, status: 'ran', ...verifierIdentityProvenance(res) });
     }

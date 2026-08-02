@@ -257,6 +257,27 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
     if (ctx.opts.allowCodeReviewFailure !== true && ctx.opts.force !== true) {
       return { outcome: 'refuse', reason };
     }
-    return { outcome: 'pass' };
+    // Phase 248 (T2, AC-1/AC-3): the verifier call itself never returned —
+    // report the bypass honestly via the distinct reviewVerifierFailure flag
+    // (never verifierFailure; see gates/types.ts) and print a loud stderr
+    // notice, styled like the findings-bypass notice above (lines 156-161)
+    // but NOT the same precedence: that notice names --force first when both
+    // flags are set; AC-1 requires this one to name the gate-specific flag
+    // first (matching registry.ts's bypass-ladder convention) — do not
+    // "harmonize" the two, the inversion is deliberate.
+    const flag =
+      ctx.opts.allowCodeReviewFailure === true ? '--allow-code-review-failure' : '--force';
+    ctx.io.err(
+      `code-review: ${flag} set; proceeding past a verifier failure (${message}).\n`,
+    );
+    return {
+      outcome: 'pass',
+      flags: {
+        reviewVerifierFailure: {
+          message,
+          provider: ctx.config?.codeReview?.provider ?? 'mock',
+        },
+      },
+    };
   }
 };

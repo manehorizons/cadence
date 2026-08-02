@@ -1421,6 +1421,13 @@
       "kind": "note",
       "summary": "cadence intelligence audit at main@59a2116e (2026-08-02): 20 orphan decisions + 125 orphan evidence entries, oldest dated 2026-06-11; sample checked (rec-20260711-001) confirmed absent from both recommendations[] (69 entries) and archived[] (115 entries).",
       "createdAt": "2026-08-02T02:22:38.945Z"
+    },
+    {
+      "id": "ev-20260802-013",
+      "recommendationId": "rec-20260802-004",
+      "kind": "note",
+      "summary": "Surfaced during phase 248's SPEC authoring (2026-08-02): registry.ts's dispatch loop has no branch reading res.flags?.verifierFailure at all — confirmed by reading the full bypass-ladder chain (self-guard predicate, build-test-must-pass x2, boundary-scan, test-coverage, code-review/security-audit's new reviewVerifierFailure branch) and finding none match deep-verify's own verifierFailure flag.",
+      "createdAt": "2026-08-02T04:09:25.988Z"
     }
   ]
 }
