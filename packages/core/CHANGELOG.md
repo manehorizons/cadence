@@ -1,5 +1,119 @@
 # @manehorizons/cadence-core
 
+## 1.54.0
+
+### Minor Changes
+
+- fcd76ad: Fixed a provenance-honesty gap: when a `code-review` or `security-audit`
+  verifier **throw** (the call itself never returned — revoked key, network
+  blip) was bypassed via `--force`, `--allow-code-review-failure`, or
+  `--allow-security-audit-failure`, the persisted `SUMMARY.gates[]` entry
+  read `{ gate: 'code-review', status: 'ran' }` — indistinguishable from a
+  clean real-provider pass, since only the absence of the phase-232
+  `provider`/`model` fields hinted anything was wrong.
+
+  Both gates' catch blocks now set a new, distinct `GateFlags.reviewVerifierFailure`
+  field on a bypassed throw (deliberately not the pre-existing `verifierFailure`
+  field, which is reserved for `deep-verify` and feeds `notify/collect.ts`'s
+  anomaly emission — reusing it would have fabricated a false `deep-verify`
+  entry in `SUMMARY.gateBypasses`). `packages/core/src/gates/registry.ts`'s
+  `runSettleGates` dispatch loop turns this into an honest
+  `status: 'skipped'` entry with a `skipReason` naming the flag that
+  triggered the bypass, the underlying failure message, and the configured
+  provider — with no fabricated `provider`/`model` structured field, so the
+  entry correctly stays excluded from `deriveAssuranceRecord`'s
+  `verifierRollup`. The bypass also now prints a loud stderr notice, matching
+  this repo's no-quiet-fallback convention. A verifier throw with no bypass
+  flag set continues to refuse identically to before (exit code, exact
+  stderr reason text, and no `flags` on the refusal — all unchanged).
+
+  Out of scope, unchanged: the pre-existing findings-based bypass path (real
+  HIGH/CRITICAL findings waved through on a review call that _did_ return)
+  still correctly records `status: 'ran'` with a real `verifierIdentity`.
+  `deep-verify.ts`'s own identical registry-side gap (its bypassed throw also
+  still records `status: 'ran'` with empty identity today) is a separate,
+  unscoped concern — tracked as a follow-up recommendation.
+
+- 8b42ff4: Renamed the npm scope to `@thomas-powers-jr` across all five published
+  packages, matching the GitHub org rename in #360. This is a rename of
+  existing software on its existing 1.x version lineage, not a new product —
+  consistent with the standing pre-v2.0.0 semver policy.
+
+  The previously-published packages under the old scope are not deleted —
+  they stay resolvable and get `npm deprecate`d with a pointer to the new
+  scope, as a separate operator-run step after this release. See
+  [docs/migration-npm-scope.md](../docs/migration-npm-scope.md) for the full
+  migration path, including the exact `cadence doctor --fix --wire-host`
+  command that repairs an existing consumer's host-adapter hook install.
+
+  `cadence doctor`'s host-hooks and `cadence config explain`'s warnings both
+  now distinguish a hook entry that's missing entirely from one that's
+  present but still pointing at the old scope — previously both cases
+  reported the same "not found" message, which was factually wrong for the
+  second case.
+
+- 8f58bde: Fixed three more silent-refusal gaps in `cadence settle run`: the
+  AC-derivation refusal (`--auto`/`--interactive` finding a blocked or
+  incomplete task), the anomaly/skill-audit refusal, and the evidence-floor
+  refusal each previously exited 1 with zero durable evidence beyond an
+  ephemeral stderr line — no `SUMMARY.json`/`.md` was written at all. Phase
+  247 had already fixed this for the gate-loop refusal family (a gate itself
+  returning `refused`); these three post-gate-loop families were a separate,
+  undocumented gap in the same mechanism.
+
+  All three now route through the existing `writeRefusedSettleSummary`
+  (unchanged), reusing the `acc`/`gates` already computed earlier in
+  `settleService` — no new parameters on any helper function, no
+  reimplementation. A findings-bearing refusal in any of these three
+  families inherits the identical conditional `contentHash` and per-attempt
+  snapshot-sibling behavior phase 247 built for the gate-loop family;
+  `acResults` stays `[]` on all four refusal families alike, matching the
+  existing invariant. Exit code, stderr messaging, loop-state non-mutation,
+  and every gate's own outcome are unchanged.
+
+  Out of scope, unchanged by design: `loadSettlePreconditions`'s precondition
+  refusal, `checkPhaseCollisionBackstop`'s worktree-collision backstop, and
+  `resolveSettleGateSet`'s soft-cap refusal all fire before a `gates`
+  provenance array exists to attach a SUMMARY to — none of the three writes
+  one, before or after this change.
+
+- afcb90a: Fixed two compounding data-loss gaps in a refused (failed) `cadence settle`:
+  `writeRefusedSettleSummary` (`packages/core/src/services/settle.ts`) never
+  recorded the `codeReview`/`securityAudit` findings that caused the refusal
+  in the first place, even though they were already accumulated into `acc`
+  by the time the gate loop halted — they were computed, then silently
+  dropped at the write. Fixed by threading `acc.codeReview`/
+  `acc.securityAudit` into the refused `SUMMARY.json`, mirroring the
+  success path's shape exactly, with a `contentHash` attached exactly when
+  at least one of those collections is non-empty (a findings-free refusal —
+  e.g. a bare `build-test-must-pass` refusal — keeps producing byte-identical
+  output to before this change).
+
+  Second, even once recorded, a later settle attempt for the same draft
+  silently overwrote the previous attempt's refused record — a convergence
+  reloop's attempt-1 findings vanished the moment attempt-2 ran, success or
+  refusal. Fixed by additively writing an immutable per-attempt sibling pair
+  (`<id>-refused-<completedAt-slug>-SUMMARY-snapshot.json`/`.md`, exported as
+  `refusedSnapshotArtifactBase`) whenever a refusal recorded findings — named
+  so it is invisible to every existing SUMMARY-discovery consumer
+  (`mcp/resources.ts`, `git/diff-strict.ts`, `verify phase`, `summary
+render`/`verify`) by construction, best-effort (a sibling-write failure is
+  reported on stderr but never affects the canonical write or settle's exit
+  code), and never written on the success path or for a findings-free
+  refusal. The canonical `<id>-SUMMARY.json`/`.md` continues to reflect only
+  the latest attempt, as before — nothing that reads it changes behavior;
+  prior attempts' siblings simply keep accumulating on disk.
+
+  `cadence summary verify`'s `NO_HASH` outcome and `packages/core/src/
+services/summary-verify.ts`'s doc comment are updated to reflect the new
+  conditional truth: `NO_HASH` now means "pre-phase-223 record, or a refused
+  settle that recorded no findings" rather than "any refused settle."
+
+### Patch Changes
+
+- Updated dependencies [8b42ff4]
+  - @thomas-powers-jr/cadence-types@1.54.0
+
 ## 1.53.0
 
 ### Minor Changes
