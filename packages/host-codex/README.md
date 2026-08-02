@@ -3,7 +3,7 @@
 CADENCE host adapter for the OpenAI Codex CLI — the `cadence-host-codex` command
 (hook install + slash-command prompts + event mapping).
 
-Part of the [CADENCE](https://github.com/manehorizons/cadence) monorepo. MIT licensed.
+Part of the [CADENCE](https://github.com/thomas-powers-jr/cadence) monorepo. MIT licensed.
 
 ```bash
 # First-run bootstrap from an uninitialized repo
@@ -30,6 +30,6 @@ repo is already initialized. It is adapter-only: it does not create `.cadence/`
 state and it does not write `AGENTS.md`.
 
 The second conformance consumer of the CADENCE
-[host-adapter contract](https://github.com/manehorizons/cadence/blob/main/docs/host-adapters.md);
+[host-adapter contract](https://github.com/thomas-powers-jr/cadence/blob/main/docs/host-adapters.md);
 see that guide for how the Codex adapter maps Codex's lifecycle onto the shared
 engine.

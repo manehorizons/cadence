@@ -108,7 +108,7 @@ export function resolveEffectiveProvider(
 }
 
 const PROVIDERS_DOC =
-  'https://github.com/manehorizons/cadence/blob/main/docs/providers.md';
+  'https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md';
 
 /**
  * Prominent stderr banner for the mock case under a verification gate.

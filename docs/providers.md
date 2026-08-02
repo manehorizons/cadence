@@ -143,7 +143,7 @@ not a bare one-liner):
   ⚠  MOCK = NOT REAL VERIFICATION
      verifier: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.
      The `mock` verifier is a deterministic, offline placeholder that only checks each AC links to a test — it is NOT real verification. Run `cadence activate` to turn on a real AI verifier.
-     https://github.com/manehorizons/cadence/blob/main/docs/providers.md
+     https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md
 
 ```
 
@@ -243,7 +243,7 @@ with the same loud, gate-prefixed banner described above (Phase 243), e.g.:
   ⚠  MOCK = NOT REAL VERIFICATION
      verifier: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.
      The `mock` verifier is a deterministic, offline placeholder that only checks each AC links to a test — it is NOT real verification. Run `cadence activate` to turn on a real AI verifier.
-     https://github.com/manehorizons/cadence/blob/main/docs/providers.md
+     https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md
 
 ```
 

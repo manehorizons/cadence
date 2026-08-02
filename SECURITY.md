@@ -11,7 +11,7 @@ supported — please upgrade before reporting.
 
 **Do not open a public issue for a security vulnerability.**
 
-Report privately via GitHub's **[Report a vulnerability](https://github.com/manehorizons/cadence/security/advisories/new)**
+Report privately via GitHub's **[Report a vulnerability](https://github.com/thomas-powers-jr/cadence/security/advisories/new)**
 button (Security → Advisories). This opens a private advisory visible only to
 maintainers. If private reporting is unavailable, open a minimal public issue
 that says only "security report — please enable private contact" without

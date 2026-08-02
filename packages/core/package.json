@@ -7,8 +7,8 @@
   "description": "CADENCE engine — the DRAFT→BUILD→SETTLE loop, configurable quality gates, and the host-agnostic `cadence` CLI for AI-assisted development.",
   "license": "MIT",
   "author": "Thomas Powers",
-  "homepage": "https://github.com/manehorizons/cadence#readme",
-  "bugs": "https://github.com/manehorizons/cadence/issues",
+  "homepage": "https://github.com/thomas-powers-jr/cadence#readme",
+  "bugs": "https://github.com/thomas-powers-jr/cadence/issues",
   "keywords": [
     "cadence",
     "ai",
@@ -43,7 +43,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/manehorizons/cadence.git",
+    "url": "git+https://github.com/thomas-powers-jr/cadence.git",
     "directory": "packages/core"
   },
   "scripts": {

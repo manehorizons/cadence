@@ -1,15 +1,15 @@
 # CADENCE
 
-[![CI](https://github.com/manehorizons/cadence/actions/workflows/ci.yml/badge.svg)](https://github.com/manehorizons/cadence/actions/workflows/ci.yml)
+[![CI](https://github.com/thomas-powers-jr/cadence/actions/workflows/ci.yml/badge.svg)](https://github.com/thomas-powers-jr/cadence/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/%40manehorizons%2Fcadence-core)](https://www.npmjs.com/package/@manehorizons/cadence-core)
 
 **Cadence stops AI agents from shipping work they only *claim* is done** — a DRAFT→BUILD→SETTLE loop whose quality gates re-check your acceptance criteria and refuse to settle when they don't pass.
 
 > **"Your CI is green. Cadence still said no."**
 
-![An agent guts a failing test to make the suite green; Cadence's settle gate still refuses, then accepts once the bug is actually fixed](https://raw.githubusercontent.com/manehorizons/cadence/main/examples/demo-test-gutting/gutting.svg)
+![An agent guts a failing test to make the suite green; Cadence's settle gate still refuses, then accepts once the bug is actually fixed](https://raw.githubusercontent.com/thomas-powers-jr/cadence/main/examples/demo-test-gutting/gutting.svg)
 
-An agent hits a failing test, guts the assertion, and leaves a plausible excuse (`// flaky rounding on some platforms? disabling for now`). The suite goes green, tasks get marked DONE. Then `cadence settle run --auto` refuses anyway — naming the specific AC and the specific dodge, exit 1. Fix the bug for real, restore the assertion, and it settles clean. Real output, offline, mock verifier, zero npm deps — run it yourself: **[docs/DEMO.md →](https://github.com/manehorizons/cadence/blob/main/docs/DEMO.md)** (full 4-beat narrative) or [`examples/demo-test-gutting/run-demo.sh`](https://github.com/manehorizons/cadence/tree/main/examples/demo-test-gutting) (replay it locally).
+An agent hits a failing test, guts the assertion, and leaves a plausible excuse (`// flaky rounding on some platforms? disabling for now`). The suite goes green, tasks get marked DONE. Then `cadence settle run --auto` refuses anyway — naming the specific AC and the specific dodge, exit 1. Fix the bug for real, restore the assertion, and it settles clean. Real output, offline, mock verifier, zero npm deps — run it yourself: **[docs/DEMO.md →](https://github.com/thomas-powers-jr/cadence/blob/main/docs/DEMO.md)** (full 4-beat narrative) or [`examples/demo-test-gutting/run-demo.sh`](https://github.com/thomas-powers-jr/cadence/tree/main/examples/demo-test-gutting) (replay it locally).
 
 ## Try it in 30 seconds — no install, no repo writes
 
@@ -57,7 +57,7 @@ cadence settle run --auto
 cadence settle run --ac AC-1=pass
 ```
 
-> **Heads-up on the default verifier.** Out of the box every gate uses `mock`, a deterministic offline **placeholder** that only checks each acceptance criterion links to a test — it is **not real verification**. Run [`cadence activate`](https://github.com/manehorizons/cadence/blob/main/docs/providers.md) to turn on a real AI verifier (Anthropic or a local model); `cadence doctor` tells you whether real verification is actually wired.
+> **Heads-up on the default verifier.** Out of the box every gate uses `mock`, a deterministic offline **placeholder** that only checks each acceptance criterion links to a test — it is **not real verification**. Run [`cadence activate`](https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md) to turn on a real AI verifier (Anthropic or a local model); `cadence doctor` tells you whether real verification is actually wired.
 
 ## Why this exists
 
@@ -107,14 +107,14 @@ This package is the engine — the `cadence` CLI implements the DRAFT→BUILD→
 
 ## Full user guide
 
-- [Quickstart](https://github.com/manehorizons/cadence/blob/main/docs/quickstart.md) — no-install demo, first real template, and full loop walkthrough
-- [Concepts](https://github.com/manehorizons/cadence/blob/main/docs/concepts.md) — the loop, gates, profiles, and single-commit convention
-- [CLI guide](https://github.com/manehorizons/cadence/blob/main/docs/cli.md) — all subcommands and flags
-- [Claude Code integration](https://github.com/manehorizons/cadence/blob/main/docs/claude-code.md) — hooks and slash commands
-- [MCP server](https://github.com/manehorizons/cadence/blob/main/docs/mcp.md) — drive the loop from any MCP host
-- [Providers](https://github.com/manehorizons/cadence/blob/main/docs/providers.md) — Anthropic, local models, and host-CLI verification
-- [Command reference](https://github.com/manehorizons/cadence/blob/main/docs/reference/commands.md) — exhaustive CLI reference
-- [Config reference](https://github.com/manehorizons/cadence/blob/main/docs/reference/config.md) — full `.cadence/` config schema
+- [Quickstart](https://github.com/thomas-powers-jr/cadence/blob/main/docs/quickstart.md) — no-install demo, first real template, and full loop walkthrough
+- [Concepts](https://github.com/thomas-powers-jr/cadence/blob/main/docs/concepts.md) — the loop, gates, profiles, and single-commit convention
+- [CLI guide](https://github.com/thomas-powers-jr/cadence/blob/main/docs/cli.md) — all subcommands and flags
+- [Claude Code integration](https://github.com/thomas-powers-jr/cadence/blob/main/docs/claude-code.md) — hooks and slash commands
+- [MCP server](https://github.com/thomas-powers-jr/cadence/blob/main/docs/mcp.md) — drive the loop from any MCP host
+- [Providers](https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md) — Anthropic, local models, and host-CLI verification
+- [Command reference](https://github.com/thomas-powers-jr/cadence/blob/main/docs/reference/commands.md) — exhaustive CLI reference
+- [Config reference](https://github.com/thomas-powers-jr/cadence/blob/main/docs/reference/config.md) — full `.cadence/` config schema
 
 ## About the name
 
@@ -122,4 +122,4 @@ This package is the engine — the `cadence` CLI implements the DRAFT→BUILD→
 
 ## License
 
-MIT — [manehorizons/cadence](https://github.com/manehorizons/cadence)
+MIT — [thomas-powers-jr/cadence](https://github.com/thomas-powers-jr/cadence)
