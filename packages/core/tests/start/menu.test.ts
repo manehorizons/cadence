@@ -12,7 +12,7 @@ describe('start menu catalog', () => {
     expect(resolvePick(6)).toMatchObject({ runner: 'cadence', args: ['doctor'] });
   });
 
-  it('routes host options through npx with install args (AC-1)', () => {
+  it('250-01/AC-8: routes host options through npx with install args (AC-1)', () => {
     expect(resolvePick(3)).toMatchObject({
       runner: 'npx',
       args: ['-y', '@thomas-powers-jr/cadence-host-claude-code', 'install'],

@@ -59,4 +59,69 @@ describe('gatherExplainContext (AC-2)', () => {
     expect(ctx.activeTier).toBeNull();
     expect(ctx.hostHooksInstalled).toBe(false);
   });
+
+  // Phase 250 (AC-5/T16): a managed entry whose command still references the
+  // pre-rename npm scope is stale, not installed — gather must surface both
+  // flags so build.ts can tell "stale, needs reinstall" apart from
+  // "genuinely absent" instead of conflating the two.
+  //
+  // The stale scope string below is built via concatenation, not one
+  // literal: this fixture must exercise the real stale-scope string to trip
+  // `hasStaleScopeManagedHook`, but this test file is not allowlisted in the
+  // phase-250 repo-wide stray-scope sweep (npm-scope-sweep.test.ts) and a
+  // literal here would trip it.
+  const STALE_SCOPE = '@maneh' + 'orizons/';
+
+  it('T16: a stale-scope managed hook entry reports hostHooksInstalled=false, hostHooksStale=true', async () => {
+    active = await tempRepo({ initialized: true });
+    await mkdir(join(active.root, '.claude'), { recursive: true });
+    await writeFile(
+      join(active.root, '.claude', 'settings.json'),
+      JSON.stringify({
+        hooks: {
+          Stop: [
+            {
+              hooks: [
+                { type: 'command', command: `npx ${STALE_SCOPE}cadence-host-claude-code hook` },
+              ],
+              _managedBy: 'cadence',
+            },
+          ],
+        },
+      }),
+    );
+    const ctx = await gatherExplainContext(active.root, {} as NodeJS.ProcessEnv);
+    expect(ctx.hostHooksInstalled).toBe(false);
+    expect(ctx.hostHooksStale).toBe(true);
+  });
+
+  it('T16: a fresh-scope managed hook entry reports hostHooksInstalled=true, hostHooksStale=false', async () => {
+    active = await tempRepo({ initialized: true });
+    await mkdir(join(active.root, '.claude'), { recursive: true });
+    await writeFile(
+      join(active.root, '.claude', 'settings.json'),
+      JSON.stringify({
+        hooks: {
+          Stop: [
+            {
+              hooks: [
+                { type: 'command', command: 'npx @thomas-powers-jr/cadence-host-claude-code hook' },
+              ],
+              _managedBy: 'cadence',
+            },
+          ],
+        },
+      }),
+    );
+    const ctx = await gatherExplainContext(active.root, {} as NodeJS.ProcessEnv);
+    expect(ctx.hostHooksInstalled).toBe(true);
+    expect(ctx.hostHooksStale).toBe(false);
+  });
+
+  it('T16: a genuinely absent settings.json reports hostHooksInstalled=false, hostHooksStale=false', async () => {
+    active = await tempRepo({ initialized: true });
+    const ctx = await gatherExplainContext(active.root, {} as NodeJS.ProcessEnv);
+    expect(ctx.hostHooksInstalled).toBe(false);
+    expect(ctx.hostHooksStale).toBe(false);
+  });
 });

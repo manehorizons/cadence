@@ -1,7 +1,30 @@
 import type { Tier } from '@thomas-powers-jr/cadence-types';
+import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { SimpleStateBackend } from '../state/simple.js';
-import { hostHooksInstalled } from '../doctor/host-hooks.js';
+import { hasManagedCadence, hasStaleScopeManagedHook } from '../doctor/host-hooks.js';
 import type { ExplainContext } from './types.js';
+
+/**
+ * Read `.claude/settings.json` once and derive both the installed and
+ * stale-scope flags from the same parsed document — mirrors doctor's
+ * `checkHostHooks` (`../doctor/run.ts`, phase 250 T14) so `config explain`
+ * can tell a genuinely-absent CADENCE-managed hook entry from one that is
+ * present but still references the pre-rename npm scope (phase 250, AC-5).
+ * Best-effort: an absent file, unreadable file, or invalid JSON all degrade
+ * to "not installed, not stale" rather than throwing.
+ */
+async function readHostHookState(root: string): Promise<{ installed: boolean; stale: boolean }> {
+  const settings = join(root, '.claude', 'settings.json');
+  if (!existsSync(settings)) return { installed: false, stale: false };
+  try {
+    const parsed: unknown = JSON.parse(await readFile(settings, 'utf8'));
+    return { installed: hasManagedCadence(parsed), stale: hasStaleScopeManagedHook(parsed) };
+  } catch {
+    return { installed: false, stale: false };
+  }
+}
 
 /**
  * Gather the impure facts {@link buildExplanation} needs: the active phase tier
@@ -23,10 +46,13 @@ export async function gatherExplainContext(
     activeTier = null;
   }
 
+  const hostHooks = await readHostHookState(root);
+
   return {
     activeTier,
     anthropicKeyPresent: Boolean(env.ANTHROPIC_API_KEY),
     localKeyPresent: Boolean(env.CADENCE_LOCAL_API_KEY),
-    hostHooksInstalled: await hostHooksInstalled(root),
+    hostHooksInstalled: hostHooks.installed,
+    hostHooksStale: hostHooks.stale,
   };
 }

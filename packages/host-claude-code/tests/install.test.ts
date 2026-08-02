@@ -37,7 +37,7 @@ describe('installHooks', () => {
     expect(cfg.hooks.PostToolUse[0].matcher).toBe('Edit|Write|MultiEdit|NotebookEdit');
   });
 
-  it('all events point at the host-claude-code shim (single command)', async () => {
+  it('250-01/AC-4: all events point at the host-claude-code shim (single command)', async () => {
     const root = await tempDir();
     await installHooks(root);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
@@ -50,7 +50,7 @@ describe('installHooks', () => {
     expect(cfg.hooks.SubagentStop[0].hooks[0].command).toBe(expected);
   });
 
-  it('cadenceCommand option appends --cadence "<cmd>" to the shim invocation', async () => {
+  it('250-01/AC-4: cadenceCommand option appends --cadence "<cmd>" to the shim invocation', async () => {
     const root = await tempDir();
     await installHooks(root, { cadenceCommand: 'node /abs/cadence.js' });
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
@@ -322,7 +322,7 @@ describe('installHooks', () => {
   // AC-2 (Phase 171) — ENOENT (no settings.json yet) must still create a
   // fresh file with the cadence-managed hooks; the T2 malformed-JSON refusal
   // must not regress the absent-file path.
-  it('AC-2: ENOENT (no prior settings.json) still creates a fresh settings file with cadence hooks', async () => {
+  it('250-01/AC-4: AC-2: ENOENT (no prior settings.json) still creates a fresh settings file with cadence hooks', async () => {
     const root = await tempDir();
     await installHooks(root);
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { writeFile, readFile, unlink } from 'node:fs/promises';
+import { writeFile, readFile, unlink, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { emptyState } from '@thomas-powers-jr/cadence-types';
@@ -330,5 +330,117 @@ describe('runDoctor — state conflict-marker diagnosis (phase 196, issue #177, 
     expect(check?.detail).toMatch(/state\.json is not valid JSON/);
     expect(check?.fixId).toBeNull();
     expect(check?.remediation).toBe('Restore .cadence/state.json from version control, or re-init.');
+  });
+});
+
+/**
+ * Phase 250, T14 (whole-branch-review as-built amendment): `checkHostHooks`
+ * and `checkCodexHooks` must not print the generic "no managed entries
+ * found" message for a managed hook entry that IS present but stale (its
+ * command still references the pre-rename npm scope) -- that message is a
+ * false claim in that case (AC-5's Then-clause: flagged "as stale...
+ * specifically because its command references the old scope, not just
+ * marker-presence"). Strengthens the AC-5 coverage: the pre-existing AC-5
+ * test in host-hooks.test.ts only asserted `severity`/`fixId`, never the
+ * `detail` text -- which is exactly why the whole-branch review caught this
+ * as a gap rather than a test failure. These assert on `detail` content,
+ * distinguishing "stale, needs reinstall" from "no entry found at all", for
+ * both the Claude Code (`host-hooks`) and Codex (`codex-hooks`) checks.
+ */
+describe('runDoctor — host-hooks/codex-hooks stale-scope message honesty (phase 250, T14)', () => {
+  // The stale (pre-rename) npm scope, built via concatenation rather than one
+  // literal so this fixture -- which must exercise the real stale-scope
+  // string to trip hasStaleScopeManagedHook -- doesn't itself trip the
+  // phase-250 repo-wide stray-scope sweep (npm-scope-sweep.test.ts), which
+  // does not allowlist this file.
+  const STALE_SCOPE = '@maneh' + 'orizons/';
+  const STALE_HOST_COMMAND = `npx ${STALE_SCOPE}cadence-host-claude-code hook`;
+  const STALE_CODEX_COMMAND = `npx -y ${STALE_SCOPE}cadence-host-codex hook`;
+  const FRESH_HOST_COMMAND = 'npx @thomas-powers-jr/cadence-host-claude-code hook';
+
+  async function writeHostSettings(root: string, command: string): Promise<void> {
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await writeFile(
+      join(root, '.claude', 'settings.json'),
+      JSON.stringify({
+        hooks: { Stop: [{ hooks: [{ type: 'command', command }], _managedBy: 'cadence' }] },
+      }),
+    );
+  }
+
+  async function writeCodexHooksFile(root: string, command: string): Promise<void> {
+    await mkdir(join(root, '.codex'), { recursive: true });
+    await writeFile(
+      join(root, '.codex', 'hooks.json'),
+      JSON.stringify({
+        hooks: { Stop: [{ _managedBy: 'cadence', hooks: [{ type: 'command', command }] }] },
+      }),
+    );
+  }
+
+  it('250-01/AC-5: host-hooks: a stale-scope managed entry is flagged stale/needs-reinstall, not "not found", and remediation names --fix --wire-host', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-host-hooks-stale' });
+    await writeHostSettings(active.root, STALE_HOST_COMMAND);
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    const check = findCheck(report.checks, 'host-hooks');
+
+    expect(check?.severity).toBe('warning');
+    expect(check?.fixId).toBe('host-install');
+    expect(check?.detail).toMatch(/outdated npm scope/i);
+    expect(check?.detail).toMatch(/needs reinstalling/i);
+    expect(check?.detail).not.toMatch(/No CADENCE-managed/);
+    expect(check?.remediation).toMatch(/cadence doctor --fix --wire-host/);
+  });
+
+  it('250-01/AC-5: host-hooks: a genuinely absent managed entry still reports "not found", distinct from the stale-scope message', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-host-hooks-absent' });
+    await mkdir(join(active.root, '.claude'), { recursive: true });
+    await writeFile(join(active.root, '.claude', 'settings.json'), JSON.stringify({ hooks: {} }));
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    const check = findCheck(report.checks, 'host-hooks');
+
+    expect(check?.severity).toBe('warning');
+    expect(check?.fixId).toBe('host-install');
+    expect(check?.detail).toMatch(/No CADENCE-managed/);
+    expect(check?.detail).not.toMatch(/outdated npm scope/i);
+  });
+
+  it('250-01/AC-5: host-hooks: a fresh-scope managed entry passes and is never flagged stale', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-host-hooks-fresh' });
+    await writeHostSettings(active.root, FRESH_HOST_COMMAND);
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    expect(findCheck(report.checks, 'host-hooks')?.severity).toBe('ok');
+  });
+
+  it('250-01/AC-5: codex-hooks: a stale-scope managed entry is flagged stale/needs-reinstall, not "not found", and remediation names --fix --wire-host', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-codex-hooks-stale' });
+    await writeCodexHooksFile(active.root, STALE_CODEX_COMMAND);
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    const check = findCheck(report.checks, 'codex-hooks');
+
+    expect(check?.severity).toBe('warning');
+    expect(check?.fixId).toBe('codex-host-install');
+    expect(check?.detail).toMatch(/outdated npm scope/i);
+    expect(check?.detail).toMatch(/needs reinstalling/i);
+    expect(check?.detail).not.toMatch(/No CADENCE-managed/);
+    expect(check?.remediation).toMatch(/cadence doctor --fix --wire-host/);
+  });
+
+  it('250-01/AC-5: codex-hooks: a genuinely absent managed entry still reports "not found", distinct from the stale-scope message', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-codex-hooks-absent' });
+    await mkdir(join(active.root, '.codex'), { recursive: true });
+    await writeFile(join(active.root, '.codex', 'hooks.json'), JSON.stringify({ hooks: {} }));
+
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    const check = findCheck(report.checks, 'codex-hooks');
+
+    expect(check?.severity).toBe('warning');
+    expect(check?.fixId).toBe('codex-host-install');
+    expect(check?.detail).toMatch(/No CADENCE-managed/);
+    expect(check?.detail).not.toMatch(/outdated npm scope/i);
   });
 });

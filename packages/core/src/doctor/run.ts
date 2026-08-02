@@ -39,7 +39,7 @@ import {
   type DoctorEnv,
   type DoctorReport,
 } from './model.js';
-import { hasManagedCadence } from './host-hooks.js';
+import { hasManagedCadence, hasStaleScopeManagedHook } from './host-hooks.js';
 
 function checkNode(env: DoctorEnv): DoctorCheck {
   const r = checkNodeMajor(env.nodeVersion);
@@ -397,6 +397,15 @@ async function checkHostHooks(root: string): Promise<DoctorCheck> {
       'CADENCE-managed hook entries are present in settings.json.',
     );
   }
+  if (hasStaleScopeManagedHook(parsed)) {
+    return fail(
+      'host-hooks',
+      'warning',
+      'A CADENCE-managed hook entry is present in settings.json but is stale — it references an outdated npm scope and needs reinstalling.',
+      'Run `cadence doctor --fix --wire-host` to reinstall the lifecycle hooks with the current package scope.',
+      'host-install',
+    );
+  }
   return fail(
     'host-hooks',
     'warning',
@@ -454,6 +463,15 @@ async function checkCodexHooks(root: string): Promise<DoctorCheck> {
     const parsed = JSON.parse(await readFile(hooksPath, 'utf8'));
     if (hasManagedCadence(parsed)) {
       return pass('codex-hooks', 'CADENCE-managed Codex hook entries are present.');
+    }
+    if (hasStaleScopeManagedHook(parsed)) {
+      return fail(
+        'codex-hooks',
+        'warning',
+        'A CADENCE-managed Codex hook entry is present in .codex/hooks.json but is stale — it references an outdated npm scope and needs reinstalling.',
+        'Run `cadence doctor --fix --wire-host` to reinstall the Codex lifecycle hooks with the current package scope.',
+        'codex-host-install',
+      );
     }
     return fail(
       'codex-hooks',

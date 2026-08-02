@@ -72,7 +72,7 @@ describe('runStart', () => {
     ]);
   });
 
-  it('dispatches a host option through npx (AC-7)', async () => {
+  it('250-01/AC-8: dispatches a host option through npx (AC-7)', async () => {
     const io = bufferIO();
     const d = deps();
     await runStart('/repo', { pick: 3, yes: true, isTty: false }, io, d);

@@ -3,7 +3,7 @@ import { renderMenu, renderJson, renderConfirm } from '../../src/start/render.js
 import { resolvePick } from '../../src/start/menu.js';
 
 describe('start render', () => {
-  it('lists all options and the quit line (AC-3)', () => {
+  it('250-01/AC-8: lists all options and the quit line (AC-3)', () => {
     const text = renderMenu(false);
     expect(text).toContain('What are you doing?');
     expect(text).toContain('1. Try Cadence in a throwaway sandbox');
@@ -11,7 +11,7 @@ describe('start render', () => {
     expect(text).toContain('q. Quit');
   });
 
-  it('shows an opinionated recommended command when provided', () => {
+  it('250-01/AC-8: shows an opinionated recommended command when provided', () => {
     const text = renderMenu(false, {
       command: 'npx -y @thomas-powers-jr/cadence-core tutorial',
       reason: 'Fastest first touch.',

@@ -151,7 +151,7 @@ describe('release-integrity helper', () => {
     ).toThrow('@thomas-powers-jr/cadence-types@1.30.0');
   });
 
-  it('discovers every public @thomas-powers-jr/cadence-* package and skips private packages (AC-3)', async () => {
+  it('250-01/AC-6: discovers every public @thomas-powers-jr/cadence-* package and skips private packages (AC-3)', async () => {
     const root = tempRoot();
     try {
       writePackage(root, 'core', {

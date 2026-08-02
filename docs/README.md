@@ -29,6 +29,7 @@ Read in this order:
 - **[Command reference](reference/commands.md)** — Exhaustive reference for all CLI subcommands and their options.
 - **[Config reference](reference/config.md)** — Full `.cadence/` config schema and all settable fields.
 - **[Release process](release.md)** — Maintainer checklist for publishing npm, tag, and GitHub Release records in sync.
+- **[npm scope migration](migration-npm-scope.md)** — Moving from an `@manehorizons/cadence-*` install to `@thomas-powers-jr/cadence-*`.
 
 ---
 

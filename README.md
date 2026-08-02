@@ -181,6 +181,7 @@ See **[docs/README.md](./docs/README.md)** for the complete user guide:
 - [Command reference](./docs/reference/commands.md) — exhaustive CLI reference
 - [Config reference](./docs/reference/config.md) — full `.cadence/` config schema
 - [Release process](./docs/release.md) — maintainer checklist for npm, tag, and GitHub Release integrity
+- [npm scope migration](./docs/migration-npm-scope.md) — `@manehorizons` → `@thomas-powers-jr`: old packages stay resolvable and deprecated, exact remediation commands
 
 ## Continuous integration
 

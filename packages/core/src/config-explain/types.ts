@@ -17,6 +17,16 @@ export interface ExplainContext {
   localKeyPresent: boolean;
   /** Whether the Claude Code adapter's hooks are registered in `.claude/settings.json`. */
   hostHooksInstalled: boolean;
+  /**
+   * Whether a `_managedBy: "cadence"` hook entry is present in
+   * `.claude/settings.json` but stale — its command still references the
+   * pre-rename npm scope (phase 250, AC-5/T16). Distinguishes "present but
+   * needs reinstalling" from "genuinely absent" so `deriveWarnings` doesn't
+   * emit the same "no host hook entry was found" message for both. Optional
+   * so pre-existing `ExplainContext` literals (tests) keep compiling without
+   * it; a missing/`undefined` value is treated the same as `false`.
+   */
+  hostHooksStale?: boolean;
 }
 
 /** The gates that fire for one tier under the configured profile. */

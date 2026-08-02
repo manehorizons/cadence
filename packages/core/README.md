@@ -27,6 +27,13 @@ Requires Node ≥ 22.
 npm install -g @thomas-powers-jr/cadence-core
 ```
 
+> **Migrating from `@manehorizons/cadence-*`?** This package renamed its npm
+> scope in phase 250 — same code, new scope. The old packages keep working
+> (deprecated, never removed), but to move over: `npm uninstall -g
+> @manehorizons/cadence-core && npm install -g @thomas-powers-jr/cadence-core`.
+> Full guide, including refreshing a Claude Code/Codex host adapter hook:
+> [docs/migration-npm-scope.md](https://github.com/thomas-powers-jr/cadence/blob/main/docs/migration-npm-scope.md).
+
 New to CADENCE? Run `cadence start` — a guided menu that picks the right setup command for what you're doing. (Once you're set up, `cadence quickstart` is the read-only map of where you are and your next moves.)
 
 ## Quickstart

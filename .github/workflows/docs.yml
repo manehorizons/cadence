@@ -50,12 +50,12 @@ jobs:
       # The API docs are generated from packages/*/src via typedoc, which must
       # resolve those packages' imports: external deps (e.g. zod) need the
       # monorepo installed at the repo root, and cross-package imports (e.g.
-      # @manehorizons/cadence-types) resolve via each package's built
+      # @thomas-powers-jr/cadence-types) resolve via each package's built
       # dist/*.d.ts — so install AND build the workspace before the site build.
       # The isolated website install alone is not enough.
       - name: Install monorepo deps (for typedoc source resolution)
         run: pnpm install --frozen-lockfile
-      - name: Build packages (typedoc resolves @manehorizons/* via built declarations)
+      - name: Build packages (typedoc resolves @thomas-powers-jr/* via built declarations)
         run: pnpm build
       - name: Install (website)
         working-directory: website
