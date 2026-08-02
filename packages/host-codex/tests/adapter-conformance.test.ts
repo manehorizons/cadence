@@ -3,7 +3,7 @@ import {
   HostCapabilitiesZ,
   AbstractEventZ,
   ADAPTER_CONTRACT_VERSION,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { codexAdapter } from '../src/index.js';
 import { mapEvent, extractPayload } from '../src/event-map.js';
 import { codexCapabilities } from '../src/capabilities.js';

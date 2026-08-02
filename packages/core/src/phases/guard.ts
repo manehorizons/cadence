@@ -6,7 +6,7 @@
 // (`spec new` / `draft new`) and as a settle backstop. Additive to — never a
 // replacement for — the existing local same-dir `existsSync` refusal.
 
-import type { CadenceConfig } from '@manehorizons/cadence-types';
+import type { CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import { detectPhaseCollision, type Occupancy } from './collision.js';
 import { gatherOccupancy } from './occupancy.js';
 

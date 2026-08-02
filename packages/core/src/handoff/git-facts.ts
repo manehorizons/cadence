@@ -1,7 +1,7 @@
 // packages/core/src/handoff/git-facts.ts
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import type { GitFacts } from '@manehorizons/cadence-types';
+import type { GitFacts } from '@thomas-powers-jr/cadence-types';
 
 const pexec = promisify(execFile);
 const EXEC_OPTS = { timeout: 5000, windowsHide: true, maxBuffer: 4 * 1024 * 1024 } as const;

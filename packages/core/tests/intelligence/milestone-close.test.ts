@@ -1,10 +1,10 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { IntelligenceMilestone, MilestoneLedger, Recommendation } from '@manehorizons/cadence-types';
+import type { IntelligenceMilestone, MilestoneLedger, Recommendation } from '@thomas-powers-jr/cadence-types';
 import { applyTransition, runMilestoneTransition } from '../../src/intelligence/milestone.js';
 import { readMilestoneLedger } from '../../src/intelligence/store/milestones.js';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 // Issue #135 / phase 149: `close` transitions an `exported` milestone to `closed`.
 // AC-1: close transitions exported -> closed

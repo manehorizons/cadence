@@ -4,7 +4,7 @@ The test-gutting demo. Replaces (or headlines over) the $100/3 demo.
 
 **Thesis in one line:** the $100/3 demo proves bugs exist; this demo proves *your agent will cheat, and nothing else in your stack notices*.
 
-Every transcript below is **real output**, captured 2026-07-07 against `@manehorizons/cadence-core` v1.42.0 (local build of `main`), Node 22, mock verifier, offline. Deterministic — safe to run live on stage. (Beat 3's refusal message was re-verified and updated against v1.43.0 on 2026-07-11 — phase 166's language-aware coverage diagnostics changed its wording; every other beat was re-checked and is unchanged. Re-verified again on 2026-07-11 against v1.44.0 — phase 167's multi-language coverage engine reworded the refusal again, this time to be language-neutral and point at `cadence verify coverage --explain`; the same phase also fixed a real regression it introduced and caught before release, where the js/ts coverage profile never registered `.mjs`/`.cjs`/`.mts`/`.cts`, which would have silently broken this exact `.test.mjs`-based demo end-to-end. Re-ran the full demo live against a local v1.44.0 build to confirm Beat 3 and Beat 4 both still work correctly.)
+Every transcript below is **real output**, captured 2026-07-07 against `@thomas-powers-jr/cadence-core` v1.42.0 (local build of `main`), Node 22, mock verifier, offline. Deterministic — safe to run live on stage. (Beat 3's refusal message was re-verified and updated against v1.43.0 on 2026-07-11 — phase 166's language-aware coverage diagnostics changed its wording; every other beat was re-checked and is unchanged. Re-verified again on 2026-07-11 against v1.44.0 — phase 167's multi-language coverage engine reworded the refusal again, this time to be language-neutral and point at `cadence verify coverage --explain`; the same phase also fixed a real regression it introduced and caught before release, where the js/ts coverage profile never registered `.mjs`/`.cjs`/`.mts`/`.cts`, which would have silently broken this exact `.test.mjs`-based demo end-to-end. Re-ran the full demo live against a local v1.44.0 build to confirm Beat 3 and Beat 4 both still work correctly.)
 
 ---
 
@@ -98,7 +98,7 @@ Everyone watching has personally caught Claude weakening or skipping a failing t
 ## Running it
 
 ```bash
-npm i -g @manehorizons/cadence-core   # or point at a local build
+npm i -g @thomas-powers-jr/cadence-core   # or point at a local build
 ./run-demo.sh                          # interactive, pauses between beats
 ./run-demo.sh /path/to/cadence.cjs     # against a local build
 ```

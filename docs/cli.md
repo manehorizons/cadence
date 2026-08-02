@@ -11,7 +11,7 @@ The SPEC stage and the strategic-intelligence commands
 [docs/reference/commands.md](reference/commands.md), which also carries the
 exhaustive option lists (every flag and its default).
 
-> **Install:** `npm install -g @manehorizons/cadence-core` provides the
+> **Install:** `npm install -g @thomas-powers-jr/cadence-core` provides the
 > `cadence` command used in every example below (requires Node ≥ 22).
 
 ---

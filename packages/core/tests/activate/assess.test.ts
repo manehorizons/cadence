@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CadenceConfigZ, defaultConfig } from '@manehorizons/cadence-types';
+import { CadenceConfigZ, defaultConfig } from '@thomas-powers-jr/cadence-types';
 import {
   assessReadiness,
   credsPresent,

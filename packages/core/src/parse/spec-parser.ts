@@ -1,4 +1,4 @@
-import { SpecZ, type Spec } from '@manehorizons/cadence-types';
+import { SpecZ, type Spec } from '@thomas-powers-jr/cadence-types';
 import { CadenceError } from '../errors.js';
 
 // Helpers reproduced verbatim from draft-parser.ts (those are module-private

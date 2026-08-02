@@ -1,4 +1,4 @@
-import type { AbstractEvent, HookContext } from '@manehorizons/cadence-types';
+import type { AbstractEvent, HookContext } from '@thomas-powers-jr/cadence-types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { loadConfig } from '../config/loader.js';
 import { getLogger, configureLoggerFromConfig } from '../logging/logger.js';

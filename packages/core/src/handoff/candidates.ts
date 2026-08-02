@@ -1,7 +1,7 @@
 // packages/core/src/handoff/candidates.ts
 import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
-import type { HandoffCandidate } from '@manehorizons/cadence-types';
+import type { HandoffCandidate } from '@thomas-powers-jr/cadence-types';
 import { gitBestEffort, listSiblingWorktrees } from '../git/worktrees.js';
 import { SimpleStateBackend } from '../state/simple.js';
 import { locateFreshestHandoff, readKey } from './locate.js';

@@ -4,7 +4,7 @@ import {
   type IntelligenceDecision,
   type IntelligenceDecisionLedger,
   type RecommendationLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { atomicWriteText } from '../../state/atomic-write.js';
 import { renderDecisionsMd } from '../render-decision.js';
 import { readLedger, writeLedger, type SubjectLedgerSpec } from './ledger.js';

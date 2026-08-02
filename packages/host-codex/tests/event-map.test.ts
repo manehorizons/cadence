@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AbstractEventZ } from '@manehorizons/cadence-types';
+import { AbstractEventZ } from '@thomas-powers-jr/cadence-types';
 import { mapEvent, extractPayload } from '../src/event-map.js';
 
 describe('codex event-map', () => {

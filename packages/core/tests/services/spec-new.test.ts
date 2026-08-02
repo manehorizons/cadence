@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, writeFile, rm, realpath, readFile } from 'node:fs/promi
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultConfig, emptyState } from '@manehorizons/cadence-types';
+import { defaultConfig, emptyState } from '@thomas-powers-jr/cadence-types';
 import { specNewService } from '../../src/services/spec-new.js';
 import type { CommandIO } from '../../src/services/io.js';
 

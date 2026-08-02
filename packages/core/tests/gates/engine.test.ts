@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Profile, Tier } from '@manehorizons/cadence-types';
+import type { Profile, Tier } from '@thomas-powers-jr/cadence-types';
 import {
   effectiveGateSet,
   effectiveProfile,

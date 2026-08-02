@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { COMMANDS, type CommandSpec } from '@manehorizons/cadence-host-toolkit';
+import { COMMANDS, type CommandSpec } from '@thomas-powers-jr/cadence-host-toolkit';
 import { resolveLocalPaths } from './locate-self.js';
 
 export interface InstallCommandsOptions {
@@ -26,7 +26,7 @@ const MANAGED_MARKER = '<!-- managed-by: cadence -->';
 
 // The command catalog (which commands exist, their description/cli/
 // argumentHint/trailing/body) now lives in the shared toolkit package,
-// `@manehorizons/cadence-host-toolkit` (phase 222), so both host adapters
+// `@thomas-powers-jr/cadence-host-toolkit` (phase 222), so both host adapters
 // render from the identical, undrifted catalog. Rendered output is
 // byte-identical — guarded by tests/install-commands-parity.test.ts.
 

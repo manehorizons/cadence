@@ -1,4 +1,4 @@
-# @manehorizons/cadence-host-codex
+# @thomas-powers-jr/cadence-host-codex
 
 CADENCE host adapter for the OpenAI Codex CLI — the `cadence-host-codex` command
 (hook install + slash-command prompts + event mapping).
@@ -10,7 +10,7 @@ Part of the [CADENCE](https://github.com/thomas-powers-jr/cadence) monorepo. MIT
 cadence init --host codex
 
 # Install hooks into a project + the cadence slash commands (global prompts)
-npx -y @manehorizons/cadence-host-codex install
+npx -y @thomas-powers-jr/cadence-host-codex install
 ```
 
 `install` writes project-level hook config to `.codex/hooks.json` and the cadence
@@ -25,7 +25,7 @@ runs this adapter installer. After install, approve the hooks in Codex and start
 a new Codex session so prompt commands are loaded. If prompts are not loaded yet,
 ask Codex to run the `cadence` CLI directly, for example `cadence progress`.
 
-Use `npx -y @manehorizons/cadence-host-codex install` by itself only when the
+Use `npx -y @thomas-powers-jr/cadence-host-codex install` by itself only when the
 repo is already initialized. It is adapter-only: it does not create `.cadence/`
 state and it does not write `AGENTS.md`.
 

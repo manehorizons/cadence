@@ -41,16 +41,16 @@ export const START_OPTIONS: StartOption[] = [
   {
     number: 3,
     label: 'Wire into Claude Code',
-    display: 'npx @manehorizons/cadence-host-claude-code install',
+    display: 'npx @thomas-powers-jr/cadence-host-claude-code install',
     runner: 'npx',
-    args: ['-y', '@manehorizons/cadence-host-claude-code', 'install'],
+    args: ['-y', '@thomas-powers-jr/cadence-host-claude-code', 'install'],
   },
   {
     number: 4,
     label: 'Wire into Codex CLI',
-    display: 'npx @manehorizons/cadence-host-codex install',
+    display: 'npx @thomas-powers-jr/cadence-host-codex install',
     runner: 'npx',
-    args: ['-y', '@manehorizons/cadence-host-codex', 'install'],
+    args: ['-y', '@thomas-powers-jr/cadence-host-codex', 'install'],
   },
   {
     number: 5,

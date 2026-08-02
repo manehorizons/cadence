@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { scanTestCoverage } from '../../src/verify/coverage.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -450,7 +450,7 @@ describe('cadence init — phase 108 zero-prompt + auto-wire (rec-20260617-001)'
       'utf8',
     );
     expect(src).not.toMatch(
-      /import[\s\S]*from\s*['"]@manehorizons\/cadence-host-claude-code['"]/,
+      /import[\s\S]*from\s*['"]@thomas-powers-jr\/cadence-host-claude-code['"]/,
     );
   });
 

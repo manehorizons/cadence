@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { GetPromptResult } from '@modelcontextprotocol/sdk/types.js';
-import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
+import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@thomas-powers-jr/cadence-types';
 
 /**
  * MCP **Prompts** (phase 77) — guided workflows exposed to any MCP host, sourced
- * from the shared `@manehorizons/cadence-types` guidance module (the same text
+ * from the shared `@thomas-powers-jr/cadence-types` guidance module (the same text
  * the Claude-Code slash commands render). Prompts orient the conversation; they
  * do not drive the loop — the tools act. The scout prompt is the standout: an
  * inherently conversational dialogue rather than a request/response tool.

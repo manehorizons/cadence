@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultConfig, presets } from '@manehorizons/cadence-types';
+import { defaultConfig, presets } from '@thomas-powers-jr/cadence-types';
 import { gatesFor } from '../../src/gates/engine.js';
 import { buildExplanation } from '../../src/config-explain/build.js';
 import type { ExplainContext } from '../../src/config-explain/types.js';
@@ -57,5 +57,37 @@ describe('buildExplanation — provider rows (Phase 165 AC-1)', () => {
       provider: 'host-cli',
       isMock: false,
     });
+  });
+});
+
+describe('buildExplanation — hooks-not-installed stale-vs-absent honesty (phase 250, T16)', () => {
+  // defaultConfig has sessionStart/stopReminder/userPromptSubmit = true, so
+  // anyHookEnabled is true and the hooks-not-installed warning is live.
+  const ctxAbsent: ExplainContext = { ...cleanCtx, hostHooksInstalled: false };
+  const ctxStale: ExplainContext = {
+    ...cleanCtx,
+    hostHooksInstalled: false,
+    hostHooksStale: true,
+  };
+
+  // T16: a present-but-stale entry must not get the "no host hook entry was
+  // found" message — that claim is false when an entry does exist.
+  it('T16: a stale-scope managed entry gets a distinct "needs reinstalling" message, not "no host hook entry was found"', () => {
+    const warnings = buildExplanation(defaultConfig, ctxStale).warnings;
+    const warning = warnings.find((w) => w.code === 'hooks-not-installed');
+    expect(warning).toBeDefined();
+    expect(warning!.message).toMatch(/outdated npm scope/i);
+    expect(warning!.message).toMatch(/needs reinstalling/i);
+    expect(warning!.message).not.toMatch(/no host hook entry was found/i);
+  });
+
+  // T16: a genuinely absent entry keeps the original message, and it must
+  // not pick up the stale-scope framing.
+  it('T16: a genuinely absent entry still reports "no host hook entry was found", distinct from the stale message', () => {
+    const warnings = buildExplanation(defaultConfig, ctxAbsent).warnings;
+    const warning = warnings.find((w) => w.code === 'hooks-not-installed');
+    expect(warning).toBeDefined();
+    expect(warning!.message).toMatch(/no host hook entry was found/i);
+    expect(warning!.message).not.toMatch(/outdated npm scope/i);
   });
 });

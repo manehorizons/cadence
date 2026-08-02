@@ -1,5 +1,5 @@
-import { LogLevelZ, LogFormatZ } from '@manehorizons/cadence-types';
-import type { LogLevel, LogFormat } from '@manehorizons/cadence-types';
+import { LogLevelZ, LogFormatZ } from '@thomas-powers-jr/cadence-types';
+import type { LogLevel, LogFormat } from '@thomas-powers-jr/cadence-types';
 
 /**
  * Pure resolution of the effective log level / format (Phase 80, AC-5).

@@ -1,7 +1,7 @@
 # CADENCE
 
 [![CI](https://github.com/thomas-powers-jr/cadence/actions/workflows/ci.yml/badge.svg)](https://github.com/thomas-powers-jr/cadence/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/%40manehorizons%2Fcadence-core)](https://www.npmjs.com/package/@manehorizons/cadence-core)
+[![npm](https://img.shields.io/npm/v/%40thomas-powers-jr%2Fcadence-core)](https://www.npmjs.com/package/@thomas-powers-jr/cadence-core)
 
 **Cadence stops AI agents from shipping work they only *claim* is done** — a DRAFT→BUILD→SETTLE loop whose quality gates re-check your acceptance criteria and refuse to settle when they don't pass.
 
@@ -16,7 +16,7 @@ An agent hits a failing test, guts the assertion, and leaves a plausible excuse 
 Watch one real loop run, including the moment settle refuses to close a phase the tests don't back, then closes once they do:
 
 ```sh
-npx -y @manehorizons/cadence-core tutorial
+npx -y @thomas-powers-jr/cadence-core tutorial
 ```
 
 ## Install
@@ -24,8 +24,15 @@ npx -y @manehorizons/cadence-core tutorial
 Requires Node ≥ 22.
 
 ```sh
-npm install -g @manehorizons/cadence-core
+npm install -g @thomas-powers-jr/cadence-core
 ```
+
+> **Migrating from `@manehorizons/cadence-*`?** This package renamed its npm
+> scope in phase 250 — same code, new scope. The old packages keep working
+> (deprecated, never removed), but to move over: `npm uninstall -g
+> @manehorizons/cadence-core && npm install -g @thomas-powers-jr/cadence-core`.
+> Full guide, including refreshing a Claude Code/Codex host adapter hook:
+> [docs/migration-npm-scope.md](https://github.com/thomas-powers-jr/cadence/blob/main/docs/migration-npm-scope.md).
 
 New to CADENCE? Run `cadence start` — a guided menu that picks the right setup command for what you're doing. (Once you're set up, `cadence quickstart` is the read-only map of where you are and your next moves.)
 
@@ -88,9 +95,9 @@ This package is the engine — the `cadence` CLI implements the DRAFT→BUILD→
 
 | Surface | How | Package / command |
 |---|---|---|
-| **Terminal / any agent** | The `cadence` CLI (this package) | `npm i -g @manehorizons/cadence-core` |
-| **Claude Code** | Lifecycle hooks + 15 slash commands, incl. *ambient* edit-time gates (boundary checks, anomaly detection as you edit) | [`@manehorizons/cadence-host-claude-code`](https://www.npmjs.com/package/@manehorizons/cadence-host-claude-code) — `npx @manehorizons/cadence-host-claude-code install` |
-| **OpenAI Codex CLI** | Lifecycle hooks + global prompt commands | [`@manehorizons/cadence-host-codex`](https://www.npmjs.com/package/@manehorizons/cadence-host-codex) — or `cadence init --host codex` |
+| **Terminal / any agent** | The `cadence` CLI (this package) | `npm i -g @thomas-powers-jr/cadence-core` |
+| **Claude Code** | Lifecycle hooks + 15 slash commands, incl. *ambient* edit-time gates (boundary checks, anomaly detection as you edit) | [`@thomas-powers-jr/cadence-host-claude-code`](https://www.npmjs.com/package/@thomas-powers-jr/cadence-host-claude-code) — `npx @thomas-powers-jr/cadence-host-claude-code install` |
+| **OpenAI Codex CLI** | Lifecycle hooks + global prompt commands | [`@thomas-powers-jr/cadence-host-codex`](https://www.npmjs.com/package/@thomas-powers-jr/cadence-host-codex) — or `cadence init --host codex` |
 | **Any MCP host** (Claude Desktop, Cursor, agents) | Local [MCP](https://modelcontextprotocol.io) server over stdio — imperative loop, no bespoke adapter needed | `cadence mcp serve` |
 
 ```jsonc

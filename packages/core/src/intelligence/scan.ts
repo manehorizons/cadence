@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { RepoScan } from '@manehorizons/cadence-types';
+import type { RepoScan } from '@thomas-powers-jr/cadence-types';
 import { phaseNumber } from '../phases/collision.js';
 
 function git(root: string, args: string[]): Promise<{ ok: boolean; out: string }> {

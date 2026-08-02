@@ -1,5 +1,5 @@
-import type { CadenceConfig, Tier } from '@manehorizons/cadence-types';
-import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
+import type { CadenceConfig, Tier } from '@thomas-powers-jr/cadence-types';
+import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
 import { effectiveProfile, gatesFor } from '../gates/engine.js';
 import type {
   ConfigExplanation,
@@ -72,13 +72,24 @@ function deriveWarnings(
   }
 
   // 2. A hook enabled in config but the host adapter never installed → no effect.
+  // Phase 250 (AC-5/T16): a stale-scope managed entry is present-but-outdated,
+  // not absent — say so distinctly rather than reusing the "no entry was
+  // found" message (that would be false: an entry does exist).
   const anyHookEnabled = Object.values(config.hooks).some(Boolean);
   if (anyHookEnabled && !ctx.hostHooksInstalled) {
-    warnings.push({
-      code: 'hooks-not-installed',
-      message:
-        "one or more hooks are enabled in config, but no host hook entry was found in .claude/settings.json — these hooks do nothing until `cadence-host-claude-code install`. Run cadence doctor for the full host check.",
-    });
+    if (ctx.hostHooksStale === true) {
+      warnings.push({
+        code: 'hooks-not-installed',
+        message:
+          'one or more hooks are enabled in config, and a CADENCE-managed host hook entry is present in .claude/settings.json, but it is stale — it still references an outdated npm scope and needs reinstalling via `cadence-host-claude-code install`. Run cadence doctor for the full host check.',
+      });
+    } else {
+      warnings.push({
+        code: 'hooks-not-installed',
+        message:
+          "one or more hooks are enabled in config, but no host hook entry was found in .claude/settings.json — these hooks do nothing until `cadence-host-claude-code install`. Run cadence doctor for the full host check.",
+      });
+    }
   }
 
   // 3. auto × complex is soft-capped — complex phases refuse without a flag.

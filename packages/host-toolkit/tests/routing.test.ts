@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DISPATCH_DIALOGUE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
+import { DISPATCH_DIALOGUE, SCOUT_DIALOGUE } from '@thomas-powers-jr/cadence-types';
 import {
   mapEvent,
   extractPayload,

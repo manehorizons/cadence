@@ -1,4 +1,4 @@
-import type { AnomalyEvent } from '@manehorizons/cadence-types';
+import type { AnomalyEvent } from '@thomas-powers-jr/cadence-types';
 import type { CoherenceIssue } from '../coherence/check.js';
 import type { DraftGateContext, DraftGateImpl } from './draft-types.js';
 import type { GateResult, IoPort } from './types.js';

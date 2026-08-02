@@ -11,9 +11,9 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { defaultConfig } from '@manehorizons/cadence-types';
-import type { CoverageProfileConfig } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
+import type { CoverageProfileConfig } from '@thomas-powers-jr/cadence-types';
 import { loadConfig } from '../../src/config/loader.js';
 import { scanTestCoverage, uncoveredAcs, weaklyLinkedAcs } from '../../src/verify/coverage.js';
 import { mergeCustomProfiles, getProfileForExtension } from '../../src/verify/coverage-profiles/registry.js';

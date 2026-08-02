@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, runGit } from '@manehorizons/cadence-testkit';
+import { tempRepo, runGit } from '@thomas-powers-jr/cadence-testkit';
 import { discoverChangedPhases, GitDiffError } from '../../src/git/diff-strict.js';
 
 async function initRepo(root: string): Promise<void> {

@@ -7,7 +7,7 @@ import type {
   IntelligenceDecisionLedger,
   Recommendation,
   RecommendationLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { assumptionLedgerSpec } from './assumptions.js';
 import { decisionLedgerSpec } from './decisions.js';
 import { evidenceLedgerSpec } from './io.js';

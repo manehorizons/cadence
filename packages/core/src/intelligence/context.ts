@@ -10,8 +10,8 @@ import type {
   EvidenceLedger,
   IntelligenceDecision,
   Recommendation,
-} from '@manehorizons/cadence-types';
-import { ContextPacketZ, emptyEvidenceLedger } from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
+import { ContextPacketZ, emptyEvidenceLedger } from '@thomas-powers-jr/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { partitionLedger, scoreRecommendation } from './recommend.js';
 import { intelligenceDir } from './store/paths.js';

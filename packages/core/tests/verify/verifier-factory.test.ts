@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CadenceConfigZ, defaultConfig } from '@manehorizons/cadence-types';
+import { CadenceConfigZ, defaultConfig } from '@thomas-powers-jr/cadence-types';
 import {
   buildLocalHeaders,
   createVerifierFactory,
@@ -231,7 +231,7 @@ describe('createVerifierFactory', () => {
 
 // AC-3 (Phase 164 T4) — one level more real than the fake-spec harness above:
 // exercises the actual production wrapper (`selectVerifier`) over the real
-// `CadenceConfig`/`CadenceConfigZ` shape from @manehorizons/cadence-types, and
+// `CadenceConfig`/`CadenceConfigZ` shape from @thomas-powers-jr/cadence-types, and
 // asserts the real `AnthropicVerifier` class is constructed (not a fake tag).
 describe('selectVerifier — committed-config inheritance across teammates (AC-3, integration)', () => {
   it('a teammate who never ran `cadence activate` still gets real anthropic verification from a committed provider + a key discoverable only via .env', () => {

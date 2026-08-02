@@ -1,7 +1,7 @@
 import { readFile, mkdir, rename } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { CadenceStateZ, type CadenceState } from '@manehorizons/cadence-types';
+import { CadenceStateZ, type CadenceState } from '@thomas-powers-jr/cadence-types';
 import { StateCorruptError, NotInitializedError, StateConflictError } from '../errors.js';
 import { atomicWriteJSON, atomicWriteText } from './atomic-write.js';
 import { renderStateMd } from '../render/state-md.js';

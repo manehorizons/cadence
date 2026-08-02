@@ -1,5 +1,5 @@
 ---
-'@manehorizons/cadence-core': minor
+'@thomas-powers-jr/cadence-core': minor
 ---
 
 Fixed three more silent-refusal gaps in `cadence settle run`: the

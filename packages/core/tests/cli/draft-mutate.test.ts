@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { parseDraftMd } from '../../src/parse/draft-parser.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

@@ -1,8 +1,8 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { IntelligenceMilestone } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import type { IntelligenceMilestone } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { cadenceBackend } from '../../src/intelligence/backend/cadence.js';
 import { parseSpecMd } from '../../src/parse/spec-parser.js';
 

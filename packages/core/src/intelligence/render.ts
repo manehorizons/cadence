@@ -3,7 +3,7 @@ import type {
   EvidenceLedger,
   IntelligenceDecisionLedger,
   RecommendationLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 
 export function renderRecommendationsMd(
   ledger: RecommendationLedger,

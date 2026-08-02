@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url';
 export interface LocalPaths {
   /** Absolute path to a host adapter's compiled CLI entry (dist/cli.js). */
   shimCli: string;
-  /** Absolute path to the workspace @manehorizons/cadence-core CLI entry (dist/cli/index.js). */
+  /** Absolute path to the workspace @thomas-powers-jr/cadence-core CLI entry (dist/cli/index.js). */
   coreCli: string;
 }
 
 /**
  * Resolves absolute paths to the local (workspace) builds of a host adapter
- * and `@manehorizons/cadence-core`, given the URL of a module living at that
+ * and `@thomas-powers-jr/cadence-core`, given the URL of a module living at that
  * adapter's own package root (i.e. `packages/<adapter>/src/locate-self.ts` or
  * `packages/<adapter>/dist/locate-self.js`). Designed to work both at runtime
  * (compiled, running from `dist/`) and under vitest (running from `src/`).

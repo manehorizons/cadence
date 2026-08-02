@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 import { doctorService } from '../../src/services/doctor.js';
 import type { CommandIO } from '../../src/services/io.js';
 import type { DoctorReport } from '../../src/doctor/model.js';

@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, statSync, readFileSync } from 'node:fs';
 import { join, basename } from 'node:path';
-import { presets, type Profile } from '@manehorizons/cadence-types';
+import { presets, type Profile } from '@thomas-powers-jr/cadence-types';
 import { derivePhaseTaskId } from '../phases/id.js';
 
 const GATE_PROFILES: readonly Profile[] = ['strict', 'standard', 'auto'];

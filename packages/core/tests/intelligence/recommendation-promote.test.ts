@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type {
   Recommendation,
   RecommendationLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { applyRecommendationPromotion } from '../../src/intelligence/store/recommendations.js';
 
 function mkRec(

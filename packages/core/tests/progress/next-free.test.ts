@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { emptyState } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { nextAction } from '../../src/progress.js';
 import { resolveNextFreePhase } from '../../src/phases/next-free.js';
 import { progressService } from '../../src/services/progress.js';

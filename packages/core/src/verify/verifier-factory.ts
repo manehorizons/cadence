@@ -1,4 +1,4 @@
-import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
+import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
 import { discoverKey } from '../activate/key-discovery.js';
 import { HostCliError } from './host-cli-client.js';
 

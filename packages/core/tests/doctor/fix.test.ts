@@ -2,8 +2,8 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { CadenceStateZ, emptyState } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { CadenceStateZ, emptyState } from '@thomas-powers-jr/cadence-types';
 import { runDoctor } from '../../src/doctor/run.js';
 import { planFixes, applyFixes } from '../../src/doctor/fix.js';
 

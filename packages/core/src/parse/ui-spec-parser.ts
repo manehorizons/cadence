@@ -1,4 +1,4 @@
-import { UiSpecZ, type UiSpec, type UiComponent } from '@manehorizons/cadence-types';
+import { UiSpecZ, type UiSpec, type UiComponent } from '@thomas-powers-jr/cadence-types';
 import { CadenceError } from '../errors.js';
 
 // Helpers reproduced verbatim from spec-parser.ts (those are module-private

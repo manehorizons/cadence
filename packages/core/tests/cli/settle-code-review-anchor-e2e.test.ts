@@ -3,8 +3,8 @@ import { spawn, execSync } from 'node:child_process';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { NO_TEST_COMMAND_NOTICE } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { NO_TEST_COMMAND_NOTICE } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 /**
  * Phase 241 (T3) — end-to-end reachability of the §7.1 anchor ladder's top

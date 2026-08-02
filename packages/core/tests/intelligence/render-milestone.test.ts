@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IntelligenceMilestone, MilestoneLedger } from '@manehorizons/cadence-types';
+import type { IntelligenceMilestone, MilestoneLedger } from '@thomas-powers-jr/cadence-types';
 import { renderMilestonesMd } from '../../src/intelligence/render-milestone.js';
 
 function mk(p: Partial<IntelligenceMilestone> & { id: string }): IntelligenceMilestone {

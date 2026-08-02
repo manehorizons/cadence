@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtemp, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultConfig, emptyState } from '@manehorizons/cadence-types';
+import { defaultConfig, emptyState } from '@thomas-powers-jr/cadence-types';
 import { parseDraftMd } from '../../src/parse/draft-parser.js';
 import { buildBuildContext } from '../../src/gates/build-context.js';
 

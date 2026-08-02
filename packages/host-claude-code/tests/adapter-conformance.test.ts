@@ -3,7 +3,7 @@ import {
   HostCapabilitiesZ,
   AbstractEventZ,
   ADAPTER_CONTRACT_VERSION,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { claudeCodeAdapter } from '../src/index.js';
 import { mapEvent, extractPayload } from '../src/event-map.js';
 import { claudeCodeCapabilities } from '../src/capabilities.js';

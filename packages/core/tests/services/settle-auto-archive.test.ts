@@ -8,7 +8,7 @@ import {
   emptyState,
   type Recommendation,
   type RecommendationLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { settleService } from '../../src/services/settle.js';
 import type { CommandIO } from '../../src/services/io.js';
 

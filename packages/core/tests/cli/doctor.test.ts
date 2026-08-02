@@ -3,8 +3,8 @@ import { spawn } from 'node:child_process';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { emptyState } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 
 const CADENCE_CLI = join(
   dirname(fileURLToPath(import.meta.url)),

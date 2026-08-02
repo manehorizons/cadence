@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { checkVerificationReadiness } from '../../src/doctor/run.js';
 import { loadConfig, writeConfig } from '../../src/config/loader.js';
 

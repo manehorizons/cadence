@@ -6,7 +6,7 @@ import {
   type Inspection,
   type InspectionFlag,
   type RepoScan,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { intelligenceDir } from './store/paths.js';
 import {

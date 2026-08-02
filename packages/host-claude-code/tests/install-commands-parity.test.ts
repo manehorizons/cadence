@@ -16,7 +16,7 @@ afterEach(async () => {
 
 /**
  * Phase 77 regression guard: extracting the guidance prose into the shared
- * `@manehorizons/cadence-types` module must leave the rendered slash-command
+ * `@thomas-powers-jr/cadence-types` module must leave the rendered slash-command
  * files BYTE-IDENTICAL. The golden fixtures were captured from the
  * pre-extraction renderer; this test fails if any byte drifts. (AC-1)
  */

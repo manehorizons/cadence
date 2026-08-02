@@ -1,4 +1,4 @@
-import type { LogRecord } from '@manehorizons/cadence-types';
+import type { LogRecord } from '@thomas-powers-jr/cadence-types';
 
 /**
  * Pure renderers for a {@link LogRecord} (Phase 80). No I/O, deterministic —

@@ -4,7 +4,7 @@ import type {
   CadenceState,
   Draft,
   GateSet,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import type { CoherenceResult } from '../coherence/check.js';
 import type { Prompter } from '../verify/prompter.js';
 import type { Interactivity } from './interactivity.js';

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AcceptanceCriterion, Draft, GateProvenance, Task } from '@manehorizons/cadence-types';
+import type { AcceptanceCriterion, Draft, GateProvenance, Task } from '@thomas-powers-jr/cadence-types';
 import { MockCodeReviewVerifier } from '../../src/verify/code-review.js';
 import type { Finding } from '../../src/verify/code-review.js';
 import { resolveAnchor } from '../../src/verify/anchor.js';

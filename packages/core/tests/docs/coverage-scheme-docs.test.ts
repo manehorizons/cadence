@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CadenceConfigZ, defaultConfig } from '@manehorizons/cadence-types';
+import { CadenceConfigZ, defaultConfig } from '@thomas-powers-jr/cadence-types';
 
 // Resolve repo-root assets from this test file's location:
 // packages/core/tests/docs → ../../../../<asset>

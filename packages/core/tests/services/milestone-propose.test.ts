@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import {
   addRecommendation,
   runRecommendationPromotion,
@@ -11,7 +11,7 @@ import {
 } from '../../src/services/milestone-propose.js';
 import { runMilestoneTransition } from '../../src/intelligence/milestone.js';
 import { bufferIO } from '../../src/services/io.js';
-import { emptyMilestoneLedger, type MilestoneLedger } from '@manehorizons/cadence-types';
+import { emptyMilestoneLedger, type MilestoneLedger } from '@thomas-powers-jr/cadence-types';
 
 function makeMilestone(
   id: string,

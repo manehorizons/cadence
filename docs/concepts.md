@@ -605,7 +605,7 @@ locally-declared `Finding`/`FindingSeverity` (severity `high|medium|low`
 only) were two independently-maintained shapes for the same concept. Per the
 source design doc's local D9 ("one Finding type, discriminated by `target`"),
 `verify/code-review.ts` no longer declares its own type — it imports the
-shared `Finding` from `@manehorizons/cadence-types` directly
+shared `Finding` from `@thomas-powers-jr/cadence-types` directly
 (`verify/code-review.ts:4`), and every construction site (the mock walker,
 the Anthropic-response mapping) keeps emitting `'high'|'medium'|'low'`
 literals, a valid subtype of the wider shared severity union.
@@ -613,7 +613,7 @@ literals, a valid subtype of the wider shared severity union.
 `CodeReviewFindingSeverity` as re-exported aliases of the same shared type
 (`contracts/index.ts:167-186`) purely for name back-compat with existing
 consumers (`gates/types.ts`, `notify/code-review.ts`); new code can import
-`Finding` from `@manehorizons/cadence-types` directly instead.
+`Finding` from `@thomas-powers-jr/cadence-types` directly instead.
 `security-audit`'s findings already used the shared `FindingZ` and are
 unaffected — they simply never populate the new `id`/`target`/`disposition`
 fields (wiring identity computation into `gates/security-audit.ts` is out of

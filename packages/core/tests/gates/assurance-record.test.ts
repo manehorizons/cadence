@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { GateProvenance } from '@manehorizons/cadence-types';
+import type { GateProvenance } from '@thomas-powers-jr/cadence-types';
 import { deriveAssuranceRecord, type AssuranceAcResult } from '../../src/gates/assurance-record.js';
 import { GATE_ORDER } from '../../src/gates/registry.js';
 

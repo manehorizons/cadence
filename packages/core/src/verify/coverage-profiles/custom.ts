@@ -2,7 +2,7 @@
  * Config → `LanguageProfile` compilation for `verification.coverageProfiles`
  * (phase 167, T7).
  *
- * `CoverageProfileConfig` (`@manehorizons/cadence-types`, `packages/types/
+ * `CoverageProfileConfig` (`@thomas-powers-jr/cadence-types`, `packages/types/
  * src/config.ts`) is the JSON-serializable, string-pattern shape an operator
  * writes in `.cadence/config.json` — `openerPattern`/`assertionPattern` are
  * regex SOURCE STRINGS there, because a native `RegExp` cannot round-trip
@@ -47,7 +47,7 @@
  * compile for them here because config can't express them this task.
  */
 
-import type { CoverageProfileConfig } from '@manehorizons/cadence-types';
+import type { CoverageProfileConfig } from '@thomas-powers-jr/cadence-types';
 import type { BlockStrategy, LanguageProfile, LanguageSyntax } from './types.js';
 import { ConfigInvalidError } from '../../errors.js';
 

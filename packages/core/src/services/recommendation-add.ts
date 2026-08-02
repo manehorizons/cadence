@@ -1,4 +1,4 @@
-import { RecommendationPriorityZ, RecommendationReadinessZ } from '@manehorizons/cadence-types';
+import { RecommendationPriorityZ, RecommendationReadinessZ } from '@thomas-powers-jr/cadence-types';
 import {
   addRecommendation,
   type AddRecommendationInput,

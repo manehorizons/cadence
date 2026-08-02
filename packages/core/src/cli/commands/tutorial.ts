@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { emptyState } from '@manehorizons/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 import { atomicWriteJSON } from '../../state/atomic-write.js';
 import { SimpleStateBackend } from '../../state/simple.js';
 import { draftNewService } from '../../services/draft-new.js';
@@ -242,7 +242,7 @@ export async function runTutorial(
     line(io, '  That gap — and settle refusing to paper over it — is the whole tool.');
     line(io);
     line(io, '  Next:  cadence init                                  (start your own loop)');
-    line(io, '         npx @manehorizons/cadence-host-claude-code install   (wire into Claude Code)');
+    line(io, '         npx @thomas-powers-jr/cadence-host-claude-code install   (wire into Claude Code)');
     line(io);
 
     return {

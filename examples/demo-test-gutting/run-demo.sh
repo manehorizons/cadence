@@ -3,7 +3,7 @@
 # Replays the test-gutting arc end-to-end in a throwaway repo.
 #
 # Usage:   ./run-demo.sh [path-to-cadence-cli]
-# Default: uses `cadence` from PATH (npm i -g @manehorizons/cadence-core).
+# Default: uses `cadence` from PATH (npm i -g @thomas-powers-jr/cadence-core).
 # Requires: node >= 20, git. Zero npm deps (uses node:test).
 set -euo pipefail
 

@@ -1,4 +1,4 @@
-# @manehorizons/cadence-host-claude-code
+# @thomas-powers-jr/cadence-host-claude-code
 
 CADENCE host adapter for Claude Code — the `cadence-host-claude-code` command (hook install + event mapping).
 

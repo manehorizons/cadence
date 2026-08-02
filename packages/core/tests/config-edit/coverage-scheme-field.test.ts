@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { resolveField } from '../../src/config-edit/fields.js';
 import { validateCandidate, assembleConfig } from '../../src/config-edit/apply.js';
-import { defaultConfig } from '@manehorizons/cadence-types';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 
 describe('config-edit coverageScheme field', () => {
   // 239-01/AC-5: the field is registered and discoverable exactly like coverageMode.

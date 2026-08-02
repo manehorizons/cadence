@@ -1,4 +1,4 @@
-import type { Profile } from '@manehorizons/cadence-types';
+import type { Profile } from '@thomas-powers-jr/cadence-types';
 
 /**
  * The init-time heads-up for the silent gate-profile flip (rec-20260617-009).

@@ -1,4 +1,4 @@
-import type { AnomalyEvent } from '@manehorizons/cadence-types';
+import type { AnomalyEvent } from '@thomas-powers-jr/cadence-types';
 import type { Notifier } from './notifier.js';
 
 /**

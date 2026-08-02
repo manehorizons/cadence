@@ -16,6 +16,7 @@ export const ROUTES = [
   { src: 'docs/mcp.md',               out: 'guides/mcp',             group: 'Guides',      label: 'MCP server' },
   { src: 'docs/providers.md',         out: 'guides/providers',       group: 'Guides',      label: 'Verifier providers' },
   { src: 'docs/cli.md',               out: 'guides/cli',             group: 'Guides',      label: 'CLI usage' },
+  { src: 'docs/migration-npm-scope.md', out: 'guides/npm-scope-migration', group: 'Guides', label: 'npm scope migration' },
   // Reference
   { src: 'docs/reference/commands.md', out: 'reference/commands',    group: 'Reference',   label: 'Commands' },
   { src: 'docs/reference/config.md',  out: 'reference/config',       group: 'Reference',   label: 'Config' },

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AcceptanceCriterion, Task, GateProvenance } from '@manehorizons/cadence-types';
+import type { AcceptanceCriterion, Task, GateProvenance } from '@thomas-powers-jr/cadence-types';
 import { resolveAnchor } from '../../src/verify/anchor.js';
 
 // Phase 235, T2 — the pure anchor resolver (§7.1 ladder). AC-2: the ladder

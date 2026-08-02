@@ -1,4 +1,4 @@
-import type { DeepVerdict, DeepVerifyMeta } from '@manehorizons/cadence-types';
+import type { DeepVerdict, DeepVerifyMeta } from '@thomas-powers-jr/cadence-types';
 import type { VerifyAc, VerifyInput, VerifyTestRef } from '../contracts/index.js';
 import { capDiff } from '../verify/cap-diff.js';
 import type { GateImpl, GateFlags, GateResult, SettleContext } from './types.js';

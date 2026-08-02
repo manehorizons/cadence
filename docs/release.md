@@ -8,7 +8,7 @@ provenance and finishes the repository release record.
 
 A release is done only when all four public records agree:
 
-- npm shows the new version for every public `@manehorizons/cadence-*` package.
+- npm shows the new version for every public `@thomas-powers-jr/cadence-*` package.
 - `origin` has the matching `v<version>` git tag.
 - GitHub has a non-draft Release for that exact tag.
 - GitHub marks that Release as the latest release.
@@ -28,7 +28,7 @@ the job exits green.
 5. Merge through a PR so the required `ci-success` check is green on `main`.
 
 The workflow uses `packages/core/package.json` as the canonical version and checks
-that every non-private `@manehorizons/cadence-*` package under `packages/` has the
+that every non-private `@thomas-powers-jr/cadence-*` package under `packages/` has the
 same version.
 
 ## Publish

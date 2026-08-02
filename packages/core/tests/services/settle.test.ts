@@ -13,8 +13,8 @@ import {
   type Recommendation,
   type RecommendationLedger,
   type Summary,
-} from '@manehorizons/cadence-types';
-import { tempRepo, runGit } from '@manehorizons/cadence-testkit';
+} from '@thomas-powers-jr/cadence-types';
+import { tempRepo, runGit } from '@thomas-powers-jr/cadence-testkit';
 import type { CommandIO } from '../../src/services/io.js';
 import { computeSummaryContentHash, canonicalStringify } from '../../src/services/summary-hash.js';
 import { GATE_ORDER } from '../../src/gates/registry.js';

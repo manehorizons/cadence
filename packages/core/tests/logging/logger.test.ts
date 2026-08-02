@@ -7,7 +7,7 @@ import {
   resetLogger,
   configureLoggerFromConfig,
 } from '../../src/logging/logger.js';
-import type { LogLevel, LogFormat } from '@manehorizons/cadence-types';
+import type { LogLevel, LogFormat } from '@thomas-powers-jr/cadence-types';
 
 function capture(level: LogLevel, format: LogFormat = 'json') {
   const lines: string[] = [];

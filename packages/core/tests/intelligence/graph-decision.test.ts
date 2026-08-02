@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type {
   IntelligenceDecision,
   IntelligenceDecisionLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { buildDecisionGraph } from '../../src/intelligence/graph-decision.js';
 
 function mkDec(partial: Partial<IntelligenceDecision> & { id: string }): IntelligenceDecision {

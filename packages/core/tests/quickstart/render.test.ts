@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderText, renderJson } from '../../src/quickstart/render.js';
 import { buildQuickstart } from '../../src/quickstart/build.js';
-import { emptyState } from '@manehorizons/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 
 describe('quickstart render', () => {
   // AC-3: uninitialized text shows header, the numbered moves, and the map.

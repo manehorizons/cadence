@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { emptyMilestoneLedger, type MilestoneLedger } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { emptyMilestoneLedger, type MilestoneLedger } from '@thomas-powers-jr/cadence-types';
 import {
   readMilestoneLedger,
   writeMilestoneLedger,

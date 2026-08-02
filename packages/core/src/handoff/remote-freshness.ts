@@ -1,7 +1,7 @@
 // packages/core/src/handoff/remote-freshness.ts
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import type { RemoteFreshness } from '@manehorizons/cadence-types';
+import type { RemoteFreshness } from '@thomas-powers-jr/cadence-types';
 
 const pexec = promisify(execFile);
 const EXEC_OPTS = { timeout: 15000, windowsHide: true, maxBuffer: 1024 * 1024 } as const;

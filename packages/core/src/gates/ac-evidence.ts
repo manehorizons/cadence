@@ -1,4 +1,4 @@
-import type { AcEvidence, DeepVerdict } from '@manehorizons/cadence-types';
+import type { AcEvidence, DeepVerdict } from '@thomas-powers-jr/cadence-types';
 import type { AcId, TestRef } from '../verify/coverage.js';
 
 /**

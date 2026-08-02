@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { bufferIO } from '../../src/services/io.js';
 import { runConfigExplain } from '../../src/cli/commands/config.js';
 import { NotInitializedError } from '../../src/errors.js';

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultConfig, MOCK_VERIFIER_NOTICE } from '@manehorizons/cadence-types';
+import { defaultConfig, MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
 import { buildExplanation } from '../../src/config-explain/build.js';
 import type { ExplainContext, WarningCode } from '../../src/config-explain/types.js';
 

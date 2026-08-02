@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { readFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { SimpleStateBackend } from '../../src/state/simple.js';
 import { renderStateMd } from '../../src/render/state-md.js';
-import { CadenceStateZ } from '@manehorizons/cadence-types';
+import { CadenceStateZ } from '@thomas-powers-jr/cadence-types';
 import { StateConflictError } from '../../src/errors.js';
 
 let active: Fixture | null = null;

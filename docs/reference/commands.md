@@ -7,8 +7,8 @@ configuration fields and presets, see [docs/reference/config.md](config.md).
 
 Two CLIs are documented here:
 
-- **`cadence`** — the core CLI (`@manehorizons/cadence-core`)
-- **`cadence-host-claude-code`** — the Claude Code host adapter (`@manehorizons/cadence-host-claude-code`)
+- **`cadence`** — the core CLI (`@thomas-powers-jr/cadence-core`)
+- **`cadence-host-claude-code`** — the Claude Code host adapter (`@thomas-powers-jr/cadence-host-claude-code`)
 
 ---
 
@@ -209,7 +209,7 @@ adapter in the same step (a TTY offers it interactively; non-TTY skips with a
 pointer); `--skip-host-wire` opts out. `--host codex` is the explicit first-run
 bootstrap for Codex and should be run before opening Codex in the repo: it
 writes `.cadence/`, creates the managed `AGENTS.md` block Codex reads at session
-start, runs `npx -y @manehorizons/cadence-host-codex install`, and prints the
+start, runs `npx -y @thomas-powers-jr/cadence-host-codex install`, and prints the
 "approve hooks then start a new Codex session" next step. The plain Codex host
 installer is adapter-only; use it for already-initialized repos, paired with
 `cadence init --agents-md` if `AGENTS.md` is missing. `--demo` seeds a
@@ -2116,7 +2116,7 @@ Interactive onboarding — pick what you're doing, and run it
 **Behavior** — the interactive front door, sibling to the read-only `quickstart`
 (which prints the map without running anything). `start` first prints an
 opinionated recommended command based on local state: uninitialized repos point
-at the no-install `npx -y @manehorizons/cadence-core tutorial`, initialized
+at the no-install `npx -y @thomas-powers-jr/cadence-core tutorial`, initialized
 IDLE repos point at `cadence draft new --title "Fix login timeout" --template
 bugfix`, active loops point at `cadence progress`, and unreadable state points
 at `cadence doctor`.
@@ -2124,8 +2124,8 @@ at `cadence doctor`.
 It then asks "What are you doing?", takes a numbered pick, shows the exact
 command and a `[Y/n]` confirm, then runs it. The six routes are:
 `cadence tutorial` (throwaway sandbox), `cadence init` (this repo),
-`npx @manehorizons/cadence-host-claude-code install` (Claude Code),
-`npx @manehorizons/cadence-host-codex install` (Codex CLI), `cadence mcp
+`npx @thomas-powers-jr/cadence-host-claude-code install` (Claude Code),
+`npx @thomas-powers-jr/cadence-host-codex install` (Codex CLI), `cadence mcp
 install` (MCP), and `cadence doctor` (health check). Dispatch is a subprocess
 spawn — the `cadence` binary for core routes, `npx` for the two host packages —
 so `start` never imports host code. Declining the confirm prints the command so
@@ -2614,8 +2614,8 @@ Write Claude Code hook entries and slash commands into the project
 | Option | Default | Description |
 |---|---|---|
 | `--cwd <dir>` | (current working directory) | Project root |
-| `--command <cmd>` | `"npx @manehorizons/cadence-host-claude-code"` | Base command for the shim |
-| `--cadence <cmd>` | `"npx @manehorizons/cadence-core"` | Base command the shim uses to invoke core |
+| `--command <cmd>` | `"npx @thomas-powers-jr/cadence-host-claude-code"` | Base command for the shim |
+| `--cadence <cmd>` | `"npx @thomas-powers-jr/cadence-core"` | Base command the shim uses to invoke core |
 | `--settings <path>` | `".claude/settings.json"` | Settings file path relative to `cwd` |
 | `--no-hooks` | — | Skip writing hooks to `settings.json` |
 | `--no-commands` | — | Skip writing slash commands to `.claude/commands/` |
@@ -2652,7 +2652,7 @@ Shim invoked by Claude Code hooks: translates stdin and calls cadence hook <even
 
 | Option | Default | Description |
 |---|---|---|
-| `--cadence <cmd>` | `"npx @manehorizons/cadence-core"` | Base command to invoke core |
+| `--cadence <cmd>` | `"npx @thomas-powers-jr/cadence-core"` | Base command to invoke core |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — this command is invoked by Claude Code at hook time (e.g.

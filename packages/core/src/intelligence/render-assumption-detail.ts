@@ -1,4 +1,4 @@
-import type { Assumption, Recommendation } from '@manehorizons/cadence-types';
+import type { Assumption, Recommendation } from '@thomas-powers-jr/cadence-types';
 
 export function renderAssumptionDetail(
   as: Assumption,

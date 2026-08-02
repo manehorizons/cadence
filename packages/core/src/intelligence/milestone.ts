@@ -10,7 +10,7 @@ import type {
   RecommendationDecayState,
   RecommendationReadiness,
   RecommendationStatus,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import {
   readAssumptionLedger,
   readRecommendationLedger,

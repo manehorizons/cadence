@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SummaryZ } from '@manehorizons/cadence-types';
+import { SummaryZ } from '@thomas-powers-jr/cadence-types';
 import { GATE_ORDER } from '../../src/gates/registry.js';
 import { runCodeReviewGate } from '../../src/gates/code-review.js';
 import type { SettleContext } from '../../src/gates/types.js';

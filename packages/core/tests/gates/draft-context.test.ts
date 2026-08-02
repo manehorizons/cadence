@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mkdtemp, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultConfig, emptyState } from '@manehorizons/cadence-types';
+import { defaultConfig, emptyState } from '@thomas-powers-jr/cadence-types';
 
 /**
  * T5 (phase 164): `buildDraftContext`'s `planReview.verify` closure threads

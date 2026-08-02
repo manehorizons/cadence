@@ -1,4 +1,4 @@
-import type { RetroDigest } from '@manehorizons/cadence-types';
+import type { RetroDigest } from '@thomas-powers-jr/cadence-types';
 
 // deja:new distinct renderer for RetroDigest (settle friction digest), not the SUMMARY renderer — intentionally mirrors renderSummaryMd's section-per-field Markdown shape (phase 174 T3)
 export function renderRetroMd(digest: RetroDigest): string {

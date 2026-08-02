@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import type { Draft } from '@manehorizons/cadence-types';
-import { emptyState } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import type { Draft } from '@thomas-powers-jr/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import {

@@ -1,4 +1,4 @@
-import type { AnomalyEvent, AnomalyType } from '@manehorizons/cadence-types';
+import type { AnomalyEvent, AnomalyType } from '@thomas-powers-jr/cadence-types';
 import type { selectNotifier } from './factory.js';
 
 /**

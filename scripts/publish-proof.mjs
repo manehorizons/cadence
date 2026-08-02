@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Reversible publish proof: ephemeral verdaccio -> real pnpm publish of the 3
-// publishable @manehorizons/cadence-* packages -> clean-dir install -> assert no
+// publishable @thomas-powers-jr/cadence-* packages -> clean-dir install -> assert no
 // workspace: leak + both bins run -> exercise the real init->draft->approve->
 // build->settle loop against the installed CLI -> unconditional Windows-safe
 // teardown. NO non-localhost registry is contacted for *publish* (transitive
@@ -85,7 +85,7 @@ uplinks:
   npmjs:
     url: https://registry.npmjs.org/
 packages:
-  '@manehorizons/cadence-*':
+  '@thomas-powers-jr/cadence-*':
     access: $all
     publish: $all
     unpublish: $all
@@ -102,7 +102,7 @@ log: { type: stdout, format: pretty, level: warn }
   // userconfig token lives in an OS-temp dir — NEVER written into the repo
   // (no repo-root .npmrc artifact to leak/commit on interrupt).
   const npmrc = join(tmp('vc-rc-'), '.npmrc');
-  writeFileSync(npmrc, `@manehorizons:registry=${REG}\n//localhost:4873/:_authToken=publishproof\n`);
+  writeFileSync(npmrc, `@thomas-powers-jr:registry=${REG}\n//localhost:4873/:_authToken=publishproof\n`);
 
   let vc;
   await withUnconditionalTeardown(
@@ -125,19 +125,19 @@ log: { type: stdout, format: pretty, level: warn }
       const pubEnv = { ...process.env, npm_config_userconfig: npmrc, npm_config_registry: REG };
       for (const p of PKGS) {
         must(run('pnpm', ['publish', '--registry', REG, '--no-git-checks', '--no-provenance'],
-          { cwd: join(REPO, 'packages', p), env: pubEnv }), `publish @manehorizons/cadence-${p}`);
+          { cwd: join(REPO, 'packages', p), env: pubEnv }), `publish @thomas-powers-jr/cadence-${p}`);
       }
 
       const proj = tmp('vc-proj-');
       must(run('npm', ['init', '-y'], { cwd: proj }), 'npm init');
-      must(run('npm', ['i', '@manehorizons/cadence-core', '@manehorizons/cadence-host-claude-code', '--registry', REG], { cwd: proj }),
-        'clean install @manehorizons/cadence-core + host');
-      const scoped = join(proj, 'node_modules', '@manehorizons');
+      must(run('npm', ['i', '@thomas-powers-jr/cadence-core', '@thomas-powers-jr/cadence-host-claude-code', '--registry', REG], { cwd: proj }),
+        'clean install @thomas-powers-jr/cadence-core + host');
+      const scoped = join(proj, 'node_modules', '@thomas-powers-jr');
       for (const name of readdirSync(scoped)) {
         const pj = JSON.parse(readFileSync(join(scoped, name, 'package.json'), 'utf8'));
         for (const [d, v] of Object.entries({ ...pj.dependencies })) {
-          if (d.startsWith('@manehorizons/cadence-') && /workspace:/.test(String(v))) {
-            throw new Error(`workspace: leak in @manehorizons/cadence-${name} -> ${d}@${v}`);
+          if (d.startsWith('@thomas-powers-jr/cadence-') && /workspace:/.test(String(v))) {
+            throw new Error(`workspace: leak in @thomas-powers-jr/cadence-${name} -> ${d}@${v}`);
           }
         }
       }

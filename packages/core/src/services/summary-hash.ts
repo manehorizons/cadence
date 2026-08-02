@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { Summary } from '@manehorizons/cadence-types';
+import type { Summary } from '@thomas-powers-jr/cadence-types';
 
 /**
  * Phase 223 (T2): settle-time content-hash provenance, so a hand-edited

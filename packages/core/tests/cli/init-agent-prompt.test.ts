@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { renderAgentPrompt } from '../../src/agent-prompt/render.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

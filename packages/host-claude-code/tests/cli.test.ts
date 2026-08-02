@@ -124,7 +124,7 @@ describe('cadence-host-claude-code install', () => {
     expect(r.code).toBe(0);
     const cfg = JSON.parse(await readFile(join(root, '.claude/settings.json'), 'utf8'));
     expect(cfg.hooks.SessionStart[0].hooks[0].command).toBe(
-      'npx @manehorizons/cadence-host-claude-code hook --cadence "node /abs/k.js"',
+      'npx @thomas-powers-jr/cadence-host-claude-code hook --cadence "node /abs/k.js"',
     );
   });
 });

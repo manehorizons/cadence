@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { pass, fail } from '../../src/doctor/model.js';
 import { runDoctor } from '../../src/doctor/run.js';
 

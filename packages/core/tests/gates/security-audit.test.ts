@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { runSecurityAuditGate } from '../../src/gates/security-audit.js';
 import type { SettleContext } from '../../src/gates/types.js';
-import type { Finding } from '@manehorizons/cadence-types';
+import type { Finding } from '@thomas-powers-jr/cadence-types';
 
 const CRIT: Finding[] = [{ severity: 'critical', message: 'sqli', line: 7 }];
 const LOW: Finding[] = [{ severity: 'low', message: 'nit' }];

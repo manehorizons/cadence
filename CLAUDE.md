@@ -57,13 +57,13 @@ pnpm typecheck            # tsc --noEmit, all packages
 pnpm lint                 # eslint, all packages
 
 # Single-package work:
-pnpm --filter @manehorizons/cadence-core test
-pnpm --filter @manehorizons/cadence-core build
-pnpm --filter @manehorizons/cadence-host-claude-code typecheck
+pnpm --filter @thomas-powers-jr/cadence-core test
+pnpm --filter @thomas-powers-jr/cadence-core build
+pnpm --filter @thomas-powers-jr/cadence-host-claude-code typecheck
 
 # Run a single test file or grep test name:
-pnpm --filter @manehorizons/cadence-core test -- path/to/file.test.ts
-pnpm --filter @manehorizons/cadence-core test -- -t "name fragment"
+pnpm --filter @thomas-powers-jr/cadence-core test -- path/to/file.test.ts
+pnpm --filter @thomas-powers-jr/cadence-core test -- -t "name fragment"
 ```
 
 Node `>=22` is required. `package.json` pins `pnpm@9.12.0`. The local CLI is
@@ -77,12 +77,12 @@ MCP). Source of truth is `pnpm-workspace.yaml` + each package's
 
 | Package | Role |
 |---|---|
-| `@manehorizons/cadence-core` | The engine. CLI (`cadence` binary), DRAFT→BUILD→SETTLE state machine, all gates, parsers, renderers. ~All logic lives here. |
-| `@manehorizons/cadence-types` | Zod schemas + TypeScript types. Pure data layer — no logic, no I/O. Imported by every other package. |
-| `@manehorizons/cadence-host-claude-code` | Claude Code adapter (reference `HostAdapter`). Installs lifecycle hooks + slash commands; shims host events to the core dispatcher. |
-| `@manehorizons/cadence-host-codex` | OpenAI Codex CLI adapter, second `HostAdapter` contract consumer. |
-| `@manehorizons/cadence-host-toolkit` | Shared toolkit for the two host adapters (phase 222): the hook-routing algorithm's shape, the slash-command catalog, install.ts's managed-marker merge logic, and locate-self.ts. Depended on by both adapters as `workspace:*`; never imported by core. |
-| `@manehorizons/cadence-testkit` | `private`, dev-only. Mock host + ephemeral-repo fixtures + assertions used by every package's tests. Never published. |
+| `@thomas-powers-jr/cadence-core` | The engine. CLI (`cadence` binary), DRAFT→BUILD→SETTLE state machine, all gates, parsers, renderers. ~All logic lives here. |
+| `@thomas-powers-jr/cadence-types` | Zod schemas + TypeScript types. Pure data layer — no logic, no I/O. Imported by every other package. |
+| `@thomas-powers-jr/cadence-host-claude-code` | Claude Code adapter (reference `HostAdapter`). Installs lifecycle hooks + slash commands; shims host events to the core dispatcher. |
+| `@thomas-powers-jr/cadence-host-codex` | OpenAI Codex CLI adapter, second `HostAdapter` contract consumer. |
+| `@thomas-powers-jr/cadence-host-toolkit` | Shared toolkit for the two host adapters (phase 222): the hook-routing algorithm's shape, the slash-command catalog, install.ts's managed-marker merge logic, and locate-self.ts. Depended on by both adapters as `workspace:*`; never imported by core. |
+| `@thomas-powers-jr/cadence-testkit` | `private`, dev-only. Mock host + ephemeral-repo fixtures + assertions used by every package's tests. Never published. |
 
 Five packages publish to npm; `testkit` is intentionally private.
 `host-toolkit` had its first npm publish in the `1.51.1` release. Releases are
@@ -163,7 +163,7 @@ session to do the same. The shape of a healthy session:
 3. **TDD is the house style** (`CONTRIBUTING.md`). Every feature and bugfix
    starts with a failing test, then implementation, then commit. Tests live
    in `packages/<pkg>/tests/` mirroring `src/`. Use
-   `@manehorizons/cadence-testkit` ephemeral-repo fixtures rather than
+   `@thomas-powers-jr/cadence-testkit` ephemeral-repo fixtures rather than
    rolling your own.
 4. **Non-trivial phases run subagent-driven in an isolated worktree**
    (`.claude/worktrees/<slug>`; prefer the native worktree tools over manual

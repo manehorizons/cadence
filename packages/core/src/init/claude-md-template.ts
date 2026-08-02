@@ -1,4 +1,4 @@
-import type { Profile } from '@manehorizons/cadence-types';
+import type { Profile } from '@thomas-powers-jr/cadence-types';
 
 /**
  * Phase 26.2 — CLAUDE.md scaffold. `cadence init` writes a CLAUDE.md at the

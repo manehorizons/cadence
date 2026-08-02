@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runBoundaryScanGate } from '../../src/gates/boundary-scan.js';
 import type { SettleContext } from '../../src/gates/types.js';
-import type { Task } from '@manehorizons/cadence-types';
+import type { Task } from '@thomas-powers-jr/cadence-types';
 
 function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, {

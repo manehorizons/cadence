@@ -1,4 +1,4 @@
-import type { McpTrustGrant, McpTrustLedger } from '@manehorizons/cadence-types';
+import type { McpTrustGrant, McpTrustLedger } from '@thomas-powers-jr/cadence-types';
 import { TOOLS } from '../mcp/tools.js';
 import { computeToolDefHash } from '../mcp/trust/def-hash.js';
 import { readTrustLedger, writeTrustLedger } from '../mcp/trust/store.js';

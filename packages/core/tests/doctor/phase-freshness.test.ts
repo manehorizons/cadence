@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { emptyState } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { checkPhaseFreshness, runDoctor, PHASE_FRESHNESS_WARN_THRESHOLD_MS } from '../../src/doctor/run.js';
 
 let active: Fixture | null = null;

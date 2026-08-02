@@ -1,5 +1,5 @@
 {
-  "name": "@manehorizons/cadence-core",
+  "name": "@thomas-powers-jr/cadence-core",
   "version": "1.53.0",
   "engines": {
     "node": ">=22"
@@ -55,13 +55,13 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
-    "@manehorizons/cadence-types": "workspace:*",
+    "@thomas-powers-jr/cadence-types": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^14.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@manehorizons/cadence-testkit": "workspace:*",
+    "@thomas-powers-jr/cadence-testkit": "workspace:*",
     "vitest": "^2.1.0"
   }
 }

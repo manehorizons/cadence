@@ -1,6 +1,6 @@
 // packages/core/src/handoff/run-resume.ts
 import { readFile } from 'node:fs/promises';
-import { defaultConfig, type HandoffCandidate, type ResumeResult } from '@manehorizons/cadence-types';
+import { defaultConfig, type HandoffCandidate, type ResumeResult } from '@thomas-powers-jr/cadence-types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { runContext } from '../intelligence/context.js';
 import { loadConfig } from '../config/loader.js';

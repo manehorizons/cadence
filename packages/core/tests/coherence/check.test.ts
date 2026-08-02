@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { coherenceCheck } from '../../src/coherence/check.js';
-import { emptyState } from '@manehorizons/cadence-types';
+import { emptyState } from '@thomas-powers-jr/cadence-types';
 
 const baseDraft = {
   schemaVersion: 1 as const,

@@ -7,7 +7,7 @@ import {
   type RetroFrequencyBuckets,
   type RetroFrequencyEntry,
   type RetroRollup,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { isDigestEmpty, nonEmptyFindingCategories } from './retro.js';
 import type { CommandIO } from './io.js';
 

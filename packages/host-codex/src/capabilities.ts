@@ -1,4 +1,4 @@
-import type { HostCapabilities } from '@manehorizons/cadence-types';
+import type { HostCapabilities } from '@thomas-powers-jr/cadence-types';
 
 /**
  * What the OpenAI Codex CLI environment can do, per the phase-65 spike

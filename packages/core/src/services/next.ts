@@ -1,4 +1,4 @@
-import type { LoopPosition } from '@manehorizons/cadence-types';
+import type { LoopPosition } from '@thomas-powers-jr/cadence-types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { nextAction, type LegalMove, type NextActionHints } from '../progress.js';
 import { loadStatus } from '../status.js';

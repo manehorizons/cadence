@@ -5,7 +5,7 @@ import type {
   BackendStatus,
   IntelligenceMilestone,
   Recommendation,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { SimpleStateBackend } from '../../state/simple.js';
 import { nextAction, type NextActionHints } from '../../progress.js';
 import { resolveNextFreePhase } from '../../phases/next-free.js';

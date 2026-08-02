@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@manehorizons/cadence-types';
+import { COMMAND_GUIDANCE, SCOUT_DIALOGUE } from '@thomas-powers-jr/cadence-types';
 import { installCommands } from '../src/install-commands.js';
 
 let cleanup: Array<() => Promise<void>> = [];

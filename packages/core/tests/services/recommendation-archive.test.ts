@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { addRecommendation } from '../../src/intelligence/store/recommendations.js';
 import { readRecommendationLedger } from '../../src/intelligence/store/io.js';
 import { recommendationArchiveService } from '../../src/services/recommendation-archive.js';

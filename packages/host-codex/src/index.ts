@@ -1,4 +1,4 @@
-import { ADAPTER_CONTRACT_VERSION, type HostAdapter } from '@manehorizons/cadence-types';
+import { ADAPTER_CONTRACT_VERSION, type HostAdapter } from '@thomas-powers-jr/cadence-types';
 import { mapEvent, extractPayload } from './event-map.js';
 import { codexCapabilities } from './capabilities.js';
 import { installHooks, type InstallOptions } from './install.js';
@@ -9,9 +9,9 @@ export type { ExtractedPayload } from './event-map.js';
 export { routeHookEvent } from './shim.js';
 export type { RouteResult } from './shim.js';
 export { codexCapabilities } from './capabilities.js';
-export type { HostCapabilities } from '@manehorizons/cadence-types';
-export { ADAPTER_CONTRACT_VERSION } from '@manehorizons/cadence-types';
-export type { HostAdapter } from '@manehorizons/cadence-types';
+export type { HostCapabilities } from '@thomas-powers-jr/cadence-types';
+export { ADAPTER_CONTRACT_VERSION } from '@thomas-powers-jr/cadence-types';
+export type { HostAdapter } from '@thomas-powers-jr/cadence-types';
 export { installHooks } from './install.js';
 export type { InstallOptions } from './install.js';
 export { installCommands } from './install-commands.js';

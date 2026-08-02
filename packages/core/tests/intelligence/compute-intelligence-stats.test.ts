@@ -7,7 +7,7 @@ import type {
   MilestoneLedger,
   Recommendation,
   RecommendationLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { computeIntelligenceStats } from '../../src/intelligence/store/stats.js';
 
 function mkRec(overrides: Partial<Recommendation> = {}): Recommendation {

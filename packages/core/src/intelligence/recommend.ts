@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { RecommendationReportZ, emptyEvidenceLedger } from '@manehorizons/cadence-types';
+import { RecommendationReportZ, emptyEvidenceLedger } from '@thomas-powers-jr/cadence-types';
 import type {
   BackendStatus,
   EvidenceLedger,
@@ -9,7 +9,7 @@ import type {
   RecommendationRank,
   RecommendationReport,
   ScoreTerm,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { atomicWriteJSON, atomicWriteText } from '../state/atomic-write.js';
 import { intelligenceDir } from './store/paths.js';
 import { readRecommendationLedger, readEvidenceLedger } from './store/io.js';

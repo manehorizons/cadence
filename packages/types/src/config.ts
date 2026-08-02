@@ -5,7 +5,7 @@ import { LogLevelZ, LogFormatZ } from './logging.js';
 /**
  * Config-facing shape for a custom assertion-coverage profile
  * (`verification.coverageProfiles`, phase 167 T7). Mirrors
- * `@manehorizons/cadence-core`'s `LanguageProfile`
+ * `@thomas-powers-jr/cadence-core`'s `LanguageProfile`
  * (`packages/core/src/verify/coverage-profiles/types.ts`) as a
  * JSON-serializable, string-pattern shape: `openerPattern`/`assertionPattern`
  * are regex SOURCE STRINGS here, compiled into real `RegExp`s at

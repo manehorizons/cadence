@@ -5,7 +5,7 @@ name: Release
 # pushes the matching `v<version>` tag, creates/updates the GitHub Release, and
 # verifies that npm + tag + release metadata agree. Provenance requires: a
 # public repo + id-token:write (OIDC) + the publish running inside this
-# workflow. The private @manehorizons/cadence-testkit is skipped automatically
+# workflow. The private @thomas-powers-jr/cadence-testkit is skipped automatically
 # by `pnpm -r publish` (it has "private": true).
 #
 # `dry_run` defaults to FALSE: a plain "Run workflow" publishes. Tick the box to

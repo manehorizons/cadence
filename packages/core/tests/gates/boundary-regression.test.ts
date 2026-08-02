@@ -24,8 +24,8 @@ import { spawn, execSync } from 'node:child_process';
 import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
-import { SummaryZ } from '@manehorizons/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { SummaryZ } from '@thomas-powers-jr/cadence-types';
 import { runVerifyPhase } from '../../src/services/verify.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

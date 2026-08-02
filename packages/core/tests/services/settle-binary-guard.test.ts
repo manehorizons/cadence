@@ -9,7 +9,7 @@ import { detectForeignCadenceBinary } from '../../src/services/settle.js';
 // string/boolean facts, so these tests exercise it directly.
 describe('detectForeignCadenceBinary (phase 244 T1)', () => {
   it('244-01/AC-1: reports a mismatch when the running binary sits outside the repo toplevel AND the repo is recognizably the CADENCE monorepo', () => {
-    const runningBinaryRealpath = '/usr/local/lib/node_modules/@manehorizons/cadence-core/bin/cadence.cjs';
+    const runningBinaryRealpath = '/usr/local/lib/node_modules/@thomas-powers-jr/cadence-core/bin/cadence.cjs';
     const repoToplevel = '/home/thomas/projects/cadence';
 
     expect(
@@ -36,7 +36,7 @@ describe('detectForeignCadenceBinary (phase 244 T1)', () => {
   });
 
   it('244-01/AC-1: reports NO mismatch when the running binary is outside the repo toplevel but the repo is NOT recognizably CADENCE\'s own monorepo (an ordinary consumer project using a globally-installed cadence) — the critical false-positive-avoidance case', () => {
-    const runningBinaryRealpath = '/usr/local/lib/node_modules/@manehorizons/cadence-core/bin/cadence.cjs';
+    const runningBinaryRealpath = '/usr/local/lib/node_modules/@thomas-powers-jr/cadence-core/bin/cadence.cjs';
     const repoToplevel = '/home/someone/projects/my-app';
 
     expect(

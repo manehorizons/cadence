@@ -4,7 +4,7 @@
  * Spawns the built CLI (per this repo's own known gotcha — CLI tests must
  * run against `dist/cli/index.js`, so `pnpm build` first or a regression
  * hides until CI) against real ephemeral-repo fixtures
- * (`@manehorizons/cadence-testkit`), the same pattern `doctor.test.ts` and
+ * (`@thomas-powers-jr/cadence-testkit`), the same pattern `doctor.test.ts` and
  * `draft-approve-gate.test.ts` use.
  */
 import { describe, it, expect, afterEach } from 'vitest';
@@ -12,7 +12,7 @@ import { spawn } from 'node:child_process';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 const CADENCE_CLI = join(
   dirname(fileURLToPath(import.meta.url)),

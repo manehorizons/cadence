@@ -13,7 +13,7 @@
  * module fully unit-testable without touching real stdin, and matches how
  * `gates/approve.ts` consumes the same seam.
  */
-import type { HandoffCandidate } from '@manehorizons/cadence-types';
+import type { HandoffCandidate } from '@thomas-powers-jr/cadence-types';
 import type { CommandIO } from '../services/io.js';
 import type { Interactivity } from '../gates/interactivity.js';
 import { StdinPrompter, type Prompter } from '../verify/prompter.js';

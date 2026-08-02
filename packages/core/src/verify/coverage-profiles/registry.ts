@@ -30,7 +30,7 @@
  */
 
 import type { LanguageProfile } from './types.js';
-import type { CoverageProfileConfig } from '@manehorizons/cadence-types';
+import type { CoverageProfileConfig } from '@thomas-powers-jr/cadence-types';
 import { jsTsProfile } from './js-ts.js';
 import { pythonProfile } from './python.js';
 import { goProfile } from './go.js';

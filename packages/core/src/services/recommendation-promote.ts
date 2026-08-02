@@ -1,4 +1,4 @@
-import { RecommendationReadinessZ, RecommendationStatusZ } from '@manehorizons/cadence-types';
+import { RecommendationReadinessZ, RecommendationStatusZ } from '@thomas-powers-jr/cadence-types';
 import {
   runRecommendationPromotion,
   type RecommendationPromotionChanges,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { RetroDigest } from '@manehorizons/cadence-types';
+import type { RetroDigest } from '@thomas-powers-jr/cadence-types';
 import { renderRetroMd } from '../../src/parse/retro-writer.js';
 
 const EMPTY: RetroDigest = { bypasses: [], roughTasks: [], findings: {} };

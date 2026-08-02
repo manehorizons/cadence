@@ -3,7 +3,7 @@ import { readFile, stat } from 'node:fs';
 import { readdir, writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { atomicWriteJSON, atomicWriteText } from '../../src/state/atomic-write.js';
 
 // Wraps the real `writeFile` in a spy (behavior unchanged) so we can assert

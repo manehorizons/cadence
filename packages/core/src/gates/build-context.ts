@@ -4,7 +4,7 @@ import type {
   CadenceState,
   Draft,
   GateSet,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { collectGitDiff } from '../git/diff.js';
 import { selectNotifier } from '../notify/factory.js';
 import { selectPerTaskVerifier } from '../verify/per-task-factory.js';

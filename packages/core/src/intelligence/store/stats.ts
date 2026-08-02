@@ -9,8 +9,8 @@ import type {
   MilestoneStatus,
   Recommendation,
   RecommendationLedger,
-} from '@manehorizons/cadence-types';
-import { emptyMilestoneLedger, RecommendationStatusZ } from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
+import { emptyMilestoneLedger, RecommendationStatusZ } from '@thomas-powers-jr/cadence-types';
 
 export type IntelligenceStats = {
   recommendations: {

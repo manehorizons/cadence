@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IntelligenceDecision, Recommendation } from '@manehorizons/cadence-types';
+import type { IntelligenceDecision, Recommendation } from '@thomas-powers-jr/cadence-types';
 import { renderDecisionDetail } from '../../src/intelligence/render-decision-detail.js';
 
 function mkDec(p: Partial<IntelligenceDecision> = {}): IntelligenceDecision {

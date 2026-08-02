@@ -1,6 +1,6 @@
 # Claude Code Host Adapter How-To
 
-The `@manehorizons/cadence-host-claude-code` package is the **host adapter** that connects
+The `@thomas-powers-jr/cadence-host-claude-code` package is the **host adapter** that connects
 CADENCE to Claude Code. It installs two integration surfaces into your project:
 
 - **Hooks** — entries in `.claude/settings.json` that fire the CADENCE shim on
@@ -20,8 +20,8 @@ the same `cadence hook <event>` dispatch path — without any special API surfac
 > (see [docs/mcp.md](mcp.md)); MCP covers the imperative loop but not ambient
 > gating, which has no host-hook equivalent over MCP.
 
-> **Install:** the adapter ships as `@manehorizons/cadence-host-claude-code`. Run
-> it with `npx @manehorizons/cadence-host-claude-code install` (or install it
+> **Install:** the adapter ships as `@thomas-powers-jr/cadence-host-claude-code`. Run
+> it with `npx @thomas-powers-jr/cadence-host-claude-code install` (or install it
 > globally for the `cadence-host-claude-code` command used below).
 
 ---
@@ -70,9 +70,9 @@ Write Claude Code hook entries and slash commands into the project
 Options:
   --cwd <dir>        project root (default: current working directory)
   --command <cmd>    base command for the shim
-                     (default: "npx @manehorizons/cadence-host-claude-code")
+                     (default: "npx @thomas-powers-jr/cadence-host-claude-code")
   --cadence <cmd>    base command the shim uses to invoke core
-                     (default: "npx @manehorizons/cadence-core")
+                     (default: "npx @thomas-powers-jr/cadence-core")
   --settings <path>  settings file path relative to cwd
                      (default: ".claude/settings.json")
   --no-hooks         skip writing hooks to settings.json
@@ -103,7 +103,7 @@ node packages/host-claude-code/dist/cli.js install --local --settings .claude/se
 
 ```sh
 node packages/host-claude-code/dist/cli.js install \
-  --command "npx @manehorizons/cadence-host-claude-code" \
+  --command "npx @thomas-powers-jr/cadence-host-claude-code" \
   --cadence "node /absolute/path/to/cadence.cjs"
 ```
 

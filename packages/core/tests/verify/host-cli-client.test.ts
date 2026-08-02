@@ -3,7 +3,7 @@ import { z } from 'zod/v4';
 import { hostCliJSON, type SpawnFn, type SpawnedProcessLike } from '../../src/verify/host-cli-client.js';
 
 // AC-3 (structural, satisfied by the diff): this test file, and the module it
-// exercises, import nothing from `@manehorizons/cadence-types`'s host.ts or
+// exercises, import nothing from `@thomas-powers-jr/cadence-types`'s host.ts or
 // `packages/host-claude-code/` — the host-cli provider spawns the CLI binary
 // directly from `packages/core/src/verify/` the same way `local-client.ts`
 // calls an arbitrary HTTP endpoint, adding zero new HostAdapter/HostCapabilities

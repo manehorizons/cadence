@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeWaves } from '../../src/dispatch/wave-planner.js';
-import type { Draft, Task } from '@manehorizons/cadence-types';
+import type { Draft, Task } from '@thomas-powers-jr/cadence-types';
 
 function makeDraft(tasks: Task[]): Draft {
   return {

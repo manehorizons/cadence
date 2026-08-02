@@ -1,5 +1,5 @@
 {
-  "name": "@manehorizons/cadence-types",
+  "name": "@thomas-powers-jr/cadence-types",
   "version": "1.53.0",
   "engines": {
     "node": ">=22"

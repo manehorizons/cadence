@@ -4,8 +4,8 @@ import type {
   LogFormat,
   LogLevel,
   LogRecord,
-} from '@manehorizons/cadence-types';
-import { LOG_LEVEL_SEVERITY } from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
+import { LOG_LEVEL_SEVERITY } from '@thomas-powers-jr/cadence-types';
 import { formatJson, formatPretty } from './format.js';
 import { resolveLogLevel, resolveLogFormat } from './resolve.js';
 

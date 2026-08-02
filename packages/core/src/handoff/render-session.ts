@@ -1,5 +1,5 @@
 // packages/core/src/handoff/render-session.ts
-import type { ContextPacket, GitFacts } from '@manehorizons/cadence-types';
+import type { ContextPacket, GitFacts } from '@thomas-powers-jr/cadence-types';
 
 export interface SessionRenderInput {
   generatedAt: string;

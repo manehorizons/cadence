@@ -1,5 +1,5 @@
 {
-  "name": "@manehorizons/cadence-testkit",
+  "name": "@thomas-powers-jr/cadence-testkit",
   "version": "1.4.0",
   "private": true,
   "type": "module",
@@ -22,7 +22,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@manehorizons/cadence-types": "workspace:*"
+    "@thomas-powers-jr/cadence-types": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.0"

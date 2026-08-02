@@ -1,9 +1,9 @@
-import type { RouteResult } from '@manehorizons/cadence-host-toolkit';
+import type { RouteResult } from '@thomas-powers-jr/cadence-host-toolkit';
 import { extractPayload, mapEvent, EDIT_TOOL_MATCHER } from './event-map.js';
 
 // `RouteResult`'s shape (`{ abstractEvent, translatedStdin }`) is identical to
 // host-claude-code's, so it's the one piece shared with the toolkit here — the
-// canonical definition now lives in `@manehorizons/cadence-host-toolkit`
+// canonical definition now lives in `@thomas-powers-jr/cadence-host-toolkit`
 // (phase 222). `routeHookEvent` itself stays local: Codex's dispatch algorithm
 // genuinely differs from the toolkit's Claude-Code-shaped implementation (see
 // the note in `./event-map.ts`), so re-exporting the toolkit's routeHookEvent

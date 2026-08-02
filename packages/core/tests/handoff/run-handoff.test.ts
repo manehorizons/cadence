@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { defaultConfig } from '@manehorizons/cadence-types';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { defaultConfig } from '@thomas-powers-jr/cadence-types';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { SimpleStateBackend } from '../../src/state/simple.js';
 import { runHandoff, runHandoffCheck } from '../../src/handoff/run-handoff.js';
 

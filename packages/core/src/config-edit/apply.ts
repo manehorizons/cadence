@@ -1,5 +1,5 @@
 // packages/core/src/config-edit/apply.ts
-import { CadenceConfigZ, type CadenceConfig } from '@manehorizons/cadence-types';
+import { CadenceConfigZ, type CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import type { EditableField } from './fields.js';
 
 /** Set a nested value by path, creating intermediate objects. Lifted from config.ts. */

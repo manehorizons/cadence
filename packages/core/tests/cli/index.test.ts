@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { tempRepo, type Fixture } from '@manehorizons/cadence-testkit';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { StateCorruptError } from '../../src/errors.js';
 // `cli/index.ts` is a script: importing it for real would immediately run
 // `program.parseAsync(process.argv)` against whatever argv this test runner

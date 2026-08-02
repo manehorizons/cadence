@@ -1,5 +1,5 @@
-import { CadenceStateZ, CadenceConfigZ, DraftZ, SummaryZ } from '@manehorizons/cadence-types';
-import type { CadenceState, CadenceConfig, Draft, Summary } from '@manehorizons/cadence-types';
+import { CadenceStateZ, CadenceConfigZ, DraftZ, SummaryZ } from '@thomas-powers-jr/cadence-types';
+import type { CadenceState, CadenceConfig, Draft, Summary } from '@thomas-powers-jr/cadence-types';
 
 export function assertStateValid(value: unknown): asserts value is CadenceState {
   const result = CadenceStateZ.safeParse(value);

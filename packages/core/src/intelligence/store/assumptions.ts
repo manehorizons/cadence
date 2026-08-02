@@ -3,7 +3,7 @@ import {
   emptyAssumptionLedger,
   type Assumption,
   type AssumptionLedger,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import { atomicWriteText } from '../../state/atomic-write.js';
 import { renderAssumptionsMd } from '../render-assumption.js';
 import { readLedger, writeLedger, type SubjectLedgerSpec } from './ledger.js';

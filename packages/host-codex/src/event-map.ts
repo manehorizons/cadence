@@ -1,10 +1,10 @@
-import type { AbstractEvent, ExtractedPayload } from '@manehorizons/cadence-types';
+import type { AbstractEvent, ExtractedPayload } from '@thomas-powers-jr/cadence-types';
 
 // Re-exported for parity with the Claude adapter; the canonical definition lives
-// in @manehorizons/cadence-types as part of the host-adapter contract.
+// in @thomas-powers-jr/cadence-types as part of the host-adapter contract.
 export type { ExtractedPayload };
 
-// NOTE (phase 222): the shared toolkit package, `@manehorizons/cadence-host-toolkit`,
+// NOTE (phase 222): the shared toolkit package, `@thomas-powers-jr/cadence-host-toolkit`,
 // exports a same-named `mapEvent`/`extractPayload`/`EDIT_TOOL_MATCHER` trio, but
 // those are built for Claude Code's hook shape — the edit tool is
 // `Edit|Write|MultiEdit|NotebookEdit`, payloads carry `tool_input.file_path`,

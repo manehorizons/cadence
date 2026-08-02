@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultConfig, type CadenceConfig } from '@manehorizons/cadence-types';
+import { defaultConfig, type CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import { assertNoPhaseCollision } from '../../src/phases/guard.js';
 import type { Occupancy } from '../../src/phases/collision.js';
 

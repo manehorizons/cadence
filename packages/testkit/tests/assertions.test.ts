@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { assertStateValid, assertConfigValid, assertDraftValid, assertSummaryValid } from '../src/assertions.js';
-import { emptyState, defaultConfig } from '@manehorizons/cadence-types';
+import { emptyState, defaultConfig } from '@thomas-powers-jr/cadence-types';
 
 describe('custom assertions', () => {
   it('assertStateValid passes for emptyState', () => {

@@ -1,5 +1,5 @@
 // packages/core/src/config-edit/fields.ts
-import type { CadenceConfig } from '@manehorizons/cadence-types';
+import type { CadenceConfig } from '@thomas-powers-jr/cadence-types';
 
 /** One selectable value for an enum field, with a one-line description. */
 export interface FieldChoice {

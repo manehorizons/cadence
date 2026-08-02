@@ -1,4 +1,4 @@
-import type { CadenceConfig } from '@manehorizons/cadence-types';
+import type { CadenceConfig } from '@thomas-powers-jr/cadence-types';
 import type { ConfigExplanation, ProviderRow, TierGateView } from './types.js';
 
 /**

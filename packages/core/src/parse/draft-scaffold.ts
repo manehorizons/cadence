@@ -1,4 +1,4 @@
-import type { Spec, UiSpec } from '@manehorizons/cadence-types';
+import type { Spec, UiSpec } from '@thomas-powers-jr/cadence-types';
 
 /**
  * Phase 38.1 (#1b) — pure DRAFT.md body renderer. The `spec`-absent branch is

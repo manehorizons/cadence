@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { GateProvenance } from '@manehorizons/cadence-types';
+import type { GateProvenance } from '@thomas-powers-jr/cadence-types';
 import type { GateResult, SettleContext } from '../../src/gates/types.js';
 import { runSettleGates, type GateEntry, type SettleGate } from '../../src/gates/registry.js';
 

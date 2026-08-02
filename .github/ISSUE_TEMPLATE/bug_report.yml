@@ -40,7 +40,7 @@ body:
     id: env
     attributes:
       label: Environment
-      description: "Output of `node --version`, your OS, and the `@manehorizons/cadence-*` versions (or commit SHA if running from source)."
+      description: "Output of `node --version`, your OS, and the `@thomas-powers-jr/cadence-*` versions (or commit SHA if running from source)."
       render: shell
     validations:
       required: true

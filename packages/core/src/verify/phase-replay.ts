@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { SummaryZ } from '@manehorizons/cadence-types';
+import { SummaryZ } from '@thomas-powers-jr/cadence-types';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { scanTestCoverage, uncoveredAcs, weaklyLinkedAcs, skippedOnlyLinkedAcs } from './coverage.js';
 

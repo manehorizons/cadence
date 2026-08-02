@@ -9,7 +9,7 @@ import {
   MOCK_VERIFIER_NOTICE,
   type Profile,
   type CadenceConfig,
-} from '@manehorizons/cadence-types';
+} from '@thomas-powers-jr/cadence-types';
 import {
   deriveName,
   detectCoverageMode,

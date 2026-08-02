@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Finding } from '@manehorizons/cadence-types';
+import type { Finding } from '@thomas-powers-jr/cadence-types';
 import type { AddRecommendationInput } from '../../src/intelligence/store/recommendations.js';
 import {
   deriveRoutingCandidates,
