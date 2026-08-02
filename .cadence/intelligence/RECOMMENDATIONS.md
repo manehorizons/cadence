@@ -408,23 +408,6 @@ cadence draft new's optional [num] positional argument silently accepts any stri
 
 cadence draft add-ac and add-task never warn when appending a new AC/task after the scaffolded draft still has its placeholder AC-1/T1 stub in place (e.g. from draft new without --template or --from-rec). This can silently leave a stale generic placeholder alongside real, hand-authored ACs/tasks.
 
-## rec-20260712-006 — Settle-internal refusal paths still write no SUMMARY
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: low
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, settle
-- files: packages/core/src/parse/summary-writer.ts
-- evidence: Reconstructed stub: original entry (rec-20260712-003, logged during the phase 170 session, 2026-07-12) was lost to an unrelated git reset --hard before being committed. Recreated from context earlier in this session.
-- evidence: Joined to the finding-durability cluster. Verified at main@afcb90a: the post-gate-loop refusal families in services/settle.ts still return exitCode 1 with no SUMMARY write (map each ok:false exit site to its owning family before drafting — expected members: AC derivation, anomaly/skill-audit, evidence floor). Phase 247 sharpened the asymmetry: a gate-loop refusal now persists findings, a contentHash, and a tamper-evident sibling, while an evidence-floor refusal later in the same service persists nothing. Fix is now trivially specified: those families call the writer 247 hardened. Scoped as phase 249.
-- next: cadence milestone propose
-
-Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.
-
 ## rec-20260712-009 — Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY
 
 - status: candidate
@@ -945,6 +928,7 @@ The new 'Finding identity, disposition, and type convergence (phase 236)' subsec
 - decisions: dec-20260802-003 (active)
 - evidence: Surfaced by independent review of phase 242 T3 (2026-07-31), verified live: a forced high-severity settle exits 1 with lastGate.reason naming code-review, no codeReview key in the refused SUMMARY, no ledger entry
 - evidence: Persistence half shipped via phase 247 (PR #357, main@afcb90a, re-verified unchanged at main@59a2116e): writeRefusedSettleSummary now threads acc.codeReview/acc.securityAudit with the success path's conditional-spread shape, attaches contentHash when findings are non-empty, and preserves findings-bearing refused attempts as immutable -SUMMARY-snapshot siblings. The summary's claim that a refused settle's findings are not even persisted is stale as of 247. Routing half is disposed by dec-20260802-003 (already recorded, superseding the decision text originally sketched for this rec) — ledger routing stays finalize-only, trigger amended to name rec-20260801-012's finding that real-provider gate throws are structurally unreachable under this repo's normal auto-profile, headless-agent operating mode.
+- evidence: Phase 249 T1 verified this disposition durable as of housekeeping PR #359 (main@9d561fbd): dec-20260802-003 active, status deferred, 2 prior evidence entries confirmed unchanged. No additional mutation applied.
 - next: cadence milestone propose
 
 Phase 242's finding-to-ledger routing (settle.ts, finalizeAndCloseSettle) only ever runs on a settle that reaches finalization. collectHighFindings (gates/code-review.ts) fails the code-review gate on any 'high' severity finding, so settle takes the writeRefusedSettleSummary path instead -- finalizeAndCloseSettle, and therefore the routing step, is never reached. Verified live: a settle with a high-severity finding exits 1, the refused SUMMARY has no codeReview key at all (the findings aren't even persisted), and no ledger entry is created. The findings only route if the operator bypasses via --force/--allow-code-review-failure. This is consistent with phase 242's DRAFT (AC-1 says 'when settle finalizes'), so it is not a phase-242 defect -- but it means the single most severe class of finding is the one class the routing feature never captures by default. Worth a decision: should a refused settle still route the findings from its failed attempt (there is real diagnostic value in a high-severity finding landing in the ledger even though the phase didn't settle), or is 'only route on a clean settle' the deliberately narrower, safer scope?
@@ -1089,6 +1073,7 @@ Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/se
 - areas: core, intelligence
 - files: .cadence/intelligence/recommendations.json
 - evidence: cadence intelligence audit at main@59a2116e (2026-08-02): 20 orphan decisions + 125 orphan evidence entries, oldest dated 2026-06-11; sample checked (rec-20260711-001) confirmed absent from both recommendations[] (69 entries) and archived[] (115 entries).
+- evidence: Root cause identified while authoring phase 249's SPEC: computeIntelligenceAudit (packages/core/src/intelligence/store/audit.ts) builds its valid-rec-id set from recommendations[] only and never consults archived[] — so a decision/evidence entry whose rec is legitimately archived (not lost, not deleted) is flagged as an orphan indistinguishable from a genuinely-vanished rec like rec-20260711-001. This reframes the finding: it is not only a fixed 145-item historical backlog, it is an ongoing generator of new orphans. recommendation-promote.ts's autoArchive:true default means every phase that closes by promoting its source rec to 'shipped' (the single-commit settle convention's normal path) immediately orphans that rec's own evidence entries. Verified live: rec-20260801-004 (status shipped, in archived[]) has 3 evidence entries (ev-20260801-004, ev-20260802-005, ev-20260802-011) now flagged as orphans by this mechanism, confirmed absent from the original 145-count baseline. Scoping fix, not resolved here: computeIntelligenceAudit's valid-rec-id set should include archived[] alongside recommendations[] before orphan counts are used as any kind of gate.
 - next: cadence milestone propose
 
 cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence entries whose referenced rec ids exist in neither the 69-entry active recommendations array nor the 115-entry archived array in .cadence/intelligence/recommendations.json — e.g. rec-20260711-001, referenced by dec-20260711-001 and ev-20260711-*, is genuinely absent from both, not merely archived. Orphans date back to 2026-06-11, so this predates any known reconciliation pass. Verified at main@59a2116e (this session's own Part 1 evidence/decision additions — ev-20260802-009/010/011, dec-20260802-003 — were checked and are NOT part of this orphan set, so the finding is pre-existing and unrelated to that work). The audit tool's own remediation text calls restore-or-remove an operator decision; 'cadence intelligence reconcile' only re-derives rec-side link arrays and does not resolve orphan subjects. Needs scoping: how far back the gap goes, whether it's from lost commits (git reset --hard has bitten this ledger before per rec-20260712-006's own evidence) or a reconcile bug, and whether restoring vs. pruning is right per orphan.

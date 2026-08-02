@@ -777,35 +777,6 @@
       "updatedAt": "2026-07-12T04:25:17.528Z"
     },
     {
-      "id": "rec-20260712-006",
-      "title": "Settle-internal refusal paths still write no SUMMARY",
-      "summary": "Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "low",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "settle"
-      ],
-      "affectedFiles": [
-        "packages/core/src/parse/summary-writer.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260712-006",
-        "ev-20260802-010"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-12T04:25:17.712Z",
-      "updatedAt": "2026-08-02T02:20:40.663Z"
-    },
-    {
       "id": "rec-20260712-009",
       "title": "Record a gate lifecycle-state taxonomy (requested/started/passed/refused/failed/timed-out) in SUMMARY",
       "summary": "GateProvenanceZ (packages/types/src/summary.ts) currently enumerates only status: 'ran' | 'skipped' | 'refused' -- confirmed no 'failed' or 'timed-out' state distinct from 'refused', and no in-flight requested/started states. Extend SUMMARY to record a fuller gate lifecycle-state taxonomy so incident analysis and resume can reconstruct where a settle run stopped, including crash-mid-gate cases a synchronous refuse/pass pair can't distinguish. Pairs with the exit-code-taxonomy-as-public-contract work. Distinct from rec-20260611-001, which is about recommendation status lifecycle, not gate lifecycle.",
@@ -1749,7 +1720,8 @@
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
         "ev-20260731-010",
-        "ev-20260802-009"
+        "ev-20260802-009",
+        "ev-20260802-015"
       ],
       "assumptionIds": [],
       "decisionIds": [
@@ -1757,7 +1729,7 @@
       ],
       "scoutId": "scout-20260731-kernel-ledger-routing",
       "createdAt": "2026-07-31T23:57:57.980Z",
-      "updatedAt": "2026-08-02T02:21:43.503Z"
+      "updatedAt": "2026-08-02T15:37:44.889Z"
     },
     {
       "id": "rec-20260731-005",
@@ -2016,12 +1988,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260802-012"
+        "ev-20260802-012",
+        "ev-20260802-014"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-02T02:22:38.945Z",
-      "updatedAt": "2026-08-02T02:22:38.945Z"
+      "updatedAt": "2026-08-02T15:19:47.655Z"
     },
     {
       "id": "rec-20260802-004",
@@ -6027,6 +6000,40 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-01T02:40:28.981Z",
       "updatedAt": "2026-08-02T04:09:10.772Z"
+    },
+    {
+      "id": "rec-20260712-006",
+      "title": "Settle-internal refusal paths still write no SUMMARY",
+      "summary": "Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "settle"
+      ],
+      "affectedFiles": [
+        "packages/core/src/parse/summary-writer.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260712-006",
+        "ev-20260802-010",
+        "ev-20260802-016"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "249-post-gate-refusal-summaries",
+      "createdAt": "2026-07-12T04:25:17.712Z",
+      "updatedAt": "2026-08-02T16:58:36.553Z",
+      "shippedRef": "PR pending",
+      "archivedAt": "2026-08-02T16:58:36.553Z",
+      "archiveReason": "shipped"
     }
   ]
 }

@@ -19,7 +19,15 @@ function run(args: string[], cwd: string): Promise<{ stdout: string; stderr: str
   });
 }
 
-async function readSummary(root: string): Promise<{ md: string; json: { acResults: { id: string; pass: boolean; note?: string }[] } }> {
+async function readSummary(root: string): Promise<{
+  md: string;
+  json: {
+    acResults: { id: string; pass: boolean; note?: string }[];
+    gates?: { gate: string; status: string }[];
+    draftId?: string;
+    taskResults?: { id: string; status: string; notes: string }[];
+  };
+}> {
   const base = join(root, '.cadence/phases/01-foundation/01-01-SUMMARY');
   const md = await readFile(`${base}.md`, 'utf8');
   const json = JSON.parse(await readFile(`${base}.json`, 'utf8'));
@@ -94,7 +102,7 @@ describe('cadence settle run --auto', () => {
     expect(md).toMatch(/needs context/);
   });
 
-  it('BLOCKED task → exit 1, stderr names AC + task, state still BUILD, no SUMMARY', async () => {
+  it('249-01/AC-3: BLOCKED task → exit 1, stderr names AC + task, state still BUILD, refused SUMMARY records gates provenance + empty acResults (byte-identical refusal behavior otherwise)', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
@@ -103,7 +111,20 @@ describe('cadence settle run --auto', () => {
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/AC-1 blocked/);
     expect(r.stderr).toMatch(/T1/);
-    expect(existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'))).toBe(false);
+    // Phase 249: this is the AC-derivation refusal family, now routed through
+    // the same writeRefusedSettleSummary the gate-loop refusal family
+    // (phase 170/247) already uses — a SUMMARY is written, not withheld.
+    expect(existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md'))).toBe(true);
+    const { json } = await readSummary(active.root);
+    expect(json.acResults).toEqual([]);
+    const gates = json.gates ?? [];
+    expect(gates.length).toBeGreaterThan(0);
+    expect(gates.every((g) => g.status === 'ran' || g.status === 'skipped')).toBe(true);
+    // This SUMMARY reflects THIS refusal's draft/progress, not a stale
+    // artifact — draftId matches, and T1's real BLOCKED build record
+    // round-trips through buildTaskResults.
+    expect(json.draftId).toBe('01-01');
+    expect(json.taskResults).toEqual([{ id: 'T1', status: 'BLOCKED', notes: '' }]);
     expect((await readState(active.root)).loopPosition).toBe('BUILD');
   });
 

@@ -113,7 +113,7 @@ describe('cadence settle run — required-skill gate (Phase 34.1)', () => {
     expect(existsSync(summaryPath(active.root))).toBe(true);
   });
 
-  it('AC-3 (c): shortfall → exit 1 + skill-audit-miss error anomaly, no SUMMARY', async () => {
+  it('249-01/AC-3: AC-3 (c) shortfall → exit 1 + skill-audit-miss error anomaly, refused SUMMARY records gates provenance + empty acResults (byte-identical refusal behavior otherwise)', async () => {
     active = await tempRepo({ initialized: true });
     await arrange(active.root);
     await patchConfig(active.root, (c) => (c.skillAudit = { required: ['tdd'] }));
@@ -121,7 +121,23 @@ describe('cadence settle run — required-skill gate (Phase 34.1)', () => {
     const r = await run(SETTLE, active.root);
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/required skill\(s\) not invoked: tdd/);
-    expect(existsSync(summaryPath(active.root))).toBe(false);
+    // Phase 249: this is the anomaly/skill-audit refusal family, now routed
+    // through the same writeRefusedSettleSummary the gate-loop refusal
+    // family (phase 170/247) already uses — a SUMMARY is written, not
+    // withheld.
+    expect(existsSync(summaryPath(active.root))).toBe(true);
+    const summary = JSON.parse(await readFile(summaryPath(active.root), 'utf8'));
+    expect(summary.acResults).toEqual([]);
+    expect(Array.isArray(summary.gates)).toBe(true);
+    expect(summary.gates.length).toBeGreaterThan(0);
+    expect(
+      summary.gates.every((g: { status: string }) => g.status === 'ran' || g.status === 'skipped'),
+    ).toBe(true);
+    // This SUMMARY reflects THIS refusal's draft/progress, not a stale
+    // artifact — draftId matches, and T1's real DONE build record (set by
+    // `arrange()`) round-trips through buildTaskResults.
+    expect(summary.draftId).toBe('01-01');
+    expect(summary.taskResults).toEqual([{ id: 'T1', status: 'DONE', notes: '' }]);
     const log = await readFile(logPath(active.root), 'utf8');
     expect(log).toMatch(/"type":"skill-audit-miss"/);
     expect(log).toMatch(/"severity":"error"/);

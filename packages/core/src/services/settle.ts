@@ -717,24 +717,39 @@ function buildSettleContext(
 }
 
 /**
- * Concern 5 (phase 228 T3): gate-loop refusal-path SUMMARY. A refusing gate
- * previously left zero durable evidence besides its own ephemeral stderr line
- * — `gates` (already correctly ending in the refused entry) was discarded and
- * no SUMMARY was written. Persist one now, to the same path the success path
- * uses, with `acResults: []` (nothing was ever evaluated before the halt) and
- * no loop-state mutation: `state.loopPosition`/`activeDraft` stay exactly
- * where they were so a human can fix the refusal cause and retry `settle
- * run`. Deliberately skips `runSkillAuditCheck`, `collectAnomalies`, and
- * recommendation-promotion — none of those apply before gates have actually
- * finished running. Verbatim extraction of the former `settleService`
- * refusal branch — logic moved, not rewritten.
+ * Concern 5 (phase 228 T3): refusal-path SUMMARY, shared by four callers. A
+ * refusing gate previously left zero durable evidence besides its own
+ * ephemeral stderr line — `gates` was discarded and no SUMMARY was written.
+ * Persist one now, to the same path the success path uses, with
+ * `acResults: []` and no loop-state mutation: `state.loopPosition`/
+ * `activeDraft` stay exactly where they were so a human can fix the refusal
+ * cause and retry `settle run`. Verbatim extraction of the former
+ * `settleService` gate-loop refusal branch — logic moved, not rewritten —
+ * later reused unchanged by three more callers (phase 249):
+ *
+ * - **Gate-loop refusal** (`runSettleGates`): `gates` already correctly ends
+ *   in the refused entry; `acResults: []` because nothing was ever
+ *   evaluated before the halt; `collectAnomalies`/`runSkillAuditCheck`/
+ *   recommendation-promotion are skipped because none of those has run yet
+ *   at this point in `settleService`.
+ * - **AC-derivation, anomaly/skill-audit, and evidence-floor refusals**
+ *   (phase 249): all three fire *after* the gate loop completes, so here
+ *   `gates` holds every gate's final `ran`/`skipped` entry (never a
+ *   `refused` one — no gate itself refused). `collectAnomalies` has already
+ *   run by the time the anomaly/skill-audit and evidence-floor refusals can
+ *   fire. `acResults: []` on these three is a **deliberate discard**, not
+ *   "never evaluated" — the AC-derivation/evidence-floor refusals compute
+ *   real `acResults` internally before deciding to refuse, and this
+ *   function intentionally does not receive or persist that work, matching
+ *   the gate-loop refusal's shape exactly rather than inventing a richer
+ *   record for only some refusal families.
  *
  * Phase 244 (T2): `foreignBinaryMismatch` is threaded in from the caller
- * (already computed by `resolveSettleGateSet`, which runs before the gate
- * loop that can produce this refusal) rather than re-resolved here — a
- * refused settle still writes a SUMMARY, and the same provenance applies to
- * it: if the running binary was foreign, that is just as true of the refused
- * attempt as it would be of a successful one.
+ * (already computed by `resolveSettleGateSet`, which runs before every
+ * refusal point that can reach this function) rather than re-resolved here
+ * — a refused settle still writes a SUMMARY, and the same provenance
+ * applies to it: if the running binary was foreign, that is just as true of
+ * the refused attempt as it would be of a successful one.
  */
 /**
  * Phase 239 (T6, AC-7): the coverage scheme/mode in force at settle, as a
@@ -1461,7 +1476,12 @@ export async function settleService(
     }
 
     const acDerivation = deriveSettleAcResults(acc, draft, progress, explicit, explicitIds, gateSet, opts, io);
-    if (!acDerivation.ok) return acDerivation.result;
+    if (!acDerivation.ok) {
+      return await writeRefusedSettleSummary(
+        cwd, activePhase, state, draft, progress, gates,
+        acc.codeReview, acc.securityAudit, cadenceConfig, foreignBinaryMismatch, now, io,
+      );
+    }
     const {
       acResults,
       coverageBypassed,
@@ -1490,7 +1510,12 @@ export async function settleService(
       verifierFailure,
       io,
     );
-    if (!anomalyResult.ok) return anomalyResult.result;
+    if (!anomalyResult.ok) {
+      return await writeRefusedSettleSummary(
+        cwd, activePhase, state, draft, progress, gates,
+        acc.codeReview, acc.securityAudit, cadenceConfig, foreignBinaryMismatch, now, io,
+      );
+    }
     const { gateBypasses } = anomalyResult;
 
     const evidenceResult = await deriveEvidenceAndCheckFloor(
@@ -1502,7 +1527,12 @@ export async function settleService(
       evidenceFloorBypassById,
       io,
     );
-    if (!evidenceResult.ok) return evidenceResult.result;
+    if (!evidenceResult.ok) {
+      return await writeRefusedSettleSummary(
+        cwd, activePhase, state, draft, progress, gates,
+        acc.codeReview, acc.securityAudit, cadenceConfig, foreignBinaryMismatch, now, io,
+      );
+    }
     const { acResultsWithEvidence, evidenceFloorBypassesUsed } = evidenceResult.data;
 
     return await finalizeAndCloseSettle(
