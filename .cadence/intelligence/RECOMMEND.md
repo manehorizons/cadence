@@ -2,7 +2,7 @@
 
 > Generated from `.cadence/intelligence/recommend.json`.
 
-Generated at: 2026-08-01T22:26:17.972Z
+Generated at: 2026-08-02T23:09:13.107Z
 
 ## Advisory
 
@@ -15,6 +15,14 @@ Generated at: 2026-08-01T22:26:17.972Z
 - score: 73/100 (raw 25.7)
 - status: candidate · ready: ready-for-cadence-spec · priority: high · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio high +5 · friction 0 +0 ⇒ raw 25.7 (score 73)
+- next: cadence milestone propose
+
+### rec-20260802-001 — Finding-durability arc: complete, attempt-addressable settle records on every exit path
+
+- score: 73/100 (raw 25.7)
+- status: candidate · ready: ready-for-cadence-spec · priority: high · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready ready-for-cadence-spec +10 · decay fresh +4 · prio high +5 · friction 0 +0 ⇒ raw 25.7 (score 73)
+- scout: scout-20260801-claude-finding-durability
 - next: cadence milestone propose
 
 ### rec-20260731-001 — cadence doctor: release-currency check (local package.json vs published npm)
@@ -103,44 +111,20 @@ Generated at: 2026-08-01T22:26:17.972Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
 - next: cadence milestone propose
 
-### rec-20260731-010 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)
-
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
-- scout: scout-20260731-kernel-ledger-routing
-- next: cadence milestone propose
-
-### rec-20260801-004 — code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw
-
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
-- scout: scout-20260801-0100
-- next: cadence milestone propose
-
-### rec-20260801-005 — A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle
-
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
-- scout: scout-20260801-0100
-- next: cadence milestone propose
-
-### rec-20260801-011 — Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings
-
-- score: 56/100 (raw 14.7)
-- status: candidate · ready: needs-decision · priority: medium · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
-- scout: scout-20260801-phase246-review
-- next: cadence milestone propose
-
 ### rec-20260801-012 — Real-provider code-review findings are structurally unreachable under default profile + agent-driven settles
 
 - score: 56/100 (raw 14.7)
 - status: candidate · ready: needs-decision · priority: medium · decay: fresh
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
 - scout: scout-20260801-phase246-review
+- next: cadence milestone propose
+
+### rec-20260802-002 — SUMMARY.md never renders codeReview/securityAudit findings — a refused-attempt sibling shows nothing an operator opens it to see
+
+- score: 56/100 (raw 14.7)
+- status: candidate · ready: needs-decision · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-decision +2 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 14.7 (score 56)
+- scout: scout-20260801-claude-finding-durability
 - next: cadence milestone propose
 
 ### rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
@@ -159,6 +143,20 @@ Generated at: 2026-08-01T22:26:17.972Z
 - next: cadence milestone propose
 
 ### rec-20260731-004 — docs/providers.md's host-cli 'per-task-verify only' scope claim is stale — all 7 factories now have host-cli wired
+
+- score: 55/100 (raw 13.7)
+- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 13.7 (score 55)
+- next: cadence milestone propose
+
+### rec-20260802-003 — Intelligence ledger has 145 orphan decision/evidence links to recs absent from both active and archived arrays
+
+- score: 55/100 (raw 13.7)
+- status: candidate · ready: needs-evidence · priority: medium · decay: fresh
+- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready needs-evidence +1 · decay fresh +4 · prio medium +2 · friction 0 +0 ⇒ raw 13.7 (score 55)
+- next: cadence milestone propose
+
+### rec-20260802-004 — deep-verify.ts's own bypassed-throw case has the identical registry-side provenance gap phase 248 just fixed for code-review/security-audit
 
 - score: 55/100 (raw 13.7)
 - status: candidate · ready: needs-evidence · priority: medium · decay: fresh
@@ -271,13 +269,6 @@ Generated at: 2026-08-01T22:26:17.972Z
 - why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 · friction 0 +0 ⇒ raw 10.7 (score 50)
 - next: cadence milestone propose
 
-### rec-20260712-006 — Settle-internal refusal paths still write no SUMMARY
-
-- score: 50/100 (raw 10.7)
-- status: candidate · ready: raw-idea · priority: low · decay: fresh
-- why: lev 5 +5 · conf 0.70 +4.2 · risk 5 -2.5 · status candidate +0 · ready raw-idea +0 · decay fresh +4 · prio low +0 · friction 0 +0 ⇒ raw 10.7 (score 50)
-- next: cadence milestone propose
-
 ### rec-20260712-016 — Write a formal threat model covering MCP serve, hooks, host adapters, headless verifier, and ledger exposure
 
 - score: 50/100 (raw 10.7)
@@ -358,6 +349,7 @@ Generated at: 2026-08-01T22:26:17.972Z
 ## Parked (deferred)
 
 - rec-20260710-003 — MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool (deferred, needs-evidence)
+- rec-20260731-010 — High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs) (deferred, needs-decision)
 
 ## Needs attention (superseded / contradicted)
 
@@ -365,4 +357,4 @@ None.
 
 ## Totals
 
-- total 69 · ranked 46 · parked 1 · needs-attention 0 · excluded 22
+- total 69 · ranked 45 · parked 2 · needs-attention 0 · excluded 22

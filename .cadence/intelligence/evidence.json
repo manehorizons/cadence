@@ -1449,6 +1449,13 @@
       "kind": "note",
       "summary": "Phase 249 T2 verified this recommendation's conversion to phase 249-post-gate-refusal-summaries. Readiness/status confirmed as expected; no additional mutation applied.",
       "createdAt": "2026-08-02T15:39:30.009Z"
+    },
+    {
+      "id": "ev-20260802-017",
+      "recommendationId": "rec-20260802-005",
+      "kind": "note",
+      "summary": "Release workflow run 30771173624 (2026-08-02): 'Create GitHub Release and verify registry' step failed with E404 after 10 attempts; publish/tag/GH-release steps all green; manual npm view polling confirmed all 5 @thomas-powers-jr packages resolved a few minutes later",
+      "createdAt": "2026-08-02T23:10:39.572Z"
     }
   ]
 }
