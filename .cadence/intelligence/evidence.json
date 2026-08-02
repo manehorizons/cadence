@@ -1449,6 +1449,13 @@
       "kind": "note",
       "summary": "Phase 249 T2 verified this recommendation's conversion to phase 249-post-gate-refusal-summaries. Readiness/status confirmed as expected; no additional mutation applied.",
       "createdAt": "2026-08-02T15:39:30.009Z"
+    },
+    {
+      "id": "ev-20260802-018",
+      "recommendationId": "rec-20260802-006",
+      "kind": "note",
+      "summary": "Dependabot alert sweep 2026-08-02: 38 open alerts total, 30 of which (all high/moderate/low in website/) have zero CI enforcement per the exceptions doc's documented scope; PR #364 fixed 2 of the 7 website high-severity alerts",
+      "createdAt": "2026-08-02T23:33:26.220Z"
     }
   ]
 }

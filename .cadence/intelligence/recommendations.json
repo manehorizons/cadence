@@ -2023,6 +2023,38 @@
       "decisionIds": [],
       "createdAt": "2026-08-02T04:09:25.988Z",
       "updatedAt": "2026-08-02T04:09:25.988Z"
+    },
+    {
+      "id": "rec-20260802-006",
+      "title": "Extend security audit CI coverage to website/ workspace",
+      "summary": "docs/security/audit-exceptions.md's own text documents that the audit CI job (scripts/check-audit-exceptions.mjs, .github/workflows/security.yml) only scans the packages/* workspace's root pnpm-lock.yaml -- website/ has a fully separate pnpm-workspace.yaml + pnpm-lock.yaml that is never audited at all. Confirmed via live GitHub Dependabot alerts on 2026-08-02: 7 high-severity alerts (astro SSRF #19, brace-expansion #26, js-yaml #27, linkify-it #34, postcss #39, sharp #36, svgo #35) plus 23 moderate/low alerts exist ONLY in website's lockfile and would never fail CI even if left unpatched indefinitely, unlike the same-severity packages/* advisories which are forced into a time-boxed exception table or a real fix. Two of the seven (brace-expansion, js-yaml) were fixed in PR #364 by re-resolving already-permitted transitive versions; the other five need their own patched-version research.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "ci",
+        "website"
+      ],
+      "affectedFiles": [
+        "docs/security/audit-exceptions.md",
+        ".github/workflows/security.yml",
+        "scripts/check-audit-exceptions.mjs",
+        "website/pnpm-lock.yaml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260802-018"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-02T23:33:26.220Z",
+      "updatedAt": "2026-08-02T23:33:26.220Z"
     }
   ],
   "archived": [
@@ -6029,11 +6061,11 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "249-post-gate-refusal-summaries",
-      "createdAt": "2026-07-12T04:25:17.712Z",
-      "updatedAt": "2026-08-02T16:58:36.553Z",
       "shippedRef": "PR pending",
       "archivedAt": "2026-08-02T16:58:36.553Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-12T04:25:17.712Z",
+      "updatedAt": "2026-08-02T16:58:36.553Z"
     }
   ]
 }
