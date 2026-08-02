@@ -1330,7 +1330,7 @@ async function setupTwoAcBuildRepo(args: {
 }
 
 describe('settleService enforces gates.evidenceFloor (phase 214, T4)', () => {
-  it('AC-4/AC-1: refuses cadence settle run --auto when an AC PASS verdict rests on evidence below the effective floor', async () => {
+  it('214-01/AC-4 + 214-01/AC-1 + 249-01/AC-4: refuses cadence settle run --auto when an AC PASS verdict rests on evidence below the effective floor, and (phase 249) the refused SUMMARY now records gates provenance + empty acResults instead of being withheld', async () => {
     root = await mktemp();
     await setupTwoAcBuildRepo({
       root,
@@ -1357,12 +1357,33 @@ describe('settleService enforces gates.evidenceFloor (phase 214, T4)', () => {
     expect(errText).toContain('AC-1');
     expect(errText).toContain('AC-2');
 
-    // Refused before the loop transitioned — state stays in BUILD, no
-    // SUMMARY promising a settle that didn't happen.
+    // Refused before the loop transitioned — state stays in BUILD.
     const stateRaw = await readFile(join(root, '.cadence', 'state.json'), 'utf8');
     const state = JSON.parse(stateRaw) as { loopPosition: string; activeDraft: string | null };
     expect(state.loopPosition).toBe('BUILD');
     expect(state.activeDraft).toBe('214-01');
+
+    // Phase 249 (AC-2/AC-4): evidence-floor is now one of the in-scope
+    // post-gate refusal families routed through writeRefusedSettleSummary —
+    // a refused SUMMARY is written (not withheld) with the same shape the
+    // gate-loop refusal family (phase 170/247) already produces:
+    // acResults: [] (nothing synthesized) and gates[] provenance present.
+    const summaryPath = join(
+      root, '.cadence', 'phases', '214-01-evidence-floor-refuse', '214-01-SUMMARY.json',
+    );
+    expect(existsSync(summaryPath)).toBe(true);
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+    expect(summary.acResults).toEqual([]);
+    expect(summary.gates?.length ?? 0).toBeGreaterThan(0);
+    expect(summary.gates?.every((g) => g.status === 'ran' || g.status === 'skipped')).toBe(true);
+    // This SUMMARY reflects THIS refusal's draft/progress, not a stale
+    // artifact — draftId matches, and both tasks' real DONE build records
+    // (set by setupTwoAcBuildRepo) round-trip through buildTaskResults.
+    expect(summary.draftId).toBe('214-01');
+    expect(summary.taskResults).toEqual([
+      { id: 'T1', status: 'DONE', notes: '' },
+      { id: 'T2', status: 'DONE', notes: '' },
+    ]);
   });
 
   it('AC-3: refuses with the structural ai-verified/mock-provider reason, not the generic below-floor message, when floor=ai-verified under the default mock provider', async () => {
@@ -1513,6 +1534,109 @@ describe('settleService enforces gates.evidenceFloor (phase 214, T4)', () => {
 function mkFinding(message: string, severity: Finding['severity'] = 'medium'): Finding {
   return { severity, message };
 }
+
+describe('settleService threads acc-accumulated findings into a newly-in-scope refusal family (phase 249, T5, AC-2)', () => {
+  it('249-01/AC-2: an --allow-code-review-failure-bypassed HIGH code-review finding still records codeReview + a contentHash in a SUMMARY refused at evidence-floor (not the gate loop)', async () => {
+    root = await mktemp();
+    await setupTwoAcBuildRepo({
+      root,
+      phase: '249-05-findings-threading-evidence-floor',
+      id: '249-05',
+      config: {
+        ...defaultConfig,
+        // strict×standard's delta includes 'code-review' (engine.ts DELTAS),
+        // matching the phase-247 fixture above. Both tasks are DONE (per
+        // setupTwoAcBuildRepo) so the AC-derivation family never refuses
+        // here — only evidence-floor does, since neither AC has coverage or
+        // deep-verify evidence and the floor is raised to 'assertion'. This
+        // deliberately proves AC-2's findings-threading claim on a family
+        // OTHER than the gate-loop refusal phase 247 already covers.
+        profile: 'strict',
+        gates: { sealed: [], evidenceFloor: 'assertion' },
+      },
+    });
+    constructed.codeReviewFindingsOverride = {
+      'src/foo.ts': [mkFinding('console.log left in source', 'high')],
+    };
+
+    const { io, err } = captureIO();
+    // --allow-code-review-failure (NOT --force): bypasses code-review's HIGH
+    // finding specifically without also suppressing the AC-derivation
+    // offender check (settle.ts's deriveSettleAcResults refuses on
+    // `offenders.length > 0 && !opts.force` — using bare --force here would
+    // make this indistinguishable from an AC-derivation-family test), so the
+    // settle proceeds past code-review and is refused downstream, at
+    // evidence-floor, instead.
+    const res = await settleService(
+      root,
+      {
+        auto: true,
+        interactive: false,
+        allowMissingCoverage: true,
+        allowCodeReviewFailure: true,
+      },
+      io,
+    );
+
+    expect(res.exitCode).toBe(1);
+    const errText = err.join('');
+    // code-review bypassed (not refused) ...
+    expect(errText).toContain(
+      'code-review: --allow-code-review-failure set; proceeding past 1 HIGH finding(s).',
+    );
+    // ... and evidence-floor is what actually refused the settle.
+    expect(errText).toContain('evidence-floor');
+    expect(errText).toContain('AC-1');
+    expect(errText).toContain('AC-2');
+
+    const summaryPath = join(
+      root, '.cadence/phases/249-05-findings-threading-evidence-floor/249-05-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    // AC-3 invariant: nothing synthesized on a refusal.
+    expect(summary.acResults).toEqual([]);
+    // The gate loop itself completed cleanly — code-review "ran" via its own
+    // bypass fall-through, never "refused" — so this refusal is
+    // settleService's own evidence-floor check, downstream of the gate loop,
+    // exactly per this phase's AC-2/AC-3.
+    expect(summary.gates?.length ?? 0).toBeGreaterThan(0);
+    expect(summary.gates?.every((g) => g.status === 'ran' || g.status === 'skipped')).toBe(true);
+    // This SUMMARY reflects THIS refusal's draft/progress, not a stale
+    // artifact — draftId matches, and both tasks' real DONE build records
+    // (set by setupTwoAcBuildRepo) round-trip through buildTaskResults.
+    expect(summary.draftId).toBe('249-05');
+    expect(summary.taskResults).toEqual([
+      { id: 'T1', status: 'DONE', notes: '' },
+      { id: 'T2', status: 'DONE', notes: '' },
+    ]);
+
+    // AC-2's actual claim: the earlier-accumulated code-review finding
+    // survives into this differently-shaped refusal, unmodified, with a
+    // contentHash — identical treatment to the gate-loop refusal family
+    // (phase 247, `codeReviewFindingsOverride` precedent above).
+    expect(summary.codeReview?.['src/foo.ts']).toHaveLength(1);
+    expect(summary.codeReview?.['src/foo.ts']?.[0]).toMatchObject({
+      severity: 'high',
+      message: 'console.log left in source',
+    });
+    expect(summary.contentHash?.algorithm).toBe('sha256');
+    expect(summary.contentHash?.value).toMatch(/^[0-9a-f]{64}$/);
+    const recomputed = computeSummaryContentHash(summary);
+    expect(recomputed.value).toBe(summary.contentHash?.value);
+
+    // Phase 247 (T3)'s additive per-attempt sibling snapshot fires on the
+    // exact same hasCodeReviewFindings/hasSecurityAuditFindings condition
+    // that gates contentHash above — this test is the only coverage of that
+    // condition firing on a family OTHER than the gate loop, so pin it too.
+    const snapshotBase = join(
+      root, '.cadence/phases/249-05-findings-threading-evidence-floor',
+      refusedSnapshotArtifactBase('249-05', summary.completedAt),
+    );
+    expect(existsSync(`${snapshotBase}.json`)).toBe(true);
+    expect(existsSync(`${snapshotBase}.md`)).toBe(true);
+  });
+});
 
 describe('settleService routes identified code-review findings into the recommendation ledger (phase 242, T3)', () => {
   async function readRecsFile(r: string): Promise<RecommendationLedger> {

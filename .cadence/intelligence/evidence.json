@@ -1428,6 +1428,27 @@
       "kind": "note",
       "summary": "Surfaced during phase 248's SPEC authoring (2026-08-02): registry.ts's dispatch loop has no branch reading res.flags?.verifierFailure at all — confirmed by reading the full bypass-ladder chain (self-guard predicate, build-test-must-pass x2, boundary-scan, test-coverage, code-review/security-audit's new reviewVerifierFailure branch) and finding none match deep-verify's own verifierFailure flag.",
       "createdAt": "2026-08-02T04:09:25.988Z"
+    },
+    {
+      "id": "ev-20260802-014",
+      "recommendationId": "rec-20260802-003",
+      "kind": "note",
+      "summary": "Root cause identified while authoring phase 249's SPEC: computeIntelligenceAudit (packages/core/src/intelligence/store/audit.ts) builds its valid-rec-id set from recommendations[] only and never consults archived[] — so a decision/evidence entry whose rec is legitimately archived (not lost, not deleted) is flagged as an orphan indistinguishable from a genuinely-vanished rec like rec-20260711-001. This reframes the finding: it is not only a fixed 145-item historical backlog, it is an ongoing generator of new orphans. recommendation-promote.ts's autoArchive:true default means every phase that closes by promoting its source rec to 'shipped' (the single-commit settle convention's normal path) immediately orphans that rec's own evidence entries. Verified live: rec-20260801-004 (status shipped, in archived[]) has 3 evidence entries (ev-20260801-004, ev-20260802-005, ev-20260802-011) now flagged as orphans by this mechanism, confirmed absent from the original 145-count baseline. Scoping fix, not resolved here: computeIntelligenceAudit's valid-rec-id set should include archived[] alongside recommendations[] before orphan counts are used as any kind of gate.",
+      "createdAt": "2026-08-02T15:19:47.655Z"
+    },
+    {
+      "id": "ev-20260802-015",
+      "recommendationId": "rec-20260731-010",
+      "kind": "note",
+      "summary": "Phase 249 T1 verified this disposition durable as of housekeeping PR #359 (main@9d561fbd): dec-20260802-003 active, status deferred, 2 prior evidence entries confirmed unchanged. No additional mutation applied.",
+      "createdAt": "2026-08-02T15:37:44.889Z"
+    },
+    {
+      "id": "ev-20260802-016",
+      "recommendationId": "rec-20260712-006",
+      "kind": "note",
+      "summary": "Phase 249 T2 verified this recommendation's conversion to phase 249-post-gate-refusal-summaries. Readiness/status confirmed as expected; no additional mutation applied.",
+      "createdAt": "2026-08-02T15:39:30.009Z"
     }
   ]
 }

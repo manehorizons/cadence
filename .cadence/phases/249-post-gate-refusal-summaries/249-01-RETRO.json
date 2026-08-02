@@ -1,0 +1,18 @@
+{
+  "bypasses": [
+    {
+      "gate": "test-coverage",
+      "flag": "--allow-missing-coverage",
+      "reason": "test-coverage gate bypassed via --allow-missing-coverage",
+      "severity": "warn"
+    },
+    {
+      "gate": "evidence-floor:AC-1",
+      "flag": "--evidence-floor-bypass",
+      "reason": "ledger-state verification via CLI show/list output, not code behavior — no test can carry this AC's token (phase 246 precedent, tier difference required also bypassing test-coverage)",
+      "severity": "warn"
+    }
+  ],
+  "roughTasks": [],
+  "findings": {}
+}

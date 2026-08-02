@@ -165,7 +165,7 @@ describe('settle --interactive (Phase 16)', () => {
     expect(summary.acResults[0]).toEqual({ id: 'AC-1', pass: true, evidence: 'assertion' }); // structural pass
   });
 
-  it('T4 (Phase 29.8): skip without --auto still falls through to structural derivation and refuses an incomplete AC', async () => {
+  it('249-01/AC-3: T4 (Phase 29.8) skip without --auto still falls through to structural derivation and refuses an incomplete AC — refused SUMMARY records gates provenance + empty acResults (byte-identical refusal behavior otherwise)', async () => {
     active = await tempRepo({ initialized: true });
     await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
     await run(['draft', 'approve', '01-foundation', '01'], active.root);
@@ -177,9 +177,27 @@ describe('settle --interactive (Phase 16)', () => {
     );
     expect(r.code).toBe(1);
     expect(r.stderr).toMatch(/AC-1/);
+    // Phase 249: --interactive (without --auto) still sets
+    // interactiveRequested unconditionally and refuses at the same
+    // AC-derivation call site as the --auto BLOCKED-task case — same
+    // family, now routed through writeRefusedSettleSummary, so a SUMMARY is
+    // written, not withheld.
+    const summaryJsonPath = join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.json');
     expect(
       existsSync(join(active.root, '.cadence/phases/01-foundation/01-01-SUMMARY.md')),
-    ).toBe(false);
+    ).toBe(true);
+    const summary = JSON.parse(await readFile(summaryJsonPath, 'utf8'));
+    expect(summary.acResults).toEqual([]);
+    expect(Array.isArray(summary.gates)).toBe(true);
+    expect(summary.gates.length).toBeGreaterThan(0);
+    expect(
+      summary.gates.every((g: { status: string }) => g.status === 'ran' || g.status === 'skipped'),
+    ).toBe(true);
+    // This SUMMARY reflects THIS refusal's draft/progress, not a stale
+    // artifact — draftId matches, and T1 (never built, no PROGRESS.json
+    // entry) round-trips through buildTaskResults' no-record fallback.
+    expect(summary.draftId).toBe('01-01');
+    expect(summary.taskResults).toEqual([{ id: 'T1', status: 'BLOCKED', notes: '' }]);
   });
 
   it('T4 (Phase 29.8): --force still escapes the skip→structural refusal', async () => {

@@ -120,6 +120,30 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   `SUMMARY.md` "Gate provenance" section prints a skipped gate's
   `skipReason` but does not yet print a refused gate's `reason`, so read the
   `.json` record for the refusal text.
+- Phase 249: the phase-170 "still writes the SUMMARY pair" behavior above
+  covered only the gate-loop refusal (a `runSettleGates` gate returning
+  `refused`). Three more refusal points inside `settleService`'s own
+  post-gate-loop body — AC derivation (`deriveSettleAcResults`),
+  anomaly/skill-audit (`runAnomalyAndSkillAuditChecks`), and the
+  `evidence-floor` gate documented under [The gate universe](#the-gate-universe)
+  below (`deriveEvidenceAndCheckFloor`) — previously returned their bare refusal
+  result with no SUMMARY written at all. Phase 249 routes all three through
+  the same phase-247 `writeRefusedSettleSummary`, called from
+  `settleService` with the identical `acc`/`gates` already in scope there,
+  so a findings-bearing refusal in any of these three families inherits the
+  conditional `contentHash`/snapshot-sibling behavior identically to a
+  gate-loop refusal. `acResults` stays `[]` on all four refusal families
+  alike, preserving the phase-170 invariant unchanged. Three earlier refusal
+  points remain silent by design and are unaffected, each missing a
+  different piece of the context a SUMMARY needs: `loadSettlePreconditions`'s
+  precondition refusal returns before `draft`/`progress`/`gates` all exist;
+  `checkPhaseCollisionBackstop`'s worktree-collision backstop (its own
+  docstring: "a `settleService` precondition, NOT a gate-matrix gate") runs
+  with `draft`/`progress` already resolved but before `gates` exists; and
+  `resolveSettleGateSet`'s soft-cap refusal runs with `draft`/`progress`
+  already resolved too, missing only `gates`/`ctx`. All three are excluded
+  for the same underlying reason — no `gates` provenance array exists yet
+  to attach — not because none of `draft`/`progress` is available.
 - Phase 232: `gates[]` entries also carry optional `provider`/`model` —
   the verifier family/model that actually ran the gate — currently populated
   only for the `code-review` and `security-audit` entries (`mock`, the

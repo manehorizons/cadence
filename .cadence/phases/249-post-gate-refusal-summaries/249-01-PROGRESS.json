@@ -1,0 +1,56 @@
+{
+  "draftId": "249-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T15:38:34.590Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T15:40:33.671Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-02T15:46:57.156Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/.cadence/phases/249-post-gate-refusal-summaries/249-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/.cadence/phases/249-post-gate-refusal-summaries/249-01-SPEC.md"
+      ],
+      "updatedAt": "2026-08-02T16:02:57.404Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/tests/cli/settle-auto.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/tests/cli/settle-skill-audit.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/tests/cli/settle-interactive.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/tests/services/settle.test.ts"
+      ],
+      "updatedAt": "2026-08-02T16:09:44.659Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/tests/services/settle.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/tests/cli/settle-interactive.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/tests/cli/settle-auto.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase249-refused-settle-post-gate/packages/core/tests/cli/settle-skill-audit.test.ts"
+      ],
+      "updatedAt": "2026-08-02T16:31:26.601Z"
+    }
+  }
+}
