@@ -1330,6 +1330,13 @@
       "kind": "note",
       "summary": "Verified 2026-08-01: refusedSummaryBase and summaryBase both resolve to join(cwd, '.cadence/phases', activePhase, `${state.activeDraft}-SUMMARY`) -- settle.ts lines ~778-781 (refused) and ~1148-1150 (success).",
       "createdAt": "2026-08-01T21:34:26.911Z"
+    },
+    {
+      "id": "ev-20260802-001",
+      "recommendationId": "rec-20260802-001",
+      "kind": "note",
+      "summary": "Surfaced during phase 248's SPEC authoring (2026-08-02): registry.ts's dispatch loop has no branch reading res.flags?.verifierFailure at all — confirmed by reading the full bypass-ladder chain (self-guard predicate, build-test-must-pass x2, boundary-scan, test-coverage, code-review/security-audit's new reviewVerifierFailure branch) and finding none match deep-verify's own verifierFailure flag.",
+      "createdAt": "2026-08-02T04:09:25.988Z"
     }
   ]
 }

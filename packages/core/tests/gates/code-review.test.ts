@@ -23,6 +23,12 @@ function ctx(over: {
   force?: boolean;
   provider?: string;
   model?: string;
+  /** Phase 248: `config.codeReview.provider`, distinct from `provider` above
+   *  (which sets the live verifier RESULT's provider on the success path).
+   *  This one drives the catch block's `ctx.config?.codeReview?.provider ??
+   *  'mock'` fallback chain — set it to prove the config path is actually
+   *  read, not just its `'mock'` fallback. */
+  configProvider?: string;
   errs?: string[];
   calls?: Calls;
 }): SettleContext {
@@ -42,7 +48,10 @@ function ctx(over: {
     state: { draftReadAt: null, activePhase: '01-foundation', activeDraft: '01-01' } as never,
     draft: { acceptanceCriteria: [], tasks: [] } as never,
     progress: { draftId: '01-01', tasks: {} },
-    config: { convergence: { maxAttempts: over.maxAttempts ?? 3 } } as never,
+    config: {
+      convergence: { maxAttempts: over.maxAttempts ?? 3 },
+      ...(over.configProvider ? { codeReview: { provider: over.configProvider } } : {}),
+    } as never,
     gateSet: { gates, softCap: false } as never,
     opts,
     explicitIds: new Set<string>(),
@@ -339,7 +348,7 @@ describe('runCodeReviewGate', () => {
   });
 
   // AC-5: verifier throws, no bypass → refuse with failure stderr
-  it('refuses when the verifier throws and no bypass flag is set', async () => {
+  it('248-01/AC-2: refuses when the verifier throws and no bypass flag is set', async () => {
     const errs: string[] = [];
     const res = await runCodeReviewGate(ctx({ verifyThrows: 'boom', errs }));
     expect(res.outcome).toBe('refuse');
@@ -357,5 +366,60 @@ describe('runCodeReviewGate', () => {
   it('passes when the verifier throws under --allow-code-review-failure', async () => {
     const res = await runCodeReviewGate(ctx({ verifyThrows: 'boom', allowCodeReviewFailure: true }));
     expect(res.outcome).toBe('pass');
+  });
+
+  // AC-1 / AC-3: verifier throws + --allow-code-review-failure → pass, with
+  // flags.reviewVerifierFailure naming the message + configured provider, and
+  // a loud stderr bypass notice naming --allow-code-review-failure.
+  it('248-01/AC-1: sets flags.reviewVerifierFailure and prints a bypass notice under --allow-code-review-failure', async () => {
+    const errs: string[] = [];
+    const res = await runCodeReviewGate(
+      ctx({ verifyThrows: 'boom', allowCodeReviewFailure: true, errs }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.flags?.reviewVerifierFailure).toEqual({ message: 'boom', provider: 'mock' });
+    expect(errs.join('')).toContain(
+      'code-review: --allow-code-review-failure set; proceeding past a verifier failure (boom).',
+    );
+  });
+
+  // AC-1: same throw, bare --force (no allowCodeReviewFailure) → bypass
+  // notice names --force instead.
+  it('248-01/AC-1: sets flags.reviewVerifierFailure and prints a bypass notice under bare --force', async () => {
+    const errs: string[] = [];
+    const res = await runCodeReviewGate(ctx({ verifyThrows: 'boom', force: true, errs }));
+    expect(res.outcome).toBe('pass');
+    expect(res.flags?.reviewVerifierFailure).toEqual({ message: 'boom', provider: 'mock' });
+    expect(errs.join('')).toContain(
+      'code-review: --force set; proceeding past a verifier failure (boom).',
+    );
+  });
+
+  // AC-1: the configured provider is actually READ from config.codeReview
+  // .provider, not just the 'mock' fallback — a hardcoded 'mock' or a
+  // cross-wired read of a different config slice (e.g. config.verifier
+  // .provider, what deep-verify.ts reads) would fail this.
+  it('248-01/AC-1: reads the configured provider from config.codeReview.provider, not the mock fallback', async () => {
+    const res = await runCodeReviewGate(
+      ctx({ verifyThrows: 'boom', allowCodeReviewFailure: true, configProvider: 'anthropic' }),
+    );
+    expect(res.flags?.reviewVerifierFailure).toEqual({ message: 'boom', provider: 'anthropic' });
+  });
+
+  // AC-1 precedence rule: when BOTH --force and --allow-code-review-failure
+  // are set, the gate-specific flag wins in the stderr notice — mirroring
+  // registry.ts's bypass-ladder convention, NOT the older findings-bypass
+  // notice a few lines up in this same file (which prefers --force). Only
+  // this both-set case can distinguish the rule from its inverse.
+  it('248-01/AC-1: names --allow-code-review-failure (not --force) when both flags are set', async () => {
+    const errs: string[] = [];
+    const res = await runCodeReviewGate(
+      ctx({ verifyThrows: 'boom', allowCodeReviewFailure: true, force: true, errs }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(errs.join('')).toContain(
+      'code-review: --allow-code-review-failure set; proceeding past a verifier failure (boom).',
+    );
+    expect(errs.join('')).not.toContain('code-review: --force set;');
   });
 });

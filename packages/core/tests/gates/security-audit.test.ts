@@ -20,6 +20,12 @@ function ctx(over: {
   errs?: string[];
   provider?: string;
   model?: string;
+  /** Phase 248: `config.securityAudit.provider`, distinct from `provider`
+   *  above (which sets the live verifier RESULT's provider on the success
+   *  path). Drives the catch block's `ctx.config?.securityAudit?.provider
+   *  ?? 'mock'` fallback chain — set it to prove the config path is
+   *  actually read, not just its `'mock'` fallback. */
+  configProvider?: string;
   captureOpts?: (opts: { signal?: AbortSignal; traceId?: string } | undefined) => void;
 }): SettleContext {
   const errs = over.errs ?? [];
@@ -31,7 +37,9 @@ function ctx(over: {
     state: { draftReadAt: null, activePhase: '01-foundation', activeDraft: '01-01' } as never,
     draft: { acceptanceCriteria: [], tasks: [] } as never,
     progress: { draftId: '01-01', tasks: {} },
-    config: null,
+    config: over.configProvider
+      ? ({ securityAudit: { provider: over.configProvider } } as never)
+      : null,
     gateSet: { gates: ['security-audit'], softCap: false } as never,
     opts,
     explicitIds: new Set<string>(),
@@ -123,7 +131,7 @@ describe('runSecurityAuditGate', () => {
   });
 
   // AC-4: verifier throws, no bypass → refuse with failure stderr
-  it('refuses when the verifier throws and no bypass flag is set', async () => {
+  it('248-01/AC-2: refuses when the verifier throws and no bypass flag is set', async () => {
     const errs: string[] = [];
     const res = await runSecurityAuditGate(ctx({ verifyThrows: 'boom', errs }));
     expect(res.outcome).toBe('refuse');
@@ -141,6 +149,69 @@ describe('runSecurityAuditGate', () => {
   it('passes when the verifier throws under --allow-security-audit-failure', async () => {
     const res = await runSecurityAuditGate(ctx({ verifyThrows: 'boom', allowSecurityAuditFailure: true }));
     expect(res.outcome).toBe('pass');
+  });
+
+  // AC-1/AC-3/AC-5: verifier throws + --allow-security-audit-failure → the
+  // distinct reviewVerifierFailure flag is set (message + configured
+  // provider), and a loud stderr notice names the gate-specific flag.
+  it('248-01/AC-5: sets flags.reviewVerifierFailure and prints a bypass notice under --allow-security-audit-failure', async () => {
+    const errs: string[] = [];
+    const res = await runSecurityAuditGate(
+      ctx({ verifyThrows: 'boom', allowSecurityAuditFailure: true, errs }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.flags?.reviewVerifierFailure).toEqual({
+      message: 'boom',
+      provider: 'mock',
+    });
+    expect(errs.join('')).toContain(
+      'security-audit: --allow-security-audit-failure set; proceeding past a verifier failure (boom).',
+    );
+  });
+
+  // AC-1/AC-5: the configured provider is actually READ from
+  // config.securityAudit.provider, not just the 'mock' fallback — a
+  // hardcoded 'mock' or a cross-wired read of a different config slice
+  // would fail this.
+  it('248-01/AC-5: reads the configured provider from config.securityAudit.provider, not the mock fallback', async () => {
+    const res = await runSecurityAuditGate(
+      ctx({ verifyThrows: 'boom', allowSecurityAuditFailure: true, configProvider: 'anthropic' }),
+    );
+    expect(res.flags?.reviewVerifierFailure).toEqual({ message: 'boom', provider: 'anthropic' });
+  });
+
+  // AC-1/AC-5: verifier throws + bare --force (no allowSecurityAuditFailure)
+  // → the stderr notice names --force instead, per the flag-naming
+  // precedence rule.
+  it('248-01/AC-5: names --force in the bypass notice when only --force is set on a verifier throw', async () => {
+    const errs: string[] = [];
+    const res = await runSecurityAuditGate(ctx({ verifyThrows: 'boom', force: true, errs }));
+    expect(res.outcome).toBe('pass');
+    expect(res.flags?.reviewVerifierFailure).toEqual({
+      message: 'boom',
+      provider: 'mock',
+    });
+    expect(errs.join('')).toContain(
+      'security-audit: --force set; proceeding past a verifier failure (boom).',
+    );
+  });
+
+  // AC-1/AC-5: verifier throws + both --force AND --allow-security-audit-failure
+  // set → the gate-specific flag wins, matching registry.ts's own bypass-
+  // ladder precedence (name the gate-specific flag when it was explicitly
+  // set, --force only when it alone triggered the bypass). This is the only
+  // case that actually discriminates the precedence rule from its inverse.
+  it('248-01/AC-5: names --allow-security-audit-failure (not --force) when both flags are set on a verifier throw', async () => {
+    const errs: string[] = [];
+    const res = await runSecurityAuditGate(
+      ctx({ verifyThrows: 'boom', allowSecurityAuditFailure: true, force: true, errs }),
+    );
+    expect(res.outcome).toBe('pass');
+    const stderrOutput = errs.join('');
+    expect(stderrOutput).toContain(
+      'security-audit: --allow-security-audit-failure set; proceeding past a verifier failure (boom).',
+    );
+    expect(stderrOutput).not.toContain('security-audit: --force set; proceeding past a verifier failure');
   });
 
   // AC-3: pass path — a credential-shaped substring in a finding message is redacted before the summary patch

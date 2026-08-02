@@ -246,6 +246,17 @@ export interface GateFlags {
    *  `coverageBypassed`/`buildTestBypassed` above. */
   boundaryScanBypassed?: boolean;
   verifierFailure?: { message: string; provider?: string };
+  /** Phase 248 (T1): set iff a *review* verifier (code-review or
+   *  security-audit — never deep-verify) failed to run and the gate
+   *  proceeded anyway via a bypass.
+   *  Deliberately distinct from `verifierFailure` above: that field feeds
+   *  `notify/collect.ts`'s anomaly emission, which is hardcoded to attribute
+   *  the failure to `deep-verify` and record it in `SUMMARY.gateBypasses`.
+   *  Reusing `verifierFailure` for code-review/security-audit would
+   *  fabricate a false `deep-verify` bypass record for a gate that never
+   *  ran. No `model` sub-field, matching `verifierFailure`'s own actual
+   *  shape — `deep-verify.ts` never threads a model through it either. */
+  reviewVerifierFailure?: { message: string; provider?: string };
   /** Phase 232: verifier identity that actually ran a gate (currently set
    *  only by `code-review`/`security-audit`), for the registry to merge onto
    *  that gate's persisted GateProvenance entry (`provider`/`model`) without

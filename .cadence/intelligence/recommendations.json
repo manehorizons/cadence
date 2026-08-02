@@ -1844,36 +1844,6 @@
       "updatedAt": "2026-08-01T00:18:50.599Z"
     },
     {
-      "id": "rec-20260801-004",
-      "title": "code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw",
-      "summary": "code-review.ts and security-audit.ts's catch(err) blocks return {outcome:'pass'} with no flags at all when --allow-code-review-failure/--allow-security-audit-failure/--force bypasses a real-provider throw (revoked key, rate limit, network blip). Unlike build-test-must-pass/boundary-scan/test-coverage (which set a dedicated bypass flag registry.ts turns into an explicit skipReason provenance entry) or deep-verify.ts (which sets flags.verifierFailure={message,provider} on its own throw path), these two gates set nothing. verifierIdentityProvenance(res) then returns {} since res.flags?.verifierIdentity is undefined. Verified directly against source 2026-08-01: the persisted SUMMARY.gates[] entry reads as {gate:'code-review',status:'ran'} -- indistinguishable from a clean real-provider pass, with no skipReason explaining a failure was bypassed. This lands on exactly the two gates phase 232 exists to make trustworthy. deriveAssuranceRecord under-reports (drops the gate from verifierRollup) rather than over-reports, so it is not a spoofing risk, but the raw gates[] provenance record is actively misleading about what 'ran' means here.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/code-review.ts",
-        "packages/core/src/gates/security-audit.ts",
-        "packages/core/src/gates/registry.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260801-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260801-0100",
-      "createdAt": "2026-08-01T02:40:28.981Z",
-      "updatedAt": "2026-08-01T02:40:28.981Z"
-    },
-    {
       "id": "rec-20260801-006",
       "title": "deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case",
       "summary": "assurance-record.ts documents 'weak' as covering '...or simply no ACs at all with no verifier signal either,' but zero ACs with zero verifier identity actually trips the first branch (vacuously true when acResults is empty) and returns 'unverified', not 'weak' -- doc and code disagree with no test pinning either. Also untested: deriveAssuranceRecord(realProviderGates, []) (zero ACs, real verifier) traces by hand to 'mixed', but the one test exercising this shape only asserts verifierRollup, never .overall. Agent-reported 2026-08-01.",
@@ -1932,6 +1902,34 @@
       "scoutId": "scout-20260801-0100",
       "createdAt": "2026-08-01T02:40:44.959Z",
       "updatedAt": "2026-08-01T02:40:44.959Z"
+    },
+    {
+      "id": "rec-20260802-001",
+      "title": "deep-verify.ts's own bypassed-throw case has the identical registry-side provenance gap phase 248 just fixed for code-review/security-audit",
+      "summary": "Phase 248 fixed code-review/security-audit: a bypassed verifier throw (--allow-verifier-failure equivalents) now records an honest SUMMARY.gates[] status:'skipped' entry instead of a bare status:'ran' with empty identity. deep-verify.ts (packages/core/src/gates/deep-verify.ts) has the structurally identical bug: on a bypassed throw it already sets flags.verifierFailure = { message, provider }, but registry.ts's runSettleGates dispatch loop has no branch that reads verifierFailure — so it falls through to the same generic status:'ran' with empty identity that phase 248 fixed for the other two gates. Deliberately NOT folded into phase 248 (rec-20260801-004 scoped to code-review/security-audit only per its own files: list) and NOT a copy-paste fix: verifierFailure is load-bearing for notify/collect.ts's anomaly emission and SUMMARY.gateBypasses (hardcoded to attribute failures to 'deep-verify' — which is actually correct for this gate, unlike the false-attribution risk that made phase 248 use a distinct reviewVerifierFailure field instead of reusing verifierFailure). So the registry.ts fix here can consume the existing verifierFailure flag directly, but the new branch's interaction with the anomaly-emission pipeline (does printing a loud stderr notice AND recording gates[] status:'skipped' double-count with the existing anomaly/gateBypasses record for the same event?) needs its own scoping pass before drafting, not an assumption that phase 248's exact pattern transfers unchanged.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/deep-verify.ts",
+        "packages/core/src/gates/registry.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260802-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-02T04:09:25.988Z",
+      "updatedAt": "2026-08-02T04:09:25.988Z"
     }
   ],
   "archived": [
@@ -5863,12 +5861,45 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260801-0100",
-      "createdAt": "2026-08-01T02:40:29.145Z",
-      "updatedAt": "2026-08-02T00:40:15.033Z",
       "shippedRef": "phase 247-refused-settle-summary-preservation (PR pending) — same writer-threading fix as rec-20260801-011's T1",
+      "scoutId": "scout-20260801-0100",
       "archivedAt": "2026-08-02T00:40:15.033Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-01T02:40:29.145Z",
+      "updatedAt": "2026-08-02T00:40:15.033Z"
+    },
+    {
+      "id": "rec-20260801-004",
+      "title": "code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw",
+      "summary": "code-review.ts and security-audit.ts's catch(err) blocks return {outcome:'pass'} with no flags at all when --allow-code-review-failure/--allow-security-audit-failure/--force bypasses a real-provider throw (revoked key, rate limit, network blip). Unlike build-test-must-pass/boundary-scan/test-coverage (which set a dedicated bypass flag registry.ts turns into an explicit skipReason provenance entry) or deep-verify.ts (which sets flags.verifierFailure={message,provider} on its own throw path), these two gates set nothing. verifierIdentityProvenance(res) then returns {} since res.flags?.verifierIdentity is undefined. Verified directly against source 2026-08-01: the persisted SUMMARY.gates[] entry reads as {gate:'code-review',status:'ran'} -- indistinguishable from a clean real-provider pass, with no skipReason explaining a failure was bypassed. This lands on exactly the two gates phase 232 exists to make trustworthy. deriveAssuranceRecord under-reports (drops the gate from verifierRollup) rather than over-reports, so it is not a spoofing risk, but the raw gates[] provenance record is actively misleading about what 'ran' means here.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/code-review.ts",
+        "packages/core/src/gates/security-audit.ts",
+        "packages/core/src/gates/registry.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260801-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "phase 248-bypassed-verifier-provenance (PR pending)",
+      "scoutId": "scout-20260801-0100",
+      "archivedAt": "2026-08-02T04:09:10.772Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-01T02:40:28.981Z",
+      "updatedAt": "2026-08-02T04:09:10.772Z"
     }
   ]
 }
