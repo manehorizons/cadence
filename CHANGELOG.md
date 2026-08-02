@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.54.0] - 2026-08-02
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.54.0`. Per-package bumps managed by changesets. First release published under the `@thomas-powers-jr` npm scope.
+
+### Changed
+
+- **npm scope renamed to `@thomas-powers-jr`** across all five published packages, matching the GitHub org rename (#360). The previously-published `@manehorizons` packages are not deleted — they stay resolvable and get `npm deprecate`d with a pointer to the new scope as a separate operator-run step; see [docs/migration-npm-scope.md](docs/migration-npm-scope.md) for the full migration path. `cadence doctor`'s host-hooks check and `cadence config explain`'s warnings now distinguish a hook entry that's missing entirely from one that's present but still pointing at the old scope. (Phase `250`.)
+
+### Fixed
+
+- Bypassed `code-review`/`security-audit` verifier **throws** (the call itself never returned) now record an honest `status: 'skipped'` SUMMARY entry with a `skipReason`, via a new `GateFlags.reviewVerifierFailure` flag — previously indistinguishable from a real provider pass. A verifier throw with no bypass flag still refuses identically to before. (Phase `248`, rec-20260801-004.)
+- Three more silent-refusal gaps in `cadence settle run` — the AC-derivation, anomaly/skill-audit, and evidence-floor refusal families — now write a durable `SUMMARY.json`/`.md` via the existing `writeRefusedSettleSummary`, instead of exiting with only an ephemeral stderr line. (Phase `249`, rec-20260712-006.)
+- A refused `cadence settle`'s `code-review`/`security-audit` findings are now recorded in the refused `SUMMARY.json` instead of silently dropped. A later settle attempt for the same draft no longer overwrites a prior refused attempt's findings — each findings-bearing refusal now also writes an immutable per-attempt snapshot sibling. (Phase `247`.)
+
 ## [1.53.0] - 2026-08-01
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.53.0`. Per-package bumps managed by changesets. Lands the `feat/kernel-assurance-v2` arc (phases 232-236, 241-245, open since 2026-07-27) merged whole into `main` per `dec-20260727-001`.
