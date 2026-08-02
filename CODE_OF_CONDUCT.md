@@ -12,7 +12,7 @@ tolerated.
 ## Reporting
 
 To report a concern, contact the maintainers privately through GitHub's
-**[private vulnerability / security advisory](https://github.com/manehorizons/cadence/security/advisories/new)**
+**[private vulnerability / security advisory](https://github.com/thomas-powers-jr/cadence/security/advisories/new)**
 channel, or open a minimal issue asking a maintainer to make private contact
 (without including sensitive details in the public issue). All reports are
 reviewed and handled confidentially.

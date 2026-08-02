@@ -994,7 +994,7 @@ only: it produces ordinary Praxis records and never drives the loop, allocates a
 loop id, or runs a gate.
 
 > **Terminology:** this guide and the codebase use precise names for these
-> concepts — see the project glossary, [`CONTEXT.md`](https://github.com/manehorizons/cadence/blob/main/CONTEXT.md), for the
+> concepts — see the project glossary, [`CONTEXT.md`](https://github.com/thomas-powers-jr/cadence/blob/main/CONTEXT.md), for the
 > canonical term for each (and the aliases to avoid).
 
 ### Empty-result and refusal messages

@@ -74,7 +74,7 @@ describe('mergeManagedBlock (AC-2/AC-3 unit)', () => {
     const block = renderManagedBlock(opts);
     expect(block).not.toMatch(/DESIGN\.md/);
     expect(block).toMatch(
-      /github\.com\/manehorizons\/cadence\/blob\/main\/docs\/concepts\.md/,
+      /github\.com\/thomas-powers-jr\/cadence\/blob\/main\/docs\/concepts\.md/,
     );
   });
 });

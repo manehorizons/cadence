@@ -5,7 +5,7 @@ import starlightTypeDoc, { typeDocSidebarGroup } from 'starlight-typedoc';
 
 // GitHub project-pages base. Centralized here; a custom-domain swap is a
 // two-line change (set site to the domain, base to '/').
-const SITE = 'https://manehorizons.github.io';
+const SITE = 'https://thomas-powers-jr.github.io';
 const BASE = '/cadence';
 
 export default defineConfig({
@@ -32,7 +32,7 @@ export default defineConfig({
       description:
         'A draft/build/settle framework for AI-assisted development with configurable quality gates.',
       social: [
-        { icon: 'github', label: 'GitHub', href: 'https://github.com/manehorizons/cadence' },
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/thomas-powers-jr/cadence' },
       ],
       customCss: ['./src/styles/theme.css'],
       sidebar: [

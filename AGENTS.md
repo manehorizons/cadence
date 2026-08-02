@@ -6,7 +6,7 @@ Configuration for AI agents working in this repo. See `docs/agents/` for the det
 
 ### Issue tracker
 
-Issues live in GitHub (`manehorizons/cadence`), managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in GitHub (`thomas-powers-jr/cadence`), managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

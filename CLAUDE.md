@@ -24,7 +24,7 @@ listed at the bottom are some flavor of violating it.
 
 **Current version: `1.53.0`** across all five published packages (lockstep).
 Do not reconstruct release history from memory or from this file — it lives
-in `packages/*/CHANGELOG.md`, [GitHub Releases](https://github.com/manehorizons/cadence/releases),
+in `packages/*/CHANGELOG.md`, [GitHub Releases](https://github.com/thomas-powers-jr/cadence/releases),
 `git log`, and `.cadence/phases/*/`. When a release bumps
 `packages/core/package.json`, the version line above **must** be updated in
 the same commit (the doc-sync gate below aborts the commit otherwise, and CI
