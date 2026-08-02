@@ -1074,3 +1074,19 @@ Two independent, verified blockers mean phase 237's entry gate and dec-20260801-
 - next: cadence milestone propose
 
 One arc, decided (dec-20260802-001/002/003) and partially landed as phase 247 (worktree phase247-refused-settle-summary, DRAFT 247-01, in BUILD as of 2026-08-02): (S1) bypassed verifier throws still need an honest skipped-with-reason provenance entry instead of a clean 'ran' (rec-20260801-004, independent, unblocked, not yet started); (S2) the gate-loop refusal family now threads acc's codeReview/securityAudit findings into a conditionally-hashed refused SUMMARY (rec-20260801-005, rec-20260731-010 persistence half -- dec-20260802-001, phase 247 T1, DONE and independently test-verified); the three post-gate refusal families (rec-20260712-006) remain silent and are scoped as a dedicated follow-on phase, deliberately excluded from 247 to keep its single-commit-settle convention intact; (S3) refused-attempt SUMMARYs are preserved as timestamp-slugged sibling artifacts, invisible to every current SUMMARY consumer by construction (rec-20260801-011 -- dec-20260802-002, phase 247 T1/T2 DONE, T3/T4 in progress under a concurrent session). Routing-on-refusal deliberately excluded per dec-20260802-003 (finalize-only routing; revisit trigger amended to name its rec-20260801-012 precondition -- real-provider findings are structurally unreachable under this repo's normal agent-driven, auto-profile operation).
+
+## rec-20260802-002 — SUMMARY.md never renders codeReview/securityAudit findings — a refused-attempt sibling shows nothing an operator opens it to see
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/services/summary-render.ts
+- evidence: Empirically verified 2026-08-02 during phase 247's independent whole-branch review: grep for codeReview/securityAudit in summary-render.ts returns zero hits; a hand-built refused SUMMARY with a HIGH finding, rendered via the real CLI, omits the finding entirely from SUMMARY.md while the JSON carries it correctly.
+- next: cadence milestone propose
+
+Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/services/summary-render.ts renders AC / Tasks / Gates / Gate bypasses / Assurance / Decisions / Deferred sections but has zero handling for the codeReview or securityAudit fields, for ANY SUMMARY (success or refused) -- this predates phase 247 and is not scoped to it. Phase 247 makes the gap newly consequential: it now writes an immutable per-attempt sibling .md specifically so a human can inspect what a refused/abandoned attempt found, but the .md half of that record is byte-identical to the canonical refused SUMMARY.md and renders none of the findings that caused the refusal -- verified empirically: a hand-built refused-shaped SUMMARY with one HIGH code-review finding, rendered via the real cadence summary render, shows the content hash and the refused gate but not one word of the finding. The data is JSON-only. Fix is out of phase 247's DRAFT scope (Boundaries did not ask for a render change) and was not built. Worth a dedicated phase: add a codeReview/securityAudit findings section to summary-render.ts, following the same JSON-only-so-far -> now-rendered precedent as the phase-170 gates[].reason field (docs/concepts.md notes this exact pattern already).

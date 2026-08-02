@@ -1386,6 +1386,13 @@
       "kind": "note",
       "summary": "Five-rec cluster verified line-by-line at main@361f6490 (re-verified from the original 98b6a15 pin, zero source drift): acc payloads discarded at writeRefusedSettleSummary until phase 247's T1 fix, three silent post-gate refusal families still unaddressed (rec-20260712-006, follow-on), same-path SUMMARY overwrite on reloop now fixed by phase 247's T2/T3 (T3 in progress), and bare {outcome:'pass'} bypass catches in both review gates (rec-20260801-004, not yet started). Data loss was anti-correlated with severity: the cleanest settles kept the most complete records.",
       "createdAt": "2026-08-02T00:06:05.610Z"
+    },
+    {
+      "id": "ev-20260802-008",
+      "recommendationId": "rec-20260802-002",
+      "kind": "note",
+      "summary": "Empirically verified 2026-08-02 during phase 247's independent whole-branch review: grep for codeReview/securityAudit in summary-render.ts returns zero hits; a hand-built refused SUMMARY with a HIGH finding, rendered via the real CLI, omits the finding entirely from SUMMARY.md while the JSON carries it correctly.",
+      "createdAt": "2026-08-02T00:36:54.293Z"
     }
   ]
 }
