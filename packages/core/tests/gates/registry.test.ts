@@ -18,6 +18,7 @@ import { runDeepVerifyGate } from '../../src/gates/deep-verify.js';
 import { runCodeReviewGate } from '../../src/gates/code-review.js';
 import { runSecurityAuditGate } from '../../src/gates/security-audit.js';
 import { runTaskVerifyRequiredGate } from '../../src/gates/task-verify-required.js';
+import { deriveAssuranceRecord } from '../../src/gates/assurance-record.js';
 
 /** The ten settle gates in their canonical execution order. */
 const EXPECTED_ORDER: SettleGate[] = [
@@ -511,6 +512,239 @@ describe('runSettleGates verifier-identity provenance merge (Phase 232, AC-1, AC
           : { gate, status: 'ran' },
       ),
     );
+  });
+});
+
+describe('runSettleGates reviewVerifierFailure bypass provenance (Phase 248, T4, AC-1, AC-3, AC-4, AC-5)', () => {
+  it('248-01/AC-1, 248-01/AC-3, 248-01/AC-4: records skipped/skipReason for a bypassed code-review throw via --allow-code-review-failure, fabricates no identity, and excludes it from verifierRollup while a genuinely-ran security-audit still contributes', async () => {
+    const ctx = {
+      gateSet: { gates: ['code-review', 'security-audit'] },
+      opts: { allowCodeReviewFailure: true },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'pass',
+          flags: { reviewVerifierFailure: { message: 'revoked key', provider: 'local' } },
+        },
+        'security-audit': {
+          outcome: 'pass',
+          flags: { verifierIdentity: { family: 'anthropic', model: 'claude-opus-4' } },
+        },
+      }),
+      order: ['code-review', 'security-audit'],
+    });
+    // (a) AC-1: honest skipped status naming the flag, the failure, and the provider.
+    expect(gates).toEqual([
+      {
+        gate: 'code-review',
+        status: 'skipped',
+        skipReason:
+          'bypassed via --allow-code-review-failure — verifier failure bypassed (revoked key), configured provider: local',
+      },
+      { gate: 'security-audit', status: 'ran', provider: 'anthropic', model: 'claude-opus-4' },
+    ]);
+    const codeReviewEntry = gates[0]!;
+    expect(codeReviewEntry.skipReason).toContain('--allow-code-review-failure');
+    expect(codeReviewEntry.skipReason).toContain('revoked key');
+    expect(codeReviewEntry.skipReason).toContain('local');
+    // (b) AC-3: no fabricated structured identity on the bypassed entry.
+    expect('provider' in codeReviewEntry).toBe(false);
+    expect('model' in codeReviewEntry).toBe(false);
+    // (c) AC-4: verifierRollup excludes the bypassed gate. The security-audit
+    // positive control (a genuinely-ran gate carrying real verifierIdentity)
+    // proves the rollup machinery is live in this same run — if it were
+    // inert, or if this branch fabricated an identity, this assertion would
+    // catch it either way (empty rollup would mean inert; a second entry or
+    // 'local' present would mean fabrication).
+    const { verifierRollup } = deriveAssuranceRecord(gates, []);
+    expect(verifierRollup).toEqual([{ provider: 'anthropic', model: 'claude-opus-4', gateCount: 1 }]);
+  });
+
+  it('248-01/AC-1, 248-01/AC-3, 248-01/AC-4, 248-01/AC-5: records skipped/skipReason for a bypassed security-audit throw via --allow-security-audit-failure, fabricates no identity, and excludes it from verifierRollup while a genuinely-ran code-review still contributes (AC-5 symmetry)', async () => {
+    const ctx = {
+      gateSet: { gates: ['code-review', 'security-audit'] },
+      opts: { allowSecurityAuditFailure: true },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'pass',
+          flags: { verifierIdentity: { family: 'anthropic', model: 'claude-opus-4' } },
+        },
+        'security-audit': {
+          outcome: 'pass',
+          flags: { reviewVerifierFailure: { message: 'network blip', provider: 'local' } },
+        },
+      }),
+      order: ['code-review', 'security-audit'],
+    });
+    // (a) AC-1 (via AC-5 symmetry)
+    expect(gates).toEqual([
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-opus-4' },
+      {
+        gate: 'security-audit',
+        status: 'skipped',
+        skipReason:
+          'bypassed via --allow-security-audit-failure — verifier failure bypassed (network blip), configured provider: local',
+      },
+    ]);
+    const securityAuditEntry = gates[1]!;
+    expect(securityAuditEntry.skipReason).toContain('--allow-security-audit-failure');
+    expect(securityAuditEntry.skipReason).toContain('network blip');
+    expect(securityAuditEntry.skipReason).toContain('local');
+    // (b) AC-3
+    expect('provider' in securityAuditEntry).toBe(false);
+    expect('model' in securityAuditEntry).toBe(false);
+    // (c) AC-4, same positive-control reasoning as the code-review case above.
+    const { verifierRollup } = deriveAssuranceRecord(gates, []);
+    expect(verifierRollup).toEqual([{ provider: 'anthropic', model: 'claude-opus-4', gateCount: 1 }]);
+  });
+
+  it('248-01/AC-1: names --force (not --allow-code-review-failure) when code-review was bypassed via bare --force', async () => {
+    const ctx = {
+      gateSet: { gates: ['code-review'] },
+      opts: { force: true },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'pass',
+          flags: { reviewVerifierFailure: { message: 'revoked key', provider: 'mock' } },
+        },
+      }),
+      order: ['code-review'],
+    });
+    expect(gates).toEqual([
+      {
+        gate: 'code-review',
+        status: 'skipped',
+        skipReason: 'bypassed via --force — verifier failure bypassed (revoked key), configured provider: mock',
+      },
+    ]);
+  });
+
+  it('248-01/AC-1, 248-01/AC-5: names --force (not --allow-security-audit-failure) when security-audit was bypassed via bare --force (AC-5 symmetry)', async () => {
+    const ctx = {
+      gateSet: { gates: ['security-audit'] },
+      opts: { force: true },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'security-audit': {
+          outcome: 'pass',
+          flags: { reviewVerifierFailure: { message: 'network blip', provider: 'mock' } },
+        },
+      }),
+      order: ['security-audit'],
+    });
+    expect(gates).toEqual([
+      {
+        gate: 'security-audit',
+        status: 'skipped',
+        skipReason: 'bypassed via --force — verifier failure bypassed (network blip), configured provider: mock',
+      },
+    ]);
+  });
+
+  it('248-01/AC-1: names --allow-code-review-failure (not --force) when both --force and --allow-code-review-failure are set (AC-1 precedence rule)', async () => {
+    const ctx = {
+      gateSet: { gates: ['code-review'] },
+      opts: { force: true, allowCodeReviewFailure: true },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'pass',
+          flags: { reviewVerifierFailure: { message: 'revoked key', provider: 'anthropic' } },
+        },
+      }),
+      order: ['code-review'],
+    });
+    expect(gates).toEqual([
+      {
+        gate: 'code-review',
+        status: 'skipped',
+        skipReason:
+          'bypassed via --allow-code-review-failure — verifier failure bypassed (revoked key), configured provider: anthropic',
+      },
+    ]);
+  });
+
+  it('248-01/AC-1, 248-01/AC-5: names --allow-security-audit-failure (not --force) when both --force and --allow-security-audit-failure are set (AC-1 precedence rule, AC-5 symmetry)', async () => {
+    const ctx = {
+      gateSet: { gates: ['security-audit'] },
+      opts: { force: true, allowSecurityAuditFailure: true },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'security-audit': {
+          outcome: 'pass',
+          flags: { reviewVerifierFailure: { message: 'network blip', provider: 'anthropic' } },
+        },
+      }),
+      order: ['security-audit'],
+    });
+    expect(gates).toEqual([
+      {
+        gate: 'security-audit',
+        status: 'skipped',
+        skipReason:
+          'bypassed via --allow-security-audit-failure — verifier failure bypassed (network blip), configured provider: anthropic',
+      },
+    ]);
+  });
+
+  it('248-01/AC-1, 248-01/AC-3, 248-01/AC-4, 248-01/AC-5: both gates bypassed in the same settle: registry.ts builds each skipped entry from its own res, not the merged acc, so mergeInto\'s Object.assign never lets one gate\'s reviewVerifierFailure clobber or leak into the other\'s entry', async () => {
+    // This is the exact hazard the SPEC's independent review caught in an
+    // earlier draft of this phase: reusing the shared `verifierFailure` flag
+    // would have this pair silently clobber via `mergeInto`'s plain
+    // `Object.assign(acc.flags, res.flags)` (code-review runs after
+    // deep-verify in GATE_ORDER, so the second write would win). The new
+    // `reviewVerifierFailure`-based branch reads `res.flags` per gate inside
+    // the loop, before the next gate's `mergeInto` call even runs — so each
+    // pushed entry can only ever reflect its own gate's failure.
+    const ctx = {
+      gateSet: { gates: ['code-review', 'security-audit'] },
+      opts: { allowCodeReviewFailure: true, allowSecurityAuditFailure: true },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'pass',
+          flags: { reviewVerifierFailure: { message: 'code-review revoked key', provider: 'anthropic' } },
+        },
+        'security-audit': {
+          outcome: 'pass',
+          flags: { reviewVerifierFailure: { message: 'security-audit network blip', provider: 'local' } },
+        },
+      }),
+      order: ['code-review', 'security-audit'],
+    });
+    expect(gates).toEqual([
+      {
+        gate: 'code-review',
+        status: 'skipped',
+        skipReason:
+          'bypassed via --allow-code-review-failure — verifier failure bypassed (code-review revoked key), configured provider: anthropic',
+      },
+      {
+        gate: 'security-audit',
+        status: 'skipped',
+        skipReason:
+          'bypassed via --allow-security-audit-failure — verifier failure bypassed (security-audit network blip), configured provider: local',
+      },
+    ]);
+    // Neither entry's message/provider leaked into the other's.
+    expect(gates[0]!.skipReason).not.toContain('security-audit network blip');
+    expect(gates[1]!.skipReason).not.toContain('code-review revoked key');
+    // No fabricated identity on either (AC-3), and both excluded from rollup (AC-4).
+    for (const entry of gates) {
+      expect('provider' in entry).toBe(false);
+      expect('model' in entry).toBe(false);
+    }
+    const { verifierRollup } = deriveAssuranceRecord(gates, []);
+    expect(verifierRollup).toEqual([]);
   });
 });
 

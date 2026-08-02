@@ -229,6 +229,41 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   `refusedSnapshotArtifactBase` (`packages/core/src/services/settle.ts`)
   is the one place this naming scheme is defined — reuse it rather than
   reconstructing the pattern.
+- Phase 248: a code-review or security-audit verifier **throw** — the call
+  itself never returned (revoked key, network blip), as opposed to a
+  findings-based bypass of a *completed* review — bypassed via `--force` or
+  the gate-specific `--allow-code-review-failure`/
+  `--allow-security-audit-failure` now records an honest
+  `status: 'skipped'` `gates[]` entry, where before this phase it fell
+  through to a bare `status: 'ran'` with no identity at all — actively
+  misleading about what `'ran'` means here, since the `status` field alone
+  gives no hint anything was bypassed (only the phase-232 `provider`/`model`
+  fields' absence would, and nothing prompts a reader to check for that).
+  The `skipReason` names the actual flag that triggered the bypass,
+  following `registry.ts`'s own existing bypass-ladder convention for
+  `build-test-must-pass`/`boundary-scan` (the gate-specific flag when it
+  was explicitly set, `--force` only when it alone fired), states that a
+  verifier failure was bypassed, and includes both the underlying error
+  message and the
+  configured provider (`ctx.config?.codeReview?.provider ?? 'mock'` /
+  `ctx.config?.securityAudit?.provider ?? 'mock'`) — but only inside that
+  free-text string. Unlike the phase-232 `provider`/`model` fields above,
+  this entry carries neither field structurally, so it stays excluded from
+  `deriveAssuranceRecord`'s `verifierRollup` — a call that never returned
+  cannot honestly claim a verifier identity. The bypass also prints a loud
+  stderr notice, matching this repo's no-quiet-fallback convention. Scope
+  is deliberately narrow: the pre-existing findings-based bypass path (real
+  HIGH/CRITICAL findings waved through on a review call that *did* return)
+  is untouched and still records `status: 'ran'` with a real
+  `verifierIdentity`. The new `GateFlags.reviewVerifierFailure` field
+  carrying this is deliberately distinct from `deep-verify.ts`'s own
+  `verifierFailure` field — that field feeds `notify/collect.ts`'s anomaly
+  emission and `SUMMARY.gateBypasses`, hardcoded to attribute the failure to
+  `deep-verify`, so reusing it for code-review/security-audit would have
+  fabricated a false `deep-verify` bypass record. `deep-verify.ts`'s own
+  identical registry-side gap (a bypassed throw there also still records
+  `status: 'ran'` with empty identity) is deliberately out of scope for
+  this phase.
 
 ### State files
 
