@@ -134,8 +134,25 @@ describe('251-01 operator procedure doc + rec-20260801-012 promotion (AC-6)', ()
 
     // The section exists as its own heading, and is listed in the doc's own
     // table of contents.
-    expect(providersDoc).toMatch(
-      /## Producing a real-provider code-review or security-audit finding/,
+    //
+    // NOTE on this block's style: this repo's `js-ts` coverage-scanning
+    // profile (packages/core/src/verify/coverage-profiles/js-ts.ts) uses
+    // depth-aware paren-counting to find each `it()` block's boundary, and
+    // only recognizes `'`/`"`/backtick-quoted *strings* when masking out
+    // non-structural characters -- it has no concept of a `/regex/` literal
+    // as its own lexical category. A raw backtick or parenthesis inside a
+    // regex literal (even escaped, e.g. `\(`) is therefore read as a real
+    // structural character, corrupting paren-depth tracking for the rest of
+    // the file and causing `cadence settle run`'s coverage gate to report
+    // "token found but not inside any recognized test block" -- hit for
+    // real while building this file. Fix on this side, not the scanner
+    // (out of scope for this phase): prefer `.toContain('plain string')`
+    // (backticks/parens are safe *inside* a properly-quoted string, since
+    // the scanner does correctly mask those) over `.toMatch(/regex/)`
+    // wherever a plain substring check suffices, which is everywhere below
+    // except the one genuine line-wrap case that needs `\s+`.
+    expect(providersDoc).toContain(
+      '## Producing a real-provider code-review or security-audit finding',
     );
     expect(providersDoc).toContain(
       '[Producing a real-provider code-review or security-audit finding (conduction, Phase 251)]',
@@ -143,17 +160,19 @@ describe('251-01 operator procedure doc + rec-20260801-012 promotion (AC-6)', ()
 
     // code-review's procedure: profile override in DRAFT frontmatter (standard
     // x complex, or strict x standard/complex), not a CLI flag.
-    expect(providersDoc).toMatch(/### code-review procedure/);
+    expect(providersDoc).toContain('### code-review procedure');
     expect(providersDoc).toContain('profile: standard   # tier: complex only');
     expect(providersDoc).toContain('profile: strict      # tier: standard OR complex');
 
     // security-audit's procedure is documented SEPARATELY (not one unified
     // checklist) and correctly narrower: strict x complex is its only reachable
     // cell, plus its provider must be reconfigured off mock.
-    expect(providersDoc).toMatch(/### security-audit procedure/);
-    expect(providersDoc).toMatch(
-      /security-audit`'s \*only\* reachable\s+profile×tier cell is `strict`×`complex`/,
-    );
+    expect(providersDoc).toContain('### security-audit procedure');
+    // The doc line-wraps between "reachable" and "profile×tier cell" -- the
+    // one assertion in this block that genuinely needs regex (whitespace
+    // spanning a newline), so it's written to avoid every backtick/paren.
+    expect(providersDoc).toMatch(/\*only\* reachable\s+profile×tier cell is/);
+    expect(providersDoc).toContain('`strict`×`complex`');
     expect(providersDoc).toContain(
       'cadence config set securityAudit.provider host-cli',
     );
@@ -162,11 +181,11 @@ describe('251-01 operator procedure doc + rec-20260801-012 promotion (AC-6)', ()
     // guard never fires) and confirming via SUMMARY.gates[].provider /
     // assurance.verifierRollup[] -- explicitly not the internal `verifierIdentity`
     // GateFlags field.
-    expect(providersDoc).toMatch(/cadence settle run/);
-    expect(providersDoc).toMatch(/CLAUDECODE.*unset/);
+    expect(providersDoc).toContain('cadence settle run');
+    expect(providersDoc).toContain('CLAUDECODE` unset');
     expect(providersDoc).toContain('assurance.verifierRollup[]');
-    expect(providersDoc).toMatch(
-      /Do not look for a field called `verifierIdentity`/,
+    expect(providersDoc).toContain(
+      'Do not look for a field called `verifierIdentity`',
     );
 
     // rec-20260801-012 reflects this phase's disposition: promoted to shipped,
@@ -197,34 +216,44 @@ describe('251-01 conduction disposition decision (AC-5)', () => {
 
     // (a) the self-invocation guard is retained as a safety property; farming
     // findings by removing it would trade that property for test data.
+    // (Plain `.toContain()` throughout this block, not `.toMatch(/regex/)` —
+    // see the note in the AC-6 block above on why a raw paren inside a
+    // regex literal corrupts this scanner's test-block-boundary detection;
+    // none of these checks need real regex power anyway.)
     expect(rationale).toContain('self-invocation guard');
-    expect(rationale).toMatch(/real safety property/);
-    expect(rationale).toMatch(/trade that safety property for test data/);
+    expect(rationale).toContain('real safety property');
+    expect(rationale).toContain('trade that safety property for test data');
 
     // (b) the auto-profile gate set is unchanged; conduction is a deliberate,
     // operator-initiated act, not an incidental side effect.
     expect(rationale).toContain('auto-profile gate set');
-    expect(rationale).toMatch(/auto-profile gate set \(gates\/engine\.ts's DELTAS matrix\) is unchanged/);
-    expect(rationale).toMatch(/deliberately a human-operator-initiated act/);
+    expect(rationale).toContain(
+      "auto-profile gate set (gates/engine.ts's DELTAS matrix) is unchanged",
+    );
+    expect(rationale).toContain('deliberately a human-operator-initiated act');
 
     // (c) security-audit's mock-provider default is a separate, ordinary
     // config decision — explicitly not conflated with (a)/(b).
-    expect(rationale).toMatch(/NOT the same kind of decision as \(a\) or \(b\)/);
+    expect(rationale).toContain('NOT the same kind of decision as (a) or (b)');
     expect(rationale).toContain('mock-provider default');
-    expect(rationale).toMatch(/ordinary, changeable config decision/);
-    expect(rationale).toMatch(/must not conflate this ordinary config default with the two retained safety\/cost decisions/);
+    expect(rationale).toContain('ordinary, changeable config decision');
+    expect(rationale).toContain(
+      'must not conflate this ordinary config default with the two retained safety/cost decisions',
+    );
 
     // (d) conduction is a documented human-operator procedure; the check
     // exists so a missing finding is legible, not silently indistinguishable
     // from "hasn't happened yet".
-    expect(rationale).toMatch(/documented human-operator procedure/);
-    expect(rationale).toMatch(/legible and visible to an operator/);
-    expect(rationale).toMatch(/silently indistinguishable from 'conduction hasn't happened yet'/);
+    expect(rationale).toContain('documented human-operator procedure');
+    expect(rationale).toContain('legible and visible to an operator');
+    expect(rationale).toContain(
+      "silently indistinguishable from 'conduction hasn't happened yet'",
+    );
 
     // (e) revisit trigger: an empty corpus through the *next* arc (not this
     // one) — reconsider a supervised, depth-limited escape hatch.
-    expect(rationale).toMatch(/Revisit trigger/);
-    expect(rationale).toMatch(/through the NEXT arc after this one/);
-    expect(rationale).toMatch(/supervised, depth-limited escape hatch/);
+    expect(rationale).toContain('Revisit trigger');
+    expect(rationale).toContain('through the NEXT arc after this one');
+    expect(rationale).toContain('supervised, depth-limited escape hatch');
   });
 });
