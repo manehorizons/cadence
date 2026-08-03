@@ -1456,6 +1456,27 @@
       "kind": "note",
       "summary": "Dependabot alert sweep 2026-08-02: 38 open alerts total, 30 of which (all high/moderate/low in website/) have zero CI enforcement per the exceptions doc's documented scope; PR #364 fixed 2 of the 7 website high-severity alerts",
       "createdAt": "2026-08-02T23:33:26.220Z"
+    },
+    {
+      "id": "ev-20260803-001",
+      "recommendationId": "rec-20260802-001",
+      "kind": "note",
+      "summary": "Landed and verified as ancestors of main at v1.54.0: phase 247 (preserve refused-settle findings across attempts) merged as afcb90a9 (PR #357); phase 248 (honest bypassed-verifier provenance for code-review/security-audit, rec-20260801-004) merged as fcd76ad8 (PR #358); phase 249 (post-gate refusal SUMMARYs + finding-durability ledger closeout, rec-20260712-006) merged as 8f58bde1 (PR #361). All three confirmed via 'git merge-base --is-ancestor <sha> origin/main' at this commit.",
+      "createdAt": "2026-08-03T01:35:40.087Z"
+    },
+    {
+      "id": "ev-20260803-002",
+      "recommendationId": "rec-20260803-001",
+      "kind": "note",
+      "summary": "Verified at v1.54.0: docs/reference/commands.md's recommendation promote section states refusal for terminal statuses and lists the two sanctioned exceptions; rec-20260801-004 and rec-20260712-006 both carry a ref containing 'PR pending' post-merge.",
+      "createdAt": "2026-08-03T01:36:10.979Z"
+    },
+    {
+      "id": "ev-20260803-003",
+      "recommendationId": "rec-20260802-003",
+      "kind": "note",
+      "summary": "Post-npm-scope-migration re-measure at v1.54.0 (2026-08-03), phase 251 T1c: cadence intelligence audit now reports 20 orphan decisions and 134 orphan evidence entries (154 total), compared against the pre-migration baseline of 20 orphan decisions + 125 orphan evidence entries recorded at filing time. Decisions count unchanged; evidence count grew by 9, consistent with this being a known-drifting metric (computeIntelligenceAudit's archived[]-blind-spot, not yet fixed) that new autoArchive'd promotions (including this same phase's rec-20260802-001 T1a promotion) continue to inflate — not asserted as a threshold, gate, or expected decrease.",
+      "createdAt": "2026-08-03T01:36:36.384Z"
     }
   ]
 }
