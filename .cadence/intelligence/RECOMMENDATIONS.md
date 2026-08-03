@@ -1063,6 +1063,21 @@ cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence e
 
 Phase 248 fixed code-review/security-audit: a bypassed verifier throw (--allow-verifier-failure equivalents) now records an honest SUMMARY.gates[] status:'skipped' entry instead of a bare status:'ran' with empty identity. deep-verify.ts (packages/core/src/gates/deep-verify.ts) has the structurally identical bug: on a bypassed throw it already sets flags.verifierFailure = { message, provider }, but registry.ts's runSettleGates dispatch loop has no branch that reads verifierFailure — so it falls through to the same generic status:'ran' with empty identity that phase 248 fixed for the other two gates. Deliberately NOT folded into phase 248 (rec-20260801-004 scoped to code-review/security-audit only per its own files: list) and NOT a copy-paste fix: verifierFailure is load-bearing for notify/collect.ts's anomaly emission and SUMMARY.gateBypasses (hardcoded to attribute failures to 'deep-verify' — which is actually correct for this gate, unlike the false-attribution risk that made phase 248 use a distinct reviewVerifierFailure field instead of reusing verifierFailure). So the registry.ts fix here can consume the existing verifierFailure flag directly, but the new branch's interaction with the anomaly-emission pipeline (does printing a loud stderr notice AND recording gates[] status:'skipped' double-count with the existing anomaly/gateBypasses record for the same event?) needs its own scoping pass before drafting, not an assumption that phase 248's exact pattern transfers unchanged.
 
+## rec-20260802-005 — release-integrity's 10-attempt (~45s) verify budget insufficient for first-ever publish under a new npm scope
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: release, ci
+- evidence: Release workflow run 30771173624 (2026-08-02): 'Create GitHub Release and verify registry' step failed with E404 after 10 attempts; publish/tag/GH-release steps all green; manual npm view polling confirmed all 5 @thomas-powers-jr packages resolved a few minutes later
+- next: cadence milestone propose
+
+v1.54.0's release (npm scope rename, phase 250) published all 5 packages successfully with provenance, and the git tag + GitHub Release were both created correctly, but the Release workflow's post-publish 'verify registry' step failed -- release-integrity.mjs's POST_PUBLISH_VERIFY_ATTEMPTS=10 (~45s linear backoff, added in phase 218 for routine version-bump propagation lag) wasn't enough for a brand-new scope's CDN entries, which took several more minutes to resolve. Nothing was actually broken (independently verified via npm view/git ls-remote/gh release view once propagation completed) -- same 'red run, real publish' pattern phase 218 fixed, just at a longer timescale than that fix's budget covers. Consider either an adaptive/longer retry budget specifically for a package's first-ever publish (detectable via the pre-publish 404 the script already observes), or documenting this as an expected-slower case in release-cut's known-flake protocol. Don't blanket-extend the budget for routine releases -- 45s was fine per phase 218.
+
 ## rec-20260802-006 — Extend security audit CI coverage to website/ workspace
 
 - status: candidate

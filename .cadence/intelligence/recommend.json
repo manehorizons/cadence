@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-01T22:26:17.972Z",
+  "generatedAt": "2026-08-02T23:09:13.107Z",
   "ranked": [
     {
       "id": "rec-20260727-012",
@@ -46,6 +46,52 @@
         }
       ],
       "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260802-001",
+      "title": "Finding-durability arc: complete, attempt-addressable settle records on every exit path",
+      "raw": 25.7,
+      "score": 73,
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready ready-for-cadence-spec",
+          "value": 10
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio high",
+          "value": 5
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260801-claude-finding-durability"
     },
     {
       "id": "rec-20260731-001",
@@ -590,190 +636,6 @@
       "suggestedBackendAction": "cadence milestone propose"
     },
     {
-      "id": "rec-20260731-010",
-      "title": "High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260731-kernel-ledger-routing"
-    },
-    {
-      "id": "rec-20260801-004",
-      "title": "code-review/security-audit lose verifier identity entirely on a caught-and-bypassed throw",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260801-0100"
-    },
-    {
-      "id": "rec-20260801-005",
-      "title": "A declared code-review criteria-gap finding is lost from the persisted SUMMARY if a later gate refuses the same settle",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260801-0100"
-    },
-    {
-      "id": "rec-20260801-011",
-      "title": "Refused settle overwrites the same SUMMARY.json a later successful settle writes, destroying attempt-1 code-review findings",
-      "raw": 14.7,
-      "score": 56,
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready needs-decision",
-          "value": 2
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio medium",
-          "value": 2
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "scoutId": "scout-20260801-phase246-review"
-    },
-    {
       "id": "rec-20260801-012",
       "title": "Real-provider code-review findings are structurally unreachable under default profile + agent-driven settles",
       "raw": 14.7,
@@ -818,6 +680,52 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "scoutId": "scout-20260801-phase246-review"
+    },
+    {
+      "id": "rec-20260802-002",
+      "title": "SUMMARY.md never renders codeReview/securityAudit findings — a refused-attempt sibling shows nothing an operator opens it to see",
+      "raw": 14.7,
+      "score": 56,
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-decision",
+          "value": 2
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "scoutId": "scout-20260801-claude-finding-durability"
     },
     {
       "id": "rec-20260724-007",
@@ -913,6 +821,96 @@
     {
       "id": "rec-20260731-004",
       "title": "docs/providers.md's host-cli 'per-task-verify only' scope claim is stale — all 7 factories now have host-cli wired",
+      "raw": 13.7,
+      "score": 55,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260802-003",
+      "title": "Intelligence ledger has 145 orphan decision/evidence links to recs absent from both active and archived arrays",
+      "raw": 13.7,
+      "score": 55,
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "decayState": "fresh",
+      "terms": [
+        {
+          "label": "lev 5",
+          "value": 5
+        },
+        {
+          "label": "conf 0.70",
+          "value": 4.2
+        },
+        {
+          "label": "risk 5",
+          "value": -2.5
+        },
+        {
+          "label": "status candidate",
+          "value": 0
+        },
+        {
+          "label": "ready needs-evidence",
+          "value": 1
+        },
+        {
+          "label": "decay fresh",
+          "value": 4
+        },
+        {
+          "label": "prio medium",
+          "value": 2
+        },
+        {
+          "label": "friction 0",
+          "value": 0
+        }
+      ],
+      "suggestedBackendAction": "cadence milestone propose"
+    },
+    {
+      "id": "rec-20260802-004",
+      "title": "deep-verify.ts's own bypassed-throw case has the identical registry-side provenance gap phase 248 just fixed for code-review/security-audit",
       "raw": 13.7,
       "score": 55,
       "status": "candidate",
@@ -1594,51 +1592,6 @@
       "suggestedBackendAction": "cadence milestone propose"
     },
     {
-      "id": "rec-20260712-006",
-      "title": "Settle-internal refusal paths still write no SUMMARY",
-      "raw": 10.7,
-      "score": 50,
-      "status": "candidate",
-      "readiness": "raw-idea",
-      "priority": "low",
-      "decayState": "fresh",
-      "terms": [
-        {
-          "label": "lev 5",
-          "value": 5
-        },
-        {
-          "label": "conf 0.70",
-          "value": 4.2
-        },
-        {
-          "label": "risk 5",
-          "value": -2.5
-        },
-        {
-          "label": "status candidate",
-          "value": 0
-        },
-        {
-          "label": "ready raw-idea",
-          "value": 0
-        },
-        {
-          "label": "decay fresh",
-          "value": 4
-        },
-        {
-          "label": "prio low",
-          "value": 0
-        },
-        {
-          "label": "friction 0",
-          "value": 0
-        }
-      ],
-      "suggestedBackendAction": "cadence milestone propose"
-    },
-    {
       "id": "rec-20260712-016",
       "title": "Write a formal threat model covering MCP serve, hooks, host adapters, headless verifier, and ledger exposure",
       "raw": 10.7,
@@ -2102,6 +2055,12 @@
       "title": "MCP-driven inversion: host CLI calls into cadence mcp serve's verify tool",
       "status": "deferred",
       "readiness": "needs-evidence"
+    },
+    {
+      "id": "rec-20260731-010",
+      "title": "High-severity code-review findings never reach the finding-ledger (they refuse settle before finalizeAndCloseSettle runs)",
+      "status": "deferred",
+      "readiness": "needs-decision"
     }
   ],
   "needsAttention": [],
@@ -2111,8 +2070,8 @@
   },
   "totals": {
     "total": 69,
-    "ranked": 46,
-    "parked": 1,
+    "ranked": 45,
+    "parked": 2,
     "needsAttention": 0,
     "excluded": 22
   }

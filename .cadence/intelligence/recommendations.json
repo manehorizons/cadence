@@ -1966,6 +1966,32 @@
       "updatedAt": "2026-08-02T04:09:25.988Z"
     },
     {
+      "id": "rec-20260802-005",
+      "title": "release-integrity's 10-attempt (~45s) verify budget insufficient for first-ever publish under a new npm scope",
+      "summary": "v1.54.0's release (npm scope rename, phase 250) published all 5 packages successfully with provenance, and the git tag + GitHub Release were both created correctly, but the Release workflow's post-publish 'verify registry' step failed -- release-integrity.mjs's POST_PUBLISH_VERIFY_ATTEMPTS=10 (~45s linear backoff, added in phase 218 for routine version-bump propagation lag) wasn't enough for a brand-new scope's CDN entries, which took several more minutes to resolve. Nothing was actually broken (independently verified via npm view/git ls-remote/gh release view once propagation completed) -- same 'red run, real publish' pattern phase 218 fixed, just at a longer timescale than that fix's budget covers. Consider either an adaptive/longer retry budget specifically for a package's first-ever publish (detectable via the pre-publish 404 the script already observes), or documenting this as an expected-slower case in release-cut's known-flake protocol. Don't blanket-extend the budget for routine releases -- 45s was fine per phase 218.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "release",
+        "ci"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260802-017"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-02T23:10:39.572Z",
+      "updatedAt": "2026-08-02T23:10:39.572Z"
+    },
+    {
       "id": "rec-20260802-006",
       "title": "Extend security audit CI coverage to website/ workspace",
       "summary": "docs/security/audit-exceptions.md's own text documents that the audit CI job (scripts/check-audit-exceptions.mjs, .github/workflows/security.yml) only scans the packages/* workspace's root pnpm-lock.yaml -- website/ has a fully separate pnpm-workspace.yaml + pnpm-lock.yaml that is never audited at all. Confirmed via live GitHub Dependabot alerts on 2026-08-02: 7 high-severity alerts (astro SSRF #19, brace-expansion #26, js-yaml #27, linkify-it #34, postcss #39, sharp #36, svgo #35) plus 23 moderate/low alerts exist ONLY in website's lockfile and would never fail CI even if left unpatched indefinitely, unlike the same-severity packages/* advisories which are forced into a time-boxed exception table or a real fix. Two of the seven (brace-expansion, js-yaml) were fixed in PR #364 by re-resolving already-permitted transitive versions; the other five need their own patched-version research.",
