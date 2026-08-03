@@ -12,10 +12,19 @@ import {
   AssumptionLedgerZ,
   IntelligenceDecisionLedgerZ,
   type CadenceState,
+  type CadenceConfig,
+  type Gate,
+  type Tier,
 } from '@thomas-powers-jr/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
-import { assessReadiness, isClaudeCodeSession, seamProvider } from '../activate/assess.js';
+import {
+  assessReadiness,
+  isClaudeCodeSession,
+  seamProvider,
+  type VerifierSeam,
+} from '../activate/assess.js';
+import { gatesFor, effectiveProfile } from '../gates/engine.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
 import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
 import {
@@ -1257,6 +1266,129 @@ export async function checkPhaseFreshness(
   }
 }
 
+/** All three `Tier` values — the profile axis quantifies over all of them
+ *  ("reachable at any tier"), never a single tier. */
+const ALL_TIERS: Tier[] = ['quick-fix', 'standard', 'complex'];
+
+/** The gate ↔ seam pairing this check evaluates. `Gate` (kebab-case, the
+ *  profile-axis string space, `gates/engine.js`/`profile.ts`) and
+ *  `VerifierSeam` (camelCase, the provider-axis string space,
+ *  `activate/assess.js`) are different namespaces for the same two
+ *  reachability subjects — this table is the single place they're paired so
+ *  the rest of the check never has to conflate them. */
+const CONDUCTION_GATES: ReadonlyArray<{ gate: Gate; seam: VerifierSeam }> = [
+  { gate: 'code-review', seam: 'codeReview' },
+  { gate: 'security-audit', seam: 'securityAudit' },
+];
+
+/** The three axes a gate's real-provider conduction can be blocked on. */
+type ConductionAxis = 'profile' | 'provider' | 'session';
+
+interface GateReachability {
+  gate: Gate;
+  seam: VerifierSeam;
+  blockedAxes: ConductionAxis[];
+}
+
+/**
+ * Per-gate axis evaluation (phase 251, AC-2). `profile` is blocked when the
+ * gate is absent from `gatesFor(tier, profile).gates` at every `Tier` — the
+ * profile axis quantifies over all three tiers, not a single tier×profile
+ * cell. `provider` is blocked when the gate's own seam is configured to
+ * `'mock'`. `session` is blocked only when the gate's own provider is
+ * `'host-cli'` **and** `isClaudeCodeSession(env)` — the self-invocation
+ * guard this axis mirrors only sits inside `host-cli-client.ts`'s spawn
+ * path, which an `anthropic`/`local`/`mock`-configured gate never reaches.
+ */
+function assessGateReachability(
+  gate: Gate,
+  seam: VerifierSeam,
+  config: CadenceConfig,
+  env: NodeJS.ProcessEnv,
+  profile: ReturnType<typeof effectiveProfile>,
+): GateReachability {
+  const blockedAxes: ConductionAxis[] = [];
+  const reachableAtSomeTier = ALL_TIERS.some((tier) => gatesFor(tier, profile).gates.includes(gate));
+  if (!reachableAtSomeTier) blockedAxes.push('profile');
+  const provider = seamProvider(config, seam);
+  if (provider === 'mock') blockedAxes.push('provider');
+  if (provider === 'host-cli' && isClaudeCodeSession(env)) blockedAxes.push('session');
+  return { gate, seam, blockedAxes };
+}
+
+/** `code-review`'s reachable profile×tier cells (`{strict×standard,
+ *  strict×complex, standard×complex}`) differ from `security-audit`'s
+ *  (`{strict×complex}` only) — the profile-axis remediation must name each
+ *  gate's own cells, never a shared generic hint. */
+function profileRemediationHint(gate: Gate): string {
+  return gate === 'code-review'
+    ? "override profile: in a DRAFT's frontmatter to 'standard' (tier: complex) or 'strict' (tier: standard or complex) to include code-review in the gate set"
+    : "override profile: to 'strict' at tier: complex — security-audit's only reachable profile×tier cell";
+}
+
+/** Remediation clause for one blocked axis on one gate. */
+function axisRemediation(gate: Gate, seam: VerifierSeam, axis: ConductionAxis): string {
+  if (axis === 'profile') return profileRemediationHint(gate);
+  if (axis === 'provider') {
+    return `reconfigure ${seam}.provider off 'mock' (e.g. \`cadence activate\`)`;
+  }
+  return (
+    'run from a real interactive terminal outside a headless Claude Code session ' +
+    "(CLAUDECODE unset) so the self-invocation guard doesn't force a mock fallback"
+  );
+}
+
+/**
+ * `cadence doctor` check (phase 251, rec-20260801-012): reports, per gate
+ * (`code-review`, `security-audit`) and per axis (profile / provider /
+ * session), whether this repo's current configuration can produce a real
+ * (non-`mock`) finding at all — never collapsed into one verdict, since the
+ * two gates' reachable profile×tier cells are asymmetric (SPEC Context,
+ * Blocker 1). Pure and injectable (`config`, `env`) so it is testable
+ * without a real terminal, provider, or mutated `process.env` (AC-3); the
+ * only two live inputs are `.cadence/config.json` and `NodeJS.ProcessEnv`
+ * — no tier, no active-DRAFT input (the check evaluates
+ * `effectiveProfile(config, null)`, the project default, not any specific
+ * in-flight DRAFT's override — see SPEC Context). `severity: 'warning'`
+ * and `fixId: null` always: none of the three axes has a safe auto-repair,
+ * each remediation is an operator decision (a profile override, a
+ * different execution context, or a provider reconfiguration).
+ */
+export function checkConductionReachability(
+  config: CadenceConfig,
+  env: NodeJS.ProcessEnv = process.env,
+): DoctorCheck {
+  const profile = effectiveProfile(config, null);
+  const results = CONDUCTION_GATES.map(({ gate, seam }) =>
+    assessGateReachability(gate, seam, config, env, profile),
+  );
+
+  const detail =
+    'Real-provider conduction reachability — ' +
+    results
+      .map(({ gate, blockedAxes }) =>
+        blockedAxes.length === 0
+          ? `${gate}: reachable`
+          : `${gate}: blocked by ${blockedAxes.join(', ')}`,
+      )
+      .join('; ') +
+    '.';
+
+  const blocked = results.filter((r) => r.blockedAxes.length > 0);
+  if (blocked.length === 0) {
+    return pass('conduction-reachability', detail);
+  }
+
+  const remediation = blocked
+    .map(
+      ({ gate, seam, blockedAxes }) =>
+        `${gate}: ${blockedAxes.map((axis) => axisRemediation(gate, seam, axis)).join('; ')}`,
+    )
+    .join(' | ');
+
+  return fail('conduction-reachability', 'warning', detail, remediation);
+}
+
 export async function runDoctor(
   root: string,
   env: DoctorEnv,
@@ -1282,5 +1414,22 @@ export async function runDoctor(
     await checkLedgerRemoteCollision(root),
     await checkCoverageModeLanguageSupport(root),
   ];
+  try {
+    const config = await loadConfig(root);
+    checks.push(checkConductionReachability(config));
+  } catch {
+    // Best-effort, mirrors checkVerificationReadiness/checkCoverageModeLanguageSupport:
+    // a config-load failure here means .cadence/config.json is missing or invalid,
+    // which `checkInitialized` above already reports as `error` — this degrades to
+    // `pass` (not a fabricated `warning`/`ok` reachability verdict) purely to avoid
+    // double-reporting the same underlying problem, never to claim conduction is
+    // reachable when it couldn't be determined.
+    checks.push(
+      pass(
+        'conduction-reachability',
+        'Conduction reachability not determinable (best-effort) — skipped.',
+      ),
+    );
+  }
   return rollup(checks);
 }

@@ -1,0 +1,54 @@
+{
+  "draftId": "251-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-03T01:46:17.687Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/packages/core/src/doctor/run.ts"
+      ],
+      "updatedAt": "2026-08-03T02:03:07.134Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/packages/core/tests/docs/cli-reference.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/packages/core/tests/doctor/run.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/packages/core/src/doctor/run.ts"
+      ],
+      "updatedAt": "2026-08-03T02:18:36.995Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-03T02:18:37.155Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/tmp/claude-1000/-home-thomas-projects-cadence/26eb5446-b792-4af9-8813-cfd45cd70873/scratchpad/run-decision-add.cjs",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/packages/core/tests/docs/phase251-ledger.test.ts"
+      ],
+      "updatedAt": "2026-08-03T02:27:57.101Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/docs/providers.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/packages/core/tests/docs/phase251-ledger.test.ts"
+      ],
+      "updatedAt": "2026-08-03T02:43:17.261Z"
+    }
+  }
+}

@@ -3,8 +3,8 @@ import { execFileSync } from 'node:child_process';
 import { writeFile, readFile, unlink, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
-import { emptyState } from '@thomas-powers-jr/cadence-types';
-import { runDoctor } from '../../src/doctor/run.js';
+import { emptyState, defaultConfig } from '@thomas-powers-jr/cadence-types';
+import { runDoctor, checkConductionReachability } from '../../src/doctor/run.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {
@@ -442,5 +442,138 @@ describe('runDoctor — host-hooks/codex-hooks stale-scope message honesty (phas
     expect(check?.fixId).toBe('codex-host-install');
     expect(check?.detail).toMatch(/No CADENCE-managed/);
     expect(check?.detail).not.toMatch(/outdated npm scope/i);
+  });
+});
+
+/**
+ * Phase 251, T3: `checkConductionReachability` (`../../src/doctor/run.ts`) —
+ * per-gate (`code-review`, `security-audit`), per-axis (profile / provider /
+ * session) reachability of a real-provider finding. Called directly with
+ * constructed `config`/`env` objects (never through `runDoctor`, which reads
+ * live `process.env`) so every combination is deterministic and mock-only,
+ * per AC-3. `defaultConfig` (`@thomas-powers-jr/cadence-types`) is a fully
+ * populated, already-`CadenceConfig`-typed literal (profile 'auto',
+ * `codeReview`/`securityAudit` both provider 'mock') — the minimal valid
+ * fixture, built by spreading it and overriding only what each case needs,
+ * matching the `{ ...defaultConfig, ... }` pattern already used in
+ * `packages/core/tests/config-explain/build.test.ts`.
+ */
+describe('checkConductionReachability (phase 251)', () => {
+  it("251-01/AC-3: profile 'auto' — both code-review and security-audit are profile-blocked (today's live default)", () => {
+    const config = { ...defaultConfig, profile: 'auto' as const };
+
+    const check = checkConductionReachability(config, {});
+
+    expect(check.name).toBe('conduction-reachability');
+    expect(check.status).toBe('warning');
+    expect(check.severity).toBe('warning');
+    expect(check.fixId).toBeNull();
+    expect(check.detail).toContain('code-review: blocked by profile, provider');
+    expect(check.detail).toContain('security-audit: blocked by profile, provider');
+  });
+
+  it("251-01/AC-3: profile 'standard' — code-review is profile-clear but security-audit is still profile-blocked (per-gate profile axis, not computed once and reused)", () => {
+    const config = { ...defaultConfig, profile: 'standard' as const };
+
+    const check = checkConductionReachability(config, {});
+
+    expect(check.severity).toBe('warning');
+    // code-review reaches standard×complex, so the profile axis does NOT
+    // block it here — only the still-mock provider axis does. If the
+    // implementation wrongly computed the profile axis once and reused it
+    // for both gates, this would incorrectly report code-review as
+    // profile-blocked too.
+    expect(check.detail).toContain('code-review: blocked by provider');
+    expect(check.detail).not.toMatch(/code-review: blocked by [^;]*profile/);
+    // security-audit is absent from every 'standard'-profile cell at any
+    // tier — its profile axis is blocked, distinctly from code-review's.
+    expect(check.detail).toContain('security-audit: blocked by profile, provider');
+  });
+
+  it("251-01/AC-3: profile 'strict', code-review on host-cli, Claude Code session set — code-review is session-blocked, security-audit is still provider-blocked regardless of session", () => {
+    const config = {
+      ...defaultConfig,
+      profile: 'strict' as const,
+      codeReview: { provider: 'host-cli' as const },
+    };
+    const env = { CLAUDECODE: '1' };
+
+    const check = checkConductionReachability(config, env);
+
+    expect(check.severity).toBe('warning');
+    expect(check.detail).toContain('code-review: blocked by session');
+    expect(check.detail).not.toMatch(/code-review: blocked by [^;]*profile/);
+    expect(check.detail).not.toMatch(/code-review: blocked by [^;]*provider/);
+    // security-audit's provider is still the default 'mock' — provider-blocked
+    // regardless of the session env var, since the session axis only ever
+    // applies to a 'host-cli'-configured gate.
+    expect(check.detail).toContain('security-audit: blocked by provider');
+    expect(check.detail).not.toMatch(/security-audit: blocked by [^;]*session/);
+  });
+
+  it("251-01/AC-3: profile 'strict', both providers non-mock, no session — both gates fully reachable, status 'ok'", () => {
+    const config = {
+      ...defaultConfig,
+      profile: 'strict' as const,
+      codeReview: { provider: 'host-cli' as const },
+      securityAudit: { provider: 'host-cli' as const },
+    };
+    const env = {};
+
+    const check = checkConductionReachability(config, env);
+
+    expect(check.status).toBe('ok');
+    expect(check.severity).toBe('ok');
+    expect(check.fixId).toBeNull();
+    expect(check.remediation).toBeNull();
+    expect(check.detail).toContain('code-review: reachable');
+    expect(check.detail).toContain('security-audit: reachable');
+  });
+
+  it("251-01/AC-3: profile 'strict', code-review on anthropic, Claude Code session set — code-review is reachable DESPITE the session env var, because the session axis only applies to a host-cli-provider gate", () => {
+    const config = {
+      ...defaultConfig,
+      profile: 'strict' as const,
+      codeReview: { provider: 'anthropic' as const },
+    };
+    const env = { CLAUDECODE: '1' };
+
+    const check = checkConductionReachability(config, env);
+
+    expect(check.detail).toContain('code-review: reachable');
+    // security-audit is still mock-provider-blocked, so the overall status
+    // stays 'warning' — confirms the per-gate reachable verdict on
+    // code-review isn't an artifact of a falsely-'ok' overall report.
+    expect(check.status).toBe('warning');
+    expect(check.detail).toContain('security-audit: blocked by provider');
+  });
+
+  it('251-01/AC-2: the detail names each gate\'s own blocked axis or axes separately, not one generic sentence', () => {
+    const config = { ...defaultConfig, profile: 'auto' as const };
+
+    const check = checkConductionReachability(config, {});
+
+    // Both gates are named individually, each with its own "blocked by ..."
+    // clause — an operator can tell at a glance which gate(s) and axis(es)
+    // need attention, per AC-2's Then-clause.
+    expect(check.detail).toMatch(/code-review: blocked by [a-z, ]+/);
+    expect(check.detail).toMatch(/security-audit: blocked by [a-z, ]+/);
+    expect(check.remediation).toContain('code-review:');
+    expect(check.remediation).toContain('security-audit:');
+
+    // Substring presence alone isn't enough — the profile-axis remediation
+    // must be genuinely gate-specific (code-review's 3 reachable cells vs.
+    // security-audit's strict×complex-only), never one shared generic hint
+    // reused for both (SPEC: "The check and its remediation text must
+    // report these two gates separately"). Assert the two gates' clauses
+    // are textually distinct on the substance that differs between them.
+    const remediation = check.remediation ?? '';
+    expect(remediation).toContain("'standard' (tier: complex) or 'strict' (tier: standard or complex)");
+    expect(remediation).toContain("security-audit's only reachable profile×tier cell");
+    // And that neither gate's clause borrowed the other's hint text.
+    const codeReviewClause = remediation.slice(0, remediation.indexOf('security-audit:'));
+    const securityAuditClause = remediation.slice(remediation.indexOf('security-audit:'));
+    expect(codeReviewClause).not.toContain("security-audit's only reachable profile×tier cell");
+    expect(securityAuditClause).not.toContain("'standard' (tier: complex) or 'strict' (tier: standard or complex)");
   });
 });
