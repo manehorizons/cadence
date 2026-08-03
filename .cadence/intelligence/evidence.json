@@ -1477,6 +1477,13 @@
       "kind": "note",
       "summary": "Post-npm-scope-migration re-measure at v1.54.0 (2026-08-03), phase 251 T1c: cadence intelligence audit now reports 20 orphan decisions and 134 orphan evidence entries (154 total), compared against the pre-migration baseline of 20 orphan decisions + 125 orphan evidence entries recorded at filing time. Decisions count unchanged; evidence count grew by 9, consistent with this being a known-drifting metric (computeIntelligenceAudit's archived[]-blind-spot, not yet fixed) that new autoArchive'd promotions (including this same phase's rec-20260802-001 T1a promotion) continue to inflate — not asserted as a threshold, gate, or expected decrease.",
       "createdAt": "2026-08-03T01:36:36.384Z"
+    },
+    {
+      "id": "ev-20260803-004",
+      "recommendationId": "rec-20260803-002",
+      "kind": "note",
+      "summary": "Reproduced live during phase 251 (2026-08-03): packages/core/tests/docs/phase251-ledger.test.ts's AC-5/AC-6 it() blocks failed 'cadence verify coverage --explain' with 'spans found: 1' (of 3 it() blocks in the file) until every backtick/paren was removed from .toMatch(/regex/) calls in favor of .toContain('string'); see phase 251's commit for the exact before/after.",
+      "createdAt": "2026-08-03T03:07:40.383Z"
     }
   ]
 }
