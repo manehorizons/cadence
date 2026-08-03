@@ -32,6 +32,11 @@ For a conceptual overview of providers and the gate universe they serve, see
   - [Deferred: batching](#deferred-batching)
 - [Per-gate provider configuration](#per-gate-provider-configuration)
 - [Which gate fires in which cell](#which-gate-fires-in-which-cell)
+- [Producing a real-provider code-review or security-audit finding (conduction, Phase 251)](#producing-a-real-provider-code-review-or-security-audit-finding-conduction-phase-251)
+  - [Check reachability first with cadence doctor](#check-reachability-first-with-cadence-doctor)
+  - [code-review procedure](#code-review-procedure)
+  - [security-audit procedure](#security-audit-procedure)
+  - [Confirming it actually produced a real finding](#confirming-it-actually-produced-a-real-finding)
 - [Selecting a provider at the command line (Phase 73)](#selecting-a-provider-at-the-command-line-phase-73)
   - [Token usage in the SUMMARY](#token-usage-in-the-summary)
 - [Deep-verify prompt id-binding (Phase 29.7)](#deep-verify-prompt-id-binding-phase-297)
@@ -528,6 +533,154 @@ approve` alongside `spec-review`, but only when the phase's DRAFT has a
 sibling `<id>-UI-SPEC.md` design contract; a phase with no UI-SPEC never
 triggers it, regardless of profile/tier. Bypass with
 `--allow-ui-spec-review-failure`.
+
+---
+
+## Producing a real-provider code-review or security-audit finding (conduction, Phase 251)
+
+`code-review` and `security-audit` are the two most locked-down gates in the
+matrix. Configuring a real provider for either one is necessary but not
+sufficient — each gate is independently gated by up to three axes (profile,
+provider, session), and **the two gates are not symmetric**: `security-audit`
+is reachable at a single, narrower profile×tier cell than `code-review`, and
+this repo's own `.cadence/config.json` blocks it on a second axis besides.
+Follow the two procedures below separately — do not treat this as one
+unified checklist. (This section documents the operator procedure recorded
+by `dec-20260803-001`, linked to `rec-20260801-012`: the self-invocation
+guard and the `auto`-profile gate set are both deliberately retained — see
+[Self-invocation guard](#self-invocation-guard) — so producing a real finding
+is, by design, a human-operator act performed from outside a headless agent
+session, never something a flag or env var unlocks from inside one.)
+
+### Check reachability first with cadence doctor
+
+Before attempting either procedure below, check whether it's even needed:
+
+```sh
+cadence doctor
+```
+
+Read the `conduction-reachability` check's result. It evaluates, separately
+for `code-review` and `security-audit`, whether this repo's *current*
+configuration can produce a real (non-mock) finding at all, across three
+axes:
+
+- **profile** — is the gate present in `gatesFor(tier, profile).gates` at
+  any `Tier`, for the project's `effectiveProfile(config, null)`?
+- **provider** — is the gate's own seam (`codeReview.provider` /
+  `securityAudit.provider`) still `'mock'`?
+- **session** — is the gate's own provider `'host-cli'` *and* is this a
+  headless Claude Code session (`CLAUDECODE=1`)? (The session axis never
+  blocks a gate configured to `anthropic`/`local`/`mock` — the
+  self-invocation guard only sits inside the `host-cli` spawn path.)
+
+`status: 'ok'` means both gates are reachable today and neither procedure is
+needed. `status: 'warning'` names, in its `detail` field, exactly which axis
+or axes block which gate, and its `remediation` field gives the fix for each
+one. There is no `--fix` for this check (`fixId: null`) — every remediation
+below is an operator decision, not something safe to auto-apply.
+
+### code-review procedure
+
+1. **Clear the profile axis.** Override `profile:` in the DRAFT's own
+   frontmatter — not a CLI flag; `draft.profile` wins over `config.profile`
+   in `effectiveProfile()` (`gates/engine.ts`):
+
+   ```yaml
+   profile: standard   # tier: complex only
+   # or
+   profile: strict      # tier: standard OR complex
+   ```
+
+   Any of these three profile×tier cells — `standard`×`complex`,
+   `strict`×`standard`, `strict`×`complex` — includes `code-review` in the
+   gate set (`gates/engine.ts`'s `DELTAS` matrix). The project default
+   (`auto` profile) never does, at any tier.
+
+2. **Clear the provider axis.** `codeReview.provider` must not be `mock`:
+
+   ```sh
+   cadence config get codeReview.provider
+   cadence config set codeReview.provider host-cli   # or anthropic / local
+   ```
+
+3. **Clear the session axis.** Run `cadence settle run` from a real
+   interactive terminal — a plain shell, not a headless Claude Code session,
+   hook, or Bash-tool call (`CLAUDECODE` must be unset). If
+   `codeReview.provider` is `host-cli` and `CLAUDECODE=1` is set, the
+   self-invocation guard (`isSelfInvocation`, `host-cli-client.ts`) fires and
+   falls back to `mock` for that call, by design — see
+   [Self-invocation guard](#self-invocation-guard). A gate on
+   `anthropic`/`local` is unaffected by this axis.
+
+4. **Run the settle** from that terminal:
+
+   ```sh
+   cadence settle run
+   ```
+
+### security-audit procedure
+
+`security-audit` is strictly narrower than `code-review` on the profile
+axis, and this repo's own `.cadence/config.json` currently blocks it on the
+provider axis too (`securityAudit.provider: 'mock'`) — clearing
+`code-review`'s blockers does **not** clear `security-audit`'s. Treat it as
+its own procedure:
+
+1. **Clear the profile axis.** `security-audit`'s *only* reachable
+   profile×tier cell is `strict`×`complex` — nothing else works:
+
+   ```yaml
+   profile: strict   # tier: complex — the only cell that includes security-audit
+   ```
+
+2. **Clear the provider axis.** Reconfigure `securityAudit.provider` off
+   `mock` — via a direct config edit, or `cadence activate`:
+
+   ```sh
+   cadence config set securityAudit.provider host-cli   # or anthropic / local
+   # or, to flip every seam at once (including securityAudit):
+   cadence activate --provider host-cli --all
+   ```
+
+   Reconfiguring this default is an ordinary, sanctioned config change (an
+   operator can do it independently, any time) — it is not the same kind of
+   decision as the profile override above, which is scoped to a single
+   DRAFT.
+
+3. **Clear the session axis**, same as `code-review` above: run from a real
+   interactive terminal, `CLAUDECODE` unset, if the resolved provider is
+   `host-cli`.
+
+4. **Run the settle**:
+
+   ```sh
+   cadence settle run
+   ```
+
+### Confirming it actually produced a real finding
+
+Don't infer success from the run completing quietly — read the persisted
+SUMMARY. Two places carry provider identity:
+
+- `SUMMARY.json`'s `gates[]` array (`GateProvenance[]`): find the entry with
+  `gate: 'code-review'` (or `'security-audit'`) and check its `provider`
+  field is not `'mock'` (and, if populated, its `model` field).
+- `SUMMARY.json`'s `assurance.verifierRollup[]`: an array of `{ provider,
+  model?, gateCount }` grouped across every gate that carried verifier
+  identity — a non-`mock` `provider` entry there confirms it too.
+
+**Do not look for a field called `verifierIdentity`** — that name belongs to
+an internal `GateFlags` field used during gate evaluation only. By the time
+a result is persisted, `gates/registry.ts` has already lifted it onto the
+`GateProvenance` entry's `provider`/`model` fields above; `verifierIdentity`
+itself never appears in a written SUMMARY.
+
+If the mock-fallback banner (`⚠ MOCK = NOT REAL VERIFICATION`, see
+[mock — offline deterministic default](#mock--offline-deterministic-default)
+above) printed to stderr during the run, the finding is mock regardless of
+what the SUMMARY otherwise looks like — the banner and the persisted
+`provider` field always agree.
 
 ---
 

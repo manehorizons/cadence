@@ -31,6 +31,24 @@
       "notes": "",
       "touchedFiles": [],
       "updatedAt": "2026-08-03T02:18:37.155Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/tmp/claude-1000/-home-thomas-projects-cadence/26eb5446-b792-4af9-8813-cfd45cd70873/scratchpad/run-decision-add.cjs",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/packages/core/tests/docs/phase251-ledger.test.ts"
+      ],
+      "updatedAt": "2026-08-03T02:27:57.101Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/docs/providers.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/phase251-conduction-reachability/packages/core/tests/docs/phase251-ledger.test.ts"
+      ],
+      "updatedAt": "2026-08-03T02:43:17.261Z"
     }
   }
 }

@@ -216,6 +216,15 @@
       "status": "active",
       "decidedAt": "2026-08-02T00:04:18.306Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260803-001",
+      "recommendationId": "rec-20260801-012",
+      "title": "Conduction stays operator-initiated: guard and gate set retained; mock-provider default is a separate ordinary config decision",
+      "rationale": "(a) The self-invocation guard (isSelfInvocation/SELF_INVOCATION_ENV_VAR in host-cli-client.ts) is retained, unmodified. It prevents unbounded nested self-invocation -- a real safety property -- and removing or bypassing it to farm real-provider findings would trade that safety property for test data, which this decision explicitly declines to do. (b) The auto-profile gate set (gates/engine.ts's DELTAS matrix) is unchanged: code-review and security-audit remain absent from all three auto-profile tiers. Conduction -- producing a real-provider finding -- is deliberately a human-operator-initiated act (a profile override plus a real interactive terminal), not something that should happen incidentally as a side effect of normal, agent-driven operation. (c) Separately, and NOT the same kind of decision as (a) or (b): security-audit's mock-provider default in this repo's own .cadence/config.json (securityAudit.provider: 'mock') is an ordinary, changeable config decision -- an operator can reconfigure it via cadence activate or an equivalent config edit at any time, independent of (a)/(b). A future reader must not conflate this ordinary config default with the two retained safety/cost decisions above. (d) Conduction is therefore a documented human-operator procedure (docs/providers.md, phase 251 T6), and the conduction-reachability doctor check (already implemented, phase 251 T2) exists precisely so the absence of a real finding is legible and visible to an operator -- rather than being silently indistinguishable from 'conduction hasn't happened yet'. (e) Revisit trigger: if operator-run conduction proves impractical enough that the corpus of real-provider findings stays empty through the NEXT arc after this one (explicitly not this arc -- give it more time before reconsidering), reconsider a supervised, depth-limited escape hatch as an alternative.",
+      "status": "active",
+      "decidedAt": "2026-08-03T02:20:36.365Z",
+      "supersedes": []
     }
   ]
 }
