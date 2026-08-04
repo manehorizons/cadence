@@ -135,6 +135,14 @@ const ALLOWED_FILES = new Set<string>([
   // it's staged or the sweep would fail permanently on itself the moment
   // this task's own deliverable is committed.
   'packages/core/tests/docs/npm-scope-sweep.test.ts',
+
+  // v1.55 release-handoff doc (2026-08-04): its release-cut checklist item 2
+  // reads "No changeset references the deprecated `@manehorizons` scope" —
+  // an instruction to verify the absence of such references, which
+  // necessarily names the scope it's checking for. Same category as
+  // docs/migration-npm-scope.md above: naming the old scope to describe a
+  // check about it, not a leftover reference needing migration.
+  'docs/handoffs/HANDOFF-v1.55-integrity-release.md',
 ]);
 
 // Note on generated docs: `website/src/content/docs/api/**` (typedoc output)
