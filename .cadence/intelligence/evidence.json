@@ -1491,6 +1491,13 @@
       "kind": "note",
       "summary": "Reproduced live during phase 251 (2026-08-03): packages/core/tests/docs/phase251-ledger.test.ts's AC-5/AC-6 it() blocks failed 'cadence verify coverage --explain' with 'spans found: 1' (of 3 it() blocks in the file) until every backtick/paren was removed from .toMatch(/regex/) calls in favor of .toContain('string'); see phase 251's commit for the exact before/after.",
       "createdAt": "2026-08-03T03:07:40.383Z"
+    },
+    {
+      "id": "ev-20260803-005",
+      "recommendationId": "rec-20260803-003",
+      "kind": "note",
+      "summary": "gh run view 30786676416 (Security workflow, main, schedule) failed; gh run view <pr-368-audit-job> --log-failed shows 4 FAIL lines for the 3 undocumented GHSA ids (brace-expansion GHSA-rgw5-rvv9-x895 appears twice in dependency graph)",
+      "createdAt": "2026-08-03T22:02:34.472Z"
     }
   ]
 }

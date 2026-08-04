@@ -2078,6 +2078,34 @@
       "decisionIds": [],
       "createdAt": "2026-08-03T03:07:40.383Z",
       "updatedAt": "2026-08-03T03:07:40.383Z"
+    },
+    {
+      "id": "rec-20260803-003",
+      "title": "3 undocumented high-severity pnpm-audit advisories now failing the Security workflow's audit job",
+      "summary": "The Security workflow's 'Check pnpm audit against documented exceptions' job started failing on main's scheduled run at 2026-08-03T05:15:54Z (run 30786676416), after PR #367 merged at 04:03 UTC same day -- not caused by any source change, the advisories were newly disclosed/detected between those two timestamps. Three findings are undocumented in docs/security/audit-exceptions.md: GHSA-7p8r-x3mc-p8w7 (fast-uri, high), GHSA-mwp4-54f8-5fhr (ip-address, high), and GHSA-rgw5-rvv9-x895 (brace-expansion, high -- a DIFFERENT advisory ID than the already-documented GHSA-mh99-v99m-4gvg). Does not block the required ci-success check (which only depends on the test job, per .github/workflows/ci.yml), so PRs can still merge, but the audit gate itself is red and needs triage: either add documented exceptions (with the same reachability-analysis rigor as the existing entries) or bump the offending transitive dependencies.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "ci"
+      ],
+      "affectedFiles": [
+        "docs/security/audit-exceptions.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260803-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-03T22:02:34.472Z",
+      "updatedAt": "2026-08-03T22:02:34.472Z"
     }
   ],
   "archived": [
