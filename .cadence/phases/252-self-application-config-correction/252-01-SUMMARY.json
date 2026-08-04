@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 2,
+  "draftId": "252-01",
+  "completedAt": "2026-08-04T22:35:52.423Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Two asserting blocks written (252-01/AC-1, 252-01/AC-2); confirmed both red against pre-fix state."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "gates.evidenceFloor mention -> assertion in .cadence/config.json; only that line changed (confirmed via git diff); profile and securityAudit.provider untouched."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "dec-20260804-001 recorded (defers baseline profile to v1.56 Phase P, explicit non-supersede of dec-20260803-001); conduction-reachability doctor snapshot captured in DRAFT.md, confirmed unchanged (still warning)."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "pnpm build && pnpm typecheck && pnpm lint && pnpm test all green; 394/394 test files, 3639/3639 tests passed including the new self-application-config.test.ts."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 358,
+    "sessionSubagentSpawns": 344
+  },
+  "assurance": {
+    "verifierRollup": [],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 2,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "mixed"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "69bdd3e5d0a265cc37908814957c1bd57f1bd8c2b2bf198ce759207b650997e1"
+  }
+}

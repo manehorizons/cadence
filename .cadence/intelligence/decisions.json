@@ -225,6 +225,14 @@
       "status": "active",
       "decidedAt": "2026-08-03T02:20:36.365Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260804-001",
+      "title": "Defer baseline profile change to v1.56 Phase P",
+      "rationale": "The baseline profile question (should .cadence/config.json's profile ever move off auto) is deferred, not resolved, pending v1.56 Phase P (mock-abstains-on-review-gates). This decision does not supersede dec-20260803-001 -- that decision's commitment (conduction stays a deliberate per-phase DRAFT-level profile override, not an incidental consequence of normal agent-driven operation) is unchanged. This decision answers a narrower, different question: whether the baseline itself should ever move, which dec-20260803-001 clauses (a)/(b) didn't address either way. Moving the baseline today would newly fire draft-read (present in standard/strict at every tier, absent from auto entirely) on every future phase, plus code-review/deep-verify at complex tier -- gate-cost this release does not need to take on before its Aug 12 2026 deadline. softCap (engine.ts: softCap = profile === 'auto' && tier === 'complex') is a distinct auto-specific cost-control mechanic worth understanding before any future baseline change; noted here, not resolved. cadence init's own maturity heuristic would give a repo this age 'standard' fresh -- context for the eventual revisit, not acted on now. Trigger to revisit: v1.56 Phase P lands, removing the false-confidence risk a baseline change carries today. securityAudit.provider is unaffected by this decision -- per dec-20260803-001 clause (c), that field is already an ordinary, independently-changeable config decision.",
+      "status": "active",
+      "decidedAt": "2026-08-04T22:25:55.657Z",
+      "supersedes": []
     }
   ]
 }
