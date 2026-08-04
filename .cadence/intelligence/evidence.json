@@ -1498,6 +1498,48 @@
       "kind": "note",
       "summary": "gh run view 30786676416 (Security workflow, main, schedule) failed; gh run view <pr-368-audit-job> --log-failed shows 4 FAIL lines for the 3 undocumented GHSA ids (brace-expansion GHSA-rgw5-rvv9-x895 appears twice in dependency graph)",
       "createdAt": "2026-08-03T22:02:34.472Z"
+    },
+    {
+      "id": "ev-20260804-001",
+      "recommendationId": "rec-20260804-001",
+      "kind": "note",
+      "summary": "package.json pins brace-expansion@5.0.6 -> ^5.0.7 and fast-uri@3.1.2 -> ^3.1.4 (grep -A6 '\"pnpm\"' package.json); pnpm-lock.yaml resolves brace-expansion 5.0.7 + 2.1.2, fast-uri 3.1.4, ip-address 10.2.0 (grep -nE '^  (brace-expansion|fast-uri|ip-address)@' pnpm-lock.yaml). node scripts/check-audit-exceptions.mjs exits 1 with 4 FAIL lines across 3 GHSAs, all override-fixable. No test or CI step reads the overrides block.",
+      "createdAt": "2026-08-04T21:32:32.228Z"
+    },
+    {
+      "id": "ev-20260804-002",
+      "recommendationId": "rec-20260804-002",
+      "kind": "note",
+      "summary": "parseExceptionsTable(readFileSync('docs/security/audit-exceptions.md')) returns 5 rows today. Appending an identical row BELOW the existing HTML comment (after line 38) still returns 5; appending the same row ABOVE the comment (before line 34) returns 6. Measured via a Node one-liner importing parseExceptionsTable from scripts/check-audit-exceptions.mjs.",
+      "createdAt": "2026-08-04T21:32:41.238Z"
+    },
+    {
+      "id": "ev-20260804-003",
+      "recommendationId": "rec-20260804-003",
+      "kind": "note",
+      "summary": "cadence recommendation list does not contain rec-20260801-010; cadence recommendation list --archived does. cadence decision show dec-20260801-003 reports 'Decision: ship no code this phase' plus an unmet revisit trigger (3 non-mock settles each persisting >=1 code-review finding). Discovered 2026-08-04 while dedupping for scout-20260804-integrity-release against a handoff that itself listed rec-20260801-010 in its 'existing, do not duplicate' table.",
+      "createdAt": "2026-08-04T21:32:51.880Z"
+    },
+    {
+      "id": "ev-20260804-004",
+      "recommendationId": "rec-20260804-004",
+      "kind": "note",
+      "summary": "git worktree list shows 3 entries (main + the two above). cadence doctor reports 'warning worktree-phases: phase number collision across worktrees' enumerating roughly 2..249, as 1 of 3 problems across 20 checks (exit 0). git log shows phases 246/247/248/249/250/251 all merged directly to main (PRs #365-#369), not via feat/kernel-assurance-v2. Phases 252+ (this release) are outside the collision footprint, so this release's own phases are unaffected.",
+      "createdAt": "2026-08-04T21:33:05.971Z"
+    },
+    {
+      "id": "ev-20260804-005",
+      "recommendationId": "rec-20260804-005",
+      "kind": "note",
+      "summary": "cat .cadence/config.json shows gates.evidenceFloor: \"mention\" (lines ~112-115). packages/types/src/config.ts:593 shows defaultConfig.gates.evidenceFloor matches the schema default; packages/types/src/config.ts:608 shows presets.solo.gates.evidenceFloor: 'assertion'. Phases 249-251's *-SUMMARY.json record evidence: 'executed' per AC except one named bypass (249 AC-1, via --evidence-floor-bypass).",
+      "createdAt": "2026-08-04T21:33:15.314Z"
+    },
+    {
+      "id": "ev-20260804-006",
+      "recommendationId": "rec-20260804-006",
+      "kind": "note",
+      "summary": "gh api repos/thomas-powers-jr/cadence/branches/main/protection --jq '.required_status_checks.contexts' returns [\"ci-success\"] only (run 2026-08-04). .github/workflows/ci.yml:47-49 shows ci-success's needs: [test]. command grep -rnE 'always\\(\\)|needs:' .github/workflows/ shows ci.yml's ci-success is the only if: always() + explicit-result-check job in the repo.",
+      "createdAt": "2026-08-04T21:33:29.287Z"
     }
   ]
 }
