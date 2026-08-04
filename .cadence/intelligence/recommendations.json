@@ -2106,6 +2106,190 @@
       "decisionIds": [],
       "createdAt": "2026-08-03T22:02:34.472Z",
       "updatedAt": "2026-08-03T22:02:34.472Z"
+    },
+    {
+      "id": "rec-20260804-001",
+      "title": "Nothing detects a pnpm override whose target has gone stale or whose key no longer matches",
+      "summary": "Root package.json declares four pnpm.overrides. They ARE applied (pnpm-lock.yaml carries a matching overrides: block and the resolutions match), but every target is pinned to the patch floor that was current when it was written, and each key is qualified by a specific vulnerable source version. Nothing in CI or the test suite compares override targets against the versions actually resolved in the lockfile, so a target that falls behind the advisory's patched floor, a key that stops matching after the tree moves, and a second major line of the same package with no override at all are all silently invisible.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "build"
+      ],
+      "affectedFiles": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "scripts/",
+        "packages/core/tests/docs/"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260804-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-integrity-release",
+      "createdAt": "2026-08-04T21:32:32.228Z",
+      "updatedAt": "2026-08-04T21:32:32.228Z"
+    },
+    {
+      "id": "rec-20260804-002",
+      "title": "audit-exceptions parser silently drops any exception row appended below the HTML template comment",
+      "summary": "parseExceptionsTable stops at the first non-table-row line. docs/security/audit-exceptions.md places an HTML-comment 'how to add a row' template immediately after the last real row. The comment's own text says to append above it, so following the instruction works -- but appending below it produces an exception that parses to nothing and fails CI with 'not listed', with no diagnostic pointing at the placement. Correct and incorrect placement look identical in the rendered Markdown. The inverse case (a template row INSIDE the comment being ignored) is already proven safe and tested at security-ci.test.ts:207 -- this covers only the untested directional case.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "docs"
+      ],
+      "affectedFiles": [
+        "scripts/check-audit-exceptions.mjs",
+        "docs/security/audit-exceptions.md",
+        "packages/core/tests/docs/security-ci.test.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260804-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-integrity-release",
+      "createdAt": "2026-08-04T21:32:41.238Z",
+      "updatedAt": "2026-08-04T21:32:41.238Z"
+    },
+    {
+      "id": "rec-20260804-003",
+      "title": "A rec archived as shipped by a ship-no-code decision is invisible to the documented dedup procedure",
+      "summary": "rec-20260801-010 (finding message-drift dedup) is archived with status shipped, shippedRef phase 246 / PR #356. Its linked decision dec-20260801-003 states 'Decision: ship no code this phase' with a revisit trigger -- i.e. the underlying defect was deferred, not fixed. Because 'cadence recommendation list' shows only the active set by default, an agent following the standing dedup-first rule cannot see it and could refile the same defect. Needs either a distinct terminal state for deferred-by-decision, a list surface that includes archived recs carrying an unmet decision trigger, or a doc change making --archived mandatory in the dedup step.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "intelligence",
+        "process"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/recommendation.ts",
+        ".cadence/intelligence/recommendations.json"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260804-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-integrity-release",
+      "createdAt": "2026-08-04T21:32:51.880Z",
+      "updatedAt": "2026-08-04T21:32:51.880Z"
+    },
+    {
+      "id": "rec-20260804-004",
+      "title": "Two sibling worktrees each re-claim nearly every phase number 2-249, making worktree-phases a permanently-warning check",
+      "summary": "cadence doctor's worktree-phases check reports a collision footprint spanning essentially the whole phase history, sourced from two worktrees: .claude/worktrees/kernel-arc-docs-review (feat/kernel-assurance-v2 @ 5d5ec8b6) and .claude/worktrees/phase249-refused-settle-post-gate (feat/post-gate-refusal-summaries-phase-249 @ e1aba70b). Both carry a full .cadence/phases tree, so every historical phase reads as contested. kernel-arc-docs-review in particular sits on a branch-naming convention (a long-lived feat/kernel-assurance-v2 feature branch) that phases 246-251 show has since been superseded -- work now lands directly on main -- suggesting this worktree may be an abandoned holdover. OPERATOR DECISION ONLY: per CLAUDE.md's Zombie Session rule, neither worktree may be removed until confirmed dead. Filing this to move the warning from untriaged to tracked, satisfying the v1.55 Definition of Done's 'no untriaged release-blocking warning' bar without touching either tree.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "process",
+        "worktrees"
+      ],
+      "affectedFiles": [
+        ".claude/worktrees/"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260804-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-integrity-release",
+      "createdAt": "2026-08-04T21:33:05.971Z",
+      "updatedAt": "2026-08-04T21:33:05.971Z"
+    },
+    {
+      "id": "rec-20260804-005",
+      "title": "Repo's own gates.evidenceFloor (mention) sits below the solo preset default (assertion)",
+      "summary": "This repo's .cadence/config.json sets gates.evidenceFloor to 'mention' -- the Zod schema's back-compat default, not an adopted preset. All three shipped presets set a higher floor: solo -> 'assertion', team -> 'executed', production -> 'executed'. verification.coverageMode is already 'assertion' here, and phases 249/250/251 all recorded evidence: 'executed' (a rung above assertion) for every non-bypassed AC, so raising the floor to match is low-risk and mostly just formalizes what's already happening in practice.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "config",
+        "gates"
+      ],
+      "affectedFiles": [
+        ".cadence/config.json",
+        "packages/types/src/config.ts",
+        "packages/core/src/tutorial/fixtures.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260804-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-integrity-release",
+      "createdAt": "2026-08-04T21:33:15.314Z",
+      "updatedAt": "2026-08-04T21:33:15.314Z"
+    },
+    {
+      "id": "rec-20260804-006",
+      "title": "ci-success does not aggregate Security/CodeQL, and they are not required checks by any other route",
+      "summary": "ci.yml's ci-success job (the sole required status check on main) has needs: [test] only -- Security and CodeQL workflows are separate, unaggregated jobs. GitHub branch protection's required_status_checks.contexts is exactly [\"ci-success\"], confirmed via the live API, so a red Security workflow (e.g. an undocumented high-severity advisory) blocks nothing: PRs merge regardless. ci-success's own if: always() + explicit needs.test.result string-comparison pattern (ci.yml:47-58) is the only aggregation template in the repo's 6 workflow files and is directly reusable.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "ci"
+      ],
+      "affectedFiles": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/security.yml",
+        ".github/workflows/codeql.yml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260804-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-04T21:33:29.287Z",
+      "updatedAt": "2026-08-04T21:33:29.287Z",
+      "scoutId": "scout-20260804-integrity-release"
     }
   ],
   "archived": [

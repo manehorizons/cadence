@@ -1140,3 +1140,99 @@ packages/core/src/verify/coverage-profiles/js-ts.ts's call-expression span strat
 - next: cadence milestone propose
 
 The Security workflow's 'Check pnpm audit against documented exceptions' job started failing on main's scheduled run at 2026-08-03T05:15:54Z (run 30786676416), after PR #367 merged at 04:03 UTC same day -- not caused by any source change, the advisories were newly disclosed/detected between those two timestamps. Three findings are undocumented in docs/security/audit-exceptions.md: GHSA-7p8r-x3mc-p8w7 (fast-uri, high), GHSA-mwp4-54f8-5fhr (ip-address, high), and GHSA-rgw5-rvv9-x895 (brace-expansion, high -- a DIFFERENT advisory ID than the already-documented GHSA-mh99-v99m-4gvg). Does not block the required ci-success check (which only depends on the test job, per .github/workflows/ci.yml), so PRs can still merge, but the audit gate itself is red and needs triage: either add documented exceptions (with the same reachability-analysis rigor as the existing entries) or bump the offending transitive dependencies.
+
+## rec-20260804-001 — Nothing detects a pnpm override whose target has gone stale or whose key no longer matches
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security, build
+- files: package.json, pnpm-lock.yaml, scripts/, packages/core/tests/docs/
+- evidence: package.json pins brace-expansion@5.0.6 -> ^5.0.7 and fast-uri@3.1.2 -> ^3.1.4 (grep -A6 '"pnpm"' package.json); pnpm-lock.yaml resolves brace-expansion 5.0.7 + 2.1.2, fast-uri 3.1.4, ip-address 10.2.0 (grep -nE '^  (brace-expansion|fast-uri|ip-address)@' pnpm-lock.yaml). node scripts/check-audit-exceptions.mjs exits 1 with 4 FAIL lines across 3 GHSAs, all override-fixable. No test or CI step reads the overrides block.
+- next: cadence milestone propose
+
+Root package.json declares four pnpm.overrides. They ARE applied (pnpm-lock.yaml carries a matching overrides: block and the resolutions match), but every target is pinned to the patch floor that was current when it was written, and each key is qualified by a specific vulnerable source version. Nothing in CI or the test suite compares override targets against the versions actually resolved in the lockfile, so a target that falls behind the advisory's patched floor, a key that stops matching after the tree moves, and a second major line of the same package with no override at all are all silently invisible.
+
+## rec-20260804-002 — audit-exceptions parser silently drops any exception row appended below the HTML template comment
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security, docs
+- files: scripts/check-audit-exceptions.mjs, docs/security/audit-exceptions.md, packages/core/tests/docs/security-ci.test.ts
+- evidence: parseExceptionsTable(readFileSync('docs/security/audit-exceptions.md')) returns 5 rows today. Appending an identical row BELOW the existing HTML comment (after line 38) still returns 5; appending the same row ABOVE the comment (before line 34) returns 6. Measured via a Node one-liner importing parseExceptionsTable from scripts/check-audit-exceptions.mjs.
+- next: cadence milestone propose
+
+parseExceptionsTable stops at the first non-table-row line. docs/security/audit-exceptions.md places an HTML-comment 'how to add a row' template immediately after the last real row. The comment's own text says to append above it, so following the instruction works -- but appending below it produces an exception that parses to nothing and fails CI with 'not listed', with no diagnostic pointing at the placement. Correct and incorrect placement look identical in the rendered Markdown. The inverse case (a template row INSIDE the comment being ignored) is already proven safe and tested at security-ci.test.ts:207 -- this covers only the untested directional case.
+
+## rec-20260804-003 — A rec archived as shipped by a ship-no-code decision is invisible to the documented dedup procedure
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: intelligence, process
+- files: packages/core/src/cli/commands/recommendation.ts, .cadence/intelligence/recommendations.json
+- evidence: cadence recommendation list does not contain rec-20260801-010; cadence recommendation list --archived does. cadence decision show dec-20260801-003 reports 'Decision: ship no code this phase' plus an unmet revisit trigger (3 non-mock settles each persisting >=1 code-review finding). Discovered 2026-08-04 while dedupping for scout-20260804-integrity-release against a handoff that itself listed rec-20260801-010 in its 'existing, do not duplicate' table.
+- next: cadence milestone propose
+
+rec-20260801-010 (finding message-drift dedup) is archived with status shipped, shippedRef phase 246 / PR #356. Its linked decision dec-20260801-003 states 'Decision: ship no code this phase' with a revisit trigger -- i.e. the underlying defect was deferred, not fixed. Because 'cadence recommendation list' shows only the active set by default, an agent following the standing dedup-first rule cannot see it and could refile the same defect. Needs either a distinct terminal state for deferred-by-decision, a list surface that includes archived recs carrying an unmet decision trigger, or a doc change making --archived mandatory in the dedup step.
+
+## rec-20260804-004 — Two sibling worktrees each re-claim nearly every phase number 2-249, making worktree-phases a permanently-warning check
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: process, worktrees
+- files: .claude/worktrees/
+- evidence: git worktree list shows 3 entries (main + the two above). cadence doctor reports 'warning worktree-phases: phase number collision across worktrees' enumerating roughly 2..249, as 1 of 3 problems across 20 checks (exit 0). git log shows phases 246/247/248/249/250/251 all merged directly to main (PRs #365-#369), not via feat/kernel-assurance-v2. Phases 252+ (this release) are outside the collision footprint, so this release's own phases are unaffected.
+- next: cadence milestone propose
+
+cadence doctor's worktree-phases check reports a collision footprint spanning essentially the whole phase history, sourced from two worktrees: .claude/worktrees/kernel-arc-docs-review (feat/kernel-assurance-v2 @ 5d5ec8b6) and .claude/worktrees/phase249-refused-settle-post-gate (feat/post-gate-refusal-summaries-phase-249 @ e1aba70b). Both carry a full .cadence/phases tree, so every historical phase reads as contested. kernel-arc-docs-review in particular sits on a branch-naming convention (a long-lived feat/kernel-assurance-v2 feature branch) that phases 246-251 show has since been superseded -- work now lands directly on main -- suggesting this worktree may be an abandoned holdover. OPERATOR DECISION ONLY: per CLAUDE.md's Zombie Session rule, neither worktree may be removed until confirmed dead. Filing this to move the warning from untriaged to tracked, satisfying the v1.55 Definition of Done's 'no untriaged release-blocking warning' bar without touching either tree.
+
+## rec-20260804-005 — Repo's own gates.evidenceFloor (mention) sits below the solo preset default (assertion)
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: config, gates
+- files: .cadence/config.json, packages/types/src/config.ts, packages/core/src/tutorial/fixtures.ts
+- evidence: cat .cadence/config.json shows gates.evidenceFloor: "mention" (lines ~112-115). packages/types/src/config.ts:593 shows defaultConfig.gates.evidenceFloor matches the schema default; packages/types/src/config.ts:608 shows presets.solo.gates.evidenceFloor: 'assertion'. Phases 249-251's *-SUMMARY.json record evidence: 'executed' per AC except one named bypass (249 AC-1, via --evidence-floor-bypass).
+- next: cadence milestone propose
+
+This repo's .cadence/config.json sets gates.evidenceFloor to 'mention' -- the Zod schema's back-compat default, not an adopted preset. All three shipped presets set a higher floor: solo -> 'assertion', team -> 'executed', production -> 'executed'. verification.coverageMode is already 'assertion' here, and phases 249/250/251 all recorded evidence: 'executed' (a rung above assertion) for every non-bypassed AC, so raising the floor to match is low-risk and mostly just formalizes what's already happening in practice.
+
+## rec-20260804-006 — ci-success does not aggregate Security/CodeQL, and they are not required checks by any other route
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security, ci
+- files: .github/workflows/ci.yml, .github/workflows/security.yml, .github/workflows/codeql.yml
+- evidence: gh api repos/thomas-powers-jr/cadence/branches/main/protection --jq '.required_status_checks.contexts' returns ["ci-success"] only (run 2026-08-04). .github/workflows/ci.yml:47-49 shows ci-success's needs: [test]. command grep -rnE 'always\(\)|needs:' .github/workflows/ shows ci.yml's ci-success is the only if: always() + explicit-result-check job in the repo.
+- next: cadence milestone propose
+
+ci.yml's ci-success job (the sole required status check on main) has needs: [test] only -- Security and CodeQL workflows are separate, unaggregated jobs. GitHub branch protection's required_status_checks.contexts is exactly ["ci-success"], confirmed via the live API, so a red Security workflow (e.g. an undocumented high-severity advisory) blocks nothing: PRs merge regardless. ci-success's own if: always() + explicit needs.test.result string-comparison pattern (ci.yml:47-58) is the only aggregation template in the repo's 6 workflow files and is directly reusable.
