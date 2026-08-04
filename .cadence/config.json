@@ -111,7 +111,7 @@
   },
   "gates": {
     "sealed": [],
-    "evidenceFloor": "mention"
+    "evidenceFloor": "assertion"
   },
   "resume": {
     "crossWorktree": true,

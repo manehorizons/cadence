@@ -1205,22 +1205,6 @@ rec-20260801-010 (finding message-drift dedup) is archived with status shipped, 
 
 cadence doctor's worktree-phases check reports a collision footprint spanning essentially the whole phase history, sourced from two worktrees: .claude/worktrees/kernel-arc-docs-review (feat/kernel-assurance-v2 @ 5d5ec8b6) and .claude/worktrees/phase249-refused-settle-post-gate (feat/post-gate-refusal-summaries-phase-249 @ e1aba70b). Both carry a full .cadence/phases tree, so every historical phase reads as contested. kernel-arc-docs-review in particular sits on a branch-naming convention (a long-lived feat/kernel-assurance-v2 feature branch) that phases 246-251 show has since been superseded -- work now lands directly on main -- suggesting this worktree may be an abandoned holdover. OPERATOR DECISION ONLY: per CLAUDE.md's Zombie Session rule, neither worktree may be removed until confirmed dead. Filing this to move the warning from untriaged to tracked, satisfying the v1.55 Definition of Done's 'no untriaged release-blocking warning' bar without touching either tree.
 
-## rec-20260804-005 — Repo's own gates.evidenceFloor (mention) sits below the solo preset default (assertion)
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: config, gates
-- files: .cadence/config.json, packages/types/src/config.ts, packages/core/src/tutorial/fixtures.ts
-- evidence: cat .cadence/config.json shows gates.evidenceFloor: "mention" (lines ~112-115). packages/types/src/config.ts:593 shows defaultConfig.gates.evidenceFloor matches the schema default; packages/types/src/config.ts:608 shows presets.solo.gates.evidenceFloor: 'assertion'. Phases 249-251's *-SUMMARY.json record evidence: 'executed' per AC except one named bypass (249 AC-1, via --evidence-floor-bypass).
-- next: cadence milestone propose
-
-This repo's .cadence/config.json sets gates.evidenceFloor to 'mention' -- the Zod schema's back-compat default, not an adopted preset. All three shipped presets set a higher floor: solo -> 'assertion', team -> 'executed', production -> 'executed'. verification.coverageMode is already 'assertion' here, and phases 249/250/251 all recorded evidence: 'executed' (a rung above assertion) for every non-bypassed AC, so raising the floor to match is low-risk and mostly just formalizes what's already happening in practice.
-
 ## rec-20260804-006 — ci-success does not aggregate Security/CodeQL, and they are not required checks by any other route
 
 - status: candidate

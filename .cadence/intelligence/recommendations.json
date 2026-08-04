@@ -2230,37 +2230,6 @@
       "updatedAt": "2026-08-04T21:33:05.971Z"
     },
     {
-      "id": "rec-20260804-005",
-      "title": "Repo's own gates.evidenceFloor (mention) sits below the solo preset default (assertion)",
-      "summary": "This repo's .cadence/config.json sets gates.evidenceFloor to 'mention' -- the Zod schema's back-compat default, not an adopted preset. All three shipped presets set a higher floor: solo -> 'assertion', team -> 'executed', production -> 'executed'. verification.coverageMode is already 'assertion' here, and phases 249/250/251 all recorded evidence: 'executed' (a rung above assertion) for every non-bypassed AC, so raising the floor to match is low-risk and mostly just formalizes what's already happening in practice.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "config",
-        "gates"
-      ],
-      "affectedFiles": [
-        ".cadence/config.json",
-        "packages/types/src/config.ts",
-        "packages/core/src/tutorial/fixtures.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260804-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260804-integrity-release",
-      "createdAt": "2026-08-04T21:33:15.314Z",
-      "updatedAt": "2026-08-04T21:33:15.314Z"
-    },
-    {
       "id": "rec-20260804-006",
       "title": "ci-success does not aggregate Security/CodeQL, and they are not required checks by any other route",
       "summary": "ci.yml's ci-success job (the sole required status check on main) has needs: [test] only -- Security and CodeQL workflows are separate, unaggregated jobs. GitHub branch protection's required_status_checks.contexts is exactly [\"ci-success\"], confirmed via the live API, so a red Security workflow (e.g. an undocumented high-severity advisory) blocks nothing: PRs merge regardless. ci-success's own if: always() + explicit needs.test.result string-comparison pattern (ci.yml:47-58) is the only aggregation template in the repo's 6 workflow files and is directly reusable.",
@@ -2287,9 +2256,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "scoutId": "scout-20260804-integrity-release",
       "createdAt": "2026-08-04T21:33:29.287Z",
-      "updatedAt": "2026-08-04T21:33:29.287Z",
-      "scoutId": "scout-20260804-integrity-release"
+      "updatedAt": "2026-08-04T21:33:29.287Z"
     }
   ],
   "archived": [
@@ -6370,6 +6339,41 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-01T22:24:37.054Z",
       "updatedAt": "2026-08-03T02:33:01.629Z"
+    },
+    {
+      "id": "rec-20260804-005",
+      "title": "Repo's own gates.evidenceFloor (mention) sits below the solo preset default (assertion)",
+      "summary": "This repo's .cadence/config.json sets gates.evidenceFloor to 'mention' -- the Zod schema's back-compat default, not an adopted preset. All three shipped presets set a higher floor: solo -> 'assertion', team -> 'executed', production -> 'executed'. verification.coverageMode is already 'assertion' here, and phases 249/250/251 all recorded evidence: 'executed' (a rung above assertion) for every non-bypassed AC, so raising the floor to match is low-risk and mostly just formalizes what's already happening in practice.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "config",
+        "gates"
+      ],
+      "affectedFiles": [
+        ".cadence/config.json",
+        "packages/types/src/config.ts",
+        "packages/core/src/tutorial/fixtures.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260804-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "252-self-application-config-correction",
+      "scoutId": "scout-20260804-integrity-release",
+      "createdAt": "2026-08-04T21:33:15.314Z",
+      "updatedAt": "2026-08-04T22:35:52.428Z",
+      "shippedRef": "phase 252-self-application-config-correction (PR pending)",
+      "archivedAt": "2026-08-04T22:35:52.428Z",
+      "archiveReason": "shipped"
     }
   ]
 }
