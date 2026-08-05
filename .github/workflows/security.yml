@@ -7,8 +7,9 @@ name: Security
 # schedule in codeql.yml and is out of scope here.
 #
 # Jobs today: secret-scan (gitleaks), audit (pnpm audit vs. the documented
-# exceptions allowlist), sbom (CycloneDX SBOM + license inventory). Keep new
-# jobs additive, one per concern.
+# exceptions allowlist, plus a pnpm.overrides lockfile-coverage check), sbom
+# (CycloneDX SBOM + license inventory). Keep new jobs additive, one per
+# concern.
 on:
   push:
     branches: [main]
@@ -43,9 +44,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Fails on any high/critical advisory pnpm audit reports that is not listed
-  # in docs/security/audit-exceptions.md (or is listed but past its expiry).
-  # See docs/security/audit-exceptions.md for the policy and
-  # scripts/check-audit-exceptions.mjs for the check itself.
+  # in docs/security/audit-exceptions.md (or is listed but past its expiry),
+  # and separately fails when a pnpm.overrides target in package.json no
+  # longer covers every resolved instance of that package in
+  # pnpm-lock.yaml (pnpm's override-key matching is silent-no-op on a stale
+  # or non-intersecting key — see
+  # .cadence/phases/253-dependency-override-remediation/253-01-T3-EVIDENCE.md).
+  # See docs/security/audit-exceptions.md for the audit-exceptions policy,
+  # scripts/check-audit-exceptions.mjs for that check, and
+  # scripts/check-lockfile-overrides.mjs for the override-coverage check.
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -70,6 +77,9 @@ jobs:
 
       - name: Check pnpm audit against documented exceptions
         run: node scripts/check-audit-exceptions.mjs
+
+      - name: Check pnpm.overrides targets against the resolved lockfile
+        run: node scripts/check-lockfile-overrides.mjs
 
   # Generates a CycloneDX SBOM (full dependency graph/component inventory)
   # and a license inventory grouped by license type, uploaded as workflow

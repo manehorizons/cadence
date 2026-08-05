@@ -1540,6 +1540,27 @@
       "kind": "note",
       "summary": "gh api repos/thomas-powers-jr/cadence/branches/main/protection --jq '.required_status_checks.contexts' returns [\"ci-success\"] only (run 2026-08-04). .github/workflows/ci.yml:47-49 shows ci-success's needs: [test]. command grep -rnE 'always\\(\\)|needs:' .github/workflows/ shows ci.yml's ci-success is the only if: always() + explicit-result-check job in the repo.",
       "createdAt": "2026-08-04T21:33:29.287Z"
+    },
+    {
+      "id": "ev-20260805-001",
+      "recommendationId": "rec-20260805-001",
+      "kind": "note",
+      "summary": "grep -n action-setup .github/workflows/*.yml shows docs.yml:44 = @v4 vs ci.yml:32, release.yml:30, security.yml:61,94 = @v6 (found while filing phase 253 T7 doc note, 2026-08-04)",
+      "createdAt": "2026-08-05T01:10:20.695Z"
+    },
+    {
+      "id": "ev-20260805-002",
+      "recommendationId": "rec-20260805-002",
+      "kind": "note",
+      "summary": "phase 253 (253-dependency-override-remediation) T5 independent review, 2026-08-05: reviewer identified this as a genuine scope boundary while verifying the detector's fail-then-pass evidence",
+      "createdAt": "2026-08-05T01:24:34.767Z"
+    },
+    {
+      "id": "ev-20260805-003",
+      "recommendationId": "rec-20260804-003",
+      "kind": "note",
+      "summary": "Same defect class also reproduces for status=rejected, not just shipped: promoting rec-20260724-012 to rejected (phase 253 whole-branch review fix, 2026-08-05) hid it from the default 'cadence recommendation list' as expected, but also broke 'cadence recommendation evidence add rec-20260724-012' entirely ('recommendation not found', despite 'recommendation show rec-20260724-012' resolving it fine) -- worse than rec-20260801-010's case, where the rec is merely hidden from listing but presumably still evidence-addressable. The lookup used by evidence add appears to filter against the same active-only set as the default list, not against the full ledger the way show/promote do.",
+      "createdAt": "2026-08-05T01:42:47.051Z"
     }
   ]
 }

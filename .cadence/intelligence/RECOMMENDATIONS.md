@@ -597,22 +597,6 @@ cadence milestone premortem --add-likely-failure-mode/--add-hidden-dependency/--
 
 During phase 213's build, running 'cadence done 213-01-T1' (a fully-qualified-looking id, mirroring the DRAFT frontmatter's 213-01 phase/num prefix) succeeded silently and wrote a new orphaned '213-01-T1' key into PROGRESS.json's tasks map, instead of refusing because no task with that id exists in the active draft (real ids are bare 'T1'/'T2'/'T3'). cadence status/progress kept showing all tasks PENDING afterward with no error surfaced. This violates the repo's own 'Refuse + suggest, never silently mutate' and 'Quiet Fallback always prints a loud notice' conventions (CLAUDE.md). Caught only because status was checked immediately after; recovered by re-running done with the correct bare id and hand-editing PROGRESS.json to remove the 3 stray keys. Fix: cadence build task <id> should validate <id> against the active draft's known task ids and refuse (not silently create a new map entry) on an unknown id.
 
-## rec-20260724-012 — pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented
-
-- status: candidate
-- ready: needs-evidence
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: tooling, security, dependencies
-- files: package.json, pnpm-workspace.yaml
-- evidence: Empirically confirmed 2026-07-24: pre-existing brace-expansion override in package.json produced no effect (resolved version matched the un-overridden natural resolution); relocating to pnpm-workspace.yaml also produced no effect (no overrides section in regenerated pnpm-lock.yaml, resolved version unchanged). GHSA-mh99-v99m-4gvg documented as a time-boxed audit exception in the meantime (docs/security/audit-exceptions.md, expires 2026-08-20).
-- next: cadence milestone propose
-
-Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.
-
 ## rec-20260726-001 — Full cryptographic signing of SUMMARY.json (blocked on threat model)
 
 - status: candidate
@@ -1141,22 +1125,6 @@ packages/core/src/verify/coverage-profiles/js-ts.ts's call-expression span strat
 
 The Security workflow's 'Check pnpm audit against documented exceptions' job started failing on main's scheduled run at 2026-08-03T05:15:54Z (run 30786676416), after PR #367 merged at 04:03 UTC same day -- not caused by any source change, the advisories were newly disclosed/detected between those two timestamps. Three findings are undocumented in docs/security/audit-exceptions.md: GHSA-7p8r-x3mc-p8w7 (fast-uri, high), GHSA-mwp4-54f8-5fhr (ip-address, high), and GHSA-rgw5-rvv9-x895 (brace-expansion, high -- a DIFFERENT advisory ID than the already-documented GHSA-mh99-v99m-4gvg). Does not block the required ci-success check (which only depends on the test job, per .github/workflows/ci.yml), so PRs can still merge, but the audit gate itself is red and needs triage: either add documented exceptions (with the same reachability-analysis rigor as the existing entries) or bump the offending transitive dependencies.
 
-## rec-20260804-001 — Nothing detects a pnpm override whose target has gone stale or whose key no longer matches
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: security, build
-- files: package.json, pnpm-lock.yaml, scripts/, packages/core/tests/docs/
-- evidence: package.json pins brace-expansion@5.0.6 -> ^5.0.7 and fast-uri@3.1.2 -> ^3.1.4 (grep -A6 '"pnpm"' package.json); pnpm-lock.yaml resolves brace-expansion 5.0.7 + 2.1.2, fast-uri 3.1.4, ip-address 10.2.0 (grep -nE '^  (brace-expansion|fast-uri|ip-address)@' pnpm-lock.yaml). node scripts/check-audit-exceptions.mjs exits 1 with 4 FAIL lines across 3 GHSAs, all override-fixable. No test or CI step reads the overrides block.
-- next: cadence milestone propose
-
-Root package.json declares four pnpm.overrides. They ARE applied (pnpm-lock.yaml carries a matching overrides: block and the resolutions match), but every target is pinned to the patch floor that was current when it was written, and each key is qualified by a specific vulnerable source version. Nothing in CI or the test suite compares override targets against the versions actually resolved in the lockfile, so a target that falls behind the advisory's patched floor, a key that stops matching after the tree moves, and a second major line of the same package with no override at all are all silently invisible.
-
 ## rec-20260804-002 — audit-exceptions parser silently drops any exception row appended below the HTML template comment
 
 - status: candidate
@@ -1185,6 +1153,7 @@ parseExceptionsTable stops at the first non-table-row line. docs/security/audit-
 - areas: intelligence, process
 - files: packages/core/src/cli/commands/recommendation.ts, .cadence/intelligence/recommendations.json
 - evidence: cadence recommendation list does not contain rec-20260801-010; cadence recommendation list --archived does. cadence decision show dec-20260801-003 reports 'Decision: ship no code this phase' plus an unmet revisit trigger (3 non-mock settles each persisting >=1 code-review finding). Discovered 2026-08-04 while dedupping for scout-20260804-integrity-release against a handoff that itself listed rec-20260801-010 in its 'existing, do not duplicate' table.
+- evidence: Same defect class also reproduces for status=rejected, not just shipped: promoting rec-20260724-012 to rejected (phase 253 whole-branch review fix, 2026-08-05) hid it from the default 'cadence recommendation list' as expected, but also broke 'cadence recommendation evidence add rec-20260724-012' entirely ('recommendation not found', despite 'recommendation show rec-20260724-012' resolving it fine) -- worse than rec-20260801-010's case, where the rec is merely hidden from listing but presumably still evidence-addressable. The lookup used by evidence add appears to filter against the same active-only set as the default list, not against the full ledger the way show/promote do.
 - next: cadence milestone propose
 
 rec-20260801-010 (finding message-drift dedup) is archived with status shipped, shippedRef phase 246 / PR #356. Its linked decision dec-20260801-003 states 'Decision: ship no code this phase' with a revisit trigger -- i.e. the underlying defect was deferred, not fixed. Because 'cadence recommendation list' shows only the active set by default, an agent following the standing dedup-first rule cannot see it and could refile the same defect. Needs either a distinct terminal state for deferred-by-decision, a list surface that includes archived recs carrying an unmet decision trigger, or a doc change making --archived mandatory in the dedup step.
@@ -1220,3 +1189,35 @@ cadence doctor's worktree-phases check reports a collision footprint spanning es
 - next: cadence milestone propose
 
 ci.yml's ci-success job (the sole required status check on main) has needs: [test] only -- Security and CodeQL workflows are separate, unaggregated jobs. GitHub branch protection's required_status_checks.contexts is exactly ["ci-success"], confirmed via the live API, so a red Security workflow (e.g. an undocumented high-severity advisory) blocks nothing: PRs merge regardless. ci-success's own if: always() + explicit needs.test.result string-comparison pattern (ci.yml:47-58) is the only aggregation template in the repo's 6 workflow files and is directly reusable.
+
+## rec-20260805-001 — docs.yml pins pnpm/action-setup@v4 while other workflows use @v6
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: ci
+- files: .github/workflows/docs.yml
+- evidence: grep -n action-setup .github/workflows/*.yml shows docs.yml:44 = @v4 vs ci.yml:32, release.yml:30, security.yml:61,94 = @v6 (found while filing phase 253 T7 doc note, 2026-08-04)
+- next: cadence milestone propose
+
+The docs workflow (.github/workflows/docs.yml:44) pins pnpm/action-setup@v4; ci.yml, release.yml, and both jobs in security.yml pin @v6. Minor version-pin drift, no known CVE — align docs.yml to @v6 for consistency.
+
+## rec-20260805-002 — check-lockfile-overrides.mjs cannot detect an override floor that is stale relative to the real upstream patched version
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security
+- files: scripts/check-lockfile-overrides.mjs
+- evidence: phase 253 (253-dependency-override-remediation) T5 independent review, 2026-08-05: reviewer identified this as a genuine scope boundary while verifying the detector's fail-then-pass evidence
+- next: cadence milestone propose
+
+The phase-253 detector (scripts/check-lockfile-overrides.mjs) only checks internal lockfile consistency: that a resolved instance satisfies its own declared pnpm.overrides target. It cannot catch a target whose floor is self-consistent with the lockfile but sits below the real current upstream patched version (the exact original failure shape phase 253 corrected for fast-uri/brace-expansion, where a stale-but-internally-satisfied override masked a still-vulnerable resolved version). Catching that class needs a live-vulnerability cross-check (pnpm audit's job, via scripts/check-audit-exceptions.mjs), not a lockfile-internal consistency check. Flagged by phase 253's T5 independent reviewer; recorded per the repo's Unlogged Audit Finding convention rather than left implicit.

@@ -94,20 +94,41 @@ a deliverable.
 ## 4. Resolved conflict — read before Workstream A
 
 Two prior assessments disagreed on whether `pnpm.overrides` remediated the
-`fast-uri` and `brace-expansion` advisories. **Resolved: they did not.**
+`fast-uri` and `brace-expansion` advisories. **Corrected by phase 253's
+empirical re-investigation: the prior diagnosis — that the mechanism
+doesn't work — was itself wrong.** `pnpm.overrides` works correctly under
+this repo's pinned `packageManager` (`pnpm@9.12.0`); the real defect was
+stale override targets, not the mechanism itself.
 
-`docs/security/audit-exceptions.md:33` records, empirically confirmed in a prior
-phase: pnpm 9.12.0 (this repo's pinned `packageManager`) deprecated reading
-`pnpm.overrides` from `package.json` — it warns, then ignores — and does not
-implement the documented replacement (`pnpm-workspace.yaml`'s `overrides:` key)
-either. Moving the override there produced no `overrides:` section in the
-regenerated lockfile and no resolution change.
+`docs/security/audit-exceptions.md:33` previously recorded a misdiagnosis:
+that pnpm 9.12.0 deprecated reading `pnpm.overrides` from `package.json` and
+does not implement its documented replacement either. That was based on
+a `[WARN] The "pnpm" field in package.json is no longer read by pnpm...`
+message which, empirically re-derived by two independent operators in
+phase 253 (transcripts in
+`.cadence/phases/253-dependency-override-remediation/253-01-T3-EVIDENCE.md`),
+is printed by a **globally-installed newer pnpm launcher** (e.g. v11.2.2)
+self-switching and warning about its own irrelevant behavior *before* it
+delegates to this repo's `packageManager`-pinned `pnpm@9.12.0`, which then
+reads and applies `pnpm.overrides` correctly. `corepack pnpm@9.12.0` never
+prints the warning, even at debug loglevel.
+
+The real mechanism: an override key `"pkg@<selector>": "<target>"` fires
+only when `<selector>` intersects the *declared* range of the dependent
+requesting the package — not whatever version would naturally resolve. A
+selector that no longer intersects any declaring dependent's range is
+**silently ignored, no error** — a real, distinct failure mode, but **not**
+what happened here. This repo's `brace-expansion@5.0.6 → ^5.0.7` and
+`fast-uri@3.1.2 → ^3.1.4` entries *did* fire and pin the tree to those exact
+targets (confirmed against the pre-phase-253 lockfile) — the defect was that
+those targets were themselves stale, pinned below the current patched floor,
+not that the overrides went unmatched.
 
 **Consequences:**
 
-- The `fast-uri@3.1.2 → ^3.1.4` and `brace-expansion@5.0.6 → ^5.0.7` entries in root `package.json` are inert. Observed lockfile resolutions came from natural transitive resolution, not from those declarations.
-- `brace-expansion@5.0.7` is still resolved and the exception text states patched is `>=5.0.8` — so it remains vulnerable. A second copy at `2.1.2` is also present.
-- Any remediation plan that assumes overrides work will silently fail. **`rec-20260724-012` is therefore a prerequisite for, not a peer of, the advisory work.**
+- The `fast-uri@3.1.2 → ^3.1.4` and `brace-expansion@5.0.6 → ^5.0.7` entries in root `package.json` were stale — pinned below the current patched floor — and the `brace-expansion` 2.x resolved line and `ip-address` had no override of their own at all. Nothing detected the drift.
+- `brace-expansion@5.0.7` was still resolved and the exception text states patched is `>=5.0.8` — so it remained vulnerable. A second copy at `2.1.2` is also present, with no override targeting it.
+- Any remediation plan that assumed overrides were broken and reached for a pnpm major-version upgrade or a devDependency-pin workaround would have solved the wrong problem. **`rec-20260724-012`, filed under the mistaken diagnosis, is superseded by phase 253's correction**, which refreshed the four override targets to their real patched floors, added the missing `ip-address` override, and added `scripts/check-lockfile-overrides.mjs` — a CI detector that fails the build the next time a target drifts below what's actually resolved.
 
 Verify this independently before acting on it.
 
@@ -168,23 +189,34 @@ Present this split as a decision before starting G. Do not decide unilaterally.
 
 ### Phase A — Repair the dependency-control mechanism
 
-**Rec:** `rec-20260724-012`
+**Corrected (phase 253, `253-dependency-override-remediation`):** the original
+diagnosis below, that pnpm 9.12.0 does not read `pnpm.overrides` at all, was
+wrong. Root `package.json`'s `pnpm.overrides` mechanism works correctly under
+this repo's pinned
+`packageManager` (`pnpm@9.12.0`); the misleading warning came from a
+globally-installed newer pnpm launcher self-switching before delegating to the
+pinned binary (see §4). The real, much smaller defect: four override targets
+were stale — pinned below the current patched floor — `brace-expansion`'s 2.x
+resolved line had no override of its own, `ip-address` had no override at
+all, and nothing detected the drift.
 
-Root `package.json` declares `pnpm.overrides` that pnpm 9.12.0 ignores. The
-declarations communicate remediation that does not occur.
+**Rec:** `rec-20260724-012`, filed under a mistaken premise this phase
+disproves; superseded by phase 253's correction.
 
-**Tasks**
+**Tasks — corrected to what the real defect actually required:**
 
-- **A.1** — Reproduce the inertness. Capture the deprecation warning verbatim. Do not accept §4 on faith.
-- **A.2** — Choose one *verified* mechanism: upgrade pnpm to a version where overrides work; or replace with direct root devDependency pins; or another proven lockfile strategy. Note `security.yml` already shells out to `corepack pnpm@11.x` for the audit itself because pnpm <11 hits npm's retired legacy audit endpoint (410 Gone, pnpm/pnpm#11265) — a pnpm major upgrade may resolve two problems at once. Evaluate that path explicitly.
-- **A.3** — Remove every dead override. Do not retain inert config for documentation value.
-- **A.4** — Prove each replacement constraint in `pnpm-lock.yaml`.
-- **A.5** — Add a test or script that fails when an intended forced version is absent from the lockfile. This defect existed *because* nothing detected it.
-- **A.6** — Reconcile the pnpm version across `packageManager`, all workflows, `.githooks/`, and docs to one consistent value.
+- **A.1** — Empirically determine the override key grammar (there was no unreachable, dead-on-arrival config to reproduce). Capture the misleading launcher warning's real source, and confirm overrides fire on declared-range intersection with the requesting dependent, not natural resolution. Do not accept §4 on faith — verify independently.
+- **A.2** — Refresh the four override targets to their real patched floors (fast-uri >=3.1.5, brace-expansion 5.x line >=5.0.9, brace-expansion 2.x line as its own new override >=2.1.4, ip-address as a new override >=10.3.1). No pnpm major-version upgrade and no devDependency-pin workaround are needed once the true mechanism is understood — and pnpm 11.0.0–11.0.8 has its own separate, worse override-ignoring regression, so an upgrade is a net-worse path, not a shortcut. `security.yml`'s separate `corepack pnpm@11.x` shell-out for the audit itself (working around npm's retired legacy audit endpoint, pnpm/pnpm#11265) is orthogonal to `pnpm.overrides` correctness — do not conflate the two.
+- **A.3** — Do NOT remove any of the four existing overrides — they are load-bearing and functional; correct their targets in place.
+- **A.4** — Prove every resolved instance (including both brace-expansion lines) satisfies its refreshed target directly against `pnpm-lock.yaml`.
+- **A.5** — Add a detector that fails when a resolved instance no longer satisfies its override target. This defect existed *because* nothing detected drift, not because the mechanism was broken.
+- **A.6** — The `packageManager`-pinned `pnpm@9.12.0` that actually governs install/build/test/lint behavior is consistent across workflows, `.githooks/`, and docs; leave that pin untouched (no upgrade). This is separate from `.github/workflows/docs.yml:44`'s `pnpm/action-setup@v4` pin, which is inconsistent with every other workflow's `@v6` (`ci.yml`, `security.yml`, `release.yml`) — a real, known, minor discrepancy in the action-setup step version, not the `packageManager` pin itself. Phase 253's task T7 files a low-priority recommendation for that mismatch rather than fixing it inline.
 
-**Bar:** no known-dead override remains; every replacement proven in the lockfile;
-clean install and `--frozen-lockfile` install both succeed; a deliberately-removed
-pin fails the new detector.
+**Bar:** every override target names its current patched floor; every resolved
+instance (including both `brace-expansion` lines) satisfies its target in the
+lockfile; clean install and `--frozen-lockfile` install both succeed; a
+deliberately-reverted target fails the new detector, and passes again once
+restored.
 
 ---
 
@@ -584,13 +616,19 @@ scope** — file adjacent findings as recommendations and continue.
 
 ## 14. Begin here
 
-**Phase A**, not Phase B — the dependency-control mechanism must work before
-advisory remediation can be trusted. Reproduce the override inertness, capture the
-deprecation warning verbatim, and evaluate the pnpm-upgrade path (which may also
-resolve the legacy-audit-endpoint workaround in `security.yml`).
+**Phase A**, not Phase B — corrected by phase 253: the dependency-control
+mechanism already works (`pnpm.overrides` under `pnpm@9.12.0` applies
+correctly; see §4). What had to happen before advisory remediation could be
+trusted was empirically confirming the real mechanism (declared-range
+intersection, and the misleading warning's true source — a globally
+installed newer pnpm launcher self-switching, not pnpm 9.12.0 itself), then
+refreshing the four stale override targets to their real patched floors,
+adding the missing `ip-address` override, and adding a CI detector so a
+future stale target fails the build instead of silently going dead again —
+no pnpm-upgrade path was needed or taken.
 
-Do not edit the exceptions table until reachability and upgrade options are
-independently verified.
+Do not edit the exceptions table until the corrected mechanism and refreshed
+targets are independently verified.
 
 ---
 
