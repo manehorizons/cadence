@@ -2070,12 +2070,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260803-005"
+        "ev-20260803-005",
+        "ev-20260805-004"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-03T22:02:34.472Z",
-      "updatedAt": "2026-08-03T22:02:34.472Z"
+      "updatedAt": "2026-08-05T03:51:52.866Z"
     },
     {
       "id": "rec-20260804-002",
@@ -6429,12 +6430,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "253-dependency-override-remediation",
-      "scoutId": "scout-20260804-integrity-release",
-      "createdAt": "2026-08-04T21:32:32.228Z",
-      "updatedAt": "2026-08-05T01:45:56.106Z",
       "shippedRef": "phase 253-dependency-override-remediation (PR pending)",
+      "scoutId": "scout-20260804-integrity-release",
       "archivedAt": "2026-08-05T01:45:56.106Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-04T21:32:32.228Z",
+      "updatedAt": "2026-08-05T01:45:56.106Z"
     }
   ]
 }
