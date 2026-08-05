@@ -1175,22 +1175,6 @@ rec-20260801-010 (finding message-drift dedup) is archived with status shipped, 
 
 cadence doctor's worktree-phases check reports a collision footprint spanning essentially the whole phase history, sourced from two worktrees: .claude/worktrees/kernel-arc-docs-review (feat/kernel-assurance-v2 @ 5d5ec8b6) and .claude/worktrees/phase249-refused-settle-post-gate (feat/post-gate-refusal-summaries-phase-249 @ e1aba70b). Both carry a full .cadence/phases tree, so every historical phase reads as contested. kernel-arc-docs-review in particular sits on a branch-naming convention (a long-lived feat/kernel-assurance-v2 feature branch) that phases 246-251 show has since been superseded -- work now lands directly on main -- suggesting this worktree may be an abandoned holdover. OPERATOR DECISION ONLY: per CLAUDE.md's Zombie Session rule, neither worktree may be removed until confirmed dead. Filing this to move the warning from untriaged to tracked, satisfying the v1.55 Definition of Done's 'no untriaged release-blocking warning' bar without touching either tree.
 
-## rec-20260804-006 — ci-success does not aggregate Security/CodeQL, and they are not required checks by any other route
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: security, ci
-- files: .github/workflows/ci.yml, .github/workflows/security.yml, .github/workflows/codeql.yml
-- evidence: gh api repos/thomas-powers-jr/cadence/branches/main/protection --jq '.required_status_checks.contexts' returns ["ci-success"] only (run 2026-08-04). .github/workflows/ci.yml:47-49 shows ci-success's needs: [test]. command grep -rnE 'always\(\)|needs:' .github/workflows/ shows ci.yml's ci-success is the only if: always() + explicit-result-check job in the repo.
-- next: cadence milestone propose
-
-ci.yml's ci-success job (the sole required status check on main) has needs: [test] only -- Security and CodeQL workflows are separate, unaggregated jobs. GitHub branch protection's required_status_checks.contexts is exactly ["ci-success"], confirmed via the live API, so a red Security workflow (e.g. an undocumented high-severity advisory) blocks nothing: PRs merge regardless. ci-success's own if: always() + explicit needs.test.result string-comparison pattern (ci.yml:47-58) is the only aggregation template in the repo's 6 workflow files and is directly reusable.
-
 ## rec-20260805-001 — docs.yml pins pnpm/action-setup@v4 while other workflows use @v6
 
 - status: candidate
@@ -1222,3 +1206,31 @@ The docs workflow (.github/workflows/docs.yml:44) pins pnpm/action-setup@v4; ci.
 - next: cadence milestone propose
 
 The phase-253 detector (scripts/check-lockfile-overrides.mjs) only checks internal lockfile consistency: that a resolved instance satisfies its own declared pnpm.overrides target. It cannot catch a target whose floor is self-consistent with the lockfile but sits below the real current upstream patched version (the exact original failure shape phase 253 corrected for fast-uri/brace-expansion, where a stale-but-internally-satisfied override masked a still-vulnerable resolved version). Catching that class needs a live-vulnerability cross-check (pnpm audit's job, via scripts/check-audit-exceptions.mjs), not a lockfile-internal consistency check. Flagged by phase 253's T5 independent reviewer; recorded per the repo's Unlogged Audit Finding convention rather than left implicit.
+
+## rec-20260805-003 — DRAFT parser's task action field silently truncates multi-line content to its first line
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 40%
+- decay: fresh
+- areas: core-parsing
+- next: cadence milestone propose
+
+packages/core/src/parse/draft-parser.ts's parseTasks extracts a task's action via a regex with no 's' flag (/-\s*action:\s*(.+)/), capturing only the first line. Any multi-line action body (e.g. a RUNBOOK-style block added after the first sentence) is silently dropped for every machine consumer that reconstructs task text from the parsed action field -- packages/core/src/dispatch/packet.ts and packages/core/src/verify/plan-review.ts both do this. Humans reading the raw DRAFT.md (and cadence draft check, which reads full section text) see the complete content; only field-level machine consumers lose it. Found during phase 255's T5 (255-01-DRAFT.md), which relies on a multi-line RUNBOOK for an unambiguous operator instruction -- confirmed via direct parseDraftMd test that task.action for T5 contains only the first line, dropping the RUNBOOK's ordering constraint and DONE-does-not-mean-executed disambiguation.
+
+## rec-20260805-004 — js-ts coverage profile mismasks regex literals containing quote characters, silently corrupting downstream span detection
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 40%
+- decay: fresh
+- areas: core-verify
+- next: cadence milestone propose
+
+packages/core/src/verify/coverage-profiles/mask.ts's classify() only knows string delimiters ', ", and ` (js-ts.ts's syntax.strings table) -- it has no concept of a /regex/ literal as a distinct construct. A regex literal containing an odd-parity sequence of unescaped ' or " characters (e.g. /needs\.audit\.result.*!=\s*["']success["']/ ) causes classify() to open a spurious string mode partway through the regex that is never legitimately closed, silently misclassifying all subsequent real code (including ) and } characters needed for paren/brace depth tracking) as string content until an unrelated later quote happens to resync it by coincidence. This corrupts findMatchingParenIndex/callExpressionBlock's span resolution for every it()/test() block between the triggering regex and the accidental resync point -- observed directly in phase 255's packages/core/tests/docs/security-ci.test.ts, where one such regex caused 3 of 5 new AC-tagged describe blocks to report 'token found but not inside any test block recognized by profile js-ts' despite syntactically correct, passing test code. Confirmed via cadence verify coverage --explain and fixed locally in that file by replacing embedded quote characters with hex escapes (\x27/\x22), but the underlying mask.ts/js-ts.ts gap is unfixed and would silently affect any other test file in the repo (or written in the future) whose regex-literal assertions embed a ' or " character with odd parity -- coverage could report false negatives (a real AC test wrongly refused) or, worse, false positives if the resync boundary happens to land such that an unrelated it() block's span absorbs content it shouldn't.

@@ -417,3 +417,167 @@ describe('security workflow — sbom job', () => {
     expect(yml).toContain('licenses.json');
   });
 });
+
+// Resolve the repo-root phase 255 DRAFT from this test file's location:
+// packages/core/tests/docs → ../../../../.cadence/phases/255-make-security-merge-blocking/255-01-DRAFT.md
+const PHASE_255_DRAFT_MD = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  '..',
+  '..',
+  '.cadence',
+  'phases',
+  '255-make-security-merge-blocking',
+  '255-01-DRAFT.md',
+);
+
+// 255-01 / AC-1 (phase 255) — security-success must aggregate secret-scan
+// and audit only (sbom deliberately excluded -- it's a compliance-artifact
+// generation step, not a security verdict), mirroring ci-success's
+// if: always() + explicit needs.<job>.result string-comparison pattern.
+// Sliced from `\n  security-success:` to the end of the file (it is the
+// last job in security.yml), the same slice-between-job-markers technique
+// the 253-01 audit-job block above uses. Qualifier and AC id kept apart in
+// this comment and in the describe() title below; the asserting it() titles
+// use the hard-adjacent form on purpose — see the 253-01/AC-5 note above for
+// why (the coverage scanner records only the first qualified occurrence per
+// AC token per file).
+describe('security workflow — security-success aggregator (255-01 / AC-1)', () => {
+  const yml = readFileSync(SECURITY_YML, 'utf8');
+  const jobStart = yml.indexOf('\n  security-success:');
+  const job = yml.slice(jobStart);
+
+  it('defines security-success needing exactly [secret-scan, audit], with sbom excluded (255-01/AC-1)', () => {
+    expect(jobStart).toBeGreaterThan(-1);
+    expect(job).toMatch(/needs:\s*\[secret-scan,\s*audit\]/);
+    expect(job).not.toMatch(/needs:\s*\[[^\]]*sbom[^\]]*\]/);
+  });
+
+  it('runs security-success with if: always() so it reports even when a dependency is skipped (255-01/AC-1)', () => {
+    expect(job).toMatch(/if:\s*always\(\)/);
+  });
+
+  it("string-compares both needs['secret-scan'].result and needs.audit.result to success (255-01/AC-1)", () => {
+    // Single-line comparisons in the actual step body — `.` (no dotAll) is
+    // deliberately used instead of `[\s\S]*` here so this can't cross a line
+    // boundary and pair a mutated/broken secret-scan comparison with the
+    // unrelated audit comparison's own `!= "success"` a few lines below.
+    expect(job).toMatch(/needs\[[\x27\x22]secret-scan[\x27\x22]\]\.result.*!=\s*[\x22\x27]success[\x22\x27]/);
+    expect(job).toMatch(/needs\.audit\.result.*!=\s*[\x22\x27]success[\x22\x27]/);
+  });
+});
+
+// 255-01 / AC-2 (phase 255) — codeql-success must give CodeQL a stable,
+// non-matrix-derived required-check name, needing only [analyze], with the
+// same if: always() + string-compare-to-success pattern as ci-success and
+// security-success. Sliced from `\n  codeql-success:` to the end of the
+// file (it is the last job in codeql.yml). Qualifier/AC-id spacing follows
+// the same convention noted above.
+describe('CodeQL workflow — codeql-success aggregator (255-01 / AC-2)', () => {
+  const yml = readFileSync(CODEQL_YML, 'utf8');
+  const jobStart = yml.indexOf('\n  codeql-success:');
+  const job = yml.slice(jobStart);
+
+  it('defines codeql-success needing exactly [analyze] (255-01/AC-2)', () => {
+    expect(jobStart).toBeGreaterThan(-1);
+    expect(job).toMatch(/needs:\s*\[analyze\]/);
+  });
+
+  it('runs codeql-success with if: always() so it reports even when analyze is skipped (255-01/AC-2)', () => {
+    expect(job).toMatch(/if:\s*always\(\)/);
+  });
+
+  it('string-compares needs.analyze.result to "success" (255-01/AC-2)', () => {
+    // `.` (no dotAll), not `[\s\S]*` — see the 255-01/AC-1 block above for
+    // why: keeps this pinned to the single line where the real comparison
+    // lives instead of matching across an unrelated line.
+    expect(job).toMatch(/needs\.analyze\.result.*!=\s*[\x22\x27]success[\x22\x27]/);
+  });
+});
+
+// 255-01 / AC-3 (phase 255) — the honest gate-scope distinction must be
+// documented, not just implemented: codeql-success gates on the analyze job
+// *completing*, not on zero CodeQL findings (CodeQL's analyze step does not
+// fail its own job by default on alerts), while security-success's
+// secret-scan/audit dependencies genuinely fail on real conditions. Also
+// asserts the audit-exceptions.md "What blocks a merge" section states the
+// not-yet-a-required-check caveat, so a reader can't come away believing
+// either aggregator already blocks anything today.
+describe('audit exceptions doc + CodeQL workflow — honest gate-scope note (255-01 / AC-3)', () => {
+  const md = readFileSync(AUDIT_EXCEPTIONS_MD, 'utf8');
+  const codeqlYml = readFileSync(CODEQL_YML, 'utf8');
+  // Collapse whitespace (including line wraps) so a substring that happens
+  // to wrap across two lines in the source markdown still matches — several
+  // of the sentences asserted below wrap mid-phrase in the actual file.
+  const normalizedMd = md.replace(/\s+/g, ' ');
+
+  it('documents a "What blocks a merge" section in audit-exceptions.md (255-01/AC-3)', () => {
+    expect(md).toContain('## What blocks a merge');
+  });
+
+  it('states neither aggregator is a required check yet, alongside describing what "blocks a merge" (255-01/AC-3)', () => {
+    expect(md).toContain('blocks a merge');
+    expect(md).toContain('neither check below actually blocks a merge yet');
+  });
+
+  it('states codeql-success only means the analyze job ran, not that CodeQL found nothing (255-01/AC-3)', () => {
+    expect(codeqlYml).toContain('does not fail its job by default when it finds alerts');
+    expect(normalizedMd).toContain("does not fail its own job by default when it finds alerts");
+  });
+});
+
+// 255-01 / AC-4 (phase 255) — a meta-assertion that both new aggregator
+// jobs are present and wired the same way: needing a job list, gated with
+// if: always(). The detailed needs-list/string-compare assertions live in
+// the 255-01/AC-1 and 255-01/AC-2 blocks above; this is the combined token
+// proving both aggregators are covered by tests.
+describe('security + codeql workflows — both merge-blocking aggregators covered (255-01 / AC-4)', () => {
+  const securityYml = readFileSync(SECURITY_YML, 'utf8');
+  const codeqlYml = readFileSync(CODEQL_YML, 'utf8');
+
+  it('security-success and codeql-success both exist as if: always() jobs with a needs: list (255-01/AC-4)', () => {
+    const securityJob = securityYml.slice(securityYml.indexOf('\n  security-success:'));
+    const codeqlJob = codeqlYml.slice(codeqlYml.indexOf('\n  codeql-success:'));
+    expect(securityJob).toMatch(/if:\s*always\(\)[\s\S]*needs:\s*\[/);
+    expect(codeqlJob).toMatch(/if:\s*always\(\)[\s\S]*needs:\s*\[/);
+  });
+});
+
+// 255-01 / AC-5 (phase 255) — the branch-protection follow-up must be
+// recorded as an explicit, sequenced, non-automated operator task in the
+// DRAFT (T5), not a side note: a human, via GitHub Settings (or an
+// equivalent `gh api` call typed by that human), only after this PR has
+// merged and both aggregators have reported at least once on main. Sliced
+// from `### T5:` to the next `## Boundaries` heading.
+describe('phase 255 DRAFT — T5 branch-protection runbook (255-01 / AC-5)', () => {
+  const draft = readFileSync(PHASE_255_DRAFT_MD, 'utf8');
+  const t5Start = draft.indexOf('### T5:');
+  const t5End = draft.indexOf('## Boundaries', t5Start);
+  const t5 = draft.slice(t5Start, t5End);
+
+  it('names both exact branch-protection context strings, security-success and codeql-success (255-01/AC-5)', () => {
+    expect(t5Start).toBeGreaterThan(-1);
+    expect(t5End).toBeGreaterThan(t5Start);
+    expect(t5).toContain('security-success');
+    expect(t5).toContain('codeql-success');
+  });
+
+  it('states this is a manual, human, GitHub Settings operator action, not a cadence/CLI command (255-01/AC-5)', () => {
+    expect(t5).toContain('Manual execution only');
+    expect(t5).toContain('a human with repo admin rights');
+    expect(t5).toContain('GitHub web UI');
+    expect(t5).toContain('NOT something any `cadence` CLI command performs');
+  });
+
+  it('states the merge-then-both-report-then-add ordering constraint (255-01/AC-5)', () => {
+    expect(t5).toContain('perform step 1 ONLY after');
+    expect(t5).toContain("this phase's PR has merged to `main`");
+    expect(t5).toContain('posted at least one real status on a commit on `main`');
+  });
+
+  it('disambiguates that marking T5 DONE does not mean the contexts were actually added (255-01/AC-5)', () => {
+    expect(t5).toContain('Marking T5 DONE');
+    expect(t5).toContain('it is not a signal that the branch-protection contexts have been added');
+  });
+});

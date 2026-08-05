@@ -22,6 +22,37 @@ Advisory ids are the GHSA id (e.g. `GHSA-xxxx-xxxx-xxxx`) or, if GitHub has
 not assigned one yet, the npm advisory id reported by `pnpm audit`. Expiry
 dates are ISO 8601 (`YYYY-MM-DD`).
 
+## What blocks a merge
+
+Merge-blocking status differs by check, and the difference matters when
+reading a green run -- with one important caveat up front: as of this
+writing, neither check below actually blocks a merge yet. `main`'s branch
+protection `required_status_checks.contexts` is exactly `["ci-success"]`;
+registering `security-success` and `codeql-success` as required contexts is
+a separate, manual, post-merge operator step (see this phase's DRAFT, T5)
+that can only happen once this PR has merged and both jobs have reported at
+least once on `main`. Until that step happens, both jobs report a result on
+every push/PR but neither one blocks anything. What follows describes what
+each check *means* and what it will enforce once it is registered.
+
+`security-success` (`.github/workflows/security.yml`) aggregates
+`secret-scan` and `audit` -- both genuinely fail their job on a real
+condition: `audit` fails on an undocumented (or expired-exception)
+high/critical `pnpm audit` advisory (the policy above), or on a
+`pnpm.overrides` target that no longer covers every resolved instance of
+that package in `pnpm-lock.yaml` (`scripts/check-lockfile-overrides.mjs`,
+phase 253's drift detector); `secret-scan` fails on a credential gitleaks
+detects in the diff. So a red security-success means something concrete
+failed, and a green one means none of those conditions were present.
+`codeql-success` (`.github/workflows/codeql.yml`) is different in kind: it
+gates on the CodeQL `analyze` job *completing*, not on the scan finding zero
+issues -- CodeQL's `analyze` step does not fail its own job by default when
+it finds alerts; findings surface in the GitHub Security tab, not as a
+failed job. Once both checks are actually registered as required, a PR will
+still be able to merge with codeql-success green while CodeQL has open
+findings. Read a green codeql-success as "the analysis job ran to
+completion" only -- never as "no CodeQL findings."
+
 ## Deferred: vitest major-version upgrade
 
 The `vitest`, `vite`, and `postcss` rows below all trace back to one

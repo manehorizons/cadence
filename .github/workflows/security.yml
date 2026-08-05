@@ -8,8 +8,9 @@ name: Security
 #
 # Jobs today: secret-scan (gitleaks), audit (pnpm audit vs. the documented
 # exceptions allowlist, plus a pnpm.overrides lockfile-coverage check), sbom
-# (CycloneDX SBOM + license inventory). Keep new jobs additive, one per
-# concern.
+# (CycloneDX SBOM + license inventory), plus security-success (aggregator
+# status context for branch protection, not a fourth concern -- see its own
+# comment below). Keep new jobs additive, one per concern.
 on:
   push:
     branches: [main]
@@ -121,3 +122,41 @@ jobs:
           path: |
             sbom.cdx.json
             licenses.json
+
+  # Single stable status context, intended for branch protection and
+  # mirroring ci.yml's ci-success pattern -- but not yet wired in: as of this
+  # writing, main's required_status_checks.contexts is exactly
+  # ["ci-success"]. Registering security-success (and codeql-success) as
+  # required contexts is a separate, manual, post-merge operator step (see
+  # this phase's DRAFT, T5) that can only happen once this PR has merged and
+  # both jobs have reported at least once on main. Until then, this job
+  # reports on every push/PR/schedule but blocks nothing. sbom is
+  # deliberately excluded from needs -- it's a compliance-artifact
+  # generation step (network fetch), not a security verdict; see this file's
+  # header comment and the phase 255 DRAFT's Boundaries.
+  #
+  # Contrast codeql-success in codeql.yml: security-success failing means
+  # secret-scan or audit genuinely found a problem (a leaked credential, an
+  # undocumented high/critical pnpm audit advisory, or a pnpm.overrides
+  # target that no longer covers every resolved instance of that package in
+  # pnpm-lock.yaml -- see scripts/check-lockfile-overrides.mjs).
+  # codeql-success is different in kind -- it only confirms the CodeQL
+  # analyze job completed, not that it found nothing; see codeql.yml's
+  # codeql-success comment for the full honest-scope note
+  # (rec-20260804-006, AC-3).
+  security-success:
+    if: always()
+    needs: [secret-scan, audit]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if secret-scan or audit did not succeed
+        run: |
+          if [ "${{ needs['secret-scan'].result }}" != "success" ]; then
+            echo "secret-scan job result: ${{ needs['secret-scan'].result }}"
+            exit 1
+          fi
+          if [ "${{ needs.audit.result }}" != "success" ]; then
+            echo "audit job result: ${{ needs.audit.result }}"
+            exit 1
+          fi
+          echo "secret-scan and audit jobs succeeded"

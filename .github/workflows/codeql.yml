@@ -40,3 +40,44 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: '/language:${{ matrix.language }}'
+
+  # Single stable status context, intended for branch protection and
+  # mirroring ci.yml's ci-success pattern -- but not yet wired in: as of this
+  # writing, main's required_status_checks.contexts is exactly
+  # ["ci-success"]. Registering codeql-success (and security-success) as
+  # required contexts is a separate, manual, post-merge operator step (see
+  # this phase's DRAFT, T5) that can only happen once this PR has merged and
+  # both jobs have reported at least once on main. Until then, this job
+  # reports on every push/PR/schedule but blocks nothing. analyze runs under
+  # a language matrix, so its own GitHub status check reports under a
+  # matrix-derived name (e.g. "analyze (javascript-typescript)") -- this job
+  # exists so the required-check name stays `codeql-success` independent of
+  # the matrix shape.
+  #
+  # Scope, stated explicitly (rec-20260804-006, AC-3): codeql-success gates
+  # on the analyze job *completing* -- i.e. the CodeQL scan ran to
+  # completion -- not on the scan finding zero issues. CodeQL's own analyze
+  # step does not fail its job by default when it finds alerts; findings
+  # surface in the GitHub Security tab, not as a failed job. So once
+  # codeql-success is actually registered as a required check, a PR will
+  # still be able to merge with codeql-success green while CodeQL has open
+  # findings. Contrast security-success in security.yml: its secret-scan and
+  # audit dependencies genuinely fail their jobs on real conditions (a
+  # detected leaked credential, an undocumented high/critical advisory, or a
+  # pnpm.overrides target that no longer covers every resolved instance of
+  # that package in pnpm-lock.yaml), so security-success failing means
+  # something concrete failed. codeql-success passing means only "the scan
+  # ran" -- never "no CodeQL findings". Do not let any doc, comment, or
+  # SUMMARY claim otherwise.
+  codeql-success:
+    if: always()
+    needs: [analyze]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if the analyze job did not succeed
+        run: |
+          if [ "${{ needs.analyze.result }}" != "success" ]; then
+            echo "analyze job result: ${{ needs.analyze.result }}"
+            exit 1
+          fi
+          echo "analyze job succeeded"
