@@ -22,15 +22,55 @@ Advisory ids are the GHSA id (e.g. `GHSA-xxxx-xxxx-xxxx`) or, if GitHub has
 not assigned one yet, the npm advisory id reported by `pnpm audit`. Expiry
 dates are ISO 8601 (`YYYY-MM-DD`).
 
+## Deferred: vitest major-version upgrade
+
+The `vitest`, `vite`, and `postcss` rows below all trace back to one
+package, `vitest` (`vite` and `postcss` are pulled in as its own transitive
+dependencies). Note the target version is **not** simply "`>=3.2.6`": that
+floor patches the vitest UI-server advisory (`GHSA-5xrq-8626-4rwp`) itself,
+but PR #235's own investigation (below) found it insufficient for the
+vite/postcss chain — 3.x still transitively resolved a vulnerable
+`vite@5.4.21`. The real target proven to close all three in this monorepo's
+toolchain is `vitest ^4.1.10` (a major, 2→4 jump — `website/` already runs
+`vitest ^4.1.8` successfully). That upgrade is out of scope for phase 254
+— it touches `vitest.shared.ts`'s shared worker/timeout/coverage config
+consumed by all six `packages/*` workspaces and warrants its own dedicated
+phase, not a drive-by dependency bump.
+
+There is prior art, and it is not directly reusable: PR #235
+(`chore/security-vitest-and-transitive-bump`) attempted this exact bump
+(landing on `vitest ^4.1.10` for precisely the 3.2.6-is-insufficient reason
+above) but is stale (branched from `main` on 2026-07-18, before a large
+volume of subsequent work) and was closed by the repo owner on 2026-08-04.
+One implementation choice within that PR — adding `vite` as an explicit
+direct devDependency because it claimed `pnpm.overrides` doesn't work in
+this setup — rested on a premise phase 253
+(`.cadence/phases/253-dependency-override-remediation/`) has since
+disproved empirically: the override mechanism fires correctly, the real
+defect was stale override *targets*, not a broken mechanism. Do not reopen,
+cherry-pick from, or rebase that branch as-is — its vitest/vite/hono
+version targets and breakage fixes are still useful reference, but its
+override-workaround approach needs replacing with a proper override entry
+before it lands. A future phase must redo the vitest 2→4 (`>=^4.1.10`, not
+`>=3.2.6`) upgrade from a current `main`, scoped properly, before these
+three exceptions can be permanently closed rather than merely re-justified.
+
+Each of the three rows below was independently re-verified against this
+repo's current state on 2026-08-04 (see each row's justification for what
+was actually checked) and its expiry extended to **2026-11-02** — a 90-day
+window from that re-verification date, clearing this phase's 2026-08-12
+deadline with roughly three months of margin for a future phase to land the
+upgrade properly, rather than an arbitrarily short window that would just
+force another rubber-stamp-adjacent renewal first.
+
 ## Exceptions
 
 | Advisory ID | Package | Justification | Expiry |
 | --- | --- | --- | --- |
-| GHSA-5xrq-8626-4rwp | vitest | Arbitrary file read/execute via the Vitest UI server. `--ui` is never passed in this repo (`vitest.shared.ts`, CI, local scripts all run plain `vitest run`), so the vulnerable server is never started; dev-only devDependency, not shipped in any published package. Upgrade to vitest >=3.2.6 tracked separately (a major-version bump affecting `vitest.shared.ts`'s worker/timeout config across all packages). | 2026-08-13 |
-| GHSA-fx2h-pf6j-xcff | vite | `server.fs.deny` bypass on Windows, transitive of `vitest`'s dev server. No `vite`/`vitest` dev server is ever exposed outside a local `pnpm test` run (no `vite preview`/serve usage in this repo); dev-only devDependency, not shipped. Resolves once the `vitest` upgrade above lands (vite is pulled in transitively). | 2026-08-13 |
+| GHSA-5xrq-8626-4rwp | vitest | Arbitrary file read/execute via the Vitest UI server, reachable only when the process is started with `--ui`. Re-verified 2026-08-04 by grepping every place a vitest invocation could add that flag: `vitest.shared.ts` (the single shared config all six `packages/*` workspaces merge — no `--ui`), every `packages/*/package.json` `test` script (types, testkit, host-claude-code, host-codex, host-toolkit, core — all six run plain `vitest run`), the root `package.json` (`turbo run test`, delegating to the same six scripts), `website/`'s separate-workspace `test` script (also plain `vitest run`), and every CI workflow that runs tests (`.github/workflows/ci.yml`, `docs.yml`, `release.yml` — each invokes `pnpm test` / `pnpm turbo run typecheck lint test`, no vitest flags); no shell script anywhere in the repo passes `--ui` either. The vulnerable UI server is never started. `pnpm-lock.yaml` resolves a single instance, `vitest@2.1.9`, a dev-only devDependency not shipped in any published package. The vitest advisory itself patches at `>=3.2.6`, but the full chain (including the vite/postcss rows below) requires `vitest >=4.1.10` per PR #235's own finding; the real target is tracked as a deferred blocker above ("Deferred: vitest major-version upgrade"), not silently dropped. | 2026-11-02 |
+| GHSA-fx2h-pf6j-xcff | vite | `server.fs.deny` bypass on Windows via vite's dev server, transitive of `vitest` (`pnpm-lock.yaml` shows `vitest@2.1.9` depends directly on `vite@5.4.21`, resolved to a single instance). Re-verified 2026-08-04 by grepping the whole repo (root, every `packages/*` workspace, and `website/`) for `vite preview`, `vite serve`, `vite dev`, and any raw `"vite ..."` script entry — none exist anywhere; the only invocation of vite in this repo is the implicit one inside plain `vitest run`, where vitest uses vite purely for in-process module transformation (middleware mode) — no dev server is ever exposed on a listening port. `website/`'s `dev`/`preview` scripts run Astro (`astro dev` / `astro preview`), not vite directly, and in any case `website/` is its own pnpm workspace (`website/pnpm-workspace.yaml`, `website/pnpm-lock.yaml`) outside the root `pnpm-workspace.yaml`'s `packages/*` glob — the audit CI job's `pnpm install --frozen-lockfile` (`.github/workflows/security.yml`, root-level) never installs it. Dev-only devDependency, not shipped in any published package. Resolves once the vitest upgrade lands (see "Deferred: vitest major-version upgrade" above). | 2026-11-02 |
 | GHSA-88fw-hqm2-52qc | hono | CORS middleware reflects Origin with credentials when defaulted to wildcard; transitive of `@modelcontextprotocol/sdk`'s optional HTTP transport. This repo's MCP surface (`cadence mcp serve`) only ever uses the SDK's stdio transport (see CLAUDE.md: "MCP ... exposes the imperative loop only, over stdio") — the HTTP transport classes that pull in `hono` are never imported or instantiated, so this CORS path is unreachable in our usage. Re-check on the next `@modelcontextprotocol/sdk` bump. | 2026-08-28 |
-| GHSA-r28c-9q8g-f849 | postcss | Path traversal in previous-source-map auto-loading (`sourceMappingURL`) can disclose arbitrary `.map` file contents when PostCSS parses attacker-controlled CSS without `map: false`; patched in postcss 8.5.18. Transitive of `vitest`'s dev-server toolchain (`vitest > vite > postcss`), dev-only devDependency, not shipped in any published package. No CSS files exist within this audited workspace (`packages/*`) and no code here imports `postcss` directly (verified via grep) — unreachable, and even if triggered there is no exfiltration channel (output stays local to the test run). A separate `website/` package has its own `pnpm-workspace.yaml`/lockfile outside this workspace's `packages/*` glob and is not installed or audited by this CI job; its one static, repo-authored `theme.css` is not attacker-controlled input in any case. Resolves alongside the `vitest >=3.2.6` upgrade tracked for the `vite` exception above (same transitive chain). | 2026-08-13 |
-| GHSA-mh99-v99m-4gvg | brace-expansion | DoS via unbounded expansion length causing an out-of-memory crash; vulnerable <=5.0.7, patched >=5.0.8. Transitive of the ESLint toolchain (`@typescript-eslint/{eslint-plugin,parser} > typescript-estree/utils > minimatch@10.2.5 > brace-expansion@5.0.6`), dev-only devDependency, not shipped in any published package — the only place this runs is `eslint` invoked locally/in CI over source files, never on attacker-controlled input. A pre-existing `pnpm.overrides` entry for this exact package in `package.json` was previously misdiagnosed as silently dead, on the strength of a `[WARN] The "pnpm" field in package.json is no longer read by pnpm...` message. That warning is printed by a globally-installed newer pnpm launcher (e.g. v11.2.2) self-switching before it delegates to this repo's `packageManager`-pinned `pnpm@9.12.0`, which reads and applies `pnpm.overrides` from `package.json` correctly — confirmed empirically across independent runs (see `.cadence/phases/253-dependency-override-remediation/253-01-T3-EVIDENCE.md`). The real defect: the override *fired correctly* and pinned the tree to `brace-expansion@5.0.7` — but `5.0.7` is itself a vulnerable version (patched floor is `>=5.0.8`), so this was a stale override target that had never been refreshed past the pre-patch floor it was originally written against. (A *different* failure mode is also possible and is a real risk generally — an override key only fires when its selector intersects the *declared* range of the dependent requesting the package, not whatever version would naturally resolve, so a selector that drifts entirely out of that range goes silently unmatched with no error, even at debug loglevel, see `253-01-T3-EVIDENCE.md` Finding 2 — but that is not what happened to this specific entry, which was actively applying its stale target the whole time.) Phase 253 refreshed this target to the current patched floor (brace-expansion 5.x line >=5.0.9) and added `scripts/check-lockfile-overrides.mjs`, a CI detector that fails the build if any override target is ever left unsatisfied by a resolved lockfile instance again. Originally filed as `rec-20260724-012`, whose premise this correction disproves; superseded accordingly. | 2026-08-20 |
+| GHSA-r28c-9q8g-f849 | postcss | Path traversal in previous-source-map auto-loading (`sourceMappingURL`) can disclose arbitrary `.map` file contents when PostCSS parses attacker-controlled CSS without `map: false`; patched in postcss 8.5.18, resolves here to `8.5.14` (single instance in `pnpm-lock.yaml`), pulled in transitively only via `vite@5.4.21`'s own dependency on `postcss` (chain: `vitest > vite > postcss`). Re-verified 2026-08-04 by grepping every `packages/*` workspace for `.css` files and for direct `postcss` imports/requires: the only `.css` files present are `packages/*/coverage/{base,prettify}.css`, gitignored static assets auto-generated by the v8 coverage HTML reporter — never parsed by PostCSS and never attacker-controlled; no `packages/*/package.json` declares `postcss` as a dependency and no `src`/`tests` file imports it. `website/` remains a wholly separate pnpm workspace/lockfile (see the vite row above for the grep confirming it isn't installed by the audit CI job); its one static, repo-authored `website/src/styles/theme.css` is still not attacker-controlled input either way. Unreachable, and even if triggered there is no exfiltration channel (output stays local to the test run). Dev-only devDependency, not shipped in any published package. Resolves alongside the vitest upgrade (see "Deferred: vitest major-version upgrade" above). | 2026-11-02 |
 <!--
 To add a new exception, append a row above this comment, e.g.:
 

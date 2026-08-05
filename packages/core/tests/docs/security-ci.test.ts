@@ -221,39 +221,23 @@ describe('audit exceptions doc', () => {
   });
 });
 
-// 253-01 / AC-5 (phase 253) — the pre-253 doc asserted, as a flat factual
-// claim, that pnpm's `pnpm.overrides` mechanism is non-functional under
-// this repo's pinned pnpm 9.12.0 ("Overrides are therefore non-functional
-// in this pnpm version regardless of where they're declared"). Phase 253's
-// empirical investigation (253-01-T3-EVIDENCE.md) found that diagnosis
-// itself wrong: the mechanism works; the misleading warning came from a
-// globally-installed newer pnpm launcher self-switching before delegating
-// to the pinned binary, and the real defect was a stale override target.
-// This asserts the false claim is gone and the corrected mechanism is
-// documented in its place.
+// 253-01 / AC-5 (phase 253, still valid) — the pre-253 doc asserted, as a
+// flat factual claim, that pnpm's `pnpm.overrides` mechanism is
+// non-functional under this repo's pinned pnpm 9.12.0. Phase 253 corrected
+// that. This guard is scoped to the whole document, not to any one
+// exception row, so it survives phase 254's removal of the (now-unrelated)
+// brace-expansion row below — restored here after phase 254's T1
+// mistakenly deleted it along with two other, genuinely row-specific
+// assertions from the same now-removed describe block.
 //
-// NOTE on the deliberate space between the qualifier and the AC id above
-// and in the describe() title below (the qualifier and id sit hard against
-// each other, no space, inside each it() title instead): the coverage
-// gate's assertion-mode scanner (packages/core/src/verify/coverage.ts,
-// scanTestCoverage) records at most ONE ref per token per file — the
-// FIRST qualified occurrence in file order, full stop; every later
-// occurrence of the same qualified token in the same file is silently
-// dropped by its per-file dedup, not merely deduped-but-still-counted. A
-// qualified occurrence sitting in a header comment or a describe() title,
-// positioned before the real asserting it() blocks, would therefore
-// become the ONE recorded ref for this AC — and since describe()/comment
-// text is never inside an asserting span, that ref would be
-// non-qualifying, making the whole AC read as "mentioned but never
-// qualifying" even though real asserting tests exist right below.
-// Verified empirically against this exact file via a direct
-// scanTestCoverage() call, run with assertion mode and this phase's
-// qualifier, before landing this fix. Keeping the qualifier and the AC id
-// apart here (and in the describe() title) keeps this prose
-// human-traceable without satisfying the scanner's exact adjacency check —
-// only the hard-against-each-other form inside each it() title below
-// counts as evidence.
-describe('audit exceptions doc — overrides mechanism narrative corrected (253-01 / AC-5)', () => {
+// Deliberate space between the qualifier and AC id above and in the
+// describe() title below (matching the coverage scanner's own documented
+// adjacency rule — see the it() title inside, which uses the hard-adjacent
+// qualifying form on purpose): the scanner records only the FIRST qualified
+// occurrence per token per file, so a hard-adjacent form sitting in a
+// header comment before the real asserting it() would wrongly become the
+// one recorded (non-qualifying) ref, discarding the real assertion below.
+describe('audit exceptions doc — overrides mechanism narrative stays corrected (253-01 / AC-5)', () => {
   const md = readFileSync(AUDIT_EXCEPTIONS_MD, 'utf8');
 
   it('no longer asserts pnpm.overrides is non-functional/broken/dead/ignored as a flat claim (253-01/AC-5)', () => {
@@ -261,39 +245,52 @@ describe('audit exceptions doc — overrides mechanism narrative corrected (253-
     // non-functional...", "was found to be silently dead") without also
     // matching the corrected prose's own references to the past
     // misdiagnosis (which describe it as corrected, not assert it as fact).
-    //
-    // Plain `.toContain()` on a lowercased haystack throughout this block,
-    // not `.toMatch(/regex/)` — this repo's `js-ts` coverage-scanning
-    // profile (packages/core/src/verify/coverage-profiles/js-ts.ts) masks
-    // `'`/`"`/backtick as *string* delimiters when computing the code mask
-    // it uses for `it()`-block boundary tracking, but has no concept of a
-    // `/regex/` literal as its own lexical category — a bare `'` or
-    // backtick inside a regex literal is read as a real string-open
-    // character, corrupting boundary tracking for the rest of the file
-    // (see phase251-ledger.test.ts's precedent note on the same trap; hit
-    // for real building that file). A `.toContain()` string literal is
-    // exempt — the scanner's masker is specifically designed to recognize
-    // and skip over a properly quote-delimited string's own contents.
     const lower = md.toLowerCase();
     expect(lower).not.toContain('overrides are therefore non-functional');
     expect(lower).not.toContain('overrides are non-functional');
     expect(lower).not.toContain('found to be silently dead');
     expect(lower).not.toContain("regardless of where they're declared");
   });
+});
 
-  it('states the corrected mechanism: a global pnpm launcher self-switches before delegating to the pinned 9.12.0 (253-01/AC-5)', () => {
-    const row = md.slice(md.indexOf('GHSA-mh99-v99m-4gvg'));
-    expect(row).toContain('globally-installed newer pnpm launcher');
-    expect(row).toContain('packageManager');
-    expect(row).toContain('`pnpm@9.12.0`');
-    expect(row).toContain('applies `pnpm.overrides`');
+// 254-01 / AC-1 (phase 254) — the GHSA-mh99-v99m-4gvg (brace-expansion)
+// exception row is dead weight since phase 253 refreshed the override
+// target past its patched floor (script confirmed no longer flagging it).
+// This asserts the row (and its GHSA id) is gone from the doc rather than
+// left to expire on 2026-08-20. Qualifier and AC id kept apart here (see
+// the note on the 253-01 / AC-5 block above) so this comment doesn't
+// shadow the real, hard-adjacent-qualified assertion in the it() below.
+describe('audit exceptions doc — dead brace-expansion exception retired (254-01 / AC-1)', () => {
+  it('no longer documents GHSA-mh99-v99m-4gvg as an exception (254-01/AC-1)', () => {
+    const md = readFileSync(AUDIT_EXCEPTIONS_MD, 'utf8');
+    expect(md).not.toContain('GHSA-mh99-v99m-4gvg');
+  });
+});
+
+// 254-01 / AC-2 (phase 254) — the three exceptions expiring 2026-08-13
+// (vitest/vite/postcss) were re-justified with fresh reachability analysis
+// and their expiry extended past this phase's 2026-08-12 deadline; the
+// vitest major-version upgrade that would close them permanently is
+// recorded as a named, deferred blocker rather than silently dropped.
+// Qualifier and AC id kept apart here for the same reason noted above.
+describe('audit exceptions doc — expiring exceptions re-justified, vitest-major deferred (254-01 / AC-2)', () => {
+  const md = readFileSync(AUDIT_EXCEPTIONS_MD, 'utf8');
+  const asOfPhaseDeadline = new Date('2026-08-12T23:59:59Z');
+
+  it('each of the three previously-expiring rows now has an expiry past the phase deadline (254-01/AC-2)', () => {
+    const rows = parseExceptionsTable(md);
+    const previouslyExpiring = ['GHSA-5xrq-8626-4rwp', 'GHSA-fx2h-pf6j-xcff', 'GHSA-r28c-9q8g-f849'];
+    for (const id of previouslyExpiring) {
+      const row = rows.find((r) => r.id === id);
+      expect(row).toBeTruthy();
+      expect(isExpired(row.expiry, asOfPhaseDeadline)).toBe(false);
+    }
   });
 
-  it('names the real defect as a stale override target, not a broken mechanism (253-01/AC-5)', () => {
-    const row = md.slice(md.indexOf('GHSA-mh99-v99m-4gvg'));
-    expect(row).toContain('stale override target');
-    expect(row).toContain('scripts/check-lockfile-overrides.mjs');
-    expect(row).toContain('253-01-T3-EVIDENCE.md');
+  it('records the deferred vitest-major upgrade blocker, naming PR #235 as not revivable (254-01/AC-2)', () => {
+    expect(md).toContain('Deferred: vitest major-version upgrade');
+    expect(md).toContain('PR #235');
+    expect(md.toLowerCase()).toContain('do not reopen');
   });
 });
 

@@ -1,0 +1,25 @@
+{
+  "draftId": "254-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Independently reviewed (Important: over-deletion of a still-valid whole-doc regression test + Critical: missing 254-01/AC-1 coverage token, both fixed by orchestrator — restored the 253-01/AC-5 whole-doc guard as its own describe block, added a new qualified 254-01/AC-1 test asserting the row is gone). node scripts/check-audit-exceptions.mjs exits 0. Full pnpm turbo run lint typecheck test build green (24/24). Diff read directly.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-05T03:04:49.226Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Independently reviewed (3 Minor citation/presentation nits, no Critical/Important findings) — fixed by orchestrator: corrected an overstated Finding-2 citation, disambiguated an ellipsis-spliced quote from two distinct verification events, added an inline caveat flag to the summary table's Before column. All source-artifact citations independently re-read and confirmed accurate; live pnpm-lock.yaml re-verified (ip-address@10.4.0, single resolved instance, satisfies >=10.3.1). Boundary compliance confirmed via git status.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-05T03:04:54.471Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Independently reviewed (Important: the doc claimed vitest >=3.2.6 'closes this permanently' for all 3 exceptions, but PR #235's own commit message says 3.x still transitively resolved a vulnerable vite@5.4.21 -- fixed by orchestrator, corrected the deferred-blocker section + vitest row to name >=4.1.10 as the real target; also softened an 'entire rationale' overstatement about PR #235's scope. All fresh-reachability claims (--ui, vite dev-server, postcss/CSS, website workspace isolation, PR #235 dates/state) independently re-derived by reviewer from primary sources, not trusted from prose. node scripts/check-audit-exceptions.mjs exits 0 after the fix. Full pnpm turbo run lint typecheck test build green (24/24).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/254-security-advisory-remediation/docs/security/audit-exceptions.md"
+      ],
+      "updatedAt": "2026-08-05T03:25:02.507Z"
+    }
+  }
+}
