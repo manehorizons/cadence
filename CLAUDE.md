@@ -69,6 +69,13 @@ pnpm --filter @thomas-powers-jr/cadence-core test -- -t "name fragment"
 Node `>=22` is required. `package.json` pins `pnpm@9.12.0`. The local CLI is
 `node packages/core/bin/cadence.cjs <subcommand>` (after `pnpm build`).
 
+A developer's PATH `pnpm` may resolve to a newer globally-installed major
+(e.g. v11.x); its launcher prints a warning about its own behavior ("The
+pnpm field in package.json is no longer read by pnpm...") before
+self-switching and delegating to this repo's `packageManager`-pinned
+`pnpm@9.12.0`, which reads and applies `pnpm.overrides` correctly — trust
+the lockfile, not the launcher's warning.
+
 ## Architecture
 
 Six packages, one engine, three surface categories (CLI · host adapters ·

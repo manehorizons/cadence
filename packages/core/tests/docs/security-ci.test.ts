@@ -143,6 +143,45 @@ describe('security workflow — audit job', () => {
   });
 });
 
+// 253-01, AC-4 (phase 253) — the audit job must also invoke the
+// pnpm.overrides lockfile-coverage detector, on the same install path as
+// check-audit-exceptions.mjs, so a regressed override target fails CI
+// before reaching main. Mirrors release-integrity.test.ts's "Release
+// workflow integrity wiring" describe block: reads the real workflow file
+// off disk and asserts step ordering/content, no subprocess or mocking.
+describe('security workflow — audit job invokes the lockfile-overrides detector', () => {
+  const yml = readFileSync(SECURITY_YML, 'utf8');
+  const auditJobStart = yml.indexOf('\n  audit:');
+  const auditJobEnd = yml.indexOf('\n  sbom:', auditJobStart);
+  const auditJob = yml.slice(auditJobStart, auditJobEnd);
+
+  it('invokes the lockfile-overrides check script (253-01/AC-4)', () => {
+    expect(auditJob).toMatch(/node scripts\/check-lockfile-overrides\.mjs/);
+  });
+
+  it('runs the lockfile-overrides check on the same install path as check-audit-exceptions.mjs, after pnpm install --frozen-lockfile (253-01/AC-4)', () => {
+    const installIdx = auditJob.indexOf('pnpm install --frozen-lockfile');
+    const auditExceptionsIdx = auditJob.indexOf('node scripts/check-audit-exceptions.mjs');
+    const lockfileOverridesIdx = auditJob.indexOf('node scripts/check-lockfile-overrides.mjs');
+
+    expect(installIdx).toBeGreaterThan(-1);
+    expect(auditExceptionsIdx).toBeGreaterThan(installIdx);
+    expect(lockfileOverridesIdx).toBeGreaterThan(installIdx);
+  });
+
+  it('does not introduce a second install step or a new job (253-01/AC-4)', () => {
+    // Only one `pnpm install --frozen-lockfile` in the audit job — the new
+    // detector reuses the existing install, it does not add its own. And the
+    // detector invocation itself lives inside the audit job block (auditJob
+    // is already sliced to end at the next top-level job, `sbom:`) rather
+    // than under a new job name.
+    expect(auditJobEnd).toBeGreaterThan(-1);
+    const installOccurrences = auditJob.match(/pnpm install --frozen-lockfile/g) ?? [];
+    expect(installOccurrences).toHaveLength(1);
+    expect(auditJob).toMatch(/node scripts\/check-lockfile-overrides\.mjs/);
+  });
+});
+
 // AC-3 (phase 182) — the documented exceptions allowlist must exist with the
 // columns the audit job's script relies on to cross-check advisories.
 describe('audit exceptions doc', () => {
@@ -179,6 +218,82 @@ describe('audit exceptions doc', () => {
       expect(row.justification).toBeTruthy();
       expect(isExpired(row.expiry)).toBe(false);
     }
+  });
+});
+
+// 253-01 / AC-5 (phase 253) — the pre-253 doc asserted, as a flat factual
+// claim, that pnpm's `pnpm.overrides` mechanism is non-functional under
+// this repo's pinned pnpm 9.12.0 ("Overrides are therefore non-functional
+// in this pnpm version regardless of where they're declared"). Phase 253's
+// empirical investigation (253-01-T3-EVIDENCE.md) found that diagnosis
+// itself wrong: the mechanism works; the misleading warning came from a
+// globally-installed newer pnpm launcher self-switching before delegating
+// to the pinned binary, and the real defect was a stale override target.
+// This asserts the false claim is gone and the corrected mechanism is
+// documented in its place.
+//
+// NOTE on the deliberate space between the qualifier and the AC id above
+// and in the describe() title below (the qualifier and id sit hard against
+// each other, no space, inside each it() title instead): the coverage
+// gate's assertion-mode scanner (packages/core/src/verify/coverage.ts,
+// scanTestCoverage) records at most ONE ref per token per file — the
+// FIRST qualified occurrence in file order, full stop; every later
+// occurrence of the same qualified token in the same file is silently
+// dropped by its per-file dedup, not merely deduped-but-still-counted. A
+// qualified occurrence sitting in a header comment or a describe() title,
+// positioned before the real asserting it() blocks, would therefore
+// become the ONE recorded ref for this AC — and since describe()/comment
+// text is never inside an asserting span, that ref would be
+// non-qualifying, making the whole AC read as "mentioned but never
+// qualifying" even though real asserting tests exist right below.
+// Verified empirically against this exact file via a direct
+// scanTestCoverage() call, run with assertion mode and this phase's
+// qualifier, before landing this fix. Keeping the qualifier and the AC id
+// apart here (and in the describe() title) keeps this prose
+// human-traceable without satisfying the scanner's exact adjacency check —
+// only the hard-against-each-other form inside each it() title below
+// counts as evidence.
+describe('audit exceptions doc — overrides mechanism narrative corrected (253-01 / AC-5)', () => {
+  const md = readFileSync(AUDIT_EXCEPTIONS_MD, 'utf8');
+
+  it('no longer asserts pnpm.overrides is non-functional/broken/dead/ignored as a flat claim (253-01/AC-5)', () => {
+    // Matches the shape of the pre-253 assertion ("Overrides are therefore
+    // non-functional...", "was found to be silently dead") without also
+    // matching the corrected prose's own references to the past
+    // misdiagnosis (which describe it as corrected, not assert it as fact).
+    //
+    // Plain `.toContain()` on a lowercased haystack throughout this block,
+    // not `.toMatch(/regex/)` — this repo's `js-ts` coverage-scanning
+    // profile (packages/core/src/verify/coverage-profiles/js-ts.ts) masks
+    // `'`/`"`/backtick as *string* delimiters when computing the code mask
+    // it uses for `it()`-block boundary tracking, but has no concept of a
+    // `/regex/` literal as its own lexical category — a bare `'` or
+    // backtick inside a regex literal is read as a real string-open
+    // character, corrupting boundary tracking for the rest of the file
+    // (see phase251-ledger.test.ts's precedent note on the same trap; hit
+    // for real building that file). A `.toContain()` string literal is
+    // exempt — the scanner's masker is specifically designed to recognize
+    // and skip over a properly quote-delimited string's own contents.
+    const lower = md.toLowerCase();
+    expect(lower).not.toContain('overrides are therefore non-functional');
+    expect(lower).not.toContain('overrides are non-functional');
+    expect(lower).not.toContain('found to be silently dead');
+    expect(lower).not.toContain("regardless of where they're declared");
+  });
+
+  it('states the corrected mechanism: a global pnpm launcher self-switches before delegating to the pinned 9.12.0 (253-01/AC-5)', () => {
+    const row = md.slice(md.indexOf('GHSA-mh99-v99m-4gvg'));
+    expect(row).toContain('globally-installed newer pnpm launcher');
+    expect(row).toContain('packageManager');
+    expect(row).toContain('`pnpm@9.12.0`');
+    expect(row).toContain('applies `pnpm.overrides`');
+  });
+
+  it('names the real defect as a stale override target, not a broken mechanism (253-01/AC-5)', () => {
+    const row = md.slice(md.indexOf('GHSA-mh99-v99m-4gvg'));
+    expect(row).toContain('stale override target');
+    expect(row).toContain('scripts/check-lockfile-overrides.mjs');
+    expect(row).toContain('253-01-T3-EVIDENCE.md');
   });
 });
 

@@ -1120,36 +1120,6 @@
       "updatedAt": "2026-07-24T23:11:35.333Z"
     },
     {
-      "id": "rec-20260724-012",
-      "title": "pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented",
-      "summary": "Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "tooling",
-        "security",
-        "dependencies"
-      ],
-      "affectedFiles": [
-        "package.json",
-        "pnpm-workspace.yaml"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260724-014"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-24T23:14:13.477Z",
-      "updatedAt": "2026-07-24T23:14:13.477Z"
-    },
-    {
       "id": "rec-20260726-001",
       "title": "Full cryptographic signing of SUMMARY.json (blocked on threat model)",
       "summary": "Follow-on to rec-20260724-006 / dec-20260726-001: rec-20260724-006 was split so phase 223 ships a settle-time content hash now. This rec covers the harder half -- full cryptographic signing with a trust root outside the artifact-authoring session (e.g. CI-identity signing via Sigstore keyless, or an operator-provisioned key), so a compromised/dishonest local session can't just re-sign a fabricated SUMMARY. Do not implement until the trust root is pinned by the formal threat model (mil-rec-rec-20260712-016, covering MCP serve/hooks/host-adapters/verifier/ledger exposure), which is currently parked. Blocked-by: mil-rec-rec-20260712-016.",
@@ -2108,38 +2078,6 @@
       "updatedAt": "2026-08-03T22:02:34.472Z"
     },
     {
-      "id": "rec-20260804-001",
-      "title": "Nothing detects a pnpm override whose target has gone stale or whose key no longer matches",
-      "summary": "Root package.json declares four pnpm.overrides. They ARE applied (pnpm-lock.yaml carries a matching overrides: block and the resolutions match), but every target is pinned to the patch floor that was current when it was written, and each key is qualified by a specific vulnerable source version. Nothing in CI or the test suite compares override targets against the versions actually resolved in the lockfile, so a target that falls behind the advisory's patched floor, a key that stops matching after the tree moves, and a second major line of the same package with no override at all are all silently invisible.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "security",
-        "build"
-      ],
-      "affectedFiles": [
-        "package.json",
-        "pnpm-lock.yaml",
-        "scripts/",
-        "packages/core/tests/docs/"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260804-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260804-integrity-release",
-      "createdAt": "2026-08-04T21:32:32.228Z",
-      "updatedAt": "2026-08-04T21:32:32.228Z"
-    },
-    {
       "id": "rec-20260804-002",
       "title": "audit-exceptions parser silently drops any exception row appended below the HTML template comment",
       "summary": "parseExceptionsTable stops at the first non-table-row line. docs/security/audit-exceptions.md places an HTML-comment 'how to add a row' template immediately after the last real row. The comment's own text says to append above it, so following the instruction works -- but appending below it produces an exception that parses to nothing and fails CI with 'not listed', with no diagnostic pointing at the placement. Correct and incorrect placement look identical in the rendered Markdown. The inverse case (a template row INSIDE the comment being ignored) is already proven safe and tested at security-ci.test.ts:207 -- this covers only the untested directional case.",
@@ -2192,13 +2130,14 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260804-003"
+        "ev-20260804-003",
+        "ev-20260805-003"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "scoutId": "scout-20260804-integrity-release",
       "createdAt": "2026-08-04T21:32:51.880Z",
-      "updatedAt": "2026-08-04T21:32:51.880Z"
+      "updatedAt": "2026-08-05T01:42:47.051Z"
     },
     {
       "id": "rec-20260804-004",
@@ -2259,6 +2198,60 @@
       "scoutId": "scout-20260804-integrity-release",
       "createdAt": "2026-08-04T21:33:29.287Z",
       "updatedAt": "2026-08-04T21:33:29.287Z"
+    },
+    {
+      "id": "rec-20260805-001",
+      "title": "docs.yml pins pnpm/action-setup@v4 while other workflows use @v6",
+      "summary": "The docs workflow (.github/workflows/docs.yml:44) pins pnpm/action-setup@v4; ci.yml, release.yml, and both jobs in security.yml pin @v6. Minor version-pin drift, no known CVE — align docs.yml to @v6 for consistency.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "ci"
+      ],
+      "affectedFiles": [
+        ".github/workflows/docs.yml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260805-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-05T01:10:20.695Z",
+      "updatedAt": "2026-08-05T01:10:20.695Z"
+    },
+    {
+      "id": "rec-20260805-002",
+      "title": "check-lockfile-overrides.mjs cannot detect an override floor that is stale relative to the real upstream patched version",
+      "summary": "The phase-253 detector (scripts/check-lockfile-overrides.mjs) only checks internal lockfile consistency: that a resolved instance satisfies its own declared pnpm.overrides target. It cannot catch a target whose floor is self-consistent with the lockfile but sits below the real current upstream patched version (the exact original failure shape phase 253 corrected for fast-uri/brace-expansion, where a stale-but-internally-satisfied override masked a still-vulnerable resolved version). Catching that class needs a live-vulnerability cross-check (pnpm audit's job, via scripts/check-audit-exceptions.mjs), not a lockfile-internal consistency check. Flagged by phase 253's T5 independent reviewer; recorded per the repo's Unlogged Audit Finding convention rather than left implicit.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security"
+      ],
+      "affectedFiles": [
+        "scripts/check-lockfile-overrides.mjs"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260805-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-05T01:24:34.767Z",
+      "updatedAt": "2026-08-05T01:24:34.767Z"
     }
   ],
   "archived": [
@@ -6368,11 +6361,79 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "252-self-application-config-correction",
-      "scoutId": "scout-20260804-integrity-release",
-      "createdAt": "2026-08-04T21:33:15.314Z",
-      "updatedAt": "2026-08-04T22:35:52.428Z",
       "shippedRef": "phase 252-self-application-config-correction (PR pending)",
+      "scoutId": "scout-20260804-integrity-release",
       "archivedAt": "2026-08-04T22:35:52.428Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-04T21:33:15.314Z",
+      "updatedAt": "2026-08-04T22:35:52.428Z"
+    },
+    {
+      "id": "rec-20260724-012",
+      "title": "pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented",
+      "summary": "Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.",
+      "source": "manual",
+      "status": "rejected",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "tooling",
+        "security",
+        "dependencies"
+      ],
+      "affectedFiles": [
+        "package.json",
+        "pnpm-workspace.yaml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260724-014"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "archivedAt": "2026-08-05T01:41:34.764Z",
+      "archiveReason": "rejected",
+      "createdAt": "2026-07-24T23:14:13.477Z",
+      "updatedAt": "2026-08-05T01:41:34.764Z"
+    },
+    {
+      "id": "rec-20260804-001",
+      "title": "Nothing detects a pnpm override whose target has gone stale or whose key no longer matches",
+      "summary": "Root package.json declares four pnpm.overrides. They ARE applied (pnpm-lock.yaml carries a matching overrides: block and the resolutions match), but every target is pinned to the patch floor that was current when it was written, and each key is qualified by a specific vulnerable source version. Nothing in CI or the test suite compares override targets against the versions actually resolved in the lockfile, so a target that falls behind the advisory's patched floor, a key that stops matching after the tree moves, and a second major line of the same package with no override at all are all silently invisible.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "security",
+        "build"
+      ],
+      "affectedFiles": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "scripts/",
+        "packages/core/tests/docs/"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260804-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "253-dependency-override-remediation",
+      "scoutId": "scout-20260804-integrity-release",
+      "createdAt": "2026-08-04T21:32:32.228Z",
+      "updatedAt": "2026-08-05T01:45:56.106Z",
+      "shippedRef": "phase 253-dependency-override-remediation (PR pending)",
+      "archivedAt": "2026-08-05T01:45:56.106Z",
       "archiveReason": "shipped"
     }
   ]
