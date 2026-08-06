@@ -1,0 +1,55 @@
+{
+  "draftId": "256-02",
+  "converged": true,
+  "attempts": 5,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-08-06T04:21:23.041Z",
+      "pass": false,
+      "findingsCount": 2,
+      "provider": "host-cli",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-08-06T04:33:28.356Z",
+      "pass": false,
+      "findingsCount": 2,
+      "provider": "host-cli",
+      "verdict": "reloop",
+      "bypassed": true
+    },
+    {
+      "at": "2026-08-06T04:43:22.651Z",
+      "pass": false,
+      "findingsCount": 2,
+      "provider": "host-cli",
+      "verdict": "escalate"
+    },
+    {
+      "at": "2026-08-06T05:08:23.708Z",
+      "pass": false,
+      "findingsCount": 1,
+      "provider": "host-cli",
+      "verdict": "escalate"
+    },
+    {
+      "at": "2026-08-06T05:13:30.387Z",
+      "pass": false,
+      "findingsCount": 1,
+      "provider": "host-cli",
+      "verdict": "escalate"
+    },
+    {
+      "at": "2026-08-06T05:20:03.068Z",
+      "pass": true,
+      "findingsCount": 0,
+      "provider": "host-cli",
+      "verdict": "pass"
+    }
+  ],
+  "pass": true,
+  "provider": "host-cli",
+  "findings": 0,
+  "at": "2026-08-06T05:20:03.068Z"
+}

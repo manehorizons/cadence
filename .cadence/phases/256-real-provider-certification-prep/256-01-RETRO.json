@@ -1,0 +1,23 @@
+{
+  "bypasses": [],
+  "roughTasks": [],
+  "findings": {
+    "codeReview": {
+      ".cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md": [
+        {
+          "severity": "medium",
+          "message": "The “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the committed baseline failing its invariant.",
+          "line": 106,
+          "anchor": {
+            "kind": "ac",
+            "ref": "AC-2",
+            "tier": "structured"
+          },
+          "id": "caf1d8ae10c848c9c2aed01bf18fac8a6bf41cc6f36e4eadb01ef111c68a3f7b",
+          "target": "artifact",
+          "disposition": "open"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "draftId": "256-02",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Fixture files already existed on disk with 256-01's content (git rm --cached'd from HEAD via fab22c15 as session prereq, now untracked). Verified via direct node -e regex checks (not cadence settle): AUTH_HEADER_RE.test() on the Authorization line = true, JWT_RE.test() = false (correctly not JWT-shaped, by design), console.log( substring check on the console.log line = true. Captured the missing link: staged git diff --no-color HEAD -- fixture/seeded-defect.ts (new-file diff, path absent from HEAD) shows both lines as real + additions -- confirming the mock/real gates, which consume this diff not raw file content, would actually see these lines. git ls-tree HEAD -- fixture/ confirmed empty. seeded-defect.fixed.ts confirmed present with the corrected (env-var-sourced, no console.log) counterpart. Both files staged (git add, not committed) at task-completion time -- required for per-task-verify itself to see a non-empty diff, same empty-diff mechanism this whole phase exists to work around.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-06T03:13:45.767Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "Scoped fixture pair clearly models a hard-coded-token/logging defect and its environment-based fix.",
+        "provider": "host-cli"
+      }
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Rewrote CONDUCTION-RUNBOOK.md with the invariant fix: a pre-flight (git ls-tree HEAD empty, git add, then git diff --no-color HEAD non-empty -- IN THAT ORDER) applied before EVERY cadence settle run call, mock dry run included. First submission's per-task-verify (real, codex-backed) correctly refused: the pre-flight commands were ordered git ls-tree / git diff / git add, so a genuinely untracked fixture would show an empty diff at check time, failing Step 0's own invariant before it could ever pass. Fixed by reordering to git ls-tree / git add / git diff in the invariant statement and all three step instances (0, 3, 5); empirically re-verified from a genuinely untracked state (git reset then git status confirmed ??, diff blank pre-add, non-empty post-add) before resubmitting. MockSecurityAuditVerifier/MockCodeReviewVerifier confirmed diff-based too (ev-20260806-006 on rec-20260806-004), so the invariant applies to the mock dry run, not just the two real attempts. Only step 5's clean settle counts toward dec-20260801-003's revisit trigger. Rewrote packages/core/tests/docs/phase256-conduction-prep.test.ts with 256-02/AC-1 and 256-02/AC-2 tokens, reusing the RegExp-constructor AUTH_HEADER_RE pattern that avoids rec-20260805-004's coverage-masker bug. Test passes 2/2 after the reorder.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md",
+        "/home/thomas/projects/cadence/packages/core/tests/docs/phase256-conduction-prep.test.ts"
+      ],
+      "updatedAt": "2026-08-06T03:17:38.396Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "Scoped documentation and matching test update coherently address the prior empty-diff failure with explicit staged-fixture preflight checks.",
+        "provider": "host-cli"
+      }
+    }
+  }
+}
