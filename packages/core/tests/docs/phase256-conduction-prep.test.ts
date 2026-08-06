@@ -11,10 +11,17 @@ const seededDefect = readFileSync(join(PHASE_DIR, 'fixture/seeded-defect.ts'), '
 const seededDefectFixed = readFileSync(join(PHASE_DIR, 'fixture/seeded-defect.fixed.ts'), 'utf8');
 const runbook = readFileSync(join(PHASE_DIR, 'CONDUCTION-RUNBOOK.md'), 'utf8');
 
-// Same regexes the real gates' mock verifiers use — see
-// packages/core/src/verify/security-audit.ts (AUTH_HEADER_RE) and
-// packages/core/src/verify/code-review.ts (MockCodeReviewVerifier).
-const AUTH_HEADER_RE = /authorization['"\s:=]+\s*(?:bearer|basic|token)\s+\S+/i;
+// Same regex the real security-audit mock verifier uses (see
+// packages/core/src/verify/security-audit.ts's AUTH_HEADER_RE), built via
+// the RegExp constructor rather than a /literal/ -- a literal containing
+// quote characters inside a character class trips the js-ts coverage
+// masker's regex-vs-division detection (rec-20260805-004), corrupting span
+// detection for every it() block after it in this file. Behaviorally
+// identical to the source regex (verified independently before this fix).
+const AUTH_HEADER_RE = new RegExp(
+  'authorization[' + String.fromCharCode(39, 34) + String.raw`\s:=]+\s*(?:bearer|basic|token)\s+\S+`,
+  'i',
+);
 const CONSOLE_LOG_RE = /console\.log\(/;
 
 describe('256-01 real-provider certification prep', () => {

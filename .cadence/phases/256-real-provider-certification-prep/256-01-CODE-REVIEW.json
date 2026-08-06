@@ -5,22 +5,29 @@
   "maxAttempts": 3,
   "history": [
     {
-      "at": "2026-08-06T00:24:54.533Z",
+      "at": "2026-08-06T01:56:05.646Z",
       "pass": true,
       "findingsCount": 0,
       "provider": "mock",
       "verdict": "pass"
     },
     {
-      "at": "2026-08-06T01:39:44.680Z",
+      "at": "2026-08-06T02:02:37.641Z",
       "pass": true,
       "findingsCount": 0,
-      "provider": "mock",
+      "provider": "host-cli",
+      "verdict": "pass"
+    },
+    {
+      "at": "2026-08-06T02:13:52.741Z",
+      "pass": true,
+      "findingsCount": 0,
+      "provider": "host-cli",
       "verdict": "pass"
     }
   ],
   "pass": true,
-  "provider": "mock",
+  "provider": "host-cli",
   "findings": 0,
-  "at": "2026-08-06T01:39:44.680Z"
+  "at": "2026-08-06T02:13:52.741Z"
 }

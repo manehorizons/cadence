@@ -1250,3 +1250,52 @@ packages/core/src/verify/coverage-profiles/mask.ts's classify() only knows strin
 - next: cadence milestone propose
 
 isClaudeCodeSession(env) (packages/core/src/activate/assess.ts:86-88) checks only CLAUDECODE==='1' and has no awareness of CADENCE_HOST_CLI_BIN. The actual self-invocation guard (isSelfInvocation, host-cli-client.ts:118-129) is keyed by SELF_INVOCATION_ENV_VAR, which only has an entry for the 'claude' family -- 'codex' is deliberately unguarded (no reliable session-indicator env var exists for it, per that file's own doc comment). When an operator sets CADENCE_HOST_CLI_BIN=codex (a sanctioned mechanism CLAUDE.md itself documents for getting independent review from inside a Claude Code session), any host-cli-configured gate's REAL spawn target is codex, not claude -- so the guard never fires regardless of CLAUDECODE, even inside a headless Claude Code session. conduction-reachability (phase 251) reports code-review as session-blocked purely from CLAUDECODE=1, which is wrong in this configuration: the profile axis is a genuine blocker but the session axis is not. Empirically confirmed 2026-08-06 during phase 256 prep: two per-task-verify calls (host-cli, family resolves to codex per this repo's own ~/.bashrc:167 CADENCE_HOST_CLI_BIN=codex) made real, non-mock calls from inside this Claude Code session, producing genuine LLM-judged verdicts (not MockPerTaskVerifier's deterministic output) -- see .cadence/phases/256-real-provider-certification-prep/256-01-PROGRESS.json's perTaskVerify.provider:host-cli entries with substantive, non-canned reason text. The check's overall 'warning' verdict for this repo is still correct today (security-audit is genuinely blocked on the provider axis, mock), so this hasn't caused a wrong overall status yet -- but the per-axis detail is misleading, and a future repo/config where code-review's provider axis is also already clear would get a false 'blocked' report for a gate that actually isn't.
+
+## rec-20260806-002 — Code-review finding (medium): The instructed “stop and report” path skips Step 5b, leaving securityAudit.prov…
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: .cadence
+- files: .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md
+- evidence: phase 256-real-provider-certification-prep, draft 256-01, SUMMARY contentHash 51b2f95ce6ec4030acca94c1b1117abb7cd2555cb4cd23aaf0c627fa6a4c2fc8 — medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The instructed “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the repo failing its baseline invariant. Require rollback before stopping.
+- next: cadence milestone propose
+
+medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The instructed “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the repo failing its baseline invariant. Require rollback before stopping.
+
+## rec-20260806-003 — Code-review finding (medium): The “stop and report” path skips Step 5b, leaving securityAudit.provider as hos…
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: .cadence
+- files: .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md
+- evidence: phase 256-real-provider-certification-prep, draft 256-01, SUMMARY contentHash 0e2b9d2da3c2d5076cd4afb28ce1bd27c9939f6d81b7d93fd6fa3a9d9c9d782d — medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the committed baseline failing its invariant.
+- next: cadence milestone propose
+
+medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the committed baseline failing its invariant.
+
+## rec-20260806-004 — Real-provider verification gates (code-review, security-audit) silently produce empty findings when their touched files are already committed before settle runs
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/code-review.ts, packages/core/src/gates/security-audit.ts, packages/core/src/verify/security-audit.ts, packages/core/src/verify/code-review.ts
+- decisions: dec-20260806-001 (active)
+- evidence: 256-01-SUMMARY.json (2026-08-06T02:14:04.111Z): security-audit ran with provider host-cli and returned securityAudit: [] against a fixture with a hardcoded credential still in place, uncommitted-vs-HEAD diff confirmed empty via git diff HEAD -- fixture/seeded-defect.ts; code-review's sole finding that same settle was against CONDUCTION-RUNBOOK.md, the only touched file with real dirt vs HEAD
+- next: cadence milestone propose
+
+Every diff-scoped verifier gate builds its input from ctx.diff() = git diff HEAD -- <touchedFiles> (see packages/core/src/gates/code-review.ts, security-audit.ts). If those files are already committed (no working-tree delta vs HEAD), the diff is empty, and both HostCliSecurityAuditVerifier.verify and the equivalent code-review path early-return {findings: []} without ever spawning a real provider call to judge anything -- no error, no warning, a normal-looking 'ran' gate status with provider: host-cli in the persisted SUMMARY, and assurance.overall can still reach 'strong'. This is silent: nothing distinguishes 'gate ran and found nothing' from 'gate never actually reviewed anything because the diff was empty by construction'. Concretely hit during phase 256's real-provider certification (2026-08-06): the seeded-defect fixture was committed in a WIP prep commit before the real settle ran, so security-audit's real codex call saw an empty diff and returned no findings on an objectively hardcoded credential its own system prompt calls CRITICAL (bullet 1) -- producing a false 'strong' assurance record (256-01-SUMMARY.json) that looked like a valid real-provider pass. code-review's one finding in that same settle was real, but only because CONDUCTION-RUNBOOK.md had uncommitted edits -- it was the only file with an actual diff. This is a general trap for ANY future real-provider conduction attempt, not specific to phase 256: an operator following docs/providers.md's documented procedure would hit this whenever the phase's own artifacts happen to already be committed at settle time. Consider: a loud warning (or refuse) when a code-review/security-audit gate's provider is non-mock but its diff is empty and touchedFiles is non-empty (as distinct from the already-handled empty-touchedFiles case), so an empty-diff false pass can never look identical to a genuine clean pass.

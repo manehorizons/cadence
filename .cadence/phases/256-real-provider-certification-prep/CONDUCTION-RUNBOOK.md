@@ -85,12 +85,26 @@ cadence config set securityAudit.provider host-cli
 
 ## Step 3 — Run the settle for real (attempt 1, expect refusal)
 
+**`--allow-failing-build` is required here — this is expected, not a bug.**
+`packages/core/tests/docs/self-application-config.test.ts` (phase 252) is
+an invariant test asserting this repo's committed `.cadence/config.json`
+always has `securityAudit.provider: 'mock'`. Step 2 just flipped it —
+exactly the condition that test exists to catch. It's doing its job
+correctly; `build-test-must-pass` will refuse without the bypass. This is
+a real, structural tension between phase 252's baseline-invariant and
+phase 256's temporary conduction, not a transient failure — the bypass
+gets recorded in the SUMMARY's `gateBypasses`, which is the honest way to
+carry it, not a reason to hide it.
+
 ```sh
-cadence settle run
+cadence settle run --allow-failing-build
 ```
 
 Expect: refused, CRITICAL security-audit finding on the hardcoded
-credential. Note whether `code-review` also produced a HIGH finding (see
+credential (confirm the ONLY failing test was
+`self-application-config.test.ts`'s `securityAudit.provider` assertion —
+if anything else failed, stop and report it, don't assume it's this same
+known cause). Note whether `code-review` also produced a HIGH finding (see
 "Code-review coverage" above) — either outcome is informative, capture it.
 
 ## Step 4 — Capture the refused-attempt evidence
@@ -113,13 +127,32 @@ grep -A5 'verifierRollup' <that-snapshot-file>
 
 ## Step 5 — Revert to the corrected fixture, settle again (expect clean)
 
+Still needs `--allow-failing-build` — `securityAudit.provider` is still
+`host-cli` at this point (reverted in Step 5b, after this run, not before
+— the point of this settle is to prove the real provider clears cleanly,
+which needs the real provider still configured):
+
 ```sh
 cp .cadence/phases/256-real-provider-certification-prep/fixture/seeded-defect.fixed.ts \
    .cadence/phases/256-real-provider-certification-prep/fixture/seeded-defect.ts
-cadence settle run
+cadence settle run --allow-failing-build
 ```
 
-Expect: clean pass, no security-audit findings.
+Expect: clean pass, no security-audit findings. Confirm the ONLY thing
+`build-test-must-pass` bypassed was the same known `self-application-config`
+assertion as Step 3.
+
+## Step 5b — Revert securityAudit.provider back to mock
+
+**Do this before Step 6, before any commit.** Leaving it as `host-cli`
+would permanently change the repo's committed baseline config, contradicting
+phase 252's own deliberate decision (`dec-20260803-001`: conduction stays a
+temporary, DRAFT-level act via profile override, never a baseline change).
+
+```sh
+cadence config set securityAudit.provider mock
+pnpm --filter @thomas-powers-jr/cadence-core test -- tests/docs/self-application-config.test.ts   # confirm it passes again
+```
 
 ## Step 6 — Clean up before the settle commit
 
@@ -127,7 +160,7 @@ Expect: clean pass, no security-audit findings.
 rm -rf .cadence/phases/256-real-provider-certification-prep/fixture
 rm .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md
 rm packages/core/tests/docs/phase256-conduction-prep.test.ts
-pnpm --filter @thomas-powers-jr/cadence-core test -- tests/docs   # confirm nothing else references the deleted files
+pnpm test   # full suite — confirm everything is clean again, not just tests/docs
 ```
 
 These were prep scratch, never shipped code. Everything else in

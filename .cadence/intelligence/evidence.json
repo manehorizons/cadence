@@ -1575,6 +1575,29 @@
       "kind": "note",
       "summary": "cadence doctor's conduction-reachability check reported 'code-review: blocked by profile, session' on 2026-08-06 while this repo's CADENCE_HOST_CLI_BIN=codex (~/.bashrc:167) meant the session axis was not actually blocking -- confirmed by two real (non-mock) codex-backed per-task-verify calls succeeding in the same headless session, recorded in .cadence/phases/256-real-provider-certification-prep/256-01-PROGRESS.json",
       "createdAt": "2026-08-06T00:45:07.905Z"
+    },
+    {
+      "id": "ev-20260806-002",
+      "recommendationId": "rec-20260806-002",
+      "kind": "cadence-artifact",
+      "summary": "phase 256-real-provider-certification-prep, draft 256-01, SUMMARY contentHash 51b2f95ce6ec4030acca94c1b1117abb7cd2555cb4cd23aaf0c627fa6a4c2fc8 — medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The instructed “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the repo failing its baseline invariant. Require rollback before stopping.",
+      "path": ".cadence/phases/256-real-provider-certification-prep/256-01-SUMMARY.json",
+      "createdAt": "2026-08-06T02:02:51.544Z"
+    },
+    {
+      "id": "ev-20260806-003",
+      "recommendationId": "rec-20260806-003",
+      "kind": "cadence-artifact",
+      "summary": "phase 256-real-provider-certification-prep, draft 256-01, SUMMARY contentHash 0e2b9d2da3c2d5076cd4afb28ce1bd27c9939f6d81b7d93fd6fa3a9d9c9d782d — medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the committed baseline failing its invariant.",
+      "path": ".cadence/phases/256-real-provider-certification-prep/256-01-SUMMARY.json",
+      "createdAt": "2026-08-06T02:14:04.129Z"
+    },
+    {
+      "id": "ev-20260806-004",
+      "recommendationId": "rec-20260806-004",
+      "kind": "note",
+      "summary": "256-01-SUMMARY.json (2026-08-06T02:14:04.111Z): security-audit ran with provider host-cli and returned securityAudit: [] against a fixture with a hardcoded credential still in place, uncommitted-vs-HEAD diff confirmed empty via git diff HEAD -- fixture/seeded-defect.ts; code-review's sole finding that same settle was against CONDUCTION-RUNBOOK.md, the only touched file with real dirt vs HEAD",
+      "createdAt": "2026-08-06T02:32:59.249Z"
     }
   ]
 }
