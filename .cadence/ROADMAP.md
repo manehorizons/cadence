@@ -2123,6 +2123,368 @@ pass/refuse verdict are byte-for-byte unchanged. Disposition mutation (accept / 
 supersede) still has no CLI surface, and `security-audit` findings still have no identity
 wired in — both stay follow-on scope, per phase 236's boundary.
 
+## Backfilled: phases 243–256 (2026-08-06)
+
+Phases 243–256 were built and shipped but never written up here — a live gap this
+entry closes. `rec-20260727-012` (`cadence doctor` roadmap-currency check, Phase 231
+above) would have caught this drift automatically; it was only ever filed
+(`#322`), never built, so nothing flagged it. Still open — see the note after
+Phase 256.
+
+## v1.53.0 — Kernel-assurance-v2 arc merge — ✓ SHIPPED 2026-08-01
+
+Bundles phases 232–236, 241–245 (10 changesets, PR #355). 244–245 (and the arc's
+earlier phases 232–236, 241) were built on `feat/kernel-assurance-v2`, merged to
+`main` via `18296088`; 243 shipped straight to `main` the day before (PR #344) and
+is folded into this release as "the mock-banner follow-up."
+
+### Phase 243 — Loud banner on every verifier seam's credential-missing downgrade (rec-20260731-002)
+
+**Objective.** `createVerifierFactory`'s three selection-time degrade branches
+(anthropic: no key; local: no baseURL/model; host-cli: builder unwired) emitted
+only a bare one-line stderr warning, unlike deep-verify's loud
+`MOCK_FALLBACK_BANNER`. Elevate those three branches to the same loud-banner
+treatment, naming the seam and the missing prerequisite, without touching the
+silent default-mock fallthrough.
+
+**Files.** `packages/core/src/verify/verifier-factory.ts`;
+`packages/core/tests/verify/verifier-factory.test.ts`; `docs/providers.md`;
+`.changeset/mock-fallback-banner-all-seams.md`.
+
+**As built (2026-07-31).** Shipped as designed — `buildDowngradeBanner()` reuses
+`MOCK_VERIFIER_NOTICE` wording, wired into all three degrade branches.
+`settle-mock-banner.test.ts`'s disjointness assertions updated since factory- and
+settle.ts-level banners now legitimately share phrasing. Full workspace green.
+Flagged, left untouched: `docs/providers.md`'s "Current scope" section claims
+5/7 seams lack host-cli wiring — verified false (all 7 wired), pre-existing doc
+drift, out of scope. PR #344.
+
+### Phase 244 — Settle-time guard for global-CLI-shadowing-branch build (rec-20260729-001)
+
+**Objective.** `cadence settle` could silently write a downgraded SUMMARY
+(schemaVersion 1, no assurance record) when actually executed by a
+globally-installed `cadence` binary predating the repo's own build (confirmed on
+phases 233/234 — both binaries report identical `--version` strings). Add a
+realpath-based self-check that fires a loud stderr notice and records provenance
+on the SUMMARY when the executing binary isn't inside this repo's own worktree.
+
+**Files.** `packages/core/src/services/settle.ts` (new
+`detectForeignCadenceBinary`, `isPathInside`, `resolveForeignBinaryFacts`);
+`packages/types/src/summary.ts` (new optional field);
+`packages/core/src/verify/verifier-factory.ts`; tests
+`settle-binary-guard.test.ts`, `settle-foreign-binary-wiring.test.ts`;
+`docs/concepts.md`; changeset.
+
+**As built (2026-08-01).** Shipped as designed; also fixed a coverage-attribution
+bug where a literal `AC-N` token in a test file's header comment shadowed a real
+asserting block. PR #348, with a follow-up commit (PR #349) promoting
+rec-20260729-001 to shipped. Built on `feat/kernel-assurance-v2`.
+
+### Phase 245 — Finding-identity hash: drop anchor + severity volatility (rec-20260801-009)
+
+**Objective.** `computeFindingId` hashed `anchor.kind`/`anchor.ref`/`severity`
+alongside file+message, but both can legitimately change for the same underlying
+defect (DRAFT-amendment re-anchoring; live LLM severity classification), minting
+duplicate ledger recommendations. Narrow identity to `(file, normalized
+message)` only and fix `deriveRoutingCandidates`'s merge logic, which had
+assumed severity was invariant within a matched-id group.
+
+**Files.** `packages/core/src/verify/finding-identity.ts`;
+`packages/core/src/intelligence/finding-routing.ts` (new `SEVERITY_RANK`); tests
+`finding-identity.test.ts`, `criteria-anchor-corpus.test.ts`,
+`finding-routing.test.ts`; `docs/concepts.md`.
+
+**As built (2026-08-01).** Shipped as designed across all 5 ACs. Also corrected
+stale comments in `finding-routing.ts` claiming a matched group "already agrees
+on severity by construction" (no longer true post-fix) and `docs/concepts.md`'s
+old 5-input identity formula. Full core suite green (381/381 files, 3491/3491
+tests). PR #352. Built on `feat/kernel-assurance-v2`.
+
+## v1.54.0 — npm scope rename + post-gate refusal durability — ✓ SHIPPED 2026-08-02
+
+Bundles phases 246–250 (7 commits since v1.53.0, PR #363).
+
+### Phase 246 — Finding-identity dedup under real-provider message drift (rec-20260801-010)
+
+**Objective.** Decide, on evidence not assumption, whether finding-identity
+dedup under real-LLM message drift needs code now.
+
+**Files.** `.cadence/intelligence/decisions.json`,
+`.cadence/intelligence/recommendations.json` only — no source code.
+
+**As built (2026-08-01) — decision-only, major scope change mid-BUILD.** After
+independent review found the original in-loop-telemetry design measured the
+wrong axis (intra-batch, not cross-settle), the phase was revised to a
+decision-only outcome. Recorded `dec-20260801-003`: 0/257 SUMMARY.json files had
+ever carried a persisted code-review finding; the pre-committed next step is an
+offline analyzer over the accumulated SUMMARY corpus (not in-loop telemetry or
+fuzzy-matching); revisit trigger is ≥3 non-mock-provider settles each persisting
+≥1 finding. Shipped via `--evidence-floor-bypass` (no test file exists for a
+decision-only phase; AC-1 verified via `cadence decision show` instead). Filed
+rec-20260801-011 (refused-settle SUMMARY overwrite, → phase 247) separately.
+PR #356.
+
+### Phase 247 — Preserve refused-settle findings: additive per-attempt SUMMARY sibling (rec-20260801-011, rec-20260801-005)
+
+**Objective.** `writeRefusedSettleSummary` never recorded the code-review/
+security-audit findings that caused a refusal, and even once recorded, a later
+attempt for the same draft overwrote the record. Fix both: record, then
+protect.
+
+**Files.** `packages/core/src/services/settle.ts` (`writeRefusedSettleSummary`
+extended; new `now?: () => string` clock seam);
+`packages/core/tests/services/settle.test.ts`;
+`packages/core/src/services/summary-verify.ts`;
+`packages/core/src/cli/commands/summary.ts`; `docs/reference/commands.md`;
+`docs/concepts.md`.
+
+**As built (2026-08-02).** Shipped as designed — refused SUMMARYs now
+conditionally carry `codeReview`/`securityAudit` findings and a `contentHash`,
+plus an immutable `<draftId>-refused-<timestamp>-SUMMARY-snapshot.{json,md}`
+sibling (deliberately not matching `-SUMMARY.json` discovery patterns so
+MCP/git-diff tooling never picks it up). Full suite green (390/390 files,
+3592/3592 tests). PR #357.
+
+### Phase 248 — Honest bypassed-verifier provenance for code-review/security-audit throws (rec-20260801-004)
+
+**Objective.** A code-review/security-audit verifier *throw* (not a
+findings-based bypass) bypassed via `--allow-*-failure`/`--force` recorded a
+bare `status: 'ran'` with no identity — dishonest, since the call never
+returned. Should record `status: 'skipped'` naming the flag and the failure.
+
+**Files.** `packages/core/src/gates/types.ts` (new `reviewVerifierFailure`
+`GateFlags` field); `packages/core/src/gates/code-review.ts`,
+`security-audit.ts`, `registry.ts`; corresponding test files;
+`docs/concepts.md`.
+
+**As built (2026-08-02).** Shipped as designed, all 5 ACs pass. Symmetric fix
+across both gates; the existing findings-bypass path (real HIGH/CRITICAL
+findings on a completed call) deliberately left untouched since `status: 'ran'`
+is accurate there. PR #358.
+
+### Phase 249 — Post-gate refusal SUMMARYs + finding-durability ledger closeout (rec-20260731-010, rec-20260712-006)
+
+**Objective.** Extend phase 247's refused-SUMMARY writer to the three remaining
+post-gate refusal families (AC-derivation, anomaly/skill-audit, evidence-floor)
+that still exited 1 with no SUMMARY, plus close out finding-durability ledger
+bookkeeping.
+
+**Files.** `packages/core/src/services/settle.ts` (3 call-site reroutes only, no
+signature changes); `packages/core/tests/cli/settle-auto.test.ts`,
+`settle-skill-audit.test.ts`, `settle-interactive.test.ts`,
+`packages/core/tests/services/settle.test.ts`; `docs/concepts.md`.
+
+**As built (2026-08-02).** Shipped as designed. Build-time correction: a grep
+missed a third absence-assertion (`settle-interactive.test.ts:180-182`) because
+its `existsSync`/`.toBe(false)` spanned two lines — same refusal family, flipped
+along with the other two. Also missed `checkPhaseCollisionBackstop`'s
+worktree-collision refusal (bare `{exitCode:1}` shape, out of scope by design).
+Shipped with two gate bypasses: `--allow-missing-coverage` (test-coverage) and
+`--evidence-floor-bypass` on AC-1 (ledger-state verified via CLI output, no test
+can carry the token — phase 246 precedent). PR #361.
+
+### Phase 250 — Rename npm scope to `@thomas-powers-jr`
+
+**Objective.** Rename the monorepo's npm scope from `@manehorizons` to
+`@thomas-powers-jr` across source, config, docs, and tooling, matching the
+already-renamed GitHub org (PR #360). Publish-ready but does not publish (npm
+publish/deprecate are operator-run post-merge). Also closes a real gap:
+`cadence doctor --fix` couldn't detect a hook still pointing at the old scope
+(marker-presence only, not command-content).
+
+**Files.** All 6 `package.json`s + `pnpm-lock.yaml`; 178 source files' import
+specifiers; `host-wire.ts`, both adapters' `install.ts`, `doctor/fix.ts`,
+`doctor/host-hooks.ts`, `doctor/run.ts`; `config-explain/{gather,build,types}.ts`;
+~290 test files; `CLAUDE.md`, all READMEs, `.changeset/config.json`,
+`scripts/release-integrity.mjs`; new `docs/migration-npm-scope.md`; GitHub issue
+template + 3 workflow files.
+
+**As built (2026-08-02).** Largest of these 14 phases (16 tasks, tier `complex`,
+soft-cap bypassed via `--allow-auto-complex`). Grew via as-built amendments
+(T9–T16) found by independent review and a whole-branch review: two tasks fixed
+doctor's and config-explain's stale-scope messages, which had promised detection
+(AC-5) but never actually branched on the new predicate for two of three
+promised callers; another phase-qualified all AC-coverage tokens
+(`.cadence/config.json`'s `coverageScheme` requires `250-01/AC-N`, not bare
+`AC-N`) and closed 2 real coverage gaps (AC-2, AC-7) with honest new assertions
+rather than bypasses. Final state: 392/392 test files, 3627/3627 tests green.
+PR #362.
+
+## Unreleased — v1.55.0 integrity release in progress — phases 251–256
+
+Scope, priorities, and standing rules for this arc are tracked in
+`docs/handoffs/HANDOFF-v1.55-integrity-release.md`. Phase 251 shipped ahead of
+that handoff being written; 252–256 map to its lettered phases C, A, B, D, E
+respectively (letters F–J are not yet phases).
+
+### Phase 251 — Conduction reachability check + finding-durability arc close-out (rec-20260801-012)
+
+**Objective.** Close the finding-durability arc's ledger bookkeeping (phases
+247–249, shipped v1.54.0), then add a `cadence doctor` check
+(`conduction-reachability`) reporting per-gate/per-axis (profile, provider,
+session) whether this repo's config can produce a real-provider code-review/
+security-audit finding at all — three verified blockers currently make it
+structurally unreachable in normal headless-agent operation.
+
+**Files.** `packages/core/src/doctor/run.ts` (new inline check,
+`severity: 'warning'`, `fixId: null`); `docs/reference/commands.md`;
+`docs/providers.md`; `.cadence/intelligence/{recommendations,decisions,evidence}.json`;
+new `packages/core/tests/docs/phase251-ledger.test.ts`.
+
+**As built (2026-08-03).** Shipped as designed, all 6 ACs pass. Ledger closeout:
+`rec-20260802-001` promoted to shipped (ref "v1.54.0 (phases 247/248/249)");
+filed a new low-priority gap rec noting no CLI path corrects a `shippedRef` on
+an already-terminal recommendation. Recorded `dec-20260803-001`: self-invocation
+guard retained (safety property), auto-profile gate set unchanged (deliberate
+cost decision), security-audit's mock default is a separate ordinary config
+choice, conduction is a documented human-operator procedure. Deliberately does
+not modify `isSelfInvocation`/`DELTAS`. PR #366.
+
+### Phase 252 — Self-application config correction (rec-20260804-005)
+
+**Objective.** Raise the repo's own `gates.evidenceFloor` from `"mention"` to
+the `solo` preset's `"assertion"` default, and record a decision deferring the
+baseline `profile` question to v1.56 Phase P, without superseding
+`dec-20260803-001`.
+
+**Files.** `.cadence/config.json`; `.cadence/intelligence/decisions.json`,
+`DECISIONS.md`; new `packages/core/tests/docs/self-application-config.test.ts`.
+
+**As built (2026-08-04).** Shipped exactly as designed, both ACs pass. `profile`
+deliberately left at `"auto"`; `securityAudit.provider` left at `"mock"`.
+Recorded `dec-20260804-001`. Captured `conduction-reachability` doctor output
+confirming it stayed `warning`/unchanged — correct outcome, nothing about
+reachability should move from this phase. Full suite green (394/394 files,
+3639/3639 tests). PR #372.
+
+### Phase 253 — Dependency override remediation
+
+**Objective.** Corrected premise: pnpm's `overrides` mechanism was never
+broken — the misleading warning came from a newer globally-installed pnpm
+launcher self-switching before delegating to the pinned 9.12.0. The real
+defect: override targets (fast-uri, brace-expansion 2.x/5.x lines) were stale,
+`ip-address` had no override at all, and nothing detected drift. Refresh
+targets, add the missing override, add a CI detector, and correct the false
+narrative in-place.
+
+**Files.** `package.json` (`pnpm.overrides`), `pnpm-lock.yaml`; new
+`scripts/check-lockfile-overrides.mjs`; `.github/workflows/security.yml`;
+`packages/core/tests/docs/check-lockfile-overrides.test.ts`, `security-ci.test.ts`;
+`docs/security/audit-exceptions.md`; `docs/handoffs/HANDOFF-v1.55-integrity-release.md`;
+`CLAUDE.md`.
+
+**As built (2026-08-05).** Tier `complex`, soft-cap bypassed
+(`--allow-auto-complex`). All 6 ACs pass with a documented AC-3 framing
+correction (the "revert to stale value" example doesn't demonstrate failure
+within a major version; the detector's real failure modes are a *tightened*
+target and a *removed/uncovered* override key). Shipped brace-expansion
+2.x/ip-address as caret ranges rather than the DRAFT's literal `>=`, after
+empirically finding an unbounded `>=` collapsed the 2.x line into the unrelated
+5.x line's resolution. Filed rec-20260805-001 (low, `docs.yml`'s stale
+`pnpm/action-setup@v4` vs `@v6` elsewhere) and rec-20260805-002 (low, detector
+can't catch a stale-but-internally-consistent floor). PR #373. Corrects
+`rec-20260724-012`, which was filed under the mistaken "overrides don't work"
+diagnosis this phase disproves.
+
+### Phase 254 — Security advisory remediation
+
+**Objective.** Retire the now-dead brace-expansion security exception (phase
+253 already patched it), re-justify the three exceptions expiring 2026-08-13
+with fresh reachability analysis, and capture ip-address moderate-advisory
+evidence — ahead of the 2026-08-12 deadline.
+
+**Files.** `docs/security/audit-exceptions.md`;
+`packages/core/tests/docs/security-ci.test.ts`; new `254-01-T2-EVIDENCE.md`.
+
+**As built (2026-08-05).** Both ACs pass. Independent review caught and fixed
+an over-deletion (a still-valid whole-doc regression test) and a missing AC-1
+coverage token, plus an overstated claim that vitest ≥3.2.6 "closes this
+permanently" — PR #235's own commit message showed 3.x still transitively
+resolved a vulnerable `vite@5.4.21`; corrected to name ≥4.1.10 as the real
+deferred target. PR #374.
+
+### Phase 255 — Make Security and CodeQL merge-blocking (rec-20260804-006)
+
+**Objective.** Add stable `security-success`/`codeql-success` aggregator status
+checks (mirroring `ci-success`'s pattern) so a red Security/CodeQL run on `main`
+actually blocks merge — `required_status_checks.contexts` was exactly
+`["ci-success"]`, so a failing/skipped security or CodeQL job blocked nothing.
+
+**Files.** `.github/workflows/security.yml`, `codeql.yml`;
+`packages/core/tests/docs/security-ci.test.ts`;
+`docs/security/audit-exceptions.md`.
+
+**As built (2026-08-05).** All 5 ACs pass. Deliberately excludes `sbom` from
+`security-success`'s needs (compliance artifact, not a security verdict).
+Independent review caught a present-tense overclaim that gates were already
+blocking before the operator's post-merge branch-protection step, and a real
+bug in the coverage engine's `js-ts` masking profile — a regex literal with an
+odd-parity quote sequence desynced the string/comment classifier, silently
+mismasking later code; fixed by hex-escaping the quotes, filed as
+rec-20260805-004 (masker itself unfixed, out of phase scope). The branch-
+protection contexts addition itself is recorded as an explicit, sequenced,
+manual, post-merge, operator-only GitHub Settings action — not automated by
+this phase. Filed rec-20260805-003 (draft-parser only captures a task's first
+action line, silently dropping the multi-line runbook for machine consumers).
+PR #376.
+
+### Phase 256 — Real-provider certification prep
+
+**Objective.** Prepare a disposable seeded-defect fixture and a paste-ready
+operator runbook so Thomas (not an agent) can personally certify code-review
+and security-audit against a real, non-mock provider from a real terminal.
+Supplies "settle 1 of 3" toward `dec-20260801-003`'s revisit trigger; explicitly
+not reopening rec-20260801-010.
+
+**Files.** `.cadence/phases/256-real-provider-certification-prep/fixture/
+{seeded-defect.ts,seeded-defect.fixed.ts}`, `CONDUCTION-RUNBOOK.md` (all three
+deliberately deleted before the final commit);
+`packages/core/tests/docs/phase256-conduction-prep.test.ts` (also scratch,
+deleted alongside).
+
+**256-01 — void, redone as 256-02.** Settled 2026-08-06 with
+`assurance.overall: strong`, both gates ran under `provider: host-cli` — but
+this was a *false record*: the fixture had already been committed (`9fb2eef6`)
+before settle ran, so `security-audit`'s real codex call saw an empty diff and
+returned no findings without ever judging the seeded credential; the one
+code-review finding was real but incidental (only `CONDUCTION-RUNBOOK.md` had
+an actual diff). Recorded void via `dec-20260806-001`; filed rec-20260806-004
+(general gap: any diff-scoped verifier gate silently no-ops if its own
+artifacts are already committed at settle time — not specific to this phase).
+`securityAudit.provider` manually reverted to `mock` immediately after.
+
+**256-02 — redo (commit-timing fix), settled clean 2026-08-06.** Fixed the root
+cause: the fixture must never land in a commit (stays staged-but-uncommitted at
+every real settle call), enforced by a mandatory pre-flight (`git ls-tree HEAD`
+empty → `git add` → `git diff --no-color HEAD` non-empty, in that exact order)
+before *every* settle call including the mock dry run. Five refused attempts
+preceded the final clean settle, all real, non-mock, host-cli-backed, each
+catching a genuine defect in the fixture or test design along the way. Final
+`256-02-SUMMARY.json`: 1 MEDIUM finding on the runbook itself (its "stop and
+report" branch skipped reverting `securityAudit.provider` to mock) — fixed,
+settled clean. As-built amendment: the final test ships a synthetic
+string-concatenation sample rather than a literal credential, to validate
+detector regexes independent of live disk content. Also corrects the DRAFT's
+framing that only the final clean settle counts toward `dec-20260801-003`'s
+3-settle trigger — the decision's actual text counts *any* settle persisting
+≥1 finding, and all six real settles in this phase qualify. Filed two
+engine-facing findings outside `rec-20260806-004`'s scope:
+`build-test-must-pass`'s `--allow-failing-build` bypass silently swallows which
+test failed, and code-review's convergence-attempt budget persists *across*
+separate settle invocations for the same draft, undocumented. PR #377. Tier
+`complex`/profile `strict` (DRAFT-level override, no engine changes).
+
+> **Still open.** `rec-20260727-012` (Phase 231's `cadence doctor`
+> roadmap-currency check) remains unshipped — the anti-recurrence mechanism
+> that would have caught this exact 14-phase gap automatically was itself only
+> ever filed, never built. The `## v1.52.0 (planned) ... — NEXT` header above
+> this backfill is also stale (v1.52.0 shipped 2026-07-31; none of phases
+> 231/232–236/242 actually landed under that release per the v1.53.0/v1.54.0
+> release PRs' own changeset audits) — left uncorrected here since untangling
+> which phase actually shipped under which release header is a bigger
+> archaeology job than this backfill's scope. Both are candidates for a
+> follow-on phase, not fixed inline.
+
 ### Phase 237 — Invariant promotion from recurring findings *(sketch — contingent)*
 
 **Gate to entry.** Phase 236 settled and has produced enough routed findings for
