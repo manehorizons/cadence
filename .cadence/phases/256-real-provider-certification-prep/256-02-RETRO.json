@@ -1,0 +1,23 @@
+{
+  "bypasses": [],
+  "roughTasks": [],
+  "findings": {
+    "codeReview": {
+      ".cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md": [
+        {
+          "severity": "medium",
+          "message": "The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provider set to host-cli and the baseline config invalid.",
+          "line": 180,
+          "anchor": {
+            "kind": "ac",
+            "ref": "AC-2",
+            "tier": "structured"
+          },
+          "id": "36166aaefa12cfa1ba91ac7a59f760abafa4fc9730a915ad18ccd0785f3d4006",
+          "target": "artifact",
+          "disposition": "open"
+        }
+      ]
+    }
+  }
+}

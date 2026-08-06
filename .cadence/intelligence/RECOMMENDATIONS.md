@@ -1231,6 +1231,7 @@ packages/core/src/parse/draft-parser.ts's parseTasks extracts a task's action vi
 - confidence: 40%
 - decay: fresh
 - areas: core-verify
+- evidence: Second independent occurrence, this time a backtick rather than a quote character (2026-08-05, phase 256-02 redo). packages/core/tests/docs/phase256-conduction-prep.test.ts line 63 originally read: expect(runbook).not.toMatch(/git commit[^`]*seeded-defect/) -- a bare backtick inside the regex's character class. Since mask.ts's classify() tracks backtick as a string/template delimiter identically to ' and ", this backtick opens a spurious template-literal mode that is never legitimately closed (no matching backtick appears later in the file), corrupting span detection for the rest of the file from that point on. Distinct from the quote-character case in one way worth recording: here the corrupting backtick sat INSIDE the very it() block it broke (256-02/AC-2, opening at line 46), not in an earlier block -- cadence verify coverage --explain AC-2 reported the block's own opening line as 'no containing span' (spans found: 1 for the whole file, should have been 2), because the corrupted mask meant the parser never found a valid closing brace for that block at all, not just that a later block absorbed extra content. This caused a real settle attempt (cadence settle run --allow-failing-build, 2026-08-05T04:00:28Z) to refuse at test-coverage before code-review/security-audit ever ran -- the exact real-provider certification this phase exists to produce was never reached because of this bug, not because of anything about the fixture. Fixed locally by replacing the regex with a plain string/line-based check (avoiding regex entirely for that assertion, not just avoiding the specific bad character) -- verified via cadence verify coverage --explain AC-1/AC-2 (both now satisfies: true, spans found: 2) and the test itself (2/2 passing) before resubmitting the settle.
 - next: cadence milestone propose
 
 packages/core/src/verify/coverage-profiles/mask.ts's classify() only knows string delimiters ', ", and ` (js-ts.ts's syntax.strings table) -- it has no concept of a /regex/ literal as a distinct construct. A regex literal containing an odd-parity sequence of unescaped ' or " characters (e.g. /needs\.audit\.result.*!=\s*["']success["']/ ) causes classify() to open a spurious string mode partway through the regex that is never legitimately closed, silently misclassifying all subsequent real code (including ) and } characters needed for paren/brace depth tracking) as string content until an unrelated later quote happens to resync it by coincidence. This corrupts findMatchingParenIndex/callExpressionBlock's span resolution for every it()/test() block between the triggering regex and the accidental resync point -- observed directly in phase 255's packages/core/tests/docs/security-ci.test.ts, where one such regex caused 3 of 5 new AC-tagged describe blocks to report 'token found but not inside any test block recognized by profile js-ts' despite syntactically correct, passing test code. Confirmed via cadence verify coverage --explain and fixed locally in that file by replacing embedded quote characters with hex escapes (\x27/\x22), but the underlying mask.ts/js-ts.ts gap is unfixed and would silently affect any other test file in the repo (or written in the future) whose regex-literal assertions embed a ' or " character with odd parity -- coverage could report false negatives (a real AC test wrongly refused) or, worse, false positives if the resync boundary happens to land such that an unrelated it() block's span absorbs content it shouldn't.
@@ -1301,3 +1302,67 @@ medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTIO
 - next: cadence milestone propose
 
 Every diff-scoped verifier gate builds its input from ctx.diff() = git diff HEAD -- <touchedFiles> (see packages/core/src/gates/code-review.ts, security-audit.ts). If those files are already committed (no working-tree delta vs HEAD), the diff is empty, and both HostCliSecurityAuditVerifier.verify and the equivalent code-review path early-return {findings: []} without ever spawning a real provider call to judge anything -- no error, no warning, a normal-looking 'ran' gate status with provider: host-cli in the persisted SUMMARY, and assurance.overall can still reach 'strong'. This is silent: nothing distinguishes 'gate ran and found nothing' from 'gate never actually reviewed anything because the diff was empty by construction'. Concretely hit during phase 256's real-provider certification (2026-08-06): the seeded-defect fixture was committed in a WIP prep commit before the real settle ran, so security-audit's real codex call saw an empty diff and returned no findings on an objectively hardcoded credential its own system prompt calls CRITICAL (bullet 1) -- producing a false 'strong' assurance record (256-01-SUMMARY.json) that looked like a valid real-provider pass. code-review's one finding in that same settle was real, but only because CONDUCTION-RUNBOOK.md had uncommitted edits -- it was the only file with an actual diff. This is a general trap for ANY future real-provider conduction attempt, not specific to phase 256: an operator following docs/providers.md's documented procedure would hit this whenever the phase's own artifacts happen to already be committed at settle time. Consider: a loud warning (or refuse) when a code-review/security-audit gate's provider is non-mock but its diff is empty and touchedFiles is non-empty (as distinct from the already-handled empty-touchedFiles case), so an empty-diff false pass can never look identical to a genuine clean pass.
+
+## rec-20260806-005 — Code-review finding (medium): The Step 3 "stop and report" path bypasses Step 6, leaving securityAudit.provid…
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: .cadence
+- files: .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md
+- evidence: phase 256-real-provider-certification-prep, draft 256-02, SUMMARY contentHash b8cecf07e5576324289d22a5c1911f760c7a5c938abdce54fa100889754f27f3 — medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:180: The Step 3 "stop and report" path bypasses Step 6, leaving securityAudit.provider set to host-cli and the baseline config invalid.
+- next: cadence milestone propose
+
+medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:180: The Step 3 "stop and report" path bypasses Step 6, leaving securityAudit.provider set to host-cli and the baseline config invalid.
+
+## rec-20260806-006 — build-test-must-pass silently swallows which test failed when bypassed via --allow-failing-build
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/build-test-must-pass.ts, packages/core/src/verify/test-runner.ts
+- evidence: Reproduced directly: pnpm --filter cadence-core test -- tests/docs/self-application-config.test.ts with securityAudit.provider=host-cli shows the real AssertionError only when run standalone outside cadence settle; cadence settle run --allow-failing-build gave zero console output about which test failed, on the exact same repo state (2026-08-06).
+- next: cadence milestone propose
+
+packages/core/src/gates/build-test-must-pass.ts only writes a stderr notice on the refusal branch (line 37: '${res.command} exited ${res.exitCode}'); when a failing run is bypassed via --allow-failing-build or --force (line 47-51), the gate returns { outcome: 'pass', flags: { buildTestBypassed: true } } with NO stderr output at all. The subprocess itself is spawned via packages/core/src/verify/test-runner.ts's runTestCommand with stdio: 'ignore' -- the actual test output (which test failed, why) is never captured anywhere, not to the console, not to a log file, not into the SUMMARY. This means an operator who bypasses a failing build genuinely cannot find out which test failed without independently re-running the test command themselves outside cadence. This violates this repo's own documented convention (CLAUDE.md's 'Quiet Fallback' failure mode: 'every fallback and auto-bypass in this codebase prints a loud stderr notice and/or records provenance in the SUMMARY'). Discovered during phase 256-02's real-provider conduction (2026-08-06): the operator was asked to confirm a known, expected build-test-must-pass bypass was ONLY the anticipated self-application-config.test.ts failure and not something else -- and had to be walked through running pnpm test directly, outside cadence, to find out, since cadence itself gave zero signal. Fix direction: capture stdout/stderr from the test command (or at minimum a pass/fail-per-file summary) and print/record it on the bypass path too, not just the refusal path.
+
+## rec-20260806-007 — code-review convergence budget persists across separate settle invocations, undocumented, counts bypassed attempts
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/verify/converge.ts, packages/core/src/gates/code-review.ts
+- evidence: 256-02-CODE-REVIEW.json sidecar history (2026-08-06): 3 entries across 3 separate settle invocations (04:21:23 reloop, 04:33:28 reloop+bypassed:true, 04:43:22 escalate) against unchanged vulnerable content, then a 4th real invocation (05:08:23, different content -- the fixed counterpart plus a since-fixed test-file issue) still produced 1 finding and needed to be judged fresh, unaffected by the exhausted counter only because it happened to genuinely pass on the 6th attempt (05:20:09) -- confirmed via packages/core/src/gates/code-review.ts:126 that a genuine pass (highs.length===0) skips the attempt-budget check entirely, so escalate only bites on continued failures, but nothing surfaces the remaining budget before that point.
+- next: cadence milestone propose
+
+packages/core/src/verify/converge.ts's maxAttempts logic (nextConvergence: 'if (attempt >= maxAttempts) return escalate') reads attemptsSoFar from a persisted per-draft sidecar (<draftId>-CODE-REVIEW.json), not a per-invocation counter -- so the 3-attempt convergence budget (config.convergence.maxAttempts, default 3) is consumed across ALL separate 'cadence settle run' invocations for a draft, including ones where the operator passed --allow-code-review-failure to deliberately bypass a KNOWN, expected finding (the sidecar still records that as an attempt with bypassed: true and increments the counter). This is undocumented operator-facing behavior: docs/providers.md's conduction procedure and this repo's own runbooks give no indication that re-running settle (e.g. to reproduce output for review, or simply retrying after an unrelated fix) burns down a shared, finite budget that has nothing to do with whether the underlying code actually changed. Concretely hit during phase 256-02's real-provider conduction (2026-08-06): three real settle invocations against the SAME unchanged vulnerable fixture (expected, deliberate, per the runbook's own design) consumed all 3 attempts; a fourth invocation -- triggered only because the operator ran 'clear' in their terminal and had to re-run settle to reproduce output for the assisting session -- hit 'code-review did NOT converge after 3 attempts' before security-audit could run again, even though --allow-code-review-failure would have worked fine on that invocation too had it been included. No engine bug here (the escalate-after-3 mechanism is presumably intentional, forcing a human decision rather than infinite silent bypass-and-retry), but the SILENCE about it being cross-invocation and bypass-inclusive is the gap: an operator has no way to know 'you have N attempts left' before hitting the wall, and no visible signal distinguishes 'this attempt was consumed by a genuine failed fix attempt' from 'this attempt was burned by an incidental re-run.' Fix direction: either surface remaining-attempts count in the reloop/bypass stderr notices (e.g. 'code-review: --allow-code-review-failure set; proceeding past 2 HIGH finding(s). 1 attempt remaining before this draft requires --force.'), or reset/exclude the counter increment specifically when the SAME finding set repeats bypassed (distinguishing genuine iteration from incidental re-invocation).
+
+## rec-20260806-008 — dec-20260801-003's 3-settle revisit trigger has been met -- worth a decision on whether to act
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/intelligence/finding-routing.ts, packages/core/src/verify/finding-identity.ts
+- evidence: Counted directly from .cadence/phases/256-real-provider-certification-prep/*.json (2026-08-06): six settles, provider host-cli throughout, codeReview finding counts 2/2/3/1/2/1 respectively; dec-20260801-003's trigger text confirmed via cadence decision show / decisions.json read.
+- next: cadence milestone propose
+
+dec-20260801-003 (linked under the now-shipped/closed rec-20260801-010) deferred finding-identity message-drift dedup, with an explicit trigger to revisit: 'at least 3 settles under a non-mock review provider (anthropic/local/host-cli) have each persisted at least 1 code-review finding.' Phase 256-02's real-provider conduction (2026-08-06) produced SIX such settles under provider: host-cli, each persisting >=1 code-review finding: .cadence/phases/256-real-provider-certification-prep/256-02-refused-2026-08-06T04-21-23-042Z-SUMMARY-snapshot.json (2 findings), ...T04-33-37-866Z (2), ...T04-43-22-653Z (3), ...T05-08-23-709Z (1), ...T05-13-30-388Z (2), and the final 256-02-SUMMARY.json (1) -- double the trigger's threshold. This does NOT mean the deferred work should now be built reflexively: several of the six are repeat invocations against unchanged fixture content (deliberate, per the redo's own runbook design, not independent drift signal), and dec-20260801-003's own planned next step was specifically an offline analyzer over the accumulated SUMMARY.json corpus, which has not been built or run. This rec exists only to make the met trigger visible for a future decision -- act on it, defer again with updated reasoning, or determine the corpus still isn't representative enough (six settles from one seeded, single-defect-type fixture may not be what the original decision meant by 'real data'). Could not attach this as evidence directly to rec-20260801-010 -- recommendation evidence add refuses on shipped/closed recs by design.

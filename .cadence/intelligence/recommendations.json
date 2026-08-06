@@ -2263,11 +2263,13 @@
       ],
       "affectedFiles": [],
       "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [],
+      "evidenceIds": [
+        "ev-20260806-007"
+      ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-05T23:17:43.748Z",
-      "updatedAt": "2026-08-05T23:17:43.748Z"
+      "updatedAt": "2026-08-06T04:10:53.058Z"
     },
     {
       "id": "rec-20260806-001",
@@ -2391,6 +2393,119 @@
       "scoutId": "scout-20260806-phase256-prep",
       "createdAt": "2026-08-06T02:32:59.249Z",
       "updatedAt": "2026-08-06T03:12:03.038Z"
+    },
+    {
+      "id": "rec-20260806-005",
+      "title": "Code-review finding (medium): The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provid…",
+      "summary": "medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:180: The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provider set to host-cli and the baseline config invalid.",
+      "source": "review",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        ".cadence"
+      ],
+      "affectedFiles": [
+        ".cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260806-0520",
+      "sourceFindingId": "36166aaefa12cfa1ba91ac7a59f760abafa4fc9730a915ad18ccd0785f3d4006",
+      "createdAt": "2026-08-06T05:20:09.925Z",
+      "updatedAt": "2026-08-06T05:20:09.925Z"
+    },
+    {
+      "id": "rec-20260806-006",
+      "title": "build-test-must-pass silently swallows which test failed when bypassed via --allow-failing-build",
+      "summary": "packages/core/src/gates/build-test-must-pass.ts only writes a stderr notice on the refusal branch (line 37: '${res.command} exited ${res.exitCode}'); when a failing run is bypassed via --allow-failing-build or --force (line 47-51), the gate returns { outcome: 'pass', flags: { buildTestBypassed: true } } with NO stderr output at all. The subprocess itself is spawned via packages/core/src/verify/test-runner.ts's runTestCommand with stdio: 'ignore' -- the actual test output (which test failed, why) is never captured anywhere, not to the console, not to a log file, not into the SUMMARY. This means an operator who bypasses a failing build genuinely cannot find out which test failed without independently re-running the test command themselves outside cadence. This violates this repo's own documented convention (CLAUDE.md's 'Quiet Fallback' failure mode: 'every fallback and auto-bypass in this codebase prints a loud stderr notice and/or records provenance in the SUMMARY'). Discovered during phase 256-02's real-provider conduction (2026-08-06): the operator was asked to confirm a known, expected build-test-must-pass bypass was ONLY the anticipated self-application-config.test.ts failure and not something else -- and had to be walked through running pnpm test directly, outside cadence, to find out, since cadence itself gave zero signal. Fix direction: capture stdout/stderr from the test command (or at minimum a pass/fail-per-file summary) and print/record it on the bypass path too, not just the refusal path.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/build-test-must-pass.ts",
+        "packages/core/src/verify/test-runner.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-009"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-06T05:30:55.570Z",
+      "updatedAt": "2026-08-06T05:30:55.570Z"
+    },
+    {
+      "id": "rec-20260806-007",
+      "title": "code-review convergence budget persists across separate settle invocations, undocumented, counts bypassed attempts",
+      "summary": "packages/core/src/verify/converge.ts's maxAttempts logic (nextConvergence: 'if (attempt >= maxAttempts) return escalate') reads attemptsSoFar from a persisted per-draft sidecar (<draftId>-CODE-REVIEW.json), not a per-invocation counter -- so the 3-attempt convergence budget (config.convergence.maxAttempts, default 3) is consumed across ALL separate 'cadence settle run' invocations for a draft, including ones where the operator passed --allow-code-review-failure to deliberately bypass a KNOWN, expected finding (the sidecar still records that as an attempt with bypassed: true and increments the counter). This is undocumented operator-facing behavior: docs/providers.md's conduction procedure and this repo's own runbooks give no indication that re-running settle (e.g. to reproduce output for review, or simply retrying after an unrelated fix) burns down a shared, finite budget that has nothing to do with whether the underlying code actually changed. Concretely hit during phase 256-02's real-provider conduction (2026-08-06): three real settle invocations against the SAME unchanged vulnerable fixture (expected, deliberate, per the runbook's own design) consumed all 3 attempts; a fourth invocation -- triggered only because the operator ran 'clear' in their terminal and had to re-run settle to reproduce output for the assisting session -- hit 'code-review did NOT converge after 3 attempts' before security-audit could run again, even though --allow-code-review-failure would have worked fine on that invocation too had it been included. No engine bug here (the escalate-after-3 mechanism is presumably intentional, forcing a human decision rather than infinite silent bypass-and-retry), but the SILENCE about it being cross-invocation and bypass-inclusive is the gap: an operator has no way to know 'you have N attempts left' before hitting the wall, and no visible signal distinguishes 'this attempt was consumed by a genuine failed fix attempt' from 'this attempt was burned by an incidental re-run.' Fix direction: either surface remaining-attempts count in the reloop/bypass stderr notices (e.g. 'code-review: --allow-code-review-failure set; proceeding past 2 HIGH finding(s). 1 attempt remaining before this draft requires --force.'), or reset/exclude the counter increment specifically when the SAME finding set repeats bypassed (distinguishing genuine iteration from incidental re-invocation).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/converge.ts",
+        "packages/core/src/gates/code-review.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-010"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-06T05:31:17.031Z",
+      "updatedAt": "2026-08-06T05:31:17.031Z"
+    },
+    {
+      "id": "rec-20260806-008",
+      "title": "dec-20260801-003's 3-settle revisit trigger has been met -- worth a decision on whether to act",
+      "summary": "dec-20260801-003 (linked under the now-shipped/closed rec-20260801-010) deferred finding-identity message-drift dedup, with an explicit trigger to revisit: 'at least 3 settles under a non-mock review provider (anthropic/local/host-cli) have each persisted at least 1 code-review finding.' Phase 256-02's real-provider conduction (2026-08-06) produced SIX such settles under provider: host-cli, each persisting >=1 code-review finding: .cadence/phases/256-real-provider-certification-prep/256-02-refused-2026-08-06T04-21-23-042Z-SUMMARY-snapshot.json (2 findings), ...T04-33-37-866Z (2), ...T04-43-22-653Z (3), ...T05-08-23-709Z (1), ...T05-13-30-388Z (2), and the final 256-02-SUMMARY.json (1) -- double the trigger's threshold. This does NOT mean the deferred work should now be built reflexively: several of the six are repeat invocations against unchanged fixture content (deliberate, per the redo's own runbook design, not independent drift signal), and dec-20260801-003's own planned next step was specifically an offline analyzer over the accumulated SUMMARY.json corpus, which has not been built or run. This rec exists only to make the met trigger visible for a future decision -- act on it, defer again with updated reasoning, or determine the corpus still isn't representative enough (six settles from one seeded, single-defect-type fixture may not be what the original decision meant by 'real data'). Could not attach this as evidence directly to rec-20260801-010 -- recommendation evidence add refuses on shipped/closed recs by design.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/intelligence/finding-routing.ts",
+        "packages/core/src/verify/finding-identity.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-011"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-06T05:32:11.283Z",
+      "updatedAt": "2026-08-06T05:32:11.283Z"
     }
   ],
   "archived": [
