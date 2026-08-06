@@ -1598,6 +1598,20 @@
       "kind": "note",
       "summary": "256-01-SUMMARY.json (2026-08-06T02:14:04.111Z): security-audit ran with provider host-cli and returned securityAudit: [] against a fixture with a hardcoded credential still in place, uncommitted-vs-HEAD diff confirmed empty via git diff HEAD -- fixture/seeded-defect.ts; code-review's sole finding that same settle was against CONDUCTION-RUNBOOK.md, the only touched file with real dirt vs HEAD",
       "createdAt": "2026-08-06T02:32:59.249Z"
+    },
+    {
+      "id": "ev-20260806-005",
+      "recommendationId": "rec-20260806-004",
+      "kind": "note",
+      "summary": "Correction (verified 2026-08-05 via code read of packages/core/src/gates/security-audit.ts:296 and code-review.ts:336): the summary's claim that the verifiers 'early-return {findings: []} without ever spawning a real provider call' is inaccurate. The empty-diff guard is an AND, not an OR (if (input.files.length === 0 && input.diff.trim().length === 0)) -- non-empty touchedFiles skips the early return, so the real host-cli subprocess DOES spawn and receives '(no diff supplied)' as its diff, burning a live provider call before returning empty findings. Cost accounting for 256-01's void run: one real codex request was consumed, not zero. This also shifts the fix direction named in this rec's Summary -- 'a loud warning when diff is empty' is insufficient since the call has already fired by the time that's known; the fix needs to refuse (or skip) BEFORE spawning the provider call, not just warn after.",
+      "createdAt": "2026-08-06T02:58:17.931Z"
+    },
+    {
+      "id": "ev-20260806-006",
+      "recommendationId": "rec-20260806-004",
+      "kind": "note",
+      "summary": "Widened scope, discovered while authoring 256-02 (2026-08-05): MockSecurityAuditVerifier and MockCodeReviewVerifier (packages/core/src/verify/security-audit.ts:67, code-review.ts:113) ALSO early-return on input.diff.trim().length === 0 -- the mock path is diff-based too, not content-based. This means the empty-diff gap defeats the mock-provider safety net as well: docs/providers.md's documented 'run a mock dry run first to confirm the fixture is wired correctly before spending a real call' step gives no warning if the touched files are already committed at settle time -- it silently returns a clean pass instead of refusing, for the identical reason the real provider silently returned empty findings. If 256-01's WIP commit (9fb2eef6, 19:44) landed before the operator's own Step 0 mock dry run (timestamps suggest but do not prove this), that step was also a silent no-op that never surfaced as anomalous. This raises the fix's importance: an operator following the documented procedure gets no early signal at any stage, mock or real.",
+      "createdAt": "2026-08-06T03:12:03.038Z"
     }
   ]
 }

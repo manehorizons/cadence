@@ -2380,7 +2380,9 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260806-004"
+        "ev-20260806-004",
+        "ev-20260806-005",
+        "ev-20260806-006"
       ],
       "assumptionIds": [],
       "decisionIds": [
@@ -2388,7 +2390,7 @@
       ],
       "scoutId": "scout-20260806-phase256-prep",
       "createdAt": "2026-08-06T02:32:59.249Z",
-      "updatedAt": "2026-08-06T02:32:59.249Z"
+      "updatedAt": "2026-08-06T03:12:03.038Z"
     }
   ],
   "archived": [
