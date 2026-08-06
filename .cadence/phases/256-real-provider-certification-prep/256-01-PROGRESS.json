@@ -1,0 +1,30 @@
+{
+  "draftId": "256-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Seeded fixture/seeded-defect.ts + .fixed.ts. Verified via direct node -e regex check against MockSecurityAuditVerifier's real AUTH_HEADER_RE (not by running cadence settle): line matches: true. No in-file disclaimer comment; token value does not resemble any real provider prefix (not sk-/ghp_/AKIA/eyJ).",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-06T00:26:37.619Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "Fixture and fixed counterpart are coherent and limited to the declared files.",
+        "provider": "host-cli"
+      }
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Fixed the real per-task-verify finding from the prior attempt: the doc-content test file is now itself scratch, listed in the runbook's Step 6 cleanup (deleted alongside fixture/runbook, after all three settle-run attempts in Steps 0/3/5 -- so test-coverage has real evidence at every settle attempt, no bypass needed). Also corrected the DRAFT's self-invocation-guard framing (Boundaries) to reflect that CADENCE_HOST_CLI_BIN=codex, not the guard, is the operative fact here. Runbook and test both re-verified green.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md",
+        "/home/thomas/projects/cadence/.cadence/phases/256-real-provider-certification-prep/256-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-06T00:42:47.900Z",
+      "perTaskVerify": {
+        "verdict": "pass",
+        "reason": "Runbook and focused documentation test are coherent with the real-provider certification prep task and match the declared files.",
+        "provider": "host-cli"
+      }
+    }
+  }
+}
