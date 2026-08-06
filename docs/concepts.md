@@ -228,6 +228,26 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   `node packages/core/bin/cadence.cjs settle run --auto`), so the mismatch
   is visible live on stderr even for a session that never inspects the
   JSON record.
+- Phase 257: persisted `codeReview`/`securityAudit` findings are rendered
+  under a shared `## Findings` heading — placed after `## Tasks` and before
+  the gates heading (`## Gate provenance` in the on-disk `SUMMARY.md`
+  sidecar, `## Gates` in `cadence summary render`'s output) in both
+  renderers, via one shared helper
+  (`packages/core/src/parse/findings-render.ts`). `codeReview` findings are
+  grouped by file path (codepoint order), then severity
+  (critical > high > medium > low), then `id` (falling back to original
+  array order when `id` is absent, as is always true for `securityAudit`
+  findings under the current schema); `securityAudit` findings are listed
+  under their own subsection, sorted by severity the same way. Each finding
+  line shows `severity`/`message`/`line` (if present) plus whichever of
+  `id`/`target`/`anchor` (`kind`/`ref`/`tier`)/`disposition`/the waiver's
+  `expiry` are present; `message` is passed through the existing
+  `redactSecrets` utility at render time (`security-audit` findings are
+  already redacted before they reach `SummaryZ`; this is the first point
+  that redacts `code-review` findings). The `## Findings` heading itself is
+  omitted entirely — not just its subsections — when `codeReview` is
+  absent/`{}`/all-empty-arrays and `securityAudit` is absent/`[]`, so a
+  historical summary with no findings renders byte-identically to before.
 - `.cadence/phases/<phase>/<id>-SUMMARY.md` — human-readable rendered view
 - `.cadence/phases/<phase>/<id>-PLAN-REVIEW.json` — plan-review findings
   (written at `draft approve` when `plan-review` fires)

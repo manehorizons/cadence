@@ -1,4 +1,5 @@
 import type { Summary } from '@thomas-powers-jr/cadence-types';
+import { renderFindingsSection } from './findings-render.js';
 
 export function renderSummaryMd(s: Summary): string {
   const lines: string[] = [
@@ -21,6 +22,7 @@ export function renderSummaryMd(s: Summary): string {
   for (const t of s.taskResults) {
     lines.push(`- ${t.id}: ${t.status}${t.notes ? ` — ${t.notes}` : ''}`);
   }
+  lines.push(...renderFindingsSection(s));
   if (s.gates && s.gates.length > 0) {
     lines.push('', '## Gate provenance', '');
     for (const g of s.gates) {

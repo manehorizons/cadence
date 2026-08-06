@@ -571,6 +571,68 @@ describe('settleService threads acc-accumulated findings into the refused SUMMAR
   });
 });
 
+describe('settleService renders the causing finding in the refused Markdown SUMMARY (phase 257, T2)', () => {
+  it('257-01/AC-2: a refused code-review gate\'s SUMMARY-snapshot.md sibling shows the causing finding under "## Findings", not only the JSON sibling', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '257-02-refused-code-review-markdown',
+      id: '257-02',
+      tier: 'standard',
+      // Mirrors the 247-01/AC-1 fixture above: strict×standard's delta
+      // includes 'code-review' (engine.ts DELTAS), and the deliberate
+      // absence of --force/--allow-code-review-failure below means the gate
+      // loop halts here with a genuine 'refuse' outcome.
+      config: {
+        ...defaultConfig,
+        profile: 'strict',
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+      },
+    });
+    constructed.codeReviewFindingsOverride = {
+      'src/foo.ts': [mkFinding('console.log left in source', 'high')],
+    };
+
+    const { io, err } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('code-review:');
+
+    const summaryPath = join(
+      root, '.cadence/phases/257-02-refused-code-review-markdown/257-02-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+    // Sanity precondition: the finding actually landed in the JSON sibling
+    // (already proven by the phase-247 tests above) before checking that it
+    // ALSO shows up in the Markdown rendering — this test's actual claim.
+    expect(summary.codeReview?.['src/foo.ts']).toHaveLength(1);
+
+    // AC-2's claim, proven rather than assumed: the refused
+    // `-SUMMARY-snapshot.md` sibling (phase 247, T3) is produced by
+    // `writeRefusedSettleSummary` calling the exact same `renderSummaryMd`
+    // that T1 (this phase) spliced the shared `## Findings` section into —
+    // so reading the real file the refused path wrote and finding the
+    // causing finding's severity + message under that heading demonstrates
+    // the refused path exercises T1's fix, rather than a second, divergent
+    // render path.
+    const snapshotBase = join(
+      root, '.cadence/phases/257-02-refused-code-review-markdown',
+      refusedSnapshotArtifactBase('257-02', summary.completedAt),
+    );
+    expect(existsSync(`${snapshotBase}.md`)).toBe(true);
+    const snapshotMd = await readFile(`${snapshotBase}.md`, 'utf8');
+    expect(snapshotMd).toContain('## Findings');
+    const findingsSection = snapshotMd.slice(snapshotMd.indexOf('## Findings'));
+    expect(findingsSection).toContain('HIGH');
+    expect(findingsSection).toContain('console.log left in source');
+  });
+});
+
 describe('settleService threads an injectable clock seam for completedAt (phase 247, T2)', () => {
   it('247-01/AC-3: a fixed injected now() produces an exact completedAt on the success-path SUMMARY', async () => {
     root = await mktemp();

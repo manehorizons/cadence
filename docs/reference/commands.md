@@ -2540,11 +2540,14 @@ Render a settled phase SUMMARY.json for humans (read-only)
 **Behavior** — reads the settled phase's `<id>-SUMMARY.json` from
 `.cadence/phases/<phase>/`, validates it against the `SummaryZ` schema, and
 prints a deterministic Markdown rendering to stdout: acceptance-criteria
-pass/fail with evidence level, per-task terminal status, gate outcomes,
-gate bypasses (if any), decisions, and deferred items. Sections with no
-entries (e.g. no gate bypasses, no decisions) are omitted entirely rather
-than printed empty, so the output is ready to paste directly into a PR
-description or comment without manual trimming. It refuses with a clear
+pass/fail with evidence level, per-task terminal status, persisted
+`codeReview`/`security-audit` findings (Phase 257 — under a `## Findings`
+heading, `codeReview` findings grouped by file path then severity then id),
+gate outcomes, gate bypasses (if any), decisions, and deferred items.
+Sections with no entries (e.g. no findings, no gate bypasses, no decisions)
+are omitted entirely rather than printed empty, so the output is ready to
+paste directly into a PR description or comment without manual trimming.
+It refuses with a clear
 stderr message and a non-zero exit on any problem reading or validating the
 file — a missing `<id>-SUMMARY.json` (file-not-found), malformed JSON
 (parse error), or JSON that doesn't conform to the `SummaryZ` schema

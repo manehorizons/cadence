@@ -2506,6 +2506,37 @@
       "decisionIds": [],
       "createdAt": "2026-08-06T05:32:11.283Z",
       "updatedAt": "2026-08-06T05:32:11.283Z"
+    },
+    {
+      "id": "rec-20260806-010",
+      "title": "summary-verify-sweep.test.ts couples all future PRs to entire historical SUMMARY corpus",
+      "summary": "Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "doctor",
+        "test-infra"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/parse/summary-verify-sweep.test.ts",
+        "packages/core/src/cli/commands/summary.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-013"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-06T18:52:16.644Z",
+      "updatedAt": "2026-08-06T18:52:16.644Z",
+      "scoutId": "scout-20260806-phase257"
     }
   ],
   "archived": [
