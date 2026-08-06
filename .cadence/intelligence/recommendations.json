@@ -2268,6 +2268,36 @@
       "decisionIds": [],
       "createdAt": "2026-08-05T23:17:43.748Z",
       "updatedAt": "2026-08-05T23:17:43.748Z"
+    },
+    {
+      "id": "rec-20260806-001",
+      "title": "conduction-reachability's session axis is a false positive when CADENCE_HOST_CLI_BIN=codex bypasses the claude-only self-invocation guard",
+      "summary": "isClaudeCodeSession(env) (packages/core/src/activate/assess.ts:86-88) checks only CLAUDECODE==='1' and has no awareness of CADENCE_HOST_CLI_BIN. The actual self-invocation guard (isSelfInvocation, host-cli-client.ts:118-129) is keyed by SELF_INVOCATION_ENV_VAR, which only has an entry for the 'claude' family -- 'codex' is deliberately unguarded (no reliable session-indicator env var exists for it, per that file's own doc comment). When an operator sets CADENCE_HOST_CLI_BIN=codex (a sanctioned mechanism CLAUDE.md itself documents for getting independent review from inside a Claude Code session), any host-cli-configured gate's REAL spawn target is codex, not claude -- so the guard never fires regardless of CLAUDECODE, even inside a headless Claude Code session. conduction-reachability (phase 251) reports code-review as session-blocked purely from CLAUDECODE=1, which is wrong in this configuration: the profile axis is a genuine blocker but the session axis is not. Empirically confirmed 2026-08-06 during phase 256 prep: two per-task-verify calls (host-cli, family resolves to codex per this repo's own ~/.bashrc:167 CADENCE_HOST_CLI_BIN=codex) made real, non-mock calls from inside this Claude Code session, producing genuine LLM-judged verdicts (not MockPerTaskVerifier's deterministic output) -- see .cadence/phases/256-real-provider-certification-prep/256-01-PROGRESS.json's perTaskVerify.provider:host-cli entries with substantive, non-canned reason text. The check's overall 'warning' verdict for this repo is still correct today (security-audit is genuinely blocked on the provider axis, mock), so this hasn't caused a wrong overall status yet -- but the per-axis detail is misleading, and a future repo/config where code-review's provider axis is also already clear would get a false 'blocked' report for a gate that actually isn't.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/activate/assess.ts",
+        "packages/core/src/verify/host-cli-client.ts",
+        "packages/core/src/doctor/run.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-06T00:45:07.905Z",
+      "updatedAt": "2026-08-06T00:45:07.905Z",
+      "scoutId": "scout-20260806-phase256-prep"
     }
   ],
   "archived": [
@@ -6480,12 +6510,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "255-make-security-merge-blocking",
-      "scoutId": "scout-20260804-integrity-release",
-      "createdAt": "2026-08-04T21:33:29.287Z",
-      "updatedAt": "2026-08-05T23:18:09.518Z",
       "shippedRef": "phase 255-make-security-merge-blocking (PR pending)",
+      "scoutId": "scout-20260804-integrity-release",
       "archivedAt": "2026-08-05T23:18:09.518Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-04T21:33:29.287Z",
+      "updatedAt": "2026-08-05T23:18:09.518Z"
     }
   ]
 }

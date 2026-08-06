@@ -1568,6 +1568,13 @@
       "kind": "note",
       "summary": "Now moot as a side effect of phase 253 (PR #373, commit 0b371063), not explicitly scoped in either phase 253 or 254's DRAFT: node scripts/check-audit-exceptions.mjs run on 2026-08-05 (this worktree, phase 254's build) reports only 4 high/critical advisories (vitest/vite/hono/postcss) -- none of this rec's 3 GHSA ids (GHSA-7p8r-x3mc-p8w7 fast-uri, GHSA-mwp4-54f8-5fhr ip-address, GHSA-rgw5-rvv9-x895 brace-expansion) appear at all, meaning pnpm audit no longer detects them. Consistent with phase 253's corrected override floors (fast-uri >=3.1.5, brace-expansion 5.x >=5.0.9 / 2.x >=2.1.4, ip-address >=10.3.1) satisfying these particular GHSA ids' patched versions too, in addition to the originally-targeted GHSA-mh99-v99m-4gvg/moderate ip-address ids. Independently confirmed by phase 254's whole-branch reviewer via live grep + pnpm-lock.yaml inspection, not just this note's own claim. Leaving status as-is (candidate/needs-evidence) for the operator to close -- outside phase 254's own declared DRAFT scope to unilaterally promote/reject.",
       "createdAt": "2026-08-05T03:51:52.866Z"
+    },
+    {
+      "id": "ev-20260806-001",
+      "recommendationId": "rec-20260806-001",
+      "kind": "note",
+      "summary": "cadence doctor's conduction-reachability check reported 'code-review: blocked by profile, session' on 2026-08-06 while this repo's CADENCE_HOST_CLI_BIN=codex (~/.bashrc:167) meant the session axis was not actually blocking -- confirmed by two real (non-mock) codex-backed per-task-verify calls succeeding in the same headless session, recorded in .cadence/phases/256-real-provider-certification-prep/256-01-PROGRESS.json",
+      "createdAt": "2026-08-06T00:45:07.905Z"
     }
   ]
 }
