@@ -240,3 +240,246 @@ describe('cadence summary render', () => {
     expect(r.stdout).toMatch(/77-01/);
   });
 });
+
+describe('cadence summary render - Findings section (phase 257)', () => {
+  it('257-01/AC-1: places ## Findings after ## Tasks and before ## Gates', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        codeReview: { 'src/a.ts': [{ severity: 'high', message: 'a high finding' }] },
+        gates: [{ gate: 'code-review', status: 'ran' }],
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    const tasksIdx = r.stdout.indexOf('## Tasks');
+    const findingsIdx = r.stdout.indexOf('## Findings');
+    const gatesIdx = r.stdout.indexOf('## Gates');
+    expect(tasksIdx).toBeGreaterThan(-1);
+    expect(findingsIdx).toBeGreaterThan(tasksIdx);
+    expect(gatesIdx).toBeGreaterThan(findingsIdx);
+  });
+
+  it('257-01/AC-1: renders codeReview findings of every severity, grouped by file then severity', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        codeReview: {
+          'src/b.ts': [{ severity: 'low', message: 'b low finding' }],
+          'src/a.ts': [
+            { severity: 'medium', message: 'a medium finding' },
+            { severity: 'critical', message: 'a critical finding' },
+            { severity: 'high', message: 'a high finding' },
+          ],
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('## Findings');
+    expect(r.stdout).toContain('### Code review');
+
+    const aIdx = r.stdout.indexOf('#### src/a.ts');
+    const bIdx = r.stdout.indexOf('#### src/b.ts');
+    expect(aIdx).toBeGreaterThan(-1);
+    expect(bIdx).toBeGreaterThan(aIdx);
+
+    const critIdx = r.stdout.indexOf('CRITICAL: a critical finding');
+    const highIdx = r.stdout.indexOf('HIGH: a high finding');
+    const medIdx = r.stdout.indexOf('MEDIUM: a medium finding');
+    expect(critIdx).toBeGreaterThan(aIdx);
+    expect(highIdx).toBeGreaterThan(critIdx);
+    expect(medIdx).toBeGreaterThan(highIdx);
+    expect(medIdx).toBeLessThan(bIdx);
+    expect(r.stdout).toMatch(/LOW: b low finding/);
+  });
+
+  it('257-01/AC-1: renders securityAudit findings under a Security audit subsection', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        securityAudit: [
+          { severity: 'high', message: 'sec high finding' },
+          { severity: 'critical', message: 'sec critical finding' },
+        ],
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('## Findings');
+    expect(r.stdout).toContain('### Security audit');
+    const critIdx = r.stdout.indexOf('CRITICAL: sec critical finding');
+    const highIdx = r.stdout.indexOf('HIGH: sec high finding');
+    expect(critIdx).toBeGreaterThan(-1);
+    expect(highIdx).toBeGreaterThan(critIdx);
+  });
+
+  it('257-01/AC-1: renders a finding missing every optional field (no line/id/target/anchor/disposition)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        securityAudit: [{ severity: 'medium', message: 'bare finding' }],
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('- MEDIUM: bare finding');
+    expect(r.stdout).not.toMatch(/bare finding.*\(line/);
+    expect(r.stdout).not.toMatch(/bare finding.*\[/);
+  });
+
+  it('257-01/AC-1: renders anchor kind/ref/tier when present', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        codeReview: {
+          'src/a.ts': [
+            {
+              severity: 'high',
+              message: 'anchored finding',
+              anchor: { kind: 'ac', ref: 'AC-3', tier: 'structured' },
+            },
+          ],
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/anchored finding.*\[anchor: kind=ac, ref=AC-3, tier=structured\]/);
+  });
+
+  it('257-01/AC-1: renders disposition waived together with its matching waiver expiry', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        codeReview: {
+          'src/a.ts': [
+            {
+              severity: 'low',
+              message: 'waived finding',
+              disposition: 'waived',
+              waiver: { expiry: '2026-09-01T00:00:00Z' },
+            },
+          ],
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(
+      /waived finding.*\[disposition: waived; waiver-expiry: 2026-09-01T00:00:00Z\]/,
+    );
+  });
+
+  it('257-01/AC-1: omits ## Findings entirely when codeReview is {} and securityAudit is absent', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...VALID_SUMMARY, codeReview: {} }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/## Findings/);
+  });
+
+  it('257-01/AC-1: omits ## Findings entirely when a codeReview file key maps to [] and securityAudit is absent', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...VALID_SUMMARY, codeReview: { 'src/a.ts': [] } }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/## Findings/);
+  });
+
+  it('257-01/AC-1: omits ## Findings entirely when securityAudit is [] and codeReview is absent', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({ ...VALID_SUMMARY, securityAudit: [] }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/## Findings/);
+  });
+
+  it('257-01/AC-4: redacts an AWS-access-key-shaped string in a codeReview finding message', async () => {
+    active = await tempRepo({ initialized: true });
+    const leakedKey = 'AKIAABCDEFGHIJKLMNOP';
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        codeReview: {
+          'src/a.ts': [{ severity: 'critical', message: `found ${leakedKey} leaked in code` }],
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('[REDACTED]');
+    expect(r.stdout).not.toContain(leakedKey);
+  });
+
+  it('257-01/AC-4: does NOT redact a plain local-absolute-path-shaped string (out of scope for redactSecrets)', async () => {
+    active = await tempRepo({ initialized: true });
+    const localPath = '/home/someone/.ssh/id_rsa';
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        securityAudit: [{ severity: 'medium', message: `found reference to ${localPath}` }],
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain(localPath);
+    expect(r.stdout).not.toContain('[REDACTED]');
+  });
+});

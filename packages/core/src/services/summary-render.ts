@@ -1,4 +1,5 @@
 import type { Summary } from '@thomas-powers-jr/cadence-types';
+import { renderFindingsSection } from '../parse/findings-render.js';
 
 // deja:new distinct renderer for `cadence summary render` (phase 202, T1) —
 // intentionally NOT the same renderer as `parse/summary-writer.ts`'s
@@ -33,6 +34,8 @@ export function renderSummaryForReview(s: Summary): string {
   for (const t of s.taskResults) {
     lines.push(`- ${t.id}: ${t.status}${t.notes ? ` — ${t.notes}` : ''}`);
   }
+
+  lines.push(...renderFindingsSection(s));
 
   if (s.gates && s.gates.length > 0) {
     lines.push('', '## Gates', '');

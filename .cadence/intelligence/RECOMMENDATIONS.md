@@ -997,22 +997,6 @@ assurance-record.ts documents 'weak' as covering '...or simply no ACs at all wit
 
 (1) eslint.config.js's own comment candidly documents that dynamic import() of verifier family modules is invisible to the new kernel/verifier/consumer boundary rule -- a disclosed, real gap with no tracking recommendation until now. (2) deriveAssuranceRecord's verifierRollup key is an unseparated string join (${provider} ${model ?? ''}) -- theoretically collision-prone if a provider/model string ever contains a space (today's real values never do). (3) readRawSchemaVersion/MAX_RECOGNIZED_SCHEMA_VERSION is duplicated between verify/phase-replay.ts and cli/commands/summary.ts, hand-synced -- a third SummaryZ.safeParse call site would misreport a future schemaVersion-3 record as a generic parse failure instead of 'written by a newer Cadence.' None urgent; bundled as one low-priority rec per the independent review's own framing.
 
-## rec-20260802-002 — SUMMARY.md never renders codeReview/securityAudit findings — a refused-attempt sibling shows nothing an operator opens it to see
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/services/summary-render.ts
-- evidence: Empirically verified 2026-08-02 during phase 247's independent whole-branch review: grep for codeReview/securityAudit in summary-render.ts returns zero hits; a hand-built refused SUMMARY with a HIGH finding, rendered via the real CLI, omits the finding entirely from SUMMARY.md while the JSON carries it correctly.
-- next: cadence milestone propose
-
-Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/services/summary-render.ts renders AC / Tasks / Gates / Gate bypasses / Assurance / Decisions / Deferred sections but has zero handling for the codeReview or securityAudit fields, for ANY SUMMARY (success or refused) -- this predates phase 247 and is not scoped to it. Phase 247 makes the gap newly consequential: it now writes an immutable per-attempt sibling .md specifically so a human can inspect what a refused/abandoned attempt found, but the .md half of that record is byte-identical to the canonical refused SUMMARY.md and renders none of the findings that caused the refusal -- verified empirically: a hand-built refused-shaped SUMMARY with one HIGH code-review finding, rendered via the real cadence summary render, shows the content hash and the refused gate but not one word of the finding. The data is JSON-only. Fix is out of phase 247's DRAFT scope (Boundaries did not ask for a render change) and was not built. Worth a dedicated phase: add a codeReview/securityAudit findings section to summary-render.ts, following the same JSON-only-so-far -> now-rendered precedent as the phase-170 gates[].reason field (docs/concepts.md notes this exact pattern already).
-
 ## rec-20260802-003 — Intelligence ledger has 145 orphan decision/evidence links to recs absent from both active and archived arrays
 
 - status: candidate
@@ -1382,3 +1366,19 @@ packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the p
 - next: cadence milestone propose
 
 Discovered 2026-08-07 while landing PR #380 (phase 258, unrelated regex-literal-mask work -- zero dependency changes in that PR). CI's audit job (.github/workflows/security.yml, node scripts/check-audit-exceptions.mjs) failed with: 'FAIL GHSA-5p4m-2wfm-xmqj (js-yaml, high) -- not listed in docs/security/audit-exceptions.md'. This is a genuinely new/undocumented advisory, not something PR #380 introduced -- since ci-success only depends on the test job (not audit), the PR was still mergeable, but the underlying finding is real and needs the same triage phase 254 (security advisory remediation) gave the other three currently-documented exceptions (vitest/vite/postcss, expiring 2026-11-02 and 2026-08-28). Separately, confirmed via 'gh api repos/thomas-powers-jr/cadence/branches/main/protection --jq .required_status_checks.contexts' that only ['ci-success'] is registered as a required branch-protection check -- security-success and codeql-success (built in phase 255, 'fix: make security and codeql merge-blocking via aggregator checks (phase 255) (#376)') are NOT actually required, despite that phase's stated goal. This matches a carry-forward gotcha already noted in an earlier session handoff ('branch-protection registration for security-success/codeql-success (phase 255)') that was evidently never completed -- the CI-side aggregator jobs exist and correctly compute pass/fail, but the GitHub branch-protection settings were never updated to actually require them, so a red audit/CodeQL currently cannot block a merge the way phase 255 intended. Both findings need operator decision/action: (1) triage the js-yaml advisory (likely transitive -- js-yaml commonly pulled in by markdown/YAML tooling; needs the same reachability-analysis treatment as the other three documented exceptions, or a real fix/upgrade), (2) register security-success and codeql-success as required checks via 'gh api repos/thomas-powers-jr/cadence/branches/main/protection' (or the GitHub UI) to actually close the gap phase 255 was built to close.
+
+## rec-20260806-010 — summary-verify-sweep.test.ts couples all future PRs to entire historical SUMMARY corpus
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, doctor, test-infra
+- files: packages/core/tests/parse/summary-verify-sweep.test.ts, packages/core/src/cli/commands/summary.ts
+- evidence: Whole-branch review of phase 257 (2026-08-06): pnpm turbo run test --force ran the sweep at 35.6s covering 269 real historical summaries via 269 spawned CLI processes at concurrency 12; git ls-files .cadence/phases | grep -c SUMMARY.json = 269.
+- next: cadence milestone propose
+
+Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.
