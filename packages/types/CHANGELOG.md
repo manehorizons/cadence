@@ -1,4 +1,6 @@
-# @manehorizons/cadence-types
+# @thomas-powers-jr/cadence-types
+
+## 1.55.0
 
 ## 1.54.0
 

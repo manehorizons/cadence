@@ -1,4 +1,36 @@
-# @manehorizons/cadence-core
+# @thomas-powers-jr/cadence-core
+
+## 1.55.0
+
+### Minor Changes
+
+- c8333f8: Added a new `cadence doctor` check, `conduction-reachability`, that reports — separately for `code-review` and `security-audit`, since the two gates are asymmetrically gated in this repo — whether the current configuration can produce a real-provider (non-`mock`) finding at all.
+
+  Two independent, deliberately-retained blockers make this structurally unreachable in normal, headless-agent-driven operation: the `auto` gate profile excludes both review gates from every tier, and the self-invocation guard forces a `mock` verifier fallback whenever `cadence` is already running inside a headless Claude Code session. A third, ordinary (non-safety-related) blocker can also apply: a gate's own `provider` config being set to `'mock'`.
+
+  The check evaluates three axes per gate — profile inclusion (`gatesFor` across all tiers), provider configuration (`seamProvider`), and the self-invocation session guard (conditioned on the gate's own provider being `'host-cli'`, since the guard only applies to that spawn path) — and reports `severity: 'warning'` naming exactly which axis or axes block each gate, with `fixId: null` (no safe auto-repair exists; every remediation is an operator decision). `status: 'ok'` only when both gates are fully reachable.
+
+  Neither blocker is modified or bypassed by this change — `isSelfInvocation`, `SELF_INVOCATION_ENV_VAR`, and the `DELTAS` gate matrix are untouched. The check adds visibility only, so an operator can tell "no real finding has been produced yet" apart from "no real finding can currently be produced," and `docs/providers.md` now documents the exact operator procedure (a DRAFT-level `profile:` override, run from a real interactive terminal) to produce one when needed.
+
+- db8209f: Fixed a real coverage-scanner defect: the JS/TS `test-coverage` gate's `classify()` state machine had no concept of a regex literal, so a paren, quote, or backtick inside an unrecognized `/regex/` — not just parens/backticks, as originally reported — was read as a real structural character. This corrupted `findMatchingParenIndex`'s depth-aware paren matcher and/or flipped the scanner into real string/template mode for the rest of the file, silently undercounting or dropping test-block spans (and, in rarer cases, silently dropping a real assertion from a span without changing its count). A repo-wide sweep found this affected 20 of this repo's own 446 JS/TS test files before the fix; all 20 are now confirmed resolved with no file-content edits needed, since the fix lives entirely in the scanner.
+
+  `classify()` (`packages/core/src/verify/coverage-profiles/mask.ts`) now recognizes JS/TS regex literals as their own lexical category, opt-in per language profile via a new `LanguageSyntax.regexLiterals` field (set only for the built-in `js-ts` profile — no other language profile is affected). Regex-vs-division disambiguation uses a masker-only heuristic (no new runtime dependency) against an explicitly documented, bounded preceding-token vocabulary; a `/` in a context outside that vocabulary resolves conservatively, the same as division, rather than guessing regex-open.
+
+  That conservative fallback is now also surfaced instead of staying silent: `cadence verify coverage --explain` reports a `[mask diagnostic]` line naming the out-of-vocabulary context, so a scanner blind spot is visible instead of quietly under-counting coverage. `findSpansForProfile`'s existing signature and behavior are unchanged for every existing caller; the new diagnostics are opt-in via a sibling function.
+
+- 8098aee: Persisted `codeReview`/`securityAudit` findings on a `SUMMARY.json` are now rendered in both Markdown summary surfaces — the on-disk `<id>-SUMMARY.md` sidecar (`renderSummaryMd`) and `cadence summary render`'s output (`renderSummaryForReview`) — under a shared `## Findings` section, placed after `## Tasks` and before the gates heading in both. Previously these findings were JSON-only: a refused settle or a pasted PR summary gave no visibility into the finding that actually caused the refusal without opening the raw `.json` record.
+
+  Findings are grouped and ordered deterministically: `codeReview` findings by file path (codepoint order), then severity (critical > high > medium > low), then `id`; `securityAudit` findings by severity then `id`, with original array order as the stable tie-break when `id` is absent (as it always is for `security-audit` findings under the current schema). Each rendered line includes severity, message, and — when present — line, id, target, anchor (kind/ref/tier), disposition, and waiver expiry. The `## Findings` heading itself is omitted entirely when there is nothing to render, so every historical summary predating this change (no `codeReview`/`securityAudit` fields at all) renders byte-identically to before, and `cadence summary verify`'s `contentHash` check — which hashes the parsed JSON, never the Markdown — is unaffected; a new test sweeps all 269 existing `.cadence/phases/**/*-SUMMARY.json` records in this repo to prove it.
+
+  Every rendered finding message passes through the existing `redactSecrets` utility. `security-audit` findings were already redacted upstream before reaching `SummaryZ`; this adds the same protection for `code-review` findings, which previously were not. Only the credential shapes `redactSecrets` already recognizes (PEM keys, JWTs, AWS access keys, GitHub tokens, Authorization headers, `key=`/`token=`/`password=`/`secret=`-style assignments) are redacted — webhook URLs and bare local file paths are not, and are deliberately out of scope; widening `redactSecrets`'s shared patterns (it also backs `gates/security-audit.ts`, `intelligence/finding-routing.ts`, and others) is left to a future phase if ever needed.
+
+- a5e729d: Added a new `cadence doctor` check, `roadmap-currency`, that reports drift between the highest phase number under `.cadence/phases/` and the highest phase number referenced in `ROADMAP.md`/`MILESTONES.md` — an anti-recurrence mechanism for the 113-phase/6-week ROADMAP drift fixed in PR #321.
+
+  Drift is computed against the lower of the two reference files (using only files that contain at least one `Phase N` heading — a file with zero matches is excluded from the comparison, never treated as `0`, so a consumer repo that only maintains one of the two files doesn't warn forever). `severity: 'warning'` when drift exceeds 10 phases, `'ok'` otherwise, and `fixId: null` always — generating roadmap prose is deliberately not automated. The check silently passes on a fresh consumer repo (no phases yet, or `ROADMAP.md` still the `init` stub), and degrades to a best-effort "not determinable" `ok` on any unexpected read failure rather than throwing.
+
+### Patch Changes
+
+- @thomas-powers-jr/cadence-types@1.55.0
 
 ## 1.54.0
 

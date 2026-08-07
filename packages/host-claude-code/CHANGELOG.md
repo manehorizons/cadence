@@ -1,4 +1,16 @@
-# @manehorizons/cadence-host-claude-code
+# @thomas-powers-jr/cadence-host-claude-code
+
+## 1.55.0
+
+### Patch Changes
+
+- Updated dependencies [c8333f8]
+- Updated dependencies [db8209f]
+- Updated dependencies [8098aee]
+- Updated dependencies [a5e729d]
+  - @thomas-powers-jr/cadence-core@1.55.0
+  - @thomas-powers-jr/cadence-types@1.55.0
+  - @thomas-powers-jr/cadence-host-toolkit@1.55.0
 
 ## 1.54.0
 

@@ -4,6 +4,29 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.55.0] - 2026-08-07
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.55.0`. Per-package bumps managed by changesets, now enforced lockstep across all five published packages via a `fixed` group in `.changeset/config.json` (previously `fixed: []` — every prior release happened to land in lockstep by coincidence, not enforcement; this cut caught the drift when it first actually diverged).
+
+### Added
+
+- `cadence doctor` check `conduction-reachability`: reports, separately for `code-review` and `security-audit`, whether the current configuration can produce a real-provider (non-`mock`) finding at all, naming exactly which axis (gate profile, provider config, self-invocation guard) blocks each gate. Visibility only — no blockers are modified or bypassed. (Phase `251`.)
+- `cadence doctor` check `roadmap-currency`: reports drift between the highest phase number under `.cadence/phases/` and the highest phase number referenced in `ROADMAP.md`/`MILESTONES.md` — an anti-recurrence check for the 113-phase/6-week drift fixed in PR #321. (Phase `259`.)
+- `codeReview`/`securityAudit` findings on a `SUMMARY.json` are now rendered in both Markdown summary surfaces (the on-disk `-SUMMARY.md` sidecar and `cadence summary render`) under a shared `## Findings` section — previously JSON-only, giving no visibility into the finding that caused a refusal without opening the raw record. `code-review` findings are now redacted the same way `security-audit` findings already were. (Phase `257`.)
+
+### Fixed
+
+- The JS/TS `test-coverage` gate's regex-literal handling: an unrecognized `/regex/` containing a paren, quote, or backtick was read as a real structural character, corrupting paren matching and silently undercounting or dropping test-block spans. Affected 20 of this repo's own 446 JS/TS test files; all 20 confirmed resolved by the scanner fix alone (no file-content edits needed). A masker fallback that can't confidently classify a `/` is now surfaced via `cadence verify coverage --explain` instead of failing silently. (Phase `258`.)
+- Stale `pnpm.overrides` targets refreshed against the resolved lockfile, plus a new drift detector (`scripts/check-lockfile-overrides.mjs`, wired into CI's `audit` job) so an override that stops covering every resolved instance of its package fails CI instead of silently no-op'ing. (Phase `253`.)
+- Security advisory remediation: re-verified and re-justified the three then-documented `pnpm audit` exceptions (vitest/vite/postcss) against current repo state. (Phase `254`.)
+- Major `vitest` 2 → 4 upgrade, closing the vitest/vite/postcss exceptions above for real (superseding the re-verification) — resolved as a byproduct, an undocumented HIGH `js-yaml` advisory (`GHSA-5p4m-2wfm-xmqj`) that surfaced separately (`rec-20260807-002`). (Phase `260`.)
+- `security-success` and `codeql-success` (built in phase 255 specifically to be required branch-protection checks) were never actually registered as such — `main`'s `required_status_checks.contexts` was `["ci-success"]` only, so a red audit or CodeQL run could not block a merge despite phase 255's stated goal. Registered both. (`rec-20260807-002`.)
+- `website/`'s separate pnpm lockfile synced off a vulnerable `brace-expansion`/`js-yaml` resolution.
+
+### Internal
+
+- Self-application config correction: raised this repo's own `evidenceFloor` to `assertion` and deferred a baseline-profile change to a later milestone, after live real-provider certification of `code-review`/`security-audit` surfaced it and two other engine/process gaps (each filed as its own recommendation) that no prior session had reached with an actual non-`mock` provider. (Phases `252`, `256`.)
+
 ## [1.54.0] - 2026-08-02
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.54.0`. Per-package bumps managed by changesets. First release published under the `@thomas-powers-jr` npm scope.

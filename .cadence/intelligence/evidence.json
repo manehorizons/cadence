@@ -1704,6 +1704,20 @@
       "kind": "note",
       "summary": "Verified 2026-08-07: (1) js-yaml GHSA-5p4m-2wfm-xmqj already resolved -- latest main Security run (18:18:19Z, after phase 260's vitest 2->4 upgrade) reports 'check-audit-exceptions: no high/critical advisories reported'; pnpm-lock.yaml resolves js-yaml to 4.3.1. No exception-table row needed, nothing to document. (2) Registered security-success and codeql-success as required branch-protection contexts via gh api (both had reported green on main repeatedly, most recently 18:17:57Z); required_status_checks.contexts now ['ci-success','security-success','codeql-success']. Updated docs/security/audit-exceptions.md's 'What blocks a merge' section (was asserting neither check blocks yet -- phase 255's own deferred T5) and its doc test (255-01/AC-3 in security-ci.test.ts) to match; full suite green (52/52 in that file).",
       "createdAt": "2026-08-07T18:49:16.325Z"
+    },
+    {
+      "id": "ev-20260807-008",
+      "recommendationId": "rec-20260807-004",
+      "kind": "note",
+      "summary": "Duplicate of rec-20260807-002 (filed 12h earlier same day, 02:15:30Z vs this rec's 14:30:15Z, same advisory GHSA-5p4m-2wfm-xmqj). Resolved as a side effect of phase 260's vitest 2->4 major upgrade -- confirmed 2026-08-07 via latest main Security run: 'check-audit-exceptions: no high/critical advisories reported'; pnpm-lock.yaml resolves js-yaml to 4.3.1. No pnpm.overrides entry needed since the upgrade already moved the resolved version past the patched floor. Archiving as superseded/duplicate rather than shipped, since no phase directly implemented this rec's proposed override -- the fix landed incidentally via phase 260, and rec-20260807-002 already carries the full evidence trail (ev-20260807-006, ev-20260807-007).",
+      "createdAt": "2026-08-07T19:50:07.239Z"
+    },
+    {
+      "id": "ev-20260807-009",
+      "recommendationId": "rec-20260803-003",
+      "kind": "note",
+      "summary": "Closing during v1.55.0 release-cut doc-sync pass, 2026-08-07: re-confirmed moot. Latest main Security audit run (18:18:19Z, post-phase-260) reports 'check-audit-exceptions: no high/critical advisories reported' -- none of this rec's 3 GHSA ids present, consistent with the phase-254 evidence note already on this rec. Archiving as resolved-as-side-effect (phase 253's override-floor refresh), not shipped, since no phase directly targeted these 3 advisories by name.",
+      "createdAt": "2026-08-07T19:51:05.687Z"
     }
   ]
 }
