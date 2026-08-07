@@ -25,15 +25,15 @@ dates are ISO 8601 (`YYYY-MM-DD`).
 ## What blocks a merge
 
 Merge-blocking status differs by check, and the difference matters when
-reading a green run -- with one important caveat up front: as of this
-writing, neither check below actually blocks a merge yet. `main`'s branch
-protection `required_status_checks.contexts` is exactly `["ci-success"]`;
-registering `security-success` and `codeql-success` as required contexts is
-a separate, manual, post-merge operator step (see this phase's DRAFT, T5)
-that can only happen once this PR has merged and both jobs have reported at
-least once on `main`. Until that step happens, both jobs report a result on
-every push/PR but neither one blocks anything. What follows describes what
-each check *means* and what it will enforce once it is registered.
+reading a green run. As of 2026-08-07, `main`'s branch protection
+`required_status_checks.contexts` is `["ci-success", "security-success",
+"codeql-success"]` — phase 255's T5 follow-up (registering the two
+aggregators as required contexts, deferred at the time to a manual,
+post-merge operator step) has been completed (`rec-20260807-002`). Both
+`security-success` and `codeql-success` now genuinely block a merge to
+`main`. What follows describes what each check *means* — the distinction
+still matters, since a green `codeql-success` is a narrower guarantee than
+a green `security-success` (see below).
 
 `security-success` (`.github/workflows/security.yml`) aggregates
 `secret-scan` and `audit` -- both genuinely fail their job on a real
