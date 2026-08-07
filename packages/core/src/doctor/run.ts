@@ -26,7 +26,7 @@ import {
 } from '../activate/assess.js';
 import { gatesFor, effectiveProfile } from '../gates/engine.js';
 import { gatherOccupancy } from '../phases/occupancy.js';
-import { detectPhaseCollision, type Occupancy } from '../phases/collision.js';
+import { detectPhaseCollision, phaseNumber, type Occupancy } from '../phases/collision.js';
 import {
   readRecommendationLedger,
   readEvidenceLedger,
@@ -1266,6 +1266,128 @@ export async function checkPhaseFreshness(
   }
 }
 
+/**
+ * Warn threshold for {@link checkRoadmapCurrency} (Phase 259,
+ * rec-20260727-012): how far the highest on-disk phase number under
+ * `.cadence/phases/` may drift ahead of the highest phase number referenced
+ * in ROADMAP.md/MILESTONES.md before the check warns.
+ * Hardcoded and documented, not config — matches
+ * `PHASE_FRESHNESS_WARN_THRESHOLD_MS`'s pattern; closes the gap that caused
+ * a 113-phase/6-week ROADMAP drift (PR #321).
+ */
+export const ROADMAP_DRIFT_WARN_THRESHOLD = 10;
+
+/**
+ * Scans `text` for `regex` (a global, multiline pattern with one capture
+ * group of digits) and returns the highest captured number, or `null` if
+ * there were zero matches. Per AC-1, a zero-match file must be excluded
+ * from `checkRoadmapCurrency`'s `min(...)` entirely, never folded in as
+ * `0` — returning `null` here (rather than `0`) is what makes that
+ * exclusion possible at the call site.
+ */
+function highestPhaseMatch(text: string, regex: RegExp): number | null {
+  const numbers = [...text.matchAll(regex)].map((m) => Number(m[1]));
+  return numbers.length > 0 ? Math.max(...numbers) : null;
+}
+
+/**
+ * Warns when `.cadence/phases/`'s highest on-disk phase number has drifted
+ * more than {@link ROADMAP_DRIFT_WARN_THRESHOLD} ahead of the highest phase
+ * number referenced across ROADMAP.md/MILESTONES.md (Phase 259,
+ * closing the gap that caused a 113-phase/6-week ROADMAP drift, PR #321).
+ * `severity` is never `'error'` and `fixId` is always `null` — generating
+ * roadmap prose must never be automated; this is a human-only fix.
+ *
+ * Per AC-1, `drift = onDiskMax - min(includedFiles)`, where `includedFiles`
+ * is the set of {ROADMAP.md, MILESTONES.md} that produced at least one
+ * `Phase N` heading match — a file with **zero** matches is excluded from
+ * the `min` entirely, never treated as `0` (MILESTONES.md is hand-maintained
+ * prose that `cadence init` never populates beyond a one-line stub, so
+ * counting an all-zero MILESTONES.md as `0` would warn permanently on every
+ * consumer repo past phase 11, even with a perfectly current ROADMAP.md).
+ *
+ * AC-3's silent-pass Given is an *unconditional* disjunction — no phase
+ * directories, **or** ROADMAP.md alone has zero matches — so a zero-match
+ * ROADMAP.md short-circuits to silent `ok` before MILESTONES.md is even
+ * read, regardless of what MILESTONES.md contains. (This is narrower than
+ * "both files are zero": a hand-maintained MILESTONES.md that already has
+ * entries must not turn a fresh-stub ROADMAP.md into a spurious warning.)
+ *
+ * Best-effort per doctor convention (mirrors `checkPhaseFreshness`): a read
+ * failure on `.cadence/phases/`, ROADMAP.md, or MILESTONES.md for any
+ * reason other than the AC-3 states above (missing file, permissions,
+ * malformed) degrades to `ok` with a "not determinable" detail rather than
+ * throwing.
+ */
+export async function checkRoadmapCurrency(root: string): Promise<DoctorCheck> {
+  try {
+    let phaseDirNames: string[] = [];
+    try {
+      const entries = await readdir(join(root, '.cadence', 'phases'), { withFileTypes: true });
+      phaseDirNames = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+    } catch {
+      // No `.cadence/phases/` at all is indistinguishable from "no phase
+      // directories yet" for this check's purposes — AC-3's silent-pass path.
+      phaseDirNames = [];
+    }
+
+    const onDiskNumbers = phaseDirNames
+      .map((name) => phaseNumber(name))
+      .filter((n): n is number => n !== null);
+
+    if (onDiskNumbers.length === 0) {
+      return pass('roadmap-currency', 'No phase directories under .cadence/phases/ yet.');
+    }
+    const onDiskMax = Math.max(...onDiskNumbers);
+
+    const roadmapText = await readFile(join(root, '.cadence', 'ROADMAP.md'), 'utf8');
+    const roadmapMax = highestPhaseMatch(roadmapText, /^### Phase (\d+)/gm);
+
+    // AC-3's Given is an unconditional OR: "no phase dirs, OR ROADMAP.md has
+    // zero `### Phase N` matches" → silent ok — regardless of what
+    // MILESTONES.md contains. This must short-circuit before MILESTONES.md
+    // is even consulted, otherwise a fresh-stub ROADMAP.md paired with a
+    // hand-maintained MILESTONES.md that already has entries would compute a
+    // (spurious) drift and warn, which AC-3 forbids outright.
+    if (roadmapMax === null) {
+      return pass(
+        'roadmap-currency',
+        'ROADMAP.md references no phases yet (fresh-init stub) — nothing to compare.',
+      );
+    }
+
+    const milestonesText = await readFile(join(root, '.cadence', 'MILESTONES.md'), 'utf8');
+    const milestonesMax = highestPhaseMatch(milestonesText, /^\s*-\s+\*\*Phase (\d+)/gm);
+
+    // Per AC-1, MILESTONES.md is excluded from the min (not folded in as
+    // `0`) whenever it has zero matches — ROADMAP.md is always included here
+    // since the null-check above already guarantees `roadmapMax !== null`.
+    const included = milestonesMax === null ? [roadmapMax] : [roadmapMax, milestonesMax];
+    const includedMin = Math.min(...included);
+    const drift = onDiskMax - includedMin;
+
+    if (drift <= ROADMAP_DRIFT_WARN_THRESHOLD) {
+      return pass(
+        'roadmap-currency',
+        `Roadmap currency drift is ${drift} (on-disk highest phase ${onDiskMax} vs. referenced lowest-of-included ${includedMin}) — within the ${ROADMAP_DRIFT_WARN_THRESHOLD}-phase threshold.`,
+      );
+    }
+
+    return fail(
+      'roadmap-currency',
+      'warning',
+      `Roadmap currency drift is ${drift} (on-disk highest phase is ${onDiskMax}, but the lowest of the referenced-highest phase numbers across ROADMAP.md/MILESTONES.md is ${includedMin}) — exceeds the ${ROADMAP_DRIFT_WARN_THRESHOLD}-phase threshold.`,
+      'Update ROADMAP.md and/or MILESTONES.md to reflect recently landed phases — this is a manual fix; roadmap prose is never auto-generated.',
+      null,
+    );
+  } catch {
+    return pass(
+      'roadmap-currency',
+      'Roadmap currency not determinable (best-effort) — skipped.',
+    );
+  }
+}
+
 /** All three `Tier` values — the profile axis quantifies over all of them
  *  ("reachable at any tier"), never a single tier. */
 const ALL_TIERS: Tier[] = ['quick-fix', 'standard', 'complex'];
@@ -1413,6 +1535,7 @@ export async function runDoctor(
     await checkOrphanedEvidence(root),
     await checkLedgerRemoteCollision(root),
     await checkCoverageModeLanguageSupport(root),
+    await checkRoadmapCurrency(root),
   ];
   try {
     const config = await loadConfig(root);

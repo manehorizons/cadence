@@ -1856,6 +1856,20 @@ kernel work starting. Neither blocks the other; the operator picks build order.
 
 ### Phase 231 — `cadence doctor` check: roadmap-currency (rec-20260727-012)
 
+> **As built (2026-08-07).** Shipped as **phase 259**, not phase 231 — by the time this
+> phase's DRAFT was scaffolded, 259 was the next free phase number (231 had long since been
+> taken by unrelated work). The file plan below is also stale: doctor checks turned out not
+> to live under a `checks/` subdirectory with a separate `registry.ts` — every check is
+> inline in `packages/core/src/doctor/run.ts`, one per exported function, each with its own
+> test file under `packages/core/tests/doctor/`. Phase 259 followed that real architecture:
+> `packages/core/src/doctor/run.ts` (`checkRoadmapCurrency`, `ROADMAP_DRIFT_WARN_THRESHOLD =
+> 10`), `packages/core/tests/doctor/roadmap-currency.test.ts` (new), and the `docs/reference/
+> commands.md` doc edit (AC-5) — all five ACs below shipped as specified, including the
+> `min`-across-files semantics of AC-1, refined during BUILD to explicitly *exclude* (not
+> zero-out) a reference file with no `Phase N` headings at all, so a repo that only maintains
+> one of the two files doesn't warn forever. The `release-cut` skill step in the file list
+> below was deliberately dropped — out of scope, undecided follow-up, not one of the five ACs.
+
 **Objective.** Add a warning-only, non-blocking `cadence doctor` check comparing the
 highest phase number under `.cadence/phases/` against the highest phase number referenced
 in `ROADMAP.md`/`MILESTONES.md`; warn when drift exceeds a threshold. Deliberately

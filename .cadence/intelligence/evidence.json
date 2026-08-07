@@ -33,21 +33,21 @@
       "id": "ev-20260604-001",
       "recommendationId": "rec-20260604-001",
       "kind": "note",
-      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Highest ecosystem leverage of the session. Tension/sibling: 'Host-adapter authoring guide' (MCP may obsolete bespoke adapters \u2014 decide which path before building either).",
+      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Highest ecosystem leverage of the session. Tension/sibling: 'Host-adapter authoring guide' (MCP may obsolete bespoke adapters — decide which path before building either).",
       "createdAt": "2026-06-04T19:31:58.130Z"
     },
     {
       "id": "ev-20260604-002",
       "recommendationId": "rec-20260604-002",
       "kind": "note",
-      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Sibling: rec-20260604-001 (MCP surface) \u2014 decide MCP-vs-adapters direction first; this guide only pays off if bespoke adapters remain the path.",
+      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Sibling: rec-20260604-001 (MCP surface) — decide MCP-vs-adapters direction first; this guide only pays off if bespoke adapters remain the path.",
       "createdAt": "2026-06-04T19:32:11.371Z"
     },
     {
       "id": "ev-20260604-003",
       "recommendationId": "rec-20260604-003",
       "kind": "note",
-      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Concrete + well-scoped. Motivated directly by the 2026-06-04 broken-slash-command-path bug (committed --local Windows path) \u2014 a doctor check would have caught it. Siblings: rec-20260604-001, rec-20260604-002.",
+      "summary": "Generated in /cadence-scout session on 'adoption & ecosystem', 2026-06-04. Concrete + well-scoped. Motivated directly by the 2026-06-04 broken-slash-command-path bug (committed --local Windows path) — a doctor check would have caught it. Siblings: rec-20260604-001, rec-20260604-002.",
       "createdAt": "2026-06-04T19:32:11.537Z"
     },
     {
@@ -117,14 +117,14 @@
       "id": "ev-20260607-006",
       "recommendationId": "rec-20260607-006",
       "kind": "note",
-      "summary": "Approved design 2026-06-07 \u00a7Instrumented seams",
+      "summary": "Approved design 2026-06-07 §Instrumented seams",
       "createdAt": "2026-06-07T18:41:51.887Z"
     },
     {
       "id": "ev-20260607-007",
       "recommendationId": "rec-20260607-007",
       "kind": "note",
-      "summary": "Approved design 2026-06-07 \u00a7Phasing + \u00a7DESIGN.md & docs",
+      "summary": "Approved design 2026-06-07 §Phasing + §DESIGN.md & docs",
       "createdAt": "2026-06-07T18:41:52.044Z"
     },
     {
@@ -327,7 +327,7 @@
       "id": "ev-20260701-002",
       "recommendationId": "rec-20260701-002",
       "kind": "note",
-      "summary": "2026-07-01 audit R-02/F2: reproduced in sandbox \u2014 fix applied hooksPath=.githooks with no .githooks dir, check then reported ok",
+      "summary": "2026-07-01 audit R-02/F2: reproduced in sandbox — fix applied hooksPath=.githooks with no .githooks dir, check then reported ok",
       "createdAt": "2026-07-01T23:56:35.969Z"
     },
     {
@@ -341,7 +341,7 @@
       "id": "ev-20260701-004",
       "recommendationId": "rec-20260701-004",
       "kind": "note",
-      "summary": "2026-07-01 audit R-04/F4: reproduced \u2014 cadence progress --json exits 1 with unknown option; 15 read commands support --json, zero loop-write commands do",
+      "summary": "2026-07-01 audit R-04/F4: reproduced — cadence progress --json exits 1 with unknown option; 15 read commands support --json, zero loop-write commands do",
       "createdAt": "2026-07-01T23:56:58.634Z"
     },
     {
@@ -404,7 +404,7 @@
       "id": "ev-20260703-001",
       "recommendationId": "rec-20260703-001",
       "kind": "note",
-      "summary": "Builds on shipped primitives: phase-collision guard (v1.18, DESIGN.md \u00a713), doctor worktree-phases check + next-free allocation (v1.19), agent-prompt (v1.33), and phase 142's gatherHandoffCandidates/liveLoopPosition (settled 07-03, PR #125, unwired core awaiting a consumer).",
+      "summary": "Builds on shipped primitives: phase-collision guard (v1.18, DESIGN.md §13), doctor worktree-phases check + next-free allocation (v1.19), agent-prompt (v1.33), and phase 142's gatherHandoffCandidates/liveLoopPosition (settled 07-03, PR #125, unwired core awaiting a consumer).",
       "createdAt": "2026-07-03T16:59:18.968Z"
     },
     {
@@ -754,7 +754,7 @@
       "id": "ev-20260721-002",
       "recommendationId": "rec-20260721-002",
       "kind": "note",
-      "summary": "Same 2026-07-21 incident \u2014 the operator's literal action at the wall was asking Claude Code 'what should we do next?', a question whose answer is fully determined by ledger + loop state and therefore should not cost a model prompt; existing 'quickstart' read-only position rendering as the substrate to extend; sibling rec (actionable empty states) shares the same 'nearest legal move' computation \u2014 cross-referenced in both summaries.",
+      "summary": "Same 2026-07-21 incident — the operator's literal action at the wall was asking Claude Code 'what should we do next?', a question whose answer is fully determined by ledger + loop state and therefore should not cost a model prompt; existing 'quickstart' read-only position rendering as the substrate to extend; sibling rec (actionable empty states) shares the same 'nearest legal move' computation — cross-referenced in both summaries.",
       "createdAt": "2026-07-21T22:33:42.499Z"
     },
     {
@@ -817,7 +817,7 @@
       "id": "ev-20260724-005",
       "recommendationId": "rec-20260724-005",
       "kind": "note",
-      "summary": "Audit 2026-07-24: Phase 181 comment in mcp-trust.ts \u2014 SETTLE is classified but left ungated this phase (see DRAFT Boundaries)",
+      "summary": "Audit 2026-07-24: Phase 181 comment in mcp-trust.ts — SETTLE is classified but left ungated this phase (see DRAFT Boundaries)",
       "createdAt": "2026-07-24T14:35:48.927Z"
     },
     {
@@ -1076,7 +1076,7 @@
       "id": "ev-20260730-002",
       "recommendationId": "rec-20260730-002",
       "kind": "note",
-      "summary": "Hit live during phase 239 T7 (2026-07-30). The new test file's own fixture-hygiene COMMENT contained a contiguous 239-01/AC-8 literal; it took the dedup slot and AC-8 measured refs=1 qualifying=0 while five asserting it() titles below carried the same qualified token. Full pipeline was 24/24 green throughout \u2014 only a direct scanTestCoverage probe surfaced it. Cost one full implement/review round-trip.",
+      "summary": "Hit live during phase 239 T7 (2026-07-30). The new test file's own fixture-hygiene COMMENT contained a contiguous 239-01/AC-8 literal; it took the dedup slot and AC-8 measured refs=1 qualifying=0 while five asserting it() titles below carried the same qualified token. Full pipeline was 24/24 green throughout — only a direct scanTestCoverage probe surfaced it. Cost one full implement/review round-trip.",
       "createdAt": "2026-07-30T23:24:17.740Z"
     },
     {
@@ -1195,7 +1195,7 @@
       "id": "ev-20260731-009",
       "recommendationId": "rec-20260731-009",
       "kind": "note",
-      "summary": "Source doc \u00a77.3 (docs/handoffs/cadence-phase0-assurance-kernel-review.md); phase 236 ROADMAP.md 'As built' amendment explicitly splits this out; rec-20260727-006/-011 (shipped, schema-only) are the prerequisites this consumes; rec-20260731-007 (finding-id collision, needs-decision) must be designed around, not ignored",
+      "summary": "Source doc §7.3 (docs/handoffs/cadence-phase0-assurance-kernel-review.md); phase 236 ROADMAP.md 'As built' amendment explicitly splits this out; rec-20260727-006/-011 (shipped, schema-only) are the prerequisites this consumes; rec-20260731-007 (finding-id collision, needs-decision) must be designed around, not ignored",
       "createdAt": "2026-07-31T22:02:11.174Z"
     },
     {
@@ -1398,21 +1398,21 @@
       "id": "ev-20260802-009",
       "recommendationId": "rec-20260731-010",
       "kind": "note",
-      "summary": "Persistence half shipped via phase 247 (PR #357, main@afcb90a, re-verified unchanged at main@59a2116e): writeRefusedSettleSummary now threads acc.codeReview/acc.securityAudit with the success path's conditional-spread shape, attaches contentHash when findings are non-empty, and preserves findings-bearing refused attempts as immutable -SUMMARY-snapshot siblings. The summary's claim that a refused settle's findings are not even persisted is stale as of 247. Routing half is disposed by dec-20260802-003 (already recorded, superseding the decision text originally sketched for this rec) \u2014 ledger routing stays finalize-only, trigger amended to name rec-20260801-012's finding that real-provider gate throws are structurally unreachable under this repo's normal auto-profile, headless-agent operating mode.",
+      "summary": "Persistence half shipped via phase 247 (PR #357, main@afcb90a, re-verified unchanged at main@59a2116e): writeRefusedSettleSummary now threads acc.codeReview/acc.securityAudit with the success path's conditional-spread shape, attaches contentHash when findings are non-empty, and preserves findings-bearing refused attempts as immutable -SUMMARY-snapshot siblings. The summary's claim that a refused settle's findings are not even persisted is stale as of 247. Routing half is disposed by dec-20260802-003 (already recorded, superseding the decision text originally sketched for this rec) — ledger routing stays finalize-only, trigger amended to name rec-20260801-012's finding that real-provider gate throws are structurally unreachable under this repo's normal auto-profile, headless-agent operating mode.",
       "createdAt": "2026-08-02T02:20:34.309Z"
     },
     {
       "id": "ev-20260802-010",
       "recommendationId": "rec-20260712-006",
       "kind": "note",
-      "summary": "Joined to the finding-durability cluster. Verified at main@afcb90a: the post-gate-loop refusal families in services/settle.ts still return exitCode 1 with no SUMMARY write (map each ok:false exit site to its owning family before drafting \u2014 expected members: AC derivation, anomaly/skill-audit, evidence floor). Phase 247 sharpened the asymmetry: a gate-loop refusal now persists findings, a contentHash, and a tamper-evident sibling, while an evidence-floor refusal later in the same service persists nothing. Fix is now trivially specified: those families call the writer 247 hardened. Scoped as phase 249.",
+      "summary": "Joined to the finding-durability cluster. Verified at main@afcb90a: the post-gate-loop refusal families in services/settle.ts still return exitCode 1 with no SUMMARY write (map each ok:false exit site to its owning family before drafting — expected members: AC derivation, anomaly/skill-audit, evidence floor). Phase 247 sharpened the asymmetry: a gate-loop refusal now persists findings, a contentHash, and a tamper-evident sibling, while an evidence-floor refusal later in the same service persists nothing. Fix is now trivially specified: those families call the writer 247 hardened. Scoped as phase 249.",
       "createdAt": "2026-08-02T02:20:40.502Z"
     },
     {
       "id": "ev-20260802-011",
       "recommendationId": "rec-20260801-004",
       "kind": "note",
-      "summary": "Re-verified at main@afcb90a (confirmed unchanged at main@59a2116e): both catch blocks unchanged by phase 247 \u2014 a bypassed verifier throw still returns bare outcome pass with no flags, and registry persists status ran with empty verifier identity. Urgency shifted: codeReview.provider has been host-cli in this repo's live config since PR #351 (confirmed still host-cli), so a credential expiry or network failure plus --force is now a reachable daily-dogfooding event that records as a clean real-provider pass. Scoped as phase 248; land before real-provider reloop dogfooding accumulates any such records.",
+      "summary": "Re-verified at main@afcb90a (confirmed unchanged at main@59a2116e): both catch blocks unchanged by phase 247 — a bypassed verifier throw still returns bare outcome pass with no flags, and registry persists status ran with empty verifier identity. Urgency shifted: codeReview.provider has been host-cli in this repo's live config since PR #351 (confirmed still host-cli), so a credential expiry or network failure plus --force is now a reachable daily-dogfooding event that records as a clean real-provider pass. Scoped as phase 248; land before real-provider reloop dogfooding accumulates any such records.",
       "createdAt": "2026-08-02T02:20:47.769Z"
     },
     {
@@ -1426,14 +1426,14 @@
       "id": "ev-20260802-013",
       "recommendationId": "rec-20260802-004",
       "kind": "note",
-      "summary": "Surfaced during phase 248's SPEC authoring (2026-08-02): registry.ts's dispatch loop has no branch reading res.flags?.verifierFailure at all \u2014 confirmed by reading the full bypass-ladder chain (self-guard predicate, build-test-must-pass x2, boundary-scan, test-coverage, code-review/security-audit's new reviewVerifierFailure branch) and finding none match deep-verify's own verifierFailure flag.",
+      "summary": "Surfaced during phase 248's SPEC authoring (2026-08-02): registry.ts's dispatch loop has no branch reading res.flags?.verifierFailure at all — confirmed by reading the full bypass-ladder chain (self-guard predicate, build-test-must-pass x2, boundary-scan, test-coverage, code-review/security-audit's new reviewVerifierFailure branch) and finding none match deep-verify's own verifierFailure flag.",
       "createdAt": "2026-08-02T04:09:25.988Z"
     },
     {
       "id": "ev-20260802-014",
       "recommendationId": "rec-20260802-003",
       "kind": "note",
-      "summary": "Root cause identified while authoring phase 249's SPEC: computeIntelligenceAudit (packages/core/src/intelligence/store/audit.ts) builds its valid-rec-id set from recommendations[] only and never consults archived[] \u2014 so a decision/evidence entry whose rec is legitimately archived (not lost, not deleted) is flagged as an orphan indistinguishable from a genuinely-vanished rec like rec-20260711-001. This reframes the finding: it is not only a fixed 145-item historical backlog, it is an ongoing generator of new orphans. recommendation-promote.ts's autoArchive:true default means every phase that closes by promoting its source rec to 'shipped' (the single-commit settle convention's normal path) immediately orphans that rec's own evidence entries. Verified live: rec-20260801-004 (status shipped, in archived[]) has 3 evidence entries (ev-20260801-004, ev-20260802-005, ev-20260802-011) now flagged as orphans by this mechanism, confirmed absent from the original 145-count baseline. Scoping fix, not resolved here: computeIntelligenceAudit's valid-rec-id set should include archived[] alongside recommendations[] before orphan counts are used as any kind of gate.",
+      "summary": "Root cause identified while authoring phase 249's SPEC: computeIntelligenceAudit (packages/core/src/intelligence/store/audit.ts) builds its valid-rec-id set from recommendations[] only and never consults archived[] — so a decision/evidence entry whose rec is legitimately archived (not lost, not deleted) is flagged as an orphan indistinguishable from a genuinely-vanished rec like rec-20260711-001. This reframes the finding: it is not only a fixed 145-item historical backlog, it is an ongoing generator of new orphans. recommendation-promote.ts's autoArchive:true default means every phase that closes by promoting its source rec to 'shipped' (the single-commit settle convention's normal path) immediately orphans that rec's own evidence entries. Verified live: rec-20260801-004 (status shipped, in archived[]) has 3 evidence entries (ev-20260801-004, ev-20260802-005, ev-20260802-011) now flagged as orphans by this mechanism, confirmed absent from the original 145-count baseline. Scoping fix, not resolved here: computeIntelligenceAudit's valid-rec-id set should include archived[] alongside recommendations[] before orphan counts are used as any kind of gate.",
       "createdAt": "2026-08-02T15:19:47.655Z"
     },
     {
@@ -1482,7 +1482,7 @@
       "id": "ev-20260803-003",
       "recommendationId": "rec-20260802-003",
       "kind": "note",
-      "summary": "Post-npm-scope-migration re-measure at v1.54.0 (2026-08-03), phase 251 T1c: cadence intelligence audit now reports 20 orphan decisions and 134 orphan evidence entries (154 total), compared against the pre-migration baseline of 20 orphan decisions + 125 orphan evidence entries recorded at filing time. Decisions count unchanged; evidence count grew by 9, consistent with this being a known-drifting metric (computeIntelligenceAudit's archived[]-blind-spot, not yet fixed) that new autoArchive'd promotions (including this same phase's rec-20260802-001 T1a promotion) continue to inflate \u2014 not asserted as a threshold, gate, or expected decrease.",
+      "summary": "Post-npm-scope-migration re-measure at v1.54.0 (2026-08-03), phase 251 T1c: cadence intelligence audit now reports 20 orphan decisions and 134 orphan evidence entries (154 total), compared against the pre-migration baseline of 20 orphan decisions + 125 orphan evidence entries recorded at filing time. Decisions count unchanged; evidence count grew by 9, consistent with this being a known-drifting metric (computeIntelligenceAudit's archived[]-blind-spot, not yet fixed) that new autoArchive'd promotions (including this same phase's rec-20260802-001 T1a promotion) continue to inflate — not asserted as a threshold, gate, or expected decrease.",
       "createdAt": "2026-08-03T01:36:36.384Z"
     },
     {
@@ -1580,7 +1580,7 @@
       "id": "ev-20260806-002",
       "recommendationId": "rec-20260806-002",
       "kind": "cadence-artifact",
-      "summary": "phase 256-real-provider-certification-prep, draft 256-01, SUMMARY contentHash 51b2f95ce6ec4030acca94c1b1117abb7cd2555cb4cd23aaf0c627fa6a4c2fc8 \u2014 medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The instructed \u201cstop and report\u201d path skips Step 5b, leaving securityAudit.provider as host-cli and the repo failing its baseline invariant. Require rollback before stopping.",
+      "summary": "phase 256-real-provider-certification-prep, draft 256-01, SUMMARY contentHash 51b2f95ce6ec4030acca94c1b1117abb7cd2555cb4cd23aaf0c627fa6a4c2fc8 — medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The instructed “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the repo failing its baseline invariant. Require rollback before stopping.",
       "path": ".cadence/phases/256-real-provider-certification-prep/256-01-SUMMARY.json",
       "createdAt": "2026-08-06T02:02:51.544Z"
     },
@@ -1588,7 +1588,7 @@
       "id": "ev-20260806-003",
       "recommendationId": "rec-20260806-003",
       "kind": "cadence-artifact",
-      "summary": "phase 256-real-provider-certification-prep, draft 256-01, SUMMARY contentHash 0e2b9d2da3c2d5076cd4afb28ce1bd27c9939f6d81b7d93fd6fa3a9d9c9d782d \u2014 medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The \u201cstop and report\u201d path skips Step 5b, leaving securityAudit.provider as host-cli and the committed baseline failing its invariant.",
+      "summary": "phase 256-real-provider-certification-prep, draft 256-01, SUMMARY contentHash 0e2b9d2da3c2d5076cd4afb28ce1bd27c9939f6d81b7d93fd6fa3a9d9c9d782d — medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the committed baseline failing its invariant.",
       "path": ".cadence/phases/256-real-provider-certification-prep/256-01-SUMMARY.json",
       "createdAt": "2026-08-06T02:14:04.129Z"
     },
@@ -1624,7 +1624,7 @@
       "id": "ev-20260806-008",
       "recommendationId": "rec-20260806-005",
       "kind": "cadence-artifact",
-      "summary": "phase 256-real-provider-certification-prep, draft 256-02, SUMMARY contentHash b8cecf07e5576324289d22a5c1911f760c7a5c938abdce54fa100889754f27f3 \u2014 medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:180: The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provider set to host-cli and the baseline config invalid.",
+      "summary": "phase 256-real-provider-certification-prep, draft 256-02, SUMMARY contentHash b8cecf07e5576324289d22a5c1911f760c7a5c938abdce54fa100889754f27f3 — medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:180: The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provider set to host-cli and the baseline config invalid.",
       "path": ".cadence/phases/256-real-provider-certification-prep/256-02-SUMMARY.json",
       "createdAt": "2026-08-06T05:20:09.925Z"
     },
