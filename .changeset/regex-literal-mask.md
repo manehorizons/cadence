@@ -1,0 +1,9 @@
+---
+"@thomas-powers-jr/cadence-core": minor
+---
+
+Fixed a real coverage-scanner defect: the JS/TS `test-coverage` gate's `classify()` state machine had no concept of a regex literal, so a paren, quote, or backtick inside an unrecognized `/regex/` — not just parens/backticks, as originally reported — was read as a real structural character. This corrupted `findMatchingParenIndex`'s depth-aware paren matcher and/or flipped the scanner into real string/template mode for the rest of the file, silently undercounting or dropping test-block spans (and, in rarer cases, silently dropping a real assertion from a span without changing its count). A repo-wide sweep found this affected 20 of this repo's own 446 JS/TS test files before the fix; all 20 are now confirmed resolved with no file-content edits needed, since the fix lives entirely in the scanner.
+
+`classify()` (`packages/core/src/verify/coverage-profiles/mask.ts`) now recognizes JS/TS regex literals as their own lexical category, opt-in per language profile via a new `LanguageSyntax.regexLiterals` field (set only for the built-in `js-ts` profile — no other language profile is affected). Regex-vs-division disambiguation uses a masker-only heuristic (no new runtime dependency) against an explicitly documented, bounded preceding-token vocabulary; a `/` in a context outside that vocabulary resolves conservatively, the same as division, rather than guessing regex-open.
+
+That conservative fallback is now also surfaced instead of staying silent: `cadence verify coverage --explain` reports a `[mask diagnostic]` line naming the out-of-vocabulary context, so a scanner blind spot is visible instead of quietly under-counting coverage. `findSpansForProfile`'s existing signature and behavior are unchanged for every existing caller; the new diagnostics are opt-in via a sibling function.

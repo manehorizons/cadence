@@ -70,6 +70,11 @@ export function renderExplainHuman(result: CoverageExplainResult): string {
     const profileLabel = f.profileId === null ? 'none' : f.profileId;
     lines.push(`${f.file}  profile: ${profileLabel}  spans found: ${f.spansFound}`);
     lines.push(`  ${f.profileReason}`);
+    if (f.maskDiagnostics !== undefined && f.maskDiagnostics.length > 0) {
+      for (const d of f.maskDiagnostics) {
+        lines.push(`  [mask diagnostic] ${d}`);
+      }
+    }
     if (f.occurrences.length === 0) {
       lines.push(`  (no occurrence of ${result.acId} in this file)`);
     }

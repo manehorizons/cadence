@@ -1648,6 +1648,27 @@
       "kind": "note",
       "summary": "Counted directly from .cadence/phases/256-real-provider-certification-prep/*.json (2026-08-06): six settles, provider host-cli throughout, codeReview finding counts 2/2/3/1/2/1 respectively; dec-20260801-003's trigger text confirmed via cadence decision show / decisions.json read.",
       "createdAt": "2026-08-06T05:32:11.283Z"
+    },
+    {
+      "id": "ev-20260806-012",
+      "recommendationId": "rec-20260806-009",
+      "kind": "note",
+      "summary": "T4 sweep (phase 258, 2026-08-06): 17/450 JS/TS test files show scanner-span-count < real-block-count (Class A), 3 more show same-count boundary corruption incl. a true->false hasAssertion flip (Class B). Full 20-file table in .cadence/phases/258-assertion-span-scanner/258-01-DRAFT.md 'As built' section. 2 findings independently re-derived post-hoc against the real built scanner.",
+      "createdAt": "2026-08-06T22:37:44.740Z"
+    },
+    {
+      "id": "ev-20260807-001",
+      "recommendationId": "rec-20260806-009",
+      "kind": "note",
+      "summary": "Re-swept post-fix (phase 258, all 3 T2 rounds complete, 2026-08-06): re-ran the comparison against the now-fixed real scanner using quote-anchored, member-call-excluded ground truth (excludes fixture-string false positives and RegExp.prototype.test() member calls, matching T4's own stated methodology). Result: 20/20 previously-flagged files now show scanner span count == actual real block count; 0 files remain affected; 0 new files discovered affected anywhere in the 446-file repo. The Class B hasAssertion true->false flip in coverage-profiles-engine.test.ts is also confirmed resolved (span now correctly extends lines 93-113 including the real expect() calls, not truncated at 93-98). Since the fix lives entirely in the scanner (packages/core/src/verify/coverage-profiles/mask.ts), no historical test-file content needs editing -- the original 'repo-wide remediation' framing was mischaracterized; there is nothing to remediate in the files themselves. Archiving this rec as resolved by the fix. The one genuinely remaining question -- whether any HISTORICAL settled AC-PASS record was affected while the bug was live -- is already rec-20260729-006's exact scope; redirect there.",
+      "createdAt": "2026-08-07T00:01:12.509Z"
+    },
+    {
+      "id": "ev-20260807-002",
+      "recommendationId": "rec-20260807-001",
+      "kind": "note",
+      "summary": "Reproduced live during phase 258 settle (2026-08-07): cadence settle run --auto refused citing '258-01/AC-5 is mentioned but not inside a recognized asserting test block', while cadence verify coverage --explain AC-5 showed 'Overall: SATISFIED' for the same file/token at the same commit. Root-caused to packages/core/src/verify/coverage.ts's assertion-mode scan loop's per-file dedup (const key = [REDACTED] if (seen.has(key)) continue;) keeping only the first-encountered occurrence (a non-qualifying describe() title at line 568) over a later genuinely-qualifying it() block occurrence (line 821) in the same file. Confirmed by removing the earlier, redundant occurrence, which made settle pass immediately with no other change.",
+      "createdAt": "2026-08-07T01:50:06.798Z"
     }
   ]
 }

@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import type { Dirent } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { getProfileForExtension } from './coverage-profiles/registry.js';
-import { findSpansForProfile } from './coverage-profiles/engine.js';
+import { findSpansForProfile, findSpansForProfileWithDiagnostics } from './coverage-profiles/engine.js';
 import type { TestSpan } from './coverage-profiles/types.js';
 
 export type AcId = `AC-${number}` | string;
@@ -327,6 +327,19 @@ export interface ExplainFileResult {
    * mode, for an unclaimed extension, or for a claimed extension whose
    * profile recognized no block shape in this file's actual content). */
   spansFound: number;
+  /**
+   * Phase 258, T3: out-of-vocabulary preceding-token diagnostics
+   * (`MaskDiagnostic`, `./coverage-profiles/mask.ts`) collected while
+   * scanning this file in assertion mode, formatted as human-readable
+   * strings (`line N: <snippet> — <context>`) the same way `profileReason`
+   * is already a rendered string rather than a structured object. Omitted
+   * entirely (rather than an empty array) when there are none, so mention
+   * mode and every file with a fully in-vocabulary preceding-token context
+   * — i.e. almost every file — keep this key absent, matching
+   * `exactOptionalPropertyTypes` and leaving every pre-existing consumer of
+   * this shape unaffected.
+   */
+  maskDiagnostics?: string[];
   /** Occurrences of the target AC token found in this file. */
   occurrences: ExplainOccurrence[];
 }
@@ -398,6 +411,7 @@ export async function explainAcCoverage(
     let profileId: string | null = null;
     let profileReason: string;
     let spans: TestSpan[] = [];
+    let maskDiagnostics: string[] = [];
 
     if (mode === 'assertion') {
       const profile = getProfileForExtension(ext);
@@ -407,7 +421,16 @@ export async function explainAcCoverage(
           '— file contributes zero spans';
       } else {
         profileId = profile.id;
-        spans = findSpansForProfile(raw, profile);
+        // Phase 258, T3: `findSpansForProfileWithDiagnostics` produces the
+        // exact same spans `findSpansForProfile` would (it's the same
+        // function plus a diagnostics sink — see engine.ts's docstring) —
+        // switching to it here changes nothing about span resolution, only
+        // adds visibility into out-of-vocabulary preceding-token contexts.
+        const scanned = findSpansForProfileWithDiagnostics(raw, profile);
+        spans = scanned.spans;
+        maskDiagnostics = scanned.diagnostics.map(
+          (d) => `line ${offsetToLine(raw, d.offset)}: ${d.snippet} — ${d.context}`,
+        );
         profileReason =
           spans.length > 0
             ? `scanned with profile "${profile.id}"`
@@ -522,6 +545,7 @@ export async function explainAcCoverage(
       profileId,
       profileReason,
       spansFound: spans.length,
+      ...(maskDiagnostics.length > 0 ? { maskDiagnostics } : {}),
       occurrences,
     });
   }

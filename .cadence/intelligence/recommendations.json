@@ -2020,36 +2020,6 @@
       "updatedAt": "2026-08-03T01:36:10.979Z"
     },
     {
-      "id": "rec-20260803-002",
-      "title": "js-ts coverage-scanner mask has no concept of a JS/TS regex literal, corrupting span detection",
-      "summary": "packages/core/src/verify/coverage-profiles/js-ts.ts's call-expression span strategy (packages/core/src/verify/coverage-profiles/strategies.ts's findMatchingParenIndex) does depth-aware paren counting over the file's CodeMask to find each it()/test() block's closing paren, and the mask only recognizes single/double/backtick-quoted strings and // and /* */ comments as non-structural spans -- it has no concept of a /regex/ literal as its own lexical category. A raw backtick or parenthesis inside a regex literal (even backslash-escaped, e.g. \\( -- escaping has no special meaning to the mask, which isn't string/regex-aware) is read as a real structural character: a backtick toggles the mask's template-literal-string state (since backtick is registered as a string delimiter), and a paren perturbs the running depth count. Either can desynchronize span detection for the rest of the file, not just the offending block. Hit for real writing packages/core/tests/docs/phase251-ledger.test.ts (phase 251): two it() blocks whose .toMatch(/regex containing backticks or parens/) assertions caused 'cadence settle run' to refuse with 'token found but not inside any recognized test block', diagnosable via 'cadence verify coverage --explain AC-N' showing 'spans found: 1' for a 3-it() file. Worked around on the test-authoring side (prefer .toContain('plain string') -- backticks/parens inside a properly single/double-quoted string ARE correctly masked -- over .toMatch(/regex/) containing either character) rather than fixing the scanner, which was out of scope for that phase. Likely affects any existing test file using a regex-literal assertion with a raw backtick or paren, silently undercounting real coverage without ever surfacing an error (a token inside such a corrupted span just reads as 'not inside any recognized test block', indistinguishable from genuinely missing coverage) -- worth a repo-wide grep audit alongside any fix. Options to weigh: teach the CodeMask a regex-literal syntax category (nontrivial -- distinguishing a regex literal from a division operator is a known hard problem in naive JS/TS tokenizers, usually needs some lookbehind heuristic); or document the limitation prominently (e.g. in this profile's own file, and in whatever author-facing guidance covers writing coverage-satisfying tests) so future authors know to avoid backtick/paren-bearing regex literals rather than hit this blind.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/coverage-profiles/js-ts.ts",
-        "packages/core/src/verify/coverage-profiles/strategies.ts",
-        "packages/core/src/verify/coverage-profiles/mask.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260803-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-03T03:07:40.383Z",
-      "updatedAt": "2026-08-03T03:07:40.383Z"
-    },
-    {
       "id": "rec-20260803-003",
       "title": "3 undocumented high-severity pnpm-audit advisories now failing the Security workflow's audit job",
       "summary": "The Security workflow's 'Check pnpm audit against documented exceptions' job started failing on main's scheduled run at 2026-08-03T05:15:54Z (run 30786676416), after PR #367 merged at 04:03 UTC same day -- not caused by any source change, the advisories were newly disclosed/detected between those two timestamps. Three findings are undocumented in docs/security/audit-exceptions.md: GHSA-7p8r-x3mc-p8w7 (fast-uri, high), GHSA-mwp4-54f8-5fhr (ip-address, high), and GHSA-rgw5-rvv9-x895 (brace-expansion, high -- a DIFFERENT advisory ID than the already-documented GHSA-mh99-v99m-4gvg). Does not block the required ci-success check (which only depends on the test job, per .github/workflows/ci.yml), so PRs can still merge, but the audit gate itself is red and needs triage: either add documented exceptions (with the same reachability-analysis rigor as the existing entries) or bump the offending transitive dependencies.",
@@ -2506,6 +2476,34 @@
       "decisionIds": [],
       "createdAt": "2026-08-06T05:32:11.283Z",
       "updatedAt": "2026-08-06T05:32:11.283Z"
+    },
+    {
+      "id": "rec-20260807-001",
+      "title": "test-coverage gate (assertion mode) dedupes AC-token occurrences per-file by first-encountered, silently discarding a later genuinely-qualifying occurrence",
+      "summary": "packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the per-file token loop inside the mode==='assertion' branch) dedupes AC-token occurrences with 'const key = id@relPath; if (seen.has(key)) continue; seen.add(key);' -- keeping only the FIRST occurrence of a given AC token encountered per file, in file-scan (top-to-bottom) order, and silently discarding every later occurrence in that same file, including one that genuinely qualifies (is inside a real asserting it()/test() block). Hit for real during phase 258's settle (2026-08-07): the AC-5 regression test's file had the token 258-01/AC-5 in BOTH a describe() block title (line 568, earlier in the file, non-qualifying since describe wrappers are not spans) and the real asserting it() block title that actually carries the evidence (line 821, later in the file, genuinely qualifying). The dedup kept only the first (describe-title) occurrence, so weaklyLinkedAcs()'s isFullyNonQualifying(refs) check saw a single non-qualifying ref and refused settle with 'is mentioned but not inside a recognized asserting test block', even though a real qualifying test existed in the same file. cadence verify coverage --explain AC-5 did NOT reproduce this refusal -- explainAcCoverage (used by --explain) collects every occurrence separately with no per-file dedup, and its overall satisfied field is true iff ANY occurrence in ANY file satisfies -- so it correctly showed 'Overall: SATISFIED', creating a genuine, confusing divergence between what --explain reports and what settle's gate actually enforces for the exact same file/token. Worked around in phase 258 by removing the redundant token from the describe title (only the real it() block needs to carry it), but the underlying dedup-keeps-first-occurrence behavior is a real defect independent of that workaround: any test file where an AC token happens to appear first in a non-qualifying location (a describe title, a comment, a variable name) and later in a real qualifying it()/test() block will incorrectly refuse settle, with a --explain result that actively misleads an operator into thinking coverage is fine. Options to weigh: change the dedup to keep the qualifying occurrence if ANY occurrence for that (id, file) pair qualifies, rather than keeping strictly the first found; or align --explain's semantics with the gate's per-file-first-occurrence semantics (worse, since it would make --explain lie in the other direction); or drop the per-file dedup granularity entirely and just check 'does at least one occurrence across the whole repo qualify', matching --explain.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260807-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-07T01:50:06.798Z",
+      "updatedAt": "2026-08-07T01:50:06.798Z"
     }
   ],
   "archived": [
@@ -6724,6 +6722,73 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-04T21:33:29.287Z",
       "updatedAt": "2026-08-05T23:18:09.518Z"
+    },
+    {
+      "id": "rec-20260806-009",
+      "title": "Repo-wide remediation: 20 test files undercounted by the regex-literal mask defect (rec-20260803-002 / phase 258)",
+      "summary": "Phase 258's T4 sweep (2026-08-06) compared the pre-fix findSpansForProfile/jsTsProfile scanner against a throwaway regex-literal-aware audit oracle across all 450 JS/TS test files. Found 17 files where the scanner's span count is strictly less than the real it()/test() block count (worst: packages/core/tests/quickstart.test.ts, 0 of 3 blocks found, caused by a single quote inside a character class -- no paren or backtick at all), plus 3 more files with silent boundary corruption where the span count still matched (packages/core/tests/verify/coverage-profiles-engine.test.ts flips hasAssertion true->false on a block whose real source does contain expect(...) past the truncation point; packages/core/tests/config-edit/render.test.ts silently drops a trailing assertion from its span; packages/core/tests/intelligence/render-milestone.test.ts is a 4-byte inert shift). 15 of the 17 Class A files and both non-inert Class B files contain AC-N tokens, so some historical AC PASS records may rest on undercounted spans. Two of the twenty findings were independently spot-checked by the phase-258 orchestrator directly against the real built scanner (node -e against packages/core/dist/verify/coverage-profiles/{engine,js-ts}.js) and both reproduced exactly. Phase 258 fixes the scanner itself (rec-20260803-002) but explicitly does not remediate these 20 historical files -- report only, per the source v1.55 handoff's own instruction. Couples to rec-20260729-006 (retroactive audit of historical AC PASS records), which already planned this exact repo-wide coverage audit.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/quickstart.test.ts",
+        "packages/core/tests/verify/coverage-profiles-engine.test.ts",
+        "packages/core/tests/config-edit/render.test.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-012",
+        "ev-20260807-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "archivedAt": "2026-08-07T00:01:20.358Z",
+      "archiveReason": "manual",
+      "createdAt": "2026-08-06T22:37:44.740Z",
+      "updatedAt": "2026-08-07T00:01:20.358Z"
+    },
+    {
+      "id": "rec-20260803-002",
+      "title": "js-ts coverage-scanner mask has no concept of a JS/TS regex literal, corrupting span detection",
+      "summary": "packages/core/src/verify/coverage-profiles/js-ts.ts's call-expression span strategy (packages/core/src/verify/coverage-profiles/strategies.ts's findMatchingParenIndex) does depth-aware paren counting over the file's CodeMask to find each it()/test() block's closing paren, and the mask only recognizes single/double/backtick-quoted strings and // and /* */ comments as non-structural spans -- it has no concept of a /regex/ literal as its own lexical category. A raw backtick or parenthesis inside a regex literal (even backslash-escaped, e.g. \\( -- escaping has no special meaning to the mask, which isn't string/regex-aware) is read as a real structural character: a backtick toggles the mask's template-literal-string state (since backtick is registered as a string delimiter), and a paren perturbs the running depth count. Either can desynchronize span detection for the rest of the file, not just the offending block. Hit for real writing packages/core/tests/docs/phase251-ledger.test.ts (phase 251): two it() blocks whose .toMatch(/regex containing backticks or parens/) assertions caused 'cadence settle run' to refuse with 'token found but not inside any recognized test block', diagnosable via 'cadence verify coverage --explain AC-N' showing 'spans found: 1' for a 3-it() file. Worked around on the test-authoring side (prefer .toContain('plain string') -- backticks/parens inside a properly single/double-quoted string ARE correctly masked -- over .toMatch(/regex/) containing either character) rather than fixing the scanner, which was out of scope for that phase. Likely affects any existing test file using a regex-literal assertion with a raw backtick or paren, silently undercounting real coverage without ever surfacing an error (a token inside such a corrupted span just reads as 'not inside any recognized test block', indistinguishable from genuinely missing coverage) -- worth a repo-wide grep audit alongside any fix. Options to weigh: teach the CodeMask a regex-literal syntax category (nontrivial -- distinguishing a regex literal from a division operator is a known hard problem in naive JS/TS tokenizers, usually needs some lookbehind heuristic); or document the limitation prominently (e.g. in this profile's own file, and in whatever author-facing guidance covers writing coverage-satisfying tests) so future authors know to avoid backtick/paren-bearing regex literals rather than hit this blind.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage-profiles/js-ts.ts",
+        "packages/core/src/verify/coverage-profiles/strategies.ts",
+        "packages/core/src/verify/coverage-profiles/mask.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260803-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "258-assertion-span-scanner",
+      "createdAt": "2026-08-03T03:07:40.383Z",
+      "updatedAt": "2026-08-07T01:50:30.603Z",
+      "shippedRef": "phase 258, branch worktree-258-assertion-span-scanner",
+      "archivedAt": "2026-08-07T01:50:30.603Z",
+      "archiveReason": "shipped"
     }
   ]
 }
