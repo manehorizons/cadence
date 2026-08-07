@@ -304,7 +304,7 @@ mock fallback's pass as one.
   YAGNI is applied deliberately, and rejected scope is *recorded* in
   DESIGN.md ("dropped, not deferred"), not just omitted.
 - **Vitest workers are capped.** `vitest.shared.ts` is the single source of
-  truth for test timeouts (20s) and `maxForks: 12`. Each package's
+  truth for test timeouts (20s) and `maxWorkers: 12`. Each package's
   `vitest.config.ts` merges it and adds only `include`.
 - **Test ↔ AC linkage.** Under the coverage gate each AC must be referenced
   by its `AC-N` token in a test file — and in `assertion` mode (the default

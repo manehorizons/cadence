@@ -1,0 +1,42 @@
+{
+  "draftId": "260-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-07T15:34:57.669Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-07T15:45:55.599Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-07T15:45:56.071Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\AppData\\Local\\Temp\\claude\\C--Users-Thomas-Documents-Projects-cadence\\26b67890-dd6f-44ae-8ee1-67469d7a11cc\\scratchpad\\check.mjs",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\260-vitest-v4-upgrade\\packages\\core\\tests\\docs\\lockfile-overrides-current-state.test.ts",
+        "C:\\Users\\Thomas\\AppData\\Local\\Temp\\claude\\C--Users-Thomas-Documents-Projects-cadence\\26b67890-dd6f-44ae-8ee1-67469d7a11cc\\scratchpad\\summarize.mjs",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\260-vitest-v4-upgrade\\vitest.shared.ts"
+      ],
+      "updatedAt": "2026-08-07T16:54:07.618Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\260-vitest-v4-upgrade\\docs\\security\\audit-exceptions.md"
+      ],
+      "updatedAt": "2026-08-07T17:00:12.093Z"
+    }
+  }
+}
