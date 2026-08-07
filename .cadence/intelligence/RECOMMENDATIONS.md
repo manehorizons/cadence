@@ -1061,23 +1061,6 @@ docs/security/audit-exceptions.md's own text documents that the audit CI job (sc
 
 recommendation promote is refused for terminal-status recs, so a --ref recorded at settle time as a placeholder (e.g. 'PR pending') can never be corrected once the PR merges. Observed on rec-20260801-004 (phase 248, PR #358 merged) and rec-20260712-006 (phase 249 merged), both still reading 'PR pending' at v1.54.0. The doctor recommendation-shipped-drift check covers the settle-pending waypoint but not a stale ref on an already-shipped rec. Options to weigh: a narrow 'recommendation ref set <id> --ref' command; allowing --ref on promote for a shipped→shipped no-op transition; or having settle record the branch/PR automatically at the settle-pending → shipped step so a placeholder is never minted. Cosmetic per-instance, but it accumulates once per shipped phase and silently degrades the ledger's own provenance.
 
-## rec-20260803-003 — 3 undocumented high-severity pnpm-audit advisories now failing the Security workflow's audit job
-
-- status: candidate
-- ready: needs-evidence
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: security, ci
-- files: docs/security/audit-exceptions.md
-- evidence: gh run view 30786676416 (Security workflow, main, schedule) failed; gh run view <pr-368-audit-job> --log-failed shows 4 FAIL lines for the 3 undocumented GHSA ids (brace-expansion GHSA-rgw5-rvv9-x895 appears twice in dependency graph)
-- evidence: Now moot as a side effect of phase 253 (PR #373, commit 0b371063), not explicitly scoped in either phase 253 or 254's DRAFT: node scripts/check-audit-exceptions.mjs run on 2026-08-05 (this worktree, phase 254's build) reports only 4 high/critical advisories (vitest/vite/hono/postcss) -- none of this rec's 3 GHSA ids (GHSA-7p8r-x3mc-p8w7 fast-uri, GHSA-mwp4-54f8-5fhr ip-address, GHSA-rgw5-rvv9-x895 brace-expansion) appear at all, meaning pnpm audit no longer detects them. Consistent with phase 253's corrected override floors (fast-uri >=3.1.5, brace-expansion 5.x >=5.0.9 / 2.x >=2.1.4, ip-address >=10.3.1) satisfying these particular GHSA ids' patched versions too, in addition to the originally-targeted GHSA-mh99-v99m-4gvg/moderate ip-address ids. Independently confirmed by phase 254's whole-branch reviewer via live grep + pnpm-lock.yaml inspection, not just this note's own claim. Leaving status as-is (candidate/needs-evidence) for the operator to close -- outside phase 254's own declared DRAFT scope to unilaterally promote/reject.
-- next: cadence milestone propose
-
-The Security workflow's 'Check pnpm audit against documented exceptions' job started failing on main's scheduled run at 2026-08-03T05:15:54Z (run 30786676416), after PR #367 merged at 04:03 UTC same day -- not caused by any source change, the advisories were newly disclosed/detected between those two timestamps. Three findings are undocumented in docs/security/audit-exceptions.md: GHSA-7p8r-x3mc-p8w7 (fast-uri, high), GHSA-mwp4-54f8-5fhr (ip-address, high), and GHSA-rgw5-rvv9-x895 (brace-expansion, high -- a DIFFERENT advisory ID than the already-documented GHSA-mh99-v99m-4gvg). Does not block the required ci-success check (which only depends on the test job, per .github/workflows/ci.yml), so PRs can still merge, but the audit gate itself is red and needs triage: either add documented exceptions (with the same reachability-analysis rigor as the existing entries) or bump the offending transitive dependencies.
-
 ## rec-20260804-002 — audit-exceptions parser silently drops any exception row appended below the HTML template comment
 
 - status: candidate
@@ -1350,19 +1333,3 @@ packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the p
 - next: cadence milestone propose
 
 Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.
-
-## rec-20260807-004 — Undocumented high-severity js-yaml advisory (GHSA-5p4m-2wfm-xmqj) blocks security-success on every PR
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: critical
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: security, dependencies, ci
-- files: package.json, pnpm-lock.yaml, docs/security/audit-exceptions.md, scripts/check-lockfile-overrides.mjs, scripts/check-audit-exceptions.mjs
-- evidence: gh run view (Security workflow, PR #379, run 31140709029): 'check-audit-exceptions: FAIL GHSA-5p4m-2wfm-xmqj (js-yaml, high) -- not listed in docs/security/audit-exceptions.md'. pnpm why js-yaml confirms sole resolution path: @changesets/cli -> @manypkg/get-packages -> read-yaml-file -> js-yaml@4.3.0 (devDependencies only). GitHub Advisory GHSA-5p4m-2wfm-xmqj: js-yaml 3.0.0-3.15.0 and 4.0.0-4.3.0 affected, patched at 3.15.1/4.3.1, CVSS 7.5, CWE-407 (O(n^2) resolveYamlOmap key-uniqueness check in the default schema, no special config needed).
-- next: cadence milestone propose
-
-pnpm audit / scripts/check-audit-exceptions.mjs now fails on GHSA-5p4m-2wfm-xmqj (js-yaml, high, CVSS 7.5, O(n^2) DoS in resolveYamlOmap() for the default schema, CWE-407) -- confirmed reproducing on every branch as of 2026-08-07 (observed failing on PR #378 and PR #379, both otherwise unrelated to dependencies), since audit runs against the shared lockfile regardless of branch diff. This makes the security workflow's audit job fail, which fails security-success, which is a required branch-protection check per phase 255 -- currently blocking ALL PR merges repo-wide, not just one branch. Dependency path: js-yaml@4.3.0 is a dev-only transitive dependency of @changesets/cli (via @manypkg/get-packages -> read-yaml-file), used only to parse this repo's own trusted, repo-authored YAML (changeset/workspace config) during local/CI changeset tooling -- never shipped in any published package, never parses attacker-controlled input. Unlike prior exceptions in docs/security/audit-exceptions.md, a real patched version already exists (4.3.1) for both the 3.x and 4.x lines, so per house convention ('prefer real upgrade or re-resolution over exception', phase 254) the correct fix is very likely a pnpm.overrides entry (js-yaml >=4.3.1) added to scripts/check-lockfile-overrides.mjs's tracked set (phase 253's mechanism), not a documented exception -- low risk given the dependency is dev-only and already reachability-analyzed as unreachable regardless. Needs its own narrowly-scoped phase per house convention (one concern per phase).
