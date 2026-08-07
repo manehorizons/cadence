@@ -1690,6 +1690,20 @@
       "kind": "note",
       "summary": "docs/security/audit-exceptions.md lines 56-95 ('Deferred: vitest major-version upgrade'); dependabot PR #370/#244 CI both red; closed prior-art PR #235",
       "createdAt": "2026-08-07T14:41:48.324Z"
+    },
+    {
+      "id": "ev-20260807-006",
+      "recommendationId": "rec-20260807-004",
+      "kind": "note",
+      "summary": "gh run view (Security workflow, PR #379, run 31140709029): 'check-audit-exceptions: FAIL GHSA-5p4m-2wfm-xmqj (js-yaml, high) -- not listed in docs/security/audit-exceptions.md'. pnpm why js-yaml confirms sole resolution path: @changesets/cli -> @manypkg/get-packages -> read-yaml-file -> js-yaml@4.3.0 (devDependencies only). GitHub Advisory GHSA-5p4m-2wfm-xmqj: js-yaml 3.0.0-3.15.0 and 4.0.0-4.3.0 affected, patched at 3.15.1/4.3.1, CVSS 7.5, CWE-407 (O(n^2) resolveYamlOmap key-uniqueness check in the default schema, no special config needed).",
+      "createdAt": "2026-08-07T14:30:15.594Z"
+    },
+    {
+      "id": "ev-20260807-007",
+      "recommendationId": "rec-20260807-002",
+      "kind": "note",
+      "summary": "Verified 2026-08-07: (1) js-yaml GHSA-5p4m-2wfm-xmqj already resolved -- latest main Security run (18:18:19Z, after phase 260's vitest 2->4 upgrade) reports 'check-audit-exceptions: no high/critical advisories reported'; pnpm-lock.yaml resolves js-yaml to 4.3.1. No exception-table row needed, nothing to document. (2) Registered security-success and codeql-success as required branch-protection contexts via gh api (both had reported green on main repeatedly, most recently 18:17:57Z); required_status_checks.contexts now ['ci-success','security-success','codeql-success']. Updated docs/security/audit-exceptions.md's 'What blocks a merge' section (was asserting neither check blocks yet -- phase 255's own deferred T5) and its doc test (255-01/AC-3 in security-ci.test.ts) to match; full suite green (52/52 in that file).",
+      "createdAt": "2026-08-07T18:49:16.325Z"
     }
   ]
 }
