@@ -1850,34 +1850,6 @@
       "updatedAt": "2026-08-01T02:40:44.959Z"
     },
     {
-      "id": "rec-20260802-002",
-      "title": "SUMMARY.md never renders codeReview/securityAudit findings — a refused-attempt sibling shows nothing an operator opens it to see",
-      "summary": "Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/services/summary-render.ts renders AC / Tasks / Gates / Gate bypasses / Assurance / Decisions / Deferred sections but has zero handling for the codeReview or securityAudit fields, for ANY SUMMARY (success or refused) -- this predates phase 247 and is not scoped to it. Phase 247 makes the gap newly consequential: it now writes an immutable per-attempt sibling .md specifically so a human can inspect what a refused/abandoned attempt found, but the .md half of that record is byte-identical to the canonical refused SUMMARY.md and renders none of the findings that caused the refusal -- verified empirically: a hand-built refused-shaped SUMMARY with one HIGH code-review finding, rendered via the real cadence summary render, shows the content hash and the refused gate but not one word of the finding. The data is JSON-only. Fix is out of phase 247's DRAFT scope (Boundaries did not ask for a render change) and was not built. Worth a dedicated phase: add a codeReview/securityAudit findings section to summary-render.ts, following the same JSON-only-so-far -> now-rendered precedent as the phase-170 gates[].reason field (docs/concepts.md notes this exact pattern already).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/services/summary-render.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260802-008"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260801-claude-finding-durability",
-      "createdAt": "2026-08-02T00:36:54.293Z",
-      "updatedAt": "2026-08-02T00:36:54.293Z"
-    },
-    {
       "id": "rec-20260802-003",
       "title": "Intelligence ledger has 145 orphan decision/evidence links to recs absent from both active and archived arrays",
       "summary": "cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence entries whose referenced rec ids exist in neither the 69-entry active recommendations array nor the 115-entry archived array in .cadence/intelligence/recommendations.json — e.g. rec-20260711-001, referenced by dec-20260711-001 and ev-20260711-*, is genuinely absent from both, not merely archived. Orphans date back to 2026-06-11, so this predates any known reconciliation pass. Verified at main@59a2116e (this session's own Part 1 evidence/decision additions — ev-20260802-009/010/011, dec-20260802-003 — were checked and are NOT part of this orphan set, so the finding is pre-existing and unrelated to that work). The audit tool's own remediation text calls restore-or-remove an operator decision; 'cadence intelligence reconcile' only re-derives rec-side link arrays and does not resolve orphan subjects. Needs scoping: how far back the gap goes, whether it's from lost commits (git reset --hard has bitten this ledger before per rec-20260712-006's own evidence) or a reconcile bug, and whether restoring vs. pruning is right per orphan.",
@@ -2506,6 +2478,37 @@
       "decisionIds": [],
       "createdAt": "2026-08-06T05:32:11.283Z",
       "updatedAt": "2026-08-06T05:32:11.283Z"
+    },
+    {
+      "id": "rec-20260806-010",
+      "title": "summary-verify-sweep.test.ts couples all future PRs to entire historical SUMMARY corpus",
+      "summary": "Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "doctor",
+        "test-infra"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/parse/summary-verify-sweep.test.ts",
+        "packages/core/src/cli/commands/summary.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260806-013"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260806-phase257",
+      "createdAt": "2026-08-06T18:52:16.644Z",
+      "updatedAt": "2026-08-06T18:52:16.644Z"
     }
   ],
   "archived": [
@@ -6724,6 +6727,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-04T21:33:29.287Z",
       "updatedAt": "2026-08-05T23:18:09.518Z"
+    },
+    {
+      "id": "rec-20260802-002",
+      "title": "SUMMARY.md never renders codeReview/securityAudit findings — a refused-attempt sibling shows nothing an operator opens it to see",
+      "summary": "Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/services/summary-render.ts renders AC / Tasks / Gates / Gate bypasses / Assurance / Decisions / Deferred sections but has zero handling for the codeReview or securityAudit fields, for ANY SUMMARY (success or refused) -- this predates phase 247 and is not scoped to it. Phase 247 makes the gap newly consequential: it now writes an immutable per-attempt sibling .md specifically so a human can inspect what a refused/abandoned attempt found, but the .md half of that record is byte-identical to the canonical refused SUMMARY.md and renders none of the findings that caused the refusal -- verified empirically: a hand-built refused-shaped SUMMARY with one HIGH code-review finding, rendered via the real cadence summary render, shows the content hash and the refused gate but not one word of the finding. The data is JSON-only. Fix is out of phase 247's DRAFT scope (Boundaries did not ask for a render change) and was not built. Worth a dedicated phase: add a codeReview/securityAudit findings section to summary-render.ts, following the same JSON-only-so-far -> now-rendered precedent as the phase-170 gates[].reason field (docs/concepts.md notes this exact pattern already).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/summary-render.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260802-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260801-claude-finding-durability",
+      "createdAt": "2026-08-02T00:36:54.293Z",
+      "updatedAt": "2026-08-06T19:00:59.193Z",
+      "shippedRef": "PR #379",
+      "archivedAt": "2026-08-06T19:00:59.193Z",
+      "archiveReason": "shipped"
     }
   ]
 }

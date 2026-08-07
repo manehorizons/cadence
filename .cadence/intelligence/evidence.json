@@ -1648,6 +1648,20 @@
       "kind": "note",
       "summary": "Counted directly from .cadence/phases/256-real-provider-certification-prep/*.json (2026-08-06): six settles, provider host-cli throughout, codeReview finding counts 2/2/3/1/2/1 respectively; dec-20260801-003's trigger text confirmed via cadence decision show / decisions.json read.",
       "createdAt": "2026-08-06T05:32:11.283Z"
+    },
+    {
+      "id": "ev-20260806-012",
+      "recommendationId": "rec-20260806-009",
+      "kind": "note",
+      "summary": "Whole-branch review of phase 257 (2026-08-06): pnpm turbo run test --force ran the sweep at 35.6s covering 269 real historical summaries via 269 spawned CLI processes at concurrency 12; git ls-files .cadence/phases | grep -c SUMMARY.json = 269.",
+      "createdAt": "2026-08-06T18:46:25.932Z"
+    },
+    {
+      "id": "ev-20260806-013",
+      "recommendationId": "rec-20260806-010",
+      "kind": "note",
+      "summary": "Whole-branch review of phase 257 (2026-08-06): pnpm turbo run test --force ran the sweep at 35.6s covering 269 real historical summaries via 269 spawned CLI processes at concurrency 12; git ls-files .cadence/phases | grep -c SUMMARY.json = 269.",
+      "createdAt": "2026-08-06T18:52:16.644Z"
     }
   ]
 }

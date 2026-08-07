@@ -1,0 +1,34 @@
+{
+  "draftId": "257-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Shared findings-render helper (packages/core/src/parse/findings-render.ts) wired into both renderers between Tasks and Gates. Full suite green (397 files/3683 tests), typecheck+lint clean. Independent review: PASS, no findings. Note for T4: redaction already wired in (redactSecrets in renderFindingLine), tagged 257-01/AC-1 not 257-01/AC-4 -- T4 should add correctly-tagged tests, not re-implement.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-06T18:03:45.163Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Refused-settle SUMMARY-snapshot.md proven to show the causing finding via T1's renderFindingsSection (read the real on-disk sidecar, not synthetic). Independent review: PASS, zero findings.",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\feat+257-render-findings-markdown\\packages\\core\\tests\\parse\\summary-writer.test.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\feat+257-render-findings-markdown\\packages\\core\\tests\\services\\settle.test.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\feat+257-render-findings-markdown\\packages\\core\\tests\\cli\\summary-render.test.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\feat+257-render-findings-markdown\\packages\\core\\tests\\parse\\summary-verify-sweep.test.ts"
+      ],
+      "updatedAt": "2026-08-06T18:26:46.569Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Byte-compat inline-snapshot regression + new repo-wide summary-verify-sweep.test.ts (269 files, 0 failures, ~16s real CLI spawns, concurrency 12). Independent review: PASS. Important note carried to whole-branch review: the sweep runs on every test invocation forever, growing with phase count, coupling future PRs' CI to the full historical corpus's summary-verify integrity -- worth a decision (keep as-is vs. gate behind a slower/nightly lane).",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-06T18:26:47.031Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Correctly-tagged 257-01/AC-4 coverage added (redaction behavior itself was pre-built inside T1). Independent review: PASS, regexes verified against real character counts, negative cases hand-traced against GENERIC_SECRET_RE.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-06T18:26:47.470Z"
+    }
+  }
+}
