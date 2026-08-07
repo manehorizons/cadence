@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "draftId": "260-01",
+  "completedAt": "2026-08-07T17:18:14.879Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": ""
+    },
+    {
+      "id": "T6",
+      "status": "BLOCKED",
+      "notes": ""
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 29,
+    "sessionSubagentSpawns": 13
+  },
+  "assurance": {
+    "verifierRollup": [],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 5,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "mixed"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "f2dced1d8477c977d611146fbe309d58f25490c38ddc43ef89c6ae60b1bbac30"
+  }
+}

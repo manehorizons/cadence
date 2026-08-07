@@ -52,16 +52,41 @@ const TIMEOUT_MS = process.platform === 'win32' ? 90000 : 20000;
 // dominated by each adapter's own `cli.ts` (0% — exercised only via spawned
 // subprocess tests, which v8 coverage of the parent process can't see; a
 // pre-existing characteristic, not introduced by this phase).
+//
+// Re-measured 2026-08-07 (phase 260, vitest v4 upgrade): Vitest 4's
+// `@vitest/coverage-v8` turns on AST-aware remapping by default (previously
+// experimental/opt-in), which maps V8's raw byte-range hit counts onto the
+// real AST instead of the old cruder v8-to-istanbul conversion. This is a
+// *measurement* change, not a behavior regression — same tests, same pass
+// counts, same lines/functions genuinely exercised — but it recomputes the
+// denominators from scratch: it finds substantially more real branches and
+// functions than the old converter did (e.g. `core`'s branch total went
+// 6291 -> 7249, functions 1132 -> 1799, confirmed by running the identical
+// suite under both vitest 2.1.9 and 4.1.10), and it counts "statements" on a
+// finer per-expression basis rather than roughly per-line, which shrinks the
+// statement/line denominators for terse files. Every affected package's
+// thresholds below were re-measured under vitest 4.1.10 via each package's
+// real `pnpm test` invocation and re-derived with the same methodology this
+// file has always used (measure, subtract a ~5-point safety margin, floor to
+// a whole number) — nothing here loosens what's actually asserted; the old
+// thresholds were calibrated against a coverage tool that undercounted
+// branches/functions, and would otherwise permanently fail on the more
+// accurate v4 numbers regardless of test quality. Newly measured
+// (statements/branches/functions/lines): core 75.07/65.29/81.32/75.41,
+// host-claude-code 47.2/55.29/57.14/49.09, host-codex
+// 53.65/63.07/64.7/54.28, testkit 88.88/75/90/91.42. `types` and
+// `host-toolkit` still clear their existing thresholds comfortably under v4
+// and were left unchanged.
 const COVERAGE_THRESHOLDS: Record<
   string,
   { statements: number; branches: number; functions: number; lines: number }
 > = {
   types: { statements: 91, branches: 70, functions: 39, lines: 91 },
-  core: { statements: 70, branches: 82, functions: 82, lines: 70 },
-  'host-claude-code': { statements: 49, branches: 88, functions: 82, lines: 49 },
+  core: { statements: 70, branches: 60, functions: 76, lines: 70 },
+  'host-claude-code': { statements: 42, branches: 50, functions: 52, lines: 44 },
   'host-toolkit': { statements: 94, branches: 89, functions: 95, lines: 94 },
-  'host-codex': { statements: 53, branches: 88, functions: 86, lines: 53 },
-  testkit: { statements: 84, branches: 78, functions: 78, lines: 84 },
+  'host-codex': { statements: 48, branches: 58, functions: 59, lines: 49 },
+  testkit: { statements: 83, branches: 70, functions: 85, lines: 86 },
 };
 
 // Only used if vitest is invoked from a directory that doesn't match a known
@@ -70,7 +95,7 @@ const COVERAGE_THRESHOLDS: Record<
 // from within that package's directory). Falls back to the lowest
 // per-metric threshold across all packages so a combined/aggregate run
 // can't spuriously fail against a number tuned for a single package.
-const FALLBACK_THRESHOLDS = { statements: 49, branches: 70, functions: 39, lines: 49 };
+const FALLBACK_THRESHOLDS = { statements: 42, branches: 50, functions: 39, lines: 44 };
 
 const currentPackage = path.basename(process.cwd());
 const coverageThresholds =
@@ -83,10 +108,10 @@ export default defineConfig({
     testTimeout: TIMEOUT_MS,
     hookTimeout: TIMEOUT_MS,
     pool: 'forks',
-    // minForks must be <= maxForks: vitest's default minForks tracks CPU count
-    // (24 on this box) and would otherwise exceed a bare maxForks cap, throwing
-    // "minThreads and maxThreads must not conflict". 1 lets the pool scale down.
-    poolOptions: { forks: { minForks: 1, maxForks: 12 } },
+    // Vitest 4's pool rework flattened per-pool min/max worker knobs
+    // (poolOptions.<pool>.{minForks,maxForks}) into a single top-level cap:
+    // https://vitest.dev/guide/migration#pool-rework
+    maxWorkers: 12,
     coverage: {
       // `enabled: true` is required here because no package's `test` script
       // (or CI's `pnpm test` / `turbo run test`) passes the `--coverage`

@@ -1683,6 +1683,13 @@
       "kind": "note",
       "summary": "Whole-branch review of phase 257 (2026-08-06): pnpm turbo run test --force ran the sweep at 35.6s covering 269 real historical summaries via 269 spawned CLI processes at concurrency 12; git ls-files .cadence/phases | grep -c SUMMARY.json = 269.",
       "createdAt": "2026-08-06T18:52:16.644Z"
+    },
+    {
+      "id": "ev-20260807-005",
+      "recommendationId": "rec-20260807-003",
+      "kind": "note",
+      "summary": "docs/security/audit-exceptions.md lines 56-95 ('Deferred: vitest major-version upgrade'); dependabot PR #370/#244 CI both red; closed prior-art PR #235",
+      "createdAt": "2026-08-07T14:41:48.324Z"
     }
   ]
 }

@@ -22,14 +22,14 @@
     "@types/node": "^22.20.1",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.64.0",
-    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.5",
     "tsx": "^4.23.1",
     "turbo": "^2.10.5",
     "typescript": "^6.0.3",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.10"
   },
   "pnpm": {
     "overrides": {
@@ -38,7 +38,8 @@
       "read-yaml-file@1.1.0": "^2.1.0",
       "js-yaml@4.2.0": "^4.3.0",
       "fast-uri@3.1.2": "^3.1.5",
-      "ip-address@^10.0.0": "^10.3.1"
+      "ip-address@^10.0.0": "^10.3.1",
+      "vite@^6.0.0 || ^7.0.0 || ^8.0.0": "^7.3.5"
     }
   }
 }

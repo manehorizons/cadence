@@ -55,13 +55,22 @@ describe('lockfile overrides — real, current repo state (253-01, AC-1 and AC-2
     const overrideTargets = extractOverrideTargets(packageJson);
     const lockfilePackages = parseLockfilePackages(lockfileText);
 
-    // Sanity: brace-expansion really does resolve to two live instances in
-    // the real lockfile (its 2.x and 5.x lines) — otherwise this test would
-    // pass trivially without ever exercising the "not just the first
-    // instance found" requirement AC-2 calls out.
+    // Sanity: brace-expansion resolves to at least one live instance in the
+    // real lockfile. At 253-01 time it resolved to two (minimatch@9.x's 2.x
+    // line and minimatch@10.x's 5.x line), which is what originally
+    // motivated this test's "not just the first instance found" phrasing for
+    // AC-2. Phase 260's vitest v4 bump (and its transitive vite/vitest dep
+    // graph) dropped minimatch@9.x from the resolved graph entirely, so only
+    // the 5.x line remains today — a real, expected dependency-graph shift,
+    // not a regression (the `brace-expansion@^2.0.0` override in
+    // package.json's pnpm.overrides stays in place regardless, ready to
+    // cover a 2.x line again if one re-enters the graph later). The
+    // multi-instance "don't stop at the first match" behavior itself stays
+    // covered by check-lockfile-overrides.test.ts's fixture-based unit tests,
+    // which model that shape directly rather than depending on today's real
+    // graph happening to contain two majors of the same package.
     const braceExpansionInstances = lockfilePackages.filter((p: { package: string }) => p.package === 'brace-expansion');
-    expect(braceExpansionInstances.length).toBeGreaterThanOrEqual(2);
-    expect(new Set(braceExpansionInstances.map((p: { version: string }) => p.version)).size).toBeGreaterThanOrEqual(2);
+    expect(braceExpansionInstances.length).toBeGreaterThanOrEqual(1);
 
     const result = checkOverrideCoverage(overrideTargets, lockfilePackages);
 

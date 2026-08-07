@@ -267,30 +267,35 @@ describe('audit exceptions doc — dead brace-expansion exception retired (254-0
   });
 });
 
-// 254-01 / AC-2 (phase 254) — the three exceptions expiring 2026-08-13
-// (vitest/vite/postcss) were re-justified with fresh reachability analysis
-// and their expiry extended past this phase's 2026-08-12 deadline; the
-// vitest major-version upgrade that would close them permanently is
-// recorded as a named, deferred blocker rather than silently dropped.
+// 254-01 / AC-2 (phase 254) originally re-justified the three exceptions
+// expiring 2026-08-13 (vitest/vite/postcss) with fresh reachability analysis,
+// extended their expiry past that phase's 2026-08-12 deadline, and recorded
+// the vitest major-version upgrade that would close them permanently as a
+// named, deferred blocker rather than silently dropping them. Phase 260
+// (vitest 2->4 upgrade) landed that deferred blocker for real: the three
+// rows and the "Deferred" section documenting them are gone from
+// docs/security/audit-exceptions.md now, resolved outright rather than
+// merely re-justified — see 260-01/AC-5's own test
+// (phase260-vitest-v4-upgrade.test.ts) for the disk-reading proof of the
+// removal. 254-01/AC-2's real intent — the doc must never silently drop an
+// advisory without justification — still holds: this describe block now
+// asserts that same non-silence property against the *current* reality
+// (removed with evidence, not omitted without it), rather than the interim
+// re-justified-and-deferred state that no longer exists.
 // Qualifier and AC id kept apart here for the same reason noted above.
 describe('audit exceptions doc — expiring exceptions re-justified, vitest-major deferred (254-01 / AC-2)', () => {
   const md = readFileSync(AUDIT_EXCEPTIONS_MD, 'utf8');
-  const asOfPhaseDeadline = new Date('2026-08-12T23:59:59Z');
 
-  it('each of the three previously-expiring rows now has an expiry past the phase deadline (254-01/AC-2)', () => {
+  it('no longer lists the three vitest/vite/postcss rows as exceptions -- phase 260 resolved them outright (254-01/AC-2, superseded by 260-01/AC-5)', () => {
     const rows = parseExceptionsTable(md);
-    const previouslyExpiring = ['GHSA-5xrq-8626-4rwp', 'GHSA-fx2h-pf6j-xcff', 'GHSA-r28c-9q8g-f849'];
-    for (const id of previouslyExpiring) {
-      const row = rows.find((r) => r.id === id);
-      expect(row).toBeTruthy();
-      expect(isExpired(row.expiry, asOfPhaseDeadline)).toBe(false);
+    const previouslyDeferred = ['GHSA-5xrq-8626-4rwp', 'GHSA-fx2h-pf6j-xcff', 'GHSA-r28c-9q8g-f849'];
+    for (const id of previouslyDeferred) {
+      expect(rows.find((r) => r.id === id)).toBeUndefined();
     }
   });
 
-  it('records the deferred vitest-major upgrade blocker, naming PR #235 as not revivable (254-01/AC-2)', () => {
-    expect(md).toContain('Deferred: vitest major-version upgrade');
-    expect(md).toContain('PR #235');
-    expect(md.toLowerCase()).toContain('do not reopen');
+  it('no longer carries the deferred vitest-major upgrade blocker section -- the upgrade it deferred has landed (254-01/AC-2, superseded by 260-01/AC-5)', () => {
+    expect(md).not.toContain('## Deferred: vitest major-version upgrade');
   });
 });
 

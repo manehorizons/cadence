@@ -6789,10 +6789,50 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "259-cadence-doctor-check-roadmap-currency",
-      "createdAt": "2026-07-27T20:31:34.467Z",
-      "updatedAt": "2026-08-07T04:59:51.440Z",
       "shippedRef": "phase 259-cadence-doctor-check-roadmap-currency (PR pending)",
       "archivedAt": "2026-08-07T04:59:51.440Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-27T20:31:34.467Z",
+      "updatedAt": "2026-08-07T04:59:51.440Z"
+    },
+    {
+      "id": "rec-20260807-003",
+      "title": "vitest 2->4 major upgrade to close deferred vitest/vite/postcss audit exceptions",
+      "summary": "Dependabot PRs #370 and #244 both bump vitest 2.1.9->3.2.6 across 6 packages/* workspaces + website, and both are CI-red (build/test failures on all 3 OSes) -- a straight major-version bump breaks vitest.shared.ts's shared worker/timeout/coverage config. docs/security/audit-exceptions.md's own 'Deferred: vitest major-version upgrade' section (written phase 254, re-verified 2026-08-04) already found 3.2.6 insufficient: the vite/postcss chain still resolves a vulnerable vite@5.4.21 at that floor. The real target is vitest ^4.1.10 (website/ already runs it successfully). Prior art PR #235 (chore/security-vitest-and-transitive-bump) attempted this exact jump but is stale (branched 2026-07-18, closed 2026-08-04 by operator) and used a since-disproven override-workaround (adding vite as a direct devDependency instead of a proper pnpm.overrides entry -- phase 253 proved the override mechanism itself works fine). Closes 3 documented audit exceptions (GHSA-5xrq-8626-4rwp vitest, GHSA-fx2h-pf6j-xcff vite, GHSA-r28c-9q8g-f849 postcss), all expiring 2026-11-02. Should close/supersede dependabot PRs #370 and #244 once landed.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packages/core",
+        "packages/host-claude-code",
+        "packages/host-codex",
+        "packages/host-toolkit",
+        "packages/testkit",
+        "website",
+        "vitest.shared.ts"
+      ],
+      "affectedFiles": [
+        "vitest.shared.ts",
+        "package.json",
+        "pnpm-lock.yaml",
+        "docs/security/audit-exceptions.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260807-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "260-vitest-v4-upgrade",
+      "createdAt": "2026-08-07T14:41:48.324Z",
+      "updatedAt": "2026-08-07T17:46:34.115Z",
+      "shippedRef": "PR #382",
+      "archivedAt": "2026-08-07T17:46:34.115Z",
       "archiveReason": "shipped"
     }
   ]

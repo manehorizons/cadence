@@ -21,7 +21,13 @@ import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 const dispatchSpy = vi.hoisted(() => vi.fn().mockResolvedValue({ ok: true }));
 
 vi.mock('../../src/hooks/dispatcher.js', () => ({
-  HookDispatcher: vi.fn().mockImplementation(() => ({ dispatch: dispatchSpy })),
+  // Vitest 4 tightened vi.fn() mock implementations to real JS `new`
+  // semantics — an arrow function can never be a constructor, so
+  // `new HookDispatcher(...)` in the source under test now throws unless
+  // the implementation is a real `function`.
+  HookDispatcher: vi.fn().mockImplementation(function () {
+    return { dispatch: dispatchSpy };
+  }),
 }));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -84,7 +90,7 @@ describe('cadence hook — agentId/agentType promotion (subagent task-redundancy
     dispatchSpy.mockClear();
   });
 
-  it('promotes agentId/agentType from stdin JSON onto the ctx passed to dispatch', async () => {
+  it('promotes agentId/agentType from stdin JSON onto the ctx passed to dispatch (260-01/AC-3: exercises the constructor-mocked HookDispatcher)', async () => {
     const { registerHookCommand } = await import('../../src/cli/commands/hook.js');
     const program = new Command();
     registerHookCommand(program);
