@@ -1,0 +1,23 @@
+{
+  "draftId": "259-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "checkRoadmapCurrency + ROADMAP_DRIFT_WARN_THRESHOLD implemented and wired into runDoctor; independently reviewed PASS (AC-1..AC-4), including empirical reproduction of the min-exclusion fix",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-07T04:43:28.052Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "9 tests in packages/core/tests/doctor/roadmap-currency.test.ts covering AC-1..AC-4; independently reviewed PASS, all 4 AC tokens confirmed SATISFIED via verify coverage --explain",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-07T04:43:28.210Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "docs/reference/commands.md doctor table row + --fix manual classification + cli-reference.test.ts 259-01/AC-5 test; independently reviewed PASS",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-07T04:43:28.372Z"
+    }
+  }
+}
