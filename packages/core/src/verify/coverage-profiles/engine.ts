@@ -16,11 +16,14 @@
  *
  * `findSpansForProfile` is strategy-agnostic and language-agnostic; every
  * built-in and custom `LanguageProfile` is scanned through this one
- * function.
+ * function. `findSpansForProfileWithDiagnostics` (phase 258, T3) is an
+ * additive sibling that also surfaces `mask.ts`'s out-of-vocabulary
+ * preceding-token diagnostics — `findSpansForProfile` delegates to it and
+ * discards the diagnostics, so its own signature and behavior never change.
  */
 
 import { computeCodeMask, computeCommentMask } from './mask.js';
-import type { CodeMask } from './mask.js';
+import type { CodeMask, MaskDiagnostic } from './mask.js';
 import { resolveBlock, extractTopLevelParenText } from './strategies.js';
 import type { LanguageProfile, TestSpan } from './types.js';
 
@@ -69,8 +72,41 @@ function codeOnlySlice(text: string, mask: Uint8Array, start: number, end: numbe
   return out;
 }
 
+/** Return shape of `findSpansForProfileWithDiagnostics` — see its docstring. */
+export interface SpansWithDiagnostics {
+  spans: TestSpan[];
+  /** Out-of-vocabulary preceding-token diagnostics collected while masking
+   * (phase 258, T3) — see `MaskDiagnostic` (`./mask.ts`). Empty for any
+   * profile that doesn't opt into `syntax.regexLiterals`, and typically
+   * empty even for js/ts, since a genuinely out-of-vocabulary preceding
+   * token is meant to be rare. */
+  diagnostics: MaskDiagnostic[];
+}
+
 export function findSpansForProfile(text: string, profile: LanguageProfile): TestSpan[] {
-  const mask = computeCodeMask(text, profile.syntax);
+  return findSpansForProfileWithDiagnostics(text, profile).spans;
+}
+
+/**
+ * Identical to `findSpansForProfile` in every way that affects span
+ * resolution — same masking, same opener matching, same block resolution,
+ * same assertion testing — but additionally returns the `MaskDiagnostic[]`
+ * `mask.ts` collected while computing the primary code mask (phase 258, T3).
+ * Diagnostics are collected from the `computeCodeMask` call only, never from
+ * the secondary `computeCommentMask` call some profiles trigger via
+ * `openerMatchesStrings` — see `computeCommentMask`'s own docstring
+ * (`./mask.ts`) for why collecting from both would double-report.
+ *
+ * `findSpansForProfile` is kept as a thin delegate to this function
+ * (returning only `.spans`) so every existing caller's signature and
+ * behavior is unchanged — this is purely additive instrumentation.
+ */
+export function findSpansForProfileWithDiagnostics(
+  text: string,
+  profile: LanguageProfile,
+): SpansWithDiagnostics {
+  const diagnostics: MaskDiagnostic[] = [];
+  const mask = computeCodeMask(text, profile.syntax, diagnostics);
   const openerVisibleMask = profile.openerMatchesStrings
     ? computeCommentMask(text, profile.syntax)
     : mask;
@@ -135,5 +171,5 @@ export function findSpansForProfile(text: string, profile: LanguageProfile): Tes
     i++;
   }
 
-  return spans;
+  return { spans, diagnostics };
 }

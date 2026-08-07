@@ -4,7 +4,7 @@
     {
       "id": "rec-20260602-001",
       "title": "Rename 'cadence init --profile' flag to '--preset'",
-      "summary": "The init --profile flag takes solo|team|production (a PRESET), while the domain profile is set via --gate-profile — actively misleading (flag named 'profile' does not set the profile). Rename the flag to --preset, keeping --profile as a deprecated alias. Design settled in the 2026-06-01 CONTEXT.md grilling session; needs a test (TDD), docs/reference/commands.md update, and the two-commit settle.",
+      "summary": "The init --profile flag takes solo|team|production (a PRESET), while the domain profile is set via --gate-profile \u2014 actively misleading (flag named 'profile' does not set the profile). Rename the flag to --preset, keeping --profile as a deprecated alias. Design settled in the 2026-06-01 CONTEXT.md grilling session; needs a test (TDD), docs/reference/commands.md update, and the two-commit settle.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-cadence-spec",
@@ -32,8 +32,8 @@
     },
     {
       "id": "rec-20260602-002",
-      "title": "Add /cadence-scout host slash command (ideation dialogue → recs)",
-      "summary": "A tenth Claude Code slash command (prompt template, installed by cadence-host-claude-code) that runs a CADENCE-aware divergent→convergent ideation dialogue and lands survivors as Praxis recommendations via existing 'cadence recommendation add'. Named scout (not brainstorm) — it is the opposite end of the superpowers brainstorming skill: divergent candidate generation into the ranked ledger, never design→plan. Zero core-engine change, no new gate/loop position/record type. Fills the gap of an in-tool structured ideation dialogue that today forces leaving the tool and hand-entering results.",
+      "title": "Add /cadence-scout host slash command (ideation dialogue \u2192 recs)",
+      "summary": "A tenth Claude Code slash command (prompt template, installed by cadence-host-claude-code) that runs a CADENCE-aware divergent\u2192convergent ideation dialogue and lands survivors as Praxis recommendations via existing 'cadence recommendation add'. Named scout (not brainstorm) \u2014 it is the opposite end of the superpowers brainstorming skill: divergent candidate generation into the ranked ledger, never design\u2192plan. Zero core-engine change, no new gate/loop position/record type. Fills the gap of an in-tool structured ideation dialogue that today forces leaving the tool and hand-entering results.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-milestone",
@@ -95,7 +95,7 @@
     {
       "id": "rec-20260603-001",
       "title": "Enable windows-latest CI leg (timeout + EBUSY harness fixes)",
-      "summary": "Phase 49 unblocked macOS via realpath but deferred Windows. Enabling windows-latest surfaced Windows-only test-harness issues: (1) settle-security-audit.test.ts AC-4 and dispatcher.test.ts 'skill-invoke caps at 100 entries' exceed the vitest timeout on Windows runners (CLI-spawn + git + 100 atomic writes are slower there); (2) temp-dir cleanup hits EBUSY (rmdir, open handle) past the fixture's rm retry budget (maxRetries:5/retryDelay:100). Fix: raise fixture cleanup retry budget for EBUSY; address the slow Windows tests without per-test timeout band-aids (CLAUDE.md rule) — likely a Windows-aware global timeout or reducing per-test CLI-spawn count; consider an injectable renameWithRetry for testability. Then add windows-latest back to the ci.yml matrix + the ci-matrix.test.ts guard.",
+      "summary": "Phase 49 unblocked macOS via realpath but deferred Windows. Enabling windows-latest surfaced Windows-only test-harness issues: (1) settle-security-audit.test.ts AC-4 and dispatcher.test.ts 'skill-invoke caps at 100 entries' exceed the vitest timeout on Windows runners (CLI-spawn + git + 100 atomic writes are slower there); (2) temp-dir cleanup hits EBUSY (rmdir, open handle) past the fixture's rm retry budget (maxRetries:5/retryDelay:100). Fix: raise fixture cleanup retry budget for EBUSY; address the slow Windows tests without per-test timeout band-aids (CLAUDE.md rule) \u2014 likely a Windows-aware global timeout or reducing per-test CLI-spawn count; consider an injectable renameWithRetry for testability. Then add windows-latest back to the ci.yml matrix + the ci-matrix.test.ts guard.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -130,7 +130,7 @@
     {
       "id": "rec-20260604-001",
       "title": "Expose CADENCE as an MCP server surface",
-      "summary": "Ship an MCP server that exposes the DRAFT→BUILD→SETTLE loop as MCP tools, so any MCP-capable agent (Claude Desktop/Code, Cursor, etc.) can drive CADENCE without a bespoke per-host adapter. Could reframe the whole multi-host question — one surface instead of N adapters.",
+      "summary": "Ship an MCP server that exposes the DRAFT\u2192BUILD\u2192SETTLE loop as MCP tools, so any MCP-capable agent (Claude Desktop/Code, Cursor, etc.) can drive CADENCE without a bespoke per-host adapter. Could reframe the whole multi-host question \u2014 one surface instead of N adapters.",
       "source": "manual",
       "status": "shipped",
       "readiness": "raw-idea",
@@ -158,7 +158,7 @@
     {
       "id": "rec-20260604-002",
       "title": "Host-adapter authoring guide + stable capabilities contract",
-      "summary": "Document the host-adapter contract (event-map, shim, capabilities) and publish an authoring guide so the community can write adapters (Codex, Cursor, Copilot CLI) instead of the maintainer building each. Force-multiplier: scales the ecosystem without solo effort. Codex host was started then archived (phases 02→11), so the contract exists implicitly — this makes it explicit and reusable.",
+      "summary": "Document the host-adapter contract (event-map, shim, capabilities) and publish an authoring guide so the community can write adapters (Codex, Cursor, Copilot CLI) instead of the maintainer building each. Force-multiplier: scales the ecosystem without solo effort. Codex host was started then archived (phases 02\u219211), so the contract exists implicitly \u2014 this makes it explicit and reusable.",
       "source": "manual",
       "status": "shipped",
       "readiness": "raw-idea",
@@ -185,7 +185,7 @@
     },
     {
       "id": "rec-20260604-003",
-      "title": "cadence doctor — diagnose project setup",
+      "title": "cadence doctor \u2014 diagnose project setup",
       "summary": "A 'cadence doctor' subcommand that checks a project's setup health: hooks wired into settings.json, hooksPath configured, Node >=20, config schema valid, and slash-command run-lines portable (no machine-absolute paths). Surfaces silent misconfig that otherwise looks like CADENCE being broken.",
       "source": "manual",
       "status": "shipped",
@@ -212,8 +212,8 @@
     },
     {
       "id": "rec-20260604-004",
-      "title": "Recommendation promotion CLI — make milestone propose reachable",
-      "summary": "Add CLI to advance a recommendation's status (candidate → accepted) and readiness (→ needs-decision/ready-for-milestone/ready-for-cadence-spec). Today the only rec status transition is 'convert' (→ converted), and readiness is write-once at 'add' time — so 'cadence milestone propose', which requires status=accepted AND readiness∈{ready-for-milestone,ready-for-cadence-spec}, can never be fed a manually-added rec. The whole milestone-clustering → accept → export-to-SPEC pipeline is unreachable from the CLI for manual recs.",
+      "title": "Recommendation promotion CLI \u2014 make milestone propose reachable",
+      "summary": "Add CLI to advance a recommendation's status (candidate \u2192 accepted) and readiness (\u2192 needs-decision/ready-for-milestone/ready-for-cadence-spec). Today the only rec status transition is 'convert' (\u2192 converted), and readiness is write-once at 'add' time \u2014 so 'cadence milestone propose', which requires status=accepted AND readiness\u2208{ready-for-milestone,ready-for-cadence-spec}, can never be fed a manually-added rec. The whole milestone-clustering \u2192 accept \u2192 export-to-SPEC pipeline is unreachable from the CLI for manual recs.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-evidence",
@@ -240,8 +240,8 @@
     },
     {
       "id": "rec-20260605-001",
-      "title": "cadence tutorial — guided first-loop walkthrough",
-      "summary": "Interactive walkthrough that runs one toy DRAFT→BUILD→SETTLE loop end-to-end so a newcomer sees the loop in ~2 minutes. Reduces time-to-first-aha; largest build of the onboarding scout set.",
+      "title": "cadence tutorial \u2014 guided first-loop walkthrough",
+      "summary": "Interactive walkthrough that runs one toy DRAFT\u2192BUILD\u2192SETTLE loop end-to-end so a newcomer sees the loop in ~2 minutes. Reduces time-to-first-aha; largest build of the onboarding scout set.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-evidence",
@@ -271,7 +271,7 @@
     {
       "id": "rec-20260605-002",
       "title": "First-run 'what now?' nudge after cadence init",
-      "summary": "After 'cadence init', print the exact next loop commands (draft new → approve → ...) so the user is not left at a 'now what?' cliff. Tiny, high-ROI removal of the first-5-minutes drop-off.",
+      "summary": "After 'cadence init', print the exact next loop commands (draft new \u2192 approve \u2192 ...) so the user is not left at a 'now what?' cliff. Tiny, high-ROI removal of the first-5-minutes drop-off.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-evidence",
@@ -300,7 +300,7 @@
     },
     {
       "id": "rec-20260605-003",
-      "title": "cadence explain <concept> — in-CLI concept help",
+      "title": "cadence explain <concept> \u2014 in-CLI concept help",
       "summary": "In-CLI help for loop / gates / tiers / profiles so users do not have to leave the terminal for docs. Reuses existing docs content; makes the tool self-teaching.",
       "source": "manual",
       "status": "shipped",
@@ -453,7 +453,7 @@
     },
     {
       "id": "rec-20260607-005",
-      "title": "Phase 80 — structured logger foundation",
+      "title": "Phase 80 \u2014 structured logger foundation",
       "summary": "Zero-dependency operator-debugging logger: LogLevel/LogRecord types in cadence-types, logger.ts + pure formatters in core, CADENCE_LOG_LEVEL/FORMAT env + config.logging block, stderr-only, default-off. Foundation only (no seam wiring or one trivial seam).",
       "source": "manual",
       "status": "shipped",
@@ -484,7 +484,7 @@
     },
     {
       "id": "rec-20260607-006",
-      "title": "Phase 81 — instrument three seams + scoped console.* migration",
+      "title": "Phase 81 \u2014 instrument three seams + scoped console.* migration",
       "summary": "Wire gate decisions, hook/event dispatch, and verifier provider calls through the logger via bound child loggers; migrate only diagnostic/error console.* calls at those seams. Per-seam tests + stdout-purity test.",
       "source": "manual",
       "status": "shipped",
@@ -516,8 +516,8 @@
     },
     {
       "id": "rec-20260607-007",
-      "title": "Phase 82 — observability docs + release v1.17.0",
-      "summary": "Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md section), changeset, lockstep 1.16.0→1.17.0 bump across all four published packages, tag + provenance.",
+      "title": "Phase 82 \u2014 observability docs + release v1.17.0",
+      "summary": "Docs (config.md logging block + env vars, logging.md/concepts note, DESIGN.md section), changeset, lockstep 1.16.0\u21921.17.0 bump across all four published packages, tag + provenance.",
       "source": "manual",
       "status": "rejected",
       "readiness": "ready-for-cadence-spec",
@@ -544,8 +544,8 @@
     },
     {
       "id": "rec-20260608-001",
-      "title": "Handoff retention policy — auto-prune stale SESSION docs",
-      "summary": "cadence handoff accumulates dated .cadence/handoff/SESSION-*.md docs indefinitely (30 had piled up by v1.19, manually pruned to 1). Add an opt-in retention policy that supersedes stale handoffs automatically. Design notes from 2026-06-08: (1) trigger at handoff-WRITE time, not settle — settle fires per-phase and would race the lastHandoff pointer mid-session; handoff is when a new doc obsoletes the prior. (2) Prefer retention-by-count (keep lastHandoff + most recent N) over merged-to-main detection — deterministic, offline, no git introspection. (3) Make it opt-in/configurable (handoff.retain knob, default off or generous), same posture as phaseGuard — the resume skill leans on the dated archive existing, so never silently destructive.",
+      "title": "Handoff retention policy \u2014 auto-prune stale SESSION docs",
+      "summary": "cadence handoff accumulates dated .cadence/handoff/SESSION-*.md docs indefinitely (30 had piled up by v1.19, manually pruned to 1). Add an opt-in retention policy that supersedes stale handoffs automatically. Design notes from 2026-06-08: (1) trigger at handoff-WRITE time, not settle \u2014 settle fires per-phase and would race the lastHandoff pointer mid-session; handoff is when a new doc obsoletes the prior. (2) Prefer retention-by-count (keep lastHandoff + most recent N) over merged-to-main detection \u2014 deterministic, offline, no git introspection. (3) Make it opt-in/configurable (handoff.retain knob, default off or generous), same posture as phaseGuard \u2014 the resume skill leans on the dated archive existing, so never silently destructive.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -577,7 +577,7 @@
     {
       "id": "rec-20260610-001",
       "title": "Phase-id schema caps phases at 99 (two digits)",
-      "summary": "PlanZ/SpecZ id regex /^\\d{2}-\\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) rejects 3-digit phase numbers, so 'cadence draft new … 100' generates an invalid id (10-100) and draft approve/coherence fail. CADENCE could not represent its own phase 100; the v1.22 release was cut outside the loop. Fix: widen the regex (e.g. /^\\d{2,}-\\d{2,}$/) + the id-derivation/padding, with tests at the 99→100 boundary.",
+      "summary": "PlanZ/SpecZ id regex /^\\d{2}-\\d{2}$/ in cadence-types (plan.ts:28, spec.ts:12) rejects 3-digit phase numbers, so 'cadence draft new \u2026 100' generates an invalid id (10-100) and draft approve/coherence fail. CADENCE could not represent its own phase 100; the v1.22 release was cut outside the loop. Fix: widen the regex (e.g. /^\\d{2,}-\\d{2,}$/) + the id-derivation/padding, with tests at the 99\u2192100 boundary.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -608,7 +608,7 @@
     {
       "id": "rec-20260611-001",
       "title": "Recommendation lifecycle needs a terminal shipped/resolved state",
-      "summary": "The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped — forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.",
+      "summary": "The rec lifecycle has no terminal status for work that has actually shipped. promote only offers candidate|accepted|deferred|rejected, and convert requires a real .cadence/phases/ dir. So a rec like rec-20260610-001 (phase-id ceiling fix) stays 'candidate/needs-decision' in the ledger even after it merged to main (PR #70) and shipped \u2014 forcing any existing status would be dishonest. Propose adding a terminal 'shipped'/'resolved' status (and a way to set it without a phases dir) so the ledger can honestly reflect delivered work.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -870,8 +870,8 @@
     },
     {
       "id": "rec-20260714-002",
-      "title": "draft add-task has no --name flag (add-ac does) — every appended task needs a hand-fix",
-      "summary": "cadence draft add-task <phase> <num> --files --action --verify --done has no --name option, unlike cadence draft add-ac which has --given/--when/--then/--name. Every task appended via add-task lands as '### T<n>: ' with an empty heading, requiring a manual Edit pass to fill in the name before the DRAFT reads sensibly — confirmed live 2026-07-14 appending T2-T6 to phase 181's DRAFT (all five came out blank). Add --name <n> to add-task mirroring add-ac's option.",
+      "title": "draft add-task has no --name flag (add-ac does) \u2014 every appended task needs a hand-fix",
+      "summary": "cadence draft add-task <phase> <num> --files --action --verify --done has no --name option, unlike cadence draft add-ac which has --given/--when/--then/--name. Every task appended via add-task lands as '### T<n>: ' with an empty heading, requiring a manual Edit pass to fill in the name before the DRAFT reads sensibly \u2014 confirmed live 2026-07-14 appending T2-T6 to phase 181's DRAFT (all five came out blank). Add --name <n> to add-task mirroring add-ac's option.",
       "source": "manual",
       "status": "candidate",
       "readiness": "raw-idea",
@@ -1152,7 +1152,7 @@
     {
       "id": "rec-20260726-005",
       "title": "coverage.ts's coverageBypassed is false-negative when a --force-only bypass overrides real coverage gaps in assertion mode",
-      "summary": "In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts ~line 55-127), reaching the final pass return with real coverage gaps present but bypassed via bare --force (not --allow-missing-coverage) leaves coverageBypassed computed as 'ctx.opts.allowMissingCoverage === true && !sealed' — false in this case, since only --force was set. registry.ts's provenance therefore records this gate as status:'ran' even though a genuine --force bypass of real gaps just happened, hiding it from SUMMARY.json's audit trail. Discovered during phase 226's whole-branch review while verifying the reviewer's claim that build-test-must-pass/boundary-scan's new *Bypassed flags mirror coverage.ts's existing pattern exactly -- they do, faithfully, including this pre-existing imprecision (which phase 226 fixed for the two new gates in registry.ts by naming the actually-fired flag, but did not touch coverage.ts itself, out of scope for that phase). Pre-dates phase 226; not introduced by it.",
+      "summary": "In runCoverageGate's assertion-mode branch (packages/core/src/gates/coverage.ts ~line 55-127), reaching the final pass return with real coverage gaps present but bypassed via bare --force (not --allow-missing-coverage) leaves coverageBypassed computed as 'ctx.opts.allowMissingCoverage === true && !sealed' \u2014 false in this case, since only --force was set. registry.ts's provenance therefore records this gate as status:'ran' even though a genuine --force bypass of real gaps just happened, hiding it from SUMMARY.json's audit trail. Discovered during phase 226's whole-branch review while verifying the reviewer's claim that build-test-must-pass/boundary-scan's new *Bypassed flags mirror coverage.ts's existing pattern exactly -- they do, faithfully, including this pre-existing imprecision (which phase 226 fixed for the two new gates in registry.ts by naming the actually-fired flag, but did not touch coverage.ts itself, out of scope for that phase). Pre-dates phase 226; not introduced by it.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -1284,7 +1284,7 @@
     {
       "id": "rec-20260727-012",
       "title": "cadence doctor check: roadmap-currency (anti-recurrence for ROADMAP/MILESTONES drift)",
-      "summary": "Add a warning-only, non-blocking cadence doctor check comparing the highest phase number under .cadence/phases/ against the highest phase number referenced in ROADMAP.md/MILESTONES.md; warn when drift exceeds a threshold (10). fixId: null deliberately — generating roadmap prose must not be automated. Full spec already written in .cadence/ROADMAP.md's Phase 231 entry (files, ACs, threshold). Ships ahead of Phase 0 Slice 1 so this anti-recurrence mechanism is live before new phase numbers accumulate again — closes the same gap that caused the 113-phase/6-week ROADMAP drift fixed in PR #321.",
+      "summary": "Add a warning-only, non-blocking cadence doctor check comparing the highest phase number under .cadence/phases/ against the highest phase number referenced in ROADMAP.md/MILESTONES.md; warn when drift exceeds a threshold (10). fixId: null deliberately \u2014 generating roadmap prose must not be automated. Full spec already written in .cadence/ROADMAP.md's Phase 231 entry (files, ACs, threshold). Ships ahead of Phase 0 Slice 1 so this anti-recurrence mechanism is live before new phase numbers accumulate again \u2014 closes the same gap that caused the 113-phase/6-week ROADMAP drift fixed in PR #321.",
       "source": "manual",
       "status": "candidate",
       "readiness": "ready-for-cadence-spec",
@@ -1315,7 +1315,7 @@
     {
       "id": "rec-20260730-001",
       "title": "phase-replay ignores SUMMARY.coverageMode provenance, re-derives coverage under the live config's mode",
-      "summary": "replayPhaseCoverage takes mode from config.coverageMode ?? 'mention' while phase 239 T6 writes summary.coverageMode into every new SUMMARY as provenance. A phase that settled under 'mention' (token legally in a comment) is reported as DRIFTED after the operator later switches the repo to 'assertion' — the phase did not change, the standard did, and verify phase reds CI claiming 'recorded PASS (executed), no longer covered by its linked test'. Fix is summary.coverageMode ?? config.coverageMode, but it changes the BARE path's behavior for any post-239 SUMMARY, so it was deliberately excluded from T7 (whose boundary requires the bare path stay byte-for-byte unchanged). Fixing it only under the qualified branch would leave two schemes resolving the same question differently — the hazard services/settle.ts:432-434 already warns about. Needs its own slice.",
+      "summary": "replayPhaseCoverage takes mode from config.coverageMode ?? 'mention' while phase 239 T6 writes summary.coverageMode into every new SUMMARY as provenance. A phase that settled under 'mention' (token legally in a comment) is reported as DRIFTED after the operator later switches the repo to 'assertion' \u2014 the phase did not change, the standard did, and verify phase reds CI claiming 'recorded PASS (executed), no longer covered by its linked test'. Fix is summary.coverageMode ?? config.coverageMode, but it changes the BARE path's behavior for any post-239 SUMMARY, so it was deliberately excluded from T7 (whose boundary requires the bare path stay byte-for-byte unchanged). Fixing it only under the qualified branch would leave two schemes resolving the same question differently \u2014 the hazard services/settle.ts:432-434 already warns about. Needs its own slice.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -1346,7 +1346,7 @@
     {
       "id": "rec-20260730-002",
       "title": "Coverage dedup: a qualified AC token outside an asserting block silently zeroes that AC's coverage",
-      "summary": "scanTestCoverage dedups per AC-N@file on a first-occurrence-wins basis (verify/coverage.ts, the 'seen' set). Phase 239 T2 deliberately filters UNQUALIFIED occurrences before the dedup add so a bare token cannot consume the slot — but a correctly-qualified occurrence sitting outside an asserting block (a comment, a doc block, a describe() title) passes that filter, takes the slot, and is recorded qualifying:false. Every genuinely-qualifying occurrence later in the same file is then unreachable, and the AC reads as having zero coverage. Failure is silent: the suite stays green, the gate refuses at settle, and the refusal names a token the file demonstrably contains. Candidate fixes: prefer a qualifying occurrence over a non-qualifying one when filling the dedup slot, or keep all occurrences and let the consumer reduce.",
+      "summary": "scanTestCoverage dedups per AC-N@file on a first-occurrence-wins basis (verify/coverage.ts, the 'seen' set). Phase 239 T2 deliberately filters UNQUALIFIED occurrences before the dedup add so a bare token cannot consume the slot \u2014 but a correctly-qualified occurrence sitting outside an asserting block (a comment, a doc block, a describe() title) passes that filter, takes the slot, and is recorded qualifying:false. Every genuinely-qualifying occurrence later in the same file is then unreachable, and the AC reads as having zero coverage. Failure is silent: the suite stays green, the gate refuses at settle, and the refusal names a token the file demonstrably contains. Candidate fixes: prefer a qualifying occurrence over a non-qualifying one when filling the dedup slot, or keep all occurrences and let the consumer reduce.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -1434,7 +1434,7 @@
     },
     {
       "id": "rec-20260731-004",
-      "title": "docs/providers.md's host-cli 'per-task-verify only' scope claim is stale — all 7 factories now have host-cli wired",
+      "title": "docs/providers.md's host-cli 'per-task-verify only' scope claim is stale \u2014 all 7 factories now have host-cli wired",
       "summary": "docs/providers.md ~L307-328 ('Current scope: per-task-verify only') claims 5 of 7 verifier seams (verifier/deep-verify, codeReview, planReview, securityAudit, specReview) 'have no host-cli builder yet' and that wiring them is a future follow-up. Verified false while working phase 243 (2026-07-31): every packages/core/src/verify/*-factory.ts (code-review-factory.ts, per-task-factory.ts, plan-review-factory.ts, security-audit-factory.ts, spec-review-factory.ts, ui-spec-review-factory.ts, factory.ts) already passes a hostCli builder to createVerifierFactory. This means createVerifierFactory's 'host-cli builder not wired for this family' degrade branch is now unreachable in production for any of the 7 seams (only exercisable via a deliberately-incomplete test spec) -- the doc section describes a limitation that no longer exists, without saying when it closed. Needs an audit of when each family's HostCli*Verifier class was added (git blame/log per file) and a doc rewrite -- possibly deleting the 'Current scope' section entirely if host-cli is now fully wired everywhere, or documenting the real remaining gap if any exists.",
       "source": "manual",
       "status": "candidate",
@@ -1499,7 +1499,7 @@
     {
       "id": "rec-20260729-003",
       "title": "Criteria-gap anchoring is file-granular, so a finding in a covered file never reads as a gap",
-      "summary": "Phase 235's anchorFindings (verify/criteria-gap.ts) resolves ONE anchor per file and tags every finding in that file with it, because the code-review verifier returns findings keyed by file with no per-finding criterion attribution. Consequence: a genuinely uncovered defect sitting in a file that some task happens to cover inherits that file's anchor and is NOT counted as a criteria gap — the gap detector under-reports precisely where a phase's ACs are thinnest. Phase 235 extended CodeReviewInput so the verifier can now SEE the ACs/boundaries, which is the prerequisite for the verifier itself citing the criterion it believes a finding violates; the mock does not exercise that. Fix: have the verifier return a per-finding anchor candidate (criterion citation) and grade that, keeping the file-level resolution only as the fallback when the verifier cites nothing.",
+      "summary": "Phase 235's anchorFindings (verify/criteria-gap.ts) resolves ONE anchor per file and tags every finding in that file with it, because the code-review verifier returns findings keyed by file with no per-finding criterion attribution. Consequence: a genuinely uncovered defect sitting in a file that some task happens to cover inherits that file's anchor and is NOT counted as a criteria gap \u2014 the gap detector under-reports precisely where a phase's ACs are thinnest. Phase 235 extended CodeReviewInput so the verifier can now SEE the ACs/boundaries, which is the prerequisite for the verifier itself citing the criterion it believes a finding violates; the mock does not exercise that. Fix: have the verifier return a per-finding anchor candidate (criterion citation) and grade that, keeping the file-level resolution only as the fallback when the verifier cites nothing.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -1528,7 +1528,7 @@
     {
       "id": "rec-20260729-004",
       "title": "test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests",
-      "summary": "scanTestCoverage (verify/coverage.ts) walks DEFAULT_GLOBS packages/**/*.test.ts across the WHOLE repo and links an AC purely by the presence of its bare AC-N token. AC ids are per-phase and restart at AC-1 every phase, so tokens collide globally: while building phase 235 I confirmed via 'cadence verify coverage --explain AC-2' that AC-2 was already satisfied by phase 211's tests/activate/render.test.ts, entirely unrelated to phase 235. Any AC-N from any past phase satisfies that same id for every future phase, so the coverage gate cannot actually attest that THIS phase's ACs are covered — it degrades to 'some test somewhere once mentioned this token inside an it() block'. assertion mode hardened WHERE the token sits but not WHICH phase it belongs to. Fix candidates: scope the scan to the phase's own test files (via task files:/git diff), or require a phase-qualified token, or have the gate report which files matched so a reviewer can see cross-phase satisfaction.",
+      "summary": "scanTestCoverage (verify/coverage.ts) walks DEFAULT_GLOBS packages/**/*.test.ts across the WHOLE repo and links an AC purely by the presence of its bare AC-N token. AC ids are per-phase and restart at AC-1 every phase, so tokens collide globally: while building phase 235 I confirmed via 'cadence verify coverage --explain AC-2' that AC-2 was already satisfied by phase 211's tests/activate/render.test.ts, entirely unrelated to phase 235. Any AC-N from any past phase satisfies that same id for every future phase, so the coverage gate cannot actually attest that THIS phase's ACs are covered \u2014 it degrades to 'some test somewhere once mentioned this token inside an it() block'. assertion mode hardened WHERE the token sits but not WHICH phase it belongs to. Fix candidates: scope the scan to the phase's own test files (via task files:/git diff), or require a phase-qualified token, or have the gate report which files matched so a reviewer can see cross-phase satisfaction.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -1557,7 +1557,7 @@
     {
       "id": "rec-20260729-005",
       "title": "Boundary-string anchors are granted by filename substring match, so an irrelevant boundary can mask a criteria gap",
-      "summary": "candidatesForFile (verify/criteria-gap.ts) proposes a boundary candidate whenever a free-text boundaries[] entry contains the filename as a substring, and resolveAnchor then 'verifies' it with boundaries.find(b => b === candidate.ref) — which is guaranteed to succeed because the ref was sourced from that same array by construction. The exact-match step therefore confirms only 'this string exists', not that the boundary has anything to do with the finding. Consequence: a boundary like 'DO NOT add a runtime dependency to packages/core/src/gates/code-review.ts' grants declared tier to ANY finding in that file, converting a would-be criteria gap into a (weak) anchored finding and hiding it from the gap count. Matches section 7.1's literal spec, which imposes no relevance requirement on a boundary anchor, and declared is documented as the weakest non-gap tier — so this is working-as-specified, not a code defect. But it is a real false-anchor path that suppresses gap reporting. Distinct from rec-20260729-003 (which is about per-file rather than per-finding granularity). Fix candidates: require the boundary to cite the file more strongly than substring containment, or treat a boundary-only anchor as a gap-with-weak-mitigation rather than a non-gap.",
+      "summary": "candidatesForFile (verify/criteria-gap.ts) proposes a boundary candidate whenever a free-text boundaries[] entry contains the filename as a substring, and resolveAnchor then 'verifies' it with boundaries.find(b => b === candidate.ref) \u2014 which is guaranteed to succeed because the ref was sourced from that same array by construction. The exact-match step therefore confirms only 'this string exists', not that the boundary has anything to do with the finding. Consequence: a boundary like 'DO NOT add a runtime dependency to packages/core/src/gates/code-review.ts' grants declared tier to ANY finding in that file, converting a would-be criteria gap into a (weak) anchored finding and hiding it from the gap count. Matches section 7.1's literal spec, which imposes no relevance requirement on a boundary anchor, and declared is documented as the weakest non-gap tier \u2014 so this is working-as-specified, not a code defect. But it is a real false-anchor path that suppresses gap reporting. Distinct from rec-20260729-003 (which is about per-file rather than per-finding granularity). Fix candidates: require the boundary to cite the file more strongly than substring containment, or treat a boundary-only anchor as a gap-with-weak-mitigation rather than a non-gap.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -1585,7 +1585,7 @@
     {
       "id": "rec-20260729-006",
       "title": "Retroactive audit: re-derive how many historical AC PASS records had genuine per-phase test coverage",
-      "summary": "Follow-on to rec-20260729-004 (repo-wide AC-N token collision). Because settle derives per-AC PASS from task terminal status PLUS coverage evidence, and the coverage leg is satisfiable by any past phase's identically-numbered AC token, per-AC PASS for a typical phase collapsed toward the agent's own DONE self-report — the exact signal the project exists to distrust. The settled SUMMARY corpus therefore carries an AC-coverage attestation stronger than the evidence behind it. This is a defect in the proof, not proof that the work was undone: build-test-must-pass, per-task verify commands, and the review gates were unaffected and provided real signal. Audit to run: for every settled phase, re-derive whether each AC's satisfying token actually sits in a test file belonging to THAT phase rather than an unrelated one, and report the count of AC PASS records with genuine per-phase coverage vs cross-phase-only satisfaction. cadence verify phase already re-derives settled coverage but needs the phase-scoping fix from rec-20260729-004 first to give a trustworthy answer. Operator decision 2026-07-29: run this in a fresh session after phase 235 lands, not inline.",
+      "summary": "Follow-on to rec-20260729-004 (repo-wide AC-N token collision). Because settle derives per-AC PASS from task terminal status PLUS coverage evidence, and the coverage leg is satisfiable by any past phase's identically-numbered AC token, per-AC PASS for a typical phase collapsed toward the agent's own DONE self-report \u2014 the exact signal the project exists to distrust. The settled SUMMARY corpus therefore carries an AC-coverage attestation stronger than the evidence behind it. This is a defect in the proof, not proof that the work was undone: build-test-must-pass, per-task verify commands, and the review gates were unaffected and provided real signal. Audit to run: for every settled phase, re-derive whether each AC's satisfying token actually sits in a test file belonging to THAT phase rather than an unrelated one, and report the count of AC PASS records with genuine per-phase coverage vs cross-phase-only satisfaction. cadence verify phase already re-derives settled coverage but needs the phase-scoping fix from rec-20260729-004 first to give a trustworthy answer. Operator decision 2026-07-29: run this in a fresh session after phase 235 lands, not inline.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-evidence",
@@ -1614,7 +1614,7 @@
     {
       "id": "rec-20260731-007",
       "title": "Finding id collision: two same-severity/message findings in one file share one id",
-      "summary": "computeFindingId hashes (file, anchor.kind, anchor.ref, severity, normalized message) per AC-3's exact spec, with no per-occurrence discriminant. Two distinct findings in the same file with identical anchor/severity/normalized-message (e.g. MockCodeReviewVerifier's 'console.log left in source' emitted twice in one file) collapse to the same id. Harmless today since findings are never keyed by id, but the follow-on ledger-routing phase (source doc section 7.3, phase 236's ROADMAP.md 'As built' amendment) must key on identity for ledger hygiene — it would currently mint one recommendation for N occurrences and a future disposition surface would waive them all together. Surfaced by an Opus gap review (2026-07-30) of phase 236, verified reachable via MockCodeReviewVerifier's literal duplicate-marker behavior. Undocumented anywhere; needs at minimum a doc note, and the ledger-routing phase's design should account for it explicitly (e.g. include occurrence count/ordinal in the hash, or accept it as a deliberate merge-by-identity semantic).",
+      "summary": "computeFindingId hashes (file, anchor.kind, anchor.ref, severity, normalized message) per AC-3's exact spec, with no per-occurrence discriminant. Two distinct findings in the same file with identical anchor/severity/normalized-message (e.g. MockCodeReviewVerifier's 'console.log left in source' emitted twice in one file) collapse to the same id. Harmless today since findings are never keyed by id, but the follow-on ledger-routing phase (source doc section 7.3, phase 236's ROADMAP.md 'As built' amendment) must key on identity for ledger hygiene \u2014 it would currently mint one recommendation for N occurrences and a future disposition surface would waive them all together. Surfaced by an Opus gap review (2026-07-30) of phase 236, verified reachable via MockCodeReviewVerifier's literal duplicate-marker behavior. Undocumented anywhere; needs at minimum a doc note, and the ledger-routing phase's design should account for it explicitly (e.g. include occurrence count/ordinal in the hash, or accept it as a deliberate merge-by-identity semantic).",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -1852,7 +1852,7 @@
     {
       "id": "rec-20260802-003",
       "title": "Intelligence ledger has 145 orphan decision/evidence links to recs absent from both active and archived arrays",
-      "summary": "cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence entries whose referenced rec ids exist in neither the 69-entry active recommendations array nor the 115-entry archived array in .cadence/intelligence/recommendations.json — e.g. rec-20260711-001, referenced by dec-20260711-001 and ev-20260711-*, is genuinely absent from both, not merely archived. Orphans date back to 2026-06-11, so this predates any known reconciliation pass. Verified at main@59a2116e (this session's own Part 1 evidence/decision additions — ev-20260802-009/010/011, dec-20260802-003 — were checked and are NOT part of this orphan set, so the finding is pre-existing and unrelated to that work). The audit tool's own remediation text calls restore-or-remove an operator decision; 'cadence intelligence reconcile' only re-derives rec-side link arrays and does not resolve orphan subjects. Needs scoping: how far back the gap goes, whether it's from lost commits (git reset --hard has bitten this ledger before per rec-20260712-006's own evidence) or a reconcile bug, and whether restoring vs. pruning is right per orphan.",
+      "summary": "cadence intelligence audit reports 20 orphan decisions and 125 orphan evidence entries whose referenced rec ids exist in neither the 69-entry active recommendations array nor the 115-entry archived array in .cadence/intelligence/recommendations.json \u2014 e.g. rec-20260711-001, referenced by dec-20260711-001 and ev-20260711-*, is genuinely absent from both, not merely archived. Orphans date back to 2026-06-11, so this predates any known reconciliation pass. Verified at main@59a2116e (this session's own Part 1 evidence/decision additions \u2014 ev-20260802-009/010/011, dec-20260802-003 \u2014 were checked and are NOT part of this orphan set, so the finding is pre-existing and unrelated to that work). The audit tool's own remediation text calls restore-or-remove an operator decision; 'cadence intelligence reconcile' only re-derives rec-side link arrays and does not resolve orphan subjects. Needs scoping: how far back the gap goes, whether it's from lost commits (git reset --hard has bitten this ledger before per rec-20260712-006's own evidence) or a reconcile bug, and whether restoring vs. pruning is right per orphan.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-evidence",
@@ -1882,7 +1882,7 @@
     {
       "id": "rec-20260802-004",
       "title": "deep-verify.ts's own bypassed-throw case has the identical registry-side provenance gap phase 248 just fixed for code-review/security-audit",
-      "summary": "Phase 248 fixed code-review/security-audit: a bypassed verifier throw (--allow-verifier-failure equivalents) now records an honest SUMMARY.gates[] status:'skipped' entry instead of a bare status:'ran' with empty identity. deep-verify.ts (packages/core/src/gates/deep-verify.ts) has the structurally identical bug: on a bypassed throw it already sets flags.verifierFailure = { message, provider }, but registry.ts's runSettleGates dispatch loop has no branch that reads verifierFailure — so it falls through to the same generic status:'ran' with empty identity that phase 248 fixed for the other two gates. Deliberately NOT folded into phase 248 (rec-20260801-004 scoped to code-review/security-audit only per its own files: list) and NOT a copy-paste fix: verifierFailure is load-bearing for notify/collect.ts's anomaly emission and SUMMARY.gateBypasses (hardcoded to attribute failures to 'deep-verify' — which is actually correct for this gate, unlike the false-attribution risk that made phase 248 use a distinct reviewVerifierFailure field instead of reusing verifierFailure). So the registry.ts fix here can consume the existing verifierFailure flag directly, but the new branch's interaction with the anomaly-emission pipeline (does printing a loud stderr notice AND recording gates[] status:'skipped' double-count with the existing anomaly/gateBypasses record for the same event?) needs its own scoping pass before drafting, not an assumption that phase 248's exact pattern transfers unchanged.",
+      "summary": "Phase 248 fixed code-review/security-audit: a bypassed verifier throw (--allow-verifier-failure equivalents) now records an honest SUMMARY.gates[] status:'skipped' entry instead of a bare status:'ran' with empty identity. deep-verify.ts (packages/core/src/gates/deep-verify.ts) has the structurally identical bug: on a bypassed throw it already sets flags.verifierFailure = { message, provider }, but registry.ts's runSettleGates dispatch loop has no branch that reads verifierFailure \u2014 so it falls through to the same generic status:'ran' with empty identity that phase 248 fixed for the other two gates. Deliberately NOT folded into phase 248 (rec-20260801-004 scoped to code-review/security-audit only per its own files: list) and NOT a copy-paste fix: verifierFailure is load-bearing for notify/collect.ts's anomaly emission and SUMMARY.gateBypasses (hardcoded to attribute failures to 'deep-verify' \u2014 which is actually correct for this gate, unlike the false-attribution risk that made phase 248 use a distinct reviewVerifierFailure field instead of reusing verifierFailure). So the registry.ts fix here can consume the existing verifierFailure flag directly, but the new branch's interaction with the anomaly-emission pipeline (does printing a loud stderr notice AND recording gates[] status:'skipped' double-count with the existing anomaly/gateBypasses record for the same event?) needs its own scoping pass before drafting, not an assumption that phase 248's exact pattern transfers unchanged.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-evidence",
@@ -1968,7 +1968,7 @@
     {
       "id": "rec-20260803-001",
       "title": "No CLI path corrects a shippedRef on an already-shipped recommendation",
-      "summary": "recommendation promote is refused for terminal-status recs, so a --ref recorded at settle time as a placeholder (e.g. 'PR pending') can never be corrected once the PR merges. Observed on rec-20260801-004 (phase 248, PR #358 merged) and rec-20260712-006 (phase 249 merged), both still reading 'PR pending' at v1.54.0. The doctor recommendation-shipped-drift check covers the settle-pending waypoint but not a stale ref on an already-shipped rec. Options to weigh: a narrow 'recommendation ref set <id> --ref' command; allowing --ref on promote for a shipped→shipped no-op transition; or having settle record the branch/PR automatically at the settle-pending → shipped step so a placeholder is never minted. Cosmetic per-instance, but it accumulates once per shipped phase and silently degrades the ledger's own provenance.",
+      "summary": "recommendation promote is refused for terminal-status recs, so a --ref recorded at settle time as a placeholder (e.g. 'PR pending') can never be corrected once the PR merges. Observed on rec-20260801-004 (phase 248, PR #358 merged) and rec-20260712-006 (phase 249 merged), both still reading 'PR pending' at v1.54.0. The doctor recommendation-shipped-drift check covers the settle-pending waypoint but not a stale ref on an already-shipped rec. Options to weigh: a narrow 'recommendation ref set <id> --ref' command; allowing --ref on promote for a shipped\u2192shipped no-op transition; or having settle record the branch/PR automatically at the settle-pending \u2192 shipped step so a placeholder is never minted. Cosmetic per-instance, but it accumulates once per shipped phase and silently degrades the ledger's own provenance.",
       "source": "manual",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -1990,36 +1990,6 @@
       "decisionIds": [],
       "createdAt": "2026-08-03T01:36:10.979Z",
       "updatedAt": "2026-08-03T01:36:10.979Z"
-    },
-    {
-      "id": "rec-20260803-002",
-      "title": "js-ts coverage-scanner mask has no concept of a JS/TS regex literal, corrupting span detection",
-      "summary": "packages/core/src/verify/coverage-profiles/js-ts.ts's call-expression span strategy (packages/core/src/verify/coverage-profiles/strategies.ts's findMatchingParenIndex) does depth-aware paren counting over the file's CodeMask to find each it()/test() block's closing paren, and the mask only recognizes single/double/backtick-quoted strings and // and /* */ comments as non-structural spans -- it has no concept of a /regex/ literal as its own lexical category. A raw backtick or parenthesis inside a regex literal (even backslash-escaped, e.g. \\( -- escaping has no special meaning to the mask, which isn't string/regex-aware) is read as a real structural character: a backtick toggles the mask's template-literal-string state (since backtick is registered as a string delimiter), and a paren perturbs the running depth count. Either can desynchronize span detection for the rest of the file, not just the offending block. Hit for real writing packages/core/tests/docs/phase251-ledger.test.ts (phase 251): two it() blocks whose .toMatch(/regex containing backticks or parens/) assertions caused 'cadence settle run' to refuse with 'token found but not inside any recognized test block', diagnosable via 'cadence verify coverage --explain AC-N' showing 'spans found: 1' for a 3-it() file. Worked around on the test-authoring side (prefer .toContain('plain string') -- backticks/parens inside a properly single/double-quoted string ARE correctly masked -- over .toMatch(/regex/) containing either character) rather than fixing the scanner, which was out of scope for that phase. Likely affects any existing test file using a regex-literal assertion with a raw backtick or paren, silently undercounting real coverage without ever surfacing an error (a token inside such a corrupted span just reads as 'not inside any recognized test block', indistinguishable from genuinely missing coverage) -- worth a repo-wide grep audit alongside any fix. Options to weigh: teach the CodeMask a regex-literal syntax category (nontrivial -- distinguishing a regex literal from a division operator is a known hard problem in naive JS/TS tokenizers, usually needs some lookbehind heuristic); or document the limitation prominently (e.g. in this profile's own file, and in whatever author-facing guidance covers writing coverage-satisfying tests) so future authors know to avoid backtick/paren-bearing regex literals rather than hit this blind.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core",
-        "verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/coverage-profiles/js-ts.ts",
-        "packages/core/src/verify/coverage-profiles/strategies.ts",
-        "packages/core/src/verify/coverage-profiles/mask.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260803-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-03T03:07:40.383Z",
-      "updatedAt": "2026-08-03T03:07:40.383Z"
     },
     {
       "id": "rec-20260803-003",
@@ -2144,7 +2114,7 @@
     {
       "id": "rec-20260805-001",
       "title": "docs.yml pins pnpm/action-setup@v4 while other workflows use @v6",
-      "summary": "The docs workflow (.github/workflows/docs.yml:44) pins pnpm/action-setup@v4; ci.yml, release.yml, and both jobs in security.yml pin @v6. Minor version-pin drift, no known CVE — align docs.yml to @v6 for consistency.",
+      "summary": "The docs workflow (.github/workflows/docs.yml:44) pins pnpm/action-setup@v4; ci.yml, release.yml, and both jobs in security.yml pin @v6. Minor version-pin drift, no known CVE \u2014 align docs.yml to @v6 for consistency.",
       "source": "manual",
       "status": "candidate",
       "readiness": "raw-idea",
@@ -2275,8 +2245,8 @@
     },
     {
       "id": "rec-20260806-002",
-      "title": "Code-review finding (medium): The instructed “stop and report” path skips Step 5b, leaving securityAudit.prov…",
-      "summary": "medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The instructed “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the repo failing its baseline invariant. Require rollback before stopping.",
+      "title": "Code-review finding (medium): The instructed \u201cstop and report\u201d path skips Step 5b, leaving securityAudit.prov\u2026",
+      "summary": "medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The instructed \u201cstop and report\u201d path skips Step 5b, leaving securityAudit.provider as host-cli and the repo failing its baseline invariant. Require rollback before stopping.",
       "source": "review",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -2304,8 +2274,8 @@
     },
     {
       "id": "rec-20260806-003",
-      "title": "Code-review finding (medium): The “stop and report” path skips Step 5b, leaving securityAudit.provider as hos…",
-      "summary": "medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The “stop and report” path skips Step 5b, leaving securityAudit.provider as host-cli and the committed baseline failing its invariant.",
+      "title": "Code-review finding (medium): The \u201cstop and report\u201d path skips Step 5b, leaving securityAudit.provider as hos\u2026",
+      "summary": "medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:106: The \u201cstop and report\u201d path skips Step 5b, leaving securityAudit.provider as host-cli and the committed baseline failing its invariant.",
       "source": "review",
       "status": "candidate",
       "readiness": "needs-decision",
@@ -2368,7 +2338,7 @@
     },
     {
       "id": "rec-20260806-005",
-      "title": "Code-review finding (medium): The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provid…",
+      "title": "Code-review finding (medium): The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provid\u2026",
       "summary": "medium finding at .cadence/phases/256-real-provider-certification-prep/CONDUCTION-RUNBOOK.md:180: The Step 3 \"stop and report\" path bypasses Step 6, leaving securityAudit.provider set to host-cli and the baseline config invalid.",
       "source": "review",
       "status": "candidate",
@@ -2478,6 +2448,63 @@
       "decisionIds": [],
       "createdAt": "2026-08-06T05:32:11.283Z",
       "updatedAt": "2026-08-06T05:32:11.283Z"
+    },
+    {
+      "id": "rec-20260807-001",
+      "title": "test-coverage gate (assertion mode) dedupes AC-token occurrences per-file by first-encountered, silently discarding a later genuinely-qualifying occurrence",
+      "summary": "packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the per-file token loop inside the mode==='assertion' branch) dedupes AC-token occurrences with 'const key = id@relPath; if (seen.has(key)) continue; seen.add(key);' -- keeping only the FIRST occurrence of a given AC token encountered per file, in file-scan (top-to-bottom) order, and silently discarding every later occurrence in that same file, including one that genuinely qualifies (is inside a real asserting it()/test() block). Hit for real during phase 258's settle (2026-08-07): the AC-5 regression test's file had the token 258-01/AC-5 in BOTH a describe() block title (line 568, earlier in the file, non-qualifying since describe wrappers are not spans) and the real asserting it() block title that actually carries the evidence (line 821, later in the file, genuinely qualifying). The dedup kept only the first (describe-title) occurrence, so weaklyLinkedAcs()'s isFullyNonQualifying(refs) check saw a single non-qualifying ref and refused settle with 'is mentioned but not inside a recognized asserting test block', even though a real qualifying test existed in the same file. cadence verify coverage --explain AC-5 did NOT reproduce this refusal -- explainAcCoverage (used by --explain) collects every occurrence separately with no per-file dedup, and its overall satisfied field is true iff ANY occurrence in ANY file satisfies -- so it correctly showed 'Overall: SATISFIED', creating a genuine, confusing divergence between what --explain reports and what settle's gate actually enforces for the exact same file/token. Worked around in phase 258 by removing the redundant token from the describe title (only the real it() block needs to carry it), but the underlying dedup-keeps-first-occurrence behavior is a real defect independent of that workaround: any test file where an AC token happens to appear first in a non-qualifying location (a describe title, a comment, a variable name) and later in a real qualifying it()/test() block will incorrectly refuse settle, with a --explain result that actively misleads an operator into thinking coverage is fine. Options to weigh: change the dedup to keep the qualifying occurrence if ANY occurrence for that (id, file) pair qualifies, rather than keeping strictly the first found; or align --explain's semantics with the gate's per-file-first-occurrence semantics (worse, since it would make --explain lie in the other direction); or drop the per-file dedup granularity entirely and just check 'does at least one occurrence across the whole repo qualify', matching --explain.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260807-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-07T01:50:06.798Z",
+      "updatedAt": "2026-08-07T01:50:06.798Z"
+    },
+    {
+      "id": "rec-20260807-002",
+      "title": "New undocumented HIGH-severity advisory (js-yaml, GHSA-5p4m-2wfm-xmqj) failing audit; security-success still not registered as a required branch-protection check",
+      "summary": "Discovered 2026-08-07 while landing PR #380 (phase 258, unrelated regex-literal-mask work -- zero dependency changes in that PR). CI's audit job (.github/workflows/security.yml, node scripts/check-audit-exceptions.mjs) failed with: 'FAIL GHSA-5p4m-2wfm-xmqj (js-yaml, high) -- not listed in docs/security/audit-exceptions.md'. This is a genuinely new/undocumented advisory, not something PR #380 introduced -- since ci-success only depends on the test job (not audit), the PR was still mergeable, but the underlying finding is real and needs the same triage phase 254 (security advisory remediation) gave the other three currently-documented exceptions (vitest/vite/postcss, expiring 2026-11-02 and 2026-08-28). Separately, confirmed via 'gh api repos/thomas-powers-jr/cadence/branches/main/protection --jq .required_status_checks.contexts' that only ['ci-success'] is registered as a required branch-protection check -- security-success and codeql-success (built in phase 255, 'fix: make security and codeql merge-blocking via aggregator checks (phase 255) (#376)') are NOT actually required, despite that phase's stated goal. This matches a carry-forward gotcha already noted in an earlier session handoff ('branch-protection registration for security-success/codeql-success (phase 255)') that was evidently never completed -- the CI-side aggregator jobs exist and correctly compute pass/fail, but the GitHub branch-protection settings were never updated to actually require them, so a red audit/CodeQL currently cannot block a merge the way phase 255 intended. Both findings need operator decision/action: (1) triage the js-yaml advisory (likely transitive -- js-yaml commonly pulled in by markdown/YAML tooling; needs the same reachability-analysis treatment as the other three documented exceptions, or a real fix/upgrade), (2) register security-success and codeql-success as required checks via 'gh api repos/thomas-powers-jr/cadence/branches/main/protection' (or the GitHub UI) to actually close the gap phase 255 was built to close.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "security"
+      ],
+      "affectedFiles": [
+        "docs/security/audit-exceptions.md",
+        ".github/workflows/security.yml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260807-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-07T02:15:30.535Z",
+      "updatedAt": "2026-08-07T02:15:30.535Z"
     },
     {
       "id": "rec-20260806-010",
@@ -2610,7 +2637,7 @@
         "dec-20260729-002"
       ],
       "convertedToPhaseId": "234-kernel-verifier-consumer-boundary",
-      "shippedRef": "phase 234 — kernel/verifier/consumer boundary, lint-enforced",
+      "shippedRef": "phase 234 \u2014 kernel/verifier/consumer boundary, lint-enforced",
       "scoutId": "scout-20260727-kernel-review-phase0",
       "archivedAt": "2026-07-29T01:28:58.405Z",
       "archiveReason": "shipped",
@@ -2646,7 +2673,7 @@
         "dec-20260729-006"
       ],
       "convertedToPhaseId": "235-criteria-anchored-review-input",
-      "shippedRef": "phase 235 — criteria-anchored review verifier: CodeReviewInput carries ACs/boundaries/task refs",
+      "shippedRef": "phase 235 \u2014 criteria-anchored review verifier: CodeReviewInput carries ACs/boundaries/task refs",
       "scoutId": "scout-20260727-kernel-review-phase0",
       "archivedAt": "2026-07-29T23:39:21.010Z",
       "archiveReason": "shipped",
@@ -2681,7 +2708,7 @@
         "dec-20260729-004"
       ],
       "convertedToPhaseId": "235-criteria-anchored-review-input",
-      "shippedRef": "phase 235 — anchor ladder as peer schema to AcEvidenceZ (executable > structured > declared > undeclared)",
+      "shippedRef": "phase 235 \u2014 anchor ladder as peer schema to AcEvidenceZ (executable > structured > declared > undeclared)",
       "scoutId": "scout-20260727-kernel-review-phase0",
       "archivedAt": "2026-07-29T23:39:21.170Z",
       "archiveReason": "shipped",
@@ -2921,7 +2948,7 @@
     {
       "id": "rec-20260611-004",
       "title": "Deepen the coverage gate beyond AC-token string-matching (false-positive risk)",
-      "summary": "The test-coverage gate links a test to an AC by string-matching the AC id (e.g. grep 'AC-1') in test text. A test that merely MENTIONS AC-1 in a comment or describe() label — without actually exercising it — passes the gate. This admits false positives in the exact mechanism the project sells as its credibility (AC-linked verification). Evaluate a cheap deepening: require the AC token to appear inside an it()/test() block that contains >=1 assertion, or proximity-to-expect heuristics, while staying deterministic and offline (no full AST/semantic analysis unless justified). May be partially YAGNI — decide whether the false-positive surface is worth closing or just documenting loudly.",
+      "summary": "The test-coverage gate links a test to an AC by string-matching the AC id (e.g. grep 'AC-1') in test text. A test that merely MENTIONS AC-1 in a comment or describe() label \u2014 without actually exercising it \u2014 passes the gate. This admits false positives in the exact mechanism the project sells as its credibility (AC-linked verification). Evaluate a cheap deepening: require the AC token to appear inside an it()/test() block that contains >=1 assertion, or proximity-to-expect heuristics, while staying deterministic and offline (no full AST/semantic analysis unless justified). May be partially YAGNI \u2014 decide whether the false-positive surface is worth closing or just documenting loudly.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -2944,7 +2971,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "phase 112 / PR #90 (401d86c) — coverage-gate assertion mode",
+      "shippedRef": "phase 112 / PR #90 (401d86c) \u2014 coverage-gate assertion mode",
       "scoutId": "scout-20260611-1857",
       "archivedAt": "2026-06-17T23:40:31.032Z",
       "archiveReason": "shipped",
@@ -2992,7 +3019,7 @@
     {
       "id": "rec-20260617-006",
       "title": "Frictionless first loop: seed an example DRAFT + make the settle refusal a teaching moment",
-      "summary": "(1) 'cadence draft new' should scaffold a complete runnable toy DRAFT (objective + AC-1 + T1 pre-filled, commented 'replace this') so a newcomer can run the whole loop before learning AC-N/T1 conventions (tutorial.ts already generates this). (2) The first loop's 'settle run --auto' refuses by design ('AC-1 has no test') but the why lives only in a README comment — make the refusal output narrate it with the exact next command. NOTE: re-check against v1.27 'onboarding breeze' which shipped init front-door work. Source: 2026-06-17 onboarding assessment (#1, #3).",
+      "summary": "(1) 'cadence draft new' should scaffold a complete runnable toy DRAFT (objective + AC-1 + T1 pre-filled, commented 'replace this') so a newcomer can run the whole loop before learning AC-N/T1 conventions (tutorial.ts already generates this). (2) The first loop's 'settle run --auto' refuses by design ('AC-1 has no test') but the why lives only in a README comment \u2014 make the refusal output narrate it with the exact next command. NOTE: re-check against v1.27 'onboarding breeze' which shipped init front-door work. Source: 2026-06-17 onboarding assessment (#1, #3).",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-cadence-spec",
@@ -3019,7 +3046,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "v1.27.0 / phase 109 init --demo (#89) — seeded example DRAFT; refusal-teaching residual reopened separately if needed",
+      "shippedRef": "v1.27.0 / phase 109 init --demo (#89) \u2014 seeded example DRAFT; refusal-teaching residual reopened separately if needed",
       "scoutId": "scout-20260617-1659",
       "archivedAt": "2026-06-17T23:48:43.105Z",
       "archiveReason": "shipped",
@@ -3058,7 +3085,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "phase 113 / PR #91 (3fae956) — one front door + guided Next: rail",
+      "shippedRef": "phase 113 / PR #91 (3fae956) \u2014 one front door + guided Next: rail",
       "scoutId": "scout-20260617-1659",
       "archivedAt": "2026-06-18T00:19:47.809Z",
       "archiveReason": "shipped",
@@ -3068,7 +3095,7 @@
     {
       "id": "rec-20260617-009",
       "title": "Remove onboarding terminology collision + the silent gate-profile flip",
-      "summary": "(1) 'cadence init' prints both 'preset' (solo/team/production) and 'gate profile' (strict/standard/auto) with no explanation — rename gate profile to 'strictness' or add a one-line distinction. (2) A repo crossing ~20 commits silently flips 'draft approve' to interactive — warn at init time. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#8, #9).",
+      "summary": "(1) 'cadence init' prints both 'preset' (solo/team/production) and 'gate profile' (strict/standard/auto) with no explanation \u2014 rename gate profile to 'strictness' or add a one-line distinction. (2) A repo crossing ~20 commits silently flips 'draft approve' to interactive \u2014 warn at init time. NOTE: re-check against v1.27 'onboarding breeze'. Source: 2026-06-17 assessment (#8, #9).",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-cadence-spec",
@@ -3093,7 +3120,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "phase 114 / PR #92 (f6182c0) — init auto-flip warning",
+      "shippedRef": "phase 114 / PR #92 (f6182c0) \u2014 init auto-flip warning",
       "scoutId": "scout-20260617-1659",
       "archivedAt": "2026-06-18T00:35:08.005Z",
       "archiveReason": "shipped",
@@ -3103,7 +3130,7 @@
     {
       "id": "rec-20260618-001",
       "title": "Midnight-boundary flake in handoff clobber test (inject the clock at the CLI boundary)",
-      "summary": "tests/cli/handoff.test.ts AC-23 ('refusing to clobber exits 2') flakes when a CI run straddles UTC midnight. The SESSION filename is wall-clock-dated (run-handoff.ts:45 'now.toISOString().slice(0,10)') and the clobber refusal is by filename; the test spawns the real CLI twice, so if the clock ticks past midnight between the two invocations they get different date filenames, no collision fires, and the second handoff exits 0 instead of 2. Observed 2026-06-18T00:00:26Z on macos-22 (PR #91), passed on re-run. runHandoff already takes an injectable 'now' (run-handoff.ts:42) but the CLI command doesn't expose it — add a CADENCE_NOW-style env override read at the CLI boundary so the test can pin the date (and runs become reproducible). Pure offline fix; no behavior change in normal use.",
+      "summary": "tests/cli/handoff.test.ts AC-23 ('refusing to clobber exits 2') flakes when a CI run straddles UTC midnight. The SESSION filename is wall-clock-dated (run-handoff.ts:45 'now.toISOString().slice(0,10)') and the clobber refusal is by filename; the test spawns the real CLI twice, so if the clock ticks past midnight between the two invocations they get different date filenames, no collision fires, and the second handoff exits 0 instead of 2. Observed 2026-06-18T00:00:26Z on macos-22 (PR #91), passed on re-run. runHandoff already takes an injectable 'now' (run-handoff.ts:42) but the CLI command doesn't expose it \u2014 add a CADENCE_NOW-style env override read at the CLI boundary so the test can pin the date (and runs become reproducible). Pure offline fix; no behavior change in normal use.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-cadence-spec",
@@ -3129,7 +3156,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "phase 114 / PR #92 (f6182c0) — handoff CADENCE_NOW seam",
+      "shippedRef": "phase 114 / PR #92 (f6182c0) \u2014 handoff CADENCE_NOW seam",
       "archivedAt": "2026-06-18T00:35:08.194Z",
       "archiveReason": "shipped",
       "createdAt": "2026-06-18T00:18:38.856Z",
@@ -3205,7 +3232,7 @@
     {
       "id": "rec-20260611-005",
       "title": "Loud audit trail when settle gates are bypassed (--force / --allow-verifier-failure)",
-      "summary": "Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility — record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.",
+      "summary": "Settle can bypass gates via --force and --allow-verifier-failure with no loud, durable record that verification was skipped. For a tool whose whole positioning is 'refuses to settle unverified work', a silent bypass is the worst-case credibility hole: a phase can read as settled-and-verified when a gate was forced. Add legibility \u2014 record bypass events in the SUMMARY (which gate, why, flag used), emit a visible banner at settle time, and optionally surface a doctor/recommend warning when recent settles were forced. Directly reinforces the honest-claims positioning Thomas requires.",
       "source": "manual",
       "status": "converted",
       "readiness": "needs-decision",
@@ -3239,7 +3266,7 @@
     {
       "id": "rec-20260611-007",
       "title": "Author a sourced COMPETITIVE.md / objection-FAQ capturing the in-loop-enforcement wedge",
-      "summary": "Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' — distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.",
+      "summary": "Turn the 2026-06-11 competitive assessment into a durable, verifiable positioning asset so it is not re-researched and so launch copy stays honest. Lead with the defensible, narrow claim that survives scrutiny: 'the only npm-distributed, host-agnostic tool that gates phase completion on acceptance-criteria coverage IN-LOOP' \u2014 distinct from scaffolders (Spec Kit 111k*, OpenSpec 54k*, BMAD 49k*, Kiro/AWS) that do not enforce, and from review bots (CodeRabbit, Graphite->Cursor, Greptile, Qodo) that enforce post-hoc on PRs via branch-protection. Cite the tailwind (ThoughtWorks Radar v34 endorsing deterministic quality gates wired into agent loops). Explicitly bank the overclaim to AVOID ('only tool that gates AI code'). Keep it local-only/gitignored like the other launch-prep artifacts until intentionally published.",
       "source": "manual",
       "status": "converted",
       "readiness": "needs-decision",
@@ -3366,7 +3393,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "v1.31.0 — README Quickstart leads with npx -y @manehorizons/cadence-core tutorial (no-install first touch)",
+      "shippedRef": "v1.31.0 \u2014 README Quickstart leads with npx -y @manehorizons/cadence-core tutorial (no-install first touch)",
       "archivedAt": "2026-06-25T23:03:57.866Z",
       "archiveReason": "shipped",
       "createdAt": "2026-06-19T02:46:20.224Z",
@@ -3400,7 +3427,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "v1.31.0 — cadence tutorial is the hero Quickstart CTA, ahead of global install",
+      "shippedRef": "v1.31.0 \u2014 cadence tutorial is the hero Quickstart CTA, ahead of global install",
       "archivedAt": "2026-06-25T23:03:58.035Z",
       "archiveReason": "shipped",
       "createdAt": "2026-06-19T02:46:20.598Z",
@@ -3434,7 +3461,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "v1.32.0 / phase 129 — tutorial rebuilt around refuse→fix→pass by default (stronger than the proposed --fail-first flag)",
+      "shippedRef": "v1.32.0 / phase 129 \u2014 tutorial rebuilt around refuse\u2192fix\u2192pass by default (stronger than the proposed --fail-first flag)",
       "archivedAt": "2026-06-25T23:03:58.197Z",
       "archiveReason": "shipped",
       "createdAt": "2026-06-19T02:46:22.162Z",
@@ -3577,7 +3604,7 @@
     {
       "id": "rec-20260701-005",
       "title": "init --demo prints instructions that immediately refuse",
-      "summary": "--demo seeds a phase leaving the loop in DRAFT, but init still prints the generic Your-first-loop block (step 1: draft new) and the draft-new agent prompt — following the most prominent instruction hits draft new refused: loopPosition is DRAFT. Fix: when demoSeeded, suppress the generic block and agent prompt, print only approve → done → settle; also genericize the hardcoded 01-fix-login-timeout slug.",
+      "summary": "--demo seeds a phase leaving the loop in DRAFT, but init still prints the generic Your-first-loop block (step 1: draft new) and the draft-new agent prompt \u2014 following the most prominent instruction hits draft new refused: loopPosition is DRAFT. Fix: when demoSeeded, suppress the generic block and agent prompt, print only approve \u2192 done \u2192 settle; also genericize the hardcoded 01-fix-login-timeout slug.",
       "source": "manual",
       "status": "converted",
       "readiness": "ready-for-milestone",
@@ -3610,7 +3637,7 @@
     {
       "id": "rec-20260701-006",
       "title": "Defuse the non-TTY approve trap in the agent path",
-      "summary": "init gives repos with 20+ commits the standard profile, whose draft approve refuses headless without --no-approve — but the README first-real-phase example and the copy-paste agent-prompt both use plain draft approve. Fix: make renderAgentPrompt profile-aware so step 3 tells the agent to stop and hand the human the approve command (the intended control point), and note the same in README.",
+      "summary": "init gives repos with 20+ commits the standard profile, whose draft approve refuses headless without --no-approve \u2014 but the README first-real-phase example and the copy-paste agent-prompt both use plain draft approve. Fix: make renderAgentPrompt profile-aware so step 3 tells the agent to stop and hand the human the approve command (the intended control point), and note the same in README.",
       "source": "manual",
       "status": "converted",
       "readiness": "ready-for-milestone",
@@ -3751,7 +3778,7 @@
     {
       "id": "rec-20260701-003",
       "title": "SUMMARY gate provenance: record what ran, what skipped, and what PASS meant",
-      "summary": "SUMMARY records AC-N: PASS with no evidence trail — a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.",
+      "summary": "SUMMARY records AC-N: PASS with no evidence trail \u2014 a comment-mention settle is indistinguishable from a verified one. Fix: extend summary schema with a gates array (id, outcome, skip reason) and per-AC evidence class (mention/assertion/executed/ai-verified); render both in SUMMARY.md plus the already-captured deepVerifyMeta token usage. Data all exists at settle time.",
       "source": "manual",
       "status": "converted",
       "readiness": "needs-decision",
@@ -3784,7 +3811,7 @@
     {
       "id": "rec-20260701-009",
       "title": "Sealed gates: let production preset make named gates non-bypassable",
-      "summary": "Every gate honors --force or a per-gate --allow-* flag; even the production preset removes none — the strictest expressible posture is bypassable-but-logged. Fix: a gates.sealed [gate-ids] config that makes listed gates ignore --force and their allow flag; wire into the production preset for test-coverage and build-test-must-pass. Bypass logging stays for everything unsealed.",
+      "summary": "Every gate honors --force or a per-gate --allow-* flag; even the production preset removes none \u2014 the strictest expressible posture is bypassable-but-logged. Fix: a gates.sealed [gate-ids] config that makes listed gates ignore --force and their allow flag; wire into the production preset for test-coverage and build-test-must-pass. Bypass logging stays for everything unsealed.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -3817,7 +3844,7 @@
     {
       "id": "rec-20260701-008",
       "title": "Structured draft editing: draft add-ac / add-task / set-objective",
-      "summary": "The DRAFT is the central artifact and the only loop step the CLI cannot touch — all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.",
+      "summary": "The DRAFT is the central artifact and the only loop step the CLI cannot touch \u2014 all content is hand-edited markdown that is then parsed structurally, so a typo in a task heading silently changes the id. Fix: additive subcommands (set-objective, add-ac --given/--when/--then, add-task --files --done AC-N) round-tripping through parseDraftMd. Hand-editing stays supported; agents get a write path that cannot produce unparseable markdown. Compounds with the loop --json work.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -3852,7 +3879,7 @@
     {
       "id": "rec-20260701-010",
       "title": "MCP parity for the intelligence lifecycle",
-      "summary": "An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose — the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.",
+      "summary": "An MCP-only client can add and promote a recommendation but cannot convert it to a phase or run milestone propose \u2014 the promote tool description itself points at a command that is not a tool, so the scout-to-phase story dead-ends over MCP. Fix: add recommendation_convert, milestone_propose, recommendation_archive tools (services exist behind the io-seam); expose SUMMARY.json as a resource.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -3884,7 +3911,7 @@
     {
       "id": "rec-20260701-012",
       "title": "Boundary enforcement block mode, including subagent edits",
-      "summary": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere — honest scoping for hosts where edit-time hooks cannot see subagents.",
+      "summary": "DRAFT declares files: per task and Boundaries per phase, but pre-tool-edit checks only warn, the sole blocking edit hook is off by default, and subagent edits only tick a counter. Fix: boundaryEnforcement warn|block config (default warn); block mode refuses out-of-boundary writes at edit time where the host supports it, and a settle-time diff scan raises a blocking anomaly for out-of-boundary changes everywhere \u2014 honest scoping for hosts where edit-time hooks cannot see subagents.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-milestone",
@@ -4125,8 +4152,8 @@
     },
     {
       "id": "rec-20260611-003",
-      "title": "Make real verification the felt default — close the gap between the enforcement wedge and the mock default",
-      "summary": "CADENCE's sharpest, most-defensible differentiator (a deterministic in-loop AC-linked gate that refuses to settle) currently ships with its WEAKEST implementation on by default: the mock verifier only checks that a linked test exists and references the AC. The public pitch is 'real verification gate'; the out-of-box experience is 'structural test-linkage'. Decide how to converge them — e.g. make 'cadence activate' (v1.22) a near-mandatory first-run step, surface a louder 'you are running mock = NOT real verification' state in settle/doctor/quickstart, and/or reframe docs so mock is explicitly named as a placeholder, not a verifier. This is the #1 strategic finding from the 2026-06-11 competitive assessment: the wedge and the default experience must stop diverging.",
+      "title": "Make real verification the felt default \u2014 close the gap between the enforcement wedge and the mock default",
+      "summary": "CADENCE's sharpest, most-defensible differentiator (a deterministic in-loop AC-linked gate that refuses to settle) currently ships with its WEAKEST implementation on by default: the mock verifier only checks that a linked test exists and references the AC. The public pitch is 'real verification gate'; the out-of-box experience is 'structural test-linkage'. Decide how to converge them \u2014 e.g. make 'cadence activate' (v1.22) a near-mandatory first-run step, surface a louder 'you are running mock = NOT real verification' state in settle/doctor/quickstart, and/or reframe docs so mock is explicitly named as a placeholder, not a verifier. This is the #1 strategic finding from the 2026-06-11 competitive assessment: the wedge and the default experience must stop diverging.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-milestone",
@@ -4509,7 +4536,7 @@
     {
       "id": "rec-20260712-002",
       "title": "Cross-phase retro rollup/trend view",
-      "summary": "A cross-phase rollup/trend view over the post-settle retro artifacts (depends on the retro-artifact recommendation existing first) — surfaces recurring workflow friction across multiple phases rather than one phase at a time. Landed via the same /cadence-scout session (scout-20260712-0328).",
+      "summary": "A cross-phase rollup/trend view over the post-settle retro artifacts (depends on the retro-artifact recommendation existing first) \u2014 surfaces recurring workflow friction across multiple phases rather than one phase at a time. Landed via the same /cadence-scout session (scout-20260712-0328).",
       "source": "manual",
       "status": "shipped",
       "readiness": "raw-idea",
@@ -4540,7 +4567,7 @@
     {
       "id": "rec-20260714-003",
       "title": "gateBypasses omits the --allow-auto-complex soft-cap override",
-      "summary": "settle.ts's gateBypassesFromAnomalies() and the equivalent draft-approve path only map AnomalyEvent types coverage-bypassed/force-used/verifier-failure to a recorded GateBypass. --allow-auto-complex (DESIGN.md §4 M2 soft cap, used at both draft approve and settle run) only prints a stderr notice via io.err() and never emits an AnomalyEvent, so it is silently absent from SUMMARY.json's gateBypasses field even when used twice in the same phase. This contradicts CLAUDE.md's claim that bypasses are 'loud and recorded in the SUMMARY (gateBypasses)'. Discovered live during phase 181 settle (mcp-tool-trust-envelope), whose draft was approved and settled under --allow-auto-complex with zero trace in its SUMMARY. Fix: emit a proper AnomalyEvent (new type, e.g. 'auto-complex-override') from both draft-approve.ts and settle.ts when the flag is used, and add it to anomalyToGateBypass's mapping.",
+      "summary": "settle.ts's gateBypassesFromAnomalies() and the equivalent draft-approve path only map AnomalyEvent types coverage-bypassed/force-used/verifier-failure to a recorded GateBypass. --allow-auto-complex (DESIGN.md \u00a74 M2 soft cap, used at both draft approve and settle run) only prints a stderr notice via io.err() and never emits an AnomalyEvent, so it is silently absent from SUMMARY.json's gateBypasses field even when used twice in the same phase. This contradicts CLAUDE.md's claim that bypasses are 'loud and recorded in the SUMMARY (gateBypasses)'. Discovered live during phase 181 settle (mcp-tool-trust-envelope), whose draft was approved and settled under --allow-auto-complex with zero trace in its SUMMARY. Fix: emit a proper AnomalyEvent (new type, e.g. 'auto-complex-override') from both draft-approve.ts and settle.ts when the flag is used, and add it to anomalyToGateBypass's mapping.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-evidence",
@@ -4760,44 +4787,10 @@
     },
     {
       "id": "rec-20260719-001",
-      "title": "No CLI writer to attach evidence to an existing recommendation",
-      "summary": "cadence recommendation add --evidence only sets a rec's evidence at creation time. There is no subcommand or flag to append a new evidence note to an EXISTING recommendation afterward -- e.g. when new information surfaces during a walk-back, review, or later investigation. The only path today is a raw hand-edit of two files in lockstep: append to .cadence/intelligence/evidence.json's evidence array AND append the new evidence id to the matching recommendation's evidenceIds array in recommendations.json. This second step is easy to miss and easy to get wrong: 'cadence intelligence reconcile' does NOT help here -- deriveRecommendationLinks (packages/core/src/intelligence/store/recommendations.ts:82-102) only re-derives assumptionIds/decisionIds from asLedger/decLedger; it never takes the evidence ledger as input, so evidenceIds is never re-derived from evidence.json and a hand-added evidence entry silently fails to show up in 'cadence recommendation show' until evidenceIds is ALSO hand-edited. Add a small CLI writer, e.g. 'cadence recommendation evidence add <recId> --note <text>' (mirroring assumption/decision's tied-record commands), that appends to both files atomically together.",
-      "source": "manual",
-      "status": "shipped",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "intelligence"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/recommendation.ts",
-        "packages/core/src/intelligence/store/recommendations.ts",
-        "packages/core/src/intelligence/store/reconcile.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260719-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "199-recommendation-evidence-add-cli-writer",
-      "shippedRef": "PR #254",
-      "archivedAt": "2026-07-19T23:04:41.437Z",
-      "archiveReason": "shipped",
-      "createdAt": "2026-07-19T19:28:00.320Z",
-      "updatedAt": "2026-07-19T23:04:41.437Z"
-    },
-    {
-      "id": "rec-20260719-001",
       "title": "Impact-gated verification via Phenyx (radius-aware settle gate)",
       "summary": "New settle/CI gate: compute blast radius on the phase's changed files via phenyx_graph_blast and REFUSE settle when radius-implicated tests were not in the run, printing the evidence chain as the refusal reason. Test-impact analysis exists elsewhere; impact REFUSAL with cross-plane provenance does not. Decision needed: hard dependency vs optional gate behind config (recommend optional: gate present only when a Phenyx index is reachable). Cross-ref phenyx rec scout-20260715-claude-roadmap-03 (edit-time sentinel, the ambient sibling).",
       "source": "manual",
-      "status": "candidate",
+      "status": "shipped",
       "readiness": "needs-decision",
       "priority": "high",
       "leverageScore": 5,
@@ -4810,15 +4803,16 @@
       "affectedFiles": [],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260719-004"
+        "ev-20260719-005"
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "shippedRef": "v1.48.0",
       "scoutId": "scout-20260715-claude-roadmap-02",
-      "archivedAt": "2026-07-19T23:21:17.033Z",
-      "archiveReason": "manual",
-      "createdAt": "2026-07-19T23:19:08.214Z",
-      "updatedAt": "2026-07-19T23:21:17.033Z"
+      "archivedAt": "2026-07-20T03:25:52.775Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-19T23:21:24.838Z",
+      "updatedAt": "2026-07-20T03:25:52.775Z"
     },
     {
       "id": "rec-20260619-008",
@@ -4858,7 +4852,7 @@
     {
       "id": "rec-20260714-001",
       "title": "milestone premortem: no CLI writer for any operator-authored field (likelyFailureModes, hiddenDependencies, outOfScope)",
-      "summary": "cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/driftRisks deterministically from ledger heuristics (correctly empty when a milestone's recs trip no risk signal — e.g. mil-rec-rec-20260712-011: single high-confidence, accepted+ready-for-milestone, undecayed rec). outOfScope is explicitly excluded from that derivation (milestone.ts:90,188 — seedPreMortem hardcodes [], deepenPreMortem passes milestone.preMortem.outOfScope through unchanged) because it's meant to be operator-authored, not inferred. But there is no 'cadence milestone' subcommand to set it — the only path today is a raw hand-edit of .cadence/intelligence/milestones.json, which the project otherwise treats as a derived-state file. Add a small CLI writer, e.g. 'cadence milestone premortem <id> --out-of-scope <text>' (repeatable) or a dedicated 'cadence milestone scope <id>' subcommand, so pre-mortems can be completed without hand-editing ledger JSON. Confirmed 2026-07-19 (mil-rec-rec-20260619-008 walk-back): the gap is not limited to outOfScope — there is likewise no CLI writer for likelyFailureModes or hiddenDependencies, since the deterministic refresh only derives heuristic-driven entries and nothing else. Any writer added should cover all three fields, not just outOfScope.",
+      "summary": "cadence milestone premortem regenerates likelyFailureModes/hiddenDependencies/driftRisks deterministically from ledger heuristics (correctly empty when a milestone's recs trip no risk signal \u2014 e.g. mil-rec-rec-20260712-011: single high-confidence, accepted+ready-for-milestone, undecayed rec). outOfScope is explicitly excluded from that derivation (milestone.ts:90,188 \u2014 seedPreMortem hardcodes [], deepenPreMortem passes milestone.preMortem.outOfScope through unchanged) because it's meant to be operator-authored, not inferred. But there is no 'cadence milestone' subcommand to set it \u2014 the only path today is a raw hand-edit of .cadence/intelligence/milestones.json, which the project otherwise treats as a derived-state file. Add a small CLI writer, e.g. 'cadence milestone premortem <id> --out-of-scope <text>' (repeatable) or a dedicated 'cadence milestone scope <id>' subcommand, so pre-mortems can be completed without hand-editing ledger JSON. Confirmed 2026-07-19 (mil-rec-rec-20260619-008 walk-back): the gap is not limited to outOfScope \u2014 there is likewise no CLI writer for likelyFailureModes or hiddenDependencies, since the deterministic refresh only derives heuristic-driven entries and nothing else. Any writer added should cover all three fields, not just outOfScope.",
       "source": "manual",
       "status": "shipped",
       "readiness": "raw-idea",
@@ -4888,35 +4882,6 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-14T03:01:16.909Z",
       "updatedAt": "2026-07-20T03:25:52.583Z"
-    },
-    {
-      "id": "rec-20260719-001",
-      "title": "Impact-gated verification via Phenyx (radius-aware settle gate)",
-      "summary": "New settle/CI gate: compute blast radius on the phase's changed files via phenyx_graph_blast and REFUSE settle when radius-implicated tests were not in the run, printing the evidence chain as the refusal reason. Test-impact analysis exists elsewhere; impact REFUSAL with cross-plane provenance does not. Decision needed: hard dependency vs optional gate behind config (recommend optional: gate present only when a Phenyx index is reachable). Cross-ref phenyx rec scout-20260715-claude-roadmap-03 (edit-time sentinel, the ambient sibling).",
-      "source": "manual",
-      "status": "shipped",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "settle-gates"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260719-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "shippedRef": "v1.48.0",
-      "scoutId": "scout-20260715-claude-roadmap-02",
-      "archivedAt": "2026-07-20T03:25:52.775Z",
-      "archiveReason": "shipped",
-      "createdAt": "2026-07-19T23:21:24.838Z",
-      "updatedAt": "2026-07-20T03:25:52.775Z"
     },
     {
       "id": "rec-20260720-002",
@@ -4956,7 +4921,7 @@
     {
       "id": "rec-20260720-001",
       "title": "milestone lifecycle has no un-defer/re-propose path once a milestone candidate is deferred",
-      "summary": "clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect — the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.",
+      "summary": "clusterMilestones() (packages/core/src/intelligence/milestone.ts) treats any non-'proposed' milestone as a permanent survivor and permanently excludes its claimed recommendationIds from re-clustering. applyTransition()'s allowed-transitions table has no path out of 'deferred' (accept only works from 'proposed', defer only from 'proposed'/'accepted', close only from 'exported'). Once a milestone is deferred, bumping the underlying recommendation's readiness/status has no effect \u2014 the rec is permanently claimed by the dead milestone entry. Discovered 2026-07-20: rec-20260619-008 (Team rollout kit) had been deferred as mil-rec-rec-20260619-008 and stayed stuck at needs-decision across 2+ sessions because there was no CLI path to reopen it; the only workaround found was a direct edit of milestones.json, which violates this repo's refuse+suggest/never-hand-edit-derived-state convention. Consider adding a 'milestone reopen <id>' transition (deferred -> proposed) or making clusterMilestones() re-pool recs whose readiness has been promoted since the deferral.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-milestone",
@@ -5051,7 +5016,7 @@
     {
       "id": "rec-20260721-002",
       "title": "cadence next: state-derived legal next moves at any loop position, human + --json agent contract",
-      "summary": "A read-only command answering \"what now?\" deterministically from ground truth at any loop position — not milestone suggestion, literal next step. Computed from state the engine already holds: pending DRAFT -> the approve invocation; mid-BUILD -> remaining tasks (T-ids) + ACs still lacking coverage; all tasks DONE -> the settle invocation; settled -> next phase in milestone, else the promote->propose chain with real rec ids; empty ledgers -> draft-new/onboard paths. Output: current position + 1-3 ranked legal moves with exact commands (a map, not an autopilot — when multiple moves are legal, e.g. settle-now vs. add-discovered-task, it lists both). --json returns {position, remainingTasks, blockedOn, legalMoves[]} as a stable contract so agents consume loop position as ground truth instead of reconstructing it from conversation context — deterministic navigation for orchestrators; zero tokens, zero drift. Explicitly does NOT advise how to implement work (semantic, the agent's job); it names the door, the agent walks through it. Needs decisions: standalone command vs. also auto-appending its output as the footer of every empty state from the sibling actionable-empty-states rec (recommend: both — that rec's 'Try:' line is this command's logic scoped to one wall); relationship to quickstart (static map) — subsume, cross-link, or keep separate; --json schema versioning; whether host adapters surface it as a slash command (/cadence-next). Related but narrower: rec-20260605-002 (First-run 'what now?' nudge after cadence init) covers only the init-time case, not general loop-position navigation.",
+      "summary": "A read-only command answering \"what now?\" deterministically from ground truth at any loop position \u2014 not milestone suggestion, literal next step. Computed from state the engine already holds: pending DRAFT -> the approve invocation; mid-BUILD -> remaining tasks (T-ids) + ACs still lacking coverage; all tasks DONE -> the settle invocation; settled -> next phase in milestone, else the promote->propose chain with real rec ids; empty ledgers -> draft-new/onboard paths. Output: current position + 1-3 ranked legal moves with exact commands (a map, not an autopilot \u2014 when multiple moves are legal, e.g. settle-now vs. add-discovered-task, it lists both). --json returns {position, remainingTasks, blockedOn, legalMoves[]} as a stable contract so agents consume loop position as ground truth instead of reconstructing it from conversation context \u2014 deterministic navigation for orchestrators; zero tokens, zero drift. Explicitly does NOT advise how to implement work (semantic, the agent's job); it names the door, the agent walks through it. Needs decisions: standalone command vs. also auto-appending its output as the footer of every empty state from the sibling actionable-empty-states rec (recommend: both \u2014 that rec's 'Try:' line is this command's logic scoped to one wall); relationship to quickstart (static map) \u2014 subsume, cross-link, or keep separate; --json schema versioning; whether host adapters surface it as a slash command (/cadence-next). Related but narrower: rec-20260605-002 (First-run 'what now?' nudge after cadence init) covers only the init-time case, not general loop-position navigation.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-cadence-spec",
@@ -5086,7 +5051,7 @@
     {
       "id": "rec-20260721-001",
       "title": "Empty states and refusals must name the precondition, nearest candidates, and unblocking command",
-      "summary": "Establish and enforce a guidance invariant: every empty result or refusal in the intelligence layer (recommend, milestone propose, promote, retro, and any command that can return \"nothing\") must state (a) why the result is empty, (b) the unmet precondition in concrete terms, (c) the nearest-miss candidates from the already-loaded ledger with what each is missing, and (d) the exact command that would change the outcome. Example target output for the incident case: 'Proposed milestones: 0 — 14 recommendations exist; none eligible (requires status=accepted + readiness ready-for-milestone or ready-for-cadence-spec). Closest: rec-0041 (accepted, needs-decision). Try: cadence recommendation promote rec-0041 --readiness ready-for-milestone'. Acceptance bar for the eventual phase: an audit checklist of every intelligence-layer empty/zero path, each upgraded and tested; a doc'd guidance invariant so future commands inherit the bar. Cheap: the candidate data is already in memory at render time. This is the same bar settle refusals already meet, applied uniformly. (Sibling: shares one 'nearest legal move' computation with the cadence-next rec recorded alongside it.)",
+      "summary": "Establish and enforce a guidance invariant: every empty result or refusal in the intelligence layer (recommend, milestone propose, promote, retro, and any command that can return \"nothing\") must state (a) why the result is empty, (b) the unmet precondition in concrete terms, (c) the nearest-miss candidates from the already-loaded ledger with what each is missing, and (d) the exact command that would change the outcome. Example target output for the incident case: 'Proposed milestones: 0 \u2014 14 recommendations exist; none eligible (requires status=accepted + readiness ready-for-milestone or ready-for-cadence-spec). Closest: rec-0041 (accepted, needs-decision). Try: cadence recommendation promote rec-0041 --readiness ready-for-milestone'. Acceptance bar for the eventual phase: an audit checklist of every intelligence-layer empty/zero path, each upgraded and tested; a doc'd guidance invariant so future commands inherit the bar. Cheap: the candidate data is already in memory at render time. This is the same bar settle refusals already meet, applied uniformly. (Sibling: shares one 'nearest legal move' computation with the cadence-next rec recorded alongside it.)",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-cadence-spec",
@@ -5412,7 +5377,7 @@
     {
       "id": "rec-20260724-005",
       "title": "Close the trust envelope: gate the SETTLE capability class in MCP serve",
-      "summary": "mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation — an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.",
+      "summary": "mcp-trust.ts classifies SETTLE as a capability class but the source comment states it is left ungated this phase. The envelope machinery (def-hash-bound grants, revoke-on-version-change, expiry) already exists and gates APPROVAL_BYPASS; extending it to SETTLE is the remaining step. Settle is the crown-jewel operation \u2014 an MCP caller reaching it without an operator grant undercuts the independence story the rest of the surface earns.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-milestone",
@@ -5446,7 +5411,7 @@
     {
       "id": "rec-20260724-003",
       "title": "Generate CHANGELOG entries from settle artifacts and gate releases on changelog currency",
-      "summary": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) — roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
+      "summary": "CHANGELOG.md tops out at 1.6.0 (2026-06-04) while npm latest is 1.50.0 (published 2026-07-22) \u2014 roughly 44 published versions unrecorded, and the releases page carries 14 tags against ~50 versions. The internal record is immaculate, so the fix is mechanical: a phase-to-changelog generation step drawing on SUMMARY.json artifacts, plus a release-workflow gate that refuses publish when the changelog lags the version bump. Turns a record-integrity regression into a product feature.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-milestone",
@@ -5513,8 +5478,8 @@
     },
     {
       "id": "rec-20260724-013",
-      "title": "cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json — can silently collide with a dangling evidence row",
-      "summary": "Discovered 2026-07-24 during a rebase-conflict repair: an earlier session's mis-resolved rebase conflict left .cadence/intelligence/RECOMMENDATIONS.md and evidence.json carrying a recommendation (id rec-20260724-011) with NO backing entry in recommendations.json (the actual source of truth) — a half-written recommendation from an interrupted/incomplete cadence recommendation add call, or a hand-edited conflict resolution. A later, unrelated cadence recommendation add call computed its next id purely from recommendations.json's current max id, correctly saw '010' as the ceiling, and re-minted 'rec-20260724-011' for a completely different finding — colliding with the orphaned evidence row (which still pointed 'recommendationId': 'rec-20260724-011' at the wrong content). Root cause: id-minting logic doesn't cross-check evidence.json's recommendationId references, so a dangling evidence row (with no matching recommendations.json entry) is invisible to it. Fix: either have id-minting take the max across both recommendations.json ids AND evidence.json's referenced recommendationIds, or add a cadence doctor check that flags evidence rows with no matching recommendation (which would have caught this drift immediately instead of it surviving 6 handoff commits unnoticed).",
+      "title": "cadence recommendation add's next-id derivation only reads recommendations.json, ignoring evidence.json \u2014 can silently collide with a dangling evidence row",
+      "summary": "Discovered 2026-07-24 during a rebase-conflict repair: an earlier session's mis-resolved rebase conflict left .cadence/intelligence/RECOMMENDATIONS.md and evidence.json carrying a recommendation (id rec-20260724-011) with NO backing entry in recommendations.json (the actual source of truth) \u2014 a half-written recommendation from an interrupted/incomplete cadence recommendation add call, or a hand-edited conflict resolution. A later, unrelated cadence recommendation add call computed its next id purely from recommendations.json's current max id, correctly saw '010' as the ceiling, and re-minted 'rec-20260724-011' for a completely different finding \u2014 colliding with the orphaned evidence row (which still pointed 'recommendationId': 'rec-20260724-011' at the wrong content). Root cause: id-minting logic doesn't cross-check evidence.json's recommendationId references, so a dangling evidence row (with no matching recommendations.json entry) is invisible to it. Fix: either have id-minting take the max across both recommendations.json ids AND evidence.json's referenced recommendationIds, or add a cadence doctor check that flags evidence rows with no matching recommendation (which would have caught this drift immediately instead of it surviving 6 handoff commits unnoticed).",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-evidence",
@@ -5820,7 +5785,7 @@
     },
     {
       "id": "rec-20260726-002",
-      "title": "Fresh worktree has .cadence/ but no state.json — cadence init refuses to bootstrap it",
+      "title": "Fresh worktree has .cadence/ but no state.json \u2014 cadence init refuses to bootstrap it",
       "summary": "EnterWorktree's default 'fresh' baseRef branches a new git worktree from origin/<default-branch>, which includes the committed .cadence/ directory (config.json, ROADMAP.md, phases/, etc.) but NOT state.json/STATE.md (gitignored since phase 196, never copied by git). Every cadence state-mutating command (spec new, draft new, ...) throws NotInitializedError because SimpleStateBackend.readState() requires state.json to literally exist on disk. But 'cadence init' refuses to run because it detects .cadence/ already exists (existsSync(cadenceDir) check in cli/commands/init.ts), even though what's actually missing is just the gitignored state file. Hit live 2026-07-25 building phase 222 in a freshly created worktree -- had to hand-author a minimal valid state.json (schemaVersion, project.createdAt copied from the primary checkout, loopPosition IDLE, empty arrays/maps) matching CadenceStateZ's shape before any cadence command would run. This will recur for every future phase-build in a fresh worktree until fixed.",
       "source": "manual",
       "status": "shipped",
@@ -6065,7 +6030,7 @@
     {
       "id": "rec-20260729-002",
       "title": "Thread gate provenance into SettleContext so the anchor ladder's executable tier is reachable in the live gate",
-      "summary": "Phase 235 shipped the full four-tier 7.1 anchor ladder as a pure resolver, but SettleContext exposes no gate-provenance array to a GateImpl (the accumulator lives only inside runSettleGates in gates/registry.ts). gates/code-review.ts therefore calls anchorFindings with gateProvenance: [], so the executable tier is structurally unreachable in production — every live finding caps at structured/declared/undeclared. The tier is covered only by T2's unit tests with injected provenance. Net effect: the ladder's top rung is dead in the real path, which is exactly the kind of claim-vs-reality gap CADENCE exists to surface. Fix: thread the in-flight provenance (read-only) into SettleContext so gates that need corroboration can see which gates have already run this settle.",
+      "summary": "Phase 235 shipped the full four-tier 7.1 anchor ladder as a pure resolver, but SettleContext exposes no gate-provenance array to a GateImpl (the accumulator lives only inside runSettleGates in gates/registry.ts). gates/code-review.ts therefore calls anchorFindings with gateProvenance: [], so the executable tier is structurally unreachable in production \u2014 every live finding caps at structured/declared/undeclared. The tier is covered only by T2's unit tests with injected provenance. Net effect: the ladder's top rung is dead in the real path, which is exactly the kind of claim-vs-reality gap CADENCE exists to surface. Fix: thread the in-flight provenance (read-only) into SettleContext so gates that need corroboration can see which gates have already run this settle.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -6100,7 +6065,7 @@
     {
       "id": "rec-20260729-007",
       "title": "Criteria-anchoring has never run end-to-end: code-review is skipped at standard x standard, so phase 235 could not dogfood its own gate",
-      "summary": "Phase 235 enhanced the code-review gate (criteria-anchored findings, anchor ladder, criteria-gap emission) but settled under tier=standard x profile=standard, where code-review is not in the effective gate set — its SUMMARY gate provenance records 'code-review -> skipped: not in the active tier x profile gate set'. Combined with rec-20260729-002 (SettleContext exposes no provenance, so the live gate would pass gateProvenance: [] anyway), the consequence is that the anchoring code has executed ONLY in tests: never once against a real diff, a real DRAFT, and a real verifier in a real settle. The unit and gate-level tests are strong (3410 green, adversarial corpus, mutation-proved), but no end-to-end evidence exists. Worth doing before the arc leans further on anchoring: run a phase at strict x standard or standard x complex (or deliberately override the tier) and inspect the resulting SUMMARY's codeReview findings for real anchor tiers and a real gap count. This is the meta-tool failing to dogfood a change to itself, which is precisely the class of gap CADENCE exists to catch.",
+      "summary": "Phase 235 enhanced the code-review gate (criteria-anchored findings, anchor ladder, criteria-gap emission) but settled under tier=standard x profile=standard, where code-review is not in the effective gate set \u2014 its SUMMARY gate provenance records 'code-review -> skipped: not in the active tier x profile gate set'. Combined with rec-20260729-002 (SettleContext exposes no provenance, so the live gate would pass gateProvenance: [] anyway), the consequence is that the anchoring code has executed ONLY in tests: never once against a real diff, a real DRAFT, and a real verifier in a real settle. The unit and gate-level tests are strong (3410 green, adversarial corpus, mutation-proved), but no end-to-end evidence exists. Worth doing before the arc leans further on anchoring: run a phase at strict x standard or standard x complex (or deliberately override the tier) and inspect the resulting SUMMARY's codeReview findings for real anchor tiers and a real gap count. This is the meta-tool failing to dogfood a change to itself, which is precisely the class of gap CADENCE exists to catch.",
       "source": "manual",
       "status": "shipped",
       "readiness": "needs-decision",
@@ -6124,7 +6089,7 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "shippedRef": "phase 241 / feat-kernel-assurance-v2 (release pending) — code-review ran at strict x standard, SUMMARY gate provenance 'ran'",
+      "shippedRef": "phase 241 / feat-kernel-assurance-v2 (release pending) \u2014 code-review ran at strict x standard, SUMMARY gate provenance 'ran'",
       "archivedAt": "2026-07-30T02:22:21.167Z",
       "archiveReason": "shipped",
       "createdAt": "2026-07-29T23:42:20.928Z",
@@ -6133,7 +6098,7 @@
     {
       "id": "rec-20260731-009",
       "title": "Findings-to-ledger auto-routing: create Recommendation + Evidence entries from code-review findings during settle",
-      "summary": "Phase 236 shipped finding identity (id/target/disposition/waiver on FindingZ, packages/core/src/verify/finding-identity.ts) and RecommendationSourceZ's 'review' member, but explicitly deferred the behavioral half: settle currently persists findings into the SUMMARY only, never into the recommendation ledger. Per the source doc (docs/handoffs/cadence-phase0-assurance-kernel-review.md §7.3) and phase 236's ROADMAP.md 'As built' amendment, this follow-on must: (1) route findings as Recommendation entries with EvidenceZ(kind:'cadence-artifact') pointing at the settle, sourced as 'review' not 'manual'/'cadence'; (2) reuse the existing scout-id convention for batch provenance (one scout id per settle's batch of routed findings, not one scout per finding); (3) key routing on FindingZ.id for ledger hygiene so a re-settle of an unchanged phase does not mint duplicate recommendations for the same finding -- this is the hard requirement the source doc names ('without stable identity and dispositions, repeated runs fill the ledger with undisposed items'); (4) account explicitly for rec-20260731-007 (computeFindingId collides for two same-severity/message findings in one file, no occurrence discriminant) rather than silently merging distinct findings under one ledger entry -- either add an occurrence ordinal to the hash or make merge-by-identity a documented, deliberate semantic. Scope is the settle-time writer only (a new named step in packages/core/src/services/settle.ts, per phase 228's step-function convention) -- no new gate, no GATE_ORDER change, no refusal semantics.",
+      "summary": "Phase 236 shipped finding identity (id/target/disposition/waiver on FindingZ, packages/core/src/verify/finding-identity.ts) and RecommendationSourceZ's 'review' member, but explicitly deferred the behavioral half: settle currently persists findings into the SUMMARY only, never into the recommendation ledger. Per the source doc (docs/handoffs/cadence-phase0-assurance-kernel-review.md \u00a77.3) and phase 236's ROADMAP.md 'As built' amendment, this follow-on must: (1) route findings as Recommendation entries with EvidenceZ(kind:'cadence-artifact') pointing at the settle, sourced as 'review' not 'manual'/'cadence'; (2) reuse the existing scout-id convention for batch provenance (one scout id per settle's batch of routed findings, not one scout per finding); (3) key routing on FindingZ.id for ledger hygiene so a re-settle of an unchanged phase does not mint duplicate recommendations for the same finding -- this is the hard requirement the source doc names ('without stable identity and dispositions, repeated runs fill the ledger with undisposed items'); (4) account explicitly for rec-20260731-007 (computeFindingId collides for two same-severity/message findings in one file, no occurrence discriminant) rather than silently merging distinct findings under one ledger entry -- either add an occurrence ordinal to the hash or make merge-by-identity a documented, deliberate semantic. Scope is the settle-time writer only (a new named step in packages/core/src/services/settle.ts, per phase 228's step-function convention) -- no new gate, no GATE_ORDER change, no refusal semantics.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-cadence-spec",
@@ -6446,7 +6411,7 @@
       "decisionIds": [
         "dec-20260802-001"
       ],
-      "shippedRef": "phase 247-refused-settle-summary-preservation (PR pending) — same writer-threading fix as rec-20260801-011's T1",
+      "shippedRef": "phase 247-refused-settle-summary-preservation (PR pending) \u2014 same writer-threading fix as rec-20260801-011's T1",
       "scoutId": "scout-20260801-0100",
       "archivedAt": "2026-08-02T00:40:15.033Z",
       "archiveReason": "shipped",
@@ -6490,7 +6455,7 @@
     {
       "id": "rec-20260712-006",
       "title": "Settle-internal refusal paths still write no SUMMARY",
-      "summary": "Two settle-internal refusal paths — the --auto blocked-task refusal and the skill-audit refusal — still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.",
+      "summary": "Two settle-internal refusal paths \u2014 the --auto blocked-task refusal and the skill-audit refusal \u2014 still write no SUMMARY.{json,md} on refusal, the same gap phase 171 (settle 170) just fixed for the 9 gate-dispatched refusals. These two paths are internal to settle rather than gate-dispatched, so they were out of scope for that fix.",
       "source": "manual",
       "status": "shipped",
       "readiness": "ready-for-cadence-spec",
@@ -6627,8 +6592,8 @@
     },
     {
       "id": "rec-20260724-012",
-      "title": "pnpm.overrides is non-functional under the pinned pnpm 9.12.0 — package.json location deprecated, pnpm-workspace.yaml location not yet implemented",
-      "summary": "Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect — confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) — and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.",
+      "title": "pnpm.overrides is non-functional under the pinned pnpm 9.12.0 \u2014 package.json location deprecated, pnpm-workspace.yaml location not yet implemented",
+      "summary": "Discovered while triaging GHSA-mh99-v99m-4gvg (brace-expansion, high): package.json's pre-existing pnpm.overrides block (targeting brace-expansion, read-yaml-file, js-yaml, fast-uri) is silently ignored by pnpm 9.12.0 (prints a deprecation warning, then does nothing). Moving the same overrides to pnpm-workspace.yaml's documented replacement 'overrides:' key also had zero effect \u2014 confirmed empirically: no overrides section appeared in the regenerated lockfile, and brace-expansion still resolved below the override target. Any override anyone adds under the current pinned pnpm version is dead on arrival, silently. Needs real investigation: either a pnpm major-version upgrade (own tracked, riskier change touching CI pins, .githooks/, packageManager field) or a documented workaround (e.g. direct root devDependency pins) \u2014 and either way, some verification (a smoke-test script, or CI step) that a declared override actually takes effect, so this doesn't silently rot again.",
       "source": "manual",
       "status": "rejected",
       "readiness": "needs-evidence",
@@ -6729,8 +6694,75 @@
       "updatedAt": "2026-08-05T23:18:09.518Z"
     },
     {
+      "id": "rec-20260806-009",
+      "title": "Repo-wide remediation: 20 test files undercounted by the regex-literal mask defect (rec-20260803-002 / phase 258)",
+      "summary": "Phase 258's T4 sweep (2026-08-06) compared the pre-fix findSpansForProfile/jsTsProfile scanner against a throwaway regex-literal-aware audit oracle across all 450 JS/TS test files. Found 17 files where the scanner's span count is strictly less than the real it()/test() block count (worst: packages/core/tests/quickstart.test.ts, 0 of 3 blocks found, caused by a single quote inside a character class -- no paren or backtick at all), plus 3 more files with silent boundary corruption where the span count still matched (packages/core/tests/verify/coverage-profiles-engine.test.ts flips hasAssertion true->false on a block whose real source does contain expect(...) past the truncation point; packages/core/tests/config-edit/render.test.ts silently drops a trailing assertion from its span; packages/core/tests/intelligence/render-milestone.test.ts is a 4-byte inert shift). 15 of the 17 Class A files and both non-inert Class B files contain AC-N tokens, so some historical AC PASS records may rest on undercounted spans. Two of the twenty findings were independently spot-checked by the phase-258 orchestrator directly against the real built scanner (node -e against packages/core/dist/verify/coverage-profiles/{engine,js-ts}.js) and both reproduced exactly. Phase 258 fixes the scanner itself (rec-20260803-002) but explicitly does not remediate these 20 historical files -- report only, per the source v1.55 handoff's own instruction. Couples to rec-20260729-006 (retroactive audit of historical AC PASS records), which already planned this exact repo-wide coverage audit.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/quickstart.test.ts",
+        "packages/core/tests/verify/coverage-profiles-engine.test.ts",
+        "packages/core/tests/config-edit/render.test.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260807-004",
+        "ev-20260807-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "archivedAt": "2026-08-07T00:01:20.358Z",
+      "archiveReason": "manual",
+      "createdAt": "2026-08-06T22:37:44.740Z",
+      "updatedAt": "2026-08-07T00:01:20.358Z"
+    },
+    {
+      "id": "rec-20260803-002",
+      "title": "js-ts coverage-scanner mask has no concept of a JS/TS regex literal, corrupting span detection",
+      "summary": "packages/core/src/verify/coverage-profiles/js-ts.ts's call-expression span strategy (packages/core/src/verify/coverage-profiles/strategies.ts's findMatchingParenIndex) does depth-aware paren counting over the file's CodeMask to find each it()/test() block's closing paren, and the mask only recognizes single/double/backtick-quoted strings and // and /* */ comments as non-structural spans -- it has no concept of a /regex/ literal as its own lexical category. A raw backtick or parenthesis inside a regex literal (even backslash-escaped, e.g. \\( -- escaping has no special meaning to the mask, which isn't string/regex-aware) is read as a real structural character: a backtick toggles the mask's template-literal-string state (since backtick is registered as a string delimiter), and a paren perturbs the running depth count. Either can desynchronize span detection for the rest of the file, not just the offending block. Hit for real writing packages/core/tests/docs/phase251-ledger.test.ts (phase 251): two it() blocks whose .toMatch(/regex containing backticks or parens/) assertions caused 'cadence settle run' to refuse with 'token found but not inside any recognized test block', diagnosable via 'cadence verify coverage --explain AC-N' showing 'spans found: 1' for a 3-it() file. Worked around on the test-authoring side (prefer .toContain('plain string') -- backticks/parens inside a properly single/double-quoted string ARE correctly masked -- over .toMatch(/regex/) containing either character) rather than fixing the scanner, which was out of scope for that phase. Likely affects any existing test file using a regex-literal assertion with a raw backtick or paren, silently undercounting real coverage without ever surfacing an error (a token inside such a corrupted span just reads as 'not inside any recognized test block', indistinguishable from genuinely missing coverage) -- worth a repo-wide grep audit alongside any fix. Options to weigh: teach the CodeMask a regex-literal syntax category (nontrivial -- distinguishing a regex literal from a division operator is a known hard problem in naive JS/TS tokenizers, usually needs some lookbehind heuristic); or document the limitation prominently (e.g. in this profile's own file, and in whatever author-facing guidance covers writing coverage-satisfying tests) so future authors know to avoid backtick/paren-bearing regex literals rather than hit this blind.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage-profiles/js-ts.ts",
+        "packages/core/src/verify/coverage-profiles/strategies.ts",
+        "packages/core/src/verify/coverage-profiles/mask.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260803-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "258-assertion-span-scanner",
+      "shippedRef": "phase 258, branch worktree-258-assertion-span-scanner",
+      "archivedAt": "2026-08-07T01:50:30.603Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-03T03:07:40.383Z",
+      "updatedAt": "2026-08-07T01:50:30.603Z"
+    },
+    {
       "id": "rec-20260802-002",
-      "title": "SUMMARY.md never renders codeReview/securityAudit findings — a refused-attempt sibling shows nothing an operator opens it to see",
+      "title": "SUMMARY.md never renders codeReview/securityAudit findings \u2014 a refused-attempt sibling shows nothing an operator opens it to see",
       "summary": "Surfaced by the phase-247 whole-branch review (2026-08-02): packages/core/src/services/summary-render.ts renders AC / Tasks / Gates / Gate bypasses / Assurance / Decisions / Deferred sections but has zero handling for the codeReview or securityAudit fields, for ANY SUMMARY (success or refused) -- this predates phase 247 and is not scoped to it. Phase 247 makes the gap newly consequential: it now writes an immutable per-attempt sibling .md specifically so a human can inspect what a refused/abandoned attempt found, but the .md half of that record is byte-identical to the canonical refused SUMMARY.md and renders none of the findings that caused the refusal -- verified empirically: a hand-built refused-shaped SUMMARY with one HIGH code-review finding, rendered via the real cadence summary render, shows the content hash and the refused gate but not one word of the finding. The data is JSON-only. Fix is out of phase 247's DRAFT scope (Boundaries did not ask for a render change) and was not built. Worth a dedicated phase: add a codeReview/securityAudit findings section to summary-render.ts, following the same JSON-only-so-far -> now-rendered precedent as the phase-170 gates[].reason field (docs/concepts.md notes this exact pattern already).",
       "source": "manual",
       "status": "shipped",

@@ -108,6 +108,17 @@ export interface LanguageSyntax {
   fencedStrings?: FencedStringDelimiter[];
   /** Optional line-anchored dynamic-identifier string forms — see `HeredocDelimiter`. */
   heredocs?: HeredocDelimiter[];
+  /**
+   * Opts a profile into `classify()`'s (`./mask.ts`) JS/TS-style `/regex/`
+   * literal masking (phase 258, T2). `false`/unset by default and left
+   * unset by every built-in profile except `js-ts` and by
+   * `compileSyntax`'s custom-profile compilation (`./custom.ts`) — `/` means
+   * division, a path separator, or nothing at all in most of the other
+   * languages this scanner supports, so this stays an explicit js/ts-only
+   * opt-in rather than a default every profile inherits (see `js-ts.ts` for
+   * the one profile that sets it, and `mask.ts` for the heuristic itself).
+   */
+  regexLiterals?: boolean;
 }
 
 /**

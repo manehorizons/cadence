@@ -49,6 +49,14 @@ export const jsTsProfile: LanguageProfile = {
   syntax: {
     comments: { line: ['//'], block: [['/*', '*/']] },
     strings: [{ open: "'" }, { open: '"' }, { open: '`' }],
+    // Phase 258, T2: teaches `classify()` (`./mask.ts`) to mask `/regex/`
+    // literal content — without this, any of the three string delimiters
+    // above (`'`/`"`/`` ` ``) appearing unescaped inside an unrecognized
+    // regex literal desyncs the whole rest of the file's classification
+    // (see `mask.ts`'s `REGEX_ELIGIBLE_KEYWORDS`/`REGEX_ELIGIBLE_PUNCT` doc
+    // comment for the heuristic itself). js/ts-only: no other built-in
+    // profile sets this.
+    regexLiterals: true,
   },
   strategy: 'call-expression',
   isSkippedOpener,
