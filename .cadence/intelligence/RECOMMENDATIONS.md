@@ -1366,3 +1366,19 @@ Discovered 2026-08-07 while landing PR #380 (phase 258, unrelated regex-literal-
 - next: cadence milestone propose
 
 Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.
+
+## rec-20260807-004 — Undocumented high-severity js-yaml advisory (GHSA-5p4m-2wfm-xmqj) blocks security-success on every PR
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: critical
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: security, dependencies, ci
+- files: package.json, pnpm-lock.yaml, docs/security/audit-exceptions.md, scripts/check-lockfile-overrides.mjs, scripts/check-audit-exceptions.mjs
+- evidence: gh run view (Security workflow, PR #379, run 31140709029): 'check-audit-exceptions: FAIL GHSA-5p4m-2wfm-xmqj (js-yaml, high) -- not listed in docs/security/audit-exceptions.md'. pnpm why js-yaml confirms sole resolution path: @changesets/cli -> @manypkg/get-packages -> read-yaml-file -> js-yaml@4.3.0 (devDependencies only). GitHub Advisory GHSA-5p4m-2wfm-xmqj: js-yaml 3.0.0-3.15.0 and 4.0.0-4.3.0 affected, patched at 3.15.1/4.3.1, CVSS 7.5, CWE-407 (O(n^2) resolveYamlOmap key-uniqueness check in the default schema, no special config needed).
+- next: cadence milestone propose
+
+pnpm audit / scripts/check-audit-exceptions.mjs now fails on GHSA-5p4m-2wfm-xmqj (js-yaml, high, CVSS 7.5, O(n^2) DoS in resolveYamlOmap() for the default schema, CWE-407) -- confirmed reproducing on every branch as of 2026-08-07 (observed failing on PR #378 and PR #379, both otherwise unrelated to dependencies), since audit runs against the shared lockfile regardless of branch diff. This makes the security workflow's audit job fail, which fails security-success, which is a required branch-protection check per phase 255 -- currently blocking ALL PR merges repo-wide, not just one branch. Dependency path: js-yaml@4.3.0 is a dev-only transitive dependency of @changesets/cli (via @manypkg/get-packages -> read-yaml-file), used only to parse this repo's own trusted, repo-authored YAML (changeset/workspace config) during local/CI changeset tooling -- never shipped in any published package, never parses attacker-controlled input. Unlike prior exceptions in docs/security/audit-exceptions.md, a real patched version already exists (4.3.1) for both the 3.x and 4.x lines, so per house convention ('prefer real upgrade or re-resolution over exception', phase 254) the correct fix is very likely a pnpm.overrides entry (js-yaml >=4.3.1) added to scripts/check-lockfile-overrides.mjs's tracked set (phase 253's mechanism), not a documented exception -- low risk given the dependency is dev-only and already reachability-analyzed as unreachable regardless. Needs its own narrowly-scoped phase per house convention (one concern per phase).
