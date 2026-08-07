@@ -1669,6 +1669,13 @@
       "kind": "note",
       "summary": "Reproduced live during phase 258 settle (2026-08-07): cadence settle run --auto refused citing '258-01/AC-5 is mentioned but not inside a recognized asserting test block', while cadence verify coverage --explain AC-5 showed 'Overall: SATISFIED' for the same file/token at the same commit. Root-caused to packages/core/src/verify/coverage.ts's assertion-mode scan loop's per-file dedup (const key = [REDACTED] if (seen.has(key)) continue;) keeping only the first-encountered occurrence (a non-qualifying describe() title at line 568) over a later genuinely-qualifying it() block occurrence (line 821) in the same file. Confirmed by removing the earlier, redundant occurrence, which made settle pass immediately with no other change.",
       "createdAt": "2026-08-07T01:50:06.798Z"
+    },
+    {
+      "id": "ev-20260807-003",
+      "recommendationId": "rec-20260807-002",
+      "kind": "note",
+      "summary": "gh run view (PR #380's audit job) 2026-08-07: 'check-audit-exceptions: FAIL GHSA-5p4m-2wfm-xmqj (js-yaml, high) -- not listed in docs/security/audit-exceptions.md'. gh api repos/thomas-powers-jr/cadence/branches/main/protection --jq '.required_status_checks.contexts' returned exactly [\"ci-success\"] -- security-success/codeql-success absent.",
+      "createdAt": "2026-08-07T02:15:30.535Z"
     }
   ]
 }

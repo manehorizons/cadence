@@ -2504,6 +2504,35 @@
       "decisionIds": [],
       "createdAt": "2026-08-07T01:50:06.798Z",
       "updatedAt": "2026-08-07T01:50:06.798Z"
+    },
+    {
+      "id": "rec-20260807-002",
+      "title": "New undocumented HIGH-severity advisory (js-yaml, GHSA-5p4m-2wfm-xmqj) failing audit; security-success still not registered as a required branch-protection check",
+      "summary": "Discovered 2026-08-07 while landing PR #380 (phase 258, unrelated regex-literal-mask work -- zero dependency changes in that PR). CI's audit job (.github/workflows/security.yml, node scripts/check-audit-exceptions.mjs) failed with: 'FAIL GHSA-5p4m-2wfm-xmqj (js-yaml, high) -- not listed in docs/security/audit-exceptions.md'. This is a genuinely new/undocumented advisory, not something PR #380 introduced -- since ci-success only depends on the test job (not audit), the PR was still mergeable, but the underlying finding is real and needs the same triage phase 254 (security advisory remediation) gave the other three currently-documented exceptions (vitest/vite/postcss, expiring 2026-11-02 and 2026-08-28). Separately, confirmed via 'gh api repos/thomas-powers-jr/cadence/branches/main/protection --jq .required_status_checks.contexts' that only ['ci-success'] is registered as a required branch-protection check -- security-success and codeql-success (built in phase 255, 'fix: make security and codeql merge-blocking via aggregator checks (phase 255) (#376)') are NOT actually required, despite that phase's stated goal. This matches a carry-forward gotcha already noted in an earlier session handoff ('branch-protection registration for security-success/codeql-success (phase 255)') that was evidently never completed -- the CI-side aggregator jobs exist and correctly compute pass/fail, but the GitHub branch-protection settings were never updated to actually require them, so a red audit/CodeQL currently cannot block a merge the way phase 255 intended. Both findings need operator decision/action: (1) triage the js-yaml advisory (likely transitive -- js-yaml commonly pulled in by markdown/YAML tooling; needs the same reachability-analysis treatment as the other three documented exceptions, or a real fix/upgrade), (2) register security-success and codeql-success as required checks via 'gh api repos/thomas-powers-jr/cadence/branches/main/protection' (or the GitHub UI) to actually close the gap phase 255 was built to close.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "security"
+      ],
+      "affectedFiles": [
+        "docs/security/audit-exceptions.md",
+        ".github/workflows/security.yml"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260807-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-07T02:15:30.535Z",
+      "updatedAt": "2026-08-07T02:15:30.535Z"
     }
   ],
   "archived": [
@@ -6784,11 +6813,11 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "258-assertion-span-scanner",
-      "createdAt": "2026-08-03T03:07:40.383Z",
-      "updatedAt": "2026-08-07T01:50:30.603Z",
       "shippedRef": "phase 258, branch worktree-258-assertion-span-scanner",
       "archivedAt": "2026-08-07T01:50:30.603Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-03T03:07:40.383Z",
+      "updatedAt": "2026-08-07T01:50:30.603Z"
     }
   ]
 }
