@@ -2,7 +2,15 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@thomas-powers-jr/cadence-core",
+      "@thomas-powers-jr/cadence-types",
+      "@thomas-powers-jr/cadence-host-claude-code",
+      "@thomas-powers-jr/cadence-host-codex",
+      "@thomas-powers-jr/cadence-host-toolkit"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

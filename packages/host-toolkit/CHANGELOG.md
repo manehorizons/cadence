@@ -1,4 +1,10 @@
-# @manehorizons/cadence-host-toolkit
+# @thomas-powers-jr/cadence-host-toolkit
+
+## 1.55.0
+
+### Patch Changes
+
+- @thomas-powers-jr/cadence-types@1.55.0
 
 ## 1.54.0
 
