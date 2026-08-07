@@ -297,17 +297,17 @@ describe('renderSummaryMd - Findings section (phase 257)', () => {
       ...SAMPLE,
       codeReview: {
         'src/a.ts': [
-          finding({ severity: 'critical', message: 'found AKIAABCDEFGHIJKLMNOP leaked in code' }),
+          finding({ severity: 'critical', message: 'found AKIAABCDEFGHIJKLMNOP leaked in code' }), // gitleaks:allow — fake key, redaction fixture
         ],
       },
     };
     const md = renderSummaryMd(summary);
     expect(md).toContain('[REDACTED]');
-    expect(md).not.toContain('AKIAABCDEFGHIJKLMNOP');
+    expect(md).not.toContain('AKIAABCDEFGHIJKLMNOP'); // gitleaks:allow — fake key, redaction fixture
   });
 
   it('257-01/AC-4: redacts a GitHub-token-shaped string in a securityAudit finding message', () => {
-    const leakedToken = 'ghp_ABCDEFGHIJ1234567890abcd';
+    const leakedToken = 'ghp_ABCDEFGHIJ1234567890abcd'; // gitleaks:allow — fake token, redaction fixture
     const summary: Summary = {
       ...SAMPLE,
       securityAudit: [

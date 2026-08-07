@@ -445,7 +445,7 @@ describe('cadence summary render - Findings section (phase 257)', () => {
 
   it('257-01/AC-4: redacts an AWS-access-key-shaped string in a codeReview finding message', async () => {
     active = await tempRepo({ initialized: true });
-    const leakedKey = 'AKIAABCDEFGHIJKLMNOP';
+    const leakedKey = 'AKIAABCDEFGHIJKLMNOP'; // gitleaks:allow — fake key, redaction fixture
     await writeSummary(
       active.root,
       '77-team-rollout-kit',
