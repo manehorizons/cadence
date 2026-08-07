@@ -1366,19 +1366,3 @@ Discovered 2026-08-07 while landing PR #380 (phase 258, unrelated regex-literal-
 - next: cadence milestone propose
 
 Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.
-
-## rec-20260807-003 — vitest 2->4 major upgrade to close deferred vitest/vite/postcss audit exceptions
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: packages/core, packages/host-claude-code, packages/host-codex, packages/host-toolkit, packages/testkit, website, vitest.shared.ts
-- files: vitest.shared.ts, package.json, pnpm-lock.yaml, docs/security/audit-exceptions.md
-- evidence: docs/security/audit-exceptions.md lines 56-95 ('Deferred: vitest major-version upgrade'); dependabot PR #370/#244 CI both red; closed prior-art PR #235
-- next: cadence milestone propose
-
-Dependabot PRs #370 and #244 both bump vitest 2.1.9->3.2.6 across 6 packages/* workspaces + website, and both are CI-red (build/test failures on all 3 OSes) -- a straight major-version bump breaks vitest.shared.ts's shared worker/timeout/coverage config. docs/security/audit-exceptions.md's own 'Deferred: vitest major-version upgrade' section (written phase 254, re-verified 2026-08-04) already found 3.2.6 insufficient: the vite/postcss chain still resolves a vulnerable vite@5.4.21 at that floor. The real target is vitest ^4.1.10 (website/ already runs it successfully). Prior art PR #235 (chore/security-vitest-and-transitive-bump) attempted this exact jump but is stale (branched 2026-07-18, closed 2026-08-04 by operator) and used a since-disproven override-workaround (adding vite as a direct devDependency instead of a proper pnpm.overrides entry -- phase 253 proved the override mechanism itself works fine). Closes 3 documented audit exceptions (GHSA-5xrq-8626-4rwp vitest, GHSA-fx2h-pf6j-xcff vite, GHSA-r28c-9q8g-f849 postcss), all expiring 2026-11-02. Should close/supersede dependabot PRs #370 and #244 once landed.
