@@ -506,9 +506,9 @@ describe('CodeQL workflow — codeql-success aggregator (255-01 / AC-2)', () => 
 // *completing*, not on zero CodeQL findings (CodeQL's analyze step does not
 // fail its own job by default on alerts), while security-success's
 // secret-scan/audit dependencies genuinely fail on real conditions. Also
-// asserts the audit-exceptions.md "What blocks a merge" section states the
-// not-yet-a-required-check caveat, so a reader can't come away believing
-// either aggregator already blocks anything today.
+// asserts the audit-exceptions.md "What blocks a merge" section reflects
+// current reality: both aggregators were registered as required contexts
+// (rec-20260807-002), so the doc must say they block, not that they don't.
 describe('audit exceptions doc + CodeQL workflow — honest gate-scope note (255-01 / AC-3)', () => {
   const md = readFileSync(AUDIT_EXCEPTIONS_MD, 'utf8');
   const codeqlYml = readFileSync(CODEQL_YML, 'utf8');
@@ -521,9 +521,11 @@ describe('audit exceptions doc + CodeQL workflow — honest gate-scope note (255
     expect(md).toContain('## What blocks a merge');
   });
 
-  it('states neither aggregator is a required check yet, alongside describing what "blocks a merge" (255-01/AC-3)', () => {
+  it('states both aggregators are now required checks that genuinely block a merge (255-01/AC-3, rec-20260807-002)', () => {
     expect(md).toContain('blocks a merge');
-    expect(md).toContain('neither check below actually blocks a merge yet');
+    expect(normalizedMd).toContain(
+      'Both `security-success` and `codeql-success` now genuinely block a merge to `main`.',
+    );
   });
 
   it('states codeql-success only means the analyze job ran, not that CodeQL found nothing (255-01/AC-3)', () => {
