@@ -1321,7 +1321,7 @@ release-currency (phase 262) is scoped to comparing published vs local 'engines'
 
 ## rec-20260808-002 — Provenance cannot distinguish configured mock from fallback mock
 
-- status: candidate
+- status: converted
 - ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
