@@ -5,6 +5,10 @@ import { discoverChangedPhases, GitDiffError } from '../git/diff-strict.js';
 import { runTestCommand } from '../verify/test-runner.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
 import { SimpleStateBackend } from '../state/simple.js';
+import {
+  auditHistoricalCoverage,
+  type HistoricalCoverageAuditReport,
+} from '../verify/historical-coverage-audit.js';
 import type { CommandIO, CommandResult } from './io.js';
 
 /**
@@ -337,4 +341,73 @@ export async function runVerifyPhase(args: VerifyPhaseArgs, io: CommandIO): Prom
   }
 
   return { exitCode: driftFound || testFailed ? 1 : 0, data: payload };
+}
+
+/**
+ * `cadence verify historical-coverage-audit` (phase 261, T3) — a read-only,
+ * corpus-wide diagnostic that runs T2's `auditHistoricalCoverage`
+ * (`../verify/historical-coverage-audit.js`) against the real repo and
+ * prints its report. Unlike `verify phase`, this is not scoped to one
+ * phase or a `--changed` set: it walks every `SUMMARY.json` under
+ * `.cadence/phases/**`, classifies the pre-phase-239 (scheme-absent)
+ * ones into the four AC-coverage buckets, and aggregates. See that
+ * module's doc comments for the full classification rationale — this is
+ * a thin rendering shell over an already-tested core function, the same
+ * pure-core/impure-shell split as `runVerifyCoverage`/`runVerifyPhase`
+ * above.
+ *
+ * This is a diagnostic, not a gate: exit code is `0` on any successful
+ * run, regardless of what the report contains (matches `verify
+ * coverage`'s exit-code convention — the same reasoning applies here,
+ * since a repo with zero pre-239 records or with unreadable ones is not
+ * itself an error). A genuine failure to even run the audit (e.g.
+ * `auditHistoricalCoverage` throwing) is caught and reported via
+ * `io.err` with exit code `1` rather than crashing the CLI — CLAUDE.md's
+ * "The Throwing Observer" applies to this walk the same way it applies
+ * to the underlying introspection code, even though that code is itself
+ * built to be best-effort and should rarely throw in practice.
+ */
+export interface VerifyHistoricalCoverageAuditArgs {
+  cwd: string;
+  json?: boolean | undefined;
+}
+
+/** Pure rendering of a `HistoricalCoverageAuditReport` into the human-readable summary. */
+export function renderHistoricalCoverageAuditHuman(report: HistoricalCoverageAuditReport): string {
+  const lines: string[] = [];
+  lines.push('cadence verify historical-coverage-audit');
+  lines.push('');
+  lines.push(`phases audited: ${report.perPhase.length}`);
+  lines.push('bucket totals:');
+  lines.push(`  self-attested: ${report.bucketTotals['self-attested']}`);
+  lines.push(`  self-attested-shared: ${report.bucketTotals['self-attested-shared']}`);
+  lines.push(`  not-found-in-declared-files: ${report.bucketTotals['not-found-in-declared-files']}`);
+  lines.push(`  unreachable: ${report.bucketTotals.unreachable}`);
+  lines.push(`unreadable SUMMARY/DRAFT records: ${report.unreadableRecords.length}`);
+  lines.push('');
+  lines.push('run with --json for full per-phase detail');
+  return lines.join('\n') + '\n';
+}
+
+export async function runVerifyHistoricalCoverageAudit(
+  args: VerifyHistoricalCoverageAuditArgs,
+  io: CommandIO,
+): Promise<CommandResult> {
+  let report: HistoricalCoverageAuditReport;
+  try {
+    report = await auditHistoricalCoverage(args.cwd);
+  } catch (err) {
+    io.err(
+      `verify historical-coverage-audit failed: ${err instanceof Error ? err.message : String(err)}\n`,
+    );
+    return { exitCode: 1 };
+  }
+
+  if (args.json) {
+    io.out(JSON.stringify(report, null, 2) + '\n');
+  } else {
+    io.out(renderHistoricalCoverageAuditHuman(report));
+  }
+
+  return { exitCode: 0, data: report };
 }

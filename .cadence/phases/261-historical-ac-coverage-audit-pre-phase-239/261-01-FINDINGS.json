@@ -1,0 +1,6750 @@
+{
+  "perPhase": [
+    {
+      "phase": "02-host-codex",
+      "id": "02-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "03-local-dogfood",
+      "id": "03-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "04-host-capabilities",
+      "id": "04-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "05-status-command",
+      "id": "05-01",
+      "declaredTestFiles": [
+        "packages/core/tests/status.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "06-settle-auto",
+      "id": "06-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-auto.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "07-done-shortcut",
+      "id": "07-01",
+      "declaredTestFiles": [
+        "packages/core/tests/build/record.test.ts",
+        "packages/core/tests/cli/done.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "08-block-shortcuts",
+      "id": "08-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/block.test.ts",
+        "packages/core/tests/cli/needs-context.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "09-host-shortcut-commands",
+      "id": "09-01",
+      "declaredTestFiles": [
+        "packages/host-claude-code/tests/install-commands.test.ts",
+        "packages/host-codex/tests/install-commands.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "10-smoke-test-fixes",
+      "id": "10-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-new.test.ts",
+        "packages/core/tests/cli/needs-context.test.ts",
+        "packages/core/tests/cli/progress.test.ts",
+        "packages/core/tests/cli/settle-auto.test.ts",
+        "packages/core/tests/status.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "100-rec-shipped-status",
+      "id": "100-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "101-rec-archive-core",
+      "id": "101-01",
+      "declaredTestFiles": [
+        "packages/types/tests/intelligence.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-9",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "102-rec-auto-archive",
+      "id": "102-01",
+      "declaredTestFiles": [
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "103-rec-retention-release",
+      "id": "103-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "104-real-verification-default",
+      "id": "104-104",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/mock-placeholder-doc.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "105-start-menu-core",
+      "id": "105-01",
+      "declaredTestFiles": [
+        "packages/core/tests/start/menu.test.ts",
+        "packages/core/tests/start/render.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "106-start-shell",
+      "id": "106-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init-start-pointer.test.ts",
+        "packages/core/tests/cli/start.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-9",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-10",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-11",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-12",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-13",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "107-start-release",
+      "id": "107-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "108-zero-prompt-init",
+      "id": "108-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "109-init-demo",
+      "id": "109-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init-demo.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "11-codex-archive",
+      "id": "11-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "110-init-activate",
+      "id": "110-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init-activate.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "111-release-v1.27",
+      "id": "111-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "112-coverage-assertion-mode",
+      "id": "112-01",
+      "declaredTestFiles": [],
+      "perAc": []
+    },
+    {
+      "phase": "113-onboarding-front-door",
+      "id": "113-01",
+      "declaredTestFiles": [
+        "packages/core/tests/doctor/doctor-next.test.ts"
+      ],
+      "perAc": []
+    },
+    {
+      "phase": "114-onboarding-papercuts",
+      "id": "114-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/handoff.test.ts",
+        "packages/core/tests/handoff/resolve-now.test.ts",
+        "packages/core/tests/init/gate-profile-notice.test.ts"
+      ],
+      "perAc": []
+    },
+    {
+      "phase": "115-release-v1.28",
+      "id": "115-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "116-non-tty-gate-bypass",
+      "id": "116-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/interactivity.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "117-release-v1.29",
+      "id": "117-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "118-hardening-review",
+      "id": "118-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/spec-stage.test.ts",
+        "packages/core/tests/config-edit/fields.test.ts",
+        "packages/core/tests/gates/coverage.test.ts",
+        "packages/core/tests/git/diff.test.ts",
+        "packages/core/tests/mcp/resources.test.ts",
+        "packages/core/tests/phases/id.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "119-auto-phase-id",
+      "id": "119-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "12-rename-cadence",
+      "id": "12-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "120-loud-bypass-audit-trail",
+      "id": "120-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-anomaly.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "121-competitive-objection-faq",
+      "id": "121-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "122-codex-host-adapter-parity-tests",
+      "id": "122-01",
+      "declaredTestFiles": [
+        "packages/host-codex/tests/install-commands-parity.test.ts",
+        "packages/host-codex/tests/local-roundtrip.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "123-draft-templates",
+      "id": "123-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "124-release-integrity-github-releases-stay-in-sync",
+      "id": "124-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "129-tutorial-rebuild-catch",
+      "id": "129-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/tutorial.test.ts",
+        "packages/core/tests/tutorial/fixtures.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "13-profile-system",
+      "id": "13-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/config.test.ts",
+        "packages/core/tests/gates/engine.test.ts",
+        "packages/core/tests/status.test.ts",
+        "packages/types/tests/config.test.ts",
+        "packages/types/tests/profile.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "130",
+      "id": "130-01",
+      "declaredTestFiles": [
+        "packages/core/tests/agent-prompt/render.test.ts",
+        "packages/core/tests/cli/agent-prompt.test.ts",
+        "packages/core/tests/cli/init-agent-prompt.test.ts",
+        "packages/core/tests/quickstart/build.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "131-doctor-fix-for-safe-onboarding-repairs",
+      "id": "131-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/doctor-fix.test.ts",
+        "packages/core/tests/doctor/fix-apply.test.ts",
+        "packages/core/tests/doctor/fix-plan.test.ts",
+        "packages/core/tests/doctor/fix-wire-host.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "132-init-dry-run-fit-check",
+      "id": "132-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init-dry-run.test.ts",
+        "packages/core/tests/init/init-plan.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "133-onboarding-honesty",
+      "id": "133-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "134-progress-json",
+      "id": "134-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "135-init-demo-next-steps",
+      "id": "135-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "136-readme-approve-inline-note",
+      "id": "136-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/readme-profiles.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "137-refusal-trio",
+      "id": "137-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "138-docs-truth-pass",
+      "id": "138-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "139-default-install-enforces-what-the-tutorial-demonstrates",
+      "id": "139-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts",
+        "packages/core/tests/init/plan.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "14-test-coverage",
+      "id": "14-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-coverage.test.ts",
+        "packages/core/tests/verify/coverage.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "140-summary-gate-provenance",
+      "id": "140-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "141-sealed-gates-production-preset-makes-named-gates-non-bypassable",
+      "id": "141-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "142-extract-worktree-discovery-cross-worktree-handoff-candidates",
+      "id": "142-01",
+      "declaredTestFiles": [
+        "packages/core/tests/git/worktrees.test.ts",
+        "packages/core/tests/handoff/candidates.test.ts",
+        "packages/types/tests/handoff.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "143-cli-service-integration-picker-for-cadence-resume",
+      "id": "143-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/resume.test.ts",
+        "packages/core/tests/handoff/pick.test.ts",
+        "packages/core/tests/handoff/run-resume.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "144-docs-release-for-cross-worktree-handoff-picker-v1-38-0",
+      "id": "144-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/resume-cross-worktree-docs.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "145-settle-pending-recommendation-status",
+      "id": "145-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "146-cadence-recommend-slash-command-top-flag",
+      "id": "146-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/recommend.test.ts",
+        "packages/core/tests/intelligence/recommend.test.ts",
+        "packages/core/tests/intelligence/render-recommend.test.ts",
+        "packages/host-claude-code/tests/install-commands.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "147-upstream-self-authorship-exemption-for-phase-collision-guard",
+      "id": "147-01",
+      "declaredTestFiles": [
+        "packages/core/tests/services/scaffold-collision.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "148-settle-run-ship-ref-shortcut",
+      "id": "148-01",
+      "declaredTestFiles": [
+        "packages/core/tests/services/settle-ship-ref.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "149-milestone-close-verb",
+      "id": "149-01",
+      "declaredTestFiles": [
+        "packages/core/tests/intelligence/milestone-close.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "15-deep-verifier",
+      "id": "15-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-deep.test.ts",
+        "packages/core/tests/verify/anthropic-verifier.test.ts",
+        "packages/core/tests/verify/factory.test.ts",
+        "packages/core/tests/verify/mock-verifier.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "150-ac-ref-parser-drops-ids-after-trailing-annotation",
+      "id": "150-01",
+      "declaredTestFiles": [
+        "packages/core/tests/parse/ac-refs.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "151-structured-draft-editing-draft-add-ac-add-task-set-objective",
+      "id": "151-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-mutate.test.ts",
+        "packages/core/tests/parse/draft-mutate.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "152-release-v1-40-0",
+      "id": "152-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "153-mcp-parity-intelligence-lifecycle",
+      "id": "153-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "154-release-v1-41-0",
+      "id": "154-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "155-boundary-enforcement-block-mode",
+      "id": "155-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "156-settle-time-boundary-diff-scan",
+      "id": "156-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "157-fix-multi-line-truncation-in-spec-draft-parsers",
+      "id": "157-01",
+      "declaredTestFiles": [
+        "packages/core/tests/parse/draft-parser.test.ts",
+        "packages/core/tests/parse/draft-scaffold.test.ts",
+        "packages/core/tests/parse/spec-parser.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "158-subagent-task-redundancy-monitoring",
+      "id": "158-01",
+      "declaredTestFiles": [
+        "packages/core/tests/checks/task-redundancy.test.ts",
+        "packages/core/tests/cli/hook.test.ts",
+        "packages/core/tests/hooks/dispatcher.test.ts",
+        "packages/core/tests/hooks/handlers-redundancy.test.ts",
+        "packages/core/tests/hooks/handlers-subagent-start.test.ts",
+        "packages/core/tests/hooks/handlers-subagent-stop-safety-net.test.ts",
+        "packages/core/tests/hooks/handlers-subagent-touched-files.test.ts",
+        "packages/core/tests/parse/draft-parser.test.ts",
+        "packages/host-claude-code/tests/event-map.test.ts",
+        "packages/host-claude-code/tests/install.test.ts",
+        "packages/types/tests/anomaly.test.ts",
+        "packages/types/tests/config.test.ts",
+        "packages/types/tests/events.test.ts",
+        "packages/types/tests/host.test.ts",
+        "packages/types/tests/plan.test.ts",
+        "packages/types/tests/state.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "159-wave-based-subagent-dispatch",
+      "id": "159-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/dispatch-plan.test.ts",
+        "packages/core/tests/dispatch/packet.test.ts",
+        "packages/core/tests/dispatch/wave-planner.test.ts",
+        "packages/core/tests/parse/draft-parser.test.ts",
+        "packages/host-claude-code/tests/install-commands.test.ts",
+        "packages/types/tests/guidance.test.ts",
+        "packages/types/tests/plan.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "16-interactive-verdict",
+      "id": "16-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-interactive.test.ts",
+        "packages/core/tests/verify/interactive.test.ts",
+        "packages/core/tests/verify/prompter.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "160-release-v1-42-0",
+      "id": "160-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "161-portfolio-readiness-doc-sync",
+      "id": "161-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/portfolio-readiness-doc-sync.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "162-codex-first-run-bootstrap",
+      "id": "162-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts",
+        "packages/core/tests/cli/start.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "163-handoff-resume-hardening",
+      "id": "163-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "164-trustworthy-verifier-activation",
+      "id": "164-01",
+      "declaredTestFiles": [
+        "packages/core/tests/activate/key-discovery.test.ts",
+        "packages/core/tests/verify/verifier-factory.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "165-host-cli-headless-verifier",
+      "id": "165-01",
+      "declaredTestFiles": [
+        "packages/core/tests/activate/assess.test.ts",
+        "packages/core/tests/cli/activate.test.ts",
+        "packages/core/tests/cli/settle-auto.test.ts",
+        "packages/core/tests/gates/per-task-verify.test.ts",
+        "packages/core/tests/verify/host-cli-client.test.ts",
+        "packages/core/tests/verify/local-client.test.ts",
+        "packages/core/tests/verify/per-task.test.ts",
+        "packages/core/tests/verify/verifier-factory.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "166-language-aware-coverage-defaults",
+      "id": "166-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts",
+        "packages/core/tests/gates/coverage.test.ts",
+        "packages/core/tests/init/plan.test.ts",
+        "packages/core/tests/services/doctor.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "167-multi-language-coverage-engine",
+      "id": "167-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-9",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-10",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "168-land-test-gutting-demo-as-a-committed-example",
+      "id": "168-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/demo-example.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "169-assertion-mode-coverage-refuses-the-skip-todo-failing-dodge",
+      "id": "169-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/coverage.test.ts",
+        "packages/core/tests/verify/coverage-assertion.test.ts",
+        "packages/core/tests/verify/test-spans.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "17-anomaly-notify",
+      "id": "17-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-anomaly.test.ts",
+        "packages/core/tests/notify/collect.test.ts",
+        "packages/core/tests/notify/factory.test.ts",
+        "packages/core/tests/notify/notifier.test.ts",
+        "packages/types/tests/anomaly.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "17-anomaly-notify",
+      "id": "17-02",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/status-anomalies.test.ts",
+        "packages/core/tests/hooks/handlers-anomaly.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "17-anomaly-notify",
+      "id": "17-03",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/status-anomalies.test.ts",
+        "packages/core/tests/hooks/handlers-anomaly.test.ts",
+        "packages/core/tests/notify/collect.test.ts",
+        "packages/types/tests/anomaly.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "170-refusing-gate-provenance",
+      "id": "170-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "171-installer-settings-parse-failure-recovery",
+      "id": "171-01",
+      "declaredTestFiles": [
+        "packages/host-claude-code/tests/install.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "173-optimistic-concurrency-for-cadence-state-writes",
+      "id": "173-01",
+      "declaredTestFiles": [
+        "packages/core/tests/errors.test.ts",
+        "packages/core/tests/hooks/handlers-subagent-touched-files.test.ts",
+        "packages/core/tests/state/commit.test.ts",
+        "packages/types/tests/state.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "174-post-settle-retro-artifact",
+      "id": "174-01",
+      "declaredTestFiles": [
+        "packages/core/tests/parse/retro-writer.test.ts",
+        "packages/core/tests/services/retro.test.ts",
+        "packages/core/tests/services/settle-retro.test.ts",
+        "packages/core/tests/verify/prompter-default.test.ts",
+        "packages/types/tests/config.test.ts",
+        "packages/types/tests/retro.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "176-audit-trail-for-settle-gate-throws",
+      "id": "176-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/registry.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "177-readme-embeds-the-animated-test-gutting-demo-svg",
+      "id": "177-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "178-headless-verifier-guardrails",
+      "id": "178-01",
+      "declaredTestFiles": [
+        "packages/core/tests/verify/host-cli-client.test.ts",
+        "packages/core/tests/verify/json-repair.test.ts",
+        "packages/core/tests/verify/per-task.test.ts",
+        "packages/core/tests/verify/verifier-factory.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "179-milestone-fan-in-worktree-status",
+      "id": "179-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/milestone.test.ts",
+        "packages/core/tests/intelligence/milestone.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "18-f2-rename",
+      "id": "18-01",
+      "declaredTestFiles": [
+        "packages/host-claude-code/tests/install.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "180-redact-secrets-from-evidence-quotes-and-security-audit-findings",
+      "id": "180-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/security-audit.test.ts",
+        "packages/core/tests/intelligence/store/io.test.ts",
+        "packages/core/tests/intelligence/store/recommendations.test.ts",
+        "packages/core/tests/security/redact.test.ts",
+        "packages/core/tests/state/atomic-write.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "181-mcp-tool-trust-envelope",
+      "id": "181-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/mcp-trust.test.ts",
+        "packages/core/tests/mcp/trust/def-hash.test.ts",
+        "packages/core/tests/mcp/trust/enforce.test.ts",
+        "packages/core/tests/mcp/trust/store.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "182-ci-security-automation",
+      "id": "182-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/security-ci.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "183-docs-drift-check",
+      "id": "183-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/cli-reference.test.ts",
+        "packages/core/tests/docs/config-explain-docs.test.ts",
+        "packages/core/tests/docs/exit-codes.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "184-gate-verifier-abort-signal",
+      "id": "184-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/security-audit.test.ts",
+        "packages/core/tests/verify/host-cli-client.test.ts",
+        "packages/core/tests/verify/local-client.test.ts",
+        "packages/core/tests/verify/local-verifier.test.ts",
+        "packages/core/tests/verify/mock-verifier.test.ts",
+        "packages/core/tests/verify/security-audit.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "185-smoke-test-the-packed-npm-tarball",
+      "id": "185-01",
+      "declaredTestFiles": [
+        "packages/core/tests/scripts/publish-proof.test.ts",
+        "packages/core/tests/scripts/release-integrity.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "186-cross-phase-retro-rollup",
+      "id": "186-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/retro.test.ts",
+        "packages/core/tests/services/retro-rollup.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "187-gate-bypass-auto-complex-override",
+      "id": "187-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-anomaly.test.ts",
+        "packages/core/tests/notify/collect.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "188-cadence-quickstart",
+      "id": "188-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init-full.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "189-cadence-onboard",
+      "id": "189-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init-contributing.test.ts",
+        "packages/core/tests/cli/onboard.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "19-f4-webhook",
+      "id": "19-01",
+      "declaredTestFiles": [
+        "packages/core/tests/notify/webhook.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "190-doctor-fix-handoff-retention",
+      "id": "190-01",
+      "declaredTestFiles": [
+        "packages/core/tests/doctor/fix-apply.test.ts",
+        "packages/core/tests/doctor/fix-plan.test.ts",
+        "packages/core/tests/doctor/handoff-retention.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "191",
+      "id": "191-00",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/plan-review.test.ts",
+        "packages/core/tests/verify/code-review.test.ts",
+        "packages/core/tests/verify/host-cli-verifier.test.ts",
+        "packages/core/tests/verify/security-audit.test.ts",
+        "packages/core/tests/verify/spec-review.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "192-dispatch-action-boilerplate",
+      "id": "192-01",
+      "declaredTestFiles": [
+        "packages/core/tests/dispatch/packet.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "193-dispatch-isolation-recommendation",
+      "id": "193-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/dispatch-plan.test.ts",
+        "packages/core/tests/dispatch/packet.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "194-settle-telemetry-revision-conflict",
+      "id": "194-01",
+      "declaredTestFiles": [
+        "packages/core/tests/state/commit.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "195-settle-refuses-bare-tn-done-with-no-verify-evidence",
+      "id": "195-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/task-verify-required.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "196-worktree-safe-state-tracking-issue-177",
+      "id": "196-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/doctor.test.ts",
+        "packages/core/tests/doctor/fix.test.ts",
+        "packages/core/tests/doctor/run.test.ts",
+        "packages/core/tests/init/gitignore.test.ts",
+        "packages/core/tests/services/settle.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "197-bootstrap-missing-state-json-in-an-already-scaffolded-cadence-dir-fresh-worktrees-dead-end-since-phase-196",
+      "id": "197-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/onboard.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "198-bound-filter-regex-complexity-to-prevent-redos",
+      "id": "198-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "199-recommendation-evidence-add-cli-writer",
+      "id": "199-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/recommendation.test.ts",
+        "packages/core/tests/intelligence/store/recommendations.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "20-f5-f6-cleanup",
+      "id": "20-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "200-fix-recommendation-id-collision-with-archived-ids",
+      "id": "200-01",
+      "declaredTestFiles": [
+        "packages/core/tests/intelligence/store/ids.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "201-milestone-premortem-cli-writer-for-operator-authored-fields",
+      "id": "201-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/milestone.test.ts",
+        "packages/core/tests/intelligence/milestone.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "202-team-rollout-kit",
+      "id": "202-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/summary-render.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "203-milestone-reopen-transition",
+      "id": "203-01",
+      "declaredTestFiles": [
+        "packages/core/tests/services/milestone-propose.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "204-cadence-init-ci-ci-gate-re-verification-for-consumer-repos",
+      "id": "204-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init-ci.test.ts",
+        "packages/core/tests/cli/verify-phase.test.ts",
+        "packages/core/tests/git/diff-strict.test.ts",
+        "packages/core/tests/init/ci-workflow.test.ts",
+        "packages/core/tests/init/init-plan.test.ts",
+        "packages/core/tests/verify/phase-replay.test.ts",
+        "packages/core/tests/verify/test-runner.test.ts",
+        "packages/testkit/tests/git.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "205-ui-spec-gate",
+      "id": "205-01",
+      "declaredTestFiles": [
+        "packages/core/tests/notify/emit-unconverged.test.ts",
+        "packages/core/tests/parse/draft-scaffold.test.ts",
+        "packages/core/tests/parse/ui-spec-parser.test.ts",
+        "packages/core/tests/services/draft-new.test.ts",
+        "packages/core/tests/services/spec-approve.test.ts",
+        "packages/core/tests/services/spec-new.test.ts",
+        "packages/core/tests/verify/ui-spec-review-factory.test.ts",
+        "packages/core/tests/verify/ui-spec-review.test.ts",
+        "packages/types/tests/anomaly.test.ts",
+        "packages/types/tests/config.test.ts",
+        "packages/types/tests/ui-spec.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-9",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "206-cadence-next",
+      "id": "206-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/next.test.ts",
+        "packages/core/tests/progress.test.ts",
+        "packages/core/tests/quickstart.test.ts",
+        "packages/host-claude-code/tests/docs-command-count.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "207-empty-states-name-precondition-and-command",
+      "id": "207-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/recommend.test.ts",
+        "packages/core/tests/cli/recommendation.test.ts",
+        "packages/core/tests/intelligence/nearest-candidate.test.ts",
+        "packages/core/tests/intelligence/render-recommend.test.ts",
+        "packages/core/tests/parse/render-retro-rollup.test.ts",
+        "packages/core/tests/services/milestone-propose.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "208-doctor-check-guidance-for-concurrent-session-collision-safety",
+      "id": "208-01",
+      "declaredTestFiles": [
+        "packages/core/tests/doctor/phase-freshness.test.ts",
+        "packages/core/tests/phases/liveness.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "209-anthropic-fallback-warning-claude-code-distinction",
+      "id": "209-01",
+      "declaredTestFiles": [
+        "packages/core/tests/config-explain/warnings.test.ts",
+        "packages/core/tests/verify/verifier-factory.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "21-auto-complex-cap",
+      "id": "21-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-approve.test.ts",
+        "packages/core/tests/cli/settle.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "210-anthropic-docs-callout-claude-code-vs-api-key",
+      "id": "210-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "211-claudecode-aware-provider-messaging",
+      "id": "211-01",
+      "declaredTestFiles": [
+        "packages/core/tests/activate/assess.test.ts",
+        "packages/core/tests/activate/render.test.ts",
+        "packages/core/tests/cli/activate.test.ts",
+        "packages/core/tests/doctor/verification-readiness.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "212-retro-scoring-feedback",
+      "id": "212-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/retro.test.ts",
+        "packages/core/tests/intelligence/recommend.test.ts",
+        "packages/core/tests/services/retro-feedback.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "213-coverage-thresholds-ci",
+      "id": "213-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "214-evidence-floor-gate",
+      "id": "214-01",
+      "declaredTestFiles": [
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "215-p0-escape-retro-ledger-diff",
+      "id": "215-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/audit-ledger-diff.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "216-settle-capability-gate",
+      "id": "216-01",
+      "declaredTestFiles": [
+        "packages/core/tests/mcp/tools-capability-class.test.ts",
+        "packages/core/tests/mcp/trust/enforce.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "217-changelog-currency-gate",
+      "id": "217-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/doc-sync-hook.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "218-release-verify-retry-budget",
+      "id": "218-01",
+      "declaredTestFiles": [
+        "packages/core/tests/scripts/release-integrity.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "219-recommendation-id-cross-check",
+      "id": "219-01",
+      "declaredTestFiles": [
+        "packages/core/tests/intelligence/store/ids.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "22-v030-release",
+      "id": "22-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "220-praxis-ledger-unify",
+      "id": "220-01",
+      "declaredTestFiles": [
+        "packages/core/tests/intelligence/store/ids.test.ts",
+        "packages/core/tests/intelligence/store/io.test.ts",
+        "packages/core/tests/intelligence/store/ledger.test.ts",
+        "packages/core/tests/intelligence/store/milestones.test.ts",
+        "packages/core/tests/intelligence/store/recommendations.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "221-mcp-cli-parity",
+      "id": "221-01",
+      "declaredTestFiles": [
+        "packages/core/tests/mcp/mcp-server.test.ts",
+        "packages/core/tests/services/milestone-propose.test.ts",
+        "packages/core/tests/services/recommendation-promote.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "222-shared-adapter-toolkit",
+      "id": "222-01",
+      "declaredTestFiles": [
+        "packages/host-toolkit/tests/install-merge.test.ts",
+        "packages/host-toolkit/tests/locate-self.test.ts",
+        "packages/host-toolkit/tests/routing.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "223-summary-hash-attestation",
+      "id": "223-01",
+      "declaredTestFiles": [
+        "packages/types/tests/summary.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "224-ledger-remote-collision-doctor",
+      "id": "224-01",
+      "declaredTestFiles": [
+        "packages/core/tests/doctor/ledger-remote-collision.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "225-convergent-review-runner",
+      "id": "225-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/code-review.test.ts",
+        "packages/core/tests/gates/plan-review.test.ts",
+        "packages/core/tests/services/spec-approve.test.ts",
+        "packages/core/tests/verify/converge.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "226-centralize-gate-bypass-seal-policy",
+      "id": "226-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/gates-sealed-doc-sync.test.ts",
+        "packages/core/tests/gates/registry.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "227-bootstrap-missing-state-json-in-fresh-worktrees",
+      "id": "227-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts",
+        "packages/core/tests/state/simple.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "228-split-settleservice-into-named-step-functions",
+      "id": "228-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "229-readme-mermaid-diagram-doc-test",
+      "id": "229-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/readme-architecture-diagram.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "23-coherence-warn",
+      "id": "23-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "23-draft-read-gate",
+      "id": "23-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-approve.test.ts",
+        "packages/core/tests/cli/draft-read-gate.test.ts",
+        "packages/types/tests/state.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "23-loop-violation",
+      "id": "23-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "23-skill-audit",
+      "id": "23-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "230-python-coverage-opener-misses-return-type-annotations",
+      "id": "230-01",
+      "declaredTestFiles": [
+        "packages/core/tests/verify/coverage-profiles-python.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "232-gate-provenance-verifier-identity",
+      "id": "232-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/registry.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "233-per-settle-assurance-record",
+      "id": "233-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "234-kernel-verifier-consumer-boundary",
+      "id": "234-01",
+      "declaredTestFiles": [
+        "packages/core/tests/contracts/contract.test.ts",
+        "packages/core/tests/gates/boundary-regression.test.ts",
+        "packages/core/tests/gates/registry.test.ts",
+        "packages/core/tests/lint/boundary-rule.test.ts",
+        "packages/core/tests/spec/spec-approve-ports.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "235-criteria-anchored-review-input",
+      "id": "235-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/criteria-anchoring-docs.test.ts",
+        "packages/core/tests/gates/code-review-criteria-gap.test.ts",
+        "packages/core/tests/gates/code-review-criteria-input.test.ts",
+        "packages/core/tests/verify/anchor.test.ts",
+        "packages/core/tests/verify/criteria-anchor-corpus.test.ts",
+        "packages/types/tests/anchor.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "236-finding-identity-disposition-ledger-routing",
+      "id": "236-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/code-review-criteria-gap.test.ts",
+        "packages/core/tests/verify/finding-identity.test.ts",
+        "packages/types/tests/anchor.test.ts",
+        "packages/types/tests/intelligence.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "238-drop-node20-support",
+      "id": "238-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/node-guard.test.ts",
+        "packages/core/tests/cli/settle-code-review.test.ts",
+        "packages/core/tests/cli/settle-codereview-convergence.test.ts",
+        "packages/core/tests/doctor/handoff-retention.test.ts",
+        "packages/core/tests/doctor/host-checks.test.ts",
+        "packages/core/tests/doctor/ledger-remote-collision.test.ts",
+        "packages/core/tests/doctor/phase-freshness.test.ts",
+        "packages/core/tests/doctor/run.test.ts",
+        "packages/core/tests/doctor/worktree-phases.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "24-code-review",
+      "id": "24-03",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-code-review.test.ts",
+        "packages/core/tests/verify/code-review.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "24-manual-approve",
+      "id": "24-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-approve-gate.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "24-per-task-verify",
+      "id": "24-02",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/build-per-task.test.ts",
+        "packages/core/tests/verify/per-task.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "240-doctor-multi-seam-readiness",
+      "id": "240-01",
+      "declaredTestFiles": [
+        "packages/core/tests/activate/assess.test.ts",
+        "packages/core/tests/doctor/verification-readiness.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "241-anchor-ladder-reachability",
+      "id": "241-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-code-review-anchor-e2e.test.ts",
+        "packages/core/tests/docs/concepts-anchor-tier.test.ts",
+        "packages/core/tests/docs/criteria-anchoring-docs.test.ts",
+        "packages/core/tests/gates/registry-provenance-snapshot.test.ts",
+        "packages/core/tests/verify/criteria-anchor-corpus.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "242-findings-to-ledger-auto-routing",
+      "id": "242-01",
+      "declaredTestFiles": [
+        "packages/core/tests/intelligence/finding-routing.test.ts",
+        "packages/core/tests/intelligence/store/recommendations.test.ts",
+        "packages/core/tests/services/settle.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "244-settle-time-guard-for-global-cli-shadowing-branch-build",
+      "id": "244-01",
+      "declaredTestFiles": [
+        "packages/core/tests/services/settle-binary-guard.test.ts",
+        "packages/core/tests/services/settle-foreign-binary-wiring.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "245-finding-identity-stability",
+      "id": "245-01",
+      "declaredTestFiles": [
+        "packages/core/tests/intelligence/finding-routing.test.ts",
+        "packages/core/tests/verify/criteria-anchor-corpus.test.ts",
+        "packages/core/tests/verify/finding-identity.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "25-plan-review",
+      "id": "25-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-plan-review.test.ts",
+        "packages/core/tests/verify/plan-review.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "25-security-audit",
+      "id": "25-02",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-security-audit.test.ts",
+        "packages/core/tests/verify/security-audit.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "26-anomalies-tail",
+      "id": "26-03",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/status-anomalies-tail.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "26-claude-md",
+      "id": "26-02",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init-claude-md.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "26-init-ux",
+      "id": "26-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "27-ci",
+      "id": "27-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "28-release",
+      "id": "28-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "29-expensive-gate",
+      "id": "29-02",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "29-f2-testglobs",
+      "id": "29-04",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "29-gate-remediation",
+      "id": "29-07",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-plan-review.test.ts",
+        "packages/core/tests/verify/anthropic-verifier.test.ts",
+        "packages/core/tests/verify/local-client.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "29-shakedown",
+      "id": "29-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "29-shakedown-docs",
+      "id": "29-06",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts",
+        "packages/core/tests/docs/readme-shakedown.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "29-testinfra-timeout",
+      "id": "29-05",
+      "declaredTestFiles": [
+        "packages/core/tests/hooks/dispatcher.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "29-tty",
+      "id": "29-03",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "29-tty-remediation",
+      "id": "29-08",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/build-task-validation.test.ts",
+        "packages/core/tests/cli/draft-approve.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "30-local-provider",
+      "id": "30-01",
+      "declaredTestFiles": [
+        "packages/core/tests/verify/local-client.test.ts",
+        "packages/core/tests/verify/local-factories.test.ts",
+        "packages/core/tests/verify/local-gates.test.ts",
+        "packages/core/tests/verify/local-verifier.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "30-testinfra-build-per-task",
+      "id": "30-02",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/build-per-task.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "31-user-docs",
+      "id": "31-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/cli-reference.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "32-lint-register",
+      "id": "32-02",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "32-testinfra-flake",
+      "id": "32-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/build-per-task.test.ts",
+        "packages/core/tests/hooks/dispatcher.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "33-publish-pipeline",
+      "id": "33-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "34-required-skills",
+      "id": "34-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-skill-audit.test.ts",
+        "packages/core/tests/parse/draft-parser-required-skills.test.ts",
+        "packages/core/tests/verify/skill-match.test.ts",
+        "packages/types/tests/config.test.ts",
+        "packages/types/tests/plan.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "35-review-convergence",
+      "id": "35-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-approve-convergence.test.ts",
+        "packages/core/tests/verify/converge.test.ts",
+        "packages/types/tests/anomaly.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "36-spec-stage",
+      "id": "36-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/spec-stage.test.ts",
+        "packages/core/tests/parse/spec-parser.test.ts",
+        "packages/types/tests/anomaly.test.ts",
+        "packages/types/tests/config.test.ts",
+        "packages/types/tests/plan.test.ts",
+        "packages/types/tests/state.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "37-codereview-convergence",
+      "id": "37-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-codereview-convergence.test.ts",
+        "packages/types/tests/anomaly.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "38-spec-draft-autoseed",
+      "id": "38-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/draft-new-seed.test.ts",
+        "packages/core/tests/parse/draft-scaffold.test.ts",
+        "packages/core/tests/parse/spec-parser.test.ts",
+        "packages/types/tests/spec.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "45-public-release",
+      "id": "45-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "46-handoff-resume",
+      "id": "46-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/handoff.test.ts",
+        "packages/core/tests/cli/resume.test.ts",
+        "packages/core/tests/handoff/git-facts.test.ts",
+        "packages/core/tests/handoff/locate.test.ts",
+        "packages/core/tests/handoff/render-session.test.ts",
+        "packages/core/tests/handoff/run-handoff.test.ts",
+        "packages/core/tests/handoff/run-resume.test.ts",
+        "packages/host-claude-code/tests/install-commands.test.ts",
+        "packages/types/tests/handoff.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-9",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-10",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-11",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-12",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-13",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-14",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-15",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-16",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-17",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-18",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-19",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-20",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-21",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-22",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-23",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-24",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-25",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-26",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-27",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "47-boundary-path-fix",
+      "id": "47-01",
+      "declaredTestFiles": [
+        "packages/core/tests/checks/boundary.test.ts",
+        "packages/core/tests/notify/collect.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "48-onboarding-hardening",
+      "id": "48-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/node-guard.test.ts",
+        "packages/core/tests/cli/settle-mock-banner.test.ts",
+        "packages/core/tests/docs/readme-profiles.test.ts",
+        "packages/core/tests/errors.test.ts",
+        "packages/core/tests/state/simple.test.ts",
+        "packages/core/tests/verify/effective-provider.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "49-cross-platform-ci",
+      "id": "49-01",
+      "declaredTestFiles": [
+        "packages/core/tests/docs/ci-matrix.test.ts",
+        "packages/core/tests/state/atomic-write.test.ts",
+        "packages/testkit/tests/fixture.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "50-windows-ci-leg",
+      "id": "50-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-security-audit.test.ts",
+        "packages/core/tests/docs/ci-matrix.test.ts",
+        "packages/testkit/tests/fixture.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "51-docs-portal",
+      "id": "51-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "52-preset-flag-rename",
+      "id": "52-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "53-cadence-scout",
+      "id": "53-01",
+      "declaredTestFiles": [
+        "packages/host-claude-code/tests/install-commands.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "54-intelligence-store-split",
+      "id": "54-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "55-intelligence-store-deep-imports",
+      "id": "55-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "56-cadence-doctor",
+      "id": "56-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/doctor.test.ts",
+        "packages/core/tests/doctor/host-checks.test.ts",
+        "packages/core/tests/doctor/run.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "57-rec-promote",
+      "id": "57-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/recommendation-promote.test.ts",
+        "packages/core/tests/intelligence/recommendation-promote.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "58-mcp-server",
+      "id": "58-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "59-brief-resume",
+      "id": "59-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/resume.test.ts",
+        "packages/core/tests/handoff/brief.test.ts",
+        "packages/core/tests/handoff/run-resume.test.ts",
+        "packages/types/tests/handoff.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-21",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-22",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-23",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-27",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-28",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-29",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-32",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-33",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "60-host-adapter-contract",
+      "id": "60-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "61-scout-session-grouping",
+      "id": "61-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "62-first-run-nudge",
+      "id": "62-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/init.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "63-cadence-tutorial",
+      "id": "63-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/tutorial.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "64-explain",
+      "id": "64-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/explain.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "65-codex-spike",
+      "id": "65-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "66-codex-adapter",
+      "id": "66-01",
+      "declaredTestFiles": [
+        "packages/host-codex/tests/adapter-conformance.test.ts",
+        "packages/host-codex/tests/event-map.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "67-codex-install",
+      "id": "67-01",
+      "declaredTestFiles": [
+        "packages/host-codex/tests/cli.test.ts",
+        "packages/host-codex/tests/install-commands.test.ts",
+        "packages/host-codex/tests/install.test.ts",
+        "packages/host-codex/tests/locate-self.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "68-codex-shim",
+      "id": "68-01",
+      "declaredTestFiles": [
+        "packages/host-codex/tests/shim-integration.test.ts",
+        "packages/host-codex/tests/shim.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "69-codex-docs",
+      "id": "69-01",
+      "declaredTestFiles": [
+        "packages/host-codex/tests/docs-published.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "70-deep-verify-diff",
+      "id": "70-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/deep-verify.test.ts",
+        "packages/core/tests/verify/cap-diff.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": []
+    },
+    {
+      "phase": "71-banner-honesty-docs",
+      "id": "71-01",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/settle-mock-banner.test.ts"
+      ],
+      "perAc": []
+    },
+    {
+      "phase": "72-provider-hardening",
+      "id": "72-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "73-verifier-selection",
+      "id": "73-01",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "75-mcp-resources",
+      "id": "75-01",
+      "declaredTestFiles": [
+        "packages/core/tests/mcp/resources.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "76-mcp-tool-parity",
+      "id": "76-01",
+      "declaredTestFiles": [
+        "packages/core/tests/mcp/tool-parity.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "77-mcp-prompts",
+      "id": "77-01",
+      "declaredTestFiles": [
+        "packages/host-claude-code/tests/install-commands-parity.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "78-mcp-install",
+      "id": "78-01",
+      "declaredTestFiles": [
+        "packages/core/tests/mcp/install.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "80-logger-foundation",
+      "id": "80-01",
+      "declaredTestFiles": [
+        "packages/core/tests/logging/format.test.ts",
+        "packages/core/tests/logging/logger.test.ts",
+        "packages/core/tests/logging/resolve.test.ts",
+        "packages/types/tests/config.test.ts",
+        "packages/types/tests/logging.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "81-seam-instrumentation",
+      "id": "81-01",
+      "declaredTestFiles": [
+        "packages/core/tests/gates/registry-logging.test.ts",
+        "packages/core/tests/hooks/dispatcher-logging.test.ts",
+        "packages/core/tests/logging/logger.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "self-attested"
+        }
+      ]
+    },
+    {
+      "phase": "83-phase-collision-guard",
+      "id": "83-01",
+      "declaredTestFiles": [
+        "packages/core/tests/phases/collision.test.ts",
+        "packages/core/tests/phases/occupancy.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "85-doctor-worktree-line",
+      "id": "85-85",
+      "declaredTestFiles": [
+        "packages/core/tests/doctor/worktree-phases.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "86-proactive-next-free",
+      "id": "86-86",
+      "declaredTestFiles": [
+        "packages/core/tests/progress/next-free.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "87-release-v1.19.0",
+      "id": "87-87",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "88-handoff-retention-core",
+      "id": "88-88",
+      "declaredTestFiles": [
+        "packages/core/tests/handoff/retention.test.ts",
+        "packages/core/tests/handoff/run-handoff.test.ts",
+        "packages/core/tests/services/handoff.test.ts",
+        "packages/types/tests/config.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "89-doctor-handoff-retention",
+      "id": "89-89",
+      "declaredTestFiles": [
+        "packages/core/tests/doctor/handoff-retention.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "self-attested-shared"
+        }
+      ]
+    },
+    {
+      "phase": "90-release-v1.20.0",
+      "id": "90-90",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "91-config-explain-core",
+      "id": "91-91",
+      "declaredTestFiles": [
+        "packages/core/tests/config-explain/build.test.ts",
+        "packages/core/tests/config-explain/render.test.ts",
+        "packages/core/tests/config-explain/warnings.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "92-config-explain-cli",
+      "id": "92-92",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/config-explain.test.ts",
+        "packages/core/tests/config-explain/gather.test.ts",
+        "packages/core/tests/doctor/host-hooks.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "93-explain-deepening",
+      "id": "93-93",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/explain.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "94-config-edit-core",
+      "id": "94-94",
+      "declaredTestFiles": [
+        "packages/core/tests/config-edit/apply.test.ts",
+        "packages/core/tests/config-edit/fields.test.ts",
+        "packages/core/tests/config-edit/parse.test.ts",
+        "packages/core/tests/config-edit/render.test.ts",
+        "packages/core/tests/config-edit/wizard.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-8",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "95-config-edit-cli",
+      "id": "95-95",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/config-edit.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "96-quickstart",
+      "id": "96-96",
+      "declaredTestFiles": [
+        "packages/core/tests/cli/quickstart.test.ts",
+        "packages/core/tests/quickstart/build.test.ts",
+        "packages/core/tests/quickstart/render.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-7",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "97-release-v1.21",
+      "id": "97-97",
+      "declaredTestFiles": [],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "unreachable"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "unreachable"
+        }
+      ]
+    },
+    {
+      "phase": "98-activate",
+      "id": "98-98",
+      "declaredTestFiles": [
+        "packages/core/tests/activate/assess.test.ts",
+        "packages/core/tests/activate/ping.test.ts",
+        "packages/core/tests/activate/plan.test.ts",
+        "packages/core/tests/activate/render.test.ts",
+        "packages/core/tests/cli/activate.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "self-attested"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-6",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    },
+    {
+      "phase": "99-activate-doctor",
+      "id": "99-99",
+      "declaredTestFiles": [
+        "packages/core/tests/activate/wiring.test.ts",
+        "packages/core/tests/doctor/verification-readiness.test.ts"
+      ],
+      "perAc": [
+        {
+          "id": "AC-1",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-2",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-3",
+          "bucket": "self-attested-shared"
+        },
+        {
+          "id": "AC-4",
+          "bucket": "not-found-in-declared-files"
+        },
+        {
+          "id": "AC-5",
+          "bucket": "not-found-in-declared-files"
+        }
+      ]
+    }
+  ],
+  "bucketTotals": {
+    "self-attested": 150,
+    "self-attested-shared": 319,
+    "not-found-in-declared-files": 351,
+    "unreachable": 257
+  },
+  "unreadableRecords": [
+    {
+      "phase": "39-code-review-gate",
+      "id": "39-01",
+      "summaryPath": ".cadence/phases/39-code-review-gate/39-01-SUMMARY.json",
+      "reason": ".cadence/phases/39-code-review-gate/39-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "39-draft-build-gates",
+      "id": "39-01",
+      "summaryPath": ".cadence/phases/39-draft-build-gates/39-01-SUMMARY.json",
+      "reason": ".cadence/phases/39-draft-build-gates/39-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "39-enum-gate-coverage",
+      "id": "39-01",
+      "summaryPath": ".cadence/phases/39-enum-gate-coverage/39-01-SUMMARY.json",
+      "reason": ".cadence/phases/39-enum-gate-coverage/39-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "39-gate-contract",
+      "id": "39-01",
+      "summaryPath": ".cadence/phases/39-gate-contract/39-01-SUMMARY.json",
+      "reason": ".cadence/phases/39-gate-contract/39-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "39-interactive-gate",
+      "id": "39-01",
+      "summaryPath": ".cadence/phases/39-interactive-gate/39-01-SUMMARY.json",
+      "reason": ".cadence/phases/39-interactive-gate/39-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "39-security-audit-gate",
+      "id": "39-01",
+      "summaryPath": ".cadence/phases/39-security-audit-gate/39-01-SUMMARY.json",
+      "reason": ".cadence/phases/39-security-audit-gate/39-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "39-skill-audit-check",
+      "id": "39-01",
+      "summaryPath": ".cadence/phases/39-skill-audit-check/39-01-SUMMARY.json",
+      "reason": ".cadence/phases/39-skill-audit-check/39-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "40-verifier-factory",
+      "id": "40-01",
+      "summaryPath": ".cadence/phases/40-verifier-factory/40-01-SUMMARY.json",
+      "reason": ".cadence/phases/40-verifier-factory/40-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "41-backend-commit",
+      "id": "41-01",
+      "summaryPath": ".cadence/phases/41-backend-commit/41-01-SUMMARY.json",
+      "reason": ".cadence/phases/41-backend-commit/41-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "42-emit-unconverged",
+      "id": "42-01",
+      "summaryPath": ".cadence/phases/42-emit-unconverged/42-01-SUMMARY.json",
+      "reason": ".cadence/phases/42-emit-unconverged/42-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "43-boundary-check",
+      "id": "43-01",
+      "summaryPath": ".cadence/phases/43-boundary-check/43-01-SUMMARY.json",
+      "reason": ".cadence/phases/43-boundary-check/43-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    },
+    {
+      "phase": "44-gate-registry",
+      "id": "44-01",
+      "summaryPath": ".cadence/phases/44-gate-registry/44-01-SUMMARY.json",
+      "reason": ".cadence/phases/44-gate-registry/44-01-DRAFT.md could not be parsed as a DRAFT: [\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"PENDING\",\n      \"APPROVED\",\n      \"IN_PROGRESS\",\n      \"SETTLED\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"PENDING\\\"|\\\"APPROVED\\\"|\\\"IN_PROGRESS\\\"|\\\"SETTLED\\\"\"\n  }\n]"
+    }
+  ]
+}

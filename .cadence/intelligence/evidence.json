@@ -1718,6 +1718,27 @@
       "kind": "note",
       "summary": "Closing during v1.55.0 release-cut doc-sync pass, 2026-08-07: re-confirmed moot. Latest main Security audit run (18:18:19Z, post-phase-260) reports 'check-audit-exceptions: no high/critical advisories reported' -- none of this rec's 3 GHSA ids present, consistent with the phase-254 evidence note already on this rec. Archiving as resolved-as-side-effect (phase 253's override-floor refresh), not shipped, since no phase directly targeted these 3 advisories by name.",
       "createdAt": "2026-08-07T19:51:05.687Z"
+    },
+    {
+      "id": "ev-20260807-010",
+      "recommendationId": "rec-20260729-006",
+      "kind": "note",
+      "summary": "Correction (2026-08-07, phase 261 prep): the claim that this audit needs rec-20260729-004's fix landed first is stale. Phase 239 (PR #338, merged 2026-07-30) already shipped an opt-in phase-qualified token scheme; this repo's own .cadence/config.json already runs it, and cadence verify phase already trusts the 18 post-239 SUMMARY records correctly. The real gap: 255/273 settled SUMMARY records (93%) predate any recorded coverageScheme and phase-replay.ts deliberately returns indeterminate for all of them. Reachable population check: all 255 have DRAFTs with non-empty per-task files: lines (spot-checked phase 02), so a best-effort retroactive audit against those declared task files is fully viable. This is phase 261's actual scope.",
+      "createdAt": "2026-08-07T23:03:50.584Z"
+    },
+    {
+      "id": "ev-20260807-011",
+      "recommendationId": "rec-20260807-005",
+      "kind": "note",
+      "summary": "Confirmed live 2026-08-07 during phase 261 prep: config.ts:227,252,577 all default coverageScheme to 'bare'; only this repo's own .cadence/config.json overrides to phase-qualified.",
+      "createdAt": "2026-08-07T23:04:07.612Z"
+    },
+    {
+      "id": "ev-20260808-001",
+      "recommendationId": "rec-20260730-002",
+      "kind": "note",
+      "summary": "Empirically confirmed hitting this during phase 261 settle (2026-08-07): a literal, qualified 261-01/AC-5 token in a JSDoc comment (non-asserting) at the top of packages/core/tests/cli/verify-historical-coverage-audit.test.ts caused 'cadence settle run --auto' to refuse AC-5 with 'mentioned but not inside a recognized asserting test block', even though 4 real asserting it() blocks later in the same file genuinely reference 261-01/AC-5. Fix was removing the literal qualified token from the comment entirely (paraphrasing without the exact string) -- confirming the bug is real and not just theoretical. Additionally found a related, arguably separate defect: 'cadence verify coverage --explain AC-5' reported 'Overall: SATISFIED' for this exact file/AC combination while the real settle gate still refused it -- the diagnostic tool the gate's own refusal message tells operators to run to debug this class of failure gives a false-positive answer, which cost real debugging time. Worth scoping into this rec or filing as a follow-on.",
+      "createdAt": "2026-08-08T04:04:01.532Z"
     }
   ]
 }

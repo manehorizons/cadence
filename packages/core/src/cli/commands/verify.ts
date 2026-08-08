@@ -1,5 +1,9 @@
 import type { Command } from 'commander';
-import { runVerifyCoverage, runVerifyPhase } from '../../services/verify.js';
+import {
+  runVerifyCoverage,
+  runVerifyPhase,
+  runVerifyHistoricalCoverageAudit,
+} from '../../services/verify.js';
 import { processIO } from '../../services/io.js';
 
 export function registerVerifyCommand(program: Command): void {
@@ -50,4 +54,18 @@ export function registerVerifyCommand(program: Command): void {
         process.exitCode = res.exitCode;
       },
     );
+
+  cmd
+    .command('historical-coverage-audit')
+    .description(
+      "Corpus-wide, read-only audit of pre-phase-239 SUMMARY.json records' AC coverage attributability",
+    )
+    .option('--json', 'emit machine-readable JSON instead of a human-readable report')
+    .action(async (opts: { json?: boolean }) => {
+      const res = await runVerifyHistoricalCoverageAudit(
+        { cwd: process.cwd(), ...(opts.json !== undefined ? { json: opts.json } : {}) },
+        processIO(),
+      );
+      process.exitCode = res.exitCode;
+    });
 }

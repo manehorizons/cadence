@@ -2251,6 +2251,7 @@ Read-only verification diagnostics
 |---|---|
 | `coverage --explain <acId>` | Explain why an AC does or does not satisfy coverage (read-only, no state mutation) |
 | `phase [phase] [num]` | Re-derive whether a settled phase's AC coverage still holds against the current working tree (read-only, no active loop state required) |
+| `historical-coverage-audit` | Corpus-wide, read-only audit of pre-phase-239 `SUMMARY.json` records' AC coverage attributability |
 
 **`coverage` options**
 
@@ -2398,6 +2399,41 @@ refusal cannot fire for a `phase-qualified` SUMMARY (that scheme is never
 file-scoped, so there is nothing to refuse over) or for a pre-scheme SUMMARY
 (the indeterminate branch above returns before the scoping guard is ever
 reached) — it is reachable only on the bare path.
+
+**`historical-coverage-audit` options**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit machine-readable JSON instead of a human-readable report |
+
+**Behavior** (phase 261, T3) — a read-only, corpus-wide companion to `verify
+phase`'s per-phase `indeterminate` verdict (rec-20260729-006). Where `verify
+phase` reports a single pre-Phase-239 (scheme-absent) `SUMMARY.json` as simply
+"not verified", this command walks every `SUMMARY.json` under
+`.cadence/phases/**`, filters to the scheme-absent ones, and classifies each
+of their recorded ACs into one of four mutually exclusive buckets —
+`self-attested`, `self-attested-shared`, `not-found-in-declared-files`,
+`unreachable` — answering how much of that historical, pre-scheme "PASS" is
+actually backed by attributable test evidence. It never touches
+`replayPhaseCoverage` or the `verify phase` command path; it is built
+entirely on `auditHistoricalCoverage`
+(`packages/core/src/verify/historical-coverage-audit.ts`), whose doc comments
+carry the full classification rationale, the four buckets' exact meanings,
+and the deliberate scope limits (no repo-wide token scan, no wildcard-glob
+resolution) — this reference intentionally does not repeat that design
+narrative. `--json` emits the full `HistoricalCoverageAuditReport` on stdout
+(`{ perPhase, bucketTotals, unreadableRecords }`, one `perPhase` entry per
+successfully-parsed scheme-absent phase with its own `perAc` classifications);
+human mode prints a short summary — phases audited, the four bucket totals,
+the count of unreadable `SUMMARY`/`DRAFT` records, and a pointer to `--json`
+for full per-phase detail. This is a diagnostic tool, not a polished report:
+it never mutates project state and requires no active BUILD/loop, so it is
+safe to run at any time, including outside the loop.
+
+**Exit codes** — `0` on any successful run, regardless of what the report
+contains (matches `verify coverage`'s exit-code convention — this command
+diagnoses, it does not gate); `1` only if the audit itself fails to run (an
+unexpected error, reported via stderr) rather than crashing the CLI.
 
 ---
 

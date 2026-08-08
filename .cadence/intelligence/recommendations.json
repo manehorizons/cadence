@@ -1335,12 +1335,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260730-002"
+        "ev-20260730-002",
+        "ev-20260808-001"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-07-30T23:24:17.740Z",
-      "updatedAt": "2026-07-30T23:24:17.740Z"
+      "updatedAt": "2026-08-08T04:04:01.532Z"
     },
     {
       "id": "rec-20260731-001",
@@ -1495,35 +1496,6 @@
       "updatedAt": "2026-07-29T23:00:03.470Z"
     },
     {
-      "id": "rec-20260729-004",
-      "title": "test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests",
-      "summary": "scanTestCoverage (verify/coverage.ts) walks DEFAULT_GLOBS packages/**/*.test.ts across the WHOLE repo and links an AC purely by the presence of its bare AC-N token. AC ids are per-phase and restart at AC-1 every phase, so tokens collide globally: while building phase 235 I confirmed via 'cadence verify coverage --explain AC-2' that AC-2 was already satisfied by phase 211's tests/activate/render.test.ts, entirely unrelated to phase 235. Any AC-N from any past phase satisfies that same id for every future phase, so the coverage gate cannot actually attest that THIS phase's ACs are covered — it degrades to 'some test somewhere once mentioned this token inside an it() block'. assertion mode hardened WHERE the token sits but not WHICH phase it belongs to. Fix candidates: scope the scan to the phase's own test files (via task files:/git diff), or require a phase-qualified token, or have the gate report which files matched so a reviewer can see cross-phase satisfaction.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "verify",
-        "gates"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/coverage.ts",
-        "packages/core/src/gates/coverage.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260729-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-29T23:00:19.919Z",
-      "updatedAt": "2026-07-29T23:00:19.919Z"
-    },
-    {
       "id": "rec-20260729-005",
       "title": "Boundary-string anchors are granted by filename substring match, so an irrelevant boundary can mask a criteria gap",
       "summary": "candidatesForFile (verify/criteria-gap.ts) proposes a boundary candidate whenever a free-text boundaries[] entry contains the filename as a substring, and resolveAnchor then 'verifies' it with boundaries.find(b => b === candidate.ref) — which is guaranteed to succeed because the ref was sourced from that same array by construction. The exact-match step therefore confirms only 'this string exists', not that the boundary has anything to do with the finding. Consequence: a boundary like 'DO NOT add a runtime dependency to packages/core/src/gates/code-review.ts' grants declared tier to ANY finding in that file, converting a would-be criteria gap into a (weak) anchored finding and hiding it from the gap count. Matches section 7.1's literal spec, which imposes no relevance requirement on a boundary anchor, and declared is documented as the weakest non-gap tier — so this is working-as-specified, not a code defect. But it is a real false-anchor path that suppresses gap reporting. Distinct from rec-20260729-003 (which is about per-file rather than per-finding granularity). Fix candidates: require the boundary to cite the file more strongly than substring containment, or treat a boundary-only anchor as a gap-with-weak-mitigation rather than a non-gap.",
@@ -1550,35 +1522,6 @@
       "decisionIds": [],
       "createdAt": "2026-07-29T23:06:59.209Z",
       "updatedAt": "2026-07-29T23:06:59.209Z"
-    },
-    {
-      "id": "rec-20260729-006",
-      "title": "Retroactive audit: re-derive how many historical AC PASS records had genuine per-phase test coverage",
-      "summary": "Follow-on to rec-20260729-004 (repo-wide AC-N token collision). Because settle derives per-AC PASS from task terminal status PLUS coverage evidence, and the coverage leg is satisfiable by any past phase's identically-numbered AC token, per-AC PASS for a typical phase collapsed toward the agent's own DONE self-report — the exact signal the project exists to distrust. The settled SUMMARY corpus therefore carries an AC-coverage attestation stronger than the evidence behind it. This is a defect in the proof, not proof that the work was undone: build-test-must-pass, per-task verify commands, and the review gates were unaffected and provided real signal. Audit to run: for every settled phase, re-derive whether each AC's satisfying token actually sits in a test file belonging to THAT phase rather than an unrelated one, and report the count of AC PASS records with genuine per-phase coverage vs cross-phase-only satisfaction. cadence verify phase already re-derives settled coverage but needs the phase-scoping fix from rec-20260729-004 first to give a trustworthy answer. Operator decision 2026-07-29: run this in a fresh session after phase 235 lands, not inline.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "verify",
-        "gates"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/coverage.ts",
-        "packages/core/src/verify/phase-replay.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260729-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-29T23:25:34.102Z",
-      "updatedAt": "2026-07-29T23:25:34.102Z"
     },
     {
       "id": "rec-20260731-007",
@@ -2447,6 +2390,38 @@
       "scoutId": "scout-20260806-phase257",
       "createdAt": "2026-08-06T18:52:16.644Z",
       "updatedAt": "2026-08-06T18:52:16.644Z"
+    },
+    {
+      "id": "rec-20260807-005",
+      "title": "Make phase-qualified the default AC coverage scheme (bare still ships collision bug)",
+      "summary": "Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token scheme that closes the cross-phase AC-N token collision (originally rec-20260729-004). But 'bare' remains the DEFAULT for every fresh cadence init and every other cadence-managed project (packages/types/src/config.ts:227,252,577) -- this repo dogfoods the fix for itself only, via its own .cadence/config.json. Decide whether phase-qualified should become the default: weigh against the AC-N token convention documented in CLAUDE.md and asserted by packages/core/tests/verify/, backward compat for pre-239 test files written against bare tokens, and the v2.0.0-reserved semver policy (breaking changes ship as minor until full coupling).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "verify",
+        "init",
+        "config"
+      ],
+      "affectedFiles": [
+        "packages/types/src/config.ts",
+        "packages/core/src/gates/coverage.ts",
+        "packages/core/src/verify/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260807-011"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-07T23:04:07.612Z",
+      "updatedAt": "2026-08-07T23:04:07.612Z"
     }
   ],
   "archived": [
@@ -6874,10 +6849,76 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-08-03T22:02:34.472Z",
-      "updatedAt": "2026-08-07T19:51:06.108Z",
       "archivedAt": "2026-08-07T19:51:06.108Z",
-      "archiveReason": "manual"
+      "archiveReason": "manual",
+      "createdAt": "2026-08-03T22:02:34.472Z",
+      "updatedAt": "2026-08-07T19:51:06.108Z"
+    },
+    {
+      "id": "rec-20260729-004",
+      "title": "test-coverage gate's repo-wide AC-N token scan collides across phases, so any AC can be satisfied by an unrelated phase's tests",
+      "summary": "scanTestCoverage (verify/coverage.ts) walks DEFAULT_GLOBS packages/**/*.test.ts across the WHOLE repo and links an AC purely by the presence of its bare AC-N token. AC ids are per-phase and restart at AC-1 every phase, so tokens collide globally: while building phase 235 I confirmed via 'cadence verify coverage --explain AC-2' that AC-2 was already satisfied by phase 211's tests/activate/render.test.ts, entirely unrelated to phase 235. Any AC-N from any past phase satisfies that same id for every future phase, so the coverage gate cannot actually attest that THIS phase's ACs are covered — it degrades to 'some test somewhere once mentioned this token inside an it() block'. assertion mode hardened WHERE the token sits but not WHICH phase it belongs to. Fix candidates: scope the scan to the phase's own test files (via task files:/git diff), or require a phase-qualified token, or have the gate report which files matched so a reviewer can see cross-phase satisfaction.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts",
+        "packages/core/src/gates/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "phase 239 / PR #338 (phase-qualified coverage scheme; opt-in, not yet default)",
+      "archivedAt": "2026-08-07T23:03:30.505Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-29T23:00:19.919Z",
+      "updatedAt": "2026-08-07T23:03:30.505Z"
+    },
+    {
+      "id": "rec-20260729-006",
+      "title": "Retroactive audit: re-derive how many historical AC PASS records had genuine per-phase test coverage",
+      "summary": "Follow-on to rec-20260729-004 (repo-wide AC-N token collision). Because settle derives per-AC PASS from task terminal status PLUS coverage evidence, and the coverage leg is satisfiable by any past phase's identically-numbered AC token, per-AC PASS for a typical phase collapsed toward the agent's own DONE self-report — the exact signal the project exists to distrust. The settled SUMMARY corpus therefore carries an AC-coverage attestation stronger than the evidence behind it. This is a defect in the proof, not proof that the work was undone: build-test-must-pass, per-task verify commands, and the review gates were unaffected and provided real signal. Audit to run: for every settled phase, re-derive whether each AC's satisfying token actually sits in a test file belonging to THAT phase rather than an unrelated one, and report the count of AC PASS records with genuine per-phase coverage vs cross-phase-only satisfaction. cadence verify phase already re-derives settled coverage but needs the phase-scoping fix from rec-20260729-004 first to give a trustworthy answer. Operator decision 2026-07-29: run this in a fresh session after phase 235 lands, not inline.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts",
+        "packages/core/src/verify/phase-replay.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260729-006",
+        "ev-20260807-010"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "261-historical-ac-coverage-audit-pre-phase-239",
+      "createdAt": "2026-07-29T23:25:34.102Z",
+      "updatedAt": "2026-08-08T04:05:06.140Z",
+      "shippedRef": "phase 261-historical-ac-coverage-audit-pre-phase-239 (PR pending)",
+      "archivedAt": "2026-08-08T04:05:06.140Z",
+      "archiveReason": "shipped"
     }
   ]
 }
