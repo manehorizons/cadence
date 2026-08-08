@@ -1,0 +1,46 @@
+{
+  "draftId": "261-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-08T02:46:17.227Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/261-historical-ac-coverage-audit/packages/core/src/verify/historical-coverage-audit.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/261-historical-ac-coverage-audit/packages/core/tests/verify/historical-coverage-audit.test.ts"
+      ],
+      "updatedAt": "2026-08-08T03:07:16.409Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/261-historical-ac-coverage-audit/packages/core/tests/cli/verify-historical-coverage-audit.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/261-historical-ac-coverage-audit/packages/core/src/services/verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/261-historical-ac-coverage-audit/packages/core/src/cli/commands/verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/261-historical-ac-coverage-audit/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-08-08T03:29:36.075Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Real audit run against this repo's 255 pre-phase-239 SUMMARY.json records. Findings: .cadence/phases/261-historical-ac-coverage-audit-pre-phase-239/261-01-FINDINGS.md (raw data: 261-01-FINDINGS.json). Headline: 243 phases classified (12 unreadable, all legacy status:DONE frontmatter). AC-level bucket totals across 1077 ACs examined: self-attested=150, self-attested-shared=319, not-found-in-declared-files=351, unreachable=257 (AC-4 invariant holds: sum=1077). Phase-level rollup vs the Objective's ~112/79/64 ballpark: dedicated=60, shared-only=119, unreachable=64 -- unreachable matched closely, dedicated came in well below the hand-estimate with the gap landing in shared-only; see FINDINGS.md's Discrepancy discussion for the honest explanation.",
+      "touchedFiles": [
+        "/tmp/claude-1000/-home-thomas-projects-cadence/d5f6f77a-adee-4608-be8b-7834ca031a09/scratchpad/gen_tables.py",
+        "/home/thomas/projects/cadence/.claude/worktrees/261-historical-ac-coverage-audit/.cadence/phases/261-historical-ac-coverage-audit-pre-phase-239/261-01-FINDINGS.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/261-historical-ac-coverage-audit/.cadence/phases/261-historical-ac-coverage-audit-pre-phase-239/261-01-DRAFT.md",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/d5f6f77a-adee-4608-be8b-7834ca031a09/scratchpad/compare.js",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/d5f6f77a-adee-4608-be8b-7834ca031a09/scratchpad/rollup.js",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/d5f6f77a-adee-4608-be8b-7834ca031a09/scratchpad/table-check.js",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/d5f6f77a-adee-4608-be8b-7834ca031a09/scratchpad/corpus-check.js",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/d5f6f77a-adee-4608-be8b-7834ca031a09/scratchpad/ac4-real-check.js"
+      ],
+      "updatedAt": "2026-08-08T03:44:21.944Z"
+    }
+  }
+}
