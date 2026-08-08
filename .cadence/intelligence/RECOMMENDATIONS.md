@@ -1319,21 +1319,6 @@ Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token sch
 
 release-currency (phase 262) is scoped to comparing published vs local 'engines' content only, since that was the exact field behind the 2026-07-27 incident. A strictly stronger, content-agnostic, offline detector exists: local version == published version AND 'git log v<version>..HEAD' is non-empty means main has unreleased commits sitting under an already-published version tag, regardless of which field changed (deps, bin, exports, plain source). Surfaced by independent review during phase 262 DRAFT authoring; deliberately out of scope for 262 to avoid scope creep -- filed as a follow-on.
 
-## rec-20260808-002 — Provenance cannot distinguish configured mock from fallback mock
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- evidence: packages/core/src/gates/assurance-record.ts's hasRealVerifier reads only provider:'mock' vs non-mock, discarding selection context available at the phase-243 banner call site; measured via HANDOFF-v1.56-verifier-honesty.md Phase L
-- next: cadence milestone propose
-
-A gate that falls back to mock because an API key/host-cli session is unavailable persists the byte-identical provider: 'mock' as a gate the operator deliberately chose mock for. Phase 243's banner tells the terminal operator about a fallback but the corpus can't -- no retroactive analysis (including dec-20260801-003's planned offline analyzer) can tell 'operator chose a placeholder' apart from 'operator intended real verification and silently got one.' Fix: add a selection-mode field (e.g. providerSelection) populated at selection time in the same code path as the phase-243 banner, across all seven verifier seams.
-
 ## rec-20260808-003 — No standing signal for consecutive settles without real-provider conduction
 
 - status: candidate

@@ -2423,33 +2423,6 @@
       "updatedAt": "2026-08-08T14:33:57.934Z"
     },
     {
-      "id": "rec-20260808-002",
-      "title": "Provenance cannot distinguish configured mock from fallback mock",
-      "summary": "A gate that falls back to mock because an API key/host-cli session is unavailable persists the byte-identical provider: 'mock' as a gate the operator deliberately chose mock for. Phase 243's banner tells the terminal operator about a fallback but the corpus can't -- no retroactive analysis (including dec-20260801-003's planned offline analyzer) can tell 'operator chose a placeholder' apart from 'operator intended real verification and silently got one.' Fix: add a selection-mode field (e.g. providerSelection) populated at selection time in the same code path as the phase-243 banner, across all seven verifier seams.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260808-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "263-provider-selection-provenance",
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T17:58:45.635Z",
-      "updatedAt": "2026-08-08T21:10:41.577Z"
-    },
-    {
       "id": "rec-20260808-003",
       "title": "No standing signal for consecutive settles without real-provider conduction",
       "summary": "cadence doctor's conduction-reachability (phase 251) answers a point-in-time capability question ('can this repo conduct a real finding') but nothing answers the trend question ('has it, lately'). That gap is exactly how 263 settles accumulated under mock with zero escalation in the v1.54 audit. Derive a read-only streak counter from the SUMMARY corpus (consecutive settles with no non-mock verifier identity in provenance), surface it in cadence doctor/status, escalate severity by streak length, and wire it as the mechanical instrument for dec-20260801-003's three-settle revisit trigger.",
@@ -7114,6 +7087,36 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-31T14:14:35.723Z",
       "updatedAt": "2026-08-08T16:16:22.328Z"
+    },
+    {
+      "id": "rec-20260808-002",
+      "title": "Provenance cannot distinguish configured mock from fallback mock",
+      "summary": "A gate that falls back to mock because an API key/host-cli session is unavailable persists the byte-identical provider: 'mock' as a gate the operator deliberately chose mock for. Phase 243's banner tells the terminal operator about a fallback but the corpus can't -- no retroactive analysis (including dec-20260801-003's planned offline analyzer) can tell 'operator chose a placeholder' apart from 'operator intended real verification and silently got one.' Fix: add a selection-mode field (e.g. providerSelection) populated at selection time in the same code path as the phase-243 banner, across all seven verifier seams.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "263-provider-selection-provenance",
+      "scoutId": "scout-20260804-verifier-honesty",
+      "createdAt": "2026-08-08T17:58:45.635Z",
+      "updatedAt": "2026-08-08T21:12:17.001Z",
+      "shippedRef": "PR #388",
+      "archivedAt": "2026-08-08T21:12:17.001Z",
+      "archiveReason": "shipped"
     }
   ]
 }
