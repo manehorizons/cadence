@@ -266,8 +266,8 @@ describe(
           skipReason: 'not requested (no --deep / --interactive, not in gate set)',
         },
         { gate: 'deep-verify', status: 'ran' },
-        { gate: 'code-review', status: 'ran', provider: 'mock' },
-        { gate: 'security-audit', status: 'ran', provider: 'mock' },
+        { gate: 'code-review', status: 'ran', provider: 'mock', providerSelection: 'configured' },
+        { gate: 'security-audit', status: 'ran', provider: 'mock', providerSelection: 'configured' },
       ]);
       expect(summary.acResults).toEqual([{ id: 'AC-1', pass: true, evidence: 'executed' }]);
     });

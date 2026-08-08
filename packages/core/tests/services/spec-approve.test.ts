@@ -15,7 +15,15 @@ import type { CommandIO } from '../../src/services/io.js';
  * real network call is ever made (the repo's zero-live-provider-test rule).
  */
 const constructedNames = vi.hoisted(() => [] as string[]);
-const specVerifyResult = vi.hoisted(() => ({ pass: true, model: undefined as string | undefined }));
+const specVerifyResult = vi.hoisted(() => ({
+  pass: true,
+  model: undefined as string | undefined,
+  // Phase 263 (T3): mirrors `model` above — set per-test to prove
+  // specApproveService's spec-review call site reads `providerSelection`
+  // off the verify() result (via converge.ts's `readProviderSelection`) and
+  // threads it into the written `<id>-SPEC-REVIEW.json` sidecar.
+  providerSelection: undefined as 'configured' | 'fallback' | undefined,
+}));
 
 vi.mock('../../src/verify/spec-review-factory.js', async (importOriginal) => {
   const actual =
@@ -39,6 +47,9 @@ vi.mock('../../src/verify/spec-review-factory.js', async (importOriginal) => {
             : [{ severity: 'high', message: 'stub spec-review finding' }],
           provider: real.name,
           ...(specVerifyResult.model ? { model: specVerifyResult.model } : {}),
+          ...(specVerifyResult.providerSelection
+            ? { providerSelection: specVerifyResult.providerSelection }
+            : {}),
         }),
       };
     },
@@ -46,7 +57,12 @@ vi.mock('../../src/verify/spec-review-factory.js', async (importOriginal) => {
 });
 
 const uiConstructedNames = vi.hoisted(() => [] as string[]);
-const uiVerifyResult = vi.hoisted(() => ({ pass: true, model: undefined as string | undefined }));
+const uiVerifyResult = vi.hoisted(() => ({
+  pass: true,
+  model: undefined as string | undefined,
+  // Phase 263 (T3): mirrors `model` above, for the ui-spec-review call site.
+  providerSelection: undefined as 'configured' | 'fallback' | undefined,
+}));
 
 vi.mock('../../src/verify/ui-spec-review-factory.js', async (importOriginal) => {
   const actual =
@@ -66,6 +82,9 @@ vi.mock('../../src/verify/ui-spec-review-factory.js', async (importOriginal) => 
           findings: uiVerifyResult.pass ? [] : [{ severity: 'high', message: 'stub finding' }],
           provider: real.name,
           ...(uiVerifyResult.model ? { model: uiVerifyResult.model } : {}),
+          ...(uiVerifyResult.providerSelection
+            ? { providerSelection: uiVerifyResult.providerSelection }
+            : {}),
         }),
       };
     },
@@ -137,9 +156,11 @@ afterEach(async () => {
   constructedNames.length = 0;
   specVerifyResult.pass = true;
   specVerifyResult.model = undefined;
+  specVerifyResult.providerSelection = undefined;
   uiConstructedNames.length = 0;
   uiVerifyResult.pass = true;
   uiVerifyResult.model = undefined;
+  uiVerifyResult.providerSelection = undefined;
   if (root) {
     await rm(root, { recursive: true, force: true }).catch(() => {});
     root = null;
@@ -561,6 +582,45 @@ describe('specApproveService — sidecar JSON shape characterization (T1 audit)'
     });
   });
 
+  // Phase 263 (T3) — closing the test-coverage gap: T3 threads
+  // `readProviderSelection(res)` from converge.ts into the spec-review call
+  // site's `runConvergentReview` input, but shipped with no test proving it
+  // reaches the on-disk `<id>-SPEC-REVIEW.json` sidecar. This would fail if
+  // spec-approve.ts stopped reading/threading it for the spec-review call
+  // site specifically (the sibling ui-spec-review test below proves the
+  // *other* call site independently).
+  it('spec-review includes providerSelection (history + legacy top-level) when the verifier result carries a fallback tag', async () => {
+    const s = await setup(false);
+    root = s.root;
+    specVerifyResult.pass = true;
+    specVerifyResult.providerSelection = 'fallback';
+    const { io } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: true,
+      attempts: 0,
+      maxAttempts: 3,
+      history: [
+        {
+          at: expect.any(String),
+          pass: true,
+          findingsCount: 0,
+          provider: 'mock',
+          providerSelection: 'fallback',
+          verdict: 'pass',
+        },
+      ],
+      pass: true,
+      provider: 'mock',
+      providerSelection: 'fallback',
+      findings: 0,
+      at: expect.any(String),
+    });
+  });
+
   it('ui-spec-review pass: UI-SPEC-REVIEW.json full shape', async () => {
     const s = await setup(true);
     root = s.root;
@@ -736,6 +796,46 @@ describe('specApproveService — sidecar JSON shape characterization (T1 audit)'
       pass: true,
       provider: 'mock',
       model: 'claude-x',
+      findings: 0,
+      at: expect.any(String),
+    });
+  });
+
+  // Phase 263 (T3) — closing the test-coverage gap: T3 threads
+  // `readProviderSelection(uiRes)` from converge.ts into the ui-spec-review
+  // call site's `runConvergentReview` input, but shipped with no test proving
+  // it reaches the on-disk `<id>-UI-SPEC-REVIEW.json` sidecar. This is the
+  // second of spec-approve.ts's two call sites (the sibling spec-review test
+  // above proves the other one independently) — would fail if this
+  // particular call site stopped reading/threading it.
+  it('ui-spec-review includes providerSelection (history + legacy top-level) when the verifier result carries a fallback tag', async () => {
+    const s = await setup(true);
+    root = s.root;
+    specVerifyResult.pass = true;
+    uiVerifyResult.pass = true;
+    uiVerifyResult.providerSelection = 'fallback';
+    const { io } = captureIO();
+    const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
+    expect(res.exitCode).toBe(0);
+    const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    expect(sidecar).toEqual({
+      specId: '40-01',
+      converged: true,
+      attempts: 0,
+      maxAttempts: 3,
+      history: [
+        {
+          at: expect.any(String),
+          pass: true,
+          findingsCount: 0,
+          provider: 'mock',
+          providerSelection: 'fallback',
+          verdict: 'pass',
+        },
+      ],
+      pass: true,
+      provider: 'mock',
+      providerSelection: 'fallback',
       findings: 0,
       at: expect.any(String),
     });

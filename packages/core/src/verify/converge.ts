@@ -24,6 +24,14 @@ export function nextConvergence(
  * (`plan-review`, `code-review`, `spec-approve` x2). `model` is only present
  * when the verifier reported one; `bypassed` is only present when the
  * caller's already-computed bypass flag was true for this attempt.
+ *
+ * Phase 263 (T3): `providerSelection` is threaded the same way as `model` —
+ * present only when the caller passed one. Only 3 of the 4 call sites
+ * (`plan-review`, `spec-approve` x2 — the sidecar seams this phase persists
+ * for) ever supply it; `code-review` (263-01 T4's file, not this phase's)
+ * computes its own `providerSelection` INTO `flags.verifierIdentity` for
+ * `GateProvenanceZ` instead, so its `runConvergentReview` call keeps omitting
+ * this field, which is why it must stay optional here.
  */
 export interface ConvergentReviewHistoryEntry {
   at: string;
@@ -31,6 +39,7 @@ export interface ConvergentReviewHistoryEntry {
   findingsCount: number;
   provider: string;
   model?: string;
+  providerSelection?: 'configured' | 'fallback';
   verdict: ConvergeVerdict;
   bypassed?: true;
 }
@@ -52,6 +61,15 @@ export interface RunConvergentReviewInput {
   findingsCount: number;
   provider: string;
   model?: string;
+  /** Phase 263 (T3): whether `provider` was the operator's actual configured
+   *  choice or a silent fallback to mock, tagged upstream by
+   *  `verify/verifier-factory.ts`'s universal configured/fallback
+   *  computation and read here by exact name off the verify() result
+   *  (`res.providerSelection`) — never derived independently. Optional: only
+   *  present when the caller's verifier result actually carried the tag
+   *  (every verifier built by `createVerifierFactory` does; a hand-built test
+   *  fixture verifier does not). */
+  providerSelection?: 'configured' | 'fallback';
   /** Prior failing-attempt count, read from the sidecar (0 if absent/corrupt/legacy). */
   attemptsSoFar: number;
   /** Prior history array, read from the sidecar (`[]` if absent/corrupt/legacy). Not mutated. */
@@ -102,6 +120,7 @@ export function runConvergentReview(input: RunConvergentReviewInput): RunConverg
     findingsCount,
     provider,
     model,
+    providerSelection,
     attemptsSoFar,
     history,
     maxAttempts,
@@ -118,6 +137,7 @@ export function runConvergentReview(input: RunConvergentReviewInput): RunConverg
     findingsCount,
     provider,
     ...(model ? { model } : {}),
+    ...(providerSelection ? { providerSelection } : {}),
     verdict: nv.verdict,
     ...(bypassed ? { bypassed: true } : {}),
   };
@@ -133,9 +153,37 @@ export function runConvergentReview(input: RunConvergentReviewInput): RunConverg
     pass,
     provider,
     ...(model ? { model } : {}),
+    ...(providerSelection ? { providerSelection } : {}),
     findings: findingsCount,
     at,
   };
 
   return { nv, historyEntry, history: newHistory, sidecarJson };
+}
+
+/**
+ * Phase 263 (T3): reads `providerSelection` off a verify()-family result by
+ * exact name, for the three sidecar-seam call sites
+ * (`gates/plan-review.ts`, `services/spec-approve.ts` x2) to pass into
+ * `runConvergentReview` above. `PlanReviewResult`/`SpecReviewResult`/
+ * `UiSpecReviewResult` (published from `verify/plan-review.ts`,
+ * `verify/spec-review.ts`, `verify/ui-spec-review.ts` — all outside this
+ * phase's file scope) do not themselves declare `providerSelection` in their
+ * TypeScript interfaces; they don't need to, because every real verifier
+ * built by `createVerifierFactory` tags its result with the property at
+ * runtime (`verify/verifier-factory.ts`'s `tagProviderSelection`) regardless
+ * of what the family's own result interface says. This reader's parameter
+ * type is a minimal structural shape (not `PlanReviewResult` etc.) — TS
+ * accepts any of the three concrete result types here because an absent
+ * optional property is assignment-compatible, without requiring a cast or a
+ * change to those three untouched interfaces. `provider: string` is included
+ * so the parameter type isn't "weak" (all-optional), which would otherwise
+ * make this argument-type check reject an object with no overlapping
+ * members.
+ */
+export function readProviderSelection(res: {
+  provider: string;
+  providerSelection?: 'configured' | 'fallback';
+}): 'configured' | 'fallback' | undefined {
+  return res.providerSelection;
 }

@@ -31,6 +31,10 @@ function ctx(over: {
   configProvider?: string;
   errs?: string[];
   calls?: Calls;
+  /** 263-01 (T1): override the memoized `ctx.diff()` (defaults to `'DIFF'`) so
+   *  tests can exercise the touchedFiles-non-empty/diff-empty combination
+   *  without touching `touchedFiles` itself. */
+  diff?: string;
 }): SettleContext {
   const errs = over.errs ?? [];
   const calls = over.calls ?? { high: [], unconverged: 0, writes: [], unconvergedInfo: [] };
@@ -58,7 +62,7 @@ function ctx(over: {
     touchedFiles: ['src/x.ts'],
     coverage: async () => new Map(),
     draftMtimeMs: async () => null,
-    diff: () => 'DIFF',
+    diff: () => over.diff ?? 'DIFF',
     verifiers: {
       deep: { verify: async () => ({ verdicts: {}, provider: 'mock' }) },
       codeReview: {
@@ -421,5 +425,23 @@ describe('runCodeReviewGate', () => {
       'code-review: --allow-code-review-failure set; proceeding past a verifier failure (boom).',
     );
     expect(errs.join('')).not.toContain('code-review: --force set;');
+  });
+
+  // 263-01 (T1, AC-3) — corpus-first, proven red: touchedFiles is non-empty
+  // (see `ctx()`'s `touchedFiles: ['src/x.ts']`) but the memoized diff is
+  // empty, with a non-mock provider configured. The gate calls verify()
+  // exactly as it does today (this phase does not change whether/when the
+  // provider call fires — the mocked verifier above still returns normally);
+  // the only new behavior asked for is that the gate's persisted provenance
+  // records providerSelection: 'empty-diff' alongside the normal result.
+  // `flags.verifierIdentity` has no such property yet (T2/T3 add it), so
+  // `as any` is a deliberate escape hatch to fail at the assertion rather
+  // than the type checker.
+  it('263-01/AC-3: tags providerSelection: empty-diff when touchedFiles is non-empty but diff() is empty, with a non-mock provider configured', async () => {
+    const res = await runCodeReviewGate(
+      ctx({ findings: CLEAN, provider: 'anthropic', configProvider: 'anthropic', diff: '' }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect((res.flags?.verifierIdentity as any)?.providerSelection).toBe('empty-diff');
   });
 });

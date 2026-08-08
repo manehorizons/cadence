@@ -369,6 +369,135 @@ describe('host-cli fallback wrapping (AC-2, Phase 165 T3)', () => {
   });
 });
 
+// 263-01 (T1) — corpus-first adversarial fixtures for provider-selection
+// provenance, authored before any implementation exists. `providerSelection`
+// does not exist on any verify() result today; T2 adds it to the persisted
+// schema (GateProvenanceZ) and T3 tags it at this shared code path
+// (createVerifierFactory's three selection-time branches + wrapWithFallback's
+// Proxy catch). Every assertion below reads `(result as any).providerSelection`
+// — a deliberate escape hatch, not sloppiness: `FakeAsyncResult` has no such
+// field yet, so a typed property access wouldn't compile at all, and the task
+// requires these tests to fail at the assertion (`undefined !== expected`),
+// not at the type checker. Reuses `FakeAsyncVerifier`/`FakeAsyncConfig`/
+// `HostCliError` from the "host-cli fallback wrapping" block above.
+function makeFullAsyncSpec(
+  overrides: {
+    anthropicVerify?: FakeAsyncVerifier['verify'];
+    localVerify?: FakeAsyncVerifier['verify'];
+    hostCliVerify?: FakeAsyncVerifier['verify'];
+    /** false reproduces "this verifier family never wired a hostCli builder". */
+    wireHostCli?: boolean;
+  } = {},
+) {
+  const wireHostCli = overrides.wireHostCli ?? true;
+  return createVerifierFactory<FakeAsyncConfig, FakeAsyncVerifier>({
+    label: 'fake-full',
+    read: (c) => c?.fake,
+    mock: () => ({
+      name: 'mock',
+      verify: async (input: string) => ({ result: `mock:${input}` }),
+    }),
+    anthropic: () => ({
+      name: 'anthropic',
+      verify:
+        overrides.anthropicVerify ?? (async (input: string) => ({ result: `anthropic:${input}` })),
+    }),
+    local: () => ({
+      name: 'local',
+      verify: overrides.localVerify ?? (async (input: string) => ({ result: `local:${input}` })),
+    }),
+    ...(wireHostCli
+      ? {
+          hostCli: () => ({
+            name: 'host-cli',
+            verify:
+              overrides.hostCliVerify ?? (async (input: string) => ({ result: `host-cli:${input}` })),
+          }),
+        }
+      : {}),
+  });
+}
+
+describe('providerSelection tagging (263-01, T1 — corpus-first, proven red)', () => {
+  it('263-01/AC-1: configured-mock (operator explicitly configured mock) is tagged providerSelection: configured', async () => {
+    const select = makeFullAsyncSpec();
+    const v = select({ fake: { provider: 'mock' } }, { env: {}, warn: () => {} });
+    const result = await v.verify('x');
+    expect((result as any).providerSelection).toBe('configured');
+  });
+
+  it('263-01/AC-1: configured-real (host-cli succeeds, no fallback) is tagged providerSelection: configured', async () => {
+    const select = makeFullAsyncSpec();
+    const v = select({ fake: { provider: 'host-cli' } }, { env: {}, warn: () => {} });
+    const result = await v.verify('x');
+    expect((result as any).providerSelection).toBe('configured');
+  });
+
+  it('263-01/AC-1: selection-time fallback — anthropic missing ANTHROPIC_API_KEY is tagged providerSelection: fallback', async () => {
+    const select = makeFullAsyncSpec();
+    // No ANTHROPIC_API_KEY in env and no cwd/.env — createVerifierFactory's
+    // anthropic branch falls through to spec.mock(). `warn: () => {}` swallows
+    // the resulting downgrade banner so this test doesn't leak to real stderr.
+    const v = select({ fake: { provider: 'anthropic' } }, { env: {}, warn: () => {} });
+    const result = await v.verify('x');
+    expect((result as any).providerSelection).toBe('fallback');
+  });
+
+  it('263-01/AC-1: selection-time fallback — local missing CADENCE_LOCAL_BASE_URL/model is tagged providerSelection: fallback', async () => {
+    const select = makeFullAsyncSpec();
+    const v = select({ fake: { provider: 'local' } }, { env: {}, warn: () => {} });
+    const result = await v.verify('x');
+    expect((result as any).providerSelection).toBe('fallback');
+  });
+
+  it('263-01/AC-1: selection-time fallback — host-cli family with no hostCli builder wired is tagged providerSelection: fallback', async () => {
+    const select = makeFullAsyncSpec({ wireHostCli: false });
+    const v = select({ fake: { provider: 'host-cli' } }, { env: {}, warn: () => {} });
+    const result = await v.verify('x');
+    expect((result as any).providerSelection).toBe('fallback');
+  });
+
+  it('263-01/AC-2: call-time fallback — a HostCliError thrown on an actual verify() call is tagged providerSelection: fallback', async () => {
+    const select = makeFullAsyncSpec({
+      hostCliVerify: async () => {
+        throw new HostCliError('binary "claude" not found on PATH', 'not-found');
+      },
+    });
+    // `warn: () => {}` swallows the fallback warning wrapWithFallback emits
+    // on the call-time catch — not under test here, and left un-swallowed it
+    // would leak to real stderr during the suite run.
+    const v = select({ fake: { provider: 'host-cli' } }, { env: {}, warn: () => {} });
+    const result = await v.verify('x');
+    expect((result as any).providerSelection).toBe('fallback');
+  });
+
+  it('263-01/AC-2: multi-call-in-one-run — a later successful call on the same verifier instance still reports fallback once an earlier call fell back (any-fallback-wins, not last-write-wins)', async () => {
+    let callCount = 0;
+    const select = makeFullAsyncSpec({
+      hostCliVerify: async (input: string) => {
+        callCount += 1;
+        if (callCount === 1) {
+          throw new HostCliError('binary "claude" not found on PATH', 'not-found');
+        }
+        // Second call on the SAME verifier instance succeeds via the primary
+        // (host-cli) path — no error, no fallback delegate for this call.
+        return { result: `host-cli:${input}` };
+      },
+    });
+    const v = select({ fake: { provider: 'host-cli' } }, { env: {}, warn: () => {} });
+
+    const first = await v.verify('a');
+    expect((first as any).providerSelection).toBe('fallback');
+
+    const second = await v.verify('b');
+    // AC-2: any-fallback-wins for the run. The second call itself succeeded
+    // on the primary provider, but this instance already fell back once —
+    // the recorded providerSelection must stay 'fallback', not flip back to
+    // 'configured' just because the most recent call happened to succeed.
+    expect((second as any).providerSelection).toBe('fallback');
+  });
+});
+
 describe('buildLocalHeaders (AC-2, Phase 72)', () => {
   it('returns undefined when neither key nor custom headers given', () => {
     expect(buildLocalHeaders(undefined, undefined)).toBeUndefined();

@@ -58,6 +58,16 @@ export interface CodeReviewResult {
   findings: Record<string, Finding[]>;
   provider: string;
   model?: string;
+  /**
+   * 263-01 (T3/T4) — populated upstream by `verifier-factory.ts`'s
+   * configured/fallback tagging computation (`createVerifierFactory`'s
+   * selection-time branches and `wrapWithFallback`'s call-time catch); absent
+   * when the verifier was constructed by some other path (e.g. directly in a
+   * test, as the `ctx()` fixtures in `gates/code-review.test.ts` do). Optional
+   * so every existing constructor/return site in this file keeps compiling
+   * unchanged.
+   */
+  providerSelection?: 'configured' | 'fallback' | 'empty-diff';
 }
 
 export interface CodeReviewVerifier {

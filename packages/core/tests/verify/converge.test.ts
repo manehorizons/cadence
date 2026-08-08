@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { nextConvergence, runConvergentReview } from '../../src/verify/converge.js';
+import { nextConvergence, runConvergentReview, readProviderSelection } from '../../src/verify/converge.js';
 
 describe('nextConvergence (AC-1)', () => {
   it('AC-1: pass short-circuits regardless of attempts', () => {
@@ -239,6 +239,95 @@ describe('runConvergentReview (phase 225 — T2)', () => {
     });
   });
 
+  // Phase 263 (T3) — closing the test-coverage gap: no prior test in this
+  // file ever passed `providerSelection`, so the
+  // `...(providerSelection ? { providerSelection } : {})` spreads (into both
+  // the history entry and the sidecar's legacy top-level field) were never
+  // exercised. This would fail if T3's threading were reverted.
+  it('includes providerSelection (history + legacy top-level) in both history entry and sidecar when provided (fallback)', () => {
+    const result = runConvergentReview({
+      pass: true,
+      findingsCount: 0,
+      provider: 'mock',
+      providerSelection: 'fallback',
+      attemptsSoFar: 0,
+      history: [],
+      maxAttempts: 3,
+      bypassed: false,
+      idField: 'draftId',
+      idValue: '01-01',
+      now,
+    });
+    expect(result.historyEntry.providerSelection).toBe('fallback');
+    expect(result.sidecarJson).toEqual({
+      draftId: '01-01',
+      converged: true,
+      attempts: 0,
+      maxAttempts: 3,
+      history: [
+        {
+          at: AT,
+          pass: true,
+          findingsCount: 0,
+          provider: 'mock',
+          providerSelection: 'fallback',
+          verdict: 'pass',
+        },
+      ],
+      pass: true,
+      provider: 'mock',
+      providerSelection: 'fallback',
+      findings: 0,
+      at: AT,
+    });
+  });
+
+  it('includes providerSelection: configured the same way when the caller supplies it', () => {
+    const result = runConvergentReview({
+      pass: true,
+      findingsCount: 0,
+      provider: 'anthropic',
+      model: 'claude-x',
+      providerSelection: 'configured',
+      attemptsSoFar: 0,
+      history: [],
+      maxAttempts: 3,
+      bypassed: false,
+      idField: 'draftId',
+      idValue: '01-01',
+      now,
+    });
+    expect(result.historyEntry).toEqual({
+      at: AT,
+      pass: true,
+      findingsCount: 0,
+      provider: 'anthropic',
+      model: 'claude-x',
+      providerSelection: 'configured',
+      verdict: 'pass',
+    });
+    expect(result.sidecarJson.providerSelection).toBe('configured');
+  });
+
+  it('omits providerSelection from both history entry and sidecar (including its nested history entry) when the caller does not supply it', () => {
+    const result = runConvergentReview({
+      pass: true,
+      findingsCount: 0,
+      provider: 'mock',
+      attemptsSoFar: 0,
+      history: [],
+      maxAttempts: 3,
+      bypassed: false,
+      idField: 'draftId',
+      idValue: '01-01',
+      now,
+    });
+    expect(result.historyEntry).not.toHaveProperty('providerSelection');
+    expect(result.sidecarJson).not.toHaveProperty('providerSelection');
+    const historyInSidecar = result.sidecarJson.history as Array<Record<string, unknown>>;
+    expect(historyInSidecar[0]).not.toHaveProperty('providerSelection');
+  });
+
   it('appends to (and does not mutate) an existing prior history array, reproducing spec-approve\'s shape (idField: specId)', () => {
     const prior = [
       {
@@ -301,5 +390,50 @@ describe('runConvergentReview (phase 225 — T2)', () => {
     const at = result.sidecarJson.at as string;
     expect(new Date(at).getTime()).toBeGreaterThanOrEqual(before);
     expect(new Date(at).toISOString()).toBe(at);
+  });
+});
+
+// Phase 263 (T3) — closing the test-coverage gap: `readProviderSelection` was
+// added and used by gates/plan-review.ts + services/spec-approve.ts (both
+// call sites) but had no test of its own. It must read `providerSelection`
+// off the result by exact name (never derive/invent it), and return
+// `undefined` when the result doesn't carry it — these would fail if the
+// function's body changed to anything other than a plain property read.
+describe('readProviderSelection (phase 263 — T3)', () => {
+  it('reads providerSelection: fallback off the result by exact name', () => {
+    expect(readProviderSelection({ provider: 'anthropic', providerSelection: 'fallback' })).toBe(
+      'fallback',
+    );
+  });
+
+  it('reads providerSelection: configured off the result by exact name', () => {
+    expect(readProviderSelection({ provider: 'mock', providerSelection: 'configured' })).toBe(
+      'configured',
+    );
+  });
+
+  it('returns undefined when the result does not carry providerSelection', () => {
+    expect(readProviderSelection({ provider: 'mock' })).toBeUndefined();
+  });
+
+  // The other tests in this block set providerSelection as a plain
+  // (enumerable) property, but verify-factory.ts's real `tagProviderSelection`
+  // defines it non-enumerable on purpose (so pre-existing exact-shape
+  // `toEqual` assertions elsewhere keep passing — see that function's own
+  // comment). A named property read like `res.providerSelection` doesn't
+  // care about enumerability, but this pins that assumption explicitly: it
+  // would fail if `readProviderSelection` were ever changed to something
+  // enumerability-sensitive (`{...res}`, `Object.entries`, a JSON round-trip).
+  it('reads providerSelection even when it is defined non-enumerable — the shape verifier-factory.ts actually tags', () => {
+    const res: { provider: string; providerSelection?: 'configured' | 'fallback' } = {
+      provider: 'host-cli',
+    };
+    Object.defineProperty(res, 'providerSelection', {
+      value: 'fallback',
+      enumerable: false,
+      configurable: true,
+    });
+    expect(Object.keys(res)).not.toContain('providerSelection'); // sanity: truly non-enumerable
+    expect(readProviderSelection(res)).toBe('fallback');
   });
 });
