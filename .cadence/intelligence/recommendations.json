@@ -2354,13 +2354,14 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260806-013"
+        "ev-20260806-013",
+        "ev-20260808-009"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "scoutId": "scout-20260806-phase257",
       "createdAt": "2026-08-06T18:52:16.644Z",
-      "updatedAt": "2026-08-06T18:52:16.644Z"
+      "updatedAt": "2026-08-08T21:35:21.128Z"
     },
     {
       "id": "rec-20260807-005",
@@ -7111,12 +7112,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "263-provider-selection-provenance",
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T17:58:45.635Z",
-      "updatedAt": "2026-08-08T21:12:17.001Z",
       "shippedRef": "PR #388",
+      "scoutId": "scout-20260804-verifier-honesty",
       "archivedAt": "2026-08-08T21:12:17.001Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-08T17:58:45.635Z",
+      "updatedAt": "2026-08-08T21:12:17.001Z"
     }
   ]
 }

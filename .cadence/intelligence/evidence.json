@@ -1788,6 +1788,13 @@
       "kind": "note",
       "summary": "grep -n 'verifierIdentity|result.provider|result.model' packages/core/src/gates/deep-verify.ts packages/core/src/gates/per-task-verify.ts (2026-08-08): deep-verify hits are deepVerify[]/deepVerifyMeta only, never flags.verifierIdentity; per-task-verify has zero hits",
       "createdAt": "2026-08-08T19:31:59.976Z"
+    },
+    {
+      "id": "ev-20260808-009",
+      "recommendationId": "rec-20260806-010",
+      "kind": "note",
+      "summary": "Materialized in real CI, PR #388 (phase 263), 2026-08-08: test (windows-latest, 22) failed with 'Error: Test timed out in 120000ms' on tests/parse/summary-verify-sweep.test.ts's 257-01/AC-3 sweep, corpus now 275+ SUMMARY.json files (up from 269 at this rec's filing). Same run's macOS leg took 59.9s and Ubuntu 81.4s for the identical sweep -- both comfortably under 120s but Ubuntu already at 68% of the timeout budget, confirming linear-with-corpus-size growth is closing in on all three OS legs, not just Windows. Ubuntu was 35.6s for 269 files two days ago (2026-08-06); now 81.4s for 275 files -- a disproportionate jump versus pure file-count growth, worth investigating (concurrency contention? per-call CLI startup regression?) alongside deciding between this rec's two options (slower/nightly lane, or a real --all flag).",
+      "createdAt": "2026-08-08T21:35:21.128Z"
     }
   ]
 }
