@@ -2,8 +2,43 @@ import type { Draft, Finding } from '@thomas-powers-jr/cadence-types';
 import { runConvergentReview } from '../verify/converge.js';
 import { anchorFindings } from '../verify/criteria-gap.js';
 import { attachFindingIdentity } from '../verify/finding-identity.js';
-import type { CodeReviewInput, CodeReviewTaskRef } from '../contracts/index.js';
+import type { CodeReviewInput, CodeReviewResult, CodeReviewTaskRef } from '../contracts/index.js';
 import type { GateImpl, GateResult } from './types.js';
+
+/**
+ * 263-01 (T4) — builds the `flags.verifierIdentity` object shared by every
+ * pass/refuse return path below. Merges two independent provenance facts:
+ * (1) `verifyResult.providerSelection`, tagged upstream by
+ * `verifier-factory.ts`'s configured/fallback computation (T3) and threaded
+ * through untouched; (2) this gate's own empty-diff observation — touched
+ * files non-empty but the memoized diff is empty, for a provider other than
+ * `mock` — computed directly from `ctx.touchedFiles`/`ctx.diff()` rather than
+ * from the verify() call, since a verifier constructed outside
+ * `verifier-factory.ts` (as every test fixture here does) never reports its
+ * own `providerSelection`. When both would apply, `empty-diff` wins over
+ * `'configured'` (the only reachable overlap — both fallback paths in
+ * `verifier-factory.ts` return `provider: 'mock'`, which the `!== 'mock'`
+ * guard below already excludes): a provider call that structurally could not
+ * judge anything is a stronger statement than whether that same call was the
+ * operator's deliberate choice. `family`/`model` are unchanged from before
+ * this phase; `providerSelection` is added only when computed, so
+ * `{ family: 'mock' }` (no `model`, no `providerSelection`) still round-trips
+ * through `toEqual` unchanged for every pre-263-01 test.
+ */
+function buildVerifierIdentityFlag(
+  result: Pick<CodeReviewResult, 'provider' | 'model' | 'providerSelection'>,
+  touched: string[],
+  diff: string,
+): { family: string; model?: string; providerSelection?: 'configured' | 'fallback' | 'empty-diff' } {
+  const isEmptyDiff =
+    touched.length > 0 && diff.trim().length === 0 && result.provider !== 'mock';
+  const providerSelection = isEmptyDiff ? 'empty-diff' : result.providerSelection;
+  return {
+    family: result.provider,
+    ...(result.model ? { model: result.model } : {}),
+    ...(providerSelection ? { providerSelection } : {}),
+  };
+}
 
 /**
  * Phase 235 (T3) — project `draft`'s acceptance criteria, boundaries[] and
@@ -195,10 +230,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
             summaryPatch: { codeReview: identifiedFindings },
             reason,
             flags: {
-              verifierIdentity: {
-                family: verifyResult.provider,
-                ...(verifyResult.model ? { model: verifyResult.model } : {}),
-              },
+              verifierIdentity: buildVerifierIdentityFlag(verifyResult, touched, diff),
             },
           };
         }
@@ -230,10 +262,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
             summaryPatch: { codeReview: identifiedFindings },
             reason,
             flags: {
-              verifierIdentity: {
-                family: verifyResult.provider,
-                ...(verifyResult.model ? { model: verifyResult.model } : {}),
-              },
+              verifierIdentity: buildVerifierIdentityFlag(verifyResult, touched, diff),
             },
           };
         }
@@ -244,10 +273,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
       outcome: 'pass',
       summaryPatch: { codeReview: identifiedFindings },
       flags: {
-        verifierIdentity: {
-          family: verifyResult.provider,
-          ...(verifyResult.model ? { model: verifyResult.model } : {}),
-        },
+        verifierIdentity: buildVerifierIdentityFlag(verifyResult, touched, diff),
       },
     };
   } catch (err) {

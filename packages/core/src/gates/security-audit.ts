@@ -1,6 +1,42 @@
 import { randomUUID } from 'node:crypto';
 import { redactSecrets } from '../security/redact.js';
+import type { SecurityAuditResult } from '../contracts/index.js';
 import type { GateImpl, GateResult } from './types.js';
+
+/**
+ * 263-01 (T4) — builds the `flags.verifierIdentity` object shared by both
+ * pass/refuse return paths below. Merges two independent provenance facts:
+ * (1) `result.providerSelection`, tagged upstream by `verifier-factory.ts`'s
+ * configured/fallback computation (T3) and threaded through untouched; (2)
+ * this gate's own empty-diff observation — touched files non-empty but the
+ * memoized diff is empty, for a provider other than `mock` — computed
+ * directly from `ctx.touchedFiles`/`ctx.diff()` rather than from the verify()
+ * call, since a verifier constructed outside `verifier-factory.ts` (as every
+ * test fixture here does) never reports its own `providerSelection`. When
+ * both would apply, `empty-diff` wins over `'configured'` (the only reachable
+ * overlap — both fallback paths in `verifier-factory.ts` return
+ * `provider: 'mock'`, which the `!== 'mock'` guard below already excludes):
+ * a provider call that structurally could not judge anything is a stronger
+ * statement than whether that same call was the operator's deliberate
+ * choice. `family`/`model` are unchanged from before this phase;
+ * `providerSelection` is added only when computed, so `{ family: 'mock' }`
+ * (no `model`, no `providerSelection`) still round-trips through `toEqual`
+ * unchanged for every pre-263-01 test.
+ */
+function buildVerifierIdentityFlag(
+  result: Pick<SecurityAuditResult, 'provider' | 'model' | 'providerSelection'>,
+  touched: string[],
+  diff: string,
+): { family: string; model?: string; providerSelection?: 'configured' | 'fallback' | 'empty-diff' } {
+  const isEmptyDiff =
+    touched.length > 0 && diff.trim().length === 0 && result.provider !== 'mock';
+  const providerSelection = isEmptyDiff ? 'empty-diff' : result.providerSelection;
+  return {
+    family: result.provider,
+    ...(result.model ? { model: result.model } : {}),
+    ...(providerSelection ? { providerSelection } : {}),
+  };
+}
 
 /**
  * Security-audit verifier gate (Phase 25.2). Extracted from settle.ts verbatim
@@ -46,10 +82,7 @@ export const runSecurityAuditGate: GateImpl = async (ctx): Promise<GateResult> =
           summaryPatch: { securityAudit: securityAuditFindings },
           reason,
           flags: {
-            verifierIdentity: {
-              family: result.provider,
-              ...(result.model ? { model: result.model } : {}),
-            },
+            verifierIdentity: buildVerifierIdentityFlag(result, touched, diff),
           },
         };
       }
@@ -63,10 +96,7 @@ export const runSecurityAuditGate: GateImpl = async (ctx): Promise<GateResult> =
       outcome: 'pass',
       summaryPatch: { securityAudit: securityAuditFindings },
       flags: {
-        verifierIdentity: {
-          family: result.provider,
-          ...(result.model ? { model: result.model } : {}),
-        },
+        verifierIdentity: buildVerifierIdentityFlag(result, touched, diff),
       },
     };
   } catch (err) {

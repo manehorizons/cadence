@@ -299,4 +299,59 @@ describe('runPlanReviewGate', () => {
       at: expect.any(String),
     });
   });
+
+  // Phase 263 (T3) — closing the test-coverage gap: T3 threads
+  // `readProviderSelection(res)` from converge.ts into `runConvergentReview`'s
+  // input here, but shipped with no test proving it reaches the on-disk
+  // sidecar. `PlanReviewResult` doesn't declare `providerSelection` in its own
+  // TypeScript interface (converge.ts's `readProviderSelection` reads it
+  // structurally instead — see that file's comment), so the fixture below is
+  // cast to `PlanReviewResult` to attach the field the way a real
+  // `createVerifierFactory`-tagged verifier result would carry it. This test
+  // would fail if plan-review.ts stopped calling `readProviderSelection` or
+  // stopped threading its result into `runConvergentReview`.
+  it('includes providerSelection (history + legacy top-level) when the verifier result carries a fallback tag', async () => {
+    const writes: string[] = [];
+    const result = {
+      pass: true,
+      findings: [],
+      provider: 'mock',
+      providerSelection: 'fallback',
+    } as PlanReviewResult;
+    const res = await runPlanReviewGate(ctx({ result, writes }));
+    expect(res.outcome).toBe('pass');
+    const sidecar = JSON.parse(writes[0]!);
+    expect(sidecar).toEqual({
+      draftId: '01-01',
+      converged: true,
+      attempts: 0,
+      maxAttempts: 3,
+      history: [
+        {
+          at: expect.any(String),
+          pass: true,
+          findingsCount: 0,
+          provider: 'mock',
+          providerSelection: 'fallback',
+          verdict: 'pass',
+        },
+      ],
+      pass: true,
+      provider: 'mock',
+      providerSelection: 'fallback',
+      findings: 0,
+      at: expect.any(String),
+    });
+  });
+
+  it('omits providerSelection from the sidecar when the verifier result does not carry it', async () => {
+    const writes: string[] = [];
+    const res = await runPlanReviewGate(
+      ctx({ result: { pass: true, findings: [], provider: 'mock' }, writes }),
+    );
+    expect(res.outcome).toBe('pass');
+    const sidecar = JSON.parse(writes[0]!);
+    expect(sidecar).not.toHaveProperty('providerSelection');
+    expect(sidecar.history[0]).not.toHaveProperty('providerSelection');
+  });
 });

@@ -1,4 +1,4 @@
-import { runConvergentReview } from '../verify/converge.js';
+import { runConvergentReview, readProviderSelection } from '../verify/converge.js';
 import type { DraftGateImpl } from './draft-types.js';
 import type { GateResult } from './types.js';
 
@@ -26,11 +26,13 @@ export const runPlanReviewGate: DraftGateImpl = async (ctx): Promise<GateResult>
   // waved through, regardless of verdict.
   const bypassed = !res.pass && ctx.opts.allowPlanReviewFailure === true;
 
+  const providerSelection = readProviderSelection(res);
   const result = runConvergentReview({
     pass: res.pass,
     findingsCount: res.findings.length,
     provider: res.provider,
     ...(res.model ? { model: res.model } : {}),
+    ...(providerSelection ? { providerSelection } : {}),
     attemptsSoFar,
     history,
     maxAttempts,

@@ -1781,6 +1781,13 @@
       "kind": "note",
       "summary": "no existing init flow surfaces or records a provider choice; per HANDOFF-v1.56-verifier-honesty.md Phase N, verify against phase 246 onboard semantics before implementing",
       "createdAt": "2026-08-08T17:58:46.299Z"
+    },
+    {
+      "id": "ev-20260808-008",
+      "recommendationId": "rec-20260808-007",
+      "kind": "note",
+      "summary": "grep -n 'verifierIdentity|result.provider|result.model' packages/core/src/gates/deep-verify.ts packages/core/src/gates/per-task-verify.ts (2026-08-08): deep-verify hits are deepVerify[]/deepVerifyMeta only, never flags.verifierIdentity; per-task-verify has zero hits",
+      "createdAt": "2026-08-08T19:31:59.976Z"
     }
   ]
 }

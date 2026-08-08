@@ -12,7 +12,7 @@ import {
   resolveUiSpecReviewPort,
   type SpecApproveVerifierPorts,
 } from './spec-approve-ports.js';
-import { runConvergentReview } from '../verify/converge.js';
+import { runConvergentReview, readProviderSelection } from '../verify/converge.js';
 import { emitSpecReviewUnconverged } from '../notify/spec-review.js';
 import { emitUiSpecReviewUnconverged } from '../notify/ui-spec-review.js';
 import { assertSafePhaseSlug, derivePhaseTaskId } from '../phases/id.js';
@@ -69,12 +69,14 @@ export async function specApproveService(
     const res = await verifier.verify({ spec });
     const maxAttempts = cfg?.convergence?.maxAttempts ?? 3;
     const bypassed = !res.pass && args.allowSpecReviewFailure === true;
+    const providerSelection = readProviderSelection(res);
 
     const result = runConvergentReview({
       pass: res.pass,
       findingsCount: res.findings.length,
       provider: res.provider,
       ...(res.model ? { model: res.model } : {}),
+      ...(providerSelection ? { providerSelection } : {}),
       attemptsSoFar,
       history,
       maxAttempts,
@@ -166,12 +168,14 @@ export async function specApproveService(
 
       const uiRes = await uiVerifier.verify({ uiSpec });
       const uiBypassed = !uiRes.pass && args.allowUiSpecReviewFailure === true;
+      const uiProviderSelection = readProviderSelection(uiRes);
 
       const uiResult = runConvergentReview({
         pass: uiRes.pass,
         findingsCount: uiRes.findings.length,
         provider: uiRes.provider,
         ...(uiRes.model ? { model: uiRes.model } : {}),
+        ...(uiProviderSelection ? { providerSelection: uiProviderSelection } : {}),
         attemptsSoFar: uiAttemptsSoFar,
         history: uiHistory,
         maxAttempts,

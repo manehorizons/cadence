@@ -260,8 +260,21 @@ export interface GateFlags {
   /** Phase 232: verifier identity that actually ran a gate (currently set
    *  only by `code-review`/`security-audit`), for the registry to merge onto
    *  that gate's persisted GateProvenance entry (`provider`/`model`) without
-   *  the registry importing gate-specific verifier types. */
-  verifierIdentity?: { family: string; model?: string };
+   *  the registry importing gate-specific verifier types.
+   *
+   *  Phase 263 (T3): `providerSelection` widens this internal runtime shape
+   *  additively, mirroring `GateProvenanceZ.providerSelection`
+   *  (`@thomas-powers-jr/cadence-types`) one level up the same three-value
+   *  enum. `'configured'`/`'fallback'` come from `verify/verifier-factory.ts`'s
+   *  universal tagging (threaded through untouched by the gate); `'empty-diff'`
+   *  is gate-level, diff-scoped knowledge only `code-review`/`security-audit`
+   *  compute themselves (T4) — this file does not compute either value, only
+   *  names the shape both producers (T3's tagging, T4's gates) write into. */
+  verifierIdentity?: {
+    family: string;
+    model?: string;
+    providerSelection?: 'configured' | 'fallback' | 'empty-diff';
+  };
 }
 
 /**

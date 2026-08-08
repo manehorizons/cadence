@@ -1321,7 +1321,7 @@ release-currency (phase 262) is scoped to comparing published vs local 'engines'
 
 ## rec-20260808-002 — Provenance cannot distinguish configured mock from fallback mock
 
-- status: converted
+- status: settle-pending
 - ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
@@ -1393,3 +1393,20 @@ A reader seeing provider: mock reasonably concludes nothing was checked, but Moc
 - next: cadence milestone propose
 
 cadence init never asks the operator to choose a verifier provider -- it inherits a default silently, so an operator can run a repo indefinitely under mock without ever having made or recorded that choice. Make cadence init present the provider choice explicitly (mock remains a legal, unshamed, first-class option), record the selection as a ledger decision (not just config), and state the strong-assurance consequence in plain language at selection time. Non-interactive paths (--ci, --full, scripted) need a documented non-prompting flag; cadence onboard must report the existing selection rather than re-prompt.
+
+## rec-20260808-007 — deep-verify and per-task-verify persist no provider/model identity into gates[] at all
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/gates/deep-verify.ts, packages/core/src/gates/per-task-verify.ts, packages/core/src/gates/assurance-record.ts
+- decisions: dec-20260808-008 (active)
+- evidence: grep -n 'verifierIdentity|result.provider|result.model' packages/core/src/gates/deep-verify.ts packages/core/src/gates/per-task-verify.ts (2026-08-08): deep-verify hits are deepVerify[]/deepVerifyMeta only, never flags.verifierIdentity; per-task-verify has zero hits
+- next: cadence milestone propose
+
+Discovered during phase 263 (v1.56 Phase L) T3 dispatch prep: GateProvenanceZ.provider/.model are documented as 'currently populated only for code-review and security-audit' (packages/types/src/summary.ts), confirmed by direct read -- deep-verify.ts writes provider/model only into its separate deepVerify[]/deepVerifyMeta records, never into a gates[] entry's flags.verifierIdentity; per-task-verify.ts persists no provider identity anywhere (zero matches for verifierIdentity/result.provider in the file). This is a materially larger gap than phase 263's providerSelection distinction: these two gates have no baseline provider identity to extend in the first place. It also interacts with deriveAssuranceRecord's hasRealVerifier (verifierRollup.some(v => v.provider !== 'mock')): since this repo's perTaskVerifier.provider and verifier.provider are both already host-cli, naively adding baseline persistence to either gate would grow verifierRollup with real host-cli entries on ordinary auto-profile settles, silently moving assurance.overall toward strong with no review gate having actually run -- a live instance of the exact false-confidence failure mode v1.56 exists to close. Phase 263 deliberately excludes both gates from its providerSelection persistence scope (see dec-<this-decision-id> and the DRAFT's Boundaries) rather than papering over this pre-existing gap.

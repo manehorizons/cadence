@@ -145,6 +145,26 @@ export const GateProvenanceZ = z.object({
    *  `provider`/`model` and `GateFlags.verifierFailure.provider`. */
   provider: z.string().optional(),
   model: z.string().optional(),
+  /** Phase 263 (T2, AC-4): which of three epistemically distinct states
+   *  produced this gate's `provider`/`model` — a deliberately-configured
+   *  provider, a silent fallback to mock (at selection time in
+   *  `createVerifierFactory` or at call time in `wrapWithFallback`), or a
+   *  real provider whose call structurally could not judge anything because
+   *  its diff was empty. Optional — absent for every pre-phase-263 record
+   *  and for gates this phase does not tag.
+   *
+   *  MUST stay `.optional()` with NO `.default(...)`, for the exact same
+   *  reason as `coverageScheme` below (phase 239 precedent): `cadence
+   *  summary verify` Zod-parses the file and then content-hashes the PARSED
+   *  object (`core/src/services/summary-hash.ts`), so a default here would
+   *  be injected into every historical SUMMARY at parse time, change its
+   *  digest, and report every past settle as tampered. A test in
+   *  `core/tests/summary-provider-selection-schema.test.ts` fails if a
+   *  default is added. No `schemaVersion` bump either — optional fields
+   *  added after phase 232's bump to schemaVersion 2 (this one included)
+   *  have never required a further bump; see `coverageScheme`/
+   *  `coverageMode`'s phase-239 precedent immediately below. */
+  providerSelection: z.enum(['configured', 'fallback', 'empty-diff']).optional(),
 });
 export type GateProvenance = z.infer<typeof GateProvenanceZ>;
 

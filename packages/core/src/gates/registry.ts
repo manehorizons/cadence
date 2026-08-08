@@ -115,21 +115,29 @@ const SELF_GUARD_SKIP_REASON: Partial<Record<SettleGate, string>> = {
 };
 
 /**
- * Phase 232 (T3): lifts a gate's reported `flags.verifierIdentity` (populated
- * only by `code-review`/`security-audit`, see T2) onto the `provider`/`model`
- * fields of the `GateProvenance` entry being pushed for it. Checked generically
- * by flag presence rather than gate name — any future gate that starts
- * reporting `verifierIdentity` picks this up for free, and every gate that
- * doesn't set it (all of them today, besides those two) gets back `{}`, so no
- * stray keys land on its provenance entry (AC-5, `exactOptionalPropertyTypes`
- * safe: never spreads an explicit `undefined`).
+ * Phase 232 (T3), widened by Phase 263 (T3): lifts a gate's reported
+ * `flags.verifierIdentity` (populated only by `code-review`/`security-audit`,
+ * see T2/263-01 T4) onto the `provider`/`model`/`providerSelection` fields of
+ * the `GateProvenance` entry being pushed for it. Checked generically by flag
+ * presence rather than gate name — any future gate that starts reporting
+ * `verifierIdentity` picks this up for free, and every gate that doesn't set
+ * it (all of them today, besides those two) gets back `{}`, so no stray keys
+ * land on its provenance entry (AC-5, `exactOptionalPropertyTypes` safe:
+ * never spreads an explicit `undefined`). `providerSelection` lifts the same
+ * way `model` already does — present only when the gate actually computed
+ * one.
  */
-function verifierIdentityProvenance(res: GateResult): Pick<GateProvenance, 'provider' | 'model'> {
+function verifierIdentityProvenance(
+  res: GateResult,
+): Pick<GateProvenance, 'provider' | 'model' | 'providerSelection'> {
   const identity = res.flags?.verifierIdentity;
   if (!identity) return {};
   return {
     provider: identity.family,
     ...(identity.model !== undefined ? { model: identity.model } : {}),
+    ...(identity.providerSelection !== undefined
+      ? { providerSelection: identity.providerSelection }
+      : {}),
   };
 }
 
