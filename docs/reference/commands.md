@@ -941,12 +941,15 @@ Diagnose this project’s CADENCE setup and report problems
 | `--resolve-state-conflict <side>` | With `--fix`, resolves an unresolved `state.json` git merge conflict by writing the chosen side (`local` or `incoming`); requires `--fix` (errors without it) and is a no-op if `state.json` has no conflict-marker corruption to resolve *(phase 196)* |
 | `-h, --help` | Display help for command |
 
-**Behavior** — runs a set of deterministic, offline health checks on the
-project's CADENCE setup and reports each as `ok` / `warning` / `error` with a
-one-line detail and (for problems) a remediation hint. Pure filesystem + config
-inspection: no network, no AI verifier, no host process spawn, and it never
-touches loop state. **Report-only by default** — it diagnoses and points at the
-fix; pass `--fix` to apply the safe repairs (see below).
+**Behavior** — runs a set of health checks on the project's CADENCE setup and
+reports each as `ok` / `warning` / `error` with a one-line detail and (for
+problems) a remediation hint. Almost entirely filesystem + config inspection —
+no AI verifier and it never touches loop state — with two exceptions that make
+bounded, best-effort network probes and degrade to `ok` when unreachable
+rather than blocking the report: `ledger-remote-collision` (`git fetch` against
+the tracked upstream) and `release-currency` (`npm view` against the published
+package). **Report-only by default** — it diagnoses and points at the fix;
+pass `--fix` to apply the safe repairs (see below).
 
 v1 check set:
 
@@ -973,6 +976,7 @@ v1 check set:
 | `coverage-mode-language-support` | *(Phase 166; registry-driven since Phase 167)* `verification.coverageMode` **is** `'assertion'` paired with a detected project language with no registered assertion-mode coverage profile — checked against the live profile registry (js/ts, Python, Go, Rust, and PHP all have real support as of Phase 167; see `docs/reference/config.md`'s supported-language matrix). Warns naming the detected language and the exact `cadence config edit coverageMode` command to switch to `'mention'` | warning |
 | `conduction-reachability` | *(phase 251)* reports, separately for `code-review` and `security-audit`, whether real-provider conduction is reachable across three axes: **profile** (the gate is absent from `gatesFor(tier, profile).gates` at every `Tier`, for `profile = effectiveProfile(config, null)`), **provider** (the gate's own seam — `codeReview`/`securityAudit` — is configured to `'mock'`), and **session** (the gate's own provider is `'host-cli'` **and** the run is inside a headless Claude Code self-invocation session, so the self-invocation guard would force a mock fallback). Warns naming which axis or axes block each gate; the check's overall status is `ok` only when both gates are reachable | warning |
 | `roadmap-currency` | *(phase 259)* compares the highest phase number under `.cadence/phases/` against the highest phase number referenced in `ROADMAP.md`/`MILESTONES.md` (using the lower of the two, across whichever of those files actually contain phase headings), and warns when the drift exceeds 10 — a fresh consumer repo with no phases, or with no referenced phase headings yet, passes silently. Never a hard failure: generating roadmap prose is a human-only fix, so `--fix` never touches it | warning |
+| `release-currency` | *(phase 262)* compares the local `packages/core/package.json`'s `engines` field against npm's actually-published `engines` for that package (via `npm view`), catching content drift even when local and published version strings match, and independently warns when `.changeset/*.md` files are pending release, naming each one's bump type (when reported on its own, i.e. no `engines` divergence, the wording escalates if any pending changeset declares a `major`/`minor` bump). Both signals are best-effort: an unreadable/private local `package.json` skips the whole check silently (`ok`) — including in any consumer repo without a `packages/core/package.json`, matching how `roadmap-currency` stays silent on a fresh repo — and a failed `npm view` fetch (no network, unpublished/private package, timeout) skips only the `engines` comparison while the pending-changesets signal is still evaluated. Never a hard failure: whether to cut a release or confirm the divergence is intentional is a manual decision, so `--fix` never touches it | warning |
 
 Host checks run only when the relevant files exist; their absence is not a
 problem. Codex readiness checks activate when `.codex/` exists or `AGENTS.md`
@@ -1004,7 +1008,7 @@ never prompts):
 |---|---|---|
 | **auto** | `git-hooks`, missing `STATE.md`, missing managed `AGENTS.md`, `handoff-retention`, `state-tracked` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`); regenerate `AGENTS.md`; set `handoff.retain` to the default (10) when unset and prune the `SESSION-*.md` archive down to that budget (the active `lastHandoff` doc is always kept); write the four CADENCE-owned ephemeral paths to `.gitignore` and `git rm --cached` any that are tracked, without committing *(phase 196)* |
 | **wire-host** | `host-hooks`, `host-commands`, `codex-hooks`, `codex-prompts` | applied only with `--fix --wire-host` — re-runs the relevant host installer once per host repair id (deduped) to rewrite hooks/commands |
-| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `codex-cadence-command`, `ledger-remote-collision`, `conduction-reachability`, `roadmap-currency`, user-owned prompt/agent files | never auto-applied — reported as guidance with the check's remediation |
+| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `codex-cadence-command`, `ledger-remote-collision`, `conduction-reachability`, `roadmap-currency`, `release-currency`, user-owned prompt/agent files | never auto-applied — reported as guidance with the check's remediation |
 
 Each repair is best-effort: a repair that fails is reported (`✗ failed`) and the
 rest still run; `--fix` never throws on a repair failure. `--fix --dry-run`
