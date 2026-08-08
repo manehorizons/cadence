@@ -1739,6 +1739,13 @@
       "kind": "note",
       "summary": "Empirically confirmed hitting this during phase 261 settle (2026-08-07): a literal, qualified 261-01/AC-5 token in a JSDoc comment (non-asserting) at the top of packages/core/tests/cli/verify-historical-coverage-audit.test.ts caused 'cadence settle run --auto' to refuse AC-5 with 'mentioned but not inside a recognized asserting test block', even though 4 real asserting it() blocks later in the same file genuinely reference 261-01/AC-5. Fix was removing the literal qualified token from the comment entirely (paraphrasing without the exact string) -- confirming the bug is real and not just theoretical. Additionally found a related, arguably separate defect: 'cadence verify coverage --explain AC-5' reported 'Overall: SATISFIED' for this exact file/AC combination while the real settle gate still refused it -- the diagnostic tool the gate's own refusal message tells operators to run to debug this class of failure gives a false-positive answer, which cost real debugging time. Worth scoping into this rec or filing as a follow-on.",
       "createdAt": "2026-08-08T04:04:01.532Z"
+    },
+    {
+      "id": "ev-20260808-002",
+      "recommendationId": "rec-20260808-001",
+      "kind": "note",
+      "summary": "Independent fresh-context review of 262-01-DRAFT.md (2026-08-08) verified the 2026-07-27 incident (commit 127a06b0, v1.51.1 tag) via git log/tag inspection and confirmed a tag-distance check would catch the whole class, not just engines drift.",
+      "createdAt": "2026-08-08T14:33:57.934Z"
     }
   ]
 }

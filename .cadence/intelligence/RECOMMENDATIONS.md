@@ -722,22 +722,6 @@ replayPhaseCoverage takes mode from config.coverageMode ?? 'mention' while phase
 
 scanTestCoverage dedups per AC-N@file on a first-occurrence-wins basis (verify/coverage.ts, the 'seen' set). Phase 239 T2 deliberately filters UNQUALIFIED occurrences before the dedup add so a bare token cannot consume the slot — but a correctly-qualified occurrence sitting outside an asserting block (a comment, a doc block, a describe() title) passes that filter, takes the slot, and is recorded qualifying:false. Every genuinely-qualifying occurrence later in the same file is then unreachable, and the AC reads as having zero coverage. Failure is silent: the suite stays green, the gate refuses at settle, and the refusal names a token the file demonstrably contains. Candidate fixes: prefer a qualifying occurrence over a non-qualifying one when filling the dedup slot, or keep all occurrences and let the consumer reduce.
 
-## rec-20260731-001 — cadence doctor: release-currency check (local package.json vs published npm)
-
-- status: candidate
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: doctor, release-process
-- files: packages/core/src/doctor/run.ts, .githooks/pre-push
-- evidence: npm view showed 1.51.1 engines:>=20 while local main package.json (same 1.51.1 tag) already had engines:>=22 -- confirmed via manual npm view + git log during the v1.52.0 release-cut session on 2026-07-31
-- next: cadence milestone propose
-
-Node>=22 engine floor (phase 238, PR #324, 2026-07-27) merged to main and sat unreleased for 4 days / 3 more phases while npm still published engines:>=20 under the same 1.51.1 version string -- no mechanical gate caught main drifting from what npm actually ships. Add a doctor check that runs npm view @manehorizons/cadence-core version (best-effort, degrades safely offline) and compares it to local package.json; if local is ahead and .changeset/*.md files are pending, warn and list them, escalating when any pending changeset bumps engines or is a major/minor bump. Same best-effort degrade-safe pattern as checkLedgerRemoteCollision.
-
 ## rec-20260731-003 — Gate provenance doesn't distinguish a mock-downgraded AI review from a genuinely-ran one
 
 - status: candidate
@@ -1318,3 +1302,19 @@ Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which
 - next: cadence milestone propose
 
 Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token scheme that closes the cross-phase AC-N token collision (originally rec-20260729-004). But 'bare' remains the DEFAULT for every fresh cadence init and every other cadence-managed project (packages/types/src/config.ts:227,252,577) -- this repo dogfoods the fix for itself only, via its own .cadence/config.json. Decide whether phase-qualified should become the default: weigh against the AC-N token convention documented in CLAUDE.md and asserted by packages/core/tests/verify/, backward compat for pre-239 test files written against bare tokens, and the v2.0.0-reserved semver policy (breaking changes ship as minor until full coupling).
+
+## rec-20260808-001 — cadence doctor: content-agnostic release-drift check via git-tag-distance
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: doctor, release-process
+- files: packages/core/src/doctor/run.ts
+- evidence: Independent fresh-context review of 262-01-DRAFT.md (2026-08-08) verified the 2026-07-27 incident (commit 127a06b0, v1.51.1 tag) via git log/tag inspection and confirmed a tag-distance check would catch the whole class, not just engines drift.
+- next: cadence milestone propose
+
+release-currency (phase 262) is scoped to comparing published vs local 'engines' content only, since that was the exact field behind the 2026-07-27 incident. A strictly stronger, content-agnostic, offline detector exists: local version == published version AND 'git log v<version>..HEAD' is non-empty means main has unreleased commits sitting under an already-published version tag, regardless of which field changed (deps, bin, exports, plain source). Surfaced by independent review during phase 262 DRAFT authoring; deliberately out of scope for 262 to avoid scope creep -- filed as a follow-on.

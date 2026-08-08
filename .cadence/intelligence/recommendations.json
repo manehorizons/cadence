@@ -1344,35 +1344,6 @@
       "updatedAt": "2026-08-08T04:04:01.532Z"
     },
     {
-      "id": "rec-20260731-001",
-      "title": "cadence doctor: release-currency check (local package.json vs published npm)",
-      "summary": "Node>=22 engine floor (phase 238, PR #324, 2026-07-27) merged to main and sat unreleased for 4 days / 3 more phases while npm still published engines:>=20 under the same 1.51.1 version string -- no mechanical gate caught main drifting from what npm actually ships. Add a doctor check that runs npm view @manehorizons/cadence-core version (best-effort, degrades safely offline) and compares it to local package.json; if local is ahead and .changeset/*.md files are pending, warn and list them, escalating when any pending changeset bumps engines or is a major/minor bump. Same best-effort degrade-safe pattern as checkLedgerRemoteCollision.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-milestone",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "doctor",
-        "release-process"
-      ],
-      "affectedFiles": [
-        "packages/core/src/doctor/run.ts",
-        ".githooks/pre-push"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260731-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-07-31T14:14:35.723Z",
-      "updatedAt": "2026-07-31T14:14:35.723Z"
-    },
-    {
       "id": "rec-20260731-003",
       "title": "Gate provenance doesn't distinguish a mock-downgraded AI review from a genuinely-ran one",
       "summary": "GateProvenanceZ (packages/types/src/summary.ts:63-71) has only {gate, status: ran|skipped|refused, skipReason, reason} -- no field records which provider actually served a status:'ran' gate. registry.ts's fallback branch (line 187, gates.push({gate, status:'ran'})) records code-review/security-audit/deep-verify identically whether a real provider or a silently mock-downgraded one served them, unlike the skipReason pattern already used for buildTestBypassed/boundaryScanBypassed/coverageBypassed a few lines above. Verified on main 2026-07-31: no verifierIdentity or equivalent provider-carrying field exists yet in GateProvenanceZ -- issue #331 referenced 'phase 232' adding this, but that phase's artifacts live on the feat/kernel-assurance-v2 branch, not main. Overlaps rec-20260727-001 (SUMMARY.codeReview/.securityAudit persisting findings as bare arrays, discarding provider/model) -- that rec is about per-finding provenance inside the review result payload; this one is about the top-level GateProvenance ran/skipped record. Reconcile scope between the two before spec'ing either.",
@@ -2422,6 +2393,34 @@
       "decisionIds": [],
       "createdAt": "2026-08-07T23:04:07.612Z",
       "updatedAt": "2026-08-07T23:04:07.612Z"
+    },
+    {
+      "id": "rec-20260808-001",
+      "title": "cadence doctor: content-agnostic release-drift check via git-tag-distance",
+      "summary": "release-currency (phase 262) is scoped to comparing published vs local 'engines' content only, since that was the exact field behind the 2026-07-27 incident. A strictly stronger, content-agnostic, offline detector exists: local version == published version AND 'git log v<version>..HEAD' is non-empty means main has unreleased commits sitting under an already-published version tag, regardless of which field changed (deps, bin, exports, plain source). Surfaced by independent review during phase 262 DRAFT authoring; deliberately out of scope for 262 to avoid scope creep -- filed as a follow-on.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "doctor",
+        "release-process"
+      ],
+      "affectedFiles": [
+        "packages/core/src/doctor/run.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-08T14:33:57.934Z",
+      "updatedAt": "2026-08-08T14:33:57.934Z"
     }
   ],
   "archived": [
@@ -6914,10 +6913,43 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "261-historical-ac-coverage-audit-pre-phase-239",
-      "createdAt": "2026-07-29T23:25:34.102Z",
-      "updatedAt": "2026-08-08T04:05:06.140Z",
       "shippedRef": "phase 261-historical-ac-coverage-audit-pre-phase-239 (PR pending)",
       "archivedAt": "2026-08-08T04:05:06.140Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-29T23:25:34.102Z",
+      "updatedAt": "2026-08-08T04:05:06.140Z"
+    },
+    {
+      "id": "rec-20260731-001",
+      "title": "cadence doctor: release-currency check (local package.json vs published npm)",
+      "summary": "Node>=22 engine floor (phase 238, PR #324, 2026-07-27) merged to main and sat unreleased for 4 days / 3 more phases while npm still published engines:>=20 under the same 1.51.1 version string -- no mechanical gate caught main drifting from what npm actually ships. Add a doctor check that runs npm view @manehorizons/cadence-core version (best-effort, degrades safely offline) and compares it to local package.json; if local is ahead and .changeset/*.md files are pending, warn and list them, escalating when any pending changeset bumps engines or is a major/minor bump. Same best-effort degrade-safe pattern as checkLedgerRemoteCollision.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-milestone",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "doctor",
+        "release-process"
+      ],
+      "affectedFiles": [
+        "packages/core/src/doctor/run.ts",
+        ".githooks/pre-push"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260731-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "262-cadence-doctor-check-release-currency",
+      "createdAt": "2026-07-31T14:14:35.723Z",
+      "updatedAt": "2026-08-08T16:16:22.328Z",
+      "shippedRef": "phase 262-cadence-doctor-check-release-currency (PR pending)",
+      "archivedAt": "2026-08-08T16:16:22.328Z",
       "archiveReason": "shipped"
     }
   ]
