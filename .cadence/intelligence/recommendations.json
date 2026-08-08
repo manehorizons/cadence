@@ -2421,6 +2421,136 @@
       "decisionIds": [],
       "createdAt": "2026-08-08T14:33:57.934Z",
       "updatedAt": "2026-08-08T14:33:57.934Z"
+    },
+    {
+      "id": "rec-20260808-002",
+      "title": "Provenance cannot distinguish configured mock from fallback mock",
+      "summary": "A gate that falls back to mock because an API key/host-cli session is unavailable persists the byte-identical provider: 'mock' as a gate the operator deliberately chose mock for. Phase 243's banner tells the terminal operator about a fallback but the corpus can't -- no retroactive analysis (including dec-20260801-003's planned offline analyzer) can tell 'operator chose a placeholder' apart from 'operator intended real verification and silently got one.' Fix: add a selection-mode field (e.g. providerSelection) populated at selection time in the same code path as the phase-243 banner, across all seven verifier seams.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-verifier-honesty",
+      "createdAt": "2026-08-08T17:58:45.635Z",
+      "updatedAt": "2026-08-08T17:58:45.635Z"
+    },
+    {
+      "id": "rec-20260808-003",
+      "title": "No standing signal for consecutive settles without real-provider conduction",
+      "summary": "cadence doctor's conduction-reachability (phase 251) answers a point-in-time capability question ('can this repo conduct a real finding') but nothing answers the trend question ('has it, lately'). That gap is exactly how 263 settles accumulated under mock with zero escalation in the v1.54 audit. Derive a read-only streak counter from the SUMMARY corpus (consecutive settles with no non-mock verifier identity in provenance), surface it in cadence doctor/status, escalate severity by streak length, and wire it as the mechanical instrument for dec-20260801-003's three-settle revisit trigger.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-verifier-honesty",
+      "createdAt": "2026-08-08T17:58:45.804Z",
+      "updatedAt": "2026-08-08T17:58:45.804Z"
+    },
+    {
+      "id": "rec-20260808-004",
+      "title": "Mock review gates record pass, creating false confidence",
+      "summary": "A placeholder that approves creates false confidence; one that abstains cannot. Reuse the phase-248 status:'skipped'+skipReason shape (already used for bypassed verifier throws) so provenance can never record 'code-review passed' under a mock provider, scoped to review families only (code-review, security-audit, spec-review, plan-review, ui-spec-review). deep-verify and per-task-verify must keep their existing mock pass semantics -- there mock enforces real AC/test linkage and the evidence ladder depends on it.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-verifier-honesty",
+      "createdAt": "2026-08-08T17:58:45.974Z",
+      "updatedAt": "2026-08-08T17:58:45.974Z"
+    },
+    {
+      "id": "rec-20260808-005",
+      "title": "mock label understates deterministic AC-test enforcement it actually performs",
+      "summary": "A reader seeing provider: mock reasonably concludes nothing was checked, but MockACVerifier enforces real AC<->test linkage (fails without >=1 linked test) and MockCodeReviewVerifier flags every added console.log as HIGH -- both can fail. Fix the display layer only (SUMMARY.md, cadence summary render, cadence doctor, cadence config explain, phase-243 banners) via one single-sourced label that states both what mock checks and what it doesn't, and surfaces Phase L's selection mode so a fallback reads visibly different from a deliberate choice. The mock JSON provider key/schema value does not change.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-verifier-honesty",
+      "createdAt": "2026-08-08T17:58:46.133Z",
+      "updatedAt": "2026-08-08T17:58:46.133Z"
+    },
+    {
+      "id": "rec-20260808-006",
+      "title": "Provider selection is inherited silently at cadence init",
+      "summary": "cadence init never asks the operator to choose a verifier provider -- it inherits a default silently, so an operator can run a repo indefinitely under mock without ever having made or recorded that choice. Make cadence init present the provider choice explicitly (mock remains a legal, unshamed, first-class option), record the selection as a ledger decision (not just config), and state the strong-assurance consequence in plain language at selection time. Non-interactive paths (--ci, --full, scripted) need a documented non-prompting flag; cadence onboard must report the existing selection rather than re-prompt.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-08T17:58:46.299Z",
+      "updatedAt": "2026-08-08T17:58:46.299Z",
+      "scoutId": "scout-20260804-verifier-honesty"
     }
   ],
   "archived": [
@@ -6946,11 +7076,11 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "262-cadence-doctor-check-release-currency",
-      "createdAt": "2026-07-31T14:14:35.723Z",
-      "updatedAt": "2026-08-08T16:16:22.328Z",
       "shippedRef": "phase 262-cadence-doctor-check-release-currency (PR pending)",
       "archivedAt": "2026-08-08T16:16:22.328Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-31T14:14:35.723Z",
+      "updatedAt": "2026-08-08T16:16:22.328Z"
     }
   ]
 }
