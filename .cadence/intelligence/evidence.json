@@ -1746,6 +1746,41 @@
       "kind": "note",
       "summary": "Independent fresh-context review of 262-01-DRAFT.md (2026-08-08) verified the 2026-07-27 incident (commit 127a06b0, v1.51.1 tag) via git log/tag inspection and confirmed a tag-distance check would catch the whole class, not just engines drift.",
       "createdAt": "2026-08-08T14:33:57.934Z"
+    },
+    {
+      "id": "ev-20260808-003",
+      "recommendationId": "rec-20260808-002",
+      "kind": "note",
+      "summary": "packages/core/src/gates/assurance-record.ts's hasRealVerifier reads only provider:'mock' vs non-mock, discarding selection context available at the phase-243 banner call site; measured via HANDOFF-v1.56-verifier-honesty.md Phase L",
+      "createdAt": "2026-08-08T17:58:45.635Z"
+    },
+    {
+      "id": "ev-20260808-004",
+      "recommendationId": "rec-20260808-003",
+      "kind": "note",
+      "summary": "dec-20260801-003 already defines a three-settle convention with no mechanical tracker; rec-20260806-008 shows the trigger can already be met by degenerate single-fixture data, underscoring the counter needs organic post-flip settles, not manual conduction runs -- per dec-20260808-003",
+      "createdAt": "2026-08-08T17:58:45.804Z"
+    },
+    {
+      "id": "ev-20260808-005",
+      "recommendationId": "rec-20260808-004",
+      "kind": "note",
+      "summary": "phase 248 precedent for skipped+skipReason; deriveAssuranceRecord's hasRealVerifier/hasAnyVerifier interaction with a mock-abstained but provider:'mock'-carrying gate needs to be derived and tested per HANDOFF-v1.56-verifier-honesty.md Phase P",
+      "createdAt": "2026-08-08T17:58:45.974Z"
+    },
+    {
+      "id": "ev-20260808-006",
+      "recommendationId": "rec-20260808-005",
+      "kind": "note",
+      "summary": "packages/core/src/verify/mock-verifier.ts and code-review.ts:103 confirmed to have real, narrow, deterministic gate behavior per HANDOFF-v1.56-verifier-honesty.md §2; depends on Phase L's selection-mode field",
+      "createdAt": "2026-08-08T17:58:46.133Z"
+    },
+    {
+      "id": "ev-20260808-007",
+      "recommendationId": "rec-20260808-006",
+      "kind": "note",
+      "summary": "no existing init flow surfaces or records a provider choice; per HANDOFF-v1.56-verifier-honesty.md Phase N, verify against phase 246 onboard semantics before implementing",
+      "createdAt": "2026-08-08T17:58:46.299Z"
     }
   ]
 }

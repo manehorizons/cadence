@@ -182,6 +182,36 @@ The baseline profile question (should .cadence/config.json's profile ever move o
 
 256-01's settle (2026-08-06T02:14:04.111Z) completed with assurance.overall: strong and both code-review/security-audit reporting provider: host-cli, but this is a false record: the seeded-defect fixture was committed (WIP commit 9fb2eef6) before the settle ran, so ctx.diff() (git diff HEAD -- touchedFiles) was empty for the fixture files, and security-audit's real codex call returned securityAudit: [] without ever judging the hardcoded credential -- confirmed via git diff HEAD -- fixture/seeded-defect.ts returning nothing. code-review's one persisted finding was real but incidental: CONDUCTION-RUNBOOK.md was the only touched file with an actual diff at settle time. Nothing about the seeded defect's real-provider severity was learned. Do not cite 256-01's SUMMARY.json as evidence that security-audit does or does not catch hardcoded credentials, and do not count this settle toward dec-20260801-003's 3-settle revisit trigger for code-review finding-drift (the one finding it produced was not from the intended fixture, and cannot be evaluated for message-drift against nothing). securityAudit.provider was manually reverted to mock immediately after (dec-20260803-001's baseline is intact, no lasting config drift). The real fix (rec-20260806-004) is a general gap in every diff-scoped verifier gate, not specific to this phase. Next: redo the certification as a new draft (e.g. 256-02) with the fixture staged but deliberately left UNCOMMITTED at settle time, so the real diff-scoped gates actually see it.
 
+### dec-20260808-001 — D-A: Do not rename the mock provider identity
+
+- decided: 2026-08-08T17:57:49.196Z
+
+provider: 'mock' is load-bearing across config schema, SUMMARY provenance, doctor checks, and 56+ historical review artifacts. Every candidate replacement (offline/local/deterministic) reads as a legitimate long-term mode, softer than the honest 'placeholder' signal mock already sends. Renaming right after the v1.54 audit found 263 mock-only settles would read as relabeling rather than fixing the condition. v1.56 addresses mock's real precision defect (it understates what it checks) at the display layer (Phase M), not the schema layer. Recorded per HANDOFF-v1.56-verifier-honesty.md §3.
+
+### dec-20260808-002 — D-B: Do not require a real verifier provider at cadence init
+
+- decided: 2026-08-08T17:57:49.358Z
+
+This repo's own codeReview.provider was already host-cli throughout the entire period in which zero real conduction occurred -- the actual blockers were profile: auto excluding review gates from every tier, and the self-invocation guard forcing mock fallback. A setup-time provider requirement targets an axis that was never the failure axis. It would also break the offline demo/cadence tutorial, hermetic CI, and this repo's own testkit fixtures, and coerces cost onto solo users. v1.56 Phases N and O deliver informed, visible, non-drifting provider state without that coercion. Recorded per HANDOFF-v1.56-verifier-honesty.md §3.
+
+### dec-20260808-003 — v1.56 Phase O sequenced after Phase P, not before (amends HANDOFF-v1.56 §5 priority table)
+
+- decided: 2026-08-08T17:58:18.836Z
+
+The handoff ranks O (P1) ahead of P (P2), but dec-20260804-001 (filed during Phase 252/'Phase C') made the .cadence/config.json profile flip off 'auto' explicitly contingent on Phase P landing first -- to avoid taking on review-gate cost before the Aug 12 2026 security deadline, and because Phase P removes 'the false-confidence risk a baseline change carries today.' Without the flip, agent-driven settles keep producing mock-only provenance, so O.6's bar ('running the check after v1.55 reports a materially lower number') is unmeasurable in its intended sense -- the only real-provider settles on record are phase 256's six manually-conducted, single-fixture runs (rec-20260806-008), which that same rec calls degenerate evidence, not organic drift data. Execution order for this release: L -> M/N -> P (+ the profile flip) -> O, so O.3's threshold is measured against real post-flip settle behavior instead of a still-auto baseline. Operator-confirmed 2026-08-08.
+
+### dec-20260808-004 — J.1 (overall: strong structurally unreachable) resolved for the profile-override path; still true for the default auto-profile path
+
+- decided: 2026-08-08T17:58:18.985Z
+
+v1.55 handoff J.1 claimed deriveAssuranceRecord's hasRealVerifier gate made 'strong' structurally unreachable, contingent on Phases E and C succeeding. Phase E (256-02, 2026-08-06) empirically closed this for the override path: the settle at 2026-08-06T05:20:09.913Z recorded assurance.overall: 'strong' with verifierRollup [{provider: 'host-cli', gateCount: 2}], and the preceding 04:33:37Z real host-cli security-audit call is independently confirmed (via the refused-settle snapshot) to have caught the seeded critical hardcoded-credential fixture and a high-severity console.log leak -- a genuine real-provider result, not an empty-diff false pass like the voided 256-01. Phase C (252) did not flip the baseline profile (dec-20260804-001 deferred that to Phase P), so under this repo's default auto profile + agent-driven settles, code-review/security-audit still never run and 'strong' remains unreachable exactly as J.1 described. The v1.55 handoff's named deliverable for this resolution -- a regression test whose prior absence let the gap ship -- is still owed and is in scope for v1.56 Phase P, which is the phase gated on J.1 per HANDOFF-v1.56-verifier-honesty.md E5. This decision unblocks Phase P's own entry condition.
+
+### dec-20260808-005 — Phase L's providerSelection field widens to a third state covering empty-diff false-pass, not just configured/fallback
+
+- decided: 2026-08-08T17:58:19.141Z
+
+rec-20260806-004 (filed 2026-08-06, high/needs-decision) found that every diff-scoped verifier gate (code-review, security-audit) can early-return empty findings -- while still recording a normal 'ran'/provider:host-cli status -- when its diff is empty but touchedFiles is non-empty, and for the real provider this happens AFTER a live call is spawned (input.files.length === 0 && input.diff.trim().length === 0 is an AND, not an OR). This is a third epistemically distinct state Phase L's original two-value field (providerSelection: 'configured' | 'fallback') cannot represent: 'operator selected a real provider, but the gate structurally could not have judged anything.' Left uncovered, L would ship a provenance model that still can't distinguish this case from a genuine clean pass -- the exact defect class L exists to close. Phase L's DRAFT must widen the field (or add a sibling boolean/enum value) to cover this state before implementation, per operator direction 2026-08-08. Resolving this in L's design is cheaper than retrofitting after PLAN-REVIEW.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

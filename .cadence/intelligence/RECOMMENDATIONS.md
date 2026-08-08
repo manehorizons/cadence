@@ -1318,3 +1318,78 @@ Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token sch
 - next: cadence milestone propose
 
 release-currency (phase 262) is scoped to comparing published vs local 'engines' content only, since that was the exact field behind the 2026-07-27 incident. A strictly stronger, content-agnostic, offline detector exists: local version == published version AND 'git log v<version>..HEAD' is non-empty means main has unreleased commits sitting under an already-published version tag, regardless of which field changed (deps, bin, exports, plain source). Surfaced by independent review during phase 262 DRAFT authoring; deliberately out of scope for 262 to avoid scope creep -- filed as a follow-on.
+
+## rec-20260808-002 — Provenance cannot distinguish configured mock from fallback mock
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: packages/core/src/gates/assurance-record.ts's hasRealVerifier reads only provider:'mock' vs non-mock, discarding selection context available at the phase-243 banner call site; measured via HANDOFF-v1.56-verifier-honesty.md Phase L
+- next: cadence milestone propose
+
+A gate that falls back to mock because an API key/host-cli session is unavailable persists the byte-identical provider: 'mock' as a gate the operator deliberately chose mock for. Phase 243's banner tells the terminal operator about a fallback but the corpus can't -- no retroactive analysis (including dec-20260801-003's planned offline analyzer) can tell 'operator chose a placeholder' apart from 'operator intended real verification and silently got one.' Fix: add a selection-mode field (e.g. providerSelection) populated at selection time in the same code path as the phase-243 banner, across all seven verifier seams.
+
+## rec-20260808-003 — No standing signal for consecutive settles without real-provider conduction
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: dec-20260801-003 already defines a three-settle convention with no mechanical tracker; rec-20260806-008 shows the trigger can already be met by degenerate single-fixture data, underscoring the counter needs organic post-flip settles, not manual conduction runs -- per dec-20260808-003
+- next: cadence milestone propose
+
+cadence doctor's conduction-reachability (phase 251) answers a point-in-time capability question ('can this repo conduct a real finding') but nothing answers the trend question ('has it, lately'). That gap is exactly how 263 settles accumulated under mock with zero escalation in the v1.54 audit. Derive a read-only streak counter from the SUMMARY corpus (consecutive settles with no non-mock verifier identity in provenance), surface it in cadence doctor/status, escalate severity by streak length, and wire it as the mechanical instrument for dec-20260801-003's three-settle revisit trigger.
+
+## rec-20260808-004 — Mock review gates record pass, creating false confidence
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: phase 248 precedent for skipped+skipReason; deriveAssuranceRecord's hasRealVerifier/hasAnyVerifier interaction with a mock-abstained but provider:'mock'-carrying gate needs to be derived and tested per HANDOFF-v1.56-verifier-honesty.md Phase P
+- next: cadence milestone propose
+
+A placeholder that approves creates false confidence; one that abstains cannot. Reuse the phase-248 status:'skipped'+skipReason shape (already used for bypassed verifier throws) so provenance can never record 'code-review passed' under a mock provider, scoped to review families only (code-review, security-audit, spec-review, plan-review, ui-spec-review). deep-verify and per-task-verify must keep their existing mock pass semantics -- there mock enforces real AC/test linkage and the evidence ladder depends on it.
+
+## rec-20260808-005 — mock label understates deterministic AC-test enforcement it actually performs
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: packages/core/src/verify/mock-verifier.ts and code-review.ts:103 confirmed to have real, narrow, deterministic gate behavior per HANDOFF-v1.56-verifier-honesty.md §2; depends on Phase L's selection-mode field
+- next: cadence milestone propose
+
+A reader seeing provider: mock reasonably concludes nothing was checked, but MockACVerifier enforces real AC<->test linkage (fails without >=1 linked test) and MockCodeReviewVerifier flags every added console.log as HIGH -- both can fail. Fix the display layer only (SUMMARY.md, cadence summary render, cadence doctor, cadence config explain, phase-243 banners) via one single-sourced label that states both what mock checks and what it doesn't, and surfaces Phase L's selection mode so a fallback reads visibly different from a deliberate choice. The mock JSON provider key/schema value does not change.
+
+## rec-20260808-006 — Provider selection is inherited silently at cadence init
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: no existing init flow surfaces or records a provider choice; per HANDOFF-v1.56-verifier-honesty.md Phase N, verify against phase 246 onboard semantics before implementing
+- next: cadence milestone propose
+
+cadence init never asks the operator to choose a verifier provider -- it inherits a default silently, so an operator can run a repo indefinitely under mock without ever having made or recorded that choice. Make cadence init present the provider choice explicitly (mock remains a legal, unshamed, first-class option), record the selection as a ledger decision (not just config), and state the strong-assurance consequence in plain language at selection time. Non-interactive paths (--ci, --full, scripted) need a documented non-prompting flag; cadence onboard must report the existing selection rather than re-prompt.
