@@ -2559,6 +2559,35 @@
       "decisionIds": [],
       "createdAt": "2026-08-09T00:24:39.319Z",
       "updatedAt": "2026-08-09T00:24:39.319Z"
+    },
+    {
+      "id": "rec-20260809-002",
+      "title": "dispatcher.test.ts skill-invoke FIFO test times out on Windows CI, independent of diff",
+      "summary": "tests/hooks/dispatcher.test.ts:96 (skill-invoke caps at 100 entries with FIFO drop) makes 105 sequential real-disk state read/write round trips via SimpleStateBackend against a tempRepo fixture, each awaited serially. Confirmed failing with Error: Test timed out in 90000ms on windows-latest,22 across at least 2 of the last 4 main-branch CI runs (31272510722 and 31240052177), fully independent of any feature branch diff -- PR 389 phase 264 touched none of packages/core/src/hooks or its tests and still hit the identical failure. Distinct mechanism from rec-20260806-010 (subprocess-spawn corpus sweep) but same symptom class: serial real-IO-heavy test timing out under Windows CI resource pressure. Options: batch the 105 dispatch calls, raise this specific test's timeout via a scoped vitest config (not a global bump), or investigate whether SimpleStateBackend can avoid a full read-modify-write round trip per call in test/fixture mode.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "test-infra"
+      ],
+      "affectedFiles": [
+        "packages/core/src/hooks/dispatcher.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260809-002",
+        "ev-20260809-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260809-phase264-ci",
+      "createdAt": "2026-08-09T00:59:47.672Z",
+      "updatedAt": "2026-08-09T01:15:20.132Z"
     }
   ],
   "archived": [
@@ -7146,12 +7175,12 @@
         "dec-20260808-010"
       ],
       "convertedToPhaseId": "264-rendered-label-precision",
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T17:58:46.133Z",
-      "updatedAt": "2026-08-09T00:25:50.560Z",
       "shippedRef": "phase 264, PR #389",
+      "scoutId": "scout-20260804-verifier-honesty",
       "archivedAt": "2026-08-09T00:25:50.560Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-08T17:58:46.133Z",
+      "updatedAt": "2026-08-09T00:25:50.560Z"
     }
   ]
 }
