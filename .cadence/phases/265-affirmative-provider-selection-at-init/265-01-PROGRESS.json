@@ -1,0 +1,41 @@
+{
+  "draftId": "265-01",
+  "tasks": {
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-09T03:21:58.778Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-09T03:22:44.951Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-09T03:26:01.163Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/265-provider-selection-init/packages/core/src/cli/commands/init.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/265-provider-selection-init/packages/core/tests/cli/init-provider-selection.test.ts"
+      ],
+      "updatedAt": "2026-08-09T04:01:44.861Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/265-provider-selection-init/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/265-provider-selection-init/.changeset/affirmative-provider-selection.md"
+      ],
+      "updatedAt": "2026-08-09T04:08:06.188Z"
+    }
+  }
+}

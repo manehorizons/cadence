@@ -1816,6 +1816,27 @@
       "kind": "note",
       "summary": "Third-occurrence history found: this test's timeout was already remediated twice before. Phase 29.5 (commit 45177463, 2026-05-15) added a per-test 20000ms override after it timed out under the 5000ms vitest default. Phase 32.1 (commit 9e6e46f6, 2026-05-16) explicitly REVERTED that per-test override as a Per-Test Band-Aid and root-caused it into vitest.shared.ts's platform-aware global TIMEOUT_MS (20000 non-Windows). That value was itself raised to 90000ms for win32 specifically because of two consecutive dispatcher-cap timeouts at ~61s on windows-latest/Node22 (2026-07-22, PR #278 post-merge). PR 389 (phase 264, unrelated diff) now hit the identical test 3 times in a row (runs 31286150559 x3: jobs 93175252908, 93178484744, all Test timed out in 90000ms at tests/hooks/dispatcher.test.ts:96:3) -- i.e. it is now failing consistently at the SAME 90000ms ceiling that was raised specifically to fix this exact test. This is the third distinct remediation cycle for the same root cause (105 serial real-disk read-modify-write cycles), suggests Windows CI runner resource headroom has degraded again since the 2026-07-22 fix, and should be treated as higher priority than a first-time flake report.",
       "createdAt": "2026-08-09T01:15:20.132Z"
+    },
+    {
+      "id": "ev-20260809-004",
+      "recommendationId": "rec-20260809-003",
+      "kind": "note",
+      "summary": "grep -n 'zero prompt' README.md packages/core/README.md both show the same stale comment at README.md:123 and packages/core/README.md:45",
+      "createdAt": "2026-08-09T04:08:32.134Z"
+    },
+    {
+      "id": "ev-20260809-005",
+      "recommendationId": "rec-20260809-004",
+      "kind": "note",
+      "summary": "prompter.ts:84-103's own docstring documents the settle-side instance and defers the fix (Phase 174); init.ts's whole-branch review (phase 265) independently found and locally fixed a second instance in cadence init",
+      "createdAt": "2026-08-09T04:34:51.869Z"
+    },
+    {
+      "id": "ev-20260809-006",
+      "recommendationId": "rec-20260809-005",
+      "kind": "note",
+      "summary": "phase 265's DRAFT AC-5 deliberately scoped only the no-reprompt half after advisor review; rec-20260808-006's shipped promotion notes this remainder explicitly rather than overclaiming full delivery",
+      "createdAt": "2026-08-09T05:01:52.983Z"
     }
   ]
 }

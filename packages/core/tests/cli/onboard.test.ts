@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { defaultConfig } from '@thomas-powers-jr/cadence-types';
 import { loadConfig, writeConfig } from '../../src/config/loader.js';
+import { addIntelligenceDecision } from '../../src/intelligence/store/decisions.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CADENCE_CLI = join(__dirname, '../../dist/cli/index.js');
@@ -227,5 +228,98 @@ describe('cadence onboard — regression: .cadence/ committed but state.json abs
     expect(JSON.parse(stateAfter)).toEqual(mutated);
     // no "bootstrapped" notice — the file was never touched.
     expect(r.stderr).not.toMatch(/bootstrapped/);
+  });
+});
+
+describe('cadence onboard — regression: never gains a provider-selection prompt (AC-5, phase 265)', () => {
+  // Phase 265 (T3, built separately from this task) adds an interactive
+  // provider-selection prompt to `cadence init`. `onboard` is a DIFFERENT
+  // command — per onboard.ts's own header comment it only calls
+  // `assessReadiness(config, ...)` to REPORT verifier readiness by reading
+  // config; its sole `makePrompter()`/prompter usage is for the unrelated
+  // host-wire flow (`maybeWireHost`), never for choosing a provider. These
+  // tests prove that stays true regardless of TTY-likeness or whether the
+  // repo already carries a recorded provider-selection decision (AC-5's
+  // Given clause covers both: "already carries a recorded provider
+  // selection" and "predates this phase and carries none").
+
+  it('265-01/AC-5: non-TTY onboard on a repo predating this phase (no recorded provider decision) runs with a null prompter — any ask() call would throw instead of silently prompting — and renderHuman\'s verifier line stays a plain readiness report', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'no-prompt-nontty' });
+    const root = active.root;
+    // No .claude/, no CADENCE_PROMPTER_SCRIPT, default subprocess spawn
+    // (piped stdio is never a TTY): onboard.ts's makePrompter() returns
+    // `null` in exactly this configuration (see onboard.ts's makePrompter,
+    // mirroring init.ts's). A `null` prompter has no `.ask()` method — if a
+    // future regression wired a provider-selection prompt into onboard the
+    // way T3 wires one into init.ts, calling `prompter.ask(...)` here would
+    // throw a TypeError ("Cannot read properties of null"), which
+    // propagates to onboard's outer try/catch as a non-zero exit and an
+    // "onboard failed:" stderr line — never a silent prompt, never a hang.
+    delete process.env.CADENCE_PROMPTER_SCRIPT; // guard against cross-file env leakage in this worker
+    const start = Date.now();
+    const r = await run(['onboard'], root);
+    const elapsedMs = Date.now() - start;
+
+    expect(r.code).toBe(0);
+    expect(elapsedMs).toBeLessThan(5000); // a hung/blocked prompt would not resolve this fast
+    expect(r.stderr).not.toMatch(/onboard failed/);
+    // renderHuman's verifier line is still a pure readiness report — no
+    // interactive artifact (a provider-choice menu, "select"/"choose"
+    // language, or numbered options) ever appears.
+    expect(r.stdout).toMatch(/verifier\s+.+/);
+    expect(r.stdout).not.toMatch(/choose|select a provider/i);
+  });
+
+  it("265-01/AC-5: TTY-simulated onboard (CADENCE_PROMPTER_SCRIPT set) on a repo that already carries a recorded provider-selection decision — the single scripted answer is spent exactly once, by the pre-existing host-wire question; a second ask() call (e.g. a regressed provider prompt) would exhaust the prompter and fail this test", async () => {
+    active = await tempRepo({ initialized: true, projectName: 'no-prompt-tty-sim' });
+    const root = active.root;
+    await mkdir(join(root, '.claude'), { recursive: true });
+
+    // Seed a recorded provider-selection decision, mirroring what T3's
+    // `cadence init` prompt will write via addIntelligenceDecision — AC-5
+    // explicitly covers onboard running against a repo that already carries
+    // one (not just repos that predate the feature).
+    await addIntelligenceDecision(root, {
+      title: 'cadence init: verifier provider selection',
+      rationale: 'operator chose mock at init time (phase 265 provider-selection prompt)',
+    });
+
+    // CADENCE_PROMPTER_SCRIPT is this codebase's established stand-in for
+    // "an interactive-like prompter is available" in subprocess CLI tests —
+    // a real TTY can't be spawned under vitest (see makePrompter()'s own
+    // scripted-vs-TTY branching, and services/settle-retro.test.ts's
+    // identical framing of "scripted but not a real terminal"). Exactly one
+    // answer is scripted, sized to the one legitimate prompt onboard can
+    // still reach in this configuration (.claude/ present, no --wire-host/
+    // --host/--skip-host-wire flag → maybeWireHost's own [Y/n] question).
+    // Answering 'n' declines the wire without spawning a real host-install
+    // subprocess. ScriptedPrompter throws once its answers are exhausted
+    // (packages/core/src/verify/prompter.ts) — so any further ask() call,
+    // a provider-selection prompt chief among them, would hit that second
+    // call with zero answers left, throw, and surface as a non-zero exit.
+    const start = Date.now();
+    const r = await run(['onboard', '--json'], root, { CADENCE_PROMPTER_SCRIPT: 'n' });
+    const elapsedMs = Date.now() - start;
+
+    expect(r.code).toBe(0);
+    expect(elapsedMs).toBeLessThan(5000);
+    expect(r.stderr).not.toMatch(/exhausted/);
+    expect(r.stderr).not.toMatch(/onboard failed/);
+
+    const parsed = JSON.parse(r.stdout);
+    expect(parsed.ok).toBe(true);
+    // The one scripted answer landed on the host-wire question, not on some
+    // extra prompt ahead of it: `wired:false` from the 'n' reply, reached via
+    // the interactive branch (offered:true).
+    expect(parsed.hostWire).toEqual({ wired: false, offered: true });
+    // verifier readiness surface is still exactly assessReadiness's report —
+    // {provider, keyPresent, ready, reason} — never a new interactive field.
+    expect(Object.keys(parsed.verifier).sort()).toEqual(
+      ['keyPresent', 'provider', 'ready', 'reason'].sort(),
+    );
+    expect(parsed.verifier.provider).toBe('mock');
+    expect(parsed.verifier.keyPresent).toBe(true);
+    expect(typeof parsed.verifier.ready).toBe('boolean');
+    expect(typeof parsed.verifier.reason).toBe('string');
   });
 });
