@@ -328,6 +328,15 @@
       "status": "active",
       "decidedAt": "2026-08-08T22:51:21.022Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260809-001",
+      "recommendationId": "rec-20260806-010",
+      "title": "Bundle rec-20260806-010 + rec-20260809-002 into one CI-timeout-remediation phase",
+      "rationale": "Both recs surfaced independently but are the same symptom class (Windows CI resource pressure hitting per-call I/O/spawn overhead) and materialized together on PR #391's CI (two different tests timed out on the same Windows leg, in the same run). Distinct mechanisms (subprocess-spawn-per-file corpus sweep vs. serial real-disk state read/write round trips), distinct files, no shared code -- but bundling into one phase/PR gets both fixes verified against the same Windows CI run instead of two separate cycles, and the only real verification available is a green + materially-faster Windows leg, which is expensive to obtain per PR. Recorded per CLAUDE.md's Multi-Phase-Commit boundary: this is one phase's scope (CI-timeout remediation), not two phases squashed into one shot.",
+      "status": "active",
+      "decidedAt": "2026-08-09T16:26:51.505Z",
+      "supersedes": []
     }
   ]
 }

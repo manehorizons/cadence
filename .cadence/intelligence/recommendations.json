@@ -2332,38 +2332,6 @@
       "updatedAt": "2026-08-07T01:50:06.798Z"
     },
     {
-      "id": "rec-20260806-010",
-      "title": "summary-verify-sweep.test.ts couples all future PRs to entire historical SUMMARY corpus",
-      "summary": "Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "doctor",
-        "test-infra"
-      ],
-      "affectedFiles": [
-        "packages/core/tests/parse/summary-verify-sweep.test.ts",
-        "packages/core/src/cli/commands/summary.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260806-013",
-        "ev-20260808-009"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260806-phase257",
-      "createdAt": "2026-08-06T18:52:16.644Z",
-      "updatedAt": "2026-08-08T21:35:21.128Z"
-    },
-    {
       "id": "rec-20260807-005",
       "title": "Make phase-qualified the default AC coverage scheme (bare still ships collision bug)",
       "summary": "Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token scheme that closes the cross-phase AC-N token collision (originally rec-20260729-004). But 'bare' remains the DEFAULT for every fresh cadence init and every other cadence-managed project (packages/types/src/config.ts:227,252,577) -- this repo dogfoods the fix for itself only, via its own .cadence/config.json. Decide whether phase-qualified should become the default: weigh against the AC-N token convention documented in CLAUDE.md and asserted by packages/core/tests/verify/, backward compat for pre-239 test files written against bare tokens, and the v2.0.0-reserved semver policy (breaking changes ship as minor until full coupling).",
@@ -2476,6 +2444,32 @@
       "updatedAt": "2026-08-08T17:58:45.974Z"
     },
     {
+      "id": "rec-20260808-006",
+      "title": "Provider selection is inherited silently at cadence init",
+      "summary": "cadence init never asks the operator to choose a verifier provider -- it inherits a default silently, so an operator can run a repo indefinitely under mock without ever having made or recorded that choice. Make cadence init present the provider choice explicitly (mock remains a legal, unshamed, first-class option), record the selection as a ledger decision (not just config), and state the strong-assurance consequence in plain language at selection time. Non-interactive paths (--ci, --full, scripted) need a documented non-prompting flag; cadence onboard must report the existing selection rather than re-prompt.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260804-verifier-honesty",
+      "createdAt": "2026-08-08T17:58:46.299Z",
+      "updatedAt": "2026-08-08T17:58:46.299Z"
+    },
+    {
       "id": "rec-20260808-007",
       "title": "deep-verify and per-task-verify persist no provider/model identity into gates[] at all",
       "summary": "Discovered during phase 263 (v1.56 Phase L) T3 dispatch prep: GateProvenanceZ.provider/.model are documented as 'currently populated only for code-review and security-audit' (packages/types/src/summary.ts), confirmed by direct read -- deep-verify.ts writes provider/model only into its separate deepVerify[]/deepVerifyMeta records, never into a gates[] entry's flags.verifierIdentity; per-task-verify.ts persists no provider identity anywhere (zero matches for verifierIdentity/result.provider in the file). This is a materially larger gap than phase 263's providerSelection distinction: these two gates have no baseline provider identity to extend in the first place. It also interacts with deriveAssuranceRecord's hasRealVerifier (verifierRollup.some(v => v.provider !== 'mock')): since this repo's perTaskVerifier.provider and verifier.provider are both already host-cli, naively adding baseline persistence to either gate would grow verifierRollup with real host-cli entries on ordinary auto-profile settles, silently moving assurance.overall toward strong with no review gate having actually run -- a live instance of the exact false-confidence failure mode v1.56 exists to close. Phase 263 deliberately excludes both gates from its providerSelection persistence scope (see dec-<this-decision-id> and the DRAFT's Boundaries) rather than papering over this pre-existing gap.",
@@ -2535,13 +2529,13 @@
       "updatedAt": "2026-08-09T00:24:39.319Z"
     },
     {
-      "id": "rec-20260809-002",
-      "title": "dispatcher.test.ts skill-invoke FIFO test times out on Windows CI, independent of diff",
-      "summary": "tests/hooks/dispatcher.test.ts:96 (skill-invoke caps at 100 entries with FIFO drop) makes 105 sequential real-disk state read/write round trips via SimpleStateBackend against a tempRepo fixture, each awaited serially. Confirmed failing with Error: Test timed out in 90000ms on windows-latest,22 across at least 2 of the last 4 main-branch CI runs (31272510722 and 31240052177), fully independent of any feature branch diff -- PR 389 phase 264 touched none of packages/core/src/hooks or its tests and still hit the identical failure. Distinct mechanism from rec-20260806-010 (subprocess-spawn corpus sweep) but same symptom class: serial real-IO-heavy test timing out under Windows CI resource pressure. Options: batch the 105 dispatch calls, raise this specific test's timeout via a scoped vitest config (not a global bump), or investigate whether SimpleStateBackend can avoid a full read-modify-write round trip per call in test/fixture mode.",
+      "id": "rec-20260809-003",
+      "title": "vitest.shared.ts's Windows-timeout comment cites the now-fixed dispatcher cap test",
+      "summary": "vitest.shared.ts:16-19 justifies TIMEOUT_MS=90000 on win32 partly by citing 'the dispatcher cap test (105 sequential dispatch() calls, each doing multiple disk read/writes)' as historical evidence. Phase 266 rewrote that exact test (packages/core/tests/hooks/dispatcher.test.ts, the skill-invoke FIFO-cap test) to call a pure in-memory function instead, with zero disk I/O -- the comment's specific example is now stale, though the general 90000ms value likely still has other justification (CLI-spawning settle tests, general Windows CI slowness) and should not be casually lowered without separately re-measuring those.",
       "source": "manual",
       "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "medium",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "low",
       "leverageScore": 5,
       "riskScore": 5,
       "confidence": 0.7,
@@ -2550,36 +2544,7 @@
         "test-infra"
       ],
       "affectedFiles": [
-        "packages/core/src/hooks/dispatcher.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260809-002",
-        "ev-20260809-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260809-phase264-ci",
-      "createdAt": "2026-08-09T00:59:47.672Z",
-      "updatedAt": "2026-08-09T01:15:20.132Z"
-    },
-    {
-      "id": "rec-20260809-003",
-      "title": "README.md / packages/core/README.md still claim cadence init --demo is zero-prompt",
-      "summary": "Phase 265 made cadence init present the verifier-provider choice explicitly (a real prompt) whenever a prompter is available (TTY or CADENCE_PROMPTER_SCRIPT) and no --verifier-provider/--activate/--full flag settles it. docs/reference/commands.md was corrected in phase 265 T5, but README.md:123 and packages/core/README.md:45 both still show 'cadence init --demo # zero prompts: name + gate profile are derived' as an example comment -- true for name/gate-profile specifically but now potentially misleading for the whole invocation under a TTY. Low priority, cosmetic; found while reviewing phase 265's T5 (docs task) which correctly scoped its own fix to commands.md but flagged these two files as out of its declared boundary.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "low",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs"
-      ],
-      "affectedFiles": [
-        "packages/core/README.md"
+        "vitest.shared.ts"
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
@@ -2587,65 +2552,8 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260809-phase265-docs",
-      "createdAt": "2026-08-09T04:08:32.134Z",
-      "updatedAt": "2026-08-09T04:08:32.134Z"
-    },
-    {
-      "id": "rec-20260809-004",
-      "title": "Prompter-desync foot-gun has now bitten twice (settle phase 174, init phase 265) -- systemic fix overdue",
-      "summary": "packages/core/src/verify/prompter.ts's createDefaultPrompter/init.ts's makePrompter both build a brand-new ScriptedPrompter (cursor reset to 0) on every call, with no memoization. Phase 174's whole-branch review first found this for cadence settle (gates/interactive.ts's interactive-verdict gate + services/retro.ts's post-commit retro offer can both prompt in one settle run) and explicitly deferred a real fix as out-of-phase-scope, noting it needs matching close()-lifecycle changes across every existing caller. Phase 265's whole-branch review independently hit a NEW instance of the exact same bug class in cadence init (the new verifier-provider prompt + the pre-existing host-wire prompt could both fire in one init run) and fixed it locally with a per-command memoized getPrompter() closure -- a real but narrow patch, not the systemic fix Phase 174 already flagged as needed. Two independent commands have now each grown their own scripted-prompter-lifecycle workaround. Worth a real fix: one process-run-scoped Prompter singleton (or equivalent shared factory with proper close() ownership) that every prompt call site in a given cadence invocation reuses, closing it once at the very end -- eliminating this whole class of CADENCE_PROMPTER_SCRIPT desync risk rather than patching it per-command as it's rediscovered.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/init.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260809-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260809-phase265-whole-branch-review",
-      "createdAt": "2026-08-09T04:34:51.869Z",
-      "updatedAt": "2026-08-09T04:34:51.869Z"
-    },
-    {
-      "id": "rec-20260809-005",
-      "title": "cadence onboard reports live config readiness, not the recorded provider-selection decision",
-      "summary": "rec-20260808-006's original text asked that cadence onboard 'report the existing selection rather than re-prompt' -- phase 265 (which closes the rest of that rec) delivered only the negative half: onboard is regression-tested to never gain a provider-selection prompt. It still reports assessReadiness's live config-derived state (provider/keyPresent/ready/reason), not the specific recorded decision from .cadence/intelligence/decisions.json (title/rationale/timestamp of how the choice was made -- prompted, flagged, or defaulted). These usually agree in practice (config reflects the recorded choice), but onboard cannot currently answer 'when/how was this chosen' the way cadence decision list can -- a teammate onboarding onto an existing repo sees the readiness state but not the provenance. Low/medium priority: consider onboard surfacing the most recent matching decision's rationale alongside assessReadiness's report, or a documented pointer to cadence decision list.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "low",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/onboard.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260809-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260809-phase265-whole-branch-review",
-      "createdAt": "2026-08-09T05:01:52.983Z",
-      "updatedAt": "2026-08-09T05:01:52.983Z"
+      "createdAt": "2026-08-09T17:32:15.411Z",
+      "updatedAt": "2026-08-09T17:32:15.411Z"
     }
   ],
   "archived": [
@@ -7241,32 +7149,74 @@
       "updatedAt": "2026-08-09T00:25:50.560Z"
     },
     {
-      "id": "rec-20260808-006",
-      "title": "Provider selection is inherited silently at cadence init",
-      "summary": "cadence init never asks the operator to choose a verifier provider -- it inherits a default silently, so an operator can run a repo indefinitely under mock without ever having made or recorded that choice. Make cadence init present the provider choice explicitly (mock remains a legal, unshamed, first-class option), record the selection as a ledger decision (not just config), and state the strong-assurance consequence in plain language at selection time. Non-interactive paths (--ci, --full, scripted) need a documented non-prompting flag; cadence onboard must report the existing selection rather than re-prompt.",
+      "id": "rec-20260806-010",
+      "title": "summary-verify-sweep.test.ts couples all future PRs to entire historical SUMMARY corpus",
+      "summary": "Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.",
       "source": "manual",
       "status": "shipped",
-      "readiness": "ready-for-cadence-spec",
+      "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
       "confidence": 0.7,
       "decayState": "fresh",
       "affectedAreas": [
-        "core"
+        "cli",
+        "doctor",
+        "test-infra"
       ],
-      "affectedFiles": [],
+      "affectedFiles": [
+        "packages/core/tests/parse/summary-verify-sweep.test.ts",
+        "packages/core/src/cli/commands/summary.ts"
+      ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260808-007"
+        "ev-20260806-013",
+        "ev-20260808-009"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260809-001"
+      ],
+      "convertedToPhaseId": "266-ci-test-timeout-remediation",
+      "shippedRef": "PR #392",
+      "scoutId": "scout-20260806-phase257",
+      "archivedAt": "2026-08-09T17:55:27.274Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-06T18:52:16.644Z",
+      "updatedAt": "2026-08-09T17:55:27.274Z"
+    },
+    {
+      "id": "rec-20260809-002",
+      "title": "dispatcher.test.ts skill-invoke FIFO test times out on Windows CI, independent of diff",
+      "summary": "tests/hooks/dispatcher.test.ts:96 (skill-invoke caps at 100 entries with FIFO drop) makes 105 sequential real-disk state read/write round trips via SimpleStateBackend against a tempRepo fixture, each awaited serially. Confirmed failing with Error: Test timed out in 90000ms on windows-latest,22 across at least 2 of the last 4 main-branch CI runs (31272510722 and 31240052177), fully independent of any feature branch diff -- PR 389 phase 264 touched none of packages/core/src/hooks or its tests and still hit the identical failure. Distinct mechanism from rec-20260806-010 (subprocess-spawn corpus sweep) but same symptom class: serial real-IO-heavy test timing out under Windows CI resource pressure. Options: batch the 105 dispatch calls, raise this specific test's timeout via a scoped vitest config (not a global bump), or investigate whether SimpleStateBackend can avoid a full read-modify-write round trip per call in test/fixture mode.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "test-infra"
+      ],
+      "affectedFiles": [
+        "packages/core/src/hooks/dispatcher.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260809-002",
+        "ev-20260809-003"
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T17:58:46.299Z",
-      "updatedAt": "2026-08-09T05:03:46.552Z",
-      "shippedRef": "PR phase 265 -- explicit choice + ledger recording + no-reprompt delivered; onboard-surfaces-recorded-decision remainder tracked as rec-20260809-005",
-      "archivedAt": "2026-08-09T05:03:46.552Z",
+      "convertedToPhaseId": "266-ci-test-timeout-remediation",
+      "scoutId": "scout-20260809-phase264-ci",
+      "createdAt": "2026-08-09T00:59:47.672Z",
+      "updatedAt": "2026-08-09T17:55:27.454Z",
+      "shippedRef": "PR #392",
+      "archivedAt": "2026-08-09T17:55:27.454Z",
       "archiveReason": "shipped"
     }
   ]

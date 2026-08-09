@@ -239,6 +239,13 @@ renderSummaryForReview/renderSummaryMd already have both s.gates[] (carrying Pha
 
 The AC verifier enforces AC-test linkage; the code-review mock flags added console.log calls as HIGH, two different capabilities. One accurate umbrella sentence covering both, reused everywhere mock is displayed, keeps scope sane per the release D-A/D-B non-goals. Rejected alternative: per-family label variants; more precise per-surface but multiplies the single-source-of-truth surface this phase exists to consolidate, and no consumer of the label distinguishes gate family today.
 
+### dec-20260809-001 — Bundle rec-20260806-010 + rec-20260809-002 into one CI-timeout-remediation phase
+
+- recommendation: rec-20260806-010
+- decided: 2026-08-09T16:26:51.505Z
+
+Both recs surfaced independently but are the same symptom class (Windows CI resource pressure hitting per-call I/O/spawn overhead) and materialized together on PR #391's CI (two different tests timed out on the same Windows leg, in the same run). Distinct mechanisms (subprocess-spawn-per-file corpus sweep vs. serial real-disk state read/write round trips), distinct files, no shared code -- but bundling into one phase/PR gets both fixes verified against the same Windows CI run instead of two separate cycles, and the only real verification available is a green + materially-faster Windows leg, which is expensive to obtain per PR. Recorded per CLAUDE.md's Multi-Phase-Commit boundary: this is one phase's scope (CI-timeout remediation), not two phases squashed into one shot.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

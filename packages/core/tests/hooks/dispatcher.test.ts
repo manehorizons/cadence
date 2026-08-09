@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { HookDispatcher } from '../../src/hooks/dispatcher.js';
 import { SimpleStateBackend } from '../../src/state/simple.js';
+import { applySkillInvoke } from '../../src/hooks/handlers.js';
 
 let active: Fixture | null = null;
 afterEach(async () => { if (active) { await active.cleanup(); active = null; } });
@@ -93,16 +94,19 @@ describe('HookDispatcher', () => {
     expect(state.skillAudit.invoked).toEqual([]);
   });
 
-  it('skill-invoke caps at 100 entries with FIFO drop', async () => {
-    active = await tempRepo({ initialized: true });
-    const d = new HookDispatcher(active.root);
+  // AC-4 (Phase 266) — FIFO-cap logic exercised directly against the pure
+  // function, in-memory, with no HookDispatcher/tempRepo/disk I/O. Replaces
+  // a prior version of this test that drove 105 serial real dispatcher
+  // round-trips (state read + config read + a two-file atomic commit per
+  // call), which timed out on Windows CI (rec-20260809-002).
+  it('266-01/AC-4: applySkillInvoke caps at 100 entries with FIFO drop', () => {
+    let invoked: string[] = [];
     // Push 105 unique skills; first 5 should fall off the front.
     for (let i = 0; i < 105; i++) {
-      await d.dispatch('skill-invoke', { cwd: active.root, event: 'skill-invoke', raw: { skill: `skill-${i}` } });
+      invoked = applySkillInvoke(invoked, `skill-${i}`, 100);
     }
-    const state = await new SimpleStateBackend(active.root).readState();
-    expect(state.skillAudit.invoked).toHaveLength(100);
-    expect(state.skillAudit.invoked[0]).toBe('skill-5');
-    expect(state.skillAudit.invoked[99]).toBe('skill-104');
+    expect(invoked).toHaveLength(100);
+    expect(invoked[0]).toBe('skill-5');
+    expect(invoked[99]).toBe('skill-104');
   });
 });

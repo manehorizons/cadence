@@ -2600,6 +2600,7 @@ Render a settled phase SUMMARY.json for humans (read-only)
 |---|---|
 | `render <phase> <num>` | Print a deterministic, human-readable rendering of gate outcomes and per-AC status, suitable for pasting into a PR |
 | `verify <phase> <num>` | Recompute the sha256 content hash over a settled SUMMARY.json and compare it against the stored `contentHash`, to detect a hand-edited artifact |
+| `verify-all` | Walk every `<id>-SUMMARY.json` under `.cadence/phases/**` in-process and `verify` each one, reporting an aggregate pass/fail |
 
 **Behavior** — reads the settled phase's `<id>-SUMMARY.json` from
 `.cadence/phases/<phase>/`, validates it against the `SummaryZ` schema, and
@@ -2645,6 +2646,33 @@ informational, non-failing outcome). Exits `1` on `MISMATCH`, and on the
 same load errors as `render` (invalid phase slug, missing file, invalid
 JSON, schema-validation failure) — so `verify` is scriptable as a CI gate
 check.
+
+`summary verify-all` (Phase 266) walks every `<id>-SUMMARY.json` file found
+anywhere under `.cadence/phases/**`, loading and verifying each one exactly
+the way `verify <phase> <num>` does — so `cadence summary verify-all`, the
+whole-repo sweep used in this project's own CI, runs as a single process
+rather than spawning one CLI subprocess per file (a corpus of 275+
+historical summaries and growing). `MISMATCH` and any load failure (missing
+file, invalid JSON, or a schema-validation failure) count as a failure;
+`NO_HASH` is informational only and never counts as one, matching `verify`'s
+own three-verdict semantics. For each file it prints one line — a bare
+`<phase>/<id>: NO_HASH` or `<phase>/<id>: MISMATCH` to stdout, or
+`<phase>/<id>: FAILURE — <message>` to stderr for a load/parse/schema
+problem — except for a clean `MATCH`, which is counted but not printed per
+file (a `MATCH` line for every one of 275+ files would be noise; the
+aggregate is the report). When at least one summary file was found, it
+finishes with one aggregate summary line to stdout: `<N> checked: <M>
+MATCH, <K> NO_HASH, <F> failed`. If no `*-SUMMARY.json` files exist under
+`.cadence/phases` at all, no aggregate line is printed — instead it prints
+a stderr notice saying so rather than passing silently, but still exits
+`0` — zero files means zero failures. Like `render` and `verify`, `verify-all`
+is read-only throughout: it never writes to `.cadence/state.json`,
+`STATE.md`, or any phase artifact, and never transitions the loop.
+
+**Exit codes** (`verify-all`) — exits `0` unless at least one file failed (a
+`MISMATCH` or a load/parse/schema error), including when the entire corpus
+is `NO_HASH` and when zero `*-SUMMARY.json` files are found at all. Exits
+`1` if any file failed, no matter how many others passed.
 
 ---
 

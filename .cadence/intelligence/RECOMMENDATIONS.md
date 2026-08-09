@@ -1271,23 +1271,6 @@ dec-20260801-003 (linked under the now-shipped/closed rec-20260801-010) deferred
 
 packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the per-file token loop inside the mode==='assertion' branch) dedupes AC-token occurrences with 'const key = id@relPath; if (seen.has(key)) continue; seen.add(key);' -- keeping only the FIRST occurrence of a given AC token encountered per file, in file-scan (top-to-bottom) order, and silently discarding every later occurrence in that same file, including one that genuinely qualifies (is inside a real asserting it()/test() block). Hit for real during phase 258's settle (2026-08-07): the AC-5 regression test's file had the token 258-01/AC-5 in BOTH a describe() block title (line 568, earlier in the file, non-qualifying since describe wrappers are not spans) and the real asserting it() block title that actually carries the evidence (line 821, later in the file, genuinely qualifying). The dedup kept only the first (describe-title) occurrence, so weaklyLinkedAcs()'s isFullyNonQualifying(refs) check saw a single non-qualifying ref and refused settle with 'is mentioned but not inside a recognized asserting test block', even though a real qualifying test existed in the same file. cadence verify coverage --explain AC-5 did NOT reproduce this refusal -- explainAcCoverage (used by --explain) collects every occurrence separately with no per-file dedup, and its overall satisfied field is true iff ANY occurrence in ANY file satisfies -- so it correctly showed 'Overall: SATISFIED', creating a genuine, confusing divergence between what --explain reports and what settle's gate actually enforces for the exact same file/token. Worked around in phase 258 by removing the redundant token from the describe title (only the real it() block needs to carry it), but the underlying dedup-keeps-first-occurrence behavior is a real defect independent of that workaround: any test file where an AC token happens to appear first in a non-qualifying location (a describe title, a comment, a variable name) and later in a real qualifying it()/test() block will incorrectly refuse settle, with a --explain result that actively misleads an operator into thinking coverage is fine. Options to weigh: change the dedup to keep the qualifying occurrence if ANY occurrence for that (id, file) pair qualifies, rather than keeping strictly the first found; or align --explain's semantics with the gate's per-file-first-occurrence semantics (worse, since it would make --explain lie in the other direction); or drop the per-file dedup granularity entirely and just check 'does at least one occurrence across the whole repo qualify', matching --explain.
 
-## rec-20260806-010 — summary-verify-sweep.test.ts couples all future PRs to entire historical SUMMARY corpus
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, doctor, test-infra
-- files: packages/core/tests/parse/summary-verify-sweep.test.ts, packages/core/src/cli/commands/summary.ts
-- evidence: Whole-branch review of phase 257 (2026-08-06): pnpm turbo run test --force ran the sweep at 35.6s covering 269 real historical summaries via 269 spawned CLI processes at concurrency 12; git ls-files .cadence/phases | grep -c SUMMARY.json = 269.
-- evidence: Materialized in real CI, PR #388 (phase 263), 2026-08-08: test (windows-latest, 22) failed with 'Error: Test timed out in 120000ms' on tests/parse/summary-verify-sweep.test.ts's 257-01/AC-3 sweep, corpus now 275+ SUMMARY.json files (up from 269 at this rec's filing). Same run's macOS leg took 59.9s and Ubuntu 81.4s for the identical sweep -- both comfortably under 120s but Ubuntu already at 68% of the timeout budget, confirming linear-with-corpus-size growth is closing in on all three OS legs, not just Windows. Ubuntu was 35.6s for 269 files two days ago (2026-08-06); now 81.4s for 275 files -- a disproportionate jump versus pure file-count growth, worth investigating (concurrency contention? per-call CLI startup regression?) alongside deciding between this rec's two options (slower/nightly lane, or a real --all flag).
-- next: cadence milestone propose
-
-Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.
-
 ## rec-20260807-005 — Make phase-qualified the default AC coverage scheme (bare still ships collision bug)
 
 - status: candidate
@@ -1350,6 +1333,21 @@ cadence doctor's conduction-reachability (phase 251) answers a point-in-time cap
 
 A placeholder that approves creates false confidence; one that abstains cannot. Reuse the phase-248 status:'skipped'+skipReason shape (already used for bypassed verifier throws) so provenance can never record 'code-review passed' under a mock provider, scoped to review families only (code-review, security-audit, spec-review, plan-review, ui-spec-review). deep-verify and per-task-verify must keep their existing mock pass semantics -- there mock enforces real AC/test linkage and the evidence ladder depends on it.
 
+## rec-20260808-006 — Provider selection is inherited silently at cadence init
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- evidence: no existing init flow surfaces or records a provider choice; per HANDOFF-v1.56-verifier-honesty.md Phase N, verify against phase 246 onboard semantics before implementing
+- next: cadence milestone propose
+
+cadence init never asks the operator to choose a verifier provider -- it inherits a default silently, so an operator can run a repo indefinitely under mock without ever having made or recorded that choice. Make cadence init present the provider choice explicitly (mock remains a legal, unshamed, first-class option), record the selection as a ledger decision (not just config), and state the strong-assurance consequence in plain language at selection time. Non-interactive paths (--ci, --full, scripted) need a documented non-prompting flag; cadence onboard must report the existing selection rather than re-prompt.
+
 ## rec-20260808-007 — deep-verify and per-task-verify persist no provider/model identity into gates[] at all
 
 - status: candidate
@@ -1383,67 +1381,18 @@ Discovered during phase 263 (v1.56 Phase L) T3 dispatch prep: GateProvenanceZ.pr
 
 packages/core/src/verify/coverage.ts's scanTestCoverage (assertion mode, ~line 140-142; mirrored in mention mode ~line 177-179) dedups by a (bare AC id, file path) key, keeping only the FIRST textual occurrence of a token in a file regardless of whether it qualifies (sits inside an asserting it()/test() block). When a describe() block's title repeats its own child it()'s AC token and appears earlier in the file, the non-qualifying describe-level occurrence consumes the dedup slot and the real qualifying it()-level occurrence(s) are silently never recorded -- producing a false weakly-linked-AC refusal from settle's real coverage gate even though cadence verify coverage --explain (a separate, non-deduping walker) correctly reports the AC as satisfied. Confirmed empirically during phase 264's own settle: two describe() blocks (mock-banner-source.test.ts, verifier-label.test.ts, assurance-record.test.ts) that opened with the same AC token as their child it()'s title caused settle run --auto to refuse with 'no assertion-shaped span found' for AC-4/AC-5 despite real, correct, asserting tests existing. Worked around by removing the token from the describe() titles (not touching the scanner). Fix belongs in scanTestCoverage: either record every occurrence per file (not just the first), or prefer a qualifying occurrence over a non-qualifying one when only one dedup slot is kept.
 
-## rec-20260809-002 — dispatcher.test.ts skill-invoke FIFO test times out on Windows CI, independent of diff
+## rec-20260809-003 — vitest.shared.ts's Windows-timeout comment cites the now-fixed dispatcher cap test
 
 - status: candidate
-- ready: needs-evidence
-- priority: medium
+- ready: ready-for-cadence-spec
+- priority: low
 - leverage: 5/10
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
 - areas: test-infra
-- files: packages/core/src/hooks/dispatcher.ts
-- evidence: main CI runs 31272510722 and 31240052177 both failed test (windows-latest, 22) on tests/hooks/dispatcher.test.ts:96:3, Test timed out in 90000ms; PR 389 run 31286150559 hit the identical failure with a diff that never touches hooks code
-- evidence: Third-occurrence history found: this test's timeout was already remediated twice before. Phase 29.5 (commit 45177463, 2026-05-15) added a per-test 20000ms override after it timed out under the 5000ms vitest default. Phase 32.1 (commit 9e6e46f6, 2026-05-16) explicitly REVERTED that per-test override as a Per-Test Band-Aid and root-caused it into vitest.shared.ts's platform-aware global TIMEOUT_MS (20000 non-Windows). That value was itself raised to 90000ms for win32 specifically because of two consecutive dispatcher-cap timeouts at ~61s on windows-latest/Node22 (2026-07-22, PR #278 post-merge). PR 389 (phase 264, unrelated diff) now hit the identical test 3 times in a row (runs 31286150559 x3: jobs 93175252908, 93178484744, all Test timed out in 90000ms at tests/hooks/dispatcher.test.ts:96:3) -- i.e. it is now failing consistently at the SAME 90000ms ceiling that was raised specifically to fix this exact test. This is the third distinct remediation cycle for the same root cause (105 serial real-disk read-modify-write cycles), suggests Windows CI runner resource headroom has degraded again since the 2026-07-22 fix, and should be treated as higher priority than a first-time flake report.
+- files: vitest.shared.ts
+- evidence: Flagged by phase 266's T2 independent reviewer while confirming the full suite was green; out of phase 266's declared task file scope (no task's files: list includes vitest.shared.ts), so not fixed inline.
 - next: cadence milestone propose
 
-tests/hooks/dispatcher.test.ts:96 (skill-invoke caps at 100 entries with FIFO drop) makes 105 sequential real-disk state read/write round trips via SimpleStateBackend against a tempRepo fixture, each awaited serially. Confirmed failing with Error: Test timed out in 90000ms on windows-latest,22 across at least 2 of the last 4 main-branch CI runs (31272510722 and 31240052177), fully independent of any feature branch diff -- PR 389 phase 264 touched none of packages/core/src/hooks or its tests and still hit the identical failure. Distinct mechanism from rec-20260806-010 (subprocess-spawn corpus sweep) but same symptom class: serial real-IO-heavy test timing out under Windows CI resource pressure. Options: batch the 105 dispatch calls, raise this specific test's timeout via a scoped vitest config (not a global bump), or investigate whether SimpleStateBackend can avoid a full read-modify-write round trip per call in test/fixture mode.
-
-## rec-20260809-003 — README.md / packages/core/README.md still claim cadence init --demo is zero-prompt
-
-- status: candidate
-- ready: needs-decision
-- priority: low
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs
-- files: packages/core/README.md
-- evidence: grep -n 'zero prompt' README.md packages/core/README.md both show the same stale comment at README.md:123 and packages/core/README.md:45
-- next: cadence milestone propose
-
-Phase 265 made cadence init present the verifier-provider choice explicitly (a real prompt) whenever a prompter is available (TTY or CADENCE_PROMPTER_SCRIPT) and no --verifier-provider/--activate/--full flag settles it. docs/reference/commands.md was corrected in phase 265 T5, but README.md:123 and packages/core/README.md:45 both still show 'cadence init --demo # zero prompts: name + gate profile are derived' as an example comment -- true for name/gate-profile specifically but now potentially misleading for the whole invocation under a TTY. Low priority, cosmetic; found while reviewing phase 265's T5 (docs task) which correctly scoped its own fix to commands.md but flagged these two files as out of its declared boundary.
-
-## rec-20260809-004 — Prompter-desync foot-gun has now bitten twice (settle phase 174, init phase 265) -- systemic fix overdue
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli
-- files: packages/core/src/cli/commands/init.ts
-- evidence: prompter.ts:84-103's own docstring documents the settle-side instance and defers the fix (Phase 174); init.ts's whole-branch review (phase 265) independently found and locally fixed a second instance in cadence init
-- next: cadence milestone propose
-
-packages/core/src/verify/prompter.ts's createDefaultPrompter/init.ts's makePrompter both build a brand-new ScriptedPrompter (cursor reset to 0) on every call, with no memoization. Phase 174's whole-branch review first found this for cadence settle (gates/interactive.ts's interactive-verdict gate + services/retro.ts's post-commit retro offer can both prompt in one settle run) and explicitly deferred a real fix as out-of-phase-scope, noting it needs matching close()-lifecycle changes across every existing caller. Phase 265's whole-branch review independently hit a NEW instance of the exact same bug class in cadence init (the new verifier-provider prompt + the pre-existing host-wire prompt could both fire in one init run) and fixed it locally with a per-command memoized getPrompter() closure -- a real but narrow patch, not the systemic fix Phase 174 already flagged as needed. Two independent commands have now each grown their own scripted-prompter-lifecycle workaround. Worth a real fix: one process-run-scoped Prompter singleton (or equivalent shared factory with proper close() ownership) that every prompt call site in a given cadence invocation reuses, closing it once at the very end -- eliminating this whole class of CADENCE_PROMPTER_SCRIPT desync risk rather than patching it per-command as it's rediscovered.
-
-## rec-20260809-005 — cadence onboard reports live config readiness, not the recorded provider-selection decision
-
-- status: candidate
-- ready: needs-decision
-- priority: low
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/cli/commands/onboard.ts
-- evidence: phase 265's DRAFT AC-5 deliberately scoped only the no-reprompt half after advisor review; rec-20260808-006's shipped promotion notes this remainder explicitly rather than overclaiming full delivery
-- next: cadence milestone propose
-
-rec-20260808-006's original text asked that cadence onboard 'report the existing selection rather than re-prompt' -- phase 265 (which closes the rest of that rec) delivered only the negative half: onboard is regression-tested to never gain a provider-selection prompt. It still reports assessReadiness's live config-derived state (provider/keyPresent/ready/reason), not the specific recorded decision from .cadence/intelligence/decisions.json (title/rationale/timestamp of how the choice was made -- prompted, flagged, or defaulted). These usually agree in practice (config reflects the recorded choice), but onboard cannot currently answer 'when/how was this chosen' the way cadence decision list can -- a teammate onboarding onto an existing repo sees the readiness state but not the provenance. Low/medium priority: consider onboard surfacing the most recent matching decision's rationale alongside assessReadiness's report, or a documented pointer to cadence decision list.
+vitest.shared.ts:16-19 justifies TIMEOUT_MS=90000 on win32 partly by citing 'the dispatcher cap test (105 sequential dispatch() calls, each doing multiple disk read/writes)' as historical evidence. Phase 266 rewrote that exact test (packages/core/tests/hooks/dispatcher.test.ts, the skill-invoke FIFO-cap test) to call a pure in-memory function instead, with zero disk I/O -- the comment's specific example is now stale, though the general 90000ms value likely still has other justification (CLI-spawning settle tests, general Windows CI slowness) and should not be casually lowered without separately re-measuring those.
