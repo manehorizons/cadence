@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultConfig, MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
+import { defaultConfig, MOCK_VERIFIER_NOTICE, MOCK_VERIFIER_CAPABILITY } from '@thomas-powers-jr/cadence-types';
 import { buildExplanation } from '../../src/config-explain/build.js';
 import type { ExplainContext, WarningCode } from '../../src/config-explain/types.js';
 
@@ -36,6 +36,19 @@ describe('buildExplanation — config-semantic warnings (AC-2)', () => {
     );
   });
 
+  // 264-01/AC-3: this is config-explain's "silently downgraded" half of
+  // AC-3 — a seam configured to a real provider whose key is missing falls
+  // back to mock without the operator deliberately choosing it. The
+  // provider-no-key message must carry MOCK_VERIFIER_CAPABILITY the same way
+  // the all-mock (deliberately-configured) message already does.
+  it('264-01/AC-3: provider-no-key message for anthropic also embeds MOCK_VERIFIER_CAPABILITY', () => {
+    const config = { ...defaultConfig, verifier: { provider: 'anthropic' as const } };
+    const warnings = buildExplanation(config, { ...cleanCtx, anthropicKeyPresent: false }).warnings;
+    const warning = warnings.find((w) => w.code === 'provider-no-key');
+    expect(warning).toBeDefined();
+    expect(warning!.message).toContain(MOCK_VERIFIER_CAPABILITY.message);
+  });
+
   // AC-2: local provider keys off CADENCE_LOCAL_API_KEY, not the anthropic key.
   it('AC-2: provider-no-key fires for local without CADENCE_LOCAL_API_KEY', () => {
     const config = { ...defaultConfig, codeReview: { provider: 'local' as const } };
@@ -43,6 +56,16 @@ describe('buildExplanation — config-semantic warnings (AC-2)', () => {
     expect(codes(config, { ...cleanCtx, anthropicKeyPresent: false })).not.toContain(
       'provider-no-key',
     );
+  });
+
+  // 264-01/AC-3: same downgraded-seam wiring as the anthropic case above,
+  // but for the local provider's provider-no-key message.
+  it('264-01/AC-3: provider-no-key message for local also embeds MOCK_VERIFIER_CAPABILITY', () => {
+    const config = { ...defaultConfig, codeReview: { provider: 'local' as const } };
+    const warnings = buildExplanation(config, { ...cleanCtx, localKeyPresent: false }).warnings;
+    const warning = warnings.find((w) => w.code === 'provider-no-key');
+    expect(warning).toBeDefined();
+    expect(warning!.message).toContain(MOCK_VERIFIER_CAPABILITY.message);
   });
 
   // AC-2: an all-mock config never raises provider-no-key, even with no keys.
@@ -121,5 +144,17 @@ describe('buildExplanation — config-semantic warnings (AC-2)', () => {
     }).warnings;
     const allMock = warnings.find((w) => w.code === 'all-mock');
     expect(allMock!.message).toContain(MOCK_VERIFIER_NOTICE.message);
+  });
+
+  // 264-01/AC-3: the all-mock warning also carries the neutral capability fact
+  // alongside the activation-nudge notice.
+  it('264-01/AC-3: all-mock message also embeds MOCK_VERIFIER_CAPABILITY', () => {
+    const warnings = buildExplanation(defaultConfig, {
+      ...cleanCtx,
+      anthropicKeyPresent: false,
+      localKeyPresent: false,
+    }).warnings;
+    const allMock = warnings.find((w) => w.code === 'all-mock');
+    expect(allMock!.message).toContain(MOCK_VERIFIER_CAPABILITY.message);
   });
 });

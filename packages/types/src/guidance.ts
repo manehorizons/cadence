@@ -107,6 +107,37 @@ export const MOCK_VERIFIER_NOTICE = {
 } as const;
 
 /**
+ * Canonical "what mock actually checks" capability fact (phase 264, Phase M).
+ * Single source of truth for the neutral, precise clause every rendered
+ * provider label appends when the provider is `mock` — `cadence summary
+ * render`, the on-disk `<id>-SUMMARY.md` sidecar, `cadence doctor`, `cadence
+ * config explain`, and the phase-243 fallback banners all reference this
+ * constant (via `formatVerifierRollupLabel` in
+ * `@thomas-powers-jr/cadence-core/services/verifier-label.ts` for the
+ * SUMMARY renderers) so the wording can't drift across surfaces.
+ *
+ * Deliberately a SIBLING of `MOCK_VERIFIER_NOTICE`, not a replacement or an
+ * edit to it: `MOCK_VERIFIER_NOTICE.message` is an activation nudge ("this
+ * is NOT real verification, run `cadence activate`") aimed at a reader
+ * deciding whether to turn on real verification; this constant states a
+ * neutral fact about what the two mock verifiers actually inspect, aimed at
+ * a reader interpreting an already-rendered label. Both surfaces are wired
+ * together where useful, but the wording — and the constants — stay
+ * distinct. Covers both mock verifier families as one umbrella sentence
+ * (deliberately not split into per-family variants): the AC verifier
+ * (`verify/mock-verifier.ts`) checks only that each AC has ≥1 linked test,
+ * and the code-review verifier (`verify/code-review.ts`'s
+ * `MockCodeReviewVerifier`) flags every `console.log(...)` added in the
+ * diff as a HIGH finding — neither reads diff content for behavior, reads
+ * test bodies, or evaluates correctness.
+ */
+export const MOCK_VERIFIER_CAPABILITY = {
+  /** One-sentence umbrella capability fact — what mock checks, and what it does not. */
+  message:
+    'The `mock` verifier only checks that each AC has a linked test and flags any `console.log(...)` added in the diff as a finding — it does not read diff content for behavior, read test bodies, or evaluate correctness.',
+} as const;
+
+/**
  * Canonical "no test command configured" notice (phase 139,
  * rec-20260701-001). Single source of truth for the `build-test-must-pass`
  * gate's stderr notice — mirrors `MOCK_VERIFIER_NOTICE`'s pattern: loud but

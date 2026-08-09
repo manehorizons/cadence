@@ -1350,21 +1350,6 @@ cadence doctor's conduction-reachability (phase 251) answers a point-in-time cap
 
 A placeholder that approves creates false confidence; one that abstains cannot. Reuse the phase-248 status:'skipped'+skipReason shape (already used for bypassed verifier throws) so provenance can never record 'code-review passed' under a mock provider, scoped to review families only (code-review, security-audit, spec-review, plan-review, ui-spec-review). deep-verify and per-task-verify must keep their existing mock pass semantics -- there mock enforces real AC/test linkage and the evidence ladder depends on it.
 
-## rec-20260808-005 — mock label understates deterministic AC-test enforcement it actually performs
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- evidence: packages/core/src/verify/mock-verifier.ts and code-review.ts:103 confirmed to have real, narrow, deterministic gate behavior per HANDOFF-v1.56-verifier-honesty.md §2; depends on Phase L's selection-mode field
-- next: cadence milestone propose
-
-A reader seeing provider: mock reasonably concludes nothing was checked, but MockACVerifier enforces real AC<->test linkage (fails without >=1 linked test) and MockCodeReviewVerifier flags every added console.log as HIGH -- both can fail. Fix the display layer only (SUMMARY.md, cadence summary render, cadence doctor, cadence config explain, phase-243 banners) via one single-sourced label that states both what mock checks and what it doesn't, and surfaces Phase L's selection mode so a fallback reads visibly different from a deliberate choice. The mock JSON provider key/schema value does not change.
-
 ## rec-20260808-006 — Provider selection is inherited silently at cadence init
 
 - status: candidate
@@ -1396,3 +1381,19 @@ cadence init never asks the operator to choose a verifier provider -- it inherit
 - next: cadence milestone propose
 
 Discovered during phase 263 (v1.56 Phase L) T3 dispatch prep: GateProvenanceZ.provider/.model are documented as 'currently populated only for code-review and security-audit' (packages/types/src/summary.ts), confirmed by direct read -- deep-verify.ts writes provider/model only into its separate deepVerify[]/deepVerifyMeta records, never into a gates[] entry's flags.verifierIdentity; per-task-verify.ts persists no provider identity anywhere (zero matches for verifierIdentity/result.provider in the file). This is a materially larger gap than phase 263's providerSelection distinction: these two gates have no baseline provider identity to extend in the first place. It also interacts with deriveAssuranceRecord's hasRealVerifier (verifierRollup.some(v => v.provider !== 'mock')): since this repo's perTaskVerifier.provider and verifier.provider are both already host-cli, naively adding baseline persistence to either gate would grow verifierRollup with real host-cli entries on ordinary auto-profile settles, silently moving assurance.overall toward strong with no review gate having actually run -- a live instance of the exact false-confidence failure mode v1.56 exists to close. Phase 263 deliberately excludes both gates from its providerSelection persistence scope (see dec-<this-decision-id> and the DRAFT's Boundaries) rather than papering over this pre-existing gap.
+
+## rec-20260809-001 — scanTestCoverage dedups AC-token occurrences per-file by first match only, dropping later qualifying refs
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core
+- files: packages/core/src/verify/coverage.ts
+- evidence: Reproduced via a direct scanTestCoverage() call against phase 264's own worktree: AC-4 returned only the describe()-level non-qualifying ref (line 25) while cadence verify coverage --explain AC-4 independently found and reported satisfies:true for the it()-level refs at lines 26/30 in the same file, overall verdict SATISFIED -- yet settle run --auto refused, confirming the two code paths disagree because of the per-file first-match dedup in scanTestCoverage.
+- next: cadence milestone propose
+
+packages/core/src/verify/coverage.ts's scanTestCoverage (assertion mode, ~line 140-142; mirrored in mention mode ~line 177-179) dedups by a (bare AC id, file path) key, keeping only the FIRST textual occurrence of a token in a file regardless of whether it qualifies (sits inside an asserting it()/test() block). When a describe() block's title repeats its own child it()'s AC token and appears earlier in the file, the non-qualifying describe-level occurrence consumes the dedup slot and the real qualifying it()-level occurrence(s) are silently never recorded -- producing a false weakly-linked-AC refusal from settle's real coverage gate even though cadence verify coverage --explain (a separate, non-deduping walker) correctly reports the AC as satisfied. Confirmed empirically during phase 264's own settle: two describe() blocks (mock-banner-source.test.ts, verifier-label.test.ts, assurance-record.test.ts) that opened with the same AC token as their child it()'s title caused settle run --auto to refuse with 'no assertion-shaped span found' for AC-4/AC-5 despite real, correct, asserting tests existing. Worked around by removing the token from the describe() titles (not touching the scanner). Fix belongs in scanTestCoverage: either record every occurrence per file (not just the first), or prefer a qualifying occurrence over a non-qualifying one when only one dedup slot is kept.

@@ -1,4 +1,4 @@
-import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
+import { MOCK_VERIFIER_NOTICE, MOCK_VERIFIER_CAPABILITY } from '@thomas-powers-jr/cadence-types';
 import { discoverKey } from '../activate/key-discovery.js';
 import { HostCliError } from './host-cli-client.js';
 
@@ -120,6 +120,7 @@ export const MOCK_FALLBACK_BANNER = [
   '',
   `  ⚠  ${MOCK_VERIFIER_NOTICE.label.toUpperCase()}`,
   `     ${MOCK_VERIFIER_NOTICE.message}`,
+  `     ${MOCK_VERIFIER_CAPABILITY.message}`,
   `     ${PROVIDERS_DOC}`,
   '',
 ].join('\n');
@@ -139,6 +140,7 @@ function buildDowngradeBanner(reason: string): string {
     `  ⚠  ${MOCK_VERIFIER_NOTICE.label.toUpperCase()}`,
     `     ${reason}`,
     `     ${MOCK_VERIFIER_NOTICE.message}`,
+    `     ${MOCK_VERIFIER_CAPABILITY.message}`,
     `     ${PROVIDERS_DOC}`,
     '',
   ].join('\n');

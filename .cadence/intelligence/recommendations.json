@@ -2476,32 +2476,6 @@
       "updatedAt": "2026-08-08T17:58:45.974Z"
     },
     {
-      "id": "rec-20260808-005",
-      "title": "mock label understates deterministic AC-test enforcement it actually performs",
-      "summary": "A reader seeing provider: mock reasonably concludes nothing was checked, but MockACVerifier enforces real AC<->test linkage (fails without >=1 linked test) and MockCodeReviewVerifier flags every added console.log as HIGH -- both can fail. Fix the display layer only (SUMMARY.md, cadence summary render, cadence doctor, cadence config explain, phase-243 banners) via one single-sourced label that states both what mock checks and what it doesn't, and surfaces Phase L's selection mode so a fallback reads visibly different from a deliberate choice. The mock JSON provider key/schema value does not change.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260808-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T17:58:46.133Z",
-      "updatedAt": "2026-08-08T17:58:46.133Z"
-    },
-    {
       "id": "rec-20260808-006",
       "title": "Provider selection is inherited silently at cadence init",
       "summary": "cadence init never asks the operator to choose a verifier provider -- it inherits a default silently, so an operator can run a repo indefinitely under mock without ever having made or recorded that choice. Make cadence init present the provider choice explicitly (mock remains a legal, unshamed, first-class option), record the selection as a ledger decision (not just config), and state the strong-assurance consequence in plain language at selection time. Non-interactive paths (--ci, --full, scripted) need a documented non-prompting flag; cadence onboard must report the existing selection rather than re-prompt.",
@@ -2558,6 +2532,33 @@
       "scoutId": "scout-20260804-verifier-honesty",
       "createdAt": "2026-08-08T19:31:59.976Z",
       "updatedAt": "2026-08-08T19:31:59.976Z"
+    },
+    {
+      "id": "rec-20260809-001",
+      "title": "scanTestCoverage dedups AC-token occurrences per-file by first match only, dropping later qualifying refs",
+      "summary": "packages/core/src/verify/coverage.ts's scanTestCoverage (assertion mode, ~line 140-142; mirrored in mention mode ~line 177-179) dedups by a (bare AC id, file path) key, keeping only the FIRST textual occurrence of a token in a file regardless of whether it qualifies (sits inside an asserting it()/test() block). When a describe() block's title repeats its own child it()'s AC token and appears earlier in the file, the non-qualifying describe-level occurrence consumes the dedup slot and the real qualifying it()-level occurrence(s) are silently never recorded -- producing a false weakly-linked-AC refusal from settle's real coverage gate even though cadence verify coverage --explain (a separate, non-deduping walker) correctly reports the AC as satisfied. Confirmed empirically during phase 264's own settle: two describe() blocks (mock-banner-source.test.ts, verifier-label.test.ts, assurance-record.test.ts) that opened with the same AC token as their child it()'s title caused settle run --auto to refuse with 'no assertion-shaped span found' for AC-4/AC-5 despite real, correct, asserting tests existing. Worked around by removing the token from the describe() titles (not touching the scanner). Fix belongs in scanTestCoverage: either record every occurrence per file (not just the first), or prefer a qualifying occurrence over a non-qualifying one when only one dedup slot is kept.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260809-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-09T00:24:39.319Z",
+      "updatedAt": "2026-08-09T00:24:39.319Z"
     }
   ],
   "archived": [
@@ -7118,6 +7119,39 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-08T17:58:45.635Z",
       "updatedAt": "2026-08-08T21:12:17.001Z"
+    },
+    {
+      "id": "rec-20260808-005",
+      "title": "mock label understates deterministic AC-test enforcement it actually performs",
+      "summary": "A reader seeing provider: mock reasonably concludes nothing was checked, but MockACVerifier enforces real AC<->test linkage (fails without >=1 linked test) and MockCodeReviewVerifier flags every added console.log as HIGH -- both can fail. Fix the display layer only (SUMMARY.md, cadence summary render, cadence doctor, cadence config explain, phase-243 banners) via one single-sourced label that states both what mock checks and what it doesn't, and surfaces Phase L's selection mode so a fallback reads visibly different from a deliberate choice. The mock JSON provider key/schema value does not change.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260808-009",
+        "dec-20260808-010"
+      ],
+      "convertedToPhaseId": "264-rendered-label-precision",
+      "scoutId": "scout-20260804-verifier-honesty",
+      "createdAt": "2026-08-08T17:58:46.133Z",
+      "updatedAt": "2026-08-09T00:25:50.560Z",
+      "shippedRef": "phase 264, PR #389",
+      "archivedAt": "2026-08-09T00:25:50.560Z",
+      "archiveReason": "shipped"
     }
   ]
 }

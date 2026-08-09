@@ -92,7 +92,7 @@ async function mapWithConcurrency<T, R>(
 
 describe('cadence summary verify - repo-wide sweep over every existing summary (phase 257, T3)', () => {
   it(
-    '257-01/AC-3: every existing <id>-SUMMARY.json under .cadence/phases verifies with zero failures',
+    '257-01/AC-3, 264-01/AC-2: every existing <id>-SUMMARY.json under .cadence/phases verifies with zero failures',
     async () => {
       const files = walkSummaries(PHASES_DIR);
       // Sanity floor: fail loudly if the walk found suspiciously few files

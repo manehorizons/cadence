@@ -1795,6 +1795,13 @@
       "kind": "note",
       "summary": "Materialized in real CI, PR #388 (phase 263), 2026-08-08: test (windows-latest, 22) failed with 'Error: Test timed out in 120000ms' on tests/parse/summary-verify-sweep.test.ts's 257-01/AC-3 sweep, corpus now 275+ SUMMARY.json files (up from 269 at this rec's filing). Same run's macOS leg took 59.9s and Ubuntu 81.4s for the identical sweep -- both comfortably under 120s but Ubuntu already at 68% of the timeout budget, confirming linear-with-corpus-size growth is closing in on all three OS legs, not just Windows. Ubuntu was 35.6s for 269 files two days ago (2026-08-06); now 81.4s for 275 files -- a disproportionate jump versus pure file-count growth, worth investigating (concurrency contention? per-call CLI startup regression?) alongside deciding between this rec's two options (slower/nightly lane, or a real --all flag).",
       "createdAt": "2026-08-08T21:35:21.128Z"
+    },
+    {
+      "id": "ev-20260809-001",
+      "recommendationId": "rec-20260809-001",
+      "kind": "note",
+      "summary": "Reproduced via a direct scanTestCoverage() call against phase 264's own worktree: AC-4 returned only the describe()-level non-qualifying ref (line 25) while cadence verify coverage --explain AC-4 independently found and reported satisfies:true for the it()-level refs at lines 26/30 in the same file, overall verdict SATISFIED -- yet settle run --auto refused, confirming the two code paths disagree because of the per-file first-match dedup in scanTestCoverage.",
+      "createdAt": "2026-08-09T00:24:39.319Z"
     }
   ]
 }
