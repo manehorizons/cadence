@@ -1350,22 +1350,6 @@ cadence doctor's conduction-reachability (phase 251) answers a point-in-time cap
 
 A placeholder that approves creates false confidence; one that abstains cannot. Reuse the phase-248 status:'skipped'+skipReason shape (already used for bypassed verifier throws) so provenance can never record 'code-review passed' under a mock provider, scoped to review families only (code-review, security-audit, spec-review, plan-review, ui-spec-review). deep-verify and per-task-verify must keep their existing mock pass semantics -- there mock enforces real AC/test linkage and the evidence ladder depends on it.
 
-## rec-20260808-005 — mock label understates deterministic AC-test enforcement it actually performs
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- decisions: dec-20260808-009 (active), dec-20260808-010 (active)
-- evidence: packages/core/src/verify/mock-verifier.ts and code-review.ts:103 confirmed to have real, narrow, deterministic gate behavior per HANDOFF-v1.56-verifier-honesty.md §2; depends on Phase L's selection-mode field
-- next: cadence milestone propose
-
-A reader seeing provider: mock reasonably concludes nothing was checked, but MockACVerifier enforces real AC<->test linkage (fails without >=1 linked test) and MockCodeReviewVerifier flags every added console.log as HIGH -- both can fail. Fix the display layer only (SUMMARY.md, cadence summary render, cadence doctor, cadence config explain, phase-243 banners) via one single-sourced label that states both what mock checks and what it doesn't, and surfaces Phase L's selection mode so a fallback reads visibly different from a deliberate choice. The mock JSON provider key/schema value does not change.
-
 ## rec-20260808-006 — Provider selection is inherited silently at cadence init
 
 - status: candidate
