@@ -225,6 +225,20 @@ Supersedes dec-20260808-006, which cited deepVerify as an example of an optional
 
 The DRAFT's original AC-1 wording assumed all 5 'settle-pipeline' gates (deep-verify, per-task-verify, code-review, security-audit, plan-review) already persist provider/model identity into gates[] the same way -- false for 2 of the 5, confirmed by direct read (see rec-20260808-007). Also corrected: plan-review is not a settle-pipeline gate at all -- it fires at cadence draft approve via the same runConvergentReview sidecar mechanism as spec-review/ui-spec-review, confirmed by direct read of gates/plan-review.ts. Corrected seam grouping: 5 seams already persist SOME provider/model identity (code-review, security-audit via flags.verifierIdentity; spec-review, ui-spec-review, plan-review via runConvergentReview's sidecarJson) and get providerSelection added cleanly, additively, in this phase. deep-verify and per-task-verify persist none today and are explicitly excluded from persistence in this phase -- extending them is out of scope because deriveAssuranceRecord's hasRealVerifier reads verifierRollup.some(v => v.provider !== 'mock'), and this repo's perTaskVerifier.provider/verifier.provider are already host-cli; adding baseline provider persistence to either gate as a side effect of this phase would silently move assurance.overall toward strong on ordinary auto-profile settles with no review gate having run, which is the exact false-confidence failure v1.56 exists to close, not something to introduce as an unreviewed side effect. The tagging COMPUTATION in verifier-factory.ts (configured vs fallback, at selection time and call time) remains universal across all seven seams, satisfying the v1.56 handoff's L.3 requirement that the banner-precedent scope (Phase 243) is the correct boundary for where tagging happens -- only PERSISTENCE is narrowed. This diverges from HANDOFF-v1.56-verifier-honesty.md's L.3 as literally read (which implies all seven seams get persisted provenance); the divergence is recorded here for the report-back protocol.
 
+### dec-20260808-009 — Phase M: render-time join over AssuranceRecordZ schema change for providerSelection
+
+- recommendation: rec-20260808-005
+- decided: 2026-08-08T22:51:04.172Z
+
+renderSummaryForReview/renderSummaryMd already have both s.gates[] (carrying Phase L's providerSelection per gate) and s.assurance.verifierRollup in scope. Joining them by (provider, model) at render time surfaces configured-vs-fallback with zero change to AssuranceRecordZ, GateProvenanceZ, or deriveAssuranceRecord -- avoiding the retroactive-hash risk the schema's own comment warns about (packages/types/src/summary.ts:148-166) and avoiding breaking 6+ existing tests that assert an exact verifierRollup shape via toEqual (assurance-record.test.ts, registry.test.ts, settle.test.ts, types/tests/summary.test.ts). It also literally honors the HANDOFF doc's twice-stated 'display layer only' framing for Phase M. Rejected alternative: adding a providerSelection/selections field to AssuranceRecordZ.verifierRollup -- correct per schema-additive rules but unnecessary surface area and test churn when the same information is already derivable from data already in scope.
+
+### dec-20260808-010 — Phase M: umbrella mock-capability label, not per-verifier-family variants
+
+- recommendation: rec-20260808-005
+- decided: 2026-08-08T22:51:21.022Z
+
+The AC verifier enforces AC-test linkage; the code-review mock flags added console.log calls as HIGH, two different capabilities. One accurate umbrella sentence covering both, reused everywhere mock is displayed, keeps scope sane per the release D-A/D-B non-goals. Rejected alternative: per-family label variants; more precise per-surface but multiplies the single-source-of-truth surface this phase exists to consolidate, and no consumer of the label distinguishes gate family today.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

@@ -1,5 +1,6 @@
 import type { Summary } from '@thomas-powers-jr/cadence-types';
 import { renderFindingsSection } from '../parse/findings-render.js';
+import { formatVerifierRollupLabel } from './verifier-label.js';
 
 // deja:new distinct renderer for `cadence summary render` (phase 202, T1) —
 // intentionally NOT the same renderer as `parse/summary-writer.ts`'s
@@ -61,7 +62,10 @@ export function renderSummaryForReview(s: Summary): string {
     );
     if (s.assurance.verifierRollup.length > 0) {
       for (const v of s.assurance.verifierRollup) {
-        lines.push(`- verifier: ${v.provider}${v.model ? ` ${v.model}` : ''} (${v.gateCount} gate(s))`);
+        const matchingGates = (s.gates ?? []).filter(
+          (g) => g.provider === v.provider && g.model === v.model,
+        );
+        lines.push(`- verifier: ${formatVerifierRollupLabel(v, matchingGates)}`);
       }
     }
   }

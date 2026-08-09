@@ -2480,7 +2480,7 @@
       "title": "mock label understates deterministic AC-test enforcement it actually performs",
       "summary": "A reader seeing provider: mock reasonably concludes nothing was checked, but MockACVerifier enforces real AC<->test linkage (fails without >=1 linked test) and MockCodeReviewVerifier flags every added console.log as HIGH -- both can fail. Fix the display layer only (SUMMARY.md, cadence summary render, cadence doctor, cadence config explain, phase-243 banners) via one single-sourced label that states both what mock checks and what it doesn't, and surfaces Phase L's selection mode so a fallback reads visibly different from a deliberate choice. The mock JSON provider key/schema value does not change.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -2496,10 +2496,14 @@
         "ev-20260808-006"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260808-009",
+        "dec-20260808-010"
+      ],
+      "convertedToPhaseId": "264-rendered-label-precision",
       "scoutId": "scout-20260804-verifier-honesty",
       "createdAt": "2026-08-08T17:58:46.133Z",
-      "updatedAt": "2026-08-08T17:58:46.133Z"
+      "updatedAt": "2026-08-09T00:22:36.696Z"
     },
     {
       "id": "rec-20260808-006",

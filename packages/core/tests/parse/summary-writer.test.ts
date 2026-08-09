@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderSummaryMd } from '../../src/parse/summary-writer.js';
+import { MOCK_VERIFIER_CAPABILITY } from '@thomas-powers-jr/cadence-types';
 import type { Finding, Summary } from '@thomas-powers-jr/cadence-types';
 
 const SAMPLE: Summary = {
@@ -373,5 +374,117 @@ describe('renderSummaryMd - byte-compatibility regression for historical summari
       "
     `);
     expect(md).not.toContain('## Findings');
+  });
+});
+
+describe('renderSummaryMd - verifier rollup label precision (phase 264, T2)', () => {
+  /** Base `evidenceTally` satisfying `AssuranceRecordZ` — every `AcEvidenceZ`
+   *  key present, per its phase-233 exhaustive-record contract. */
+  const EVIDENCE_TALLY = {
+    'ai-verified': 0,
+    executed: 1,
+    assertion: 1,
+    mention: 0,
+    unverified: 0,
+  };
+
+  it('264-01/AC-1: renders an explicit (mixed) tag when matching mock gates disagree on providerSelection', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      schemaVersion: 2,
+      gates: [
+        { gate: 'code-review', status: 'ran', provider: 'mock', providerSelection: 'configured' },
+        { gate: 'security-audit', status: 'ran', provider: 'mock', providerSelection: 'fallback' },
+      ],
+      assurance: {
+        verifierRollup: [{ provider: 'mock', gateCount: 2 }],
+        evidenceTally: EVIDENCE_TALLY,
+        overall: 'mixed',
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('- verifier: mock (2 gate(s))');
+    expect(md).toContain('(mixed)');
+    expect(md).not.toContain('(configured)');
+    expect(md).not.toContain('(fallback)');
+  });
+
+  it('264-01/AC-1: renders a (configured) tag -- distinct from the mixed case -- when every matching mock gate agrees', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      schemaVersion: 2,
+      gates: [
+        { gate: 'code-review', status: 'ran', provider: 'mock', providerSelection: 'configured' },
+        { gate: 'security-audit', status: 'ran', provider: 'mock', providerSelection: 'configured' },
+      ],
+      assurance: {
+        verifierRollup: [{ provider: 'mock', gateCount: 2 }],
+        evidenceTally: EVIDENCE_TALLY,
+        overall: 'weak',
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('(configured)');
+    expect(md).not.toContain('(mixed)');
+    expect(md).not.toContain('(fallback)');
+  });
+
+  it('264-01/AC-2: a pre-Phase-L record (verifierRollup populated, gates absent) renders no selection tag, matching pre-existing behavior plus the mock capability clause', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      assurance: {
+        verifierRollup: [{ provider: 'mock', gateCount: 2 }],
+        evidenceTally: EVIDENCE_TALLY,
+        overall: 'weak',
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('- verifier: mock (2 gate(s))');
+    expect(md).toContain(MOCK_VERIFIER_CAPABILITY.message);
+    expect(md).not.toContain('(configured)');
+    expect(md).not.toContain('(fallback)');
+    expect(md).not.toContain('(empty-diff)');
+    expect(md).not.toContain('(mixed)');
+  });
+
+  it('264-01/AC-2: a record with gates present but no providerSelection field on any entry renders no selection tag', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      schemaVersion: 2,
+      gates: [{ gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' }],
+      assurance: {
+        verifierRollup: [{ provider: 'anthropic', model: 'claude-x', gateCount: 1 }],
+        evidenceTally: EVIDENCE_TALLY,
+        overall: 'strong',
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('- verifier: anthropic claude-x (1 gate(s))');
+    expect(md).not.toMatch(/\(configured\)|\(fallback\)|\(empty-diff\)|\(mixed\)/);
+  });
+
+  it('264-01/AC-1: renders an (empty-diff) tag for a real (non-mock) provider gate tagged empty-diff, and omits the mock capability clause', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      schemaVersion: 2,
+      gates: [
+        {
+          gate: 'code-review',
+          status: 'ran',
+          provider: 'anthropic',
+          model: 'claude-x',
+          providerSelection: 'empty-diff',
+        },
+      ],
+      assurance: {
+        verifierRollup: [{ provider: 'anthropic', model: 'claude-x', gateCount: 1 }],
+        evidenceTally: EVIDENCE_TALLY,
+        overall: 'strong',
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('- verifier: anthropic claude-x (1 gate(s))');
+    expect(md).toContain('(empty-diff)');
+    expect(md).not.toContain(MOCK_VERIFIER_CAPABILITY.message);
   });
 });

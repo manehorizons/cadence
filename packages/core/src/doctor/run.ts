@@ -6,6 +6,7 @@ import { delimiter, join } from 'node:path';
 import { homedir } from 'node:os';
 import {
   MOCK_VERIFIER_NOTICE,
+  MOCK_VERIFIER_CAPABILITY,
   CadenceStateZ,
   RecommendationLedgerZ,
   EvidenceLedgerZ,
@@ -744,10 +745,13 @@ export async function checkVerificationReadiness(
     const r = assessReadiness(config, env, root);
     if (r.provider === 'mock') {
       // Phase 104: source the honesty wording from the single MOCK_VERIFIER_NOTICE.
+      // Phase 264 (T4): append the neutral MOCK_VERIFIER_CAPABILITY fact alongside
+      // it — the notice nudges toward activation, the capability names precisely
+      // what mock does and doesn't check.
       return fail(
         'verification-readiness',
         'warning',
-        MOCK_VERIFIER_NOTICE.message,
+        `${MOCK_VERIFIER_NOTICE.message} ${MOCK_VERIFIER_CAPABILITY.message}`,
         `Run \`${MOCK_VERIFIER_NOTICE.activateHint}\` to turn on real verification.`,
       );
     }
@@ -759,17 +763,22 @@ export async function checkVerificationReadiness(
         // Code does not supply the separate `anthropic`-provider credential
         // deep-verify needs. Name the confusion and steer to host-cli, which
         // reuses that same Claude Code login instead of a standalone API key.
+        // Phase 264 (T4): this is the "silently downgraded" half of AC-3 —
+        // append MOCK_VERIFIER_CAPABILITY so the eventual mock fallback is
+        // described the same way as the deliberately-configured case above.
         return fail(
           'verification-readiness',
           'warning',
-          `deep-verify is set to 'anthropic' but its credentials are missing — it will fall back to mock. Being logged into Claude Code does not supply ${envVar}; that is a separate credential.`,
+          `deep-verify is set to 'anthropic' but its credentials are missing — it will fall back to mock. Being logged into Claude Code does not supply ${envVar}; that is a separate credential. ${MOCK_VERIFIER_CAPABILITY.message}`,
           `Set ${envVar}, or run \`cadence activate --provider host-cli\` to reuse your Claude Code login instead.`,
         );
       }
+      // Phase 264 (T4): generic missing-credentials case — same AC-3
+      // "silently downgraded" wiring as the Claude-Code-specific branch above.
       return fail(
         'verification-readiness',
         'warning',
-        `deep-verify is set to '${r.provider}' but its credentials are missing — it will fall back to mock.`,
+        `deep-verify is set to '${r.provider}' but its credentials are missing — it will fall back to mock. ${MOCK_VERIFIER_CAPABILITY.message}`,
         `Set ${envVar} (or run \`cadence activate\`).`,
       );
     }
@@ -789,10 +798,12 @@ export async function checkVerificationReadiness(
         isClaudeCodeSession(env)
           ? ' Being logged into Claude Code does not supply ANTHROPIC_API_KEY; that is a separate credential.'
           : '';
+      // Phase 264 (T4): the seamsDowngraded case is also "silently downgraded"
+      // per AC-3 — append MOCK_VERIFIER_CAPABILITY here too.
       return fail(
         'verification-readiness',
         'warning',
-        `${r.reason} But ${r.seamsDowngraded.length} other ${plural} will silently fall back to mock for want of credentials: ${named}.${claudeCodeHint}`,
+        `${r.reason} But ${r.seamsDowngraded.length} other ${plural} will silently fall back to mock for want of credentials: ${named}.${claudeCodeHint} ${MOCK_VERIFIER_CAPABILITY.message}`,
         `Supply the missing credentials, or run \`cadence activate --provider host-cli --all\` to reuse your host CLI login for every seam. \`cadence config explain\` lists each seam's effective provider.`,
       );
     }

@@ -1352,7 +1352,7 @@ A placeholder that approves creates false confidence; one that abstains cannot. 
 
 ## rec-20260808-005 — mock label understates deterministic AC-test enforcement it actually performs
 
-- status: candidate
+- status: settle-pending
 - ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
@@ -1360,6 +1360,7 @@ A placeholder that approves creates false confidence; one that abstains cannot. 
 - confidence: 70%
 - decay: fresh
 - areas: core
+- decisions: dec-20260808-009 (active), dec-20260808-010 (active)
 - evidence: packages/core/src/verify/mock-verifier.ts and code-review.ts:103 confirmed to have real, narrow, deterministic gate behavior per HANDOFF-v1.56-verifier-honesty.md §2; depends on Phase L's selection-mode field
 - next: cadence milestone propose
 

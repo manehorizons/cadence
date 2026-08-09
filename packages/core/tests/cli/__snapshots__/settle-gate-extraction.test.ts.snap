@@ -11,6 +11,7 @@ exports[`Phase 39.1 AC-7: bit-identical gate refusal transcripts > deep-verify g
 "
   ⚠  MOCK = NOT REAL VERIFICATION
      The \`mock\` verifier is a deterministic, offline placeholder that only checks each AC links to a test — it is NOT real verification. Run \`cadence activate\` to turn on a real AI verifier.
+     The \`mock\` verifier only checks that each AC has a linked test and flags any \`console.log(...)\` added in the diff as a finding — it does not read diff content for behavior, read test bodies, or evaluate correctness.
      https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md
 
 build-test-must-pass: no test command configured — build-test-must-pass cannot verify your tests ran; this settle will NOT confirm the suite passes. Set verification.testCommand in .cadence/config.json to enable real enforcement.

@@ -1,0 +1,76 @@
+{
+  "draftId": "264-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Independently re-verified: types+core build/typecheck/lint clean; 357 types tests + 3826 core tests pass. New verifier-label.ts formatVerifierRollupLabel hand-traced against 5 cases (mock+absent, mock+configured, mock+fallback, non-mock+empty-diff, mixed). MOCK_VERIFIER_NOTICE byte-unchanged; new sibling MOCK_VERIFIER_CAPABILITY added. Independent reviewer verdict: READY, 2 minor non-blocking notes.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-08T23:15:20.486Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Independently re-verified after a review-found gap (missing empty-diff/real-provider renderer test) was fixed and re-checked. Join logic hand-traced correct for undefined-model matching and absent s.gates. Full core suite green (3845 tests).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/src/doctor/run.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/src/services/summary-render.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/src/parse/summary-writer.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/src/verify/verifier-factory.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/src/config-explain/build.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/doctor/verification-readiness.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/config-explain/warnings.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/verify/mock-banner-source.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/cli/summary-render.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/parse/summary-writer.test.ts"
+      ],
+      "updatedAt": "2026-08-08T23:45:29.282Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Independently re-verified after a review-found gap (AC-3's silently-downgraded branches missing capability wording, on both doctor and config-explain) was fixed and re-checked in the diff by hand. MOCK_VERIFIER_NOTICE confirmed byte-unchanged. Full core suite green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-08T23:45:34.905Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Independently re-verified. Reviewer confirmed READY with zero findings, including independent verification of my own settle-gate-extraction snapshot fix (a ripple from the banner text change, not in T5's own file list -- documented divergence). Full core suite green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-08T23:45:39.875Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "Authored directly (trivial, no code risk): .changeset/rendered-label-precision.md, patch bump for core+types, matches existing changeset conventions in this repo. pnpm changeset status recognizes it without error (absorbed into an existing minor bump on the same packages from a prior pending changeset -- expected changeset behavior, not a conflict).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/.changeset/rendered-label-precision.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/services/verifier-label.test.ts"
+      ],
+      "updatedAt": "2026-08-08T23:47:51.599Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Independently re-verified. Reviewer disclosed a temporary mutation probe on T2's summary-render.ts during review (interrupted mid-test by permission classifier, then reverted); I independently confirmed zero residue via grep + full diff match + full rebuild/typecheck/lint/test suite (407 files/3848 tests green, matches reviewer's own count exactly).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/gates/assurance-record.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/services/summary-hash.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tests/parse/summary-verify-sweep.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/docs/providers.md",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/3f844abb-41be-4f10-bd03-2a4a2d84e241/scratchpad/tsconfig.testcheck.json",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/tsconfig.testcheck.tmp.json",
+        "/tmp/claude-1000/-home-thomas-projects-cadence/3f844abb-41be-4f10-bd03-2a4a2d84e241/scratchpad/tsconfig.adhoc-check.json",
+        "/home/thomas/projects/cadence/.claude/worktrees/264-rendered-label-precision/packages/core/src/services/summary-render.ts"
+      ],
+      "updatedAt": "2026-08-09T00:06:48.624Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "Independently re-verified. Reviewer hand-derived all 4 fixture scenarios against deriveAssuranceRecord's documented rule and confirmed byte-identical, non-tautological pins. Minor comment-precision nits noted, non-blocking. Full suite green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-09T00:06:53.522Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "Independently re-verified. Reviewer confirmed doc accurately distinguishes tag-bearing surfaces (summary render/sidecar) from prose-only surfaces (doctor/config-explain), with byte-accurate quoted examples. One minor completeness note on the absent-tag case, non-blocking.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-09T00:06:58.452Z"
+    }
+  }
+}

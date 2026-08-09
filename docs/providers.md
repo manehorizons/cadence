@@ -38,6 +38,7 @@ For a conceptual overview of providers and the gate universe they serve, see
   - [security-audit procedure](#security-audit-procedure)
   - [Confirming it actually produced a real finding](#confirming-it-actually-produced-a-real-finding)
 - [providerSelection — configured vs. fallback vs. empty-diff provenance (Phase 263)](#providerselection--configured-vs-fallback-vs-empty-diff-provenance-phase-263)
+  - [Rendered, not just queryable (Phase 264)](#rendered-not-just-queryable-phase-264)
 - [Selecting a provider at the command line (Phase 73)](#selecting-a-provider-at-the-command-line-phase-73)
   - [Token usage in the SUMMARY](#token-usage-in-the-summary)
 - [Deep-verify prompt id-binding (Phase 29.7)](#deep-verify-prompt-id-binding-phase-297)
@@ -765,6 +766,38 @@ for this exact command's actual recorded output against this repo's own
 corpus (including a positive-control run proving it can detect a non-zero
 result), plus the `cadence summary verify` sweep proving the new field
 didn't retroactively change any historical record's content hash.
+
+### Rendered, not just queryable (Phase 264)
+
+Phase 263 makes `configured`/`fallback`/`empty-diff` queryable in the raw
+JSON; Phase 264 renders the same distinction where an operator actually
+looks, so the count-script above is no longer the only way to tell a
+deliberate mock choice from a silent downgrade. `cadence summary render`'s
+output and the on-disk `<id>-SUMMARY.md` sidecar both format each
+`assurance.verifierRollup[]` entry through a single formatter
+(`formatVerifierRollupLabel`, `packages/core/src/services/verifier-label.ts`)
+that appends a trailing `(configured)`, `(fallback)`, or `(empty-diff)` tag
+whenever the gates behind that rollup entry carry a `providerSelection`
+value — or an explicit `(mixed)` tag if the matching gates disagree, never
+silently omitted. When the rollup entry's provider is `mock`, the same
+formatter also appends a neutral capability sentence naming what `mock`
+actually checks and doesn't (`MOCK_VERIFIER_CAPABILITY`,
+`packages/types/src/guidance.ts`) — a sibling of the pre-existing
+`MOCK_VERIFIER_NOTICE` activation nudge, not a replacement for it. A
+rendered line looks like:
+
+```
+- verifier: mock (2 gate(s)) The `mock` verifier only checks that each AC has a linked test and flags any `console.log(...)` added in the diff as a finding — it does not read diff content for behavior, read test bodies, or evaluate correctness. (fallback)
+```
+
+`cadence doctor`'s verification-readiness warnings and `cadence config
+explain`'s provider warnings gained the same `MOCK_VERIFIER_CAPABILITY`
+sentence too, appended to their existing configured-vs-fallback prose
+("every verifier seam is set to mock" vs. "it will fall back to mock" /
+"will silently fall back to mock for want of credentials") — those two
+surfaces warn ahead of a settle rather than rendering an already-persisted
+`GateProvenance` entry, so they carry the distinction in prose instead of
+the short tag syntax above.
 
 ---
 
