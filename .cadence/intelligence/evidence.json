@@ -1823,6 +1823,27 @@
       "kind": "note",
       "summary": "Flagged by phase 266's T2 independent reviewer while confirming the full suite was green; out of phase 266's declared task file scope (no task's files: list includes vitest.shared.ts), so not fixed inline.",
       "createdAt": "2026-08-09T17:32:15.411Z"
+    },
+    {
+      "id": "ev-20260809-005",
+      "recommendationId": "rec-20260809-004",
+      "kind": "note",
+      "summary": "grep -n 'zero prompt' README.md packages/core/README.md both show the same stale comment at README.md:123 and packages/core/README.md:45",
+      "createdAt": "2026-08-09T18:58:15.218Z"
+    },
+    {
+      "id": "ev-20260809-006",
+      "recommendationId": "rec-20260809-005",
+      "kind": "note",
+      "summary": "prompter.ts:84-103's own docstring documents the settle-side instance and defers the fix (Phase 174); init.ts's whole-branch review (phase 265) independently found and locally fixed a second instance in cadence init",
+      "createdAt": "2026-08-09T18:58:31.146Z"
+    },
+    {
+      "id": "ev-20260809-007",
+      "recommendationId": "rec-20260809-006",
+      "kind": "note",
+      "summary": "phase 265's DRAFT AC-5 deliberately scoped only the no-reprompt half after advisor review; rec-20260808-006's shipped promotion notes this remainder explicitly rather than overclaiming full delivery",
+      "createdAt": "2026-08-09T18:58:44.809Z"
     }
   ]
 }
