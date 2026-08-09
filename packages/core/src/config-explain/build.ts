@@ -1,5 +1,5 @@
 import type { CadenceConfig, Tier } from '@thomas-powers-jr/cadence-types';
-import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
+import { MOCK_VERIFIER_NOTICE, MOCK_VERIFIER_CAPABILITY } from '@thomas-powers-jr/cadence-types';
 import { effectiveProfile, gatesFor } from '../gates/engine.js';
 import type {
   ConfigExplanation,
@@ -57,16 +57,20 @@ function deriveWarnings(
   const warnings: Warning[] = [];
 
   // 1. Provider set to a real backend with its key absent → silent mock fallback.
+  // Phase 264 (T4): this is config-explain's "silently downgraded" half of
+  // AC-3 — append MOCK_VERIFIER_CAPABILITY alongside the fallback warning so
+  // this surface names the same mock-capability fact as the all-mock case
+  // below and as cadence doctor's downgraded-seam wording.
   for (const row of rows) {
     if (row.provider === 'anthropic' && !ctx.anthropicKeyPresent) {
       warnings.push({
         code: 'provider-no-key',
-        message: `${row.block} is set to 'anthropic' but ANTHROPIC_API_KEY is unset — it will silently fall back to 'mock'; a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key. Run cadence doctor to confirm provider health.`,
+        message: `${row.block} is set to 'anthropic' but ANTHROPIC_API_KEY is unset — it will silently fall back to 'mock'; a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key. Run cadence doctor to confirm provider health. ${MOCK_VERIFIER_CAPABILITY.message}`,
       });
     } else if (row.provider === 'local' && !ctx.localKeyPresent) {
       warnings.push({
         code: 'provider-no-key',
-        message: `${row.block} is set to 'local' but CADENCE_LOCAL_API_KEY is unset — the request may be rejected or fall back to 'mock'. Run cadence doctor to confirm provider health.`,
+        message: `${row.block} is set to 'local' but CADENCE_LOCAL_API_KEY is unset — the request may be rejected or fall back to 'mock'. Run cadence doctor to confirm provider health. ${MOCK_VERIFIER_CAPABILITY.message}`,
       });
     }
   }
@@ -103,10 +107,13 @@ function deriveWarnings(
 
   // 4. Every seam is mock — the default newcomer state. Point at activation.
   // Phase 104: honesty wording from the single MOCK_VERIFIER_NOTICE source.
+  // Phase 264 (T4): append the neutral MOCK_VERIFIER_CAPABILITY fact alongside
+  // it — the notice nudges toward activation, the capability names precisely
+  // what mock does and doesn't check.
   if (rows.every((r) => r.isMock)) {
     warnings.push({
       code: 'all-mock',
-      message: `every verifier seam is set to mock. ${MOCK_VERIFIER_NOTICE.message}`,
+      message: `every verifier seam is set to mock. ${MOCK_VERIFIER_NOTICE.message} ${MOCK_VERIFIER_CAPABILITY.message}`,
     });
   }
 

@@ -1,5 +1,6 @@
 import type { Summary } from '@thomas-powers-jr/cadence-types';
 import { renderFindingsSection } from './findings-render.js';
+import { formatVerifierRollupLabel } from '../services/verifier-label.js';
 
 export function renderSummaryMd(s: Summary): string {
   const lines: string[] = [
@@ -50,7 +51,10 @@ export function renderSummaryMd(s: Summary): string {
       `- evidence tally: ai-verified=${tally['ai-verified']}, executed=${tally.executed}, assertion=${tally.assertion}, mention=${tally.mention}, unverified=${tally.unverified}`,
     );
     for (const v of s.assurance.verifierRollup) {
-      lines.push(`- verifier: ${v.provider}${v.model ? ` ${v.model}` : ''} (${v.gateCount} gate(s))`);
+      const matchingGates = (s.gates ?? []).filter(
+        (g) => g.provider === v.provider && g.model === v.model,
+      );
+      lines.push(`- verifier: ${formatVerifierRollupLabel(v, matchingGates)}`);
     }
   }
   lines.push('', '## Decisions', '');

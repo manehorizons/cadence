@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 2,
+  "draftId": "264-01",
+  "completedAt": "2026-08-09T00:22:36.692Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "executed"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Independently re-verified: types+core build/typecheck/lint clean; 357 types tests + 3826 core tests pass. New verifier-label.ts formatVerifierRollupLabel hand-traced against 5 cases (mock+absent, mock+configured, mock+fallback, non-mock+empty-diff, mixed). MOCK_VERIFIER_NOTICE byte-unchanged; new sibling MOCK_VERIFIER_CAPABILITY added. Independent reviewer verdict: READY, 2 minor non-blocking notes."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Independently re-verified after a review-found gap (missing empty-diff/real-provider renderer test) was fixed and re-checked. Join logic hand-traced correct for undefined-model matching and absent s.gates. Full core suite green (3845 tests)."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Independently re-verified. Reviewer disclosed a temporary mutation probe on T2's summary-render.ts during review (interrupted mid-test by permission classifier, then reverted); I independently confirmed zero residue via grep + full diff match + full rebuild/typecheck/lint/test suite (407 files/3848 tests green, matches reviewer's own count exactly)."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "Independently re-verified after a review-found gap (AC-3's silently-downgraded branches missing capability wording, on both doctor and config-explain) was fixed and re-checked in the diff by hand. MOCK_VERIFIER_NOTICE confirmed byte-unchanged. Full core suite green."
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "Independently re-verified. Reviewer confirmed READY with zero findings, including independent verification of my own settle-gate-extraction snapshot fix (a ripple from the banner text change, not in T5's own file list -- documented divergence). Full core suite green."
+    },
+    {
+      "id": "T6",
+      "status": "DONE",
+      "notes": "Independently re-verified. Reviewer hand-derived all 4 fixture scenarios against deriveAssuranceRecord's documented rule and confirmed byte-identical, non-tautological pins. Minor comment-precision nits noted, non-blocking. Full suite green."
+    },
+    {
+      "id": "T7",
+      "status": "DONE",
+      "notes": "Independently re-verified. Reviewer confirmed doc accurately distinguishes tag-bearing surfaces (summary render/sidecar) from prose-only surfaces (doctor/config-explain), with byte-accurate quoted examples. One minor completeness note on the absent-tag case, non-blocking."
+    },
+    {
+      "id": "T8",
+      "status": "DONE",
+      "notes": "Authored directly (trivial, no code risk): .changeset/rendered-label-precision.md, patch bump for core+types, matches existing changeset conventions in this repo. pnpm changeset status recognizes it without error (absorbed into an existing minor bump on the same packages from a prior pending changeset -- expected changeset behavior, not a conflict)."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 81,
+    "sessionSubagentSpawns": 180
+  },
+  "assurance": {
+    "verifierRollup": [],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 5,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "mixed"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "54928b5629375cc57267ed2f29d930e20ed88b97ed66dd69e8be7c784f671679"
+  }
+}

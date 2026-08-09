@@ -184,6 +184,7 @@ Scaffold a new .cadence/ directory in the current working tree
 | `--demo` | — | Seed a ready-to-approve demo phase (`01-demo`, objective + AC-1 + T1) so you can run a full loop in this repo with no hand-edit |
 | `--activate` | — | When `ANTHROPIC_API_KEY` is present, turn on real verification (`verifier.provider=anthropic`, deep-verify seam) in the same step. The key is never stored; no live check runs (that stays in `cadence activate`) |
 | `--full` | — | One-command full setup: wire the host, seed the demo phase, and activate real verification when their preconditions are met (each still yields to an explicitly-passed flag, e.g. `--skip-host-wire`) |
+| `--verifier-provider <provider>` | — | `mock \| anthropic \| local \| host-cli` — explicit choice, wins over `--activate`/`--full` and over prompting |
 | `--dry-run` | — | **Fit-check.** Resolve everything init would (name, gate profile, layout, test globs, verification/provider status, host surface, and the exact files it would create) and print a preview **without touching the repo** — then exit 0. Honors the resolution flags above; safe to run inside a populated or already-initialized repo |
 | `--host <host>` | — | Wire a host during init: `claude \| codex`. `codex` runs the Codex host installer and writes managed `AGENTS.md` instructions |
 | `--wire-host` | — | When a `.claude/` workspace is present, run `cadence-host-claude-code install` in the same step (subprocess spawn; auto-run, no prompt) |
@@ -197,12 +198,34 @@ Scaffold a new .cadence/ directory in the current working tree
 `.cadence/PROJECT.md`, a managed block in the repo-root `CLAUDE.md`, and (as of
 phase 196) `.gitignore` entries for the four CADENCE-owned ephemeral paths
 (`state.json`, `STATE.md`, `mcp-trust.json`, `intelligence/context/`) so they
-stay untracked. Init is
-**zero-prompt**: it derives the project name and (via git history) the gate
-profile, asking nothing. The `--preset` flag selects a config preset;
+stay untracked. Name and gate-profile derivation are still
+**zero-prompt**: init derives the project name and (via git history) the gate
+profile, asking nothing for either. The `--preset` flag selects a config preset;
 `--gate-profile` sets which quality gates fire by default. (`--profile` is a
 deprecated alias for `--preset`, retained for back-compat — it was a misnomer,
 since it sets a preset, not a gate profile.)
+
+On a real scaffolding run (not `--dry-run`, `--claude-md`, `--agents-md`, or
+`--ci` — none of those reach this step), the verifier-provider choice **is**
+presented explicitly: unless `--verifier-provider`, `--activate`, or `--full`
+already settled it, init asks which provider (`mock | anthropic | local |
+host-cli`) should back deep-verify — with `mock` listed as a normal, unshamed
+option, not a fallback to feel bad about. The prompt only fires when a
+prompter is available (a real TTY, or `CADENCE_PROMPTER_SCRIPT` set for
+scripted/CI runs); with no prompter available it silently defaults to `mock`
+(every shipped preset's own default) rather than coercing onto a real
+provider (this repo's own D-B decision). On every completed scaffolding run
+— flag-resolved, prompted, or defaulted — the choice is recorded as a
+retrievable decision in `.cadence/intelligence/decisions.json`, viewable with
+`cadence decision list` (see [`decision`](#decision) below). `--dry-run`
+reports which way the choice *would* resolve (prompt vs. explicit vs.
+default-mock) without ever prompting or writing a decision. When `.claude/`
+is present, a `CADENCE_PROMPTER_SCRIPT`-driven run now needs **one
+additional scripted answer** ahead of the pre-existing host-wire `[Y/n]`
+question below, since this verifier-provider prompt runs first — existing
+scripts written for the old single-answer convention should account for
+this (if the script runs out, the host-wire step now degrades gracefully
+with a stderr notice rather than crashing the run).
 
 When a `.claude/` workspace is detected, `--wire-host` installs the Claude Code
 adapter in the same step (a TTY offers it interactively; non-TTY skips with a
@@ -2577,6 +2600,7 @@ Render a settled phase SUMMARY.json for humans (read-only)
 |---|---|
 | `render <phase> <num>` | Print a deterministic, human-readable rendering of gate outcomes and per-AC status, suitable for pasting into a PR |
 | `verify <phase> <num>` | Recompute the sha256 content hash over a settled SUMMARY.json and compare it against the stored `contentHash`, to detect a hand-edited artifact |
+| `verify-all` | Walk every `<id>-SUMMARY.json` under `.cadence/phases/**` in-process and `verify` each one, reporting an aggregate pass/fail |
 
 **Behavior** — reads the settled phase's `<id>-SUMMARY.json` from
 `.cadence/phases/<phase>/`, validates it against the `SummaryZ` schema, and
@@ -2622,6 +2646,33 @@ informational, non-failing outcome). Exits `1` on `MISMATCH`, and on the
 same load errors as `render` (invalid phase slug, missing file, invalid
 JSON, schema-validation failure) — so `verify` is scriptable as a CI gate
 check.
+
+`summary verify-all` (Phase 266) walks every `<id>-SUMMARY.json` file found
+anywhere under `.cadence/phases/**`, loading and verifying each one exactly
+the way `verify <phase> <num>` does — so `cadence summary verify-all`, the
+whole-repo sweep used in this project's own CI, runs as a single process
+rather than spawning one CLI subprocess per file (a corpus of 275+
+historical summaries and growing). `MISMATCH` and any load failure (missing
+file, invalid JSON, or a schema-validation failure) count as a failure;
+`NO_HASH` is informational only and never counts as one, matching `verify`'s
+own three-verdict semantics. For each file it prints one line — a bare
+`<phase>/<id>: NO_HASH` or `<phase>/<id>: MISMATCH` to stdout, or
+`<phase>/<id>: FAILURE — <message>` to stderr for a load/parse/schema
+problem — except for a clean `MATCH`, which is counted but not printed per
+file (a `MATCH` line for every one of 275+ files would be noise; the
+aggregate is the report). When at least one summary file was found, it
+finishes with one aggregate summary line to stdout: `<N> checked: <M>
+MATCH, <K> NO_HASH, <F> failed`. If no `*-SUMMARY.json` files exist under
+`.cadence/phases` at all, no aggregate line is printed — instead it prints
+a stderr notice saying so rather than passing silently, but still exits
+`0` — zero files means zero failures. Like `render` and `verify`, `verify-all`
+is read-only throughout: it never writes to `.cadence/state.json`,
+`STATE.md`, or any phase artifact, and never transitions the loop.
+
+**Exit codes** (`verify-all`) — exits `0` unless at least one file failed (a
+`MISMATCH` or a load/parse/schema error), including when the entire corpus
+is `NO_HASH` and when zero `*-SUMMARY.json` files are found at all. Exits
+`1` if any file failed, no matter how many others passed.
 
 ---
 

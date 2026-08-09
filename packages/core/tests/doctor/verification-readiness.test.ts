@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
+import { MOCK_VERIFIER_NOTICE, MOCK_VERIFIER_CAPABILITY } from '@thomas-powers-jr/cadence-types';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { checkVerificationReadiness } from '../../src/doctor/run.js';
 import { loadConfig, writeConfig } from '../../src/config/loader.js';
@@ -28,6 +28,13 @@ describe('checkVerificationReadiness (AC-1, AC-2)', () => {
     const c = await checkVerificationReadiness(active.root, {});
     expect(c.severity).toBe('warning');
     expect(c.detail).toContain(MOCK_VERIFIER_NOTICE.message);
+  });
+
+  it('264-01/AC-3: the all-mock warning detail also carries MOCK_VERIFIER_CAPABILITY', async () => {
+    active = await tempRepo({ initialized: true });
+    const c = await checkVerificationReadiness(active.root, {});
+    expect(c.severity).toBe('warning');
+    expect(c.detail).toContain(MOCK_VERIFIER_CAPABILITY.message);
   });
 
   it('AC-2: warns when a real provider is selected but the key is missing', async () => {
@@ -103,6 +110,42 @@ describe('checkVerificationReadiness (AC-1, AC-2)', () => {
     const combined = `${c.detail} ${c.remediation}`;
     expect(combined).toMatch(/specReview/);
     expect(combined).toMatch(/codeReview/);
+  });
+
+  // 264-01/AC-3: the "silently downgraded" half of AC-3 — a verifier seam
+  // configured to a real provider whose credentials are missing falls back
+  // to mock without the operator deliberately choosing it. All three
+  // sub-branches below must carry MOCK_VERIFIER_CAPABILITY the same way the
+  // deliberately-configured `provider === 'mock'` branch already does.
+  it('264-01/AC-3: the Claude-Code-session missing-key warning also carries MOCK_VERIFIER_CAPABILITY', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, { ...cfg, verifier: { ...cfg.verifier, provider: 'anthropic' } });
+    const c = await checkVerificationReadiness(active.root, { CLAUDECODE: '1' });
+    expect(c.severity).toBe('warning');
+    expect(c.detail).toContain(MOCK_VERIFIER_CAPABILITY.message);
+  });
+
+  it('264-01/AC-3: the generic missing-key warning also carries MOCK_VERIFIER_CAPABILITY', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, { ...cfg, verifier: { ...cfg.verifier, provider: 'anthropic' } });
+    const c = await checkVerificationReadiness(active.root, {});
+    expect(c.severity).toBe('warning');
+    expect(c.detail).toContain(MOCK_VERIFIER_CAPABILITY.message);
+  });
+
+  it('264-01/AC-3: the seamsDowngraded warning also carries MOCK_VERIFIER_CAPABILITY', async () => {
+    active = await tempRepo({ initialized: true });
+    const cfg = await loadConfig(active.root);
+    await writeConfig(active.root, {
+      ...cfg,
+      verifier: { ...cfg.verifier, provider: 'host-cli' },
+      specReview: { ...cfg.specReview, provider: 'anthropic' },
+    });
+    const c = await checkVerificationReadiness(active.root, {});
+    expect(c.severity).toBe('warning');
+    expect(c.detail).toContain(MOCK_VERIFIER_CAPABILITY.message);
   });
 
   it('AC-3: still passes when every seam is real and credentialed', async () => {

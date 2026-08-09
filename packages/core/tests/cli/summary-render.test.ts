@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
+import { MOCK_VERIFIER_CAPABILITY } from '@thomas-powers-jr/cadence-types';
 
 const CADENCE_CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'cli', 'index.js');
 
@@ -481,5 +482,161 @@ describe('cadence summary render - Findings section (phase 257)', () => {
     expect(r.code).toBe(0);
     expect(r.stdout).toContain(localPath);
     expect(r.stdout).not.toContain('[REDACTED]');
+  });
+});
+
+describe('cadence summary render - verifier rollup label precision (phase 264, T2)', () => {
+  /** Base `evidenceTally` satisfying `AssuranceRecordZ` — every `AcEvidenceZ`
+   *  key present, per its phase-233 exhaustive-record contract. */
+  const EVIDENCE_TALLY = {
+    'ai-verified': 0,
+    executed: 1,
+    assertion: 1,
+    mention: 0,
+    unverified: 0,
+  };
+
+  it('264-01/AC-1: renders an explicit (mixed) tag when matching mock gates disagree on providerSelection', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        schemaVersion: 2,
+        gates: [
+          { gate: 'code-review', status: 'ran', provider: 'mock', providerSelection: 'configured' },
+          { gate: 'security-audit', status: 'ran', provider: 'mock', providerSelection: 'fallback' },
+        ],
+        assurance: {
+          verifierRollup: [{ provider: 'mock', gateCount: 2 }],
+          evidenceTally: EVIDENCE_TALLY,
+          overall: 'mixed',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('- verifier: mock (2 gate(s))');
+    expect(r.stdout).toContain('(mixed)');
+    expect(r.stdout).not.toContain('(configured)');
+    expect(r.stdout).not.toContain('(fallback)');
+  });
+
+  it('264-01/AC-1: renders a (configured) tag -- distinct from the mixed case -- when every matching mock gate agrees', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        schemaVersion: 2,
+        gates: [
+          { gate: 'code-review', status: 'ran', provider: 'mock', providerSelection: 'configured' },
+          { gate: 'security-audit', status: 'ran', provider: 'mock', providerSelection: 'configured' },
+        ],
+        assurance: {
+          verifierRollup: [{ provider: 'mock', gateCount: 2 }],
+          evidenceTally: EVIDENCE_TALLY,
+          overall: 'weak',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('(configured)');
+    expect(r.stdout).not.toContain('(mixed)');
+    expect(r.stdout).not.toContain('(fallback)');
+  });
+
+  it('264-01/AC-2: a pre-Phase-L record (verifierRollup populated, gates absent) renders no selection tag, matching pre-existing behavior plus the mock capability clause', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        // no `gates` override -- inherits VALID_SUMMARY.gates, which carries
+        // no `provider`/`providerSelection` at all (a historical shape).
+        assurance: {
+          verifierRollup: [{ provider: 'mock', gateCount: 2 }],
+          evidenceTally: EVIDENCE_TALLY,
+          overall: 'weak',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('- verifier: mock (2 gate(s))');
+    expect(r.stdout).toContain(MOCK_VERIFIER_CAPABILITY.message);
+    expect(r.stdout).not.toContain('(configured)');
+    expect(r.stdout).not.toContain('(fallback)');
+    expect(r.stdout).not.toContain('(empty-diff)');
+    expect(r.stdout).not.toContain('(mixed)');
+  });
+
+  it('264-01/AC-2: a record with gates present but no providerSelection field on any entry renders no selection tag', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        schemaVersion: 2,
+        gates: [
+          { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+        ],
+        assurance: {
+          verifierRollup: [{ provider: 'anthropic', model: 'claude-x', gateCount: 1 }],
+          evidenceTally: EVIDENCE_TALLY,
+          overall: 'strong',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('- verifier: anthropic claude-x (1 gate(s))');
+    expect(r.stdout).not.toMatch(/\(configured\)|\(fallback\)|\(empty-diff\)|\(mixed\)/);
+  });
+
+  it('264-01/AC-1: renders an (empty-diff) tag for a real (non-mock) provider gate tagged empty-diff, and omits the mock capability clause', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        schemaVersion: 2,
+        gates: [
+          {
+            gate: 'code-review',
+            status: 'ran',
+            provider: 'anthropic',
+            model: 'claude-x',
+            providerSelection: 'empty-diff',
+          },
+        ],
+        assurance: {
+          verifierRollup: [{ provider: 'anthropic', model: 'claude-x', gateCount: 1 }],
+          evidenceTally: EVIDENCE_TALLY,
+          overall: 'strong',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('- verifier: anthropic claude-x (1 gate(s))');
+    expect(r.stdout).toContain('(empty-diff)');
+    expect(r.stdout).not.toContain(MOCK_VERIFIER_CAPABILITY.message);
   });
 });

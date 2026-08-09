@@ -3,6 +3,8 @@ import { existsSync, statSync, readFileSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { presets, type Profile } from '@thomas-powers-jr/cadence-types';
 import { derivePhaseTaskId } from '../phases/id.js';
+import type { VerifierProvider } from '../verify/verifier-factory.js';
+import type { ActivationScope } from '../activate/plan.js';
 
 const GATE_PROFILES: readonly Profile[] = ['strict', 'standard', 'auto'];
 
@@ -290,20 +292,99 @@ export interface InitPlanOptions {
   profile?: 'solo' | 'team' | 'production' | undefined;
   gateProfile?: string | undefined;
   activate?: boolean | undefined;
+  /** One-command full setup (`--full`); composes like `--activate` for
+   *  provider selection when neither an explicit flag nor `--activate` is
+   *  given (phase 265, T1). */
+  full?: boolean | undefined;
+  /** Explicit `--verifier-provider <mock|anthropic|local|host-cli>` (phase
+   *  265, T1) — always wins over `--activate`/`--full` and over prompting. */
+  verifierProvider?: VerifierProvider | undefined;
   demo?: boolean | undefined;
   wireHost?: boolean | undefined;
   skipHostWire?: boolean | undefined;
 }
 
+/** Where a resolved verifier-provider selection came from (phase 265, T1). */
+export type ProviderSelectionSource = 'flag' | 'activate' | 'full';
+
+/**
+ * Phase 265 (T1) — pure description of what `cadence init` would do to
+ * resolve the verifier provider before writing `config.json`:
+ *
+ * - `'prompt'` — a prompter would be available (real TTY stdin, or
+ *   `CADENCE_PROMPTER_SCRIPT` set for scripted testing of the same prompt
+ *   logic a real TTY would use) and no flag settled it outright, so a real
+ *   `cadence init` would ask the operator to choose explicitly.
+ * - `'use'` — an explicit `--verifier-provider` flag, or `--activate`/
+ *   `--full`, settled the provider outright; `source` says which.
+ * - `'default-mock'` — no flag and no prompter available (e.g. CI, a script,
+ *   an agent session) → silently resolves to `mock` (D-B: never coerced onto
+ *   a real provider).
+ */
+export type ProviderSelectionResult =
+  | { action: 'prompt' }
+  | { action: 'use'; provider: VerifierProvider; scope: ActivationScope; source: ProviderSelectionSource }
+  | { action: 'default-mock' };
+
+/**
+ * Phase 265 (T1, AC-1/AC-2) — pure provider-selection resolver. Mirrors how
+ * `init.ts`'s existing `effectiveActivate` composes `--activate`/`--full`
+ * today, extended with the new `--verifier-provider` flag. Precedence:
+ *
+ * 1. An explicit `--verifier-provider` flag always wins outright.
+ * 2. Else `--activate` or `--full` derive anthropic-if-keyed-else-mock, the
+ *    same rule `effectiveActivate` already applies (`source` records
+ *    whichever of the two actually triggered it — `activate` wins when both
+ *    are set, matching `opts.activate ?? opts.full` precedence elsewhere).
+ * 3. Else, when a prompter would be available (`isTTY ||
+ *    env.CADENCE_PROMPTER_SCRIPT !== undefined` — the same predicate
+ *    `planHost`/`makePrompter()` use), report that a real init would prompt.
+ * 4. Else default to mock.
+ *
+ * No I/O, no readline, never throws, never calls `addIntelligenceDecision` —
+ * this only *describes* what a real init would do (T3 wires the actual
+ * prompt + decision recording).
+ */
+export function resolveProviderSelection(
+  opts: InitPlanOptions,
+  env: NodeJS.ProcessEnv,
+  isTTY: boolean,
+): ProviderSelectionResult {
+  if (opts.verifierProvider !== undefined) {
+    return { action: 'use', provider: opts.verifierProvider, scope: 'deep-verify', source: 'flag' };
+  }
+  if (opts.activate || opts.full) {
+    const hasKey =
+      typeof env.ANTHROPIC_API_KEY === 'string' && env.ANTHROPIC_API_KEY.length > 0;
+    const provider: VerifierProvider = hasKey ? 'anthropic' : 'mock';
+    const source: ProviderSelectionSource = opts.activate ? 'activate' : 'full';
+    return { action: 'use', provider, scope: 'deep-verify', source };
+  }
+  const prompterAvailable = isTTY || env.CADENCE_PROMPTER_SCRIPT !== undefined;
+  if (prompterAvailable) {
+    return { action: 'prompt' };
+  }
+  return { action: 'default-mock' };
+}
+
 export interface InitPlanVerification {
-  /** Verifier provider the deep-verify seam would carry after init. */
-  provider: 'mock' | 'anthropic' | 'local';
+  /** Verifier provider the deep-verify seam would carry after init. When
+   *  `selection.action` is `'prompt'` or `'default-mock'`, a real init hasn't
+   *  asked the operator yet (dry-run never prompts) — this mirrors the preset
+   *  default in that case; `selection` is the honest report of what would
+   *  actually happen. */
+  provider: VerifierProvider;
   /** True once a non-mock provider is wired (real verification on). */
   realVerificationOn: boolean;
   /** `--activate` was requested. */
   activateRequested: boolean;
   /** `--activate` requested but no `ANTHROPIC_API_KEY` present → stays mock. */
   activateNoKey: boolean;
+  /** Phase 265 (T1) — what a real (non-dry-run) init would do to resolve the
+   *  verifier provider: prompt, use an explicit/derived provider, or default
+   *  to mock. Dry-run reports this without ever prompting or writing a
+   *  decision. */
+  selection: ProviderSelectionResult;
   /** Phase 139: derived `verification.testCommand`, or `null` when nothing
    *  could be derived (no `package.json` / no `scripts.test`). */
   testCommand: string | null;
@@ -393,7 +474,7 @@ export function planInit(
   const testGlobs = detectTestGlobs(cwd);
   const layout = testGlobs[0]?.startsWith('packages/') ? 'monorepo' : 'single-package';
 
-  const verification = planVerification(cwd, preset, opts.activate ?? false, env);
+  const verification = planVerification(cwd, preset, opts, env, isTTY);
   const host = planHost(cwd, opts, env, isTTY);
   const demo = opts.demo ?? false;
 
@@ -419,29 +500,43 @@ export function planInit(
 function planVerification(
   cwd: string,
   preset: 'solo' | 'team' | 'production',
-  activate: boolean,
+  opts: InitPlanOptions,
   env: NodeJS.ProcessEnv,
+  isTTY: boolean,
 ): InitPlanVerification {
-  // Presets only ever carry 'mock' today; the config schema's `provider` enum
-  // also admits `'host-cli'` (Phase 165) but `cadence init` doesn't offer that
-  // provider yet, so narrow defensively rather than widening this plan's
-  // public surface.
-  const rawBase = presets[preset].verifier.provider;
-  const base: 'mock' | 'anthropic' | 'local' = rawBase === 'host-cli' ? 'mock' : rawBase;
+  // Presets only ever carry 'mock' today; `cadence init` doesn't offer
+  // 'host-cli' as a preset default (Phase 165 widened the config schema's
+  // `provider` enum to admit it, not what a fresh preset writes).
+  const base = presets[preset].verifier.provider;
+  const activate = opts.activate ?? false;
   const hasKey =
     typeof env.ANTHROPIC_API_KEY === 'string' && env.ANTHROPIC_API_KEY.length > 0;
-  let provider: 'mock' | 'anthropic' | 'local' = base;
+  let provider: VerifierProvider = base;
   let activateNoKey = false;
   if (activate) {
     if (hasKey) provider = 'anthropic';
     else activateNoKey = true;
   }
+
+  // Phase 265 (T1) — the pure resolver additionally covers `--full` (the
+  // block above only ever looked at `--activate`, a pre-existing gap: dry-run
+  // silently ignored `--full`'s own activation effect) and the new
+  // `--verifier-provider` flag. When it resolves outright, that IS what a
+  // real init would write — it wins over the `--activate`-only view above
+  // (for the `--activate` case itself the two agree, since both apply the
+  // same anthropic-if-keyed-else-mock rule).
+  const selection = resolveProviderSelection(opts, env, isTTY);
+  if (selection.action === 'use') {
+    provider = selection.provider;
+  }
+
   return {
     testCommand: detectTestCommand(cwd),
     provider,
     realVerificationOn: provider !== 'mock',
     activateRequested: activate,
     activateNoKey,
+    selection,
   };
 }
 
@@ -498,6 +593,29 @@ function verificationLine(v: InitPlanVerification): string {
   return `${v.provider}  (real verification on — deep-verify)`;
 }
 
+const PROVIDER_SELECTION_SOURCE_FLAG: Record<ProviderSelectionSource, string> = {
+  flag: '--verifier-provider',
+  activate: '--activate',
+  full: '--full',
+};
+
+/**
+ * Phase 265 (T1, AC-2) — render the resolver's `ProviderSelectionResult` as
+ * the honest "what would a real (non-dry-run) init do here" line, distinct
+ * from `verificationLine` above (which reports the base/preset-derived
+ * provider `--dry-run` would preview since it never actually prompts).
+ */
+function providerSelectionLine(s: ProviderSelectionResult): string {
+  switch (s.action) {
+    case 'prompt':
+      return 'would prompt to choose explicitly (mock, anthropic, local, host-cli)';
+    case 'use':
+      return `${s.provider}  (scope: ${s.scope} — via ${PROVIDER_SELECTION_SOURCE_FLAG[s.source]})`;
+    case 'default-mock':
+      return 'defaults to mock  (no prompter available — non-TTY and CADENCE_PROMPTER_SCRIPT unset)';
+  }
+}
+
 function hostLine(h: InitPlanHost): string {
   switch (h.decision) {
     case 'no-claude':
@@ -534,6 +652,7 @@ export function renderInitPlan(plan: InitPlan): string {
     `  test command  ${plan.verification.testCommand ?? '(none derived — build-test-must-pass will not run)'}`,
   );
   lines.push(`  verification  ${verificationLine(plan.verification)}`);
+  lines.push(`  provider      ${providerSelectionLine(plan.verification.selection)}`);
   lines.push(`  host          ${hostLine(plan.host)}`);
   lines.push(`  demo phase    ${plan.demo ? 'yes (01-demo)' : 'no'}`);
   lines.push('');
