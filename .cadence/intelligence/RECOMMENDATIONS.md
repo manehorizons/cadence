@@ -1273,7 +1273,7 @@ packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the p
 
 ## rec-20260806-010 — summary-verify-sweep.test.ts couples all future PRs to entire historical SUMMARY corpus
 
-- status: candidate
+- status: settle-pending
 - ready: needs-decision
 - priority: medium
 - leverage: 5/10
@@ -1282,6 +1282,7 @@ packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the p
 - decay: fresh
 - areas: cli, doctor, test-infra
 - files: packages/core/tests/parse/summary-verify-sweep.test.ts, packages/core/src/cli/commands/summary.ts
+- decisions: dec-20260809-001 (active)
 - evidence: Whole-branch review of phase 257 (2026-08-06): pnpm turbo run test --force ran the sweep at 35.6s covering 269 real historical summaries via 269 spawned CLI processes at concurrency 12; git ls-files .cadence/phases | grep -c SUMMARY.json = 269.
 - evidence: Materialized in real CI, PR #388 (phase 263), 2026-08-08: test (windows-latest, 22) failed with 'Error: Test timed out in 120000ms' on tests/parse/summary-verify-sweep.test.ts's 257-01/AC-3 sweep, corpus now 275+ SUMMARY.json files (up from 269 at this rec's filing). Same run's macOS leg took 59.9s and Ubuntu 81.4s for the identical sweep -- both comfortably under 120s but Ubuntu already at 68% of the timeout budget, confirming linear-with-corpus-size growth is closing in on all three OS legs, not just Windows. Ubuntu was 35.6s for 269 files two days ago (2026-08-06); now 81.4s for 275 files -- a disproportionate jump versus pure file-count growth, worth investigating (concurrency contention? per-call CLI startup regression?) alongside deciding between this rec's two options (slower/nightly lane, or a real --all flag).
 - next: cadence milestone propose
@@ -1400,7 +1401,7 @@ packages/core/src/verify/coverage.ts's scanTestCoverage (assertion mode, ~line 1
 
 ## rec-20260809-002 — dispatcher.test.ts skill-invoke FIFO test times out on Windows CI, independent of diff
 
-- status: candidate
+- status: settle-pending
 - ready: needs-evidence
 - priority: medium
 - leverage: 5/10
@@ -1414,3 +1415,19 @@ packages/core/src/verify/coverage.ts's scanTestCoverage (assertion mode, ~line 1
 - next: cadence milestone propose
 
 tests/hooks/dispatcher.test.ts:96 (skill-invoke caps at 100 entries with FIFO drop) makes 105 sequential real-disk state read/write round trips via SimpleStateBackend against a tempRepo fixture, each awaited serially. Confirmed failing with Error: Test timed out in 90000ms on windows-latest,22 across at least 2 of the last 4 main-branch CI runs (31272510722 and 31240052177), fully independent of any feature branch diff -- PR 389 phase 264 touched none of packages/core/src/hooks or its tests and still hit the identical failure. Distinct mechanism from rec-20260806-010 (subprocess-spawn corpus sweep) but same symptom class: serial real-IO-heavy test timing out under Windows CI resource pressure. Options: batch the 105 dispatch calls, raise this specific test's timeout via a scoped vitest config (not a global bump), or investigate whether SimpleStateBackend can avoid a full read-modify-write round trip per call in test/fixture mode.
+
+## rec-20260809-003 — vitest.shared.ts's Windows-timeout comment cites the now-fixed dispatcher cap test
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: test-infra
+- files: vitest.shared.ts
+- evidence: Flagged by phase 266's T2 independent reviewer while confirming the full suite was green; out of phase 266's declared task file scope (no task's files: list includes vitest.shared.ts), so not fixed inline.
+- next: cadence milestone propose
+
+vitest.shared.ts:16-19 justifies TIMEOUT_MS=90000 on win32 partly by citing 'the dispatcher cap test (105 sequential dispatch() calls, each doing multiple disk read/writes)' as historical evidence. Phase 266 rewrote that exact test (packages/core/tests/hooks/dispatcher.test.ts, the skill-invoke FIFO-cap test) to call a pure in-memory function instead, with zero disk I/O -- the comment's specific example is now stale, though the general 90000ms value likely still has other justification (CLI-spawning settle tests, general Windows CI slowness) and should not be casually lowered without separately re-measuring those.

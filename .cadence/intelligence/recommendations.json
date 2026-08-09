@@ -2336,7 +2336,7 @@
       "title": "summary-verify-sweep.test.ts couples all future PRs to entire historical SUMMARY corpus",
       "summary": "Phase 257 T3 added packages/core/tests/parse/summary-verify-sweep.test.ts, which spawns cadence summary verify against every historical .cadence/phases/**/*-SUMMARY.json (269 today, growing forever) on every pnpm test invocation across all 3 CI OS legs (~16-36s). This makes any unrelated future PR's CI fail if any historical summary ever fails verify, and has Windows spawn-flakiness exposure per this repo's known pnpm/spawn-race issues. No cadence summary verify --all command exists today; the test hand-rolls process-spawn plumbing instead. Options: move to a slower/nightly lane, or build a real --all flag this test could call.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-decision",
       "priority": "medium",
       "leverageScore": 5,
@@ -2358,10 +2358,13 @@
         "ev-20260808-009"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260809-001"
+      ],
+      "convertedToPhaseId": "266-ci-test-timeout-remediation",
       "scoutId": "scout-20260806-phase257",
       "createdAt": "2026-08-06T18:52:16.644Z",
-      "updatedAt": "2026-08-08T21:35:21.128Z"
+      "updatedAt": "2026-08-09T17:53:18.060Z"
     },
     {
       "id": "rec-20260807-005",
@@ -2565,7 +2568,7 @@
       "title": "dispatcher.test.ts skill-invoke FIFO test times out on Windows CI, independent of diff",
       "summary": "tests/hooks/dispatcher.test.ts:96 (skill-invoke caps at 100 entries with FIFO drop) makes 105 sequential real-disk state read/write round trips via SimpleStateBackend against a tempRepo fixture, each awaited serially. Confirmed failing with Error: Test timed out in 90000ms on windows-latest,22 across at least 2 of the last 4 main-branch CI runs (31272510722 and 31240052177), fully independent of any feature branch diff -- PR 389 phase 264 touched none of packages/core/src/hooks or its tests and still hit the identical failure. Distinct mechanism from rec-20260806-010 (subprocess-spawn corpus sweep) but same symptom class: serial real-IO-heavy test timing out under Windows CI resource pressure. Options: batch the 105 dispatch calls, raise this specific test's timeout via a scoped vitest config (not a global bump), or investigate whether SimpleStateBackend can avoid a full read-modify-write round trip per call in test/fixture mode.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-evidence",
       "priority": "medium",
       "leverageScore": 5,
@@ -2585,9 +2588,37 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "266-ci-test-timeout-remediation",
       "scoutId": "scout-20260809-phase264-ci",
       "createdAt": "2026-08-09T00:59:47.672Z",
-      "updatedAt": "2026-08-09T01:15:20.132Z"
+      "updatedAt": "2026-08-09T17:53:18.060Z"
+    },
+    {
+      "id": "rec-20260809-003",
+      "title": "vitest.shared.ts's Windows-timeout comment cites the now-fixed dispatcher cap test",
+      "summary": "vitest.shared.ts:16-19 justifies TIMEOUT_MS=90000 on win32 partly by citing 'the dispatcher cap test (105 sequential dispatch() calls, each doing multiple disk read/writes)' as historical evidence. Phase 266 rewrote that exact test (packages/core/tests/hooks/dispatcher.test.ts, the skill-invoke FIFO-cap test) to call a pure in-memory function instead, with zero disk I/O -- the comment's specific example is now stale, though the general 90000ms value likely still has other justification (CLI-spawning settle tests, general Windows CI slowness) and should not be casually lowered without separately re-measuring those.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "test-infra"
+      ],
+      "affectedFiles": [
+        "vitest.shared.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260809-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-09T17:32:15.411Z",
+      "updatedAt": "2026-08-09T17:32:15.411Z"
     }
   ],
   "archived": [
