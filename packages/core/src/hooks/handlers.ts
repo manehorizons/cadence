@@ -394,10 +394,28 @@ export async function handleSubagentStart(
 const SKILL_AUDIT_CAP = 100;
 
 /**
+ * Phase 266 AC-4 — pure push+FIFO-cap logic for `state.skillAudit.invoked`,
+ * extracted out of `handleSkillInvoke` so the drop-at-cap behavior can be
+ * unit-tested directly (no I/O, no dispatcher round-trip). Appends `skill`
+ * then drops from the front while length exceeds `cap`. Does not mutate
+ * `invoked` — returns a new array. Takes `cap` as a parameter rather than
+ * closing over `SKILL_AUDIT_CAP` so it stays testable independent of the
+ * module constant.
+ */
+export function applySkillInvoke(invoked: readonly string[], skill: string, cap: number): string[] {
+  const next = [...invoked, skill];
+  while (next.length > cap) {
+    next.shift();
+  }
+  return next;
+}
+
+/**
  * Phase 23.4 — skillAudit wiring. Records the skill name from `ctx.raw.skill`
  * into `state.skillAudit.invoked` when `config.telemetry.skillInvocations` is
  * enabled. Dedups (set-like) and caps the array at 100 entries with FIFO
- * eviction. Best-effort: missing skill or telemetry disabled → no-op.
+ * eviction (via {@link applySkillInvoke}). Best-effort: missing skill or
+ * telemetry disabled → no-op.
  */
 export async function handleSkillInvoke(
   ctx: HookContext,
@@ -409,10 +427,7 @@ export async function handleSkillInvoke(
   const skill = (ctx.raw as { skill?: unknown } | undefined)?.skill;
   if (typeof skill !== 'string' || skill.length === 0) return { ok: true };
   if (state.skillAudit.invoked.includes(skill)) return { ok: true };
-  state.skillAudit.invoked.push(skill);
-  while (state.skillAudit.invoked.length > SKILL_AUDIT_CAP) {
-    state.skillAudit.invoked.shift();
-  }
+  state.skillAudit.invoked = applySkillInvoke(state.skillAudit.invoked, skill, SKILL_AUDIT_CAP);
   await backend.commit(state);
   return { ok: true };
 }

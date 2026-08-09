@@ -1,0 +1,32 @@
+{
+  "draftId": "266-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-09T17:15:18.238Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-09T17:15:18.395Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/266-ci-test-timeout-remediation/packages/core/tests/parse/summary-verify-sweep.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/266-ci-test-timeout-remediation/docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-08-09T17:31:46.545Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-09T17:31:46.705Z"
+    }
+  }
+}
