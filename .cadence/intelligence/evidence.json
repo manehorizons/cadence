@@ -1844,6 +1844,13 @@
       "kind": "note",
       "summary": "phase 265's DRAFT AC-5 deliberately scoped only the no-reprompt half after advisor review; rec-20260808-006's shipped promotion notes this remainder explicitly rather than overclaiming full delivery",
       "createdAt": "2026-08-09T18:58:44.809Z"
+    },
+    {
+      "id": "ev-20260810-001",
+      "recommendationId": "rec-20260810-001",
+      "kind": "note",
+      "summary": "Verified live 2026-08-09: run-demo.sh exits 1 at both settle attempts with 'coverage: 01-01/AC-1 has no linked test' etc. on this worktree's build AND an independent main-commit-2c4fa616 build (byte-identical). git diff main -- examples/demo-test-gutting/ is empty. Two candidate fixes (operator's call): add coverageScheme:'bare' to the script's post-init config patch (mirrors fixtures.ts:47), or update the 3 fixture files to 01-01/AC-N tokens.",
+      "createdAt": "2026-08-10T00:01:02.402Z"
     }
   ]
 }

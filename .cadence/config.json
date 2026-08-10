@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "profile": "auto",
+  "profile": "standard",
   "loopEnforcement": "soft",
   "acDiscipline": "tier-scaled",
   "workstreamBackend": "simple",

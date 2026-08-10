@@ -103,7 +103,11 @@ describe('runCodeReviewGate', () => {
     expect(res.summaryPatch?.codeReview).toEqual(CLEAN);
     // AC-1: passing path reports verifier identity via flags.verifierIdentity.
     expect(res.flags?.verifierIdentity).toEqual({ family: 'mock' });
-    expect(calls.writes[0]).toContain('"converged": true');
+    // Phase 267 (267-01, dec-20260810-003): CODE-REVIEW.json is a separate
+    // persisted artifact from the SUMMARY-level GateProvenance relabel — a
+    // mock-identified clean pass now abstains here too (converged: false,
+    // not true), closing a gap a real deep-verify pass caught.
+    expect(calls.writes[0]).toContain('"converged": false');
     expect(calls.high).toEqual([]);
     // Full exact-shape characterization (legacy fields preserved alongside the
     // newer converged/attempts/maxAttempts/history fields) — pins today's
@@ -111,19 +115,20 @@ describe('runCodeReviewGate', () => {
     // against it.
     expect(JSON.parse(calls.writes[0]!)).toEqual({
       draftId: '01-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
         {
           at: expect.any(String),
-          pass: true,
+          pass: false,
           findingsCount: 0,
           provider: 'mock',
-          verdict: 'pass',
+          verdict: 'abstained',
+          mockAbstained: true,
         },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       findings: 0,
       at: expect.any(String),

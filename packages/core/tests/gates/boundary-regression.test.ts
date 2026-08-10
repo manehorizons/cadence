@@ -266,8 +266,29 @@ describe(
           skipReason: 'not requested (no --deep / --interactive, not in gate set)',
         },
         { gate: 'deep-verify', status: 'ran' },
-        { gate: 'code-review', status: 'ran', provider: 'mock', providerSelection: 'configured' },
-        { gate: 'security-audit', status: 'ran', provider: 'mock', providerSelection: 'configured' },
+        // Phase 267 (267-01, dec-20260809-004): the outcome is unchanged --
+        // this is still a genuine mock-identified CLEAN PASS on both gates,
+        // same as before this phase -- but the recorded status moved from
+        // 'ran' to 'skipped' + a skipReason naming the abstention, since a
+        // mock pass is no longer persisted as a real verification result
+        // (registry.ts's new relabel branch). Not a regression: this is the
+        // exact behavior change T2 implemented and this pin now reflects it.
+        {
+          gate: 'code-review',
+          status: 'skipped',
+          skipReason:
+            'code-review: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass',
+          provider: 'mock',
+          providerSelection: 'configured',
+        },
+        {
+          gate: 'security-audit',
+          status: 'skipped',
+          skipReason:
+            'security-audit: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass',
+          provider: 'mock',
+          providerSelection: 'configured',
+        },
       ]);
       expect(summary.acResults).toEqual([{ id: 'AC-1', pass: true, evidence: 'executed' }]);
     });

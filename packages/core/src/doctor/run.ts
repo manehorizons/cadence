@@ -1486,6 +1486,18 @@ function axisRemediation(gate: Gate, seam: VerifierSeam, axis: ConductionAxis): 
  * and `fixId: null` always: none of the three axes has a safe auto-repair,
  * each remediation is an operator decision (a profile override, a
  * different execution context, or a provider reconfiguration).
+ *
+ * Phase 267 (267-01, T3): investigated, deliberately left unchanged. This
+ * check answers "CAN this repo's config produce a real finding at all,"
+ * purely from `config`/`env` — it takes no `Summary`, `GateProvenance`, or
+ * `AssuranceRecord` input and never reads a settle's gate-provenance
+ * `status` (confirmed: no reference to `Summary`/`assurance`/
+ * `GateProvenance` anywhere under `src/doctor/`). Mock-abstention (T2)
+ * relabels a *recorded* clean pass on a *past* settle; it does not change
+ * what the current config is capable of producing on the *next* one, so a
+ * settle with only abstained mock review gates still reports exactly what
+ * it reported before this phase: `code-review`/`security-audit` blocked by
+ * `provider` under a mock-configured seam.
  */
 export function checkConductionReachability(
   config: CadenceConfig,

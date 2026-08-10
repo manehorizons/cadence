@@ -96,6 +96,32 @@ describe('formatVerifierRollupLabel (264-01/AC-1)', () => {
     ]);
     expect(label).toContain('(configured)');
   });
+
+  /**
+   * Phase 267 (267-01, T3): a mock-identified clean pass on code-review/
+   * security-audit now records `status: 'skipped'` + an abstention
+   * skipReason instead of `status: 'ran'` (registry.ts, T2). This function
+   * reads only `provider`/`model`/`providerSelection` off `matchingGates` --
+   * never `status` -- so an abstained (skipped) matching gate must format
+   * identically to the equivalent ran gate. Investigated and confirmed by
+   * this test rather than assumed.
+   */
+  it("267-01/AC-3: a status: 'skipped' mock-abstained matching gate formats IDENTICALLY to the equivalent status: 'ran' gate -- status is not part of this function's contract", () => {
+    const ranLabel = formatVerifierRollupLabel({ provider: 'mock', gateCount: 1 }, [
+      gate({ providerSelection: 'configured' }),
+    ]);
+    const skippedLabel = formatVerifierRollupLabel({ provider: 'mock', gateCount: 1 }, [
+      gate({
+        status: 'skipped',
+        skipReason:
+          "code-review: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass",
+        providerSelection: 'configured',
+      }),
+    ]);
+    expect(skippedLabel).toBe(ranLabel);
+    expect(skippedLabel).toContain('(configured)');
+    expect(skippedLabel).toContain(MOCK_VERIFIER_CAPABILITY.message);
+  });
 });
 
 /**

@@ -109,7 +109,11 @@ describe('cadence draft approve — plan-review convergence (Phase 35.1)', () =>
     expect(r.code).toBe(0);
     expect(await loopPosition(active.root)).toBe('BUILD');
     const sc = await sidecar(active.root);
-    expect(sc.converged).toBe(true);
+    // Phase 267 (267-01, dec-20260810-002): this repo's default init resolves
+    // plan-review to mock, so a clean pass now persists `converged: false` +
+    // `verdict: 'abstained'` on the sidecar (not a real pass) -- the BUILD
+    // transition above (the real control-flow signal) is unaffected.
+    expect(sc.converged).toBe(false);
   });
 
   it('AC-3: failing plan → reloop, exit 1, attempt 1/3, sidecar attempts:1', async () => {

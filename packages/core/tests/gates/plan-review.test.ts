@@ -65,27 +65,41 @@ describe('runPlanReviewGate', () => {
     expect(res.outcome).toBe('pass');
     expect(writes).toHaveLength(1);
     const sidecar = JSON.parse(writes[0]!);
-    expect(sidecar.converged).toBe(true);
+    // Fix round (dec-20260810-002): mockAbstained (provider 'mock', clean
+    // pass) now persists `converged: false` — see the toEqual block below.
+    expect(sidecar.converged).toBe(false);
     expect(sidecar.draftId).toBe('01-01');
     // Full exact-shape characterization (legacy 29.7 top-level fields
     // preserved byte-for-byte alongside the newer converged/attempts/
     // maxAttempts/history fields) — pins today's real output so a later
     // extraction of a shared runner can be diffed against it.
+    // Phase 267 (267-01, T2, dec-20260809-005): `mockAbstained: true` now
+    // appears on a mock-identified clean-pass history entry — the abstain
+    // marker for plan-review's shared converge.ts sidecar, mirroring
+    // registry.ts's status:'skipped' relabeling for code-review/
+    // security-audit. Updated expected value, not a loosened assertion.
+    // Fix round (dec-20260810-002 amends dec-20260809-005, real deep-verify
+    // AC-1 refusal): pass/converged/verdict are now overridden to
+    // false/false/'abstained' for a mockAbstained entry — `pass: true` alone
+    // was still a literal persisted "pass" AC-1 forbids. Control flow
+    // (`res.outcome === 'pass'` above) is driven by the fresh verify()
+    // result, not this persisted record, so it is unaffected.
     expect(sidecar).toEqual({
       draftId: '01-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
         {
           at: expect.any(String),
-          pass: true,
+          pass: false,
           findingsCount: 0,
           provider: 'mock',
-          verdict: 'pass',
+          verdict: 'abstained',
+          mockAbstained: true,
         },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       findings: 0,
       at: expect.any(String),
@@ -321,22 +335,28 @@ describe('runPlanReviewGate', () => {
     const res = await runPlanReviewGate(ctx({ result, writes }));
     expect(res.outcome).toBe('pass');
     const sidecar = JSON.parse(writes[0]!);
+    // Phase 267 (267-01, T2, dec-20260809-005): `mockAbstained: true` now
+    // appears on this mock-identified clean-pass history entry — see the
+    // sibling test above for the same update rationale.
+    // Fix round (dec-20260810-002): see sibling test above for the
+    // pass/converged/verdict override rationale.
     expect(sidecar).toEqual({
       draftId: '01-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
         {
           at: expect.any(String),
-          pass: true,
+          pass: false,
           findingsCount: 0,
           provider: 'mock',
           providerSelection: 'fallback',
-          verdict: 'pass',
+          verdict: 'abstained',
+          mockAbstained: true,
         },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       providerSelection: 'fallback',
       findings: 0,

@@ -640,3 +640,61 @@ describe('cadence summary render - verifier rollup label precision (phase 264, T
     expect(r.stdout).not.toContain(MOCK_VERIFIER_CAPABILITY.message);
   });
 });
+
+describe('cadence summary render - mock-abstained review gates (phase 267, T3)', () => {
+  const ABSTAIN_REASON =
+    "code-review: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass";
+
+  it('267-01/AC-3: an abstained mock code-review gate renders distinguishably from a real security-audit pass and from a plan-review gate absent entirely, and still surfaces in the Assurance verifier rollup', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        schemaVersion: 2,
+        gates: [
+          { gate: 'code-review', status: 'skipped', skipReason: ABSTAIN_REASON, provider: 'mock' },
+          { gate: 'security-audit', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+          // plan-review deliberately absent -- total-absence comparison arm.
+        ],
+        assurance: {
+          verifierRollup: [
+            { provider: 'mock', gateCount: 1 },
+            { provider: 'anthropic', model: 'claude-x', gateCount: 1 },
+          ],
+          evidenceTally: {
+            'ai-verified': 0,
+            executed: 1,
+            assertion: 1,
+            mention: 0,
+            unverified: 0,
+          },
+          overall: 'mixed',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+
+    // Abstained: 'skipped', names the abstention reason -- never a bare pass.
+    expect(r.stdout).toContain(`- code-review: skipped — ${ABSTAIN_REASON}`);
+    expect(r.stdout).not.toContain('- code-review: ran');
+
+    // Real pass: 'ran', untouched by abstention wording.
+    expect(r.stdout).toContain('- security-audit: ran');
+    expect(r.stdout).not.toMatch(/security-audit:.*abstain/i);
+
+    // Total absence: no plan-review line anywhere.
+    expect(r.stdout).not.toMatch(/plan-review:/);
+
+    // Not silently dropped from the whole-run Assurance rollup either --
+    // the abstained gate's mock identity still surfaces there.
+    expect(r.stdout).toContain('## Assurance');
+    expect(r.stdout).toContain('- verifier: mock (1 gate(s))');
+    expect(r.stdout).toContain(MOCK_VERIFIER_CAPABILITY.message);
+    expect(r.stdout).toContain('- verifier: anthropic claude-x (1 gate(s))');
+  });
+});
