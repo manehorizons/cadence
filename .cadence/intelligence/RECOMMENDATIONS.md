@@ -1321,8 +1321,8 @@ release-currency (phase 262) is scoped to comparing published vs local 'engines'
 
 ## rec-20260808-003 — No standing signal for consecutive settles without real-provider conduction
 
-- status: candidate
-- ready: ready-for-cadence-spec
+- status: accepted
+- ready: ready-for-milestone
 - priority: high
 - leverage: 5/10
 - risk: 5/10

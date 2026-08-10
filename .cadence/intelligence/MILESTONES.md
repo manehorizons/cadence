@@ -4,7 +4,20 @@
 
 ## Proposed
 
-None.
+### mil-rec-rec-20260808-003 — No standing signal for consecutive settles without real-provider conduction
+
+- objective: cadence doctor's conduction-reachability (phase 251) answers a point-in-time capability question ('can this repo conduct a real finding') but nothing answers the trend question ('has it, lately'). That gap is exactly how 263 settles accumulated under mock with zero escalation in the v1.54 audit. Derive a read-only streak counter from the SUMMARY corpus (consecutive settles with no non-mock verifier identity in provenance), surface it in cadence doctor/status, escalate severity by streak length, and wire it as the mechanical instrument for dec-20260801-003's three-settle revisit trigger.
+- status: proposed
+- recommendations: rec-20260808-003
+- pre-mortem:
+  - likely failure modes:
+    - _(why might this fail?)_
+  - hidden dependencies:
+    - _(what must already be true?)_
+  - drift risks:
+    - _(what docs/specs will drift?)_
+  - out of scope:
+    - _(what is explicitly NOT in this milestone?)_
 
 ## Accepted
 
