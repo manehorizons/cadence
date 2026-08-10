@@ -32,6 +32,7 @@ node -e '
 const fs=require("fs"),p=".cadence/config.json",c=JSON.parse(fs.readFileSync(p));
 c.verification.testGlobs=["**/*.test.mjs"];
 c.verification.coverageMode="assertion";
+c.verification.coverageScheme="bare";
 c.verification.testCommand="node --test tests/*.test.mjs";
 fs.writeFileSync(p,JSON.stringify(c,null,2));
 '
