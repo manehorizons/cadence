@@ -6,6 +6,7 @@ import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { CadenceStateZ, emptyState } from '@thomas-powers-jr/cadence-types';
 import { runDoctor } from '../../src/doctor/run.js';
 import { planFixes, applyFixes } from '../../src/doctor/fix.js';
+import { pass, fail, type DoctorReport } from '../../src/doctor/model.js';
 
 const ENV = { nodeVersion: process.versions.node, platform: process.platform };
 const GIT_COMMIT_IDENTITY = ['-c', 'user.email=cadence-test@example.com', '-c', 'user.name=Cadence Test'];
@@ -281,5 +282,43 @@ describe('applyFixes — resolve-state-conflict repair (phase 196, issue #177, A
     const outcome = outcomes.find((o) => o.fixId === 'resolve-state-conflict');
     expect(outcome?.status).toBe('failed');
     expect(outcome?.message.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * Phase 268, T1: `planFixes`'s fix-planner classification of the new
+ * `indeterminate` `DoctorSeverity` rung (`dec-20260810-005`). These tests
+ * construct synthetic `DoctorReport` values directly (rather than driving a
+ * real check) so the policy decided in this task (skip auto-repair like
+ * `ok`, since missing corpus data has nothing to auto-repair) is
+ * regression-tested independently of the one real check that does now emit
+ * `indeterminate` (`conduction-drift-streak`, `run.ts`, covered separately
+ * in `tests/doctor/run.test.ts`).
+ */
+describe('planFixes — indeterminate severity policy (phase 268, T1, AC-2)', () => {
+  it('268-01/AC-2: an indeterminate check is skipped exactly like ok — no fix action is produced, not folded into the generic manual fallthrough', () => {
+    const report: DoctorReport = {
+      ok: true,
+      checks: [
+        pass('healthy', 'all good'),
+        fail('conduction-drift', 'indeterminate', 'not enough corpus data to compute a streak', 'n/a'),
+      ],
+    };
+    const plan = planFixes(report);
+    expect(plan.actions).toHaveLength(0);
+  });
+
+  it('268-01/AC-2 regression: warning/error checks are still classified for repair exactly as before — the indeterminate branch is additive only', () => {
+    const report: DoctorReport = {
+      ok: false,
+      checks: [
+        fail('git-hooks', 'warning', 'hooks not wired', 'run git config...', 'git-hooks'),
+        fail('unfixable-thing', 'error', 'something broke', 'do it by hand'),
+      ],
+    };
+    const plan = planFixes(report);
+    expect(plan.actions).toHaveLength(2);
+    expect(plan.actions.find((a) => a.check === 'git-hooks')?.kind).toBe('auto');
+    expect(plan.actions.find((a) => a.check === 'unfixable-thing')?.kind).toBe('manual');
   });
 });

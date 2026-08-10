@@ -1,0 +1,22 @@
+{
+  "specId": "268-01",
+  "converged": false,
+  "attempts": 0,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-08-10T16:14:04.718Z",
+      "pass": false,
+      "findingsCount": 0,
+      "provider": "mock",
+      "providerSelection": "configured",
+      "verdict": "abstained",
+      "mockAbstained": true
+    }
+  ],
+  "pass": false,
+  "provider": "mock",
+  "providerSelection": "configured",
+  "findings": 0,
+  "at": "2026-08-10T16:14:04.718Z"
+}

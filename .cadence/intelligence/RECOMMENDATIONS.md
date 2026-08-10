@@ -1319,21 +1319,6 @@ Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token sch
 
 release-currency (phase 262) is scoped to comparing published vs local 'engines' content only, since that was the exact field behind the 2026-07-27 incident. A strictly stronger, content-agnostic, offline detector exists: local version == published version AND 'git log v<version>..HEAD' is non-empty means main has unreleased commits sitting under an already-published version tag, regardless of which field changed (deps, bin, exports, plain source). Surfaced by independent review during phase 262 DRAFT authoring; deliberately out of scope for 262 to avoid scope creep -- filed as a follow-on.
 
-## rec-20260808-003 — No standing signal for consecutive settles without real-provider conduction
-
-- status: accepted
-- ready: ready-for-milestone
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- evidence: dec-20260801-003 already defines a three-settle convention with no mechanical tracker; rec-20260806-008 shows the trigger can already be met by degenerate single-fixture data, underscoring the counter needs organic post-flip settles, not manual conduction runs -- per dec-20260808-003
-- next: cadence milestone propose
-
-cadence doctor's conduction-reachability (phase 251) answers a point-in-time capability question ('can this repo conduct a real finding') but nothing answers the trend question ('has it, lately'). That gap is exactly how 263 settles accumulated under mock with zero escalation in the v1.54 audit. Derive a read-only streak counter from the SUMMARY corpus (consecutive settles with no non-mock verifier identity in provenance), surface it in cadence doctor/status, escalate severity by streak length, and wire it as the mechanical instrument for dec-20260801-003's three-settle revisit trigger.
-
 ## rec-20260808-007 — deep-verify and per-task-verify persist no provider/model identity into gates[] at all
 
 - status: candidate

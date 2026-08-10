@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { delimiter, join } from 'node:path';
+import { delimiter, join, relative, sep } from 'node:path';
 import { homedir } from 'node:os';
 import {
   MOCK_VERIFIER_NOTICE,
@@ -12,6 +12,7 @@ import {
   EvidenceLedgerZ,
   AssumptionLedgerZ,
   IntelligenceDecisionLedgerZ,
+  SummaryZ,
   type CadenceState,
   type CadenceConfig,
   type Gate,
@@ -1534,6 +1535,337 @@ export function checkConductionReachability(
   return fail('conduction-reachability', 'warning', detail, remediation);
 }
 
+// ---------------------------------------------------------------------------
+// Phase 268: the conduction-DRIFT streak counter — a trend signal that
+// complements `checkConductionReachability` above (phase 251's point-in-time
+// "CAN this repo's config produce a real finding at all"). This answers "HAS
+// it, lately" by walking the settled-phase SUMMARY corpus. See the doc
+// comment on `computeConductionDriftStreak` below for the full algorithm.
+// The raw counter (T2) is wired into a `DoctorCheck` (`checkConductionDriftStreak`,
+// T4/T5, further below in this section) and registered in `runDoctor`, and
+// separately into `cadence status` (`status.ts`, T4).
+// ---------------------------------------------------------------------------
+
+/**
+ * Recursively collects every `*-SUMMARY.json` path under `dir`, best-effort:
+ * a directory that can't be listed (missing — e.g. `.cadence/phases` doesn't
+ * exist yet — or a permission error) contributes nothing rather than
+ * throwing, mirroring `checkPhaseFreshness`'s / `checkRoadmapCurrency`'s
+ * best-effort convention above. A dedicated local walker rather than reusing
+ * `verify/historical-coverage-audit.ts`'s equivalent `walkFilesWithSuffix`:
+ * that helper is module-private and that file sits outside this phase's
+ * `files:` boundary (phase 268 DRAFT lists only this file and its test), so
+ * a second small walker lives here instead of widening that file's surface
+ * for an unrelated caller.
+ */
+async function walkSummaryFilePaths(dir: string): Promise<string[]> {
+  const out: string[] = [];
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const entry of entries) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...(await walkSummaryFilePaths(full)));
+    } else if (entry.isFile() && entry.name.endsWith('-SUMMARY.json')) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+/** Repo-root-relative, forward-slashed path — for a human-readable `detail`
+ *  string only (mirrors `historical-coverage-audit.ts`'s `toRepoRelative`). */
+function toRepoRelativePath(root: string, absPath: string): string {
+  return relative(root, absPath).split(sep).join('/');
+}
+
+/**
+ * One successfully-parsed SUMMARY record, reduced to what the streak walk
+ * needs. `hasAssurance: false` means the record predates phase 233's
+ * `assurance.verifierRollup` rollup entirely — see
+ * {@link computeConductionDriftStreak}'s doc comment for why that is NOT
+ * treated the same as an empty `verifierRollup`.
+ */
+interface DriftStreakRecord {
+  path: string;
+  completedAt: string;
+  hasAssurance: boolean;
+  hasNonMockProvider: boolean;
+}
+
+/**
+ * A `determinate: true` result — how many consecutive most-recent settles
+ * carried no non-mock provider identity in `assurance.verifierRollup` (AC-1).
+ */
+export interface ConductionDriftStreakDeterminate {
+  determinate: true;
+  /** `0` covers both "the most-recent settle itself carried a non-mock
+   *  identity" and "no settled phases exist yet" — see the doc comment on
+   *  {@link computeConductionDriftStreak}. */
+  streak: number;
+  /** Human-readable explanation, safe to surface directly — used verbatim as
+   *  a `DoctorCheck.detail` (`checkConductionDriftStreak` below) and in
+   *  `cadence status`'s rendered line (`status.ts`). */
+  detail: string;
+}
+
+/**
+ * The corpus could not be assessed with confidence — never a fabricated
+ * number. Mirrors `DoctorSeverity`'s `indeterminate` rung (phase 268,
+ * `dec-20260810-005`): "could not assess at all," not "assessed and found no
+ * problem" (which is what a `streak: 0` `determinate: true` result means).
+ */
+export interface ConductionDriftStreakIndeterminate {
+  determinate: false;
+  /** Human-readable explanation of why the corpus was not determinable. */
+  detail: string;
+}
+
+export type ConductionDriftStreakResult =
+  | ConductionDriftStreakDeterminate
+  | ConductionDriftStreakIndeterminate;
+
+/**
+ * Read-only, best-effort utility (phase 268, T2, AC-1) that derives the
+ * "conduction-drift" streak: how many of the MOST RECENT settles in the
+ * `.cadence/phases/**` SUMMARY corpus, walked in chronological order by
+ * `completedAt`, carried no non-mock provider identity in
+ * `assurance.verifierRollup` — a trend signal that complements phase 251's
+ * point-in-time {@link checkConductionReachability} ("CAN this repo's
+ * current config produce a real finding at all"). Exported as a plain
+ * function, deliberately NOT a `DoctorCheck`-shaped wrapper, so `cadence
+ * status` (`status.ts`) can call it directly without importing doctor-report
+ * rendering. Wrapped as a `DoctorCheck` by `checkConductionDriftStreak`
+ * below for `cadence doctor`.
+ *
+ * Algorithm, walking most-recent-first:
+ *
+ *  1. Any `*-SUMMARY.json` under `.cadence/phases/**` that cannot be read,
+ *     is not valid JSON, or fails `SummaryZ` schema validation makes the
+ *     WHOLE result `indeterminate`, regardless of that file's position in
+ *     the corpus — an unparseable record's `completedAt` is unknowable, so
+ *     it can never be ruled out as being the most-recent settle. (Read/parse
+ *     failures are checked before any chronological sort.) The live corpus
+ *     in this repo (280 records as of phase 268) has zero such records —
+ *     this is a defensive path for a hand-edited/corrupted file, not the
+ *     expected case. NOTE — a narrow gap, not fixed here: `SummaryZ.completedAt`
+ *     is `z.string()`, not a validated datetime, so a schema-valid-but-non-ISO
+ *     string passes this step and reaches step 2's `Date.parse` as `NaN`,
+ *     which can produce an unspecified sort order rather than `indeterminate`.
+ *     Every writer in this codebase emits `new Date().toISOString()`, so risk
+ *     is low in practice; flagged for a future decision, not silently assumed
+ *     safe.
+ *  2. Successfully-parsed records are sorted by `completedAt` descending
+ *     (most recent first) and walked in that order. For each:
+ *       - `assurance` absent (true of every pre-phase-233 record — 251 of
+ *         280 in this repo's own corpus) → `indeterminate`. This is
+ *         deliberately NOT folded into "no non-mock provider" /
+ *         "streak continues": a pre-233 settle's `gates[]` provenance may
+ *         well have carried a real provider identity — the derived
+ *         `verifierRollup` rollup simply didn't exist yet to record it.
+ *         Treating "rollup never computed" the same as "rollup computed and
+ *         empty" would fabricate a streak out of schema history instead of
+ *         reporting an honest "don't know."
+ *       - `assurance.verifierRollup` containing at least one entry with
+ *         `provider !== 'mock'` → the streak stops HERE (this settle broke
+ *         it); return the count of strictly-more-recent settles walked so
+ *         far (`determinate: true`).
+ *       - `assurance.verifierRollup` with every entry `provider === 'mock'`,
+ *         OR an empty array (`code-review`/`security-audit` never fired at
+ *         this settle's tier/profile at all, per
+ *         `gates/assurance-record.ts`'s derivation — no non-mock identity is
+ *         present either way, so per AC-1's literal text it counts toward
+ *         the streak) → increment the streak and continue to the
+ *         next-older record.
+ *  3. The corpus is exhausted without a break → the streak equals the total
+ *     record count (every settle found was non-mock-free).
+ *  4. Zero `*-SUMMARY.json` records found at all (fresh init, or no
+ *     `.cadence/phases/` directory yet) → `determinate: true, streak: 0` —
+ *     vacuously true (there is no settle that violates "no non-mock
+ *     identity"), not indeterminate; mirrors `checkPhaseFreshness`'s
+ *     "no active phase/draft → ok" best-effort precedent (phase 208).
+ *
+ * Never throws: every fs/JSON/schema failure above is caught locally and
+ * degrades to the `indeterminate` result; the outer try/catch is a final
+ * safety net for anything unanticipated, matching every other best-effort
+ * function in this file.
+ */
+export async function computeConductionDriftStreak(root: string): Promise<ConductionDriftStreakResult> {
+  try {
+    const phasesDir = join(root, '.cadence', 'phases');
+    const paths = await walkSummaryFilePaths(phasesDir);
+
+    if (paths.length === 0) {
+      return {
+        determinate: true,
+        streak: 0,
+        detail:
+          'No settled-phase SUMMARY.json records found under .cadence/phases/ — nothing to assess yet.',
+      };
+    }
+
+    const records: DriftStreakRecord[] = [];
+    for (const path of paths) {
+      let raw: string;
+      try {
+        raw = await readFile(path, 'utf8');
+      } catch (err) {
+        return {
+          determinate: false,
+          detail:
+            `Could not read ${toRepoRelativePath(root, path)}: ` +
+            `${err instanceof Error ? err.message : String(err)} — cannot rule out it is the ` +
+            'most-recent settle, so the streak is not determinable.',
+        };
+      }
+      let json: unknown;
+      try {
+        json = JSON.parse(raw);
+      } catch {
+        return {
+          determinate: false,
+          detail:
+            `${toRepoRelativePath(root, path)} is not valid JSON — cannot rule out it is the ` +
+            'most-recent settle, so the streak is not determinable.',
+        };
+      }
+      const parsed = SummaryZ.safeParse(json);
+      if (!parsed.success) {
+        return {
+          determinate: false,
+          detail:
+            `${toRepoRelativePath(root, path)} does not match the expected SUMMARY schema — cannot ` +
+            'rule out it is the most-recent settle, so the streak is not determinable.',
+        };
+      }
+      const assurance = parsed.data.assurance;
+      records.push({
+        path,
+        completedAt: parsed.data.completedAt,
+        hasAssurance: assurance !== undefined,
+        hasNonMockProvider: (assurance?.verifierRollup ?? []).some((v) => v.provider !== 'mock'),
+      });
+    }
+
+    records.sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt));
+
+    let streak = 0;
+    for (const record of records) {
+      if (!record.hasAssurance) {
+        return {
+          determinate: false,
+          detail:
+            `${streak} consecutive most-recent settle(s) with no non-mock provider identity, but ` +
+            `${toRepoRelativePath(root, record.path)} (completedAt ${record.completedAt}) predates ` +
+            'assurance.verifierRollup (phase 233) — cannot determine whether it continued the streak, ' +
+            'so the result is not determinable.',
+        };
+      }
+      if (record.hasNonMockProvider) {
+        return {
+          determinate: true,
+          streak,
+          detail:
+            `${streak} consecutive most-recent settle(s) with no non-mock verifier identity, broken by ` +
+            `${toRepoRelativePath(root, record.path)} (completedAt ${record.completedAt}), which carried one.`,
+        };
+      }
+      streak++;
+    }
+
+    return {
+      determinate: true,
+      streak,
+      detail: `All ${streak} settle(s) found in the corpus carry no non-mock verifier identity in assurance.verifierRollup.`,
+    };
+  } catch (err) {
+    return {
+      determinate: false,
+      detail: `Conduction-drift streak not determinable (best-effort): ${err instanceof Error ? err.message : String(err)}.`,
+    };
+  }
+}
+
+/**
+ * Severity-escalation threshold (phase 268, T5, AC-4) for
+ * {@link checkConductionDriftStreak}: once the determinate streak reaches
+ * this many consecutive most-recent settles with no non-mock verifier
+ * identity, the check's severity escalates one rung, `ok` → `warning`
+ * (never further — there is no `warning` → `error` rung on this ladder,
+ * and `indeterminate` is not reachable via streak length at all, only via
+ * T2's missing/malformed-corpus path).
+ *
+ * EXPLICITLY PROVISIONAL, not a validated number: reused from
+ * `dec-20260801-003`'s `config.convergence.maxAttempts` default of `3`
+ * (a different trigger — that decision's three-settle convention gates a
+ * code-review finding-persistence dedup revisit, not this streak) per
+ * `dec-20260810-004`'s operator choice to borrow it as a placeholder rather
+ * than invent an unvalidated number or block T5 on data that does not yet
+ * exist. `dec-20260810-004` explicitly defers O.3's full bar — "materially
+ * lower [streak], measured not guessed, after v1.55" — to a follow-up once
+ * real-provider settles accumulate under the now-standard profile; this
+ * constant is not that measurement. Hardcoded and documented, not config —
+ * matches `HANDOFF_WARN_THRESHOLD`'s / `ROADMAP_DRIFT_WARN_THRESHOLD`'s
+ * pattern. The word "provisional" must keep appearing in the rendered
+ * `detail` text below (AC-4) — the DRAFT requires the CLI/JSON output, not
+ * only this comment, to read as not-yet-validated.
+ */
+export const CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD = 3;
+
+/**
+ * `cadence doctor` check (phase 268, T4 AC-3 / T5 AC-4): wraps
+ * {@link computeConductionDriftStreak} (T2) as a `DoctorCheck` so the trend
+ * signal is surfaced alongside every other doctor finding.
+ * `determinate: false` always becomes `fail(..., 'indeterminate', ...)` so
+ * an unassessable corpus is never silently reported as `ok` (AC-3's literal
+ * bar) — `indeterminate` is reachable ONLY through this branch, never
+ * through streak length, so it stays fully orthogonal to the escalation
+ * ladder below (AC-4's explicit requirement).
+ * `determinate: true` escalates by streak length against
+ * {@link CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD} (T5, AC-4): a streak below
+ * the threshold is still `pass()` (T4's original behavior, unchanged), a
+ * streak at-or-above it becomes `fail(..., 'warning', ...)` — one rung
+ * only, `ok` → `warning`, never further, and never itself a settle-refusal
+ * signal (O.5; no settle-side code anywhere consults this check).
+ * `fixId` is always `null` (via `fail()`'s default, and `pass()`'s
+ * implicit `null`) — there is nothing to auto-repair about a trend signal
+ * derived from historical data; `fix.ts`'s `planFixes` already skips
+ * `indeterminate` checks for exactly this reason (phase 268, T1), and a
+ * `warning` here with no `fixId` falls through to `fix.ts`'s generic
+ * manual-action branch, the same as every other `fixId`-less warning check
+ * (e.g. `conduction-reachability`) — no new fix.ts code needed.
+ */
+export async function checkConductionDriftStreak(root: string): Promise<DoctorCheck> {
+  const result = await computeConductionDriftStreak(root);
+  if (!result.determinate) {
+    return fail(
+      'conduction-drift-streak',
+      'indeterminate',
+      result.detail,
+      'Informational only — nothing to repair. The corpus becomes determinable again once the ' +
+        'blocking record is fixed, removed, or superseded by a newer settle that carries assurance.verifierRollup.',
+    );
+  }
+  if (result.streak >= CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD) {
+    return fail(
+      'conduction-drift-streak',
+      'warning',
+      `${result.detail} This has reached the PROVISIONAL threshold (${CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD} ` +
+        'consecutive settles) for escalating this check\'s severity (dec-20260810-004; not yet validated ' +
+        'as O.3\'s full "materially lower after v1.55, measured" bar — see that decision).',
+      'Informational escalation only — this never blocks or refuses a settle (O.5). Consider running ' +
+        'an upcoming settle under a non-mock verifier (config.verifier/codeReview/securityAudit ' +
+        "provider: anthropic/local/host-cli) to break the streak; see dec-20260810-004 for why 3 is a " +
+        'provisional threshold, not a validated one.',
+    );
+  }
+  return pass('conduction-drift-streak', result.detail);
+}
+
 /**
  * One pending `.changeset/*.md` entry (excluding `README.md`), as gathered by
  * {@link gatherLocalReleaseFacts}. `bumpTypes` is parsed from the changeset's
@@ -1992,5 +2324,9 @@ export async function runDoctor(
       ),
     );
   }
+  // Phase 268 (T4): the trend signal that complements checkConductionReachability's
+  // point-in-time verdict above — deliberately placed right after it in the report.
+  // Needs only `root` (no config), so it sits outside the try/catch above.
+  checks.push(await checkConductionDriftStreak(root));
   return rollup(checks);
 }

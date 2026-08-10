@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "draftId": "d-third-newest-01",
+  "completedAt": "2026-03-01T00:00:00.000Z",
+  "acResults": [],
+  "taskResults": [],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": { "required": [], "invoked": [] },
+  "assurance": {
+    "verifierRollup": [],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 0,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "unverified"
+  }
+}

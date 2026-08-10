@@ -4,25 +4,51 @@ import {
   doctorNextStep,
   renderFixPlan,
   renderFixOutcomes,
+  renderDoctorSummaryLine,
+  summarizeDoctorReport,
 } from '../../doctor/render.js';
 import { planFixes, applyFixes } from '../../doctor/fix.js';
-import type { DoctorCheck, DoctorReport } from '../../doctor/model.js';
+import type { DoctorReport, DoctorSeverity } from '../../doctor/model.js';
+
+/**
+ * One glyph per `DoctorSeverity` rung, exhaustive over the type (not a
+ * fallthrough default) so a future rung fails typecheck here instead of
+ * silently inheriting another rung's mark. `indeterminate` (phase 268) gets
+ * its own glyph — distinct from `error`'s `✗` — since it means "couldn't
+ * assess", not "found a problem". Exported for direct unit coverage.
+ */
+export function severityMark(severity: DoctorSeverity): string {
+  switch (severity) {
+    case 'ok':
+      return '✓';
+    case 'warning':
+      return '!';
+    case 'error':
+      return '✗';
+    case 'indeterminate':
+      return '?';
+    default: {
+      const _exhaustive: never = severity;
+      return _exhaustive;
+    }
+  }
+}
 
 function renderHuman(report: DoctorReport): string {
   const lines: string[] = ['cadence doctor', ''];
-  const mark = (c: DoctorCheck): string =>
-    c.severity === 'ok' ? '✓' : c.severity === 'warning' ? '!' : '✗';
+  // Column width: 7 (== 'warning'.length) unless a wider severity is
+  // actually present, so pre-existing output is byte-for-byte unchanged in
+  // every repo that never encounters `indeterminate` (phase 268, AC-2).
+  const severityWidth = Math.max(7, ...report.checks.map((c) => c.severity.length));
   for (const c of report.checks) {
-    lines.push(`  ${mark(c)} ${c.severity.padEnd(7)} ${c.name}: ${c.detail}`);
+    lines.push(`  ${severityMark(c.severity)} ${c.severity.padEnd(severityWidth)} ${c.name}: ${c.detail}`);
     if (c.remediation !== null) lines.push(`      → ${c.remediation}`);
   }
-  const problems = report.checks.filter((c) => c.severity !== 'ok');
+  // Shared with `services/doctor.ts` (`summarizeDoctorReport` +
+  // `renderDoctorSummaryLine`, phase 268) -- single source of truth for both
+  // the tally and its text, so this renderer and the MCP seam can't drift.
   lines.push('');
-  lines.push(
-    problems.length === 0
-      ? `All ${report.checks.length} checks passed.`
-      : `${problems.length} problem(s) across ${report.checks.length} checks.`,
-  );
+  lines.push(renderDoctorSummaryLine(summarizeDoctorReport(report)));
   lines.push('');
   lines.push(`Next: ${doctorNextStep(report)}`);
   return lines.join('\n') + '\n';

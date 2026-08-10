@@ -919,6 +919,13 @@ task list with statuses, AC list with verdicts, and the next recommended
 action. With `--json`, all fields are emitted as a structured JSON object
 suitable for scripting.
 
+Also prints a `conduction-drift streak` line *(phase 268)* — the same
+read-only trend signal as `cadence doctor`'s `conduction-drift-streak` check
+(see that command's check table), without its severity escalation: this
+field only ever reports `ok` (a determinate streak, any length) or
+`indeterminate` (couldn't be assessed), never `warning`. `--json` carries it
+as a top-level `conductionDriftStreak` field.
+
 #### status anomalies
 
 ```
@@ -965,8 +972,11 @@ Diagnose this project’s CADENCE setup and report problems
 | `-h, --help` | Display help for command |
 
 **Behavior** — runs a set of health checks on the project's CADENCE setup and
-reports each as `ok` / `warning` / `error` with a one-line detail and (for
-problems) a remediation hint. Almost entirely filesystem + config inspection —
+reports each as `ok` / `warning` / `error` / `indeterminate` (phase 268 — a
+check that could not assess the repo at all, e.g. missing/malformed corpus
+data, distinct from `ok`'s "assessed, no problem found"; never counted as a
+problem and never silently folded into "all checks passed") with a one-line
+detail and (for problems) a remediation hint. Almost entirely filesystem + config inspection —
 no AI verifier and it never touches loop state — with two exceptions that make
 bounded, best-effort network probes and degrade to `ok` when unreachable
 rather than blocking the report: `ledger-remote-collision` (`git fetch` against
@@ -1000,6 +1010,7 @@ v1 check set:
 | `conduction-reachability` | *(phase 251)* reports, separately for `code-review` and `security-audit`, whether real-provider conduction is reachable across three axes: **profile** (the gate is absent from `gatesFor(tier, profile).gates` at every `Tier`, for `profile = effectiveProfile(config, null)`), **provider** (the gate's own seam — `codeReview`/`securityAudit` — is configured to `'mock'`), and **session** (the gate's own provider is `'host-cli'` **and** the run is inside a headless Claude Code self-invocation session, so the self-invocation guard would force a mock fallback). Warns naming which axis or axes block each gate; the check's overall status is `ok` only when both gates are reachable | warning |
 | `roadmap-currency` | *(phase 259)* compares the highest phase number under `.cadence/phases/` against the highest phase number referenced in `ROADMAP.md`/`MILESTONES.md` (using the lower of the two, across whichever of those files actually contain phase headings), and warns when the drift exceeds 10 — a fresh consumer repo with no phases, or with no referenced phase headings yet, passes silently. Never a hard failure: generating roadmap prose is a human-only fix, so `--fix` never touches it | warning |
 | `release-currency` | *(phase 262)* compares the local `packages/core/package.json`'s `engines` field against npm's actually-published `engines` for that package (via `npm view`), catching content drift even when local and published version strings match, and independently warns when `.changeset/*.md` files are pending release, naming each one's bump type (when reported on its own, i.e. no `engines` divergence, the wording escalates if any pending changeset declares a `major`/`minor` bump). Both signals are best-effort: an unreadable/private local `package.json` skips the whole check silently (`ok`) — including in any consumer repo without a `packages/core/package.json`, matching how `roadmap-currency` stays silent on a fresh repo — and a failed `npm view` fetch (no network, unpublished/private package, timeout) skips only the `engines` comparison while the pending-changesets signal is still evaluated. Never a hard failure: whether to cut a release or confirm the divergence is intentional is a manual decision, so `--fix` never touches it | warning |
+| `conduction-drift-streak` | *(phase 268)* a read-only, best-effort trend signal complementing `conduction-reachability`'s point-in-time question: how many of the most-recent settles in `.cadence/phases/**`'s SUMMARY corpus, walked in chronological order, carried no non-mock provider identity in `assurance.verifierRollup`. `indeterminate` when any SUMMARY record anywhere in the corpus cannot be read, parsed, or schema-validated (that record's true chronological position is unknowable, so the whole result is undeterminable) — never silently reported as `ok`. Escalates from `ok` to `warning` once the streak reaches a **provisional** threshold of 3 (borrowed from `dec-20260801-003`'s `config.convergence.maxAttempts` default, not yet independently validated for this check — see that decision and `dec-20260810-004`); never escalates past `warning`, and never blocks or refuses a settle. Also surfaced in `cadence status`, without the escalation (that field only ever reports `ok`/`indeterminate` — see `cadence status`'s own section) | warning / indeterminate |
 
 Host checks run only when the relevant files exist; their absence is not a
 problem. Codex readiness checks activate when `.codex/` exists or `AGENTS.md`
@@ -1031,7 +1042,7 @@ never prompts):
 |---|---|---|
 | **auto** | `git-hooks`, missing `STATE.md`, missing managed `AGENTS.md`, `handoff-retention`, `state-tracked` | applied by plain `--fix` — `git config core.hooksPath .githooks`; regenerate `STATE.md` from the valid `state.json` (never rewriting `state.json`); regenerate `AGENTS.md`; set `handoff.retain` to the default (10) when unset and prune the `SESSION-*.md` archive down to that budget (the active `lastHandoff` doc is always kept); write the four CADENCE-owned ephemeral paths to `.gitignore` and `git rm --cached` any that are tracked, without committing *(phase 196)* |
 | **wire-host** | `host-hooks`, `host-commands`, `codex-hooks`, `codex-prompts` | applied only with `--fix --wire-host` — re-runs the relevant host installer once per host repair id (deduped) to rewrite hooks/commands |
-| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `codex-cadence-command`, `ledger-remote-collision`, `conduction-reachability`, `roadmap-currency`, `release-currency`, user-owned prompt/agent files | never auto-applied — reported as guidance with the check's remediation |
+| **manual** | `node`, `initialized`, corrupt `state.json`, `worktree-phases`, `verification-readiness`, `codex-cadence-command`, `ledger-remote-collision`, `conduction-reachability`, `roadmap-currency`, `release-currency`, `conduction-drift-streak`, user-owned prompt/agent files | never auto-applied — reported as guidance with the check's remediation |
 
 Each repair is best-effort: a repair that fails is reported (`✗ failed`) and the
 rest still run; `--fix` never throws on a repair failure. `--fix --dry-run`

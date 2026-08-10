@@ -136,4 +136,20 @@ describe('docs/reference/commands.md drift guard', () => {
     if (!manualRow) throw new Error('commands.md: --fix manual-classification row not found');
     expect(manualRow[1]).toContain('release-currency');
   });
+
+  it('268-01/AC-3: doctor section documents the conduction-drift-streak check in both the v1 check set table and the --fix manual-classification passage, plus the indeterminate severity rung', () => {
+    const md = readFileSync(join(REPO_ROOT, 'docs/reference/commands.md'), 'utf8');
+    const section = commandSection(md, 'doctor');
+
+    // The "v1 check set" table row naming the check.
+    expect(section).toMatch(/\|\s*`conduction-drift-streak`\s*\|/);
+
+    // The `--fix` classification passage's `manual` list.
+    const manualRow = section.match(/\|\s*\*\*manual\*\*\s*\|([^|]*)\|/);
+    if (!manualRow) throw new Error('commands.md: --fix manual-classification row not found');
+    expect(manualRow[1]).toContain('conduction-drift-streak');
+
+    // The severity vocabulary line must name the 4th rung, not just ok/warning/error.
+    expect(section).toMatch(/`indeterminate`/);
+  });
 });

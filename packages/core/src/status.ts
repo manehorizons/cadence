@@ -15,6 +15,11 @@ import { parseDraftMd } from './parse/draft-parser.js';
 import { SimpleStateBackend } from './state/simple.js';
 import { loadConfig } from './config/loader.js';
 import { effectiveProfile } from './gates/engine.js';
+// Phase 268 (T4): pulls in doctor/run.ts's full module graph (config loader,
+// gates engine, occupancy scanner, git worktree helpers, ...) — accepted cost,
+// documented in the phase 268 DRAFT: the DRAFT authorizes no new module for
+// this task, so the T2 counter is imported directly rather than extracted.
+import { computeConductionDriftStreak, type ConductionDriftStreakResult } from './doctor/run.js';
 
 export interface ProgressFile {
   draftId: string;
@@ -36,6 +41,22 @@ export interface AcStatus {
   state: 'pending' | 'pass' | 'blocked' | 'needs-context';
 }
 
+/**
+ * Rendered form of T2's {@link ConductionDriftStreakResult} for `cadence
+ * status` (phase 268, T4, AC-3). `severity` mirrors `DoctorSeverity`'s
+ * `'ok'`/`'indeterminate'` rungs for this signal specifically — it never
+ * emits `'warning'`/`'error'`: escalating by streak length is T5's job,
+ * wired into `cadence doctor`'s own check only (see
+ * `doctor/run.ts#checkConductionDriftStreak`), never into this status
+ * field. `streak` is `null` exactly when `severity` is `'indeterminate'` —
+ * never a fabricated number.
+ */
+export interface ConductionDriftStreakStatus {
+  severity: 'ok' | 'indeterminate';
+  streak: number | null;
+  detail: string;
+}
+
 export interface StatusReport {
   /** Schema version for the --json output. Bump on breaking changes. */
   schemaVersion: 1;
@@ -49,6 +70,15 @@ export interface StatusReport {
   draftTitle: string | null;
   tasks: TaskStatusEntry[];
   acs: AcStatus[];
+  /**
+   * Phase 268 (T4, AC-3): the conduction-drift streak (T2), or `null` when
+   * this report didn't compute one — `gatherStatus` is a pure function and
+   * a caller that omits the `driftStreak` argument gets `null` here rather
+   * than a fabricated `ok`/`indeterminate` verdict it never actually
+   * derived. `loadStatus` (the impure wrapper) always supplies it, so
+   * `cadence status` always renders this field non-null.
+   */
+  conductionDriftStreak: ConductionDriftStreakStatus | null;
   /**
    * Deliberately narrowed to `{command, reason}` (phase 206), not the full
    * `NextAction` return: `nextAction()` now also carries a ranked
@@ -81,11 +111,28 @@ function taskStatusFromProgress(
   }
 }
 
+/**
+ * Converts T2's raw {@link ConductionDriftStreakResult} into the rendered
+ * {@link ConductionDriftStreakStatus} shape. `null` in → `null` out (the
+ * caller didn't supply one); `determinate: false` always maps to
+ * `'indeterminate'` severity — never `'ok'` — matching AC-3's literal bar.
+ */
+function toDriftStreakStatus(
+  result: ConductionDriftStreakResult | null,
+): ConductionDriftStreakStatus | null {
+  if (result === null) return null;
+  if (!result.determinate) {
+    return { severity: 'indeterminate', streak: null, detail: result.detail };
+  }
+  return { severity: 'ok', streak: result.streak, detail: result.detail };
+}
+
 export function gatherStatus(
   state: CadenceState,
   draft: Draft | null,
   progress: ProgressFile | null,
   config: Pick<CadenceConfig, 'profile'> | null = null,
+  driftStreak: ConductionDriftStreakResult | null = null,
 ): StatusReport {
   const { command, reason } = nextAction(state);
   const base: StatusReport = {
@@ -99,6 +146,7 @@ export function gatherStatus(
     draftTitle: null,
     tasks: [],
     acs: [],
+    conductionDriftStreak: toDriftStreakStatus(driftStreak),
     next: { command, reason },
   };
   if (!draft) return base;
@@ -220,6 +268,11 @@ export function renderStatus(r: StatusReport): string {
   }
   if (r.tier) out.push(`  tier:  ${r.tier}`);
   out.push(`  profile: ${r.profile}`);
+  if (r.conductionDriftStreak) {
+    const cds = r.conductionDriftStreak;
+    const label = cds.severity === 'indeterminate' ? 'indeterminate' : String(cds.streak);
+    out.push(`  conduction-drift streak: ${label} — ${cds.detail}`);
+  }
   if (r.tasks.length > 0) {
     out.push('');
     out.push(...renderTaskTable(r.tasks));
@@ -273,5 +326,9 @@ export async function loadStatus(root: string): Promise<StatusReport> {
   } catch {
     config = null;
   }
-  return gatherStatus(state, draft, progress, config);
+  // Phase 268 (T4, AC-3): computeConductionDriftStreak is best-effort and
+  // never throws (T2's doc comment) — no try/catch needed here, unlike the
+  // config load above.
+  const driftStreak = await computeConductionDriftStreak(root);
+  return gatherStatus(state, draft, progress, config, driftStreak);
 }

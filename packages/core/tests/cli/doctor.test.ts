@@ -198,4 +198,25 @@ describe('cadence doctor --fix --resolve-state-conflict (phase 196, issue #177, 
     const after = await readFile(join(active.root, '.cadence', 'state.json'), 'utf8');
     expect(after).toBe(before);
   });
+
+  // Phase 268 (AC-3): an indeterminate `conduction-drift-streak` check must
+  // render its own severity row correctly-aligned AND must not be silently
+  // folded into "All N checks passed." -- caught by this phase's
+  // whole-branch review after the earlier per-task fix only covered the
+  // problem-count branch, not the sibling "all passed" branch.
+  it('268-01/AC-3: an indeterminate check renders its own row and is honestly excluded from "all passed"', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-cli-indeterminate' });
+    const phaseDir = join(active.root, '.cadence', 'phases', '001-malformed');
+    await mkdir(phaseDir, { recursive: true });
+    await writeFile(join(phaseDir, '001-01-SUMMARY.json'), '{ not valid json', 'utf8');
+
+    const r = await run(['doctor'], active.root);
+    expect(r.code).toBe(0); // indeterminate never fails the exit code (O.5)
+    expect(r.stdout).toMatch(/\?\s+indeterminate\s+conduction-drift-streak:/);
+    // Never the false "all passed" claim while a check is indeterminate --
+    // regardless of whether other real problems are also present in this
+    // fixture (a fresh tempRepo carries a few pre-existing warnings, e.g.
+    // verification-readiness under mock).
+    expect(r.stdout).not.toMatch(/All \d+ checks passed\./);
+  });
 });
