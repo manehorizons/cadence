@@ -868,7 +868,7 @@ are available:
 
 | Provider | Description | Requires |
 |---|---|---|
-| `mock` | Deterministic offline **placeholder** — only checks each AC links to a test; **not real verification** | Nothing — works everywhere |
+| `mock` | Deterministic offline **placeholder**, **not real verification**. `deep-verify`/`per-task-verify` only check each AC links to a test. The review-family gates (`code-review`, `security-audit`, `plan-review`, `spec-review`, `ui-spec-review`) still run their own deterministic checks and can still refuse on a real finding, but a clean mock pass records as **abstained**, never as a persisted pass. | Nothing — works everywhere |
 | `anthropic` | Calls the Anthropic API; prompt-cached system prompt | `ANTHROPIC_API_KEY` in environment |
 | `local` | OpenAI-compatible `/v1/chat/completions` endpoint (e.g. Ollama) | `CADENCE_LOCAL_BASE_URL` + `CADENCE_LOCAL_MODEL`; falls back to `mock` with a warning if unset |
 

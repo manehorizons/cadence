@@ -70,6 +70,13 @@ export async function specApproveService(
     const maxAttempts = cfg?.convergence?.maxAttempts ?? 3;
     const bypassed = !res.pass && args.allowSpecReviewFailure === true;
     const providerSelection = readProviderSelection(res);
+    // Phase 267 (267-01, T2, dec-20260809-005): spec-review never touches
+    // registry.ts/GateProvenance or SUMMARY — its only recording surface is
+    // this shared sidecar (`*-SPEC-REVIEW.json`). A mock-identified clean
+    // pass is not real verification; mark it so on the history entry,
+    // mirroring registry.ts's status:'skipped' relabeling for
+    // code-review/security-audit. Never set for `!res.pass`.
+    const mockAbstained = res.provider === 'mock' && res.pass === true;
 
     const result = runConvergentReview({
       pass: res.pass,
@@ -81,6 +88,7 @@ export async function specApproveService(
       history,
       maxAttempts,
       bypassed,
+      mockAbstained,
       idField: 'specId',
       idValue: id,
     });
@@ -169,6 +177,10 @@ export async function specApproveService(
       const uiRes = await uiVerifier.verify({ uiSpec });
       const uiBypassed = !uiRes.pass && args.allowUiSpecReviewFailure === true;
       const uiProviderSelection = readProviderSelection(uiRes);
+      // Phase 267 (267-01, T2, dec-20260809-005): same rationale as
+      // spec-review above — ui-spec-review's only recording surface is this
+      // shared sidecar (`*-UI-SPEC-REVIEW.json`).
+      const uiMockAbstained = uiRes.provider === 'mock' && uiRes.pass === true;
 
       const uiResult = runConvergentReview({
         pass: uiRes.pass,
@@ -180,6 +192,7 @@ export async function specApproveService(
         history: uiHistory,
         maxAttempts,
         bypassed: uiBypassed,
+        mockAbstained: uiMockAbstained,
         idField: 'specId',
         idValue: id,
       });

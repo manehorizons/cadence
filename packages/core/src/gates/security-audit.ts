@@ -92,11 +92,19 @@ export const runSecurityAuditGate: GateImpl = async (ctx): Promise<GateResult> =
         `security-audit: ${flag} set; proceeding past ${criticals.length} CRITICAL finding(s).\n`,
       );
     }
+    // Phase 267 (267-01, T2): unlike `bypassed` above (true whenever
+    // --force/--allow-security-audit-failure is SET, regardless of whether
+    // there were any findings to bypass), this is scoped to "there was a
+    // real CRITICAL finding AND it was waved through" — the only case that
+    // must NOT be relabeled a mock "clean pass" by registry.ts. A clean pass
+    // run with --force set for an unrelated reason must not be suppressed.
+    const findingsBypassed = criticals.length > 0 && bypassed;
     return {
       outcome: 'pass',
       summaryPatch: { securityAudit: securityAuditFindings },
       flags: {
         verifierIdentity: buildVerifierIdentityFlag(result, touched, diff),
+        ...(findingsBypassed ? { reviewFindingsBypassed: true } : {}),
       },
     };
   } catch (err) {

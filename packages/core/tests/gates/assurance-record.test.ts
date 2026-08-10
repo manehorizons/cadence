@@ -99,6 +99,76 @@ describe('deriveAssuranceRecord (phase 233 T2)', () => {
 });
 
 /**
+ * Phase 267 (267-01, T3): a mock-identified CLEAN PASS on `code-review`/
+ * `security-audit` now arrives as `status: 'skipped'` + a skipReason naming
+ * the abstention (`registry.ts`, T2 — dec-20260809-004/-005), instead of the
+ * pre-267 `status: 'ran'`. `deriveAssuranceRecord` never branched on
+ * `status` before this phase and doesn't need to now: the decision, stated
+ * and reasoned in this file's doc comment above `deriveAssuranceRecord`, is
+ * that an abstained entry still contributes its `provider: 'mock'` identity
+ * to `verifierRollup`/`hasAnyVerifier`, exactly as a `status: 'ran'` (or
+ * pre-existing `status: 'refused'`) mock entry already does. `hasRealVerifier`
+ * is untouched either way since abstained entries never carry a non-mock
+ * provider — the only visible effect is the `'unverified'` vs `'weak'`
+ * boundary in the narrowest case (see the second test below).
+ */
+describe('deriveAssuranceRecord and mock-abstained review gates (267-01/AC-3)', () => {
+  const ABSTAIN_SKIP_REASON =
+    "code-review: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass";
+
+  it('267-01/AC-3: a mock-abstained (status: skipped) review gate produces the IDENTICAL verifierRollup/overall as the equivalent status: ran entry would', () => {
+    const acResults = [ac('AC-1', 'mention')];
+
+    const ranGates: GateProvenance[] = [{ gate: 'code-review', status: 'ran', provider: 'mock' }];
+    const skippedGates: GateProvenance[] = [
+      { gate: 'code-review', status: 'skipped', skipReason: ABSTAIN_SKIP_REASON, provider: 'mock' },
+    ];
+
+    const ranResult = deriveAssuranceRecord(ranGates, acResults);
+    const skippedResult = deriveAssuranceRecord(skippedGates, acResults);
+
+    // Byte-identical: status is not part of this function's grouping
+    // contract, only provider/model are (see doc comment above).
+    expect(skippedResult).toEqual(ranResult);
+    expect(skippedResult.verifierRollup).toEqual([{ provider: 'mock', gateCount: 1 }]);
+  });
+
+  it("267-01/AC-3: overall is 'weak', not 'unverified', when the only verifier signal anywhere is one abstained mock review gate and no AC evidence exceeds unverified", () => {
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'skipped', skipReason: ABSTAIN_SKIP_REASON, provider: 'mock' },
+    ];
+    const acResults = [ac('AC-1'), ac('AC-2', 'unverified')];
+
+    const result = deriveAssuranceRecord(gates, acResults);
+
+    // hasAnyVerifier is true (the abstained entry still carries provider:
+    // 'mock'), which alone rules out the 'unverified' branch — an abstained
+    // mock entry is honestly-recorded non-verification, not silence. Without
+    // this, the same settle would misreport 'unverified' -- as if nothing
+    // had looked at it at all -- purely because T2 renamed the gate's status.
+    expect(result.verifierRollup).toEqual([{ provider: 'mock', gateCount: 1 }]);
+    expect(result.overall).toBe('weak');
+  });
+
+  it('267-01/AC-3: a pre-existing status: refused mock entry (a real finding, never abstained) also contributes to verifierRollup -- confirms status was never a filter, before or after this phase', () => {
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'refused', reason: 'HIGH finding: ...', provider: 'mock' },
+    ];
+    const result = deriveAssuranceRecord(gates, []);
+    expect(result.verifierRollup).toEqual([{ provider: 'mock', gateCount: 1 }]);
+  });
+
+  it('267-01/AC-3: an abstained (skipped) mock entry and a bypassed-real-finding (ran) mock entry merge into ONE rollup entry -- grouping is by (provider, model) alone, uniformly across status', () => {
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'skipped', skipReason: ABSTAIN_SKIP_REASON, provider: 'mock' },
+      { gate: 'security-audit', status: 'ran', provider: 'mock' },
+    ];
+    const result = deriveAssuranceRecord(gates, []);
+    expect(result.verifierRollup).toEqual([{ provider: 'mock', gateCount: 2 }]);
+  });
+});
+
+/**
  * Phase 264, T6 — derivation-stability proof. Phase 264 only ever touches
  * render-time label formatting (`services/verifier-label.ts`) and never
  * edits this file's production source (`gates/assurance-record.ts`). This

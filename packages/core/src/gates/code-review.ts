@@ -166,6 +166,20 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
     // --allow-code-review-failure bypasses ANY failing code-review.
     const bypassed =
       !pass && (ctx.opts.allowCodeReviewFailure === true || ctx.opts.force === true);
+    // Phase 267 (267-01, dec-20260810-003 corrects dec-20260809-005):
+    // `*-CODE-REVIEW.json` is a SEPARATE persisted artifact from
+    // registry.ts's SUMMARY-level GateProvenance relabel below — a reader
+    // of this sidecar alone would see an unqualified `pass: true` even
+    // after registry.ts correctly records `status: 'skipped'` in SUMMARY.
+    // dec-20260809-005 excluded this call site from the marker reasoning
+    // that only SUMMARY-level persistence mattered for AC-1's "no persisted
+    // pass" bar; a real `deep-verify` pass caught that this sidecar is
+    // independently readable and was never fixed. Computed locally, exactly
+    // like `plan-review.ts`'s `mockAbstained` — this remains isolated from
+    // registry.ts's own `verifierIdentity`/`reviewFindingsBypassed`
+    // computation (no shared state), it simply closes the same gap on the
+    // second persisted artifact this gate writes.
+    const mockAbstained = verifyResult.provider === 'mock' && pass === true;
 
     const result = runConvergentReview({
       pass,
@@ -176,6 +190,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
       history,
       maxAttempts,
       bypassed,
+      mockAbstained,
       idField: 'draftId',
       idValue: ctx.state.activeDraft as string,
     });
@@ -269,11 +284,17 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
       }
     }
     // pass (converged) OR bypass fall-through → record findings, proceed.
+    // Phase 267 (267-01, T2): `bypassed` (declared above) is scoped to
+    // `!pass && (...)` — true here iff this is the bypass fall-through
+    // branch, i.e. real HIGH findings were waved through, never on a
+    // genuinely clean pass. Tags the outcome so registry.ts can tell "clean
+    // pass" apart from "bypassed real finding" without re-deriving it.
     return {
       outcome: 'pass',
       summaryPatch: { codeReview: identifiedFindings },
       flags: {
         verifierIdentity: buildVerifierIdentityFlag(verifyResult, touched, diff),
+        ...(bypassed ? { reviewFindingsBypassed: true } : {}),
       },
     };
   } catch (err) {

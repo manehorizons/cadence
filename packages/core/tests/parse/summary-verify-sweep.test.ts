@@ -119,4 +119,14 @@ describe('cadence summary verify-all - repo-wide sweep over every existing summa
     expect(failed).toBe(0);
     expect(result.code).toBe(0);
   });
+
+  it('267-01/AC-4: mock-abstention (T1-T3) touched no historical SUMMARY.json — the same repo-wide sweep still reports zero failures post-267', () => {
+    // Phase 267's DRAFT boundary forbids adding a third AC token to the
+    // pre-existing test titles above (phase 266's own precedent) — this is
+    // a new it() reusing the same beforeAll-computed sweep, not a token
+    // grafted onto an existing assertion.
+    expect(checked).toBeGreaterThan(100);
+    expect(failed).toBe(0);
+    expect(result.code).toBe(0);
+  });
 });

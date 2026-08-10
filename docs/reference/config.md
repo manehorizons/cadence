@@ -259,7 +259,7 @@ All seven blocks default to `{ "provider": "mock" }`. Provider options:
 
 | Provider | Description | Requires |
 |---|---|---|
-| `mock` | Deterministic offline **placeholder** — only checks each AC links to a test; always passes, no network call. **Not real verification.** | Nothing |
+| `mock` | Deterministic offline **placeholder**, no network call. **Not real verification.** For `verifier`/`perTaskVerifier` (`deep-verify`/`per-task-verify`): only checks each AC links to a test; always passes when linked. For the five review-family gates (`codeReview`, `securityAudit`, `planReview`, `specReview`, `uiSpecReview`): still runs its deterministic checks (e.g. flagging an added `console.log(` as a code-review finding) and can still refuse on a real finding — but a genuinely clean mock pass is recorded as **abstained**, not as a persisted pass, so provenance can never claim a mock placeholder "reviewed" something. | Nothing |
 | `anthropic` | Calls the Anthropic API. | `ANTHROPIC_API_KEY` in environment or a `.env` file at the repo root |
 | `local` | OpenAI-compatible `/v1/chat/completions` endpoint (e.g. Ollama). | `CADENCE_LOCAL_BASE_URL` + `CADENCE_LOCAL_MODEL`; falls back to `mock` with a warning if unset |
 

@@ -418,15 +418,31 @@ describe('specApproveService — sidecar JSON shape characterization (T1 audit)'
     expect(res.exitCode).toBe(0);
     expect(res.data).toEqual({ id: '40-01', approved: true, converged: true, bypassed: false });
     const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    // Phase 267 (267-01, T2, dec-20260809-005): `mockAbstained: true` now
+    // appears on a mock-identified clean-pass history entry — the abstain
+    // marker for spec-review's shared converge.ts sidecar, mirroring
+    // registry.ts's status:'skipped' relabeling for code-review/
+    // security-audit. Updated expected value, not a loosened assertion.
+    // Fix round (dec-20260810-002 amends dec-20260809-005, real deep-verify
+    // AC-1 refusal): sidecar pass/converged/verdict now override to
+    // false/false/'abstained' for a mockAbstained entry — `res.data.converged`
+    // above stays `true` (it reads the fresh `res.pass`, not this sidecar).
     expect(sidecar).toEqual({
       specId: '40-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
-        { at: expect.any(String), pass: true, findingsCount: 0, provider: 'mock', verdict: 'pass' },
+        {
+          at: expect.any(String),
+          pass: false,
+          findingsCount: 0,
+          provider: 'mock',
+          verdict: 'abstained',
+          mockAbstained: true,
+        },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       findings: 0,
       at: expect.any(String),
@@ -559,22 +575,27 @@ describe('specApproveService — sidecar JSON shape characterization (T1 audit)'
     const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
     expect(res.exitCode).toBe(0);
     const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    // Phase 267 (267-01, T2, dec-20260809-005): see the "SPEC-REVIEW.json
+    // full shape" test above for the `mockAbstained: true` update rationale.
+    // Fix round (dec-20260810-002): see that same test for the
+    // pass/converged/verdict override rationale.
     expect(sidecar).toEqual({
       specId: '40-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
         {
           at: expect.any(String),
-          pass: true,
+          pass: false,
           findingsCount: 0,
           provider: 'mock',
           model: 'claude-x',
-          verdict: 'pass',
+          verdict: 'abstained',
+          mockAbstained: true,
         },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       model: 'claude-x',
       findings: 0,
@@ -598,22 +619,27 @@ describe('specApproveService — sidecar JSON shape characterization (T1 audit)'
     const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
     expect(res.exitCode).toBe(0);
     const sidecar = await readSidecar(s.phaseDir, '40-01-SPEC-REVIEW.json');
+    // Phase 267 (267-01, T2, dec-20260809-005): see the "SPEC-REVIEW.json
+    // full shape" test above for the `mockAbstained: true` update rationale.
+    // Fix round (dec-20260810-002): see that same test for the
+    // pass/converged/verdict override rationale.
     expect(sidecar).toEqual({
       specId: '40-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
         {
           at: expect.any(String),
-          pass: true,
+          pass: false,
           findingsCount: 0,
           provider: 'mock',
           providerSelection: 'fallback',
-          verdict: 'pass',
+          verdict: 'abstained',
+          mockAbstained: true,
         },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       providerSelection: 'fallback',
       findings: 0,
@@ -630,15 +656,30 @@ describe('specApproveService — sidecar JSON shape characterization (T1 audit)'
     const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
     expect(res.exitCode).toBe(0);
     const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    // Phase 267 (267-01, T2, dec-20260809-005): `mockAbstained: true` now
+    // appears on a mock-identified clean-pass history entry — the abstain
+    // marker for ui-spec-review's shared converge.ts sidecar, mirroring
+    // registry.ts's status:'skipped' relabeling for code-review/
+    // security-audit. Updated expected value, not a loosened assertion.
+    // Fix round (dec-20260810-002 amends dec-20260809-005, real deep-verify
+    // AC-1 refusal): sidecar pass/converged/verdict now override to
+    // false/false/'abstained' for a mockAbstained entry.
     expect(sidecar).toEqual({
       specId: '40-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
-        { at: expect.any(String), pass: true, findingsCount: 0, provider: 'mock', verdict: 'pass' },
+        {
+          at: expect.any(String),
+          pass: false,
+          findingsCount: 0,
+          provider: 'mock',
+          verdict: 'abstained',
+          mockAbstained: true,
+        },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       findings: 0,
       at: expect.any(String),
@@ -778,22 +819,27 @@ describe('specApproveService — sidecar JSON shape characterization (T1 audit)'
     const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
     expect(res.exitCode).toBe(0);
     const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    // Phase 267 (267-01, T2, dec-20260809-005): see the "UI-SPEC-REVIEW.json
+    // full shape" test above for the `mockAbstained: true` update rationale.
+    // Fix round (dec-20260810-002): see that same test for the
+    // pass/converged/verdict override rationale.
     expect(sidecar).toEqual({
       specId: '40-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
         {
           at: expect.any(String),
-          pass: true,
+          pass: false,
           findingsCount: 0,
           provider: 'mock',
           model: 'claude-x',
-          verdict: 'pass',
+          verdict: 'abstained',
+          mockAbstained: true,
         },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       model: 'claude-x',
       findings: 0,
@@ -818,22 +864,27 @@ describe('specApproveService — sidecar JSON shape characterization (T1 audit)'
     const res = await specApproveService(s.root, { phase: '40-verifier-cwd', num: '1' }, io);
     expect(res.exitCode).toBe(0);
     const sidecar = await readSidecar(s.phaseDir, '40-01-UI-SPEC-REVIEW.json');
+    // Phase 267 (267-01, T2, dec-20260809-005): see the "UI-SPEC-REVIEW.json
+    // full shape" test above for the `mockAbstained: true` update rationale.
+    // Fix round (dec-20260810-002): see that same test for the
+    // pass/converged/verdict override rationale.
     expect(sidecar).toEqual({
       specId: '40-01',
-      converged: true,
+      converged: false,
       attempts: 0,
       maxAttempts: 3,
       history: [
         {
           at: expect.any(String),
-          pass: true,
+          pass: false,
           findingsCount: 0,
           provider: 'mock',
           providerSelection: 'fallback',
-          verdict: 'pass',
+          verdict: 'abstained',
+          mockAbstained: true,
         },
       ],
-      pass: true,
+      pass: false,
       provider: 'mock',
       providerSelection: 'fallback',
       findings: 0,

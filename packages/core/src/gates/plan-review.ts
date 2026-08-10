@@ -27,6 +27,13 @@ export const runPlanReviewGate: DraftGateImpl = async (ctx): Promise<GateResult>
   const bypassed = !res.pass && ctx.opts.allowPlanReviewFailure === true;
 
   const providerSelection = readProviderSelection(res);
+  // Phase 267 (267-01, T2, dec-20260809-005): plan-review never touches
+  // registry.ts/GateProvenance — its only recording surface is this shared
+  // sidecar (`*-PLAN-REVIEW.json`). A mock-identified clean pass is not real
+  // verification; mark it so on the history entry, mirroring registry.ts's
+  // status:'skipped' relabeling for code-review/security-audit. Never set for
+  // `!res.pass` — a real finding is never abstained, regardless of provider.
+  const mockAbstained = res.provider === 'mock' && res.pass === true;
   const result = runConvergentReview({
     pass: res.pass,
     findingsCount: res.findings.length,
@@ -37,6 +44,7 @@ export const runPlanReviewGate: DraftGateImpl = async (ctx): Promise<GateResult>
     history,
     maxAttempts,
     bypassed,
+    mockAbstained,
     idField: 'draftId',
     idValue: ctx.id,
   });
