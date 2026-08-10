@@ -6,6 +6,7 @@ import { delimiter, join } from 'node:path';
 import { homedir } from 'node:os';
 import {
   MOCK_VERIFIER_NOTICE,
+  MOCK_VERIFIER_CAPABILITY,
   CadenceStateZ,
   RecommendationLedgerZ,
   EvidenceLedgerZ,
@@ -744,10 +745,13 @@ export async function checkVerificationReadiness(
     const r = assessReadiness(config, env, root);
     if (r.provider === 'mock') {
       // Phase 104: source the honesty wording from the single MOCK_VERIFIER_NOTICE.
+      // Phase 264 (T4): append the neutral MOCK_VERIFIER_CAPABILITY fact alongside
+      // it — the notice nudges toward activation, the capability names precisely
+      // what mock does and doesn't check.
       return fail(
         'verification-readiness',
         'warning',
-        MOCK_VERIFIER_NOTICE.message,
+        `${MOCK_VERIFIER_NOTICE.message} ${MOCK_VERIFIER_CAPABILITY.message}`,
         `Run \`${MOCK_VERIFIER_NOTICE.activateHint}\` to turn on real verification.`,
       );
     }
@@ -759,17 +763,22 @@ export async function checkVerificationReadiness(
         // Code does not supply the separate `anthropic`-provider credential
         // deep-verify needs. Name the confusion and steer to host-cli, which
         // reuses that same Claude Code login instead of a standalone API key.
+        // Phase 264 (T4): this is the "silently downgraded" half of AC-3 —
+        // append MOCK_VERIFIER_CAPABILITY so the eventual mock fallback is
+        // described the same way as the deliberately-configured case above.
         return fail(
           'verification-readiness',
           'warning',
-          `deep-verify is set to 'anthropic' but its credentials are missing — it will fall back to mock. Being logged into Claude Code does not supply ${envVar}; that is a separate credential.`,
+          `deep-verify is set to 'anthropic' but its credentials are missing — it will fall back to mock. Being logged into Claude Code does not supply ${envVar}; that is a separate credential. ${MOCK_VERIFIER_CAPABILITY.message}`,
           `Set ${envVar}, or run \`cadence activate --provider host-cli\` to reuse your Claude Code login instead.`,
         );
       }
+      // Phase 264 (T4): generic missing-credentials case — same AC-3
+      // "silently downgraded" wiring as the Claude-Code-specific branch above.
       return fail(
         'verification-readiness',
         'warning',
-        `deep-verify is set to '${r.provider}' but its credentials are missing — it will fall back to mock.`,
+        `deep-verify is set to '${r.provider}' but its credentials are missing — it will fall back to mock. ${MOCK_VERIFIER_CAPABILITY.message}`,
         `Set ${envVar} (or run \`cadence activate\`).`,
       );
     }
@@ -789,10 +798,12 @@ export async function checkVerificationReadiness(
         isClaudeCodeSession(env)
           ? ' Being logged into Claude Code does not supply ANTHROPIC_API_KEY; that is a separate credential.'
           : '';
+      // Phase 264 (T4): the seamsDowngraded case is also "silently downgraded"
+      // per AC-3 — append MOCK_VERIFIER_CAPABILITY here too.
       return fail(
         'verification-readiness',
         'warning',
-        `${r.reason} But ${r.seamsDowngraded.length} other ${plural} will silently fall back to mock for want of credentials: ${named}.${claudeCodeHint}`,
+        `${r.reason} But ${r.seamsDowngraded.length} other ${plural} will silently fall back to mock for want of credentials: ${named}.${claudeCodeHint} ${MOCK_VERIFIER_CAPABILITY.message}`,
         `Supply the missing credentials, or run \`cadence activate --provider host-cli --all\` to reuse your host CLI login for every seam. \`cadence config explain\` lists each seam's effective provider.`,
       );
     }
@@ -1475,6 +1486,18 @@ function axisRemediation(gate: Gate, seam: VerifierSeam, axis: ConductionAxis): 
  * and `fixId: null` always: none of the three axes has a safe auto-repair,
  * each remediation is an operator decision (a profile override, a
  * different execution context, or a provider reconfiguration).
+ *
+ * Phase 267 (267-01, T3): investigated, deliberately left unchanged. This
+ * check answers "CAN this repo's config produce a real finding at all,"
+ * purely from `config`/`env` — it takes no `Summary`, `GateProvenance`, or
+ * `AssuranceRecord` input and never reads a settle's gate-provenance
+ * `status` (confirmed: no reference to `Summary`/`assurance`/
+ * `GateProvenance` anywhere under `src/doctor/`). Mock-abstention (T2)
+ * relabels a *recorded* clean pass on a *past* settle; it does not change
+ * what the current config is capable of producing on the *next* one, so a
+ * settle with only abstained mock review gates still reports exactly what
+ * it reported before this phase: `code-review`/`security-audit` blocked by
+ * `provider` under a mock-configured seam.
  */
 export function checkConductionReachability(
   config: CadenceConfig,
@@ -1511,6 +1534,420 @@ export function checkConductionReachability(
   return fail('conduction-reachability', 'warning', detail, remediation);
 }
 
+/**
+ * One pending `.changeset/*.md` entry (excluding `README.md`), as gathered by
+ * {@link gatherLocalReleaseFacts}. `bumpTypes` is parsed from the changeset's
+ * leading `---\n...\n---` frontmatter; a no-bump (empty-frontmatter)
+ * changeset yields `[]`, not an error.
+ */
+export interface PendingChangeset {
+  filename: string;
+  bumpTypes: string[];
+}
+
+/**
+ * Local `packages/core/package.json` facts, as gathered by
+ * {@link gatherLocalReleaseFacts}. `engines` is defaulted to `{}` when the
+ * `engines` key is absent from `package.json` — an absent key is not a read
+ * failure; normalizing it keeps the AC-1 comparison symmetric with the
+ * published side's own empty-object case, so "both absent" is correctly
+ * never a divergence.
+ */
+export interface LocalReleaseFacts {
+  name: string;
+  version: string;
+  engines: Record<string, string>;
+  pendingChangesets: PendingChangeset[];
+}
+
+/**
+ * Published npm-registry facts for the package named by
+ * {@link LocalReleaseFacts.name}, as gathered by
+ * {@link gatherPublishedReleaseFacts}. `fetchFailed: false` with
+ * `engines: {}` specifically means "fetched successfully, the published
+ * package declares no `engines` field at all" — verified live that `npm view
+ * <pkg> engines --json` exits `0` with empty stdout in that case, which is a
+ * successful fetch of an empty/absent value, not a parse failure. That is
+ * distinct from `fetchFailed: true` (genuine failure: `npm` missing,
+ * non-zero exit, timeout, or a JSON-parse failure on non-empty stdout), which
+ * always carries `version: null, engines: null`.
+ */
+export interface PublishedReleaseFacts {
+  fetchFailed: boolean;
+  version: string | null;
+  engines: Record<string, string> | null;
+}
+
+/**
+ * Combined input to the pure {@link evaluateReleaseCurrency}. `local` is
+ * nullable so the AC-5(a) "not determinable" branch can be expressed
+ * entirely inside the pure function per the DRAFT's T1 step 2 — the
+ * orchestrator ({@link checkReleaseCurrency}) still short-circuits before
+ * ever calling {@link gatherPublishedReleaseFacts} when local facts are
+ * unavailable, which is the mechanism (not this type) that keeps the
+ * network call off the ~65 existing test-suite `runDoctor` call sites.
+ */
+export interface ReleaseCurrencyFacts {
+  local: LocalReleaseFacts | null;
+  published: PublishedReleaseFacts;
+}
+
+/** Per-key value comparison of two `engines` maps — never raw
+ *  `JSON.stringify` equality, since key order is not guaranteed. */
+function enginesEqual(a: Record<string, string>, b: Record<string, string>): boolean {
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) return false;
+  return aKeys.every((key) => a[key] === b[key]);
+}
+
+/** Stable, human-readable rendering of an `engines` map for detail strings. */
+function formatEngines(engines: Record<string, string>): string {
+  return JSON.stringify(engines);
+}
+
+/** `true` iff any pending changeset declares a `major` or `minor` bump for
+ *  any package — the trigger for AC-2's escalated wording. The complement
+ *  (this being `false`) covers all-`patch` AND any mix of `patch`/no-bump
+ *  changesets, not "every changeset is literally `patch`". */
+function hasMajorOrMinorBump(pending: PendingChangeset[]): boolean {
+  return pending.some((c) => c.bumpTypes.includes('major') || c.bumpTypes.includes('minor'));
+}
+
+/** Renders each pending changeset as `filename (bump, bump)`, or bare
+ *  `filename` when it declares no bump type (a no-bump changeset). */
+function formatPendingChangesetList(pending: PendingChangeset[]): string {
+  return pending
+    .map((c) => (c.bumpTypes.length > 0 ? `${c.filename} (${c.bumpTypes.join(', ')})` : c.filename))
+    .join(', ');
+}
+
+/** AC-4's compose clause, appended to the AC-1 engines-divergence detail
+ *  when pending changesets are also present — names the changeset
+ *  filename(s) without suppressing the engines-divergence information that
+ *  precedes it. */
+function pendingChangesetsClause(pending: PendingChangeset[]): string {
+  return `Pending changeset(s) are also unreleased: ${formatPendingChangesetList(pending)}.`;
+}
+
+/** AC-2's standalone detail: routine wording when no pending changeset
+ *  declares a `major`/`minor` bump, visibly escalated wording (explicitly
+ *  naming "major"/"minor") when at least one does. */
+function pendingChangesetsStandaloneDetail(pending: PendingChangeset[]): string {
+  const list = formatPendingChangesetList(pending);
+  return hasMajorOrMinorBump(pending)
+    ? `Pending changeset(s) declare a major or minor version bump not yet released: ${list}.`
+    : `Pending changeset(s) are awaiting release (patch-level or unspecified bumps only): ${list}.`;
+}
+
+/**
+ * Pure verdict function (phase 262, T1/AC-1 through AC-5) — no I/O. Implements
+ * the precedence: local-unreadable/private (`facts.local === null`) → AC-5(a)
+ * pass; else `engines` divergence (only evaluable when the published fetch
+ * succeeded) → AC-1/AC-4 warning, folding in a pending-changesets clause when
+ * also present; else pending changesets alone → AC-2 warning; else → AC-3
+ * pass, worded differently depending on whether the published fetch
+ * succeeded. `severity` is never `'error'` and `fixId` is always `null` —
+ * this is always a manual, judgment-call fix (cut a release, or confirm the
+ * divergence is intentional), matching every other advisory doctor check.
+ */
+export function evaluateReleaseCurrency(facts: ReleaseCurrencyFacts): DoctorCheck {
+  const { local, published } = facts;
+
+  if (local === null) {
+    return pass(
+      'release-currency',
+      'Release currency not determinable (best-effort) — skipped.',
+    );
+  }
+
+  const pending = local.pendingChangesets;
+  // Distinct from `!published.fetchFailed` alone: a caller (or a
+  // hand-fabricated test facts object) can legally construct
+  // `{ fetchFailed: false, engines: null }`, which is not a state the real
+  // gatherer ever produces but IS a state `evaluateReleaseCurrency` — being
+  // pure — must still handle correctly. Both the divergence test AND AC-3's
+  // wording gate on this, so neither can claim a comparison happened when it
+  // didn't.
+  const enginesComparable = !published.fetchFailed && published.engines !== null;
+  const enginesDiverge = enginesComparable && !enginesEqual(local.engines, published.engines!);
+
+  if (enginesDiverge) {
+    const publishedEngines = published.engines as Record<string, string>;
+    const publishedVersion = published.version ?? 'unknown';
+    let detail =
+      `Published engines diverge from local under the current version string: ` +
+      `local version ${local.version} declares engines ${formatEngines(local.engines)}, ` +
+      `but npm's published version ${publishedVersion} declares engines ${formatEngines(publishedEngines)}.`;
+    if (pending.length > 0) {
+      detail += ` ${pendingChangesetsClause(pending)}`;
+    }
+    return fail(
+      'release-currency',
+      'warning',
+      detail,
+      'cut a release to publish the current engines/content, or confirm the divergence is intentional — this is a manual decision, never auto-fixed.',
+      null,
+    );
+  }
+
+  if (pending.length > 0) {
+    // Per AC-5(b): when the published baseline couldn't be compared
+    // (network failure, or the type-legal-but-inconsistent
+    // `{fetchFailed:false, engines:null}` shape I1 covers), this branch's
+    // detail must say so — otherwise "engines verified and in sync" and
+    // "engines never checked" are indistinguishable to an operator reading
+    // the same pending-changesets wording either way.
+    const detail = enginesComparable
+      ? pendingChangesetsStandaloneDetail(pending)
+      : `${pendingChangesetsStandaloneDetail(pending)} (published engines could not be verified)`;
+    return fail(
+      'release-currency',
+      'warning',
+      detail,
+      'cut a release to consume the pending changeset(s) — manual fix.',
+      null,
+    );
+  }
+
+  if (enginesComparable) {
+    return pass(
+      'release-currency',
+      'local/published engines are in sync and no changesets are pending.',
+    );
+  }
+  return pass(
+    'release-currency',
+    'no pending changesets; published engines could not be verified.',
+  );
+}
+
+/**
+ * Parses the bump-type entries declared in a changeset's leading
+ * `---\n...\n---` frontmatter block — a small line scan, not a
+ * `changesets`-library dependency (CLAUDE.md's zero-runtime-dependency
+ * bias). Each frontmatter line has the shape `"<pkg>": <bump>` (quotes
+ * optional on the key), e.g. `"@thomas-powers-jr/cadence-core": minor`. Only
+ * recognizes a frontmatter block that opens on the file's first non-blank
+ * line — a `---` horizontal rule appearing later in the body (with no
+ * frontmatter at all) is not mistaken for one. An empty-frontmatter (no-bump)
+ * changeset yields `[]`, not an error.
+ */
+function parseChangesetBumpTypes(content: string): string[] {
+  const lines = content.split('\n').map((line) => line.replace(/\r$/, ''));
+  const firstNonBlankIdx = lines.findIndex((line) => line.trim().length > 0);
+  if (firstNonBlankIdx === -1 || lines[firstNonBlankIdx]?.trim() !== '---') return [];
+  const endIdx = lines.findIndex(
+    (line, i) => i > firstNonBlankIdx && line.trim() === '---',
+  );
+  if (endIdx === -1) return [];
+  const bumpTypes: string[] = [];
+  const bumpLineRe = /^\s*["']?[^"':]+["']?\s*:\s*(major|minor|patch)\s*$/;
+  for (const line of lines.slice(firstNonBlankIdx + 1, endIdx)) {
+    const m = line.match(bumpLineRe);
+    if (m && m[1] !== undefined) bumpTypes.push(m[1]);
+  }
+  return bumpTypes;
+}
+
+/**
+ * npm's legal package-name shape: lowercase, optional `@scope/`, no shell
+ * metacharacters. Used by {@link gatherPublishedReleaseFacts} to refuse
+ * shelling out to `npm view` for a name that could not possibly be real.
+ * Deliberately still permits a leading `-` at the regex level (matching
+ * npm's own `validate-npm-package-name` shape) — {@link isSafeNpmPackageName}
+ * layers the actual argument-injection refusal on top, since a name npm
+ * CLI would interpret as a flag (e.g. `-f`, `--force`) is not a package name
+ * this check may ever pass to `npm view`, regardless of what npm's own
+ * naming rules permit.
+ */
+const NPM_PACKAGE_NAME_RE = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+
+/**
+ * True only for a `pkgName` that is both a legal npm package name AND cannot
+ * be interpreted as an `npm` CLI flag. `pkgName` originates from an
+ * arbitrary local `package.json`'s `name` field (not necessarily belonging
+ * to this repo), so a name starting with `-` must be refused outright — npm
+ * parses `-f`/`--force`-shaped arguments as flags rather than a package
+ * name, silently resolving an unrelated real package and returning
+ * `fetchFailed: false` with fabricated facts instead of failing loudly.
+ */
+export function isSafeNpmPackageName(pkgName: string): boolean {
+  return !pkgName.startsWith('-') && NPM_PACKAGE_NAME_RE.test(pkgName);
+}
+
+/**
+ * Pure-filesystem gatherer (phase 262, T1) for the local half of
+ * {@link ReleaseCurrencyFacts}: reads `packages/core/package.json` and
+ * separately scans `.changeset/*.md` (excluding `README.md`). Returns `null`
+ * — never throws — on any read/parse failure or when the package declares
+ * `private: true` (AC-5 case (a): the whole check is not determinable). No
+ * network access.
+ */
+export async function gatherLocalReleaseFacts(root: string): Promise<LocalReleaseFacts | null> {
+  let parsed: unknown;
+  try {
+    const raw = await readFile(join(root, 'packages', 'core', 'package.json'), 'utf8');
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== 'object' || parsed === null) return null;
+  const obj = parsed as Record<string, unknown>;
+  if (obj.private === true) return null;
+  const { name, version } = obj;
+  if (typeof name !== 'string' || typeof version !== 'string') return null;
+
+  let engines: Record<string, string> = {};
+  if (typeof obj.engines === 'object' && obj.engines !== null) {
+    engines = Object.fromEntries(
+      Object.entries(obj.engines as Record<string, unknown>).filter(
+        (entry): entry is [string, string] => typeof entry[1] === 'string',
+      ),
+    );
+  }
+
+  const pendingChangesets: PendingChangeset[] = [];
+  try {
+    const changesetDir = join(root, '.changeset');
+    const files = (await readdir(changesetDir))
+      .filter((f) => f.endsWith('.md') && f !== 'README.md')
+      .sort();
+    for (const filename of files) {
+      try {
+        const content = await readFile(join(changesetDir, filename), 'utf8');
+        pendingChangesets.push({ filename, bumpTypes: parseChangesetBumpTypes(content) });
+      } catch {
+        // One unreadable changeset file shouldn't blank out the rest.
+      }
+    }
+  } catch {
+    // No .changeset/ directory at all — zero pending changesets, not an error.
+  }
+
+  return { name, version, engines, pendingChangesets };
+}
+
+/**
+ * Network gatherer (phase 262, T1) for the published half of
+ * {@link ReleaseCurrencyFacts}. Makes TWO separate `pexecFile` calls — `npm
+ * view <pkgName> version` (plain text) and `npm view <pkgName> engines
+ * --json` — deliberately never combined into one `npm view <pkg> version
+ * engines --json` call: verified live that when only one of the two fields
+ * exists on the published package, npm's `--json` output silently collapses
+ * to that field's bare value instead of a `{version, engines}` object, which
+ * a combined call cannot distinguish from the other field being absent.
+ *
+ * Validates `pkgName` against npm's legal package-name shape before shelling
+ * out at all (it is `local.name`, read from an arbitrary local
+ * `package.json` that may not belong to this repo — not safe to interpolate
+ * into a shell string). `shell` is platform-guarded to `win32` only (where
+ * `npm` resolves to `npm.cmd`), matching this repo's existing `npx`-needs-
+ * `shell:true`-on-win32 precedent. Both calls carry a bounded 5000ms timeout
+ * (matching the existing precedent at {@link listTrackedCadenceOwnedPaths}) so
+ * a hung network call can never hang `cadence doctor` itself.
+ *
+ * On any genuine failure — invalid package name, `npm` missing (`ENOENT`),
+ * exit 127 under the `shell: true` path, any other non-zero exit, or a
+ * JSON-parse failure on non-empty `engines` stdout — returns
+ * `{ fetchFailed: true, version: null, engines: null }`. Empty/whitespace-only
+ * `engines` stdout on a successful (exit 0) call is `engines: {}`, not a
+ * parse failure — see {@link PublishedReleaseFacts}.
+ */
+export async function gatherPublishedReleaseFacts(pkgName: string): Promise<PublishedReleaseFacts> {
+  if (!isSafeNpmPackageName(pkgName)) {
+    return { fetchFailed: true, version: null, engines: null };
+  }
+  const execOpts = {
+    timeout: 5000,
+    windowsHide: true,
+    shell: process.platform === 'win32',
+  };
+  try {
+    const [versionResult, enginesResult] = await Promise.all([
+      pexecFile('npm', ['view', pkgName, 'version'], execOpts),
+      pexecFile('npm', ['view', pkgName, 'engines', '--json'], execOpts),
+    ]);
+    const version = versionResult.stdout.trim();
+    const enginesStdout = enginesResult.stdout.trim();
+    let engines: Record<string, string> = {};
+    if (enginesStdout.length > 0) {
+      const parsedEngines: unknown = JSON.parse(enginesStdout);
+      if (typeof parsedEngines !== 'object' || parsedEngines === null || Array.isArray(parsedEngines)) {
+        return { fetchFailed: true, version: null, engines: null };
+      }
+      engines = Object.fromEntries(
+        Object.entries(parsedEngines as Record<string, unknown>).filter(
+          (entry): entry is [string, string] => typeof entry[1] === 'string',
+        ),
+      );
+    }
+    return { fetchFailed: false, version: version.length > 0 ? version : null, engines };
+  } catch {
+    return { fetchFailed: true, version: null, engines: null };
+  }
+}
+
+/**
+ * `cadence doctor` check (phase 262, `rec-20260731-001`) that detects when the
+ * local repo's published-package content has drifted from what npm actually
+ * serves — closing the specific `engines`-drift instance behind the
+ * 2026-07-27 incident (phase 238/PR #324 bumped the local `engines` floor to
+ * `>=22`, but npm's published tarball under that *same* version string still
+ * declared `>=20`, undetected for 4 days). Orchestrates
+ * {@link gatherLocalReleaseFacts} (always first) and the injectable
+ * `gatherPublished` (defaulting to {@link gatherPublishedReleaseFacts}, real
+ * network) into the pure {@link evaluateReleaseCurrency} — mirrors
+ * {@link checkLedgerRemoteCollision}'s injectable-`gather` idiom, not a
+ * `node:child_process` mock (see this phase's DRAFT).
+ *
+ * When local facts are unavailable (`null`), `gatherPublished` is NEVER
+ * called — this is load-bearing, not just an optimization: it is what keeps
+ * the ~65 existing test-suite `runDoctor(...)` call sites (which use
+ * `@thomas-powers-jr/cadence-testkit`'s `tempRepo` fixtures with no
+ * `packages/core/package.json` present) from ever making a real network
+ * call. `local` is gathered outside the try/catch that guards
+ * `gatherPublished`, and deliberately re-used in the catch branch below —
+ * per AC-5(b), a `gatherPublished` failure (thrown, not just a returned
+ * `fetchFailed: true`) must still let `evaluateReleaseCurrency` see the
+ * already-gathered local facts (name/engines/pending changesets), so the
+ * pending-changesets signal (AC-2) is still evaluated rather than being
+ * discarded along with the failed network call. An earlier version of this
+ * function scoped `local` inside the try, so a throwing `gatherPublished`
+ * fell all the way through to a generic best-effort pass and silently
+ * suppressed AC-2 — exactly the bug this DRAFT's Boundaries name as its own
+ * first-draft mistake, reintroduced through the error path and caught by
+ * independent review of the implementation.
+ */
+export async function checkReleaseCurrency(
+  root: string,
+  gatherPublished: (pkgName: string) => Promise<PublishedReleaseFacts> = gatherPublishedReleaseFacts,
+): Promise<DoctorCheck> {
+  let local: LocalReleaseFacts | null = null;
+  try {
+    local = await gatherLocalReleaseFacts(root);
+    if (local === null) {
+      return evaluateReleaseCurrency({
+        local: null,
+        published: { fetchFailed: true, version: null, engines: null },
+      });
+    }
+    const published = await gatherPublished(local.name);
+    return evaluateReleaseCurrency({ local, published });
+  } catch {
+    // `local` may already be populated here (a thrown/rejected
+    // `gatherPublished` lands in this catch too) — evaluate with whatever we
+    // have rather than discarding it; `evaluateReleaseCurrency` handles a
+    // `null` local the same way this function's own AC-5(a) branch above
+    // does, and a non-null local with a failed-fetch `published` correctly
+    // takes the AC-5(b) path (pending changesets still checked).
+    return evaluateReleaseCurrency({
+      local,
+      published: { fetchFailed: true, version: null, engines: null },
+    });
+  }
+}
+
 export async function runDoctor(
   root: string,
   env: DoctorEnv,
@@ -1536,6 +1973,7 @@ export async function runDoctor(
     await checkLedgerRemoteCollision(root),
     await checkCoverageModeLanguageSupport(root),
     await checkRoadmapCurrency(root),
+    await checkReleaseCurrency(root),
   ];
   try {
     const config = await loadConfig(root);

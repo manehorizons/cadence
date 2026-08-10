@@ -2,8 +2,43 @@ import type { Draft, Finding } from '@thomas-powers-jr/cadence-types';
 import { runConvergentReview } from '../verify/converge.js';
 import { anchorFindings } from '../verify/criteria-gap.js';
 import { attachFindingIdentity } from '../verify/finding-identity.js';
-import type { CodeReviewInput, CodeReviewTaskRef } from '../contracts/index.js';
+import type { CodeReviewInput, CodeReviewResult, CodeReviewTaskRef } from '../contracts/index.js';
 import type { GateImpl, GateResult } from './types.js';
+
+/**
+ * 263-01 (T4) — builds the `flags.verifierIdentity` object shared by every
+ * pass/refuse return path below. Merges two independent provenance facts:
+ * (1) `verifyResult.providerSelection`, tagged upstream by
+ * `verifier-factory.ts`'s configured/fallback computation (T3) and threaded
+ * through untouched; (2) this gate's own empty-diff observation — touched
+ * files non-empty but the memoized diff is empty, for a provider other than
+ * `mock` — computed directly from `ctx.touchedFiles`/`ctx.diff()` rather than
+ * from the verify() call, since a verifier constructed outside
+ * `verifier-factory.ts` (as every test fixture here does) never reports its
+ * own `providerSelection`. When both would apply, `empty-diff` wins over
+ * `'configured'` (the only reachable overlap — both fallback paths in
+ * `verifier-factory.ts` return `provider: 'mock'`, which the `!== 'mock'`
+ * guard below already excludes): a provider call that structurally could not
+ * judge anything is a stronger statement than whether that same call was the
+ * operator's deliberate choice. `family`/`model` are unchanged from before
+ * this phase; `providerSelection` is added only when computed, so
+ * `{ family: 'mock' }` (no `model`, no `providerSelection`) still round-trips
+ * through `toEqual` unchanged for every pre-263-01 test.
+ */
+function buildVerifierIdentityFlag(
+  result: Pick<CodeReviewResult, 'provider' | 'model' | 'providerSelection'>,
+  touched: string[],
+  diff: string,
+): { family: string; model?: string; providerSelection?: 'configured' | 'fallback' | 'empty-diff' } {
+  const isEmptyDiff =
+    touched.length > 0 && diff.trim().length === 0 && result.provider !== 'mock';
+  const providerSelection = isEmptyDiff ? 'empty-diff' : result.providerSelection;
+  return {
+    family: result.provider,
+    ...(result.model ? { model: result.model } : {}),
+    ...(providerSelection ? { providerSelection } : {}),
+  };
+}
 
 /**
  * Phase 235 (T3) — project `draft`'s acceptance criteria, boundaries[] and
@@ -131,6 +166,20 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
     // --allow-code-review-failure bypasses ANY failing code-review.
     const bypassed =
       !pass && (ctx.opts.allowCodeReviewFailure === true || ctx.opts.force === true);
+    // Phase 267 (267-01, dec-20260810-003 corrects dec-20260809-005):
+    // `*-CODE-REVIEW.json` is a SEPARATE persisted artifact from
+    // registry.ts's SUMMARY-level GateProvenance relabel below — a reader
+    // of this sidecar alone would see an unqualified `pass: true` even
+    // after registry.ts correctly records `status: 'skipped'` in SUMMARY.
+    // dec-20260809-005 excluded this call site from the marker reasoning
+    // that only SUMMARY-level persistence mattered for AC-1's "no persisted
+    // pass" bar; a real `deep-verify` pass caught that this sidecar is
+    // independently readable and was never fixed. Computed locally, exactly
+    // like `plan-review.ts`'s `mockAbstained` — this remains isolated from
+    // registry.ts's own `verifierIdentity`/`reviewFindingsBypassed`
+    // computation (no shared state), it simply closes the same gap on the
+    // second persisted artifact this gate writes.
+    const mockAbstained = verifyResult.provider === 'mock' && pass === true;
 
     const result = runConvergentReview({
       pass,
@@ -141,6 +190,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
       history,
       maxAttempts,
       bypassed,
+      mockAbstained,
       idField: 'draftId',
       idValue: ctx.state.activeDraft as string,
     });
@@ -195,10 +245,7 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
             summaryPatch: { codeReview: identifiedFindings },
             reason,
             flags: {
-              verifierIdentity: {
-                family: verifyResult.provider,
-                ...(verifyResult.model ? { model: verifyResult.model } : {}),
-              },
+              verifierIdentity: buildVerifierIdentityFlag(verifyResult, touched, diff),
             },
           };
         }
@@ -230,24 +277,24 @@ export const runCodeReviewGate: GateImpl = async (ctx): Promise<GateResult> => {
             summaryPatch: { codeReview: identifiedFindings },
             reason,
             flags: {
-              verifierIdentity: {
-                family: verifyResult.provider,
-                ...(verifyResult.model ? { model: verifyResult.model } : {}),
-              },
+              verifierIdentity: buildVerifierIdentityFlag(verifyResult, touched, diff),
             },
           };
         }
       }
     }
     // pass (converged) OR bypass fall-through → record findings, proceed.
+    // Phase 267 (267-01, T2): `bypassed` (declared above) is scoped to
+    // `!pass && (...)` — true here iff this is the bypass fall-through
+    // branch, i.e. real HIGH findings were waved through, never on a
+    // genuinely clean pass. Tags the outcome so registry.ts can tell "clean
+    // pass" apart from "bypassed real finding" without re-deriving it.
     return {
       outcome: 'pass',
       summaryPatch: { codeReview: identifiedFindings },
       flags: {
-        verifierIdentity: {
-          family: verifyResult.provider,
-          ...(verifyResult.model ? { model: verifyResult.model } : {}),
-        },
+        verifierIdentity: buildVerifierIdentityFlag(verifyResult, touched, diff),
+        ...(bypassed ? { reviewFindingsBypassed: true } : {}),
       },
     };
   } catch (err) {

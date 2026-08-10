@@ -115,21 +115,29 @@ const SELF_GUARD_SKIP_REASON: Partial<Record<SettleGate, string>> = {
 };
 
 /**
- * Phase 232 (T3): lifts a gate's reported `flags.verifierIdentity` (populated
- * only by `code-review`/`security-audit`, see T2) onto the `provider`/`model`
- * fields of the `GateProvenance` entry being pushed for it. Checked generically
- * by flag presence rather than gate name — any future gate that starts
- * reporting `verifierIdentity` picks this up for free, and every gate that
- * doesn't set it (all of them today, besides those two) gets back `{}`, so no
- * stray keys land on its provenance entry (AC-5, `exactOptionalPropertyTypes`
- * safe: never spreads an explicit `undefined`).
+ * Phase 232 (T3), widened by Phase 263 (T3): lifts a gate's reported
+ * `flags.verifierIdentity` (populated only by `code-review`/`security-audit`,
+ * see T2/263-01 T4) onto the `provider`/`model`/`providerSelection` fields of
+ * the `GateProvenance` entry being pushed for it. Checked generically by flag
+ * presence rather than gate name — any future gate that starts reporting
+ * `verifierIdentity` picks this up for free, and every gate that doesn't set
+ * it (all of them today, besides those two) gets back `{}`, so no stray keys
+ * land on its provenance entry (AC-5, `exactOptionalPropertyTypes` safe:
+ * never spreads an explicit `undefined`). `providerSelection` lifts the same
+ * way `model` already does — present only when the gate actually computed
+ * one.
  */
-function verifierIdentityProvenance(res: GateResult): Pick<GateProvenance, 'provider' | 'model'> {
+function verifierIdentityProvenance(
+  res: GateResult,
+): Pick<GateProvenance, 'provider' | 'model' | 'providerSelection'> {
   const identity = res.flags?.verifierIdentity;
   if (!identity) return {};
   return {
     provider: identity.family,
     ...(identity.model !== undefined ? { model: identity.model } : {}),
+    ...(identity.providerSelection !== undefined
+      ? { providerSelection: identity.providerSelection }
+      : {}),
   };
 }
 
@@ -274,6 +282,36 @@ export async function runSettleGates(
         // the honest gap-filler, matching this phase's own provenance-
         // honesty thesis.
         skipReason: `bypassed via ${flag} — verifier failure bypassed (${message}), configured provider: ${provider ?? 'unknown'}`,
+        ...verifierIdentityProvenance(res),
+      });
+    } else if (
+      res.flags?.verifierIdentity?.family === 'mock' &&
+      res.flags?.reviewFindingsBypassed !== true
+    ) {
+      // Phase 267 (267-01, T2, dec-20260809-004/-005): a mock-identified
+      // CLEAN PASS is not real verification — relabel what would otherwise be
+      // recorded 'ran' as 'skipped'+skipReason instead. Checked generically
+      // by flag presence, same convention as `verifierIdentityProvenance`
+      // itself and the `reviewVerifierFailure` branch above: only
+      // code-review/security-audit ever populate `verifierIdentity` today
+      // (gates/code-review.ts, gates/security-audit.ts), so this reaches
+      // exactly those two without a gate-name disjunction. A mock-identified
+      // 'refuse' never reaches here — the refuse branch above (line ~218)
+      // already returned before this point, so a real flagged finding keeps
+      // its normal refusal recording, never relabeled (dec-20260809-004: a
+      // refusal is never false confidence, regardless of provider).
+      //
+      // The `reviewFindingsBypassed !== true` guard closes a second case the
+      // refuse-branch check alone misses: --force/--allow-*-failure turns a
+      // real HIGH/CRITICAL finding into `outcome:'pass'` (see the bypass
+      // fall-through in code-review.ts/security-audit.ts) — that is NOT a
+      // clean pass either, and must keep its pre-267 `status:'ran'`
+      // recording (falls to the final `else` below) rather than being
+      // mislabeled "abstained" alongside a genuinely empty result.
+      gates.push({
+        gate,
+        status: 'skipped',
+        skipReason: `${gate}: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass`,
         ...verifierIdentityProvenance(res),
       });
     } else {

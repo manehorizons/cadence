@@ -137,7 +137,11 @@ describe('cadence spec stage (Phase 36.1)', () => {
     const s = await state(active.root);
     expect(s.loopPosition).toBe('IDLE');
     expect(s.activeSpec).toBeNull();
-    expect((await sidecar(active.root)).converged).toBe(true);
+    // Phase 267 (267-01, dec-20260810-002): default init resolves spec-review
+    // to mock, so a clean pass now persists `converged: false` on the sidecar
+    // -- the IDLE transition above (the real control-flow signal) is
+    // unaffected.
+    expect((await sidecar(active.root)).converged).toBe(false);
     const dn = await run(['draft', 'new', '36-x', '01', '--title=x'], active.root);
     expect(dn.code).toBe(0);
   });

@@ -1,0 +1,18 @@
+{
+  "bypasses": [
+    {
+      "gate": "test-coverage",
+      "flag": "--allow-missing-coverage",
+      "reason": "test-coverage gate bypassed via --allow-missing-coverage",
+      "severity": "warn"
+    },
+    {
+      "gate": "evidence-floor:AC-7",
+      "flag": "--evidence-floor-bypass",
+      "reason": "AC-7 is a one-time real-corpus run + findings-artifact claim, not code -- DRAFT's own AC-6 explicitly excludes AC-7's real-corpus run from the automated test suite (pnpm test never scans this repo's live .cadence/phases/ corpus, by design). Independently re-verified by both the T4 task reviewer and the whole-branch reviewer: real audit output is byte-identical to the committed findings artifact, and AC-4's invariant holds (1077=1077) against the real corpus.",
+      "severity": "warn"
+    }
+  ],
+  "roughTasks": [],
+  "findings": {}
+}

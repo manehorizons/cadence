@@ -37,6 +37,8 @@ For a conceptual overview of providers and the gate universe they serve, see
   - [code-review procedure](#code-review-procedure)
   - [security-audit procedure](#security-audit-procedure)
   - [Confirming it actually produced a real finding](#confirming-it-actually-produced-a-real-finding)
+- [providerSelection — configured vs. fallback vs. empty-diff provenance (Phase 263)](#providerselection--configured-vs-fallback-vs-empty-diff-provenance-phase-263)
+  - [Rendered, not just queryable (Phase 264)](#rendered-not-just-queryable-phase-264)
 - [Selecting a provider at the command line (Phase 73)](#selecting-a-provider-at-the-command-line-phase-73)
   - [Token usage in the SUMMARY](#token-usage-in-the-summary)
 - [Deep-verify prompt id-binding (Phase 29.7)](#deep-verify-prompt-id-binding-phase-297)
@@ -681,6 +683,121 @@ If the mock-fallback banner (`⚠ MOCK = NOT REAL VERIFICATION`, see
 above) printed to stderr during the run, the finding is mock regardless of
 what the SUMMARY otherwise looks like — the banner and the persisted
 `provider` field always agree.
+
+---
+
+## providerSelection — configured vs. fallback vs. empty-diff provenance (Phase 263)
+
+`provider`/`model` on a persisted `GateProvenance` entry (see [Confirming it
+actually produced a real finding](#confirming-it-actually-produced-a-real-finding)
+above) always agree with the mock-fallback banner — a fallback, whether it
+happens at selection time or call time, resolves to the mock verifier and
+its result carries `provider: 'mock'`, same as a gate genuinely configured
+to mock on purpose. That is exactly the ambiguity `provider` alone cannot
+resolve: a `provider: 'mock'` entry looks identical whether mock was the
+operator's actual configured choice or a silent downgrade from
+`anthropic`/`local`/`host-cli`. An optional `providerSelection` field on
+`GateProvenance` closes that gap by naming which of three epistemically
+distinct states produced the entry:
+
+- **`configured`** — the provider actually run was the operator's real
+  configured choice (including a deliberately configured `mock`).
+- **`fallback`** — the gate silently fell back to `mock`, either at
+  selection time (`createVerifierFactory`, e.g. a missing
+  `ANTHROPIC_API_KEY`, unset `local` base URL/model, or a verifier family
+  with no `host-cli` builder wired) or at call time (`wrapWithFallback`'s
+  Proxy, e.g. a `host-cli` spawn failure) — any fallback in a run wins over
+  any successful call in the same run.
+- **`empty-diff`** — `code-review`/`security-audit` were configured to a
+  real (non-mock) provider and it was called, but `touchedFiles` was
+  non-empty while `ctx.diff()` was empty, so the call was structurally
+  unable to judge anything.
+
+`providerSelection` is persisted for five of the seven verifier seams:
+`code-review`, `security-audit` (lifted onto the `GateProvenance` entry the
+same way `provider`/`model` already are) and `spec-review`,
+`ui-spec-review`, `plan-review` (threaded into `runConvergentReview`'s
+`<id>-SPEC-REVIEW.json` / `<id>-UI-SPEC-REVIEW.json` /
+`<id>-PLAN-REVIEW.json` sidecar files). `deep-verify` and `per-task-verify`
+are deliberately excluded from persistence — neither persists *any*
+provider/model identity into `gates[]` today, and this repo's own
+`perTaskVerifier.provider`/`verifier.provider` are already `host-cli`;
+adding baseline provider persistence to either as a side effect here would
+grow `deriveAssuranceRecord`'s `verifierRollup` with real `host-cli`
+entries on ordinary auto-profile settles, silently moving
+`assurance.overall` toward `strong` with no review gate having actually
+run — the exact false-confidence failure this field exists to make
+visible elsewhere, not something to introduce as a byproduct. That gap is
+tracked separately (`dec-20260808-008`), not closed by this phase.
+
+The field is additive and optional with no `.default(...)` — it is absent
+from every `SUMMARY.json` written before Phase 263, and stays absent
+afterward for any settle where the tagged gate didn't run
+(`status !== 'ran'`) or ran on one of the two untagged seams. To count
+`providerSelection` values across every `SUMMARY.json` in this repo's
+`.cadence/phases/` corpus in one command:
+
+```sh
+find .cadence/phases -name "*-SUMMARY.json" -print0 | xargs -0 node -e '
+const fs = require("fs");
+const counts = { configured: 0, fallback: 0, "empty-diff": 0, absent: 0 };
+let files = 0, gates = 0;
+for (const f of process.argv.slice(1)) {
+  files++;
+  const data = JSON.parse(fs.readFileSync(f, "utf8"));
+  const gateList = Array.isArray(data.gates) ? data.gates : [];
+  for (const g of gateList) {
+    gates++;
+    const ps = g && g.providerSelection;
+    if (ps === "configured" || ps === "fallback" || ps === "empty-diff") {
+      counts[ps]++;
+    } else {
+      counts.absent++;
+    }
+  }
+}
+console.log(JSON.stringify({ filesScanned: files, gatesScanned: gates, counts }, null, 2));
+'
+```
+
+See
+`.cadence/phases/263-provider-selection-provenance/263-01-QUERY-EVIDENCE.md`
+for this exact command's actual recorded output against this repo's own
+corpus (including a positive-control run proving it can detect a non-zero
+result), plus the `cadence summary verify` sweep proving the new field
+didn't retroactively change any historical record's content hash.
+
+### Rendered, not just queryable (Phase 264)
+
+Phase 263 makes `configured`/`fallback`/`empty-diff` queryable in the raw
+JSON; Phase 264 renders the same distinction where an operator actually
+looks, so the count-script above is no longer the only way to tell a
+deliberate mock choice from a silent downgrade. `cadence summary render`'s
+output and the on-disk `<id>-SUMMARY.md` sidecar both format each
+`assurance.verifierRollup[]` entry through a single formatter
+(`formatVerifierRollupLabel`, `packages/core/src/services/verifier-label.ts`)
+that appends a trailing `(configured)`, `(fallback)`, or `(empty-diff)` tag
+whenever the gates behind that rollup entry carry a `providerSelection`
+value — or an explicit `(mixed)` tag if the matching gates disagree, never
+silently omitted. When the rollup entry's provider is `mock`, the same
+formatter also appends a neutral capability sentence naming what `mock`
+actually checks and doesn't (`MOCK_VERIFIER_CAPABILITY`,
+`packages/types/src/guidance.ts`) — a sibling of the pre-existing
+`MOCK_VERIFIER_NOTICE` activation nudge, not a replacement for it. A
+rendered line looks like:
+
+```
+- verifier: mock (2 gate(s)) The `mock` verifier only checks that each AC has a linked test and flags any `console.log(...)` added in the diff as a finding — it does not read diff content for behavior, read test bodies, or evaluate correctness. (fallback)
+```
+
+`cadence doctor`'s verification-readiness warnings and `cadence config
+explain`'s provider warnings gained the same `MOCK_VERIFIER_CAPABILITY`
+sentence too, appended to their existing configured-vs-fallback prose
+("every verifier seam is set to mock" vs. "it will fall back to mock" /
+"will silently fall back to mock for want of credentials") — those two
+surfaces warn ahead of a settle rather than rendering an already-persisted
+`GateProvenance` entry, so they carry the distinction in prose instead of
+the short tag syntax above.
 
 ---
 

@@ -257,11 +257,36 @@ export interface GateFlags {
    *  ran. No `model` sub-field, matching `verifierFailure`'s own actual
    *  shape — `deep-verify.ts` never threads a model through it either. */
   reviewVerifierFailure?: { message: string; provider?: string };
+  /** Phase 267 (267-01, T2): set iff code-review/security-audit had a REAL
+   *  finding (a HIGH code-review finding or a CRITICAL security-audit
+   *  finding) that was waved through via --force or the gate-specific
+   *  --allow-*-failure flag — i.e. the gate's `outcome:'pass'` return does
+   *  NOT mean "nothing was found," it means "something was found and
+   *  bypassed." Distinct from `reviewVerifierFailure` (the verifier call
+   *  itself never returned): here the verifier ran and reported findings.
+   *  Required so `registry.ts`'s mock-identified-clean-pass abstention
+   *  (dec-20260809-004) does not mislabel a bypassed real finding as a
+   *  "clean pass" — a mock-identified pass is only abstained when this flag
+   *  is absent/false. */
+  reviewFindingsBypassed?: boolean;
   /** Phase 232: verifier identity that actually ran a gate (currently set
    *  only by `code-review`/`security-audit`), for the registry to merge onto
    *  that gate's persisted GateProvenance entry (`provider`/`model`) without
-   *  the registry importing gate-specific verifier types. */
-  verifierIdentity?: { family: string; model?: string };
+   *  the registry importing gate-specific verifier types.
+   *
+   *  Phase 263 (T3): `providerSelection` widens this internal runtime shape
+   *  additively, mirroring `GateProvenanceZ.providerSelection`
+   *  (`@thomas-powers-jr/cadence-types`) one level up the same three-value
+   *  enum. `'configured'`/`'fallback'` come from `verify/verifier-factory.ts`'s
+   *  universal tagging (threaded through untouched by the gate); `'empty-diff'`
+   *  is gate-level, diff-scoped knowledge only `code-review`/`security-audit`
+   *  compute themselves (T4) — this file does not compute either value, only
+   *  names the shape both producers (T3's tagging, T4's gates) write into. */
+  verifierIdentity?: {
+    family: string;
+    model?: string;
+    providerSelection?: 'configured' | 'fallback' | 'empty-diff';
+  };
 }
 
 /**

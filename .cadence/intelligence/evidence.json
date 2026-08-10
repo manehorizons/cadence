@@ -1718,6 +1718,139 @@
       "kind": "note",
       "summary": "Closing during v1.55.0 release-cut doc-sync pass, 2026-08-07: re-confirmed moot. Latest main Security audit run (18:18:19Z, post-phase-260) reports 'check-audit-exceptions: no high/critical advisories reported' -- none of this rec's 3 GHSA ids present, consistent with the phase-254 evidence note already on this rec. Archiving as resolved-as-side-effect (phase 253's override-floor refresh), not shipped, since no phase directly targeted these 3 advisories by name.",
       "createdAt": "2026-08-07T19:51:05.687Z"
+    },
+    {
+      "id": "ev-20260807-010",
+      "recommendationId": "rec-20260729-006",
+      "kind": "note",
+      "summary": "Correction (2026-08-07, phase 261 prep): the claim that this audit needs rec-20260729-004's fix landed first is stale. Phase 239 (PR #338, merged 2026-07-30) already shipped an opt-in phase-qualified token scheme; this repo's own .cadence/config.json already runs it, and cadence verify phase already trusts the 18 post-239 SUMMARY records correctly. The real gap: 255/273 settled SUMMARY records (93%) predate any recorded coverageScheme and phase-replay.ts deliberately returns indeterminate for all of them. Reachable population check: all 255 have DRAFTs with non-empty per-task files: lines (spot-checked phase 02), so a best-effort retroactive audit against those declared task files is fully viable. This is phase 261's actual scope.",
+      "createdAt": "2026-08-07T23:03:50.584Z"
+    },
+    {
+      "id": "ev-20260807-011",
+      "recommendationId": "rec-20260807-005",
+      "kind": "note",
+      "summary": "Confirmed live 2026-08-07 during phase 261 prep: config.ts:227,252,577 all default coverageScheme to 'bare'; only this repo's own .cadence/config.json overrides to phase-qualified.",
+      "createdAt": "2026-08-07T23:04:07.612Z"
+    },
+    {
+      "id": "ev-20260808-001",
+      "recommendationId": "rec-20260730-002",
+      "kind": "note",
+      "summary": "Empirically confirmed hitting this during phase 261 settle (2026-08-07): a literal, qualified 261-01/AC-5 token in a JSDoc comment (non-asserting) at the top of packages/core/tests/cli/verify-historical-coverage-audit.test.ts caused 'cadence settle run --auto' to refuse AC-5 with 'mentioned but not inside a recognized asserting test block', even though 4 real asserting it() blocks later in the same file genuinely reference 261-01/AC-5. Fix was removing the literal qualified token from the comment entirely (paraphrasing without the exact string) -- confirming the bug is real and not just theoretical. Additionally found a related, arguably separate defect: 'cadence verify coverage --explain AC-5' reported 'Overall: SATISFIED' for this exact file/AC combination while the real settle gate still refused it -- the diagnostic tool the gate's own refusal message tells operators to run to debug this class of failure gives a false-positive answer, which cost real debugging time. Worth scoping into this rec or filing as a follow-on.",
+      "createdAt": "2026-08-08T04:04:01.532Z"
+    },
+    {
+      "id": "ev-20260808-002",
+      "recommendationId": "rec-20260808-001",
+      "kind": "note",
+      "summary": "Independent fresh-context review of 262-01-DRAFT.md (2026-08-08) verified the 2026-07-27 incident (commit 127a06b0, v1.51.1 tag) via git log/tag inspection and confirmed a tag-distance check would catch the whole class, not just engines drift.",
+      "createdAt": "2026-08-08T14:33:57.934Z"
+    },
+    {
+      "id": "ev-20260808-003",
+      "recommendationId": "rec-20260808-002",
+      "kind": "note",
+      "summary": "packages/core/src/gates/assurance-record.ts's hasRealVerifier reads only provider:'mock' vs non-mock, discarding selection context available at the phase-243 banner call site; measured via HANDOFF-v1.56-verifier-honesty.md Phase L",
+      "createdAt": "2026-08-08T17:58:45.635Z"
+    },
+    {
+      "id": "ev-20260808-004",
+      "recommendationId": "rec-20260808-003",
+      "kind": "note",
+      "summary": "dec-20260801-003 already defines a three-settle convention with no mechanical tracker; rec-20260806-008 shows the trigger can already be met by degenerate single-fixture data, underscoring the counter needs organic post-flip settles, not manual conduction runs -- per dec-20260808-003",
+      "createdAt": "2026-08-08T17:58:45.804Z"
+    },
+    {
+      "id": "ev-20260808-005",
+      "recommendationId": "rec-20260808-004",
+      "kind": "note",
+      "summary": "phase 248 precedent for skipped+skipReason; deriveAssuranceRecord's hasRealVerifier/hasAnyVerifier interaction with a mock-abstained but provider:'mock'-carrying gate needs to be derived and tested per HANDOFF-v1.56-verifier-honesty.md Phase P",
+      "createdAt": "2026-08-08T17:58:45.974Z"
+    },
+    {
+      "id": "ev-20260808-006",
+      "recommendationId": "rec-20260808-005",
+      "kind": "note",
+      "summary": "packages/core/src/verify/mock-verifier.ts and code-review.ts:103 confirmed to have real, narrow, deterministic gate behavior per HANDOFF-v1.56-verifier-honesty.md §2; depends on Phase L's selection-mode field",
+      "createdAt": "2026-08-08T17:58:46.133Z"
+    },
+    {
+      "id": "ev-20260808-007",
+      "recommendationId": "rec-20260808-006",
+      "kind": "note",
+      "summary": "no existing init flow surfaces or records a provider choice; per HANDOFF-v1.56-verifier-honesty.md Phase N, verify against phase 246 onboard semantics before implementing",
+      "createdAt": "2026-08-08T17:58:46.299Z"
+    },
+    {
+      "id": "ev-20260808-008",
+      "recommendationId": "rec-20260808-007",
+      "kind": "note",
+      "summary": "grep -n 'verifierIdentity|result.provider|result.model' packages/core/src/gates/deep-verify.ts packages/core/src/gates/per-task-verify.ts (2026-08-08): deep-verify hits are deepVerify[]/deepVerifyMeta only, never flags.verifierIdentity; per-task-verify has zero hits",
+      "createdAt": "2026-08-08T19:31:59.976Z"
+    },
+    {
+      "id": "ev-20260808-009",
+      "recommendationId": "rec-20260806-010",
+      "kind": "note",
+      "summary": "Materialized in real CI, PR #388 (phase 263), 2026-08-08: test (windows-latest, 22) failed with 'Error: Test timed out in 120000ms' on tests/parse/summary-verify-sweep.test.ts's 257-01/AC-3 sweep, corpus now 275+ SUMMARY.json files (up from 269 at this rec's filing). Same run's macOS leg took 59.9s and Ubuntu 81.4s for the identical sweep -- both comfortably under 120s but Ubuntu already at 68% of the timeout budget, confirming linear-with-corpus-size growth is closing in on all three OS legs, not just Windows. Ubuntu was 35.6s for 269 files two days ago (2026-08-06); now 81.4s for 275 files -- a disproportionate jump versus pure file-count growth, worth investigating (concurrency contention? per-call CLI startup regression?) alongside deciding between this rec's two options (slower/nightly lane, or a real --all flag).",
+      "createdAt": "2026-08-08T21:35:21.128Z"
+    },
+    {
+      "id": "ev-20260809-001",
+      "recommendationId": "rec-20260809-001",
+      "kind": "note",
+      "summary": "Reproduced via a direct scanTestCoverage() call against phase 264's own worktree: AC-4 returned only the describe()-level non-qualifying ref (line 25) while cadence verify coverage --explain AC-4 independently found and reported satisfies:true for the it()-level refs at lines 26/30 in the same file, overall verdict SATISFIED -- yet settle run --auto refused, confirming the two code paths disagree because of the per-file first-match dedup in scanTestCoverage.",
+      "createdAt": "2026-08-09T00:24:39.319Z"
+    },
+    {
+      "id": "ev-20260809-002",
+      "recommendationId": "rec-20260809-002",
+      "kind": "note",
+      "summary": "main CI runs 31272510722 and 31240052177 both failed test (windows-latest, 22) on tests/hooks/dispatcher.test.ts:96:3, Test timed out in 90000ms; PR 389 run 31286150559 hit the identical failure with a diff that never touches hooks code",
+      "createdAt": "2026-08-09T00:59:47.672Z"
+    },
+    {
+      "id": "ev-20260809-003",
+      "recommendationId": "rec-20260809-002",
+      "kind": "note",
+      "summary": "Third-occurrence history found: this test's timeout was already remediated twice before. Phase 29.5 (commit 45177463, 2026-05-15) added a per-test 20000ms override after it timed out under the 5000ms vitest default. Phase 32.1 (commit 9e6e46f6, 2026-05-16) explicitly REVERTED that per-test override as a Per-Test Band-Aid and root-caused it into vitest.shared.ts's platform-aware global TIMEOUT_MS (20000 non-Windows). That value was itself raised to 90000ms for win32 specifically because of two consecutive dispatcher-cap timeouts at ~61s on windows-latest/Node22 (2026-07-22, PR #278 post-merge). PR 389 (phase 264, unrelated diff) now hit the identical test 3 times in a row (runs 31286150559 x3: jobs 93175252908, 93178484744, all Test timed out in 90000ms at tests/hooks/dispatcher.test.ts:96:3) -- i.e. it is now failing consistently at the SAME 90000ms ceiling that was raised specifically to fix this exact test. This is the third distinct remediation cycle for the same root cause (105 serial real-disk read-modify-write cycles), suggests Windows CI runner resource headroom has degraded again since the 2026-07-22 fix, and should be treated as higher priority than a first-time flake report.",
+      "createdAt": "2026-08-09T01:15:20.132Z"
+    },
+    {
+      "id": "ev-20260809-004",
+      "recommendationId": "rec-20260809-003",
+      "kind": "note",
+      "summary": "Flagged by phase 266's T2 independent reviewer while confirming the full suite was green; out of phase 266's declared task file scope (no task's files: list includes vitest.shared.ts), so not fixed inline.",
+      "createdAt": "2026-08-09T17:32:15.411Z"
+    },
+    {
+      "id": "ev-20260809-005",
+      "recommendationId": "rec-20260809-004",
+      "kind": "note",
+      "summary": "grep -n 'zero prompt' README.md packages/core/README.md both show the same stale comment at README.md:123 and packages/core/README.md:45",
+      "createdAt": "2026-08-09T18:58:15.218Z"
+    },
+    {
+      "id": "ev-20260809-006",
+      "recommendationId": "rec-20260809-005",
+      "kind": "note",
+      "summary": "prompter.ts:84-103's own docstring documents the settle-side instance and defers the fix (Phase 174); init.ts's whole-branch review (phase 265) independently found and locally fixed a second instance in cadence init",
+      "createdAt": "2026-08-09T18:58:31.146Z"
+    },
+    {
+      "id": "ev-20260809-007",
+      "recommendationId": "rec-20260809-006",
+      "kind": "note",
+      "summary": "phase 265's DRAFT AC-5 deliberately scoped only the no-reprompt half after advisor review; rec-20260808-006's shipped promotion notes this remainder explicitly rather than overclaiming full delivery",
+      "createdAt": "2026-08-09T18:58:44.809Z"
+    },
+    {
+      "id": "ev-20260810-001",
+      "recommendationId": "rec-20260810-001",
+      "kind": "note",
+      "summary": "Verified live 2026-08-09: run-demo.sh exits 1 at both settle attempts with 'coverage: 01-01/AC-1 has no linked test' etc. on this worktree's build AND an independent main-commit-2c4fa616 build (byte-identical). git diff main -- examples/demo-test-gutting/ is empty. Two candidate fixes (operator's call): add coverageScheme:'bare' to the script's post-init config patch (mirrors fixtures.ts:47), or update the 3 fixture files to 01-01/AC-N tokens.",
+      "createdAt": "2026-08-10T00:01:02.402Z"
     }
   ]
 }

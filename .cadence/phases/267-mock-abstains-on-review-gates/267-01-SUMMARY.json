@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 2,
+  "draftId": "267-01",
+  "completedAt": "2026-08-10T01:56:57.831Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-6",
+      "pass": true,
+      "evidence": "ai-verified"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "ran"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "ran"
+    },
+    {
+      "gate": "code-review",
+      "status": "ran",
+      "provider": "host-cli",
+      "providerSelection": "configured"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "REDONE 2026-08-09 per dec-20260809-004 (identity-at-recording, not no-dispatch) and dec-20260809-005 (mechanism split: registry.ts for code-review/security-audit, converge.ts shared sidecar for plan-review/spec-review/ui-spec-review). New baseline: 46 tests, 11 red / 35 green. Independent reviewer + main-thread re-verify both reproduced 11/35/46 exactly; full package suite (3941 tests elsewhere) unaffected. Reviewer caught and I fixed: DRAFT's T2 action text wrongly said plan-review is 'fired via registry.ts' (it isn't); two fixture docstrings overstated 'no provenance record of any kind' when a shared provider-carrying sidecar (converge.ts) already exists for all 3 non-registry families. AC-1/AC-2 coverage both satisfied."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Identity-at-recording via 2 mechanisms per dec-20260809-004/-005: registry.ts relabel (code-review/security-audit) + converge.ts shared-sidecar mockAbstained marker (plan-review/spec-review/ui-spec-review). Full suite 417/417 files, 3961/3961 tests, 0 failures -- proves the original 124-test regression is genuinely fixed, not moved. AC-1/AC-2 coverage satisfied across all 5 families. Independent reviewer empirically confirmed the trickiest edge case (bypassed-finding vs genuine-clean-pass discrimination) via a throwaway repro test. One necessary out-of-list file: gates/types.ts (additive GateFlags.reviewFindingsBypassed field), justified in DRAFT's As-built note."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "deriveAssuranceRecord: abstained gates still contribute to verifierRollup/hasAnyVerifier (doc-comment only, no logic change -- function was already status-agnostic). summary-render/summary-writer/verifier-label/doctor confirmed to need zero source changes. New tests: 3-way discrimination via real CLI subprocess calls. AC-3 satisfied. Also found+fixed a real pre-existing regression in tests/gates/boundary-regression.test.ts caused by T2's change (missed by 3 prior verification passes due to stale dist -- see T2's As-built correction note). Full suite re-verified fresh: 417/417 files, 3968/3968 tests, 0 failures (rebuilt dist immediately before this check)."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "cadence summary verify-all: 279 checked, 42 MATCH, 237 NO_HASH (informational), 0 failed. summary-verify-sweep.test.ts still passes 2/2. No historical summary touched by T1-T3 -- new provenance shapes only apply to future settles."
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "Tutorial confirmed working end-to-end (live run + 8 automated tests, all passing) -- unaffected, as predicted, since standard×quick-fix carries no review-family gate. Demo does not reach Settled, but confirmed PRE-EXISTING and unrelated to phase 267 (empty diff vs main; independent main-commit build reproduces byte-identical broken output). Filed rec-20260810-001 for the demo bug (Phase 239 coverageScheme default never propagated to the demo script). Also independently proved auto profile excludes code-review/security-audit via a real settle (distinct pre-existing skip path, never reaching phase 267's new code). No source changes -- verification-only task, nothing broken to fix."
+    },
+    {
+      "id": "T6",
+      "status": "DONE",
+      "notes": "Operator approved 'standard' (not strict) via explicit choice, 2026-08-09. Applied: .cadence/config.json profile auto->standard. Decision dec-20260810-001 recorded, closes dec-20260804-001's revisit trigger. conduction-reachability delta: code-review's 'blocked by profile' cleared (host-cli-backed, now genuinely reachable pending only self-invocation-guard); security-audit stays blocked (strict-only, declined). No new doctor errors."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "deepVerify": {
+    "AC-1": {
+      "pass": true,
+      "reason": "Registry relabels mock clean passes to skipped with a mock reason; converge sidecars persist abstained/false. Linked gate tests cover mock pass/refusal and dispatch continuity.",
+      "provider": "host-cli"
+    },
+    "AC-2": {
+      "pass": true,
+      "reason": "The registry branch relies on review verifierIdentity flags; linked discrimination/adversarial tests assert deep-verify remains ran and AC-linked mock verification still passes.",
+      "provider": "host-cli"
+    },
+    "AC-3": {
+      "pass": true,
+      "reason": "Linked assurance and renderer tests discriminate skipped mock abstention from real pass and absence; registry preserves provider provenance. Doctor is config-only and deliberately unchanged.",
+      "provider": "host-cli"
+    },
+    "AC-4": {
+      "pass": true,
+      "reason": "The added AC-4 test reuses the repo-wide summary verify sweep and asserts over 100 summaries checked, zero failures, and exit code 0.",
+      "provider": "host-cli"
+    },
+    "AC-5": {
+      "pass": true,
+      "reason": "Linked tutorial test exercises end-to-end completion. The supplied diff has no changes under examples/demo-test-gutting/, satisfying the narrowed unchanged-demo evidence bar.",
+      "provider": "host-cli"
+    },
+    "AC-6": {
+      "pass": true,
+      "reason": "Config flips auto to standard; decision records explicit operator approval, gate-cost consequences, and closure of dec-20260804-001. Linked test verifies both.",
+      "provider": "host-cli"
+    }
+  },
+  "deepVerifyMeta": {
+    "diffProvided": true,
+    "diffBytes": 73689,
+    "truncated": false,
+    "filesCount": 20,
+    "provider": "host-cli"
+  },
+  "codeReview": {},
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 126,
+    "sessionSubagentSpawns": 228
+  },
+  "assurance": {
+    "verifierRollup": [
+      {
+        "provider": "host-cli",
+        "gateCount": 1
+      }
+    ],
+    "evidenceTally": {
+      "ai-verified": 6,
+      "executed": 0,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "strong"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "38105a9d1ed3890332eac0b368d9494fe8e04f92cfc9740566cb788d03d08cf2"
+  }
+}

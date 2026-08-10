@@ -1,0 +1,89 @@
+{
+  "draftId": "267-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "REDONE 2026-08-09 per dec-20260809-004 (identity-at-recording, not no-dispatch) and dec-20260809-005 (mechanism split: registry.ts for code-review/security-audit, converge.ts shared sidecar for plan-review/spec-review/ui-spec-review). New baseline: 46 tests, 11 red / 35 green. Independent reviewer + main-thread re-verify both reproduced 11/35/46 exactly; full package suite (3941 tests elsewhere) unaffected. Reviewer caught and I fixed: DRAFT's T2 action text wrongly said plan-review is 'fired via registry.ts' (it isn't); two fixture docstrings overstated 'no provenance record of any kind' when a shared provider-carrying sidecar (converge.ts) already exists for all 3 non-registry families. AC-1/AC-2 coverage both satisfied.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/code-review.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/security-audit.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/plan-review.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/services/spec-approve.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/.cadence/phases/267-mock-abstains-on-review-gates/267-01-DRAFT.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/mock-abstention-code-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/mock-abstention-security-audit.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/mock-abstention-plan-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/verify/mock-abstention-spec-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/mock-abstention-registry.test.ts"
+      ],
+      "updatedAt": "2026-08-09T23:17:32.200Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Identity-at-recording via 2 mechanisms per dec-20260809-004/-005: registry.ts relabel (code-review/security-audit) + converge.ts shared-sidecar mockAbstained marker (plan-review/spec-review/ui-spec-review). Full suite 417/417 files, 3961/3961 tests, 0 failures -- proves the original 124-test regression is genuinely fixed, not moved. AC-1/AC-2 coverage satisfied across all 5 families. Independent reviewer empirically confirmed the trickiest edge case (bypassed-finding vs genuine-clean-pass discrimination) via a throwaway repro test. One necessary out-of-list file: gates/types.ts (additive GateFlags.reviewFindingsBypassed field), justified in DRAFT's As-built note.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/verify/converge.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/plan-review.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/services/spec-approve.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/repro.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/zz-repro-bypass-blindspot.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/types.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/code-review.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/security-audit.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/plan-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/registry.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/services/spec-approve.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/mock-abstention-plan-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/verify/mock-abstention-spec-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/__throwaway-267-review.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/.cadence/phases/267-mock-abstains-on-review-gates/267-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-09T23:49:30.122Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Tutorial confirmed working end-to-end (live run + 8 automated tests, all passing) -- unaffected, as predicted, since standard×quick-fix carries no review-family gate. Demo does not reach Settled, but confirmed PRE-EXISTING and unrelated to phase 267 (empty diff vs main; independent main-commit build reproduces byte-identical broken output). Filed rec-20260810-001 for the demo bug (Phase 239 coverageScheme default never propagated to the demo script). Also independently proved auto profile excludes code-review/security-audit via a real settle (distinct pre-existing skip path, never reaching phase 267's new code). No source changes -- verification-only task, nothing broken to fix.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/assurance-record.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/assurance-record.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/services/verifier-label.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/parse/summary-writer.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/cli/summary-render.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/doctor/run.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/.cadence/phases/267-mock-abstains-on-review-gates/267-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-10T00:01:47.224Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "deriveAssuranceRecord: abstained gates still contribute to verifierRollup/hasAnyVerifier (doc-comment only, no logic change -- function was already status-agnostic). summary-render/summary-writer/verifier-label/doctor confirmed to need zero source changes. New tests: 3-way discrimination via real CLI subprocess calls. AC-3 satisfied. Also found+fixed a real pre-existing regression in tests/gates/boundary-regression.test.ts caused by T2's change (missed by 3 prior verification passes due to stale dist -- see T2's As-built correction note). Full suite re-verified fresh: 417/417 files, 3968/3968 tests, 0 failures (rebuilt dist immediately before this check).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/tests/gates/boundary-regression.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/packages/core/src/gates/assurance-record.ts",
+        "/home/thomas/.claude/projects/-home-thomas-projects-cadence/memory/cadence-cli-tests-need-dist-rebuild.md",
+        "/home/thomas/.claude/projects/-home-thomas-projects-cadence/memory/MEMORY.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/.cadence/phases/267-mock-abstains-on-review-gates/267-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-10T00:16:44.556Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "cadence summary verify-all: 279 checked, 42 MATCH, 237 NO_HASH (informational), 0 failed. summary-verify-sweep.test.ts still passes 2/2. No historical summary touched by T1-T3 -- new provenance shapes only apply to future settles.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/.cadence/phases/267-mock-abstains-on-review-gates/267-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-10T00:17:34.444Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "Operator approved 'standard' (not strict) via explicit choice, 2026-08-09. Applied: .cadence/config.json profile auto->standard. Decision dec-20260810-001 recorded, closes dec-20260804-001's revisit trigger. conduction-reachability delta: code-review's 'blocked by profile' cleared (host-cli-backed, now genuinely reachable pending only self-invocation-guard); security-audit stays blocked (strict-only, declined). No new doctor errors.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/.cadence/config.json",
+        "/home/thomas/projects/cadence/.claude/worktrees/267-mock-abstains-review-gates/.cadence/phases/267-mock-abstains-on-review-gates/267-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-10T00:42:29.977Z"
+    }
+  }
+}

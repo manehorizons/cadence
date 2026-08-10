@@ -126,12 +126,18 @@ describe(
     expect(r.stderr).not.toMatch(/code-review:/);
 
     const sc = await readJson(active.root, SIDECAR);
-    expect(sc.converged).toBe(true);
+    // Phase 267 (267-01, dec-20260810-003): default init resolves code-review
+    // to mock, so a clean pass now persists `converged: false` +
+    // `verdict: 'abstained'` on CODE-REVIEW.json -- `r.code === 0` above (the
+    // real control-flow signal, and the settle that actually closed the
+    // loop) is unaffected.
+    expect(sc.converged).toBe(false);
     expect(sc.attempts).toBe(0);
     expect(sc.findings).toBe(0);
     expect(sc.history).toHaveLength(1);
-    expect(sc.history[0].verdict).toBe('pass');
-    expect(sc.history[0].pass).toBe(true);
+    expect(sc.history[0].verdict).toBe('abstained');
+    expect(sc.history[0].pass).toBe(false);
+    expect(sc.history[0].mockAbstained).toBe(true);
   });
 
   it('AC-2: HIGH no flag — reloop, exit 1, attempt 1/3, sidecar attempts:1, SUMMARY records the refusal (phase 170)', async () => {

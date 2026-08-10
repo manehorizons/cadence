@@ -20,8 +20,12 @@ import {
   planInit,
   renderInitPlan,
   resolveGateProfile,
+  resolveProviderSelection,
   suggestGateProfile,
+  type InitPlanOptions,
+  type ProviderSelectionSource,
 } from '../../init/plan.js';
+import { deriveProviderConsequence } from '../../init/provider-consequence.js';
 import {
   renderCiWorkflowYaml,
   parseGitHubOwnerRepo,
@@ -41,7 +45,7 @@ import { ensureGitignoreEntries } from '../../init/gitignore.js';
 import { maybeWireHost, hostWireDisplay } from '../../init/host-wire.js';
 import { draftNewService } from '../../services/draft-new.js';
 import type { CommandIO } from '../../services/io.js';
-import { planActivation } from '../../activate/plan.js';
+import { planActivation, type ActivationScope } from '../../activate/plan.js';
 import { setPath } from '../../config-edit/apply.js';
 import { renderAgentPrompt } from '../../agent-prompt/render.js';
 import {
@@ -49,6 +53,51 @@ import {
   StdinPrompter,
   type Prompter,
 } from '../../verify/prompter.js';
+import type { VerifierProvider } from '../../verify/verifier-factory.js';
+import { addIntelligenceDecision } from '../../intelligence/store/decisions.js';
+
+/** Phase 265 (T3) — every value `--verifier-provider` and the init prompt admit. */
+const VERIFIER_PROVIDERS: readonly VerifierProvider[] = ['mock', 'anthropic', 'local', 'host-cli'];
+
+function isVerifierProvider(v: string): v is VerifierProvider {
+  return (VERIFIER_PROVIDERS as readonly string[]).includes(v);
+}
+
+/** Empty answer defaults to `mock` (unshamed, first-class option); any
+ *  other unrecognized answer returns `null` so the caller can report it and
+ *  fall back rather than silently guessing. */
+function parseProviderAnswer(v: string): VerifierProvider | null {
+  if (v.length === 0) return 'mock';
+  return isVerifierProvider(v) ? v : null;
+}
+
+/** Where the provider resolution ended up coming from — used both for the
+ *  "real verification on" summary line and the decision-record rationale.
+ *  `prompt-invalid` (phase 265, T3 review finding) is distinct from
+ *  `default`: a prompter WAS available and WAS invoked, but the operator's
+ *  answer wasn't a recognized provider name, so it fell back to mock. That
+ *  is a materially different story from "no prompter available" and the
+ *  ledger rationale must say so honestly.
+ *
+ *  Whole-branch review fix (phase 265, Minor finding): `'flag' | 'activate'
+ *  | 'full'` used to be re-listed here as independent string literals,
+ *  duplicating T1's already-exported `ProviderSelectionSource` (plan.ts).
+ *  Deriving from it instead means a future rename of one of those three
+ *  values in T1's type surfaces as a compiler error here, not silent drift. */
+type ProviderResolutionSource =
+  | ProviderSelectionSource
+  | 'prompt'
+  | 'prompt-invalid'
+  | 'default';
+
+const PROVIDER_RESOLUTION_SOURCE_LABEL: Record<ProviderResolutionSource, string> = {
+  flag: '--verifier-provider',
+  activate: '--activate',
+  full: '--full',
+  prompt: 'the interactive init prompt',
+  'prompt-invalid': 'an unrecognized answer to the interactive init prompt (defaulted to mock)',
+  default: 'no prompter available (non-interactive default)',
+};
 
 /**
  * Build a prompter the same way `draft.ts approve` does: a scripted prompter
@@ -180,6 +229,10 @@ export function registerInitCommand(program: Command): void {
       'turn on real verification when ANTHROPIC_API_KEY is present (writes verifier.provider=anthropic; never stores the key)',
     )
     .option(
+      '--verifier-provider <provider>',
+      'mock | anthropic | local | host-cli — explicit choice, wins over --activate/--full and over prompting',
+    )
+    .option(
       '--dry-run',
       'preview what init would resolve and write (a fit-check) without touching the repo',
     )
@@ -201,11 +254,35 @@ export function registerInitCommand(program: Command): void {
         skipHostWire?: boolean;
         demo?: boolean;
         activate?: boolean;
+        verifierProvider?: string;
         dryRun?: boolean;
         full?: boolean;
       }) => {
         const cwd = process.cwd();
         const cadenceDir = join(cwd, '.cadence');
+
+        // Whole-branch review fix (phase 265, Important finding): a single
+        // prompter shared across both possible interactive steps in one
+        // `init` run — the provider-selection prompt below and
+        // `maybeWireHost`'s host-wire prompt further down. `makePrompter()`
+        // builds a brand-new `ScriptedPrompter` (cursor reset to 0 on every
+        // call) or `StdinPrompter` (a new readline interface) every time
+        // it's invoked; calling it twice in one run silently desyncs a
+        // `CADENCE_PROMPTER_SCRIPT` script between the two prompts — the
+        // host-wire question would receive whatever the FIRST scripted
+        // answer was, not the one actually intended for it. Lazily created
+        // (never built when neither step ends up needing one, e.g. the
+        // provider resolved via a flag and .claude/ isn't present) and
+        // memoized so at most one instance ever exists per run; closed
+        // exactly once, at the very end of the run, after both possible
+        // uses (see the host-wire step's `finally` further down).
+        let sharedPrompter: Prompter | null | undefined;
+        function getPrompter(): Prompter | null {
+          if (sharedPrompter === undefined) {
+            sharedPrompter = makePrompter();
+          }
+          return sharedPrompter;
+        }
 
         // Phase 188 — `--full` sets *defaults* for --wire-host/--demo/--activate;
         // an explicitly-passed flag (including a negative one like
@@ -213,7 +290,6 @@ export function registerInitCommand(program: Command): void {
         // --full-implied default (AC-5).
         const effectiveWireHost = opts.wireHost ?? opts.full;
         const effectiveDemo = opts.demo ?? opts.full;
-        const effectiveActivate = opts.activate ?? opts.full;
 
         // rec-20260602-001: --profile was a misnomer (it sets a config preset,
         // not a gate profile). --preset is the primary flag; --profile lives on
@@ -231,6 +307,27 @@ export function registerInitCommand(program: Command): void {
           return;
         }
 
+        // Phase 265 (T3) — validate --verifier-provider the same way --host
+        // is validated just above: reject unknown values with a clear
+        // stderr message + exit 2, before reaching --dry-run's early return
+        // (matches --host's own precedent of validating ahead of it).
+        if (opts.verifierProvider !== undefined && !isVerifierProvider(opts.verifierProvider)) {
+          console.error(
+            `Unknown --verifier-provider: ${opts.verifierProvider} (expected mock|anthropic|local|host-cli)`,
+          );
+          process.exit(2);
+          return;
+        }
+        // InitPlanOptions-typed view of `opts`, narrowing verifierProvider
+        // from the raw CLI string to the validated VerifierProvider union.
+        // Shared by --dry-run's planInit call and the real
+        // resolveProviderSelection call below so the two can never disagree
+        // about what was passed.
+        const planOpts: InitPlanOptions = {
+          ...opts,
+          verifierProvider: opts.verifierProvider as VerifierProvider | undefined,
+        };
+
         // Phase 132 (rec-20260619-005) — --dry-run fit check. Resolve everything
         // init would resolve, print the preview, and write NOTHING. Takes
         // precedence over --claude-md, and previews (never exit-2 refuses) on an
@@ -239,7 +336,7 @@ export function registerInitCommand(program: Command): void {
           try {
             const plan = planInit(
               cwd,
-              opts,
+              planOpts,
               process.env,
               process.stdin.isTTY ?? false,
             );
@@ -398,28 +495,103 @@ export function registerInitCommand(program: Command): void {
           );
         }
 
-        // Phase 110 — fold activation into init. With --activate and a present
-        // ANTHROPIC_API_KEY, wire real verification (deep-verify seam) via the
-        // shared activate seam; the key is never persisted (only the provider
-        // name is written). No live ping here — that stays in `cadence activate`.
-        const hasAnthropicKey =
-          typeof process.env.ANTHROPIC_API_KEY === 'string' &&
-          process.env.ANTHROPIC_API_KEY.length > 0;
+        // Phase 265 (T1/T3, AC-1/AC-2/AC-3) — resolve the verifier provider
+        // explicitly: an explicit --verifier-provider flag, --activate/
+        // --full (unchanged anthropic-if-keyed-else-mock rule — T1's
+        // resolver applies exactly the rule this block used to apply
+        // inline, phase 110), an interactive prompt when a prompter is
+        // available and no flag settled it outright, or a silent
+        // default-mock (D-B: never coerced onto a real provider). The key
+        // is never persisted (only the provider name is written); no live
+        // ping here — that stays in `cadence activate`. Replaces the old
+        // hasAnthropicKey-only block.
+        const selection = resolveProviderSelection(
+          planOpts,
+          process.env,
+          Boolean(process.stdin.isTTY),
+        );
+
+        let resolvedProvider: VerifierProvider = presetCfg.verifier.provider;
+        let resolvedScope: ActivationScope = 'deep-verify';
+        let resolvedSource: ProviderResolutionSource = 'default';
+        // Preserved for back-compat: these two drive the pre-existing
+        // --activate/--full messaging (the "Real verification on" block
+        // below, and the --full summary block further down) exactly as
+        // before — only ever set from an --activate/--full resolution,
+        // matching what the old inline block computed.
         let activatedProvider: 'anthropic' | null = null;
         let activateNoKey = false;
-        if (effectiveActivate) {
-          if (hasAnthropicKey) {
-            const plan = planActivation({
-              provider: 'anthropic',
-              scope: 'deep-verify',
-              currentConfig: cfg as CadenceConfig,
-            });
-            for (const c of plan.changes) {
-              setPath(cfg as Record<string, unknown>, [c.seam, 'provider'], c.to);
+
+        if (selection.action === 'use') {
+          resolvedProvider = selection.provider;
+          resolvedScope = selection.scope;
+          resolvedSource = selection.source;
+          if (selection.source === 'activate' || selection.source === 'full') {
+            if (selection.provider === 'anthropic') activatedProvider = 'anthropic';
+            else activateNoKey = true;
+          }
+        } else if (selection.action === 'prompt') {
+          // AC-1: mirrors activate.ts's readlinePrompt shape (mock listed
+          // as a normal, unshamed option) but built on the shared
+          // makePrompter()/Prompter seam instead of raw readline, so
+          // CADENCE_PROMPTER_SCRIPT-driven tests exercise the same prompt
+          // logic a real TTY does.
+          //
+          // Whole-branch review fix (phase 265, Important finding): this
+          // prompter is shared with `maybeWireHost`'s host-wire prompt
+          // further down via `getPrompter()`'s memoization, and is closed
+          // exactly once, after both possible uses — deliberately NOT here.
+          // Closing it here (the old behavior) left the host-wire step's own
+          // `makePrompter()` call building a second, independent,
+          // cursor-reset instance — see `getPrompter()`'s comment above.
+          const prompter = getPrompter();
+          if (prompter !== null) {
+            const providerAns = (
+              await prompter.ask(
+                'Verifier provider for deep-verify [mock/anthropic/local/host-cli] (default: mock): ',
+              )
+            ).trim();
+            const chosen = parseProviderAnswer(providerAns);
+            if (chosen !== null) {
+              resolvedProvider = chosen;
+              resolvedSource = 'prompt';
+              const broadenAns = (
+                await prompter.ask('Enable the other verifier gates too? [y/N]: ')
+              )
+                .trim()
+                .toLowerCase();
+              resolvedScope = broadenAns === 'y' || broadenAns === 'yes' ? 'all' : 'deep-verify';
+            } else {
+              console.error(
+                `Not a provider: ${providerAns} (expected mock|anthropic|local|host-cli) — defaulting to mock.`,
+              );
+              // Review finding (phase 265, T3): a prompter WAS available
+              // and WAS invoked here — only the answer was unrecognized.
+              // Leaving `resolvedSource` at its 'default' initial value
+              // would make the decision-record rationale below falsely
+              // claim "no prompter available (non-interactive default)".
+              // `prompt-invalid` keeps that rationale honest without
+              // being indistinguishable from a genuine valid mock
+              // selection made through the prompt (`'prompt'`).
+              resolvedSource = 'prompt-invalid';
             }
-            activatedProvider = 'anthropic';
-          } else {
-            activateNoKey = true;
+          }
+          // else: a prompter should always be available whenever the
+          // resolver says 'prompt' — they share the same availability
+          // predicate (isTTY || CADENCE_PROMPTER_SCRIPT). If it's ever null
+          // anyway (e.g. StdinPrompter's constructor throwing), fall
+          // through to the default-mock resolution already set above
+          // rather than crashing init.
+        }
+
+        {
+          const plan = planActivation({
+            provider: resolvedProvider,
+            scope: resolvedScope,
+            currentConfig: cfg as CadenceConfig,
+          });
+          for (const c of plan.changes) {
+            setPath(cfg as Record<string, unknown>, [c.seam, 'provider'], c.to);
           }
         }
 
@@ -495,6 +667,32 @@ export function registerInitCommand(program: Command): void {
           }
         }
 
+        // Phase 265 (T3, AC-3) — record the resolved provider selection as
+        // a retrievable intelligence-ledger decision on every completed
+        // init run: interactive, explicit-flag, --activate/--full, or
+        // defaulted-mock. Deliberately WITHOUT a recommendationId —
+        // rec-20260808-006 only exists in this repo's own ledger; passing
+        // any id would throw "unknown recommendation" in every consumer
+        // repo that runs `cadence init`. Best-effort: init's core job
+        // (scaffolding the repo) must not be blocked by a ledger-write
+        // failure — but per this repo's "Quiet Fallback" rule, a failure
+        // here prints a loud stderr notice rather than being silently
+        // swallowed.
+        try {
+          await addIntelligenceDecision(cwd, {
+            title: `cadence init: verifier provider selection (${resolvedProvider}, scope: ${resolvedScope})`,
+            rationale:
+              `Resolved via ${PROVIDER_RESOLUTION_SOURCE_LABEL[resolvedSource]}. ` +
+              deriveProviderConsequence(resolvedProvider, gateProfile),
+          });
+        } catch (err) {
+          console.error(
+            `cadence init: could not record the provider-selection decision (${
+              err instanceof Error ? err.message : String(err)
+            }) — continuing; the scaffold itself is unaffected.`,
+          );
+        }
+
         // Legacy line — retained for back-compat ahead of the summary block.
         console.log(
           `Initialized CADENCE in ${cadenceDir} (profile=${preset})`,
@@ -564,12 +762,18 @@ export function registerInitCommand(program: Command): void {
           console.log(`    cadence settle run --ac AC-1=pass`);
         }
         console.log('');
-        if (activatedProvider) {
+        if (resolvedProvider !== 'mock') {
           console.log(`  Real verification on`);
           console.log(`  ────────────────────`);
-          console.log(
-            `  ✓ real verification on: ${activatedProvider} (deep-verify) — ANTHROPIC_API_KEY detected.`,
-          );
+          if (activatedProvider) {
+            console.log(
+              `  ✓ real verification on: ${activatedProvider} (deep-verify) — ANTHROPIC_API_KEY detected.`,
+            );
+          } else {
+            console.log(
+              `  ✓ real verification on: ${resolvedProvider} (scope: ${resolvedScope}) — chosen via ${PROVIDER_RESOLUTION_SOURCE_LABEL[resolvedSource]}.`,
+            );
+          }
           console.log(`  Watch it judge your work:  cadence settle run --deep`);
         } else {
           console.log(`  Turn on real verification`);
@@ -599,8 +803,13 @@ export function registerInitCommand(program: Command): void {
           console.log(`  ${flipNotice}`);
         }
 
-        // Phase 108 — auto-wire the Claude Code host when .claude/ is present.
-        const prompter = makePrompter();
+        // Phase 108 — auto-wire the Claude Code host when .claude/ is
+        // present. Whole-branch review fix (phase 265): reuses the same
+        // prompter instance the provider-selection prompt above may already
+        // have created — `getPrompter()` is memoized, so this is the ONLY
+        // `makePrompter()` call site actually reached on a run that never
+        // needed a prompter earlier (e.g. the provider resolved via a flag).
+        const prompter = getPrompter();
         let hostWire: { wired: boolean; offered: boolean };
         try {
           hostWire = await maybeWireHost(
@@ -608,7 +817,38 @@ export function registerInitCommand(program: Command): void {
             { wireHost: effectiveWireHost, skipHostWire: opts.skipHostWire, host: opts.host },
             prompter,
           );
+        } catch (err) {
+          // Whole-branch review fix (phase 265, second pass, blocking
+          // finding): a `CADENCE_PROMPTER_SCRIPT` written for the
+          // pre-existing single host-wire `[Y/n]` prompt (e.g. `'y'`) now
+          // gets consumed by the NEW provider-selection prompt above
+          // instead — an unrecognized provider answer falls into the
+          // `prompt-invalid` branch, which asks no broaden follow-up, so
+          // only one answer is used there but the script is still left
+          // exhausted by the time this step's own `prompter.ask(...)`
+          // runs. `ScriptedPrompter` throws rather than hanging or
+          // silently returning a default (see `prompter.ts`). Host wiring
+          // is a best-effort convenience step and the scaffold above is
+          // already fully written by this point — per this repo's "Quiet
+          // Fallback" rule (mirrors the `addIntelligenceDecision` try/catch
+          // above), this degrades loudly via stderr instead of letting the
+          // exception propagate and crash the whole `cadence init` run,
+          // which would otherwise leave a half-initialized, non-idempotent
+          // `.cadence/` behind (a retry would then hit "already
+          // initialized"). `offered: false` here is deliberately not a
+          // guess at `true` — this catch cannot know whether
+          // `maybeWireHost` had already decided to offer before failing.
+          hostWire = { wired: false, offered: false };
+          console.error(
+            `cadence init: could not complete host wiring (${
+              err instanceof Error ? err.message : String(err)
+            }) — continuing; the scaffold itself is unaffected. Wire the host manually when ready:`,
+          );
+          console.error(`  ${hostWireDisplay(opts.host === 'codex' ? 'codex' : 'claude')}`);
         } finally {
+          // Single close point for the whole run — covers both this step
+          // and the provider-selection prompt above, which deliberately
+          // does not close its own prompter (see the comment there).
           await prompter?.close?.();
         }
         if (hostWire.offered && !hostWire.wired) {
@@ -652,11 +892,35 @@ export function registerInitCommand(program: Command): void {
             : effectiveDemo
               ? 'skipped: could not seed the --demo phase; scaffold is intact'
               : 'skipped: --demo not requested';
-          const activationLine = activatedProvider
-            ? `done: ${activatedProvider}`
-            : activateNoKey
-              ? 'skipped: no ANTHROPIC_API_KEY — staying on mock'
-              : 'skipped: --activate not requested';
+          // Review finding (phase 265, T3): `activatedProvider`/`activateNoKey`
+          // are only ever set from an --activate/--full resolution
+          // (source === 'activate' || 'full'), but an explicit
+          // --verifier-provider flag resolves with source === 'flag' and
+          // correctly wins over --full (see the "Real verification on"
+          // block above, and resolveProviderSelection's own precedence).
+          // Without this branch, --full --verifier-provider <x> would fall
+          // through to "skipped: --activate not requested" directly under a
+          // block that just said real verification WAS turned on —
+          // self-contradicting, user-visible output. Checked first so any
+          // flag-driven resolution always wins this line, matching the same
+          // precedence already honored everywhere else.
+          //
+          // Whole-branch review fix (phase 265, Minor finding): this used to
+          // additionally guard on `&& resolvedProvider !== 'mock'`, which
+          // mischaracterized `--full --verifier-provider mock` — an explicit
+          // choice — as "skipped: --activate not requested", as if it were
+          // never requested at all. `done: mock (via --verifier-provider)`
+          // already describes an explicit mock choice honestly, exactly as
+          // it does for any other explicit provider, so the guard is simply
+          // dropped rather than special-cased.
+          const activationLine =
+            resolvedSource === 'flag'
+              ? `done: ${resolvedProvider} (via --verifier-provider)`
+              : activatedProvider
+                ? `done: ${activatedProvider}`
+                : activateNoKey
+                  ? 'skipped: no ANTHROPIC_API_KEY — staying on mock'
+                  : 'skipped: --activate not requested';
           const summaryTitle = 'Full setup summary';
           console.log('');
           console.log(`  ${summaryTitle}`);

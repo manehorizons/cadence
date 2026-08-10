@@ -1,4 +1,4 @@
-import { MOCK_VERIFIER_NOTICE } from '@thomas-powers-jr/cadence-types';
+import { MOCK_VERIFIER_NOTICE, MOCK_VERIFIER_CAPABILITY } from '@thomas-powers-jr/cadence-types';
 import { discoverKey } from '../activate/key-discovery.js';
 import { HostCliError } from './host-cli-client.js';
 
@@ -120,6 +120,7 @@ export const MOCK_FALLBACK_BANNER = [
   '',
   `  ⚠  ${MOCK_VERIFIER_NOTICE.label.toUpperCase()}`,
   `     ${MOCK_VERIFIER_NOTICE.message}`,
+  `     ${MOCK_VERIFIER_CAPABILITY.message}`,
   `     ${PROVIDERS_DOC}`,
   '',
 ].join('\n');
@@ -139,6 +140,7 @@ function buildDowngradeBanner(reason: string): string {
     `  ⚠  ${MOCK_VERIFIER_NOTICE.label.toUpperCase()}`,
     `     ${reason}`,
     `     ${MOCK_VERIFIER_NOTICE.message}`,
+    `     ${MOCK_VERIFIER_CAPABILITY.message}`,
     `     ${PROVIDERS_DOC}`,
     '',
   ].join('\n');
@@ -174,58 +176,143 @@ export function buildForeignBinaryBanner(runningBinaryPath: string, repoToplevel
 }
 
 /**
- * Phase 165 T3 — wraps a `host-cli`-backed verifier instance so that a
- * `HostCliError` (binary not found, spawn failure, non-zero exit, unparseable
- * output — see `host-cli-client.ts`) thrown/rejected by any of its methods is
- * caught and the call is transparently redirected to `fallback`'s
- * same-named method instead of crashing the gate or hanging.
+ * Phase 263 (T3): the two epistemically distinct states `verifier-factory.ts`
+ * itself can determine about a verify()-family result — a
+ * deliberately-configured provider, or one that silently fell back to mock
+ * (at selection time in `createVerifierFactory`'s three synchronous branches,
+ * or at call time in `wrapWithFallback`'s Proxy catch below). The third state
+ * `GateProvenanceZ.providerSelection` accepts, `'empty-diff'`, is gate-level,
+ * diff-scoped knowledge (touchedFiles non-empty but the diff is empty) that
+ * only `code-review`/`security-audit` can compute (263-01 T4) — this module
+ * never produces it.
+ */
+type ProviderSelectionTag = 'configured' | 'fallback';
+
+/**
+ * Phase 263 (T3): tags a verify()-family result with `providerSelection`,
+ * additively and invisibly to structural equality. `V` (and therefore the
+ * shape of a verify() result) is generic and unknown to this module — every
+ * verifier family publishes its own result interface — so rather than widen
+ * all seven, this defines the property NON-ENUMERABLE directly on the
+ * resolved result object.
+ *
+ * Non-enumerable is deliberate, not incidental: every downstream persistence
+ * call site (this phase's gates/plan-review.ts, services/spec-approve.ts,
+ * gates/code-review.ts, gates/security-audit.ts) reads the tag by exact name
+ * (`result.providerSelection`), which a non-enumerable property still
+ * supports — but this repo has pre-existing tests (`verifier-factory.test.ts`
+ * "host-cli fallback wrapping" block, predating this phase) asserting a
+ * call-time-fallback result via `toEqual({...})` with NO `providerSelection`
+ * key. `toEqual`, `JSON.stringify`, and object-spread all skip non-enumerable
+ * own properties, so those pre-existing exact-shape assertions keep passing
+ * unmodified while every new named read below still resolves correctly — a
+ * plain `Object.assign`/spread (enumerable by default) breaks the former.
+ *
+ * Best-effort, matching this codebase's "introspection never throws"
+ * convention: a frozen/non-extensible result object can't accept a new
+ * property at all; that's a reason to skip the tag, never a reason to crash
+ * a gate over provenance metadata. `configurable: true` lets sticky
+ * re-tagging (`wrapWithFallback` below) redefine the property on a result
+ * object more than once, though in practice each call produces a fresh one.
+ */
+function tagProviderSelection<T>(result: T, tag: ProviderSelectionTag): T {
+  if (result !== null && typeof result === 'object') {
+    try {
+      Object.defineProperty(result, 'providerSelection', {
+        value: tag,
+        enumerable: false,
+        configurable: true,
+      });
+    } catch {
+      /* best-effort — a frozen/non-extensible result simply keeps no tag */
+    }
+  }
+  return result;
+}
+
+/**
+ * Phase 165 T3, extended by Phase 263 T3 — wraps a verifier instance so that
+ * every method call's resolved result carries `providerSelection`
+ * (`tagProviderSelection` above), and — when `fallbackOpts` is supplied —
+ * a `HostCliError` (binary not found, spawn failure, non-zero exit,
+ * unparseable output — see `host-cli-client.ts`) thrown/rejected by any of
+ * its methods is caught and the call is transparently redirected to
+ * `fallbackOpts.fallback`'s same-named method instead of crashing the gate
+ * or hanging. `createVerifierFactory` calls this on EVERY return path — the
+ * three real-provider builds, the three selection-time mock downgrades, and
+ * the plain `spec.mock()` explicit-mock/host-cli branches — not only the
+ * `host-cli` family, since 263-01's tagging computation is universal across
+ * all seven verifier seams (only `fallbackOpts` — real call-time delegation
+ * — is `host-cli`-specific).
  *
  * `V` is generic and unknown to this module — each verifier family
  * (`PerTaskVerifier`, `CodeReviewVerifier`, `Verifier`, …) defines its own
  * interface shape, and `verifier-factory.ts` must work for all of them
- * without per-family edits (boundary: only this file + its test may change
- * for T3). Rather than hardcoding a method name like `verify`, this wraps
- * *every* function-valued property behind a `Proxy`: whichever method the
- * caller invokes, a synchronous throw or a rejected `Promise` carrying a
- * `HostCliError` triggers one warning (mirroring the `anthropic`/`local`
- * prerequisite-missing warnings above) and a delegate call to the same
- * method on `fallback`. Non-`HostCliError` failures (e.g. the repair-retry
- * harness exhausting retries on genuinely bad model output) are real
- * verification failures, not host-cli-availability problems, and are left to
- * propagate unchanged.
+ * without per-family edits. Rather than hardcoding a method name like
+ * `verify`, this wraps *every* function-valued property behind a `Proxy`:
+ * whichever method the caller invokes, a synchronous throw or a rejected
+ * `Promise` carrying a `HostCliError` triggers one warning (mirroring the
+ * `anthropic`/`local` prerequisite-missing warnings above) and a delegate
+ * call to the same method on `fallbackOpts.fallback`. Non-`HostCliError`
+ * failures (e.g. the repair-retry harness exhausting retries on genuinely bad
+ * model output) are real verification failures, not host-cli-availability
+ * problems, and are left to propagate unchanged.
  *
- * This can only run lazily, at actual call time — unlike the `anthropic`/
- * `local` branches, whether the host CLI binary exists or is authenticated
- * can't be determined synchronously without a blocking probe on every
- * selection (see the `host-cli` branch below), so the warning fires on first
- * failed call rather than at selection time. No timers/delays are added
- * here, so a caller awaiting the wrapped method never waits longer than the
- * underlying primary + fallback calls themselves take.
+ * The call-time fallback check can only run lazily, at actual call time —
+ * unlike the `anthropic`/`local` branches, whether the host CLI binary exists
+ * or is authenticated can't be determined synchronously without a blocking
+ * probe on every selection (see the `host-cli` branch below), so the warning
+ * fires on first failed call rather than at selection time. No timers/delays
+ * are added here, so a caller awaiting the wrapped method never waits longer
+ * than the underlying primary + fallback calls themselves take.
+ *
+ * Sticky-per-instance state (263-01 AC-2): `stuckFallback` starts `true` iff
+ * `initialTag === 'fallback'` (a selection-time downgrade already happened)
+ * and flips permanently `true` the first time any call on THIS Proxy falls
+ * back at call time — every later call on the same instance, even one that
+ * itself succeeds on the primary provider, is then tagged `'fallback'` too
+ * (any-fallback-wins, not last-write-wins; see the "multi-call-in-one-run"
+ * test in `verifier-factory.test.ts`). This is deliberately per-instance
+ * state, not global/module-level: every context builder that selects a
+ * verifier (`buildSettleContext`/`buildDraftContext` in
+ * services/settle.ts/gates/draft-context.ts, `spec-approve-ports.ts`'s
+ * `resolveSpecReviewPort`/`resolveUiSpecReviewPort`) allocates a fresh
+ * instance per settle/gate/approve invocation — including under
+ * `cadence mcp serve`, whose tool handlers (`mcp/tools.ts`) call
+ * `settleService`/`specApproveService`/draft-approve fresh per tool call with
+ * no injected long-lived verifier ports — so no caller anywhere holds one
+ * instance across multiple logical runs for this sticky state to leak across.
  */
 function wrapWithFallback<V>(
   primary: V,
-  fallback: V,
-  warn: (message: string) => void,
-  label: string,
+  initialTag: ProviderSelectionTag,
+  fallbackOpts?: { fallback: V; warn: (message: string) => void; label: string },
 ): V {
   // `V` is unconstrained at the `createVerifierFactory<C, V>` call site (any
   // verifier family's interface), but every family's builder in practice
   // returns a plain object/class instance — `Proxy` requires an object
   // target, so narrow via a local cast rather than constraining the exported
   // generic (which would ripple into every `VerifierFactorySpec<C, V>` usage).
-  const fallbackObj = fallback as object;
+  let stuckFallback = initialTag === 'fallback';
+  const targetObj = primary as object;
 
   const delegateToFallback = (prop: PropertyKey, args: unknown[], err: unknown): unknown => {
-    if (!(err instanceof HostCliError)) throw err;
-    warn(
-      `${label}: host-cli provider failed (${err.reason}: ${err.message}) — falling back to mock provider for this call.`,
+    if (!fallbackOpts || !(err instanceof HostCliError)) throw err;
+    stuckFallback = true;
+    fallbackOpts.warn(
+      `${fallbackOpts.label}: host-cli provider failed (${err.reason}: ${err.message}) — falling back to mock provider for this call.`,
     );
+    const fallbackObj = fallbackOpts.fallback as object;
     const fallbackFn = Reflect.get(fallbackObj, prop, fallbackObj);
     if (typeof fallbackFn !== 'function') throw err;
-    return Reflect.apply(fallbackFn as (...a: unknown[]) => unknown, fallbackObj, args);
+    const result = Reflect.apply(fallbackFn as (...a: unknown[]) => unknown, fallbackObj, args);
+    if (result instanceof Promise) {
+      return result.then((r: unknown) => tagProviderSelection(r, 'fallback'));
+    }
+    return tagProviderSelection(result, 'fallback');
   };
 
-  return new Proxy(primary as object, {
+  return new Proxy(targetObj, {
     get(target, prop, receiver) {
       const value = Reflect.get(target, prop, receiver);
       if (typeof value !== 'function') return value;
@@ -237,9 +324,11 @@ function wrapWithFallback<V>(
           return delegateToFallback(prop, args, err);
         }
         if (result instanceof Promise) {
-          return result.catch((err: unknown) => delegateToFallback(prop, args, err));
+          return result
+            .then((r: unknown) => tagProviderSelection(r, stuckFallback ? 'fallback' : 'configured'))
+            .catch((err: unknown) => delegateToFallback(prop, args, err));
         }
-        return result;
+        return tagProviderSelection(result, stuckFallback ? 'fallback' : 'configured');
       };
     },
   }) as V;
@@ -263,17 +352,20 @@ export function createVerifierFactory<C, V>(
             `${spec.label}: anthropic provider requested but ANTHROPIC_API_KEY is unset (a Claude Code/IDE login does not satisfy this — anthropic calls the Anthropic SDK directly and needs a separately API-billed key) — falling back to mock provider.`,
           ),
         );
-        return spec.mock();
+        return wrapWithFallback(spec.mock(), 'fallback');
       }
       const model = slice?.model;
-      return spec.anthropic({
-        apiKey,
-        ...(model ? { model } : {}),
-        ...(slice?.timeoutMs !== undefined ? { timeout: slice.timeoutMs } : {}),
-        ...(slice?.maxRetries !== undefined
-          ? { maxRetries: slice.maxRetries }
-          : {}),
-      });
+      return wrapWithFallback(
+        spec.anthropic({
+          apiKey,
+          ...(model ? { model } : {}),
+          ...(slice?.timeoutMs !== undefined ? { timeout: slice.timeoutMs } : {}),
+          ...(slice?.maxRetries !== undefined
+            ? { maxRetries: slice.maxRetries }
+            : {}),
+        }),
+        'configured',
+      );
     }
 
     if (provider === 'local') {
@@ -285,11 +377,14 @@ export function createVerifierFactory<C, V>(
             `${spec.label}: local provider requested but CADENCE_LOCAL_BASE_URL / model unset — falling back to mock provider.`,
           ),
         );
-        return spec.mock();
+        return wrapWithFallback(spec.mock(), 'fallback');
       }
       const localApiKey = discoverKey('CADENCE_LOCAL_API_KEY', env, cwd).value;
       const headers = buildLocalHeaders(localApiKey, slice?.localHeaders);
-      return spec.local({ baseURL, model, ...(headers ? { headers } : {}) });
+      return wrapWithFallback(
+        spec.local({ baseURL, model, ...(headers ? { headers } : {}) }),
+        'configured',
+      );
     }
 
     if (provider === 'host-cli') {
@@ -299,7 +394,7 @@ export function createVerifierFactory<C, V>(
             `${spec.label}: host-cli provider requested but this verifier family has not wired a host-cli builder yet — falling back to mock provider.`,
           ),
         );
-        return spec.mock();
+        return wrapWithFallback(spec.mock(), 'fallback');
       }
       // Phase 165: binary name/path is env/`.env`-discoverable the same way
       // `local`'s baseURL/model are (`discoverKey`), not a new config schema
@@ -315,9 +410,13 @@ export function createVerifierFactory<C, V>(
       // rather than probing synchronously, so a missing/unauthenticated
       // binary degrades to `mock` per-call with a loud warning instead of
       // throwing out of the gate or hanging on interactive auth (AC-2).
-      return wrapWithFallback(primary, spec.mock(), warn, spec.label);
+      return wrapWithFallback(primary, 'configured', {
+        fallback: spec.mock(),
+        warn,
+        label: spec.label,
+      });
     }
 
-    return spec.mock();
+    return wrapWithFallback(spec.mock(), 'configured');
   };
 }
