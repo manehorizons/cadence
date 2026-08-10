@@ -2418,32 +2418,6 @@
       "updatedAt": "2026-08-08T17:58:45.804Z"
     },
     {
-      "id": "rec-20260808-004",
-      "title": "Mock review gates record pass, creating false confidence",
-      "summary": "A placeholder that approves creates false confidence; one that abstains cannot. Reuse the phase-248 status:'skipped'+skipReason shape (already used for bypassed verifier throws) so provenance can never record 'code-review passed' under a mock provider, scoped to review families only (code-review, security-audit, spec-review, plan-review, ui-spec-review). deep-verify and per-task-verify must keep their existing mock pass semantics -- there mock enforces real AC/test linkage and the evidence ladder depends on it.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260808-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T17:58:45.974Z",
-      "updatedAt": "2026-08-08T17:58:45.974Z"
-    },
-    {
       "id": "rec-20260808-007",
       "title": "deep-verify and per-task-verify persist no provider/model identity into gates[] at all",
       "summary": "Discovered during phase 263 (v1.56 Phase L) T3 dispatch prep: GateProvenanceZ.provider/.model are documented as 'currently populated only for code-review and security-audit' (packages/types/src/summary.ts), confirmed by direct read -- deep-verify.ts writes provider/model only into its separate deepVerify[]/deepVerifyMeta records, never into a gates[] entry's flags.verifierIdentity; per-task-verify.ts persists no provider identity anywhere (zero matches for verifierIdentity/result.provider in the file). This is a materially larger gap than phase 263's providerSelection distinction: these two gates have no baseline provider identity to extend in the first place. It also interacts with deriveAssuranceRecord's hasRealVerifier (verifierRollup.some(v => v.provider !== 'mock')): since this repo's perTaskVerifier.provider and verifier.provider are both already host-cli, naively adding baseline persistence to either gate would grow verifierRollup with real host-cli entries on ordinary auto-profile settles, silently moving assurance.overall toward strong with no review gate having actually run -- a live instance of the exact false-confidence failure mode v1.56 exists to close. Phase 263 deliberately excludes both gates from its providerSelection persistence scope (see dec-<this-decision-id> and the DRAFT's Boundaries) rather than papering over this pre-existing gap.",
@@ -2612,6 +2586,36 @@
       "scoutId": "scout-20260809-phase265-whole-branch-review",
       "createdAt": "2026-08-09T18:58:44.809Z",
       "updatedAt": "2026-08-09T18:58:44.809Z"
+    },
+    {
+      "id": "rec-20260810-001",
+      "title": "examples/demo-test-gutting/run-demo.sh never completes -- Phase 239's phase-qualified coverage default broke its climactic refusal",
+      "summary": "Discovered during phase 267 (T5, 2026-08-09), pre-existing and unrelated to phase 267. run-demo.sh runs cadence init --gate-profile auto then overrides testGlobs/coverageMode/testCommand but never coverageScheme, so it inherits Phase 239's fresh-init default 'phase-qualified'. The demo's fixture tests use bare AC-1/AC-2/AC-3 tokens with no phase prefix, so settle run --auto refuses coverage on ALL THREE ACs (including AC-1/AC-3, which were never gutted) at both the buggy-code attempt and the fixed-code 'redemption' attempt -- the script never reaches its documented final 'Settled' state. The refusal LOOKS like the demo's thesis (gutted test caught, CI green but Cadence says no) but is actually a token-format bug unrelated to gutting detection; the gutted-assertion catch the demo exists to demonstrate is never actually exercised. Compounding this: the repo ships gutting.cast/gutting.svg (phase 177) and the README embeds that recording, so the repo displays an animated demo of behavior the script can no longer reproduce. Root cause confirmed via git diff main -- examples/demo-test-gutting/ (empty) and an independently-built main worktree reproducing byte-identical broken output. packages/core/src/tutorial/fixtures.ts:47 already sets coverageScheme:'bare' for the same reason (tutorial was immunized when Phase 239 landed; the demo script was not updated).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "examples"
+      ],
+      "affectedFiles": [
+        "examples/demo-test-gutting/run-demo.sh",
+        "examples/demo-test-gutting/README.md",
+        "packages/core/src/cli/commands/init.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260810-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-10T00:01:02.402Z",
+      "updatedAt": "2026-08-10T00:01:02.402Z"
     }
   ],
   "archived": [
@@ -7299,11 +7303,49 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T17:58:46.299Z",
-      "updatedAt": "2026-08-09T18:58:51.110Z",
       "shippedRef": "PR phase 265 -- explicit choice + ledger recording + no-reprompt delivered; onboard-surfaces-recorded-decision remainder tracked as rec-20260809-006",
+      "scoutId": "scout-20260804-verifier-honesty",
       "archivedAt": "2026-08-09T18:58:51.110Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-08T17:58:46.299Z",
+      "updatedAt": "2026-08-09T18:58:51.110Z"
+    },
+    {
+      "id": "rec-20260808-004",
+      "title": "Mock review gates record pass, creating false confidence",
+      "summary": "A placeholder that approves creates false confidence; one that abstains cannot. Reuse the phase-248 status:'skipped'+skipReason shape (already used for bypassed verifier throws) so provenance can never record 'code-review passed' under a mock provider, scoped to review families only (code-review, security-audit, spec-review, plan-review, ui-spec-review). deep-verify and per-task-verify must keep their existing mock pass semantics -- there mock enforces real AC/test linkage and the evidence ladder depends on it.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260808-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260809-002",
+        "dec-20260809-003",
+        "dec-20260809-004",
+        "dec-20260809-005",
+        "dec-20260810-001",
+        "dec-20260810-002",
+        "dec-20260810-003"
+      ],
+      "convertedToPhaseId": "267-mock-abstains-on-review-gates",
+      "scoutId": "scout-20260804-verifier-honesty",
+      "createdAt": "2026-08-08T17:58:45.974Z",
+      "updatedAt": "2026-08-10T01:58:23.703Z",
+      "shippedRef": "267-01, PR TBD",
+      "archivedAt": "2026-08-10T01:58:23.703Z",
       "archiveReason": "shipped"
     }
   ]

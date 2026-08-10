@@ -422,16 +422,26 @@ describe('runSettleGates verifier-identity provenance merge (Phase 232, AC-1, AC
   });
 
   it('merges family (no model) onto a security-audit "ran" provenance entry when the verifier reports none (AC-2)', async () => {
+    // Phase 267 (267-01, T2, dec-20260809-004): this fixture used
+    // `family: 'mock'` before phase 267 gave that exact value new meaning —
+    // a mock-identified clean pass is now relabeled `status:'skipped'` by a
+    // dedicated branch (see `mock-abstention-registry.test.ts`, the
+    // authoritative fixture for THAT behavior). This test's own intent
+    // (phase 232's AC-2: a family present with no model still merges
+    // correctly) is unrelated to mock semantics, so it now uses a real,
+    // non-mock family (`'local'`, already used elsewhere in this file) to
+    // keep testing exactly what it always tested without colliding with the
+    // new abstention branch.
     const { gates } = await runSettleGates(ctxWith(['security-audit']), {
       registry: recordingRegistry([], {
         'security-audit': {
           outcome: 'pass',
-          flags: { verifierIdentity: { family: 'mock' } },
+          flags: { verifierIdentity: { family: 'local' } },
         },
       }),
       order: ['security-audit'],
     });
-    expect(gates).toEqual([{ gate: 'security-audit', status: 'ran', provider: 'mock' }]);
+    expect(gates).toEqual([{ gate: 'security-audit', status: 'ran', provider: 'local' }]);
   });
 
   it('merges family/model onto a code-review "refused" provenance entry alongside its reason (AC-1)', async () => {

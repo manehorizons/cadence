@@ -186,7 +186,11 @@ describe('cadence draft approve (Phase 25.1 — plan-review gate)', () => {
       ),
     );
     expect(rec.draftId).toBe('25-01');
-    expect(rec.pass).toBe(true);
+    // Phase 267 (267-01, dec-20260810-002): provider mock + a clean pass now
+    // persists `pass: false` (+ `verdict: 'abstained'`, `mockAbstained: true`)
+    // on the sidecar's legacy top-level field -- `r.code === 0` above (the
+    // real control-flow signal) is unaffected.
+    expect(rec.pass).toBe(false);
     expect(rec.provider).toBe('mock');
     expect(typeof rec.findings).toBe('number');
     expect(typeof rec.at).toBe('string');

@@ -1,6 +1,18 @@
 export type ConvergeVerdict = 'pass' | 'reloop' | 'escalate';
 
 /**
+ * Phase 267 (267-01, fix round after a real `deep-verify` AC-1 refusal,
+ * dec-20260810-002 amends dec-20260809-005): the value a mock-abstained
+ * attempt's PERSISTED `verdict` reads as. Deliberately distinct from
+ * `ConvergeVerdict` — `nextConvergence`'s return type never produces
+ * `'abstained'` and callers' reloop/escalate branching (`nv.verdict`, the
+ * value `runConvergentReview` returns separately in `RunConvergentReviewResult.nv`)
+ * is untouched by this; only what gets WRITTEN to `historyEntry`/`sidecarJson`
+ * is affected. See `ConvergentReviewHistoryEntry.verdict`'s doc comment for why.
+ */
+export type PersistedVerdict = ConvergeVerdict | 'abstained';
+
+/**
  * Pure convergence classifier. Gate-agnostic — the caller supplies the
  * boolean (plan-review now; survey #4's settle-gate later) and the attempt
  * counters; this decides pass / reloop / escalate. No I/O.
@@ -35,13 +47,64 @@ export function nextConvergence(
  */
 export interface ConvergentReviewHistoryEntry {
   at: string;
+  /**
+   * Phase 267 (267-01, dec-20260810-002 amends dec-20260809-005): forced
+   * `false` when `mockAbstained` is set, regardless of the caller's fresh
+   * `pass` input. dec-20260809-005's original shape kept `pass: true` here
+   * for a mock-identified clean pass, reasoning it was inert legacy-reader
+   * bookkeeping — a real `deep-verify` AC-1 refusal caught that this is
+   * exactly the "persisted pass" AC-1 forbids (`pass: true` reads as an
+   * affirmative pass to any consumer that doesn't know to check
+   * `mockAbstained`). Verified safe to override: `draft-context.ts`'s
+   * sidecar reader only ever consumes `prior.attempts` (a number) and
+   * `prior.history` (an opaque, never-filtered-by-pass array) — no code
+   * path reads `historyEntry.pass`/`verdict`/`sidecarJson.converged` back
+   * for control flow. The value that DOES drive reloop/escalate is `nv`
+   * (`RunConvergentReviewResult.nv`, computed from the fresh `pass` input
+   * via `nextConvergence` before this override applies) — untouched by this
+   * field, so convergence behavior is identical to before this change.
+   */
   pass: boolean;
   findingsCount: number;
   provider: string;
   model?: string;
   providerSelection?: 'configured' | 'fallback';
-  verdict: ConvergeVerdict;
+  /**
+   * Phase 267 (267-01, dec-20260810-002): `'abstained'` (never `'pass'`)
+   * when `mockAbstained` is set — the direct sidecar analog of
+   * `registry.ts`'s `status:'ran'` → `'skipped'` relabeling: the persisted
+   * word a reader would see changes, not just a sibling flag added next to
+   * an unqualified `'pass'`. `nv.verdict` (control-flow, returned
+   * separately) is always the real `ConvergeVerdict` — this field alone
+   * carries the wider `PersistedVerdict` type.
+   */
+  verdict: PersistedVerdict;
   bypassed?: true;
+  /**
+   * Phase 267 (267-01, T2, dec-20260809-005; corrected by dec-20260810-003):
+   * present (`true`) only when the caller identified this attempt's resolved
+   * provider as mock AND the review passed cleanly — mirrors `registry.ts`'s
+   * `status:'skipped'` relabeling for `code-review`/`security-audit`'s
+   * SUMMARY-level `GateProvenance`. Deliberately CALLER-computed (see
+   * `RunConvergentReviewInput.mockAbstained` below), never derived here from
+   * `provider === 'mock' && pass` — every call site computes its own flag
+   * from its own local state, with zero shared logic between call sites.
+   * This primitive backs FOUR sidecars: `plan-review`/`spec-review`/
+   * `ui-spec-review` (never touch `GateProvenance`/SUMMARY at all — this
+   * marker is their ONLY abstention record) and `code-review.ts`'s own
+   * `CODE-REVIEW.json` (a SEPARATE persisted artifact from the SUMMARY-level
+   * relabel registry.ts already performs for the same gate). dec-20260809-005
+   * originally excluded `code-review.ts`'s call site from ever setting this
+   * field, reasoning that the registry.ts-layer relabel alone satisfied
+   * AC-1 for that gate — a real `deep-verify` pass caught that CODE-REVIEW.json
+   * is independently readable and was persisting an unqualified `pass: true`
+   * regardless of what SUMMARY.json said; dec-20260810-003 corrected this,
+   * and `code-review.ts` now sets this field too. Never present for a
+   * `pass: false` attempt — a refusal is never false confidence, regardless
+   * of provider (dec-20260809-004), so it is never relabeled abstained
+   * either.
+   */
+  mockAbstained?: true;
 }
 
 /**
@@ -78,6 +141,24 @@ export interface RunConvergentReviewInput {
   /** Already-computed bypass condition (e.g. code-review's `force === true ||
    *  allowCodeReviewFailure === true`) — this primitive does not re-derive it. */
   bypassed: boolean;
+  /**
+   * Phase 267 (267-01, T2, dec-20260809-005; corrected by dec-20260810-003):
+   * already-computed `provider === 'mock' && pass === true` for this
+   * attempt, supplied by all 4 call sites now (`plan-review.ts`,
+   * `spec-approve.ts` x2, and `code-review.ts`) — each computes it locally
+   * from its own already-resolved provider/pass, with no shared logic
+   * between call sites. `code-review.ts` setting this affects ONLY its own
+   * `CODE-REVIEW.json` sidecar via this primitive; it is fully independent
+   * of, and does not change, the SEPARATE registry.ts-layer `status:'ran'`→
+   * `'skipped'` relabel dec-20260809-004 established for the SUMMARY-level
+   * `GateProvenance` entry that same gate also writes — both persisted
+   * artifacts for `code-review` now correctly abstain, computed two
+   * different ways for two different files, exactly as isolated as before.
+   * Caller-computed (not derived from `provider` here) so this primitive
+   * stays generic over all 4 call sites. Omit or `false` to leave
+   * `historyEntry.mockAbstained` unset.
+   */
+  mockAbstained?: boolean;
   /** Sidecar id field name, e.g. `'draftId'` or `'specId'`. */
   idField: string;
   idValue: string;
@@ -127,30 +208,37 @@ export function runConvergentReview(input: RunConvergentReviewInput): RunConverg
     bypassed,
     idField,
     idValue,
+    mockAbstained,
   } = input;
   const at = (input.now ?? (() => new Date().toISOString()))();
   const nv = nextConvergence(pass, attemptsSoFar, maxAttempts);
+  // Phase 267 (267-01, dec-20260810-002): the PERSISTED pass/verdict only —
+  // `nv` above (control flow: reloop/escalate/attempts counting) is computed
+  // from the fresh `pass` input and returned separately, untouched by this.
+  const persistedPass = mockAbstained ? false : pass;
+  const persistedVerdict: PersistedVerdict = mockAbstained ? 'abstained' : nv.verdict;
 
   const historyEntry: ConvergentReviewHistoryEntry = {
     at,
-    pass,
+    pass: persistedPass,
     findingsCount,
     provider,
     ...(model ? { model } : {}),
     ...(providerSelection ? { providerSelection } : {}),
-    verdict: nv.verdict,
+    verdict: persistedVerdict,
     ...(bypassed ? { bypassed: true } : {}),
+    ...(mockAbstained ? { mockAbstained: true } : {}),
   };
   const newHistory = [...history, historyEntry];
 
   const sidecarJson: Record<string, unknown> = {
     [idField]: idValue,
-    converged: pass,
+    converged: persistedPass,
     attempts: nv.verdict === 'pass' ? attemptsSoFar : nv.attempt,
     maxAttempts,
     history: newHistory,
     // legacy top-level fields preserved for old readers:
-    pass,
+    pass: persistedPass,
     provider,
     ...(model ? { model } : {}),
     ...(providerSelection ? { providerSelection } : {}),

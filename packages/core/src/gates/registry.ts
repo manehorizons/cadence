@@ -284,6 +284,36 @@ export async function runSettleGates(
         skipReason: `bypassed via ${flag} — verifier failure bypassed (${message}), configured provider: ${provider ?? 'unknown'}`,
         ...verifierIdentityProvenance(res),
       });
+    } else if (
+      res.flags?.verifierIdentity?.family === 'mock' &&
+      res.flags?.reviewFindingsBypassed !== true
+    ) {
+      // Phase 267 (267-01, T2, dec-20260809-004/-005): a mock-identified
+      // CLEAN PASS is not real verification — relabel what would otherwise be
+      // recorded 'ran' as 'skipped'+skipReason instead. Checked generically
+      // by flag presence, same convention as `verifierIdentityProvenance`
+      // itself and the `reviewVerifierFailure` branch above: only
+      // code-review/security-audit ever populate `verifierIdentity` today
+      // (gates/code-review.ts, gates/security-audit.ts), so this reaches
+      // exactly those two without a gate-name disjunction. A mock-identified
+      // 'refuse' never reaches here — the refuse branch above (line ~218)
+      // already returned before this point, so a real flagged finding keeps
+      // its normal refusal recording, never relabeled (dec-20260809-004: a
+      // refusal is never false confidence, regardless of provider).
+      //
+      // The `reviewFindingsBypassed !== true` guard closes a second case the
+      // refuse-branch check alone misses: --force/--allow-*-failure turns a
+      // real HIGH/CRITICAL finding into `outcome:'pass'` (see the bypass
+      // fall-through in code-review.ts/security-audit.ts) — that is NOT a
+      // clean pass either, and must keep its pre-267 `status:'ran'`
+      // recording (falls to the final `else` below) rather than being
+      // mislabeled "abstained" alongside a genuinely empty result.
+      gates.push({
+        gate,
+        status: 'skipped',
+        skipReason: `${gate}: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass`,
+        ...verifierIdentityProvenance(res),
+      });
     } else {
       gates.push({ gate, status: 'ran', ...verifierIdentityProvenance(res) });
     }

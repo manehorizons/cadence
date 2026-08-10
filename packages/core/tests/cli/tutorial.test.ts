@@ -194,6 +194,22 @@ describe('cadence tutorial', () => {
     expect(data.sandbox?.startsWith(tmpdir())).toBe(true);
   });
 
+  // Phase 267 (267-01, T5 / whole-branch-review follow-up): the tutorial's
+  // sandbox runs at standard-profile/quick-fix-tier, which per the DELTAS
+  // matrix (gates/engine.ts) carries no review-family gate at all — so
+  // mock-abstention (T1-T3) is structurally unreachable here, and the loop
+  // must close exactly as it always has. Reuses the same real end-to-end
+  // path as AC-4 above rather than a new mechanism.
+  it('267-01/AC-5: cadence tutorial completes end to end, unaffected by mock-abstention on review gates', async () => {
+    const io = bufferIO();
+    const res = await runTutorial({ noPause: true }, io);
+    expect(res.exitCode).toBe(0);
+    const data = res.data as { loopPosition?: string; summaryWritten?: boolean };
+    expect(data.loopPosition).toBe('IDLE');
+    expect(data.summaryWritten).toBe(true);
+    expect(io.stdout()).toContain('the loop closed');
+  });
+
   // AC-5 (failure path): a throw mid-run still removes the sandbox (no spawns).
   it('AC-5: removes the sandbox even when a step throws', async () => {
     const before = await sandboxCount();

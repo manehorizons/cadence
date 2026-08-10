@@ -97,6 +97,42 @@ describe('renderSummaryMd - gate provenance (AC-4, phase 140)', () => {
     expect(md).not.toContain('## Gate provenance');
   });
 
+  /**
+   * Phase 267 (267-01, T3): a mock-identified clean pass on code-review/
+   * security-audit now records `status: 'skipped'` + a mock-abstention
+   * skipReason (registry.ts, T2) instead of the pre-267 `status: 'ran'`.
+   * The renderer needs no new logic -- the existing `status === 'skipped'`
+   * -> append `skipReason` path (proven by the test above for the
+   * pre-existing bypass-skip shape) already surfaces it -- but this must be
+   * distinguishable from BOTH a real pass on the same gate family AND a gate
+   * that never appears at all, in one fixture, not asserted piecemeal.
+   */
+  it('267-01/AC-3: an abstained mock code-review gate renders distinguishably from a real security-audit pass and from a plan-review gate absent entirely', () => {
+    const abstainReason =
+      "code-review: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass";
+    const summary: Summary = {
+      ...SAMPLE,
+      gates: [
+        { gate: 'code-review', status: 'skipped', skipReason: abstainReason, provider: 'mock' },
+        { gate: 'security-audit', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+        // plan-review deliberately absent from `gates` entirely.
+      ],
+    };
+    const md = renderSummaryMd(summary);
+
+    // Abstained: 'skipped', names mock, names abstention -- never a bare pass.
+    expect(md).toContain(`- code-review: skipped — ${abstainReason}`);
+    expect(md).not.toContain('- code-review: ran');
+    expect(md.toLowerCase()).toContain('mock');
+
+    // Real pass: 'ran', no skip/abstention language attached to it.
+    expect(md).toContain('- security-audit: ran');
+    expect(md).not.toMatch(/security-audit:.*abstain/i);
+
+    // Total absence: no line for plan-review at all -- distinct from both.
+    expect(md).not.toMatch(/plan-review:/);
+  });
+
   it('renders deep-verify token usage under the section when present', () => {
     const summary: Summary = {
       ...SAMPLE,
