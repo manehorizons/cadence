@@ -63,7 +63,9 @@ const RESOLVE_STATE_CONFLICT_FIX_ID = 'resolve-state-conflict';
  * Pure: classify every *failing* check into a fix action. A check with a known
  * repair `fixId` becomes an `auto`/`wire-host` action; anything else (no fixId,
  * or an unknown id) becomes a `manual` action carrying the check's remediation.
- * Report order is preserved.
+ * `ok` and `indeterminate` (phase 268) checks are both skipped — neither has
+ * anything to repair, so neither reaches the failing-check loop below. Report
+ * order is preserved.
  *
  * `resolve-state-conflict` (T5, phase 196, issue #177) is special-cased ahead
  * of the generic lookup: it is ALWAYS classified `manual` here — never `auto`
@@ -78,7 +80,11 @@ const RESOLVE_STATE_CONFLICT_FIX_ID = 'resolve-state-conflict';
 export function planFixes(report: DoctorReport): FixPlan {
   const actions: FixAction[] = [];
   for (const check of report.checks) {
-    if (check.severity === 'ok') continue;
+    // `indeterminate` (phase 268): the check couldn't assess the repo at all
+    // (e.g. missing/malformed corpus data) — there is nothing to repair, the
+    // same as `ok`, so it is skipped here explicitly rather than falling
+    // through into the generic manual-action branch below.
+    if (check.severity === 'ok' || check.severity === 'indeterminate') continue;
     if (check.fixId === RESOLVE_STATE_CONFLICT_FIX_ID) {
       actions.push({
         check: check.name,

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "draftId": "b-oldest-01",
+  "completedAt": "2026-01-01T00:00:00.000Z",
+  "acResults": [],
+  "taskResults": [],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": { "required": [], "invoked": [] },
+  "assurance": {
+    "verifierRollup": [{ "provider": "anthropic", "model": "claude-x", "gateCount": 1 }],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 0,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "strong"
+  }
+}

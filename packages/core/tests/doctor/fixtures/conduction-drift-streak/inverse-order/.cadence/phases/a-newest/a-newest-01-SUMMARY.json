@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "draftId": "a-newest-01",
+  "completedAt": "2026-05-01T00:00:00.000Z",
+  "acResults": [],
+  "taskResults": [],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": { "required": [], "invoked": [] },
+  "assurance": {
+    "verifierRollup": [{ "provider": "mock", "gateCount": 1 }],
+    "evidenceTally": {
+      "ai-verified": 0,
+      "executed": 0,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "unverified"
+  }
+}

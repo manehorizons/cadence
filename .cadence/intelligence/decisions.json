@@ -403,6 +403,24 @@
       "status": "active",
       "decidedAt": "2026-08-10T01:51:55.726Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260810-004",
+      "recommendationId": "rec-20260808-003",
+      "title": "Phase O (268): build the drift counter now, defer O.3's measured threshold",
+      "rationale": "Operator choice (2026-08-10), presented with the measured gap: only 3/280 SUMMARY.json carry a non-mock verifierRollup entry, and 0 postdate 267's profile flip off auto -- O.3's literal bar ('materially lower number, measured not guessed, after v1.55') has no post-flip data to measure yet. Rejected: (b) treat dec-20260801-003's three-settle convention as satisfying O.3 outright -- that decision's '3' is config.convergence.maxAttempts reused for a different trigger (code-review finding-persistence dedup revisit), not a measurement of this counter's streak; borrowing the number doesn't manufacture the missing post-flip demonstration. Rejected: (c) wait for real data before drafting -- leaves O.1/O.2/O.4/O.5/O.6 (counter derivation, doctor/status surfacing, severity escalation shape, warning-not-refusal, corpus baseline report) blocked on a threshold question that doesn't gate them. Decision: ship O.1/O.2/O.4/O.5/O.6 this phase. Use dec-20260801-003's 3 as a PROVISIONAL escalation threshold (a recorded prior convention, not invented, but explicitly not yet validated as 'materially lower after v1.55' per O.3's own bar). Record the threshold as provisional in code comments/docs. O.3's full bar -- the measured before/after comparison -- is deferred to a follow-up once real-provider settles accumulate under the now-standard profile; this phase's own corpus report (O.6) becomes the first data point for that follow-up.",
+      "status": "active",
+      "decidedAt": "2026-08-10T15:47:01.933Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260810-005",
+      "recommendationId": "rec-20260808-003",
+      "title": "Phase O (268): add an indeterminate rung to DoctorSeverity, resolving v1.55 J.2",
+      "rationale": "Operator choice (2026-08-10), presented with the fork: AC-1's streak counter can return indeterminate on missing/malformed corpus data, and DoctorSeverity (packages/core/src/doctor/model.ts) is currently only 'ok'|'warning'|'error' -- no honest place to render that state. v1.55 J.2 raised this exact question (published-contract change) and was never resolved by a recorded decision. Rejected: render indeterminate as 'warning' with distinct text (smaller blast radius, no schema change) -- rejected because it still leaves DoctorSeverity's shape lying about cardinality and doesn't close J.2. Rejected: stop and report, treat as out of scope for 268 -- rejected because the operator chose to resolve it now rather than defer a second open question inside the same phase. Decision: extend DoctorSeverity to 'ok' | 'warning' | 'error' | 'indeterminate'. Scope confirmed by direct read: only packages/core/src/doctor/model.ts defines the type; consumers needing review are DoctorReport.ok's roll-up boolean (currently 'no check is error-severity' -- decide whether indeterminate also excludes ok:true), the fail() helper family (currently typed 'warning' | 'error' only, needs widening or a sibling helper), packages/core/src/doctor/fix.ts (fix-planner classification), and packages/core/src/cli/commands/doctor.ts (CLI/JSON rendering + exit code). This phase's own AC-1/AC-2 counter check is the first real consumer of the new rung; all pre-existing doctor checks must continue to render exactly as before (no existing check silently starts reporting indeterminate).",
+      "status": "active",
+      "decidedAt": "2026-08-10T16:12:52.921Z",
+      "supersedes": []
     }
   ]
 }

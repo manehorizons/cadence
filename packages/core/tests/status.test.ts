@@ -362,6 +362,54 @@ describe('renderStatus', () => {
   });
 });
 
+/**
+ * Phase 268, T4 (AC-3): the conduction-drift streak counter (T2) surfaced
+ * into `cadence status`. `gatherStatus` stays pure — a caller that doesn't
+ * supply `driftStreak` gets `conductionDriftStreak: null` (never a
+ * fabricated `ok`/`indeterminate` verdict it didn't actually compute);
+ * `loadStatus` (the impure wrapper) always computes it via
+ * `computeConductionDriftStreak`, so `cadence status` always renders it.
+ */
+describe('gatherStatus — conduction-drift streak (phase 268, T4)', () => {
+  it('268-01/AC-3: driftStreak omitted → conductionDriftStreak is null, renderStatus omits the line entirely', () => {
+    const state = emptyState('demo');
+    const r = gatherStatus(state, null, null);
+    expect(r.conductionDriftStreak).toBeNull();
+    const out = renderStatus(r);
+    expect(out).not.toMatch(/conduction-drift/i);
+  });
+
+  it('268-01/AC-3: determinate streak → ok severity, streak value surfaced in rendered output', () => {
+    const state = emptyState('demo');
+    const r = gatherStatus(state, null, null, null, {
+      determinate: true,
+      streak: 4,
+      detail: 'All 4 settle(s) found in the corpus carry no non-mock verifier identity.',
+    });
+    expect(r.conductionDriftStreak).toEqual({
+      severity: 'ok',
+      streak: 4,
+      detail: 'All 4 settle(s) found in the corpus carry no non-mock verifier identity.',
+    });
+    const out = renderStatus(r);
+    expect(out).toMatch(/conduction-drift/i);
+    expect(out).toMatch(/4/);
+  });
+
+  it('268-01/AC-3: indeterminate streak renders as indeterminate severity with explanatory text, never silently ok', () => {
+    const state = emptyState('demo');
+    const r = gatherStatus(state, null, null, null, {
+      determinate: false,
+      detail: 'foo-SUMMARY.json predates assurance.verifierRollup — not determinable.',
+    });
+    expect(r.conductionDriftStreak?.severity).toBe('indeterminate');
+    expect(r.conductionDriftStreak?.streak).toBeNull();
+    const out = renderStatus(r);
+    expect(out).toMatch(/indeterminate/i);
+    expect(out).toMatch(/not determinable/);
+  });
+});
+
 describe('loadStatus', () => {
   it('IDLE fresh repo → minimal report', async () => {
     active = await tempRepo({ initialized: true, projectName: 'fresh' });
@@ -369,6 +417,20 @@ describe('loadStatus', () => {
     expect(r.project).toBe('fresh');
     expect(r.loopPosition).toBe('IDLE');
     expect(r.tasks).toEqual([]);
+  });
+
+  // Phase 268, T4 (AC-3): `loadStatus` is the impure wrapper that always
+  // computes the streak (unlike the pure `gatherStatus`, which defaults it
+  // to null when the caller doesn't supply one) — so `cadence status`
+  // always renders it, end to end.
+  it('268-01/AC-3: loadStatus always computes conductionDriftStreak — empty corpus surfaces ok/streak-0', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-status' });
+    const r = await loadStatus(active.root);
+    expect(r.conductionDriftStreak).not.toBeNull();
+    expect(r.conductionDriftStreak?.severity).toBe('ok');
+    expect(r.conductionDriftStreak?.streak).toBe(0);
+    const out = renderStatus(r);
+    expect(out).toMatch(/conduction-drift/i);
   });
 
   it('BUILD with draft on disk + no PROGRESS → all PENDING', async () => {

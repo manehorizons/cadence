@@ -4,7 +4,16 @@ import { writeFile, readFile, unlink, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import { emptyState, defaultConfig } from '@thomas-powers-jr/cadence-types';
-import { runDoctor, checkConductionReachability } from '../../src/doctor/run.js';
+import {
+  runDoctor,
+  checkConductionReachability,
+  checkConductionDriftStreak,
+  CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD,
+} from '../../src/doctor/run.js';
+import { pass, fail, rollup, type DoctorCheck } from '../../src/doctor/model.js';
+import { severityMark } from '../../src/cli/commands/doctor.js';
+import { settleService } from '../../src/services/settle.js';
+import type { CommandIO } from '../../src/services/io.js';
 
 let active: Fixture | null = null;
 afterEach(async () => {
@@ -25,6 +34,15 @@ async function writeCoverageMode(root: string, coverageMode: 'assertion' | 'ment
 
 function findCheck(checks: { name: string }[], name: string) {
   return checks.find((c) => c.name === name);
+}
+
+/** Mirrors `tests/services/settle-collision.test.ts`'s / `settle.test.ts`'s
+ *  identical `captureIO` helper — a `CommandIO` that records writes into
+ *  plain arrays instead of touching real stdout/stderr. */
+function captureIO(): { io: CommandIO; out: string[]; err: string[] } {
+  const out: string[] = [];
+  const err: string[] = [];
+  return { io: { out: (s) => out.push(s), err: (s) => err.push(s) }, out, err };
 }
 
 describe('runDoctor', () => {
@@ -575,5 +593,357 @@ describe('checkConductionReachability (phase 251)', () => {
     const securityAuditClause = remediation.slice(remediation.indexOf('security-audit:'));
     expect(codeReviewClause).not.toContain("security-audit's only reachable profile×tier cell");
     expect(securityAuditClause).not.toContain("'standard' (tier: complex) or 'strict' (tier: standard or complex)");
+  });
+});
+
+/**
+ * Phase 268, T1: `DoctorSeverity` gains an `indeterminate` rung
+ * (`dec-20260810-005`). This suite is pure model/CLI-glyph coverage — these
+ * tests construct `DoctorCheck`/`DoctorReport` values directly via
+ * `fail()`/`rollup()` rather than driving `runDoctor()`, independently of
+ * the one real check that does emit `indeterminate`
+ * (`conduction-drift-streak`, covered by its own describe blocks further
+ * below in this file). AC-2's Given/When/Then bar: the roll-up, the `fail()`
+ * helper, and the CLI glyph all handle the new rung explicitly, and no
+ * pre-existing check's severity/output/exit-code path is disturbed.
+ */
+describe('DoctorSeverity — indeterminate rung (phase 268, T1)', () => {
+  it('268-01/AC-2: fail() accepts \'indeterminate\' and mirrors it into status, same shape as warning/error', () => {
+    const check = fail('conduction-drift', 'indeterminate', 'not enough corpus data to compute a streak', 'n/a');
+    expect(check.severity).toBe('indeterminate');
+    expect(check.status).toBe('indeterminate');
+    expect(check.fixId).toBeNull();
+  });
+
+  it("268-01/AC-2: rollup() keeps ok:true for an indeterminate check, matching warning's existing treatment — zero code change, regression-tested", () => {
+    const checks: DoctorCheck[] = [
+      pass('healthy', 'all good'),
+      fail('conduction-drift', 'indeterminate', 'no corpus data yet', 'n/a'),
+    ];
+    const report = rollup(checks);
+    expect(report.ok).toBe(true);
+  });
+
+  it('268-01/AC-2: an indeterminate check does not mask a real error — rollup() still fails when an error check is also present', () => {
+    const checks: DoctorCheck[] = [
+      fail('conduction-drift', 'indeterminate', 'no corpus data yet', 'n/a'),
+      fail('initialized', 'error', 'missing .cadence/', 'cadence init'),
+    ];
+    const report = rollup(checks);
+    expect(report.ok).toBe(false);
+  });
+
+  it('268-01/AC-2: the CLI glyph handles all four rungs explicitly — indeterminate is its own case, never falling through to error\'s mark', () => {
+    expect(severityMark('ok')).toBe('✓');
+    expect(severityMark('warning')).toBe('!');
+    expect(severityMark('error')).toBe('✗');
+    expect(severityMark('indeterminate')).toBe('?');
+    expect(severityMark('indeterminate')).not.toBe(severityMark('error'));
+  });
+
+  it('268-01/AC-2 regression: every check runDoctor() actually produces against a healthy repo is still ok|warning|error, never indeterminate — the widened type is additive and does not leak into existing checks', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'doc-indeterminate-regression' });
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    expect(report.checks.length).toBeGreaterThan(0);
+    for (const c of report.checks) {
+      expect(['ok', 'warning', 'error']).toContain(c.severity);
+      expect(c.status).toBe(c.severity);
+    }
+    // report.ok's roll-up boolean is unaffected — same rule as before this task.
+    expect(report.ok).toBe(report.checks.every((c) => c.severity !== 'error'));
+  });
+});
+
+/**
+ * Phase 268, T4 (AC-3): the `conduction-drift-streak` `DoctorCheck` wrapper
+ * around T2's `computeConductionDriftStreak`, and its wiring into
+ * `runDoctor()`. Non-blocking, and — as of T5 (AC-4, tested separately
+ * further below in this file) — `warning` is also a legal severity once the
+ * streak reaches the escalation threshold; this describe block's own tests
+ * only exercise sub-threshold streaks and the `indeterminate` case, so they
+ * never see `warning` themselves. Never `error` — this check has nothing
+ * that rises to a hard failure.
+ */
+async function writeMinimalSummary(
+  root: string,
+  phase: string,
+  id: string,
+  opts: {
+    completedAt: string;
+    omitAssurance?: boolean;
+    verifierRollup?: Array<{ provider: string; gateCount: number }>;
+  },
+): Promise<void> {
+  const dir = join(root, '.cadence', 'phases', phase);
+  await mkdir(dir, { recursive: true });
+  const body: Record<string, unknown> = {
+    schemaVersion: 2,
+    draftId: id,
+    completedAt: opts.completedAt,
+    acResults: [],
+    taskResults: [],
+    decisions: [],
+    deferred: [],
+    skillAudit: { required: [], invoked: [] },
+  };
+  if (!opts.omitAssurance) {
+    body.assurance = {
+      verifierRollup: opts.verifierRollup ?? [],
+      evidenceTally: {
+        'ai-verified': 0,
+        executed: 0,
+        assertion: 0,
+        mention: 0,
+        unverified: 0,
+      },
+      overall: 'unverified',
+    };
+  }
+  await writeFile(join(dir, `${id}-SUMMARY.json`), JSON.stringify(body, null, 2));
+}
+
+describe('checkConductionDriftStreak — DoctorCheck wrapper (phase 268, T4)', () => {
+  it('268-01/AC-3: empty corpus (fresh repo) → ok severity, streak 0 surfaced in detail', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-empty' });
+    const check = await checkConductionDriftStreak(active.root);
+    expect(check.name).toBe('conduction-drift-streak');
+    expect(check.severity).toBe('ok');
+    expect(check.status).toBe('ok');
+    expect(check.detail.length).toBeGreaterThan(0);
+  });
+
+  it('268-01/AC-3: a pre-assurance (pre-phase-233) SUMMARY record renders indeterminate severity with explanatory text, never silently ok', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-indeterminate' });
+    await writeMinimalSummary(active.root, '01-old-phase', '01-01', {
+      completedAt: '2026-01-01T00:00:00Z',
+      omitAssurance: true,
+    });
+    const check = await checkConductionDriftStreak(active.root);
+    expect(check.name).toBe('conduction-drift-streak');
+    expect(check.severity).toBe('indeterminate');
+    expect(check.status).toBe('indeterminate');
+    expect(check.detail.length).toBeGreaterThan(0);
+    expect(check.detail).not.toBe('');
+  });
+
+  it('268-01/AC-3: a mock-only corpus stays ok (streak of 1 is below T5/AC-4\'s provisional threshold of 3)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-mock-only' });
+    await writeMinimalSummary(active.root, '01-mock-phase', '01-01', {
+      completedAt: '2026-01-01T00:00:00Z',
+      verifierRollup: [{ provider: 'mock', gateCount: 1 }],
+    });
+    const check = await checkConductionDriftStreak(active.root);
+    expect(check.severity).toBe('ok');
+    expect(check.detail).toMatch(/1/);
+  });
+
+  it('268-01/AC-3: wired into runDoctor() — the streak check is present in the full report, non-blocking (report.ok stays true)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-in-doctor' });
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    const check = findCheck(report.checks, 'conduction-drift-streak');
+    expect(check).toBeDefined();
+    expect(check?.severity).toBe('ok');
+    expect(report.ok).toBe(true);
+  });
+
+  it('268-01/AC-3: wired into runDoctor() — an indeterminate corpus surfaces as its own check, not folded into report.ok', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-indeterminate-doctor' });
+    await writeMinimalSummary(active.root, '01-old-phase', '01-01', {
+      completedAt: '2026-01-01T00:00:00Z',
+      omitAssurance: true,
+    });
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    const check = findCheck(report.checks, 'conduction-drift-streak');
+    expect(check?.severity).toBe('indeterminate');
+    // Non-blocking: an indeterminate finding never flips report.ok to false.
+    expect(report.ok).toBe(true);
+  });
+});
+
+/**
+ * Phase 268, T5 (AC-4): severity escalation against the provisional
+ * threshold. `checkConductionDriftStreak`'s legal severities widen here from
+ * `{ok, indeterminate}` (T4) to `{ok, warning, indeterminate}` — a
+ * determinate streak that reaches `CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD`
+ * escalates one rung to `warning`; `indeterminate` stays fully orthogonal to
+ * this ladder, reachable only via the missing/malformed-corpus path (T2),
+ * never via streak length.
+ */
+async function writeMockOnlyStreak(root: string, count: number): Promise<void> {
+  for (let i = 1; i <= count; i++) {
+    // Zero-padded to 2 digits (not naive `0${i}`, which breaks past i=9 --
+    // '010' sorts/parses wrong against '02') so this helper stays correct if
+    // a future threshold retune needs a longer streak than today's 3.
+    const n = String(i).padStart(2, '0');
+    await writeMinimalSummary(root, `${n}-mock-phase`, `${n}-01`, {
+      completedAt: `2026-01-${n}T00:00:00Z`,
+      verifierRollup: [{ provider: 'mock', gateCount: 1 }],
+    });
+  }
+}
+
+describe('checkConductionDriftStreak — severity escalation against the provisional threshold (phase 268, T5, AC-4)', () => {
+  it('268-01/AC-4: a streak one below the provisional threshold (2 < 3) stays ok', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-below-threshold' });
+    await writeMockOnlyStreak(active.root, CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD - 1);
+    const check = await checkConductionDriftStreak(active.root);
+    expect(check.severity).toBe('ok');
+    expect(check.status).toBe('ok');
+  });
+
+  it('268-01/AC-4: a streak AT the provisional threshold (3) escalates ok → warning, and "provisional threshold" is surfaced in the rendered detail', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-at-threshold' });
+    await writeMockOnlyStreak(active.root, CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD);
+    const check = await checkConductionDriftStreak(active.root);
+    expect(check.severity).toBe('warning');
+    expect(check.status).toBe('warning');
+    // AC-4 + the DRAFT's explicit instruction: the threshold must read as
+    // provisional in the rendered CLI/JSON output, not just in a code
+    // comment — `--json` serializes this `detail` string verbatim.
+    expect(check.detail).toMatch(/provisional threshold/i);
+    expect(check.detail).toMatch(new RegExp(String(CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD)));
+  });
+
+  it('268-01/AC-4: a streak ABOVE the provisional threshold (4 > 3) stays warning — one rung only, not a further escalation', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-above-threshold' });
+    await writeMockOnlyStreak(active.root, CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD + 1);
+    const check = await checkConductionDriftStreak(active.root);
+    expect(check.severity).toBe('warning');
+  });
+
+  it('268-01/AC-4: indeterminate stays orthogonal to the escalation ladder — never itself escalated by streak length, even with threshold-or-more valid records ahead of the indeterminate boundary', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-indeterminate-orthogonal' });
+    // The 3 most-recent settles are mock-only — on their own an escalating
+    // streak of 3 — but an OLDER record predates assurance.verifierRollup
+    // entirely, so per T2's AC-1 rule the WHOLE result degrades to
+    // indeterminate. It must never read as 'warning' just because
+    // threshold-or-more valid records happened to precede the unassessable
+    // one.
+    await writeMockOnlyStreak(active.root, CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD);
+    await writeMinimalSummary(active.root, '00-old-phase', '00-01', {
+      completedAt: '2025-12-31T00:00:00Z',
+      omitAssurance: true,
+    });
+    const check = await checkConductionDriftStreak(active.root);
+    expect(check.severity).toBe('indeterminate');
+    expect(check.status).toBe('indeterminate');
+  });
+
+  it('268-01/AC-4: wired into runDoctor() — an escalated warning is surfaced but never flips report.ok (O.5: warning only, non-blocking)', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-warning-in-doctor' });
+    await writeMockOnlyStreak(active.root, CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD);
+    const report = await runDoctor(active.root, HEALTHY_ENV);
+    const check = findCheck(report.checks, 'conduction-drift-streak');
+    expect(check?.severity).toBe('warning');
+    expect(report.ok).toBe(true);
+  });
+});
+
+/**
+ * Phase 268, T5 (AC-4, O.5): the real "never refuses" proof the DRAFT's
+ * Verify section calls for — not an absence-grep. `settleService` (see
+ * `tests/services/settle-collision.test.ts` / `tests/services/settle.test.ts`
+ * for this repo's established real-settle-fixture pattern) never imports
+ * anything from `doctor/run.ts` (confirmed: no settle gate reads the
+ * historical SUMMARY.json corpus or this check's severity), so this test's
+ * job is to demonstrate — not merely assert the absence of a hook — that a
+ * real settle against a corpus already AT the provisional threshold still
+ * completes normally.
+ */
+describe('a real settle proceeds normally while conduction-drift-streak is warning-severity (phase 268, T5, AC-4, O.5)', () => {
+  it('268-01/AC-4: settling a fixture draft with the streak at/over the provisional threshold still exits 0 and completes normally — proves the warning never refuses a settle', async () => {
+    active = await tempRepo({ initialized: true, projectName: 'drift-streak-settle-no-refusal' });
+    const root = active.root;
+
+    // Pre-existing corpus: a streak already AT the provisional threshold, so
+    // checkConductionDriftStreak is already 'warning' severity BEFORE this
+    // test's own settle runs.
+    await writeMockOnlyStreak(root, CONDUCTION_DRIFT_STREAK_WARN_THRESHOLD);
+    const preSettleCheck = await checkConductionDriftStreak(root);
+    expect(preSettleCheck.severity).toBe('warning');
+
+    const phase = '99-drift-streak-settle';
+    const id = '99-01';
+    const phaseDir = join(root, '.cadence', 'phases', phase);
+    await mkdir(phaseDir, { recursive: true });
+
+    // `gates: { sealed: [], evidenceFloor: 'unverified' }` + the
+    // `allowMissingCoverage`/`force` settle options below mirror
+    // tests/services/settle.test.ts's documented pattern for a fixture with
+    // no real AC-1 test coverage: this fixture exists to prove settle's
+    // exit code/completion, not to exercise the coverage gates (which are
+    // out of scope for T5 — this task never touches coverage or evidence
+    // logic).
+    const config = {
+      ...defaultConfig,
+      gates: { sealed: [], evidenceFloor: 'unverified' as const },
+    };
+    await writeFile(join(root, '.cadence', 'config.json'), JSON.stringify(config, null, 2));
+    const state = {
+      ...emptyState('drift-streak-settle-no-refusal'),
+      loopPosition: 'BUILD' as const,
+      activePhase: phase,
+      activeDraft: id,
+    };
+    await writeFile(join(root, '.cadence', 'state.json'), JSON.stringify(state, null, 2));
+    await writeFile(
+      join(phaseDir, `${id}-DRAFT.md`),
+      `---
+phase: ${phase}
+id: ${id}
+tier: standard
+status: APPROVED
+---
+
+# ${id} — drift streak settle fixture
+
+## Objective
+
+Prove a real settle does not refuse when conduction-drift-streak is warning-severity.
+
+## Acceptance Criteria
+
+### AC-1: it works
+Given a precondition
+When an action
+Then an observable outcome
+
+## Tasks
+
+### T1: do the thing
+- files: \`src/foo.ts\`
+- action: do it
+- verify: it works
+- done: AC-1
+
+## Boundaries
+
+- none
+`,
+    );
+    await writeFile(
+      join(phaseDir, `${id}-PROGRESS.json`),
+      JSON.stringify({ draftId: id, tasks: { T1: { status: 'DONE' } } }, null, 2),
+    );
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    // The real O.5 bar (per the DRAFT's Verify section): a warning-severity
+    // conduction-drift-streak finding never blocks or refuses a settle —
+    // proven by a real settle actually completing, not by grepping for the
+    // absence of a refusal code path.
+    expect(res.exitCode).toBe(0);
+
+    // The settle just wrote its own SUMMARY.json (mock, per defaultConfig),
+    // extending the corpus by one more mock-only record — the escalated
+    // warning survives past the settle (streak goes threshold → threshold+1),
+    // proving the escalation wasn't incidental to pre-settle state alone.
+    const postSettleCheck = await checkConductionDriftStreak(root);
+    expect(postSettleCheck.severity).toBe('warning');
   });
 });
