@@ -23,8 +23,21 @@ describe.skipIf(process.platform === 'win32')('demo-test-gutting/run-demo.sh (ph
   it('270-01/AC-1 + AC-2: money-shot refusal is AC-2-specific, and the script reaches Settled', () => {
     // `cadence settle run --auto`'s coverage-gate refusals go to stderr
     // (ctx.io.err), not stdout — capture and check both combined, in the
-    // order the script emits them.
-    const result = spawnSync('bash', [RUN_DEMO_SH, CADENCE_BIN], { encoding: 'utf8' });
+    // order the script emits them. run-demo.sh's own `git init` + `git
+    // commit` need a git identity; CI runners have no global one configured
+    // (unlike most dev machines), so it's supplied via env, matching the
+    // GIT_AUTHOR_*/GIT_COMMITTER_* convention other tests use via `git
+    // config` on ephemeral repos.
+    const result = spawnSync('bash', [RUN_DEMO_SH, CADENCE_BIN], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        GIT_AUTHOR_NAME: 'Cadence Test',
+        GIT_AUTHOR_EMAIL: 'test@cadence.local',
+        GIT_COMMITTER_NAME: 'Cadence Test',
+        GIT_COMMITTER_EMAIL: 'test@cadence.local',
+      },
+    });
     const combined = `${result.stdout}${result.stderr}`;
 
     expect(combined).not.toContain('AC-1 has no linked test');
