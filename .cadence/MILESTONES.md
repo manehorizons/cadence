@@ -927,6 +927,121 @@ here is additive to existing models). Nothing in this window was explicitly defe
 223's signing scope, which already has a tracking rec (rec-20260726-001, parked behind a
 threat-model rec per dec-20260726-001) — not newly discovered here.
 
+### v1.52.0 — pre-Phase-0 staging (DELIVERED 2026-07-31)
+*Backfilled 2026-08-11. Phase→version mapping date-derived (each phase's `completedAt`
+falls before the `v1.52.0` git tag's timestamp and after `v1.51.1`'s) — same methodology
+as the v1.51.0/v1.51.1 section above. Phase 256's ROADMAP.md entry already flags that the
+adjacent 231/232–236/242 phases do NOT belong to this tag despite an earlier stale
+document claiming otherwise; 238/239/240 below are not among the phases that note calls
+out, and their dates cleanly precede the tag, but this mapping has not been independently
+cross-checked against the `v1.52.0` release PR's own changeset list the way v1.51.0/
+v1.51.1 was — flag if a future reader finds a discrepancy.*
+
+- **Phase 238** — drop Node 20 support, raise engine floor to Node >=22 across all
+  published packages (rec-20260727-013).
+- **Phase 239** — phase-qualified AC coverage tokens (`239-01/AC-3`) close a cross-phase
+  false-pass where any past phase's bare `AC-3` satisfied every future phase's `AC-3`
+  (#338).
+- **Phase 240** — `cadence doctor`'s `verification-readiness` check now checks every
+  verifier seam, not just deep-verify (closes #331, #332).
+
+### v1.53.0 — Kernel-assurance-v2 arc merge (DELIVERED 2026-08-01, PR #355)
+
+- **Phase 232** — gate provenance persists verifier family/model; `SummaryZ.schemaVersion`
+  1→1|2, additive (rec-20260727-001).
+- **Phase 233** — per-settle assurance record derived from gate provenance + AC evidence
+  classes; reported, never gating (rec-20260728-001).
+- **Phase 234** — kernel/verifier/consumer boundary named as published contracts,
+  lint-enforced (rec-20260727-003).
+- **Phase 235** — criteria-anchored review verifier: `CodeReviewInput` extended with
+  ACs/boundaries, four-tier anchor ladder implemented (rec-20260727-004, -005).
+- **Phase 236** — finding identity (content-hash id), disposition, and waiver fields on
+  `FindingZ`; ledger routing schema-only, deferred to phase 242 (rec-20260727-006, -011).
+- **Phase 241** — threads in-flight gate provenance into the code-review gate so the
+  anchor ladder's `executable` tier is reachable in a live settle, not just injected test
+  doubles (rec-20260729-002, -007, #334).
+- **Phase 244** — settle-time guard detects a globally-installed `cadence` binary shadowing
+  the repo's own build (rec-20260729-001, #348).
+- **Phase 245** — finding-identity hash drops `anchor.kind`/`anchor.ref`/`severity`
+  (both can legitimately change for the same defect); narrows to `(file, message)`
+  (rec-20260801-009, #352).
+
+### v1.54.0 — npm scope rename + post-gate refusal durability (DELIVERED 2026-08-02, PR #363)
+
+- **Phase 242** — findings-to-ledger auto-routing: code-review findings become
+  `Recommendation`/`Evidence` entries at settle time, keyed on `Finding.id`
+  (rec-20260731-003).
+- **Phase 243** — loud banner on every verifier seam's credential-missing downgrade, not
+  just deep-verify's (rec-20260731-002, #344).
+- **Phase 246** — decision-only: 0/257 SUMMARYs had ever carried a persisted code-review
+  finding, so finding-identity dedup under real-provider message drift is deferred to an
+  offline analyzer, not in-loop telemetry (dec-20260801-003, #356).
+- **Phase 247** — refused settles now persist the findings that caused the refusal, plus
+  an immutable per-attempt SUMMARY snapshot sibling (rec-20260801-011, -005, #357).
+- **Phase 248** — a bypassed code-review/security-audit verifier *throw* now records
+  honest `status: skipped`, not a false `status: ran` (rec-20260801-004, #358).
+- **Phase 249** — extends phase 247's refused-SUMMARY writer to 3 more post-gate refusal
+  families; finding-durability ledger closeout (rec-20260731-010, -20260712-006, #361).
+- **Phase 250** — rename npm scope `@manehorizons` → `@thomas-powers-jr` across source,
+  config, docs, tooling (178 source files); largest of this era's phases (#362).
+
+### v1.55.0 — conduction visibility + coverage-scanner correctness (DELIVERED 2026-08-07)
+*Backfilled 2026-08-11. Phases 251, 257–260 verified via changeset consumption — none of
+their changesets remain pending as of this backfill, and each phase's `completedAt`
+precedes the `v1.55.0` git tag's timestamp (2026-08-07T20:12Z); the 8 currently-pending
+changesets (phases 261–268, listed below) confirm the boundary from the other side.*
+
+- **Phase 251** — `cadence doctor`'s `conduction-reachability` check reports per-gate
+  whether this repo's config can produce a real-provider finding at all; closes the
+  finding-durability arc's ledger bookkeeping (rec-20260801-012, #366).
+- **Phase 252** — repo's own `gates.evidenceFloor` raised `mention`→`assertion`; baseline
+  `profile` question deferred to v1.56 (rec-20260804-005, #372).
+- **Phase 253** — corrected a false "pnpm overrides are broken" narrative; refreshed stale
+  override targets, added a missing one, added a CI drift detector (#373).
+- **Phase 254** — retired a dead security exception, re-justified 3 exceptions ahead of
+  their 2026-08-13 expiry (#374).
+- **Phase 255** — `security-success`/`codeql-success` aggregator checks make a red
+  Security/CodeQL run actually merge-blocking (rec-20260804-006, #376).
+- **Phase 257** — `codeReview`/`securityAudit` findings render in both Markdown summary
+  surfaces, not JSON-only (#379).
+- **Phase 258** — JS/TS coverage scanner models regex literals in the span mask, fixing a
+  silent-undercount bug affecting 20 of this repo's own test files (#380).
+- **Phase 259** — `cadence doctor` `roadmap-currency` check: warns past a 10-phase drift
+  between on-disk phases and ROADMAP.md/MILESTONES.md's highest referenced phase
+  (rec-20260727-012, #381).
+- **Phase 260** — vitest `2.1.9` → `^4.1.10` major upgrade across all workspaces, closing
+  3 deferred audit exceptions (#382).
+
+### Unreleased — phases 261–270 (backfilled 2026-08-11)
+*8 pending changesets as of this backfill map exactly to phases 261–268 (verified by
+filename); phase 269 does not exist (a mis-scoped `draft new` briefly created it with no
+real content, re-scoped to 270 before anything shipped under 269); phase 270 added no
+changeset (example/test-only change, no published-package surface).*
+
+- **Phase 261** — historical audit: how many of 255 pre-phase-239 settled SUMMARYs would
+  change verdict under the phase-qualified coverage-token scheme vs. the old bare-token
+  one (#385).
+- **Phase 262** — `cadence doctor` `release-currency` check: detects when local
+  published-package content has drifted from what's actually on npm (#386).
+- **Phase 263** — gate provenance gains `providerSelection`: distinguishes configured vs.
+  fallback vs. empty-diff-so-nothing-to-judge, across all 7 verifier seams (#388).
+- **Phase 264** — rendered provider label for `mock` is now precise about
+  configured-vs-fallback, through one single-sourced formatter (#389).
+- **Phase 265** — `cadence init` presents the verifier provider choice explicitly and
+  records it as a retrievable ledger decision (#391).
+- **Phase 266** — root-caused two Windows CI timeout failures rather than raising
+  timeouts (`summary-verify-sweep`'s per-record subprocess spawn; the skill-invoke
+  FIFO-cap test's 105 serial dispatcher round-trips) (dec-20260809-001, #392).
+- **Phase 267** — mock verifier structurally cannot record a review-gate pass anymore;
+  `code-review`/`security-audit`/`plan-review`/`spec-review`/`ui-spec-review` abstain
+  instead. Repo's own gate profile moved off `auto` to `standard` (#393).
+- **Phase 268** — read-only conduction-drift-streak counter over the SUMMARY corpus,
+  surfaced in `cadence doctor`/`status`, escalating severity by streak length (#394).
+- **Phase 270** — fixed `examples/demo-test-gutting/run-demo.sh`'s coverage-scheme
+  regression (bare AC tokens vs. phase-239's phase-qualified default), which had silently
+  broken the demo's documented "Settled" end state since phase 239 (rec-20260810-001,
+  #396).
+
 
 
 ## Post-v1.0 (not scheduled)

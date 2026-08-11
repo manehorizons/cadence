@@ -1415,3 +1415,67 @@ packages/core/src/verify/prompter.ts's createDefaultPrompter/init.ts's makePromp
 - next: cadence milestone propose
 
 rec-20260808-006's original text asked that cadence onboard 'report the existing selection rather than re-prompt' -- phase 265 (which closes the rest of that rec) delivered only the negative half: onboard is regression-tested to never gain a provider-selection prompt. It still reports assessReadiness's live config-derived state (provider/keyPresent/ready/reason), not the specific recorded decision from .cadence/intelligence/decisions.json (title/rationale/timestamp of how the choice was made -- prompted, flagged, or defaulted). These usually agree in practice (config reflects the recorded choice), but onboard cannot currently answer 'when/how was this chosen' the way cadence decision list can -- a teammate onboarding onto an existing repo sees the readiness state but not the provenance. Low/medium priority: consider onboard surfacing the most recent matching decision's rationale alongside assessReadiness's report, or a documented pointer to cadence decision list.
+
+## rec-20260811-002 — Raw NUL byte in assurance-record.ts makes the file grep-classify as binary
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core/gates
+- files: packages/core/src/gates/assurance-record.ts
+- evidence: file(1) reports data, not text; one NUL byte at offset 4866 (line 87) used as a Map key delimiter in a template literal; no escaped-null convention elsewhere in packages/core/src; grep suppresses all matches in this file; unchanged across both 2026-08-10 audit passes and re-verified 2026-08-11
+- next: cadence milestone propose
+
+assurance-record.ts contains a literal NUL byte used as a Map-key delimiter inside a template literal, which makes file(1)/grep treat the whole file as binary and suppresses grep matches. Fix: use the escaped unicode-null form in the template literal instead of a literal byte (no behavior change, encoding only).
+
+## rec-20260811-003 — conduction-drift-streak will chronically warn: ~90% of phases cannot reset it by construction
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core/doctor
+- files: packages/core/src/doctor/run.ts
+- evidence: tier distribution across 282 drafts: standard 233 (82.6%), complex 29 (10.3%), quick-fix 20 (7.1%); under profile=standard only complex tier includes code-review (deltas: standard x complex has code-review, deep-verify), so only ~10% of phases can reset the streak; threshold is 3; current streak is 2 as of 2026-08-11 (re-verify before acting -- this figure moves every settle); dec-20260803-001 designates conduction as deliberately operator-initiated
+- next: cadence milestone propose
+
+Under profile=standard only complex-tier drafts include code-review, and complex is only ~10% of drafts historically, so ~90% of settles can never reset the conduction-drift-streak counter. dec-20260803-001 designates conduction as deliberately operator-initiated, so the check flags as drift what a standing decision designates as policy. Worth a decision on whether the streak/threshold model still fits that policy.
+
+## rec-20260811-004 — milestone close/status has no CLI path when its recommendation ships out-of-band of accept/export/build
+
+- status: candidate
+- ready: needs-decision
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core/intelligence
+- files: packages/core/src/cli/commands/milestone.ts
+- evidence: cadence milestone close mil-rec-rec-20260808-003 -> 'milestone close refused: cannot close milestone in status proposed'; CMD-5 (docs/handoffs/HANDOFF-v1.56-release-closeout.md) reports this as the sole desynced milestone as of 2026-08-11; recorded rather than hand-edited per that handoff's Q.3 and the project's no-hand-edit-intelligence-ledger rule
+- next: cadence milestone propose
+
+mil-rec-rec-20260808-003 stays status=proposed even though its sole recommendation (rec-20260808-003) is already shipped, because the work landed directly as a phase (268) rather than through the normal milestone accept->export->build flow. cadence milestone close refuses with 'cannot close milestone in status proposed' since it only accepts an exported milestone -- there is no transition for a proposed/accepted milestone whose recommendation(s) shipped by a different path. Same class of gap as rec-20260803-001 (no CLI path corrects a shippedRef on an already-shipped rec) but on the milestone state machine instead of the recommendation ledger.
+
+## rec-20260811-005 — ROADMAP.md missing ### Phase N entries for phases 239-241 (exist on disk, never landed under those headings)
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs
+- files: .cadence/ROADMAP.md
+- evidence: grep -n 'Phase 239\|Phase 240\|Phase 241' .cadence/ROADMAP.md returns only one incidental hit inside phase 236's prose, no heading for any of the three; all three have completedAt dates and merged PRs (#338, #332, #334) confirming real, shipped work
+- next: cadence milestone propose
+
+Phases 239 (coverage-phase-scoping, #338), 240 (doctor-multi-seam-readiness, #332), and 241 (anchor-ladder-reachability, #334) all exist on disk with completed SUMMARY.json records and shipped PRs, but ROADMAP.md has no ### Phase N heading for any of the three -- only an incidental mention of 241 inside phase 236's prose. Discovered while researching phase 271's roadmap-currency backfill; left unfixed there since the AC only required drift <= 10 (already satisfied without touching 239-241) and the handoff's own scope discipline (do not add scope) applied. MILESTONES.md now documents all three under a date-derived v1.52.0 section (phase 271 backfill).
