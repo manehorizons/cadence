@@ -1,5 +1,71 @@
 # @thomas-powers-jr/cadence-core
 
+## 1.56.0
+
+### Minor Changes
+
+- 79a760a: `cadence init` now presents the verifier-provider choice explicitly: unless an explicit `--verifier-provider <mock|anthropic|local|host-cli>` flag, `--activate`, or `--full` already settled it, init asks which provider should back deep-verify — with `mock` listed as a normal, unshamed, first-class option rather than a fallback to feel bad about. The prompt fires only when a prompter is available (a real TTY, or `CADENCE_PROMPTER_SCRIPT` for scripted/CI runs); with no prompter available it silently defaults to `mock` — never coerced onto a real provider.
+
+  On every completed scaffolding run — flag-resolved, prompted, or defaulted — the choice is now recorded as a retrievable decision in `.cadence/intelligence/decisions.json` (viewable via `cadence decision list`), so no repo runs indefinitely under an inherited default without the operator having made or seen that choice. `--dry-run` continues to preview the resolution without prompting or writing a decision.
+
+  Non-interactive paths with **no prompter available** (no TTY, no `CADENCE_PROMPTER_SCRIPT`) and explicit-flag paths (`--verifier-provider`/`--activate`/`--full`) resolve exactly as before, just with the resolution now logged. Scripted (`CADENCE_PROMPTER_SCRIPT`-driven) runs against a repo with `.claude/` present now need **one additional scripted answer** ahead of the pre-existing host-wire question, since the new verifier-provider prompt asks first — existing scripts relying on the old single-answer convention should account for this. If the script runs out at the host-wire step, that step degrades gracefully — loud stderr notice, exit 0, scaffold intact — rather than failing the run.
+
+- e228a6f: Added `cadence summary verify-all`, an in-process sweep that walks every `<id>-SUMMARY.json` under `.cadence/phases/**` and verifies each one the same way `summary verify <phase> <num>` does, without spawning a CLI subprocess per file. Reports MISMATCH and any load/parse/schema failure as a failure, treats NO_HASH as informational only, and exits nonzero iff at least one file failed.
+
+  This closes a growing correctness gap in this project's own CI: the corpus-wide `summary verify` sweep test (phase 257) previously spawned one subprocess per historical summary (275+ and growing), which was closing in on the Windows CI timeout as the corpus grew. It now runs as a single process.
+
+  Also fixes a related, independently-confirmed Windows CI timeout: the `skill-invoke` FIFO-cap-at-100 hook-dispatcher test drove 105 serial real-disk state read/write round trips. The cap logic is now a pure function (`applySkillInvoke`), unit-tested directly with no I/O — internal only, no CLI-visible behavior change.
+
+- 14288c5: Added a new `cadence doctor` check, `conduction-drift-streak`, that answers the trend question phase 251's `conduction-reachability` couldn't: not just "can this repo conduct a real finding" but "has it, lately." It's a read-only, best-effort utility walking the settled-phase `.cadence/phases/**/*-SUMMARY.json` corpus in chronological order and counting the consecutive most-recent settles that carried no non-mock provider identity in `assurance.verifierRollup` — the same drift that let 263 settles accumulate under `mock` with zero escalation, per the v1.54 audit. Also surfaced (without escalation) in `cadence status`.
+
+  `DoctorSeverity` gains a fourth rung, `indeterminate`: a check that could not assess the repo at all (e.g. an unreadable or malformed SUMMARY record whose true chronological position can't be ruled out as the most recent) — distinct from `ok`'s "assessed, no problem found." Every existing consumer (`DoctorReport.ok`'s roll-up, the `fail()` helper, `cadence doctor --fix`'s fix-planner, the CLI/JSON renderer, `doctorNextStep`'s Next-step guidance, and the MCP `doctorService` seam) handles it explicitly — `indeterminate` rolls up like `warning` (never fails the exit code) but is never counted as a problem and never silently folded into "all checks passed."
+
+  Once the streak reaches 3 consecutive mock-only settles, the check escalates from `ok` to `warning` — a warning only, never a settle refusal. That threshold is explicitly **provisional** (borrowed from an unrelated decision's `config.convergence.maxAttempts` default as a placeholder, not yet independently measured for this check) and says so in both the code and the rendered output; a follow-up will validate it once enough real-provider settles accumulate under the now-standard profile.
+
+  Every pre-existing doctor check's rendered output and exit code is unaffected — a fixture corpus and regression suite cover the counter's chronological-ordering, malformed-data, and pre-existing-schema edge cases.
+
+- 688f88f: Added a new `cadence doctor` check, `release-currency`, that warns when the local repo's publishable content has drifted from what npm actually serves under the matching version — closing the gap behind a real incident where a `package.json` `engines` bump landed on `main` but the previously-published tarball under the _same_ version string still declared the old floor, undetected for days because nothing ever compared content, only version numbers.
+
+  It compares local `packages/core/package.json`'s `engines` field against npm's published `engines` for that package (`npm view <pkg> engines --json`), and independently flags any pending `.changeset/*.md` files awaiting release, naming each one's bump type (when reported on its own, wording escalates if any pending changeset declares a `major` or `minor` bump). Both signals fold into a single `warning`-severity finding (never `error`) with `fixId: null`: this is a manual, judgment-call fix (cut a release, or confirm the divergence is intentional), never auto-applied by `--fix`.
+
+  Fully best-effort and non-blocking. If the local `package.json` is missing, unparseable, or `private: true`, the whole check is skipped with a silent `ok`. If the `npm view` fetch fails — no network, an unpublished/private package, or a timeout — only the `engines` comparison is skipped; the pending-changesets signal is still evaluated. It never throws and never fails the `cadence doctor` exit code on its own.
+
+- 3e6019f: Added a new read-only diagnostic, `cadence verify historical-coverage-audit`, that audits every pre-phase-239 (`coverageScheme` absent) `SUMMARY.json` record's recorded AC PASS for genuine, attributable test evidence — answering `rec-20260729-006`.
+
+  Each AC classifies into one of four buckets, computed from only that phase's own literal (non-wildcard), on-disk declared test files: `self-attested` (a token match in a file no other phase's DRAFT declares literally — high confidence), `self-attested-shared` (a match, but only in a file 2+ phases also declare literally — cannot rule out belonging to another phase's identically-numbered AC), `not-found-in-declared-files` (declared files were scanned, token not found — no repo-wide fallback), and `unreachable` (no literal, existing test file declared at all). It never performs a repo-wide bare-`AC-N` token scan (395 of 448 test files in a real corpus can contain that token as unrelated fixture data) and never resolves wildcard-glob `files:` entries. Purely additive and read-only: `cadence verify phase`'s existing `indeterminate` contract and command path are unmodified.
+
+  `--json` emits the full per-phase report; human mode prints aggregate bucket totals and an unreadable-record count. Exit code is always `0` on a successful run (a diagnostic, not a gate) and `1` only if the audit itself fails to run.
+
+- a66c412: Mock no longer records a persisted `pass` for the five review-family gates (`code-review`, `security-audit`, `plan-review`, `spec-review`, `ui-spec-review`) — it abstains instead. `verify()` still dispatches exactly as before under mock (its deterministic checks — flagging an added `console.log(` as HIGH, AC↔test linkage, etc. — still run and can still refuse), but when the resolved identity is mock and the outcome is a genuinely clean pass, the persisted record is relabeled rather than left as an unqualified pass: `code-review`/`security-audit` gate provenance records `status: 'skipped'` with a `skipReason` naming the abstention (instead of `'ran'`), and `plan-review`/`spec-review`/`ui-spec-review`'s convergence sidecar (`*-PLAN-REVIEW.json`/`*-SPEC-REVIEW.json`/`*-UI-SPEC-REVIEW.json`) gains a new optional `mockAbstained: true` field on the relevant history entry. A mock-served `refuse` (a real finding was flagged) is never relabeled — a refusal is never false confidence, regardless of provider.
+
+  This closes the false-clean-pass gap where an empty diff, or a diff with no matching pattern, was recorded identically to a genuine review having run and found nothing. `deep-verify` and `per-task-verify` are unaffected — they enforce real AC↔test linkage under mock and keep their existing pass/fail semantics unchanged.
+
+  `GateProvenanceZ`/`ConvergentReviewHistoryEntry` gain no required fields and no schema-version bump — both additive, matching the phase 239/263 precedent; every historical `SUMMARY.json` and convergence sidecar still parses, and no historical review-gate pass record is reinterpreted (the new fields apply only to settles/reviews run after this change).
+
+  The repo's own `.cadence/config.json` `profile` moves off `auto` to `standard` in this same release, closing a previously-deferred baseline-profile decision — mock abstention removes the false-confidence risk that baseline change would otherwise have carried. See `docs/handoffs/HANDOFF-v1.56-verifier-honesty.md` (Phase P) for the full design history.
+
+- ca61066: Added `providerSelection` to persisted gate provenance, distinguishing three previously-indistinguishable states behind a `provider: 'mock'` entry: a deliberately **configured** provider (including a deliberately configured `mock`), a silent **fallback** to mock (at selection time in `createVerifierFactory` — a missing `ANTHROPIC_API_KEY`, unset `local` base URL/model, or a verifier family with no `host-cli` builder wired — or at call time in `wrapWithFallback`'s Proxy catch, e.g. a `host-cli` spawn failure), and an **empty-diff** observation for `code-review`/`security-audit` specifically, where a real (non-mock) provider was called but `touchedFiles` was non-empty while the diff was empty, so the call was structurally unable to judge anything. A fallback anywhere in a gate run wins over a success later in the same run (any-fallback-wins, not last-write-wins).
+
+  `GateProvenanceZ.providerSelection` is a new optional enum (`'configured' | 'fallback' | 'empty-diff'`) with no `.default(...)` and no `schemaVersion` bump — additive, matching the precedent set by `coverageScheme`/`coverageMode` (phase 239): every historical `SUMMARY.json` still parses and content-hashes identically (verified against all 275 existing records in this repo's own corpus, 38 of which carry a stored hash).
+
+  Persisted for five of the seven verifier seams: `code-review`, `security-audit` (lifted onto the `gates[]` entry the same way `provider`/`model` already are) and `spec-review`, `ui-spec-review`, `plan-review` (threaded into their convergence-sidecar JSON). `deep-verify` and `per-task-verify` are deliberately excluded — neither persists any provider identity into `gates[]` today, and this repo's own `perTaskVerifier`/`verifier` providers are already `host-cli`; adding baseline persistence to either as a side effect here would grow `deriveAssuranceRecord`'s `verifierRollup` with real `host-cli` entries on ordinary auto-profile settles, silently moving `assurance.overall` toward `strong` with no review gate having actually run — the exact false-confidence failure this field exists to make visible elsewhere. See `docs/providers.md` for the full breakdown and a corpus-wide query command.
+
+### Patch Changes
+
+- 2d290db: Fixed a raw NUL byte (`0x00`) in `assurance-record.ts`, used as a `Map`-key delimiter inside a template literal, which made the file `grep`/`file(1)`-classify as binary — `grep` silently suppressed every match in it. Replaced with an escaped Unicode NUL (`U+0000`); the delimiter's runtime value is unchanged, so this is an encoding fix, not a behavior change. Added a corpus-wide regression guard against recurrence (no `packages/*/src/**/*.ts` file may contain a raw `0x00` byte).
+
+  Also corrected `deriveAssuranceRecord`'s `'weak'` classification docstring, which claimed the zero-ACs/zero-verifier-identity shape resolves to `'weak'` — it has always resolved to `'unverified'` (the branch above it fires first, both of its conditions being vacuously true for empty input). Added coverage for both previously-untested branches of that shape.
+
+- 04a38d0: Rendered provider labels now precisely convey what the `mock` verifier does and does not check, and — when the underlying gate provenance carries Phase 263's `providerSelection` — whether a `mock` entry was a deliberate choice, a silent fallback, or (for any provider) an empty-diff judgment that could not evaluate anything.
+
+  Affected surfaces: `cadence summary render`, the on-disk `<id>-SUMMARY.md` sidecar, `cadence doctor`'s verification-readiness warnings, `cadence config explain`'s provider warnings, and the phase-243 fallback banners. All five now source their wording from one single-sourced formatter (`formatVerifierRollupLabel`) and a new `MOCK_VERIFIER_CAPABILITY` constant, so the wording can't drift across renderers the way the pre-existing duplicated literal previously allowed.
+
+  Display layer only: the `mock` provider identity, `provider`/`providerSelection` JSON fields, `AssuranceRecordZ`/`GateProvenanceZ` schema, `deriveAssuranceRecord`'s derivation logic, and `contentHash` verification are all unchanged. `MOCK_VERIFIER_NOTICE` (the pre-existing activation-nudge wording) is untouched — the new constant is a neutral sibling, not a replacement.
+
+- Updated dependencies [ca61066]
+- Updated dependencies [04a38d0]
+  - @thomas-powers-jr/cadence-types@1.56.0
+
 ## 1.55.0
 
 ### Minor Changes

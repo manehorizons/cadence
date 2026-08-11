@@ -108,15 +108,15 @@ describe('271-01 pre-release record integrity (roadmap/milestone currency)', () 
     expect(unreleasedBody).toBe('');
 
     // Not a hardcoded count: later phases legitimately add their own
-    // changesets before a release consumes them all, so pinning an exact
-    // number here breaks on every such phase (271-01/AC-3 broke this way
-    // when phase 272 added a 9th). Assert the staging surface is healthy
-    // instead — non-empty, and every entry is a real changeset, not that
-    // phase 271 froze the count.
+    // changesets before a release consumes them all (broke this way when
+    // phase 272 added a 9th), and a release's own `changeset:version` step
+    // legitimately drains the count to 0 (broke this way again during the
+    // v1.56.0 cut). Neither direction of change is a defect, so the count
+    // itself isn't asserted — only that whatever is present, if anything,
+    // is a well-formed changeset.
     const changesetFiles = readdirSync(join(REPO_ROOT, '.changeset')).filter(
       (f) => f.endsWith('.md') && f !== 'README.md',
     );
-    expect(changesetFiles.length).toBeGreaterThan(0);
     for (const file of changesetFiles) {
       const body = readFileSync(join(REPO_ROOT, '.changeset', file), 'utf8');
       const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(body);

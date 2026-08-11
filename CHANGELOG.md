@@ -4,6 +4,35 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.56.0] - 2026-08-11
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.56.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Added
+
+- `cadence doctor` check `release-currency`: warns when the local repo's publishable content has drifted from what npm actually serves under the matching version — compares local `engines` against npm's published `engines` and independently flags any pending `.changeset/*.md` files awaiting release. (Phase `262`.)
+- `cadence doctor` check `conduction-drift-streak`: counts consecutive most-recent settles that carried no non-mock provider identity in `assurance.verifierRollup`, escalating from `ok` to `warning` (never a settle refusal) once the streak reaches 3. Adds a fourth `DoctorSeverity` rung, `indeterminate`, for a check that could not assess the repo at all. (Phase `268`.)
+- `cadence verify historical-coverage-audit`: a read-only diagnostic auditing every pre-phase-239 `SUMMARY.json` record's recorded AC PASS against genuine, attributable test evidence, closing `rec-20260729-006`. (Phase `261`.)
+- `cadence summary verify-all`: an in-process sweep verifying every `<id>-SUMMARY.json` under `.cadence/phases/**` without spawning a subprocess per file, closing a growing Windows CI timeout risk in the corpus-wide verify test. (Phase `264`.)
+- `cadence init` now asks explicitly which verifier provider (`mock`/`anthropic`/`local`/`host-cli`) should back deep-verify, unless an explicit flag/`--activate`/`--full` already settled it — with `mock` presented as a normal, first-class option. The resolution is always recorded as a retrievable decision in `cadence decision list`. (Phase `265`.)
+- `providerSelection` added to persisted gate provenance (`configured` / `fallback` / `empty-diff`), distinguishing a deliberate provider choice from a silent mock fallback from an empty-diff no-op judgment, across five of seven verifier seams (`code-review`, `security-audit`, `spec-review`, `ui-spec-review`, `plan-review`). (Phase `263`.)
+
+### Changed
+
+- Rendered provider labels across `cadence summary render`, the `-SUMMARY.md` sidecar, `cadence doctor`, `cadence config explain`, and the phase-243 fallback banners now precisely convey what `mock` does and does not check, and surface Phase 263's `providerSelection` where available — all sourced from one shared formatter. (Phase `264`.)
+- Mock no longer records a persisted `pass` for the five review-family gates (`code-review`, `security-audit`, `plan-review`, `spec-review`, `ui-spec-review`) — it abstains instead, closing the false-clean-pass gap where an empty or non-matching diff was recorded identically to a genuine review having run and found nothing. A mock-served refusal is never relabeled. This repo's own `.cadence/config.json` `profile` moves off `auto` to `standard` in this same release. (Phase `267`.)
+
+### Fixed
+
+- A raw NUL byte in `assurance-record.ts` (used as a `Map`-key delimiter) made the file `grep`/`file(1)`-classify as binary, silently suppressing every `grep` match in it. Replaced with an escaped Unicode NUL — the delimiter's runtime value is unchanged — and added a corpus-wide regression guard against recurrence. Also corrected `deriveAssuranceRecord`'s `'weak'`-classification docstring, which had never matched the code's actual (`'unverified'`) behavior. (Phase `272`.)
+- Two confirmed Windows CI timeouts root-caused and fixed: the corpus-wide `summary verify` sweep (now single-process, see `cadence summary verify-all` above) and the `skill-invoke` FIFO-cap-at-100 test's 105 serial real-disk round trips (now a pure, I/O-free unit test). (Phase `266`.)
+- `examples/demo-test-gutting/run-demo.sh`'s post-init config patch never set `verification.coverageScheme`, so every AC showed "has no linked test" and masked the demo's actual thesis — a gutted assertion-mode test caught by the coverage gate. (Phase `270`, `rec-20260810-001`.)
+
+### Internal
+
+- Backfilled `.cadence/ROADMAP.md` and `.cadence/MILESTONES.md` through phase 268, closing a 38-phase roadmap-currency drift down to well within threshold. Recorded the one remaining milestone/recommendation desync (`mil-rec-rec-20260808-003`) as a documented blocker rather than a hand-edit, since no CLI path exists to close it (`rec-20260803-001`). (Phase `271`.)
+- Recorded `security-audit`'s gate-matrix unreachability (1 of 9 profile × tier cells; the `standard` default profile excludes it at every tier) as a deliberate, on-the-record decision for this release rather than shipping it unaddressed (`dec-20260811-001`). Reaffirmed `rec-20260808-007`'s `deep-verify`/`per-task-verify` provenance exclusion through v1.56, deferred to v1.57 (`dec-20260811-002`).
+
 ## [1.55.0] - 2026-08-07
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.55.0`. Per-package bumps managed by changesets, now enforced lockstep across all five published packages via a `fixed` group in `.changeset/config.json` (previously `fixed: []` — every prior release happened to land in lockstep by coincidence, not enforcement; this cut caught the drift when it first actually diverged).
