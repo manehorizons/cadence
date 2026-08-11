@@ -1858,6 +1858,41 @@
       "kind": "note",
       "summary": "Verified live 2026-08-09: run-demo.sh exits 1 at both settle attempts with 'coverage: 01-01/AC-1 has no linked test' etc. on this worktree's build AND an independent main-commit-2c4fa616 build (byte-identical). git diff main -- examples/demo-test-gutting/ is empty. Two candidate fixes (operator's call): add coverageScheme:'bare' to the script's post-init config patch (mirrors fixtures.ts:47), or update the 3 fixture files to 01-01/AC-N tokens.",
       "createdAt": "2026-08-10T00:01:02.402Z"
+    },
+    {
+      "id": "ev-20260811-001",
+      "recommendationId": "rec-20260811-001",
+      "kind": "note",
+      "summary": "engine.ts:28 DELTAS: security-audit appears only under strict x complex; repo profile is standard, making it structurally unreachable at every tier; securityAudit.provider is additionally 'mock'; 0 of 282 SUMMARY records carry a real security-audit conduction (verified via cadence doctor's conduction-reachability check: 'security-audit: blocked by profile, provider')",
+      "createdAt": "2026-08-11T00:30:34.571Z"
+    },
+    {
+      "id": "ev-20260811-002",
+      "recommendationId": "rec-20260811-002",
+      "kind": "note",
+      "summary": "file(1) reports data, not text; one NUL byte at offset 4866 (line 87) used as a Map key delimiter in a template literal; no escaped-null convention elsewhere in packages/core/src; grep suppresses all matches in this file; unchanged across both 2026-08-10 audit passes and re-verified 2026-08-11",
+      "createdAt": "2026-08-11T00:30:51.497Z"
+    },
+    {
+      "id": "ev-20260811-003",
+      "recommendationId": "rec-20260811-003",
+      "kind": "note",
+      "summary": "tier distribution across 282 drafts: standard 233 (82.6%), complex 29 (10.3%), quick-fix 20 (7.1%); under profile=standard only complex tier includes code-review (deltas: standard x complex has code-review, deep-verify), so only ~10% of phases can reset the streak; threshold is 3; current streak is 2 as of 2026-08-11 (re-verify before acting -- this figure moves every settle); dec-20260803-001 designates conduction as deliberately operator-initiated",
+      "createdAt": "2026-08-11T00:31:00.991Z"
+    },
+    {
+      "id": "ev-20260811-004",
+      "recommendationId": "rec-20260811-004",
+      "kind": "note",
+      "summary": "cadence milestone close mil-rec-rec-20260808-003 -> 'milestone close refused: cannot close milestone in status proposed'; CMD-5 (docs/handoffs/HANDOFF-v1.56-release-closeout.md) reports this as the sole desynced milestone as of 2026-08-11; recorded rather than hand-edited per that handoff's Q.3 and the project's no-hand-edit-intelligence-ledger rule",
+      "createdAt": "2026-08-11T00:41:54.411Z"
+    },
+    {
+      "id": "ev-20260811-005",
+      "recommendationId": "rec-20260811-005",
+      "kind": "note",
+      "summary": "grep -n 'Phase 239\\|Phase 240\\|Phase 241' .cadence/ROADMAP.md returns only one incidental hit inside phase 236's prose, no heading for any of the three; all three have completedAt dates and merged PRs (#338, #332, #334) confirming real, shipped work",
+      "createdAt": "2026-08-11T00:54:14.926Z"
     }
   ]
 }

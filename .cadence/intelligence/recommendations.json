@@ -2589,6 +2589,118 @@
       "scoutId": "scout-20260809-phase265-whole-branch-review",
       "createdAt": "2026-08-09T18:58:44.809Z",
       "updatedAt": "2026-08-09T18:58:44.809Z"
+    },
+    {
+      "id": "rec-20260811-002",
+      "title": "Raw NUL byte in assurance-record.ts makes the file grep-classify as binary",
+      "summary": "assurance-record.ts contains a literal NUL byte used as a Map-key delimiter inside a template literal, which makes file(1)/grep treat the whole file as binary and suppresses grep matches. Fix: use the escaped unicode-null form in the template literal instead of a literal byte (no behavior change, encoding only).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/assurance-record.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260811-0027",
+      "createdAt": "2026-08-11T00:30:51.497Z",
+      "updatedAt": "2026-08-11T00:30:51.497Z"
+    },
+    {
+      "id": "rec-20260811-003",
+      "title": "conduction-drift-streak will chronically warn: ~90% of phases cannot reset it by construction",
+      "summary": "Under profile=standard only complex-tier drafts include code-review, and complex is only ~10% of drafts historically, so ~90% of settles can never reset the conduction-drift-streak counter. dec-20260803-001 designates conduction as deliberately operator-initiated, so the check flags as drift what a standing decision designates as policy. Worth a decision on whether the streak/threshold model still fits that policy.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/doctor"
+      ],
+      "affectedFiles": [
+        "packages/core/src/doctor/run.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260811-0027",
+      "createdAt": "2026-08-11T00:31:00.991Z",
+      "updatedAt": "2026-08-11T00:31:00.991Z"
+    },
+    {
+      "id": "rec-20260811-004",
+      "title": "milestone close/status has no CLI path when its recommendation ships out-of-band of accept/export/build",
+      "summary": "mil-rec-rec-20260808-003 stays status=proposed even though its sole recommendation (rec-20260808-003) is already shipped, because the work landed directly as a phase (268) rather than through the normal milestone accept->export->build flow. cadence milestone close refuses with 'cannot close milestone in status proposed' since it only accepts an exported milestone -- there is no transition for a proposed/accepted milestone whose recommendation(s) shipped by a different path. Same class of gap as rec-20260803-001 (no CLI path corrects a shippedRef on an already-shipped rec) but on the milestone state machine instead of the recommendation ledger.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/milestone.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260811-0027",
+      "createdAt": "2026-08-11T00:41:54.411Z",
+      "updatedAt": "2026-08-11T00:41:54.411Z"
+    },
+    {
+      "id": "rec-20260811-005",
+      "title": "ROADMAP.md missing ### Phase N entries for phases 239-241 (exist on disk, never landed under those headings)",
+      "summary": "Phases 239 (coverage-phase-scoping, #338), 240 (doctor-multi-seam-readiness, #332), and 241 (anchor-ladder-reachability, #334) all exist on disk with completed SUMMARY.json records and shipped PRs, but ROADMAP.md has no ### Phase N heading for any of the three -- only an incidental mention of 241 inside phase 236's prose. Discovered while researching phase 271's roadmap-currency backfill; left unfixed there since the AC only required drift <= 10 (already satisfied without touching 239-241) and the handoff's own scope discipline (do not add scope) applied. MILESTONES.md now documents all three under a date-derived v1.52.0 section (phase 271 backfill).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs"
+      ],
+      "affectedFiles": [
+        ".cadence/ROADMAP.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260811-0027",
+      "createdAt": "2026-08-11T00:54:14.926Z",
+      "updatedAt": "2026-08-11T00:54:14.926Z"
     }
   ],
   "archived": [
@@ -7382,10 +7494,43 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "270-fix-demo-test-gutting-coverage-scheme-regression",
-      "createdAt": "2026-08-10T00:01:02.402Z",
-      "updatedAt": "2026-08-10T23:38:57.255Z",
       "shippedRef": "270-fix-demo-test-gutting-coverage-scheme-regression (270-01)",
       "archivedAt": "2026-08-10T23:38:57.255Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-10T00:01:02.402Z",
+      "updatedAt": "2026-08-10T23:38:57.255Z"
+    },
+    {
+      "id": "rec-20260811-001",
+      "title": "security-audit is reachable in only 1 of 9 profile x tier DELTAS cells",
+      "summary": "security-audit only appears under strict x complex in DELTAS; repo profile is standard, so it is structurally unreachable at every tier the repo actually runs, and securityAudit.provider is additionally 'mock' — 0 of 282 settles carry a real security-audit conduction. Operator decision needed on whether/how to make it reachable for v1.56.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/engine.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260811-001"
+      ],
+      "scoutId": "scout-20260811-0027",
+      "createdAt": "2026-08-11T00:30:34.571Z",
+      "updatedAt": "2026-08-11T00:56:40.346Z",
+      "shippedRef": "271-pre-release-record-integrity (271-01), dec-20260811-001",
+      "archivedAt": "2026-08-11T00:56:40.346Z",
       "archiveReason": "shipped"
     }
   ]

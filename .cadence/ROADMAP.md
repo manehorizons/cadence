@@ -2499,6 +2499,162 @@ separate settle invocations for the same draft, undocumented. PR #377. Tier
 > archaeology job than this backfill's scope. Both are candidates for a
 > follow-on phase, not fixed inline.
 
+## Backfilled: phases 257–270 (2026-08-11)
+
+Phases 257–270 were built and shipped but never written up here, the same gap
+phase 256's backfill closed for 243–256 — `rec-20260727-012`'s anti-recurrence
+check (shipped as phase 259, see below) flags this drift but does not write
+the prose itself, by design. Phase 269 does not exist: a mis-scoped
+`draft new` briefly created it with no real content before the mistake was
+caught and its work re-scoped to phase 270; nothing shipped under 269.
+
+### Phase 257 — Render code-review/security-audit findings in Markdown summaries (#379)
+
+**Objective.** Persisted `codeReview`/`securityAudit` findings on `SummaryZ` were never
+rendered by the Markdown summary writers, so a refused settle or PR gave no visibility
+into the finding that caused the refusal without reading raw JSON. Render both finding
+kinds in both renderers, redacted via the existing `redactSecrets` utility, without
+changing byte-compatibility for historical summaries lacking findings.
+
+**As built (2026-08-06).** Shipped as designed. PR #379.
+
+### Phase 258 — JS/TS coverage scanner models regex literals in the span mask (#380)
+
+**Objective.** `coverage-profiles/mask.ts`'s `classify()` state machine had no concept of
+a JS/TS regex literal, so a raw or escaped paren/quote inside one could desync the
+string/comment classifier and silently mismask later code (the same class of bug phase
+255 found and fixed for one specific quote sequence).
+
+**As built (2026-08-06).** Shipped as designed. PR #380.
+
+### Phase 259 — `cadence doctor` check: roadmap-currency (rec-20260727-012) (#381)
+
+**Objective.** Add a warning-only, non-blocking `cadence doctor` check comparing the
+highest phase number under `.cadence/phases/` against the highest phase number
+referenced in `ROADMAP.md`/`MILESTONES.md` (`min` across both files), warning past a
+10-phase drift threshold — closing the gap that caused the 113-phase/6-week drift fixed
+in PR #321. `fixId` deliberately stays `null`: generating roadmap prose must never be
+automated. Originally scoped as phase 231; shipped as 259 since 231 had long since been
+claimed by unrelated work by the time this DRAFT was written.
+
+**As built (2026-08-07).** Shipped as designed, all 5 ACs pass —
+`checkRoadmapCurrency`/`ROADMAP_DRIFT_WARN_THRESHOLD = 10` in
+`packages/core/src/doctor/run.ts`. This is the check phase 271 (below) is closing the
+warning on. PR #381.
+
+### Phase 260 — Vitest 2 → 4 major upgrade, close deferred audit exceptions (#382)
+
+**Objective.** Upgrade vitest `2.1.9` → `^4.1.10` (the proven-sufficient floor per
+`docs/security/audit-exceptions.md`, not the `>=3.2.6` advisory floor) across root + all
+6 `packages/*` workspaces + `website`, fixing the two known Vitest-4 breakages, closing 3
+deferred audit exceptions, and superseding dependabot PRs #370/#244.
+
+**As built (2026-08-07).** Shipped as designed. PR #382.
+
+### Phase 261 — Historical AC-coverage audit for pre-phase-239 records (#385)
+
+**Objective.** Answer `rec-20260729-006`'s question with real data: of the 255
+pre-phase-239 settled `SUMMARY.json` records (written before the phase-qualified
+coverage-token scheme existed), how many would actually change verdict if replayed under
+the new scheme versus the old bare-token one — a read-only, reproducible audit, no
+behavior change.
+
+**As built (2026-08-08).** Shipped as designed. PR #385.
+
+### Phase 262 — `cadence doctor` check: release-currency (#386)
+
+**Objective.** Add a warning-only `cadence doctor` check, `release-currency`, detecting
+when the local repo's published-package content has drifted from what's actually
+published to npm (unreleased changesets, engine-floor mismatches) — the release-side
+counterpart to phase 259's roadmap-currency check.
+
+**As built (2026-08-08).** Shipped as designed. PR #386.
+
+### Phase 263 — Provider selection provenance: configured vs fallback vs empty-diff (#388)
+
+**Objective.** Persisted gate provenance couldn't distinguish a deliberately-configured
+provider from one that silently fell back to mock, nor from a real provider whose call
+structurally couldn't judge anything because its diff was empty — three epistemically
+distinct states that looked identical or went unrecorded. Adds a `providerSelection`
+field populated at the single shared code path that already knows each answer, across
+all seven verifier seams, without changing any provider identity string, the schema
+version, or any gate's pass/fail/refuse behavior.
+
+**As built (2026-08-08).** Shipped as designed. PR #388.
+
+### Phase 264 — Rendered label precision for verifier provenance (#389)
+
+**Objective.** Make the rendered provider label for `mock` precise and honest at the
+display layer — `cadence summary render`, the SUMMARY.md sidecar, `cadence doctor`,
+`cadence config explain`, and the phase-243 fallback banners — surfacing whether a mock
+result was a deliberately configured choice or an unannounced fallback (phase 263's
+`providerSelection`), through one single-sourced formatting function, without touching
+the mock provider identity or the JSON schema.
+
+**As built (2026-08-09).** Shipped as designed. PR #389.
+
+### Phase 265 — Affirmative provider selection at `cadence init` (#391)
+
+**Objective.** Make `cadence init` present the verifier provider choice explicitly and
+record it as a retrievable intelligence-ledger decision, so no repo can run indefinitely
+under an inherited default without the operator having made or seen that choice —
+without requiring a real provider (`dec-20260808-002`) or breaking any non-interactive
+init path.
+
+**As built (2026-08-09).** Shipped as designed. PR #391.
+
+### Phase 266 — Root-cause two confirmed Windows CI timeouts (#392)
+
+**Objective.** Root-cause two worsening Windows CI timeout failures
+(`summary-verify-sweep` spawning one CLI subprocess per historical `SUMMARY.json`, 275+
+and growing; the skill-invoke FIFO-cap test's 105 serial real-disk dispatcher
+round-trips) rather than raising timeouts — both had materialized together on PR #391's
+Windows leg and independently on 3 of the last 5 push-to-main CI runs. Bundled into one
+phase per `dec-20260809-001`.
+
+**As built (2026-08-09).** Shipped as designed. PR #392.
+
+### Phase 267 — Mock abstains on review-family gates instead of recording a pass (#393)
+
+**Objective.** Make it structurally impossible for the mock verifier to record a
+review-gate pass: `code-review`, `security-audit`, `plan-review`, `spec-review`, and
+`ui-spec-review` abstain (`status: skipped` + `skipReason`) under a mock provider instead
+of passing, decided at the gate/registry layer before the verifier is ever dispatched.
+`deep-verify`/`per-task-verify` keep their existing mock-pass semantics. Once abstention
+shipped, the repo's own gate profile moved off `auto` to an explicitly approved value
+(`standard`), closing `dec-20260804-001`'s deferred baseline-profile decision.
+
+**As built (2026-08-10).** Shipped as designed, across three fix rounds (`dec-20260809-004`,
+`dec-20260809-005`, `dec-20260810-002`, `dec-20260810-003`) correcting the abstention
+mechanism's exact recording site. PR #393.
+
+### Phase 268 — Conduction drift counter for `cadence doctor`/`status` (#394)
+
+**Objective.** `conduction-reachability` (phase 251) answers a point-in-time capability
+question ("can this repo conduct a real finding") but nothing answered the trend
+question ("has it, lately") — exactly how 263 settles accumulated under mock with zero
+escalation before the v1.54 audit caught it. Derive a read-only streak counter from the
+SUMMARY corpus (consecutive settles with no non-mock verifier identity in provenance),
+surface it in `cadence doctor`/`status`, and escalate severity by streak length.
+
+**As built (2026-08-10).** Shipped as designed. PR #394.
+
+### Phase 270 — Fix demo-test-gutting coverage-scheme regression (rec-20260810-001) (#396)
+
+**Objective.** `examples/demo-test-gutting/run-demo.sh`'s post-init config patch never
+set `verification.coverageScheme`, so it inherited phase 239's fresh-init default
+(`'phase-qualified'`) while its fixtures use bare `AC-N` tokens — every AC showed "has no
+linked test" at both the buggy-code and redemption steps, masking the demo's actual
+thesis (an assertion-mode gutted test caught by the coverage gate). Set
+`coverageScheme:'bare'` in the script's post-init patch, mirroring
+`packages/core/src/tutorial/fixtures.ts:47`'s existing immunization for the same reason.
+
+**As built (2026-08-10).** Shipped as designed. New end-to-end test
+(`packages/core/tests/integration/demo-gutting-coverage-scheme.test.ts`) spawns the real
+script; caught a real CI-only bug during review (the test relied on ambient git
+identity, absent on CI runners) fixed with an explicit `GIT_AUTHOR_*`/`GIT_COMMITTER_*`
+env before merge. PR #396.
+
 ### Phase 237 — Invariant promotion from recurring findings *(sketch — contingent)*
 
 **Gate to entry.** Phase 236 settled and has produced enough routed findings for
