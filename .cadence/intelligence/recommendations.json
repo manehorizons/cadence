@@ -2701,6 +2701,35 @@
       "scoutId": "scout-20260811-0027",
       "createdAt": "2026-08-11T00:54:14.926Z",
       "updatedAt": "2026-08-11T00:54:14.926Z"
+    },
+    {
+      "id": "rec-20260811-006",
+      "title": "macOS CI: demo-gutting-coverage-scheme.test.ts hits 20s timeout under load",
+      "summary": "tests/integration/demo-gutting-coverage-scheme.test.ts (phase 270's run-demo.sh e2e test, spawns npm test x2 + cadence settle run --auto x2) timed out at vitest's 20s default on macos-latest in PR #397's run 31447771306 (job 93645562270), while ubuntu-latest and windows-latest passed the same run and it runs in ~1.75-2.3s locally on Node 22. A same-run rerun (job 93655957205) passed clean in 6m54s with zero code changes -- confirms load-dependent flake, not a logic bug. main's prior 6 CI runs were all green on this test. vitest.shared.ts already scales TIMEOUT_MS to 90000 on win32 for the same class of slow child-process-spawn issue via a documented single-source-of-truth pattern (explicitly rejecting per-test overrides); if this recurs, the same darwin-scoped bump is the precedented fix -- but it trades off loosening the timeout for ~4000 other macOS tests to accommodate one outlier, so needs an explicit operator call, not a reflexive bump.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "testing",
+        "ci"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/integration/demo-gutting-coverage-scheme.test.ts",
+        "vitest.shared.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-11T02:24:45.361Z",
+      "updatedAt": "2026-08-11T02:24:45.361Z"
     }
   ],
   "archived": [
@@ -7526,12 +7555,12 @@
       "decisionIds": [
         "dec-20260811-001"
       ],
-      "scoutId": "scout-20260811-0027",
-      "createdAt": "2026-08-11T00:30:34.571Z",
-      "updatedAt": "2026-08-11T00:56:40.346Z",
       "shippedRef": "271-pre-release-record-integrity (271-01), dec-20260811-001",
+      "scoutId": "scout-20260811-0027",
       "archivedAt": "2026-08-11T00:56:40.346Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-11T00:30:34.571Z",
+      "updatedAt": "2026-08-11T00:56:40.346Z"
     }
   ]
 }

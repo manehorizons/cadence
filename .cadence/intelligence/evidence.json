@@ -1893,6 +1893,13 @@
       "kind": "note",
       "summary": "grep -n 'Phase 239\\|Phase 240\\|Phase 241' .cadence/ROADMAP.md returns only one incidental hit inside phase 236's prose, no heading for any of the three; all three have completedAt dates and merged PRs (#338, #332, #334) confirming real, shipped work",
       "createdAt": "2026-08-11T00:54:14.926Z"
+    },
+    {
+      "id": "ev-20260811-006",
+      "recommendationId": "rec-20260811-006",
+      "kind": "note",
+      "summary": "PR #397 macos-latest leg: run 31447771306, failed job 93645562270 (20s timeout), rerun job 93655957205 passed 6m54s with no code change; local Node22 run 1.75s clean; main's last 6 CI runs green",
+      "createdAt": "2026-08-11T02:24:45.361Z"
     }
   ]
 }
