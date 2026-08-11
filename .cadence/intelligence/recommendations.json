@@ -2731,6 +2731,35 @@
       "decisionIds": [],
       "createdAt": "2026-08-11T04:34:38.109Z",
       "updatedAt": "2026-08-11T04:34:38.109Z"
+    },
+    {
+      "id": "rec-20260811-009",
+      "title": "cadence resume falls back silently past a dangling lastHandoff pointer, no drift warning",
+      "summary": "state.json's session.lastHandoff can reference a SESSION-*.md file that no longer exists (e.g. an interrupted session updated the pointer field but never wrote/committed the file, or the file was later removed). cadence resume's discovery then silently falls back to a ranked filename glob instead of the pointer, and picks whichever doc sorts last lexicographically by name -- not necessarily the most recently generated one, and with no warning that the pointer itself was dangling. Observed 2026-08-11: primary checkout's state.json pointed to SESSION-2026-08-11-v1.56-closeout-phase-q-pr397-ci-pending.md (nonexistent anywhere in the repo or its worktrees); resume served SESSION-2026-08-10-resume-interrupted-main-drift-pending.md instead, a doc describing loop position phase 256-real-provider-certification-prep and an unresolved main/origin drift that had already been resolved two phases earlier (by PR #395) and superseded by phases 268/270/271/272. No drift banner fired even though the served doc's phase (256) diverged sharply from live state.json's activePhase (271). The real freshest work (phase 272, PR #399) was sitting uninvestigated in a worktree the whole time. Caught only by manually cross-checking git log, gh pr list, and worktree handoff docs -- exactly the failure the Iron Rule in the /resume skill exists to catch, but the CLI's own drift detection didn't surface it.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "resume",
+        "handoff",
+        "state-tracking"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/resume.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-009"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-11T22:11:10.838Z",
+      "updatedAt": "2026-08-11T22:11:10.838Z"
     }
   ],
   "archived": [
@@ -7620,12 +7649,12 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "272-assurance-record-correctness",
-      "scoutId": "scout-20260811-0027",
-      "createdAt": "2026-08-11T00:30:51.497Z",
-      "updatedAt": "2026-08-11T04:35:35.769Z",
       "shippedRef": "272-assurance-record-correctness (272-01)",
+      "scoutId": "scout-20260811-0027",
       "archivedAt": "2026-08-11T04:35:35.769Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-11T00:30:51.497Z",
+      "updatedAt": "2026-08-11T04:35:35.769Z"
     }
   ]
 }
