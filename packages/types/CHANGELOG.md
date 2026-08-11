@@ -1,5 +1,23 @@
 # @thomas-powers-jr/cadence-types
 
+## 1.56.0
+
+### Minor Changes
+
+- ca61066: Added `providerSelection` to persisted gate provenance, distinguishing three previously-indistinguishable states behind a `provider: 'mock'` entry: a deliberately **configured** provider (including a deliberately configured `mock`), a silent **fallback** to mock (at selection time in `createVerifierFactory` — a missing `ANTHROPIC_API_KEY`, unset `local` base URL/model, or a verifier family with no `host-cli` builder wired — or at call time in `wrapWithFallback`'s Proxy catch, e.g. a `host-cli` spawn failure), and an **empty-diff** observation for `code-review`/`security-audit` specifically, where a real (non-mock) provider was called but `touchedFiles` was non-empty while the diff was empty, so the call was structurally unable to judge anything. A fallback anywhere in a gate run wins over a success later in the same run (any-fallback-wins, not last-write-wins).
+
+  `GateProvenanceZ.providerSelection` is a new optional enum (`'configured' | 'fallback' | 'empty-diff'`) with no `.default(...)` and no `schemaVersion` bump — additive, matching the precedent set by `coverageScheme`/`coverageMode` (phase 239): every historical `SUMMARY.json` still parses and content-hashes identically (verified against all 275 existing records in this repo's own corpus, 38 of which carry a stored hash).
+
+  Persisted for five of the seven verifier seams: `code-review`, `security-audit` (lifted onto the `gates[]` entry the same way `provider`/`model` already are) and `spec-review`, `ui-spec-review`, `plan-review` (threaded into their convergence-sidecar JSON). `deep-verify` and `per-task-verify` are deliberately excluded — neither persists any provider identity into `gates[]` today, and this repo's own `perTaskVerifier`/`verifier` providers are already `host-cli`; adding baseline persistence to either as a side effect here would grow `deriveAssuranceRecord`'s `verifierRollup` with real `host-cli` entries on ordinary auto-profile settles, silently moving `assurance.overall` toward `strong` with no review gate having actually run — the exact false-confidence failure this field exists to make visible elsewhere. See `docs/providers.md` for the full breakdown and a corpus-wide query command.
+
+### Patch Changes
+
+- 04a38d0: Rendered provider labels now precisely convey what the `mock` verifier does and does not check, and — when the underlying gate provenance carries Phase 263's `providerSelection` — whether a `mock` entry was a deliberate choice, a silent fallback, or (for any provider) an empty-diff judgment that could not evaluate anything.
+
+  Affected surfaces: `cadence summary render`, the on-disk `<id>-SUMMARY.md` sidecar, `cadence doctor`'s verification-readiness warnings, `cadence config explain`'s provider warnings, and the phase-243 fallback banners. All five now source their wording from one single-sourced formatter (`formatVerifierRollupLabel`) and a new `MOCK_VERIFIER_CAPABILITY` constant, so the wording can't drift across renderers the way the pre-existing duplicated literal previously allowed.
+
+  Display layer only: the `mock` provider identity, `provider`/`providerSelection` JSON fields, `AssuranceRecordZ`/`GateProvenanceZ` schema, `deriveAssuranceRecord`'s derivation logic, and `contentHash` verification are all unchanged. `MOCK_VERIFIER_NOTICE` (the pre-existing activation-nudge wording) is untouched — the new constant is a neutral sibling, not a replacement.
+
 ## 1.55.0
 
 ## 1.54.0
