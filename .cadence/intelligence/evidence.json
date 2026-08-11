@@ -1915,6 +1915,13 @@
       "kind": "note",
       "summary": "phase 272 (272-01-SUMMARY.json): deep-verify refused AC-1/AC-2/AC-4/AC-5/AC-7 across 4 real codex conduction calls (2026-08-11); AC-2/AC-5 self-resolved on a later attempt once touchedFiles included the linking test file, isolating AC-1 (temporal)/AC-4+AC-7 (circular SUMMARY reference)/binary-pre-image-diff as the irreducible causes; git diff HEAD -- packages/core/src/gates/assurance-record.ts independently confirmed reporting 'Binary files a/... and b/... differ' for the mid-fix NUL-byte file",
       "createdAt": "2026-08-11T04:34:38.109Z"
+    },
+    {
+      "id": "ev-20260811-009",
+      "recommendationId": "rec-20260811-009",
+      "kind": "note",
+      "summary": "Reproduced 2026-08-11 in primary checkout: cadence resume served a stale doc from a dangling lastHandoff pointer with zero drift warning; ground truth required manual git/gh/worktree cross-checks to recover.",
+      "createdAt": "2026-08-11T22:11:10.838Z"
     }
   ]
 }
