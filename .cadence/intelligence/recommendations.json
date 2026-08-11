@@ -2589,36 +2589,6 @@
       "scoutId": "scout-20260809-phase265-whole-branch-review",
       "createdAt": "2026-08-09T18:58:44.809Z",
       "updatedAt": "2026-08-09T18:58:44.809Z"
-    },
-    {
-      "id": "rec-20260810-001",
-      "title": "examples/demo-test-gutting/run-demo.sh never completes -- Phase 239's phase-qualified coverage default broke its climactic refusal",
-      "summary": "Discovered during phase 267 (T5, 2026-08-09), pre-existing and unrelated to phase 267. run-demo.sh runs cadence init --gate-profile auto then overrides testGlobs/coverageMode/testCommand but never coverageScheme, so it inherits Phase 239's fresh-init default 'phase-qualified'. The demo's fixture tests use bare AC-1/AC-2/AC-3 tokens with no phase prefix, so settle run --auto refuses coverage on ALL THREE ACs (including AC-1/AC-3, which were never gutted) at both the buggy-code attempt and the fixed-code 'redemption' attempt -- the script never reaches its documented final 'Settled' state. The refusal LOOKS like the demo's thesis (gutted test caught, CI green but Cadence says no) but is actually a token-format bug unrelated to gutting detection; the gutted-assertion catch the demo exists to demonstrate is never actually exercised. Compounding this: the repo ships gutting.cast/gutting.svg (phase 177) and the README embeds that recording, so the repo displays an animated demo of behavior the script can no longer reproduce. Root cause confirmed via git diff main -- examples/demo-test-gutting/ (empty) and an independently-built main worktree reproducing byte-identical broken output. packages/core/src/tutorial/fixtures.ts:47 already sets coverageScheme:'bare' for the same reason (tutorial was immunized when Phase 239 landed; the demo script was not updated).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs",
-        "examples"
-      ],
-      "affectedFiles": [
-        "examples/demo-test-gutting/run-demo.sh",
-        "examples/demo-test-gutting/README.md",
-        "packages/core/src/cli/commands/init.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260810-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-10T00:01:02.402Z",
-      "updatedAt": "2026-08-10T00:01:02.402Z"
     }
   ],
   "archived": [
@@ -7377,11 +7347,45 @@
         "dec-20260810-005"
       ],
       "convertedToPhaseId": "268-conduction-drift-counter",
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T17:58:45.804Z",
-      "updatedAt": "2026-08-10T20:35:51.285Z",
       "shippedRef": "268-conduction-drift-counter (268-01)",
+      "scoutId": "scout-20260804-verifier-honesty",
       "archivedAt": "2026-08-10T20:35:51.285Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-08T17:58:45.804Z",
+      "updatedAt": "2026-08-10T20:35:51.285Z"
+    },
+    {
+      "id": "rec-20260810-001",
+      "title": "examples/demo-test-gutting/run-demo.sh never completes -- Phase 239's phase-qualified coverage default broke its climactic refusal",
+      "summary": "Discovered during phase 267 (T5, 2026-08-09), pre-existing and unrelated to phase 267. run-demo.sh runs cadence init --gate-profile auto then overrides testGlobs/coverageMode/testCommand but never coverageScheme, so it inherits Phase 239's fresh-init default 'phase-qualified'. The demo's fixture tests use bare AC-1/AC-2/AC-3 tokens with no phase prefix, so settle run --auto refuses coverage on ALL THREE ACs (including AC-1/AC-3, which were never gutted) at both the buggy-code attempt and the fixed-code 'redemption' attempt -- the script never reaches its documented final 'Settled' state. The refusal LOOKS like the demo's thesis (gutted test caught, CI green but Cadence says no) but is actually a token-format bug unrelated to gutting detection; the gutted-assertion catch the demo exists to demonstrate is never actually exercised. Compounding this: the repo ships gutting.cast/gutting.svg (phase 177) and the README embeds that recording, so the repo displays an animated demo of behavior the script can no longer reproduce. Root cause confirmed via git diff main -- examples/demo-test-gutting/ (empty) and an independently-built main worktree reproducing byte-identical broken output. packages/core/src/tutorial/fixtures.ts:47 already sets coverageScheme:'bare' for the same reason (tutorial was immunized when Phase 239 landed; the demo script was not updated).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "examples"
+      ],
+      "affectedFiles": [
+        "examples/demo-test-gutting/run-demo.sh",
+        "examples/demo-test-gutting/README.md",
+        "packages/core/src/cli/commands/init.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260810-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "270-fix-demo-test-gutting-coverage-scheme-regression",
+      "createdAt": "2026-08-10T00:01:02.402Z",
+      "updatedAt": "2026-08-10T23:38:57.255Z",
+      "shippedRef": "270-fix-demo-test-gutting-coverage-scheme-regression (270-01)",
+      "archivedAt": "2026-08-10T23:38:57.255Z",
       "archiveReason": "shipped"
     }
   ]

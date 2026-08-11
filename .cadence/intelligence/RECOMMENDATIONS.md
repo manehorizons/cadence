@@ -1415,19 +1415,3 @@ packages/core/src/verify/prompter.ts's createDefaultPrompter/init.ts's makePromp
 - next: cadence milestone propose
 
 rec-20260808-006's original text asked that cadence onboard 'report the existing selection rather than re-prompt' -- phase 265 (which closes the rest of that rec) delivered only the negative half: onboard is regression-tested to never gain a provider-selection prompt. It still reports assessReadiness's live config-derived state (provider/keyPresent/ready/reason), not the specific recorded decision from .cadence/intelligence/decisions.json (title/rationale/timestamp of how the choice was made -- prompted, flagged, or defaulted). These usually agree in practice (config reflects the recorded choice), but onboard cannot currently answer 'when/how was this chosen' the way cadence decision list can -- a teammate onboarding onto an existing repo sees the readiness state but not the provenance. Low/medium priority: consider onboard surfacing the most recent matching decision's rationale alongside assessReadiness's report, or a documented pointer to cadence decision list.
-
-## rec-20260810-001 — examples/demo-test-gutting/run-demo.sh never completes -- Phase 239's phase-qualified coverage default broke its climactic refusal
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs, examples
-- files: examples/demo-test-gutting/run-demo.sh, examples/demo-test-gutting/README.md, packages/core/src/cli/commands/init.ts
-- evidence: Verified live 2026-08-09: run-demo.sh exits 1 at both settle attempts with 'coverage: 01-01/AC-1 has no linked test' etc. on this worktree's build AND an independent main-commit-2c4fa616 build (byte-identical). git diff main -- examples/demo-test-gutting/ is empty. Two candidate fixes (operator's call): add coverageScheme:'bare' to the script's post-init config patch (mirrors fixtures.ts:47), or update the 3 fixture files to 01-01/AC-N tokens.
-- next: cadence milestone propose
-
-Discovered during phase 267 (T5, 2026-08-09), pre-existing and unrelated to phase 267. run-demo.sh runs cadence init --gate-profile auto then overrides testGlobs/coverageMode/testCommand but never coverageScheme, so it inherits Phase 239's fresh-init default 'phase-qualified'. The demo's fixture tests use bare AC-1/AC-2/AC-3 tokens with no phase prefix, so settle run --auto refuses coverage on ALL THREE ACs (including AC-1/AC-3, which were never gutted) at both the buggy-code attempt and the fixed-code 'redemption' attempt -- the script never reaches its documented final 'Settled' state. The refusal LOOKS like the demo's thesis (gutted test caught, CI green but Cadence says no) but is actually a token-format bug unrelated to gutting detection; the gutted-assertion catch the demo exists to demonstrate is never actually exercised. Compounding this: the repo ships gutting.cast/gutting.svg (phase 177) and the README embeds that recording, so the repo displays an animated demo of behavior the script can no longer reproduce. Root cause confirmed via git diff main -- examples/demo-test-gutting/ (empty) and an independently-built main worktree reproducing byte-identical broken output. packages/core/src/tutorial/fixtures.ts:47 already sets coverageScheme:'bare' for the same reason (tutorial was immunized when Phase 239 landed; the demo script was not updated).
