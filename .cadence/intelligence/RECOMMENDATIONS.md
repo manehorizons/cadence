@@ -1479,3 +1479,19 @@ mil-rec-rec-20260808-003 stays status=proposed even though its sole recommendati
 - next: cadence milestone propose
 
 Phases 239 (coverage-phase-scoping, #338), 240 (doctor-multi-seam-readiness, #332), and 241 (anchor-ladder-reachability, #334) all exist on disk with completed SUMMARY.json records and shipped PRs, but ROADMAP.md has no ### Phase N heading for any of the three -- only an incidental mention of 241 inside phase 236's prose. Discovered while researching phase 271's roadmap-currency backfill; left unfixed there since the AC only required drift <= 10 (already satisfied without touching 239-241) and the handoff's own scope discipline (do not add scope) applied. MILESTONES.md now documents all three under a date-derived v1.52.0 section (phase 271 backfill).
+
+## rec-20260811-006 — macOS CI: demo-gutting-coverage-scheme.test.ts hits 20s timeout under load
+
+- status: candidate
+- ready: needs-evidence
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: testing, ci
+- files: packages/core/tests/integration/demo-gutting-coverage-scheme.test.ts, vitest.shared.ts
+- evidence: PR #397 macos-latest leg: run 31447771306, failed job 93645562270 (20s timeout), rerun job 93655957205 passed 6m54s with no code change; local Node22 run 1.75s clean; main's last 6 CI runs green
+- next: cadence milestone propose
+
+tests/integration/demo-gutting-coverage-scheme.test.ts (phase 270's run-demo.sh e2e test, spawns npm test x2 + cadence settle run --auto x2) timed out at vitest's 20s default on macos-latest in PR #397's run 31447771306 (job 93645562270), while ubuntu-latest and windows-latest passed the same run and it runs in ~1.75-2.3s locally on Node 22. A same-run rerun (job 93655957205) passed clean in 6m54s with zero code changes -- confirms load-dependent flake, not a logic bug. main's prior 6 CI runs were all green on this test. vitest.shared.ts already scales TIMEOUT_MS to 90000 on win32 for the same class of slow child-process-spawn issue via a documented single-source-of-truth pattern (explicitly rejecting per-test overrides); if this recurs, the same darwin-scoped bump is the precedented fix -- but it trades off loosening the timeout for ~4000 other macOS tests to accommodate one outlier, so needs an explicit operator call, not a reflexive bump.
