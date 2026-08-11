@@ -430,6 +430,15 @@
       "status": "active",
       "decidedAt": "2026-08-11T00:33:49.763Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260811-002",
+      "recommendationId": "rec-20260808-007",
+      "title": "Reaffirm deep-verify/per-task-verify provenance exclusion through v1.56.0, defer to v1.57",
+      "rationale": "Re-verified 2026-08-11 (phase 272): deep-verify.ts still writes provider/model only into deepVerify[]/deepVerifyMeta, never into a gates[] entry's flags.verifierIdentity; per-task-verify.ts still persists no provider identity anywhere -- both match rec-20260808-007's original 2026-08-08 finding unchanged. dec-20260808-008's rationale still holds: this repo's perTaskVerifier.provider/verifier.provider are already host-cli, so naively adding baseline persistence to either gate would silently move deriveAssuranceRecord's overall toward 'strong' on ordinary auto-profile settles with no review gate having actually run -- the exact false-confidence failure mode v1.56 exists to close. It changes verifierRollup semantics and belongs behind its own phase with its own review, not folded into this correctness pass. Reaffirmed for v1.56.0: no implementation in this release; scheduled as v1.57 input.",
+      "status": "active",
+      "decidedAt": "2026-08-11T04:05:00.984Z",
+      "supersedes": []
     }
   ]
 }

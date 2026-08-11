@@ -1673,35 +1673,6 @@
       "updatedAt": "2026-08-01T00:18:50.599Z"
     },
     {
-      "id": "rec-20260801-006",
-      "title": "deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case",
-      "summary": "assurance-record.ts documents 'weak' as covering '...or simply no ACs at all with no verifier signal either,' but zero ACs with zero verifier identity actually trips the first branch (vacuously true when acResults is empty) and returns 'unverified', not 'weak' -- doc and code disagree with no test pinning either. Also untested: deriveAssuranceRecord(realProviderGates, []) (zero ACs, real verifier) traces by hand to 'mixed', but the one test exercising this shape only asserts verifierRollup, never .overall. Agent-reported 2026-08-01.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "low",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/assurance-record.ts",
-        "packages/core/tests/gates/assurance-record.test.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260801-006"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260801-0100",
-      "createdAt": "2026-08-01T02:40:44.776Z",
-      "updatedAt": "2026-08-01T02:40:44.776Z"
-    },
-    {
       "id": "rec-20260801-007",
       "title": "Three small hygiene gaps from the kernel-arc independent review (2026-08-01)",
       "summary": "(1) eslint.config.js's own comment candidly documents that dynamic import() of verifier family modules is invisible to the new kernel/verifier/consumer boundary rule -- a disclosed, real gap with no tracking recommendation until now. (2) deriveAssuranceRecord's verifierRollup key is an unseparated string join (${provider} ${model ?? ''}) -- theoretically collision-prone if a provider/model string ever contains a space (today's real values never do). (3) readRawSchemaVersion/MAX_RECOGNIZED_SCHEMA_VERSION is duplicated between verify/phase-replay.ts and cli/commands/summary.ts, hand-synced -- a third SummaryZ.safeParse call site would misreport a future schemaVersion-3 record as a generic parse failure instead of 'written by a newer Cadence.' None urgent; bundled as one low-priority rec per the independent review's own framing.",
@@ -2425,8 +2396,8 @@
       "title": "deep-verify and per-task-verify persist no provider/model identity into gates[] at all",
       "summary": "Discovered during phase 263 (v1.56 Phase L) T3 dispatch prep: GateProvenanceZ.provider/.model are documented as 'currently populated only for code-review and security-audit' (packages/types/src/summary.ts), confirmed by direct read -- deep-verify.ts writes provider/model only into its separate deepVerify[]/deepVerifyMeta records, never into a gates[] entry's flags.verifierIdentity; per-task-verify.ts persists no provider identity anywhere (zero matches for verifierIdentity/result.provider in the file). This is a materially larger gap than phase 263's providerSelection distinction: these two gates have no baseline provider identity to extend in the first place. It also interacts with deriveAssuranceRecord's hasRealVerifier (verifierRollup.some(v => v.provider !== 'mock')): since this repo's perTaskVerifier.provider and verifier.provider are both already host-cli, naively adding baseline persistence to either gate would grow verifierRollup with real host-cli entries on ordinary auto-profile settles, silently moving assurance.overall toward strong with no review gate having actually run -- a live instance of the exact false-confidence failure mode v1.56 exists to close. Phase 263 deliberately excludes both gates from its providerSelection persistence scope (see dec-<this-decision-id> and the DRAFT's Boundaries) rather than papering over this pre-existing gap.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "status": "deferred",
+      "readiness": "blocked",
       "priority": "high",
       "leverageScore": 5,
       "riskScore": 5,
@@ -2446,11 +2417,12 @@
       ],
       "assumptionIds": [],
       "decisionIds": [
-        "dec-20260808-008"
+        "dec-20260808-008",
+        "dec-20260811-002"
       ],
       "scoutId": "scout-20260804-verifier-honesty",
       "createdAt": "2026-08-08T19:31:59.976Z",
-      "updatedAt": "2026-08-08T19:31:59.976Z"
+      "updatedAt": "2026-08-11T04:05:06.559Z"
     },
     {
       "id": "rec-20260809-001",
@@ -2591,34 +2563,6 @@
       "updatedAt": "2026-08-09T18:58:44.809Z"
     },
     {
-      "id": "rec-20260811-002",
-      "title": "Raw NUL byte in assurance-record.ts makes the file grep-classify as binary",
-      "summary": "assurance-record.ts contains a literal NUL byte used as a Map-key delimiter inside a template literal, which makes file(1)/grep treat the whole file as binary and suppresses grep matches. Fix: use the escaped unicode-null form in the template literal instead of a literal byte (no behavior change, encoding only).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core/gates"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/assurance-record.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260811-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260811-0027",
-      "createdAt": "2026-08-11T00:30:51.497Z",
-      "updatedAt": "2026-08-11T00:30:51.497Z"
-    },
-    {
       "id": "rec-20260811-003",
       "title": "conduction-drift-streak will chronically warn: ~90% of phases cannot reset it by construction",
       "summary": "Under profile=standard only complex-tier drafts include code-review, and complex is only ~10% of drafts historically, so ~90% of settles can never reset the conduction-drift-streak counter. dec-20260803-001 designates conduction as deliberately operator-initiated, so the check flags as drift what a standing decision designates as policy. Worth a decision on whether the streak/threshold model still fits that policy.",
@@ -2730,6 +2674,63 @@
       "decisionIds": [],
       "createdAt": "2026-08-11T02:24:45.361Z",
       "updatedAt": "2026-08-11T02:24:45.361Z"
+    },
+    {
+      "id": "rec-20260811-007",
+      "title": "Code-review finding (high): CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws EN…",
+      "summary": "high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:60: CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.",
+      "source": "review",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packages/core"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/docs/phase272-assurance-correctness.test.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260811-0432",
+      "sourceFindingId": "2e3e2e23fb7d4aafa5186536c6b007b45e81e66c2056e8110ca58c66e4d166db",
+      "createdAt": "2026-08-11T04:32:22.867Z",
+      "updatedAt": "2026-08-11T04:32:22.867Z"
+    },
+    {
+      "id": "rec-20260811-008",
+      "title": "deep-verify judges from {acs, tests, diff, files} only -- command-output-shaped ACs are structurally unverifiable",
+      "summary": "deep-verify.ts's VerifyInput is exactly {acs, tests, diff, files} (ctx.diff() = collectGitDiff, ctx.coverage() for test linkage) -- it never sees DRAFT.md prose (no Evidence section access) or the generated SUMMARY.json (doesn't exist yet during verification). Discovered concretely in phase 272 (272-01): 5 of 7 ACs were refused by real host-cli/codex deep-verify despite passing CADENCE's own mechanical test-coverage/evidence-floor gates on merit, for three distinct structural reasons -- (1) an AC whose Then clause asserts a temporal red-then-green test sequence cannot be proven from a single diff snapshot; (2) a file whose HEAD pre-image still contains binary content (e.g. mid-fix for a NUL-byte defect) diffs as \"Binary files ... differ\", hiding the actual code change from the reviewer even though a real fix and passing test exist; (3) an AC whose Then clause references facts about \"the SUMMARY\" (e.g. \"verbatim tail pasted into the SUMMARY\", or gate provenance in \"this phase's own SUMMARY.json\") is circular by construction -- that SUMMARY does not exist until after this very settle, and after deep-verify, completes. Since DELTAS['standard']['complex'] bundles deep-verify with code-review (the same tier D-F's real-conduction requirement needs), any complex-tier phase whose ACs describe command output or self-referential SUMMARY facts will predictably hit this, forcing --force on ACs that are otherwise genuinely earned. Not a deep-verify bug to fix reflexively -- widening its context (DRAFT prose, prior SUMMARYs) has its own false-confidence risks worth designing deliberately, not bolting on.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/deep-verify.ts",
+        "packages/core/src/gates/engine.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-11T04:34:38.109Z",
+      "updatedAt": "2026-08-11T04:34:38.109Z"
     }
   ],
   "archived": [
@@ -7561,6 +7562,70 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-11T00:30:34.571Z",
       "updatedAt": "2026-08-11T00:56:40.346Z"
+    },
+    {
+      "id": "rec-20260801-006",
+      "title": "deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case",
+      "summary": "assurance-record.ts documents 'weak' as covering '...or simply no ACs at all with no verifier signal either,' but zero ACs with zero verifier identity actually trips the first branch (vacuously true when acResults is empty) and returns 'unverified', not 'weak' -- doc and code disagree with no test pinning either. Also untested: deriveAssuranceRecord(realProviderGates, []) (zero ACs, real verifier) traces by hand to 'mixed', but the one test exercising this shape only asserts verifierRollup, never .overall. Agent-reported 2026-08-01.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/assurance-record.ts",
+        "packages/core/tests/gates/assurance-record.test.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260801-006"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "272-assurance-record-correctness (272-01)",
+      "scoutId": "scout-20260801-0100",
+      "archivedAt": "2026-08-11T04:03:55.373Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-01T02:40:44.776Z",
+      "updatedAt": "2026-08-11T04:03:55.373Z"
+    },
+    {
+      "id": "rec-20260811-002",
+      "title": "Raw NUL byte in assurance-record.ts makes the file grep-classify as binary",
+      "summary": "assurance-record.ts contains a literal NUL byte used as a Map-key delimiter inside a template literal, which makes file(1)/grep treat the whole file as binary and suppresses grep matches. Fix: use the escaped unicode-null form in the template literal instead of a literal byte (no behavior change, encoding only).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/assurance-record.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "272-assurance-record-correctness",
+      "scoutId": "scout-20260811-0027",
+      "createdAt": "2026-08-11T00:30:51.497Z",
+      "updatedAt": "2026-08-11T04:35:35.769Z",
+      "shippedRef": "272-assurance-record-correctness (272-01)",
+      "archivedAt": "2026-08-11T04:35:35.769Z",
+      "archiveReason": "shipped"
     }
   ]
 }

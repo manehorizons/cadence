@@ -309,6 +309,13 @@ Operator choice (2026-08-10), presented with the fork: AC-1's streak counter can
 
 security-audit occupies only the strict x complex DELTAS cell (packages/core/src/gates/engine.ts:28); this repo's own profile is standard, so security-audit is structurally unreachable at every tier this repo actually runs, and securityAudit.provider defaults to mock. Operator decision (D-E from docs/handoffs/HANDOFF-v1.56-release-closeout.md, external-audit-authored) presented 3 options for v1.56: (1) leave as-is and record why, (2) add security-audit to standard x complex -- a gate-matrix change requiring its own DESIGN.md-scoped phase, out of scope for v1.56, (3) override profile to strict for complex-tier work via dec-20260803-001's DRAFT-level mechanism. Operator chose option 1 for this release: leave the matrix as-is, ship v1.56 with security-audit still unreachable under the default profile, and record this as a deliberate, documented choice rather than silence. Option 2 is filed as v1.57 input (see rec-20260811-001). Option 3 remains available per-phase at any time via dec-20260803-001's existing mechanism -- this decision does not foreclose an operator choosing it later for any specific complex-tier phase. Revisit trigger: reconsider before v1.57 if a real security-relevant regression ships that a real security-audit conduction would plausibly have caught.
 
+### dec-20260811-002 — Reaffirm deep-verify/per-task-verify provenance exclusion through v1.56.0, defer to v1.57
+
+- recommendation: rec-20260808-007
+- decided: 2026-08-11T04:05:00.984Z
+
+Re-verified 2026-08-11 (phase 272): deep-verify.ts still writes provider/model only into deepVerify[]/deepVerifyMeta, never into a gates[] entry's flags.verifierIdentity; per-task-verify.ts still persists no provider identity anywhere -- both match rec-20260808-007's original 2026-08-08 finding unchanged. dec-20260808-008's rationale still holds: this repo's perTaskVerifier.provider/verifier.provider are already host-cli, so naively adding baseline persistence to either gate would silently move deriveAssuranceRecord's overall toward 'strong' on ordinary auto-profile settles with no review gate having actually run -- the exact false-confidence failure mode v1.56 exists to close. It changes verifierRollup semantics and belongs behind its own phase with its own review, not folded into this correctness pass. Reaffirmed for v1.56.0: no implementation in this release; scheduled as v1.57 input.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja
