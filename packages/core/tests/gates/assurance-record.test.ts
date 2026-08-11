@@ -96,6 +96,25 @@ describe('deriveAssuranceRecord (phase 233 T2)', () => {
       { provider: 'anthropic', model: 'claude-y', gateCount: 1 },
     ]);
   });
+
+  it('272-01/AC-5: zero ACs with zero verifier identity resolves to "unverified", not "weak" (rec-20260801-006)', () => {
+    // Pins the docstring correction: the 'unverified' branch's two
+    // conditions are each vacuously true with empty inputs, so this shape
+    // hits 'unverified' before the 'weak' fallback is ever reached.
+    const result = deriveAssuranceRecord([], []);
+    expect(result.overall).toBe('unverified');
+  });
+
+  it('272-01/AC-5: zero ACs with a real verifier present resolves to "mixed" (previously untested branch, rec-20260801-006)', () => {
+    // hasRealVerifier=true but totalAcs=0 means strongRatio is 0 by the
+    // totalAcs>0 guard, so this can never reach 'strong' -- it lands in the
+    // 'mixed' branch via the hasRealVerifier||strongRatio>0 condition alone.
+    const realProviderGates: GateProvenance[] = [
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+    ];
+    const result = deriveAssuranceRecord(realProviderGates, []);
+    expect(result.overall).toBe('mixed');
+  });
 });
 
 /**

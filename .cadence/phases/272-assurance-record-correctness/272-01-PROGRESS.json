@@ -1,0 +1,38 @@
+{
+  "draftId": "272-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Wrote packages/core/tests/gates/assurance-record-encoding.test.ts; RED captured naming assurance-record.ts offset 4866",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-11T04:02:40.501Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Escaped NUL at assurance-record.ts:87 via precise buffer surgery + comment; CMD-2 NUL count=0; grep -c returns 142; file(1) reports text; T1 test GREEN",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-11T04:02:40.657Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Corrected weak-classification docstring (rec-20260801-006 was accurate: zero-ACs/zero-verifier hits unverified branch first, not weak); added 2 tests for both previously-untested branches; rec-20260801-006 promoted to shipped",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/272-assurance-record-correctness/packages/core/src/gates/assurance-record.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/272-assurance-record-correctness/packages/core/tests/gates/assurance-record.test.ts"
+      ],
+      "updatedAt": "2026-08-11T04:04:02.016Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Re-verified rec-20260808-007's claim still holds; recorded dec-20260811-002 reaffirming exclusion through v1.56, deferring to v1.57; rec-20260808-007 promoted to deferred/blocked",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-11T04:05:13.087Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "cadence summary verify-all: 283 checked, 46 MATCH, 237 NO_HASH (informational, pre-phase-223), 0 failed, exit 0",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-11T04:05:35.573Z"
+    }
+  }
+}

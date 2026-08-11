@@ -1900,6 +1900,21 @@
       "kind": "note",
       "summary": "PR #397 macos-latest leg: run 31447771306, failed job 93645562270 (20s timeout), rerun job 93655957205 passed 6m54s with no code change; local Node22 run 1.75s clean; main's last 6 CI runs green",
       "createdAt": "2026-08-11T02:24:45.361Z"
+    },
+    {
+      "id": "ev-20260811-007",
+      "recommendationId": "rec-20260811-007",
+      "kind": "cadence-artifact",
+      "summary": "phase 272-assurance-record-correctness, draft 272-01, SUMMARY contentHash 36b06bb1804268e27aaf3dbbaf581dfbb7859c34f610409f571069e6765bfecf — high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:60: CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.",
+      "path": ".cadence/phases/272-assurance-record-correctness/272-01-SUMMARY.json",
+      "createdAt": "2026-08-11T04:32:22.867Z"
+    },
+    {
+      "id": "ev-20260811-008",
+      "recommendationId": "rec-20260811-008",
+      "kind": "note",
+      "summary": "phase 272 (272-01-SUMMARY.json): deep-verify refused AC-1/AC-2/AC-4/AC-5/AC-7 across 4 real codex conduction calls (2026-08-11); AC-2/AC-5 self-resolved on a later attempt once touchedFiles included the linking test file, isolating AC-1 (temporal)/AC-4+AC-7 (circular SUMMARY reference)/binary-pre-image-diff as the irreducible causes; git diff HEAD -- packages/core/src/gates/assurance-record.ts independently confirmed reporting 'Binary files a/... and b/... differ' for the mid-fix NUL-byte file",
+      "createdAt": "2026-08-11T04:34:38.109Z"
     }
   ]
 }

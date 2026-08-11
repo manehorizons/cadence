@@ -1,0 +1,27 @@
+{
+  "draftId": "272-01",
+  "converged": false,
+  "attempts": 1,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-08-11T04:08:37.680Z",
+      "pass": true,
+      "findingsCount": 0,
+      "provider": "host-cli",
+      "verdict": "pass"
+    },
+    {
+      "at": "2026-08-11T04:32:22.850Z",
+      "pass": false,
+      "findingsCount": 1,
+      "provider": "host-cli",
+      "verdict": "reloop",
+      "bypassed": true
+    }
+  ],
+  "pass": false,
+  "provider": "host-cli",
+  "findings": 1,
+  "at": "2026-08-11T04:32:22.850Z"
+}

@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 2,
+  "draftId": "272-01",
+  "completedAt": "2026-08-11T04:32:22.853Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "executed"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-6",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-7",
+      "pass": false,
+      "note": "auto: no linked tasks",
+      "evidence": "unverified"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "ran"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "skipped",
+      "skipReason": "bypassed via --allow-missing-coverage"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "ran"
+    },
+    {
+      "gate": "code-review",
+      "status": "ran",
+      "provider": "host-cli",
+      "providerSelection": "configured"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Wrote packages/core/tests/gates/assurance-record-encoding.test.ts; RED captured naming assurance-record.ts offset 4866"
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "Escaped NUL at assurance-record.ts:87 via precise buffer surgery + comment; CMD-2 NUL count=0; grep -c returns 142; file(1) reports text; T1 test GREEN"
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "Corrected weak-classification docstring (rec-20260801-006 was accurate: zero-ACs/zero-verifier hits unverified branch first, not weak); added 2 tests for both previously-untested branches; rec-20260801-006 promoted to shipped"
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": "Re-verified rec-20260808-007's claim still holds; recorded dec-20260811-002 reaffirming exclusion through v1.56, deferring to v1.57; rec-20260808-007 promoted to deferred/blocked"
+    },
+    {
+      "id": "T5",
+      "status": "DONE",
+      "notes": "cadence summary verify-all: 283 checked, 46 MATCH, 237 NO_HASH (informational, pre-phase-223), 0 failed, exit 0"
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "deepVerify": {
+    "AC-1": {
+      "pass": false,
+      "reason": "Regression test exists, but SUMMARY only states RED was captured; it pastes neither verbatim pre-fix failure nor post-fix passing output.",
+      "provider": "host-cli"
+    },
+    "AC-2": {
+      "pass": true,
+      "reason": "Source uses \\u0000 in the template literal; AC-2 test asserts no raw NUL and escaped delimiter form, and SUMMARY records NUL count=0.",
+      "provider": "host-cli"
+    },
+    "AC-3": {
+      "pass": true,
+      "reason": "AC-3 test runs grep -c and asserts a positive numeric count; SUMMARY records grep -c returned 142 rather than binary matching.",
+      "provider": "host-cli"
+    },
+    "AC-4": {
+      "pass": false,
+      "reason": "Test runs verify-all, but SUMMARY contains only a paraphrased count note, not the required verbatim command tail.",
+      "provider": "host-cli"
+    },
+    "AC-5": {
+      "pass": true,
+      "reason": "Docstring now states empty inputs resolve unverified; tests cover empty/no-verifier and empty/real-verifier mixed branches; archived rec is shipped with phase ref.",
+      "provider": "host-cli"
+    },
+    "AC-6": {
+      "pass": true,
+      "reason": "dec-20260811-002 explicitly reaffirms exclusion through v1.56 and defers v1.57; rec-20260808-007 is deferred/blocked and references it.",
+      "provider": "host-cli"
+    },
+    "AC-7": {
+      "pass": false,
+      "reason": "SUMMARY has no code-review gate entry; deep-verify is refused. It does not record ran/host-cli/configured as required.",
+      "provider": "host-cli"
+    }
+  },
+  "deepVerifyMeta": {
+    "diffProvided": true,
+    "diffBytes": 16903,
+    "truncated": false,
+    "filesCount": 7,
+    "provider": "host-cli"
+  },
+  "codeReview": {
+    "packages/core/tests/docs/phase272-assurance-correctness.test.ts": [
+      {
+        "severity": "high",
+        "message": "CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.",
+        "line": 60,
+        "anchor": {
+          "kind": "ac",
+          "ref": "AC-1",
+          "tier": "executable"
+        },
+        "id": "2e3e2e23fb7d4aafa5186536c6b007b45e81e66c2056e8110ca58c66e4d166db",
+        "target": "artifact",
+        "disposition": "open"
+      }
+    ]
+  },
+  "gateBypasses": [
+    {
+      "gate": "test-coverage",
+      "flag": "--allow-missing-coverage",
+      "reason": "test-coverage gate bypassed via --allow-missing-coverage",
+      "severity": "warn"
+    },
+    {
+      "gate": "settle",
+      "flag": "--force",
+      "reason": "settle --force bypassed failing verdicts (structural: AC-7; deep: AC-1, AC-4, AC-7)",
+      "severity": "error"
+    }
+  ],
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 23,
+    "sessionSubagentSpawns": 1
+  },
+  "assurance": {
+    "verifierRollup": [
+      {
+        "provider": "host-cli",
+        "gateCount": 1
+      }
+    ],
+    "evidenceTally": {
+      "ai-verified": 4,
+      "executed": 2,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 1
+    },
+    "overall": "strong"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "36b06bb1804268e27aaf3dbbaf581dfbb7859c34f610409f571069e6765bfecf"
+  }
+}

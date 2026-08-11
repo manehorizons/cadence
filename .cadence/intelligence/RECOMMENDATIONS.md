@@ -902,22 +902,6 @@ Phase 242's routing step (settle.ts, finalizeAndCloseSettle) writes each new rou
 
 docs/reference/commands.md:156 ('Jump to one key -- profile, loopEnforcement, acDiscipline, commitCadence, or verifier. Omit to walk all five.') predates phase 102's autoArchive and phase 108's coverageMode additions to packages/core/src/config-edit/fields.ts's EDITABLE_FIELDS array, and now also predates phase 242's autoRoute addition -- three fields (autoArchive, coverageMode, autoRoute) are absent from this doc's field list and its 'walk all five' claim, though EDITABLE_FIELDS actually holds 8. Not caused by phase 242 -- the gap already existed for autoArchive/coverageMode before this phase; autoRoute is simply the third field to land in it. No doc-content test currently catches this (unlike the command-count/slash-command-count tests this repo already has for similar drift). Fix: update the field list and count, and consider adding a doc-content test deriving the list from EDITABLE_FIELDS.map(f => f.name) the same way docs-command-count.test.ts derives the registered command set, so this can't silently drift again.
 
-## rec-20260801-006 — deriveAssuranceRecord docstring/code mismatch on the 'weak' classification, with an untested edge case
-
-- status: candidate
-- ready: needs-decision
-- priority: low
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/gates/assurance-record.ts, packages/core/tests/gates/assurance-record.test.ts
-- evidence: Independent adversarial review of feat/kernel-assurance-v2 (2026-08-01)
-- next: cadence milestone propose
-
-assurance-record.ts documents 'weak' as covering '...or simply no ACs at all with no verifier signal either,' but zero ACs with zero verifier identity actually trips the first branch (vacuously true when acResults is empty) and returns 'unverified', not 'weak' -- doc and code disagree with no test pinning either. Also untested: deriveAssuranceRecord(realProviderGates, []) (zero ACs, real verifier) traces by hand to 'mixed', but the one test exercising this shape only asserts verifierRollup, never .overall. Agent-reported 2026-08-01.
-
 ## rec-20260801-007 — Three small hygiene gaps from the kernel-arc independent review (2026-08-01)
 
 - status: candidate
@@ -1321,8 +1305,8 @@ release-currency (phase 262) is scoped to comparing published vs local 'engines'
 
 ## rec-20260808-007 — deep-verify and per-task-verify persist no provider/model identity into gates[] at all
 
-- status: candidate
-- ready: needs-decision
+- status: deferred
+- ready: blocked
 - priority: high
 - leverage: 5/10
 - risk: 5/10
@@ -1330,7 +1314,7 @@ release-currency (phase 262) is scoped to comparing published vs local 'engines'
 - decay: fresh
 - areas: core
 - files: packages/core/src/gates/deep-verify.ts, packages/core/src/gates/per-task-verify.ts, packages/core/src/gates/assurance-record.ts
-- decisions: dec-20260808-008 (active)
+- decisions: dec-20260808-008 (active), dec-20260811-002 (active)
 - evidence: grep -n 'verifierIdentity|result.provider|result.model' packages/core/src/gates/deep-verify.ts packages/core/src/gates/per-task-verify.ts (2026-08-08): deep-verify hits are deepVerify[]/deepVerifyMeta only, never flags.verifierIdentity; per-task-verify has zero hits
 - next: cadence milestone propose
 
@@ -1416,22 +1400,6 @@ packages/core/src/verify/prompter.ts's createDefaultPrompter/init.ts's makePromp
 
 rec-20260808-006's original text asked that cadence onboard 'report the existing selection rather than re-prompt' -- phase 265 (which closes the rest of that rec) delivered only the negative half: onboard is regression-tested to never gain a provider-selection prompt. It still reports assessReadiness's live config-derived state (provider/keyPresent/ready/reason), not the specific recorded decision from .cadence/intelligence/decisions.json (title/rationale/timestamp of how the choice was made -- prompted, flagged, or defaulted). These usually agree in practice (config reflects the recorded choice), but onboard cannot currently answer 'when/how was this chosen' the way cadence decision list can -- a teammate onboarding onto an existing repo sees the readiness state but not the provenance. Low/medium priority: consider onboard surfacing the most recent matching decision's rationale alongside assessReadiness's report, or a documented pointer to cadence decision list.
 
-## rec-20260811-002 — Raw NUL byte in assurance-record.ts makes the file grep-classify as binary
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core/gates
-- files: packages/core/src/gates/assurance-record.ts
-- evidence: file(1) reports data, not text; one NUL byte at offset 4866 (line 87) used as a Map key delimiter in a template literal; no escaped-null convention elsewhere in packages/core/src; grep suppresses all matches in this file; unchanged across both 2026-08-10 audit passes and re-verified 2026-08-11
-- next: cadence milestone propose
-
-assurance-record.ts contains a literal NUL byte used as a Map-key delimiter inside a template literal, which makes file(1)/grep treat the whole file as binary and suppresses grep matches. Fix: use the escaped unicode-null form in the template literal instead of a literal byte (no behavior change, encoding only).
-
 ## rec-20260811-003 — conduction-drift-streak will chronically warn: ~90% of phases cannot reset it by construction
 
 - status: candidate
@@ -1495,3 +1463,35 @@ Phases 239 (coverage-phase-scoping, #338), 240 (doctor-multi-seam-readiness, #33
 - next: cadence milestone propose
 
 tests/integration/demo-gutting-coverage-scheme.test.ts (phase 270's run-demo.sh e2e test, spawns npm test x2 + cadence settle run --auto x2) timed out at vitest's 20s default on macos-latest in PR #397's run 31447771306 (job 93645562270), while ubuntu-latest and windows-latest passed the same run and it runs in ~1.75-2.3s locally on Node 22. A same-run rerun (job 93655957205) passed clean in 6m54s with zero code changes -- confirms load-dependent flake, not a logic bug. main's prior 6 CI runs were all green on this test. vitest.shared.ts already scales TIMEOUT_MS to 90000 on win32 for the same class of slow child-process-spawn issue via a documented single-source-of-truth pattern (explicitly rejecting per-test overrides); if this recurs, the same darwin-scoped bump is the precedented fix -- but it trades off loosening the timeout for ~4000 other macOS tests to accommodate one outlier, so needs an explicit operator call, not a reflexive bump.
+
+## rec-20260811-007 — Code-review finding (high): CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws EN…
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: packages/core
+- files: packages/core/tests/docs/phase272-assurance-correctness.test.ts
+- evidence: phase 272-assurance-record-correctness, draft 272-01, SUMMARY contentHash 36b06bb1804268e27aaf3dbbaf581dfbb7859c34f610409f571069e6765bfecf — high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:60: CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.
+- next: cadence milestone propose
+
+high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:60: CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.
+
+## rec-20260811-008 — deep-verify judges from {acs, tests, diff, files} only -- command-output-shaped ACs are structurally unverifiable
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core/gates
+- files: packages/core/src/gates/deep-verify.ts, packages/core/src/gates/engine.ts
+- evidence: phase 272 (272-01-SUMMARY.json): deep-verify refused AC-1/AC-2/AC-4/AC-5/AC-7 across 4 real codex conduction calls (2026-08-11); AC-2/AC-5 self-resolved on a later attempt once touchedFiles included the linking test file, isolating AC-1 (temporal)/AC-4+AC-7 (circular SUMMARY reference)/binary-pre-image-diff as the irreducible causes; git diff HEAD -- packages/core/src/gates/assurance-record.ts independently confirmed reporting 'Binary files a/... and b/... differ' for the mid-fix NUL-byte file
+- next: cadence milestone propose
+
+deep-verify.ts's VerifyInput is exactly {acs, tests, diff, files} (ctx.diff() = collectGitDiff, ctx.coverage() for test linkage) -- it never sees DRAFT.md prose (no Evidence section access) or the generated SUMMARY.json (doesn't exist yet during verification). Discovered concretely in phase 272 (272-01): 5 of 7 ACs were refused by real host-cli/codex deep-verify despite passing CADENCE's own mechanical test-coverage/evidence-floor gates on merit, for three distinct structural reasons -- (1) an AC whose Then clause asserts a temporal red-then-green test sequence cannot be proven from a single diff snapshot; (2) a file whose HEAD pre-image still contains binary content (e.g. mid-fix for a NUL-byte defect) diffs as "Binary files ... differ", hiding the actual code change from the reviewer even though a real fix and passing test exist; (3) an AC whose Then clause references facts about "the SUMMARY" (e.g. "verbatim tail pasted into the SUMMARY", or gate provenance in "this phase's own SUMMARY.json") is circular by construction -- that SUMMARY does not exist until after this very settle, and after deep-verify, completes. Since DELTAS['standard']['complex'] bundles deep-verify with code-review (the same tier D-F's real-conduction requirement needs), any complex-tier phase whose ACs describe command output or self-referential SUMMARY facts will predictably hit this, forcing --force on ACs that are otherwise genuinely earned. Not a deep-verify bug to fix reflexively -- widening its context (DRAFT prose, prior SUMMARYs) has its own false-confidence risks worth designing deliberately, not bolting on.
