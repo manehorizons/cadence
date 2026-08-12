@@ -1,0 +1,33 @@
+{
+  "draftId": "273-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-12T00:09:06.727Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/core/src/handoff/locate.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/types/src/handoff.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/core/src/handoff/run-resume.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/core/src/services/resume.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/core/tests/handoff/locate.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/core/tests/handoff/run-resume.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/core/tests/services/resume.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/core/src/cli/commands/resume.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/273-resume-stale-handoff-fix/packages/core/tests/cli/resume.test.ts"
+      ],
+      "updatedAt": "2026-08-12T00:34:52.990Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-12T00:36:43.186Z"
+    }
+  }
+}

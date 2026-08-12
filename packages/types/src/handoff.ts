@@ -90,6 +90,11 @@ export const ResumeResultZ = z.union([
     pickedWorktree: z.string().optional(),
     remote: RemoteFreshnessZ.optional(),
     unfilled: z.array(z.string()).optional(),
+    /** Set only when `state.json`'s `session.lastHandoff` named a SESSION
+     *  doc that no longer exists and resume fell back to the
+     *  freshest-by-`generated_at` doc instead. Holds the missing pointer's
+     *  filename. Absent on every normal resolution path. */
+    danglingHandoffPointer: z.string().optional(),
   }),
 ]);
 export type ResumeResult = z.infer<typeof ResumeResultZ>;

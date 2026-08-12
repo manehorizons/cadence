@@ -227,6 +227,60 @@ describe('cadence resume', () => {
       expect(r.stderr).toMatch(/mutually exclusive/i);
     });
   });
+
+  // -------------------------------------------------------------------
+  // Phase 273 T2: the CLI's own rendering block (process.stdout.write,
+  // separate from resumeService's io.out path) must carry the same
+  // dangling-lastHandoff-pointer warning. This is the literal surface a
+  // human hits running `cadence resume` at a terminal (rec-20260811-009).
+  // -------------------------------------------------------------------
+
+  describe('phase 273: dangling lastHandoff pointer warning', () => {
+    it('273-01/AC-1: warns on stdout naming both the missing pointer and the doc actually served', async () => {
+      active = await tempRepo({ initialized: true });
+      await run(['handoff', '--label', 'cli'], active.root);
+
+      const backend = new SimpleStateBackend(active.root);
+      const state = await backend.readState();
+      const realHandoffFileName = state.session.lastHandoff;
+      expect(realHandoffFileName).not.toBeNull();
+
+      // Corrupt the pointer to name a SESSION doc that was never written,
+      // while the real doc created by `cadence handoff` above is still on
+      // disk — the fallback glob should still find and serve it.
+      await backend.commit({
+        ...state,
+        session: { ...state.session, lastHandoff: 'SESSION-does-not-exist.md' },
+      });
+
+      // Read the actually-served path off the --json surface (resume is
+      // read-only per AC-20, so a second invocation against the same
+      // corrupted state sees identical resolution) so the assertion below
+      // ties the filename into the "served … instead" slot specifically,
+      // not just anywhere in stdout.
+      const served = JSON.parse((await run(['resume', '--json'], active.root)).stdout)
+        .handoffPath as string;
+
+      const r = await run(['resume'], active.root);
+      expect(r.code).toBe(0);
+      expect(r.stdout).toContain(
+        `⚠ state.json's lastHandoff pointer ("SESSION-does-not-exist.md") does not exist — served ${served} instead, which may not be the most recent session.`,
+      );
+    });
+
+    it('273-01/AC-2: no dangling-pointer warning when lastHandoff correctly names a real doc', async () => {
+      active = await tempRepo({ initialized: true });
+      await run(['handoff', '--label', 'cli'], active.root);
+      const r = await run(['resume'], active.root);
+      expect(r.code).toBe(0);
+      // Positive anchor: prove resume actually succeeded and rendered the
+      // narrative (not e.g. "no handoff found"), so the absence checks below
+      // are meaningful rather than vacuously true.
+      expect(r.stdout).toMatch(/--- narrative from/);
+      expect(r.stdout).not.toMatch(/lastHandoff pointer/);
+      expect(r.stdout).not.toMatch(/does not exist — served/);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

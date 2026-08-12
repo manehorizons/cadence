@@ -1922,6 +1922,13 @@
       "kind": "note",
       "summary": "Reproduced 2026-08-11 in primary checkout: cadence resume served a stale doc from a dangling lastHandoff pointer with zero drift warning; ground truth required manual git/gh/worktree cross-checks to recover.",
       "createdAt": "2026-08-11T22:11:10.838Z"
+    },
+    {
+      "id": "ev-20260812-001",
+      "recommendationId": "rec-20260812-001",
+      "kind": "note",
+      "summary": "Found during phase 273's independent T2 review (2026-08-11): confirmed by reading locate.ts's null-return path and run-resume.ts's found:false branch.",
+      "createdAt": "2026-08-12T00:35:05.643Z"
     }
   ]
 }

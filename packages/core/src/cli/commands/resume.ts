@@ -85,6 +85,11 @@ export function registerResumeCommand(program: Command): void {
               `⚠ handoff written at ${res.drift.docLoopPosition}; live state now ${res.drift.liveLoopPosition}\n\n`,
             );
           }
+          if (res.danglingHandoffPointer) {
+            process.stdout.write(
+              `⚠ state.json's lastHandoff pointer ("${res.danglingHandoffPointer}") does not exist — served ${res.handoffPath} instead, which may not be the most recent session.\n\n`,
+            );
+          }
           if (res.remote) {
             if (res.remote.checked && (res.remote.behind ?? 0) > 0) {
               process.stdout.write(
