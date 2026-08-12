@@ -105,6 +105,85 @@ describe('runResume', () => {
     }
   });
 
+  // Phase 273 task 1: reproduces the missing-signal gap at the runResume
+  // level. `state.json`'s session.lastHandoff is corrupted to point at a
+  // SESSION doc that doesn't exist, while a real SESSION doc (the one
+  // runHandoff actually generated) is still present in .cadence/handoff/.
+  // `locateFreshestHandoff` silently falls back to that real doc today —
+  // this test asserts the `found: true` ResumeResult surfaces which pointer
+  // target went missing via a `danglingHandoffPointer` field (the name T2
+  // is expected to add, per the phase 273-01 DRAFT).
+  it('273-01/AC-1: ResumeResult carries danglingHandoffPointer when session.lastHandoff names a missing SESSION doc', async () => {
+    active = await tempRepo({ initialized: true });
+    await runHandoff(active.root, { label: 'demo' }, NOW);
+    const backend = new SimpleStateBackend(active.root);
+    const state = await backend.readState();
+    const realHandoffFileName = state.session.lastHandoff;
+    expect(realHandoffFileName).not.toBeNull();
+
+    // Corrupt the pointer to name a SESSION doc that was never written,
+    // while the real doc (created by runHandoff above) is still on disk.
+    await backend.commit({
+      ...state,
+      session: { ...state.session, lastHandoff: 'SESSION-does-not-exist.md' },
+    });
+
+    const res = await runResume(active.root, {}, NOW);
+    expect(res.found).toBe(true);
+    if (res.found) {
+      // The fallback still serves the real, genuinely freshest doc.
+      expect(res.handoffPath.endsWith(realHandoffFileName!)).toBe(true);
+      // The gap: nothing today records that the pointer itself was dangling.
+      expect((res as { danglingHandoffPointer?: string }).danglingHandoffPointer).toBe(
+        'SESSION-does-not-exist.md',
+      );
+    }
+  });
+
+  // 273-01/AC-2: the two normal resolution paths — lastHandoff naming a file
+  // that exists (the common case) and lastHandoff being null while a doc is
+  // still found via the fallback glob — must never carry the new field.
+  it('273-01/AC-2: danglingHandoffPointer is absent when lastHandoff names a file that exists', async () => {
+    active = await tempRepo({ initialized: true });
+    await runHandoff(active.root, { label: 'demo' }, NOW);
+    const backend = new SimpleStateBackend(active.root);
+    const state = await backend.readState();
+    expect(state.session.lastHandoff).not.toBeNull();
+
+    const res = await runResume(active.root, {}, NOW);
+    expect(res.found).toBe(true);
+    if (res.found) {
+      expect(res.handoffPath.endsWith(state.session.lastHandoff!)).toBe(true);
+      expect((res as { danglingHandoffPointer?: string }).danglingHandoffPointer).toBeUndefined();
+      expect('danglingHandoffPointer' in res).toBe(false);
+    }
+  });
+
+  it('273-01/AC-2: danglingHandoffPointer is absent when lastHandoff is null and a doc is still found via fallback', async () => {
+    active = await tempRepo({ initialized: true });
+    await runHandoff(active.root, { label: 'demo' }, NOW);
+    const backend = new SimpleStateBackend(active.root);
+    const state = await backend.readState();
+    const realHandoffFileName = state.session.lastHandoff;
+    expect(realHandoffFileName).not.toBeNull();
+
+    // No session has ever handed off, per state.json's own record — but the
+    // real doc from runHandoff above is still on disk, so the fallback glob
+    // still finds it.
+    await backend.commit({
+      ...state,
+      session: { ...state.session, lastHandoff: null },
+    });
+
+    const res = await runResume(active.root, {}, NOW);
+    expect(res.found).toBe(true);
+    if (res.found) {
+      expect(res.handoffPath.endsWith(realHandoffFileName!)).toBe(true);
+      expect((res as { danglingHandoffPointer?: string }).danglingHandoffPointer).toBeUndefined();
+      expect('danglingHandoffPointer' in res).toBe(false);
+    }
+  });
+
   // T4 — a corrupt/invalid .cadence/config.json must never break a read-only
   // `cadence resume` in the single-candidate (no siblings) case: `loadConfig`
   // is read best-effort and falls back to `defaultConfig`'s `resume` block.

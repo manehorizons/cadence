@@ -31,6 +31,11 @@ export async function resumeService(
         `⚠ handoff written at ${res.drift.docLoopPosition}; live state now ${res.drift.liveLoopPosition}\n\n`,
       );
     }
+    if (res.danglingHandoffPointer) {
+      io.out(
+        `⚠ state.json's lastHandoff pointer ("${res.danglingHandoffPointer}") does not exist — served ${res.handoffPath} instead, which may not be the most recent session.\n\n`,
+      );
+    }
     if (res.pickedSource === 'sibling') {
       io.out(`--- from sibling worktree: ${res.pickedWorktree} ---\n\n`);
     }

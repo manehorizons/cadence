@@ -73,6 +73,9 @@ async function localResolve(
       context,
       drift,
       mode,
+      ...(located.danglingPointer !== undefined
+        ? { danglingHandoffPointer: located.danglingPointer }
+        : {}),
     };
   }
 
@@ -85,6 +88,9 @@ async function localResolve(
     context: null,
     drift,
     mode,
+    ...(located.danglingPointer !== undefined
+      ? { danglingHandoffPointer: located.danglingPointer }
+      : {}),
   };
 }
 

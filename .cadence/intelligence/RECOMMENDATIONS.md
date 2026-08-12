@@ -1496,18 +1496,18 @@ high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:
 
 deep-verify.ts's VerifyInput is exactly {acs, tests, diff, files} (ctx.diff() = collectGitDiff, ctx.coverage() for test linkage) -- it never sees DRAFT.md prose (no Evidence section access) or the generated SUMMARY.json (doesn't exist yet during verification). Discovered concretely in phase 272 (272-01): 5 of 7 ACs were refused by real host-cli/codex deep-verify despite passing CADENCE's own mechanical test-coverage/evidence-floor gates on merit, for three distinct structural reasons -- (1) an AC whose Then clause asserts a temporal red-then-green test sequence cannot be proven from a single diff snapshot; (2) a file whose HEAD pre-image still contains binary content (e.g. mid-fix for a NUL-byte defect) diffs as "Binary files ... differ", hiding the actual code change from the reviewer even though a real fix and passing test exist; (3) an AC whose Then clause references facts about "the SUMMARY" (e.g. "verbatim tail pasted into the SUMMARY", or gate provenance in "this phase's own SUMMARY.json") is circular by construction -- that SUMMARY does not exist until after this very settle, and after deep-verify, completes. Since DELTAS['standard']['complex'] bundles deep-verify with code-review (the same tier D-F's real-conduction requirement needs), any complex-tier phase whose ACs describe command output or self-referential SUMMARY facts will predictably hit this, forcing --force on ACs that are otherwise genuinely earned. Not a deep-verify bug to fix reflexively -- widening its context (DRAFT prose, prior SUMMARYs) has its own false-confidence risks worth designing deliberately, not bolting on.
 
-## rec-20260811-009 — cadence resume falls back silently past a dangling lastHandoff pointer, no drift warning
+## rec-20260812-001 — resume drops the dangling-lastHandoff-pointer signal when no fallback doc exists at all
 
 - status: candidate
 - ready: needs-decision
-- priority: high
+- priority: medium
 - leverage: 5/10
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
 - areas: resume, handoff, state-tracking
-- files: packages/core/src/services/resume.ts
-- evidence: Reproduced 2026-08-11 in primary checkout: cadence resume served a stale doc from a dangling lastHandoff pointer with zero drift warning; ground truth required manual git/gh/worktree cross-checks to recover.
+- files: packages/core/src/handoff/locate.ts, packages/core/src/handoff/run-resume.ts
+- evidence: Found during phase 273's independent T2 review (2026-08-11): confirmed by reading locate.ts's null-return path and run-resume.ts's found:false branch.
 - next: cadence milestone propose
 
-state.json's session.lastHandoff can reference a SESSION-*.md file that no longer exists (e.g. an interrupted session updated the pointer field but never wrote/committed the file, or the file was later removed). cadence resume's discovery then silently falls back to a ranked filename glob instead of the pointer, and picks whichever doc sorts last lexicographically by name -- not necessarily the most recently generated one, and with no warning that the pointer itself was dangling. Observed 2026-08-11: primary checkout's state.json pointed to SESSION-2026-08-11-v1.56-closeout-phase-q-pr397-ci-pending.md (nonexistent anywhere in the repo or its worktrees); resume served SESSION-2026-08-10-resume-interrupted-main-drift-pending.md instead, a doc describing loop position phase 256-real-provider-certification-prep and an unresolved main/origin drift that had already been resolved two phases earlier (by PR #395) and superseded by phases 268/270/271/272. No drift banner fired even though the served doc's phase (256) diverged sharply from live state.json's activePhase (271). The real freshest work (phase 272, PR #399) was sitting uninvestigated in a worktree the whole time. Caught only by manually cross-checking git log, gh pr list, and worktree handoff docs -- exactly the failure the Iron Rule in the /resume skill exists to catch, but the CLI's own drift detection didn't surface it.
+locateFreshestHandoff's new danglingPointer signal (phase 273) is only surfaced when the fallback glob finds at least one other SESSION-*.md to serve. When lastHandoff is dangling AND no SESSION-*.md exists anywhere in .cadence/handoff/, locateFreshestHandoff returns null, localResolve returns { found: false }, and the operator just sees 'resume: no handoff found' with zero indication that state.json actually pointed somewhere real. Deliberately out of scope for phase 273 (AC-1's Given required at least one fallback doc to exist); worth a small follow-up to thread the dangling filename into the not-found path too.

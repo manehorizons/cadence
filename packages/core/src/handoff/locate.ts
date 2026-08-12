@@ -8,6 +8,12 @@ export interface LocatedHandoff {
   content: string;
   generatedAt: string | null;
   loopPosition: string | null;
+  /** Set only when `lastHandoff` named a file that no longer exists and the
+   *  code fell back to the freshest-by-`generated_at` glob. Holds the
+   *  missing pointer's filename (not its full path). Absent on every other
+   *  path — including when `lastHandoff` is `null` or names a file that
+   *  does exist. */
+  danglingPointer?: string;
 }
 
 function handoffDir(root: string): string {
@@ -39,9 +45,11 @@ export async function locateFreshestHandoff(
   lastHandoff: string | null,
 ): Promise<LocatedHandoff | null> {
   const dir = handoffDir(root);
+  let danglingPointer: string | undefined;
   if (lastHandoff) {
     const pointer = join(dir, lastHandoff);
     if (existsSync(pointer)) return toLocated(pointer);
+    danglingPointer = lastHandoff;
   }
   if (!existsSync(dir)) return null;
 
@@ -72,5 +80,6 @@ export async function locateFreshestHandoff(
     content: top.content,
     generatedAt: top.generatedAt,
     loopPosition: readKey(top.content, 'loop_position'),
+    ...(danglingPointer !== undefined ? { danglingPointer } : {}),
   };
 }

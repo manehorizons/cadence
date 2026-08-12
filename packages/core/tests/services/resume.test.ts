@@ -277,3 +277,120 @@ describe('resumeService: forwards io into runResume (phase 143 task 6)', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 273 task 1: reproduces the missing-signal gap at the rendered-output
+// level. `locateFreshestHandoff` silently falls back to a freshest-by-
+// generated_at doc whenever state.json's session.lastHandoff names a
+// SESSION-*.md file that doesn't exist — today nothing in resumeService's
+// rendered stdout says so. This describe block proves the gap and proves
+// the eventual fix must not just overload the existing loop-position drift
+// banner (`⚠ handoff written at ... ; live state now ...`) to also carry
+// this information — it needs its own, visibly distinct warning.
+// ---------------------------------------------------------------------------
+
+describe('resumeService: dangling lastHandoff pointer warning (phase 273 task 1)', () => {
+  let parent: string;
+  beforeAll(async () => {
+    parent = await realpath(await mkdtemp(join(tmpdir(), 'cadence-resume-svc-dangling-')));
+  });
+  afterAll(async () => {
+    await rm(parent, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }).catch(
+      () => {},
+    );
+  });
+
+  it('273-01/AC-1: warns naming the missing pointer and the doc actually served, distinct from the drift banner', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-dangling-')));
+    await initRepo(main);
+    // Live state is BUILD; the fallback doc claims DRAFT — this also
+    // triggers the pre-existing loop-position drift banner, so the test can
+    // assert the two warnings are separate messages, not one merged string.
+    await writeRepoState(main, { loopPosition: 'BUILD', lastHandoff: 'SESSION-does-not-exist.md' });
+    await writeHandoffDoc(main, 'SESSION-2026-07-01-local.md', '2026-07-01T09:00:00.000Z', {
+      loop_position: 'DRAFT',
+    });
+
+    const io = bufferIO();
+    const res = await resumeService(main, {}, io);
+
+    expect(res.exitCode).toBe(0);
+    const data = res.data as { found: boolean; handoffPath?: string };
+    expect(data.found).toBe(true);
+    const out = io.stdout();
+
+    // The pre-existing drift banner is unmodified and still present.
+    expect(out).toContain('⚠ handoff written at DRAFT; live state now BUILD');
+    expect(data.handoffPath).toBeDefined();
+
+    // The gap: nothing today names the missing pointer AND the doc served
+    // in its place, together, in one warning. Scope to the same warning
+    // *paragraph* (text between blank lines) rather than one exact line —
+    // this repo's own remote-freshness warning
+    // (packages/core/src/cli/commands/resume.ts) already wraps a single
+    // warning across two physical lines
+    // (`⚠ origin/... \n  Inspect: ...\n\n`), so a correct multi-line T2
+    // implementation must not be rejected just for not cramming both facts
+    // onto one line. SESSION-does-not-exist.md never appears in the served
+    // doc's own body or its narrative-header line, so a paragraph match
+    // here is unambiguously the new warning, not a false-positive against
+    // unrelated output.
+    const paragraphs = out.split('\n\n');
+    const warningParagraph = paragraphs.find((p) => p.includes('SESSION-does-not-exist.md'));
+    expect(warningParagraph).toBeDefined();
+    expect(warningParagraph).toContain('SESSION-2026-07-01-local.md');
+
+    // Distinctness: the drift banner's own paragraph must not itself be
+    // carrying the dangling-pointer information (i.e. the fix must not
+    // overload the drift banner's text to also mention the missing
+    // pointer) — it must be a genuinely separate warning.
+    const driftParagraph = paragraphs.find((p) => p.includes('⚠ handoff written at'));
+    expect(driftParagraph).toBeDefined();
+    expect(driftParagraph).not.toContain('SESSION-does-not-exist.md');
+    expect(driftParagraph).not.toBe(warningParagraph);
+  });
+
+  // 273-01/AC-2: the two normal resolution paths must never render the new
+  // warning — lastHandoff naming a file that exists, and lastHandoff being
+  // null while a doc is still found via the fallback glob.
+  it('273-01/AC-2: no dangling-pointer warning when lastHandoff names a file that exists', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-no-dangle-exists-')));
+    await initRepo(main);
+    await writeRepoState(main, {
+      loopPosition: 'IDLE',
+      lastHandoff: 'SESSION-2026-07-01-local.md',
+    });
+    await writeHandoffDoc(main, 'SESSION-2026-07-01-local.md', '2026-07-01T09:00:00.000Z', {
+      loop_position: 'IDLE',
+    });
+
+    const io = bufferIO();
+    const res = await resumeService(main, {}, io);
+
+    expect(res.exitCode).toBe(0);
+    const data = res.data as { found: boolean; danglingHandoffPointer?: string };
+    expect(data.found).toBe(true);
+    expect(data.danglingHandoffPointer).toBeUndefined();
+    expect('danglingHandoffPointer' in data).toBe(false);
+    expect(io.stdout()).not.toContain("lastHandoff pointer");
+  });
+
+  it('273-01/AC-2: no dangling-pointer warning when lastHandoff is null and a doc is still found via fallback', async () => {
+    const main = await realpath(await mkdtemp(join(parent, 'main-no-dangle-null-')));
+    await initRepo(main);
+    await writeRepoState(main, { loopPosition: 'IDLE', lastHandoff: null });
+    await writeHandoffDoc(main, 'SESSION-2026-07-01-local.md', '2026-07-01T09:00:00.000Z', {
+      loop_position: 'IDLE',
+    });
+
+    const io = bufferIO();
+    const res = await resumeService(main, {}, io);
+
+    expect(res.exitCode).toBe(0);
+    const data = res.data as { found: boolean; danglingHandoffPointer?: string };
+    expect(data.found).toBe(true);
+    expect(data.danglingHandoffPointer).toBeUndefined();
+    expect('danglingHandoffPointer' in data).toBe(false);
+    expect(io.stdout()).not.toContain("lastHandoff pointer");
+  });
+});
