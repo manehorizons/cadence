@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.57.0] - 2026-08-13
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.57.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Added
+
+- `deep-verify` and `per-task-verify` now persist the provider/model identity that actually ran them into a settle's `gates[]` array, via structurally separate `observedProvider`/`observedModel`/`taskId` fields on `GateProvenanceZ` that `deriveAssuranceRecord`'s rollup fold stays completely blind to (it only reads `.provider`/`.model` by field name, unchanged) — previously neither gate recorded any identity there at all, unlike `code-review`/`security-audit`. `per-task-verify`'s already-persisted per-task identity is now synthesized into `gates[]` at settle time, one entry per task, prepended to the front of the array. Closes `rec-20260808-007`. (Phase `275`.)
+- `cadence resume` now warns when `state.json`'s `session.lastHandoff` pointer names a `SESSION-*.md` file that no longer exists, instead of silently falling back to the freshest-by-`generated_at` doc with no signal the pointer was dangling. `ResumeResult` gains an additive, optional `danglingHandoffPointer` field. (Phase `273`.)
+- `settle run --deep` no longer refuses (or requires `--force`) on an Acceptance Criterion whose satisfaction condition is structurally circular — depending on the very `SUMMARY.md`/`SUMMARY.json` that settle produces. A new pure classifier (`classifyAcObservability`) routes this narrow shape to a distinct `unobservable` verdict, excluded from deep-verify's offenders list and the evidence-floor gate but never rolled up as a pass or allowed to move `assurance.overall` toward `strong`. `DeepVerdictZ` gains an additive, optional `unobservable` boolean field. (Phase `274`.)
+
+### Fixed
+
+- `nanoid` bumped to `3.3.18`, closing `GHSA-2v37-7h3g-55p8` (custom generators looping indefinitely when size is zero) — a transitive dev-only dependency via `vite`/`postcss`, never shipped to consumers, resolved as a targeted `pnpm-lock.yaml`-only change with zero `package.json` diff. Newly surfaced between this cut's own PRs, blocking every merge to `main` until fixed.
+
+### Internal
+
+- `security-audit`'s gate-matrix unreachability under the default `standard` profile, reaffirmed for v1.56, was reaffirmed again for v1.57 (`dec-20260812-003`) — making it reachable would land the first-ever real conduction of that gate in project history inside the same release that also changed deep-verify's verdict semantics, contradicting this release's own no-bundling principle. Revisit as its own release once v1.57 has run against a few normal phases. (v1.57 Phase U, skipped — `dec-20260813-002`.)
+- Ledger reconciliation: `rec-20260812-004` merged into the earlier, more-advanced `rec-20260809-001` as a duplicate (`dec-20260813-001`); `O.3`'s conduction-drift-streak threshold re-measured against a real 35-settle corpus (66% would have warned historically) and its deferral reaffirmed with the corrected figure recorded rather than inventing a new threshold (`dec-20260813-003`); the documented-blocker posture on the milestone with no CLI closure path reaffirmed (`dec-20260813-004`); the coverage-scheme default split — existing-project upgrades stay `bare`, fresh `cadence init` recommended to default to `phase-qualified` in a future phase (`dec-20260813-005`). (v1.57 Phase W.)
+
 ## [1.56.0] - 2026-08-11
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.56.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
