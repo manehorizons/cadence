@@ -179,6 +179,36 @@ export const GateProvenanceZ = z.object({
    *  have never required a further bump; see `coverageScheme`/
    *  `coverageMode`'s phase-239 precedent immediately below. */
   providerSelection: z.enum(['configured', 'fallback', 'empty-diff']).optional(),
+  /** Phase 275 (275-01, T1): verifier identity for gates whose provider/model
+   *  must stay invisible to `deriveAssuranceRecord`'s `verifierRollup`/
+   *  `overall` fold (that function only ever reads `provider`/`model` above,
+   *  never these) — currently populated for `deep-verify` (T2) and
+   *  `per-task-verify` (T4, one entry per task execution via `taskId`).
+   *  Structurally separate field names, not a boolean flag alongside
+   *  `provider`/`model`, so the fold's existing gate-agnostic
+   *  `g.provider === undefined` check structurally cannot see them without
+   *  new code being written to read these names (rec-20260808-007,
+   *  dec-20260808-008/dec-20260811-002's protected rationale: this repo's
+   *  `perTaskVerifier.provider`/`verifier.provider` are already `host-cli`,
+   *  so naively adding baseline persistence under the *existing*
+   *  `provider`/`model` fields would silently move `overall` toward
+   *  `strong` on ordinary settles with no review gate having run).
+   *
+   *  MUST stay `.optional()` with NO `.default(...)`, and no `schemaVersion`
+   *  bump — same additive, content-hash-safe precedent as
+   *  `providerSelection` above (phase 263) and `coverageScheme` (phase 239):
+   *  `cadence summary verify` Zod-parses the file and then content-hashes the
+   *  PARSED object, so a default here would be injected into every
+   *  historical SUMMARY at parse time, change its digest, and report every
+   *  past settle as tampered. `summary-provider-selection-schema.test.ts`
+   *  guards this. `taskId` is present only on `per-task-verify` entries —
+   *  `per-task-verify` runs once per task, so collapsing its entries into
+   *  one row per distinct `(provider, model)` pair would silently discard
+   *  which task ran under which provider; `taskId` lets `gates[]` carry one
+   *  raw-provenance entry per task execution instead. */
+  observedProvider: z.string().optional(),
+  observedModel: z.string().optional(),
+  taskId: z.string().optional(),
 });
 export type GateProvenance = z.infer<typeof GateProvenanceZ>;
 

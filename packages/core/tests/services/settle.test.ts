@@ -2417,3 +2417,241 @@ describe('settleService: finding-ledger routing is additive-only to the settle g
     expect(err.join('')).not.toContain('note: finding-ledger routing failed');
   });
 });
+
+/**
+ * Phase 275 (275-01, T4): overwrites `setupTwoAcBuildRepo`'s minimal
+ * `{status: 'DONE'}` PROGRESS.json rows with two tasks each carrying a
+ * distinct `PerTaskVerifyRecord` — T1 a `pass` under a provider+model pair,
+ * T2 a `refuse`+`bypassed: true` verdict under a provider with no model, so
+ * both "record has a model" and "record has no model" are exercised.
+ */
+async function writePerTaskVerifyRecords(root: string, phase: string, id: string): Promise<void> {
+  const phaseDir = join(root, '.cadence', 'phases', phase);
+  await writeFile(
+    join(phaseDir, `${id}-PROGRESS.json`),
+    JSON.stringify(
+      {
+        draftId: id,
+        tasks: {
+          T1: {
+            status: 'DONE',
+            perTaskVerify: {
+              verdict: 'pass',
+              reason: 'looked correct',
+              provider: 'anthropic',
+              model: 'claude-sonnet-5',
+            },
+          },
+          T2: {
+            status: 'DONE',
+            perTaskVerify: {
+              verdict: 'refuse',
+              reason: 'flagged, then bypassed',
+              provider: 'mock',
+              bypassed: true,
+            },
+          },
+        },
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+describe('settleService synthesizes per-task-verify gates[] entries from PROGRESS.json, one per task execution, on every settle path (phase 275, T4)', () => {
+  it('275-01/AC-4: a successful settle prepends one gates[] entry per task carrying a PerTaskVerifyRecord, each with its own taskId/observedProvider(/observedModel) and .provider/.model left absent', async () => {
+    root = await mktemp();
+    await setupTwoAcBuildRepo({
+      root,
+      phase: '275-04-per-task-verify-success',
+      id: '275-04',
+      config: { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } },
+    });
+    await writePerTaskVerifyRecords(root, '275-04-per-task-verify-success', '275-04');
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence/phases/275-04-per-task-verify-success/275-04-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    // GATE_ORDER's own 10 entries (all ran/skipped, untouched) plus exactly
+    // one per-task-verify entry per task carrying a PerTaskVerifyRecord.
+    expect(summary.gates?.length).toBe(GATE_ORDER.length + 2);
+    const perTaskEntries = (summary.gates ?? []).filter((g) => g.gate === 'per-task-verify');
+    expect(perTaskEntries).toHaveLength(2);
+
+    const byTask = new Map(perTaskEntries.map((g) => [g.taskId, g]));
+    expect(byTask.get('T1')).toMatchObject({
+      gate: 'per-task-verify',
+      status: 'ran',
+      taskId: 'T1',
+      observedProvider: 'anthropic',
+      observedModel: 'claude-sonnet-5',
+    });
+    expect(byTask.get('T1')?.provider).toBeUndefined();
+    expect(byTask.get('T1')?.model).toBeUndefined();
+
+    expect(byTask.get('T2')).toMatchObject({
+      gate: 'per-task-verify',
+      status: 'ran',
+      taskId: 'T2',
+      observedProvider: 'mock',
+    });
+    expect(byTask.get('T2')?.observedModel).toBeUndefined();
+    expect(byTask.get('T2')?.provider).toBeUndefined();
+    expect(byTask.get('T2')?.model).toBeUndefined();
+
+    // The new entries round-trip through the real content-hash pipeline —
+    // this is the first test to hash a SUMMARY that actually carries
+    // observedProvider/observedModel/taskId (T1's own AC-5 test only covers
+    // legacy entries lacking them).
+    expect(summary.contentHash?.algorithm).toBe('sha256');
+    expect(computeSummaryContentHash(summary).value).toBe(summary.contentHash?.value);
+  });
+
+  it('275-01/AC-4: a refused settle (evidence-floor, unrelated to per-task-verify) still surfaces both tasks per-task-verify gates[] entries, with the same exact count and shape', async () => {
+    root = await mktemp();
+    await setupTwoAcBuildRepo({
+      root,
+      phase: '275-05-per-task-verify-refused',
+      id: '275-05',
+      config: {
+        ...defaultConfig,
+        // Both ACs derive 'unverified' evidence (no coverage, no deep-verify)
+        // — 'assertion' floor refuses both, downstream of a gate loop that
+        // itself completes cleanly (mirrors 214-01/AC-4's own fixture) —
+        // i.e. a settle refusal for reasons wholly unrelated to
+        // per-task-verify, per this phase's own AC-4 wording.
+        gates: { sealed: [], evidenceFloor: 'assertion' },
+      },
+    });
+    await writePerTaskVerifyRecords(root, '275-05-per-task-verify-refused', '275-05');
+
+    const { io, err } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('evidence-floor');
+
+    const summaryPath = join(
+      root, '.cadence/phases/275-05-per-task-verify-refused/275-05-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+    // AC-3 invariant on the refused-SUMMARY family: nothing synthesized.
+    expect(summary.acResults).toEqual([]);
+
+    // The gate loop itself completed cleanly (every GATE_ORDER entry ran or
+    // skipped, none refused) — evidence-floor is settleService's own
+    // downstream check — so `gates` carries the full GATE_ORDER set plus
+    // per-task-verify's two synthesized entries, identical shape to the
+    // successful-settle case above.
+    expect(summary.gates?.every((g) => g.status === 'ran' || g.status === 'skipped')).toBe(true);
+    expect(summary.gates?.length).toBe(GATE_ORDER.length + 2);
+    const perTaskEntries = (summary.gates ?? []).filter((g) => g.gate === 'per-task-verify');
+    expect(perTaskEntries).toHaveLength(2);
+
+    const byTask = new Map(perTaskEntries.map((g) => [g.taskId, g]));
+    expect(byTask.get('T1')).toMatchObject({
+      gate: 'per-task-verify',
+      status: 'ran',
+      taskId: 'T1',
+      observedProvider: 'anthropic',
+      observedModel: 'claude-sonnet-5',
+    });
+    expect(byTask.get('T2')).toMatchObject({
+      gate: 'per-task-verify',
+      status: 'ran',
+      taskId: 'T2',
+      observedProvider: 'mock',
+    });
+    expect(byTask.get('T2')?.observedModel).toBeUndefined();
+    for (const g of perTaskEntries) {
+      expect(g.provider).toBeUndefined();
+      expect(g.model).toBeUndefined();
+    }
+    // Note: unlike the successful-settle test above, this refused-SUMMARY
+    // family (evidence-floor) only computes a contentHash when code-review/
+    // security-audit findings are present (phase 247, T3 precedent) — none
+    // are here, so contentHash stays absent; not this phase's concern.
+  });
+
+  it('275-01/AC-4, 275-01/AC-3: per-task-verify\'s synthesized gates[] entries leave the settle\'s real assurance record byte-identical to an otherwise-identical settle with no perTaskVerify records — proving AC-3\'s structural-blindness property holds through the actual settle pipeline, not only T1\'s hand-built-entry unit test of the pure fold', async () => {
+    // Two independent temp roots (not the shared `root`/`afterEach` var,
+    // mirroring the 242-01/AC-2 dedup test's root1/root2 pattern above) so
+    // both settles run under identical config with only PROGRESS.json
+    // differing.
+    const baselineRoot = await mktemp();
+    const withRecordsRoot = await mktemp();
+    try {
+      const config = { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } };
+
+      await setupTwoAcBuildRepo({
+        root: baselineRoot,
+        phase: '275-06-assurance-baseline',
+        id: '275-06',
+        config,
+      });
+      const { io: baselineIo } = captureIO();
+      const baselineRes = await settleService(
+        baselineRoot,
+        { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+        baselineIo,
+      );
+      expect(baselineRes.exitCode).toBe(0);
+      const baselineSummary = JSON.parse(
+        await readFile(
+          join(baselineRoot, '.cadence/phases/275-06-assurance-baseline/275-06-SUMMARY.json'),
+          'utf8',
+        ),
+      ) as Summary;
+
+      await setupTwoAcBuildRepo({
+        root: withRecordsRoot,
+        phase: '275-06-assurance-baseline',
+        id: '275-06',
+        config,
+      });
+      await writePerTaskVerifyRecords(withRecordsRoot, '275-06-assurance-baseline', '275-06');
+      const { io: withRecordsIo } = captureIO();
+      const withRecordsRes = await settleService(
+        withRecordsRoot,
+        { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+        withRecordsIo,
+      );
+      expect(withRecordsRes.exitCode).toBe(0);
+      const withRecordsSummary = JSON.parse(
+        await readFile(
+          join(withRecordsRoot, '.cadence/phases/275-06-assurance-baseline/275-06-SUMMARY.json'),
+          'utf8',
+        ),
+      ) as Summary;
+
+      // Sanity: the two gates[] arrays actually differ (the 2 new
+      // per-task-verify entries) — otherwise this comparison would be
+      // vacuous.
+      expect(withRecordsSummary.gates?.length).toBe((baselineSummary.gates?.length ?? 0) + 2);
+
+      // The load-bearing claim: despite that difference, deriveAssuranceRecord's
+      // output is untouched — verifierRollup/evidenceTally/overall are all
+      // byte-identical, because the new entries carry no `.provider`/`.model`
+      // (only `observedProvider`/`observedModel`), which is the only thing
+      // the fold ever reads.
+      expect(withRecordsSummary.assurance).toEqual(baselineSummary.assurance);
+    } finally {
+      await rm(baselineRoot, { recursive: true, force: true }).catch(() => {});
+      await rm(withRecordsRoot, { recursive: true, force: true }).catch(() => {});
+    }
+  });
+});

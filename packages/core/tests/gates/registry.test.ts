@@ -525,6 +525,76 @@ describe('runSettleGates verifier-identity provenance merge (Phase 232, AC-1, AC
   });
 });
 
+describe('runSettleGates observed-verifier-identity provenance merge (Phase 275, 275-01, T3)', () => {
+  it('275-01/AC-2: merges observedProvider/observedModel onto a non-deep-verify gate\'s "ran" entry, proving the mapping is keyed by flag presence, not gate identity', async () => {
+    const { gates } = await runSettleGates(ctxWith(['draft-read']), {
+      registry: recordingRegistry([], {
+        'draft-read': {
+          outcome: 'pass',
+          flags: { observedVerifierIdentity: { family: 'anthropic', model: 'claude-opus-4' } },
+        },
+      }),
+      order: ['draft-read'],
+    });
+    expect(gates).toEqual([
+      { gate: 'draft-read', status: 'ran', observedProvider: 'anthropic', observedModel: 'claude-opus-4' },
+    ]);
+  });
+
+  it('275-01/AC-2: merges observedProvider only (no observedModel key) when the identity reports no model', async () => {
+    const { gates } = await runSettleGates(ctxWith(['structural-verifier']), {
+      registry: recordingRegistry([], {
+        'structural-verifier': {
+          outcome: 'pass',
+          flags: { observedVerifierIdentity: { family: 'local' } },
+        },
+      }),
+      order: ['structural-verifier'],
+    });
+    expect(gates).toEqual([{ gate: 'structural-verifier', status: 'ran', observedProvider: 'local' }]);
+    expect('observedModel' in gates[0]!).toBe(false);
+  });
+
+  it('275-01/AC-2: adds no observedProvider/observedModel keys to any gate\'s provenance entry across the full order when observedVerifierIdentity is absent', async () => {
+    const { gates } = await runSettleGates(ctxWith([...EXPECTED_ORDER]), {
+      registry: recordingRegistry([]),
+    });
+    for (const entry of gates) {
+      expect('observedProvider' in entry).toBe(false);
+      expect('observedModel' in entry).toBe(false);
+    }
+  });
+
+  it('275-01/AC-2: merges verifierIdentity and observedVerifierIdentity independently onto the same entry when a gate carries both flags', async () => {
+    // code-review is the gate that already populates `verifierIdentity`
+    // (Phase 232) — this proves the new `observedVerifierIdentity` mapping
+    // composes alongside it without clobbering, on a gate that is NOT
+    // deep-verify, reinforcing that the mapping is generic-by-flag-presence.
+    const { gates } = await runSettleGates(ctxWith(['code-review']), {
+      registry: recordingRegistry([], {
+        'code-review': {
+          outcome: 'pass',
+          flags: {
+            verifierIdentity: { family: 'anthropic', model: 'claude-opus-4' },
+            observedVerifierIdentity: { family: 'local', model: 'qwen2.5-coder' },
+          },
+        },
+      }),
+      order: ['code-review'],
+    });
+    expect(gates).toEqual([
+      {
+        gate: 'code-review',
+        status: 'ran',
+        provider: 'anthropic',
+        model: 'claude-opus-4',
+        observedProvider: 'local',
+        observedModel: 'qwen2.5-coder',
+      },
+    ]);
+  });
+});
+
 describe('runSettleGates reviewVerifierFailure bypass provenance (Phase 248, T4, AC-1, AC-3, AC-4, AC-5)', () => {
   it('248-01/AC-1, 248-01/AC-3, 248-01/AC-4: records skipped/skipReason for a bypassed code-review throw via --allow-code-review-failure, fabricates no identity, and excludes it from verifierRollup while a genuinely-ran security-audit still contributes', async () => {
     const ctx = {

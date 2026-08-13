@@ -13,6 +13,7 @@ import type {
 import type { InteractiveVerdict } from '../verify/interactive.js';
 import type { Interactivity } from './interactivity.js';
 import type { Prompter } from '../verify/prompter.js';
+import type { PerTaskVerifyRecord } from '../build/record.js';
 import type {
   VerifierPort,
   VerifyInput,
@@ -31,7 +32,17 @@ export interface ProgressJson {
   draftId: string;
   tasks: Record<
     string,
-    { status: string; notes: string; touchedFiles: string[]; updatedAt: string }
+    {
+      status: string;
+      notes: string;
+      touchedFiles: string[];
+      updatedAt: string;
+      /** Phase 275 (275-01, T1): per-task-verify's already-persisted verdict,
+       *  mirrored from `build/record.ts`'s `ProgressJson` shape so settle can
+       *  read `progress.tasks[id].perTaskVerify` (T4) without importing that
+       *  file's narrower, differently-scoped `ProgressJson` interface. */
+      perTaskVerify?: PerTaskVerifyRecord;
+    }
   >;
 }
 
@@ -286,6 +297,20 @@ export interface GateFlags {
     family: string;
     model?: string;
     providerSelection?: 'configured' | 'fallback' | 'empty-diff';
+  };
+  /** Phase 275 (275-01, T1): verifier identity that actually ran a gate whose
+   *  provider/model must NOT feed `deriveAssuranceRecord`'s `verifierRollup`/
+   *  `overall` fold (currently `deep-verify` and, at settle time,
+   *  `per-task-verify`) — structurally separate from `verifierIdentity`
+   *  above, which IS read by that fold. `registry.ts`'s
+   *  `observedVerifierIdentityProvenance()` maps this onto
+   *  `GateProvenanceZ.observedProvider`/`observedModel`, a distinct field
+   *  pair `deriveAssuranceRecord` never reads (AC-3's safety property). Same
+   *  shape as `verifierIdentity` minus `providerSelection` — deep-verify has
+   *  no analogous fallback/empty-diff distinction to carry. */
+  observedVerifierIdentity?: {
+    family: string;
+    model?: string;
   };
 }
 

@@ -1304,23 +1304,6 @@ Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token sch
 
 release-currency (phase 262) is scoped to comparing published vs local 'engines' content only, since that was the exact field behind the 2026-07-27 incident. A strictly stronger, content-agnostic, offline detector exists: local version == published version AND 'git log v<version>..HEAD' is non-empty means main has unreleased commits sitting under an already-published version tag, regardless of which field changed (deps, bin, exports, plain source). Surfaced by independent review during phase 262 DRAFT authoring; deliberately out of scope for 262 to avoid scope creep -- filed as a follow-on.
 
-## rec-20260808-007 — deep-verify and per-task-verify persist no provider/model identity into gates[] at all
-
-- status: deferred
-- ready: blocked
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/gates/deep-verify.ts, packages/core/src/gates/per-task-verify.ts, packages/core/src/gates/assurance-record.ts
-- decisions: dec-20260808-008 (active), dec-20260811-002 (active)
-- evidence: grep -n 'verifierIdentity|result.provider|result.model' packages/core/src/gates/deep-verify.ts packages/core/src/gates/per-task-verify.ts (2026-08-08): deep-verify hits are deepVerify[]/deepVerifyMeta only, never flags.verifierIdentity; per-task-verify has zero hits
-- next: cadence milestone propose
-
-Discovered during phase 263 (v1.56 Phase L) T3 dispatch prep: GateProvenanceZ.provider/.model are documented as 'currently populated only for code-review and security-audit' (packages/types/src/summary.ts), confirmed by direct read -- deep-verify.ts writes provider/model only into its separate deepVerify[]/deepVerifyMeta records, never into a gates[] entry's flags.verifierIdentity; per-task-verify.ts persists no provider identity anywhere (zero matches for verifierIdentity/result.provider in the file). This is a materially larger gap than phase 263's providerSelection distinction: these two gates have no baseline provider identity to extend in the first place. It also interacts with deriveAssuranceRecord's hasRealVerifier (verifierRollup.some(v => v.provider !== 'mock')): since this repo's perTaskVerifier.provider and verifier.provider are both already host-cli, naively adding baseline persistence to either gate would grow verifierRollup with real host-cli entries on ordinary auto-profile settles, silently moving assurance.overall toward strong with no review gate having actually run -- a live instance of the exact false-confidence failure mode v1.56 exists to close. Phase 263 deliberately excludes both gates from its providerSelection persistence scope (see dec-<this-decision-id> and the DRAFT's Boundaries) rather than papering over this pre-existing gap.
-
 ## rec-20260809-001 — scanTestCoverage dedups AC-token occurrences per-file by first match only, dropping later qualifying refs
 
 - status: candidate
