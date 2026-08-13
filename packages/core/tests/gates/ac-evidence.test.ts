@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { deriveAcEvidence, rankEvidence, meetsEvidenceFloor, checkEvidenceFloor } from '../../src/gates/ac-evidence.js';
+import {
+  deriveAcEvidence,
+  rankEvidence,
+  meetsEvidenceFloor,
+  checkEvidenceFloor,
+  isUnobservableAc,
+} from '../../src/gates/ac-evidence.js';
 import type { AcId, TestRef } from '../../src/verify/coverage.js';
 import type { AcEvidence, DeepVerdict } from '@thomas-powers-jr/cadence-types';
 
@@ -139,5 +145,78 @@ describe('checkEvidenceFloor (Phase 214 T2, AC-1)', () => {
     const result = checkEvidenceFloor([{ id: 'AC-1' }], 'mention');
     expect(result.outcome).toBe('refuse');
     expect(result.offenders).toEqual([{ id: 'AC-1', actual: 'unverified', required: 'mention' }]);
+  });
+
+  it('274-01/AC-4: an entry marked unobservable is skipped entirely, never becoming an offender despite carrying no evidence field', () => {
+    const result = checkEvidenceFloor(
+      [
+        { id: 'AC-1', unobservable: true },
+        { id: 'AC-2', evidence: 'executed' },
+      ],
+      'assertion',
+    );
+    expect(result.outcome).toBe('pass');
+    expect(result.offenders).toEqual([]);
+  });
+
+  it("274-01/AC-4: an unobservable entry is never defaulted to 'unverified' even at the strictest floor", () => {
+    const result = checkEvidenceFloor([{ id: 'AC-1', unobservable: true }], 'ai-verified');
+    expect(result.outcome).toBe('pass');
+    expect(result.offenders).toEqual([]);
+  });
+});
+
+// Phase 274 (T5, D-H): off-ladder placement for the classifier's
+// `unobservable` marker. `isUnobservableAc` is the single source of truth
+// `deriveAcEvidence`/`checkEvidenceFloor` (and `services/settle.ts`'s
+// `deriveEvidenceAndCheckFloor`) all key off of.
+describe('isUnobservableAc (Phase 274 T5, D-H)', () => {
+  it('274-01/AC-4: true when deepVerify[id].unobservable is set', () => {
+    const deepVerify: Record<string, DeepVerdict> = {
+      'AC-1': { pass: false, reason: 'circular SUMMARY reference', provider: 'mock', unobservable: true },
+    };
+    expect(isUnobservableAc('AC-1', deepVerify)).toBe(true);
+  });
+
+  it('274-01/AC-4: false for an ordinary (non-unobservable) verdict', () => {
+    const deepVerify: Record<string, DeepVerdict> = {
+      'AC-1': { pass: false, reason: 'nope', provider: 'mock' },
+    };
+    expect(isUnobservableAc('AC-1', deepVerify)).toBe(false);
+  });
+
+  it('274-01/AC-4: false when the AC has no deepVerify entry at all, or deepVerify is undefined', () => {
+    expect(isUnobservableAc('AC-1', {})).toBe(false);
+    expect(isUnobservableAc('AC-1', undefined)).toBe(false);
+  });
+});
+
+describe('deriveAcEvidence — unobservable off-ladder short-circuit (Phase 274 T5, D-H)', () => {
+  it("274-01/AC-4: returns undefined — not 'unverified' — for a classifier-marked-unobservable AC with zero coverage refs (the true phase-272-AC-7 shape)", () => {
+    const deepVerify: Record<string, DeepVerdict> = {
+      'AC-1': {
+        pass: false,
+        reason: "AC-1 self-references \"this phase's own SUMMARY\"",
+        provider: 'mock',
+        unobservable: true,
+      },
+    };
+    expect(deriveAcEvidence('AC-1', NONE, 'assertion', false, deepVerify)).toBeUndefined();
+  });
+
+  it('274-01/AC-4: stays undefined even when the AC also has a qualifying test ref — off-ladder wins over ordinary coverage-derived evidence', () => {
+    const deepVerify: Record<string, DeepVerdict> = {
+      'AC-1': { pass: false, reason: 'unobservable despite coverage', provider: 'mock', unobservable: true },
+    };
+    expect(
+      deriveAcEvidence('AC-1', refs({ qualifying: true }), 'assertion', true, deepVerify),
+    ).toBeUndefined();
+  });
+
+  it("274-01/AC-4: stays undefined even if the verdict's pass were somehow true and non-mock — the off-ladder check runs before the ai-verified branch", () => {
+    const deepVerify: Record<string, DeepVerdict> = {
+      'AC-1': { pass: true, reason: 'hypothetical', provider: 'anthropic', unobservable: true },
+    };
+    expect(deriveAcEvidence('AC-1', NONE, 'mention', false, deepVerify)).toBeUndefined();
   });
 });

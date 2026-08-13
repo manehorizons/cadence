@@ -698,3 +698,66 @@ describe('cadence summary render - mock-abstained review gates (phase 267, T3)',
     expect(r.stdout).toContain('- verifier: anthropic claude-x (1 gate(s))');
   });
 });
+
+describe('cadence summary render - unobservable deep-verify marker (phase 274, T6)', () => {
+  it('274-01/AC-1: renders an unobservable AC distinctly from a plain PASS and a plain FAIL line', async () => {
+    active = await tempRepo({ initialized: true });
+    const reason =
+      "AC-7 self-references \"this phase's own SUMMARY\" — an artifact that does not exist until after this very settle produces it (no linked test coverage).";
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        acResults: [
+          { id: 'AC-1', pass: true, evidence: 'executed' },
+          { id: 'AC-2', pass: false, evidence: 'assertion', note: 'edge case missing' },
+          { id: 'AC-7', pass: false, note: 'no linked task' },
+        ],
+        deepVerify: {
+          'AC-7': { pass: false, reason, provider: 'mock', unobservable: true },
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+
+    // The classifier's reason is carried through verbatim into stdout.
+    expect(r.stdout).toContain(`  UNOBSERVABLE (deep-verify): ${reason}`);
+
+    const ac1Line = r.stdout.split('\n').find((l) => l.startsWith('- AC-1:'));
+    const ac2Line = r.stdout.split('\n').find((l) => l.startsWith('- AC-2:'));
+    const ac7Line = r.stdout.split('\n').find((l) => l.startsWith('- AC-7:'));
+    expect(ac1Line).toMatch(/^- AC-1: PASS/);
+    expect(ac2Line).toMatch(/^- AC-2: FAIL/);
+    expect(ac7Line).toMatch(/^- AC-7: FAIL/);
+
+    // Neither the PASS nor the FAIL badge line carries the unobservable
+    // marker -- it is exclusive to AC-7's sibling line.
+    expect(r.stdout).not.toMatch(/AC-1:.*UNOBSERVABLE/);
+    expect(r.stdout).not.toMatch(/AC-2:.*UNOBSERVABLE/);
+
+    // The marker line itself is a genuinely third category -- not PASS, not
+    // FAIL, reusing neither badge's wording.
+    const unobservableLine = r.stdout.split('\n').find((l) => l.includes('UNOBSERVABLE'));
+    expect(unobservableLine).toBeDefined();
+    expect(unobservableLine).not.toMatch(/\bPASS\b/);
+    expect(unobservableLine).not.toMatch(/\bFAIL\b/);
+  });
+
+  it('274-01/AC-1: omits the unobservable line when deepVerify is absent (back-compat)', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify(VALID_SUMMARY),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toContain('UNOBSERVABLE');
+  });
+});

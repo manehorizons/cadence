@@ -13,8 +13,13 @@ import { resolveEffectiveProvider } from '../verify/verifier-factory.js';
 /**
  * Gates that always fire regardless of (tier × profile). Free per DESIGN.md
  * Section 4.1 — "always fire" row.
+ *
+ * Exported (phase 274, T7 AC-6 fix) so tests can assert against this table
+ * directly instead of hand-duplicating its contents — a drift risk the
+ * whole-branch review flagged. Still module-owned: nothing outside this
+ * file writes to it.
  */
-const ALWAYS_FIRE: Gate[] = [
+export const ALWAYS_FIRE: Gate[] = [
   'coherence-check',
   'structural-verifier',
   'build-test-must-pass',
@@ -24,8 +29,13 @@ const ALWAYS_FIRE: Gate[] = [
  * Per-cell deltas (gates added on top of ALWAYS_FIRE). Mirrors DESIGN.md
  * Section 4.2 exactly. Keep this table the only source of truth — when the
  * matrix changes, edit here, not in scattered call sites.
+ *
+ * Exported (phase 274, T7 AC-6): AC-6 requires a committed test that
+ * "asserts `DELTAS.standard.complex` directly (not a settled SUMMARY)" —
+ * the indirect `gatesFor()` proof alone didn't satisfy deep-verify's literal
+ * reading of that Then-clause. Read-only from every consumer's perspective.
  */
-const DELTAS: Record<Profile, Record<Tier, Gate[]>> = {
+export const DELTAS: Record<Profile, Record<Tier, Gate[]>> = {
   strict: {
     'quick-fix': ['draft-read', 'approve', 'test-coverage', 'interactive-verdict'],
     standard: [

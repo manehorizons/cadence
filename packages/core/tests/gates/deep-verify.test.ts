@@ -11,13 +11,17 @@ function ctx(over: {
   errs?: string[];
   diff?: string;
   diffCapBytes?: number;
+  acceptanceCriteria?: Array<{ id: string; given: string; when: string; then: string }>;
+  coverage?: Map<string, unknown>;
 }): SettleContext {
   const errs = over.errs ?? [];
   return {
     cwd: '/x',
     state: {} as never,
     draft: {
-      acceptanceCriteria: [{ id: 'AC-1', given: 'g', when: 'w', then: 't' }],
+      acceptanceCriteria: over.acceptanceCriteria ?? [
+        { id: 'AC-1', given: 'g', when: 'w', then: 't' },
+      ],
       tasks: [{ id: 'T1', files: ['a.ts'] }],
     } as never,
     progress: { draftId: 'd', tasks: {} },
@@ -29,7 +33,7 @@ function ctx(over: {
     opts: over.opts ?? { deep: true },
     explicitIds: over.explicitIds ?? new Set<string>(),
     touchedFiles: ['a.ts'],
-    coverage: async () => new Map(),
+    coverage: async () => over.coverage ?? new Map(),
     diff: () => over.diff ?? '',
     verifiers: { deep: { verify: over.verify } },
     emit: { anomalies: async () => {} },
@@ -98,6 +102,13 @@ describe('runDeepVerifyGate', () => {
     expect(res.summaryPatch?.deepVerify?.['AC-1']?.pass).toBe(false);
     expect(res.summaryPatch?.deepVerify?.['AC-1']?.reason).toBe('verifier failed: boom');
     expect(res.flags?.verifierFailure).toEqual({ message: 'boom', provider: 'mock' });
+    // The catch branch never calls `classifyAcObservability` — every AC here
+    // is `pass:false` because the verifier itself failed, not because any AC
+    // was individually classified — so `unobservable` must stay unset on
+    // every verdict it produces. `services/settle.ts`'s verifier-failure
+    // exclusion (and `notify/collect.ts`'s honesty-report comment) both
+    // depend on this producer-side guarantee holding.
+    expect(res.summaryPatch?.deepVerify?.['AC-1']?.unobservable).toBeUndefined();
   });
 
   // AC-2: verifier throws, no bypass → refuse
@@ -274,6 +285,158 @@ describe('runDeepVerifyGate', () => {
       provider: 'anthropic',
       model: 'claude-opus-4-8',
     });
+  });
+});
+
+describe('runDeepVerifyGate — phase 274 (T3) unobservable-AC classification', () => {
+  // Same shape as `criteria-observability.test.ts`'s AC-F2 fixture and phase
+  // 272's real AC-1/AC-4: the "pasted into the SUMMARY" circular-reference
+  // signal, built via the exact `[given, when, then].join('\n')` production
+  // join `classifyAcObservability`'s JSDoc documents.
+  const UNOBSERVABLE_AC = {
+    id: 'AC-1',
+    given: 'the settle-time code-review gate has run',
+    when: 'settle completes',
+    then: 'the finding count is pasted into the SUMMARY',
+  };
+
+  it('274-01/AC-1: the call site joins given/when/then with newlines, not spaces — pinned via WRITTEN_VERBATIM_CAPTURE, the one signal sensitive to the separator', async () => {
+    // classifyAcObservability's JSDoc requires the production join to be
+    // `[given, when, then].join('\n')`, not a space or other separator — a
+    // different join is untested and could move behavior in the unsafe
+    // (false-positive) direction. PASTED_INTO/SELF_REFERENCE fire the same
+    // way regardless of separator (their cue phrase sits directly adjacent
+    // to the SUMMARY token), so they can't discriminate a join-separator
+    // regression at this call site. WRITTEN_VERBATIM_CAPTURE can: it
+    // requires "written" immediately before the token AND "verbatim" +
+    // "captur-" within the SAME clause after it, where `afterWindow` stops
+    // scanning at the first `.`/`\n`. Splitting when/then across a clause
+    // boundary (the "SUMMARY" token ends the `when` clause; "verbatim" and
+    // "captured" live in `then`) means a newline join leaves `after` empty
+    // immediately — signal does not fire, verdict stays observable. A space
+    // join would stitch when+then into one clause and DOES fire — this test
+    // goes red the moment the call site's separator changes from '\n'.
+    const JOIN_SENSITIVE_AC = {
+      id: 'AC-1',
+      given: 'the shakedown phase runs every command',
+      when: 'the friction log reaches a written SUMMARY',
+      then: 'every command and its verbatim output is captured',
+    };
+    const res = await runDeepVerifyGate(
+      ctx({
+        acceptanceCriteria: [JOIN_SENSITIVE_AC],
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: true, reason: 'ok' } },
+          provider: 'mock',
+        }),
+      }),
+    );
+    const verdict = res.summaryPatch?.deepVerify?.['AC-1'];
+    expect(verdict).toEqual({ pass: true, reason: 'ok', provider: 'mock' });
+    expect(verdict?.unobservable).toBeUndefined();
+  });
+
+  it('274-01/AC-1: an unobservable-classified AC is excluded from offenders and settles without --force even when the verifier fails it', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({
+        acceptanceCriteria: [UNOBSERVABLE_AC],
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: false, reason: 'verifier says no' } },
+          provider: 'mock',
+        }),
+      }),
+    );
+    expect(res.outcome).toBe('pass');
+    const verdict = res.summaryPatch?.deepVerify?.['AC-1'];
+    expect(verdict?.pass).toBe(false);
+    expect(verdict?.unobservable).toBe(true);
+    expect(verdict?.provider).toBe('mock');
+    // Merged reason: the verifier's own reason plus the classifier's.
+    expect(verdict?.reason).toContain('verifier says no');
+    expect(verdict?.reason).toContain('pasted into the SUMMARY');
+  });
+
+  it('274-01/AC-1: pass is forced to false for an unobservable AC even when the verifier itself said pass:true', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({
+        acceptanceCriteria: [UNOBSERVABLE_AC],
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: true, reason: 'looks fine' } },
+          provider: 'mock',
+        }),
+      }),
+    );
+    expect(res.outcome).toBe('pass');
+    const verdict = res.summaryPatch?.deepVerify?.['AC-1'];
+    expect(verdict?.pass).toBe(false);
+    expect(verdict?.unobservable).toBe(true);
+  });
+
+  it('274-01/AC-1: an unobservable AC writes a stderr notice explaining why it is not counted as an offender', async () => {
+    const errs: string[] = [];
+    await runDeepVerifyGate(
+      ctx({
+        errs,
+        acceptanceCriteria: [UNOBSERVABLE_AC],
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: false, reason: 'verifier says no' } },
+          provider: 'mock',
+        }),
+      }),
+    );
+    expect(errs.join('')).toContain(
+      'deep-verify: AC-1 not counted as an offender — structurally unobservable',
+    );
+  });
+
+  it('274-01/AC-4: an observable AC verdict carries no unobservable key at all', async () => {
+    const res = await runDeepVerifyGate(
+      ctx({ verify: async () => ({ verdicts: { 'AC-1': { pass: true, reason: 'ok' } }, provider: 'mock' }) }),
+    );
+    const verdict = res.summaryPatch?.deepVerify?.['AC-1'];
+    expect(verdict).toEqual({ pass: true, reason: 'ok', provider: 'mock' });
+    expect(Object.prototype.hasOwnProperty.call(verdict ?? {}, 'unobservable')).toBe(false);
+  });
+
+  it('274-01/AC-4: settle passes cleanly without --force when the only failing ACs are classifier-marked-unobservable', async () => {
+    const OBSERVABLE_PASSING_AC = { id: 'AC-2', given: 'g2', when: 'w2', then: 't2' };
+    const res = await runDeepVerifyGate(
+      ctx({
+        acceptanceCriteria: [UNOBSERVABLE_AC, OBSERVABLE_PASSING_AC],
+        verify: async () => ({
+          verdicts: {
+            'AC-1': { pass: false, reason: 'verifier says no' },
+            'AC-2': { pass: true, reason: 'ok' },
+          },
+          provider: 'mock',
+        }),
+      }),
+    );
+    expect(res.outcome).toBe('pass');
+    expect(res.summaryPatch?.deepVerify?.['AC-1']?.unobservable).toBe(true);
+    expect(res.summaryPatch?.deepVerify?.['AC-1']?.pass).toBe(false);
+    expect(res.summaryPatch?.deepVerify?.['AC-2']).toEqual({ pass: true, reason: 'ok', provider: 'mock' });
+  });
+
+  it('274-01/AC-1: a genuinely failing, observable AC alongside an unobservable one still refuses without --force', async () => {
+    const GENUINE_FAILING_AC = { id: 'AC-2', given: 'g2', when: 'w2', then: 't2' };
+    const errs: string[] = [];
+    const res = await runDeepVerifyGate(
+      ctx({
+        errs,
+        acceptanceCriteria: [UNOBSERVABLE_AC, GENUINE_FAILING_AC],
+        verify: async () => ({
+          verdicts: {
+            'AC-1': { pass: false, reason: 'verifier says no' },
+            'AC-2': { pass: false, reason: 'genuinely broken' },
+          },
+          provider: 'mock',
+        }),
+      }),
+    );
+    expect(res.outcome).toBe('refuse');
+    expect(errs.join('')).toContain('deep-verify: AC-2 failed — genuinely broken');
+    expect(errs.join('')).not.toContain('deep-verify: AC-1 failed');
   });
 });
 

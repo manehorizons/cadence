@@ -1,5 +1,6 @@
 import type { Summary } from '@thomas-powers-jr/cadence-types';
 import { renderFindingsSection } from '../parse/findings-render.js';
+import { formatUnobservableNote } from './ac-observability-label.js';
 import { formatVerifierRollupLabel } from './verifier-label.js';
 
 // deja:new distinct renderer for `cadence summary render` (phase 202, T1) —
@@ -29,6 +30,8 @@ export function renderSummaryForReview(s: Summary): string {
     const badge = ac.pass ? 'PASS' : 'FAIL';
     const evidenceTag = ac.evidence ? ` (${ac.evidence})` : '';
     lines.push(`- ${ac.id}: ${badge}${evidenceTag}${ac.note ? ` — ${ac.note}` : ''}`);
+    const unobservableNote = formatUnobservableNote(s.deepVerify?.[ac.id]);
+    if (unobservableNote) lines.push(unobservableNote);
   }
 
   lines.push('', '## Tasks', '');

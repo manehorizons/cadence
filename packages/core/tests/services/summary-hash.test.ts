@@ -5,6 +5,7 @@ import { join, dirname } from 'node:path';
 import { SummaryZ } from '@thomas-powers-jr/cadence-types';
 import { verifySummaryContentHash } from '../../src/services/summary-verify.js';
 import { renderSummaryForReview } from '../../src/services/summary-render.js';
+import { computeSummaryContentHash } from '../../src/services/summary-hash.js';
 
 /**
  * Phase 264, T3 — proves that calling `renderSummaryForReview` (T2's
@@ -64,5 +65,62 @@ describe('render never touches contentHash (phase 264, T3)', () => {
     // calling the renderer has no side effect on the hash-verification
     // outcome — render and verify are fully independent code paths.
     expect(verifySummaryContentHash(summary)).toBe('MATCH');
+  });
+});
+
+/**
+ * Phase 274, T3 — AC-4 (content-hash half): `DeepVerdictZ`'s new optional
+ * `unobservable` field must be additive in the strongest sense — a historical
+ * settled record that predates this phase, where the field is entirely
+ * absent, must recompute to the exact same digest it was stamped with at its
+ * original settle.
+ *
+ * Deliberately reuses phase 272's real, committed `272-01-SUMMARY.json`
+ * (already the AC-2 replay fixture for `criteria-observability.test.ts`)
+ * rather than a synthetic record: its `deepVerify` block genuinely carries
+ * `pass: false` entries for AC-1/AC-4/AC-7 (this phase's own motivating
+ * case), so this is the exact shape the new field is designed to attach to —
+ * and the baseline being asserted against is the `contentHash.value` that
+ * was ALREADY on disk before this phase touched `summary.ts`, not a hex
+ * literal computed after the schema change (which would prove nothing).
+ */
+describe('DeepVerdictZ.unobservable is additive — historical records hash unchanged (phase 274, T3)', () => {
+  const FIXTURE_272 = join(
+    REPO_ROOT,
+    '.cadence',
+    'phases',
+    '272-assurance-record-correctness',
+    '272-01-SUMMARY.json',
+  );
+
+  it('274-01/AC-4: a real historical SUMMARY.json with deepVerify.unobservable absent everywhere recomputes to its originally-stored contentHash', () => {
+    const raw = readFileSync(FIXTURE_272, 'utf8');
+    const storedHashValue = (JSON.parse(raw) as { contentHash?: { value?: string } }).contentHash
+      ?.value;
+    // Sanity: the fixture actually has a stored hash to compare against —
+    // otherwise this test would pass vacuously.
+    expect(storedHashValue).toBeTruthy();
+
+    const parsed = SummaryZ.safeParse(JSON.parse(raw));
+    if (!parsed.success) {
+      throw new Error(`fixture ${FIXTURE_272} failed SummaryZ validation: ${parsed.error.message}`);
+    }
+    const summary = parsed.data;
+
+    // Confirm the schema addition didn't perturb parsing: deepVerify has
+    // real pass:false entries (272's motivating case) and none of them
+    // carry the new field — parsing an old record never invents it.
+    expect(summary.deepVerify?.['AC-1']?.pass).toBe(false);
+    expect(summary.deepVerify?.['AC-1']?.unobservable).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(summary.deepVerify?.['AC-1'] ?? {}, 'unobservable')).toBe(
+      false,
+    );
+
+    // The load-bearing assertion: recomputing over the parsed record (with
+    // the new optional field absent, exactly as Zod leaves it) reproduces
+    // the digest this SUMMARY.json was ALREADY stamped with, pre-dating
+    // this phase's schema.ts change entirely.
+    expect(verifySummaryContentHash(summary)).toBe('MATCH');
+    expect(computeSummaryContentHash(summary).value).toBe(storedHashValue);
   });
 });

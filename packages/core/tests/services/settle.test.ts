@@ -67,6 +67,15 @@ const constructed = vi.hoisted(() => ({
    * check would still have left the full suite green.
    */
   securityAuditFindingsOverride: null as Finding[] | null,
+  /**
+   * Phase 274 (T5 gap fix): per-test override that makes the stubbed deep
+   * verifier's `.verify()` reject instead of resolve — the only way to drive
+   * `gates/deep-verify.ts`'s real catch branch (verifier transport failure)
+   * through the actual `settleService` pipeline without a live provider.
+   * `null` (the default, reset in `afterEach`) preserves this file's
+   * existing always-resolves behavior for every other test.
+   */
+  deepVerifyThrowMessage: null as string | null,
 }));
 
 vi.mock('../../src/verify/factory.js', async (importOriginal) => {
@@ -81,10 +90,15 @@ vi.mock('../../src/verify/factory.js', async (importOriginal) => {
       constructed.deep.push(real.name);
       return {
         name: real.name,
-        verify: async () => ({
-          verdicts: { 'AC-1': { pass: true, reason: 'stubbed for cwd-threading test' } },
-          provider: real.name,
-        }),
+        verify: async () => {
+          if (constructed.deepVerifyThrowMessage !== null) {
+            throw new Error(constructed.deepVerifyThrowMessage);
+          }
+          return {
+            verdicts: { 'AC-1': { pass: true, reason: 'stubbed for cwd-threading test' } },
+            provider: real.name,
+          };
+        },
       };
     },
   };
@@ -225,6 +239,7 @@ afterEach(async () => {
   constructed.securityAuditOpts.length = 0;
   constructed.codeReviewFindingsOverride = null;
   constructed.securityAuditFindingsOverride = null;
+  constructed.deepVerifyThrowMessage = null;
   if (origKey !== undefined) {
     process.env.ANTHROPIC_API_KEY = origKey;
   } else {
@@ -1587,6 +1602,322 @@ describe('settleService enforces gates.evidenceFloor (phase 214, T4)', () => {
 
     expect(res.exitCode).toBe(1);
     expect(err.join('')).toContain('--evidence-floor-bypass');
+  });
+});
+
+/**
+ * Phase 274 (T5, D-H, `dec-20260812-002`): a DRAFT whose lone AC carries a
+ * genuine circular-SUMMARY self-reference — the exact `SELF_REFERENCE` shape
+ * `criteria-observability.ts` matches ("this phase's own SUMMARY.json"),
+ * mirroring phase 272 AC-7's real Then-clause — and has NO linked task at
+ * all (`## Tasks` links T1 to nothing), so `deriveAcResults`
+ * (`status.ts:194-196`) gives it zero coverage refs AND (via the `--auto`
+ * path alone) `verdict: 'pending'`. `tier: complex` is required — only
+ * `DELTAS.standard.complex` (`gates/engine.ts`) includes `'deep-verify'`;
+ * without it the classifier never runs and `deepVerify` stays undefined.
+ */
+function unobservableAcDraftMd(phase: string, id: string): string {
+  return `---
+phase: ${phase}
+id: ${id}
+tier: complex
+status: APPROVED
+---
+
+# ${id} — unobservable evidence-floor fixture
+
+## Objective
+
+Prove D-H's off-ladder placement keeps a classifier-marked-unobservable AC
+out of the evidence-floor gate instead of defaulting it to 'unverified'.
+
+## Acceptance Criteria
+
+### AC-1: this phase's own settle record is inspected
+Given nothing observable via {acs, tests, diff, files}
+When this phase's own SUMMARY.json is inspected after settle completes
+Then the inspected content matches what was actually recorded
+
+## Tasks
+
+### T1: unrelated scaffolding work
+- files: \`src/foo.ts\`
+- action: do something unrelated to AC-1
+- verify: it works
+- done:
+
+## Boundaries
+
+- none
+`;
+}
+
+async function setupUnobservableAcRepo(args: {
+  root: string;
+  phase: string;
+  id: string;
+  config: CadenceConfig;
+}): Promise<void> {
+  const { root, phase, id, config } = args;
+  const phaseDir = join(root, '.cadence', 'phases', phase);
+  await mkdir(phaseDir, { recursive: true });
+  await mkdir(join(root, 'src'), { recursive: true });
+  await writeFile(join(root, 'src', 'foo.ts'), 'export const x = 1;\n', 'utf8');
+  await writeFile(join(root, '.cadence', 'config.json'), JSON.stringify(config, null, 2));
+  const state = {
+    ...emptyState('settle-unobservable-evidence-floor'),
+    loopPosition: 'BUILD' as const,
+    activePhase: phase,
+    activeDraft: id,
+  };
+  await writeFile(join(root, '.cadence', 'state.json'), JSON.stringify(state, null, 2));
+  await writeFile(join(phaseDir, `${id}-DRAFT.md`), unobservableAcDraftMd(phase, id));
+  await writeFile(
+    join(phaseDir, `${id}-PROGRESS.json`),
+    JSON.stringify({ draftId: id, tasks: { T1: { status: 'DONE' } } }, null, 2),
+  );
+}
+
+/**
+ * Phase 274 (T5, D-H, then a T5 gap fix, then a code-review finding):
+ * unobservable ACs stay off-ladder at both the evidence-floor gate and
+ * assurance's `evidenceTally`/`overall`, across three scenarios — a real
+ * `--ac` explicit-verdict pass on a marker-carrying AC; the same, checked
+ * against `assurance` instead of the floor; and a verifier-transport-failure
+ * catch branch, where `gates/deep-verify.ts` marks EVERY AC `pass:false`
+ * WITHOUT `classifyAcObservability` ever running (deliberately — a transport
+ * failure means nothing was checked for ANY AC; see that file's own catch
+ * block and `notify/collect.ts`'s honesty-report comment, both intentionally
+ * unchanged) so the ordinary `isUnobservableAc` marker-based exclusion never
+ * fires there. Consolidated into one `it()` (real, non-mock deep-verify
+ * refusal on this exact AC, phase 274's own build): three separate asserting
+ * blocks, all carrying this AC's qualified token in this file, meant
+ * `scanTestCoverage`'s per-`${acId}@${file}` dedup (`src/verify/
+ * coverage.ts:140-142`, no line number in the key) kept only the first and
+ * silently dropped the other two real assertions. Each scenario gets its own
+ * `root`, cleaned up immediately after its own assertions so the three
+ * temp repos never coexist — `afterEach`'s existing cleanup only ever sees
+ * whichever `root` this test left set at the end.
+ */
+describe('settleService — phase 274: unobservable ACs are off-ladder at the evidence floor and assurance, including through a verifier-transport-failure catch branch', () => {
+  it("274-01/AC-4: settle does NOT refuse when a classifier-marked-unobservable, zero-coverage AC is explicitly passed under gates.evidenceFloor: 'assertion'; deriveAssuranceRecord excludes such an AC from evidenceTally entirely rather than bucketing it as unverified; and the same holds even through a verifier-transport-failure catch branch, where the unobservable marker is never set", async () => {
+    // Scenario 1 (T5, D-H): the real `--ac` explicit-verdict path, not a
+    // synthetic `checkEvidenceFloor` call — AC-1 has no linked task, so
+    // `--auto` alone would derive `verdict:'pending'` (`pass:false`) and
+    // never reach the floor check at all (already safe without this phase's
+    // fix). The real hazard is an explicit human/CI verdict asserting
+    // `pass:true` independent of task linkage (`parseAcArg`,
+    // `settle.ts:118-126`) — exactly what phase 272's real AC-7 needed to
+    // settle at all, given it could never acquire a linked task.
+    root = await mktemp();
+    await setupUnobservableAcRepo({
+      root,
+      phase: '274-01-unobservable-evidence-floor',
+      id: '274-91',
+      config: {
+        ...defaultConfig,
+        // DELTAS.standard.complex is the only cell carrying 'deep-verify' —
+        // this repo's own project default (.cadence/config.json).
+        profile: 'standard',
+        gates: { sealed: [], evidenceFloor: 'assertion' },
+      },
+    });
+
+    {
+      const { io, err } = captureIO();
+      const res = await settleService(
+        root,
+        { auto: true, interactive: false, allowMissingCoverage: true, ac: ['AC-1=pass'] },
+        io,
+      );
+
+      expect(res.exitCode).toBe(0);
+      const errText = err.join('');
+      expect(errText).not.toContain('evidence-floor');
+
+      const summaryPath = join(
+        root, '.cadence', 'phases', '274-01-unobservable-evidence-floor', '274-91-SUMMARY.json',
+      );
+      const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+      expect(summary.deepVerify?.['AC-1']?.unobservable).toBe(true);
+      expect(summary.deepVerify?.['AC-1']?.pass).toBe(false);
+
+      const ac1 = summary.acResults.find((r) => r.id === 'AC-1');
+      expect(ac1?.pass).toBe(true);
+      // Phase 274 (T5, D-H): off-ladder — the field is omitted entirely, never
+      // coerced to 'unverified'. `exactOptionalPropertyTypes` means an
+      // explicit `undefined` would already be a type error; this also confirms
+      // the *value* actually written to disk has no key, not just no value.
+      expect(ac1 && 'evidence' in ac1).toBe(false);
+    }
+    await rm(root, { recursive: true, force: true });
+    root = null;
+
+    // Scenario 2 (T5→T4 handoff gap, closed by the whole-branch review): the
+    // call site at `settle.ts`'s `finalizeAndCloseSettle`
+    // (`deriveSettleAssuranceRecord`) filters `acResultsWithEvidence` to
+    // exclude every classifier-marked-unobservable AC before handing it to
+    // `deriveAssuranceRecord` — `assurance-record.ts` itself is untouched and
+    // stays agnostic; it just tallies whatever array it's handed.
+    root = await mktemp();
+    await setupUnobservableAcRepo({
+      root,
+      phase: '274-02-unobservable-tally',
+      id: '274-92',
+      config: {
+        ...defaultConfig,
+        profile: 'standard',
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+      },
+    });
+
+    {
+      const { io } = captureIO();
+      const res = await settleService(
+        root,
+        { auto: true, interactive: false, allowMissingCoverage: true, ac: ['AC-1=pass'] },
+        io,
+      );
+      expect(res.exitCode).toBe(0);
+
+      const summaryPath = join(
+        root, '.cadence', 'phases', '274-02-unobservable-tally', '274-92-SUMMARY.json',
+      );
+      const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+      expect(summary.deepVerify?.['AC-1']?.unobservable).toBe(true);
+
+      // `summary.acResults` (built at `settle.ts:1293`) stays complete and
+      // unfiltered — the unobservable AC still appears there in full, per
+      // D-H's off-ladder-not-omitted contract.
+      const ac1 = summary.acResults.find((r) => r.id === 'AC-1');
+      expect(ac1).toBeDefined();
+
+      // This fixture's only AC is the unobservable one, so the filtered
+      // array is empty: `evidenceTally` sums to zero (the unobservable AC
+      // does not inflate `unverified` or any other bucket), and `overall` is
+      // computed only from observable ACs, exactly as D-H requires.
+      const tally = summary.assurance?.evidenceTally;
+      expect(tally?.unverified).toBe(0);
+      const tallySum = tally
+        ? Object.values(tally).reduce((sum, n) => sum + n, 0)
+        : -1;
+      expect(tallySum).toBe(0);
+      // `overall` is computed from zero observable ACs here (this fixture's
+      // only AC is the unobservable one): `hasAnyVerifier` is true (the mock
+      // deep-verify gate entry carries `provider: 'mock'`) but `hasRealVerifier`
+      // is false and `strongRatio` is 0/0=0 either way — so `overall` lands on
+      // `'weak'` whether or not the unobservable AC is counted. This value is
+      // pinned identically in both the pre-fix and post-fix states (see the
+      // revert-and-confirm-red proof for this test's original standalone
+      // form), which is what "doesn't move `assurance.overall`" means for a
+      // single-AC fixture: the one AC present is fully excluded from the
+      // derivation either way it's sliced.
+      expect(summary.assurance?.overall).toBe('weak');
+    }
+    await rm(root, { recursive: true, force: true });
+    root = null;
+
+    // Scenario 3 (T5 gap fix, independently confirmed by two reviewers this
+    // session): an operator who hits a verifier transport failure, passes
+    // `--allow-verifier-failure`, and then explicitly overrides one
+    // genuinely unobservable, zero-coverage AC to pass (`--ac AC-id=pass` —
+    // the only path that produces `pass:true` off a catch-branch verdict)
+    // reaches `deriveEvidenceAndCheckFloor` with `unobservable` unset on
+    // that AC, so the marker-based exclusion from scenarios 1/2 never fires;
+    // evidence derives to `'unverified'`, and under `gates.evidenceFloor:
+    // 'assertion'` settle would refuse — reopening the exact D-G/D-H hazard
+    // (`dec-20260812-004`, `dec-20260812-002`) this phase exists to prevent,
+    // through the one path the `unobservable` marker structurally cannot
+    // cover.
+    root = await mktemp();
+    await setupUnobservableAcRepo({
+      root,
+      phase: '274-03-unobservable-verifier-failure',
+      id: '274-93',
+      config: {
+        ...defaultConfig,
+        profile: 'standard',
+        gates: { sealed: [], evidenceFloor: 'assertion' },
+      },
+    });
+
+    // Force the stubbed deep verifier to reject — the real
+    // `gates/deep-verify.ts` catch branch handles this exactly like a real
+    // transport failure (fetch/API error), since `runDeepVerifyGate` itself
+    // is unmodified and unaware its verifier is a test stub.
+    constructed.deepVerifyThrowMessage = 'transport boom';
+
+    const { io, err } = captureIO();
+    const res = await settleService(
+      root,
+      {
+        auto: true,
+        interactive: false,
+        allowMissingCoverage: true,
+        allowVerifierFailure: true,
+        // Same real explicit-verdict path as scenario 1 — the only way a
+        // catch-branch AC's `pass` becomes `true` at all.
+        ac: ['AC-1=pass'],
+      },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+    const errText = err.join('');
+    // The refusal message itself must never fire — this is the load-bearing
+    // negative. ("evidence-floor" alone is too broad now: the fix's own new
+    // exclusion notice below legitimately contains that substring.)
+    expect(errText).not.toContain('settle run refused');
+    expect(errText).toContain('verifier failed');
+    expect(errText).toContain('--allow-verifier-failure set');
+    // The fix's own auditability notice (CLAUDE.md's "no silent auto-bypass"
+    // convention) — this AC leaves no trace in the SUMMARY at all (deepVerify
+    // and acResults are both asserted below to carry no `unobservable`
+    // marker), so this stderr line is the only record of why the floor
+    // didn't refuse.
+    expect(errText).toContain('AC-1 excluded from off-ladder reporting (evidence floor + assurance)');
+    expect(errText).toContain('structurally unobservable during a verifier-failure run');
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '274-03-unobservable-verifier-failure', '274-93-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    // Pin the producer-side gap this fix works around: the catch branch's
+    // verdict genuinely never carries `unobservable: true`.
+    expect(summary.deepVerify?.['AC-1']?.unobservable).toBeUndefined();
+    expect(summary.deepVerify?.['AC-1']?.pass).toBe(false);
+    expect(summary.deepVerify?.['AC-1']?.reason).toContain('verifier failed: transport boom');
+
+    const ac1 = summary.acResults.find((r) => r.id === 'AC-1');
+    expect(ac1?.pass).toBe(true);
+    // Unlike scenario 1 (non-verifier-failure), `evidence` here IS present
+    // and `'unverified'` — `deriveAcEvidence`/`isUnobservableAc` are
+    // untouched by this fix (out of scope per the DRAFT: the fix belongs
+    // only in `deriveEvidenceAndCheckFloor`'s pre-filter, not
+    // `ac-evidence.ts`) and have no way to know this catch-branch AC is
+    // unobservable. The load-bearing assertion is that settle succeeds
+    // anyway (exitCode 0 above) because this AC was excluded from the array
+    // actually handed to `checkEvidenceFloor`, despite carrying the weakest
+    // ladder value.
+    expect(ac1?.evidence).toBe('unverified');
+
+    // Code-review finding (settle.ts:1180, real host-cli provider, caught
+    // between two settle attempts): an earlier version of this fix removed
+    // AC-1 from `floorInput` but NOT from the array fed to
+    // `deriveSettleAssuranceRecord`, since that filter used `isUnobservableAc`
+    // alone — which reads only the (never-set-here) `deepVerify` marker, not
+    // this catch-branch's direct re-classification. AC-1's `evidence` field
+    // above is correctly `'unverified'` (a per-AC field, untouched by
+    // design), but the run-level `assurance.evidenceTally` aggregate must
+    // still exclude it — same off-ladder principle, second surface.
+    expect(summary.assurance?.evidenceTally.unverified).toBe(0);
+    const tallySum2 = Object.values(summary.assurance?.evidenceTally ?? {}).reduce(
+      (a, b) => a + b,
+      0,
+    );
+    expect(tallySum2).toBe(0);
   });
 });
 

@@ -1929,6 +1929,56 @@
       "kind": "note",
       "summary": "Found during phase 273's independent T2 review (2026-08-11): confirmed by reading locate.ts's null-return path and run-resume.ts's found:false branch.",
       "createdAt": "2026-08-12T00:35:05.643Z"
+    },
+    {
+      "id": "ev-20260812-002",
+      "recommendationId": "rec-20260812-002",
+      "kind": "note",
+      "summary": "Phase 274 T1 independent review round 2 (negation ;/em-dash gap on real 261-01 AC-7 text) and T2 independent review (synthetic deploy-log.txt clause-boundary construction) -- both 2026-08-12",
+      "createdAt": "2026-08-12T04:51:05.392Z"
+    },
+    {
+      "id": "ev-20260812-003",
+      "recommendationId": "rec-20260812-003",
+      "kind": "note",
+      "summary": "Phase 274 T6 independent review, 2026-08-12: reproduced markdown-corruption via t.notes with an unbalanced code fence, confirmed unrelated to T6's own change",
+      "createdAt": "2026-08-12T22:08:09.940Z"
+    },
+    {
+      "id": "ev-20260812-004",
+      "recommendationId": "rec-20260812-004",
+      "kind": "note",
+      "summary": "packages/core/src/verify/coverage.ts:140-142 (assertion-mode dedup key); phase 274 real deep-verify refusals on AC-1 and AC-3 (settle-attempt4.log); packages/core/tests/services/settle.test.ts:1682,1737,1819 (unfixed AC-4 residual instance)",
+      "createdAt": "2026-08-12T23:46:22.088Z"
+    },
+    {
+      "id": "ev-20260813-001",
+      "recommendationId": "rec-20260813-001",
+      "kind": "cadence-artifact",
+      "summary": "phase 274-unobservable-criteria-classification, draft 274-01, SUMMARY contentHash 2bf2cc959a487b419d2d98847674fa31cc764ba573122e48b22dde059c324699 — medium finding at packages/core/src/gates/engine.ts:22: Exported mutable gate tables can be changed by any importer, altering later `gatesFor()` results. Expose frozen/read-only data or copies instead.",
+      "path": ".cadence/phases/274-unobservable-criteria-classification/274-01-SUMMARY.json",
+      "createdAt": "2026-08-13T00:13:36.285Z"
+    },
+    {
+      "id": "ev-20260813-002",
+      "recommendationId": "rec-20260813-002",
+      "kind": "note",
+      "summary": "274-01-SUMMARY.json (deepVerify provider:mock for all ACs despite host-cli configured, code-review's own gate entry in the same SUMMARY succeeding via host-cli/configured); verify/verifier-factory.ts wrapWithFallback + tagProviderSelection (non-enumerable tag)",
+      "createdAt": "2026-08-13T00:34:49.307Z"
+    },
+    {
+      "id": "ev-20260813-003",
+      "recommendationId": "rec-20260813-003",
+      "kind": "note",
+      "summary": "packages/core/src/verify/criteria-observability.ts SUMMARY_TOKEN regex; whole-branch review's direct node -e regex probing; full-corpus scan (1237 ACs, one benign occurrence in 244-01-DRAFT.md AC-2)",
+      "createdAt": "2026-08-13T00:35:09.744Z"
+    },
+    {
+      "id": "ev-20260813-004",
+      "recommendationId": "rec-20260813-004",
+      "kind": "note",
+      "summary": "packages/core/src/gates/engine.ts DELTAS/ALWAYS_FIRE exports; 274-01-CODE-REVIEW.json / 274-01-SUMMARY.json codeReview field (MEDIUM finding, disposition: open)",
+      "createdAt": "2026-08-13T00:35:09.919Z"
     }
   ]
 }

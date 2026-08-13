@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { Profile, Tier } from '@thomas-powers-jr/cadence-types';
 import {
   effectiveGateSet,
@@ -9,10 +12,16 @@ import {
   evidenceFloorRefusalReason,
   AI_VERIFIED_UNDER_MOCK_PROVIDER_REASON,
   gatesFor,
+  DELTAS,
+  ALWAYS_FIRE,
 } from '../../src/gates/engine.js';
 import { checkEvidenceFloor } from '../../src/gates/ac-evidence.js';
 
-const ALWAYS = ['coherence-check', 'structural-verifier', 'build-test-must-pass'] as const;
+// Pre-existing local alias for this file's other describe blocks (unrelated
+// to phase 274) — left as-is rather than sweeping every call site. Phase
+// 274's own AC-6 test below asserts against the imported `DELTAS`/
+// `ALWAYS_FIRE` directly instead.
+const ALWAYS = ALWAYS_FIRE;
 
 describe('effectiveProfile', () => {
   it('draft override wins over config default', () => {
@@ -215,6 +224,45 @@ describe('gatesFor — matrix coverage', () => {
         expect(new Set(set.gates).size).toBe(set.gates.length);
       }
     }
+  });
+});
+
+// Phase 274 T7 (AC-6) — anchors AC-6 on engine.ts's DELTAS table (source
+// code truth, already inside deep-verify's observable surface) rather than
+// on this phase's own not-yet-existing SUMMARY.json — the exact circularity
+// phase 272's AC-7 fell into, which phase 274 exists to fix.
+describe('274-01: DELTAS standard × complex reachability', () => {
+  // Consolidated into a single `it()` (whole-branch review finding: this
+  // file had the same `scanTestCoverage` per-`${acId}@${file}` dedup gap
+  // — src/verify/coverage.ts:140-142, no line number in the key — that
+  // this phase's own DRAFT fifth/sixth as-built amendments already fixed in
+  // four other files; three separate `it()`s here all carried the literal
+  // `274-01/AC-6` token, so only the first survived as visible coverage).
+  it('274-01/AC-6: DELTAS.standard.complex directly contains code-review and deep-verify, gatesFor(complex, standard) actually conducts what DELTAS promises, and this phase\'s own DRAFT frontmatter is tier: complex, profile: standard', () => {
+    // Direct assertion on the DELTAS cell itself, per AC-6's Then-clause
+    // ("asserts DELTAS.standard.complex directly, not a settled SUMMARY") —
+    // deep-verify rejected an earlier version of this test that only
+    // inferred the cell's contents indirectly via gatesFor().
+    expect(DELTAS.standard.complex).toEqual(expect.arrayContaining(['code-review', 'deep-verify']));
+    // Neither gate is always-fire, so each can only have come from this
+    // DELTAS cell — confirms the assertion above is about DELTAS itself,
+    // not an artifact of gatesFor's deduplication.
+    for (const g of ['code-review', 'deep-verify'] as const) {
+      expect(ALWAYS_FIRE as readonly string[]).not.toContain(g);
+    }
+
+    const set = gatesFor('complex', 'standard');
+    expect(set.gates).toEqual(expect.arrayContaining(['code-review', 'deep-verify']));
+
+    // packages/core/tests/gates -> repo root is four levels up.
+    const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
+    const draftPath = join(
+      repoRoot,
+      '.cadence/phases/274-unobservable-criteria-classification/274-01-DRAFT.md',
+    );
+    const draftText = readFileSync(draftPath, 'utf8');
+    expect(draftText).toContain('tier: complex');
+    expect(draftText).toContain('profile: standard');
   });
 });
 

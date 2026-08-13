@@ -1,0 +1,48 @@
+{
+  "draftId": "274-01",
+  "converged": true,
+  "attempts": 3,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-08-12T23:20:47.495Z",
+      "pass": false,
+      "findingsCount": 1,
+      "provider": "host-cli",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-08-12T23:29:39.670Z",
+      "pass": false,
+      "findingsCount": 1,
+      "provider": "host-cli",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-08-13T00:02:04.086Z",
+      "pass": false,
+      "findingsCount": 1,
+      "provider": "host-cli",
+      "verdict": "escalate"
+    },
+    {
+      "at": "2026-08-13T00:10:04.152Z",
+      "pass": false,
+      "findingsCount": 0,
+      "provider": "mock",
+      "verdict": "abstained",
+      "mockAbstained": true
+    },
+    {
+      "at": "2026-08-13T00:13:36.267Z",
+      "pass": true,
+      "findingsCount": 0,
+      "provider": "host-cli",
+      "verdict": "pass"
+    }
+  ],
+  "pass": true,
+  "provider": "host-cli",
+  "findings": 0,
+  "at": "2026-08-13T00:13:36.267Z"
+}

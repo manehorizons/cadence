@@ -38,7 +38,8 @@ import {
 } from '../verify/verifier-factory.js';
 import type { VerifyTestRef } from '../contracts/index.js';
 import { runSettleGates } from '../gates/registry.js';
-import { deriveAcEvidence, checkEvidenceFloor } from '../gates/ac-evidence.js';
+import { deriveAcEvidence, checkEvidenceFloor, isUnobservableAc } from '../gates/ac-evidence.js';
+import { classifyAcObservability } from '../verify/criteria-observability.js';
 import { deriveAssuranceRecord, type AssuranceAcResult } from '../gates/assurance-record.js';
 import { effectiveEvidenceFloor, evidenceFloorRefusalReason } from '../gates/engine.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
@@ -1082,6 +1083,20 @@ async function runAnomalyAndSkillAuditChecks(
 interface EvidenceFloorData {
   acResultsWithEvidence: AcResult[];
   evidenceFloorBypassesUsed: GateBypass[];
+  /**
+   * Phase 274 (code-review finding, gap fix): every AC id excluded from
+   * off-ladder reporting — the union of the deep-verify marker
+   * (`isUnobservableAc`) and, on a verifier-failure run, direct
+   * re-classification (the marker is never set by `deep-verify.ts`'s catch
+   * branch). Computed once here over every AC (not just PASS ones —
+   * `finalizeAndCloseSettle`'s assurance derivation tallies every AC
+   * regardless of pass/fail), so the evidence-floor check below and
+   * assurance's `evidenceTally`/`overall` can never drift out of sync again
+   * the way they did before this fix (floor correctly excluded a
+   * catch-branch-classified AC; assurance still counted it as
+   * `'unverified'`).
+   */
+  offLadderExcludedIds: ReadonlySet<string>;
 }
 
 type EvidenceFloorResult =
@@ -1117,10 +1132,16 @@ async function deriveEvidenceAndCheckFloor(
   const coverageForEvidence = await ctx.coverage();
   const coverageModeForEvidence = cadenceConfig?.verification?.coverageMode ?? 'mention';
   const buildTestRan = acc.buildTestRan !== false;
-  const acResultsWithEvidence: AcResult[] = acResults.map((r) => ({
-    ...r,
-    evidence: deriveAcEvidence(r.id, coverageForEvidence, coverageModeForEvidence, buildTestRan, deepVerify),
-  }));
+  // Phase 274 (T5, D-H): `deriveAcEvidence` returns `undefined` — off the
+  // `AcEvidenceZ` ladder entirely — for a classifier-marked-unobservable AC
+  // (`isUnobservableAc`). `exactOptionalPropertyTypes` forbids assigning
+  // `evidence: undefined` directly (that's a distinct, disallowed state from
+  // "key absent"), so the field is included only when a real ladder value
+  // was derived — never explicitly set to `undefined`.
+  const acResultsWithEvidence: AcResult[] = acResults.map((r) => {
+    const evidence = deriveAcEvidence(r.id, coverageForEvidence, coverageModeForEvidence, buildTestRan, deepVerify);
+    return { ...r, ...(evidence !== undefined ? { evidence } : {}) };
+  });
 
   // Phase 214 (T4): the evidence-floor gate — refuses settle when any AC's
   // PASS verdict rests on evidence weaker than the effective
@@ -1130,11 +1151,74 @@ async function deriveEvidenceAndCheckFloor(
   // exactly the named AC (never all of them) — an offender with a bypass
   // is dropped from the refusal, but recorded into SUMMARY.gateBypasses so
   // the exemption is auditable.
+  //
+  // Phase 274 (T5, D-H): a classifier-marked-unobservable AC is additionally
+  // excluded here — never evaluated against the floor at all, regardless of
+  // its `pass` verdict. This is load-bearing, not defensive: `acResults[].
+  // pass` is derived from task linkage/terminal-status (`deriveAcResults`,
+  // `status.ts`) or an explicit/interactive human verdict
+  // (`parseAcArg`/`mergePassShorthands`/`interactiveVerify` — all in this
+  // file), never from `deepVerify`. An unobservable AC with a task-derived
+  // `pass:false` (the common no-linked-task shape, e.g. phase 272's real
+  // AC-7) would already be filtered out by `.filter((r) => r.pass)` alone —
+  // but an explicit `--ac <id>=pass` / `--ac-pass <id>` / interactive `pass`
+  // verdict sets `pass:true` independent of task linkage, and would
+  // otherwise reach `checkEvidenceFloor` with zero coverage refs, derive
+  // `'unverified'` evidence, and refuse settle under a floor like
+  // `'assertion'` — exactly the hazard D-H exists to prevent.
+  // `checkEvidenceFloor` also guards this itself (skips any entry with
+  // `unobservable: true`), but the exclusion belongs here too rather than
+  // relying solely on that inner guard.
+  //
+  // Gap closed post-T5 (independent review, same phase): the exclusion above
+  // only fires when `deepVerify[id].unobservable` was actually set — but
+  // `gates/deep-verify.ts`'s catch branch (verifier transport failure +
+  // `--allow-verifier-failure`) marks EVERY AC `pass:false` WITHOUT that
+  // marker, deliberately: a transport failure means nothing was checked for
+  // ANY AC, and selectively exempting some would misrepresent
+  // `notify/collect.ts`'s honesty report (left untouched on purpose). So an
+  // AC that is both genuinely unobservable and explicitly overridden to pass
+  // (`--ac <id>=pass` — the only way `pass:true` reaches here off a
+  // catch-branch verdict) still lands with `unobservable` unset. When this
+  // run actually hit that branch (`acc.flags.verifierFailure`), classify
+  // each surviving PASS AC's text directly instead of trusting the marker —
+  // same D-H hazard, reached through the one path the marker can't cover.
+  // Unlike the marker-present exclusion above, this path leaves no trace in
+  // `deepVerify`/`acResults` at all (both are deliberately untouched here —
+  // see the Do NOT list), so it needs its own stderr notice per AC excluded,
+  // matching this codebase's "every fallback/auto-bypass is loud" convention
+  // (`deep-verify.ts:100-103`'s analogous `not counted as an offender` line).
   const evidenceFloor = effectiveEvidenceFloor(cadenceConfig);
-  const floorCheck = checkEvidenceFloor(
-    acResultsWithEvidence.filter((r) => r.pass),
-    evidenceFloor,
+  const verifierFailure = acc.flags.verifierFailure;
+  const draftAcById = new Map(ctx.draft.acceptanceCriteria.map((a) => [a.id, a]));
+  // Computed once, over every AC (not just PASS ones — see the
+  // `EvidenceFloorData.offLadderExcludedIds` doc comment above for why),
+  // so the evidence-floor check just below and `finalizeAndCloseSettle`'s
+  // later assurance derivation both read from the same exclusion set.
+  const offLadderExcludedIds = new Set<string>();
+  for (const r of acResultsWithEvidence) {
+    if (isUnobservableAc(r.id, deepVerify)) {
+      offLadderExcludedIds.add(r.id);
+      continue;
+    }
+    if (!verifierFailure) continue;
+    const ac = draftAcById.get(r.id);
+    if (!ac) continue;
+    const acText = [ac.given, ac.when, ac.then].join('\n');
+    const refs = coverageForEvidence.get(r.id) ?? [];
+    const verdict = classifyAcObservability({ id: r.id, text: acText }, refs);
+    if (!verdict.observable) {
+      offLadderExcludedIds.add(r.id);
+      io.err(
+        `settle: ${r.id} excluded from off-ladder reporting (evidence floor + assurance) — ` +
+          `structurally unobservable during a verifier-failure run: ${verdict.reason}\n`,
+      );
+    }
+  }
+  const floorInput = acResultsWithEvidence.filter(
+    (r) => r.pass && !offLadderExcludedIds.has(r.id),
   );
+  const floorCheck = checkEvidenceFloor(floorInput, evidenceFloor);
   const evidenceFloorBypassesUsed: GateBypass[] = [];
   if (floorCheck.outcome === 'refuse') {
     const remaining = floorCheck.offenders.filter((o) => !evidenceFloorBypassById.has(o.id));
@@ -1169,7 +1253,7 @@ async function deriveEvidenceAndCheckFloor(
     }
   }
 
-  return { ok: true, data: { acResultsWithEvidence, evidenceFloorBypassesUsed } };
+  return { ok: true, data: { acResultsWithEvidence, evidenceFloorBypassesUsed, offLadderExcludedIds } };
 }
 
 /**
@@ -1213,6 +1297,7 @@ async function finalizeAndCloseSettle(
   io: CommandIO,
   foreignBinaryMismatch: { runningBinaryPath: string; repoToplevel: string } | null,
   now: () => string,
+  offLadderExcludedIds: ReadonlySet<string>,
 ): Promise<CommandResult> {
   // issue #177: snapshot loop state as it stands DURING settle, before the
   // reset-to-IDLE block below mutates it. This is the only place this data
@@ -1246,7 +1331,25 @@ async function finalizeAndCloseSettle(
       ? { gateBypasses: [...gateBypasses, ...evidenceFloorBypassesUsed] }
       : {}),
     stateAtSettle,
-    assurance: deriveSettleAssuranceRecord(gates, acResultsWithEvidence),
+    // Phase 274 (T5→T4 gap fix, whole-branch review, then a code-review
+    // finding): `acResultsWithEvidence` is `summary.acResults` verbatim
+    // above (every AC, unobservable included — that field must stay
+    // complete). `deriveAssuranceRecord` itself stays agnostic and correct:
+    // it tallies whatever array it's handed. The bug was here, at the call
+    // site — the full array was passed in, so an off-ladder AC's absent
+    // `evidence` fell into the `?? 'unverified'` default and inflated
+    // `evidenceTally`/`overall` exactly like a real failure would.
+    // `offLadderExcludedIds` (computed once in `deriveEvidenceAndCheckFloor`,
+    // covering BOTH the marker-based exclusion and the verifier-failure
+    // catch-branch's direct re-classification — a first version of this fix
+    // used only `isUnobservableAc` here and missed the catch-branch case,
+    // caught by code-review) filters it out, making `evidenceTally`'s sum
+    // mean "total OBSERVABLE ACs," consistent with D-H's off-ladder
+    // placement everywhere else.
+    assurance: deriveSettleAssuranceRecord(
+      gates,
+      acResultsWithEvidence.filter((r) => !offLadderExcludedIds.has(r.id)),
+    ),
     ...(foreignBinaryMismatch ? { foreignBinaryMismatch } : {}),
   };
 
@@ -1533,7 +1636,7 @@ export async function settleService(
         acc.codeReview, acc.securityAudit, cadenceConfig, foreignBinaryMismatch, now, io,
       );
     }
-    const { acResultsWithEvidence, evidenceFloorBypassesUsed } = evidenceResult.data;
+    const { acResultsWithEvidence, evidenceFloorBypassesUsed, offLadderExcludedIds } = evidenceResult.data;
 
     return await finalizeAndCloseSettle(
       cwd,
@@ -1559,6 +1662,7 @@ export async function settleService(
       io,
       foreignBinaryMismatch,
       now,
+      offLadderExcludedIds,
     );
   } catch (err) {
     io.err(`${formatCommandError('settle run', err)}\n`);

@@ -1,0 +1,23 @@
+{
+  "bypasses": [],
+  "roughTasks": [],
+  "findings": {
+    "codeReview": {
+      "packages/core/src/gates/engine.ts": [
+        {
+          "severity": "medium",
+          "message": "Exported mutable gate tables can be changed by any importer, altering later `gatesFor()` results. Expose frozen/read-only data or copies instead.",
+          "line": 22,
+          "anchor": {
+            "kind": "ac",
+            "ref": "AC-6",
+            "tier": "executable"
+          },
+          "id": "17661367f4e60d3a870afbc56cbb7ea5190388e6dcf02071e71f0f6910e7ed2c",
+          "target": "artifact",
+          "disposition": "open"
+        }
+      ]
+    }
+  }
+}
