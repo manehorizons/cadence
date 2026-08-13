@@ -1,6 +1,6 @@
 {
   "name": "@thomas-powers-jr/cadence-host-toolkit",
-  "version": "1.56.0",
+  "version": "1.57.0",
   "engines": {
     "node": ">=22"
   },

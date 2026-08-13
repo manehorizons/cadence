@@ -1,5 +1,25 @@
 # @thomas-powers-jr/cadence-types
 
+## 1.57.0
+
+### Minor Changes
+
+- c582da3: `deep-verify` and `per-task-verify` now persist the provider/model identity that actually ran them into a settle's `gates[]` array — previously neither gate recorded any identity there at all (unlike `code-review`/`security-audit`), so an operator reading `SUMMARY.json` had no way to tell whether either had run under a real verifier or the `mock` placeholder.
+
+  The new fields — `observedProvider`, `observedModel`, and (for `per-task-verify`) `taskId` — are structurally separate from the existing `provider`/`model` fields on `GateProvenanceZ`, so `deriveAssuranceRecord`'s assurance rollup, which folds `gates[].provider`/`.model` by field name, stays completely blind to them. This is deliberate: this repo's own verifiers already run as `host-cli` (non-mock), so naively feeding `deep-verify`'s and `per-task-verify`'s identity into the existing rollup fields would silently inflate `assurance.overall` toward `strong` on ordinary settles where no review gate actually ran. The safety property is proven by tests on the existing fold code, not by adding a new exclusion branch to it.
+
+  `per-task-verify` never previously appeared in `gates[]` at all — it runs during BUILD, not settle. Settle now synthesizes one entry per task carrying a persisted `PerTaskVerifyRecord`, prepended to the front of the array (per-task-verify's work completed before this settle's own gate loop starts, and prepending preserves the existing convention — used throughout this repo's test suite — that the _last_ entry in `gates[]` is the gate that most recently ran or refused during this settle).
+
+  All three new fields are additive and `.optional()` with no default and no `schemaVersion` bump — absent on every historical `SUMMARY.json`, and `computeSummaryContentHash` is unaffected.
+
+- 4901a00: `cadence resume` now warns when `state.json`'s `session.lastHandoff` pointer names a `SESSION-*.md` file that no longer exists. Previously `locateFreshestHandoff` silently fell back to the freshest-by-`generated_at` doc in `.cadence/handoff/` with no signal that the pointer was dangling, so a stale-but-plausible doc could read as authoritative. The warning names both the missing pointer filename and the doc actually served, and is rendered as its own message distinct from the existing loop-position drift banner, on both the `cadence resume` CLI text surface and the `resumeService`/MCP `CommandIO` surface.
+
+  `ResumeResult` (`@thomas-powers-jr/cadence-types`) gains an additive, optional `danglingHandoffPointer` field carrying the missing pointer's filename when this fires. Absent on every normal resolution path (no pointer ever set, or the pointer names a file that exists).
+
+- 492a388: `settle run --deep` no longer refuses (or requires `--force`) on an Acceptance Criterion whose satisfaction condition is structurally circular — it depends on the very `SUMMARY.md`/`SUMMARY.json` that settle produces, which doesn't exist until after the deep-verify pass that would need to observe it. A new pure classifier (`classifyAcObservability`) detects this narrow shape from an AC's Given/When/Then text and routes it to a distinct `unobservable` verdict instead of an ordinary `fail`. `unobservable`-marked ACs are excluded from deep-verify's offenders list, the evidence-floor gate, and the force-used honesty report's `deep:` bucket — but never rolled up as a pass, and never allowed to move `assurance.overall` toward `strong`. `SUMMARY.md` and the CLI's summary-render surface render such ACs distinctly from both PASS and FAIL, carrying the classifier's reason, so an operator can tell "wasn't checked because it structurally can't be" from "checked and failed."
+
+  `DeepVerdictZ` (`@thomas-powers-jr/cadence-types`) gains an additive, optional `unobservable` boolean field. Absent on every historical `SUMMARY.json` and on every AC this classifier doesn't flag; `computeSummaryContentHash` is unaffected. The classifier defaults to `observable` on any ambiguity — a false negative is just an ordinary `fail`, while a false positive would silently excuse a real failure, so every trigger pattern is narrow and structural (case-sensitive `SUMMARY` token, quote-scope and negation-scope guards) rather than a broad keyword sweep.
+
 ## 1.56.0
 
 ### Minor Changes
