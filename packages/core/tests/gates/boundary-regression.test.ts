@@ -254,6 +254,25 @@ describe(
       // never requested. This is the single settle configuration in the repo
       // that exercises every SettleGate member in one run.
       expect(summary.gates).toEqual([
+        // Phase 275 (275-01, T4; as-built): six new entries -- one per task
+        // in this fixture's draft, each carrying per-task-verify's
+        // already-persisted provider identity via `observedProvider`/
+        // `taskId`, never `provider` (deriveAssuranceRecord's rollup fold
+        // must stay blind to these). Prepended, not appended: per-task-verify
+        // already ran during BUILD, before this settle's own gate loop even
+        // starts, and prepending preserves the widespread "last entry in
+        // gates[] is the gate that most recently ran/refused this settle"
+        // convention used elsewhere (settle-code-review.test.ts et al.). Not
+        // a regression: 'per-task-verify' never appeared in `gates[]` before
+        // this phase (it fires during BUILD, not settle) -- this pin now
+        // reflects T4's settle-time synthesis of that already-existing
+        // per-task data.
+        { gate: 'per-task-verify', status: 'ran', taskId: 'T1', observedProvider: 'mock' },
+        { gate: 'per-task-verify', status: 'ran', taskId: 'T2', observedProvider: 'mock' },
+        { gate: 'per-task-verify', status: 'ran', taskId: 'T3', observedProvider: 'mock' },
+        { gate: 'per-task-verify', status: 'ran', taskId: 'T4', observedProvider: 'mock' },
+        { gate: 'per-task-verify', status: 'ran', taskId: 'T5', observedProvider: 'mock' },
+        { gate: 'per-task-verify', status: 'ran', taskId: 'T6', observedProvider: 'mock' },
         { gate: 'draft-read', status: 'ran' },
         { gate: 'structural-verifier', status: 'ran' },
         { gate: 'boundary-scan', status: 'ran' },
@@ -265,7 +284,13 @@ describe(
           status: 'skipped',
           skipReason: 'not requested (no --deep / --interactive, not in gate set)',
         },
-        { gate: 'deep-verify', status: 'ran' },
+        // Phase 275 (275-01, T2/T3): `observedProvider` is new here -- a
+        // structurally separate field from `provider` above (never read by
+        // deriveAssuranceRecord's rollup fold), populated because deep-verify
+        // now reports the identity that actually ran it. Not a regression:
+        // this is the exact behavior change T2/T3 implemented and this pin
+        // now reflects it.
+        { gate: 'deep-verify', status: 'ran', observedProvider: 'mock' },
         // Phase 267 (267-01, dec-20260809-004): the outcome is unchanged --
         // this is still a genuine mock-identified CLEAN PASS on both gates,
         // same as before this phase -- but the recorded status moved from

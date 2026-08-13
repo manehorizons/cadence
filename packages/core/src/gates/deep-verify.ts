@@ -133,11 +133,23 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
         outcome: 'refuse',
         summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model, result.usage) },
         reason,
+        flags: {
+          observedVerifierIdentity: {
+            family: result.provider,
+            ...(result.model ? { model: result.model } : {}),
+          },
+        },
       };
     }
     return {
       outcome: 'pass',
       summaryPatch: { deepVerify, deepVerifyMeta: meta(result.provider, result.model, result.usage) },
+      flags: {
+        observedVerifierIdentity: {
+          family: result.provider,
+          ...(result.model ? { model: result.model } : {}),
+        },
+      },
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -156,7 +168,13 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
           ...(failedModel ? { model: failedModel } : {}),
         };
       }
-      const flags: GateFlags = { verifierFailure: { message, provider: failedProvider } };
+      const flags: GateFlags = {
+        verifierFailure: { message, provider: failedProvider },
+        observedVerifierIdentity: {
+          family: failedProvider,
+          ...(failedModel ? { model: failedModel } : {}),
+        },
+      };
       return {
         outcome: 'pass',
         summaryPatch: { deepVerify, deepVerifyMeta: meta(failedProvider, failedModel) },

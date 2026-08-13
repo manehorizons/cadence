@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 2,
+  "draftId": "275-01",
+  "completedAt": "2026-08-13T04:41:03.381Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "ai-verified"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "ran"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "ran",
+      "observedProvider": "host-cli"
+    },
+    {
+      "gate": "code-review",
+      "status": "skipped",
+      "skipReason": "code-review: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass",
+      "provider": "mock",
+      "providerSelection": "fallback"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "Added GateFlags.observedVerifierIdentity, GateProvenanceZ.observedProvider/observedModel/taskId (all optional, no default, no schemaVersion bump), ProgressJson.perTaskVerify. Extended summary-provider-selection-schema.test.ts (275-01/AC-5, single it() block, hand-built round-trip + real 241-01-SUMMARY.json fixture MATCH check) and assurance-record.test.ts (275-01/AC-3, single it() block, proves fold blind to new fields). Independently re-verified: types build clean, targeted tests 19/19, typecheck clean, full turbo pipeline (lint+typecheck+test+build) 24/24 tasks green. Independent reviewer confirmed READY, including empirically injecting a .default('') to prove the AC-5 hazard test actually catches it."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "deep-verify.ts sets flags.observedVerifierIdentity on per-AC-pass, per-AC-fail, and the --allow-verifier-failure catch path; bare-refuse sub-path deliberately untouched. Independently re-verified: diff read myself, targeted test 29/29, typecheck clean. Independent reviewer confirmed READY with additional blast-radius check (mergeInto/Object.assign is presence-gated, no other consumer keys on this new field)."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "registry.ts's observedVerifierIdentityProvenance() mirrors verifierIdentityProvenance() exactly, spread into all 9 of 11 gates.push() sites that carry res (2 correctly excluded, confirmed by reviewer to produce real TS2454 compile errors if added). docs/concepts.md documents the new fields. Independently re-verified: diff read myself, targeted test 51/51, typecheck clean. Independent reviewer went further than inspection -- neutered the helper to a no-op and confirmed 3/4 new tests fail, verified the T2xT3 integration path by hand (all 3 of T2's return paths land at push sites carrying the spread). One non-blocking hardening suggestion noted (missing toHaveLength before the loop in one test) -- not required for DONE, can be picked up as future polish."
+    },
+    {
+      "id": "T4",
+      "status": "DONE",
+      "notes": ""
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "deepVerify": {
+    "AC-1": {
+      "pass": true,
+      "reason": "All three in-scope meta() paths set observedVerifierIdentity; a direct unit test exercises pass, refuse, and allow-verifier-failure.",
+      "provider": "host-cli"
+    },
+    "AC-2": {
+      "pass": true,
+      "reason": "Generic flag-presence helper maps observed identity to provenance; registry test uses synthetic non-deep-verify gates.",
+      "provider": "host-cli"
+    },
+    "AC-3": {
+      "pass": true,
+      "reason": "Pure-function test proves observed-only entries yield no verifierRollup and identical assurance to a same-shape stripped twin.",
+      "provider": "host-cli"
+    },
+    "AC-4": {
+      "pass": true,
+      "reason": "Settle prepends one observed-only per-task entry before all outcome branches; success and evidence-floor refusal tests assert count and two task shapes.",
+      "provider": "host-cli"
+    },
+    "AC-5": {
+      "pass": true,
+      "reason": "Optional additive schema fields preserve legacy hash through parse; test also parses a historical SUMMARY fixture and verifies MATCH.",
+      "provider": "host-cli"
+    }
+  },
+  "deepVerifyMeta": {
+    "diffProvided": true,
+    "diffBytes": 43181,
+    "truncated": false,
+    "filesCount": 10,
+    "provider": "host-cli"
+  },
+  "codeReview": {},
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 45,
+    "sessionSubagentSpawns": 104
+  },
+  "assurance": {
+    "verifierRollup": [
+      {
+        "provider": "mock",
+        "gateCount": 1
+      }
+    ],
+    "evidenceTally": {
+      "ai-verified": 5,
+      "executed": 0,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "mixed"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "6fda80156ef149001947b8c41465f2e324079652301c635e7db34d64abaa1f71"
+  }
+}

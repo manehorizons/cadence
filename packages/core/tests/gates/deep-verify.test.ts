@@ -288,6 +288,58 @@ describe('runDeepVerifyGate', () => {
   });
 });
 
+describe('runDeepVerifyGate — phase 275 (T2) observed verifier identity', () => {
+  it('275-01/AC-1: flags.observedVerifierIdentity is populated on the per-AC-pass, per-AC-fail, and allow-verifier-failure catch paths', async () => {
+    // Per-AC-pass path: no offenders, outcome 'pass'.
+    const passRes = await runDeepVerifyGate(
+      ctx({
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: true, reason: 'ok' } },
+          provider: 'anthropic',
+          model: 'claude-sonnet-4-6',
+        }),
+      }),
+    );
+    expect(passRes.outcome).toBe('pass');
+    expect(passRes.flags?.observedVerifierIdentity).toEqual({
+      family: 'anthropic',
+      model: 'claude-sonnet-4-6',
+    });
+
+    // Per-AC-fail path: an offender with no --force, outcome 'refuse'.
+    const refuseRes = await runDeepVerifyGate(
+      ctx({
+        verify: async () => ({
+          verdicts: { 'AC-1': { pass: false, reason: 'nope' } },
+          provider: 'mock',
+        }),
+      }),
+    );
+    expect(refuseRes.outcome).toBe('refuse');
+    expect(refuseRes.flags?.observedVerifierIdentity).toEqual({ family: 'mock' });
+
+    // Verifier-transport-failure catch branch, under --allow-verifier-failure.
+    const degradedRes = await runDeepVerifyGate(
+      ctx({
+        opts: { deep: true, allowVerifierFailure: true },
+        verify: async () => {
+          throw new Error('boom');
+        },
+      }),
+    );
+    expect(degradedRes.outcome).toBe('pass');
+    expect(degradedRes.flags?.observedVerifierIdentity).toEqual({ family: 'mock' });
+
+    // Bare-refuse sub-path (no bypass flag) stays out of scope: no meta() call
+    // today, so no flags at all — confirms this phase did not add one.
+    const bareRefuseRes = await runDeepVerifyGate(
+      ctx({ opts: { deep: true }, verify: async () => { throw new Error('boom'); } }),
+    );
+    expect(bareRefuseRes.outcome).toBe('refuse');
+    expect(bareRefuseRes.flags?.observedVerifierIdentity).toBeUndefined();
+  });
+});
+
 describe('runDeepVerifyGate — phase 274 (T3) unobservable-AC classification', () => {
   // Same shape as `criteria-observability.test.ts`'s AC-F2 fixture and phase
   // 272's real AC-1/AC-4: the "pasted into the SUMMARY" circular-reference

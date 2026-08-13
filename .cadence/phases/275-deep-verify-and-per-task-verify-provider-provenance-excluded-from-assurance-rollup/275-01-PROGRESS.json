@@ -1,0 +1,45 @@
+{
+  "draftId": "275-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added GateFlags.observedVerifierIdentity, GateProvenanceZ.observedProvider/observedModel/taskId (all optional, no default, no schemaVersion bump), ProgressJson.perTaskVerify. Extended summary-provider-selection-schema.test.ts (275-01/AC-5, single it() block, hand-built round-trip + real 241-01-SUMMARY.json fixture MATCH check) and assurance-record.test.ts (275-01/AC-3, single it() block, proves fold blind to new fields). Independently re-verified: types build clean, targeted tests 19/19, typecheck clean, full turbo pipeline (lint+typecheck+test+build) 24/24 tasks green. Independent reviewer confirmed READY, including empirically injecting a .default('') to prove the AC-5 hazard test actually catches it.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-13T03:43:10.284Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "deep-verify.ts sets flags.observedVerifierIdentity on per-AC-pass, per-AC-fail, and the --allow-verifier-failure catch path; bare-refuse sub-path deliberately untouched. Independently re-verified: diff read myself, targeted test 29/29, typecheck clean. Independent reviewer confirmed READY with additional blast-radius check (mergeInto/Object.assign is presence-gated, no other consumer keys on this new field).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/src/gates/registry.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/docs/concepts.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/src/gates/deep-verify.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/tests/gates/deep-verify.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/tests/gates/registry.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/tests/services/settle.test.ts"
+      ],
+      "updatedAt": "2026-08-13T03:51:59.050Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "registry.ts's observedVerifierIdentityProvenance() mirrors verifierIdentityProvenance() exactly, spread into all 9 of 11 gates.push() sites that carry res (2 correctly excluded, confirmed by reviewer to produce real TS2454 compile errors if added). docs/concepts.md documents the new fields. Independently re-verified: diff read myself, targeted test 51/51, typecheck clean. Independent reviewer went further than inspection -- neutered the helper to a no-op and confirmed 3/4 new tests fail, verified the T2xT3 integration path by hand (all 3 of T2's return paths land at push sites carrying the spread). One non-blocking hardening suggestion noted (missing toHaveLength before the loop in one test) -- not required for DONE, can be picked up as future polish.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/tests/services/settle.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/src/gates/registry.ts"
+      ],
+      "updatedAt": "2026-08-13T03:57:53.197Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/tests/services/settle.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/tests/gates/boundary-regression.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/packages/core/src/services/settle.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/275-deep-verify-per-task-provenance/.cadence/phases/275-deep-verify-and-per-task-verify-provider-provenance-excluded-from-assurance-rollup/275-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-13T04:21:15.020Z"
+    }
+  }
+}

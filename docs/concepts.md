@@ -154,6 +154,14 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   genuinely unrecognized higher `schemaVersion` (written by a newer Cadence
   than the one reading it) is reported as its own diagnostic rather than a
   generic parse failure.
+- Phase 275: `gates[]` entries also carry optional `observedProvider`/
+  `observedModel`/`taskId` — a structurally separate field set from
+  `provider`/`model` above, populated for `deep-verify` and
+  `per-task-verify` (one `taskId`-tagged entry per task execution) so both
+  gates' real verifier identity becomes visible without ever being read by
+  the `verifierRollup`/`overall` fold that `provider`/`model` feed — no
+  `schemaVersion` bump, additive and content-hash-safe like the phase-232
+  `provider`/`model` fields directly above.
 - Phase 233: `SUMMARY.json` optionally carries `assurance` — one whole-run
   record, *derived and reported only* (it adds no gate, no refusal path, and
   no bypass flag), answering "how strongly was this settle actually

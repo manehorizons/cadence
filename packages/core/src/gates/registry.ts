@@ -142,6 +142,28 @@ function verifierIdentityProvenance(
 }
 
 /**
+ * Phase 275 (275-01, T3): mirrors `verifierIdentityProvenance()` above
+ * exactly, but for `GateFlags.observedVerifierIdentity` (populated by
+ * `deep-verify` per T2, and structurally distinct from `verifierIdentity`
+ * above) onto `observedProvider`/`observedModel` — a field pair
+ * `deriveAssuranceRecord`'s `verifierRollup`/`overall` fold never reads (see
+ * `gates/types.ts`'s doc comment on `observedVerifierIdentity` and AC-3).
+ * Checked generically by flag presence, never by gate name, matching
+ * `verifierIdentityProvenance()`'s own convention: any future gate that
+ * starts reporting `observedVerifierIdentity` picks this up for free.
+ */
+function observedVerifierIdentityProvenance(
+  res: GateResult,
+): Pick<GateProvenance, 'observedProvider' | 'observedModel'> {
+  const identity = res.flags?.observedVerifierIdentity;
+  if (!identity) return {};
+  return {
+    observedProvider: identity.family,
+    ...(identity.model !== undefined ? { observedModel: identity.model } : {}),
+  };
+}
+
+/**
  * Drive the settle gate sequence (Phase 44.1). Walks `GATE_ORDER`, invoking a
  * gate iff it is `selfGuarded` or present in `ctx.gateSet.gates`, merging each
  * `GateResult` into the accumulator. The first refusing gate halts the loop —
@@ -222,6 +244,7 @@ export async function runSettleGates(
         status: 'refused',
         ...(res.reason !== undefined ? { reason: res.reason } : {}),
         ...verifierIdentityProvenance(res),
+        ...observedVerifierIdentityProvenance(res),
       });
       return { acc, refused: true, gates };
     }
@@ -238,20 +261,21 @@ export async function runSettleGates(
         status: 'skipped',
         skipReason: SELF_GUARD_SKIP_REASON[gate] ?? 'not requested',
         ...verifierIdentityProvenance(res),
+        ...observedVerifierIdentityProvenance(res),
       });
     } else if (gate === 'build-test-must-pass' && res.summaryPatch?.buildTestRan === false) {
-      gates.push({ gate, status: 'skipped', skipReason: NO_TEST_COMMAND_NOTICE.message, ...verifierIdentityProvenance(res) });
+      gates.push({ gate, status: 'skipped', skipReason: NO_TEST_COMMAND_NOTICE.message, ...verifierIdentityProvenance(res), ...observedVerifierIdentityProvenance(res) });
     } else if (gate === 'build-test-must-pass' && res.flags?.buildTestBypassed === true) {
       // Phase 226: buildTestBypassed is true for either --allow-failing-build
       // or bare --force (see build-test-must-pass.ts) — name whichever one
       // actually fired instead of always naming the gate's own flag.
       const flag = gateCtx.opts.allowFailingBuild === true ? '--allow-failing-build' : '--force';
-      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}`, ...verifierIdentityProvenance(res) });
+      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}`, ...verifierIdentityProvenance(res), ...observedVerifierIdentityProvenance(res) });
     } else if (gate === 'boundary-scan' && res.flags?.boundaryScanBypassed === true) {
       const flag = gateCtx.opts.allowBoundaryScanFailure === true ? '--allow-boundary-scan-failure' : '--force';
-      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}`, ...verifierIdentityProvenance(res) });
+      gates.push({ gate, status: 'skipped', skipReason: `bypassed via ${flag}`, ...verifierIdentityProvenance(res), ...observedVerifierIdentityProvenance(res) });
     } else if (gate === 'test-coverage' && res.flags?.coverageBypassed === true) {
-      gates.push({ gate, status: 'skipped', skipReason: 'bypassed via --allow-missing-coverage', ...verifierIdentityProvenance(res) });
+      gates.push({ gate, status: 'skipped', skipReason: 'bypassed via --allow-missing-coverage', ...verifierIdentityProvenance(res), ...observedVerifierIdentityProvenance(res) });
     } else if (res.flags?.reviewVerifierFailure) {
       // Phase 248 (T4): a code-review/security-audit verifier THROW (the call
       // itself never returned) bypassed via --force or the gate-specific
@@ -283,6 +307,7 @@ export async function runSettleGates(
         // honesty thesis.
         skipReason: `bypassed via ${flag} — verifier failure bypassed (${message}), configured provider: ${provider ?? 'unknown'}`,
         ...verifierIdentityProvenance(res),
+        ...observedVerifierIdentityProvenance(res),
       });
     } else if (
       res.flags?.verifierIdentity?.family === 'mock' &&
@@ -313,9 +338,10 @@ export async function runSettleGates(
         status: 'skipped',
         skipReason: `${gate}: mock-identified clean pass abstained — the mock provider is not real verification, recorded as skipped rather than a persisted pass`,
         ...verifierIdentityProvenance(res),
+        ...observedVerifierIdentityProvenance(res),
       });
     } else {
-      gates.push({ gate, status: 'ran', ...verifierIdentityProvenance(res) });
+      gates.push({ gate, status: 'ran', ...verifierIdentityProvenance(res), ...observedVerifierIdentityProvenance(res) });
     }
     log.debug('gate passed', { gate, outcome: res.outcome });
   }

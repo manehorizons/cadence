@@ -286,3 +286,96 @@ describe('deriveAssuranceRecord derivation-stability proof', () => {
     expect(emptyResult.overall).toBe('unverified');
   });
 });
+
+/**
+ * Phase 275 (T1) — the load-bearing safety property this phase exists to
+ * prove, phase-qualified AC-3. `observedProvider`/`observedModel`/`taskId`
+ * are a structurally separate field set on `GateProvenanceZ` (T1,
+ * `summary.ts`), populated for `deep-verify` (T2) and `per-task-verify` (T4)
+ * specifically so their real provider identity stays invisible to this
+ * function's fold — `deriveAssuranceRecord` only ever reads
+ * `.provider`/`.model` (see its own doc comment and `rollupByKey`'s
+ * `g.provider === undefined` guard above). No change to `assurance-record.ts`
+ * itself is expected or made here; this test proves the *existing* code
+ * already can't see the new field names.
+ *
+ * Both the with-fields and without-fields comparison live inside a single
+ * asserting test block below (not split across two) — this repo's coverage
+ * scanner dedups a phase-qualified AC token per file by first occurrence
+ * only, so writing the qualified token a second time anywhere earlier in
+ * this file (even in a comment or a describe title) would silently steal the
+ * dedup slot from the real assertion below and make it invisible to the
+ * coverage/evidence-floor gate. Deliberately not spelled out literally here
+ * for that exact reason — see the test title itself for the token.
+ */
+describe('deriveAssuranceRecord and observedProvider/observedModel/taskId (phase 275, AC-3)', () => {
+  it('275-01/AC-3: gates[] entries carrying only observedProvider/taskId (no provider/model) are structurally invisible to verifierRollup and overall', () => {
+    const acResults = [ac('AC-1', 'mention')];
+
+    // Baseline: no verifier identity at all on either field set.
+    const baselineGates: GateProvenance[] = [{ gate: 'draft-read', status: 'ran' }];
+    const baselineResult = deriveAssuranceRecord(baselineGates, acResults);
+    expect(baselineResult.verifierRollup).toEqual([]);
+    expect(baselineResult.overall).toBe('weak');
+
+    // Otherwise-identical input, but the entries now carry
+    // observedProvider/observedModel/taskId (the deep-verify/per-task-verify
+    // shape) while `.provider`/`.model` stay absent.
+    const observedOnlyGates: GateProvenance[] = [
+      {
+        gate: 'deep-verify',
+        status: 'ran',
+        observedProvider: 'anthropic',
+        observedModel: 'claude-sonnet-5',
+      },
+      {
+        gate: 'per-task-verify',
+        status: 'ran',
+        taskId: 'T1',
+        observedProvider: 'host-cli',
+      },
+      {
+        gate: 'per-task-verify',
+        status: 'ran',
+        taskId: 'T2',
+        observedProvider: 'host-cli',
+        observedModel: 'claude-sonnet-5',
+      },
+    ];
+    const observedOnlyResult = deriveAssuranceRecord(observedOnlyGates, acResults);
+
+    // verifierRollup is empty -- none of observedProvider/observedModel/
+    // taskId ever populate it, only `.provider`/`.model` do.
+    expect(observedOnlyResult.verifierRollup).toEqual([]);
+    // overall is UNCHANGED relative to the otherwise-identical baseline
+    // input that carries no verifier identity at all -- proving the
+    // observed* fields contribute nothing to the derivation.
+    expect(observedOnlyResult.overall).toBe(baselineResult.overall);
+    expect(observedOnlyResult).toEqual(baselineResult);
+
+    // AC-3's own wording, taken literally: "overall does not change between
+    // an otherwise-identical input with and without them present." The
+    // baseline comparison above uses a differently-shaped single entry; this
+    // is the literal same-shape twin -- the exact same 3 gate/status/taskId
+    // entries in the exact same order, with only observedProvider/
+    // observedModel stripped off each one.
+    const strippedTwinGates: GateProvenance[] = [
+      { gate: 'deep-verify', status: 'ran' },
+      { gate: 'per-task-verify', status: 'ran', taskId: 'T1' },
+      { gate: 'per-task-verify', status: 'ran', taskId: 'T2' },
+    ];
+    const strippedTwinResult = deriveAssuranceRecord(strippedTwinGates, acResults);
+    expect(observedOnlyResult).toEqual(strippedTwinResult);
+
+    // Sanity check the guard the other direction too: a genuinely-real
+    // `.provider`/`.model` entry (not observed*) DOES change `overall`,
+    // proving this test's baseline/observed-only equality above isn't
+    // vacuous because deriveAssuranceRecord is broken/no-op.
+    const realProviderGates: GateProvenance[] = [
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-sonnet-5' },
+    ];
+    const realProviderResult = deriveAssuranceRecord(realProviderGates, acResults);
+    expect(realProviderResult.verifierRollup).not.toEqual([]);
+    expect(realProviderResult.overall).not.toBe(baselineResult.overall);
+  });
+});

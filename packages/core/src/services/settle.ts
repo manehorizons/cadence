@@ -59,6 +59,7 @@ import {
   type AcResult,
   type SettleAccumulator,
 } from '../gates/types.js';
+import type { PerTaskVerifyRecord } from '../build/record.js';
 import { createDefaultPrompter } from '../verify/prompter.js';
 import { collectGitDiff } from '../git/diff.js';
 import { selectNotifier } from '../notify/factory.js';
@@ -1508,6 +1509,38 @@ async function finalizeAndCloseSettle(
 }
 
 /**
+ * Phase 275 (275-01, T4): surfaces per-task-verify's already-persisted
+ * per-task provenance (`progress.tasks[id].perTaskVerify`, populated during
+ * BUILD by `recordTaskOutcome`) into `gates[]` — one entry per task
+ * execution, keyed by `taskId` so distinct tasks running under different
+ * providers are never collapsed into a single row (unlike
+ * `verifierRollup`'s distinct-pair fold one layer up). `observedProvider`/
+ * `observedModel` are used (not `provider`/`model`) so
+ * `deriveAssuranceRecord`'s rollup fold stays structurally blind to these
+ * entries (see `dec-20260808-008`/`dec-20260811-002`). `status: 'ran'` is
+ * recorded uniformly for `pass`/`concerns`/`refuse`-bypassed verdicts alike
+ * — an unbypassed refuse never reaches PROGRESS.json at all, so every
+ * refuse-shaped record here already carries `bypassed: true`; the audit
+ * trail for the bypass itself lives in `gateBypasses[]`, a distinct
+ * mechanism this helper does not touch.
+ */
+function perTaskVerifyGateEntries(progress: ProgressJson): GateProvenance[] {
+  const entries: GateProvenance[] = [];
+  for (const [taskId, task] of Object.entries(progress.tasks)) {
+    const record: PerTaskVerifyRecord | undefined = task.perTaskVerify;
+    if (!record) continue;
+    entries.push({
+      gate: 'per-task-verify',
+      status: 'ran',
+      taskId,
+      observedProvider: record.provider,
+      ...(record.model ? { observedModel: record.model } : {}),
+    });
+  }
+  return entries;
+}
+
+/**
  * `cadence settle run` — close the loop: run the settle gate stack, write
  * SUMMARY.{json,md}, and return to IDLE. Faithful extraction of the former CLI
  * action body (process streams + exit code routed through `io`/the result).
@@ -1570,7 +1603,19 @@ export async function settleService(
     // resolution rather than each independently re-deriving it.
     const now = opts.now ?? (() => new Date().toISOString());
 
-    const { acc, refused, gates } = await runSettleGates(ctx);
+    const { acc, refused, gates: settleGates } = await runSettleGates(ctx);
+    // Phase 275 (275-01, T4; as-built): extended exactly once, before any
+    // branch below, so all 5 downstream call sites (4
+    // `writeRefusedSettleSummary` + the final `finalizeAndCloseSettle`) see
+    // per-task-verify's entries uniformly regardless of how this settle
+    // resolves. Prepended, not appended: per-task-verify already ran during
+    // BUILD, temporally before this settle's own gate loop even starts, and
+    // a widespread existing convention (~15 call sites) treats the LAST
+    // entry in `gates[]` as "the gate that most recently ran/refused during
+    // this settle's own loop" — appending would silently break that
+    // convention for every settle whose draft has any `perTaskVerify`
+    // records. Prepending preserves it while still surfacing the data.
+    const gates = [...perTaskVerifyGateEntries(progress), ...settleGates];
     if (refused) {
       return await writeRefusedSettleSummary(
         cwd, activePhase, state, draft, progress, gates,
