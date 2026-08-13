@@ -2337,7 +2337,7 @@
       "summary": "Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token scheme that closes the cross-phase AC-N token collision (originally rec-20260729-004). But 'bare' remains the DEFAULT for every fresh cadence init and every other cadence-managed project (packages/types/src/config.ts:227,252,577) -- this repo dogfoods the fix for itself only, via its own .cadence/config.json. Decide whether phase-qualified should become the default: weigh against the AC-N token convention documented in CLAUDE.md and asserted by packages/core/tests/verify/, backward compat for pre-239 test files written against bare tokens, and the v2.0.0-reserved semver policy (breaking changes ship as minor until full coupling).",
       "source": "manual",
       "status": "candidate",
-      "readiness": "needs-decision",
+      "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
       "riskScore": 5,
@@ -2359,9 +2359,11 @@
         "ev-20260807-011"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260813-005"
+      ],
       "createdAt": "2026-08-07T23:04:07.612Z",
-      "updatedAt": "2026-08-07T23:04:07.612Z"
+      "updatedAt": "2026-08-13T02:37:10.425Z"
     },
     {
       "id": "rec-20260808-001",
@@ -2444,12 +2446,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260809-001"
+        "ev-20260809-001",
+        "ev-20260813-006"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-09T00:24:39.319Z",
-      "updatedAt": "2026-08-09T00:24:39.319Z"
+      "updatedAt": "2026-08-13T02:29:05.482Z"
     },
     {
       "id": "rec-20260809-003",
@@ -2582,13 +2585,16 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260811-003"
+        "ev-20260811-003",
+        "ev-20260813-007"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260813-003"
+      ],
       "scoutId": "scout-20260811-0027",
       "createdAt": "2026-08-11T00:31:00.991Z",
-      "updatedAt": "2026-08-11T00:31:00.991Z"
+      "updatedAt": "2026-08-13T02:34:11.074Z"
     },
     {
       "id": "rec-20260811-004",
@@ -2613,7 +2619,9 @@
         "ev-20260811-004"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260813-004"
+      ],
       "scoutId": "scout-20260811-0027",
       "createdAt": "2026-08-11T00:41:54.411Z",
       "updatedAt": "2026-08-11T00:41:54.411Z"
@@ -2674,35 +2682,6 @@
       "decisionIds": [],
       "createdAt": "2026-08-11T02:24:45.361Z",
       "updatedAt": "2026-08-11T02:24:45.361Z"
-    },
-    {
-      "id": "rec-20260811-007",
-      "title": "Code-review finding (high): CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws EN…",
-      "summary": "high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:60: CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.",
-      "source": "review",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "packages/core"
-      ],
-      "affectedFiles": [
-        "packages/core/tests/docs/phase272-assurance-correctness.test.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260811-007"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260811-0432",
-      "sourceFindingId": "2e3e2e23fb7d4aafa5186536c6b007b45e81e66c2056e8110ca58c66e4d166db",
-      "createdAt": "2026-08-11T04:32:22.867Z",
-      "updatedAt": "2026-08-11T04:32:22.867Z"
     },
     {
       "id": "rec-20260812-001",
@@ -2788,33 +2767,6 @@
       "decisionIds": [],
       "createdAt": "2026-08-12T22:08:09.940Z",
       "updatedAt": "2026-08-12T22:08:09.940Z"
-    },
-    {
-      "id": "rec-20260812-004",
-      "title": "scanTestCoverage's per-file AC-token dedup silently drops evidence when multiple asserting it() blocks share one token",
-      "summary": "packages/core/src/verify/coverage.ts:140-142 dedups matched AC tokens by `${acId}@${relPath}` alone (no line number) — when two or more genuinely asserting it()/test() blocks in the SAME FILE carry the SAME qualified AC token (a natural, encouraged pattern: one token per AC, multiple tests proving different sub-claims), only the FIRST occurrence in file order survives in the returned TestRef[]; every subsequent real assertion is silently invisible to the test-coverage gate, evidence-floor derivation, and deep-verify's VerifyInput.tests linkage. Confirmed empirically in phase 274's own build: a real, non-mock deep-verify gate refused settle twice over exactly this (AC-1's six-fixture corpus test collapsed to appearing as one fixture; AC-3's two-fixture pair collapsed to appearing as only the first fixture), diagnosed by direct inspection of scanTestCoverage's output and fixed locally by consolidating the affected file's per-AC assertions into one it() each (packages/core/tests/verify/criteria-observability.test.ts). A third, same-shape instance was found but NOT fixed (out of scope/time for phase 274): packages/core/tests/services/settle.test.ts has three separate asserting it() blocks carrying the literal token 274-01/AC-4 (lines 1682, 1737, 1819) — only line 1682's test currently survives dedup; deep-verify has not (yet) flagged this, but the same structural gap is present and could surface on a future settle attempt or after any reordering. This is a pre-existing, repo-wide gap (not introduced by phase 274) affecting any test suite with this natural multi-test-per-AC shape — silent evidence loss is the exact failure direction CLAUDE.md's 'Token Drop' pattern warns about, just from the opposite structural cause (dedup collision, not comment-only mention).",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-evidence",
-      "priority": "high",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core/verify"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/coverage.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260812-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-12T23:46:22.088Z",
-      "updatedAt": "2026-08-12T23:46:22.088Z"
     },
     {
       "id": "rec-20260813-001",
@@ -2925,6 +2877,35 @@
       "decisionIds": [],
       "createdAt": "2026-08-13T00:35:09.919Z",
       "updatedAt": "2026-08-13T00:35:09.919Z"
+    },
+    {
+      "id": "rec-20260813-005",
+      "title": "resume serves a stale-but-existing lastHandoff pointer without checking for a fresher doc",
+      "summary": "locateFreshestHandoff (packages/core/src/handoff/locate.ts:44-49) returns the lastHandoff-pointed doc immediately once existsSync(pointer) is true -- it never compares that doc's generated_at against the ranked glob of other SESSION-*.md files in the same directory. Phase 273 (rec-20260811-009) only fixed the dangling case (pointer names a file that no longer exists); this is the sibling case where the pointer target still exists but a newer handoff has since been written (e.g. by a different worktree merging back, or a session that wrote a fresh doc without updating state.json's session.lastHandoff). Hit live on 2026-08-13: the primary checkout's lastHandoff pointed at SESSION-2026-08-12.md (phase 273) while origin had already merged phase 274, whose own worktree-local handoff (SESSION-2026-08-13-phase274-landed-v157-phaseT-complete.md) was strictly newer by generated_at and sat in the same .cadence/handoff/ dir once synced -- cadence resume served the stale doc with zero warning, costing a full manual cross-worktree investigation to catch. Fix shape: after resolving via the pointer, also rank against the glob and warn (not silently switch) if a strictly-newer generated_at doc exists elsewhere in the directory.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "resume",
+        "handoff",
+        "state-tracking"
+      ],
+      "affectedFiles": [
+        "packages/core/src/handoff/locate.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260813-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-13T02:27:37.800Z",
+      "updatedAt": "2026-08-13T02:27:37.800Z"
     }
   ],
   "archived": [
@@ -7884,11 +7865,74 @@
         "dec-20260812-004"
       ],
       "convertedToPhaseId": "274-unobservable-criteria-classification",
-      "createdAt": "2026-08-11T04:34:38.109Z",
-      "updatedAt": "2026-08-13T00:36:00.368Z",
       "shippedRef": "274-unobservable-criteria-classification (274-01)",
       "archivedAt": "2026-08-13T00:36:00.368Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-11T04:34:38.109Z",
+      "updatedAt": "2026-08-13T00:36:00.368Z"
+    },
+    {
+      "id": "rec-20260812-004",
+      "title": "scanTestCoverage's per-file AC-token dedup silently drops evidence when multiple asserting it() blocks share one token",
+      "summary": "packages/core/src/verify/coverage.ts:140-142 dedups matched AC tokens by `${acId}@${relPath}` alone (no line number) — when two or more genuinely asserting it()/test() blocks in the SAME FILE carry the SAME qualified AC token (a natural, encouraged pattern: one token per AC, multiple tests proving different sub-claims), only the FIRST occurrence in file order survives in the returned TestRef[]; every subsequent real assertion is silently invisible to the test-coverage gate, evidence-floor derivation, and deep-verify's VerifyInput.tests linkage. Confirmed empirically in phase 274's own build: a real, non-mock deep-verify gate refused settle twice over exactly this (AC-1's six-fixture corpus test collapsed to appearing as one fixture; AC-3's two-fixture pair collapsed to appearing as only the first fixture), diagnosed by direct inspection of scanTestCoverage's output and fixed locally by consolidating the affected file's per-AC assertions into one it() each (packages/core/tests/verify/criteria-observability.test.ts). A third, same-shape instance was found but NOT fixed (out of scope/time for phase 274): packages/core/tests/services/settle.test.ts has three separate asserting it() blocks carrying the literal token 274-01/AC-4 (lines 1682, 1737, 1819) — only line 1682's test currently survives dedup; deep-verify has not (yet) flagged this, but the same structural gap is present and could surface on a future settle attempt or after any reordering. This is a pre-existing, repo-wide gap (not introduced by phase 274) affecting any test suite with this natural multi-test-per-AC shape — silent evidence loss is the exact failure direction CLAUDE.md's 'Token Drop' pattern warns about, just from the opposite structural cause (dedup collision, not comment-only mention).",
+      "source": "manual",
+      "status": "rejected",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260812-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260813-001"
+      ],
+      "archivedAt": "2026-08-13T02:29:15.716Z",
+      "archiveReason": "rejected",
+      "createdAt": "2026-08-12T23:46:22.088Z",
+      "updatedAt": "2026-08-13T02:29:15.716Z"
+    },
+    {
+      "id": "rec-20260811-007",
+      "title": "Code-review finding (high): CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws EN…",
+      "summary": "high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:60: CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.",
+      "source": "review",
+      "status": "shipped",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packages/core"
+      ],
+      "affectedFiles": [
+        "packages/core/tests/docs/phase272-assurance-correctness.test.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-007"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "shippedRef": "packages/core/tests/docs/phase272-assurance-correctness.test.ts uses it.skipIf(process.platform === 'win32') on the grep-dependent assertion, plus a cross-platform NUL-byte/line-content proxy test that runs on all platforms -- shipped as part of 2d290db8 (fix: assurance-record.ts correctness pass, phase 272, PR #399), which predates this rec's filing (verified live in main during v1.57 Phase W reconciliation, 2026-08-13)",
+      "scoutId": "scout-20260811-0432",
+      "sourceFindingId": "2e3e2e23fb7d4aafa5186536c6b007b45e81e66c2056e8110ca58c66e4d166db",
+      "archivedAt": "2026-08-13T02:29:54.605Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-11T04:32:22.867Z",
+      "updatedAt": "2026-08-13T02:29:54.605Z"
     }
   ]
 }
