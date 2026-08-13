@@ -1,0 +1,8 @@
+---
+"@thomas-powers-jr/cadence-core": patch
+"@thomas-powers-jr/cadence-types": patch
+---
+
+`settle run --deep` no longer refuses (or requires `--force`) on an Acceptance Criterion whose satisfaction condition is structurally circular — it depends on the very `SUMMARY.md`/`SUMMARY.json` that settle produces, which doesn't exist until after the deep-verify pass that would need to observe it. A new pure classifier (`classifyAcObservability`) detects this narrow shape from an AC's Given/When/Then text and routes it to a distinct `unobservable` verdict instead of an ordinary `fail`. `unobservable`-marked ACs are excluded from deep-verify's offenders list, the evidence-floor gate, and the force-used honesty report's `deep:` bucket — but never rolled up as a pass, and never allowed to move `assurance.overall` toward `strong`. `SUMMARY.md` and the CLI's summary-render surface render such ACs distinctly from both PASS and FAIL, carrying the classifier's reason, so an operator can tell "wasn't checked because it structurally can't be" from "checked and failed."
+
+`DeepVerdictZ` (`@thomas-powers-jr/cadence-types`) gains an additive, optional `unobservable` boolean field. Absent on every historical `SUMMARY.json` and on every AC this classifier doesn't flag; `computeSummaryContentHash` is unaffected. The classifier defaults to `observable` on any ambiguity — a false negative is just an ordinary `fail`, while a false positive would silently excuse a real failure, so every trigger pattern is narrow and structural (case-sensitive `SUMMARY` token, quote-scope and negation-scope guards) rather than a broad keyword sweep.

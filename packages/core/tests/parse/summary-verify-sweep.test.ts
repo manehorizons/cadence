@@ -129,4 +129,21 @@ describe('cadence summary verify-all - repo-wide sweep over every existing summa
     expect(failed).toBe(0);
     expect(result.code).toBe(0);
   });
+
+  it("274-01/AC-4: DeepVerdictZ's additive `unobservable` field (phase 274 T3) touched no historical SUMMARY.json — the same repo-wide sweep still exits 0 corpus-wide, run against the local built CLI after the schema change", () => {
+    // Same shared beforeAll sweep, run against `packages/core/dist/cli/
+    // index.js` (the local build, never the global `cadence` on PATH — see
+    // this file's own CADENCE_CLI constant) built AFTER Phase 274 T3's
+    // additive `unobservable: z.boolean().optional()` change to
+    // `DeepVerdictZ` in packages/types/src/summary.ts. A stale pre-T3 dist
+    // would also report zero failures here (an absent optional field parses
+    // fine under either schema), which would make this assertion vacuous —
+    // this is why the dispatch report for this task independently confirms
+    // (outside this test, via `grep -c unobservable packages/types/dist/*.js`
+    // and packages/core/dist) that the built artifacts actually carry the
+    // new field before this test is trusted as meaningful.
+    expect(checked).toBeGreaterThan(100);
+    expect(failed).toBe(0);
+    expect(result.code).toBe(0);
+  });
 });

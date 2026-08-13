@@ -7,6 +7,20 @@ export const DeepVerdictZ = z.object({
   reason: z.string(),
   provider: z.string(),
   model: z.string().optional(),
+  /**
+   * Phase 274 (T3): set (always `true` when present) when
+   * `classifyAcObservability` (`core/src/verify/criteria-observability.ts`)
+   * determined this AC's satisfaction condition falls outside deep-verify's
+   * observable surface (`{acs, tests, diff, files}`) — most commonly a
+   * circular reference to this settle's own `SUMMARY.md`/`SUMMARY.json`.
+   * Additive and optional by design: absent on every historical record (no
+   * `schemaVersion` bump), and the field is never set to `false` — its mere
+   * presence is the signal, matching the "absent stays absent" boundary.
+   * `pass` is still conservatively `false` on an unobservable-marked verdict
+   * (never reads as a pass to a naive consumer), but the AC is excluded from
+   * deep-verify's offender list precisely because this marker is set.
+   */
+  unobservable: z.boolean().optional(),
 });
 export type DeepVerdict = z.infer<typeof DeepVerdictZ>;
 

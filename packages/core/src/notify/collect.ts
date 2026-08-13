@@ -163,8 +163,21 @@ export function collectAnomalies(
     if (failedAcs.length > 0) reasons.push(`structural: ${failedAcs.join(', ')}`);
 
     if (ctx.deepVerify) {
+      // Phase 274 (T4): a classifier-marked-`unobservable` verdict is always
+      // recorded with `pass: false` (deep-verify.ts's conservative override,
+      // Phase 274 T3) so it never accidentally reads as a pass — but that
+      // means this bucket must explicitly exclude `unobservable: true`
+      // entries too, or the honesty report would mislabel a structurally
+      // unobservable AC as a real failure whenever `--force` is used for
+      // some unrelated reason. Deliberately does NOT exclude entries from
+      // the `--allow-verifier-failure` catch branch in deep-verify.ts (those
+      // never carry `unobservable: true` in the first place) — a transport
+      // failure means nothing was actually checked for ANY AC, which is not
+      // evidence about any AC's observability; still reporting all of them
+      // here, alongside the separate `verifier-failure` event, is the
+      // correct honest signal.
       const failed = Object.entries(ctx.deepVerify)
-        .filter(([, v]) => v.pass === false)
+        .filter(([, v]) => v.pass === false && v.unobservable !== true)
         .map(([id]) => id);
       if (failed.length > 0) reasons.push(`deep: ${failed.join(', ')}`);
     }

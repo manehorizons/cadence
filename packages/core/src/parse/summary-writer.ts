@@ -1,5 +1,6 @@
 import type { Summary } from '@thomas-powers-jr/cadence-types';
 import { renderFindingsSection } from './findings-render.js';
+import { formatUnobservableNote } from '../services/ac-observability-label.js';
 import { formatVerifierRollupLabel } from '../services/verifier-label.js';
 
 export function renderSummaryMd(s: Summary): string {
@@ -18,6 +19,8 @@ export function renderSummaryMd(s: Summary): string {
     const badge = ac.pass ? 'PASS' : 'FAIL';
     const evidenceTag = ac.evidence ? ` (${ac.evidence})` : '';
     lines.push(`- ${ac.id}: ${badge}${evidenceTag}${ac.note ? ` — ${ac.note}` : ''}`);
+    const unobservableNote = formatUnobservableNote(s.deepVerify?.[ac.id]);
+    if (unobservableNote) lines.push(unobservableNote);
   }
   lines.push('', '## Tasks', '');
   for (const t of s.taskResults) {

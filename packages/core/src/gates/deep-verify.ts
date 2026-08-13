@@ -1,6 +1,7 @@
 import type { DeepVerdict, DeepVerifyMeta } from '@thomas-powers-jr/cadence-types';
 import type { VerifyAc, VerifyInput, VerifyTestRef } from '../contracts/index.js';
 import { capDiff } from '../verify/cap-diff.js';
+import { classifyAcObservability } from '../verify/criteria-observability.js';
 import type { GateImpl, GateFlags, GateResult, SettleContext } from './types.js';
 
 /** Schema default for `verifier.diffCapBytes` (256KB); used when config is absent. */
@@ -70,7 +71,37 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
     const deepVerify: Record<string, DeepVerdict> = {};
     for (const ac of acs) {
       const v = result.verdicts[ac.id];
-      if (v) {
+      // Phase 274 (T3): classify this AC's observability BEFORE deciding what
+      // to record. Production text is the exact `[given, when, then]` join
+      // documented by `classifyAcObservability`'s JSDoc — a different
+      // separator is untested and could move the classifier's behavior in
+      // the unsafe (false-positive) direction. Coverage is whatever this
+      // gate already computed for the AC (possibly empty) — the classifier
+      // never lets coverage presence flip an otherwise-unobservable verdict.
+      const acText = [ac.given, ac.when, ac.then].join('\n');
+      const verdict = classifyAcObservability({ id: ac.id, text: acText }, tests[ac.id] ?? []);
+      if (!verdict.observable) {
+        // Conservative override: `pass` is always `false` here regardless of
+        // what the verifier said (it structurally cannot observe this AC's
+        // satisfaction condition, so a `pass: true` from it is not
+        // trustworthy) — never lets an unobservable-marked verdict
+        // accidentally read as a pass to a naive `.pass === true` consumer.
+        // `unobservable: true` is the load-bearing signal that excludes this
+        // AC from the offenders list below.
+        deepVerify[ac.id] = {
+          pass: false,
+          reason: v
+            ? `${v.reason} — reclassified unobservable: ${verdict.reason}`
+            : verdict.reason,
+          provider: result.provider,
+          ...(result.model ? { model: result.model } : {}),
+          unobservable: true,
+        };
+        ctx.io.err(
+          `deep-verify: ${ac.id} not counted as an offender — structurally unobservable: ` +
+            `${verdict.reason}\n`,
+        );
+      } else if (v) {
         deepVerify[ac.id] = {
           pass: v.pass,
           reason: v.reason,
@@ -85,7 +116,8 @@ export const runDeepVerifyGate: GateImpl = async (ctx): Promise<GateResult> => {
         (id) =>
           !ctx.explicitIds.has(id) &&
           deepVerify[id] !== undefined &&
-          deepVerify[id]!.pass === false,
+          deepVerify[id]!.pass === false &&
+          deepVerify[id]!.unobservable !== true,
       );
     if (offenders.length > 0 && !ctx.opts.force) {
       for (const id of offenders) {

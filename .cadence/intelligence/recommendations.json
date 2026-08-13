@@ -2705,34 +2705,6 @@
       "updatedAt": "2026-08-11T04:32:22.867Z"
     },
     {
-      "id": "rec-20260811-008",
-      "title": "deep-verify judges from {acs, tests, diff, files} only -- command-output-shaped ACs are structurally unverifiable",
-      "summary": "deep-verify.ts's VerifyInput is exactly {acs, tests, diff, files} (ctx.diff() = collectGitDiff, ctx.coverage() for test linkage) -- it never sees DRAFT.md prose (no Evidence section access) or the generated SUMMARY.json (doesn't exist yet during verification). Discovered concretely in phase 272 (272-01): 5 of 7 ACs were refused by real host-cli/codex deep-verify despite passing CADENCE's own mechanical test-coverage/evidence-floor gates on merit, for three distinct structural reasons -- (1) an AC whose Then clause asserts a temporal red-then-green test sequence cannot be proven from a single diff snapshot; (2) a file whose HEAD pre-image still contains binary content (e.g. mid-fix for a NUL-byte defect) diffs as \"Binary files ... differ\", hiding the actual code change from the reviewer even though a real fix and passing test exist; (3) an AC whose Then clause references facts about \"the SUMMARY\" (e.g. \"verbatim tail pasted into the SUMMARY\", or gate provenance in \"this phase's own SUMMARY.json\") is circular by construction -- that SUMMARY does not exist until after this very settle, and after deep-verify, completes. Since DELTAS['standard']['complex'] bundles deep-verify with code-review (the same tier D-F's real-conduction requirement needs), any complex-tier phase whose ACs describe command output or self-referential SUMMARY facts will predictably hit this, forcing --force on ACs that are otherwise genuinely earned. Not a deep-verify bug to fix reflexively -- widening its context (DRAFT prose, prior SUMMARYs) has its own false-confidence risks worth designing deliberately, not bolting on.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "core/gates"
-      ],
-      "affectedFiles": [
-        "packages/core/src/gates/deep-verify.ts",
-        "packages/core/src/gates/engine.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260811-008"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-11T04:34:38.109Z",
-      "updatedAt": "2026-08-11T04:34:38.109Z"
-    },
-    {
       "id": "rec-20260812-001",
       "title": "resume drops the dangling-lastHandoff-pointer signal when no fallback doc exists at all",
       "summary": "locateFreshestHandoff's new danglingPointer signal (phase 273) is only surfaced when the fallback glob finds at least one other SESSION-*.md to serve. When lastHandoff is dangling AND no SESSION-*.md exists anywhere in .cadence/handoff/, locateFreshestHandoff returns null, localResolve returns { found: false }, and the operator just sees 'resume: no handoff found' with zero indication that state.json actually pointed somewhere real. Deliberately out of scope for phase 273 (AC-1's Given required at least one fallback doc to exist); worth a small follow-up to thread the dangling filename into the not-found path too.",
@@ -2761,6 +2733,198 @@
       "decisionIds": [],
       "createdAt": "2026-08-12T00:35:05.643Z",
       "updatedAt": "2026-08-12T00:35:05.643Z"
+    },
+    {
+      "id": "rec-20260812-002",
+      "title": "classifyAcObservability's negation-clause-boundary heuristic is fragile to punctuation adjacent to the trigger phrase",
+      "summary": "Two independent reviewers of phase 274's criteria-observability.ts found real gaps in hasNegationInClause's naive period/newline clause-boundary scan: (1) a semicolon or em-dash between a negation word and the trigger token is not treated as a boundary, so a real negation on the far side of a ; is missed -- confirmed on real corpus text (261-01-DRAFT.md AC-7), safe direction (produces a false observable, not the dangerous false unobservable). (2) A period inside an unrelated token (e.g. a filename like deploy-log.txt) between two distinct clauses can cause a signal match in the first clause to fire unobservable even though a later clause in the same sentence explicitly disclaims the SUMMARY reference -- constructed synthetically, not found in the real 1,310-AC corpus (validated twice, zero real false positives). Both point at the same root cause: a real sentence/clause boundary needs smarter detection than raw period/newline splitting. Neither gap blocked phase 274's own settle (D-G's own asymmetric-safety and staged-rollout rationale accepts this residual risk for v1.57, matching the 0.8%-population reasoning already used to defer DRAFT-time refusal to v1.58).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/verify",
+        "core/gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/criteria-observability.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260812-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-12T04:51:05.392Z",
+      "updatedAt": "2026-08-12T04:51:05.392Z"
+    },
+    {
+      "id": "rec-20260812-003",
+      "title": "renderSummaryMd splices operator/verifier free text into SUMMARY.md unsanitized -- an unbalanced code fence corrupts everything after it",
+      "summary": "renderSummaryMd (packages/core/src/parse/summary-writer.ts) has never sanitized free-text fields it splices into the Markdown sidecar: ac.note, t.notes (operator-supplied via 'build task --notes'), g.skipReason, b.reason (--force justification), and now (phase 274 T6) the classifier's unobservable reason. Confirmed by phase 274 T6's independent reviewer: constructing a reason/notes string containing an unbalanced markdown code fence corrupts every section after it when the SUMMARY.md is viewed through an actual CommonMark renderer (verified with python-markdown, same lazy-continuation rules as GitHub) -- reproduced with zero T6 code involved, using only t.notes. Not a new defect, not introduced by phase 274 -- a repo-wide gap in the renderer shared by at least 5 free-text fields.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/parse"
+      ],
+      "affectedFiles": [
+        "packages/core/src/parse/summary-writer.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260812-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-12T22:08:09.940Z",
+      "updatedAt": "2026-08-12T22:08:09.940Z"
+    },
+    {
+      "id": "rec-20260812-004",
+      "title": "scanTestCoverage's per-file AC-token dedup silently drops evidence when multiple asserting it() blocks share one token",
+      "summary": "packages/core/src/verify/coverage.ts:140-142 dedups matched AC tokens by `${acId}@${relPath}` alone (no line number) — when two or more genuinely asserting it()/test() blocks in the SAME FILE carry the SAME qualified AC token (a natural, encouraged pattern: one token per AC, multiple tests proving different sub-claims), only the FIRST occurrence in file order survives in the returned TestRef[]; every subsequent real assertion is silently invisible to the test-coverage gate, evidence-floor derivation, and deep-verify's VerifyInput.tests linkage. Confirmed empirically in phase 274's own build: a real, non-mock deep-verify gate refused settle twice over exactly this (AC-1's six-fixture corpus test collapsed to appearing as one fixture; AC-3's two-fixture pair collapsed to appearing as only the first fixture), diagnosed by direct inspection of scanTestCoverage's output and fixed locally by consolidating the affected file's per-AC assertions into one it() each (packages/core/tests/verify/criteria-observability.test.ts). A third, same-shape instance was found but NOT fixed (out of scope/time for phase 274): packages/core/tests/services/settle.test.ts has three separate asserting it() blocks carrying the literal token 274-01/AC-4 (lines 1682, 1737, 1819) — only line 1682's test currently survives dedup; deep-verify has not (yet) flagged this, but the same structural gap is present and could surface on a future settle attempt or after any reordering. This is a pre-existing, repo-wide gap (not introduced by phase 274) affecting any test suite with this natural multi-test-per-AC shape — silent evidence loss is the exact failure direction CLAUDE.md's 'Token Drop' pattern warns about, just from the opposite structural cause (dedup collision, not comment-only mention).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260812-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-12T23:46:22.088Z",
+      "updatedAt": "2026-08-12T23:46:22.088Z"
+    },
+    {
+      "id": "rec-20260813-001",
+      "title": "Code-review finding (medium): Exported mutable gate tables can be changed by any importer, altering later `ga…",
+      "summary": "medium finding at packages/core/src/gates/engine.ts:22: Exported mutable gate tables can be changed by any importer, altering later `gatesFor()` results. Expose frozen/read-only data or copies instead.",
+      "source": "review",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packages/core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/engine.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260813-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260813-0013",
+      "sourceFindingId": "17661367f4e60d3a870afbc56cbb7ea5190388e6dcf02071e71f0f6910e7ed2c",
+      "createdAt": "2026-08-13T00:13:36.285Z",
+      "updatedAt": "2026-08-13T00:13:36.285Z"
+    },
+    {
+      "id": "rec-20260813-002",
+      "title": "SUMMARY.json cannot distinguish operator-configured mock from a silent host-cli verifier fallback",
+      "summary": "verify/verifier-factory.ts's wrapWithFallback (createVerifierFactory) transparently redirects any HostCliError (self-invocation, binary-not-found, spawn error, unparseable output) to MockVerifier, tagging the result providerSelection:'fallback'. That tag is set non-enumerable, so it never serializes into SUMMARY.json's gates array or deepVerifyMeta -- a durable settle artifact carrying provider:'mock' looks byte-identical whether the operator genuinely configured mock or a real host-cli call silently failed mid-settle. Confirmed empirically during phase 274's own build: its final accepted 274-01-SUMMARY.json shows deepVerify provider:'mock' for all 6 ACs with MockVerifier's own deterministic reason-string format, even though .cadence/config.json configures verifier.provider:'host-cli' and this exact settle run's own code-review gate (same run, same diff) DID succeed via real host-cli moments earlier -- deep-verify's specific call independently hit its own HostCliError. This is a real instance of this repo's own 'Quiet Fallback' failure mode (CLAUDE.md): every fallback is supposed to print a loud stderr notice and/or record provenance in the SUMMARY; this one does neither in the durable artifact. Did not block phase 274 (assurance.evidenceTally showed ai-verified:0, executed:6 -- no AC's PASS rested on the mock deep-verify judgment), but the gap means an operator reading a settled SUMMARY.json cannot tell 'real AI verification happened' from 'it silently fell back' without cross-referencing stderr logs from the original run, which aren't retained.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/verifier-factory.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260813-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-13T00:34:49.307Z",
+      "updatedAt": "2026-08-13T00:34:49.307Z"
+    },
+    {
+      "id": "rec-20260813-003",
+      "title": "classifyAcObservability's SUMMARY_TOKEN regex lacks a trailing word-boundary guard (SUMMARYFOO/SUMMARYs still match as bare SUMMARY)",
+      "summary": "verify/criteria-observability.ts's SUMMARY_TOKEN regex (/\\bSUMMARY(?:\\.(?:json|md)\\b)?(?!\\.\\w)/g) was fixed this phase (274) to stop matching SUMMARY.mdx/SUMMARY.yaml (a real code-review HIGH finding) via a (?!\\.\\w) negative lookahead guarding the dot-extension case specifically. An independent whole-branch review of that fix found the guard doesn't extend to a trailing word-boundary in general: text containing SUMMARY_TOKEN, SUMMARYFOO, or SUMMARYs still matches as a bare SUMMARY token, since the lookahead only excludes a following '.'+word-char, not any following word character. A full real-corpus scan (1237 parseable DRAFT ACs) found exactly one occurrence of this shape (244-01-DRAFT.md AC-2's 'pre-existing SUMMARYs') and it produced zero false positive, since it doesn't sit near any of the classifier's narrow trigger phrases -- so this is a real but currently benign gap, same root-cause family as rec-20260812-002's negation-boundary fragility (both are edge cases in the classifier's structural pattern-matching, deferred per D-G's staged-rollout rationale rather than fixed, given zero real-corpus manifestation).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/verify"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/criteria-observability.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260813-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-13T00:35:09.744Z",
+      "updatedAt": "2026-08-13T00:35:09.744Z"
+    },
+    {
+      "id": "rec-20260813-004",
+      "title": "engine.ts's exported DELTAS/ALWAYS_FIRE tables are mutable at the type level (code-review MEDIUM, still open)",
+      "summary": "Phase 274's T7 fix exported gates/engine.ts's previously-module-private DELTAS and ALWAYS_FIRE consts (Record<Profile, Record<Tier, Gate[]>> and Gate[] respectively) so a test could assert DELTAS.standard.complex directly, per AC-6's literal Then-clause requirement. This phase's own code-review gate flagged a MEDIUM finding on the export: the exported tables are mutable at the type level (plain Gate[] arrays, not readonly/as-const), so any future importer could in principle mutate the single source-of-truth gate matrix at runtime with no compiler error. Confirmed still recorded only as disposition:'open' in 274-01-SUMMARY.json's codeReview field -- never independently filed as a recommendation. Object.freeze would only be a shallow, cosmetic fix (nested arrays stay mutable); a real fix needs 'as const' plus readonly types on both exports, which the current callers (engine.ts's internal DELTAS/ALWAYS_FIRE lookups, engine.test.ts's read-only assertions) would tolerate without change, but wasn't attempted in phase 274 to keep that fix minimal and narrowly scoped to AC-6's literal requirement.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/engine.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260813-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-13T00:35:09.919Z",
+      "updatedAt": "2026-08-13T00:35:09.919Z"
     }
   ],
   "archived": [
@@ -7684,10 +7848,46 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "273-resume-warn-on-dangling-lasthandoff-pointer",
-      "createdAt": "2026-08-11T22:11:10.838Z",
-      "updatedAt": "2026-08-12T00:50:59.273Z",
       "shippedRef": "273-resume-warn-on-dangling-lasthandoff-pointer (273-01)",
       "archivedAt": "2026-08-12T00:50:59.273Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-11T22:11:10.838Z",
+      "updatedAt": "2026-08-12T00:50:59.273Z"
+    },
+    {
+      "id": "rec-20260811-008",
+      "title": "deep-verify judges from {acs, tests, diff, files} only -- command-output-shaped ACs are structurally unverifiable",
+      "summary": "deep-verify.ts's VerifyInput is exactly {acs, tests, diff, files} (ctx.diff() = collectGitDiff, ctx.coverage() for test linkage) -- it never sees DRAFT.md prose (no Evidence section access) or the generated SUMMARY.json (doesn't exist yet during verification). Discovered concretely in phase 272 (272-01): 5 of 7 ACs were refused by real host-cli/codex deep-verify despite passing CADENCE's own mechanical test-coverage/evidence-floor gates on merit, for three distinct structural reasons -- (1) an AC whose Then clause asserts a temporal red-then-green test sequence cannot be proven from a single diff snapshot; (2) a file whose HEAD pre-image still contains binary content (e.g. mid-fix for a NUL-byte defect) diffs as \"Binary files ... differ\", hiding the actual code change from the reviewer even though a real fix and passing test exist; (3) an AC whose Then clause references facts about \"the SUMMARY\" (e.g. \"verbatim tail pasted into the SUMMARY\", or gate provenance in \"this phase's own SUMMARY.json\") is circular by construction -- that SUMMARY does not exist until after this very settle, and after deep-verify, completes. Since DELTAS['standard']['complex'] bundles deep-verify with code-review (the same tier D-F's real-conduction requirement needs), any complex-tier phase whose ACs describe command output or self-referential SUMMARY facts will predictably hit this, forcing --force on ACs that are otherwise genuinely earned. Not a deep-verify bug to fix reflexively -- widening its context (DRAFT prose, prior SUMMARYs) has its own false-confidence risks worth designing deliberately, not bolting on.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core/gates"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/deep-verify.ts",
+        "packages/core/src/gates/engine.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260811-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260812-001",
+        "dec-20260812-002",
+        "dec-20260812-004"
+      ],
+      "convertedToPhaseId": "274-unobservable-criteria-classification",
+      "createdAt": "2026-08-11T04:34:38.109Z",
+      "updatedAt": "2026-08-13T00:36:00.368Z",
+      "shippedRef": "274-unobservable-criteria-classification (274-01)",
+      "archivedAt": "2026-08-13T00:36:00.368Z",
       "archiveReason": "shipped"
     }
   ]

@@ -413,6 +413,74 @@ describe('renderSummaryMd - byte-compatibility regression for historical summari
   });
 });
 
+describe('renderSummaryMd - unobservable deep-verify marker (phase 274, T6)', () => {
+  it('274-01/AC-1: renders an unobservable AC distinctly from a plain PASS and a plain FAIL line', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      acResults: [
+        { id: 'AC-1', pass: true },
+        { id: 'AC-2', pass: false, note: 'flaky in CI' },
+        { id: 'AC-7', pass: false, note: 'no linked task' },
+      ],
+      deepVerify: {
+        'AC-7': {
+          pass: false,
+          reason:
+            "AC-7 self-references \"this phase's own SUMMARY\" — an artifact that does not exist until after this very settle produces it (no linked test coverage).",
+          provider: 'mock',
+          unobservable: true,
+        },
+      },
+    };
+    const md = renderSummaryMd(summary);
+
+    // The unobservable AC gets its own sibling line naming the classifier's
+    // reason -- carried through verbatim, not summarized or dropped.
+    expect(md).toContain(
+      '  UNOBSERVABLE (deep-verify): ' +
+        "AC-7 self-references \"this phase's own SUMMARY\" — an artifact that does not exist until after this very settle produces it (no linked test coverage).",
+    );
+
+    // Split into per-AC line groups so the assertions below can't cross-match
+    // another AC's line by accident.
+    const ac1Line = md.split('\n').find((l) => l.startsWith('- AC-1:'));
+    const ac2Line = md.split('\n').find((l) => l.startsWith('- AC-2:'));
+    const ac7Line = md.split('\n').find((l) => l.startsWith('- AC-7:'));
+    expect(ac1Line).toBe('- AC-1: PASS');
+    expect(ac2Line).toBe('- AC-2: FAIL — flaky in CI');
+    expect(ac7Line).toBe('- AC-7: FAIL — no linked task');
+
+    // Neither the plain-PASS nor the plain-FAIL line carries the
+    // unobservable marker -- it is exclusive to AC-7.
+    expect(md).not.toMatch(/AC-1:.*UNOBSERVABLE/);
+    expect(md).not.toMatch(/AC-2:.*UNOBSERVABLE/);
+
+    // The unobservable marker line itself is neither a PASS nor a FAIL badge
+    // -- a genuinely third, distinct category, not fail-formatting reused
+    // with different text.
+    const unobservableLine = md.split('\n').find((l) => l.includes('UNOBSERVABLE'));
+    expect(unobservableLine).toBeDefined();
+    expect(unobservableLine).not.toMatch(/\bPASS\b/);
+    expect(unobservableLine).not.toMatch(/\bFAIL\b/);
+  });
+
+  it('274-01/AC-1: omits the unobservable line entirely when deepVerify is absent (back-compat)', () => {
+    const md = renderSummaryMd(SAMPLE);
+    expect(md).not.toContain('UNOBSERVABLE');
+  });
+
+  it('274-01/AC-1: omits the unobservable line for an AC with a real (non-unobservable) deep-verify verdict', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      deepVerify: {
+        'AC-2': { pass: false, reason: 'a real deep-verify failure', provider: 'anthropic' },
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).not.toContain('UNOBSERVABLE');
+  });
+});
+
 describe('renderSummaryMd - verifier rollup label precision (phase 264, T2)', () => {
   /** Base `evidenceTally` satisfying `AssuranceRecordZ` — every `AcEvidenceZ`
    *  key present, per its phase-233 exhaustive-record contract. */
