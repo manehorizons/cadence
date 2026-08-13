@@ -1274,7 +1274,7 @@ Under the full turbo test suite (401 files, maxWorkers:12) on windows-latest CI,
 ## rec-20260807-005 — Make phase-qualified the default AC coverage scheme (bare still ships collision bug)
 
 - status: candidate
-- ready: needs-decision
+- ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
 - risk: 5/10
@@ -1282,6 +1282,7 @@ Under the full turbo test suite (401 files, maxWorkers:12) on windows-latest CI,
 - decay: fresh
 - areas: gates, verify, init, config
 - files: packages/types/src/config.ts, packages/core/src/gates/coverage.ts, packages/core/src/verify/coverage.ts
+- decisions: dec-20260813-005 (active)
 - evidence: Confirmed live 2026-08-07 during phase 261 prep: config.ts:227,252,577 all default coverageScheme to 'bare'; only this repo's own .cadence/config.json overrides to phase-qualified.
 - next: cadence milestone propose
 
@@ -1332,6 +1333,7 @@ Discovered during phase 263 (v1.56 Phase L) T3 dispatch prep: GateProvenanceZ.pr
 - areas: core
 - files: packages/core/src/verify/coverage.ts
 - evidence: Reproduced via a direct scanTestCoverage() call against phase 264's own worktree: AC-4 returned only the describe()-level non-qualifying ref (line 25) while cadence verify coverage --explain AC-4 independently found and reported satisfies:true for the it()-level refs at lines 26/30 in the same file, overall verdict SATISFIED -- yet settle run --auto refused, confirming the two code paths disagree because of the per-file first-match dedup in scanTestCoverage.
+- evidence: Corroborated independently 2026-08-12/13 by rec-20260812-004 (phase 274 build): 3 confirmed real (non-mock) deep-verify refusals from the identical root cause (coverage.ts:140-142's per-file AC-token dedup, keyed on ${acId}@${file} with no per-occurrence disambiguation) -- this time triggered by sibling asserting it() blocks sharing one AC token in the same file, not describe-title collision. A third, same-shape, not-yet-triggered instance was also spotted: packages/core/tests/services/settle.test.ts has three it() blocks carrying token 274-01/AC-4 (lines 1682/1737/1819); only line 1682 currently survives dedup. rec-20260812-004 is being closed as a duplicate of this rec (see dec-20260813-001) -- its full evidence and priority=high signal should carry forward when this is converted to a phase.
 - next: cadence milestone propose
 
 packages/core/src/verify/coverage.ts's scanTestCoverage (assertion mode, ~line 140-142; mirrored in mention mode ~line 177-179) dedups by a (bare AC id, file path) key, keeping only the FIRST textual occurrence of a token in a file regardless of whether it qualifies (sits inside an asserting it()/test() block). When a describe() block's title repeats its own child it()'s AC token and appears earlier in the file, the non-qualifying describe-level occurrence consumes the dedup slot and the real qualifying it()-level occurrence(s) are silently never recorded -- producing a false weakly-linked-AC refusal from settle's real coverage gate even though cadence verify coverage --explain (a separate, non-deduping walker) correctly reports the AC as satisfied. Confirmed empirically during phase 264's own settle: two describe() blocks (mock-banner-source.test.ts, verifier-label.test.ts, assurance-record.test.ts) that opened with the same AC token as their child it()'s title caused settle run --auto to refuse with 'no assertion-shaped span found' for AC-4/AC-5 despite real, correct, asserting tests existing. Worked around by removing the token from the describe() titles (not touching the scanner). Fix belongs in scanTestCoverage: either record every occurrence per file (not just the first), or prefer a qualifying occurrence over a non-qualifying one when only one dedup slot is kept.
@@ -1411,7 +1413,9 @@ rec-20260808-006's original text asked that cadence onboard 'report the existing
 - decay: fresh
 - areas: core/doctor
 - files: packages/core/src/doctor/run.ts
+- decisions: dec-20260813-003 (active)
 - evidence: tier distribution across 282 drafts: standard 233 (82.6%), complex 29 (10.3%), quick-fix 20 (7.1%); under profile=standard only complex tier includes code-review (deltas: standard x complex has code-review, deep-verify), so only ~10% of phases can reset the streak; threshold is 3; current streak is 2 as of 2026-08-11 (re-verify before acting -- this figure moves every settle); dec-20260803-001 designates conduction as deliberately operator-initiated
+- evidence: Corrected live re-measurement 2026-08-13 (v1.57 Phase W, dec-20260813-003), verified against the actual computeConductionDriftStreak algorithm rather than a naive corpus walk: complex-tier 31/286 drafts (~10.8%). Determinate-eligible corpus (assurance.verifierRollup present, since 2026-07-29) = 35 settles; 23/35 (66%) would show doctor's conduction-drift-streak as warning at that point in time; max streak reached = 16. Confirms the chronic-warn concern empirically. See dec-20260813-003 for the full decision: threshold not changed in this decisions-only phase, O.3's measured-threshold follow-up flagged as now-overdue with real data available.
 - next: cadence milestone propose
 
 Under profile=standard only complex-tier drafts include code-review, and complex is only ~10% of drafts historically, so ~90% of settles can never reset the conduction-drift-streak counter. dec-20260803-001 designates conduction as deliberately operator-initiated, so the check flags as drift what a standing decision designates as policy. Worth a decision on whether the streak/threshold model still fits that policy.
@@ -1427,6 +1431,7 @@ Under profile=standard only complex-tier drafts include code-review, and complex
 - decay: fresh
 - areas: core/intelligence
 - files: packages/core/src/cli/commands/milestone.ts
+- decisions: dec-20260813-004 (active)
 - evidence: cadence milestone close mil-rec-rec-20260808-003 -> 'milestone close refused: cannot close milestone in status proposed'; CMD-5 (docs/handoffs/HANDOFF-v1.56-release-closeout.md) reports this as the sole desynced milestone as of 2026-08-11; recorded rather than hand-edited per that handoff's Q.3 and the project's no-hand-edit-intelligence-ledger rule
 - next: cadence milestone propose
 
@@ -1463,22 +1468,6 @@ Phases 239 (coverage-phase-scoping, #338), 240 (doctor-multi-seam-readiness, #33
 - next: cadence milestone propose
 
 tests/integration/demo-gutting-coverage-scheme.test.ts (phase 270's run-demo.sh e2e test, spawns npm test x2 + cadence settle run --auto x2) timed out at vitest's 20s default on macos-latest in PR #397's run 31447771306 (job 93645562270), while ubuntu-latest and windows-latest passed the same run and it runs in ~1.75-2.3s locally on Node 22. A same-run rerun (job 93655957205) passed clean in 6m54s with zero code changes -- confirms load-dependent flake, not a logic bug. main's prior 6 CI runs were all green on this test. vitest.shared.ts already scales TIMEOUT_MS to 90000 on win32 for the same class of slow child-process-spawn issue via a documented single-source-of-truth pattern (explicitly rejecting per-test overrides); if this recurs, the same darwin-scoped bump is the precedented fix -- but it trades off loosening the timeout for ~4000 other macOS tests to accommodate one outlier, so needs an explicit operator call, not a reflexive bump.
-
-## rec-20260811-007 — Code-review finding (high): CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws EN…
-
-- status: candidate
-- ready: needs-decision
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: packages/core
-- files: packages/core/tests/docs/phase272-assurance-correctness.test.ts
-- evidence: phase 272-assurance-record-correctness, draft 272-01, SUMMARY contentHash 36b06bb1804268e27aaf3dbbaf581dfbb7859c34f610409f571069e6765bfecf — high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:60: CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.
-- next: cadence milestone propose
-
-high finding at packages/core/tests/docs/phase272-assurance-correctness.test.ts:60: CI runs on Windows, where `grep` is not guaranteed on PATH; this test throws ENOENT. Use a Node-only line count or skip it on win32.
 
 ## rec-20260812-001 — resume drops the dangling-lastHandoff-pointer signal when no fallback doc exists at all
 
@@ -1527,22 +1516,6 @@ Two independent reviewers of phase 274's criteria-observability.ts found real ga
 - next: cadence milestone propose
 
 renderSummaryMd (packages/core/src/parse/summary-writer.ts) has never sanitized free-text fields it splices into the Markdown sidecar: ac.note, t.notes (operator-supplied via 'build task --notes'), g.skipReason, b.reason (--force justification), and now (phase 274 T6) the classifier's unobservable reason. Confirmed by phase 274 T6's independent reviewer: constructing a reason/notes string containing an unbalanced markdown code fence corrupts every section after it when the SUMMARY.md is viewed through an actual CommonMark renderer (verified with python-markdown, same lazy-continuation rules as GitHub) -- reproduced with zero T6 code involved, using only t.notes. Not a new defect, not introduced by phase 274 -- a repo-wide gap in the renderer shared by at least 5 free-text fields.
-
-## rec-20260812-004 — scanTestCoverage's per-file AC-token dedup silently drops evidence when multiple asserting it() blocks share one token
-
-- status: candidate
-- ready: needs-evidence
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core/verify
-- files: packages/core/src/verify/coverage.ts
-- evidence: packages/core/src/verify/coverage.ts:140-142 (assertion-mode dedup key); phase 274 real deep-verify refusals on AC-1 and AC-3 (settle-attempt4.log); packages/core/tests/services/settle.test.ts:1682,1737,1819 (unfixed AC-4 residual instance)
-- next: cadence milestone propose
-
-packages/core/src/verify/coverage.ts:140-142 dedups matched AC tokens by `${acId}@${relPath}` alone (no line number) — when two or more genuinely asserting it()/test() blocks in the SAME FILE carry the SAME qualified AC token (a natural, encouraged pattern: one token per AC, multiple tests proving different sub-claims), only the FIRST occurrence in file order survives in the returned TestRef[]; every subsequent real assertion is silently invisible to the test-coverage gate, evidence-floor derivation, and deep-verify's VerifyInput.tests linkage. Confirmed empirically in phase 274's own build: a real, non-mock deep-verify gate refused settle twice over exactly this (AC-1's six-fixture corpus test collapsed to appearing as one fixture; AC-3's two-fixture pair collapsed to appearing as only the first fixture), diagnosed by direct inspection of scanTestCoverage's output and fixed locally by consolidating the affected file's per-AC assertions into one it() each (packages/core/tests/verify/criteria-observability.test.ts). A third, same-shape instance was found but NOT fixed (out of scope/time for phase 274): packages/core/tests/services/settle.test.ts has three separate asserting it() blocks carrying the literal token 274-01/AC-4 (lines 1682, 1737, 1819) — only line 1682's test currently survives dedup; deep-verify has not (yet) flagged this, but the same structural gap is present and could surface on a future settle attempt or after any reordering. This is a pre-existing, repo-wide gap (not introduced by phase 274) affecting any test suite with this natural multi-test-per-AC shape — silent evidence loss is the exact failure direction CLAUDE.md's 'Token Drop' pattern warns about, just from the opposite structural cause (dedup collision, not comment-only mention).
 
 ## rec-20260813-001 — Code-review finding (medium): Exported mutable gate tables can be changed by any importer, altering later `ga…
 
@@ -1607,3 +1580,19 @@ verify/criteria-observability.ts's SUMMARY_TOKEN regex (/\bSUMMARY(?:\.(?:json|m
 - next: cadence milestone propose
 
 Phase 274's T7 fix exported gates/engine.ts's previously-module-private DELTAS and ALWAYS_FIRE consts (Record<Profile, Record<Tier, Gate[]>> and Gate[] respectively) so a test could assert DELTAS.standard.complex directly, per AC-6's literal Then-clause requirement. This phase's own code-review gate flagged a MEDIUM finding on the export: the exported tables are mutable at the type level (plain Gate[] arrays, not readonly/as-const), so any future importer could in principle mutate the single source-of-truth gate matrix at runtime with no compiler error. Confirmed still recorded only as disposition:'open' in 274-01-SUMMARY.json's codeReview field -- never independently filed as a recommendation. Object.freeze would only be a shallow, cosmetic fix (nested arrays stay mutable); a real fix needs 'as const' plus readonly types on both exports, which the current callers (engine.ts's internal DELTAS/ALWAYS_FIRE lookups, engine.test.ts's read-only assertions) would tolerate without change, but wasn't attempted in phase 274 to keep that fix minimal and narrowly scoped to AC-6's literal requirement.
+
+## rec-20260813-005 — resume serves a stale-but-existing lastHandoff pointer without checking for a fresher doc
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: resume, handoff, state-tracking
+- files: packages/core/src/handoff/locate.ts
+- evidence: 2026-08-13 resume session: lastHandoff pointed at phase-273 doc; a newer phase-274 doc (worktree-authored, generated_at strictly later) sat unindexed in the same directory after sync; cadence resume served the stale one with no signal.
+- next: cadence milestone propose
+
+locateFreshestHandoff (packages/core/src/handoff/locate.ts:44-49) returns the lastHandoff-pointed doc immediately once existsSync(pointer) is true -- it never compares that doc's generated_at against the ranked glob of other SESSION-*.md files in the same directory. Phase 273 (rec-20260811-009) only fixed the dangling case (pointer names a file that no longer exists); this is the sibling case where the pointer target still exists but a newer handoff has since been written (e.g. by a different worktree merging back, or a session that wrote a fresh doc without updating state.json's session.lastHandoff). Hit live on 2026-08-13: the primary checkout's lastHandoff pointed at SESSION-2026-08-12.md (phase 273) while origin had already merged phase 274, whose own worktree-local handoff (SESSION-2026-08-13-phase274-landed-v157-phaseT-complete.md) was strictly newer by generated_at and sat in the same .cadence/handoff/ dir once synced -- cadence resume served the stale doc with zero warning, costing a full manual cross-worktree investigation to catch. Fix shape: after resolving via the pointer, also rank against the glob and warn (not silently switch) if a strictly-newer generated_at doc exists elsewhere in the directory.

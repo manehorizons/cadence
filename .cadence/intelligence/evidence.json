@@ -1979,6 +1979,27 @@
       "kind": "note",
       "summary": "packages/core/src/gates/engine.ts DELTAS/ALWAYS_FIRE exports; 274-01-CODE-REVIEW.json / 274-01-SUMMARY.json codeReview field (MEDIUM finding, disposition: open)",
       "createdAt": "2026-08-13T00:35:09.919Z"
+    },
+    {
+      "id": "ev-20260813-005",
+      "recommendationId": "rec-20260813-005",
+      "kind": "note",
+      "summary": "2026-08-13 resume session: lastHandoff pointed at phase-273 doc; a newer phase-274 doc (worktree-authored, generated_at strictly later) sat unindexed in the same directory after sync; cadence resume served the stale one with no signal.",
+      "createdAt": "2026-08-13T02:27:37.800Z"
+    },
+    {
+      "id": "ev-20260813-006",
+      "recommendationId": "rec-20260809-001",
+      "kind": "note",
+      "summary": "Corroborated independently 2026-08-12/13 by rec-20260812-004 (phase 274 build): 3 confirmed real (non-mock) deep-verify refusals from the identical root cause (coverage.ts:140-142's per-file AC-token dedup, keyed on ${acId}@${file} with no per-occurrence disambiguation) -- this time triggered by sibling asserting it() blocks sharing one AC token in the same file, not describe-title collision. A third, same-shape, not-yet-triggered instance was also spotted: packages/core/tests/services/settle.test.ts has three it() blocks carrying token 274-01/AC-4 (lines 1682/1737/1819); only line 1682 currently survives dedup. rec-20260812-004 is being closed as a duplicate of this rec (see dec-20260813-001) -- its full evidence and priority=high signal should carry forward when this is converted to a phase.",
+      "createdAt": "2026-08-13T02:29:05.482Z"
+    },
+    {
+      "id": "ev-20260813-007",
+      "recommendationId": "rec-20260811-003",
+      "kind": "note",
+      "summary": "Corrected live re-measurement 2026-08-13 (v1.57 Phase W, dec-20260813-003), verified against the actual computeConductionDriftStreak algorithm rather than a naive corpus walk: complex-tier 31/286 drafts (~10.8%). Determinate-eligible corpus (assurance.verifierRollup present, since 2026-07-29) = 35 settles; 23/35 (66%) would show doctor's conduction-drift-streak as warning at that point in time; max streak reached = 16. Confirms the chronic-warn concern empirically. See dec-20260813-003 for the full decision: threshold not changed in this decisions-only phase, O.3's measured-threshold follow-up flagged as now-overdue with real data available.",
+      "createdAt": "2026-08-13T02:34:11.074Z"
     }
   ]
 }
