@@ -97,6 +97,49 @@ describe('parseListFilterOptions', () => {
       const r = parseListFilterOptions({ ...NO_OPTS, filterRegex: pattern }, REC_CONFIG);
       expect(r.ok).toBe(true);
     });
+
+    describe('ReDoS guard (nested quantifiers)', () => {
+      const unsafePatterns = [
+        '(a+)+',
+        '(a*)*',
+        '(a+)*',
+        '(a*)+',
+        '((a+)*)+',
+        '(a+){2,}',
+        '(a{2,}){2,}',
+        '(?:a+)+',
+      ];
+
+      it.each(unsafePatterns)('rejects nested-quantifier pattern %s', (pattern) => {
+        const r = parseListFilterOptions({ ...NO_OPTS, filterRegex: pattern }, REC_CONFIG);
+        expect(r.ok).toBe(false);
+        if (!r.ok) {
+          expect(r.error).toMatch(/^recommendation list failed: unsafe --filter-regex pattern: /);
+        }
+      });
+
+      const safePatterns = [
+        '^Add',
+        'a+',
+        'a*',
+        '[a-z]+',
+        'foo.bar',
+        '(abc)+',
+        '(a|b)+',
+        '(ab)*cd',
+        'a{2,4}',
+        '(a){2}',
+        '(a+)',
+        'a+b+c+',
+        '(a+)(b+)',
+        '\\(a+\\)+',
+      ];
+
+      it.each(safePatterns)('accepts safe pattern %s', (pattern) => {
+        const r = parseListFilterOptions({ ...NO_OPTS, filterRegex: pattern }, REC_CONFIG);
+        expect(r.ok).toBe(true);
+      });
+    });
   });
 
   describe('--filter-regex-flags', () => {
