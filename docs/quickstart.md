@@ -1,13 +1,11 @@
 # CADENCE Quickstart
 
-This guide starts with the two fastest onboarding paths:
-
-- **30-second demo:** seed a ready-to-approve phase and close one loop without
-  hand-writing a DRAFT.
-- **First real phase:** scaffold an editable bugfix, feature, or refactor DRAFT
-  from a template, then refine it for your actual work.
-
-The longer manual walkthrough later on shows every artifact in detail.
+This guide starts with the fastest way to see CADENCE run — one command, zero
+setup — then moves to scaffolding an editable bugfix, feature, or refactor
+DRAFT from a template for your actual work. The longer manual walkthrough
+later on shows every artifact in detail; other ways to see a demo (the
+pre-`cadence demo` `tutorial` name, seeding the demo into your own repo) are
+covered near the end, in [More ways to try it](#more-ways-to-try-it).
 
 For the *why* behind the loop and the gate model, read
 [docs/concepts.md](concepts.md) first. For exhaustive flag references, see
@@ -17,7 +15,7 @@ For the *why* behind the loop and the gate model, read
 
 Pick your surface — the loop is the same engine either way:
 
-- **From a terminal (CLI):** you're in the right place — start at [Prerequisites](#prerequisites) below.
+- **From a terminal (CLI):** you're in the right place — start at [Try it in 30 seconds](#try-it-in-30-seconds) below.
 - **From Claude Code:** wire the adapter, then drive the loop with slash commands — jump to [Claude Code surface](#claude-code-surface).
 - **From the OpenAI Codex CLI:** before opening Codex for the first time in this repo, run `cadence init --host codex` to scaffold Cadence, write `AGENTS.md`, and wire lifecycle hooks + prompt commands. This is the full first-run bootstrap. If the repo is already initialized, run `npx -y @thomas-powers-jr/cadence-host-codex install` plus `cadence init --agents-md`. See [docs/host-adapters.md](host-adapters.md) for how the Codex adapter maps onto the same engine.
 - **From another MCP host** (Claude Desktop, Cursor, an agent): point it at the MCP server — jump to [MCP surface](#mcp-surface).
@@ -28,9 +26,10 @@ New and not sure? Run `cadence start` for a guided menu that picks the right set
 
 ## Table of contents
 
+- [Try it in 30 seconds](#try-it-in-30-seconds)
 - [Prerequisites](#prerequisites)
-- [Fast path — 30-second demo](#fast-path--30-second-demo)
 - [First real phase](#first-real-phase)
+- [More ways to try it](#more-ways-to-try-it)
 - [Step 1 — Set up a toy project manually](#step-1--set-up-a-toy-project-manually)
 - [Step 2 — Draft a phase](#step-2--draft-a-phase)
 - [Step 3 — Fill the DRAFT](#step-3--fill-the-draft)
@@ -44,16 +43,23 @@ New and not sure? Run `cadence start` for a guided menu that picks the right set
 
 ---
 
+## Try it in 30 seconds
+
+Zero setup, no repo writes: run the CLI with no arguments and it drops
+straight into a real, offline refuse-then-succeed DRAFT→BUILD→SETTLE loop in
+a disposable sandbox, then cleans up after itself:
+
+```sh
+npx -y @thomas-powers-jr/cadence-core
+```
+
+(Same walkthrough, run explicitly as `cadence demo`.)
+
+---
+
 ## Prerequisites
 
 - **Node.js ≥ 22**
-- For a zero-install first touch — one real loop, including settle refusing a
-  phase the tests don't back, then closing once they do:
-
-```sh
-npx -y @thomas-powers-jr/cadence-core tutorial
-```
-
 - For daily use, install the CADENCE CLI globally:
 
 ```sh
@@ -61,30 +67,6 @@ npm install -g @thomas-powers-jr/cadence-core
 ```
 
 This gives you the `cadence` command used throughout this guide.
-
----
-
-## Fast path — 30-second demo
-
-This path writes a real `.cadence/` scaffold and a ready-to-approve demo phase
-in a scratch repo. There is no DRAFT hand-editing cliff.
-
-```sh
-mkdir ~/projects/my-toy-app
-cd ~/projects/my-toy-app
-
-cadence init --demo
-cadence draft approve 01-demo 01
-cadence done T1
-cadence settle run --ac AC-1=pass
-```
-
-That is the whole loop: DRAFT → BUILD → SETTLE → IDLE.
-
-`cadence init --demo` derives the project name and gate profile, then seeds
-`.cadence/phases/01-demo/01-01-DRAFT.md` with an Objective, AC-1, and T1
-already filled in. Use this when you want to feel the loop before designing
-your own phase.
 
 ---
 
@@ -131,6 +113,38 @@ or `cadence progress` for the next exact command.
 Driving CADENCE with an AI agent? Run `cadence agent-prompt --goal "<your goal>"`
 (also printed at the end of `cadence init`) and paste the result to your agent —
 it scaffolds the DRAFT, keeps the ACs testable, and stops for your approval.
+
+---
+
+## More ways to try it
+
+Prefer the pre-`cadence demo` name? `cadence tutorial` still works — same
+walkthrough, no install, no repo writes, run explicitly by its original name:
+
+```sh
+npx -y @thomas-powers-jr/cadence-core tutorial
+```
+
+Want the demo seeded into your own repo instead of a throwaway sandbox? This
+path writes a real `.cadence/` scaffold and a ready-to-approve demo phase in a
+scratch repo — there is no DRAFT hand-editing cliff:
+
+```sh
+mkdir ~/projects/my-toy-app
+cd ~/projects/my-toy-app
+
+cadence init --demo
+cadence draft approve 01-demo 01
+cadence done T1
+cadence settle run --ac AC-1=pass
+```
+
+That is the whole loop: DRAFT → BUILD → SETTLE → IDLE.
+
+`cadence init --demo` derives the project name and gate profile, then seeds
+`.cadence/phases/01-demo/01-01-DRAFT.md` with an Objective, AC-1, and T1
+already filled in. Use this when you want to feel the loop in your own repo
+before designing your own phase.
 
 ---
 

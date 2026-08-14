@@ -13,11 +13,13 @@ An agent hits a failing test, guts the assertion, and leaves a plausible excuse 
 
 ## Try it in 30 seconds — no install, no repo writes
 
-Watch one real loop run, including the moment settle refuses to close a phase the tests don't back, then closes once they do:
+Zero setup: run the CLI with no arguments and it drops straight into a real, offline refuse-then-succeed DRAFT→BUILD→SETTLE loop in a disposable sandbox, then cleans up after itself:
 
 ```sh
-npx -y @thomas-powers-jr/cadence-core tutorial
+npx -y @thomas-powers-jr/cadence-core
 ```
+
+(Same walkthrough, run explicitly as `cadence demo`.)
 
 ## Install
 
@@ -36,21 +38,7 @@ npm install -g @thomas-powers-jr/cadence-core
 
 New to CADENCE? Run `cadence start` — a guided menu that picks the right setup command for what you're doing. (Once you're set up, `cadence quickstart` is the read-only map of where you are and your next moves.)
 
-## Quickstart
-
-The fastest way to *see* a loop run in your own repo — `--demo` seeds a ready-to-approve phase so there's nothing to hand-edit:
-
-```sh
-mkdir my-app && cd my-app
-cadence init --demo        # zero prompts: name + gate profile are derived
-cadence draft approve 01-demo 01
-cadence done T1
-cadence settle run --ac AC-1=pass
-```
-
-`cadence init` asks nothing — it derives the project name (from `package.json` or the directory) and the gate profile (from git history). Already have an `ANTHROPIC_API_KEY`? Add `--activate` to turn on real verification in the same step (the key is never stored). Or run `cadence init --full` for host wiring + demo + activation in one command.
-
-To drive a real phase yourself instead of the demo:
+## Quickstart — drive a real phase
 
 ```sh
 cadence init
@@ -65,6 +53,26 @@ cadence settle run --ac AC-1=pass
 ```
 
 > **Heads-up on the default verifier.** Out of the box every gate uses `mock`, a deterministic offline **placeholder** that only checks each acceptance criterion links to a test — it is **not real verification**. Run [`cadence activate`](https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md) to turn on a real AI verifier (Anthropic or a local model); `cadence doctor` tells you whether real verification is actually wired.
+
+## More ways to try it
+
+- **Prefer the pre-`cadence demo` name?** `cadence tutorial` still works — same walkthrough, run explicitly by its original command:
+
+  ```sh
+  npx -y @thomas-powers-jr/cadence-core tutorial
+  ```
+
+- **Want the demo seeded into your own repo instead of a throwaway sandbox?** `--demo` seeds a ready-to-approve phase so there's nothing to hand-edit:
+
+  ```sh
+  mkdir my-app && cd my-app
+  cadence init --demo        # zero prompts: name + gate profile are derived
+  cadence draft approve 01-demo 01
+  cadence done T1
+  cadence settle run --ac AC-1=pass
+  ```
+
+  `cadence init` asks nothing — it derives the project name (from `package.json` or the directory) and the gate profile (from git history). Already have an `ANTHROPIC_API_KEY`? Add `--activate` to turn on real verification in the same step (the key is never stored). Or run `cadence init --full` for host wiring + demo + activation in one command.
 
 ## Why this exists
 

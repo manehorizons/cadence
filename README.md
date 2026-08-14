@@ -108,13 +108,6 @@ npx -y @thomas-powers-jr/cadence-core
 
 (Same walkthrough, run explicitly as `cadence demo`.)
 
-No install, no repo writes — watch one real loop run, including the moment
-settle refuses to close a phase the tests don't back, then closes once they do:
-
-```sh
-npx -y @thomas-powers-jr/cadence-core tutorial
-```
-
 For daily use, install the CLI globally (requires Node ≥ 22):
 
 ```sh
@@ -125,26 +118,7 @@ New to CADENCE? Run `cadence start` — a guided menu that picks the right setup
 command for what you're doing. (Once you're set up, `cadence quickstart` is the
 read-only map of where you are and your next moves.)
 
-The fastest way to *see* a loop run in your own repo — `--demo` seeds a
-ready-to-approve phase so there's nothing to hand-edit:
-
-```sh
-mkdir my-app && cd my-app
-cadence init --demo        # zero prompts: name + gate profile are derived
-cadence draft approve 01-demo 01
-cadence done T1
-cadence settle run --ac AC-1=pass
-```
-
-`cadence init` asks nothing — it derives the project name (from `package.json`
-or the directory) and the gate profile (from git history). Already have an
-`ANTHROPIC_API_KEY`? Add `--activate` to turn on real verification in the same
-step (the key is never stored). In a Claude Code workspace (`.claude/` present),
-add `--wire-host` to install the adapter in the same step too. For Codex, run
-`cadence init --host codex` before opening Codex so hooks, prompt commands, and
-`AGENTS.md` are ready for the first session.
-
-To drive a real phase yourself instead of the demo:
+### Drive a real phase
 
 ```sh
 cadence init
@@ -158,6 +132,14 @@ cadence settle run --auto
 #   unverified work. As the operator, you can verdict the criterion yourself:
 cadence settle run --ac AC-1=pass
 ```
+
+`cadence init` asks nothing — it derives the project name (from `package.json`
+or the directory) and the gate profile (from git history). Already have an
+`ANTHROPIC_API_KEY`? Add `--activate` to turn on real verification in the same
+step (the key is never stored). In a Claude Code workspace (`.claude/` present),
+add `--wire-host` to install the adapter in the same step too. For Codex, run
+`cadence init --host codex` before opening Codex so hooks, prompt commands, and
+`AGENTS.md` are ready for the first session.
 
 Driving CADENCE from **Claude Code**? Wire the adapter into a project:
 
@@ -177,6 +159,26 @@ Driving it from **another MCP host** (Claude Desktop, Cursor, an agent)? Point t
 > - **`standard` / `strict`** — `approve` is gated behind an **interactive prompt**. In non-TTY contexts (CI, agents) it **refuses** unless you pass `--no-approve`.
 
 > **`--local` writes machine-absolute paths — do not commit it.** `cadence-host-claude-code install --local` bakes absolute paths to *this machine's* workspace into the settings file. Add the settings file (e.g. `.claude/settings.local.json`) to `.gitignore`; other clones/machines cannot resolve those paths.
+
+### More ways to try it
+
+Prefer the pre-`cadence demo` name? `cadence tutorial` still works — same
+walkthrough, no install, no repo writes, run explicitly by its original name:
+
+```sh
+npx -y @thomas-powers-jr/cadence-core tutorial
+```
+
+Want the demo seeded into your own repo instead of a throwaway sandbox?
+`--demo` seeds a ready-to-approve phase so there's nothing to hand-edit:
+
+```sh
+mkdir my-app && cd my-app
+cadence init --demo        # zero prompts: name + gate profile are derived
+cadence draft approve 01-demo 01
+cadence done T1
+cadence settle run --ac AC-1=pass
+```
 
 ## Full user guide
 

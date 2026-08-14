@@ -7,7 +7,7 @@
   "description": "Shared toolkit for CADENCE host adapters — the hook-event routing algorithm and the slash-command catalog used by host-claude-code and host-codex.",
   "license": "MIT",
   "author": "Thomas Powers",
-  "homepage": "https://github.com/thomas-powers-jr/cadence#readme",
+  "homepage": "https://thomas-powers-jr.github.io/cadence/",
   "bugs": "https://github.com/thomas-powers-jr/cadence/issues",
   "keywords": [
     "cadence",

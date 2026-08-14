@@ -7,7 +7,7 @@
   "description": "OpenAI Codex CLI adapter for CADENCE — installs lifecycle hooks and slash commands that drive the CADENCE engine from inside Codex.",
   "license": "MIT",
   "author": "Thomas Powers",
-  "homepage": "https://github.com/thomas-powers-jr/cadence#readme",
+  "homepage": "https://thomas-powers-jr.github.io/cadence/",
   "bugs": "https://github.com/thomas-powers-jr/cadence/issues",
   "keywords": [
     "cadence",
