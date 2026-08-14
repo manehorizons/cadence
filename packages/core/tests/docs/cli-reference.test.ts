@@ -152,4 +152,17 @@ describe('docs/reference/commands.md drift guard', () => {
     // The severity vocabulary line must name the 4th rung, not just ok/warning/error.
     expect(section).toMatch(/`indeterminate`/);
   });
+
+  it('277-01/AC-4: doctor section documents the recommendation-archive-currency check in both the v1 check set table and the --fix manual-classification passage', () => {
+    const md = readFileSync(join(REPO_ROOT, 'docs/reference/commands.md'), 'utf8');
+    const section = commandSection(md, 'doctor');
+
+    // The "v1 check set" table row naming the check.
+    expect(section).toMatch(/\|\s*`recommendation-archive-currency`\s*\|/);
+
+    // The `--fix` classification passage's `manual` list.
+    const manualRow = section.match(/\|\s*\*\*manual\*\*\s*\|([^|]*)\|/);
+    if (!manualRow) throw new Error('commands.md: --fix manual-classification row not found');
+    expect(manualRow[1]).toContain('recommendation-archive-currency');
+  });
 });
