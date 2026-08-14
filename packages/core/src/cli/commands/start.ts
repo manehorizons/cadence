@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { spawn as nodeSpawn } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
 import { processIO, type CommandIO, type CommandResult } from '../../services/io.js';
-import { resolvePick, START_OPTIONS, type StartOption } from '../../start/menu.js';
+import { resolvePick, visibleOptions, START_OPTIONS, type StartOption } from '../../start/menu.js';
 import {
   renderMenu,
   renderJson,
@@ -12,11 +12,14 @@ import {
   type StartRecommendation,
 } from '../../start/render.js';
 import { SimpleStateBackend } from '../../state/simple.js';
+import { readStage } from '../../onboarding/state.js';
 
 export interface StartArgs {
   pick?: number | undefined;
   yes?: boolean | undefined;
   json?: boolean | undefined;
+  /** Show the full menu regardless of onboarding stage (278-01/AC-11). */
+  advanced?: boolean | undefined;
   isTty: boolean;
 }
 
@@ -127,8 +130,14 @@ export async function runStart(
     initialized,
   );
 
+  // Progressive-disclosure filtering of the *rendered* menu only
+  // (278-01/AC-11). `resolvePick`/`--pick <n>` below always resolves
+  // against the full, unfiltered `START_OPTIONS` — a hidden option still
+  // works if the caller already knows its number.
+  const options = visibleOptions(readStage(), args.advanced === true);
+
   if (args.json === true) {
-    const data = renderJson(initialized, recommendation);
+    const data = renderJson(initialized, recommendation, options);
     io.out(JSON.stringify(data, null, 2) + '\n');
     return { exitCode: 0, data };
   }
@@ -145,10 +154,10 @@ export async function runStart(
       return { exitCode: 1, data: { reason: 'bad-pick' } };
     }
   } else if (!args.isTty) {
-    io.out(renderMenu(initialized, recommendation));
+    io.out(renderMenu(initialized, recommendation, options));
     return { exitCode: 0, data: { reason: 'menu-only' } };
   } else {
-    io.out(renderMenu(initialized, recommendation));
+    io.out(renderMenu(initialized, recommendation, options));
     option = await (deps.prompt ?? ((i) => readlinePick(i, io)))(initialized);
     if (option === null) return { exitCode: 0, data: { reason: 'quit' } };
   }
@@ -179,13 +188,22 @@ export function registerStartCommand(program: Command): void {
     .option('--pick <n>', 'select a menu option non-interactively', (v) => Number.parseInt(v, 10))
     .option('--yes', 'skip the confirm and run the picked option')
     .option('--json', 'emit the menu as JSON')
-    .action(async (opts: { pick?: number; yes?: boolean; json?: boolean }) => {
+    // NOTE: `--advanced` is intentionally NOT declared here. It is a
+    // program-level option (`cli/index.ts`, T7) shared with `cadence help
+    // --advanced`; Commander v14 resolves a flag name declared on both a
+    // parent and a child to the PARENT's option, so a second local
+    // declaration of the same flag would silently never reach this
+    // action's `opts()` (278-01/AC-11 fix-round finding). Read it via
+    // `command.optsWithGlobals()` below instead — one flag, one meaning.
+    .action(async (opts: { pick?: number; yes?: boolean; json?: boolean }, command: Command) => {
+      const advanced = (command.optsWithGlobals() as { advanced?: boolean }).advanced === true;
       const res = await runStart(
         process.cwd(),
         {
           pick: opts.pick,
           yes: opts.yes,
           json: opts.json,
+          advanced,
           isTty: Boolean(process.stdin.isTTY),
         },
         processIO(),

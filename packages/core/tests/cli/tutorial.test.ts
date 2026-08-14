@@ -192,6 +192,8 @@ describe('cadence tutorial', () => {
     expect(existsSync(join(process.cwd(), '.cadence'))).toBe(cwdCadenceBefore);
     expect(data.sandbox).toMatch(/cadence-tutorial-/);
     expect(data.sandbox?.startsWith(tmpdir())).toBe(true);
+    // 278-01/AC-8: tutorial keeps working and points at demo.
+    expect(err).toMatch(/cadence demo/);
   });
 
   // Phase 267 (267-01, T5 / whole-branch-review follow-up): the tutorial's

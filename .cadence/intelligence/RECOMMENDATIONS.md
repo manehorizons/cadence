@@ -1120,6 +1120,7 @@ Phases 239 (coverage-phase-scoping, #338), 240 (doctor-multi-seam-readiness, #33
 - areas: testing, ci
 - files: packages/core/tests/integration/demo-gutting-coverage-scheme.test.ts, vitest.shared.ts
 - evidence: PR #397 macos-latest leg: run 31447771306, failed job 93645562270 (20s timeout), rerun job 93655957205 passed 6m54s with no code change; local Node22 run 1.75s clean; main's last 6 CI runs green
+- evidence: Recurred twice more, cross-OS: (1) main's own edbd2fd0 CI run (31768449705, 2026-08-14, phase 277's release commit -- no relation to this test) timed out on macos-latest, same 20000ms ceiling, same test. (2) PR #421 (phase 278) hit it twice in a row on ubuntu-latest (runs 31837437300 job 94886752553 at 20255ms, and 31839191846 job 94892168370) -- first cross-OS confirmation beyond the macOS-only sighting in PR #397. Both PR #421 occurrences are on an unrelated diff (phase 278 doesn't touch this file or vitest.shared.ts); the recurrence on main's own commit independently rules out any diff-specific cause. Strengthens the case for the precedented darwin-style vitest.shared.ts timeout bump, now scoped to include linux too if the operator picks this up.
 - next: cadence milestone propose
 
 tests/integration/demo-gutting-coverage-scheme.test.ts (phase 270's run-demo.sh e2e test, spawns npm test x2 + cadence settle run --auto x2) timed out at vitest's 20s default on macos-latest in PR #397's run 31447771306 (job 93645562270), while ubuntu-latest and windows-latest passed the same run and it runs in ~1.75-2.3s locally on Node 22. A same-run rerun (job 93655957205) passed clean in 6m54s with zero code changes -- confirms load-dependent flake, not a logic bug. main's prior 6 CI runs were all green on this test. vitest.shared.ts already scales TIMEOUT_MS to 90000 on win32 for the same class of slow child-process-spawn issue via a documented single-source-of-truth pattern (explicitly rejecting per-test overrides); if this recurs, the same darwin-scoped bump is the precedented fix -- but it trades off loosening the timeout for ~4000 other macOS tests to accommodate one outlier, so needs an explicit operator call, not a reflexive bump.
@@ -1267,3 +1268,51 @@ locateFreshestHandoff (packages/core/src/handoff/locate.ts:44-49) returns the la
 - next: cadence milestone propose
 
 During v1.57.0's release cut (2026-08-13), reconciling a diverged local main via an explicitly-consented 'git reset --hard origin/main' silently discarded uncommitted local-only edits to .claude/settings.json and .claude/scheduled_tasks.lock -- the consent question (mine) incorrectly claimed these files would be 'left untouched', which is only true for untracked files, not uncommitted changes to tracked ones. Unlike discarded commits (recoverable via reflog for ~90d), uncommitted working-tree content to tracked files has no recovery path once reset -- it was genuinely and permanently lost; the operator did not know what was in them either. cadence doctor's host-hooks check confirmed no functional breakage this time (the discarded settings.json content matched every other worktree's baseline), but that was luck, not a guarantee -- a future reset could discard something load-bearing. A doctor check (or a resume/reset-adjacent CLI guard) could detect known local-only tracked files (.claude/settings.json, .claude/scheduled_tasks.lock per CLAUDE.md's own 'Helpful Stage' list) with uncommitted changes and surface a specific warning distinct from the generic 'you have uncommitted changes' signal, before any command that would discard them via reset --hard/checkout onto a ref.
+
+## rec-20260814-001 — cadence demo: non-interactive refuse-then-succeed command + progressive-disclosure onboarding stages
+
+- status: settle-pending
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: onboarding, cli, demo, help, docs
+- files: packages/core/src/cli/commands/tutorial.ts, packages/core/src/tutorial/fixtures.ts, packages/core/src/cli/register.ts, packages/core/src/cli/index.ts, packages/core/src/start/menu.ts, docs/reference/commands.md, README.md
+- evidence: HANDOFF-demo-progressive-disclosure.md untracked in git status; tutorial.ts:1-267 already implements 4/5 of the handoff's narrative; examples/demo-test-gutting/files/prorate.test.gutted.mjs proves the assertion-mode gutted-but-green refusal mechanic end-to-end
+- next: cadence milestone propose
+
+HANDOFF-demo-progressive-disclosure.md (untracked, never converted) asked for a one-command refuse-then-succeed demo plus staged help/start disclosure. cadence tutorial already ships most of the narrative engine (ephemeral sandbox, real DRAFT-BUILD-SETTLE loop, refusal beat, mock verifier) but is missing: non-interactive-by-default + --keep/--in-place/--interactive flags, a sharper assertion-mode gutted-but-green cheat (proven working at examples/demo-test-gutting/), a zero-arg npx front door, and a global onboarding-stage system gating cadence help/start visibility (doesn't exist anywhere in the codebase). Plan: add cadence demo as the new command carrying flags+narrative, keep tutorial working with a one-line stderr redirect, store stage in ~/.cadence/onboarding.json (CADENCE_HOME-overridable).
+
+## rec-20260814-002 — cadence verify coverage --explain's 'Overall: SATISFIED' can disagree with the real settle gate's verdict
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, coverage, gates, tooling
+- files: packages/core/src/verify/coverage.ts, packages/core/src/gates/coverage.ts
+- evidence: phase 278 build: verify coverage --explain AC-3/AC-4/AC-5/AC-6/AC-7/AC-9 all reported satisfied:true and Overall: SATISFIED throughout the whole build, yet the final cadence settle run --auto genuinely refused citing exactly those 6 AC ids as unsatisfied (assertion mode); root-caused to verify/coverage.ts:562's explainAcCoverage satisfied field lacking the per-(id,file) dedup that scanTestCoverage (verify/coverage.ts:126-157, consumed by gates/coverage.ts) applies. Fixed the phase's own test files by removing/rewording the leading narrative comments; the underlying scanner/explain discrepancy remains unfixed.
+- next: cadence milestone propose
+
+explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY occurrence in ANY file satisfies' -- no per-file dedup. scanTestCoverage() (the function the real gate at gates/coverage.ts actually consumes) keeps only the FIRST textual occurrence of an AC token per (id, file) (verify/coverage.ts:126-157) and aggregates from there. A leading narrative comment carrying the qualified token (e.g. '// 278-01/AC-3: this test proves...' placed above the real asserting it() block) consumes that file's dedup slot with a non-qualifying ref, so the real assertion below it is never recorded -- yet --explain still reports Overall: SATISFIED because it found the qualifying it() occurrence independently, without dedup. This misled every per-task independent review during phase 278's build (6 of 11 ACs showed --explain SATISFIED yet settle run --auto genuinely refused citing exactly those 6 as unsatisfied at the final settle step) until the discrepancy surfaced empirically. Root cause and fix are in the scanner itself (out of phase 278's boundaries to touch) -- either make --explain's satisfied field replicate the real per-file-dedup algorithm, or have scanTestCoverage prefer a qualifying occurrence over an earlier non-qualifying one within the same file when both exist.
+
+## rec-20260814-003 — ReDoS / regex-injection risk in list-filter.ts's --filter-regex (recommendation/decision/assumption list)
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, security
+- files: packages/core/src/cli/list-filter.ts
+- evidence: CodeQL check-run 94887026674 on PR #421 (phase 278 branch), high-severity 'Regular expression injection' annotation at list-filter.ts:106, columns 26-42; confirmed via git diff that list-filter.ts is untouched by PR #421 -- pre-existing on main, unrelated to phase 278's scope.
+- next: cadence milestone propose
+
+GitHub Advanced Security / CodeQL flagged a high-severity 'Regular expression injection' at packages/core/src/cli/list-filter.ts:106 (new RegExp(opts.filterRegex, regexFlags)), surfaced on PR #421 (phase 278) even though that PR does not touch this file -- the alert is pre-existing on main, just newly detected/reported against this PR's scan. --filter-regex is user-supplied via the recommendation/decision/assumption list commands' CLI flags and passed straight into RegExp() with only a 200-char length cap (MAX_FILTER_REGEX_LENGTH); a crafted pattern within that length can still trigger catastrophic backtracking (ReDoS) against the CLI process. Since this is purely a local CLI tool (not a server processing untrusted network input), actual exploitability is low, but it is a real gap worth closing: either validate/reject patterns with known catastrophic-backtracking shapes, apply a regex execution timeout, or document the risk explicitly if accepted as-is.

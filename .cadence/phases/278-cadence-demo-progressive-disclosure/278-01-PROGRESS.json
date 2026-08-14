@@ -1,0 +1,107 @@
+{
+  "draftId": "278-01",
+  "tasks": {
+    "T4": {
+      "status": "DONE",
+      "notes": "Correction after T1 review flagged the same bare-token pattern here: qualified the AC-8 comment (tutorial.test.ts:195) from bare 'AC-8' to '278-01/AC-8' to satisfy this repo's phase-qualified coverage scheme. Re-verified: cadence verify coverage --explain AC-8 shows the span now has hasAssertion:true; 9/9 tutorial tests still pass.",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\cli\\tutorial.test.ts"
+      ],
+      "updatedAt": "2026-08-14T16:34:05.566Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "readStage()/advanceStage(min) over CADENCE_HOME (fallback ~/.cadence)/onboarding.json, atomic write via existing helper, stage clamped 0-3 never-decreases. Independent review: 1st pass FAILED on bare AC-9 tokens vs this repo's phase-qualified coverage scheme; fix round applied (278-01/AC-9), re-verified via cadence verify coverage --explain AC-9 -> SATISFIED. Re-verified in main thread: 7/7 tests, typecheck clean, boundary clean (2 new files only).",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\demo\\fixtures.test.ts",
+        "C:\\Users\\Thomas\\AppData\\Local\\Temp\\claude\\C--Users-Thomas-Documents-Projects-cadence\\e816f3b9-2969-401d-ba2b-002e2cbca4b8\\scratchpad\\check-dedup.mjs",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\check-dedup-tmp.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\onboarding\\state.test.ts"
+      ],
+      "updatedAt": "2026-08-14T16:26:19.454Z"
+    },
+    "T1": {
+      "status": "DONE",
+      "notes": "Pure demo fixtures (SANDBOX_CONFIG, GUTTED_TEST/HONEST_TEST for greet()) mirroring tutorial/fixtures.ts's shape. Independent review: 1st pass FAILED on bare AC-1/AC-2 tokens in the outer test file (fixtures.ts's own bare tokens inside the fixture strings are correct as-is -- different, deliberately-bare sandbox scope). Fix round qualified to 278-01/AC-1, 278-01/AC-2; re-verified via cadence verify coverage --explain -> satisfies:true for both. Reviewer also flagged that AC-1/AC-2 as worded require real settle run --auto proof, not just this unit-level coverage-scan proxy -- DRAFT amended (As-built note) so T2's e2e test also closes AC-1/AC-2; T1 supplies the required fixture infrastructure. Re-verified in main thread: 4/4 tests, typecheck clean, coverage explain confirms both tokens satisfy, boundary clean (2 files only).",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\demo\\fixtures.test.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\.cadence\\phases\\278-cadence-demo-progressive-disclosure\\278-01-DRAFT.md"
+      ],
+      "updatedAt": "2026-08-14T16:38:39.603Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "minStage on StartOption (doctor->2), visibleOptions() filter, --advanced flag, wired T5's readStage(). Independent review: 1st pass FAILED -- (1) real finding: new --advanced flag undocumented, no task owned the doc fix -- DRAFT amended, folded into T10 (which already owns commands.md); (2) minor nit: bare AC-11 comment token, fixed. Additive render.ts change (optional 3rd param, default preserves existing behavior) added to T8's files: via As-built note. Re-verified in main thread: 53/53 tests, typecheck clean, coverage --explain AC-11 -> SATISFIED, diff scoped to declared 4 files.",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\demo\\run.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\cli\\commands\\demo.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\cli\\register.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\start\\menu.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\start\\render.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\cli\\commands\\start.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\cli\\start.test.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\cli\\demo.test.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\.cadence\\phases\\278-cadence-demo-progressive-disclosure\\278-01-DRAFT.md",
+        "C:\\Users\\Thomas\\AppData\\Local\\Temp\\claude\\C--Users-Thomas-Documents-Projects-cadence\\e816f3b9-2969-401d-ba2b-002e2cbca4b8\\scratchpad\\demo-review-collision\\.cadence\\config.json"
+      ],
+      "updatedAt": "2026-08-14T17:16:57.152Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "runDemo(opts,io,deps) generalizing tutorial.ts's pattern (tutorial.ts itself untouched); registered 'demo' with -i/--interactive, --keep, --in-place (defaults inverted from tutorial: non-interactive by default). Independent review: 1st pass FAILED -- blocking: --in-place silently overwrote an existing .cadence/config.json/state.json/PROJECT.md with zero guard (proven via sentinel-file repro); also AC-5's pause-wiring was untested (stripping all 5 pause() calls didn't fail any test). Fix round: existsSync(.cadence) refusal guard before scaffoldSandbox when --in-place (refuse+suggest, exit 1, nothing touched); injectable sleep seam via DemoDeps proving pause() fires 5x. Re-verified in main thread: reproduced the real CLI run myself (genuine refusal message, genuine settle pass, sandbox cleanup confirmed), independently reproduced the in-place collision refusal with my own sentinel file (MD5-identical after, exit 1, no other files created), 8/8 tests, typecheck clean, coverage --explain AC-5/AC-6 both SATISFIED, boundary scoped to declared files + 2-line register.ts addition.",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\demo\\run.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\cli\\demo.test.ts"
+      ],
+      "updatedAt": "2026-08-14T17:32:38.744Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Bare zero-arg invocation splices 'demo' into argv before commander parses, inside the entry-point guard (no duplicated dispatch logic). Independent review: PASS. Re-verified in main thread: 3/3 tests, typecheck clean, coverage --explain AC-7 -> SATISFIED, diff scoped to declared 2 files (index.ts +11/-1, new test file).",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\cli\\index.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\demo\\run.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\cli\\demo.test.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\docs\\reference\\commands.md",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\cli\\zero-arg-dispatch.test.ts"
+      ],
+      "updatedAt": "2026-08-14T17:58:59.751Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "advanceStage(ONBOARDING_STAGE_DRIVER) called in runDemo() after the step loop completes without throwing (never fires on the interim refusal alone, or on any thrown step). 2 new tests: successful run advances stage, interim refusal alone does not. Independent review: PASS, with one worth-fixing non-blocking note: the write wasn't try/caught, so a transient onboarding.json I/O failure would make the whole demo report failure even after both real teaching-moment settles genuinely succeeded. Fixed directly: wrapped in try/catch with a soft stderr notice on failure (best-effort, matches this repo's convention that cosmetic bookkeeping must not turn a genuine success into a reported failure). Re-verified in main thread: 10/10 demo tests (incl. both new AC-9 tests), typecheck clean.",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\demo\\run.ts"
+      ],
+      "updatedAt": "2026-08-14T18:01:33.995Z"
+    },
+    "T10": {
+      "status": "DONE",
+      "notes": "Added demo to marker-block+ToC; new ### demo section mirroring tutorial's structure (all 3 flags, --in-place collision-refusal documented); --advanced row+prose added to ### start; one-line mention added to ### tutorial's Behavior. Independent review: 1st pass FAILED -- two dangling [onboard](#onboard) links pointed at the unrelated existing 'cadence onboard' command instead of anywhere explaining the phase-278 stage concept (which isn't documented anywhere). Fixed directly: dropped both broken links, kept prose. Re-verified: cli-reference.test.ts 7/7 pass, only commands.md touched.",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\docs\\reference\\commands.md"
+      ],
+      "updatedAt": "2026-08-14T18:13:15.803Z"
+    },
+    "T9": {
+      "status": "DONE",
+      "notes": "One paragraph added to README Quickstart ahead of the existing tutorial mention, introducing the bare-npx one-command demo. Independent review: PASS -- all factual claims (zero-arg dispatch, offline/mock-only, cleanup-by-default, cadence demo equivalence) individually verified against the actual implementation. Diff scoped to README.md only, +10/-0.",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\README.md"
+      ],
+      "updatedAt": "2026-08-14T18:17:46.804Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "Top-level --advanced program option + Commander configureHelp/visibleCommands hook filtering the top-level help list (doctor hidden below stage 2); commands stay registered (no .command() calls touched, confirmed via Commander source trace of per-instance _helpConfiguration). 6 new e2e tests. Independent review: PASS conditional on 2 required fixes -- (1) DRAFT lacked an As-built note for the deliberate doctor-only scope decision (T1/T8/T10 precedent) -- added; (2) the new global --advanced flag was undocumented in commands.md's Global options table (cli-reference.test.ts's flag-drift check only walks subcommand options, not program.options, so nothing caught it) -- added. Re-verified in main thread: 6/6 help-gating tests, 3/3 zero-arg-dispatch (no regression), docs/cli-reference 7/7, typecheck clean, coverage --explain AC-10 -> SATISFIED, boundary scoped to declared 2 files.",
+      "touchedFiles": [
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\src\\cli\\index.ts",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\packages\\core\\tests\\cli\\help-stage-gating.test.ts",
+        "C:\\Users\\Thomas\\AppData\\Local\\Temp\\claude\\help-stage-demo\\stage2\\onboarding.json",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\.cadence\\phases\\278-cadence-demo-progressive-disclosure\\278-01-DRAFT.md",
+        "C:\\Users\\Thomas\\Documents\\Projects\\cadence\\.claude\\worktrees\\278-cadence-demo-progressive-disclosure\\docs\\reference\\commands.md"
+      ],
+      "updatedAt": "2026-08-14T18:39:32.078Z"
+    }
+  }
+}

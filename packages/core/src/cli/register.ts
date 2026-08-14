@@ -26,6 +26,7 @@ import { registerDoctorCommand } from './commands/doctor.js';
 import { registerOnboardCommand } from './commands/onboard.js';
 import { registerMcpCommand } from './commands/mcp.js';
 import { registerTutorialCommand } from './commands/tutorial.js';
+import { registerDemoCommand } from './commands/demo.js';
 import { registerExplainCommand } from './commands/explain.js';
 import { registerQuickstartCommand } from './commands/quickstart.js';
 import { registerStartCommand } from './commands/start.js';
@@ -64,6 +65,7 @@ export function registerAllCommands(program: Command): void {
   registerOnboardCommand(program);
   registerMcpCommand(program);
   registerTutorialCommand(program);
+  registerDemoCommand(program);
   registerExplainCommand(program);
   registerQuickstartCommand(program);
   registerStartCommand(program);
