@@ -72,6 +72,100 @@ function validateFilterRegexLength(pattern: string): string | undefined {
   return undefined;
 }
 
+interface QuantifierMatch {
+  consumed: number;
+  /** Whether this quantifier permits 2+ repetitions (as opposed to `?` / `{0,1}`). */
+  repeats: boolean;
+}
+
+/** Matches a `*`, `+`, `?`, or `{m}` / `{m,}` / `{m,n}` quantifier starting at `pattern[i]`. */
+function matchQuantifierAt(pattern: string, i: number): QuantifierMatch | undefined {
+  const c = pattern.charAt(i);
+  if (c === '*' || c === '+') return { consumed: 1, repeats: true };
+  if (c === '?') return { consumed: 1, repeats: false };
+  if (c === '{') {
+    let j = i + 1;
+    let body = '';
+    while (j < pattern.length && pattern.charAt(j) !== '}') {
+      body += pattern.charAt(j);
+      j++;
+    }
+    if (j >= pattern.length || !/^\d+(,\d*)?$/.test(body)) return undefined;
+    const consumed = j - i + 1;
+    const commaIdx = body.indexOf(',');
+    if (commaIdx === -1) return { consumed, repeats: Number(body) >= 2 };
+    const maxPart = body.slice(commaIdx + 1);
+    return { consumed, repeats: maxPart === '' || Number(maxPart) >= 2 };
+  }
+  return undefined;
+}
+
+/**
+ * Rejects the classic ReDoS shape — a repetition quantifier wrapped around a
+ * group that itself contains one, e.g. `(a+)+` or `(a*)*` — the "star height
+ * > 1" heuristic (`safe-regex`'s approach). This is a user-supplied pattern
+ * (`--filter-regex`), so a crafted one can hang the CLI in catastrophic
+ * backtracking; the check is intentionally conservative on this one shape
+ * (it may reject a few benign-but-suspicious-shaped patterns) but does not
+ * attempt to prove exact backtracking cost, and does not catch every
+ * ReDoS-capable shape — e.g. ambiguous alternation under a quantifier like
+ * `(a|a)+` has no nested quantifier and passes through undetected.
+ */
+function findUnsafeRegexReason(pattern: string): string | undefined {
+  const groupHasRepetition: boolean[] = [];
+  let i = 0;
+  while (i < pattern.length) {
+    const c = pattern.charAt(i);
+    if (c === '\\') {
+      i += 2;
+      continue;
+    }
+    if (c === '[') {
+      let j = i + 1;
+      if (pattern.charAt(j) === '^') j++;
+      if (pattern.charAt(j) === ']') j++;
+      while (j < pattern.length && pattern.charAt(j) !== ']') {
+        if (pattern.charAt(j) === '\\') j++;
+        j++;
+      }
+      i = j + 1;
+      continue;
+    }
+    if (c === '(') {
+      groupHasRepetition.push(false);
+      i++;
+      continue;
+    }
+    if (c === ')') {
+      const innerHasRepetition = groupHasRepetition.pop() ?? false;
+      i++;
+      const q = matchQuantifierAt(pattern, i);
+      if (q !== undefined) {
+        if (innerHasRepetition && q.repeats) {
+          return 'nested repetition can cause catastrophic backtracking (e.g. "(a+)+") — restructure the pattern so a quantifier does not wrap a group that itself repeats';
+        }
+        i += q.consumed;
+      }
+      const parentTop = groupHasRepetition.length - 1;
+      if (parentTop >= 0 && (innerHasRepetition || (q?.repeats ?? false))) {
+        groupHasRepetition[parentTop] = true;
+      }
+      continue;
+    }
+    const q = matchQuantifierAt(pattern, i);
+    if (q !== undefined) {
+      if (q.repeats) {
+        const top = groupHasRepetition.length - 1;
+        if (top >= 0) groupHasRepetition[top] = true;
+      }
+      i += q.consumed;
+      continue;
+    }
+    i++;
+  }
+  return undefined;
+}
+
 /**
  * Parses and validates the `--sort-by` / `--filter-regex` /
  * `--filter-regex-flags` options as one unit. Pure: no I/O, no process
@@ -102,6 +196,8 @@ export function parseListFilterOptions(
   if (opts.filterRegex !== undefined) {
     const lengthError = validateFilterRegexLength(opts.filterRegex);
     if (lengthError !== undefined) return fail(lengthError);
+    const unsafeReason = findUnsafeRegexReason(opts.filterRegex);
+    if (unsafeReason !== undefined) return fail(`unsafe --filter-regex pattern: ${unsafeReason}`);
     try {
       regex = new RegExp(opts.filterRegex, regexFlags);
     } catch (err) {
