@@ -1,0 +1,22 @@
+{
+  "draftId": "277-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "checkRecommendationArchiveCurrency implemented in run.ts (89 lines, additive). 8 TDD tests in recommendation-archive-currency.test.ts, all passing. Independently re-verified: typecheck clean, lint clean, build clean, full suite 425/425 files 4096/4096 tests. AC-3 wording corrected via As-built (missing ledger -> ok, not indeterminate -- readLedger doesn't throw on absence).",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-14T02:37:27.399Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Wired checkRecommendationArchiveCurrency into runDoctor (after checkRecommendationShippedDrift). Added commands.md table row + manual-classification entry, doc-content test (277-01/AC-4), minor changeset for cadence-core. Independently re-verified: cli-reference.test.ts 7/7, run.test.ts 46/46, typecheck clean, lint clean, build clean, full suite 425/425 files 4097/4097 tests.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/277-recommendation-archive-currency/packages/core/src/doctor/run.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/277-recommendation-archive-currency/docs/reference/commands.md",
+        "/home/thomas/projects/cadence/.claude/worktrees/277-recommendation-archive-currency/packages/core/tests/docs/cli-reference.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/277-recommendation-archive-currency/.changeset/recommendation-archive-currency-doctor-check.md"
+      ],
+      "updatedAt": "2026-08-14T02:46:09.832Z"
+    }
+  }
+}

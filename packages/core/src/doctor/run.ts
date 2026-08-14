@@ -17,6 +17,8 @@ import {
   type CadenceConfig,
   type Gate,
   type Tier,
+  type RecommendationLedger,
+  type RecommendationStatus,
 } from '@thomas-powers-jr/cadence-types';
 import { checkNodeMajor } from '../cli/node-guard.js';
 import { loadConfig } from '../config/loader.js';
@@ -852,6 +854,95 @@ export async function checkRecommendationShippedDrift(root: string): Promise<Doc
       'Recommendation ship-drift not determinable (best-effort) — skipped.',
     );
   }
+}
+
+/** Terminal `RecommendationStatus` values {@link checkRecommendationArchiveCurrency}
+ *  flags when found unarchived. `'converted'` is deliberately excluded — see
+ *  that function's doc comment. */
+const TERMINAL_UNARCHIVED_STATUSES: ReadonlySet<RecommendationStatus> = new Set([
+  'shipped',
+  'rejected',
+]);
+
+/**
+ * Surface recommendations in the ACTIVE `recommendations[]` array that carry
+ * a terminal `'shipped'`/`'rejected'` status but were never archived (phase
+ * 277) — the invariant phase 276 backfilled by hand for 21 recommendations
+ * that predated phase 102/v1.24's auto-archive feature. Read-only,
+ * structurally mirrors `checkRecommendationShippedDrift` (same ledger read,
+ * same `pass()`/`fail()` shape), but see the two deliberate divergences
+ * below.
+ *
+ * `'converted'` status is deliberately NOT flagged even though it can look
+ * "terminal-ish": `RecommendationStatusZ`'s schema comment
+ * (`packages/types/src/intelligence.ts`) documents that a converted rec's
+ * only sanctioned successor state is `'settle-pending'`, reached solely via
+ * the settle hook (`runAdvanceConvertedToSettlePendingForPhase`) — never
+ * `'archived'` directly. Flagging `'converted'` here would emit wrong
+ * remediation (telling the operator to `archive` a record that actually
+ * needs to reach `'shipped'` via `promote` first). This was discovered
+ * empirically in phase 276: `rec-20260701-001` is `status: converted` with
+ * no `shippedRef`, and was correctly excluded from that phase's archive
+ * backfill for exactly this reason. `'settle-pending'`/`'candidate'`/
+ * `'accepted'`/`'deferred'` are all non-terminal and are likewise never
+ * flagged.
+ *
+ * Error handling deliberately diverges from this check's two adjacent
+ * ledger-reading neighbors (`checkRecommendationShippedDrift`,
+ * `checkOrphanedEvidence` — not an exhaustive count of every ledger-reading
+ * check in this file; `checkLedgerRemoteCollision` further down shares the
+ * same best-effort convention too), which both catch-and-degrade any
+ * read/parse failure to a best-effort `pass()`. That convention predates
+ * `dec-20260810-005` (phase 268)'s later, more correct `indeterminate` rung
+ * — a check that could not assess the repo at all must say so, not silently
+ * report "no problem found". Mirrors `checkConductionDriftStreak`'s
+ * `fail(name, 'indeterminate', detail, remediation)` construction. Note this
+ * only fires for a genuinely malformed/schema-invalid file: `readLedger`
+ * (`../intelligence/store/ledger.ts`) deliberately returns an EMPTY ledger
+ * (not a throw) when `recommendations.json` is simply missing — a brand-new
+ * `cadence init` has no recommendations.json yet, and `readLedger`'s
+ * `existsSync` contract treats "absent entirely" as "nothing to report" —
+ * exactly `checkConductionDriftStreak`'s own precedent (empty corpus → `ok`;
+ * corpus present but unassessable → `indeterminate`). So a missing file
+ * naturally falls through to the zero-recommendations `pass()` path below,
+ * not this catch block, and that is correct, not an oversight.
+ *
+ * `fixId` is always `null` (via `fail()`'s default) on both the warning and
+ * indeterminate paths. Archiving is evidence-gated per-record — phase 276's
+ * lesson was that a record can carry `convertedToPhaseId` without
+ * `shippedRef`, or vice versa, and blindly auto-archiving would bypass
+ * exactly the verification that caught `rec-20260701-001`. Even though the
+ * remediation command (`cadence recommendation archive <id>`) is mechanical
+ * to type, it is never a safe blind auto-repair.
+ */
+export async function checkRecommendationArchiveCurrency(root: string): Promise<DoctorCheck> {
+  let ledger: RecommendationLedger;
+  try {
+    ledger = await readRecommendationLedger(root);
+  } catch (err) {
+    return fail(
+      'recommendation-archive-currency',
+      'indeterminate',
+      `recommendations.json could not be read/parsed: ${err instanceof Error ? err.message : String(err)}`,
+      'Fix or restore .cadence/intelligence/recommendations.json from version control, then re-run `cadence doctor`.',
+    );
+  }
+  const offenders = ledger.recommendations.filter((r) => TERMINAL_UNARCHIVED_STATUSES.has(r.status));
+  if (offenders.length === 0) {
+    return pass(
+      'recommendation-archive-currency',
+      'No terminal-status (shipped/rejected) recommendations sit unarchived in the active ledger.',
+    );
+  }
+  const detail = offenders
+    .map((r) => `${r.id} "${r.title}" — status ${r.status}, not archived`)
+    .join('; ');
+  return fail(
+    'recommendation-archive-currency',
+    'warning',
+    detail,
+    'Run `cadence recommendation archive <id>` for each listed id to move it into the archived array.',
+  );
 }
 
 /**
@@ -2301,6 +2392,7 @@ export async function runDoctor(
     await checkHandoffRetention(root),
     await checkVerificationReadiness(root),
     await checkRecommendationShippedDrift(root),
+    await checkRecommendationArchiveCurrency(root),
     await checkOrphanedEvidence(root),
     await checkLedgerRemoteCollision(root),
     await checkCoverageModeLanguageSupport(root),
