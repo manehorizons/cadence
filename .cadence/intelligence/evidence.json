@@ -2000,6 +2000,13 @@
       "kind": "note",
       "summary": "Corrected live re-measurement 2026-08-13 (v1.57 Phase W, dec-20260813-003), verified against the actual computeConductionDriftStreak algorithm rather than a naive corpus walk: complex-tier 31/286 drafts (~10.8%). Determinate-eligible corpus (assurance.verifierRollup present, since 2026-07-29) = 35 settles; 23/35 (66%) would show doctor's conduction-drift-streak as warning at that point in time; max streak reached = 16. Confirms the chronic-warn concern empirically. See dec-20260813-003 for the full decision: threshold not changed in this decisions-only phase, O.3's measured-threshold follow-up flagged as now-overdue with real data available.",
       "createdAt": "2026-08-13T02:34:11.074Z"
+    },
+    {
+      "id": "ev-20260813-008",
+      "recommendationId": "rec-20260813-006",
+      "kind": "note",
+      "summary": "v1.57.0 release cut session, 2026-08-13: git reset --hard origin/main discarded uncommitted local-only edits to .claude/settings.json and .claude/scheduled_tasks.lock; content unrecoverable, cadence doctor confirmed no functional breakage post-hoc but this was not guaranteed",
+      "createdAt": "2026-08-13T23:48:55.719Z"
     }
   ]
 }

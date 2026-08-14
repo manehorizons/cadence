@@ -2873,6 +2873,35 @@
       "decisionIds": [],
       "createdAt": "2026-08-13T02:27:37.800Z",
       "updatedAt": "2026-08-13T02:27:37.800Z"
+    },
+    {
+      "id": "rec-20260813-006",
+      "title": "cadence doctor / resume flow could warn before a git reset --hard discards uncommitted tracked-file changes, not just commits",
+      "summary": "During v1.57.0's release cut (2026-08-13), reconciling a diverged local main via an explicitly-consented 'git reset --hard origin/main' silently discarded uncommitted local-only edits to .claude/settings.json and .claude/scheduled_tasks.lock -- the consent question (mine) incorrectly claimed these files would be 'left untouched', which is only true for untracked files, not uncommitted changes to tracked ones. Unlike discarded commits (recoverable via reflog for ~90d), uncommitted working-tree content to tracked files has no recovery path once reset -- it was genuinely and permanently lost; the operator did not know what was in them either. cadence doctor's host-hooks check confirmed no functional breakage this time (the discarded settings.json content matched every other worktree's baseline), but that was luck, not a guarantee -- a future reset could discard something load-bearing. A doctor check (or a resume/reset-adjacent CLI guard) could detect known local-only tracked files (.claude/settings.json, .claude/scheduled_tasks.lock per CLAUDE.md's own 'Helpful Stage' list) with uncommitted changes and surface a specific warning distinct from the generic 'you have uncommitted changes' signal, before any command that would discard them via reset --hard/checkout onto a ref.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "docs"
+      ],
+      "affectedFiles": [
+        ".claude/settings.json",
+        ".claude/scheduled_tasks.lock"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260813-008"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-13T23:48:55.719Z",
+      "updatedAt": "2026-08-13T23:48:55.719Z"
     }
   ],
   "archived": [
@@ -7931,12 +7960,12 @@
         "dec-20260811-002"
       ],
       "convertedToPhaseId": "275-deep-verify-and-per-task-verify-provider-provenance-excluded-from-assurance-rollup",
-      "scoutId": "scout-20260804-verifier-honesty",
-      "createdAt": "2026-08-08T19:31:59.976Z",
-      "updatedAt": "2026-08-13T04:42:21.323Z",
       "shippedRef": "275-deep-verify-and-per-task-verify-provider-provenance-excluded-from-assurance-rollup",
+      "scoutId": "scout-20260804-verifier-honesty",
       "archivedAt": "2026-08-13T04:42:21.323Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-08T19:31:59.976Z",
+      "updatedAt": "2026-08-13T04:42:21.323Z"
     }
   ]
 }
