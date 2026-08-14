@@ -37,6 +37,7 @@ Two CLIs are documented here:
   - [resume](#resume)
   - [onboard](#onboard)
   - [tutorial](#tutorial)
+  - [demo](#demo)
   - [start](#start)
   - [quickstart](#quickstart)
   - [activate](#activate)
@@ -65,6 +66,7 @@ CADENCE — a draft/build/settle framework for AI-assisted development with conf
 |---|---|
 | `-V, --version` | Output the version number |
 | `-h, --help` | Display help for command |
+| `--advanced` | Show the full command surface in `cadence help`, regardless of onboarding stage |
 
 <!-- cadence:commands:start -->
 config
@@ -94,6 +96,7 @@ doctor
 onboard
 mcp
 tutorial
+demo
 explain
 start
 quickstart
@@ -2078,7 +2081,10 @@ Run one real DRAFT→BUILD→SETTLE loop — including the moment settle refuses
 | `--no-pause` | Do not pause between steps (auto-advance; required for non-TTY runs — CI, pipes, agents) |
 | `-h, --help` | Display help for command |
 
-**Behavior** — runs one real loop built around the catch. In a disposable
+**Behavior** — on start, prints one stderr line pointing at `cadence demo`
+(phase 278's newer, non-interactive-by-default walkthrough) before anything
+else runs; `tutorial` itself is unchanged and still completes the same
+refuse-then-succeed loop below. In a disposable
 `.cadence/` sandbox it drives draft → approve → build through the **real engine**,
 then stages a lie: task `T1` is marked DONE and `sum.mjs` exists, but no test
 backs `AC-1`. The first `settle run --auto` therefore **refuses** — the
@@ -2099,6 +2105,64 @@ refusal; with `--no-pause` (or any non-TTY stdin) it runs straight through.
 **Exit codes** — `0` on a clean run (which *includes* the staged refusal being
 caught and then resolved); non-zero only if the loop misbehaves — e.g. the
 staged settle fails to refuse, or the fixed settle fails to close.
+
+---
+
+### demo
+
+```
+Usage: cadence demo [options]
+
+Run one real DRAFT→BUILD→SETTLE loop — including the moment settle refuses (non-interactive by default)
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `-i, --interactive` | Pause between beats when running in a TTY (default: fully non-interactive) |
+| `--keep` | Leave the sandbox on disk instead of deleting it when the run finishes |
+| `--in-place` | Run inside the current working directory instead of a fresh temp dir |
+| `-h, --help` | Display help for command |
+
+**Behavior** — the newer, `npx`-reachable sibling of `tutorial` (bare `cadence`
+or `npx @thomas-powers-jr/cadence-core` with no arguments dispatches straight
+here). It runs the same real DRAFT→BUILD→SETTLE walkthrough — `tutorial.ts`'s
+beat/pause/scaffold shape generalized into `demo/run.ts` — but with its flag
+defaults **inverted** so it is safe to run unattended (CI, an agent shell, a
+cold `npx` invocation). In a disposable `.cadence/` sandbox it drives draft →
+approve → build through the **real engine**, then stages the catch: task `T1`
+is marked DONE and `greet.mjs` exists, but `greet.test.mjs` only *mentions*
+`AC-1` — it calls `greet()` without ever asserting on the result. The first
+`settle run --auto` therefore **refuses** — the `test-coverage` gate (in
+`assertion` mode) names `AC-1` as "mentioned but not inside a recognized
+asserting test block", and the loop stays in BUILD. The demo then restores a
+real assertion in `greet.test.mjs`, the second `settle run --auto` executes it
+via `build-test-must-pass` (`node --test`, real exit code), and the loop
+closes with a SUMMARY. Like `tutorial`, it uses no `--ac` manual assertion and
+no coverage bypass — the gates decide on real state alone.
+
+Unlike `tutorial`, `demo` is **non-interactive by default**: it never pauses,
+TTY or not, and always removes its temp sandbox once the run finishes.
+`--interactive`/`-i` opts back into `tutorial`-style TTY-paced pauses between
+beats. `--keep` leaves the sandbox on disk instead of deleting it, printing
+the path it was left at. `--in-place` runs inside the current working
+directory instead of a fresh temp dir; its sandbox is never deleted (deleting
+the caller's own cwd would be destructive), and if a `.cadence/` directory
+already exists there it **refuses** (exit `1`, nothing written) rather than
+scaffolding over it — running `scaffoldSandbox` unconditionally would
+overwrite an existing `config.json`, `state.json`, and `PROJECT.md` with the
+demo's throwaway fixtures, so it checks and bails out first.
+
+It is fully **offline and side-effect free**: the only verifier is the
+default mock (no API key or network) and the only executed test is the
+sandbox's own `node --test`. A successful run also advances the local
+progressive-disclosure onboarding stage to at least `1`.
+
+**Exit codes** — `0` on a clean run (which *includes* the staged refusal
+being caught and then resolved); non-zero if the loop misbehaves (e.g. the
+staged settle fails to refuse, or the fixed settle fails to close) or if
+`--in-place` refuses due to a pre-existing `.cadence/` directory.
 
 ---
 
@@ -2153,6 +2217,7 @@ Interactive onboarding — pick what you're doing, and run it
 | `--pick <n>` | Select a menu option non-interactively (still confirms unless `--yes`) |
 | `--yes` | Skip the confirm and run the picked option |
 | `--json` | Emit the structured menu and exit (no prompt) |
+| `--advanced` *(global)* | Show the full menu regardless of onboarding stage — bypasses the progressive-disclosure filter that otherwise hides stage-gated entries (e.g. the `cadence doctor` route) below onboarding stage 2. This is the same top-level `--advanced` flag documented under [`cadence`'s global options](#cadence) (it also gates `cadence help`'s command listing) — not a flag local to `start` — so it works in any position: `cadence start --advanced`, `cadence --advanced start`, or interleaved with `start`'s own flags. |
 
 **Behavior** — the interactive front door, sibling to the read-only `quickstart`
 (which prints the map without running anything). `start` first prints an
@@ -2173,6 +2238,12 @@ so `start` never imports host code. Declining the confirm prints the command so
 you can run it yourself. If the repo is already initialized, the `init` option
 is annotated as safe to re-run. In a non-interactive shell with no `--pick`, it
 prints the recommendation plus menu and exits `0` (never hangs).
+
+The printed menu is also filtered by progressive-disclosure onboarding stage:
+the `cadence doctor` route stays hidden until stage 2 (or `--advanced`) is
+reached. Filtering is display-only — `--pick 6` still
+resolves and runs the `doctor` route directly even while it's hidden from the
+printed list.
 
 For Codex first-run setup, prefer `cadence init --host codex` before launching
 Codex. The `start` menu's Codex route is the adapter-only installer for an

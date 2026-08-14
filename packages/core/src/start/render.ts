@@ -8,19 +8,26 @@ export interface StartRecommendation {
   reason: string;
 }
 
-/** Render the menu as terminal text. `initialized` annotates the init option. */
+/**
+ * Render the menu as terminal text. `initialized` annotates the init option.
+ * `options` defaults to the full `START_OPTIONS` catalog; `cadence start`
+ * (`cli/commands/start.ts`) passes a stage-filtered subset for progressive
+ * disclosure (278-01/AC-11) — this stays additive so every other caller
+ * (including existing `start/render.test.ts` coverage) is unaffected.
+ */
 export function renderMenu(
   initialized: boolean,
   recommendation?: StartRecommendation,
+  options: StartOption[] = START_OPTIONS,
 ): string {
-  const width = Math.max(...START_OPTIONS.map((o) => o.label.length));
+  const width = Math.max(...options.map((o) => o.label.length));
   const lines: string[] = ['What are you doing?', ''];
   if (recommendation !== undefined) {
     lines.push(`  Recommended: ${recommendation.command}`);
     lines.push(`  ${recommendation.reason}`);
     lines.push('');
   }
-  for (const o of START_OPTIONS) {
+  for (const o of options) {
     let line = `  ${o.number}. ${o.label.padEnd(width)}  → ${o.display}`;
     if (initialized && o.number === INIT_OPTION_NUMBER) line += `  ${ANNOTATION}`;
     lines.push(line);
@@ -39,9 +46,10 @@ export interface StartMenuJson {
 export function renderJson(
   initialized: boolean,
   recommendation?: StartRecommendation,
+  options: StartOption[] = START_OPTIONS,
 ): StartMenuJson {
   return {
-    options: START_OPTIONS,
+    options,
     initialized,
     ...(recommendation !== undefined ? { recommendation } : {}),
   };

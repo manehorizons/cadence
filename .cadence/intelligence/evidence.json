@@ -2007,6 +2007,20 @@
       "kind": "note",
       "summary": "v1.57.0 release cut session, 2026-08-13: git reset --hard origin/main discarded uncommitted local-only edits to .claude/settings.json and .claude/scheduled_tasks.lock; content unrecoverable, cadence doctor confirmed no functional breakage post-hoc but this was not guaranteed",
       "createdAt": "2026-08-13T23:48:55.719Z"
+    },
+    {
+      "id": "ev-20260814-001",
+      "recommendationId": "rec-20260814-001",
+      "kind": "note",
+      "summary": "HANDOFF-demo-progressive-disclosure.md untracked in git status; tutorial.ts:1-267 already implements 4/5 of the handoff's narrative; examples/demo-test-gutting/files/prorate.test.gutted.mjs proves the assertion-mode gutted-but-green refusal mechanic end-to-end",
+      "createdAt": "2026-08-14T15:36:42.702Z"
+    },
+    {
+      "id": "ev-20260814-002",
+      "recommendationId": "rec-20260814-002",
+      "kind": "note",
+      "summary": "phase 278 build: verify coverage --explain AC-3/AC-4/AC-5/AC-6/AC-7/AC-9 all reported satisfied:true and Overall: SATISFIED throughout the whole build, yet the final cadence settle run --auto genuinely refused citing exactly those 6 AC ids as unsatisfied (assertion mode); root-caused to verify/coverage.ts:562's explainAcCoverage satisfied field lacking the per-(id,file) dedup that scanTestCoverage (verify/coverage.ts:126-157, consumed by gates/coverage.ts) applies. Fixed the phase's own test files by removing/rewording the leading narrative comments; the underlying scanner/explain discrepancy remains unfixed.",
+      "createdAt": "2026-08-14T20:13:37.556Z"
     }
   ]
 }

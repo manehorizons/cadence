@@ -221,6 +221,7 @@ export async function runTutorial(
 ): Promise<CommandResult> {
   const root = await mkdtemp(join(tmpdir(), 'cadence-tutorial-'));
   try {
+    io.err('Tip: cadence demo is the newer version of this walkthrough — try it next.\n');
     line(io);
     line(io, '  CADENCE tutorial — one real loop, and the moment it refuses');
     line(io, '  ──────────────────────────────────────────────────────────');

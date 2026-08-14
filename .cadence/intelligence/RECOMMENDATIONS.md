@@ -1267,3 +1267,35 @@ locateFreshestHandoff (packages/core/src/handoff/locate.ts:44-49) returns the la
 - next: cadence milestone propose
 
 During v1.57.0's release cut (2026-08-13), reconciling a diverged local main via an explicitly-consented 'git reset --hard origin/main' silently discarded uncommitted local-only edits to .claude/settings.json and .claude/scheduled_tasks.lock -- the consent question (mine) incorrectly claimed these files would be 'left untouched', which is only true for untracked files, not uncommitted changes to tracked ones. Unlike discarded commits (recoverable via reflog for ~90d), uncommitted working-tree content to tracked files has no recovery path once reset -- it was genuinely and permanently lost; the operator did not know what was in them either. cadence doctor's host-hooks check confirmed no functional breakage this time (the discarded settings.json content matched every other worktree's baseline), but that was luck, not a guarantee -- a future reset could discard something load-bearing. A doctor check (or a resume/reset-adjacent CLI guard) could detect known local-only tracked files (.claude/settings.json, .claude/scheduled_tasks.lock per CLAUDE.md's own 'Helpful Stage' list) with uncommitted changes and surface a specific warning distinct from the generic 'you have uncommitted changes' signal, before any command that would discard them via reset --hard/checkout onto a ref.
+
+## rec-20260814-001 — cadence demo: non-interactive refuse-then-succeed command + progressive-disclosure onboarding stages
+
+- status: settle-pending
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: onboarding, cli, demo, help, docs
+- files: packages/core/src/cli/commands/tutorial.ts, packages/core/src/tutorial/fixtures.ts, packages/core/src/cli/register.ts, packages/core/src/cli/index.ts, packages/core/src/start/menu.ts, docs/reference/commands.md, README.md
+- evidence: HANDOFF-demo-progressive-disclosure.md untracked in git status; tutorial.ts:1-267 already implements 4/5 of the handoff's narrative; examples/demo-test-gutting/files/prorate.test.gutted.mjs proves the assertion-mode gutted-but-green refusal mechanic end-to-end
+- next: cadence milestone propose
+
+HANDOFF-demo-progressive-disclosure.md (untracked, never converted) asked for a one-command refuse-then-succeed demo plus staged help/start disclosure. cadence tutorial already ships most of the narrative engine (ephemeral sandbox, real DRAFT-BUILD-SETTLE loop, refusal beat, mock verifier) but is missing: non-interactive-by-default + --keep/--in-place/--interactive flags, a sharper assertion-mode gutted-but-green cheat (proven working at examples/demo-test-gutting/), a zero-arg npx front door, and a global onboarding-stage system gating cadence help/start visibility (doesn't exist anywhere in the codebase). Plan: add cadence demo as the new command carrying flags+narrative, keep tutorial working with a one-line stderr redirect, store stage in ~/.cadence/onboarding.json (CADENCE_HOME-overridable).
+
+## rec-20260814-002 — cadence verify coverage --explain's 'Overall: SATISFIED' can disagree with the real settle gate's verdict
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, coverage, gates, tooling
+- files: packages/core/src/verify/coverage.ts, packages/core/src/gates/coverage.ts
+- evidence: phase 278 build: verify coverage --explain AC-3/AC-4/AC-5/AC-6/AC-7/AC-9 all reported satisfied:true and Overall: SATISFIED throughout the whole build, yet the final cadence settle run --auto genuinely refused citing exactly those 6 AC ids as unsatisfied (assertion mode); root-caused to verify/coverage.ts:562's explainAcCoverage satisfied field lacking the per-(id,file) dedup that scanTestCoverage (verify/coverage.ts:126-157, consumed by gates/coverage.ts) applies. Fixed the phase's own test files by removing/rewording the leading narrative comments; the underlying scanner/explain discrepancy remains unfixed.
+- next: cadence milestone propose
+
+explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY occurrence in ANY file satisfies' -- no per-file dedup. scanTestCoverage() (the function the real gate at gates/coverage.ts actually consumes) keeps only the FIRST textual occurrence of an AC token per (id, file) (verify/coverage.ts:126-157) and aggregates from there. A leading narrative comment carrying the qualified token (e.g. '// 278-01/AC-3: this test proves...' placed above the real asserting it() block) consumes that file's dedup slot with a non-qualifying ref, so the real assertion below it is never recorded -- yet --explain still reports Overall: SATISFIED because it found the qualifying it() occurrence independently, without dedup. This misled every per-task independent review during phase 278's build (6 of 11 ACs showed --explain SATISFIED yet settle run --auto genuinely refused citing exactly those 6 as unsatisfied at the final settle step) until the discrepancy surfaced empirically. Root cause and fix are in the scanner itself (out of phase 278's boundaries to touch) -- either make --explain's satisfied field replicate the real per-file-dedup algorithm, or have scanTestCoverage prefer a qualifying occurrence over an earlier non-qualifying one within the same file when both exist.

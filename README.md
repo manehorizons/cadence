@@ -98,6 +98,16 @@ The agent isn't believed; the state is.
 
 ## Quickstart
 
+Zero setup, one command: run the CLI with no arguments and it drops straight
+into a real, offline refuse-then-succeed DRAFT→BUILD→SETTLE loop in a
+disposable sandbox, then cleans up after itself:
+
+```sh
+npx -y @thomas-powers-jr/cadence-core
+```
+
+(Same walkthrough, run explicitly as `cadence demo`.)
+
 No install, no repo writes — watch one real loop run, including the moment
 settle refuses to close a phase the tests don't back, then closes once they do:
 
