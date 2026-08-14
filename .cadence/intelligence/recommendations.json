@@ -2273,44 +2273,6 @@
       "updatedAt": "2026-08-13T23:48:55.719Z"
     },
     {
-      "id": "rec-20260814-001",
-      "title": "cadence demo: non-interactive refuse-then-succeed command + progressive-disclosure onboarding stages",
-      "summary": "HANDOFF-demo-progressive-disclosure.md (untracked, never converted) asked for a one-command refuse-then-succeed demo plus staged help/start disclosure. cadence tutorial already ships most of the narrative engine (ephemeral sandbox, real DRAFT-BUILD-SETTLE loop, refusal beat, mock verifier) but is missing: non-interactive-by-default + --keep/--in-place/--interactive flags, a sharper assertion-mode gutted-but-green cheat (proven working at examples/demo-test-gutting/), a zero-arg npx front door, and a global onboarding-stage system gating cadence help/start visibility (doesn't exist anywhere in the codebase). Plan: add cadence demo as the new command carrying flags+narrative, keep tutorial working with a one-line stderr redirect, store stage in ~/.cadence/onboarding.json (CADENCE_HOME-overridable).",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "onboarding",
-        "cli",
-        "demo",
-        "help",
-        "docs"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/tutorial.ts",
-        "packages/core/src/tutorial/fixtures.ts",
-        "packages/core/src/cli/register.ts",
-        "packages/core/src/cli/index.ts",
-        "packages/core/src/start/menu.ts",
-        "docs/reference/commands.md",
-        "README.md"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260814-001"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "278-cadence-demo-progressive-disclosure",
-      "createdAt": "2026-08-14T15:36:42.702Z",
-      "updatedAt": "2026-08-14T20:09:21.698Z"
-    },
-    {
       "id": "rec-20260814-002",
       "title": "cadence verify coverage --explain's 'Overall: SATISFIED' can disagree with the real settle gate's verdict",
       "summary": "explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY occurrence in ANY file satisfies' -- no per-file dedup. scanTestCoverage() (the function the real gate at gates/coverage.ts actually consumes) keeps only the FIRST textual occurrence of an AC token per (id, file) (verify/coverage.ts:126-157) and aggregates from there. A leading narrative comment carrying the qualified token (e.g. '// 278-01/AC-3: this test proves...' placed above the real asserting it() block) consumes that file's dedup slot with a non-qualifying ref, so the real assertion below it is never recorded -- yet --explain still reports Overall: SATISFIED because it found the qualifying it() occurrence independently, without dedup. This misled every per-task independent review during phase 278's build (6 of 11 ACs showed --explain SATISFIED yet settle run --auto genuinely refused citing exactly those 6 as unsatisfied at the final settle step) until the discrepancy surfaced empirically. Root cause and fix are in the scanner itself (out of phase 278's boundaries to touch) -- either make --explain's satisfied field replicate the real per-file-dedup algorithm, or have scanTestCoverage prefer a qualifying occurrence over an earlier non-qualifying one within the same file when both exist.",
@@ -2340,34 +2302,6 @@
       "decisionIds": [],
       "createdAt": "2026-08-14T20:13:37.556Z",
       "updatedAt": "2026-08-14T20:13:37.556Z"
-    },
-    {
-      "id": "rec-20260814-003",
-      "title": "ReDoS / regex-injection risk in list-filter.ts's --filter-regex (recommendation/decision/assumption list)",
-      "summary": "GitHub Advanced Security / CodeQL flagged a high-severity 'Regular expression injection' at packages/core/src/cli/list-filter.ts:106 (new RegExp(opts.filterRegex, regexFlags)), surfaced on PR #421 (phase 278) even though that PR does not touch this file -- the alert is pre-existing on main, just newly detected/reported against this PR's scan. --filter-regex is user-supplied via the recommendation/decision/assumption list commands' CLI flags and passed straight into RegExp() with only a 200-char length cap (MAX_FILTER_REGEX_LENGTH); a crafted pattern within that length can still trigger catastrophic backtracking (ReDoS) against the CLI process. Since this is purely a local CLI tool (not a server processing untrusted network input), actual exploitability is low, but it is a real gap worth closing: either validate/reject patterns with known catastrophic-backtracking shapes, apply a regex execution timeout, or document the risk explicitly if accepted as-is.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "security"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/list-filter.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260814-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "createdAt": "2026-08-14T20:39:02.587Z",
-      "updatedAt": "2026-08-14T20:39:02.587Z"
     }
   ],
   "archived": [
@@ -8106,6 +8040,78 @@
       "archiveReason": "manual",
       "createdAt": "2026-06-11T14:52:03.329Z",
       "updatedAt": "2026-08-14T01:50:38.739Z"
+    },
+    {
+      "id": "rec-20260814-001",
+      "title": "cadence demo: non-interactive refuse-then-succeed command + progressive-disclosure onboarding stages",
+      "summary": "HANDOFF-demo-progressive-disclosure.md (untracked, never converted) asked for a one-command refuse-then-succeed demo plus staged help/start disclosure. cadence tutorial already ships most of the narrative engine (ephemeral sandbox, real DRAFT-BUILD-SETTLE loop, refusal beat, mock verifier) but is missing: non-interactive-by-default + --keep/--in-place/--interactive flags, a sharper assertion-mode gutted-but-green cheat (proven working at examples/demo-test-gutting/), a zero-arg npx front door, and a global onboarding-stage system gating cadence help/start visibility (doesn't exist anywhere in the codebase). Plan: add cadence demo as the new command carrying flags+narrative, keep tutorial working with a one-line stderr redirect, store stage in ~/.cadence/onboarding.json (CADENCE_HOME-overridable).",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "onboarding",
+        "cli",
+        "demo",
+        "help",
+        "docs"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/tutorial.ts",
+        "packages/core/src/tutorial/fixtures.ts",
+        "packages/core/src/cli/register.ts",
+        "packages/core/src/cli/index.ts",
+        "packages/core/src/start/menu.ts",
+        "docs/reference/commands.md",
+        "README.md"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260814-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "278-cadence-demo-progressive-disclosure",
+      "shippedRef": "v1.59.0 / PR #421",
+      "archivedAt": "2026-08-14T23:25:51.819Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-14T15:36:42.702Z",
+      "updatedAt": "2026-08-14T23:25:51.819Z"
+    },
+    {
+      "id": "rec-20260814-003",
+      "title": "ReDoS / regex-injection risk in list-filter.ts's --filter-regex (recommendation/decision/assumption list)",
+      "summary": "GitHub Advanced Security / CodeQL flagged a high-severity 'Regular expression injection' at packages/core/src/cli/list-filter.ts:106 (new RegExp(opts.filterRegex, regexFlags)), surfaced on PR #421 (phase 278) even though that PR does not touch this file -- the alert is pre-existing on main, just newly detected/reported against this PR's scan. --filter-regex is user-supplied via the recommendation/decision/assumption list commands' CLI flags and passed straight into RegExp() with only a 200-char length cap (MAX_FILTER_REGEX_LENGTH); a crafted pattern within that length can still trigger catastrophic backtracking (ReDoS) against the CLI process. Since this is purely a local CLI tool (not a server processing untrusted network input), actual exploitability is low, but it is a real gap worth closing: either validate/reject patterns with known catastrophic-backtracking shapes, apply a regex execution timeout, or document the risk explicitly if accepted as-is.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "security"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/list-filter.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260814-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-14T20:39:02.587Z",
+      "updatedAt": "2026-08-14T23:25:52.006Z",
+      "shippedRef": "v1.59.0 / PR #422",
+      "archivedAt": "2026-08-14T23:25:52.006Z",
+      "archiveReason": "shipped"
     }
   ]
 }
