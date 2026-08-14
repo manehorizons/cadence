@@ -15,7 +15,7 @@ A **customizable, AI-assisted development framework** that lets a user dial in h
 
 Inspired by GSD (Get Shit Done). Intended as a **faster, more efficient, more customizable** alternative to GSD — *not* a lighter one. The gates exist; the user picks which ones fire.
 
-**Current architecture (as of v1.57.0):** one core engine, reached through
+**Current architecture (as of v1.58.0):** one core engine, reached through
 three surface categories — the host-agnostic `cadence` **CLI**, **host
 adapters** (Claude Code and Codex, D5/D9) that wire the engine into a specific
 coding agent's lifecycle hooks, and the **MCP server** (`cadence mcp serve`,

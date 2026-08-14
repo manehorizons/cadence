@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.58.0] - 2026-08-13
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.58.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Added
+
+- `cadence doctor` gained a new check, `recommendation-archive-currency`, that warns when a recommendation in the active `recommendations[]` array carries a terminal `shipped`/`rejected` status without being moved into `archived[]` — the invariant phase 276 had to hand-backfill for 21 recommendations that predated phase 102/v1.24's auto-archive feature. `converted` and `settle-pending` are deliberately excluded from the flagged-status set: a converted recommendation's only schema-documented successor state is `settle-pending` (reached solely via the settle hook), not `archived`. Diverging from the two adjacent ledger-reading doctor checks (`recommendation-shipped-drift`, `orphaned-evidence`), a malformed/schema-invalid `recommendations.json` reports `indeterminate`, never a silent best-effort `ok`. `fixId` is always `null` — archiving is evidence-gated per record, not a safe blind auto-repair. (Phase `277`.)
+
+### Internal
+
+- Phase 276 archived 21 recommendations (20 shipped, 1 rejected) that already carried terminal status but predated auto-archive, entirely via the existing `cadence recommendation archive` CLI — zero new code. This closed out `HANDOFF-v1.58-ledger-truth.md`, an external audit whose central diagnosis (a missing recommendation-lifecycle terminal state) proved wrong on independent verification before any code was written; the corrected, much smaller replacement (`HANDOFF-archive-backfill-CORRECTED.md`, the auditor's own retraction) is what actually shipped. Both docs are preserved under `docs/handoffs/` as the narrative record, matching this repo's own convention of preserving rejected history. `rec-20260701-001` (status `converted`, no `shippedRef`) was excluded from the backfill and remains open for a future promotion once its shipping version is confirmed. Records `dec-20260814-001`: accept `archiveReason=manual` for the backfill cohort, identifiable by `archivedAt`, rather than add a new `--reason` CLI flag for a one-time migration. (Phase `276`.)
+- Filed `rec-20260813-006` (reset --hard tracked-file data-loss guard) to the intelligence ledger for future work; not yet implemented.
+
 ## [1.57.0] - 2026-08-13
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.57.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
