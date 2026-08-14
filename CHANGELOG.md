@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.59.0] - 2026-08-14
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.59.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Added
+
+- `cadence demo` — a fully non-interactive refuse-then-succeed walkthrough (a real DRAFT→BUILD→SETTLE loop against an assertion-mode gutted-but-green fixture, then the honest fix) that runs in an ephemeral sandbox and cleans up by default. `--keep` leaves the playground on disk, `--in-place` runs inside the current directory (refusing loudly instead of overwriting an existing `.cadence/` there), `--interactive`/`-i` opts into the tutorial's TTY-paced pauses. A bare `npx @thomas-powers-jr/cadence-core` or bare `cadence` invocation now dispatches straight into it. `cadence tutorial` keeps working unchanged, with one added stderr line pointing at `cadence demo`. A new progressive-disclosure onboarding-stage system (`~/.cadence/onboarding.json` or `$CADENCE_HOME/onboarding.json`, stages 0 First Contact through 3 Power User) hides `doctor` from `cadence help`/`cadence start` below stage 2, advanced to at least Driver by a successful `cadence demo` run; a new top-level `--advanced` flag forces the full surface at any stage, and every command stays directly invocable regardless of stage. (Phase `278`.)
+
+### Fixed
+
+- `--filter-regex` (on `recommendation list` / `decision list` / `assumption list`) now rejects patterns with nested quantifiers that can cause catastrophic backtracking (e.g. `(a+)+`) before compiling the operator-supplied pattern — closes a CodeQL `js/regex-injection` (ReDoS) finding on pre-existing phase-220 code, surfaced (not introduced) by phase 278's PR.
+
 ## [1.58.0] - 2026-08-13
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.58.0`. Per-package bumps managed by changesets, lockstep across all five published packages.

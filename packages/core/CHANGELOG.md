@@ -1,5 +1,18 @@
 # @thomas-powers-jr/cadence-core
 
+## 1.59.0
+
+### Minor Changes
+
+- 6e5a2d0: Added `cadence demo` — a fully non-interactive refuse-then-succeed walkthrough (a real DRAFT→BUILD→SETTLE loop against an assertion-mode gutted-but-green fixture, then the honest fix) that runs in an ephemeral sandbox and cleans up by default. `--keep` leaves the playground on disk, `--in-place` runs inside the current directory (refusing loudly instead of overwriting an existing `.cadence/` there), `--interactive`/`-i` opts into the tutorial's TTY-paced pauses. A bare `npx @thomas-powers-jr/cadence-core` or bare `cadence` invocation now dispatches straight into it. `cadence tutorial` keeps working unchanged, with one added stderr line pointing at `cadence demo`.
+
+  Added a minimal progressive-disclosure onboarding-stage system: a global `~/.cadence/onboarding.json` (or `$CADENCE_HOME/onboarding.json`) stage marker (0 First Contact, 1 Driver, 2 Operator, 3 Power User) that a successful `cadence demo` run advances to at least Driver. `cadence help` and `cadence start` now hide `doctor` below stage 2; a new top-level `--advanced` flag forces the full surface at any stage. Filtering is display-only — every command stays registered and directly invocable (`cadence doctor`, `cadence start --pick 6`) regardless of stage.
+
+### Patch Changes
+
+- dd6c3c5: `--filter-regex` (on `recommendation list` / `decision list` / `assumption list`) now rejects patterns with nested quantifiers that can cause catastrophic backtracking (e.g. `(a+)+`) before compiling the operator-supplied pattern, addressing a CodeQL `js/regex-injection` (ReDoS) finding on `packages/core/src/cli/list-filter.ts`.
+  - @thomas-powers-jr/cadence-types@1.59.0
+
 ## 1.58.0
 
 ### Minor Changes
