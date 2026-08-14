@@ -2028,6 +2028,13 @@
       "kind": "note",
       "summary": "CodeQL check-run 94887026674 on PR #421 (phase 278 branch), high-severity 'Regular expression injection' annotation at list-filter.ts:106, columns 26-42; confirmed via git diff that list-filter.ts is untouched by PR #421 -- pre-existing on main, unrelated to phase 278's scope.",
       "createdAt": "2026-08-14T20:39:02.587Z"
+    },
+    {
+      "id": "ev-20260814-004",
+      "recommendationId": "rec-20260811-006",
+      "kind": "note",
+      "summary": "Recurred twice more, cross-OS: (1) main's own edbd2fd0 CI run (31768449705, 2026-08-14, phase 277's release commit -- no relation to this test) timed out on macos-latest, same 20000ms ceiling, same test. (2) PR #421 (phase 278) hit it twice in a row on ubuntu-latest (runs 31837437300 job 94886752553 at 20255ms, and 31839191846 job 94892168370) -- first cross-OS confirmation beyond the macOS-only sighting in PR #397. Both PR #421 occurrences are on an unrelated diff (phase 278 doesn't touch this file or vitest.shared.ts); the recurrence on main's own commit independently rules out any diff-specific cause. Strengthens the case for the precedented darwin-style vitest.shared.ts timeout bump, now scoped to include linux too if the operator picks this up.",
+      "createdAt": "2026-08-14T20:57:42.249Z"
     }
   ]
 }
