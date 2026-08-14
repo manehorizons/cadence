@@ -1,5 +1,15 @@
 # @thomas-powers-jr/cadence-host-claude-code
 
+## 1.59.0
+
+### Patch Changes
+
+- Updated dependencies [6e5a2d0]
+- Updated dependencies [dd6c3c5]
+  - @thomas-powers-jr/cadence-core@1.59.0
+  - @thomas-powers-jr/cadence-types@1.59.0
+  - @thomas-powers-jr/cadence-host-toolkit@1.59.0
+
 ## 1.58.0
 
 ### Patch Changes
