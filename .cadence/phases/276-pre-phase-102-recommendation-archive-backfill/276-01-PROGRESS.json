@@ -1,0 +1,29 @@
+{
+  "draftId": "276-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "22 candidates verified against phase dir + SUMMARY.json. 21 clean (shippedRef/convertedToPhaseId present and consistent); rec-20260701-001 excluded (converted, no shippedRef despite phase 139 existing) — documented in As-built.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-14T01:51:35.750Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Archived 21 via cadence recommendation archive. CMD-1 post: 1 (rec-20260701-001 only). CMD-2 post: open 78 {medium:38,low:31,high:9} unchanged. archived[] 148->169.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-14T01:51:35.906Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Spot-checked rec-20260602-001, rec-20260607-005, rec-20260611-001: status/shippedRef/convertedToPhaseId byte-identical pre/post move.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-14T01:51:36.114Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Recorded dec-20260814-001: D-M option 3, accept archiveReason=manual, backfill cohort identifiable by archivedAt 2026-08-14.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-14T01:51:36.264Z"
+    }
+  }
+}
