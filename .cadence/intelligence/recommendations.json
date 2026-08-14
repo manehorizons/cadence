@@ -2339,6 +2339,34 @@
       "decisionIds": [],
       "createdAt": "2026-08-14T20:13:37.556Z",
       "updatedAt": "2026-08-14T20:13:37.556Z"
+    },
+    {
+      "id": "rec-20260814-003",
+      "title": "ReDoS / regex-injection risk in list-filter.ts's --filter-regex (recommendation/decision/assumption list)",
+      "summary": "GitHub Advanced Security / CodeQL flagged a high-severity 'Regular expression injection' at packages/core/src/cli/list-filter.ts:106 (new RegExp(opts.filterRegex, regexFlags)), surfaced on PR #421 (phase 278) even though that PR does not touch this file -- the alert is pre-existing on main, just newly detected/reported against this PR's scan. --filter-regex is user-supplied via the recommendation/decision/assumption list commands' CLI flags and passed straight into RegExp() with only a 200-char length cap (MAX_FILTER_REGEX_LENGTH); a crafted pattern within that length can still trigger catastrophic backtracking (ReDoS) against the CLI process. Since this is purely a local CLI tool (not a server processing untrusted network input), actual exploitability is low, but it is a real gap worth closing: either validate/reject patterns with known catastrophic-backtracking shapes, apply a regex execution timeout, or document the risk explicitly if accepted as-is.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "security"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/list-filter.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260814-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-14T20:39:02.587Z",
+      "updatedAt": "2026-08-14T20:39:02.587Z"
     }
   ],
   "archived": [

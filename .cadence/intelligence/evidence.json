@@ -2021,6 +2021,13 @@
       "kind": "note",
       "summary": "phase 278 build: verify coverage --explain AC-3/AC-4/AC-5/AC-6/AC-7/AC-9 all reported satisfied:true and Overall: SATISFIED throughout the whole build, yet the final cadence settle run --auto genuinely refused citing exactly those 6 AC ids as unsatisfied (assertion mode); root-caused to verify/coverage.ts:562's explainAcCoverage satisfied field lacking the per-(id,file) dedup that scanTestCoverage (verify/coverage.ts:126-157, consumed by gates/coverage.ts) applies. Fixed the phase's own test files by removing/rewording the leading narrative comments; the underlying scanner/explain discrepancy remains unfixed.",
       "createdAt": "2026-08-14T20:13:37.556Z"
+    },
+    {
+      "id": "ev-20260814-003",
+      "recommendationId": "rec-20260814-003",
+      "kind": "note",
+      "summary": "CodeQL check-run 94887026674 on PR #421 (phase 278 branch), high-severity 'Regular expression injection' annotation at list-filter.ts:106, columns 26-42; confirmed via git diff that list-filter.ts is untouched by PR #421 -- pre-existing on main, unrelated to phase 278's scope.",
+      "createdAt": "2026-08-14T20:39:02.587Z"
     }
   ]
 }

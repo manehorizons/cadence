@@ -1299,3 +1299,19 @@ HANDOFF-demo-progressive-disclosure.md (untracked, never converted) asked for a 
 - next: cadence milestone propose
 
 explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY occurrence in ANY file satisfies' -- no per-file dedup. scanTestCoverage() (the function the real gate at gates/coverage.ts actually consumes) keeps only the FIRST textual occurrence of an AC token per (id, file) (verify/coverage.ts:126-157) and aggregates from there. A leading narrative comment carrying the qualified token (e.g. '// 278-01/AC-3: this test proves...' placed above the real asserting it() block) consumes that file's dedup slot with a non-qualifying ref, so the real assertion below it is never recorded -- yet --explain still reports Overall: SATISFIED because it found the qualifying it() occurrence independently, without dedup. This misled every per-task independent review during phase 278's build (6 of 11 ACs showed --explain SATISFIED yet settle run --auto genuinely refused citing exactly those 6 as unsatisfied at the final settle step) until the discrepancy surfaced empirically. Root cause and fix are in the scanner itself (out of phase 278's boundaries to touch) -- either make --explain's satisfied field replicate the real per-file-dedup algorithm, or have scanTestCoverage prefer a qualifying occurrence over an earlier non-qualifying one within the same file when both exist.
+
+## rec-20260814-003 — ReDoS / regex-injection risk in list-filter.ts's --filter-regex (recommendation/decision/assumption list)
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, security
+- files: packages/core/src/cli/list-filter.ts
+- evidence: CodeQL check-run 94887026674 on PR #421 (phase 278 branch), high-severity 'Regular expression injection' annotation at list-filter.ts:106, columns 26-42; confirmed via git diff that list-filter.ts is untouched by PR #421 -- pre-existing on main, unrelated to phase 278's scope.
+- next: cadence milestone propose
+
+GitHub Advanced Security / CodeQL flagged a high-severity 'Regular expression injection' at packages/core/src/cli/list-filter.ts:106 (new RegExp(opts.filterRegex, regexFlags)), surfaced on PR #421 (phase 278) even though that PR does not touch this file -- the alert is pre-existing on main, just newly detected/reported against this PR's scan. --filter-regex is user-supplied via the recommendation/decision/assumption list commands' CLI flags and passed straight into RegExp() with only a 200-char length cap (MAX_FILTER_REGEX_LENGTH); a crafted pattern within that length can still trigger catastrophic backtracking (ReDoS) against the CLI process. Since this is purely a local CLI tool (not a server processing untrusted network input), actual exploitability is low, but it is a real gap worth closing: either validate/reject patterns with known catastrophic-backtracking shapes, apply a regex execution timeout, or document the risk explicitly if accepted as-is.

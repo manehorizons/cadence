@@ -163,22 +163,24 @@ describe('cadence demo', () => {
     process.stdin.isTTY = true;
 
     const io = bufferIO();
-    const start = Date.now();
+    const sleepCalls: number[] = [];
+    const fakeSleep = async (ms: number): Promise<void> => {
+      sleepCalls.push(ms);
+    };
     let res: Awaited<ReturnType<typeof runDemo>>;
     try {
-      res = await runDemo({}, io);
+      res = await runDemo({}, io, { sleep: fakeSleep });
     } finally {
       process.stdin.isTTY = originalIsTTY;
     }
-    const elapsed = Date.now() - start;
     // A regression to tutorial's default (TTY-auto-pause with no explicit
-    // opt-out) would add the full six-beat pause sum (800+800+1000+1800+1000
-    // = 5400ms). An unpaused run was observed at ~850ms in this suite; 4000ms
-    // leaves ample headroom above that baseline (this repo has scar tissue on
-    // Windows/CI timing flakes -- see CLAUDE.md's Windows Panic entry -- so
-    // the margin is deliberately generous) while still catching the
-    // regression this assertion exists to guard against.
-    expect(elapsed).toBeLessThan(4000);
+    // opt-out) would call the pause seam at every beat boundary. Asserting
+    // on the injected sleep spy -- the same seam AC-5's wiring-level test
+    // uses -- proves this deterministically; a wall-clock elapsed-time bound
+    // was tried here first and flaked on Windows CI (10.9s observed against
+    // a 4000ms ceiling) purely from real subprocess/spawn slowness, nothing
+    // to do with pausing.
+    expect(sleepCalls.length).toBe(0);
     const out = io.stdout();
     const err = io.stderr();
 
