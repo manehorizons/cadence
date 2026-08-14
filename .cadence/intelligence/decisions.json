@@ -521,6 +521,14 @@
       "status": "active",
       "decidedAt": "2026-08-13T02:37:04.165Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260814-001",
+      "title": "D-M: accept archiveReason=manual for the pre-phase-102 archive backfill",
+      "rationale": "The cadence recommendation archive CLI hardcodes archiveReason='manual' (recommendation.ts:514); it does not distinguish a genuine ad-hoc manual archive from a bulk backfill. Chose option 3 from HANDOFF-archive-backfill-CORRECTED.md $3 (D-M): accept 'manual' rather than add a --reason flag. Rationale: status still carries the substantive truth (shipped/rejected) for every backfilled record, and the 21 records archived in phase 276 on 2026-08-14 are identifiable as the pre-phase-102 backfill cohort by their archivedAt timestamp (2026-08-14T01:50:3*Z) without adding any new CLI surface for a one-time migration. Option 2 (a --reason flag) was rejected as unwarranted surface area for a single backfill event, consistent with this repo's zero-runtime-dependency/minimal-surface bias.",
+      "status": "active",
+      "decidedAt": "2026-08-14T01:51:04.168Z",
+      "supersedes": []
     }
   ]
 }

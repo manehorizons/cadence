@@ -1,0 +1,42 @@
+{
+  "bypasses": [
+    {
+      "gate": "test-coverage",
+      "flag": "--allow-missing-coverage",
+      "reason": "test-coverage gate bypassed via --allow-missing-coverage",
+      "severity": "warn"
+    },
+    {
+      "gate": "evidence-floor:AC-1",
+      "flag": "--evidence-floor-bypass",
+      "reason": "Ledger-only phase, no source code; evidence is direct CLI/script verification of live .cadence/intelligence/recommendations.json against phase dirs, recorded in T1's task notes and the DRAFT's As-built section",
+      "severity": "warn"
+    },
+    {
+      "gate": "evidence-floor:AC-2",
+      "flag": "--evidence-floor-bypass",
+      "reason": "Same — CMD-1/CMD-2 re-run output recorded in T2's task notes shows the exact counts",
+      "severity": "warn"
+    },
+    {
+      "gate": "evidence-floor:AC-3",
+      "flag": "--evidence-floor-bypass",
+      "reason": "Same — byte-identical field comparison recorded in T3's task notes",
+      "severity": "warn"
+    },
+    {
+      "gate": "evidence-floor:AC-4",
+      "flag": "--evidence-floor-bypass",
+      "reason": "Same — CMD-2 output recorded in T2's task notes",
+      "severity": "warn"
+    },
+    {
+      "gate": "evidence-floor:AC-5",
+      "flag": "--evidence-floor-bypass",
+      "reason": "Same — cadence decision show dec-20260814-001 output recorded in T4's task notes",
+      "severity": "warn"
+    }
+  ],
+  "roughTasks": [],
+  "findings": {}
+}
