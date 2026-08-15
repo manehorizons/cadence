@@ -1,5 +1,18 @@
 # @thomas-powers-jr/cadence-core
 
+## 1.60.0
+
+### Minor Changes
+
+- 3d99185: Makes the dispatch contract enforceable at record time, closing the 2026-07-18 deja incident's three recommendations. A new optional `stop:` DRAFT task field renders as a `**Stop condition:**` packet line, and `cadence draft check` warns (never blocks) when a task declares `files:` with no `stop:`. `cadence build task <id> --status=DONE` now runs a boundary + redundancy check at record time from real git diffs rather than agent self-report: a stray file outside the task's declared `files:` refuses the recording (exit 1, no mutation) once `boundaryEnforcement` resolves to `block`, unless `--allow-boundary-breach` is passed (records anyway, emits an error-severity anomaly). Independent of that config field, one task recorded with `--execution dispatch` escalates boundary enforcement to `block` for the rest of the phase and never de-escalates. `--isolation` and `--model-class` round out the new recording flags; all three carry through to `SUMMARY.json` on settle when present. Fully additive: no `schemaVersion` bump, no `.default()` on any new field, and the existing settle-time `boundary-scan` gate is unchanged.
+- 06d8790: `cadence dispatch plan` now computes an advisory execution verdict per task — `{ execution: 'inline'|'dispatch', modelClass, model, reasons[] }` — giving `config.subagentPolicy` and `config.modelPerClass` their first consumer. A new optional `class:` DRAFT task field (`TaskZ.class`) lets an operator declare a task's execution class; a pure heuristic cross-checks it and a mismatch surfaces as a `cadence draft check` coherence warning. `--json` output gains the new per-task fields plus a top-level `signals.contextUtilization` (always `null` for now — no real context-utilization signal is wired in yet). The rendered dispatch packet gains an `**Execution:**` line (and a `**Model:**` line when dispatched). Fully additive: no `schemaVersion` bump, no change to existing fields, and `dispatch plan` remains read-only/advisory only — it does not spawn, schedule, or supervise agents.
+
+### Patch Changes
+
+- Updated dependencies [3d99185]
+- Updated dependencies [06d8790]
+  - @thomas-powers-jr/cadence-types@1.60.0
+
 ## 1.59.0
 
 ### Minor Changes

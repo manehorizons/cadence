@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.60.0] - 2026-08-15
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.60.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Added
+
+- `cadence dispatch plan` now computes an advisory execution verdict per task — `{ execution: 'inline'|'dispatch', modelClass, model, reasons[] }` — giving `config.subagentPolicy` and `config.modelPerClass` their first consumer. A new optional `class:` DRAFT task field (`TaskZ.class`) lets an operator declare a task's execution class; a pure heuristic cross-checks it and a mismatch surfaces as a `cadence draft check` coherence warning. `--json` output gains the new per-task fields plus a top-level `signals.contextUtilization` (always `null` for now — no real context-utilization signal is wired in yet). The rendered dispatch packet gains an `**Execution:**` line (and a `**Model:**` line when dispatched). Read-only/advisory only — it does not spawn, schedule, or supervise agents. (Phase `279`.)
+- Makes the dispatch contract enforceable at record time, closing the 2026-07-18 deja incident's three recommendations (`rec-20260718-003/004/005`). A new optional `stop:` DRAFT task field renders as a `**Stop condition:**` packet line, and `cadence draft check` warns (never blocks) when a task declares `files:` with no `stop:`. `cadence build task <id> --status=DONE` now runs a boundary + redundancy check at record time from real git diffs rather than agent self-report: a stray file outside the task's declared `files:` refuses the recording (exit 1, no mutation) once `boundaryEnforcement` resolves to `block`, unless `--allow-boundary-breach` is passed (records anyway, emits an error-severity anomaly). One task recorded with `--execution dispatch` escalates boundary enforcement to `block` for the rest of the phase and never de-escalates. `--isolation` and `--model-class` round out the new recording flags; all three carry through to `SUMMARY.json` on settle when present. (Phase `280`.)
+
+### Fixed
+
+- 11 open Dependabot alerts remediated in `website/` (docs site, not a published package).
+
+### Changed
+
+- Routine dependency bumps: `@anthropic-ai/sdk` 0.115.0 → 0.116.0, `eslint` 10.8.0 → 10.8.1, `turbo` 2.10.8 → 2.10.9, `tsx` 4.23.11 → 4.23.12, `@typescript-eslint/parser` 8.66.0 → 8.67.0, `github/codeql-action` 4.37.3 → 4.37.6.
+
 ## [1.59.0] - 2026-08-14
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.59.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
