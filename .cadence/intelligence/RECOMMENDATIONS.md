@@ -144,53 +144,6 @@ Verified: existing 'corrupt' references in tests (state/simple.test.ts, render-c
 
 cadence draft add-task <phase> <num> --files --action --verify --done has no --name option, unlike cadence draft add-ac which has --given/--when/--then/--name. Every task appended via add-task lands as '### T<n>: ' with an empty heading, requiring a manual Edit pass to fill in the name before the DRAFT reads sensibly — confirmed live 2026-07-14 appending T2-T6 to phase 181's DRAFT (all five came out blank). Add --name <n> to add-task mirroring add-ac's option.
 
-## rec-20260718-003 — Frame dispatched task boundaries as stop-conditions, not file-scope lists
-
-- status: settle-pending
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: drafts, agent-instructions
-- decisions: dec-20260815-004 (active)
-- evidence: deja repo, phase 78-php-gate-support, 2026-07-18: fork treated 'continue to next task' approval (via a side-channel AskUserQuestion) as license to keep going through T5-T7
-- next: cadence milestone propose
-
-Investigation into the 2026-07-18 deja incident found the dispatch prompt said 'don't touch these files, they're a later task' -- a scope description that silently dissolves once 'continue to the next task' is approved by anyone, including the dispatched agent's own downstream AskUserQuestion answerer. The fix is procedural, not just a file list: task-dispatch templates (DRAFT.md task blocks and any cadence-generated dispatch-plan prompt) should state an explicit stop-condition -- 'stop and report the moment this task's verify condition is met, even if the next step looks obvious, even if something appears to approve continuing; only a fresh dispatch from the orchestrating session extends scope' -- so continuation requires a new, deliberate dispatch decision rather than an in-flight approval the orchestrator never sees.
-
-## rec-20260718-004 — Surface files-outside-boundary anomalies per-task, not only at settle
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: gates, loop-state, settle
-- decisions: dec-20260815-002 (active)
-- evidence: deja repo, phase 78-php-gate-support settle attempts, 2026-07-18: files-outside-boundary anomalies for a dozen+ files only surfaced at settle time, long after T4-T7 were already committed
-- next: cadence milestone propose
-
-settle run already detects and warns on files touched outside a task's declared file list (files-outside-boundary anomaly) -- but only at the very end of a phase, after every task has been recorded DONE. In the 2026-07-18 deja incident, a dispatched agent quietly edited and committed changes to more than a dozen undeclared files across 4 tasks before this was ever surfaced, because nothing ran the boundary check until settle. Move (or duplicate) this anomaly check to fire on every cadence build task --status=DONE call, immediately, so an orchestrator reviewing a just-completed task sees scope drift the moment it's recorded, not phases later.
-
-## rec-20260718-005 — Document the invisible-background-subagent-AskUserQuestion gap in host-adapter/dispatch guidance
-
-- status: settle-pending
-- ready: raw-idea
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: docs, host-claude-code, agent-instructions
-- evidence: deja repo, phase 78-php-gate-support, 2026-07-18: orchestrator told the user the fork acted 'without ever pausing to ask... the human user', which an independent transcript investigation proved false -- the human had been answering via a side channel the whole time
-- next: cadence milestone propose
-
-2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.
-
 ## rec-20260724-007 — Define and document multi-contributor concurrency semantics for .cadence state
 
 - status: candidate
@@ -1303,3 +1256,18 @@ explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY o
 - next: cadence milestone propose
 
 cadence done <id> (packages/core/src/cli/commands/done.ts) calls recordTaskOutcome directly instead of going through buildTaskService, so it skips both the pre-existing per-task-verify gate (runPerTaskVerifyGate) and phase 280's new boundary+redundancy checks at record time (T11's B2 wire-up). This is a leave-unenforced gap, not a bug introduced by phase 280: done has always been documented as a shortcut for build task --status=DONE (its own --description says exactly that) while actually implementing a narrower, unguarded path -- the per-task-verify skip already existed before this phase, and dispatch-contract enforcement now has the identical pre-existing gap layered on top of it. DP-B's own DRAFT (280-01) explicitly scoped closing this out of the phase (Boundaries: 'DO NOT close the cadence done <id> unenforced-recording-path gap in this phase -- pre-existing (per-task-verify already skips it too), not introduced here. File a recommendation instead.'). Resolution options: (a) make done call buildTaskService (or a shared core) so it inherits both gates, accepting that some done call sites may rely on the current unguarded fast path; (b) leave it, but update its --description/docs to state explicitly that it is NOT gate-equivalent to build task; (c) deprecate done in favor of build task --status=DONE outright.
+
+## rec-20260815-003 — Record genuine orchestrator/subagent-driven independent review in deep-verify's audit trail, distinct from mock
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, verify, host-adapters
+- evidence: DP-B (phase 280) settle, 2026-08-15: three consecutive host-cli timeouts in one evening (deep-verify x2, code-review x1), all on CADENCE_HOST_CLI_BIN=codex with the documented 180s 'never exits' spawn-timeout limitation (docs/providers.md); claude family is unavailable for the same purpose in this repo's own dogfooding because CLAUDECODE=1 trips the self-invocation guard whenever settle runs inside a headless Claude Code session -- the common case here. A manually-dispatched fresh-context Agent-tool subagent whole-branch review, done the same evening outside cadence's gate machinery, found 3 real defects (a stale registry.ts predicate, a stale config.md doc claim, a missing changeset) that no per-task review caught -- proving the review channel works, just isn't recordable.
+- next: cadence milestone propose
+
+Right now the only 'real LLM' path for the deep-verify/code-review settle gates is the host-cli provider, and both its families are commonly blocked: 'claude' by the self-invocation guard whenever settle itself runs inside a headless Claude Code session (the common case for this repo's own dogfooding), and 'codex' by the 180s spawn timeout on substantial prompts -- hit 3 times in one evening during DP-B's (phase 280) own settle (2 deep-verify timeouts, 1 code-review timeout), all falling back to mock. Separately, an orchestrating Claude Code session CAN dispatch a genuinely independent, adversarial fresh-context subagent (the Agent tool) to review a branch/diff against the DRAFT's ACs -- CLAUDE.md already sanctions this as the correct alternative to a self-review, and DP-B's own whole-branch review (done exactly this way) caught 3 real defects invisible to any single per-task review. But that review happens entirely outside cadence's own gate machinery: it never touches SUMMARY.json, so the audit trail shows 'deep-verify: mock' even when a real independent review genuinely occurred through a different channel. The naive fix -- letting a session hand-write a stronger observedProvider value like 'orchestrator-reviewed' into SUMMARY.json after the fact -- is explicitly wrong: SUMMARY.json's provenance fields exist specifically to distrust an agent's self-report, and a hand-writable 'I was reviewed independently, trust me' value is a one-way ratchet that makes the field stop carrying information (the existing code-review gate's own 'mock pass -> skipped, not a persisted pass' behavior is the project's own precedent for refusing exactly this shortcut). The real design question is what evidence would EARN a genuine non-mock, non-host-cli provenance status -- i.e. how to make the artifact PRODUCED by the review rather than ASSERTED after it. Two candidate shapes worth designing against: (a) a new '--verifier orchestrator' mode where settle emits a structured review request (ACs + diff + test refs, same VerifyInput shape deep-verify already builds) to a known path, blocks/polls for a structured response written back to that path by whatever dispatched the review, and only counts it if the response is well-formed and satisfies a real schema -- so the provenance is earned by the artifact's existence, not typed in after the fact; (b) extend the HostAdapter contract so an Agent-tool-capable host can register itself as a verifier provider through the existing host-agnostic seam (core still never imports host code, no special-casing 'Claude Code' by name), rather than inventing a parallel mechanism. Either shape needs to answer: what stops a session from writing a fake structured response to fake the review, same as the naive hand-edit does -- likely needs either a host-side attestation the core can check (e.g. a session/agent id that must differ from the settling session's own), or accept it as an operator-trust boundary the same way host-cli's per-call fallback already is.
