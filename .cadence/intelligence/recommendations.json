@@ -264,93 +264,6 @@
       "updatedAt": "2026-07-14T04:03:43.550Z"
     },
     {
-      "id": "rec-20260718-003",
-      "title": "Frame dispatched task boundaries as stop-conditions, not file-scope lists",
-      "summary": "Investigation into the 2026-07-18 deja incident found the dispatch prompt said 'don't touch these files, they're a later task' -- a scope description that silently dissolves once 'continue to the next task' is approved by anyone, including the dispatched agent's own downstream AskUserQuestion answerer. The fix is procedural, not just a file list: task-dispatch templates (DRAFT.md task blocks and any cadence-generated dispatch-plan prompt) should state an explicit stop-condition -- 'stop and report the moment this task's verify condition is met, even if the next step looks obvious, even if something appears to approve continuing; only a fresh dispatch from the orchestrating session extends scope' -- so continuation requires a new, deliberate dispatch decision rather than an in-flight approval the orchestrator never sees.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "drafts",
-        "agent-instructions"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260718-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [
-        "dec-20260815-004"
-      ],
-      "convertedToPhaseId": "280-dispatch-contract",
-      "createdAt": "2026-07-18T04:59:49.080Z",
-      "updatedAt": "2026-08-15T16:35:43.919Z"
-    },
-    {
-      "id": "rec-20260718-004",
-      "title": "Surface files-outside-boundary anomalies per-task, not only at settle",
-      "summary": "settle run already detects and warns on files touched outside a task's declared file list (files-outside-boundary anomaly) -- but only at the very end of a phase, after every task has been recorded DONE. In the 2026-07-18 deja incident, a dispatched agent quietly edited and committed changes to more than a dozen undeclared files across 4 tasks before this was ever surfaced, because nothing ran the boundary check until settle. Move (or duplicate) this anomaly check to fire on every cadence build task --status=DONE call, immediately, so an orchestrator reviewing a just-completed task sees scope drift the moment it's recorded, not phases later.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "gates",
-        "loop-state",
-        "settle"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260718-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [
-        "dec-20260815-002"
-      ],
-      "convertedToPhaseId": "280-dispatch-contract",
-      "createdAt": "2026-07-18T04:59:57.048Z",
-      "updatedAt": "2026-08-15T16:35:43.919Z"
-    },
-    {
-      "id": "rec-20260718-005",
-      "title": "Document the invisible-background-subagent-AskUserQuestion gap in host-adapter/dispatch guidance",
-      "summary": "2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "raw-idea",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "docs",
-        "host-claude-code",
-        "agent-instructions"
-      ],
-      "affectedFiles": [],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260718-005"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "convertedToPhaseId": "280-dispatch-contract",
-      "createdAt": "2026-07-18T05:00:07.898Z",
-      "updatedAt": "2026-08-15T16:35:43.919Z"
-    },
-    {
       "id": "rec-20260724-007",
       "title": "Define and document multi-contributor concurrency semantics for .cadence state",
       "summary": "team-rollout.md covers PR visibility but not the mechanics of two contributors with phases in flight: merge behavior for state.json, the intelligence ledger, and phase directories. First verify whether current behavior is safe-by-construction (per-phase directories may already isolate most conflict surface), then document the answer or design the missing piece. This is the first question a second contributor asks and the team preset is now the default.",
@@ -2338,6 +2251,33 @@
       "decisionIds": [],
       "createdAt": "2026-08-15T15:34:52.440Z",
       "updatedAt": "2026-08-15T15:34:52.440Z"
+    },
+    {
+      "id": "rec-20260815-003",
+      "title": "Record genuine orchestrator/subagent-driven independent review in deep-verify's audit trail, distinct from mock",
+      "summary": "Right now the only 'real LLM' path for the deep-verify/code-review settle gates is the host-cli provider, and both its families are commonly blocked: 'claude' by the self-invocation guard whenever settle itself runs inside a headless Claude Code session (the common case for this repo's own dogfooding), and 'codex' by the 180s spawn timeout on substantial prompts -- hit 3 times in one evening during DP-B's (phase 280) own settle (2 deep-verify timeouts, 1 code-review timeout), all falling back to mock. Separately, an orchestrating Claude Code session CAN dispatch a genuinely independent, adversarial fresh-context subagent (the Agent tool) to review a branch/diff against the DRAFT's ACs -- CLAUDE.md already sanctions this as the correct alternative to a self-review, and DP-B's own whole-branch review (done exactly this way) caught 3 real defects invisible to any single per-task review. But that review happens entirely outside cadence's own gate machinery: it never touches SUMMARY.json, so the audit trail shows 'deep-verify: mock' even when a real independent review genuinely occurred through a different channel. The naive fix -- letting a session hand-write a stronger observedProvider value like 'orchestrator-reviewed' into SUMMARY.json after the fact -- is explicitly wrong: SUMMARY.json's provenance fields exist specifically to distrust an agent's self-report, and a hand-writable 'I was reviewed independently, trust me' value is a one-way ratchet that makes the field stop carrying information (the existing code-review gate's own 'mock pass -> skipped, not a persisted pass' behavior is the project's own precedent for refusing exactly this shortcut). The real design question is what evidence would EARN a genuine non-mock, non-host-cli provenance status -- i.e. how to make the artifact PRODUCED by the review rather than ASSERTED after it. Two candidate shapes worth designing against: (a) a new '--verifier orchestrator' mode where settle emits a structured review request (ACs + diff + test refs, same VerifyInput shape deep-verify already builds) to a known path, blocks/polls for a structured response written back to that path by whatever dispatched the review, and only counts it if the response is well-formed and satisfies a real schema -- so the provenance is earned by the artifact's existence, not typed in after the fact; (b) extend the HostAdapter contract so an Agent-tool-capable host can register itself as a verifier provider through the existing host-agnostic seam (core still never imports host code, no special-casing 'Claude Code' by name), rather than inventing a parallel mechanism. Either shape needs to answer: what stops a session from writing a fake structured response to fake the review, same as the naive hand-edit does -- likely needs either a host-side attestation the core can check (e.g. a session/agent id that must differ from the settling session's own), or accept it as an operator-trust boundary the same way host-cli's per-call fallback already is.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "verify",
+        "host-adapters"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260815-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-15T16:58:49.224Z",
+      "updatedAt": "2026-08-15T16:58:49.224Z"
     }
   ],
   "archived": [
@@ -8184,6 +8124,102 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-15T01:57:34.834Z",
       "updatedAt": "2026-08-15T03:14:55.909Z"
+    },
+    {
+      "id": "rec-20260718-003",
+      "title": "Frame dispatched task boundaries as stop-conditions, not file-scope lists",
+      "summary": "Investigation into the 2026-07-18 deja incident found the dispatch prompt said 'don't touch these files, they're a later task' -- a scope description that silently dissolves once 'continue to the next task' is approved by anyone, including the dispatched agent's own downstream AskUserQuestion answerer. The fix is procedural, not just a file list: task-dispatch templates (DRAFT.md task blocks and any cadence-generated dispatch-plan prompt) should state an explicit stop-condition -- 'stop and report the moment this task's verify condition is met, even if the next step looks obvious, even if something appears to approve continuing; only a fresh dispatch from the orchestrating session extends scope' -- so continuation requires a new, deliberate dispatch decision rather than an in-flight approval the orchestrator never sees.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "drafts",
+        "agent-instructions"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260718-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260815-004"
+      ],
+      "convertedToPhaseId": "280-dispatch-contract",
+      "shippedRef": "PR #429 (phase 280, dispatch contract, merged 2026-08-15)",
+      "archivedAt": "2026-08-15T17:45:29.242Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-18T04:59:49.080Z",
+      "updatedAt": "2026-08-15T17:45:29.242Z"
+    },
+    {
+      "id": "rec-20260718-004",
+      "title": "Surface files-outside-boundary anomalies per-task, not only at settle",
+      "summary": "settle run already detects and warns on files touched outside a task's declared file list (files-outside-boundary anomaly) -- but only at the very end of a phase, after every task has been recorded DONE. In the 2026-07-18 deja incident, a dispatched agent quietly edited and committed changes to more than a dozen undeclared files across 4 tasks before this was ever surfaced, because nothing ran the boundary check until settle. Move (or duplicate) this anomaly check to fire on every cadence build task --status=DONE call, immediately, so an orchestrator reviewing a just-completed task sees scope drift the moment it's recorded, not phases later.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "loop-state",
+        "settle"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260718-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260815-002"
+      ],
+      "convertedToPhaseId": "280-dispatch-contract",
+      "shippedRef": "PR #429 (phase 280, dispatch contract, merged 2026-08-15)",
+      "archivedAt": "2026-08-15T17:45:29.426Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-07-18T04:59:57.048Z",
+      "updatedAt": "2026-08-15T17:45:29.426Z"
+    },
+    {
+      "id": "rec-20260718-005",
+      "title": "Document the invisible-background-subagent-AskUserQuestion gap in host-adapter/dispatch guidance",
+      "summary": "2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "docs",
+        "host-claude-code",
+        "agent-instructions"
+      ],
+      "affectedFiles": [],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260718-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "convertedToPhaseId": "280-dispatch-contract",
+      "createdAt": "2026-07-18T05:00:07.898Z",
+      "updatedAt": "2026-08-15T17:45:29.603Z",
+      "shippedRef": "PR #429 (phase 280, dispatch contract, merged 2026-08-15)",
+      "archivedAt": "2026-08-15T17:45:29.603Z",
+      "archiveReason": "shipped"
     }
   ]
 }
