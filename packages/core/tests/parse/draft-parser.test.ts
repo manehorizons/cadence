@@ -376,6 +376,66 @@ Then widget emits photons
   });
 });
 
+describe('task stop: line', () => {
+  const DRAFT_WITH_STOP = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+Make widget glow.
+
+## Acceptance Criteria
+
+### AC-1: Glows
+Given widget exists
+When user enables glow mode
+Then widget emits photons
+
+## Tasks
+
+### T1: Add glow flag
+- files: \`src/widget.ts\`
+- action: add boolean glow prop
+- verify: vitest passes
+- done: AC-1
+
+### T2: Wire glow flag into UI
+- files: \`src/ui.ts\`
+- action: read the glow prop
+- verify: vitest passes
+- stop: If more than one file changes outside src/ui.ts, halt and ask a human
+- done: AC-1
+
+## Boundaries
+
+- Do not change \`src/legacy.ts\`
+`;
+
+  it('parses a declared stop value onto the task', () => {
+    const d = parseDraftMd(DRAFT_WITH_STOP);
+    expect(d.tasks[1]?.id).toBe('T2');
+    expect(d.tasks[1]?.stop).toBe(
+      'If more than one file changes outside src/ui.ts, halt and ask a human',
+    );
+  });
+
+  it('omits stop when the line is absent', () => {
+    const d = parseDraftMd(DRAFT_WITH_STOP);
+    expect(d.tasks[0]?.stop).toBeUndefined();
+  });
+
+  // No "invalid value" case here, unlike `class:` above: `stop` is a plain
+  // `z.string().optional()` (packages/types/src/plan.ts), not an enum, so
+  // there is no invalid-literal shape for the parser or schema to reject —
+  // any non-empty trimmed string is a valid stop condition.
+});
+
 describe('redundantWorkEnforcement frontmatter', () => {
   it('parses redundantWorkEnforcement when present', () => {
     const raw = `---\nphase: 01-foundation\nid: 01-01\ntier: standard\nredundantWorkEnforcement: block\nstatus: PENDING\n---\n\n# 01-01 — Demo\n\n## Objective\n\nDemo.\n\n## Acceptance Criteria\n\n### AC-1: Demo\nGiven a\nWhen b\nThen c\n\n## Tasks\n\n## Boundaries\n\n- _(none)_\n`;

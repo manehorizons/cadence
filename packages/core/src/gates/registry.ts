@@ -98,7 +98,20 @@ export interface RunGatesResult {
 const SELF_GUARD_PREDICATES: Partial<Record<SettleGate, (ctx: SettleContext) => boolean>> = {
   'deep-verify': isDeepVerifyRequested,
   'interactive-verdict': isInteractiveRequested,
-  'boundary-scan': (ctx) => effectiveBoundaryEnforcement(ctx.config, ctx.draft) === 'block',
+  'boundary-scan': (ctx) => {
+    // Phase 280 (280-01, T10): mirror boundary-scan.ts's own anyTaskDispatched
+    // derivation. Without this, a phase that only reaches block mode via the
+    // dispatch-scoped escalation (warn config + a recorded execution:'dispatch'
+    // task) reports this gate as skipped ("boundaryEnforcement is not
+    // "block"") even though it genuinely ran in block mode -- a false
+    // gate-provenance entry in SUMMARY.json. Best-effort: ctx.progress is
+    // required by SettleContext's type, but tolerate its absence (never
+    // throw) rather than assume every caller populates it.
+    const anyTaskDispatched = ctx.progress
+      ? Object.values(ctx.progress.tasks).some((t) => t.execution === 'dispatch')
+      : false;
+    return effectiveBoundaryEnforcement(ctx.config, ctx.draft, { anyTaskDispatched }) === 'block';
+  },
 };
 
 /**

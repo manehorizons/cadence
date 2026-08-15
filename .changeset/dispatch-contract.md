@@ -1,0 +1,6 @@
+---
+"@thomas-powers-jr/cadence-core": minor
+"@thomas-powers-jr/cadence-types": minor
+---
+
+Makes the dispatch contract enforceable at record time, closing the 2026-07-18 deja incident's three recommendations. A new optional `stop:` DRAFT task field renders as a `**Stop condition:**` packet line, and `cadence draft check` warns (never blocks) when a task declares `files:` with no `stop:`. `cadence build task <id> --status=DONE` now runs a boundary + redundancy check at record time from real git diffs rather than agent self-report: a stray file outside the task's declared `files:` refuses the recording (exit 1, no mutation) once `boundaryEnforcement` resolves to `block`, unless `--allow-boundary-breach` is passed (records anyway, emits an error-severity anomaly). Independent of that config field, one task recorded with `--execution dispatch` escalates boundary enforcement to `block` for the rest of the phase and never de-escalates. `--isolation` and `--model-class` round out the new recording flags; all three carry through to `SUMMARY.json` on settle when present. Fully additive: no `schemaVersion` bump, no `.default()` on any new field, and the existing settle-time `boundary-scan` gate is unchanged.

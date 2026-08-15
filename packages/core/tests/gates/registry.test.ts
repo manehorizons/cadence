@@ -403,6 +403,43 @@ describe('runSettleGates gate provenance (AC-1, phase 140)', () => {
     });
     expect(gates).toEqual([{ gate: 'boundary-scan', status: 'ran' }]);
   });
+
+  // Phase 280 (280-01, T10 whole-branch-review fix): the self-guard predicate
+  // must mirror boundary-scan.ts's own anyTaskDispatched escalation, or a
+  // phase that only reaches block mode via a recorded execution:'dispatch'
+  // task (config/draft both still 'warn') gets a false "skipped" provenance
+  // entry even though the gate genuinely ran in block mode.
+  it('records boundary-scan as ran under the dispatch-scoped escalation, even with boundaryEnforcement:"warn"', async () => {
+    const ctx = {
+      gateSet: { gates: [] },
+      opts: {},
+      config: { boundaryEnforcement: 'warn' },
+      draft: { tasks: [] },
+      progress: { draftId: '280-01', tasks: { T1: { status: 'DONE', execution: 'dispatch' } } },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([]),
+      order: ['boundary-scan'],
+    });
+    expect(gates).toEqual([{ gate: 'boundary-scan', status: 'ran' }]);
+  });
+
+  it('records boundary-scan as skipped when boundaryEnforcement:"warn" and no task carries execution:"dispatch"', async () => {
+    const ctx = {
+      gateSet: { gates: [] },
+      opts: {},
+      config: { boundaryEnforcement: 'warn' },
+      draft: { tasks: [] },
+      progress: { draftId: '280-01', tasks: { T1: { status: 'DONE' } } },
+    } as unknown as SettleContext;
+    const { gates } = await runSettleGates(ctx, {
+      registry: recordingRegistry([]),
+      order: ['boundary-scan'],
+    });
+    expect(gates).toEqual([
+      { gate: 'boundary-scan', status: 'skipped', skipReason: 'boundaryEnforcement is not "block"' },
+    ]);
+  });
 });
 
 describe('runSettleGates verifier-identity provenance merge (Phase 232, AC-1, AC-2, AC-5)', () => {

@@ -65,6 +65,7 @@ function parseTasks(section: string): Draft['tasks'] {
       ? dependsLine.split(',').map((s) => s.trim()).filter((s) => s.length > 0)
       : undefined;
     const classLine = /-\s*class:\s*(.+)/.exec(block)?.[1]?.trim();
+    const stop = /-\s*stop:\s*(.+)/.exec(block)?.[1]?.trim();
     out.push({
       id,
       name,
@@ -74,6 +75,7 @@ function parseTasks(section: string): Draft['tasks'] {
       done,
       ...(depends ? { depends } : {}),
       ...(classLine ? { class: classLine as Task['class'] } : {}),
+      ...(stop ? { stop } : {}),
     });
   }
   return out;

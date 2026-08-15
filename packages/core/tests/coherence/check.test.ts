@@ -11,7 +11,17 @@ const baseDraft = {
   objective: 'do thing',
   acceptanceCriteria: [{ id: 'AC-1', given: 'x', when: 'y', then: 'z' }],
   tasks: [
-    { id: 'T1', name: 'edit foo', files: ['src/foo.ts'], action: 'change x', verify: 'tests pass', done: 'AC-1' },
+    {
+      id: 'T1',
+      name: 'edit foo',
+      files: ['src/foo.ts'],
+      action: 'change x',
+      verify: 'tests pass',
+      // Present so unrelated tests using baseDraft as-is aren't polluted by
+      // the AC-7 STOP_CONDITION_MISSING warning below.
+      stop: 'halt if the change breaks downstream callers',
+      done: 'AC-1',
+    },
   ],
   boundaries: [],
   status: 'PENDING' as const,
@@ -98,5 +108,65 @@ describe('coherenceCheck', () => {
     };
     const result = coherenceCheck(draft, emptyState(), 'PROJECT body');
     expect(result.issues.filter((i) => i.code === 'CLASS_MISMATCH')).toHaveLength(0);
+  });
+
+  it('280-01/AC-7: warns STOP_CONDITION_MISSING (warn severity) when a task declares files: and no stop:', () => {
+    const draft = {
+      ...baseDraft,
+      tasks: [
+        {
+          id: 'T1',
+          name: 'risky task',
+          files: ['src/risky.ts'],
+          action: 'do a risky thing',
+          verify: 'tests pass',
+          done: 'AC-1',
+          // deliberately no `stop:`
+        },
+      ],
+    };
+    const result = coherenceCheck(draft, emptyState(), 'PROJECT body');
+    const stopIssues = result.issues.filter((i) => i.code === 'STOP_CONDITION_MISSING');
+    expect(stopIssues).toHaveLength(1);
+    expect(stopIssues[0]?.severity).toBe('warn');
+    expect(stopIssues[0]?.message).toContain('T1');
+  });
+
+  it('280-01/AC-7: does not warn STOP_CONDITION_MISSING when the task declares files: and a stop:', () => {
+    const draft = {
+      ...baseDraft,
+      tasks: [
+        {
+          id: 'T1',
+          name: 'risky task',
+          files: ['src/risky.ts'],
+          action: 'do a risky thing',
+          verify: 'tests pass',
+          done: 'AC-1',
+          stop: 'halt if more than 3 tables are touched',
+        },
+      ],
+    };
+    const result = coherenceCheck(draft, emptyState(), 'PROJECT body');
+    expect(result.issues.filter((i) => i.code === 'STOP_CONDITION_MISSING')).toHaveLength(0);
+  });
+
+  it('280-01/AC-7: does not warn STOP_CONDITION_MISSING for a task with no files:, regardless of stop:', () => {
+    const draft = {
+      ...baseDraft,
+      tasks: [
+        {
+          id: 'T1',
+          name: 'process task',
+          files: [],
+          action: 'do a process thing',
+          verify: 'tests pass',
+          done: 'AC-1',
+          // no stop:, but also no files: -- must not warn
+        },
+      ],
+    };
+    const result = coherenceCheck(draft, emptyState(), 'PROJECT body');
+    expect(result.issues.filter((i) => i.code === 'STOP_CONDITION_MISSING')).toHaveLength(0);
   });
 });

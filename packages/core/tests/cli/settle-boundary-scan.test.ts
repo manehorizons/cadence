@@ -118,7 +118,13 @@ async function driveToRefusal(root: string): Promise<void> {
   await writeFile(join(root, 'src', 'app.ts'), 'export const x = 1;\n');
   execSync('git add src/app.ts', { cwd: root, stdio: 'ignore' });
   await writeFile(join(root, 'src', 'extra.ts'), 'export const y = 2;\n');
-  await run(['build', 'task', 'T1', '--status=DONE'], root);
+  // Phase 280 (280-01, T11/T12): `build task` now enforces the boundary
+  // check at record time too, not just at settle. Without this flag, T1's
+  // record-time refusal (boundaryEnforcement: block + the stray src/extra.ts
+  // above) would leave T1 unrecorded, and settle would refuse for an
+  // unrelated reason (AC-1 pending) before ever reaching the settle-time
+  // boundary-scan gate this fixture exists to exercise.
+  await run(['build', 'task', 'T1', '--status=DONE', '--allow-boundary-breach'], root);
 }
 
 describe('cadence settle run (Phase 156 — boundary-scan gate CLI flag)', () => {

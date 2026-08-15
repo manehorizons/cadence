@@ -1,10 +1,8 @@
-import { collectUnscopedTouchedFiles } from '../git/boundary-diff.js';
+import { collectUnscopedTouchedFiles, filterCadenceSelfWrites } from '../git/boundary-diff.js';
 import { runBoundaryCheck } from '../checks/boundary.js';
 import { effectiveBoundaryEnforcement } from './engine.js';
 import { isGateSealed } from './types.js';
 import type { GateImpl, GateResult } from './types.js';
-
-const CADENCE_DIR_PREFIX = '.cadence/';
 
 /**
  * Settle-time boundary diff scan (Phase 156). Follow-on to phase 155's
@@ -24,9 +22,18 @@ const CADENCE_DIR_PREFIX = '.cadence/';
  * `flags.boundaryScanBypassed: true` on the returned `GateResult` — mirroring
  * `test-coverage`'s `coverageBypassed` — so the registry's gate-provenance
  * collection can report this as "skipped (bypassed)" instead of "ran".
+ *
+ * Phase 280 (280-01, T10, AC-2): `anyTaskDispatched` is derived here from
+ * `ctx.progress.tasks[*].execution === 'dispatch'` (already threaded onto
+ * `SettleContext.progress` by T8) and passed as `effectiveBoundaryEnforcement`'s
+ * optional third `progressSignal` param (T9). Once any recorded task in the
+ * phase carries `execution: 'dispatch'`, this gate runs in block mode for the
+ * rest of the phase regardless of config/draft `boundaryEnforcement` — the
+ * dispatch-scoped escalation never de-escalates.
  */
 export const runBoundaryScanGate: GateImpl = async (ctx): Promise<GateResult> => {
-  if (effectiveBoundaryEnforcement(ctx.config, ctx.draft) !== 'block') {
+  const anyTaskDispatched = Object.values(ctx.progress.tasks).some((t) => t.execution === 'dispatch');
+  if (effectiveBoundaryEnforcement(ctx.config, ctx.draft, { anyTaskDispatched }) !== 'block') {
     return { outcome: 'pass' };
   }
 
@@ -39,7 +46,7 @@ export const runBoundaryScanGate: GateImpl = async (ctx): Promise<GateResult> =>
     );
   }
 
-  const filtered = files.filter((f) => f !== '.cadence' && !f.startsWith(CADENCE_DIR_PREFIX));
+  const filtered = filterCadenceSelfWrites(files);
 
   const declaredFiles = ctx.draft.tasks.flatMap((t) => t.files);
   if (declaredFiles.length === 0) {

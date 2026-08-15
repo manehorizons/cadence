@@ -221,6 +221,52 @@ describe('Task.class', () => {
   });
 });
 
+describe('Task.stop', () => {
+  const base = {
+    schemaVersion: 1 as const,
+    id: '01-01',
+    phase: '01-foundation',
+    tier: 'standard' as const,
+    title: 'x',
+    objective: 'x',
+    acceptanceCriteria: [{ id: 'AC-1', given: '-', when: '-', then: '-' }],
+    boundaries: [],
+    status: 'PENDING' as const,
+  };
+
+  it('is optional — a task with no stop parses fine', () => {
+    const parsed = DraftZ.parse({
+      ...base,
+      tasks: [{ id: 'T1', name: 'n', files: ['a.ts'], action: 'a', verify: 'v', done: 'AC-1' }],
+    });
+    expect(parsed.tasks[0]?.stop).toBeUndefined();
+  });
+
+  it('round-trips a declared stop value', () => {
+    const parsed = DraftZ.parse({
+      ...base,
+      tasks: [
+        {
+          id: 'T1',
+          name: 'n',
+          files: ['a.ts'],
+          action: 'a',
+          verify: 'v',
+          done: 'AC-1',
+          stop: 'If the migration touches more than 3 tables, halt and ask a human before continuing',
+        },
+      ],
+    });
+    expect(parsed.tasks[0]?.stop).toBe(
+      'If the migration touches more than 3 tables, halt and ask a human before continuing',
+    );
+  });
+
+  // No "rejects an invalid value" sub-case here (unlike Task.class's enum
+  // check above): `stop` is a plain `z.string()`, not an enum, so every
+  // string is a valid stop-condition — there is no invalid value to reject.
+});
+
 describe('Draft.redundantWorkEnforcement override', () => {
   const base = {
     schemaVersion: 1 as const,

@@ -146,4 +146,16 @@ describe('cadence summary verify-all - repo-wide sweep over every existing summa
     expect(failed).toBe(0);
     expect(result.code).toBe(0);
   });
+
+  it("280-01/AC-5: SummaryZ.taskResults[]'s additive `execution`/`isolation`/`modelClass` fields (phase 280 T13) touched no historical SUMMARY.json — the same repo-wide sweep still exits 0 corpus-wide, run against the local built CLI after the schema change", () => {
+    // Same shared beforeAll sweep, run against `packages/core/dist/cli/
+    // index.js` (the local build, never the global `cadence` on PATH — see
+    // this file's own CADENCE_CLI constant) built AFTER Phase 280 T13's
+    // additive `execution`/`isolation`/`modelClass: z.enum([...]).optional()`
+    // fields were added to `SummaryZ.taskResults[]` in
+    // packages/types/src/summary.ts. Mirrors the 274-01/AC-4 block above.
+    expect(checked).toBeGreaterThan(100);
+    expect(failed).toBe(0);
+    expect(result.code).toBe(0);
+  });
 });

@@ -76,6 +76,17 @@ export const myHostCapabilities: HostCapabilities = {
 Declare only what the host actually does. The contract is the *leaner successor*
 to an earlier over-built capability layer — resist speculative flags.
 
+> **Dispatched-agent prompts are not orchestrator-visible.** A host reporting
+> `subagentSpawn: 'native'` may let a dispatched background agent's interactive
+> prompt (e.g. Claude Code's `AskUserQuestion`) get answered on a surface the
+> orchestrating session never sees — the orchestrator can end up carrying a
+> confidently wrong account of what happened until an independent transcript
+> read corrects it (`rec-20260718-005`). The dispatch packet already forbids a
+> dispatched agent from invoking `AskUserQuestion`, or any equivalent
+> interactive prompt, at runtime; any human approval for a scope change during
+> dispatch must flow back through the orchestrating session, never a side
+> channel the orchestrator can't see.
+
 ## 3. Map events and extract payloads
 
 `mapEvent` turns a host event name (plus an optional tool name, to disambiguate)

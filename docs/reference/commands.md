@@ -597,12 +597,24 @@ Record outcome for task <id>
 | `--status <s>` | `"DONE"` | `DONE \| DONE_WITH_CONCERNS \| NEEDS_CONTEXT \| BLOCKED` |
 | `--notes <n>` | `""` | Notes |
 | `--allow-per-task-failure` | — | Bypass the per-task verifier gate (Phase 24.2): record DONE even if the verifier refuses |
+| `--allow-boundary-breach` | — | Bypass a block-mode boundary refusal (dispatch contract, phase 280): record the task past a files-outside-boundary finding anyway, emitting a `bypassed` error-severity anomaly — never bypasses the (warn-only) redundancy check |
+| `--execution <execution>` | — | `inline \| dispatch` — how this task was actually carried out; absent means untracked, conceptually equivalent to inline (dispatch contract, phase 280) |
+| `--isolation <isolation>` | — | `worktree \| none` — whether the task ran under worktree isolation (dispatch contract, phase 280) |
+| `--model-class <modelClass>` | — | `mechanical \| standard \| complex` — the model-class tier the task was routed to (dispatch contract, phase 280) |
 | `-h, --help` | — | Display help for command |
 
 **Behavior** — writes the outcome for the given task ID into `.cadence/state.json`.
 The per-task verifier gate (Phase 24.2) runs before recording a `DONE` status;
 if the verifier refuses, the command exits non-zero unless
-`--allow-per-task-failure` is passed.
+`--allow-per-task-failure` is passed. Since phase 280 (the dispatch contract),
+a boundary+redundancy check also runs at record time: if
+`boundaryEnforcement` resolves to `block` (via config, draft override, or the
+dispatch-scoped escalation once any task in the phase has been recorded with
+`--execution dispatch`) and a working-tree file exists outside every task's
+declared `files:`, the command refuses (exit 1, no state mutation) unless
+`--allow-boundary-breach` is passed. `--execution`/`--isolation`/
+`--model-class` are additive provenance fields recorded alongside the task
+outcome and carried through to `SUMMARY.json` on settle when present.
 
 **Task-ID validation** — `build task` validates that `<id>` exists in the
 current draft's task list. Supplying an unknown ID causes a refusal (exit

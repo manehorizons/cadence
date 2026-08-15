@@ -27,7 +27,14 @@ import type {
 } from '../contracts/index.js';
 
 /** Canonical PROGRESS.json shape settle reads. settle.ts imports this (and
- *  AcResult below) rather than redefining them locally. */
+ *  AcResult below) rather than redefining them locally.
+ *
+ *  Phase 280 (280-01, T8): note there is a THIRD, independent `ProgressFile`
+ *  interface at `packages/core/src/status.ts` (imported by `services/`
+ *  status/settle code as `ProgressFile`, not `services/status.ts` itself —
+ *  that file has no interface of its own, it just re-exports `loadStatus`/
+ *  `renderStatus`). It is deliberately NOT widened with the fields below —
+ *  out of scope for this phase. */
 export interface ProgressJson {
   draftId: string;
   tasks: Record<
@@ -42,6 +49,13 @@ export interface ProgressJson {
        *  read `progress.tasks[id].perTaskVerify` (T4) without importing that
        *  file's narrower, differently-scoped `ProgressJson` interface. */
       perTaskVerify?: PerTaskVerifyRecord;
+      /** Phase 280 (280-01, T8): dispatch-contract additions, mirrored from
+       *  `build/record.ts`'s `ProgressJson` shape for the same reason as
+       *  `perTaskVerify` above — additive/optional, populated by T11's real
+       *  wiring, not by this file. */
+      execution?: 'inline' | 'dispatch';
+      isolation?: 'worktree' | 'none';
+      modelClass?: 'mechanical' | 'standard' | 'complex';
     }
   >;
 }

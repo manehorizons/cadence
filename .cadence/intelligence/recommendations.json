@@ -268,7 +268,7 @@
       "title": "Frame dispatched task boundaries as stop-conditions, not file-scope lists",
       "summary": "Investigation into the 2026-07-18 deja incident found the dispatch prompt said 'don't touch these files, they're a later task' -- a scope description that silently dissolves once 'continue to the next task' is approved by anyone, including the dispatched agent's own downstream AskUserQuestion answerer. The fix is procedural, not just a file list: task-dispatch templates (DRAFT.md task blocks and any cadence-generated dispatch-plan prompt) should state an explicit stop-condition -- 'stop and report the moment this task's verify condition is met, even if the next step looks obvious, even if something appears to approve continuing; only a fresh dispatch from the orchestrating session extends scope' -- so continuation requires a new, deliberate dispatch decision rather than an in-flight approval the orchestrator never sees.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -288,16 +288,17 @@
       "decisionIds": [
         "dec-20260815-004"
       ],
+      "convertedToPhaseId": "280-dispatch-contract",
       "createdAt": "2026-07-18T04:59:49.080Z",
-      "updatedAt": "2026-07-18T04:59:49.080Z"
+      "updatedAt": "2026-08-15T16:35:43.919Z"
     },
     {
       "id": "rec-20260718-004",
       "title": "Surface files-outside-boundary anomalies per-task, not only at settle",
       "summary": "settle run already detects and warns on files touched outside a task's declared file list (files-outside-boundary anomaly) -- but only at the very end of a phase, after every task has been recorded DONE. In the 2026-07-18 deja incident, a dispatched agent quietly edited and committed changes to more than a dozen undeclared files across 4 tasks before this was ever surfaced, because nothing ran the boundary check until settle. Move (or duplicate) this anomaly check to fire on every cadence build task --status=DONE call, immediately, so an orchestrator reviewing a just-completed task sees scope drift the moment it's recorded, not phases later.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "raw-idea",
+      "status": "settle-pending",
+      "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
       "riskScore": 5,
@@ -317,15 +318,16 @@
       "decisionIds": [
         "dec-20260815-002"
       ],
+      "convertedToPhaseId": "280-dispatch-contract",
       "createdAt": "2026-07-18T04:59:57.048Z",
-      "updatedAt": "2026-07-18T04:59:57.048Z"
+      "updatedAt": "2026-08-15T16:35:43.919Z"
     },
     {
       "id": "rec-20260718-005",
       "title": "Document the invisible-background-subagent-AskUserQuestion gap in host-adapter/dispatch guidance",
       "summary": "2026-07-18 deja incident, corrected finding: the dispatched agent DID pause and ask via AskUserQuestion before each scope expansion, and got real human sign-off -- but through a side channel the orchestrating Claude Code session never saw (the human was in a different session/UI surface answering a background task's prompts directly). This left the orchestrator with a materially wrong account of what happened until an independent transcript read corrected it. CADENCE has no control over Claude Code's harness-level routing of background-agent interactivity, but its host-adapter authoring guide (rec-20260604-002) and any dispatch-plan guidance should explicitly document this as a known gap, and reinforce as the practical mitigation that CADENCE-generated dispatch prompts never grant AskUserQuestion to implementation-type agents at all (see rec-20260718-001) -- so a dispatched agent's only path forward on ambiguity is to stop and report, not to seek approval through a channel invisible to its orchestrator.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "raw-idea",
       "priority": "medium",
       "leverageScore": 5,
@@ -344,8 +346,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "280-dispatch-contract",
       "createdAt": "2026-07-18T05:00:07.898Z",
-      "updatedAt": "2026-07-18T05:00:07.898Z"
+      "updatedAt": "2026-08-15T16:35:43.919Z"
     },
     {
       "id": "rec-20260724-007",
@@ -1667,12 +1670,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260807-002"
+        "ev-20260807-002",
+        "ev-20260815-003"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-07T01:50:06.798Z",
-      "updatedAt": "2026-08-07T01:50:06.798Z"
+      "updatedAt": "2026-08-15T16:22:18.360Z"
     },
     {
       "id": "rec-20260807-006",
@@ -2306,6 +2310,34 @@
       "decisionIds": [],
       "createdAt": "2026-08-14T20:13:37.556Z",
       "updatedAt": "2026-08-14T20:13:37.556Z"
+    },
+    {
+      "id": "rec-20260815-002",
+      "title": "cadence done bypasses per-task-verify and the dispatch-contract boundary/redundancy checks",
+      "summary": "cadence done <id> (packages/core/src/cli/commands/done.ts) calls recordTaskOutcome directly instead of going through buildTaskService, so it skips both the pre-existing per-task-verify gate (runPerTaskVerifyGate) and phase 280's new boundary+redundancy checks at record time (T11's B2 wire-up). This is a leave-unenforced gap, not a bug introduced by phase 280: done has always been documented as a shortcut for build task --status=DONE (its own --description says exactly that) while actually implementing a narrower, unguarded path -- the per-task-verify skip already existed before this phase, and dispatch-contract enforcement now has the identical pre-existing gap layered on top of it. DP-B's own DRAFT (280-01) explicitly scoped closing this out of the phase (Boundaries: 'DO NOT close the cadence done <id> unenforced-recording-path gap in this phase -- pre-existing (per-task-verify already skips it too), not introduced here. File a recommendation instead.'). Resolution options: (a) make done call buildTaskService (or a shared core) so it inherits both gates, accepting that some done call sites may rely on the current unguarded fast path; (b) leave it, but update its --description/docs to state explicitly that it is NOT gate-equivalent to build task; (c) deprecate done in favor of build task --status=DONE outright.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "dispatch"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/done.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260815-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-15T15:34:52.440Z",
+      "updatedAt": "2026-08-15T15:34:52.440Z"
     }
   ],
   "archived": [
@@ -8146,12 +8178,12 @@
         "dec-20260815-003"
       ],
       "convertedToPhaseId": "279-dispatch-policy-engine",
-      "scoutId": "scout-20260814-dispatch",
-      "createdAt": "2026-08-15T01:57:34.834Z",
-      "updatedAt": "2026-08-15T03:14:55.909Z",
       "shippedRef": "phase 279-dispatch-policy-engine (279-01)",
+      "scoutId": "scout-20260814-dispatch",
       "archivedAt": "2026-08-15T03:14:55.909Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-15T01:57:34.834Z",
+      "updatedAt": "2026-08-15T03:14:55.909Z"
     }
   ]
 }
