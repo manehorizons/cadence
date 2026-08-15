@@ -1,4 +1,4 @@
-import { DraftZ, type Draft } from '@thomas-powers-jr/cadence-types';
+import { DraftZ, type Draft, type Task } from '@thomas-powers-jr/cadence-types';
 import { CadenceError } from '../errors.js';
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n/;
@@ -64,7 +64,17 @@ function parseTasks(section: string): Draft['tasks'] {
     const depends = dependsLine
       ? dependsLine.split(',').map((s) => s.trim()).filter((s) => s.length > 0)
       : undefined;
-    out.push({ id, name, files, action, verify, done, ...(depends ? { depends } : {}) });
+    const classLine = /-\s*class:\s*(.+)/.exec(block)?.[1]?.trim();
+    out.push({
+      id,
+      name,
+      files,
+      action,
+      verify,
+      done,
+      ...(depends ? { depends } : {}),
+      ...(classLine ? { class: classLine as Task['class'] } : {}),
+    });
   }
   return out;
 }

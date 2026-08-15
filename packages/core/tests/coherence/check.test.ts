@@ -37,4 +37,66 @@ describe('coherenceCheck', () => {
     const result = coherenceCheck(baseDraft, emptyState(), 'Project rules:\n- DO NOT edit src/foo.ts.');
     expect(result.issues.some((i) => i.severity === 'block')).toBe(true);
   });
+
+  it('279-01/AC-4: warns CLASS_MISMATCH when the heuristic disagrees with a declared class (depends-precedence case)', () => {
+    const draft = {
+      ...baseDraft,
+      tasks: [
+        {
+          id: 'T1',
+          name: 'edit foo',
+          files: ['a.ts'],
+          depends: ['T1', 'T2'],
+          class: 'mechanical' as const,
+          action: 'change x',
+          verify: 'tests pass',
+          done: 'AC-1',
+        },
+      ],
+    };
+    const result = coherenceCheck(draft, emptyState(), 'PROJECT body');
+    const mismatches = result.issues.filter((i) => i.code === 'CLASS_MISMATCH');
+    expect(mismatches).toHaveLength(1);
+    expect(mismatches[0]?.severity).toBe('warn');
+    expect(mismatches[0]?.message).toContain('mechanical');
+    expect(mismatches[0]?.message).toContain('complex');
+  });
+
+  it('does not warn CLASS_MISMATCH when the declared class matches the heuristic', () => {
+    const draft = {
+      ...baseDraft,
+      tasks: [
+        {
+          id: 'T1',
+          name: 'edit foo',
+          files: ['a.ts'],
+          class: 'mechanical' as const,
+          action: 'change x',
+          verify: 'tests pass',
+          done: 'AC-1',
+        },
+      ],
+    };
+    const result = coherenceCheck(draft, emptyState(), 'PROJECT body');
+    expect(result.issues.filter((i) => i.code === 'CLASS_MISMATCH')).toHaveLength(0);
+  });
+
+  it('does not warn CLASS_MISMATCH when the task has no class line at all', () => {
+    const draft = {
+      ...baseDraft,
+      tasks: [
+        {
+          id: 'T1',
+          name: 'edit foo',
+          files: ['a.ts'],
+          depends: ['T1', 'T2'],
+          action: 'change x',
+          verify: 'tests pass',
+          done: 'AC-1',
+        },
+      ],
+    };
+    const result = coherenceCheck(draft, emptyState(), 'PROJECT body');
+    expect(result.issues.filter((i) => i.code === 'CLASS_MISMATCH')).toHaveLength(0);
+  });
 });

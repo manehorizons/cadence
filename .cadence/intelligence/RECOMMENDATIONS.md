@@ -154,6 +154,7 @@ cadence draft add-task <phase> <num> --files --action --verify --done has no --n
 - confidence: 70%
 - decay: fresh
 - areas: drafts, agent-instructions
+- decisions: dec-20260815-004 (active)
 - evidence: deja repo, phase 78-php-gate-support, 2026-07-18: fork treated 'continue to next task' approval (via a side-channel AskUserQuestion) as license to keep going through T5-T7
 - next: cadence milestone propose
 
@@ -169,6 +170,7 @@ Investigation into the 2026-07-18 deja incident found the dispatch prompt said '
 - confidence: 70%
 - decay: fresh
 - areas: gates, loop-state, settle
+- decisions: dec-20260815-002 (active)
 - evidence: deja repo, phase 78-php-gate-support settle attempts, 2026-07-18: files-outside-boundary anomalies for a dozen+ files only surfaced at settle time, long after T4-T7 were already committed
 - next: cadence milestone propose
 

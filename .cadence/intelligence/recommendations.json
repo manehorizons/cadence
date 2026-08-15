@@ -285,7 +285,9 @@
         "ev-20260718-003"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260815-004"
+      ],
       "createdAt": "2026-07-18T04:59:49.080Z",
       "updatedAt": "2026-07-18T04:59:49.080Z"
     },
@@ -312,7 +314,9 @@
         "ev-20260718-004"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260815-002"
+      ],
       "createdAt": "2026-07-18T04:59:57.048Z",
       "updatedAt": "2026-07-18T04:59:57.048Z"
     },
@@ -8107,10 +8111,46 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-08-14T20:39:02.587Z",
-      "updatedAt": "2026-08-14T23:25:52.006Z",
       "shippedRef": "v1.59.0 / PR #422",
       "archivedAt": "2026-08-14T23:25:52.006Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-14T20:39:02.587Z",
+      "updatedAt": "2026-08-14T23:25:52.006Z"
+    },
+    {
+      "id": "rec-20260815-001",
+      "title": "Give subagentPolicy/modelPerClass their first consumer: a dispatch execution classifier",
+      "summary": "config.subagentPolicy (contextBudgetThreshold/largeTaskTokens/mechanicalBatchMin) and config.modelPerClass are fully schema'd, defaulted, and live in .cadence/config.json but have zero consumers anywhere in packages/core/src. Add a pure classifyTaskExecution(task, wave, config, signals) in a new dispatch/policy.ts that computes {execution, modelClass, model, reasons[]} per task, threaded through 'cadence dispatch plan' JSON output and the packet. Read-only/advisory only -- no agent spawning or state mutation. Companion phase to rec-20260718-003/-004/-005 (DP-B, dispatch contract enforcement), which depends on this phase's TaskZ.class field.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "dispatch",
+        "config"
+      ],
+      "affectedFiles": [
+        "packages/core/src/dispatch/policy.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260815-001"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260815-001",
+        "dec-20260815-003"
+      ],
+      "convertedToPhaseId": "279-dispatch-policy-engine",
+      "scoutId": "scout-20260814-dispatch",
+      "createdAt": "2026-08-15T01:57:34.834Z",
+      "updatedAt": "2026-08-15T03:14:55.909Z",
+      "shippedRef": "phase 279-dispatch-policy-engine (279-01)",
+      "archivedAt": "2026-08-15T03:14:55.909Z",
       "archiveReason": "shipped"
     }
   ]

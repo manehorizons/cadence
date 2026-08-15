@@ -1,0 +1,78 @@
+{
+  "draftId": "279-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Pre-change dispatch plan --json fixture captured at packages/core/tests/fixtures/dispatch/pre-dp-a-plan.json; reviewed independently, full pipeline green (24/24).",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-15T02:09:05.391Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "TaskClassZ + TaskZ.class added (optional, additive, no schemaVersion bump). Reviewed independently (PASS), full pipeline green (24/24).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/types/tests/plan.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/types/src/plan.ts"
+      ],
+      "updatedAt": "2026-08-15T02:14:31.816Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "class: line parsing added to draft-parser.ts, mirroring depends:. Reviewed independently (PASS), full pipeline green.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/tests/parse/draft-parser.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/src/parse/draft-parser.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/tests/dispatch/policy.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/src/dispatch/policy.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/tests/parse/zz-scratch-review-tmp.test.ts"
+      ],
+      "updatedAt": "2026-08-15T02:27:38.745Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "dispatch/policy.ts classifier implemented per dec-20260815-001. Reviewer found one test-coverage gap on the batch-trigger count comparison; fixed with a load-bearing negative test (verified via mutation testing). Full pipeline green (24/24).",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-15T02:27:38.913Z"
+    },
+    "T9": {
+      "status": "DONE",
+      "notes": "Doc comments added above subagentPolicy/modelPerClass noting they're now consumed by dispatch/policy.ts. Comment-only, zero behavior change; verified directly (housekeeping, gates no AC).",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/tests/dispatch/packet.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/tests/coherence/check.test.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/src/coherence/check.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/src/dispatch/packet.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/types/src/config.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/tests/dispatch/policy-corpus.test.ts"
+      ],
+      "updatedAt": "2026-08-15T02:32:19.642Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "packet.ts split into buildLines/renderPacketBase/renderPacket. Reviewed independently (PASS), splice-point + strip-invariant verified. Note: typecheck/3 dispatch-plan CLI tests intentionally red pending T6's fix to services/dispatch.ts's now-outdated 2-arg renderPacket call (dispatch.ts(85,19)) -- confirmed the sole cause, T6 is next.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-15T02:37:07.697Z"
+    },
+    "T7": {
+      "status": "DONE",
+      "notes": "CLASS_MISMATCH coherence warn added, first real wiring of declared-vs-heuristic pattern. Reviewed independently (PASS), 6/6 tests green, severity hard-locked to warn.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-15T02:37:07.901Z"
+    },
+    "T8": {
+      "status": "DONE",
+      "notes": "Corpus class-distribution test added. Real measurement: 1204 tasks/279 DRAFTs, mechanical 36.5% / standard 44.2% / complex 19.4%, non-degenerate. Reviewed independently (PASS, one cosmetic nit only).",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-15T02:37:08.073Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "services/dispatch.ts wired to T4/T5. Reviewed independently (PASS, full turbo run 18/18 across all 6 packages). AC-1/AC-2/AC-3/AC-5 all proven at CLI level. Full pipeline green (24/24). Note: docs/reference/commands.md's dispatch plan --json example is now stale -- fixing before settle.",
+      "touchedFiles": [
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/src/services/dispatch.ts",
+        "/home/thomas/projects/cadence/.claude/worktrees/dp-a-dispatch-policy-engine/packages/core/tests/cli/dispatch-plan.test.ts"
+      ],
+      "updatedAt": "2026-08-15T03:00:40.419Z"
+    }
+  }
+}

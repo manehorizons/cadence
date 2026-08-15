@@ -11,6 +11,10 @@ export const AcceptanceCriterionZ = z.object({
 });
 export type AcceptanceCriterion = z.infer<typeof AcceptanceCriterionZ>;
 
+/** Declared task-execution weight class, used by the dispatch policy engine (Phase 279: dispatch policy engine). */
+export const TaskClassZ = z.enum(['mechanical', 'standard', 'complex']);
+export type TaskClass = z.infer<typeof TaskClassZ>;
+
 export const TaskZ = z.object({
   id: z.string(),
   name: z.string(),
@@ -20,6 +24,8 @@ export const TaskZ = z.object({
   done: z.string(),
   /** Optional task ids this task requires to complete first (Phase: wave-based dispatch). */
   depends: z.array(z.string()).optional(),
+  /** Optional declared execution class; wins over the heuristic classifier when set (Phase 279: dispatch policy engine). */
+  class: TaskClassZ.optional(),
   status: TaskStatusZ.optional(),
   touchedFiles: z.array(z.string()).optional(),
 });

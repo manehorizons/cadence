@@ -160,6 +160,67 @@ describe('Task.depends', () => {
   });
 });
 
+describe('Task.class', () => {
+  const base = {
+    schemaVersion: 1 as const,
+    id: '01-01',
+    phase: '01-foundation',
+    tier: 'standard' as const,
+    title: 'x',
+    objective: 'x',
+    acceptanceCriteria: [{ id: 'AC-1', given: '-', when: '-', then: '-' }],
+    boundaries: [],
+    status: 'PENDING' as const,
+  };
+
+  it('is optional — a task with no class parses fine', () => {
+    const parsed = DraftZ.parse({
+      ...base,
+      tasks: [{ id: 'T1', name: 'n', files: ['a.ts'], action: 'a', verify: 'v', done: 'AC-1' }],
+    });
+    expect(parsed.tasks[0]?.class).toBeUndefined();
+  });
+
+  it('round-trips a declared class value', () => {
+    for (const cls of ['mechanical', 'standard', 'complex'] as const) {
+      const parsed = DraftZ.parse({
+        ...base,
+        tasks: [
+          {
+            id: 'T1',
+            name: 'n',
+            files: ['a.ts'],
+            action: 'a',
+            verify: 'v',
+            done: 'AC-1',
+            class: cls,
+          },
+        ],
+      });
+      expect(parsed.tasks[0]?.class).toBe(cls);
+    }
+  });
+
+  it('rejects an invalid class value', () => {
+    expect(() =>
+      DraftZ.parse({
+        ...base,
+        tasks: [
+          {
+            id: 'T1',
+            name: 'n',
+            files: ['a.ts'],
+            action: 'a',
+            verify: 'v',
+            done: 'AC-1',
+            class: 'bogus' as never,
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+});
+
 describe('Draft.redundantWorkEnforcement override', () => {
   const base = {
     schemaVersion: 1 as const,

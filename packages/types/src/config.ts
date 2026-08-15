@@ -132,11 +132,17 @@ export const CadenceConfigZ = z.object({
     z.enum(['trigger-taxonomy', 'carl']),
     z.string().regex(/^custom:/),
   ]),
+  /** Thresholds consumed by `packages/core/src/dispatch/policy.ts`'s
+   * `classifyTaskExecution` to decide, per task, whether execution should be
+   * `dispatch` or `inline` (batch-size, size, and context-budget signals). */
   subagentPolicy: z.object({
     contextBudgetThreshold: z.number().min(0.3).max(0.95),
     largeTaskTokens: z.number().int().positive(),
     mechanicalBatchMin: z.number().int().positive(),
   }),
+  /** Model id per task class, read by `classifyTaskExecution`
+   * (`packages/core/src/dispatch/policy.ts`) to resolve the `model` field it
+   * attaches to each task's dispatch plan entry. */
   modelPerClass: z.object({
     mechanical: z.string(),
     standard: z.string(),

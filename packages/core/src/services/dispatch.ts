@@ -1,11 +1,15 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
+import type { TaskClass } from '@thomas-powers-jr/cadence-types';
 import { SimpleStateBackend } from '../state/simple.js';
 import { assertSafePhaseSlug } from '../phases/id.js';
 import { parseDraftMd } from '../parse/draft-parser.js';
 import { computeWaves } from '../dispatch/wave-planner.js';
-import { renderPacket, recommendIsolation } from '../dispatch/packet.js';
+import { renderPacket, renderPacketBase, recommendIsolation } from '../dispatch/packet.js';
+import { resolveTaskClass, classifyTaskExecution, FILE_BYTES_CAP } from '../dispatch/policy.js';
+import type { WaveExecutionContext, DispatchSignals, ExecutionVerdict } from '../dispatch/policy.js';
+import { loadConfig } from '../config/loader.js';
 import type { ProgressJson } from '../gates/types.js';
 import { formatCommandError } from './format-command-error.js';
 import type { CommandIO, CommandResult } from './io.js';
@@ -15,6 +19,10 @@ interface DispatchTaskPlan {
   name: string;
   packet: string;
   recommendedIsolation: 'worktree' | 'none';
+  execution: 'inline' | 'dispatch';
+  modelClass: TaskClass;
+  model: string;
+  reasons: string[];
 }
 interface DispatchWavePlan {
   wave: number;
@@ -41,6 +49,22 @@ async function readProgressOrEmpty(progPath: string, draftId: string): Promise<P
     return JSON.parse(await readFile(progPath, 'utf8')) as ProgressJson;
   } catch {
     return { draftId, tasks: {} };
+  }
+}
+
+/**
+ * A declared file's on-disk byte size, or 0 on any failure (missing file,
+ * stat error) — mirrors `readProgressOrEmpty`'s fail-open posture: a
+ * declared file the size estimator can't read degrades to "contributes
+ * nothing", never a thrown error or a silent guess. Synchronous so the
+ * existing per-task `.map()` structure doesn't need to become async.
+ */
+function fileBytesOrZero(absPath: string): number {
+  if (!existsSync(absPath)) return 0;
+  try {
+    return statSync(absPath).size;
+  } catch {
+    return 0;
   }
 }
 
@@ -74,26 +98,60 @@ export async function dispatchPlanService(
       return reportNothing(io, args, 'nothing to dispatch — every task is already finished');
     }
 
+    // Loaded once per invocation, only on the real-plan path — an early
+    // "nothing to plan"/"nothing to dispatch" return must stay exit-0 even
+    // when config.json is broken (loadConfig can throw ConfigInvalidError).
+    const config = await loadConfig(repoRoot);
+    const classById = new Map(draft.tasks.map((t) => [t.id, resolveTaskClass(t)]));
+
     const byId = new Map(draft.tasks.map((t) => [t.id, t]));
-    const plan: DispatchWavePlan[] = waves.map((w) => ({
-      wave: w.wave,
-      tasks: w.taskIds.map((id) => {
-        const task = byId.get(id)!;
-        return {
-          id: task.id,
-          name: task.name,
-          packet: renderPacket(task, draft),
-          recommendedIsolation: recommendIsolation(task),
-        };
-      }),
-    }));
+    const plan: DispatchWavePlan[] = waves.map((w) => {
+      const waveClasses: Record<string, TaskClass> = {};
+      for (const id of w.taskIds) waveClasses[id] = classById.get(id)!;
+      return {
+        wave: w.wave,
+        tasks: w.taskIds.map((id) => {
+          const task = byId.get(id)!;
+          const basePacket = renderPacketBase(task, draft);
+          const declaredFileBytes = task.files.reduce(
+            (sum, f) => sum + Math.min(fileBytesOrZero(join(repoRoot, f)), FILE_BYTES_CAP),
+            0,
+          );
+          const signals: DispatchSignals = {
+            packetChars: basePacket.length,
+            declaredFileBytes,
+            // ALWAYS null (D-DQ3) — tokenUtilization is a confirmed-fake
+            // synthetic counter; no real context-utilization reading is
+            // wired into dispatch planning this phase.
+            contextUtilization: null,
+          };
+          const waveCtx: WaveExecutionContext = { wave: w.wave, waveClasses };
+          const verdict: ExecutionVerdict = classifyTaskExecution(task, waveCtx, config, signals);
+          return {
+            id: task.id,
+            name: task.name,
+            packet: renderPacket(task, draft, verdict),
+            recommendedIsolation: recommendIsolation(task),
+            execution: verdict.execution,
+            modelClass: verdict.modelClass,
+            model: verdict.model,
+            reasons: verdict.reasons,
+          };
+        }),
+      };
+    });
 
     if (args.json) {
-      io.out(JSON.stringify({ waves: plan }) + '\n');
+      // signals is a stdout-JSON-shape addition only (D-DQ3) — the budget
+      // signal is always null, never wired to a real reading this phase.
+      io.out(JSON.stringify({ waves: plan, signals: { contextUtilization: null } }) + '\n');
     } else {
       for (const w of plan) {
         io.out(`Wave ${w.wave}:\n`);
-        for (const t of w.tasks) io.out(`  ${t.id}: ${t.name}\n`);
+        for (const t of w.tasks) {
+          const detail = t.execution === 'dispatch' ? `${t.execution}, ${t.modelClass}` : t.execution;
+          io.out(`  ${t.id}: ${t.name} [${detail}]\n`);
+        }
       }
       io.out('Run with --json to get each task\'s full dispatch packet.\n');
     }
