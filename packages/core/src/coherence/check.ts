@@ -1,4 +1,5 @@
 import type { Draft, CadenceState } from '@thomas-powers-jr/cadence-types';
+import { heuristicTaskClass } from '../dispatch/policy.js';
 
 export interface CoherenceIssue {
   severity: 'warn' | 'block';
@@ -43,5 +44,23 @@ export function coherenceCheck(draft: Draft, state: CadenceState, projectMd: str
       });
     }
   }
+
+  // First real wiring of the declared-vs-heuristic warn pattern into
+  // coherence/check.ts (D-DQ1, dec-20260815-001). This is NOT a
+  // continuation of classify/tier.ts's classifyTier — that module
+  // implements a similarly-shaped idea but was never wired into this
+  // check, and remains explicitly out of scope for this phase.
+  for (const t of draft.tasks) {
+    if (t.class === undefined) continue;
+    const heuristic = heuristicTaskClass(t);
+    if (heuristic !== t.class) {
+      issues.push({
+        severity: 'warn',
+        code: 'CLASS_MISMATCH',
+        message: `Task ${t.id} declares class: ${t.class} but the heuristic classifies it as ${heuristic} (files=${t.files.length}, depends=${t.depends?.length ?? 0}); declared value wins.`,
+      });
+    }
+  }
+
   return { issues };
 }

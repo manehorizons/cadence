@@ -636,7 +636,7 @@ Compute the next dispatch wave(s) from the active BUILD draft
 
 | Option | Description |
 |---|---|
-| `--json` | Emit machine-readable JSON (`{ waves: [{ wave, tasks: [{ id, name, packet, recommendedIsolation }] }] }`) instead of rendered text |
+| `--json` | Emit machine-readable JSON (`{ waves: [{ wave, tasks: [{ id, name, packet, recommendedIsolation, execution, modelClass, model, reasons }] }], signals: { contextUtilization } }`) instead of rendered text |
 | `-h, --help` | Display help for command |
 
 **Behavior** — read-only; never mutates state. Reads the active BUILD draft +
@@ -658,8 +658,27 @@ the task declares one or more `files:` (it will mutate the working tree),
 both as the `recommendedIsolation` JSON field and as an advisory line in the
 rendered packet text itself. Tasks already `DONE`/`DONE_WITH_CONCERNS` are
 excluded from every wave.
+
+Each task also carries a computed, advisory execution verdict from a pure
+classifier (`config.subagentPolicy`/`config.modelPerClass`, phase 279):
+`execution` (`'inline'` or `'dispatch'`), `modelClass`
+(`'mechanical'`/`'standard'`/`'complex'` — the task's own `class:` field when
+declared, else a heuristic based on `files:`/`depends:` counts), `model`
+(the configured model id for that class), and `reasons` (why `execution`
+came out the way it did — naming which of `mechanicalBatchMin`,
+`largeTaskTokens`, or `contextBudgetThreshold` fired, with the measured
+value and threshold; empty when no trigger fired). When `execution` is
+`'dispatch'`, the rendered packet gains a `**Execution:** ...` line spliced
+in right after the isolation-recommendation line (and a `**Model:** ...`
+line); when `'inline'`, only the `**Execution:**` line is added. This is advisory only — `dispatch plan` still only computes
+and reports; it never spawns, schedules, or supervises agents. The
+top-level `signals.contextUtilization` field is currently always `null` —
+no real orchestrator context-utilization reading is wired in yet, so
+`contextBudgetThreshold` never contributes to any verdict.
+
 Outside BUILD (no active draft), reports "nothing to plan" at exit 0. When
 every task is already finished, reports "nothing to dispatch" at exit 0.
+Neither of these "nothing to do" JSON payloads carries a `signals` field.
 
 **Exit codes** — exits non-zero (with a message naming the cycle, or the
 unknown task id) if `depends:` forms a dependency cycle, or references a

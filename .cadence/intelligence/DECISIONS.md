@@ -376,6 +376,34 @@ The rec frames this as a blanket flip, but the two cases have different constrai
 
 The cadence recommendation archive CLI hardcodes archiveReason='manual' (recommendation.ts:514); it does not distinguish a genuine ad-hoc manual archive from a bulk backfill. Chose option 3 from HANDOFF-archive-backfill-CORRECTED.md $3 (D-M): accept 'manual' rather than add a --reason flag. Rationale: status still carries the substantive truth (shipped/rejected) for every backfilled record, and the 21 records archived in phase 276 on 2026-08-14 are identifiable as the pre-phase-102 backfill cohort by their archivedAt timestamp (2026-08-14T01:50:3*Z) without adding any new CLI surface for a one-time migration. Option 2 (a --reason flag) was rejected as unwarranted surface area for a single backfill event, consistent with this repo's zero-runtime-dependency/minimal-surface bias.
 
+### dec-20260815-001 — D-DQ1: Task execution class -- declared field wins, heuristic cross-checks via coherence warn
+
+- recommendation: rec-20260815-001
+- decided: 2026-08-15T01:57:52.339Z
+
+Declared class: (TaskZ.class) wins when present; a pure heuristicTaskClass(task) cross-checks and disagreement emits a coherence warn (never a blocker), naming both values. Chosen over heuristic-only because a 99-task/17-phase corpus sample shows the heuristic carries real information (non-degenerate distribution across mechanical/standard/complex, no bucket >90%) -- so per the arc's own standing rule ('if the heuristic carries no information, report that'), it should be wired, not skipped. The DESIGN.md S4.3 M3 pattern this was originally justified by does NOT exist as running code -- classify/tier.ts's classifyTier is real but never wired into coherence/check.ts (which today only implements DECISION_TOUCH/PROJECT_FORBIDDEN); this decision's warn is the first real instance of that pattern, not a continuation of an existing one. Corpus sampling also found a real precedence bug in the naive rule: tasks with files.length<=1 but depends.length>=2 (6/99 sampled) must classify complex, not mechanical -- the depends-based complex rule must be checked before the file-count mechanical rule.
+
+### dec-20260815-002 — D-DQ2: boundaryEnforcement escalates to block, dispatch-scoped, once DP-B lands
+
+- recommendation: rec-20260718-004
+- decided: 2026-08-15T01:57:52.524Z
+
+Once DP-B ships, boundary enforcement escalates to 'block' for any phase where a task has been recorded with execution:dispatch -- regardless of the global config/draft value, which may stay 'warn'. Implemented as a pure additive third parameter on effectiveBoundaryEnforcement(config, draft, progressSignal?: {anyTaskDispatched}) rather than mutating draft.boundaryEnforcement at runtime -- confirmed no DRAFT-rewrite mechanism exists anywhere in this codebase (grep -rln writeDraft|rewriteDraft|persistDraft packages/core/src -> 0 hits), and mutating an authored/reviewed DRAFT.md at runtime would violate the repo's refuse-plus-suggest-never-silently-mutate convention. Both DP-B's record-time check and the existing settle-time gates/boundary-scan.ts gate (Phase 156) call the same function, so both inherit the escalation once each call site passes the computed signal -- one mechanism, not two. Chosen over staying globally warn (loses the enforcement DP-B is built to provide) and over flipping DELTAS-matrix cells (a separate, unrelated standing question with its own deferral history). This change touches no config file (.cadence/config.json unchanged), so it ships inside DP-B's feature commit, not a separate one.
+
+### dec-20260815-003 — D-DQ3: contextBudgetThreshold stays inert this arc -- tokenUtilization is a fake signal
+
+- recommendation: rec-20260815-001
+- decided: 2026-08-15T01:57:52.697Z
+
+config.telemetry.tokenUtilization does not measure real token/context usage -- confirmed by direct read of hooks/handlers.ts:73-74, it is a flat +0.01-per-UserPromptSubmit counter capped at 1, used only for a human-readable 'Token utilization: N%' line in render/state-md.ts. Feeding this into a dispatch verdict would cite a fabricated number. classifyTaskExecution's signals.contextUtilization is therefore always null this arc, and no verdict's reasons[] ever names contextBudgetThreshold -- AC-A3 makes this absence explicit and tested rather than silently skipped. Revisit once real orchestrator context-utilization telemetry exists.
+
+### dec-20260815-004 — D-DQ4: stop-condition coherence severity is warn, not a blocker, for now
+
+- recommendation: rec-20260718-003
+- decided: 2026-08-15T01:57:52.872Z
+
+A dispatch-classified task that declares files: but no stop: gets a coherence warn (STOP_CONDITION_MISSING), never a block. A blocker on a brand-new DRAFT field would refuse every pre-existing draft that predates it. Revisit against retro data (the phase-212 retro-feedback pipeline is the natural evidence source) once there's a real corpus of stop:-bearing drafts to measure against.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

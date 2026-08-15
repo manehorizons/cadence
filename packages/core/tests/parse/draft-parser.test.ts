@@ -318,6 +318,64 @@ Then widget emits photons
   });
 });
 
+describe('task class: line', () => {
+  const DRAFT_WITH_CLASS = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+Make widget glow.
+
+## Acceptance Criteria
+
+### AC-1: Glows
+Given widget exists
+When user enables glow mode
+Then widget emits photons
+
+## Tasks
+
+### T1: Add glow flag
+- files: \`src/widget.ts\`
+- action: add boolean glow prop
+- verify: vitest passes
+- done: AC-1
+
+### T2: Wire glow flag into UI
+- files: \`src/ui.ts\`
+- action: read the glow prop
+- verify: vitest passes
+- class: mechanical
+- done: AC-1
+
+## Boundaries
+
+- Do not change \`src/legacy.ts\`
+`;
+
+  it('parses a declared class value onto the task', () => {
+    const d = parseDraftMd(DRAFT_WITH_CLASS);
+    expect(d.tasks[1]?.id).toBe('T2');
+    expect(d.tasks[1]?.class).toBe('mechanical');
+  });
+
+  it('omits class when the line is absent', () => {
+    const d = parseDraftMd(DRAFT_WITH_CLASS);
+    expect(d.tasks[0]?.class).toBeUndefined();
+  });
+
+  it('rejects DRAFT with invalid class literal', () => {
+    const bad = DRAFT_WITH_CLASS.replace('- class: mechanical', '- class: mediumm');
+    expect(() => parseDraftMd(bad)).toThrow();
+  });
+});
+
 describe('redundantWorkEnforcement frontmatter', () => {
   it('parses redundantWorkEnforcement when present', () => {
     const raw = `---\nphase: 01-foundation\nid: 01-01\ntier: standard\nredundantWorkEnforcement: block\nstatus: PENDING\n---\n\n# 01-01 — Demo\n\n## Objective\n\nDemo.\n\n## Acceptance Criteria\n\n### AC-1: Demo\nGiven a\nWhen b\nThen c\n\n## Tasks\n\n## Boundaries\n\n- _(none)_\n`;

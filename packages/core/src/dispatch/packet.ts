@@ -1,4 +1,5 @@
 import type { Draft, Task } from '@thomas-powers-jr/cadence-types';
+import type { ExecutionVerdict } from './policy.js';
 
 /**
  * Recommends whether a task should be dispatched into an isolated git
@@ -11,12 +12,13 @@ export function recommendIsolation(task: Task): 'worktree' | 'none' {
 }
 
 /**
- * Renders a self-contained dispatch prompt for one task: the DRAFT's
- * objective, the task's action/verify/done, its files: boundary stated
- * explicitly, and a reminder of Spec 1's redundant-work monitoring. Pure —
- * no I/O.
+ * Builds the full line array for a dispatch packet: the DRAFT's objective,
+ * the task's action/verify/done, its files: boundary stated explicitly, and
+ * a reminder of Spec 1's redundant-work monitoring. `verdictLines` (empty
+ * for the base packet) is spliced in right after the isolation-recommendation
+ * line and before the following blank line. Pure — no I/O.
  */
-export function renderPacket(task: Task, draft: Draft): string {
+function buildLines(task: Task, draft: Draft, verdictLines: string[]): string[] {
   const filesStr = task.files.length > 0 ? task.files.map((f) => `\`${f}\``).join(', ') : '(none declared)';
   const isolation = recommendIsolation(task);
   const isolationLine =
@@ -34,6 +36,7 @@ export function renderPacket(task: Task, draft: Draft): string {
     '',
     `**Files (stay within these):** ${filesStr}`,
     isolationLine,
+    ...verdictLines,
     '',
     "Do not touch files declared under any other task. If a task already marked",
     "DONE or DONE_WITH_CONCERNS genuinely needs revisiting, say so explicitly",
@@ -56,5 +59,30 @@ export function renderPacket(task: Task, draft: Draft): string {
     'commands you ran and their real output, and the resulting diff. The',
     'orchestrator alone runs `cadence build task` (or `cadence settle`) and',
     'records the outcome.',
-  ].join('\n');
+  ];
+}
+
+/**
+ * Renders a self-contained dispatch prompt for one task, with no execution
+ * verdict included. Byte-identical to the pre-verdict-split renderPacket
+ * output — the baseline other AC-5 non-regression comparisons are pinned
+ * against. Pure — no I/O.
+ */
+export function renderPacketBase(task: Task, draft: Draft): string {
+  return buildLines(task, draft, []).join('\n');
+}
+
+/**
+ * Renders a self-contained dispatch prompt for one task, including the
+ * dispatch-policy classifier's Execution (and, when dispatched, Model)
+ * lines spliced into a fixed slot between the isolation-recommendation line
+ * and the following blank line. Pure — no I/O.
+ */
+export function renderPacket(task: Task, draft: Draft, verdict: ExecutionVerdict): string {
+  const execLine =
+    `**Execution:** ${verdict.execution} — ` +
+    (verdict.reasons.length > 0 ? verdict.reasons.join('; ') : 'no dispatch trigger met');
+  const verdictLines =
+    verdict.execution === 'dispatch' ? [execLine, `**Model:** ${verdict.model} (${verdict.modelClass})`] : [execLine];
+  return buildLines(task, draft, verdictLines).join('\n');
 }
