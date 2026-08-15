@@ -31,8 +31,35 @@ interface ProgressJson {
       touchedFiles: string[];
       updatedAt: string;
       perTaskVerify?: PerTaskVerifyRecord;
+      /** Phase 280 (280-01, T8): dispatch-contract additions — how the task
+       *  was executed, whether it ran in an isolated worktree, and the model
+       *  class it was dispatched under. All optional/additive; populated by
+       *  T11's real wiring in `build-task.ts`, not by this file. */
+      execution?: 'inline' | 'dispatch';
+      isolation?: 'worktree' | 'none';
+      modelClass?: 'mechanical' | 'standard' | 'complex';
     }
   >;
+}
+
+/**
+ * Phase 280 (280-01, T8): additive options bag replacing the old trailing
+ * `perTaskVerify?: PerTaskVerifyRecord` positional param. `perTaskVerify`
+ * keeps its exact old meaning; the rest are new dispatch-contract fields a
+ * future caller (T11, in `build-task.ts`) will populate from git-derived
+ * touched files (`deriveTaskTouchedFiles`, T7) and dispatch metadata — this
+ * file only needs to be ABLE to accept and record them.
+ */
+export interface RecordTaskOutcomeOptions {
+  perTaskVerify?: PerTaskVerifyRecord;
+  /** When present (including an empty array), used INSTEAD OF the
+   *  hook-accumulated `state.activeTask.touchedFiles` self-report for
+   *  `progress.tasks[taskId].touchedFiles`. When absent (undefined), the
+   *  self-report fallback is unchanged. Never blended with the self-report. */
+  gitTouchedFiles?: string[];
+  execution?: 'inline' | 'dispatch';
+  isolation?: 'worktree' | 'none';
+  modelClass?: 'mechanical' | 'standard' | 'complex';
 }
 
 export async function recordTaskOutcome(
@@ -40,7 +67,7 @@ export async function recordTaskOutcome(
   taskId: string,
   status: RecordableStatus,
   notes: string,
-  perTaskVerify?: PerTaskVerifyRecord,
+  options?: RecordTaskOutcomeOptions,
 ): Promise<void> {
   const backend = new SimpleStateBackend(cwd);
   const state = await backend.readState();
@@ -62,12 +89,33 @@ export async function recordTaskOutcome(
   } else {
     progress = { draftId: state.activeDraft, tasks: {} };
   }
+  const prior = progress.tasks[taskId];
   progress.tasks[taskId] = {
     status,
     notes,
-    touchedFiles: state.activeTask?.touchedFiles ?? [],
+    touchedFiles: options?.gitTouchedFiles ?? state.activeTask?.touchedFiles ?? [],
     updatedAt: new Date().toISOString(),
-    ...(perTaskVerify ? { perTaskVerify } : {}),
+    ...(options?.perTaskVerify ? { perTaskVerify: options.perTaskVerify } : {}),
+    // Phase 280 (280-01, T8 fix round): a re-record that omits execution/
+    // isolation/modelClass must preserve the prior row's values rather than
+    // dropping them -- AC-2 requires the dispatch-scoped boundary escalation
+    // to "never de-escalate", which depends on a task's execution:'dispatch'
+    // marker surviving every subsequent re-record of that same task.
+    ...(options?.execution
+      ? { execution: options.execution }
+      : prior?.execution
+        ? { execution: prior.execution }
+        : {}),
+    ...(options?.isolation
+      ? { isolation: options.isolation }
+      : prior?.isolation
+        ? { isolation: prior.isolation }
+        : {}),
+    ...(options?.modelClass
+      ? { modelClass: options.modelClass }
+      : prior?.modelClass
+        ? { modelClass: prior.modelClass }
+        : {}),
   };
   await atomicWriteJSON(progPath, progress);
   state.activeTask = { id: taskId, status, touchedFiles: [] };

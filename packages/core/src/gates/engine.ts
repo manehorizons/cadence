@@ -98,11 +98,20 @@ export function effectiveProfile(
  * AC-5). DRAFT frontmatter override wins; otherwise the project default from
  * `.cadence/config.json` applies. Falls back to `'warn'` if neither is set —
  * mirrors `effectiveProfile` above.
+ *
+ * Phase 280 T9 (AC-2, dec-20260815-002 / D-DQ2): optional third
+ * `progressSignal` param — escalation-only. When
+ * `progressSignal.anyTaskDispatched` is true the result is always `'block'`,
+ * overriding config *and* an explicit draft override; it never de-escalates.
+ * Omitting the param (every pre-existing 2-arg call site) leaves behavior
+ * byte-for-byte unchanged.
  */
 export function effectiveBoundaryEnforcement(
   config: Pick<CadenceConfig, 'boundaryEnforcement'> | null,
   draft: Pick<Draft, 'boundaryEnforcement'> | null,
+  progressSignal?: { anyTaskDispatched: boolean },
 ): CadenceConfig['boundaryEnforcement'] {
+  if (progressSignal?.anyTaskDispatched) return 'block';
   if (draft?.boundaryEnforcement) return draft.boundaryEnforcement;
   if (config?.boundaryEnforcement) return config.boundaryEnforcement;
   return 'warn';

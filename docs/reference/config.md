@@ -673,11 +673,26 @@ A DRAFT-level override wins over the project default in `.cadence/config.json`.
 { "boundaryEnforcement": "block" }
 ```
 
-**Scope note:** `block` mode is edit-time only — it fires on `PreToolUse`,
-which includes subagent-originated edits (Claude Code's `PreToolUse` hook
-fires for subagent tool calls, not just main-thread ones). A settle-time diff
-scan (phase 156, `boundary-scan` gate) is a second, independent line of
-defense for anything that slips past edit-time detection.
+**Scope note:** `block` mode is enforced at three independent points. It
+fires on `PreToolUse` (edit-time), which includes subagent-originated edits
+(Claude Code's `PreToolUse` hook fires for subagent tool calls, not just
+main-thread ones). A settle-time diff scan (phase 156, `boundary-scan` gate)
+is a second, independent line of defense for anything that slips past
+edit-time detection. Since phase 280 (the dispatch contract), `cadence build
+task <id> --status=DONE` also enforces it at record time: a stray
+working-tree file outside every task's declared `files:` refuses the
+recording (exit 1, no state mutation) unless `--allow-boundary-breach` is
+passed — see `docs/reference/commands.md`'s `build task` entry.
+
+**Dispatch-scoped auto-escalation:** independent of this config field's own
+value, once any task in the active phase has been recorded with `--execution
+dispatch`, both the record-time check and the settle-time `boundary-scan`
+gate escalate to `block` mode for the rest of the phase — even when this
+field is left at its default `warn`. This never de-escalates for the
+phase's remaining tasks. An operator who has never touched
+`boundaryEnforcement` can still see a hard record-time refusal once a
+dispatched task is recorded; that refusal is the escalation, not a
+misconfiguration.
 
 ---
 

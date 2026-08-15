@@ -22,3 +22,26 @@ describe('host-adapter authoring guide is published (AC-5)', () => {
     expect(guide).toContain('claudeCodeAdapter'); // the worked example
   });
 });
+
+describe('dispatched-agent AskUserQuestion side-channel callout', () => {
+  it('280-01/AC-6: host-adapters.md Declare capabilities section carries the side-channel callout', () => {
+    const guide = read('docs/host-adapters.md');
+    const section = guide.slice(
+      guide.indexOf('## 2. Declare capabilities'),
+      guide.indexOf('## 3. Map events and extract payloads'),
+    );
+    expect(section).toContain('AskUserQuestion');
+    expect(section).toMatch(/orchestrat\w*[a-z ]* never sees/i);
+  });
+
+  it('280-01/AC-6: claude-code.md also carries the side-channel callout', () => {
+    const guide = read('docs/claude-code.md');
+    expect(guide).toContain('AskUserQuestion');
+    expect(guide).toMatch(/orchestrat\w*[a-z ]*(?:never sees|no record)/i);
+  });
+
+  it('280-01/AC-6: the callouts are not the only AskUserQuestion mention in the repo — packet.ts still forbids it at runtime', () => {
+    const packet = read('packages/core/src/dispatch/packet.ts');
+    expect(packet).toContain('AskUserQuestion');
+  });
+});

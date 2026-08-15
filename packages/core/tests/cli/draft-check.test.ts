@@ -47,6 +47,7 @@ Then widget emits photons
 - action: add prop
 - verify: tests pass
 - done: AC-1
+- stop: halt if the flag changes widget's public API
 
 ## Boundaries
 `;

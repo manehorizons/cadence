@@ -14,9 +14,14 @@ export function recommendIsolation(task: Task): 'worktree' | 'none' {
 /**
  * Builds the full line array for a dispatch packet: the DRAFT's objective,
  * the task's action/verify/done, its files: boundary stated explicitly, and
- * a reminder of Spec 1's redundant-work monitoring. `verdictLines` (empty
- * for the base packet) is spliced in right after the isolation-recommendation
- * line and before the following blank line. Pure — no I/O.
+ * a reminder of Spec 1's redundant-work monitoring. When the task declares a
+ * `stop:` field, a `**Stop condition:**` bold-label line (matching the
+ * `**Recommended isolation:**` convention, not a heading) is spliced in
+ * right after the isolation-recommendation line via a conditional spread —
+ * absent tasks get nothing added, which is what keeps the rendered packet
+ * byte-identical to the pre-DP-B baseline when no stop: is declared.
+ * `verdictLines` (empty for the base packet) is spliced in right after that
+ * and before the following blank line. Pure — no I/O.
  */
 function buildLines(task: Task, draft: Draft, verdictLines: string[]): string[] {
   const filesStr = task.files.length > 0 ? task.files.map((f) => `\`${f}\``).join(', ') : '(none declared)';
@@ -36,6 +41,7 @@ function buildLines(task: Task, draft: Draft, verdictLines: string[]): string[] 
     '',
     `**Files (stay within these):** ${filesStr}`,
     isolationLine,
+    ...(task.stop ? [`**Stop condition:** ${task.stop}`, ''] : []),
     ...verdictLines,
     '',
     "Do not touch files declared under any other task. If a task already marked",

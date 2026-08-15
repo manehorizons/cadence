@@ -93,7 +93,7 @@ describe('cadence draft approve', () => {
     const path = join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md');
     await writeFile(
       path,
-      `---\nphase: 01-foundation\nid: 01-01\ntier: standard\nstatus: PENDING\n---\n\n# 01-01 — D\n\n## Objective\no\n\n## Acceptance Criteria\n\n### AC-1: a\nGiven x\nWhen y\nThen z\n\n## Tasks\n\n### T1: t\n- files: \`src/widget.ts\`\n- action: a\n- verify: v\n- done: AC-1\n\n## Boundaries\n`,
+      `---\nphase: 01-foundation\nid: 01-01\ntier: standard\nstatus: PENDING\n---\n\n# 01-01 — D\n\n## Objective\no\n\n## Acceptance Criteria\n\n### AC-1: a\nGiven x\nWhen y\nThen z\n\n## Tasks\n\n### T1: t\n- files: \`src/widget.ts\`\n- action: a\n- verify: v\n- done: AC-1\n- stop: halt if the change breaks downstream callers\n\n## Boundaries\n`,
     );
     const r = await run(['draft', 'approve', '01-foundation', '01'], active.root);
     expect(r.code).toBe(0);
@@ -125,10 +125,14 @@ describe('cadence draft approve', () => {
     expect(stateAfter.loopPosition).toBe('BUILD');
     const logPath = join(active.root, '.cadence/anomalies.log');
     const lines = (await readFile(logPath, 'utf8')).split('\n').filter((l) => l.length > 0);
-    expect(lines).toHaveLength(1);
-    const ev = JSON.parse(lines[0]!);
-    expect(ev.type).toBe('auto-complex-override');
-    expect(ev.severity).toBe('warn');
+    // The scaffolded template's T1 declares files: with no stop: by design
+    // (280-01/T5), so a STOP_CONDITION_MISSING coherence-warn also legitimately
+    // fires alongside auto-complex-override — assert on the event we're
+    // actually testing rather than the total anomaly count.
+    const events = lines.map((l) => JSON.parse(l) as AnomalyEvent);
+    const overrideEvents = events.filter((e) => e.type === 'auto-complex-override');
+    expect(overrideEvents).toHaveLength(1);
+    expect(overrideEvents[0]!.severity).toBe('warn');
   });
 
   // AC-2 (Phase 187 / T3) — membership-gated exactly like emitCoherenceWarns:

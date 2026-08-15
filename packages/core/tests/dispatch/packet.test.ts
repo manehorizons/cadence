@@ -142,3 +142,66 @@ describe('recommendIsolation', () => {
     expect(recommendIsolation(noFiles)).toBe('none');
   });
 });
+
+// Phase 280-dispatch-contract, DRAFT 280-01 (DP-B), T4 — Stop condition line.
+describe('Stop condition line — 280-01/AC-1', () => {
+  // Captured verbatim (via a one-off script invoking renderPacketBase with
+  // this exact file's `task`/`draft` fixtures) before packet.ts gained any
+  // stop:-line logic. `task` above declares no `stop`, so this string is the
+  // pre-DP-B baseline AC-1 requires renderPacketBase to keep reproducing
+  // byte-for-byte when a task has no stop: declared.
+  const PRE_DP_B_FIXTURE =
+    '# Task T1: Add glow flag\n' +
+    '\n' +
+    '**Phase objective:** Make the widget glow.\n' +
+    '\n' +
+    '**Action:** add a boolean glow prop\n' +
+    '**Verify:** vitest passes\n' +
+    '**Done when:** AC-1\n' +
+    '\n' +
+    '**Files (stay within these):** `src/widget.ts`, `tests/widget.test.ts`\n' +
+    '**Recommended isolation:** worktree — this task mutates files; dispatch it into its own git worktree if you are running multiple tasks concurrently.\n' +
+    '\n' +
+    'Do not touch files declared under any other task. If a task already marked\n' +
+    'DONE or DONE_WITH_CONCERNS genuinely needs revisiting, say so explicitly\n' +
+    "rather than silently redoing it — CADENCE's redundant-work monitoring will\n" +
+    "flag an edit to an already-finished task's files.\n" +
+    '\n' +
+    '**You are forbidden from taking the following actions, with no exceptions:**\n' +
+    '- Any state-mutating `cadence` subcommand — including but not limited to\n' +
+    '  `cadence build` and `cadence settle` — or any other command that mutates\n' +
+    '  `.cadence/` state.\n' +
+    '- `git commit` or `git push`.\n' +
+    '- gh (the GitHub CLI) or any other command that reaches a network or\n' +
+    '  external service.\n' +
+    '- Invoking `AskUserQuestion` or any other mechanism to prompt a human\n' +
+    '  interactively.\n' +
+    '\n' +
+    'The moment your Verify condition is met — or the moment you are genuinely\n' +
+    'blocked or need more context — STOP. Do not record the outcome yourself.\n' +
+    'Report back to the orchestrating session with what you did, the exact\n' +
+    'commands you ran and their real output, and the resulting diff. The\n' +
+    'orchestrator alone runs `cadence build task` (or `cadence settle`) and\n' +
+    'records the outcome.';
+
+  it('280-01/AC-1: renders byte-identical to the pre-DP-B fixture when no stop: is declared', () => {
+    expect(renderPacketBase(task, draft)).toBe(PRE_DP_B_FIXTURE);
+  });
+
+  it('280-01/AC-1: a declared stop: condition appears verbatim as a bold-label line, not a heading', () => {
+    const withStop: Task = {
+      ...task,
+      stop: 'If the migration touches more than 3 tables, halt and ask a human before continuing',
+    };
+    const packet = renderPacketBase(withStop, draft);
+    expect(packet).toContain(
+      '**Stop condition:** If the migration touches more than 3 tables, halt and ask a human before continuing',
+    );
+    expect(packet).not.toContain('## Stop condition');
+    expect(packet).not.toContain('# Stop condition');
+  });
+
+  it('280-01/AC-1: task with no stop: declared has no Stop condition line at all', () => {
+    expect(renderPacketBase(task, draft)).not.toContain('Stop condition');
+  });
+});

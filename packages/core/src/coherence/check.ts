@@ -62,5 +62,19 @@ export function coherenceCheck(draft: Draft, state: CadenceState, projectMd: str
     }
   }
 
+  // AC-7 (280-01, DP-B): a task that declares files: but no stop: gets a
+  // warn-severity STOP_CONDITION_MISSING issue. Draft-local signal only --
+  // does not depend on DP-A's runtime execution-class verdict, and never
+  // escalates to block.
+  for (const t of draft.tasks) {
+    if (t.files.length > 0 && !t.stop) {
+      issues.push({
+        severity: 'warn',
+        code: 'STOP_CONDITION_MISSING',
+        message: `Task ${t.id} declares files: but no stop: condition. Consider adding one so a dispatched agent knows when to halt.`,
+      });
+    }
+  }
+
   return { issues };
 }

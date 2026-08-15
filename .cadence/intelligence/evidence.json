@@ -2042,6 +2042,20 @@
       "kind": "note",
       "summary": "subagentPolicy/modelPerClass have zero consumers in packages/core/src (grep -rln subagentPolicy|contextBudgetThreshold|mechanicalBatchMin --include=*.ts packages/core/src -> 0 hits, measured 2026-08-14 and re-verified same day)",
       "createdAt": "2026-08-15T01:57:34.834Z"
+    },
+    {
+      "id": "ev-20260815-002",
+      "recommendationId": "rec-20260815-002",
+      "kind": "note",
+      "summary": "done.ts:13 calls recordTaskOutcome(process.cwd(), taskId, 'DONE', opts.notes) directly, never buildTaskService -- confirmed by reading both files 2026-08-15; runPerTaskVerifyGate and T11's boundary/redundancy checks both live only in buildTaskService",
+      "createdAt": "2026-08-15T15:34:52.440Z"
+    },
+    {
+      "id": "ev-20260815-003",
+      "recommendationId": "rec-20260807-001",
+      "kind": "note",
+      "summary": "Third confirmed hit, phase 280 (280-01, DP-B), 2026-08-15. Same dedup (packages/core/src/verify/coverage.ts assertion-mode per-file key=[REDACTED] hit THREE ways in one settle: (1) 280-01/AC-6's describe() title (docs-published.test.ts:26) shadowed 3 genuinely-qualifying it() occurrences at lines 27/37/43 -- identical shape to this rec's original phase-258 report, same workaround applied (dropped the token from the describe title). (2) Confirmed the dedup ALSO corrupts deep-verify's independent AI-verifier input, not just the token gate: gates/deep-verify.ts:35-37 feeds coverageMap straight into VerifyInput.tests without re-deriving full occurrence lists, so the verifier's 'linked tests' view is silently truncated to one ref per (AC,file) too. Manually confirmed via direct scanTestCoverage() calls that build-task-boundary.test.ts had 3 real AC-2 tests and 4 real AC-3 tests but the coverage map exposed only 1 and 2 respectively (first-encountered each time) -- deep-verify's refusal reasons ('the sole linked AC-2 test covers only...') matched exactly the single deduped ref's content, not the full test suite. (3) Separately (not this bug): AC-5 had a complete, correct, already-qualified-looking test that used a BARE 'AC-5:' it() title instead of '280-01/AC-5:' under coverageScheme:phase-qualified -- a distinct authoring mistake, fixed directly, not evidence for this rec. New severity note: two consecutive cadence settle run --auto invocations against the IDENTICAL code (before/after only the AC-5 title fix, which cannot affect AC-2/AC-3/AC-5's own files) produced DISJOINT deep-verify offender sets (run1: AC-2,AC-3,AC-5 fail; run2: those pass, AC-4 fails instead) -- run-to-run non-determinism on top of the dedup corruption, making a single deep-verify run's verdict unreliable evidence of a real gap either way. Escalating priority given this is the third confirmed real-world hit plus a newly-confirmed verifier-corruption vector; recommend folding rec-20260809-001 (near-duplicate) and treating rec-20260814-002 (the --explain-vs-settle divergence symptom) as downstream of this same root cause.",
+      "createdAt": "2026-08-15T16:22:18.360Z"
     }
   ]
 }

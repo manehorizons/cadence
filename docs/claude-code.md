@@ -236,6 +236,18 @@ To bootstrap the first phase, run `cadence agent-prompt --goal "<your goal>"` an
 paste the output to your agent — it produces a DRAFT with testable acceptance
 criteria and stops at approval, the same loop the slash commands drive.
 
+> **A dispatched subagent's prompt can land on a different terminal than
+> yours.** This host's native subagent spawn (see `Subagent spawn` below) runs
+> a background agent whose transcript is not guaranteed to appear in the
+> orchestrating session's window — if that agent pauses to ask something
+> interactive via `AskUserQuestion`, a human can end up answering it in a
+> different terminal/session entirely, leaving the orchestrator with no record
+> of the exchange, only the agent's eventual report (`rec-20260718-005`). This
+> is why CADENCE's dispatch packets forbid a dispatched agent from invoking
+> `AskUserQuestion` at runtime: any human approval for a scope change mid-
+> dispatch must come back through the orchestrating session, not a side
+> channel it never sees.
+
 Hook capabilities declared for this host:
 
 | Capability | Value |

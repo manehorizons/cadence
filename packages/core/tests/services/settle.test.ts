@@ -2655,3 +2655,121 @@ describe('settleService synthesizes per-task-verify gates[] entries from PROGRES
     }
   });
 });
+
+describe('settleService threads task provenance (execution/isolation/modelClass) into SUMMARY.taskResults (phase 280, T14)', () => {
+  /**
+   * Phase 280 (280-01, T14): `buildTaskResults` is a single shared function
+   * — both call sites (`finalizeAndCloseSettle`'s normal-settle SUMMARY and
+   * `writeRefusedSettleSummary`'s refused-settle SUMMARY) inherit the spread
+   * automatically. Two dedicated tests below prove that for real on both
+   * paths rather than assuming symmetry from reading the source, mirroring
+   * the phase-170/T4 refused-settle-summary test's use of `setupBuildRepo`
+   * + a hand-written PROGRESS.json.
+   */
+  it('280-01/AC-5: a normal settle path carries execution/isolation/modelClass from PROGRESS.json into SUMMARY.json.taskResults', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '280-14-normal-settle-provenance',
+      id: '280-14',
+      tier: 'standard',
+      // Phase 214 (T4): see the '51-code-review-verifier-cwd' comment above —
+      // this fixture has no real AC-1 coverage and predates evidence-floor.
+      config: { ...defaultConfig, gates: { sealed: [], evidenceFloor: 'unverified' } },
+    });
+
+    // setupBuildRepo writes a bare PROGRESS.json (T1: {status: 'DONE'} only)
+    // — overwrite it with the dispatch-contract provenance fields T8 already
+    // taught ProgressJson (gates/types.ts) to carry.
+    await writeFile(
+      join(root, '.cadence/phases/280-14-normal-settle-provenance/280-14-PROGRESS.json'),
+      JSON.stringify(
+        {
+          draftId: '280-14',
+          tasks: {
+            T1: {
+              status: 'DONE',
+              execution: 'dispatch',
+              isolation: 'worktree',
+              modelClass: 'standard',
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '280-14-normal-settle-provenance', '280-14-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    const t1 = summary.taskResults.find((t) => t.id === 'T1');
+    expect(t1).toBeDefined();
+    expect(t1?.execution).toBe('dispatch');
+    expect(t1?.isolation).toBe('worktree');
+    expect(t1?.modelClass).toBe('standard');
+  });
+
+  it('280-01/AC-5: a refused-settle path (build-test-must-pass refusal) still carries execution/isolation/modelClass into SUMMARY.json.taskResults', async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '280-14-refused-settle-provenance',
+      id: '280-14',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        verification: { ...defaultConfig.verification, testCommand: 'node -e "process.exit(1)"' },
+      },
+    });
+
+    await writeFile(
+      join(root, '.cadence/phases/280-14-refused-settle-provenance/280-14-PROGRESS.json'),
+      JSON.stringify(
+        {
+          draftId: '280-14',
+          tasks: {
+            T1: {
+              status: 'DONE',
+              execution: 'dispatch',
+              isolation: 'worktree',
+              modelClass: 'complex',
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    const { io, err } = captureIO();
+    // No --allow-failing-build / --force — the build-test-must-pass gate
+    // refuses (mirrors the phase-170/T4 '53-refused-settle-summary' fixture).
+    const res = await settleService(root, {}, io);
+
+    expect(res.exitCode).toBe(1);
+    expect(err.join('')).toContain('build-test-must-pass:');
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '280-14-refused-settle-provenance', '280-14-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    const t1 = summary.taskResults.find((t) => t.id === 'T1');
+    expect(t1).toBeDefined();
+    expect(t1?.execution).toBe('dispatch');
+    expect(t1?.isolation).toBe('worktree');
+    expect(t1?.modelClass).toBe('complex');
+  });
+});

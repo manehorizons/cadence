@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, mkdir, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runBoundaryScanGate } from '../../src/gates/boundary-scan.js';
-import type { SettleContext } from '../../src/gates/types.js';
+import type { SettleContext, ProgressJson } from '../../src/gates/types.js';
 import type { Task } from '@thomas-powers-jr/cadence-types';
 
 function git(cwd: string, args: string[]): string {
@@ -53,6 +53,7 @@ function ctx(over: {
   allowBoundaryScanFailure?: boolean;
   sealed?: string[];
   errs?: string[];
+  progressTasks?: ProgressJson['tasks'];
 }): SettleContext {
   const errs = over.errs ?? [];
   return {
@@ -63,7 +64,7 @@ function ctx(over: {
       acceptanceCriteria: [],
       tasks: [task(over.declaredFiles ?? [])],
     } as never,
-    progress: { draftId: '156-01', tasks: {} },
+    progress: { draftId: '156-01', tasks: over.progressTasks ?? {} },
     config: over.sealed ? ({ gates: { sealed: over.sealed } } as never) : null,
     gateSet: { gates: ['boundary-scan'], softCap: false } as never,
     opts: {
@@ -231,6 +232,37 @@ describe('runBoundaryScanGate', () => {
     });
 
     expect(errs.join('')).toContain('could not resolve a base ref');
+    expect(res.outcome).toBe('refuse');
+    expect(errs.join('')).toContain('undeclared.ts');
+  });
+
+  it('AC-2: escalates to block mode when a PROGRESS task carries execution:dispatch, even under a warn config', async () => {
+    const root = await makeRepo();
+    await writeFile(join(root, 'declared.ts'), 'declared\n');
+    await writeFile(join(root, 'undeclared.ts'), 'oops\n');
+    const errs: string[] = [];
+
+    const res = await runBoundaryScanGate(
+      ctx({
+        cwd: root,
+        boundaryEnforcement: 'warn',
+        declaredFiles: ['declared.ts'],
+        progressTasks: {
+          T0: {
+            status: 'DONE',
+            notes: '',
+            touchedFiles: [],
+            updatedAt: new Date().toISOString(),
+            execution: 'dispatch',
+          },
+        },
+        errs,
+      }),
+    );
+
+    // Config alone says 'warn' (a no-op pass); the dispatch-scoped escalation
+    // (T9's effectiveBoundaryEnforcement progressSignal) must still force the
+    // gate to run in block mode and refuse on the real stray file.
     expect(res.outcome).toBe('refuse');
     expect(errs.join('')).toContain('undeclared.ts');
   });

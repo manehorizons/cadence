@@ -60,6 +60,47 @@ describe('effectiveBoundaryEnforcement', () => {
       'warn',
     );
   });
+
+  // Phase 280 T9 (AC-2) — dispatch-execution escalation. anyTaskDispatched
+  // always wins to 'block', overriding even an explicit 'warn' from config or
+  // draft; the 3rd param is optional so all pre-existing 2-arg call sites
+  // above are unaffected.
+  it('AC-2: anyTaskDispatched:true escalates to "block" even when config says "warn" and draft is unset', () => {
+    expect(
+      effectiveBoundaryEnforcement(
+        { boundaryEnforcement: 'warn' },
+        { boundaryEnforcement: undefined },
+        { anyTaskDispatched: true },
+      ),
+    ).toBe('block');
+  });
+
+  it('AC-2: anyTaskDispatched:true escalates to "block" even when draft explicitly overrides config to "warn"', () => {
+    expect(
+      effectiveBoundaryEnforcement(
+        { boundaryEnforcement: 'block' },
+        { boundaryEnforcement: 'warn' },
+        { anyTaskDispatched: true },
+      ),
+    ).toBe('block');
+  });
+
+  it('AC-2: anyTaskDispatched:false behaves identically to the 2-arg call (no escalation)', () => {
+    expect(
+      effectiveBoundaryEnforcement(
+        { boundaryEnforcement: 'warn' },
+        { boundaryEnforcement: undefined },
+        { anyTaskDispatched: false },
+      ),
+    ).toBe('warn');
+    expect(
+      effectiveBoundaryEnforcement(
+        { boundaryEnforcement: 'block' },
+        { boundaryEnforcement: 'warn' },
+        { anyTaskDispatched: false },
+      ),
+    ).toBe('warn');
+  });
 });
 
 describe('effectiveRedundantWorkEnforcement', () => {

@@ -26,6 +26,15 @@ export const TaskZ = z.object({
   depends: z.array(z.string()).optional(),
   /** Optional declared execution class; wins over the heuristic classifier when set (Phase 279: dispatch policy engine). */
   class: TaskClassZ.optional(),
+  /**
+   * Optional machine-readable stop-condition a dispatched agent must honor
+   * (Phase 280: dispatch contract). Distinct from a prose file-scope
+   * description because it survives a "continue?" approval mid-dispatch —
+   * the agent re-checks it even after a human has said yes to keep going.
+   * NOT the same field as `touchedFiles` below (a separately-dead field
+   * this phase does not populate) — do not conflate the two.
+   */
+  stop: z.string().optional(),
   status: TaskStatusZ.optional(),
   touchedFiles: z.array(z.string()).optional(),
 });

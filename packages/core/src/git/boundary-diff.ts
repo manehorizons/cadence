@@ -14,6 +14,17 @@ export interface UnscopedTouchedFiles {
   baseRefResolved: boolean;
 }
 
+export const CADENCE_DIR_PREFIX = '.cadence/';
+
+/**
+ * Drop `.cadence/**` self-writes from a touched-files list — the settle-time
+ * `boundary-scan` gate's own state writes (`state.json`, `STATE.md`, phase
+ * artifacts, etc.) are never a boundary violation.
+ */
+export function filterCadenceSelfWrites(files: string[]): string[] {
+  return files.filter((f) => f !== '.cadence' && !f.startsWith(CADENCE_DIR_PREFIX));
+}
+
 /**
  * Parse one `git status --porcelain` line into its path. Strips the 2-char
  * status code + 1-space prefix; for a rename/copy line (`R  old -> new`),

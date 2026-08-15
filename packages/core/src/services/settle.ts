@@ -221,13 +221,24 @@ function buildTaskResults(
   draft: { tasks: { id: string }[] },
   progress: ProgressJson,
 ): Summary['taskResults'] {
-  return draft.tasks.map((t) => ({
-    id: t.id,
-    status: (TaskStatusZ.safeParse(progress.tasks[t.id]?.status).success
-      ? (progress.tasks[t.id]!.status as Summary['taskResults'][number]['status'])
-      : 'BLOCKED'),
-    notes: progress.tasks[t.id]?.notes ?? '',
-  }));
+  return draft.tasks.map((t) => {
+    const row = progress.tasks[t.id];
+    return {
+      id: t.id,
+      status: (TaskStatusZ.safeParse(row?.status).success
+        ? (row!.status as Summary['taskResults'][number]['status'])
+        : 'BLOCKED'),
+      notes: row?.notes ?? '',
+      // Phase 280 (280-01, T14): dispatch-contract provenance — spread
+      // straight from PROGRESS.json when T8/T11/T12 populated it. Additive
+      // only: absent on every pre-phase-280 record, so this never injects a
+      // key (and thus never perturbs computeSummaryContentHash) for a
+      // historical PROGRESS row that predates these fields.
+      ...(row?.execution ? { execution: row.execution } : {}),
+      ...(row?.isolation ? { isolation: row.isolation } : {}),
+      ...(row?.modelClass ? { modelClass: row.modelClass } : {}),
+    };
+  });
 }
 
 /**

@@ -124,3 +124,110 @@ describe('DeepVerdictZ.unobservable is additive — historical records hash unch
     expect(computeSummaryContentHash(summary).value).toBe(storedHashValue);
   });
 });
+
+/**
+ * Phase 280 (280-01, T13/T16): `SummaryZ.taskResults[]` gained three new
+ * optional fields — `execution`, `isolation`, `modelClass` (T13) — dispatch-
+ * contract provenance for how a task was actually carried out. Same
+ * content-hash-safety hazard as `coverageScheme`/`providerSelection`/
+ * `DeepVerdictZ.unobservable` above: NO `.default(...)` on any of the three,
+ * or parsing a historical record would inject a value, change its digest,
+ * and falsely report every past settle as tampered.
+ *
+ * Reuses phase 279's own real, committed `279-01-SUMMARY.json` (predates
+ * this phase — none of its `taskResults[]` entries carry the new fields) as
+ * the historical fixture: the baseline asserted against is the
+ * `contentHash.value` already on disk from that phase's own settle, not a
+ * hex literal recomputed after the schema change (which would prove
+ * nothing).
+ */
+describe('SummaryZ.taskResults[].execution/isolation/modelClass are additive — historical records hash unchanged (phase 280, T13/T16)', () => {
+  const FIXTURE_279 = join(
+    REPO_ROOT,
+    '.cadence',
+    'phases',
+    '279-dispatch-policy-engine',
+    '279-01-SUMMARY.json',
+  );
+
+  it('280-01/AC-5: a real historical SUMMARY.json with execution/isolation/modelClass absent everywhere recomputes to its originally-stored contentHash, and a hand-built legacy taskResults entry round-trips unchanged while a new-fields entry parses and preserves the enum values', () => {
+    const raw = readFileSync(FIXTURE_279, 'utf8');
+    const storedHashValue = (JSON.parse(raw) as { contentHash?: { value?: string } }).contentHash
+      ?.value;
+    // Sanity: the fixture actually has a stored hash to compare against —
+    // otherwise this test would pass vacuously.
+    expect(storedHashValue).toBeTruthy();
+
+    const parsed = SummaryZ.safeParse(JSON.parse(raw));
+    if (!parsed.success) {
+      throw new Error(`fixture ${FIXTURE_279} failed SummaryZ validation: ${parsed.error.message}`);
+    }
+    const summary = parsed.data;
+
+    // Confirm the schema addition didn't perturb parsing: the fixture
+    // genuinely has taskResults, and none of them carry the new fields post-
+    // parse — parsing an old record never invents them.
+    expect(summary.taskResults.length).toBeGreaterThan(0);
+    for (const t of summary.taskResults) {
+      expect(Object.hasOwn(t, 'execution')).toBe(false);
+      expect(Object.hasOwn(t, 'isolation')).toBe(false);
+      expect(Object.hasOwn(t, 'modelClass')).toBe(false);
+    }
+
+    // The load-bearing assertion: recomputing over the parsed record (with
+    // the three new optional fields absent, exactly as Zod leaves them)
+    // reproduces the digest this SUMMARY.json was ALREADY stamped with,
+    // pre-dating this phase's schema.ts change entirely.
+    expect(verifySummaryContentHash(summary)).toBe('MATCH');
+    expect(computeSummaryContentHash(summary).value).toBe(storedHashValue);
+
+    // Second, non-tautological round-trip mirroring phase 239/263/275's
+    // pattern exactly: hash a hand-built legacy object (lacking all three
+    // new fields) BEFORE any schema parse, round-trip it through
+    // SummaryZ.parse, then re-hash. If any of the three fields carried a
+    // `.default(...)`, parsing would inject it and the hashes would diverge.
+    const legacy = {
+      schemaVersion: 2,
+      draftId: '01-01',
+      completedAt: '2026-01-01T00:00:00.000Z',
+      acResults: [{ id: 'AC-1', pass: true }],
+      taskResults: [{ id: 'T1', status: 'DONE', notes: '' }],
+      decisions: [],
+      deferred: [],
+      skillAudit: { required: [], invoked: [] },
+    };
+    const legacyHash = computeSummaryContentHash(legacy as never);
+    const withHash = { ...legacy, contentHash: legacyHash };
+
+    const roundTripped = SummaryZ.parse(withHash);
+    const recomputed = computeSummaryContentHash(roundTripped);
+    expect(recomputed.value).toBe(legacyHash.value);
+
+    const legacyTask = roundTripped.taskResults[0];
+    expect(legacyTask).toBeDefined();
+    expect(Object.hasOwn(legacyTask as object, 'execution')).toBe(false);
+    expect(Object.hasOwn(legacyTask as object, 'isolation')).toBe(false);
+    expect(Object.hasOwn(legacyTask as object, 'modelClass')).toBe(false);
+
+    // A taskResults entry that DOES carry the new fields parses and
+    // preserves them.
+    const withNewFields = SummaryZ.parse({
+      ...legacy,
+      taskResults: [
+        {
+          id: 'T1',
+          status: 'DONE',
+          notes: '',
+          execution: 'dispatch',
+          isolation: 'worktree',
+          modelClass: 'standard',
+        },
+      ],
+    });
+    expect(withNewFields.taskResults[0]).toMatchObject({
+      execution: 'dispatch',
+      isolation: 'worktree',
+      modelClass: 'standard',
+    });
+  });
+});

@@ -1,0 +1,27 @@
+{
+  "draftId": "280-01",
+  "converged": false,
+  "attempts": 1,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-08-15T16:26:23.401Z",
+      "pass": false,
+      "findingsCount": 1,
+      "provider": "host-cli",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-08-15T16:35:43.846Z",
+      "pass": false,
+      "findingsCount": 0,
+      "provider": "mock",
+      "verdict": "abstained",
+      "mockAbstained": true
+    }
+  ],
+  "pass": false,
+  "provider": "mock",
+  "findings": 0,
+  "at": "2026-08-15T16:35:43.846Z"
+}

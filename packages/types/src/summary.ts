@@ -277,7 +277,32 @@ export const SummaryZ = z.object({
     }),
   ),
   taskResults: z.array(
-    z.object({ id: z.string(), status: TaskStatusZ, notes: z.string() }),
+    z.object({
+      id: z.string(),
+      status: TaskStatusZ,
+      notes: z.string(),
+      /** Phase 280 (280-01, T13): dispatch-contract provenance — how this
+       *  task's implementation was actually carried out (`inline` in the
+       *  main session vs. `dispatch` to a subagent), whether it ran under
+       *  worktree isolation, and the model-class tier it was routed to.
+       *  Absent on every pre-phase-280 record.
+       *
+       *  MUST stay `.optional()` with NO `.default(...)`, for the exact same
+       *  reason as `coverageScheme`/`providerSelection` above (phase 239/263
+       *  precedent): `cadence summary verify` Zod-parses the file and then
+       *  content-hashes the PARSED object (`core/src/services/summary-hash.ts`),
+       *  so a default here would be injected into every historical SUMMARY at
+       *  parse time, change its digest, and falsely report every past settle
+       *  as tampered. `core/tests/summary-coverage-scheme.test.ts` and
+       *  `core/tests/summary-provider-selection-schema.test.ts` both guard
+       *  this same invariant and fail if any `.default(...)` sneaks into this
+       *  schema. No `schemaVersion` bump either — additive optional fields
+       *  have never required one since phase 232's bump to schemaVersion 2.
+       */
+      execution: z.enum(['inline', 'dispatch']).optional(),
+      isolation: z.enum(['worktree', 'none']).optional(),
+      modelClass: z.enum(['mechanical', 'standard', 'complex']).optional(),
+    }),
   ),
   decisions: z.array(DecisionZ),
   deferred: z.array(DeferredItemZ),
