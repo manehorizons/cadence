@@ -118,11 +118,21 @@ export async function buildTaskService(
     execution?: 'inline' | 'dispatch';
     isolation?: 'worktree' | 'none';
     modelClass?: 'mechanical' | 'standard' | 'complex';
+    /**
+     * `context.source` tag on the `loop-violation` anomaly emitted for a
+     * `LoopViolationError` caught below (D-N3/dec-20260815-007). Defaults to
+     * `'build.task'` — this command's own identity — so every caller that
+     * omits it keeps today's behavior byte-for-byte; `done.ts` passes
+     * `'build.done'` to preserve its own distinct, pre-existing tag once it
+     * delegates here instead of calling `recordTaskOutcome` directly.
+     */
+    anomalySource?: string;
   },
   io: CommandIO,
 ): Promise<CommandResult> {
   const statusRaw = args.status ?? 'DONE';
   const notes = args.notes ?? '';
+  const anomalySource = args.anomalySource ?? 'build.task';
   try {
     const statusParse = TaskStatusZ.safeParse(statusRaw);
     if (
@@ -360,7 +370,7 @@ export async function buildTaskService(
   } catch (err) {
     io.err(`${formatCommandError('build task', err)}\n`);
     if (err instanceof LoopViolationError) {
-      await emitLoopViolation(repoRoot, err, 'build.task');
+      await emitLoopViolation(repoRoot, err, anomalySource);
     }
     return { exitCode: 1 };
   }

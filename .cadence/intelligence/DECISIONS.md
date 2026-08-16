@@ -404,6 +404,27 @@ config.telemetry.tokenUtilization does not measure real token/context usage -- c
 
 A dispatch-classified task that declares files: but no stop: gets a coherence warn (STOP_CONDITION_MISSING), never a block. A blocker on a brand-new DRAFT field would refuse every pre-existing draft that predates it. Revisit against retro data (the phase-212 retro-feedback pipeline is the natural evidence source) once there's a real corpus of stop:-bearing drafts to measure against.
 
+### dec-20260815-005 — D-N: cadence done becomes a true alias for build task --status=DONE
+
+- recommendation: rec-20260815-002
+- decided: 2026-08-15T22:12:44.592Z
+
+done delegates to buildTaskService with status: 'DONE' and no other flags, rather than growing a matching --allow-per-task-failure/--allow-boundary-breach/--execution surface. done's whole value is being the short command; matching build task's guarantees on the alias while keeping its flag surface minimal is the smaller, more honest change. Consequence (user-visible behavior change, called out in the changeset): cadence done in a phase where boundaryEnforcement resolves to block, or where per-task-verify would refuse, can now refuse -- with no bypass flag available on done itself. Previously done always succeeded. Anyone needing a bypass must use build task <id> --status=DONE --allow-per-task-failure / --allow-boundary-breach instead. docs/reference/commands.md's done section documents this explicitly (AC-A5).
+
+### dec-20260815-006 — D-N2: done inherits buildTaskService's unknown-task-id guard too, a third pre-existing gate
+
+- recommendation: rec-20260815-002
+- decided: 2026-08-15T22:46:42.067Z
+
+During T4's build, routing done through buildTaskService broke a pre-existing done.test.ts case ('records DONE with empty notes when --notes omitted') that calls 'cadence done T2' against a DRAFT scaffolded with only T1 declared. Under the old recordTaskOutcome path this always exited 0 (no task-id validation at all); under buildTaskService it now exits 2 with 'unknown task id T2 ... Nothing recorded.' Verified via git log -S 'unknown task id' -- packages/core/src/services/build-task.ts: this guard is from phase 58 (7cb76955), which long predates phase 280 and this phase -- build task T2 against a T1-only draft has ALWAYS refused. done T2 succeeding was always the anomaly; the pre-existing test's use of T2 was incidental to testing --notes defaulting, not a deliberate assertion that an undeclared task id should succeed. Resolution: amend AC-4 (both SPEC and DRAFT) to scope 'neither gate would refuse' to the three gates done now inherits -- per-task-verify, boundary/redundancy, and this unknown-task-id guard -- and correct the one pre-existing test to use a declared task id (T1) instead of the never-valid T2, preserving exactly what it tests (--notes default behavior). This is D-N2 because it is a distinct behavior-change dimension from D-N (D-N covered per-task-verify/boundary refusal with no bypass flag on done; this covers unknown-task-id refusal, a different exit code (2, not 1) done never surfaced before). docs/reference/commands.md and the changeset must name all three inherited gates, not two.
+
+### dec-20260815-007 — D-N3: buildTaskService gains an additive optional anomalySource param for the LoopViolation tag
+
+- recommendation: rec-20260815-002
+- decided: 2026-08-15T22:59:35.198Z
+
+T4's independent reviewer, running the full suite (not just the cli/done filter), found that packages/core/tests/cli/loop-violation.test.ts's pre-existing, unmodified AC-4 case ('cadence done shortcut from IDLE -> loop-violation event with source=build.done') regressed: buildTaskService's catch block hardcodes emitLoopViolation(repoRoot, err, 'build.task') at build-task.ts:363, so done.ts delegating entirely to buildTaskService has no interception point to relabel the anomaly source back to 'build.done'. This is real AC-4-violating observable behavior drift, not a false positive -- confirmed via full suite run (2 failures, one is this) and by reading the hardcoded literal directly. block.ts and needs-context.ts are unaffected (out of scope for this phase, still call recordTaskOutcome + emitLoopViolation directly with their own 'build.block'/'build.needs-context' tags), so this asymmetry is specific to done's new full delegation, not a pre-existing repo-wide pattern. Resolution: add an additive optional args.anomalySource?: string to buildTaskService (default 'build.task', preserving build task's and any other untouched caller's behavior exactly), threaded into its internal emitLoopViolation call in place of the hardcoded literal. done.ts passes anomalySource: 'build.done'. This requires amending the DRAFT's 'DO NOT change buildTaskService itself' boundary -- narrowly, to permit only this one additive optional field, mirroring the D-N2 as-built-amendment process. No schemaVersion bump; no behavior change for build task or the MCP surface (both omit the new field).
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

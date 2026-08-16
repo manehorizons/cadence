@@ -1243,8 +1243,8 @@ explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY o
 
 ## rec-20260815-002 — cadence done bypasses per-task-verify and the dispatch-contract boundary/redundancy checks
 
-- status: candidate
-- ready: raw-idea
+- status: settle-pending
+- ready: ready-for-cadence-spec
 - priority: medium
 - leverage: 5/10
 - risk: 5/10
@@ -1252,6 +1252,7 @@ explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY o
 - decay: fresh
 - areas: cli, dispatch
 - files: packages/core/src/cli/commands/done.ts
+- decisions: dec-20260815-005 (active), dec-20260815-006 (active), dec-20260815-007 (active)
 - evidence: done.ts:13 calls recordTaskOutcome(process.cwd(), taskId, 'DONE', opts.notes) directly, never buildTaskService -- confirmed by reading both files 2026-08-15; runPerTaskVerifyGate and T11's boundary/redundancy checks both live only in buildTaskService
 - next: cadence milestone propose
 
@@ -1271,3 +1272,35 @@ cadence done <id> (packages/core/src/cli/commands/done.ts) calls recordTaskOutco
 - next: cadence milestone propose
 
 Right now the only 'real LLM' path for the deep-verify/code-review settle gates is the host-cli provider, and both its families are commonly blocked: 'claude' by the self-invocation guard whenever settle itself runs inside a headless Claude Code session (the common case for this repo's own dogfooding), and 'codex' by the 180s spawn timeout on substantial prompts -- hit 3 times in one evening during DP-B's (phase 280) own settle (2 deep-verify timeouts, 1 code-review timeout), all falling back to mock. Separately, an orchestrating Claude Code session CAN dispatch a genuinely independent, adversarial fresh-context subagent (the Agent tool) to review a branch/diff against the DRAFT's ACs -- CLAUDE.md already sanctions this as the correct alternative to a self-review, and DP-B's own whole-branch review (done exactly this way) caught 3 real defects invisible to any single per-task review. But that review happens entirely outside cadence's own gate machinery: it never touches SUMMARY.json, so the audit trail shows 'deep-verify: mock' even when a real independent review genuinely occurred through a different channel. The naive fix -- letting a session hand-write a stronger observedProvider value like 'orchestrator-reviewed' into SUMMARY.json after the fact -- is explicitly wrong: SUMMARY.json's provenance fields exist specifically to distrust an agent's self-report, and a hand-writable 'I was reviewed independently, trust me' value is a one-way ratchet that makes the field stop carrying information (the existing code-review gate's own 'mock pass -> skipped, not a persisted pass' behavior is the project's own precedent for refusing exactly this shortcut). The real design question is what evidence would EARN a genuine non-mock, non-host-cli provenance status -- i.e. how to make the artifact PRODUCED by the review rather than ASSERTED after it. Two candidate shapes worth designing against: (a) a new '--verifier orchestrator' mode where settle emits a structured review request (ACs + diff + test refs, same VerifyInput shape deep-verify already builds) to a known path, blocks/polls for a structured response written back to that path by whatever dispatched the review, and only counts it if the response is well-formed and satisfies a real schema -- so the provenance is earned by the artifact's existence, not typed in after the fact; (b) extend the HostAdapter contract so an Agent-tool-capable host can register itself as a verifier provider through the existing host-agnostic seam (core still never imports host code, no special-casing 'Claude Code' by name), rather than inventing a parallel mechanism. Either shape needs to answer: what stops a session from writing a fake structured response to fake the review, same as the naive hand-edit does -- likely needs either a host-side attestation the core can check (e.g. a session/agent id that must differ from the settling session's own), or accept it as an operator-trust boundary the same way host-cli's per-call fallback already is.
+
+## rec-20260815-004 — ROADMAP.md/MILESTONES.md backfill gap: phases 271-280 have no roadmap/milestone entries
+
+- status: candidate
+- ready: raw-idea
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs
+- files: .cadence/ROADMAP.md, .cadence/MILESTONES.md
+- evidence: computeRoadmapDrift() with disk=281 (phase 281 present), roadmap=270, milestones=270 -> drift=11 > threshold 10, before phase 281's own T5 fix recorded a Phase 281 entry
+- next: cadence milestone propose
+
+tests/docs/phase271-record-integrity.test.ts's roadmap-currency drift check (disk-vs-backfill, threshold 10) was already at its maximum tolerance (drift=10, disk=280, backfill=270) before phase 281 existed -- confirmed via cadence doctor at session start ('roadmap-currency: ok ... within the 10-phase threshold'). Phase 281's own directory creation alone (independent of its content) tipped drift to 11 and broke the test; phase 281 fixed this narrowly by recording only its own Phase 281 entry in both files (bringing drift back to 0), per D-N3-adjacent as-built scope decision -- see .cadence/phases/281-done-bypass-fix/281-01-DRAFT.md's T5. The underlying gap (phases 271-280 have zero ROADMAP.md/MILESTONES.md entries) is still open and will recur: the very next new phase after 281 will again sit at drift=1 with zero slack, and any phase after that risks tripping the same threshold again depending on how many phases land between now and the next backfill sweep. Precedent: rec-20260811-005 tracks the same class of gap for phases 239-241. Resolution: a dedicated backfill phase (or the release-cut skill's doc-sync step) should write full ### Phase N / - **Phase N** entries for 271 through (whatever the disk-max is at backfill time), sourced from real phase SUMMARY/PROGRESS records and merged PR numbers, not guessed.
+
+## rec-20260815-005 — Boundary-scan doesn't glob-expand declared files: patterns (e.g. .changeset/*.md)
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, dispatch
+- files: packages/core/src/git/boundary-diff.ts, packages/core/src/checks/boundary.ts
+- evidence: cadence build task T6 --status=DONE against phase 281's own T6 (files: .changeset/*.md, wrote .changeset/done-bypass-fix.md) printed: 'cadence anomaly [warn] files-outside-boundary: .changeset/done-bypass-fix.md touched but not declared in any task's files:'
+- next: cadence milestone propose
+
+Phase 281's T6 declared files: `.changeset/*.md` in its DRAFT and then wrote .changeset/done-bypass-fix.md exactly as scoped, but cadence build task T6 still emitted a files-outside-boundary warn anomaly for that exact file. grep across packages/core/src/git/boundary-diff.ts and packages/core/src/checks/boundary.ts shows no glob/minimatch/micromatch usage -- declared files: entries appear to be compared as literal paths, not glob-expanded, so a wildcard pattern in files: can never actually match anything and any file it was meant to cover will always warn (or refuse, in block mode). This is warn-only and non-blocking today (boundaryEnforcement defaulted to warn for phase 281's build), but would be a real, surprising refusal for any dispatch-scoped phase (block mode) that declares a wildcard files: pattern -- the task would refuse no matter what it wrote. Resolution: either glob-expand files: entries at match time (minimatch/micromatch, zero-runtime-dep policy permitting -- check if a glob impl is already a transitive dep before adding one), or refuse to accept a files: pattern containing a glob character at draft coherence-check time with a clear error, so authors don't unknowingly write an unenforceable boundary.

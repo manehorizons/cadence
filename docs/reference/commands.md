@@ -719,11 +719,27 @@ Shortcut for `cadence build task <id> --status=DONE`
 | `--notes <n>` | `""` | Notes |
 | `-h, --help` | — | Display help for command |
 
-**Behavior** — equivalent to `cadence build task <id> --status=DONE
-[--notes <n>]`. The per-task verifier gate (Phase 24.2) fires exactly as it
-does for `build task`. See [build task](#build-task) for gate details.
+**Behavior** — `done <id>` is a true alias for `cadence build task <id>
+--status=DONE [--notes <n>]` (dec-20260815-005): it delegates entirely to
+`buildTaskService`, so it carries identical guarantees rather than a reduced
+or reimplemented subset. Three gates inherited from `build task` fire exactly
+as they do there:
 
-**Exit codes** — same as `build task`: exits non-zero on gate refusal.
+1. The per-task verifier gate (Phase 24.2).
+2. The record-time boundary/redundancy check (dispatch contract, phase 280).
+3. The unknown-task-id guard (Phase 29.8) — `<id>` must be declared in the
+   current draft's task list.
+
+`done` adds no flags of its own. A caller who needs to bypass gate 1 or 2
+must call `cadence build task <id> --status=DONE` directly with
+`--allow-per-task-failure` or `--allow-boundary-breach` respectively — see
+[build task](#build-task) for what each flag does. Gate 3, the unknown-task-id
+guard, has no bypass flag on either command: the task id must be declared in
+the active draft.
+
+**Exit codes** — 0 on success. Gates 1 and 2 (per-task-verify, boundary/
+redundancy) refuse at exit 1. Gate 3 (unknown task id) refuses at exit 2, a
+distinct code from the other two refusals.
 
 ---
 
