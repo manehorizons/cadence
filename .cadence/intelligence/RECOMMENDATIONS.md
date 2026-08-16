@@ -1241,23 +1241,6 @@ During v1.57.0's release cut (2026-08-13), reconciling a diverged local main via
 
 explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY occurrence in ANY file satisfies' -- no per-file dedup. scanTestCoverage() (the function the real gate at gates/coverage.ts actually consumes) keeps only the FIRST textual occurrence of an AC token per (id, file) (verify/coverage.ts:126-157) and aggregates from there. A leading narrative comment carrying the qualified token (e.g. '// 278-01/AC-3: this test proves...' placed above the real asserting it() block) consumes that file's dedup slot with a non-qualifying ref, so the real assertion below it is never recorded -- yet --explain still reports Overall: SATISFIED because it found the qualifying it() occurrence independently, without dedup. This misled every per-task independent review during phase 278's build (6 of 11 ACs showed --explain SATISFIED yet settle run --auto genuinely refused citing exactly those 6 as unsatisfied at the final settle step) until the discrepancy surfaced empirically. Root cause and fix are in the scanner itself (out of phase 278's boundaries to touch) -- either make --explain's satisfied field replicate the real per-file-dedup algorithm, or have scanTestCoverage prefer a qualifying occurrence over an earlier non-qualifying one within the same file when both exist.
 
-## rec-20260815-002 — cadence done bypasses per-task-verify and the dispatch-contract boundary/redundancy checks
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: cli, dispatch
-- files: packages/core/src/cli/commands/done.ts
-- decisions: dec-20260815-005 (active), dec-20260815-006 (active), dec-20260815-007 (active)
-- evidence: done.ts:13 calls recordTaskOutcome(process.cwd(), taskId, 'DONE', opts.notes) directly, never buildTaskService -- confirmed by reading both files 2026-08-15; runPerTaskVerifyGate and T11's boundary/redundancy checks both live only in buildTaskService
-- next: cadence milestone propose
-
-cadence done <id> (packages/core/src/cli/commands/done.ts) calls recordTaskOutcome directly instead of going through buildTaskService, so it skips both the pre-existing per-task-verify gate (runPerTaskVerifyGate) and phase 280's new boundary+redundancy checks at record time (T11's B2 wire-up). This is a leave-unenforced gap, not a bug introduced by phase 280: done has always been documented as a shortcut for build task --status=DONE (its own --description says exactly that) while actually implementing a narrower, unguarded path -- the per-task-verify skip already existed before this phase, and dispatch-contract enforcement now has the identical pre-existing gap layered on top of it. DP-B's own DRAFT (280-01) explicitly scoped closing this out of the phase (Boundaries: 'DO NOT close the cadence done <id> unenforced-recording-path gap in this phase -- pre-existing (per-task-verify already skips it too), not introduced here. File a recommendation instead.'). Resolution options: (a) make done call buildTaskService (or a shared core) so it inherits both gates, accepting that some done call sites may rely on the current unguarded fast path; (b) leave it, but update its --description/docs to state explicitly that it is NOT gate-equivalent to build task; (c) deprecate done in favor of build task --status=DONE outright.
-
 ## rec-20260815-003 — Record genuine orchestrator/subagent-driven independent review in deep-verify's audit trail, distinct from mock
 
 - status: candidate
