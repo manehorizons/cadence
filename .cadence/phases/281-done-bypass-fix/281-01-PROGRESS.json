@@ -1,0 +1,52 @@
+{
+  "draftId": "281-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Added failing regression test proving cadence done bypasses per-task-verify (red for the right reason: exit 0 instead of 1). Independently re-verified: typecheck clean, lint clean, cli/done test shows 1 failed (new case, expected) + 4 passed (pre-existing, unmodified). Reviewed by independent subagent: PASS, no critical/important findings.",
+      "touchedFiles": [
+        "packages/core/tests/cli/done.test.ts",
+        ".flywheel-DEGRADED"
+      ],
+      "updatedAt": "2026-08-15T22:25:00.770Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Added block-mode boundary regression test proving cadence done bypasses the record-time boundary check entirely (no gate even runs). Independently re-verified: typecheck clean, both new cases red for stated reasons (exit 0 vs expected 1), 4 pre-existing cases still pass. Reviewer independently reproduced the real build-task refusal message to confirm the assertions aren't fabricated: PASS, no critical/important findings.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-15T22:33:07.339Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Added warn-mode touchedFiles regression test. Reviewer independently verified the AC-3 premise (build task computes ground-truth touchedFiles even in default warn mode when declared-files union is non-empty) against build-task.ts:198-268 and cross-checked with build-task-boundary.test.ts's T11 case, plus reproduced the real build task run confirming touchedFiles genuinely contains the stray file while done currently records []. Independently re-verified: typecheck clean, 3 red for stated reasons, 4 pre-existing pass. PASS, no critical/important findings.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-15T22:41:36.640Z"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Routed done.ts through buildTaskService (D-N, true alias). Two additional gaps found by independent review and resolved with recorded decisions: D-N2 (dec-20260815-006) -- a pre-existing test used a never-valid task id, corrected T2->T1 (build task against the same id has refused since phase 58); D-N3 (dec-20260815-007) -- buildTaskService hardcoded the loop-violation anomaly source tag, added an additive optional anomalySource param so done preserves its distinct build.done tag. Added a proving test for the third inherited gate (unknown-task-id, exit 2). SPEC and DRAFT amended (as-built) to reflect all three. Independently re-verified: typecheck clean, build clean, full unfiltered package suite 435/435 files, 4247/4247 tests, lint clean. Two independent review rounds: PASS both times, second pass explicitly re-ran the full suite and independently reproduced the anomaly-log evidence.",
+      "touchedFiles": [
+        "packages/core/src/cli/commands/done.ts",
+        "packages/core/src/services/build-task.ts"
+      ],
+      "updatedAt": "2026-08-15T23:23:14.168Z"
+    },
+    "T5": {
+      "status": "DONE",
+      "notes": "Updated docs/reference/commands.md's done section to state all three inherited gates (per-task-verify, boundary/redundancy, unknown-task-id/Phase 29.8) and the bypass path (build task's --allow-per-task-failure/--allow-boundary-breach; no bypass for the id guard). Recorded this phase's own entries in ROADMAP.md/MILESTONES.md (roadmap-currency drift fix, drift 11->0; unrelated 271-280 backfill gap filed as rec-20260815-004, not absorbed into scope). Independent review found one real stale-doc finding directly caused by this phase (docs/cli.md's Carry-forward callout claiming done still skips id validation) -- fixed narrowly, as-built amendment to T5. Independently re-verified: both targeted doc tests pass (10/10), full unfiltered suite still 435/435 files, 4247/4247 tests.",
+      "touchedFiles": [
+        "docs/cli.md",
+        "docs/reference/commands.md"
+      ],
+      "updatedAt": "2026-08-15T23:35:31.462Z"
+    },
+    "T6": {
+      "status": "DONE",
+      "notes": "Added .changeset/done-bypass-fix.md (minor bump on cadence-core, propagates to all 5 public packages via the fixed lockstep group per .changeset/config.json). Validated with npx changeset status: recognized correctly, no errors. Describes the behavior change plainly: done now inherits three gates (per-task-verify, boundary/redundancy, unknown-task-id) with distinct exit codes (1 vs 2) and no bypass flag of its own; names build task with --allow-per-task-failure/--allow-boundary-breach as the bypass path.",
+      "touchedFiles": [
+        ".changeset/done-bypass-fix.md"
+      ],
+      "updatedAt": "2026-08-15T23:36:02.047Z"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "specId": "281-01",
+  "converged": false,
+  "attempts": 1,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-08-15T22:13:38.502Z",
+      "pass": false,
+      "findingsCount": 3,
+      "provider": "mock",
+      "providerSelection": "configured",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-08-15T22:13:51.833Z",
+      "pass": false,
+      "findingsCount": 0,
+      "provider": "mock",
+      "providerSelection": "configured",
+      "verdict": "abstained",
+      "mockAbstained": true
+    }
+  ],
+  "pass": false,
+  "provider": "mock",
+  "providerSelection": "configured",
+  "findings": 0,
+  "at": "2026-08-15T22:13:51.833Z"
+}

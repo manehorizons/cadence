@@ -1041,6 +1041,12 @@ changeset (example/test-only change, no published-package surface).*
   regression (bare AC tokens vs. phase-239's phase-qualified default), which had silently
   broken the demo's documented "Settled" end state since phase 239 (rec-20260810-001,
   #396).
+- **Phase 281** — `cadence done <id>` routed through `buildTaskService` to close a
+  documented-but-unenforced shortcut: it bypassed the per-task-verify gate, phase 280's
+  record-time boundary/redundancy check, and the pre-existing unknown-task-id guard
+  (Phase 29.8, carried into `buildTaskService` by phase 58's MCP-surface extraction).
+  Now a true alias for `build task <id> --status=DONE` with identical guarantees
+  (rec-20260815-002, dec-20260815-005).
 
 
 

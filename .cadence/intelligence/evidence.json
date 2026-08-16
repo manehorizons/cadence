@@ -2063,6 +2063,20 @@
       "kind": "note",
       "summary": "DP-B (phase 280) settle, 2026-08-15: three consecutive host-cli timeouts in one evening (deep-verify x2, code-review x1), all on CADENCE_HOST_CLI_BIN=codex with the documented 180s 'never exits' spawn-timeout limitation (docs/providers.md); claude family is unavailable for the same purpose in this repo's own dogfooding because CLAUDECODE=1 trips the self-invocation guard whenever settle runs inside a headless Claude Code session -- the common case here. A manually-dispatched fresh-context Agent-tool subagent whole-branch review, done the same evening outside cadence's gate machinery, found 3 real defects (a stale registry.ts predicate, a stale config.md doc claim, a missing changeset) that no per-task review caught -- proving the review channel works, just isn't recordable.",
       "createdAt": "2026-08-15T16:58:49.224Z"
+    },
+    {
+      "id": "ev-20260815-005",
+      "recommendationId": "rec-20260815-004",
+      "kind": "note",
+      "summary": "computeRoadmapDrift() with disk=281 (phase 281 present), roadmap=270, milestones=270 -> drift=11 > threshold 10, before phase 281's own T5 fix recorded a Phase 281 entry",
+      "createdAt": "2026-08-15T23:06:22.966Z"
+    },
+    {
+      "id": "ev-20260815-006",
+      "recommendationId": "rec-20260815-005",
+      "kind": "note",
+      "summary": "cadence build task T6 --status=DONE against phase 281's own T6 (files: .changeset/*.md, wrote .changeset/done-bypass-fix.md) printed: 'cadence anomaly [warn] files-outside-boundary: .changeset/done-bypass-fix.md touched but not declared in any task's files:'",
+      "createdAt": "2026-08-15T23:36:27.867Z"
     }
   ]
 }

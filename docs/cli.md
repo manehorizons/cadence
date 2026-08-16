@@ -197,12 +197,14 @@ cadence block T2 --notes "waiting for API spec"
 cadence needs-context T3 --notes "unclear which endpoint to use"
 ```
 
-> **Carry-forward:** `done`, `block`, and `needs-context` accept any string as
-> `<id>` without validating it against the list of tasks declared in the active
+> **Carry-forward:** `block` and `needs-context` accept any string as `<id>`
+> without validating it against the list of tasks declared in the active
 > DRAFT. If you pass a misspelled or non-existent task id, the engine writes
 > the record under that id and settle's structural gate will detect the
 > inconsistency. Double-check task ids against the DRAFT before running these
-> shortcuts.
+> two shortcuts. `done` is unaffected — it is a true alias for `build task`
+> (phase 281) and refuses an undeclared id outright (exit 2), recording
+> nothing.
 
 ---
 

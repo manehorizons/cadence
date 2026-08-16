@@ -2655,6 +2655,20 @@ script; caught a real CI-only bug during review (the test relied on ambient git
 identity, absent on CI runners) fixed with an explicit `GIT_AUTHOR_*`/`GIT_COMMITTER_*`
 env before merge. PR #396.
 
+### Phase 281 — Close the `cadence done` bypass hole (rec-20260815-002)
+
+**Objective.** `cadence done <id>` is documented as a shortcut for `cadence build
+task <id> --status=DONE` but called `recordTaskOutcome` directly, bypassing
+three gates `build task` runs via `buildTaskService`: the per-task-verify
+gate, the record-time boundary/redundancy check (phase 280), and the
+pre-existing unknown-task-id guard (Phase 29.8; carried into `buildTaskService`
+by phase 58's MCP-surface extraction). Route `done` through
+`buildTaskService` so it is a true alias carrying identical guarantees, per
+decision `dec-20260815-005` (D-N). The gap predates v1.60.0's dispatch-contract
+release (per-task-verify was already unguarded before phase 280; phase 280
+layered the boundary/redundancy gap on top) — v1.60.0 shipped before this fix
+landed, so the gap is present in a released version pending the next release.
+
 ### Phase 237 — Invariant promotion from recurring findings *(sketch — contingent)*
 
 **Gate to entry.** Phase 236 settled and has produced enough routed findings for
