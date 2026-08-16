@@ -380,23 +380,6 @@ candidatesForFile (verify/criteria-gap.ts) proposes a boundary candidate wheneve
 
 replayPhaseCoverage takes mode from config.coverageMode ?? 'mention' while phase 239 T6 writes summary.coverageMode into every new SUMMARY as provenance. A phase that settled under 'mention' (token legally in a comment) is reported as DRIFTED after the operator later switches the repo to 'assertion' — the phase did not change, the standard did, and verify phase reds CI claiming 'recorded PASS (executed), no longer covered by its linked test'. Fix is summary.coverageMode ?? config.coverageMode, but it changes the BARE path's behavior for any post-239 SUMMARY, so it was deliberately excluded from T7 (whose boundary requires the bare path stay byte-for-byte unchanged). Fixing it only under the qualified branch would leave two schemes resolving the same question differently — the hazard services/settle.ts:432-434 already warns about. Needs its own slice.
 
-## rec-20260730-002 — Coverage dedup: a qualified AC token outside an asserting block silently zeroes that AC's coverage
-
-- status: candidate
-- ready: needs-decision
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: verify, coverage, gates
-- files: packages/core/src/verify/coverage.ts, packages/core/src/gates/coverage.ts
-- evidence: Hit live during phase 239 T7 (2026-07-30). The new test file's own fixture-hygiene COMMENT contained a contiguous 239-01/AC-8 literal; it took the dedup slot and AC-8 measured refs=1 qualifying=0 while five asserting it() titles below carried the same qualified token. Full pipeline was 24/24 green throughout — only a direct scanTestCoverage probe surfaced it. Cost one full implement/review round-trip.
-- evidence: Empirically confirmed hitting this during phase 261 settle (2026-08-07): a literal, qualified 261-01/AC-5 token in a JSDoc comment (non-asserting) at the top of packages/core/tests/cli/verify-historical-coverage-audit.test.ts caused 'cadence settle run --auto' to refuse AC-5 with 'mentioned but not inside a recognized asserting test block', even though 4 real asserting it() blocks later in the same file genuinely reference 261-01/AC-5. Fix was removing the literal qualified token from the comment entirely (paraphrasing without the exact string) -- confirming the bug is real and not just theoretical. Additionally found a related, arguably separate defect: 'cadence verify coverage --explain AC-5' reported 'Overall: SATISFIED' for this exact file/AC combination while the real settle gate still refused it -- the diagnostic tool the gate's own refusal message tells operators to run to debug this class of failure gives a false-positive answer, which cost real debugging time. Worth scoping into this rec or filing as a follow-on.
-- next: cadence milestone propose
-
-scanTestCoverage dedups per AC-N@file on a first-occurrence-wins basis (verify/coverage.ts, the 'seen' set). Phase 239 T2 deliberately filters UNQUALIFIED occurrences before the dedup add so a bare token cannot consume the slot — but a correctly-qualified occurrence sitting outside an asserting block (a comment, a doc block, a describe() title) passes that filter, takes the slot, and is recorded qualifying:false. Every genuinely-qualifying occurrence later in the same file is then unreachable, and the AC reads as having zero coverage. Failure is silent: the suite stays green, the gate refuses at settle, and the refusal names a token the file demonstrably contains. Candidate fixes: prefer a qualifying occurrence over a non-qualifying one when filling the dedup slot, or keep all occurrences and let the consumer reduce.
-
 ## rec-20260731-007 — Finding id collision: two same-severity/message findings in one file share one id
 
 - status: candidate
@@ -866,23 +849,6 @@ packages/core/src/verify/converge.ts's maxAttempts logic (nextConvergence: 'if (
 
 dec-20260801-003 (linked under the now-shipped/closed rec-20260801-010) deferred finding-identity message-drift dedup, with an explicit trigger to revisit: 'at least 3 settles under a non-mock review provider (anthropic/local/host-cli) have each persisted at least 1 code-review finding.' Phase 256-02's real-provider conduction (2026-08-06) produced SIX such settles under provider: host-cli, each persisting >=1 code-review finding: .cadence/phases/256-real-provider-certification-prep/256-02-refused-2026-08-06T04-21-23-042Z-SUMMARY-snapshot.json (2 findings), ...T04-33-37-866Z (2), ...T04-43-22-653Z (3), ...T05-08-23-709Z (1), ...T05-13-30-388Z (2), and the final 256-02-SUMMARY.json (1) -- double the trigger's threshold. This does NOT mean the deferred work should now be built reflexively: several of the six are repeat invocations against unchanged fixture content (deliberate, per the redo's own runbook design, not independent drift signal), and dec-20260801-003's own planned next step was specifically an offline analyzer over the accumulated SUMMARY.json corpus, which has not been built or run. This rec exists only to make the met trigger visible for a future decision -- act on it, defer again with updated reasoning, or determine the corpus still isn't representative enough (six settles from one seeded, single-defect-type fixture may not be what the original decision meant by 'real data'). Could not attach this as evidence directly to rec-20260801-010 -- recommendation evidence add refuses on shipped/closed recs by design.
 
-## rec-20260807-001 — test-coverage gate (assertion mode) dedupes AC-token occurrences per-file by first-encountered, silently discarding a later genuinely-qualifying occurrence
-
-- status: candidate
-- ready: needs-decision
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, verify
-- files: packages/core/src/verify/coverage.ts
-- evidence: Reproduced live during phase 258 settle (2026-08-07): cadence settle run --auto refused citing '258-01/AC-5 is mentioned but not inside a recognized asserting test block', while cadence verify coverage --explain AC-5 showed 'Overall: SATISFIED' for the same file/token at the same commit. Root-caused to packages/core/src/verify/coverage.ts's assertion-mode scan loop's per-file dedup (const key = [REDACTED] if (seen.has(key)) continue;) keeping only the first-encountered occurrence (a non-qualifying describe() title at line 568) over a later genuinely-qualifying it() block occurrence (line 821) in the same file. Confirmed by removing the earlier, redundant occurrence, which made settle pass immediately with no other change.
-- evidence: Third confirmed hit, phase 280 (280-01, DP-B), 2026-08-15. Same dedup (packages/core/src/verify/coverage.ts assertion-mode per-file key=[REDACTED] hit THREE ways in one settle: (1) 280-01/AC-6's describe() title (docs-published.test.ts:26) shadowed 3 genuinely-qualifying it() occurrences at lines 27/37/43 -- identical shape to this rec's original phase-258 report, same workaround applied (dropped the token from the describe title). (2) Confirmed the dedup ALSO corrupts deep-verify's independent AI-verifier input, not just the token gate: gates/deep-verify.ts:35-37 feeds coverageMap straight into VerifyInput.tests without re-deriving full occurrence lists, so the verifier's 'linked tests' view is silently truncated to one ref per (AC,file) too. Manually confirmed via direct scanTestCoverage() calls that build-task-boundary.test.ts had 3 real AC-2 tests and 4 real AC-3 tests but the coverage map exposed only 1 and 2 respectively (first-encountered each time) -- deep-verify's refusal reasons ('the sole linked AC-2 test covers only...') matched exactly the single deduped ref's content, not the full test suite. (3) Separately (not this bug): AC-5 had a complete, correct, already-qualified-looking test that used a BARE 'AC-5:' it() title instead of '280-01/AC-5:' under coverageScheme:phase-qualified -- a distinct authoring mistake, fixed directly, not evidence for this rec. New severity note: two consecutive cadence settle run --auto invocations against the IDENTICAL code (before/after only the AC-5 title fix, which cannot affect AC-2/AC-3/AC-5's own files) produced DISJOINT deep-verify offender sets (run1: AC-2,AC-3,AC-5 fail; run2: those pass, AC-4 fails instead) -- run-to-run non-determinism on top of the dedup corruption, making a single deep-verify run's verdict unreliable evidence of a real gap either way. Escalating priority given this is the third confirmed real-world hit plus a newly-confirmed verifier-corruption vector; recommend folding rec-20260809-001 (near-duplicate) and treating rec-20260814-002 (the --explain-vs-settle divergence symptom) as downstream of this same root cause.
-- next: cadence milestone propose
-
-packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the per-file token loop inside the mode==='assertion' branch) dedupes AC-token occurrences with 'const key = id@relPath; if (seen.has(key)) continue; seen.add(key);' -- keeping only the FIRST occurrence of a given AC token encountered per file, in file-scan (top-to-bottom) order, and silently discarding every later occurrence in that same file, including one that genuinely qualifies (is inside a real asserting it()/test() block). Hit for real during phase 258's settle (2026-08-07): the AC-5 regression test's file had the token 258-01/AC-5 in BOTH a describe() block title (line 568, earlier in the file, non-qualifying since describe wrappers are not spans) and the real asserting it() block title that actually carries the evidence (line 821, later in the file, genuinely qualifying). The dedup kept only the first (describe-title) occurrence, so weaklyLinkedAcs()'s isFullyNonQualifying(refs) check saw a single non-qualifying ref and refused settle with 'is mentioned but not inside a recognized asserting test block', even though a real qualifying test existed in the same file. cadence verify coverage --explain AC-5 did NOT reproduce this refusal -- explainAcCoverage (used by --explain) collects every occurrence separately with no per-file dedup, and its overall satisfied field is true iff ANY occurrence in ANY file satisfies -- so it correctly showed 'Overall: SATISFIED', creating a genuine, confusing divergence between what --explain reports and what settle's gate actually enforces for the exact same file/token. Worked around in phase 258 by removing the redundant token from the describe title (only the real it() block needs to carry it), but the underlying dedup-keeps-first-occurrence behavior is a real defect independent of that workaround: any test file where an AC token happens to appear first in a non-qualifying location (a describe title, a comment, a variable name) and later in a real qualifying it()/test() block will incorrectly refuse settle, with a --explain result that actively misleads an operator into thinking coverage is fine. Options to weigh: change the dedup to keep the qualifying occurrence if ANY occurrence for that (id, file) pair qualifies, rather than keeping strictly the first found; or align --explain's semantics with the gate's per-file-first-occurrence semantics (worse, since it would make --explain lie in the other direction); or drop the per-file dedup granularity entirely and just check 'does at least one occurrence across the whole repo qualify', matching --explain.
-
 ## rec-20260807-006 — tests/hooks/dispatcher.test.ts Windows CI timeout, recurred 3x during v1.55.0 release-cut
 
 - status: candidate
@@ -931,23 +897,6 @@ Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token sch
 - next: cadence milestone propose
 
 release-currency (phase 262) is scoped to comparing published vs local 'engines' content only, since that was the exact field behind the 2026-07-27 incident. A strictly stronger, content-agnostic, offline detector exists: local version == published version AND 'git log v<version>..HEAD' is non-empty means main has unreleased commits sitting under an already-published version tag, regardless of which field changed (deps, bin, exports, plain source). Surfaced by independent review during phase 262 DRAFT authoring; deliberately out of scope for 262 to avoid scope creep -- filed as a follow-on.
-
-## rec-20260809-001 — scanTestCoverage dedups AC-token occurrences per-file by first match only, dropping later qualifying refs
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core
-- files: packages/core/src/verify/coverage.ts
-- evidence: Reproduced via a direct scanTestCoverage() call against phase 264's own worktree: AC-4 returned only the describe()-level non-qualifying ref (line 25) while cadence verify coverage --explain AC-4 independently found and reported satisfies:true for the it()-level refs at lines 26/30 in the same file, overall verdict SATISFIED -- yet settle run --auto refused, confirming the two code paths disagree because of the per-file first-match dedup in scanTestCoverage.
-- evidence: Corroborated independently 2026-08-12/13 by rec-20260812-004 (phase 274 build): 3 confirmed real (non-mock) deep-verify refusals from the identical root cause (coverage.ts:140-142's per-file AC-token dedup, keyed on ${acId}@${file} with no per-occurrence disambiguation) -- this time triggered by sibling asserting it() blocks sharing one AC token in the same file, not describe-title collision. A third, same-shape, not-yet-triggered instance was also spotted: packages/core/tests/services/settle.test.ts has three it() blocks carrying token 274-01/AC-4 (lines 1682/1737/1819); only line 1682 currently survives dedup. rec-20260812-004 is being closed as a duplicate of this rec (see dec-20260813-001) -- its full evidence and priority=high signal should carry forward when this is converted to a phase.
-- next: cadence milestone propose
-
-packages/core/src/verify/coverage.ts's scanTestCoverage (assertion mode, ~line 140-142; mirrored in mention mode ~line 177-179) dedups by a (bare AC id, file path) key, keeping only the FIRST textual occurrence of a token in a file regardless of whether it qualifies (sits inside an asserting it()/test() block). When a describe() block's title repeats its own child it()'s AC token and appears earlier in the file, the non-qualifying describe-level occurrence consumes the dedup slot and the real qualifying it()-level occurrence(s) are silently never recorded -- producing a false weakly-linked-AC refusal from settle's real coverage gate even though cadence verify coverage --explain (a separate, non-deduping walker) correctly reports the AC as satisfied. Confirmed empirically during phase 264's own settle: two describe() blocks (mock-banner-source.test.ts, verifier-label.test.ts, assurance-record.test.ts) that opened with the same AC token as their child it()'s title caused settle run --auto to refuse with 'no assertion-shaped span found' for AC-4/AC-5 despite real, correct, asserting tests existing. Worked around by removing the token from the describe() titles (not touching the scanner). Fix belongs in scanTestCoverage: either record every occurrence per file (not just the first), or prefer a qualifying occurrence over a non-qualifying one when only one dedup slot is kept.
 
 ## rec-20260809-003 — vitest.shared.ts's Windows-timeout comment cites the now-fixed dispatcher cap test
 
@@ -1228,22 +1177,6 @@ locateFreshestHandoff (packages/core/src/handoff/locate.ts:44-49) returns the la
 
 During v1.57.0's release cut (2026-08-13), reconciling a diverged local main via an explicitly-consented 'git reset --hard origin/main' silently discarded uncommitted local-only edits to .claude/settings.json and .claude/scheduled_tasks.lock -- the consent question (mine) incorrectly claimed these files would be 'left untouched', which is only true for untracked files, not uncommitted changes to tracked ones. Unlike discarded commits (recoverable via reflog for ~90d), uncommitted working-tree content to tracked files has no recovery path once reset -- it was genuinely and permanently lost; the operator did not know what was in them either. cadence doctor's host-hooks check confirmed no functional breakage this time (the discarded settings.json content matched every other worktree's baseline), but that was luck, not a guarantee -- a future reset could discard something load-bearing. A doctor check (or a resume/reset-adjacent CLI guard) could detect known local-only tracked files (.claude/settings.json, .claude/scheduled_tasks.lock per CLAUDE.md's own 'Helpful Stage' list) with uncommitted changes and surface a specific warning distinct from the generic 'you have uncommitted changes' signal, before any command that would discard them via reset --hard/checkout onto a ref.
 
-## rec-20260814-002 — cadence verify coverage --explain's 'Overall: SATISFIED' can disagree with the real settle gate's verdict
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: high
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: verify, coverage, gates, tooling
-- files: packages/core/src/verify/coverage.ts, packages/core/src/gates/coverage.ts
-- evidence: phase 278 build: verify coverage --explain AC-3/AC-4/AC-5/AC-6/AC-7/AC-9 all reported satisfied:true and Overall: SATISFIED throughout the whole build, yet the final cadence settle run --auto genuinely refused citing exactly those 6 AC ids as unsatisfied (assertion mode); root-caused to verify/coverage.ts:562's explainAcCoverage satisfied field lacking the per-(id,file) dedup that scanTestCoverage (verify/coverage.ts:126-157, consumed by gates/coverage.ts) applies. Fixed the phase's own test files by removing/rewording the leading narrative comments; the underlying scanner/explain discrepancy remains unfixed.
-- next: cadence milestone propose
-
-explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY occurrence in ANY file satisfies' -- no per-file dedup. scanTestCoverage() (the function the real gate at gates/coverage.ts actually consumes) keeps only the FIRST textual occurrence of an AC token per (id, file) (verify/coverage.ts:126-157) and aggregates from there. A leading narrative comment carrying the qualified token (e.g. '// 278-01/AC-3: this test proves...' placed above the real asserting it() block) consumes that file's dedup slot with a non-qualifying ref, so the real assertion below it is never recorded -- yet --explain still reports Overall: SATISFIED because it found the qualifying it() occurrence independently, without dedup. This misled every per-task independent review during phase 278's build (6 of 11 ACs showed --explain SATISFIED yet settle run --auto genuinely refused citing exactly those 6 as unsatisfied at the final settle step) until the discrepancy surfaced empirically. Root cause and fix are in the scanner itself (out of phase 278's boundaries to touch) -- either make --explain's satisfied field replicate the real per-file-dedup algorithm, or have scanTestCoverage prefer a qualifying occurrence over an earlier non-qualifying one within the same file when both exist.
-
 ## rec-20260815-003 — Record genuine orchestrator/subagent-driven independent review in deep-verify's audit trail, distinct from mock
 
 - status: candidate
@@ -1290,3 +1223,20 @@ tests/docs/phase271-record-integrity.test.ts's roadmap-currency drift check (dis
 - next: cadence milestone propose
 
 Phase 281's T6 declared files: `.changeset/*.md` in its DRAFT and then wrote .changeset/done-bypass-fix.md exactly as scoped, but cadence build task T6 still emitted a files-outside-boundary warn anomaly for that exact file. grep across packages/core/src/git/boundary-diff.ts and packages/core/src/checks/boundary.ts shows no glob/minimatch/micromatch usage -- declared files: entries appear to be compared as literal paths, not glob-expanded, so a wildcard pattern in files: can never actually match anything and any file it was meant to cover will always warn (or refuse, in block mode). This is warn-only and non-blocking today (boundaryEnforcement defaulted to warn for phase 281's build), but would be a real, surprising refusal for any dispatch-scoped phase (block mode) that declares a wildcard files: pattern -- the task would refuse no matter what it wrote. Resolution: either glob-expand files: entries at match time (minimatch/micromatch, zero-runtime-dep policy permitting -- check if a glob impl is already a transitive dep before adding one), or refuse to accept a files: pattern containing a glob character at draft coherence-check time with a clear error, so authors don't unknowingly write an unenforceable boundary.
+
+## rec-20260816-001 — verify coverage --explain silently double-qualifies an already-qualified token
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, coverage, cli
+- files: packages/core/src/verify/coverage.ts, packages/core/src/cli/verify-coverage.ts
+- evidence: Repro: node packages/core/bin/cadence.cjs verify coverage --explain 282-01/AC-4 prints 'scheme: phase-qualified (expected token: [REDACTED] and exits 0 reporting no occurrence, vs the correct bare --explain AC-4 which resolves to 282-01/AC-4 and finds real occurrences. Found and independently reproduced during phase 282 (coverage-scanner-determinism) T4.
+- evidence: File-path correction: the --file list on this rec named a guessed packages/core/src/cli/verify-coverage.ts, which does not exist. The real implementation sites are packages/core/src/services/verify.ts (verify coverage command wiring) and packages/core/src/verify/coverage.ts (explainAcCoverage, the double-qualification bug's actual location).
+- next: cadence milestone propose
+
+cadence verify coverage --explain <arg> unconditionally prepends the active phase qualifier, even when <arg> is already qualified. Passing the already-qualified form (e.g. 282-01/AC-4 instead of the correct bare AC-4) produces expected token: 282-01/282-01/AC-4, which never matches any real token, so the command reports a bogus 'NOT SATISFIED' with exit 0 (no error, no warning). This is a real operator trap discovered during phase 282's T3/T4 work (rec-20260814-002's original --explain/gate divergence was a different bug, already fixed by T1) -- the correct usage is always the bare AC-N form, but nothing tells the caller that, and the silent double-qualification with exit 0 makes it easy to misdiagnose as a real coverage gap.

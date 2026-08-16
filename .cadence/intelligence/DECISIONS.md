@@ -432,6 +432,27 @@ T4's independent reviewer, running the full suite (not just the cli/done filter)
 
 8 identical 'Test timed out in 20000ms' occurrences 2026-08-11 through 2026-08-16 across ubuntu-latest and macos-latest, several on zero-code-diff PRs, confirmed load-driven and not OS-specific (ev-20260811-006 through ev-20260816-002). Operator explicitly chose (2026-08-16, via AskUserQuestion) to raise this one test's own vitest timeout (20_000 -> 90_000, packages/core/tests/integration/demo-gutting-coverage-scheme.test.ts) rather than vitest.shared.ts's global TIMEOUT_MS, which would loosen the 20s ceiling for ~4000 unrelated tests to fix one known-slow spawnSync-heavy integration test. Landed on chore/ship-rec-20260815-002 (PR #434), commit 9024d4b7.
 
+### dec-20260816-002 — D-P amendment: four coverage-dedup filings exist, not three; primary chosen on decision-carrying not chronology
+
+- recommendation: rec-20260807-001
+- decided: 2026-08-16T03:12:55.006Z
+
+The v1.60 plan doc (docs/handoffs/HANDOFF-v1.60-dispatch-release-and-coverage-determinism.md) names rec-20260807-001 as 'the original filing' of the per-file coverage-dedup ordering bug and proposes converting rec-20260809-001 + rec-20260814-002 to it. The §8 dedup preflight surfaced a fourth filing, rec-20260730-002 (2026-07-30), which predates rec-20260807-001 (2026-08-07) by 8 days, names the identical two files (verify/coverage.ts, gates/coverage.ts), describes the identical mechanism (first-occurrence-wins dedup claims the slot before qualifying is computed), and even proposes the identical candidate fix wording later adopted as D-O option (1). Its evidence (ev-20260730-002, ev-20260808-001) is the earliest and most direct: two independent real production hits (phase 239 T7, phase 261 settle) plus a note in ev-20260808-001 that explicitly foreshadows what became rec-20260814-002's --explain-vs-gate divergence finding. The doc's chronology claim is therefore wrong. Despite that, rec-20260807-001 remains the correct --from-rec primary: it is the rec carrying the open needs-decision (D-O) this phase resolves, and --from-rec seeds a SPEC from the decision-carrying rec, not strictly the earliest timestamp. Resolution: rec-20260730-002 converts into this phase alongside rec-20260809-001 and rec-20260814-002 (four filings, one phase), and rec-20260807-001 stays --from-rec. Distinct from rec-20260730-001 (phase-replay coverageMode provenance) -- different files, different mechanism, a title-similar near-miss, explicitly out of scope.
+
+### dec-20260816-003 — D-O: fix coverage dedup via prefer-qualifying (option 1), not drop-dedup or align-explain-down
+
+- recommendation: rec-20260807-001
+- decided: 2026-08-16T03:13:07.885Z
+
+packages/core/src/verify/coverage.ts's per-file dedup (assertion mode, and mirrored in mention mode) claims the (id, file) slot on first regex match, then computes qualifying/skipped afterward -- so a non-qualifying occurrence (describe() title, comment) earlier in a file's text permanently shadows a genuinely-qualifying it()/test() occurrence later in the SAME file. Taking option (1): compute qualifying/skipped BEFORE the slot claim, and let a qualifying occurrence displace an already-recorded non-qualifying one for the same (id, file). This preserves the one-occurrence-per-file output shape every downstream consumer (gates/coverage.ts's uncoveredAcs/weaklyLinkedAcs/skippedOnlyLinkedAcs, deep-verify.ts's tests[id] feed) already assumes, and matches rec-20260814-002's real complaint (the gate and --explain must resolve to the SAME answer) by making the gate correct rather than making --explain equally wrong (option 3, explicitly rejected). Option (2) (drop the dedup, record every occurrence) is not taken: reproduction (C.1) found the per-file dedup itself is deterministic (regex match order, not filesystem-dependent) -- the separate, genuinely non-deterministic defect is listAllFiles's unsorted directory walk feeding cross-file array order in out.get(id), which option (1) does not touch and which needs its own fix (sort the file list) to satisfy AC-C1's map-deep-equal requirement.
+
+### dec-20260816-004 — Phase D folds into Phase C itself, not a future phase
+
+- recommendation: rec-20260807-001
+- decided: 2026-08-16T03:13:08.069Z
+
+The plan doc's §7 wording ('fold into the next non-trivial phase... whichever phase runs next after C') is ambiguous about whether C counts. Phase 280 already deferred this exact live exercise once (zero stop: fields, anyTaskDispatched false for its own build) -- deferring again risks the same pattern repeating indefinitely while the dispatch-scoped block escalation stays permanently untested in production. Resolution: Phase C itself is the dispatch-driven exercise. Every task in 282-coverage-scanner-determinism's DRAFT declares an explicit stop: condition from authoring (not retrofitted), and at least one task is recorded via cadence build task <id> --execution dispatch, which flips anyTaskDispatched true and escalates boundaryEnforcement to block for the remainder of the phase. Expect friction (stray-file refusals from review fix rounds, per §7's own warning) -- that friction is the intended data, not a reason to revert to warn mode mid-phase.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja
