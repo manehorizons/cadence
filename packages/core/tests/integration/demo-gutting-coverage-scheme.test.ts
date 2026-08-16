@@ -18,6 +18,15 @@ const CADENCE_BIN = join(REPO_ROOT, 'packages', 'core', 'bin', 'cadence.cjs');
  *
  * Windows-skipped: the script is bash with a POSIX shebang, same convention
  * as packages/core/tests/docs/doc-sync-hook.test.ts's isWindows guard.
+ *
+ * Timeout raised from 20_000 to 90_000 (rec-20260811-006): this blocking
+ * spawnSync chain (cadence init, two npm test runs, two cadence settle
+ * runs, git) brushed the shared 20s ceiling under concurrent CI load on
+ * both macos-latest and ubuntu-latest — 8 occurrences across 2026-08-11
+ * through 2026-08-16, confirmed load-dependent (not diff-related; several
+ * hits were on zero-code-diff PRs) and confirmed not OS-specific, so this
+ * is scoped to the one slow test rather than vitest.shared.ts's global
+ * TIMEOUT_MS.
  */
 describe.skipIf(process.platform === 'win32')('demo-test-gutting/run-demo.sh (phase 270)', () => {
   it('270-01/AC-1 + AC-2: money-shot refusal is AC-2-specific, and the script reaches Settled', () => {
@@ -48,5 +57,5 @@ describe.skipIf(process.platform === 'win32')('demo-test-gutting/run-demo.sh (ph
     // script completes with exit 0.
     expect(result.status).toBe(0);
     expect(combined).toContain('Settled. The loop only closes on evidence.');
-  }, 20_000);
+  }, 90_000);
 });
