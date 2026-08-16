@@ -1,0 +1,38 @@
+{
+  "specId": "282-01",
+  "converged": false,
+  "attempts": 2,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-08-16T03:14:39.453Z",
+      "pass": false,
+      "findingsCount": 2,
+      "provider": "mock",
+      "providerSelection": "configured",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-08-16T03:15:29.379Z",
+      "pass": false,
+      "findingsCount": 2,
+      "provider": "mock",
+      "providerSelection": "configured",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-08-16T03:15:53.517Z",
+      "pass": false,
+      "findingsCount": 0,
+      "provider": "mock",
+      "providerSelection": "configured",
+      "verdict": "abstained",
+      "mockAbstained": true
+    }
+  ],
+  "pass": false,
+  "provider": "mock",
+  "providerSelection": "configured",
+  "findings": 0,
+  "at": "2026-08-16T03:15:53.517Z"
+}

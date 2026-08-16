@@ -692,7 +692,7 @@
       "title": "Coverage dedup: a qualified AC token outside an asserting block silently zeroes that AC's coverage",
       "summary": "scanTestCoverage dedups per AC-N@file on a first-occurrence-wins basis (verify/coverage.ts, the 'seen' set). Phase 239 T2 deliberately filters UNQUALIFIED occurrences before the dedup add so a bare token cannot consume the slot — but a correctly-qualified occurrence sitting outside an asserting block (a comment, a doc block, a describe() title) passes that filter, takes the slot, and is recorded qualifying:false. Every genuinely-qualifying occurrence later in the same file is then unreachable, and the AC reads as having zero coverage. Failure is silent: the suite stays green, the gate refuses at settle, and the refusal names a token the file demonstrably contains. Candidate fixes: prefer a qualifying occurrence over a non-qualifying one when filling the dedup slot, or keep all occurrences and let the consumer reduce.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "needs-decision",
       "priority": "high",
       "leverageScore": 5,
@@ -715,8 +715,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "282-coverage-scanner-determinism",
       "createdAt": "2026-07-30T23:24:17.740Z",
-      "updatedAt": "2026-08-08T04:04:01.532Z"
+      "updatedAt": "2026-08-16T14:53:42.527Z"
     },
     {
       "id": "rec-20260731-007",
@@ -1567,8 +1568,8 @@
       "title": "test-coverage gate (assertion mode) dedupes AC-token occurrences per-file by first-encountered, silently discarding a later genuinely-qualifying occurrence",
       "summary": "packages/core/src/verify/coverage.ts's assertion-mode scan (~line 140-142, the per-file token loop inside the mode==='assertion' branch) dedupes AC-token occurrences with 'const key = id@relPath; if (seen.has(key)) continue; seen.add(key);' -- keeping only the FIRST occurrence of a given AC token encountered per file, in file-scan (top-to-bottom) order, and silently discarding every later occurrence in that same file, including one that genuinely qualifies (is inside a real asserting it()/test() block). Hit for real during phase 258's settle (2026-08-07): the AC-5 regression test's file had the token 258-01/AC-5 in BOTH a describe() block title (line 568, earlier in the file, non-qualifying since describe wrappers are not spans) and the real asserting it() block title that actually carries the evidence (line 821, later in the file, genuinely qualifying). The dedup kept only the first (describe-title) occurrence, so weaklyLinkedAcs()'s isFullyNonQualifying(refs) check saw a single non-qualifying ref and refused settle with 'is mentioned but not inside a recognized asserting test block', even though a real qualifying test existed in the same file. cadence verify coverage --explain AC-5 did NOT reproduce this refusal -- explainAcCoverage (used by --explain) collects every occurrence separately with no per-file dedup, and its overall satisfied field is true iff ANY occurrence in ANY file satisfies -- so it correctly showed 'Overall: SATISFIED', creating a genuine, confusing divergence between what --explain reports and what settle's gate actually enforces for the exact same file/token. Worked around in phase 258 by removing the redundant token from the describe title (only the real it() block needs to carry it), but the underlying dedup-keeps-first-occurrence behavior is a real defect independent of that workaround: any test file where an AC token happens to appear first in a non-qualifying location (a describe title, a comment, a variable name) and later in a real qualifying it()/test() block will incorrectly refuse settle, with a --explain result that actively misleads an operator into thinking coverage is fine. Options to weigh: change the dedup to keep the qualifying occurrence if ANY occurrence for that (id, file) pair qualifies, rather than keeping strictly the first found; or align --explain's semantics with the gate's per-file-first-occurrence semantics (worse, since it would make --explain lie in the other direction); or drop the per-file dedup granularity entirely and just check 'does at least one occurrence across the whole repo qualify', matching --explain.",
       "source": "manual",
-      "status": "candidate",
-      "readiness": "needs-decision",
+      "status": "settle-pending",
+      "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1587,9 +1588,14 @@
         "ev-20260815-003"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260816-002",
+        "dec-20260816-003",
+        "dec-20260816-004"
+      ],
+      "convertedToPhaseId": "282-coverage-scanner-determinism",
       "createdAt": "2026-08-07T01:50:06.798Z",
-      "updatedAt": "2026-08-15T16:22:18.360Z"
+      "updatedAt": "2026-08-16T14:53:42.527Z"
     },
     {
       "id": "rec-20260807-006",
@@ -1687,7 +1693,7 @@
       "title": "scanTestCoverage dedups AC-token occurrences per-file by first match only, dropping later qualifying refs",
       "summary": "packages/core/src/verify/coverage.ts's scanTestCoverage (assertion mode, ~line 140-142; mirrored in mention mode ~line 177-179) dedups by a (bare AC id, file path) key, keeping only the FIRST textual occurrence of a token in a file regardless of whether it qualifies (sits inside an asserting it()/test() block). When a describe() block's title repeats its own child it()'s AC token and appears earlier in the file, the non-qualifying describe-level occurrence consumes the dedup slot and the real qualifying it()-level occurrence(s) are silently never recorded -- producing a false weakly-linked-AC refusal from settle's real coverage gate even though cadence verify coverage --explain (a separate, non-deduping walker) correctly reports the AC as satisfied. Confirmed empirically during phase 264's own settle: two describe() blocks (mock-banner-source.test.ts, verifier-label.test.ts, assurance-record.test.ts) that opened with the same AC token as their child it()'s title caused settle run --auto to refuse with 'no assertion-shaped span found' for AC-4/AC-5 despite real, correct, asserting tests existing. Worked around by removing the token from the describe() titles (not touching the scanner). Fix belongs in scanTestCoverage: either record every occurrence per file (not just the first), or prefer a qualifying occurrence over a non-qualifying one when only one dedup slot is kept.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "ready-for-cadence-spec",
       "priority": "medium",
       "leverageScore": 5,
@@ -1707,8 +1713,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "282-coverage-scanner-determinism",
       "createdAt": "2026-08-09T00:24:39.319Z",
-      "updatedAt": "2026-08-13T02:29:05.482Z"
+      "updatedAt": "2026-08-16T14:53:42.527Z"
     },
     {
       "id": "rec-20260809-003",
@@ -2202,7 +2209,7 @@
       "title": "cadence verify coverage --explain's 'Overall: SATISFIED' can disagree with the real settle gate's verdict",
       "summary": "explainAcCoverage()'s satisfied field (verify/coverage.ts:562) is 'true if ANY occurrence in ANY file satisfies' -- no per-file dedup. scanTestCoverage() (the function the real gate at gates/coverage.ts actually consumes) keeps only the FIRST textual occurrence of an AC token per (id, file) (verify/coverage.ts:126-157) and aggregates from there. A leading narrative comment carrying the qualified token (e.g. '// 278-01/AC-3: this test proves...' placed above the real asserting it() block) consumes that file's dedup slot with a non-qualifying ref, so the real assertion below it is never recorded -- yet --explain still reports Overall: SATISFIED because it found the qualifying it() occurrence independently, without dedup. This misled every per-task independent review during phase 278's build (6 of 11 ACs showed --explain SATISFIED yet settle run --auto genuinely refused citing exactly those 6 as unsatisfied at the final settle step) until the discrepancy surfaced empirically. Root cause and fix are in the scanner itself (out of phase 278's boundaries to touch) -- either make --explain's satisfied field replicate the real per-file-dedup algorithm, or have scanTestCoverage prefer a qualifying occurrence over an earlier non-qualifying one within the same file when both exist.",
       "source": "manual",
-      "status": "candidate",
+      "status": "settle-pending",
       "readiness": "ready-for-cadence-spec",
       "priority": "high",
       "leverageScore": 5,
@@ -2225,8 +2232,9 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
+      "convertedToPhaseId": "282-coverage-scanner-determinism",
       "createdAt": "2026-08-14T20:13:37.556Z",
-      "updatedAt": "2026-08-14T20:13:37.556Z"
+      "updatedAt": "2026-08-16T14:53:42.527Z"
     },
     {
       "id": "rec-20260815-003",
@@ -2311,6 +2319,37 @@
       "decisionIds": [],
       "createdAt": "2026-08-15T23:36:27.867Z",
       "updatedAt": "2026-08-15T23:36:27.867Z"
+    },
+    {
+      "id": "rec-20260816-001",
+      "title": "verify coverage --explain silently double-qualifies an already-qualified token",
+      "summary": "cadence verify coverage --explain <arg> unconditionally prepends the active phase qualifier, even when <arg> is already qualified. Passing the already-qualified form (e.g. 282-01/AC-4 instead of the correct bare AC-4) produces expected token: 282-01/282-01/AC-4, which never matches any real token, so the command reports a bogus 'NOT SATISFIED' with exit 0 (no error, no warning). This is a real operator trap discovered during phase 282's T3/T4 work (rec-20260814-002's original --explain/gate divergence was a different bug, already fixed by T1) -- the correct usage is always the bare AC-N form, but nothing tells the caller that, and the silent double-qualification with exit 0 makes it easy to misdiagnose as a real coverage gap.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "coverage",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts",
+        "packages/core/src/cli/verify-coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260816-003",
+        "ev-20260816-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-16T14:12:06.535Z",
+      "updatedAt": "2026-08-16T14:12:31.824Z"
     }
   ],
   "archived": [

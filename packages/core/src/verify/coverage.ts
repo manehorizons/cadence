@@ -123,7 +123,18 @@ export async function scanTestCoverage(
       const profile = getProfileForExtension(extensionOf(relPath));
       const spans = profile ? findSpansForProfile(raw, profile) : [];
       AC_TOKEN_RE.lastIndex = 0;
-      const seen = new Set<string>();
+      // 282-01, T1 (AC-1, D-O option 1): `seen` now maps the per-file dedup
+      // key to the INDEX its ref occupies in that id's output array, rather
+      // than just marking the key claimed. `qualifying`/`skipped` are
+      // computed for every match BEFORE the slot decision is made — a match
+      // that already has a claimed, non-qualifying slot for this
+      // `(id, file)` and is itself qualifying REPLACES that entry (a real
+      // asserting occurrence must never be shadowed by an earlier
+      // non-qualifying one, e.g. a `describe()` title mentioning the same
+      // id). If the existing slot is already qualifying, or the new match
+      // is not qualifying, first-wins is kept — order doesn't change the
+      // AC's coverage verdict in either of those cases.
+      const seen = new Map<string, number>();
       for (const m of raw.matchAll(AC_TOKEN_RE)) {
         const id = m[0]!;
         const offset = m.index ?? 0;
@@ -138,26 +149,44 @@ export async function scanTestCoverage(
           continue;
         }
         const key = `${id}@${relPath}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
         const before = raw.slice(0, offset);
         const lineNo = before.split('\n').length;
         const lineText = (raw.split('\n')[lineNo - 1] ?? '').trim().slice(0, 120);
-        const arr = out.get(id) ?? [];
-        arr.push({
-          file: relPath,
-          line: lineNo,
-          snippet: lineText,
-          qualifying: spans.some(
-            (s) => s.hasAssertion && !s.skipped && offset >= s.start && offset <= s.end,
-          ),
-          skipped: spans.some((s) => s.skipped && offset >= s.start && offset <= s.end),
-        });
-        out.set(id, arr);
+        const qualifying = spans.some(
+          (s) => s.hasAssertion && !s.skipped && offset >= s.start && offset <= s.end,
+        );
+        const skipped = spans.some((s) => s.skipped && offset >= s.start && offset <= s.end);
+        const ref: TestRef = { file: relPath, line: lineNo, snippet: lineText, qualifying, skipped };
+
+        const existingIdx = seen.get(key);
+        if (existingIdx === undefined) {
+          const arr = out.get(id) ?? [];
+          seen.set(key, arr.length);
+          arr.push(ref);
+          out.set(id, arr);
+        } else {
+          const arr = out.get(id)!;
+          const existing = arr[existingIdx]!;
+          if (qualifying && !existing.qualifying) {
+            arr[existingIdx] = ref;
+          }
+        }
       }
       continue; // next file; do not run the mention loop
     }
 
+    // 282-01, T1 (AC-1): mention mode's mirrored per-file dedup is NOT given
+    // the same qualifying-displaces-non-qualifying treatment as the
+    // assertion-mode branch above, and that is deliberate, not an oversight.
+    // Mention-mode `TestRef`s carry no `qualifying`/`skipped` concept at all
+    // (see the `TestRef` docstring: those fields are "assertion mode only")
+    // — every occurrence of an id in a file is equivalent evidence here, and
+    // the AC's coverage verdict (`uncoveredAcs`, `weaklyLinkedAcs`, etc.) is
+    // driven purely by whether ≥1 ref exists per id, never by which specific
+    // occurrence within a file got recorded. Which line/snippet ends up
+    // representing a multi-occurrence file is cosmetic display detail only,
+    // so first-wins here is correct as written; there is no earlier/later
+    // "verdict" distinction to preserve.
     const lines = raw.split(/\r?\n/);
     const seenInFile = new Set<string>();
     for (let i = 0; i < lines.length; i++) {
@@ -593,6 +622,15 @@ async function listAllFiles(root: string): Promise<string[]> {
       }
     }
   }
+  // 282-01, T2 (AC-2): Node's `readdir` order is not spec-guaranteed stable
+  // across repeated calls, and this walk is an unsorted LIFO-stack DFS on
+  // top of it — so without a final deterministic sort, the array order of
+  // multiple files (and therefore the `TestRef[]` array order downstream in
+  // `scanTestCoverage` for an AC id whose occurrences span >1 file) could
+  // vary run-to-run even though file contents never changed. Sorting here
+  // makes the file list — and everything derived from it — deterministic
+  // across repeated invocations against an identical file set.
+  out.sort();
   return out;
 }
 
