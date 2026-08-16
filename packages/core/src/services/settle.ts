@@ -40,7 +40,11 @@ import type { VerifyTestRef } from '../contracts/index.js';
 import { runSettleGates } from '../gates/registry.js';
 import { deriveAcEvidence, checkEvidenceFloor, isUnobservableAc } from '../gates/ac-evidence.js';
 import { classifyAcObservability } from '../verify/criteria-observability.js';
-import { deriveAssuranceRecord, type AssuranceAcResult } from '../gates/assurance-record.js';
+import {
+  deriveAssuranceRecord,
+  type AssuranceAcResult,
+  type AssuranceBypassInput,
+} from '../gates/assurance-record.js';
 import { effectiveEvidenceFloor, evidenceFloorRefusalReason } from '../gates/engine.js';
 import { runSkillAuditCheck } from '../checks/skill-audit.js';
 import {
@@ -252,12 +256,26 @@ function buildTaskResults(
  * casing. Purely reported: its result is attached to `summary.assurance`
  * strictly after each call site's PASS/REFUSE outcome is already decided,
  * and is never read back by any gate-outcome or refusal logic (AC-4).
+ *
+ * Phase 283 (283-01, T3): an optional third argument, `AssuranceBypassInput`
+ * (same shape `deriveAssuranceRecord` itself now accepts — see that file's
+ * doc comment for the D-S/D-R rules), is threaded straight through to it.
+ * Only `finalizeAndCloseSettle` (the success path) supplies a populated one,
+ * built from `gateBypasses`/`deepVerify` already in scope there.
+ * `writeRefusedSettleSummary` (the refused path) keeps calling with two
+ * arguments — it already passes `acResults: []`, so bypass/deepVerify data
+ * would be a no-op there regardless (283-01 Boundaries).
  */
+// deja:new pre-existing thin wrapper (phase 233 T3), being extended in place
+// with the same optional third argument `deriveAssuranceRecord` (T2, phase
+// 283) now takes — a pass-through, not a new utility; see the doc comment
+// above.
 function deriveSettleAssuranceRecord(
   gates: readonly GateProvenance[],
   acResults: readonly AssuranceAcResult[],
+  bypassInput: AssuranceBypassInput = {},
 ): AssuranceRecord {
-  return deriveAssuranceRecord(gates, acResults);
+  return deriveAssuranceRecord(gates, acResults, bypassInput);
 }
 
 /**
@@ -1358,9 +1376,25 @@ async function finalizeAndCloseSettle(
     // caught by code-review) filters it out, making `evidenceTally`'s sum
     // mean "total OBSERVABLE ACs," consistent with D-H's off-ladder
     // placement everywhere else.
+    // Phase 283 (283-01, T3): `gateBypasses` (this function's own parameter,
+    // above) and `deepVerify` (this function's own parameter too) are both
+    // already in local scope — threaded through verbatim as the third
+    // argument so D-S/D-R can see them. `evidenceFloorBypassesUsed` is
+    // deliberately NOT included here: every entry it ever contains is
+    // hardcoded `severity: 'warn'` (`~line 1262` above), so it can never
+    // trigger D-S's error-severity cap and folding it in would only add a
+    // reader's doubt, not a behavior change. `exactOptionalPropertyTypes` is
+    // on, so `deepVerify` — typed `Record<string, DeepVerdict> | undefined`
+    // — needs the same conditional-spread shape already used a few lines up
+    // for the SUMMARY's own `deepVerify` field, rather than a direct
+    // assignment.
     assurance: deriveSettleAssuranceRecord(
       gates,
       acResultsWithEvidence.filter((r) => !offLadderExcludedIds.has(r.id)),
+      {
+        gateBypasses,
+        ...(deepVerify ? { deepVerify } : {}),
+      },
     ),
     ...(foreignBinaryMismatch ? { foreignBinaryMismatch } : {}),
   };

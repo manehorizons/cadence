@@ -592,3 +592,90 @@ describe('renderSummaryMd - verifier rollup label precision (phase 264, T2)', ()
     expect(md).not.toContain(MOCK_VERIFIER_CAPABILITY.message);
   });
 });
+
+describe('renderSummaryMd - bypass state alongside grade (phase 283, T4)', () => {
+  /** Base `evidenceTally` satisfying `AssuranceRecordZ` — every `AcEvidenceZ`
+   *  key present, per its phase-233 exhaustive-record contract. */
+  const EVIDENCE_TALLY = {
+    'ai-verified': 0,
+    executed: 1,
+    assertion: 1,
+    mention: 0,
+    unverified: 0,
+  };
+
+  it('283-01/AC-6: surfaces the bypass state directly next to the overall grade line for a bypassed settle', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      gateBypasses: [
+        {
+          gate: 'test-coverage',
+          flag: '--allow-missing-coverage',
+          reason: 'test-coverage gate bypassed via --allow-missing-coverage',
+          severity: 'error',
+        },
+      ],
+      assurance: {
+        verifierRollup: [{ provider: 'mock', gateCount: 1 }],
+        evidenceTally: EVIDENCE_TALLY,
+        overall: 'mixed',
+      },
+    };
+    const md = renderSummaryMd(summary);
+
+    // Not only present, but immediately adjacent to the grade line.
+    const lines = md.split('\n');
+    const overallIdx = lines.findIndex((l) => l === '- overall: mixed');
+    const bypassIdx = lines.findIndex((l) => l.startsWith('- bypassed:'));
+    expect(overallIdx).toBeGreaterThan(-1);
+    expect(bypassIdx).toBe(overallIdx + 1);
+    expect(lines[bypassIdx]).toContain('1 gate(s)');
+    expect(lines[bypassIdx]).toContain('severity: error');
+  });
+
+  it('283-01/AC-6: multiple bypasses with only warn severity report severity: warn, not error', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      gateBypasses: [
+        {
+          gate: 'test-coverage',
+          flag: '--allow-missing-coverage',
+          reason: 'test-coverage gate bypassed via --allow-missing-coverage',
+          severity: 'warn',
+        },
+        {
+          gate: 'boundary-scan',
+          flag: '--allow-boundary-scan-failure',
+          reason: 'boundary-scan gate bypassed via --allow-boundary-scan-failure',
+          severity: 'warn',
+        },
+      ],
+      assurance: {
+        verifierRollup: [{ provider: 'mock', gateCount: 1 }],
+        evidenceTally: EVIDENCE_TALLY,
+        overall: 'weak',
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).toContain('- bypassed: 2 gate(s) (severity: warn)');
+  });
+
+  it('283-01/AC-6: omits the bypass line when gateBypasses is absent -- clean settle unchanged (see byte-compatibility snapshot above for SAMPLE)', () => {
+    const md = renderSummaryMd(SAMPLE);
+    expect(md).not.toMatch(/- bypassed:/);
+  });
+
+  it('283-01/AC-6: omits the bypass line when gateBypasses is present but empty -- clean settle unchanged', () => {
+    const summary: Summary = {
+      ...SAMPLE,
+      gateBypasses: [],
+      assurance: {
+        verifierRollup: [{ provider: 'mock', gateCount: 1 }],
+        evidenceTally: EVIDENCE_TALLY,
+        overall: 'strong',
+      },
+    };
+    const md = renderSummaryMd(summary);
+    expect(md).not.toMatch(/- bypassed:/);
+  });
+});

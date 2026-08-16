@@ -76,6 +76,19 @@ const constructed = vi.hoisted(() => ({
    * existing always-resolves behavior for every other test.
    */
   deepVerifyThrowMessage: null as string | null,
+  /**
+   * Phase 283 (283-01, T3): per-test override for the stubbed deep verifier's
+   * AC-1 verdict, mirroring `codeReviewFindingsOverride`/
+   * `securityAuditFindingsOverride` above. Without this seam nothing in this
+   * file could produce a real (non-mock) `deepVerify` `pass: false` entry
+   * through a normally-resolving `.verify()` call — only a full transport
+   * throw (`deepVerifyThrowMessage`) was reachable, which is a different
+   * scenario (verifier-transport-failure catch branch, unobservable-style
+   * bookkeeping) than a real verifier cleanly rejecting an AC. `null` (the
+   * default, reset in `afterEach`) preserves this file's existing
+   * always-`pass: true` stub behavior for every other test.
+   */
+  deepVerifyAc1Override: null as { pass: boolean; reason: string } | null,
 }));
 
 vi.mock('../../src/verify/factory.js', async (importOriginal) => {
@@ -95,7 +108,11 @@ vi.mock('../../src/verify/factory.js', async (importOriginal) => {
             throw new Error(constructed.deepVerifyThrowMessage);
           }
           return {
-            verdicts: { 'AC-1': { pass: true, reason: 'stubbed for cwd-threading test' } },
+            verdicts: {
+              'AC-1':
+                constructed.deepVerifyAc1Override ??
+                { pass: true, reason: 'stubbed for cwd-threading test' },
+            },
             provider: real.name,
           };
         },
@@ -229,6 +246,26 @@ async function setupBuildRepo(args: {
   await writeFile(join(root, '.env'), 'ANTHROPIC_API_KEY=from-dotenv-settle-test\n');
 }
 
+/**
+ * Phase 283 (283-01, T3): a real, qualifying `assertion`-mode coverage test
+ * per AC id, at the default `verification.testGlobs` location — mirrors
+ * `settle-deep.test.ts`'s `seedCoverageTest` helper (this file has no shared
+ * import path to it, so it is reproduced locally rather than reached for
+ * across test files). Combined with a real passing `verification.testCommand`
+ * (`buildTestRan: true`), this is what lets `deriveAcEvidence` land an AC at
+ * `'executed'` — one of the two evidence classes `strongRatio` counts —
+ * without a real (non-mock) `deepVerify` pass for the same AC.
+ */
+async function seedCoverageTest(root: string, acIds: string[]): Promise<void> {
+  const abs = join(root, 'packages', 'core', 'tests', 'foo.test.ts');
+  await mkdir(join(root, 'packages', 'core', 'tests'), { recursive: true });
+  const body =
+    acIds
+      .map((id) => `it('${id} coverage fixture', () => { expect(true).toBe(true); });`)
+      .join('\n') + '\n';
+  await writeFile(abs, body, 'utf8');
+}
+
 let root: string | null = null;
 const origKey = process.env.ANTHROPIC_API_KEY;
 
@@ -240,6 +277,7 @@ afterEach(async () => {
   constructed.codeReviewFindingsOverride = null;
   constructed.securityAuditFindingsOverride = null;
   constructed.deepVerifyThrowMessage = null;
+  constructed.deepVerifyAc1Override = null;
   if (origKey !== undefined) {
     process.env.ANTHROPIC_API_KEY = origKey;
   } else {
@@ -1317,6 +1355,195 @@ describe('settleService surfaces the assurance record in the rendered SUMMARY.md
     // rollup, not just the machine-readable SUMMARY.json.
     expect(md).toContain('## Assurance');
     expect(md).toContain(`overall: ${summary.assurance?.overall}`);
+  });
+});
+
+/**
+ * Phase 283 (283-01, T3): proves `finalizeAndCloseSettle`'s real call site
+ * (not a synthetic `deriveAssuranceRecord` unit call) actually threads
+ * `gateBypasses`/`deepVerify` through `deriveSettleAssuranceRecord` end to
+ * end. Two scenarios, deliberately kept separate rather than combined into
+ * one, because a combined scenario doesn't actually discriminate the two
+ * facts: the first `it()` below carries BOTH a real deepVerify objection
+ * (D-R) AND an error-severity gateBypasses entry (D-S), but D-R alone
+ * already drops `strongRatio` to 0 in a single-AC fixture — `overall` lands
+ * on 'mixed' before D-S's `overall === 'strong'` cap-check ever has anything
+ * to cap, so that scenario alone would still pass with `gateBypasses`
+ * silently dropped from the call site (verified empirically: deleting just
+ * `gateBypasses,` from the finalize-path call site while leaving `deepVerify`
+ * in place does not fail it). The second `it()` isolates D-S with ZERO
+ * deep-verify involvement (no AC anywhere carries a `pass: false` deepVerify
+ * verdict), so it can only pass if `gateBypasses` itself is genuinely
+ * threaded through.
+ */
+describe('settleService threads bypass-aware assurance inputs into the finalize-path call site (phase 283, T3)', () => {
+  it("283-01/AC-2: a real (non-mock) deep-verify objection excluded from strongRatio, combined with the --force bypass it required, no longer grades assurance.overall as 'strong' end-to-end", async () => {
+    root = await mktemp();
+    await setupBuildRepo({
+      root,
+      phase: '283-01-bypass-assurance',
+      id: '283-01',
+      tier: 'standard',
+      config: {
+        ...defaultConfig,
+        // 'strict' × 'standard' includes 'code-review' (DELTAS.strict.standard)
+        // — the only way to get a real (non-mock) `gates[].provider` entry,
+        // since deep-verify's own gate provenance never sets `.provider` (only
+        // `.observedProvider` — see `assurance-record.ts`'s doc comment).
+        profile: 'strict',
+        codeReview: { provider: 'anthropic' },
+        // Phase 283 (283-01, T3): `resolveEffectiveProvider`'s selection
+        // algorithm is `override ?? slice.provider ?? 'mock'` — an .env key
+        // alone is not enough, `config.verifier.provider` must be set
+        // explicitly too (mirrors the T5 "AC-1: deep-verify seam" test above).
+        verifier: { provider: 'anthropic', diffCapBytes: 262144 },
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+        verification: {
+          ...defaultConfig.verification,
+          // A real, passing test command is what makes `buildTestRan: true`
+          // (`build-test-must-pass.ts` only sets `buildTestRan: false` when NO
+          // command is configured at all) — needed for AC-1's qualifying
+          // assertion-mode coverage below to land at 'executed' rather than
+          // the weaker 'assertion'.
+          testCommand: 'node -e "process.exit(0)"',
+        },
+      },
+    });
+    await seedCoverageTest(root, ['AC-1']);
+
+    // Force the .env-discovered key (AC-1/AC-3 of the T5 describe block
+    // above) to be the only source of the real provider, and make the
+    // stubbed deep verifier's AC-1 verdict a clean, non-throwing objection —
+    // not a transport failure (that would mark AC-1 `unobservable` instead).
+    delete process.env.ANTHROPIC_API_KEY;
+    constructed.deepVerifyAc1Override = {
+      pass: false,
+      reason: 'real (non-mock) verifier objects to AC-1',
+    };
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, deep: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    // --force bypasses both the code-review pass-through and the deep-verify
+    // refusal (offenders.length > 0 && !ctx.opts.force would otherwise
+    // refuse) — the settle itself succeeds.
+    expect(res.exitCode).toBe(0);
+    expect(constructed.codeReview).toEqual(['anthropic']);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '283-01-bypass-assurance', '283-01-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    // Preconditions: this is genuinely the "would have graded strong" shape
+    // D-S/D-R exist to correct, not a vacuous scenario.
+    const ac1 = summary.acResults.find((r) => r.id === 'AC-1');
+    expect(ac1?.pass).toBe(true); // D-R: acResults[].pass is never flipped by --force
+    expect(ac1?.evidence).toBe('executed');
+    expect(summary.deepVerify?.['AC-1']).toMatchObject({
+      pass: false,
+      provider: 'anthropic',
+    });
+    expect(
+      summary.gateBypasses?.some((b) => b.severity === 'error' && b.flag === '--force'),
+    ).toBe(true);
+
+    // 283-01/AC-2: D-R's exclusion is threaded through the real finalize-path
+    // call site now — overall is capped at 'mixed', never 'strong', even
+    // though a real verifier engaged and this settle's only AC has
+    // non-mock-eligible evidence. (A non-empty error-severity `gateBypasses`
+    // is also genuinely present and threaded here — asserted above — but
+    // D-R alone already accounts for this scenario's 'mixed' result; the
+    // dedicated AC-1 test below isolates D-S's own contribution.)
+    expect(summary.assurance?.overall).toBe('mixed');
+  });
+
+  it("283-01/AC-1: an error-severity gateBypasses entry, with ZERO deep-verify involvement anywhere, caps overall at 'mixed' through the real finalize-path call site", async () => {
+    root = await mktemp();
+    await setupTwoAcBuildRepo({
+      root,
+      phase: '283-02-bypass-assurance-ac1',
+      id: '283-02',
+      config: {
+        ...defaultConfig,
+        // 'strict' × 'standard' includes 'code-review' — see the AC-2 test
+        // above for why this is the only way to get hasRealVerifier=true.
+        profile: 'strict',
+        codeReview: { provider: 'anthropic' },
+        verifier: { provider: 'anthropic', diffCapBytes: 262144 },
+        gates: { sealed: [], evidenceFloor: 'unverified' },
+      },
+    });
+    // T2 BLOCKED (not DONE) — structurally terminal (structural-verifier
+    // treats BLOCKED as terminal, no refusal there), but AC-2's only linked
+    // task being BLOCKED is exactly `collectAnomalies`'s STRUCTURAL
+    // force-used trigger (settle-anomaly.test.ts's own "AC-3: auto profile +
+    // --force + BLOCKED task" precedent) — an error-severity `gateBypasses`
+    // entry with no deep-verify involvement anywhere, isolating D-S from D-R.
+    const phaseDir = join(root, '.cadence', 'phases', '283-02-bypass-assurance-ac1');
+    await writeFile(
+      join(phaseDir, '283-02-PROGRESS.json'),
+      JSON.stringify(
+        { draftId: '283-02', tasks: { T1: { status: 'DONE' }, T2: { status: 'BLOCKED' } } },
+        null,
+        2,
+      ),
+    );
+    // Real (non-mock) provider discoverable only via .env at repoRoot —
+    // setupTwoAcBuildRepo (unlike setupBuildRepo) doesn't write one itself.
+    await writeFile(join(root, '.env'), 'ANTHROPIC_API_KEY=from-dotenv-settle-test\n');
+
+    // opts.auto's own offender check (settle.ts:998-1008) refuses BEFORE the
+    // gate loop when any AC's derived verdict isn't 'pass' and --force isn't
+    // set — AC-2's 'blocked' verdict makes --force required just to reach
+    // finalize at all here, not only for the force-used anomaly to fire.
+    delete process.env.ANTHROPIC_API_KEY;
+    // deepVerifyAc1Override stays null (this file's default): AC-1's
+    // deep-verify verdict resolves pass:true from the real 'anthropic' stub
+    // — 'ai-verified' evidence, D-R's exclusion never triggers anywhere in
+    // this scenario (confirmed below). AC-2 has no coverage and no
+    // deep-verify entry of its own (the stub only ever answers for 'AC-1'),
+    // so it lands at 'unverified' evidence — weak, but it was never going to
+    // count toward strongCount either way.
+
+    const { io } = captureIO();
+    const res = await settleService(
+      root,
+      { auto: true, deep: true, interactive: false, allowMissingCoverage: true, force: true },
+      io,
+    );
+
+    expect(res.exitCode).toBe(0);
+    expect(constructed.codeReview).toEqual(['anthropic']);
+
+    const summaryPath = join(
+      root, '.cadence', 'phases', '283-02-bypass-assurance-ac1', '283-02-SUMMARY.json',
+    );
+    const summary = JSON.parse(await readFile(summaryPath, 'utf8')) as Summary;
+
+    // Preconditions: AC-1 alone already clears the 'strong' bar on its own —
+    // hasRealVerifier (code-review: anthropic) is true, and strongRatio (1
+    // 'ai-verified' AC-1 of 2 total ACs) = 0.5 >= 0.5. No deepVerify
+    // pass:false entry exists anywhere in this SUMMARY (asserted next), so
+    // D-R contributes nothing here — the ONLY thing that can move `overall`
+    // off 'strong' in this scenario is D-S's cap.
+    expect(summary.deepVerify?.['AC-1']).toMatchObject({ pass: true, provider: 'anthropic' });
+    expect(summary.deepVerify?.['AC-2']).toBeUndefined();
+    expect(Object.values(summary.deepVerify ?? {}).some((v) => v.pass === false)).toBe(false);
+    const ac1 = summary.acResults.find((r) => r.id === 'AC-1');
+    expect(ac1?.evidence).toBe('ai-verified');
+    expect(
+      summary.gateBypasses?.some((b) => b.severity === 'error' && b.flag === '--force'),
+    ).toBe(true);
+
+    // 283-01/AC-1: D-S alone — with zero D-R involvement anywhere in this
+    // SUMMARY — caps overall at 'mixed', never 'strong'. This is the
+    // discriminating proof the AC-2 test above cannot provide on its own.
+    expect(summary.assurance?.overall).toBe('mixed');
   });
 });
 

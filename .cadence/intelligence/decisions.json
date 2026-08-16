@@ -628,6 +628,42 @@
       "status": "active",
       "decidedAt": "2026-08-16T03:13:08.069Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260816-005",
+      "recommendationId": "rec-20260816-002",
+      "title": "D-R: bypass/deepVerify honesty enters via a new third argument to deriveAssuranceRecord, acResults untouched",
+      "rationale": "Option 1 of HANDOFF-assurance-honesty.md's D-R. acResults[].pass records the true settle outcome (the AC really was accepted under --force); flipping it to false would make the artifact claim the settle failed when it in fact settled -- a different lie, not a fix. AC-E1 (cap on error-severity gateBypasses) and AC-E2 (deepVerify pass:false ACs excluded from strongRatio) are both satisfiable from a single new argument carrying {gateBypasses, deepVerify} into deriveAssuranceRecord, with no change to acResults or its consumers (verify phase, phase-replay, drift report, summary render, evidence floor).",
+      "status": "active",
+      "decidedAt": "2026-08-16T17:59:19.319Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260816-006",
+      "recommendationId": "rec-20260816-002",
+      "title": "D-S: cap overall at mixed on error-severity bypass, no AssuranceRecordZ schema change",
+      "rationale": "Option 1 of HANDOFF-assurance-honesty.md's D-S, not option 2 (new 'overridden'/'forced' enum rung) or option 3 alone (orthogonal bypassed flag, overall left as-is -- which by itself fails AC-E1). Empirical check (2026-08-16): every consumer that reads assurance.overall already has the whole SUMMARY object in scope (summary-writer.ts:51, summary-render.ts:61 both render 's.assurance.overall' with 's' -- the full summary, including gateBypasses -- already in hand); no consumer reads overall in true isolation. That removes the case for a schema change: cap 'overall' at 'mixed' when an error-severity gateBypasses entry is present (AC-E1), and satisfy AC-E6's 'surface alongside' requirement by having summary-render.ts/summary-writer.ts print the existing gateBypasses array next to the assurance line -- no new field on AssuranceRecordZ, so no exhaustive-switch break for readers and no additive-only exception needed. warn-severity-only bypasses do not force the cap; AC-E2's ratio math (deepVerify pass:false excluded from strongRatio) already independently suppresses 'strong' whenever a real verifier failure occurred, regardless of severity.",
+      "status": "active",
+      "decidedAt": "2026-08-16T17:59:28.194Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260816-007",
+      "recommendationId": "rec-20260816-002",
+      "title": "D-T: dec-20260728-001's gate-agnostic invariant is honored, not relitigated",
+      "rationale": "gateBypasses entries carry a 'gate' field; the new third argument to deriveAssuranceRecord must be read via severity/flag only, never branch on entry.gate -- that would violate the phase-233 tripwire dec-20260728-001 established. The existing tripwire test in tests/gates/assurance-record.test.ts must pass unmodified (AC-E4); a new test asserts the bypass-aware path specifically doesn't read .gate. Docstring on deriveAssuranceRecord gets extended in the same commit to describe the third argument under the same gate-agnostic framing.",
+      "status": "active",
+      "decidedAt": "2026-08-16T17:59:37.878Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260816-008",
+      "recommendationId": "rec-20260816-002",
+      "title": "D-U: report-only, no backfill of historical SUMMARY.json grades",
+      "rationale": "Settled per HANDOFF-assurance-honesty.md §3 (not a genuine fork -- repo's standing posture is report-never-rewrite, and summary verify-all exists to detect exactly this class of tampering). AC-E5's corpus report enumerates every one of the 294 records whose grade would change under the new rule (phase id, old->new), read-only, with summary verify-all reporting 0 MISMATCH / 0 failed both before and after the code change -- capturing the 'before' run is part of this decision, not just the 'after'.",
+      "status": "active",
+      "decidedAt": "2026-08-16T17:59:38.051Z",
+      "supersedes": []
     }
   ]
 }

@@ -1,7 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import type { GateProvenance } from '@thomas-powers-jr/cadence-types';
+import type { DeepVerdict, GateBypass, GateProvenance } from '@thomas-powers-jr/cadence-types';
 import { deriveAssuranceRecord, type AssuranceAcResult } from '../../src/gates/assurance-record.js';
 import { GATE_ORDER } from '../../src/gates/registry.js';
+
+const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__');
 
 function ac(id: string, evidence?: AssuranceAcResult['evidence']): AssuranceAcResult {
   return { id, pass: true, ...(evidence !== undefined ? { evidence } : {}) };
@@ -377,5 +382,305 @@ describe('deriveAssuranceRecord and observedProvider/observedModel/taskId (phase
     const realProviderResult = deriveAssuranceRecord(realProviderGates, acResults);
     expect(realProviderResult.verifierRollup).not.toEqual([]);
     expect(realProviderResult.overall).not.toBe(baselineResult.overall);
+  });
+});
+
+/**
+ * Phase 283 (283-01, T1) — red regression tests against TODAY's unmodified
+ * `deriveAssuranceRecord`, capturing the bug this whole phase exists to fix
+ * (see the phase Objective: 272-assurance-record-correctness and
+ * 282-coverage-scanner-determinism both graded 'strong' over recorded
+ * gateBypasses and real host-cli deep-verify failures).
+ *
+ * T1 originally wrote these tests against `deriveAssuranceRecord`'s
+ * anticipated post-T2 signature via a local type cast (`callWithBypassInput`)
+ * because the real function only took two arguments at the time. T2
+ * (283-01) has since implemented the real third argument with this exact
+ * `{ gateBypasses, deepVerify }` shape (see `AssuranceBypassInput` in
+ * `src/gates/assurance-record.ts`), so the cast is now dead plumbing and
+ * both tests below call `deriveAssuranceRecord` directly with 3 real
+ * arguments. The test bodies/assertions are otherwise unchanged from T1 —
+ * these were genuinely RED before T2's implementation and are GREEN now.
+ */
+describe('deriveAssuranceRecord bypass-aware grading (phase 283-01, T1 red tests)', () => {
+  it('283-01/AC-1: an error-severity gateBypasses entry caps overall at mixed, never strong, even though the underlying gates/evidence alone would grade strong', () => {
+    // Mirrors a real forced settle: a real (non-mock) verifier ran on every
+    // gate that carries identity, and every AC landed at the two strongest
+    // evidence classes -- on the gates/acResults alone this is the textbook
+    // 'strong' shape (see the 264-01/AC-5 "all-real" scenario above, whose
+    // equivalent input already asserts exactly that).
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+      { gate: 'security-audit', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+    ];
+    const acResults = [ac('AC-1', 'ai-verified'), ac('AC-2', 'executed')];
+
+    // But this settle also carries a non-empty gateBypasses array with an
+    // error-severity entry -- e.g. a --force override of a real refusal.
+    // 'settle' is the pseudo-gate name GateBypassZ.gate uses for the
+    // --force bypass case specifically (see its doc comment in
+    // packages/types/src/summary.ts).
+    const gateBypasses: GateBypass[] = [
+      { gate: 'settle', flag: '--force', reason: 'operator override of evidence-floor refusal', severity: 'error' },
+    ];
+
+    const result = deriveAssuranceRecord(gates, acResults, { gateBypasses });
+
+    // Pre-T2 this evaluated to today's real deriveAssuranceRecord(gates,
+    // acResults) result (the third argument was inert), which was 'strong'
+    // -- the bug. Post-T2: an error-severity bypass caps overall at 'mixed',
+    // never 'strong', regardless of how strong the underlying gates/evidence
+    // would otherwise grade.
+    expect(result.overall).toBe('mixed');
+  });
+
+  it('283-01/AC-2: a deepVerify pass:false verdict from a non-mock provider excludes that AC from strongRatio without altering acResults[].pass', () => {
+    const gates: GateProvenance[] = [{ gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' }];
+
+    // Three ACs: two at the strongest evidence classes (as independently
+    // recorded coverage/verification evidence -- e.g. from real test
+    // execution), one weak. A real (non-mock) deep-verify pass has since
+    // objected to both of the strong ones with pass: false -- a real
+    // verifier failure that settle recorded acResults[].pass: true over
+    // (e.g. via --force), matching the phase Objective's exact scenario.
+    // AC-3 (evidence 'mention', no deepVerify entry) exists to keep the
+    // denominator non-zero -- and this scenario's assertion discriminating
+    // -- under EITHER a numerator-only exclusion reading (strongCount drops
+    // to 0 of 3) or a numerator-and-denominator reading (0 of 1, AC-3 alone);
+    // both land on 'mixed' here, so this test doesn't silently pass today
+    // for the wrong shape of exclusion T2 might pick.
+    const ac1 = ac('AC-1', 'ai-verified');
+    const ac2 = ac('AC-2', 'executed');
+    const ac3 = ac('AC-3', 'mention');
+    const acResults = [ac1, ac2, ac3];
+    expect(ac1.pass).toBe(true);
+    expect(ac2.pass).toBe(true);
+
+    const deepVerify: Record<string, DeepVerdict> = {
+      'AC-1': { pass: false, reason: 'verifier objected: does not satisfy the AC', provider: 'anthropic' },
+      'AC-2': { pass: false, reason: 'verifier objected: does not satisfy the AC', provider: 'anthropic' },
+    };
+
+    const result = deriveAssuranceRecord(gates, acResults, { deepVerify });
+
+    // Pre-T2 the third argument was inert -- deriveAssuranceRecord only ever
+    // read acResults[].evidence, never deepVerify, so both objected-to ACs
+    // still fully counted toward strongRatio's numerator (2/3 = 0.667 >=
+    // 0.5, with a real verifier present) -- 'strong'. The bug: a real
+    // verifier's objection was invisible to the grade.
+    // Post-T2: both AC-1 and AC-2 are excluded from strongRatio because of
+    // their failing non-mock deepVerify verdicts (whether by shrinking only
+    // the numerator to 0/3, or both numerator and denominator to 0/1 -- this
+    // scenario's arithmetic lands on 'mixed' either way, since a real
+    // verifier is still present), landing on 'mixed'.
+    expect(result.overall).toBe('mixed');
+
+    // acResults[].pass must NOT have been altered by this -- the real settle
+    // outcome (a --force-recorded pass) stays recorded as-is; only how the
+    // AC contributes to the derived grade changes.
+    expect(ac1.pass).toBe(true);
+    expect(ac2.pass).toBe(true);
+  });
+});
+
+/**
+ * Phase 283 (283-01, T2) — negative cases for AC-1/AC-2, flagged by the
+ * independent reviewer of T1 as real test-discrimination gaps (not T1
+ * defects): T1 only proved the positive direction of each rule (an
+ * error-severity bypass DOES cap; a real deepVerify failure DOES exclude).
+ * These prove the rules don't over-fire on the adjacent shape that must NOT
+ * trigger them.
+ */
+describe('deriveAssuranceRecord bypass-aware grading negative cases (phase 283-01, T2)', () => {
+  it("283-01/AC-1: a gateBypasses array with ONLY warn-severity entries does not cap overall -- a settle that would otherwise grade 'strong' still grades 'strong'", () => {
+    // Identical textbook-'strong' shape to the AC-1 positive test above.
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+      { gate: 'security-audit', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+    ];
+    const acResults = [ac('AC-1', 'ai-verified'), ac('AC-2', 'executed')];
+
+    // gateBypasses is non-empty, but every entry is warn-severity -- D-S's
+    // cap requires at least one error-severity entry, so this must NOT cap.
+    const gateBypasses: GateBypass[] = [
+      { gate: 'coherence-check', flag: '--allow-boundary-scan-failure', reason: 'known noisy scan', severity: 'warn' },
+    ];
+
+    const result = deriveAssuranceRecord(gates, acResults, { gateBypasses });
+    expect(result.overall).toBe('strong');
+  });
+
+  it("283-01/AC-2: a deepVerify pass:false verdict from provider: 'mock' does not exclude that AC from strongRatio -- mock failures are not real verification failures", () => {
+    // Identical textbook-'strong' shape to the AC-1/AC-2 positive tests
+    // above, so exclusion (if it wrongly fired) would be visible as a drop
+    // from 'strong' to 'mixed'.
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+      { gate: 'security-audit', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+    ];
+    const ac1 = ac('AC-1', 'ai-verified');
+    const ac2 = ac('AC-2', 'executed');
+    const acResults = [ac1, ac2];
+
+    // A mock-provider deepVerify entry objects to AC-1 -- D-R's exclusion
+    // requires a non-mock provider, so this must NOT exclude AC-1.
+    const deepVerify: Record<string, DeepVerdict> = {
+      'AC-1': { pass: false, reason: 'mock placeholder verdict', provider: 'mock' },
+    };
+
+    const result = deriveAssuranceRecord(gates, acResults, { deepVerify });
+    expect(result.overall).toBe('strong');
+    expect(ac1.pass).toBe(true);
+  });
+});
+
+/**
+ * Phase 283 (283-01, T2) — AC-3: proves "clean settles are byte-identical to
+ * pre-change output" against the literal, machine-captured T1 fixture
+ * (`__fixtures__/assurance-record-clean-settle.json`), not just "looks
+ * unchanged." Runs every fixture scenario's `input` through the real post-T2
+ * `deriveAssuranceRecord` three ways -- third argument omitted entirely,
+ * passed as `{}`, and passed as an explicit-but-clean
+ * `{ gateBypasses: [], deepVerify: {} }` -- and asserts each reproduces that
+ * scenario's recorded `output`. Checked two ways: Vitest's `toEqual` (deep
+ * structural equality, so a genuinely different value is caught even if the
+ * failure message is easier to read) AND a literal `JSON.stringify`
+ * string-equality check (`toBe`), which is the actual byte-for-byte proof
+ * AC-3's wording asks for — `toEqual` alone would tolerate a key-order
+ * difference that `JSON.stringify`/`toBe` would not.
+ */
+describe('deriveAssuranceRecord clean-settle backward compatibility (phase 283-01, T2, AC-3)', () => {
+  const fixture = JSON.parse(
+    readFileSync(join(FIXTURES_DIR, 'assurance-record-clean-settle.json'), 'utf8'),
+  ) as {
+    scenarios: Array<{
+      name: string;
+      input: { gates: GateProvenance[]; acResults: AssuranceAcResult[] };
+      output: unknown;
+    }>;
+  };
+
+  it('283-01/AC-3: every clean-settle fixture scenario reproduces its recorded pre-change output byte-for-byte, with the third argument omitted, {}, and explicitly-clean', () => {
+    expect(fixture.scenarios.length).toBeGreaterThan(0);
+
+    for (const scenario of fixture.scenarios) {
+      const { gates, acResults } = scenario.input;
+      const expectedJson = JSON.stringify(scenario.output);
+
+      const omitted = deriveAssuranceRecord(gates, acResults);
+      const emptyObject = deriveAssuranceRecord(gates, acResults, {});
+      const explicitlyClean = deriveAssuranceRecord(gates, acResults, { gateBypasses: [], deepVerify: {} });
+
+      expect(omitted, `scenario "${scenario.name}" (third arg omitted)`).toEqual(scenario.output);
+      expect(emptyObject, `scenario "${scenario.name}" (third arg {})`).toEqual(scenario.output);
+      expect(explicitlyClean, `scenario "${scenario.name}" (third arg explicitly clean)`).toEqual(scenario.output);
+
+      // Byte-for-byte, literally: JSON.stringify + toBe catches a key-order
+      // difference that toEqual's structural equality would silently accept.
+      expect(JSON.stringify(omitted), `scenario "${scenario.name}" (omitted, stringified)`).toBe(expectedJson);
+      expect(JSON.stringify(emptyObject), `scenario "${scenario.name}" ({}, stringified)`).toBe(expectedJson);
+      expect(JSON.stringify(explicitlyClean), `scenario "${scenario.name}" (explicitly clean, stringified)`).toBe(
+        expectedJson,
+      );
+    }
+  });
+});
+
+/**
+ * Phase 283 (283-01, T2) — AC-4: proves `deriveAssuranceRecord`'s new
+ * bypass-handling code path (D-S's cap) never reads `gateBypasses[].gate`.
+ * The phase-233 gate-agnostic tripwire above proves the pre-existing `gates`
+ * argument is gate-agnostic; this is the equivalent proof for the new third
+ * argument. Two `gateBypasses` entries that differ ONLY in `.gate` (one
+ * nonsense/unregistered gate name, one different nonsense/unregistered gate
+ * name) must produce byte-identical results, driven by `severity` alone.
+ */
+describe('deriveAssuranceRecord bypass cap is gate-agnostic (phase 283-01, T2, AC-4)', () => {
+  it('283-01/AC-4: the error-severity cap never reads gateBypasses[].gate -- results are identical across entries whose .gate differs (including nonsense/unregistered names), driven by severity alone', () => {
+    // Textbook-'strong' shape absent any bypass, so the cap (if it fires) is
+    // visible as a drop to 'mixed'.
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+      { gate: 'security-audit', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+    ];
+    const acResults = [ac('AC-1', 'ai-verified'), ac('AC-2', 'executed')];
+
+    const bypassesWithGateA: GateBypass[] = [
+      { gate: 'totally-not-a-real-registered-gate-name', flag: '--force', reason: 'x', severity: 'error' },
+    ];
+    const bypassesWithGateB: GateBypass[] = [
+      { gate: '', flag: '--force', reason: 'x', severity: 'error' },
+    ];
+    const bypassesWithGateC: GateBypass[] = [
+      { gate: 'build-test-must-pass', flag: '--force', reason: 'x', severity: 'error' },
+    ];
+
+    const resultA = deriveAssuranceRecord(gates, acResults, { gateBypasses: bypassesWithGateA });
+    const resultB = deriveAssuranceRecord(gates, acResults, { gateBypasses: bypassesWithGateB });
+    const resultC = deriveAssuranceRecord(gates, acResults, { gateBypasses: bypassesWithGateC });
+
+    // All three .gate values are different (one nonsense, one empty, one a
+    // real registered gate name) -- if the cap read .gate at all, at least
+    // one of these could plausibly diverge. It doesn't: severity alone
+    // drives the outcome.
+    expect(resultA).toEqual(resultB);
+    expect(resultB).toEqual(resultC);
+    expect(resultA.overall).toBe('mixed');
+  });
+});
+
+/**
+ * Phase 283 (283-01, T3) — an independent reviewer's finding on T2's AC-2
+ * test above: that test's own comment admits its arithmetic (2 objected + 1
+ * weak AC) lands on 'mixed' under EITHER reading of D-R's exclusion --
+ * numerator-only (the actually-implemented rule, per this file's doc
+ * comment: "that AC is excluded from strongRatio's numerator") or a wrong
+ * numerator-AND-denominator reading. Deferred to T3 as "cheaper now than
+ * after T3 wires the real call site" -- a real gap, not a T2 defect. This
+ * test picks a scenario where the two readings diverge, so a regression to
+ * the wrong (denominator-shrinking) reading would actually fail here.
+ */
+describe('deriveAssuranceRecord D-R exclusion touches only strongCount\'s numerator, not totalAcs (phase 283-01, T3 gap fix)', () => {
+  it("283-01/AC-2: two real-provider-objected ai-verified ACs are excluded from strongRatio's numerator only -- 1/4 = 0.25 -> 'mixed', discriminating against a wrong numerator-and-denominator reading that would give 1/2 = 0.5 -> 'strong'", () => {
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+    ];
+
+    // 4 ACs total (totalAcs = 4), deliberately NOT 3 like the T1 AC-2 test
+    // above -- with 3 ACs (2 objected + 1 weak) both readings of D-R
+    // coincidentally land on 'mixed'. With 4 (2 objected ai-verified + 1
+    // clean ai-verified + 1 mention), the two readings diverge:
+    //  - numerator-only (correct): strongCount = 1 (AC-3 alone; AC-1/AC-2
+    //    excluded by their real-provider pass:false verdicts, AC-4 never
+    //    qualified since 'mention' isn't a strong evidence class in the
+    //    first place), totalAcs stays 4 -> 1/4 = 0.25.
+    //  - numerator-and-denominator (wrong): AC-1/AC-2 would also be dropped
+    //    from the denominator -> totalAcs effectively 2 (AC-3, AC-4) ->
+    //    1/2 = 0.5.
+    const ac1 = ac('AC-1', 'ai-verified');
+    const ac2 = ac('AC-2', 'ai-verified');
+    const ac3 = ac('AC-3', 'ai-verified');
+    const ac4 = ac('AC-4', 'mention');
+    const acResults = [ac1, ac2, ac3, ac4];
+
+    const deepVerify: Record<string, DeepVerdict> = {
+      'AC-1': { pass: false, reason: 'verifier objected: does not satisfy the AC', provider: 'anthropic' },
+      'AC-2': { pass: false, reason: 'verifier objected: does not satisfy the AC', provider: 'anthropic' },
+    };
+
+    const result = deriveAssuranceRecord(gates, acResults, { deepVerify });
+
+    // 0.25 < 0.5 -> fails the 'strong' bar (hasRealVerifier && strongRatio
+    // >= 0.5) even with a real verifier present, landing on 'mixed' via the
+    // hasRealVerifier||strongRatio>0 branch. 0.5 (the wrong reading) would
+    // instead have cleared the 'strong' bar exactly -- that is the failure
+    // this test exists to catch if the exclusion ever regresses to touch
+    // the denominator.
+    expect(result.overall).toBe('mixed');
+
+    // acResults[].pass is untouched by any of this -- D-R never flips it,
+    // exactly as the existing T1/T2 tests above already establish.
+    expect(ac1.pass).toBe(true);
+    expect(ac2.pass).toBe(true);
   });
 });
