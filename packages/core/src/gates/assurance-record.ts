@@ -1,4 +1,11 @@
-import type { AcEvidence, AssuranceRecord, GateProvenance, Summary } from '@thomas-powers-jr/cadence-types';
+import type {
+  AcEvidence,
+  AssuranceRecord,
+  DeepVerdict,
+  GateBypass,
+  GateProvenance,
+  Summary,
+} from '@thomas-powers-jr/cadence-types';
 
 /**
  * Phase 233 (T2): the per-AC result shape `deriveAssuranceRecord` consumes —
@@ -7,6 +14,24 @@ import type { AcEvidence, AssuranceRecord, GateProvenance, Summary } from '@thom
  * ever changes shape, instead of silently drifting from it.
  */
 export type AssuranceAcResult = Summary['acResults'][number];
+
+/**
+ * Phase 283 (283-01, T2): the optional third argument `deriveAssuranceRecord`
+ * accepts, carrying the two extra settle-level facts D-S/D-R read (see the
+ * function's own doc comment below for the rules). Both fields are optional
+ * and independently defaultable — omitting the whole argument, or passing
+ * `{}`, is equivalent to passing `{ gateBypasses: [], deepVerify: {} }`
+ * (283-01/AC-3: this makes the addition backward-compatible by construction,
+ * not by convention). Gate-agnostic like the rest of this file: only
+ * `severity` is ever read off `gateBypasses` entries and only `pass`/
+ * `provider` off `deepVerify` entries — `.gate` is never read anywhere in
+ * this file, on this new argument any more than on the pre-existing `gates`
+ * argument (`dec-20260728-001`, reaffirmed as D-T by `dec-20260816-007`).
+ */
+export interface AssuranceBypassInput {
+  readonly gateBypasses?: readonly GateBypass[];
+  readonly deepVerify?: Record<string, DeepVerdict>;
+}
 
 const EVIDENCE_CLASSES: readonly AcEvidence[] = [
   'ai-verified',
@@ -21,8 +46,10 @@ const EVIDENCE_CLASSES: readonly AcEvidence[] = [
  * per-gate provenance array and per-AC evidence array — "how strongly was
  * this settle actually verified?", composed rather than gated.
  *
- * Pure function of its two arguments only — no I/O, no clock, no gate-name
- * special-casing (the AC-3 tripwire this task exists to test). Every gate
+ * Pure function of its arguments only — no I/O, no clock, no gate-name
+ * special-casing (the AC-3 tripwire this task exists to test; phase 283
+ * extended the argument list to three but this remains true of all of
+ * them — see below). Every gate
  * entry is treated uniformly by its `provider`/`model` fields alone: this
  * function never inspects `gate.gate`. Gates that carry no verifier
  * identity (everything except `code-review`/`security-audit` as of phase
@@ -54,6 +81,39 @@ const EVIDENCE_CLASSES: readonly AcEvidence[] = [
  *    gates, and "every AC's evidence class is `'unverified'`" is vacuously
  *    true with no ACs).
  *
+ * Phase 283 (283-01, T2): a third, optional argument — `{ gateBypasses,
+ * deepVerify }`, typed as `AssuranceBypassInput` above — lets two more
+ * settle-level facts adjust `overall` below, without adding a new `overall`
+ * enum value or touching `verifierRollup`/`evidenceTally`'s own shape. Both
+ * rules stay gate-agnostic like everything else in this function: only
+ * `severity` is read off `gateBypasses` entries and only `pass`/`provider`
+ * off `deepVerify` entries — `.gate` is never read anywhere in this file, on
+ * this new argument any more than on `gates` (`dec-20260728-001`, D-T /
+ * `dec-20260816-007`).
+ *
+ *  - D-S (`dec-20260816-006`): if `gateBypasses` contains at least one entry
+ *    with `severity === 'error'`, `overall` is capped at `'mixed'` — an
+ *    otherwise-`'strong'` result is downgraded to `'mixed'`, but a `'weak'`/
+ *    `'unverified'` result is left alone (both are already at or below the
+ *    cap, so there is nothing to downgrade). A `gateBypasses` array
+ *    containing only `'warn'`-severity entries never triggers this cap.
+ *  - D-R (`dec-20260816-005`): for each AC id present in `deepVerify` with
+ *    `pass: false` from a `provider` that is not `'mock'`, that AC is
+ *    excluded from `strongRatio`'s numerator even when its own
+ *    `acResults[].evidence` is `'ai-verified'`/`'executed'` — a real
+ *    verifier's objection to a `--force`-overridden AC must not read as
+ *    strong evidence. `acResults[].pass` itself is never altered by this; it
+ *    keeps recording the real settle outcome, exactly as before this phase.
+ *    A `deepVerify` entry with `pass: false` from `provider: 'mock'` does
+ *    NOT trigger this exclusion — mock is a placeholder, never real
+ *    verification (matching this file's existing mock-honesty framing
+ *    above), so a mock failure carries no more signal than a mock pass does.
+ *
+ * When the third argument is omitted, or passed as `{}` / `{ gateBypasses:
+ * [], deepVerify: {} }`, both rules are no-ops and this function's output is
+ * byte-identical to the pre-283 two-argument call — additive and
+ * backward-compatible by construction (283-01/AC-3), not a redesign.
+ *
  * Phase 267 (267-01, T3): investigated and deliberately left unchanged.
  * `code-review`/`security-audit` gates that resolve to a mock-identified
  * CLEAN PASS now arrive here as `{ status: 'skipped', provider: 'mock',
@@ -83,7 +143,10 @@ const EVIDENCE_CLASSES: readonly AcEvidence[] = [
 export function deriveAssuranceRecord(
   gates: readonly GateProvenance[],
   acResults: readonly AssuranceAcResult[],
+  bypassInput: AssuranceBypassInput = {},
 ): AssuranceRecord {
+  const { gateBypasses = [], deepVerify = {} } = bypassInput;
+
   // 1. verifierRollup: group by (provider, model) pairs carried on `gates`
   // entries. Gate-agnostic — only `provider`/`model` are read, never `gate`.
   const rollupByKey = new Map<string, { provider: string; model?: string; gateCount: number }>();
@@ -126,7 +189,24 @@ export function deriveAssuranceRecord(
   const totalAcs = acResults.length;
   const hasAnyVerifier = verifierRollup.length > 0;
   const hasRealVerifier = verifierRollup.some((v) => v.provider !== 'mock');
-  const strongCount = evidenceTally['ai-verified'] + evidenceTally.executed;
+
+  // D-R (283-01/T2): strongCount mirrors `evidenceTally['ai-verified'] +
+  // evidenceTally.executed`, except an AC is skipped when a non-mock
+  // `deepVerify` verdict objected to it (`pass: false`) — see the doc
+  // comment above. With `deepVerify` empty (the default) no AC is ever
+  // excluded, so this reduces to exactly the pre-283 sum (283-01/AC-3).
+  // `evidenceTally` itself is untouched by this: it keeps recording each
+  // AC's real evidence class regardless of any deepVerify objection.
+  let strongCount = 0;
+  for (const acr of acResults) {
+    const evidence = acr.evidence ?? 'unverified';
+    if (evidence !== 'ai-verified' && evidence !== 'executed') continue;
+    const verdict = deepVerify[acr.id];
+    const excludedByRealVerifierFailure =
+      verdict !== undefined && verdict.pass === false && verdict.provider !== 'mock';
+    if (excludedByRealVerifierFailure) continue;
+    strongCount += 1;
+  }
   const strongRatio = totalAcs > 0 ? strongCount / totalAcs : 0;
   const noEvidenceAboveUnverified = EVIDENCE_CLASSES.filter((c) => c !== 'unverified').every(
     (c) => evidenceTally[c] === 0,
@@ -141,6 +221,17 @@ export function deriveAssuranceRecord(
     overall = 'mixed';
   } else {
     overall = 'weak';
+  }
+
+  // D-S (283-01/T2): an error-severity `gateBypasses` entry caps `overall`
+  // at 'mixed' — it can never grade 'strong' regardless of the gates/
+  // evidence math above. Only `severity` is read here, never `.gate` (D-T).
+  // A 'weak'/'unverified' result is left alone (already at or below the
+  // cap); an all-'warn' `gateBypasses` array never triggers this, and an
+  // empty `gateBypasses` (the default) is a no-op (283-01/AC-3).
+  const hasErrorSeverityBypass = gateBypasses.some((b) => b.severity === 'error');
+  if (hasErrorSeverityBypass && overall === 'strong') {
+    overall = 'mixed';
   }
 
   return { verifierRollup, evidenceTally, overall };

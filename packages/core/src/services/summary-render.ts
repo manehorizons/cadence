@@ -59,6 +59,12 @@ export function renderSummaryForReview(s: Summary): string {
   if (s.assurance) {
     lines.push('', '## Assurance', '');
     lines.push(`- overall: ${s.assurance.overall}`);
+    if (s.gateBypasses && s.gateBypasses.length > 0) {
+      const hasError = s.gateBypasses.some((b) => b.severity === 'error');
+      lines.push(
+        `- bypassed: ${s.gateBypasses.length} gate(s) (severity: ${hasError ? 'error' : 'warn'})`,
+      );
+    }
     const tally = s.assurance.evidenceTally;
     lines.push(
       `- evidence tally: ai-verified=${tally['ai-verified']}, executed=${tally.executed}, assertion=${tally.assertion}, mention=${tally.mention}, unverified=${tally.unverified}`,

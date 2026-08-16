@@ -761,3 +761,100 @@ describe('cadence summary render - unobservable deep-verify marker (phase 274, T
     expect(r.stdout).not.toContain('UNOBSERVABLE');
   });
 });
+
+describe('cadence summary render - bypass state alongside grade (phase 283, T4)', () => {
+  /** Base `evidenceTally` satisfying `AssuranceRecordZ` — every `AcEvidenceZ`
+   *  key present, per its phase-233 exhaustive-record contract. */
+  const EVIDENCE_TALLY = {
+    'ai-verified': 0,
+    executed: 1,
+    assertion: 1,
+    mention: 0,
+    unverified: 0,
+  };
+
+  it('283-01/AC-6: surfaces the bypass state directly next to the overall grade line for a bypassed settle', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        schemaVersion: 2,
+        gateBypasses: [
+          {
+            gate: 'test-coverage',
+            flag: '--allow-missing-coverage',
+            reason: 'test-coverage gate bypassed via --allow-missing-coverage',
+            severity: 'error',
+          },
+        ],
+        assurance: {
+          verifierRollup: [{ provider: 'mock', gateCount: 1 }],
+          evidenceTally: EVIDENCE_TALLY,
+          overall: 'mixed',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+
+    // Not only present, but immediately adjacent to the grade line -- not
+    // buried lower in the raw JSON or a distant unrelated section.
+    const lines = r.stdout.split('\n');
+    const overallIdx = lines.findIndex((l) => l === '- overall: mixed');
+    const bypassIdx = lines.findIndex((l) => l.startsWith('- bypassed:'));
+    expect(overallIdx).toBeGreaterThan(-1);
+    expect(bypassIdx).toBe(overallIdx + 1);
+    expect(lines[bypassIdx]).toContain('1 gate(s)');
+    expect(lines[bypassIdx]).toContain('severity: error');
+  });
+
+  it('283-01/AC-6: omits the bypass line next to the grade when gateBypasses is absent -- clean settle unchanged', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        schemaVersion: 2,
+        assurance: {
+          verifierRollup: [{ provider: 'mock', gateCount: 1 }],
+          evidenceTally: EVIDENCE_TALLY,
+          overall: 'strong',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('- overall: strong');
+    expect(r.stdout).not.toMatch(/- bypassed:/);
+  });
+
+  it('283-01/AC-6: omits the bypass line when gateBypasses is present but empty -- clean settle unchanged', async () => {
+    active = await tempRepo({ initialized: true });
+    await writeSummary(
+      active.root,
+      '77-team-rollout-kit',
+      '77-01',
+      JSON.stringify({
+        ...VALID_SUMMARY,
+        schemaVersion: 2,
+        gateBypasses: [],
+        assurance: {
+          verifierRollup: [{ provider: 'mock', gateCount: 1 }],
+          evidenceTally: EVIDENCE_TALLY,
+          overall: 'strong',
+        },
+      }),
+    );
+
+    const r = await run(['summary', 'render', '77-team-rollout-kit', '01'], active.root);
+    expect(r.code).toBe(0);
+    expect(r.stdout).not.toMatch(/- bypassed:/);
+  });
+});

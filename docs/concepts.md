@@ -174,19 +174,42 @@ below — and leaves `loopPosition`/`activeDraft` untouched so the exact same
   computed from the other two: `'unverified'` when no gate carried verifier
   identity and no AC evidence rose above `'unverified'`; `'strong'` when at
   least one gate ran under a real, non-`mock` provider and at least half of
-  all ACs landed at `ai-verified`/`executed`; `'mixed'` when some real signal
-  exists but not enough to clear the `'strong'` bar; `'weak'` otherwise). The
-  derivation function (`packages/core/src/gates/assurance-record.ts`) is a
-  pure reduction over the `gates[]` and `acResults[]` arrays with no
-  gate-name special-casing, so it composes uniformly from existing gate
-  provenance and AC evidence rather than adding a new verification path.
-  `assurance` is covered by the same phase-223 settle-time content hash as
-  the rest of `SUMMARY.json` (the hash is computed generically over the
-  whole record), so a post-settle hand-edit to `assurance` is caught by
-  `cadence summary verify` exactly like any other field. It is surfaced in
-  both `cadence summary render` and the on-disk `SUMMARY.md` sidecar as an
-  "## Assurance" section (`overall`, the evidence tally, and any verifier
-  rollup entries).
+  all ACs landed at `ai-verified`/`executed` **and neither phase-283
+  condition below applies**; `'mixed'` when some real signal exists but not
+  enough to clear the `'strong'` bar (or the `'strong'` bar was cleared but
+  phase 283's cap applies); `'weak'` otherwise). The derivation function
+  (`packages/core/src/gates/assurance-record.ts`) is a pure reduction over
+  its arguments — `gates[]`, `acResults[]`, and (phase 283) an optional
+  third `{ gateBypasses, deepVerify }` — with no gate-name special-casing
+  anywhere, including on the phase-283 argument, so it composes uniformly
+  from existing gate provenance and AC evidence rather than adding a new
+  verification path. `assurance` is covered by the same phase-223
+  settle-time content hash as the rest of `SUMMARY.json` (the hash is
+  computed generically over the whole record), so a post-settle hand-edit to
+  `assurance` is caught by `cadence summary verify` exactly like any other
+  field. It is surfaced in both `cadence summary render` and the on-disk
+  `SUMMARY.md` sidecar as an "## Assurance" section (`overall`, a
+  `- bypassed:` line when `gateBypasses` is non-empty (phase 283), the
+  evidence tally, and any verifier rollup entries).
+- Phase 283: a forced settle could grade `assurance.overall: 'strong'`
+  identically to a genuinely clean one — `deriveAssuranceRecord` read only
+  `gates[]`/`acResults[]`, and by settle time a `--force`-overridden AC
+  already recorded `pass: true` in `acResults`, so the grade was computed
+  from the settle's *outcome*, not from whether a real verifier actually
+  agreed with it. Fixed with two additive rules on the optional third
+  argument above, neither of which touches `acResults[].pass` (which still
+  records the true settle outcome) or reads any gate name: an
+  error-severity `gateBypasses` entry caps `overall` at `'mixed'` (never
+  `'strong'`, regardless of the underlying gate/evidence math); a
+  `deepVerify` verdict with `pass: false` from a non-`mock` provider
+  excludes that AC from `strongRatio`'s numerator, so a real verifier's
+  objection to an overridden AC no longer counts as strong evidence.
+  Omitting the third argument (or passing `{}`) is a no-op — every clean
+  settle's grade is byte-identical to pre-phase-283 output. See
+  `.cadence/phases/283-bypass-aware-assurance/283-01-ASSURANCE-DRIFT-REPORT.md`
+  for the full historical-corpus accounting of which past records' grades
+  would change under this rule (none were rewritten; the report is
+  read-only).
 - Phase 244: `SUMMARY.json` optionally carries `foreignBinaryMismatch` — a
   sibling provenance field to `assurance` above, set only when this settle
   actually ran through a `cadence` binary whose realpath resolves OUTSIDE
