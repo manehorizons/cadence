@@ -2077,6 +2077,13 @@
       "kind": "note",
       "summary": "cadence build task T6 --status=DONE against phase 281's own T6 (files: .changeset/*.md, wrote .changeset/done-bypass-fix.md) printed: 'cadence anomaly [warn] files-outside-boundary: .changeset/done-bypass-fix.md touched but not declared in any task's files:'",
       "createdAt": "2026-08-15T23:36:27.867Z"
+    },
+    {
+      "id": "ev-20260816-001",
+      "recommendationId": "rec-20260811-006",
+      "kind": "note",
+      "summary": "3 fresh occurrences 2026-08-15 across 2 unrelated PRs (#433, #434), same repo state: PR #433 (real code diff, packages/core/src/cli/commands/done.ts + build-task.ts) hit it once on ubuntu-latest; PR #434 (pure .cadence/intelligence/*.json ledger data, zero code) hit it on BOTH macos-latest and ubuntu-latest on first run, then macos-latest again on the immediate re-run, before passing on a third attempt. All 4 failures: identical error 'Test timed out in 20000ms' at tests/integration/demo-gutting-coverage-scheme.test.ts:23:3, identical test name '270-01/AC-1 + AC-2: money-shot refusal is AC-2-specific, and the script reaches Settled'. PR #434's diff cannot plausibly cause this (no code touched at all), confirming the timeout is CI-load-driven, not diff-related -- strong evidence this is a real, currently-active flake worth fixing (bump testTimeout for this spawn-heavy integration test, or investigate why the demo script subprocess is slow under concurrent CI load) rather than a one-off.",
+      "createdAt": "2026-08-16T01:00:31.734Z"
     }
   ]
 }

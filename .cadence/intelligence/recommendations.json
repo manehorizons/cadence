@@ -1933,12 +1933,13 @@
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
         "ev-20260811-006",
-        "ev-20260814-004"
+        "ev-20260814-004",
+        "ev-20260816-001"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-11T02:24:45.361Z",
-      "updatedAt": "2026-08-14T20:57:42.249Z"
+      "updatedAt": "2026-08-16T01:00:31.734Z"
     },
     {
       "id": "rec-20260812-001",
@@ -8280,11 +8281,11 @@
         "dec-20260815-007"
       ],
       "convertedToPhaseId": "281-done-bypass-fix",
-      "createdAt": "2026-08-15T15:34:52.440Z",
-      "updatedAt": "2026-08-16T00:31:18.606Z",
       "shippedRef": "PR #433 (squash c508afa0)",
       "archivedAt": "2026-08-16T00:31:18.606Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-15T15:34:52.440Z",
+      "updatedAt": "2026-08-16T00:31:18.606Z"
     }
   ]
 }
