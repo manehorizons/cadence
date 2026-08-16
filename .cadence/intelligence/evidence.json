@@ -2091,6 +2091,20 @@
       "kind": "note",
       "summary": "2 more occurrences 2026-08-16, both on PR #434's own CI run 31918591341 (chore/ship-rec-20260815-002, pure ledger JSON diff, zero code touched): first attempt job 95094570163 (ubuntu-latest, 8m4s) and the operator-approved single re-run job 95096358921 (ubuntu-latest, 7m19s) both failed identically -- 'Test timed out in 20000ms' at demo-gutting-coverage-scheme.test.ts:23:3. windows-latest and macos-latest passed both times. This brings the 2026-08-15/16 session total to 6 identical ubuntu/macos occurrences across PR #433 and #434 alone, all zero-relation diffs. Per the pr-land skill's flake protocol and the repo's 'Flake Reflex' rule, the session stopped re-running after this single permitted retry and is surfacing the pattern to the operator rather than continuing to loop -- this is now well past isolated-flake territory and worth the operator's explicit call on the precedented testTimeout bump.",
       "createdAt": "2026-08-16T01:27:11.035Z"
+    },
+    {
+      "id": "ev-20260816-003",
+      "recommendationId": "rec-20260816-001",
+      "kind": "note",
+      "summary": "Repro: node packages/core/bin/cadence.cjs verify coverage --explain 282-01/AC-4 prints 'scheme: phase-qualified (expected token: [REDACTED] and exits 0 reporting no occurrence, vs the correct bare --explain AC-4 which resolves to 282-01/AC-4 and finds real occurrences. Found and independently reproduced during phase 282 (coverage-scanner-determinism) T4.",
+      "createdAt": "2026-08-16T14:12:06.535Z"
+    },
+    {
+      "id": "ev-20260816-004",
+      "recommendationId": "rec-20260816-001",
+      "kind": "note",
+      "summary": "File-path correction: the --file list on this rec named a guessed packages/core/src/cli/verify-coverage.ts, which does not exist. The real implementation sites are packages/core/src/services/verify.ts (verify coverage command wiring) and packages/core/src/verify/coverage.ts (explainAcCoverage, the double-qualification bug's actual location).",
+      "createdAt": "2026-08-16T14:12:31.824Z"
     }
   ]
 }

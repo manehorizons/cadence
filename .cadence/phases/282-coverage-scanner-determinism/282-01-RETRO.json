@@ -1,0 +1,18 @@
+{
+  "bypasses": [
+    {
+      "gate": "settle",
+      "flag": "--force",
+      "reason": "settle --force bypassed failing verdicts (deep: AC-2, AC-4)",
+      "severity": "error"
+    }
+  ],
+  "roughTasks": [],
+  "findings": {
+    "boundaryScan": {
+      "offenders": [
+        ".flywheel-DEGRADED"
+      ]
+    }
+  }
+}
