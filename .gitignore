@@ -12,7 +12,7 @@ coverage/
 .keel-cache/
 .worktrees/
 .claude/settings.local.json
-.codex/hooks.local.json
+.codex/
 graphify-out/
 
 # Internal planning scratch (superpowers-driven design/plan docs). Kept locally
@@ -54,3 +54,10 @@ launch/
 # Ad hoc scratch dump for pasted-in external bug reports / triage input.
 # Not repo content — never published.
 /dumpfile
+
+# Local flywheel session-capture tooling (dogfooded against this repo, not
+# part of it). Daemon spool/pid state, degraded-capture markers (can appear
+# in any package dir), and the pre-install settings.json backup.
+.flywheel/
+.flywheel-DEGRADED
+.claude/settings.json.pre-flywheel-*
