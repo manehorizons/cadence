@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.61.0] - 2026-08-16
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.61.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Fixed
+
+- Assurance grading no longer reports `assurance.overall: 'strong'` when a settle's gates were bypassed or a real verifier's AC failure was overridden. `deriveAssuranceRecord` gains an optional third argument, `{ gateBypasses, deepVerify }`: an error-severity `gateBypasses` entry caps `overall` at `'mixed'`; a `deepVerify` verdict with `pass: false` from a non-mock provider excludes that AC from `strongRatio`'s numerator. Neither ever touches `acResults[].pass`, and both stay gate-agnostic. Omitting the third argument is a no-op — every clean settle's grade is byte-identical to before this change. `cadence summary render` and the `SUMMARY.md` writer now surface the bypass state next to the grade line. A full read-only re-derivation across the historical corpus is documented in `.cadence/phases/283-bypass-aware-assurance/283-01-ASSURANCE-DRIFT-REPORT.md`: exactly 2 historical records drift from a stored `'strong'` grade to `'mixed'` under the new rule; no historical `SUMMARY.json` was modified. (Phase `283`.)
+- Two defects in the test-coverage scanner (`scanTestCoverage`) that could make the coverage gate's verdict wrong or unstable: a qualifying occurrence could be shadowed by an earlier non-qualifying match of the same AC token in the same file (dedup ordering), and `listAllFiles`'s unsorted walk made cross-file `TestRef[]` array order unstable across processes/filesystems (walk-order determinism). Both fixes are coverage-monotone or verdict-neutral by construction. A full re-derivation across the historical corpus is documented in `.cadence/phases/282-coverage-scanner-determinism/282-01-COVERAGE-DRIFT-REPORT.md`. (Phase `282`.)
+
+### Changed
+
+- `cadence done <id>` is now a true alias for `cadence build task <id> --status=DONE`: it delegates entirely to `buildTaskService`, inheriting the per-task-verify gate, the record-time boundary/redundancy check, and a pre-existing unknown-task-id guard that it previously bypassed entirely. `done` can now refuse (no bypass flag of its own) where it previously always succeeded; a caller needing to bypass a refusal uses `build task` directly. (Phase `281`.)
+
 ## [1.60.0] - 2026-08-15
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.60.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
