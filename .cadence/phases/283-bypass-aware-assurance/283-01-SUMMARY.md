@@ -1,0 +1,57 @@
+# SETTLE Summary — 283-01
+
+**Completed:** 2026-08-16T19:47:31.444Z
+**Content hash (sha256):** c3f4f965df2ffc101c1df3664218f986e06f11163cf896898657555a351f1281
+
+## Acceptance Criteria
+
+- AC-1: PASS (executed)
+- AC-2: PASS (executed)
+- AC-3: PASS (executed)
+- AC-4: PASS (executed)
+- AC-5: PASS (executed)
+- AC-6: PASS (executed)
+
+## Tasks
+
+- T1: DONE — Red tests for AC-1/AC-2 against anticipated 3-arg deriveAssuranceRecord; pre-change clean-settle fixture (4 scenarios) machine-captured. Independently re-verified in main thread (hand-derived fixture math) and by a fresh adversarial reviewer (programmatic re-derivation via built dist, full core suite green except the 2 intentional reds). Reviewer found 2 real test-discrimination gaps (no warn-severity negative case for AC-1, no mock-provider negative case for AC-2) -- folded into T2's task as required additions, not a T1 fix round.
+- T2: DONE — deriveAssuranceRecord extended with optional 3rd arg {gateBypasses, deepVerify}; D-S cap (error-severity bypass -> mixed ceiling), D-R exclusion (non-mock deepVerify pass:false excluded from strongRatio numerator only), D-T gate-agnostic (never reads .gate). AC-3 byte-identity proven against T1's fixture (toEqual + JSON.stringify/toBe). AC-4 gate-agnosticism proven with a dedicated test. 2 negative-case tests added per T1 reviewer's findings. Independently re-verified in main thread (read full diff, hand-traced D-S/D-R/purity, ran full suite: 440/440 files, 4271/4271 tests, typecheck+lint clean) and by a fresh adversarial reviewer (10/10 checks pass, confirmed phase-233 tripwire byte-identical, confirmed T1 tests were genuinely red pre-T2 by hand-deriving against the actually-committed pre-283 function). One non-blocking finding carried into T3: numerator-only exclusion isn't yet pinned by a fully discriminating test -- folding a test case into T3.
+- T3: DONE — Threaded gateBypasses/deepVerify through deriveSettleAssuranceRecord into the finalize-path call site only (~settle.ts:1391); refused-path call site (writeRefusedSettleSummary, settle.ts:861) confirmed byte-identical, still 2-arg. evidenceFloorBypassesUsed deliberately excluded from the derive call -- confirmed its single construction site hardcodes severity:'warn', can never trigger D-S's cap. Two real end-to-end integration tests (283-01/AC-1, 283-01/AC-2) call the actual settleService with force:true against real ephemeral repos and assert on the real written SUMMARY.json -- self-caught and fixed a real discrimination gap where the first AC-2 draft didn't actually prove gateBypasses was threaded through (D-R alone already reached 'mixed'); added AC-1 as an isolated D-S-only test with zero deepVerify involvement to fix it. One extra discriminating test added to assurance-record.test.ts (numerator-only, per T2 reviewer's finding). Independently re-verified in main thread (read full settle.ts diff, confirmed refused-path unchanged, confirmed evidenceFloorBypassesUsed severity claim by grep, ran settle.test.ts myself: 57/57, ran full rebuilt suite: 441/441 files, 4287/4287 tests) and by adversarial reviewer (11/11 checks pass, hand-traced both integration tests' arithmetic independently, confirmed genuinely end-to-end not mocked). Reviewer caught that this task's own DONE recording had been skipped -- exactly the kind of self-referential gap this phase's bookkeeping needs to catch; fixed by this call.
+- T4: DONE — Both summary-render.ts and summary-writer.ts render an additive '- bypassed: N gate(s) (severity: error/warn)' line immediately after '- overall:' when gateBypasses is non-empty; no schema change (gateBypasses pre-existed since phase 280). 7 new tests (283-01/AC-6 token), position+content assertions (bypass line asserted at overallIdx+1, not just substring-anywhere). Independently re-verified in main thread (read diff, ran targeted tests: 71/71 pass) and by adversarial reviewer (9/9 checks pass; confirmed pre-existing detailed '## Gate bypasses' section already gives full per-entry detail, so the new one-liner is a compact grade-adjacent pointer, not lossy). DRAFT amended as-built to declare the two test files T4 needed to extend (not originally in T4's files: list). One minor non-blocking note: summary-writer.test.ts's 'absent' case test is vacuous (reuses a no-assurance SAMPLE) -- functionally covered elsewhere; not worth a fix round.
+- T5: DONE — Corpus scan (assurance-record-corpus.test.ts) walks all 294 *-SUMMARY.json records read-only, uses each record's own STORED assurance.overall as 'old' grade (never a recomputed baseline), calls real T2-updated deriveAssuranceRecord for 'new' grade. Drift report enumerates exactly 2 grade changes (272-01, 282-01, both strong->mixed), 13 gateBypasses records, 4 deepVerify-vs-acResults contradictions -- reproduces rec-20260816-002's ad-hoc numbers exactly. summary verify-all: 294 checked, 0 failed, identical before/after. Zero SUMMARY.json files touched. Changeset added (patch). Independently re-verified in main thread (read report + changeset in full, ran corpus test: 6/6, ran verify-all myself) and by adversarial reviewer who INDEPENDENTLY RE-DERIVED the entire scan from scratch via a separate script (not just spot-checking) -- every headline number reproduced exactly, including hand-deriving 272-01/282-01's grades through deriveAssuranceRecord's actual branch logic. No fabrication, no historical mutation found.
+
+## Gate provenance
+
+- draft-read: ran
+- structural-verifier: ran
+- boundary-scan: ran
+- task-verify-required: ran
+- build-test-must-pass: ran
+- test-coverage: ran
+- interactive-verdict: skipped — not requested (no --deep / --interactive, not in gate set)
+- deep-verify: skipped — not requested (no --deep / --interactive, not in gate set)
+- code-review: skipped — not in the active tier × profile gate set
+- security-audit: skipped — not in the active tier × profile gate set
+
+## Assurance
+
+- overall: mixed
+- evidence tally: ai-verified=0, executed=6, assertion=0, mention=0, unverified=0
+
+## Decisions
+
+_(none)_
+
+## Deferred
+
+_(none)_
+
+## Skill audit
+
+_(none)_
+
+## State at settle
+
+- loop position before settle: BUILD
+- revision: 78
+- session subagent spawns: 178

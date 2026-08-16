@@ -2223,6 +2223,41 @@
       "decisionIds": [],
       "createdAt": "2026-08-16T14:12:06.535Z",
       "updatedAt": "2026-08-16T14:12:31.824Z"
+    },
+    {
+      "id": "rec-20260816-002",
+      "title": "Assurance grade ignores gate bypasses and real-verifier AC failures -- a forced settle can still grade 'strong'",
+      "summary": "deriveAssuranceRecord(gates, acResults) never receives gateBypasses or deepVerify's per-AC verdicts; by the time acResults is built, a --force-overridden AC already records pass:true, so the grading function computes a plausible-looking strong from laundered input. Corpus scan (294 SUMMARY.json records, 2026-08-16): 13 carry gateBypasses, of which 2 grade 'strong'; 4 direct contradictions (a real host-cli deepVerify pass:false paired with an acResults pass:true) span 2 phases -- 272-assurance-record-correctness (AC-1, AC-4) and 282-coverage-scanner-determinism (AC-2, AC-4). Phase 272, named for assurance-record correctness, force-settled over 3 host-cli failures and still graded strong. Fix: extend deriveAssuranceRecord to cap 'overall' when an error-severity gateBypasses entry is present, and stop deepVerify pass:false ACs from counting toward strongRatio -- without touching acResults[].pass (which correctly records the true settle outcome) or the function's existing gate-agnostic purity (dec-20260728-001).",
+      "source": "manual",
+      "status": "settle-pending",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "assurance"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/assurance-record.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260816-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260816-005",
+        "dec-20260816-006",
+        "dec-20260816-007",
+        "dec-20260816-008"
+      ],
+      "convertedToPhaseId": "283-bypass-aware-assurance",
+      "scoutId": "scout-20260816-assurance-honesty",
+      "createdAt": "2026-08-16T17:59:07.606Z",
+      "updatedAt": "2026-08-16T19:47:31.446Z"
     }
   ],
   "archived": [
@@ -8335,11 +8370,11 @@
       "assumptionIds": [],
       "decisionIds": [],
       "convertedToPhaseId": "282-coverage-scanner-determinism",
-      "createdAt": "2026-08-14T20:13:37.556Z",
-      "updatedAt": "2026-08-16T14:56:14.809Z",
       "shippedRef": "PR #435",
       "archivedAt": "2026-08-16T14:56:14.809Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-14T20:13:37.556Z",
+      "updatedAt": "2026-08-16T14:56:14.809Z"
     }
   ]
 }

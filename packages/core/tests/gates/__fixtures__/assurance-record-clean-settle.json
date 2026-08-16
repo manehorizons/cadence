@@ -1,0 +1,168 @@
+{
+  "note": "Phase 283-01 (T1) pre-change baseline. Each scenario's `output` is the literal, machine-produced return value of running TODAY'S UNMODIFIED deriveAssuranceRecord(gates, acResults) (2-argument signature -- this baseline was captured BEFORE T2 adds a third argument -- over that scenario's `input`) — not hand-authored or guessed. AC-3 (clean settles are byte-identical to pre-change output) is checked against this fixture's `output` values. Because every scenario here is a clean settle (no gateBypasses, no failing deepVerify), AC-3's proof must hold BOTH when the post-T2 deriveAssuranceRecord is called with the third argument omitted entirely AND when it is called with a present-but-clean third argument (e.g. `{}`, or `{ gateBypasses: [], deepVerify: {} }`) over these same inputs -- both call forms must reproduce these exact `output` values byte-for-byte. Regenerate only by re-running deriveAssuranceRecord against the pre-283-01 source if this file is ever legitimately invalidated — never hand-edit an `output` value.",
+  "capturedFrom": "packages/core/src/gates/assurance-record.ts:deriveAssuranceRecord",
+  "scenarios": [
+    {
+      "name": "all-mock",
+      "input": {
+        "gates": [
+          {
+            "gate": "code-review",
+            "status": "ran",
+            "provider": "mock"
+          },
+          {
+            "gate": "security-audit",
+            "status": "ran",
+            "provider": "mock"
+          }
+        ],
+        "acResults": [
+          {
+            "id": "AC-1",
+            "pass": true,
+            "evidence": "mention"
+          },
+          {
+            "id": "AC-2",
+            "pass": true,
+            "evidence": "unverified"
+          }
+        ]
+      },
+      "output": {
+        "verifierRollup": [
+          {
+            "provider": "mock",
+            "gateCount": 2
+          }
+        ],
+        "evidenceTally": {
+          "ai-verified": 0,
+          "executed": 0,
+          "assertion": 0,
+          "mention": 1,
+          "unverified": 1
+        },
+        "overall": "weak"
+      }
+    },
+    {
+      "name": "mixed-mock-and-real",
+      "input": {
+        "gates": [
+          {
+            "gate": "code-review",
+            "status": "ran",
+            "provider": "mock"
+          },
+          {
+            "gate": "security-audit",
+            "status": "ran",
+            "provider": "anthropic",
+            "model": "claude-x"
+          }
+        ],
+        "acResults": [
+          {
+            "id": "AC-1",
+            "pass": true,
+            "evidence": "mention"
+          },
+          {
+            "id": "AC-2",
+            "pass": true,
+            "evidence": "mention"
+          }
+        ]
+      },
+      "output": {
+        "verifierRollup": [
+          {
+            "provider": "mock",
+            "gateCount": 1
+          },
+          {
+            "provider": "anthropic",
+            "model": "claude-x",
+            "gateCount": 1
+          }
+        ],
+        "evidenceTally": {
+          "ai-verified": 0,
+          "executed": 0,
+          "assertion": 0,
+          "mention": 2,
+          "unverified": 0
+        },
+        "overall": "mixed"
+      }
+    },
+    {
+      "name": "all-real",
+      "input": {
+        "gates": [
+          {
+            "gate": "code-review",
+            "status": "ran",
+            "provider": "anthropic",
+            "model": "claude-x"
+          },
+          {
+            "gate": "security-audit",
+            "status": "ran",
+            "provider": "anthropic",
+            "model": "claude-x"
+          }
+        ],
+        "acResults": [
+          {
+            "id": "AC-1",
+            "pass": true,
+            "evidence": "ai-verified"
+          },
+          {
+            "id": "AC-2",
+            "pass": true,
+            "evidence": "executed"
+          }
+        ]
+      },
+      "output": {
+        "verifierRollup": [
+          {
+            "provider": "anthropic",
+            "model": "claude-x",
+            "gateCount": 2
+          }
+        ],
+        "evidenceTally": {
+          "ai-verified": 1,
+          "executed": 1,
+          "assertion": 0,
+          "mention": 0,
+          "unverified": 0
+        },
+        "overall": "strong"
+      }
+    },
+    {
+      "name": "empty",
+      "input": {
+        "gates": [],
+        "acResults": []
+      },
+      "output": {
+        "verifierRollup": [],
+        "evidenceTally": {
+          "ai-verified": 0,
+          "executed": 0,
+          "assertion": 0,
+          "mention": 0,
+          "unverified": 0
+        },
+        "overall": "unverified"
+      }
+    }
+  ]
+}

@@ -1240,3 +1240,20 @@ Phase 281's T6 declared files: `.changeset/*.md` in its DRAFT and then wrote .ch
 - next: cadence milestone propose
 
 cadence verify coverage --explain <arg> unconditionally prepends the active phase qualifier, even when <arg> is already qualified. Passing the already-qualified form (e.g. 282-01/AC-4 instead of the correct bare AC-4) produces expected token: 282-01/282-01/AC-4, which never matches any real token, so the command reports a bogus 'NOT SATISFIED' with exit 0 (no error, no warning). This is a real operator trap discovered during phase 282's T3/T4 work (rec-20260814-002's original --explain/gate divergence was a different bug, already fixed by T1) -- the correct usage is always the bare AC-N form, but nothing tells the caller that, and the silent double-qualification with exit 0 makes it easy to misdiagnose as a real coverage gap.
+
+## rec-20260816-002 — Assurance grade ignores gate bypasses and real-verifier AC failures -- a forced settle can still grade 'strong'
+
+- status: settle-pending
+- ready: ready-for-cadence-spec
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, assurance
+- files: packages/core/src/gates/assurance-record.ts
+- decisions: dec-20260816-005 (active), dec-20260816-006 (active), dec-20260816-007 (active), dec-20260816-008 (active)
+- evidence: 272-01 and 282-01 both grade assurance:strong while gateBypasses records --force over failing host-cli verdicts (measured 2026-08-16, 294-record corpus)
+- next: cadence milestone propose
+
+deriveAssuranceRecord(gates, acResults) never receives gateBypasses or deepVerify's per-AC verdicts; by the time acResults is built, a --force-overridden AC already records pass:true, so the grading function computes a plausible-looking strong from laundered input. Corpus scan (294 SUMMARY.json records, 2026-08-16): 13 carry gateBypasses, of which 2 grade 'strong'; 4 direct contradictions (a real host-cli deepVerify pass:false paired with an acResults pass:true) span 2 phases -- 272-assurance-record-correctness (AC-1, AC-4) and 282-coverage-scanner-determinism (AC-2, AC-4). Phase 272, named for assurance-record correctness, force-settled over 3 host-cli failures and still graded strong. Fix: extend deriveAssuranceRecord to cap 'overall' when an error-severity gateBypasses entry is present, and stop deepVerify pass:false ACs from counting toward strongRatio -- without touching acResults[].pass (which correctly records the true settle outcome) or the function's existing gate-agnostic purity (dec-20260728-001).

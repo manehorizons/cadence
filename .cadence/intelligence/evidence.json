@@ -2105,6 +2105,13 @@
       "kind": "note",
       "summary": "File-path correction: the --file list on this rec named a guessed packages/core/src/cli/verify-coverage.ts, which does not exist. The real implementation sites are packages/core/src/services/verify.ts (verify coverage command wiring) and packages/core/src/verify/coverage.ts (explainAcCoverage, the double-qualification bug's actual location).",
       "createdAt": "2026-08-16T14:12:31.824Z"
+    },
+    {
+      "id": "ev-20260816-005",
+      "recommendationId": "rec-20260816-002",
+      "kind": "note",
+      "summary": "272-01 and 282-01 both grade assurance:strong while gateBypasses records --force over failing host-cli verdicts (measured 2026-08-16, 294-record corpus)",
+      "createdAt": "2026-08-16T17:59:07.606Z"
     }
   ]
 }
