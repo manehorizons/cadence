@@ -425,6 +425,13 @@ During T4's build, routing done through buildTaskService broke a pre-existing do
 
 T4's independent reviewer, running the full suite (not just the cli/done filter), found that packages/core/tests/cli/loop-violation.test.ts's pre-existing, unmodified AC-4 case ('cadence done shortcut from IDLE -> loop-violation event with source=build.done') regressed: buildTaskService's catch block hardcodes emitLoopViolation(repoRoot, err, 'build.task') at build-task.ts:363, so done.ts delegating entirely to buildTaskService has no interception point to relabel the anomaly source back to 'build.done'. This is real AC-4-violating observable behavior drift, not a false positive -- confirmed via full suite run (2 failures, one is this) and by reading the hardcoded literal directly. block.ts and needs-context.ts are unaffected (out of scope for this phase, still call recordTaskOutcome + emitLoopViolation directly with their own 'build.block'/'build.needs-context' tags), so this asymmetry is specific to done's new full delegation, not a pre-existing repo-wide pattern. Resolution: add an additive optional args.anomalySource?: string to buildTaskService (default 'build.task', preserving build task's and any other untouched caller's behavior exactly), threaded into its internal emitLoopViolation call in place of the hardcoded literal. done.ts passes anomalySource: 'build.done'. This requires amending the DRAFT's 'DO NOT change buildTaskService itself' boundary -- narrowly, to permit only this one additive optional field, mirroring the D-N2 as-built-amendment process. No schemaVersion bump; no behavior change for build task or the MCP surface (both omit the new field).
 
+### dec-20260816-001 — Fix demo-gutting-coverage-scheme.test.ts flake via per-test timeout, not global bump
+
+- recommendation: rec-20260811-006
+- decided: 2026-08-16T02:47:13.494Z
+
+8 identical 'Test timed out in 20000ms' occurrences 2026-08-11 through 2026-08-16 across ubuntu-latest and macos-latest, several on zero-code-diff PRs, confirmed load-driven and not OS-specific (ev-20260811-006 through ev-20260816-002). Operator explicitly chose (2026-08-16, via AskUserQuestion) to raise this one test's own vitest timeout (20_000 -> 90_000, packages/core/tests/integration/demo-gutting-coverage-scheme.test.ts) rather than vitest.shared.ts's global TIMEOUT_MS, which would loosen the 20s ceiling for ~4000 unrelated tests to fix one known-slow spawnSync-heavy integration test. Landed on chore/ship-rec-20260815-002 (PR #434), commit 9024d4b7.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

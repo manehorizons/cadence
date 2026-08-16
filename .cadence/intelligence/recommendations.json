@@ -1933,12 +1933,16 @@
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
         "ev-20260811-006",
-        "ev-20260814-004"
+        "ev-20260814-004",
+        "ev-20260816-001",
+        "ev-20260816-002"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260816-001"
+      ],
       "createdAt": "2026-08-11T02:24:45.361Z",
-      "updatedAt": "2026-08-14T20:57:42.249Z"
+      "updatedAt": "2026-08-16T01:27:11.035Z"
     },
     {
       "id": "rec-20260812-001",
@@ -2223,39 +2227,6 @@
       "decisionIds": [],
       "createdAt": "2026-08-14T20:13:37.556Z",
       "updatedAt": "2026-08-14T20:13:37.556Z"
-    },
-    {
-      "id": "rec-20260815-002",
-      "title": "cadence done bypasses per-task-verify and the dispatch-contract boundary/redundancy checks",
-      "summary": "cadence done <id> (packages/core/src/cli/commands/done.ts) calls recordTaskOutcome directly instead of going through buildTaskService, so it skips both the pre-existing per-task-verify gate (runPerTaskVerifyGate) and phase 280's new boundary+redundancy checks at record time (T11's B2 wire-up). This is a leave-unenforced gap, not a bug introduced by phase 280: done has always been documented as a shortcut for build task --status=DONE (its own --description says exactly that) while actually implementing a narrower, unguarded path -- the per-task-verify skip already existed before this phase, and dispatch-contract enforcement now has the identical pre-existing gap layered on top of it. DP-B's own DRAFT (280-01) explicitly scoped closing this out of the phase (Boundaries: 'DO NOT close the cadence done <id> unenforced-recording-path gap in this phase -- pre-existing (per-task-verify already skips it too), not introduced here. File a recommendation instead.'). Resolution options: (a) make done call buildTaskService (or a shared core) so it inherits both gates, accepting that some done call sites may rely on the current unguarded fast path; (b) leave it, but update its --description/docs to state explicitly that it is NOT gate-equivalent to build task; (c) deprecate done in favor of build task --status=DONE outright.",
-      "source": "manual",
-      "status": "settle-pending",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "cli",
-        "dispatch"
-      ],
-      "affectedFiles": [
-        "packages/core/src/cli/commands/done.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260815-002"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [
-        "dec-20260815-005",
-        "dec-20260815-006",
-        "dec-20260815-007"
-      ],
-      "convertedToPhaseId": "281-done-bypass-fix",
-      "createdAt": "2026-08-15T15:34:52.440Z",
-      "updatedAt": "2026-08-15T23:52:15.596Z"
     },
     {
       "id": "rec-20260815-003",
@@ -8282,6 +8253,42 @@
       "archiveReason": "shipped",
       "createdAt": "2026-07-18T05:00:07.898Z",
       "updatedAt": "2026-08-15T17:45:29.603Z"
+    },
+    {
+      "id": "rec-20260815-002",
+      "title": "cadence done bypasses per-task-verify and the dispatch-contract boundary/redundancy checks",
+      "summary": "cadence done <id> (packages/core/src/cli/commands/done.ts) calls recordTaskOutcome directly instead of going through buildTaskService, so it skips both the pre-existing per-task-verify gate (runPerTaskVerifyGate) and phase 280's new boundary+redundancy checks at record time (T11's B2 wire-up). This is a leave-unenforced gap, not a bug introduced by phase 280: done has always been documented as a shortcut for build task --status=DONE (its own --description says exactly that) while actually implementing a narrower, unguarded path -- the per-task-verify skip already existed before this phase, and dispatch-contract enforcement now has the identical pre-existing gap layered on top of it. DP-B's own DRAFT (280-01) explicitly scoped closing this out of the phase (Boundaries: 'DO NOT close the cadence done <id> unenforced-recording-path gap in this phase -- pre-existing (per-task-verify already skips it too), not introduced here. File a recommendation instead.'). Resolution options: (a) make done call buildTaskService (or a shared core) so it inherits both gates, accepting that some done call sites may rely on the current unguarded fast path; (b) leave it, but update its --description/docs to state explicitly that it is NOT gate-equivalent to build task; (c) deprecate done in favor of build task --status=DONE outright.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "dispatch"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/done.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260815-002"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260815-005",
+        "dec-20260815-006",
+        "dec-20260815-007"
+      ],
+      "convertedToPhaseId": "281-done-bypass-fix",
+      "shippedRef": "PR #433 (squash c508afa0)",
+      "archivedAt": "2026-08-16T00:31:18.606Z",
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-15T15:34:52.440Z",
+      "updatedAt": "2026-08-16T00:31:18.606Z"
     }
   ]
 }

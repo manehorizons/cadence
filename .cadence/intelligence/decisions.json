@@ -592,6 +592,15 @@
       "status": "active",
       "decidedAt": "2026-08-15T22:59:35.198Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260816-001",
+      "recommendationId": "rec-20260811-006",
+      "title": "Fix demo-gutting-coverage-scheme.test.ts flake via per-test timeout, not global bump",
+      "rationale": "8 identical 'Test timed out in 20000ms' occurrences 2026-08-11 through 2026-08-16 across ubuntu-latest and macos-latest, several on zero-code-diff PRs, confirmed load-driven and not OS-specific (ev-20260811-006 through ev-20260816-002). Operator explicitly chose (2026-08-16, via AskUserQuestion) to raise this one test's own vitest timeout (20_000 -> 90_000, packages/core/tests/integration/demo-gutting-coverage-scheme.test.ts) rather than vitest.shared.ts's global TIMEOUT_MS, which would loosen the 20s ceiling for ~4000 unrelated tests to fix one known-slow spawnSync-heavy integration test. Landed on chore/ship-rec-20260815-002 (PR #434), commit 9024d4b7.",
+      "status": "active",
+      "decidedAt": "2026-08-16T02:47:13.494Z",
+      "supersedes": []
     }
   ]
 }
