@@ -1,5 +1,41 @@
 # @thomas-powers-jr/cadence-core
 
+## 1.61.0
+
+### Minor Changes
+
+- c508afa: `cadence done <id>` is now a true alias for `cadence build task <id> --status=DONE`: it delegates entirely to `buildTaskService` instead of calling `recordTaskOutcome` directly, inheriting three gates it previously bypassed entirely — the per-task-verify gate, the record-time boundary/redundancy check (phase 280's dispatch contract), and a pre-existing unknown-task-id guard. `done` gains no new flags of its own.
+
+  This is a real behavior change: `done` could previously never fail. It can now refuse with no bypass flag on `done` itself — exit 1 for a per-task-verify or boundary-check refusal, exit 2 (a distinct code) for an undeclared task id. A caller needing to bypass a gate-1/gate-2 refusal must use `build task <id> --status=DONE --allow-per-task-failure` / `--allow-boundary-breach` directly; the unknown-task-id guard has no bypass on either command — the id must be declared in the active DRAFT.
+
+  Error and diagnostic output on the `done` path now comes from `build task` (messages are prefixed `build task:` / `build task failed:` rather than `done failed:`), a consequence of full delegation.
+
+### Patch Changes
+
+- 59ed33b: Fix: assurance grading no longer reports `'strong'` when a settle's gates were bypassed or a real verifier's AC failure was overridden.
+
+  `deriveAssuranceRecord` previously derived `overall` from `gates`/`acResults` alone — by settle time, a `--force`-overridden AC already records `pass: true` in `acResults`, so a forced settle over real verifier failures graded identically to a genuinely clean one. It now accepts an optional third argument, `{ gateBypasses, deepVerify }`:
+
+  - An error-severity `gateBypasses` entry caps `overall` at `'mixed'` — it can never grade `'strong'`, regardless of the underlying gate/evidence math. A `'weak'`/`'unverified'` result is left alone (already at or below the cap), and an all-`'warn'` `gateBypasses` array never triggers this.
+  - A `deepVerify` verdict with `pass: false` from a non-mock provider excludes that AC from `strongRatio`'s numerator, even when its own `acResults[].evidence` is `'ai-verified'`/`'executed'` — a real verifier's objection to a `--force`-overridden AC no longer reads as strong evidence.
+
+  Both rules are additive and gate-agnostic (never branch on `gateBypasses[].gate` or `GateProvenance.gate`, matching `dec-20260728-001`), and neither ever mutates `acResults[].pass` — it still records the true settle outcome. Omitting the third argument (or passing `{}`) is a no-op, so every existing caller and every clean settle is byte-identical to before this change.
+
+  `cadence summary render` (and the equivalent `SUMMARY.md` writer) now also surfaces the bypass state next to the overall assurance grade line for a settle whose `SUMMARY.json` carries a non-empty `gateBypasses` array — sourced from the existing `gateBypasses` field, no schema change — so a reader sees the caveat in the same place they see the grade, not only in the raw JSON.
+
+  **Historical phases:** a full read-only re-derivation across the entire historical `.cadence/phases/**` corpus (294 `*-SUMMARY.json` records) is enumerated in `.cadence/phases/283-bypass-aware-assurance/283-01-ASSURANCE-DRIFT-REPORT.md`. Exactly 2 records — `272-assurance-record-correctness/272-01` and `282-coverage-scanner-determinism/282-01` — drift from a stored `strong` grade to `mixed` under the new rule; no historical `SUMMARY.json` was modified to produce that report.
+
+- 2337888: Fix two defects in the test-coverage scanner (`scanTestCoverage`) that could make the coverage gate's verdict wrong or unstable. No new public API surface; both are bug fixes to existing behavior.
+
+  **Dedup ordering — a qualifying occurrence is no longer shadowed by an earlier non-qualifying one.** In assertion mode the per-file dedup claimed a `(AC id, file)` slot on the _first_ textual match of the token and discarded every later match in that file, before it had computed whether the match qualified. An AC token appearing in a `describe()` title, a leading comment, or any other non-asserting position therefore permanently shadowed a genuinely qualifying `it()`/`test()` occurrence for the same id later in the same file — the AC was reported weakly-linked (or skipped-only) even though a real asserting test existed. `qualifying`/`skipped` are now computed for every match before the slot decision, and a qualifying match displaces an already-recorded non-qualifying one for the same slot. The change is coverage-monotone: it can only promote a slot non-qualifying → qualifying, never the reverse, and the number of recorded refs per AC is unchanged. Mention mode's mirrored dedup is deliberately left first-wins — mention-mode refs carry no `qualifying`/`skipped` concept at all, so which same-file occurrence is recorded is cosmetic display detail there, never a verdict difference.
+
+  **Walk-order determinism — `scanTestCoverage`'s returned map is now stable across repeated invocations.** `listAllFiles` was an unsorted LIFO-stack DFS over `readdir`, whose order is not spec-guaranteed and whose result was neither canonical nor stable across processes or filesystems. Its output is now sorted, so the file list — and the `TestRef[]` array order derived from it for any AC whose occurrences span more than one file — is identical for identical inputs. This is order-only: the _set_ of scanned files and recorded refs is unchanged, so no coverage verdict moves as a result.
+
+  **`verify coverage --explain` needed no change.** A shared-fixture agreement test now pins `explainAcCoverage`'s satisfied/refused verdict to the real `test-coverage` gate's, including on the adversarial dedup-ordering fixture that was the documented historical divergence. It passed once the gate's own correctness was fixed, confirming the explainer was already right and the gate was the side that was wrong.
+
+  **Historical phases:** because both fixes are coverage-monotone or verdict-neutral, no previously-settled phase can lose coverage from this change. A full re-derivation across the entire historical `.cadence/phases/**` corpus is enumerated in `.cadence/phases/282-coverage-scanner-determinism/282-01-COVERAGE-DRIFT-REPORT.md` for anyone wanting the per-phase accounting.
+  - @thomas-powers-jr/cadence-types@1.61.0
+
 ## 1.60.0
 
 ### Minor Changes
