@@ -104,18 +104,6 @@ const ALLOWED_FILES = new Set<string>([
   // it to consumers moving off it.
   'docs/migration-npm-scope.md',
 
-  // T12's migration callout / doc-index link text in the three README-style
-  // entry points — each necessarily names the old scope, either in the
-  // exact `npm uninstall -g @manehorizons/cadence-core` remediation command
-  // (packages/core/README.md) or in a one-line description of what the
-  // linked migration guide covers (root README.md, docs/README.md). Root
-  // README.md was not itemized in the phase DRAFT's original list but
-  // carries the identical kind of migration-link text as the other two —
-  // added here after an independent repo-wide sweep confirmed it.
-  'README.md',
-  'packages/core/README.md',
-  'docs/README.md',
-
   // Pre-existing (2026-07-27, PR #319) Phase-0 kernel/assurance design spec,
   // predating this rename. Its `Target repo: manehorizons/cadence` header is
   // a factual snapshot of the repo as it was when the doc was written — the
