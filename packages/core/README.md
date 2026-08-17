@@ -45,7 +45,7 @@ cadence settle run --auto
 cadence settle run --ac AC-1=pass
 ```
 
-> **Heads-up on the default verifier.** Out of the box every gate uses `mock`, a deterministic offline **placeholder** that only checks each acceptance criterion links to a test — it is **not real verification**. Run [`cadence activate`](https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md) to turn on a real AI verifier (Anthropic or a local model); `cadence doctor` tells you whether real verification is actually wired.
+> **Heads-up on the default verifier.** Out of the box every gate uses `mock`, a deterministic offline **placeholder** that only checks each acceptance criterion links to a test — it is **not real verification**. Run [`cadence activate`](https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md) to turn on a real AI verifier (Anthropic, a local model, or your host CLI); `cadence doctor` tells you whether real verification is actually wired.
 
 ## More ways to try it
 
