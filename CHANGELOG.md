@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.61.1] - 2026-08-17
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.61.1`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Docs
+
+- Removed the `@manehorizons` → `@thomas-powers-jr` npm-scope migration callout from the three README-style entry points (`README.md`, `packages/core/README.md`, `docs/README.md`) — operator decision: download volume on the old scope no longer warrants surfacing the notice on the GitHub/npm landing pages. `docs/migration-npm-scope.md` (the full guide) is untouched. While syncing these entry points, also fixed a stale Providers description (two of three still named "OpenAI, Claude, Ollama" instead of the real provider ids) and reconciled each entry point's doc-index list against the others. (#440)
+- Fixed the "Heads-up on the default verifier" callout in `README.md`/`packages/core/README.md`, which omitted `host-cli` as a real-verifier option alongside Anthropic and local models. (#441)
+
 ## [1.61.0] - 2026-08-16
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.61.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
