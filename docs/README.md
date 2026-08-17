@@ -25,11 +25,10 @@ Read in this order:
 - **[Claude Code integration](claude-code.md)** — Set up and use the Claude Code slash commands and understand how the adapter bridges the CLI engine.
 - **[Host adapters](host-adapters.md)** - Understand the shared adapter contract used by Claude Code and Codex.
 - **[MCP server](mcp.md)** — Drive the loop from any MCP host (Claude Desktop, Cursor, agents) via `cadence mcp serve`.
-- **[Providers](providers.md)** — Integrate with your model provider (OpenAI, Claude, custom LLMs, local models).
+- **[Providers](providers.md)** — Integrate with your model provider: `mock` (offline default), `anthropic`, `local` (OpenAI-compatible endpoints), or `host-cli`.
 - **[Command reference](reference/commands.md)** — Exhaustive reference for all CLI subcommands and their options.
 - **[Config reference](reference/config.md)** — Full `.cadence/` config schema and all settable fields.
 - **[Release process](release.md)** — Maintainer checklist for publishing npm, tag, and GitHub Release records in sync.
-- **[npm scope migration](migration-npm-scope.md)** — Moving from an `@manehorizons/cadence-*` install to `@thomas-powers-jr/cadence-*`.
 
 ---
 

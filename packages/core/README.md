@@ -29,13 +29,6 @@ Requires Node ≥ 22.
 npm install -g @thomas-powers-jr/cadence-core
 ```
 
-> **Migrating from `@manehorizons/cadence-*`?** This package renamed its npm
-> scope in phase 250 — same code, new scope. The old packages keep working
-> (deprecated, never removed), but to move over: `npm uninstall -g
-> @manehorizons/cadence-core && npm install -g @thomas-powers-jr/cadence-core`.
-> Full guide, including refreshing a Claude Code/Codex host adapter hook:
-> [docs/migration-npm-scope.md](https://github.com/thomas-powers-jr/cadence/blob/main/docs/migration-npm-scope.md).
-
 New to CADENCE? Run `cadence start` — a guided menu that picks the right setup command for what you're doing. (Once you're set up, `cadence quickstart` is the read-only map of where you are and your next moves.)
 
 ## Quickstart — drive a real phase
@@ -126,10 +119,12 @@ This package is the engine — the `cadence` CLI implements the DRAFT→BUILD→
 - [Concepts](https://github.com/thomas-powers-jr/cadence/blob/main/docs/concepts.md) — the loop, gates, profiles, and single-commit convention
 - [CLI guide](https://github.com/thomas-powers-jr/cadence/blob/main/docs/cli.md) — all subcommands and flags
 - [Claude Code integration](https://github.com/thomas-powers-jr/cadence/blob/main/docs/claude-code.md) — hooks and slash commands
+- [Host adapters](https://github.com/thomas-powers-jr/cadence/blob/main/docs/host-adapters.md) — the shared adapter contract used by Claude Code and Codex
 - [MCP server](https://github.com/thomas-powers-jr/cadence/blob/main/docs/mcp.md) — drive the loop from any MCP host
-- [Providers](https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md) — Anthropic, local models, and host-CLI verification
+- [Providers](https://github.com/thomas-powers-jr/cadence/blob/main/docs/providers.md) — mock (offline default), Anthropic API, local OpenAI-compatible endpoints, or your host CLI
 - [Command reference](https://github.com/thomas-powers-jr/cadence/blob/main/docs/reference/commands.md) — exhaustive CLI reference
 - [Config reference](https://github.com/thomas-powers-jr/cadence/blob/main/docs/reference/config.md) — full `.cadence/` config schema
+- [Release process](https://github.com/thomas-powers-jr/cadence/blob/main/docs/release.md) — maintainer checklist for npm, tag, and GitHub Release integrity
 
 ## About the name
 
