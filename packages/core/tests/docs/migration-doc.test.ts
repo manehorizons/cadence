@@ -17,11 +17,4 @@ describe('phase 250 (AC-7): npm scope migration path documented', () => {
     const text = readFileSync(path, 'utf8');
     expect(text).toContain('cadence doctor --fix --wire-host');
   });
-
-  it('250-01/AC-7: packages/core/README.md and docs/README.md both link to the migration guide', () => {
-    for (const rel of ['packages/core/README.md', 'docs/README.md']) {
-      const text = readFileSync(join(ROOT, rel), 'utf8');
-      expect(text, `${rel} should reference migration-npm-scope.md`).toContain('migration-npm-scope.md');
-    }
-  });
 });

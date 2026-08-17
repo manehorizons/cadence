@@ -188,12 +188,12 @@ See **[docs/README.md](./docs/README.md)** for the complete user guide:
 - [Concepts](./docs/concepts.md) — the loop, gates, profiles, and single-commit convention
 - [CLI guide](./docs/cli.md) — all subcommands and flags
 - [Claude Code integration](./docs/claude-code.md) — hooks and slash commands
+- [Host adapters](./docs/host-adapters.md) — the shared adapter contract used by Claude Code and Codex
 - [MCP server](./docs/mcp.md) — drive the loop from any MCP host (`cadence mcp serve`)
-- [Providers](./docs/providers.md) — OpenAI, Claude, Ollama, and custom LLMs
+- [Providers](./docs/providers.md) — mock (offline default), Anthropic API, local OpenAI-compatible endpoints, or your host CLI
 - [Command reference](./docs/reference/commands.md) — exhaustive CLI reference
 - [Config reference](./docs/reference/config.md) — full `.cadence/` config schema
 - [Release process](./docs/release.md) — maintainer checklist for npm, tag, and GitHub Release integrity
-- [npm scope migration](./docs/migration-npm-scope.md) — `@manehorizons` → `@thomas-powers-jr`: old packages stay resolvable and deprecated, exact remediation commands
 
 ## Continuous integration
 
