@@ -1,6 +1,6 @@
 {
   "name": "@thomas-powers-jr/cadence-types",
-  "version": "1.61.0",
+  "version": "1.61.1",
   "engines": {
     "node": ">=22"
   },
