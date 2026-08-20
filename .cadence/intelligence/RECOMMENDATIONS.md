@@ -1240,3 +1240,38 @@ Phase 281's T6 declared files: `.changeset/*.md` in its DRAFT and then wrote .ch
 - next: cadence milestone propose
 
 cadence verify coverage --explain <arg> unconditionally prepends the active phase qualifier, even when <arg> is already qualified. Passing the already-qualified form (e.g. 282-01/AC-4 instead of the correct bare AC-4) produces expected token: 282-01/282-01/AC-4, which never matches any real token, so the command reports a bogus 'NOT SATISFIED' with exit 0 (no error, no warning). This is a real operator trap discovered during phase 282's T3/T4 work (rec-20260814-002's original --explain/gate divergence was a different bug, already fixed by T1) -- the correct usage is always the bare AC-N form, but nothing tells the caller that, and the silent double-qualification with exit 0 makes it easy to misdiagnose as a real coverage gap.
+
+## rec-20260820-001 — Amendment-vs-verifier gap: a legitimately amended AC has no path back to deep-verify
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: gates, verification, assurance
+- files: packages/core/src/gates/deep-verify.ts, .cadence/phases/282-coverage-scanner-determinism/282-01-DRAFT.md, .cadence/phases/282-coverage-scanner-determinism/282-01-SUMMARY.json
+- evidence: 282-01-SUMMARY.json gateBypasses: flag --force, reason 'settle --force bypassed failing verdicts (deep: AC-2, AC-4)', severity error; 282-01-DRAFT.md carries four As-built amendment blocks (T1, T2, two under T4) showing the underlying issues were already found/corrected by independent review
+- evidence: 282-01-DRAFT.md's four As-built amendment blocks, in order of appearance: (T1) mention-mode dedup treatment deliberately not retrofitted -- reviewer-flagged, no bug found; (T2) AC-2's Given/action wording corrected -- independent reproduction (reverting the fix, running the fixture 10x in-process) proved the originally-demanded pre-fix reproduction (non-deep-equal map / run-to-run-varying order) impossible, since readdir on an unmutated directory returns a stable-but-non-canonical order within a single process; (T4, first block) and (T4, second block) -- real deep-verify (not mock) found two genuine gaps during independent verification, both addressed in-flight. None of these four amendments could feed back into a re-verify of the deep-verify pass:false verdicts already rendered against AC-2 and AC-4's original wording -- there is no re-verify-on-amendment mechanism in packages/core/src/gates/deep-verify.ts. The resulting bypass is recorded verbatim in 282-01-SUMMARY.json's gateBypasses array: {gate: settle, flag: --force, reason: 'settle --force bypassed failing verdicts (deep: AC-2, AC-4)', severity: error}. Decided as D-W (file-only, dec-20260820-003): this recommendation records the gap; a re-verify-on-amendment mechanism or amendedAt/supersedes schema field is explicitly out of scope this arc.
+- evidence: The mixed-grade cap this recommendation describes is the D-S rule (dec-20260816-006, phase 283-01/T2), implemented in packages/core/src/gates/assurance-record.ts (~lines 84-99): if gateBypasses contains at least one severity:error entry, overall is capped at 'mixed', downgrading an otherwise-'strong' result. 282-01-SUMMARY.json's own gateBypasses entry (flag --force, severity error) is exactly that shape, so a live recomputation of 282's assurance record today would grade 'mixed'. Note for the record: 282-01-SUMMARY.json's stored assurance.overall field itself still reads 'strong', not 'mixed' -- 282 settled before phase 283 shipped this cap, and report-never-rewrite means that historical SUMMARY.json is never recomputed retroactively. deep-verify.ts is where the AC-2/AC-4 pass:false verdicts that gateBypasses references originate; assurance-record.ts is where those bypasses actually get translated into the grade cap. Both files are relevant to the mechanism; this note names the cap's precise implementation site since the affectedFiles list on this recommendation's own add command named only deep-verify.ts.
+- evidence: Correction to ev-20260820-002's phrasing: 282-01-DRAFT.md has three '**As-built amendment**' headings (T1, T2, T4), not four separate blocks -- the T4 heading carries two numbered findings (1: AC-1's mention-mode disjunction ported to SPEC Constraints; 2: AC-4's summary-verify-all run for real) under one block. rec-20260820-001's own summary phrase 'four ... blocks (T1, T2, two under T4)' is accurate (its parenthetical disambiguates), but ev-20260820-002's '(T4, first block) and (T4, second block)' wording incorrectly implies two separate T4 headings. Flagged by phase 284's whole-branch review; filed as an additive correction since evidence notes have no post-creation edit path.
+- next: cadence milestone propose
+
+Mechanism: when an acceptance criterion's text is legitimately amended in-flight (an independent reviewer finds the AC's literal wording describes an impossible or already-superseded defect shape and corrects it), the amended AC has no mechanism to re-reach deep-verify -- the verifier already rendered its pass:false verdict against the original, now-superseded wording, and there is no re-verify-on-amendment path. This forces settle --force to close the loop, and post-phase-283's assurance-record change now caps the resulting overall grade at mixed even when the underlying work and the amendment were both correct. Perverse incentive: left unaddressed, this quietly disincentivizes the honest behavior of amending a wrong AC in-flight, because doing so guarantees a --force and a capped grade, while silently leaving a known-wrong AC's text untouched avoids that penalty. Surfaced while reconciling phase 282-coverage-scanner-determinism's AC-2/AC-4 historical record (phase 284-record-reconciliation): 282's own four As-built amendment blocks show independent reviewers had already found and corrected the underlying issues in ways host-cli deep-verify's pass:false judgement didn't reflect, forcing the --force override captured in 282-01-SUMMARY.json's gateBypasses entry. See packages/core/src/gates/deep-verify.ts (no re-verify-on-amendment path exists), .cadence/phases/282-coverage-scanner-determinism/282-01-DRAFT.md (the four As-built amendment blocks), and .cadence/phases/282-coverage-scanner-determinism/282-01-SUMMARY.json (the gateBypasses entry and assurance record).
+
+## rec-20260820-002 — Code-review finding (medium): The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This re…
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: .cadence
+- files: .cadence/intelligence/recommendations.json
+- evidence: phase 284-record-reconciliation, draft 284-01, SUMMARY contentHash f0875bfb7c6c43a46cb644383cd49d971a3bbba3fdd117d10122761a389ee864 — medium finding at .cadence/intelligence/recommendations.json:2230: The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This records a false fact; ev-004 compounds it by claiming a parenthetical the summary lacks.
+- next: cadence milestone propose
+
+medium finding at .cadence/intelligence/recommendations.json:2230: The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This records a false fact; ev-004 compounds it by claiming a parenthetical the summary lacks.
