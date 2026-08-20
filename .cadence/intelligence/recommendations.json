@@ -2223,6 +2223,70 @@
       "decisionIds": [],
       "createdAt": "2026-08-16T14:12:06.535Z",
       "updatedAt": "2026-08-16T14:12:31.824Z"
+    },
+    {
+      "id": "rec-20260820-001",
+      "title": "Amendment-vs-verifier gap: a legitimately amended AC has no path back to deep-verify",
+      "summary": "Mechanism: when an acceptance criterion's text is legitimately amended in-flight (an independent reviewer finds the AC's literal wording describes an impossible or already-superseded defect shape and corrects it), the amended AC has no mechanism to re-reach deep-verify -- the verifier already rendered its pass:false verdict against the original, now-superseded wording, and there is no re-verify-on-amendment path. This forces settle --force to close the loop, and post-phase-283's assurance-record change now caps the resulting overall grade at mixed even when the underlying work and the amendment were both correct. Perverse incentive: left unaddressed, this quietly disincentivizes the honest behavior of amending a wrong AC in-flight, because doing so guarantees a --force and a capped grade, while silently leaving a known-wrong AC's text untouched avoids that penalty. Surfaced while reconciling phase 282-coverage-scanner-determinism's AC-2/AC-4 historical record (phase 284-record-reconciliation): 282's own four As-built amendment blocks show independent reviewers had already found and corrected the underlying issues in ways host-cli deep-verify's pass:false judgement didn't reflect, forcing the --force override captured in 282-01-SUMMARY.json's gateBypasses entry. See packages/core/src/gates/deep-verify.ts (no re-verify-on-amendment path exists), .cadence/phases/282-coverage-scanner-determinism/282-01-DRAFT.md (the four As-built amendment blocks), and .cadence/phases/282-coverage-scanner-determinism/282-01-SUMMARY.json (the gateBypasses entry and assurance record).",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "high",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "gates",
+        "verification",
+        "assurance"
+      ],
+      "affectedFiles": [
+        "packages/core/src/gates/deep-verify.ts",
+        ".cadence/phases/282-coverage-scanner-determinism/282-01-DRAFT.md",
+        ".cadence/phases/282-coverage-scanner-determinism/282-01-SUMMARY.json"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260820-001",
+        "ev-20260820-002",
+        "ev-20260820-003",
+        "ev-20260820-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260818-record-reconciliation",
+      "createdAt": "2026-08-20T22:17:45.637Z",
+      "updatedAt": "2026-08-20T22:49:05.630Z"
+    },
+    {
+      "id": "rec-20260820-002",
+      "title": "Code-review finding (medium): The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This re…",
+      "summary": "medium finding at .cadence/intelligence/recommendations.json:2230: The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This records a false fact; ev-004 compounds it by claiming a parenthetical the summary lacks.",
+      "source": "review",
+      "status": "candidate",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        ".cadence"
+      ],
+      "affectedFiles": [
+        ".cadence/intelligence/recommendations.json"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260820-005"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-20T22:51:47.089Z",
+      "updatedAt": "2026-08-20T22:51:47.089Z",
+      "scoutId": "scout-20260820-2251",
+      "sourceFindingId": "faedbdaf49d9f48962ddbef3c53c341b5128b9dac832782a67f1198fba168ac9"
     }
   ],
   "archived": [
@@ -8372,12 +8436,12 @@
         "dec-20260816-008"
       ],
       "convertedToPhaseId": "283-bypass-aware-assurance",
-      "scoutId": "scout-20260816-assurance-honesty",
-      "createdAt": "2026-08-16T17:59:07.606Z",
-      "updatedAt": "2026-08-16T19:49:44.921Z",
       "shippedRef": "PR #437",
+      "scoutId": "scout-20260816-assurance-honesty",
       "archivedAt": "2026-08-16T19:49:44.921Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-16T17:59:07.606Z",
+      "updatedAt": "2026-08-16T19:49:44.921Z"
     }
   ]
 }

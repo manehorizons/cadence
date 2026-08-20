@@ -2112,6 +2112,42 @@
       "kind": "note",
       "summary": "272-01 and 282-01 both grade assurance:strong while gateBypasses records --force over failing host-cli verdicts (measured 2026-08-16, 294-record corpus)",
       "createdAt": "2026-08-16T17:59:07.606Z"
+    },
+    {
+      "id": "ev-20260820-001",
+      "recommendationId": "rec-20260820-001",
+      "kind": "note",
+      "summary": "282-01-SUMMARY.json gateBypasses: flag --force, reason 'settle --force bypassed failing verdicts (deep: AC-2, AC-4)', severity error; 282-01-DRAFT.md carries four As-built amendment blocks (T1, T2, two under T4) showing the underlying issues were already found/corrected by independent review",
+      "createdAt": "2026-08-20T22:17:45.637Z"
+    },
+    {
+      "id": "ev-20260820-002",
+      "recommendationId": "rec-20260820-001",
+      "kind": "note",
+      "summary": "282-01-DRAFT.md's four As-built amendment blocks, in order of appearance: (T1) mention-mode dedup treatment deliberately not retrofitted -- reviewer-flagged, no bug found; (T2) AC-2's Given/action wording corrected -- independent reproduction (reverting the fix, running the fixture 10x in-process) proved the originally-demanded pre-fix reproduction (non-deep-equal map / run-to-run-varying order) impossible, since readdir on an unmutated directory returns a stable-but-non-canonical order within a single process; (T4, first block) and (T4, second block) -- real deep-verify (not mock) found two genuine gaps during independent verification, both addressed in-flight. None of these four amendments could feed back into a re-verify of the deep-verify pass:false verdicts already rendered against AC-2 and AC-4's original wording -- there is no re-verify-on-amendment mechanism in packages/core/src/gates/deep-verify.ts. The resulting bypass is recorded verbatim in 282-01-SUMMARY.json's gateBypasses array: {gate: settle, flag: --force, reason: 'settle --force bypassed failing verdicts (deep: AC-2, AC-4)', severity: error}. Decided as D-W (file-only, dec-20260820-003): this recommendation records the gap; a re-verify-on-amendment mechanism or amendedAt/supersedes schema field is explicitly out of scope this arc.",
+      "createdAt": "2026-08-20T22:17:56.274Z"
+    },
+    {
+      "id": "ev-20260820-003",
+      "recommendationId": "rec-20260820-001",
+      "kind": "note",
+      "summary": "The mixed-grade cap this recommendation describes is the D-S rule (dec-20260816-006, phase 283-01/T2), implemented in packages/core/src/gates/assurance-record.ts (~lines 84-99): if gateBypasses contains at least one severity:error entry, overall is capped at 'mixed', downgrading an otherwise-'strong' result. 282-01-SUMMARY.json's own gateBypasses entry (flag --force, severity error) is exactly that shape, so a live recomputation of 282's assurance record today would grade 'mixed'. Note for the record: 282-01-SUMMARY.json's stored assurance.overall field itself still reads 'strong', not 'mixed' -- 282 settled before phase 283 shipped this cap, and report-never-rewrite means that historical SUMMARY.json is never recomputed retroactively. deep-verify.ts is where the AC-2/AC-4 pass:false verdicts that gateBypasses references originate; assurance-record.ts is where those bypasses actually get translated into the grade cap. Both files are relevant to the mechanism; this note names the cap's precise implementation site since the affectedFiles list on this recommendation's own add command named only deep-verify.ts.",
+      "createdAt": "2026-08-20T22:20:09.151Z"
+    },
+    {
+      "id": "ev-20260820-004",
+      "recommendationId": "rec-20260820-001",
+      "kind": "note",
+      "summary": "Correction to ev-20260820-002's phrasing: 282-01-DRAFT.md has three '**As-built amendment**' headings (T1, T2, T4), not four separate blocks -- the T4 heading carries two numbered findings (1: AC-1's mention-mode disjunction ported to SPEC Constraints; 2: AC-4's summary-verify-all run for real) under one block. rec-20260820-001's own summary phrase 'four ... blocks (T1, T2, two under T4)' is accurate (its parenthetical disambiguates), but ev-20260820-002's '(T4, first block) and (T4, second block)' wording incorrectly implies two separate T4 headings. Flagged by phase 284's whole-branch review; filed as an additive correction since evidence notes have no post-creation edit path.",
+      "createdAt": "2026-08-20T22:49:05.630Z"
+    },
+    {
+      "id": "ev-20260820-005",
+      "recommendationId": "rec-20260820-002",
+      "kind": "cadence-artifact",
+      "summary": "phase 284-record-reconciliation, draft 284-01, SUMMARY contentHash f0875bfb7c6c43a46cb644383cd49d971a3bbba3fdd117d10122761a389ee864 — medium finding at .cadence/intelligence/recommendations.json:2230: The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This records a false fact; ev-004 compounds it by claiming a parenthetical the summary lacks.",
+      "path": ".cadence/phases/284-record-reconciliation/284-01-SUMMARY.json",
+      "createdAt": "2026-08-20T22:51:47.089Z"
     }
   ]
 }
