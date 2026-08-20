@@ -664,6 +664,30 @@
       "status": "active",
       "decidedAt": "2026-08-16T17:59:38.051Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260820-001",
+      "title": "D-V: 282-01/AC-2 amended -- pre-fix repro proven impossible",
+      "rationale": "282-01/AC-2's original Given demanded reproducing a non-deep-equal map / run-to-run-varying array order across repeated pre-fix runs. The T2 As-built amendment block in 282-01-DRAFT.md (independent-reviewer finding) proved this literal reproduction impossible: reverting the fix and running the fixture 10x in-process showed readdir on an unmutated directory returns a stable order within a single process -- all 10 pre-fix runs returned the identical (but reversed-from-canonical) [gamma, beta, alpha] order, so a naive mutual 10-run deep-equal loop passes vacuously even on unfixed code. The real, demonstrated defect is stable-but-non-canonical order (an artifact of unsorted readdir + LIFO-stack DFS traversal, with no cross-process/cross-filesystem stability guarantee), not observable run-to-run variance within one invocation. Decision: amend AC-2's text (282-01-DRAFT.md's AC-2 heading, executed in 284-01/T2) to match the corrected Given rather than attempt to strengthen a test to chase a defect shape that cannot occur -- coverage-determinism.test.ts's existing pinned-order assertion already catches the real defect and is a stronger, more honest regression guard than AC-2's literal wording asked for.",
+      "status": "active",
+      "decidedAt": "2026-08-20T21:55:17.744Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260820-002",
+      "title": "D-V: 282-01/AC-4 split verdict -- runs-summary-verify-all strengthened, phase-id-enumeration already satisfied",
+      "rationale": "host-cli's deep-verify objection to 282-01/AC-4 read: 'The linked test only string-matches a report; it neither runs summary verify-all nor verifies phase-id enumeration in the settle summary, so the operational AC is untested.' Investigation split this into two independently-judged clauses. (1) runs-summary-verify-all: genuinely survives review -- the existing linked test only string-matched a hand-written markdown transcript claiming the command had been run, and never actually re-invoked cadence summary verify-all as part of the test, so nothing there would catch a regression. Closed via D-V option 3 (strengthen the test): 284-01/T4 adds a genuinely operationally-real assertion extending the existing summary-verify-sweep.test.ts corpus-wide sweep, not a further string-match. (2) phase-id-enumeration: does not survive review -- already adequately covered by two existing asserting blocks in packages/core/tests/docs/phase282-coverage-drift-report.test.ts that enumerate the 3 drifted phases and the 12 could-not-verify phases. SUMMARY.json itself cannot be the enumeration vehicle under the report-never-rewrite rule (it is never rewritten), and the T4 As-built amendment block in 282-01-DRAFT.md documents that the sibling drift-report doc was deliberately designated as the enumeration vehicle instead, with a new asserting test case pinning the real cadence summary verify-all output. This is a split D-V verdict, not a single option, because the two clauses of one deep-verify reason string resolve differently on independent investigation.",
+      "status": "active",
+      "decidedAt": "2026-08-20T21:55:27.536Z",
+      "supersedes": []
+    },
+    {
+      "id": "dec-20260820-003",
+      "title": "D-W: amendment-vs-verifier gap filed as recommendation only (file-only)",
+      "rationale": "Systemic finding surfaced while reconciling 282-01/AC-2 and AC-4: a legitimately amended acceptance criterion has no mechanism to re-reach deep-verify once amended, so honest in-flight correction (as phase 282's own independent reviewers performed, per the T2 and T4 As-built amendment blocks) manufactures a false pass:false verdict requiring --force to settle, which post-phase-283's assurance-record change now caps the overall grade at mixed even though the underlying work was correct. This is D-W: file-only (option a). The gap is recorded as a new high-priority recommendation via cadence recommendation add (284-01/T3), citing 282's four amendment blocks and the gateBypasses entry in 282-01-SUMMARY.json as evidence, but no re-verify-on-amendment mechanism or amendedAt/supersedes schema field is designed or built this arc -- 284-01-DRAFT.md's own Boundaries section reserves that scope explicitly for a future phase to pick up from the filed recommendation.",
+      "status": "active",
+      "decidedAt": "2026-08-20T21:55:34.674Z",
+      "supersedes": []
     }
   ]
 }

@@ -158,4 +158,68 @@ describe('cadence summary verify-all - repo-wide sweep over every existing summa
     expect(failed).toBe(0);
     expect(result.code).toBe(0);
   });
+
+  it("284-01/AC-4: phase 284's own edits — the prose amendment to phase 282's second AC, the filed recommendation, and this phase's new test files — did not push the corpus-wide sweep above 0 MISMATCH / 0 failed", () => {
+    // Same shared beforeAll sweep, reused rather than re-run (one spawn for
+    // the whole file remains phase 266 T2's fix). Phase 284 is a
+    // documentation/ledger/test-coverage reconciliation: it amends a prose
+    // heading in a historical DRAFT, files a recommendation, and adds test
+    // files. None of those is a SUMMARY.json, so the sweep must come back
+    // exactly as clean after this phase as it was before it.
+    expect(checked).toBeGreaterThan(100);
+    expect(failed).toBe(0);
+    expect(result.code).toBe(0);
+
+    // This phase's AC-4 names "0 MISMATCH" separately from "0 failed", and
+    // no block above asserts anything about MISMATCH at all. `verify-all`
+    // prints a literal `<phase>/<id>: MISMATCH` line per tampered file, so
+    // that substring's absence from stdout is the direct check.
+    // Deliberately NOT `not.toContain('MATCH')`: the trailing summary line
+    // always carries a "<N> MATCH" count, which would make that vacuously
+    // impossible to satisfy.
+    expect(result.stdout).not.toContain('MISMATCH');
+  });
+
+  it("282-01/AC-4, 284-01/AC-5: `cadence summary verify-all` — the command phase 282's AC-4 names — passes against the live corpus, executed for real by this suite's own subprocess rather than string-matched out of a hand-written transcript", () => {
+    // Why this block exists, and why it carries two phase-qualified tokens.
+    // Phase 282's real (host-cli) deep-verify returned pass:false on its
+    // AC-4, reasoning that the linked test "only string-matches a report; it
+    // neither runs summary verify-all nor verifies phase-id enumeration in
+    // the settle summary, so the operational AC is untested". Phase 284
+    // judged that objection in two independently-resolved halves
+    // (dec-20260820-002): the phase-id-enumeration half is already covered
+    // by existing asserting blocks in packages/core/tests/docs/
+    // phase282-coverage-drift-report.test.ts, which enumerate the 3 drifted
+    // and the 12 could-not-verify phase ids by id; the runs-summary-verify-
+    // all half was genuinely open, and this block is what closes it —
+    // retroactively granting real coverage to phase 282's own AC-4 (the
+    // `282-01/AC-4` token), which is also, one-for-one, what phase 284's own
+    // AC-5 ("282-01/AC-4's deep-verify objection resolved on its
+    // 'runs summary verify-all' clause") requires as its evidence (the
+    // `284-01/AC-5` token). One assertion body genuinely proves both claims;
+    // this mirrors the `257-01/AC-3, 264-01/AC-2` combined-token precedent
+    // already established elsewhere in this same file.
+    //
+    // What makes this operationally real rather than another string-match:
+    // `checked` / `failed` / `result.code` all come from a live
+    // `node <dist>/cli/index.js summary verify-all` subprocess spawned in
+    // this file's `beforeAll`, and that `beforeAll` *throws* when no
+    // "<N> checked: ... failed" line parses out of its stdout — so a command
+    // that failed to run, or that stopped emitting its report, fails this
+    // suite loudly instead of passing vacuously against stale prose.
+    expect(result.stdout).toMatch(/^\d+ checked: \d+ MATCH, \d+ NO_HASH, \d+ failed$/m);
+
+    // A monotone floor, not an equality. 294 is the corpus size pinned by
+    // the point-in-time verify-all transcript asserted in
+    // phase282-coverage-drift-report.test.ts — left untouched by this phase,
+    // since those numbers are legitimately point-in-time per that file's own
+    // doc comment. `.cadence/phases/**` is append-only, so the live count can
+    // only grow past it; a live count that had *fallen* below the attested
+    // one would mean historical records went missing. Do not "fix" this into
+    // an equality as the corpus grows.
+    expect(checked).toBeGreaterThanOrEqual(294);
+
+    expect(failed).toBe(0);
+    expect(result.code).toBe(0);
+  });
 });

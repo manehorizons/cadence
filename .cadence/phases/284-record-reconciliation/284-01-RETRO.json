@@ -1,0 +1,23 @@
+{
+  "bypasses": [],
+  "roughTasks": [],
+  "findings": {
+    "codeReview": {
+      ".cadence/intelligence/recommendations.json": [
+        {
+          "severity": "medium",
+          "message": "The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This records a false fact; ev-004 compounds it by claiming a parenthetical the summary lacks.",
+          "line": 2230,
+          "anchor": {
+            "kind": "ac",
+            "ref": "AC-3",
+            "tier": "executable"
+          },
+          "id": "faedbdaf49d9f48962ddbef3c53c341b5128b9dac832782a67f1198fba168ac9",
+          "target": "artifact",
+          "disposition": "open"
+        }
+      ]
+    }
+  }
+}
