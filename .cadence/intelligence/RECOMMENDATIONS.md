@@ -876,7 +876,7 @@ Under the full turbo test suite (401 files, maxWorkers:12) on windows-latest CI,
 - decay: fresh
 - areas: gates, verify, init, config
 - files: packages/types/src/config.ts, packages/core/src/gates/coverage.ts, packages/core/src/verify/coverage.ts
-- decisions: dec-20260813-005 (superseded), dec-20260821-003 (active)
+- decisions: dec-20260813-005 (superseded), dec-20260821-004 (active)
 - evidence: Confirmed live 2026-08-07 during phase 261 prep: config.ts:227,252,577 all default coverageScheme to 'bare'; only this repo's own .cadence/config.json overrides to phase-qualified.
 - evidence: Verified live 2026-08-21: packages/core/src/cli/commands/init.ts:481 writes coverageScheme: 'phase-qualified' as const unconditionally for every fresh cadence init (git blame: commit 90e3ed96, phase 239, 2026-07-30 -- predates this rec's own filing). packages/types/src/config.ts:583 confirms 'bare' is the deliberate defaultConfig back-compat literal for pre-existing/upgraded projects only. The rec's summary claim that 'bare' remains the default for every fresh cadence init is stale/incorrect; see dec-20260821-001 (supersedes dec-20260813-005, which checked plan.ts instead of cli/commands/init.ts). Remaining open question is narrower: whether/how pre-phase-239 projects migrate off 'bare', not whether fresh init should default to phase-qualified.
 - next: cadence milestone propose
@@ -1263,7 +1263,7 @@ medium finding at docs/reference/commands.md:2442: Incorrect: bare mode accepts 
 ## rec-20260821-002 — boundary-pattern-unmatched advisory re-fires for an earlier task's already-satisfied wildcard in multi-task drafts
 
 - status: candidate
-- ready: raw-idea
+- ready: needs-decision
 - priority: low
 - leverage: 5/10
 - risk: 5/10
@@ -1271,26 +1271,12 @@ medium finding at docs/reference/commands.md:2442: Incorrect: bare mode accepts 
 - decay: fresh
 - areas: core, dispatch
 - files: packages/core/src/services/build-task.ts, packages/core/src/checks/boundary.ts
+- decisions: dec-20260821-003 (active)
 - evidence: 286-01-DRAFT.md's T3 As-built amendment (follow-up-filed section) and T3 independent review, 2026-08-21
+- evidence: Reconciled duplicate: rec-20260821-003 (auto-filed by cadence settle's code-review-finding-to-recommendation mechanism) describes the identical defect (build-task.ts:287, false boundary-pattern-unmatched re-fire after an earlier task's wildcard match is subtracted from the delta) with independent corroboration — cadence-artifact evidence from phase 286-boundary-glob-expansion draft 286-01's SUMMARY. Absorbed here; rec-20260821-003 marked rejected as a duplicate.
 - next: cadence milestone propose
 
 packages/core/src/services/build-task.ts passes findUnmatchedBoundaryPatterns the full draft's declaredFiles (union across all tasks, draft.tasks.flatMap(t => t.files)) but only the CURRENT task's touchedFiles delta (deriveTaskTouchedFiles subtracts files already recorded by earlier tasks). In a multi-task draft where task A declares and satisfies a wildcard pattern (e.g. .changeset/*.md), recording a later task B re-evaluates that same pattern against B's delta, which no longer contains the file that satisfied it -- producing a spurious boundary-pattern-unmatched warn advisory for A's already-matched pattern when B is recorded. Confirmed real (phase 286-01's own T3 independent review, 2026-08-21), warn-only (never a refusal -- dec-20260821-001's severity isolation holds regardless), and latent for phase 286-01's own build since none of its tasks declare a wildcard files: entry. Worth fixing because it reintroduces exactly the 'noise on nearly every task' class that dec-20260821-001 scoped wildcard-only zero-match detection to avoid -- just for wildcard-declaring multi-task drafts specifically, which are precisely the case this feature exists to serve well. Likely fix shape: scope findUnmatchedBoundaryPatterns's declaredFiles input to only the CURRENT task's own files: entries (not the whole draft's union), matching the same per-task scoping touchedFiles already uses -- needs a design decision on whether that changes any other AC-5 guarantee.
-
-## rec-20260821-003 — Code-review finding (medium): Uses all tasks’ patterns with only the current delta. After T1 satisfies a wild…
-
-- status: candidate
-- ready: needs-decision
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: packages/core
-- files: packages/core/src/services/build-task.ts
-- evidence: phase 286-boundary-glob-expansion, draft 286-01, SUMMARY contentHash 6e7dc29b827da233e9567a40f1b71067c551ff5763f7dd248e8612680b068b67 — medium finding at packages/core/src/services/build-task.ts:287: Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.
-- next: cadence milestone propose
-
-medium finding at packages/core/src/services/build-task.ts:287: Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.
 
 ## rec-20260821-004 — recommendation promote has no path to edit an existing rec's priority or summary text
 

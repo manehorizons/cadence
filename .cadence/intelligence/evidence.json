@@ -2173,6 +2173,13 @@
       "createdAt": "2026-08-21T04:44:13.950Z"
     },
     {
+      "id": "ev-20260821-004",
+      "recommendationId": "rec-20260821-002",
+      "kind": "note",
+      "summary": "Reconciled duplicate: rec-20260821-003 (auto-filed by cadence settle's code-review-finding-to-recommendation mechanism) describes the identical defect (build-task.ts:287, false boundary-pattern-unmatched re-fire after an earlier task's wildcard match is subtracted from the delta) with independent corroboration — cadence-artifact evidence from phase 286-boundary-glob-expansion draft 286-01's SUMMARY. Absorbed here; rec-20260821-003 marked rejected as a duplicate.",
+      "createdAt": "2026-08-21T22:46:40.003Z"
+    },
+    {
       "id": "ev-20260821-005",
       "recommendationId": "rec-20260807-005",
       "kind": "note",

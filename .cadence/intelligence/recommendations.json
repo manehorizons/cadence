@@ -1591,7 +1591,7 @@
       "assumptionIds": [],
       "decisionIds": [
         "dec-20260813-005",
-        "dec-20260821-003"
+        "dec-20260821-004"
       ],
       "createdAt": "2026-08-07T23:04:07.612Z",
       "updatedAt": "2026-08-21T02:24:27.714Z"
@@ -2265,7 +2265,7 @@
       "summary": "packages/core/src/services/build-task.ts passes findUnmatchedBoundaryPatterns the full draft's declaredFiles (union across all tasks, draft.tasks.flatMap(t => t.files)) but only the CURRENT task's touchedFiles delta (deriveTaskTouchedFiles subtracts files already recorded by earlier tasks). In a multi-task draft where task A declares and satisfies a wildcard pattern (e.g. .changeset/*.md), recording a later task B re-evaluates that same pattern against B's delta, which no longer contains the file that satisfied it -- producing a spurious boundary-pattern-unmatched warn advisory for A's already-matched pattern when B is recorded. Confirmed real (phase 286-01's own T3 independent review, 2026-08-21), warn-only (never a refusal -- dec-20260821-001's severity isolation holds regardless), and latent for phase 286-01's own build since none of its tasks declare a wildcard files: entry. Worth fixing because it reintroduces exactly the 'noise on nearly every task' class that dec-20260821-001 scoped wildcard-only zero-match detection to avoid -- just for wildcard-declaring multi-task drafts specifically, which are precisely the case this feature exists to serve well. Likely fix shape: scope findUnmatchedBoundaryPatterns's declaredFiles input to only the CURRENT task's own files: entries (not the whole draft's union), matching the same per-task scoping touchedFiles already uses -- needs a design decision on whether that changes any other AC-5 guarantee.",
       "source": "manual",
       "status": "candidate",
-      "readiness": "raw-idea",
+      "readiness": "needs-decision",
       "priority": "low",
       "leverageScore": 5,
       "riskScore": 5,
@@ -2281,41 +2281,15 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260821-002"
+        "ev-20260821-002",
+        "ev-20260821-004"
       ],
       "assumptionIds": [],
-      "decisionIds": [],
+      "decisionIds": [
+        "dec-20260821-003"
+      ],
       "createdAt": "2026-08-21T03:31:25.782Z",
-      "updatedAt": "2026-08-21T03:31:25.782Z"
-    },
-    {
-      "id": "rec-20260821-003",
-      "title": "Code-review finding (medium): Uses all tasks’ patterns with only the current delta. After T1 satisfies a wild…",
-      "summary": "medium finding at packages/core/src/services/build-task.ts:287: Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.",
-      "source": "review",
-      "status": "candidate",
-      "readiness": "needs-decision",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "packages/core"
-      ],
-      "affectedFiles": [
-        "packages/core/src/services/build-task.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260821-003"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [],
-      "scoutId": "scout-20260821-0444",
-      "sourceFindingId": "acf54d9f6775dce2ff3cc275d621e8f15f3a68590392df2be713ae6699ba61ac",
-      "createdAt": "2026-08-21T04:44:13.950Z",
-      "updatedAt": "2026-08-21T04:44:13.950Z"
+      "updatedAt": "2026-08-21T22:46:40.165Z"
     },
     {
       "id": "rec-20260821-004",
@@ -8572,6 +8546,37 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-15T23:36:27.867Z",
       "updatedAt": "2026-08-21T05:25:35.471Z"
+    },
+    {
+      "id": "rec-20260821-003",
+      "title": "Code-review finding (medium): Uses all tasks’ patterns with only the current delta. After T1 satisfies a wild…",
+      "summary": "medium finding at packages/core/src/services/build-task.ts:287: Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.",
+      "source": "review",
+      "status": "rejected",
+      "readiness": "needs-decision",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "packages/core"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/build-task.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260821-003"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "scoutId": "scout-20260821-0444",
+      "sourceFindingId": "acf54d9f6775dce2ff3cc275d621e8f15f3a68590392df2be713ae6699ba61ac",
+      "archivedAt": "2026-08-21T22:47:05.329Z",
+      "archiveReason": "rejected",
+      "createdAt": "2026-08-21T04:44:13.950Z",
+      "updatedAt": "2026-08-21T22:47:05.329Z"
     }
   ]
 }
