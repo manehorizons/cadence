@@ -868,7 +868,7 @@ Under the full turbo test suite (401 files, maxWorkers:12) on windows-latest CI,
 ## rec-20260807-005 — Make phase-qualified the default AC coverage scheme (bare still ships collision bug)
 
 - status: candidate
-- ready: ready-for-cadence-spec
+- ready: needs-decision
 - priority: high
 - leverage: 5/10
 - risk: 5/10
@@ -876,8 +876,9 @@ Under the full turbo test suite (401 files, maxWorkers:12) on windows-latest CI,
 - decay: fresh
 - areas: gates, verify, init, config
 - files: packages/types/src/config.ts, packages/core/src/gates/coverage.ts, packages/core/src/verify/coverage.ts
-- decisions: dec-20260813-005 (active)
+- decisions: dec-20260813-005 (superseded), dec-20260821-001 (active)
 - evidence: Confirmed live 2026-08-07 during phase 261 prep: config.ts:227,252,577 all default coverageScheme to 'bare'; only this repo's own .cadence/config.json overrides to phase-qualified.
+- evidence: Verified live 2026-08-21: packages/core/src/cli/commands/init.ts:481 writes coverageScheme: 'phase-qualified' as const unconditionally for every fresh cadence init (git blame: commit 90e3ed96, phase 239, 2026-07-30 -- predates this rec's own filing). packages/types/src/config.ts:583 confirms 'bare' is the deliberate defaultConfig back-compat literal for pre-existing/upgraded projects only. The rec's summary claim that 'bare' remains the default for every fresh cadence init is stale/incorrect; see dec-20260821-001 (supersedes dec-20260813-005, which checked plan.ts instead of cli/commands/init.ts). Remaining open question is narrower: whether/how pre-phase-239 projects migrate off 'bare', not whether fresh init should default to phase-qualified.
 - next: cadence milestone propose
 
 Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token scheme that closes the cross-phase AC-N token collision (originally rec-20260729-004). But 'bare' remains the DEFAULT for every fresh cadence init and every other cadence-managed project (packages/types/src/config.ts:227,252,577) -- this repo dogfoods the fix for itself only, via its own .cadence/config.json. Decide whether phase-qualified should become the default: weigh against the AC-N token convention documented in CLAUDE.md and asserted by packages/core/tests/verify/, backward compat for pre-239 test files written against bare tokens, and the v2.0.0-reserved semver policy (breaking changes ship as minor until full coupling).
@@ -1220,6 +1221,7 @@ tests/docs/phase271-record-integrity.test.ts's roadmap-currency drift check (dis
 - areas: core, dispatch
 - files: packages/core/src/git/boundary-diff.ts, packages/core/src/checks/boundary.ts
 - evidence: cadence build task T6 --status=DONE against phase 281's own T6 (files: .changeset/*.md, wrote .changeset/done-bypass-fix.md) printed: 'cadence anomaly [warn] files-outside-boundary: .changeset/done-bypass-fix.md touched but not declared in any task's files:'
+- evidence: HANDOFF-v1.62-record-reconciliation.md sec6 (Phase I): filed low, but treat as medium -- under dispatch-scoped block mode (phase 280) a wildcard files: declaration produces a hard refusal on correctly-scoped work, and phase 281's T6 already hit the warn-mode version live (declared .changeset/*.md, wrote exactly that file, got a files-outside-boundary anomaly anyway). Note for whoever specs this: cadence recommendation promote only mutates status/readiness (packages/core/src/services/recommendation-promote.ts), and no CLI/service path exists to change an existing rec's priority field -- verified by reading the promote service and grepping recommendation.ts's option set. Raising this rec's stored priority to medium would require a hand-edit of .cadence/intelligence/recommendations.json, which CLAUDE.md's sec7 ledger-write rule forbids. Leaving priority=low in the ledger; treat the severity as medium per this note until a priority-edit command exists or the rec is re-filed.
 - next: cadence milestone propose
 
 Phase 281's T6 declared files: `.changeset/*.md` in its DRAFT and then wrote .changeset/done-bypass-fix.md exactly as scoped, but cadence build task T6 still emitted a files-outside-boundary warn anomaly for that exact file. grep across packages/core/src/git/boundary-diff.ts and packages/core/src/checks/boundary.ts shows no glob/minimatch/micromatch usage -- declared files: entries appear to be compared as literal paths, not glob-expanded, so a wildcard pattern in files: can never actually match anything and any file it was meant to cover will always warn (or refuse, in block mode). This is warn-only and non-blocking today (boundaryEnforcement defaulted to warn for phase 281's build), but would be a real, surprising refusal for any dispatch-scoped phase (block mode) that declares a wildcard files: pattern -- the task would refuse no matter what it wrote. Resolution: either glob-expand files: entries at match time (minimatch/micromatch, zero-runtime-dep policy permitting -- check if a glob impl is already a transitive dep before adding one), or refuse to accept a files: pattern containing a glob character at draft coherence-check time with a clear error, so authors don't unknowingly write an unenforceable boundary.
@@ -1274,3 +1276,19 @@ medium finding at .cadence/intelligence/recommendations.json:2230: The DRAFT has
 - next: cadence milestone propose
 
 medium finding at docs/reference/commands.md:2442: Incorrect: bare mode accepts `<phase>/AC-N` literally (and AC-3 tests it); only phase-qualified normalizes. Say bare `AC-N` is recommended, or scope the restriction to phase-qualified.
+
+## rec-20260821-002 — recommendation promote has no path to edit an existing rec's priority or summary text
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: cli, intelligence
+- files: packages/core/src/cli/commands/recommendation.ts, packages/core/src/services/recommendation-promote.ts
+- evidence: ev-20260821-003 on rec-20260815-005 is the workaround this gap forced
+- next: cadence milestone propose
+
+cadence recommendation promote only mutates status/readiness/shippedRef (packages/core/src/services/recommendation-promote.ts); there is no CLI or service seam to correct a stale priority or summary on an existing recommendation once filed. Hand-editing .cadence/intelligence/recommendations.json is explicitly forbidden (CLAUDE.md sec7, 'No hand-edits to .cadence/intelligence/'). Hit directly 2026-08-21: HANDOFF-v1.62-record-reconciliation.md sec6 asked to raise rec-20260815-005's priority from low to medium, and no mechanism existed to do it -- worked around via an evidence note (ev-20260821-003) instead, which is a weaker signal than a real priority field since list/sort-by priority won't reflect it. The likely-correct fix is a promote-like verb (e.g. --priority on promote, or a new recommendation amend) that appends provenance the way promote already does, keeping the ledger's report-never-silently-rewrite posture intact.

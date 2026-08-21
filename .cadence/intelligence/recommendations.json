@@ -1566,7 +1566,7 @@
       "summary": "Phase 239 (PR #338) shipped an opt-in coverageScheme='phase-qualified' token scheme that closes the cross-phase AC-N token collision (originally rec-20260729-004). But 'bare' remains the DEFAULT for every fresh cadence init and every other cadence-managed project (packages/types/src/config.ts:227,252,577) -- this repo dogfoods the fix for itself only, via its own .cadence/config.json. Decide whether phase-qualified should become the default: weigh against the AC-N token convention documented in CLAUDE.md and asserted by packages/core/tests/verify/, backward compat for pre-239 test files written against bare tokens, and the v2.0.0-reserved semver policy (breaking changes ship as minor until full coupling).",
       "source": "manual",
       "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
+      "readiness": "needs-decision",
       "priority": "high",
       "leverageScore": 5,
       "riskScore": 5,
@@ -1585,14 +1585,16 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260807-011"
+        "ev-20260807-011",
+        "ev-20260821-002"
       ],
       "assumptionIds": [],
       "decisionIds": [
-        "dec-20260813-005"
+        "dec-20260813-005",
+        "dec-20260821-001"
       ],
       "createdAt": "2026-08-07T23:04:07.612Z",
-      "updatedAt": "2026-08-13T02:37:10.425Z"
+      "updatedAt": "2026-08-21T02:24:27.714Z"
     },
     {
       "id": "rec-20260808-001",
@@ -2186,12 +2188,13 @@
       ],
       "suggestedBackendAction": "cadence milestone propose",
       "evidenceIds": [
-        "ev-20260815-006"
+        "ev-20260815-006",
+        "ev-20260821-003"
       ],
       "assumptionIds": [],
       "decisionIds": [],
       "createdAt": "2026-08-15T23:36:27.867Z",
-      "updatedAt": "2026-08-15T23:36:27.867Z"
+      "updatedAt": "2026-08-21T02:24:38.980Z"
     },
     {
       "id": "rec-20260820-001",
@@ -2285,6 +2288,35 @@
       "sourceFindingId": "d9acf9332e28796a92272cb33ca30846d6728db5dd6f412a394d64b534f9af84",
       "createdAt": "2026-08-21T00:54:39.056Z",
       "updatedAt": "2026-08-21T00:54:39.056Z"
+    },
+    {
+      "id": "rec-20260821-002",
+      "title": "recommendation promote has no path to edit an existing rec's priority or summary text",
+      "summary": "cadence recommendation promote only mutates status/readiness/shippedRef (packages/core/src/services/recommendation-promote.ts); there is no CLI or service seam to correct a stale priority or summary on an existing recommendation once filed. Hand-editing .cadence/intelligence/recommendations.json is explicitly forbidden (CLAUDE.md sec7, 'No hand-edits to .cadence/intelligence/'). Hit directly 2026-08-21: HANDOFF-v1.62-record-reconciliation.md sec6 asked to raise rec-20260815-005's priority from low to medium, and no mechanism existed to do it -- worked around via an evidence note (ev-20260821-003) instead, which is a weaker signal than a real priority field since list/sort-by priority won't reflect it. The likely-correct fix is a promote-like verb (e.g. --priority on promote, or a new recommendation amend) that appends provenance the way promote already does, keeping the ledger's report-never-silently-rewrite posture intact.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "raw-idea",
+      "priority": "low",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "cli",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/cli/commands/recommendation.ts",
+        "packages/core/src/services/recommendation-promote.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260821-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-21T02:25:03.799Z",
+      "updatedAt": "2026-08-21T02:25:03.799Z"
     }
   ],
   "archived": [
@@ -8471,11 +8503,11 @@
       "decisionIds": [
         "dec-20260820-004"
       ],
-      "createdAt": "2026-08-16T14:12:06.535Z",
-      "updatedAt": "2026-08-21T01:25:35.121Z",
       "shippedRef": "PR #450 / phase 285",
       "archivedAt": "2026-08-21T01:25:35.121Z",
-      "archiveReason": "shipped"
+      "archiveReason": "shipped",
+      "createdAt": "2026-08-16T14:12:06.535Z",
+      "updatedAt": "2026-08-21T01:25:35.121Z"
     }
   ]
 }
