@@ -1,0 +1,88 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`285-01: --explain double-qualification guard (HANDOFF-v1.62's Phase H) > 285-01/AC-2: the correct bare --explain path under phase-qualified is byte-identical to a committed snapshot 1`] = `
+{
+  "exitCode": 0,
+  "stderr": "",
+  "stdout": "{
+  "acId": "AC-3",
+  "mode": "assertion",
+  "expectedQualifier": "239-01",
+  "globs": [
+    "**/*.test.ts"
+  ],
+  "anyFilesMatched": true,
+  "files": [
+    {
+      "file": "a.test.ts",
+      "extension": ".ts",
+      "profileId": "js-ts",
+      "profileReason": "scanned with profile \\"js-ts\\"",
+      "spansFound": 1,
+      "occurrences": [
+        {
+          "line": 1,
+          "snippet": "it('239-01/AC-3 covered', () => { expect(1).toBe(1); });",
+          "offset": 11,
+          "span": {
+            "start": 0,
+            "end": 54,
+            "startLine": 1,
+            "endLine": 1,
+            "hasAssertion": true,
+            "skipped": false
+          },
+          "satisfies": true,
+          "reason": "token inside an asserting test block (profile \\"js-ts\\") — satisfies assertion mode"
+        }
+      ]
+    }
+  ],
+  "satisfied": true
+}
+",
+}
+`;
+
+exports[`285-01: --explain double-qualification guard (HANDOFF-v1.62's Phase H) > 285-01/AC-3: a qualifier-looking token under the bare scheme is matched literally, never normalized 1`] = `
+{
+  "exitCode": 0,
+  "stderr": "",
+  "stdout": "{
+  "acId": "285-fixture-qualifier/AC-3",
+  "mode": "assertion",
+  "globs": [
+    "**/*.test.ts"
+  ],
+  "anyFilesMatched": true,
+  "files": [
+    {
+      "file": "a.test.ts",
+      "extension": ".ts",
+      "profileId": "js-ts",
+      "profileReason": "scanned with profile \\"js-ts\\"",
+      "spansFound": 1,
+      "occurrences": [
+        {
+          "line": 1,
+          "snippet": "it('285-fixture-qualifier/AC-3 covered', () => { expect(1).toBe(1); });",
+          "offset": 4,
+          "span": {
+            "start": 0,
+            "end": 69,
+            "startLine": 1,
+            "endLine": 1,
+            "hasAssertion": true,
+            "skipped": false
+          },
+          "satisfies": true,
+          "reason": "token inside an asserting test block (profile \\"js-ts\\") — satisfies assertion mode"
+        }
+      ]
+    }
+  ],
+  "satisfied": true
+}
+",
+}
+`;

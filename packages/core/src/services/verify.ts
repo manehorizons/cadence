@@ -115,7 +115,7 @@ export async function runVerifyCoverage(
   args: VerifyCoverageArgs,
   io: CommandIO,
 ): Promise<CommandResult> {
-  const acId = args.explain.trim();
+  let acId = args.explain.trim();
   if (acId === '') {
     io.err('verify coverage failed: --explain requires a non-empty AC id\n');
     return { exitCode: 1 };
@@ -148,6 +148,34 @@ export async function runVerifyCoverage(
     }
     if (typeof activeDraft === 'string' && /^[A-Za-z0-9._-]+$/.test(activeDraft)) {
       expectedQualifier = activeDraft;
+      // Phase 285 (T2, D-X / rec-20260816-001): an --explain argument the
+      // caller already qualified (e.g. `282-01/AC-4`) must not be prepended
+      // with the active draft's qualifier a second time -- that silently
+      // builds a search token that can never match, at exit 0. Normalize to
+      // the bare form and say so loudly, matching the Quiet Fallback notice
+      // a few lines above for the no-active-draft degraded path.
+      const qualifiedPrefix = `${expectedQualifier}/`;
+      if (acId.startsWith(qualifiedPrefix)) {
+        const bareAcId = acId.slice(qualifiedPrefix.length);
+        if (bareAcId === '') {
+          // Stripping must never leave an empty search token -- explainAcCoverage's
+          // `\b${acId}\b` would degrade to an empty pattern matching every word
+          // boundary, silently reporting satisfied: true for nothing searched at
+          // all. That is worse than the double-qualification bug this task fixes.
+          io.err(
+            `verify coverage failed: --explain argument '${acId}' is only the active ` +
+              `draft's qualifier prefix ('${qualifiedPrefix}') with no AC id after it; ` +
+              `pass the bare AC id, e.g. --explain AC-4.\n`,
+          );
+          return { exitCode: 1 };
+        }
+        io.err(
+          `verify coverage: --explain argument '${acId}' is already qualified with the ` +
+            `active draft's prefix '${qualifiedPrefix}'; using the bare form '${bareAcId}' ` +
+            `to search, instead of double-qualifying it.\n`,
+        );
+        acId = bareAcId;
+      }
     } else {
       io.err(
         `verify coverage: verification.coverageScheme is 'phase-qualified', but no usable ` +

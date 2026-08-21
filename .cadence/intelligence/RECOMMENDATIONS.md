@@ -1235,6 +1235,7 @@ Phase 281's T6 declared files: `.changeset/*.md` in its DRAFT and then wrote .ch
 - decay: fresh
 - areas: verify, coverage, cli
 - files: packages/core/src/verify/coverage.ts, packages/core/src/cli/verify-coverage.ts
+- decisions: dec-20260820-004 (active)
 - evidence: Repro: node packages/core/bin/cadence.cjs verify coverage --explain 282-01/AC-4 prints 'scheme: phase-qualified (expected token: [REDACTED] and exits 0 reporting no occurrence, vs the correct bare --explain AC-4 which resolves to 282-01/AC-4 and finds real occurrences. Found and independently reproduced during phase 282 (coverage-scanner-determinism) T4.
 - evidence: File-path correction: the --file list on this rec named a guessed packages/core/src/cli/verify-coverage.ts, which does not exist. The real implementation sites are packages/core/src/services/verify.ts (verify coverage command wiring) and packages/core/src/verify/coverage.ts (explainAcCoverage, the double-qualification bug's actual location).
 - next: cadence milestone propose
@@ -1275,3 +1276,19 @@ Mechanism: when an acceptance criterion's text is legitimately amended in-flight
 - next: cadence milestone propose
 
 medium finding at .cadence/intelligence/recommendations.json:2230: The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This records a false fact; ev-004 compounds it by claiming a parenthetical the summary lacks.
+
+## rec-20260821-001 — Code-review finding (medium): Incorrect: bare mode accepts `<phase>/AC-N` literally (and AC-3 tests it); only…
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: docs
+- files: docs/reference/commands.md
+- evidence: phase 285-explain-double-qualification, draft 285-01, SUMMARY contentHash bf2ccba1750350290965f276dc0202debc22876ca30dee31228d0354b6449074 — medium finding at docs/reference/commands.md:2442: Incorrect: bare mode accepts `<phase>/AC-N` literally (and AC-3 tests it); only phase-qualified normalizes. Say bare `AC-N` is recommended, or scope the restriction to phase-qualified.
+- next: cadence milestone propose
+
+medium finding at docs/reference/commands.md:2442: Incorrect: bare mode accepts `<phase>/AC-N` literally (and AC-3 tests it); only phase-qualified normalizes. Say bare `AC-N` is recommended, or scope the restriction to phase-qualified.

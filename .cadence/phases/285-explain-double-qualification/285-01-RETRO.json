@@ -1,0 +1,23 @@
+{
+  "bypasses": [],
+  "roughTasks": [],
+  "findings": {
+    "codeReview": {
+      "docs/reference/commands.md": [
+        {
+          "severity": "medium",
+          "message": "Incorrect: bare mode accepts `<phase>/AC-N` literally (and AC-3 tests it); only phase-qualified normalizes. Say bare `AC-N` is recommended, or scope the restriction to phase-qualified.",
+          "line": 2442,
+          "anchor": {
+            "kind": "ac",
+            "ref": "AC-5",
+            "tier": "executable"
+          },
+          "id": "d9acf9332e28796a92272cb33ca30846d6728db5dd6f412a394d64b534f9af84",
+          "target": "artifact",
+          "disposition": "open"
+        }
+      ]
+    }
+  }
+}

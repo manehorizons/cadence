@@ -2148,6 +2148,14 @@
       "summary": "phase 284-record-reconciliation, draft 284-01, SUMMARY contentHash f0875bfb7c6c43a46cb644383cd49d971a3bbba3fdd117d10122761a389ee864 — medium finding at .cadence/intelligence/recommendations.json:2230: The DRAFT has three As-built amendment headings (T1, T2, T4), not four. This records a false fact; ev-004 compounds it by claiming a parenthetical the summary lacks.",
       "path": ".cadence/phases/284-record-reconciliation/284-01-SUMMARY.json",
       "createdAt": "2026-08-20T22:51:47.089Z"
+    },
+    {
+      "id": "ev-20260821-001",
+      "recommendationId": "rec-20260821-001",
+      "kind": "cadence-artifact",
+      "summary": "phase 285-explain-double-qualification, draft 285-01, SUMMARY contentHash bf2ccba1750350290965f276dc0202debc22876ca30dee31228d0354b6449074 — medium finding at docs/reference/commands.md:2442: Incorrect: bare mode accepts `<phase>/AC-N` literally (and AC-3 tests it); only phase-qualified normalizes. Say bare `AC-N` is recommended, or scope the restriction to phase-qualified.",
+      "path": ".cadence/phases/285-explain-double-qualification/285-01-SUMMARY.json",
+      "createdAt": "2026-08-21T00:54:39.056Z"
     }
   ]
 }

@@ -2437,8 +2437,22 @@ though it sits inside a fully asserting block. To resolve which qualifier is
 `.cadence/state.json`'s `activeDraft` — best-effort, and never a hard failure: if
 no state exists or no active draft is set, it prints a loud stderr warning that
 the report below is unqualified and won't match what the settle gate enforces,
-then falls back to the unqualified report rather than refusing outright. Under
-the `"bare"` scheme (the default), none of this applies — state is never read,
+then falls back to the unqualified report rather than refusing outright.
+
+`--explain <acId>` always takes the bare `AC-N` form under either scheme —
+never a caller-supplied `<phase>/AC-N` qualified form; under `"phase-qualified"`
+the qualifier is resolved automatically from the active draft, not something the
+caller supplies. If the argument is already qualified with that same
+active-draft prefix (e.g. `282-01/AC-4` when the active draft is already
+`282-01`), the command does not silently prepend the qualifier a second time and
+search for an unmatchable double-qualified token (Phase 285, T2) — it strips
+the prefix, searches using the bare form instead, and prints a stderr notice
+naming both the original argument and the bare form actually used. A
+qualifier-only argument with nothing after the slash (e.g. `282-01/`) is
+refused outright, with a non-zero exit and a message, rather than searched as
+an empty token.
+
+Under the `"bare"` scheme (the default), none of this applies — state is never read,
 and the report is byte-for-byte what it has always been. `--json` emits the same
 facts as structured JSON on stdout (`{ acId, mode, globs, anyFilesMatched, files,
 satisfied }`, plus an `expectedQualifier` key present only under the qualified
@@ -2451,8 +2465,10 @@ stays safe to run at any time, including outside the loop. Diagnostics
 warning above) go to stderr.
 
 **Exit codes** — `0` on a successful run (regardless of whether the AC is satisfied —
-this command diagnoses, it does not gate); `1` on a config-load failure or an empty
-`--explain` value.
+this command diagnoses, it does not gate); `1` on a config-load failure, an empty
+`--explain` value, or a `--explain` argument that strips down to an empty AC id under
+`"phase-qualified"` (Phase 285, T2 — a qualifier-only argument with nothing after the
+slash).
 
 **`phase` options**
 
