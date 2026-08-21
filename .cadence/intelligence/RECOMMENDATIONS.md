@@ -1210,8 +1210,8 @@ tests/docs/phase271-record-integrity.test.ts's roadmap-currency drift check (dis
 
 ## rec-20260815-005 — Boundary-scan doesn't glob-expand declared files: patterns (e.g. .changeset/*.md)
 
-- status: candidate
-- ready: raw-idea
+- status: settle-pending
+- ready: ready-for-cadence-spec
 - priority: low
 - leverage: 5/10
 - risk: 5/10
@@ -1219,6 +1219,7 @@ tests/docs/phase271-record-integrity.test.ts's roadmap-currency drift check (dis
 - decay: fresh
 - areas: core, dispatch
 - files: packages/core/src/git/boundary-diff.ts, packages/core/src/checks/boundary.ts
+- decisions: dec-20260821-001 (active), dec-20260821-002 (active)
 - evidence: cadence build task T6 --status=DONE against phase 281's own T6 (files: .changeset/*.md, wrote .changeset/done-bypass-fix.md) printed: 'cadence anomaly [warn] files-outside-boundary: .changeset/done-bypass-fix.md touched but not declared in any task's files:'
 - next: cadence milestone propose
 
@@ -1274,3 +1275,35 @@ medium finding at .cadence/intelligence/recommendations.json:2230: The DRAFT has
 - next: cadence milestone propose
 
 medium finding at docs/reference/commands.md:2442: Incorrect: bare mode accepts `<phase>/AC-N` literally (and AC-3 tests it); only phase-qualified normalizes. Say bare `AC-N` is recommended, or scope the restriction to phase-qualified.
+
+## rec-20260821-002 — boundary-pattern-unmatched advisory re-fires for an earlier task's already-satisfied wildcard in multi-task drafts
+
+- status: candidate
+- ready: raw-idea
+- priority: low
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, dispatch
+- files: packages/core/src/services/build-task.ts, packages/core/src/checks/boundary.ts
+- evidence: 286-01-DRAFT.md's T3 As-built amendment (follow-up-filed section) and T3 independent review, 2026-08-21
+- next: cadence milestone propose
+
+packages/core/src/services/build-task.ts passes findUnmatchedBoundaryPatterns the full draft's declaredFiles (union across all tasks, draft.tasks.flatMap(t => t.files)) but only the CURRENT task's touchedFiles delta (deriveTaskTouchedFiles subtracts files already recorded by earlier tasks). In a multi-task draft where task A declares and satisfies a wildcard pattern (e.g. .changeset/*.md), recording a later task B re-evaluates that same pattern against B's delta, which no longer contains the file that satisfied it -- producing a spurious boundary-pattern-unmatched warn advisory for A's already-matched pattern when B is recorded. Confirmed real (phase 286-01's own T3 independent review, 2026-08-21), warn-only (never a refusal -- dec-20260821-001's severity isolation holds regardless), and latent for phase 286-01's own build since none of its tasks declare a wildcard files: entry. Worth fixing because it reintroduces exactly the 'noise on nearly every task' class that dec-20260821-001 scoped wildcard-only zero-match detection to avoid -- just for wildcard-declaring multi-task drafts specifically, which are precisely the case this feature exists to serve well. Likely fix shape: scope findUnmatchedBoundaryPatterns's declaredFiles input to only the CURRENT task's own files: entries (not the whole draft's union), matching the same per-task scoping touchedFiles already uses -- needs a design decision on whether that changes any other AC-5 guarantee.
+
+## rec-20260821-003 — Code-review finding (medium): Uses all tasks’ patterns with only the current delta. After T1 satisfies a wild…
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: packages/core
+- files: packages/core/src/services/build-task.ts
+- evidence: phase 286-boundary-glob-expansion, draft 286-01, SUMMARY contentHash 6e7dc29b827da233e9567a40f1b71067c551ff5763f7dd248e8612680b068b67 — medium finding at packages/core/src/services/build-task.ts:287: Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.
+- next: cadence milestone propose
+
+medium finding at packages/core/src/services/build-task.ts:287: Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.

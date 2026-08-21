@@ -5,6 +5,7 @@ import { join, relative, sep } from 'node:path';
 import { getProfileForExtension } from './coverage-profiles/registry.js';
 import { findSpansForProfile, findSpansForProfileWithDiagnostics } from './coverage-profiles/engine.js';
 import type { TestSpan } from './coverage-profiles/types.js';
+import { toMatcher } from '../util/glob.js';
 
 export type AcId = `AC-${number}` | string;
 
@@ -644,44 +645,5 @@ function extensionOf(relPath: string): string {
   const base = relPath.slice(relPath.lastIndexOf('/') + 1);
   const dot = base.lastIndexOf('.');
   return dot === -1 ? '' : base.slice(dot).toLowerCase();
-}
-
-/**
- * Compile a glob pattern (subset: `**`, `*`, literal segments) into a
- * predicate over forward-slashed relative paths. Examples:
- *   `packages/**\/*.test.ts` → matches `packages/core/tests/foo.test.ts`
- *   `**\/*.test.ts` → matches `apps/api/__tests__/bar.test.ts`
- */
-function toMatcher(pattern: string): (relPath: string) => boolean {
-  const re = globToRegExp(pattern);
-  return (p) => re.test(p);
-}
-
-function globToRegExp(pattern: string): RegExp {
-  // Tokenize: split on '/', then handle '**' specially.
-  const parts = pattern.split('/');
-  const reParts: string[] = [];
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i]!;
-    if (part === '**') {
-      // Match zero-or-more path segments.
-      // If there is a following part, allow `**/x` to match `x` too (zero segments).
-      const next = parts[i + 1];
-      if (next !== undefined) {
-        reParts.push('(?:[^/]+/)*');
-        // Consume the trailing slash semantics; let the next iteration add `next` literally.
-      } else {
-        reParts.push('.*');
-      }
-      continue;
-    }
-    // Escape regex specials except `*`.
-    const seg = part
-      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-      .replace(/\*/g, '[^/]*');
-    reParts.push(seg);
-    if (i < parts.length - 1) reParts.push('/');
-  }
-  return new RegExp('^' + reParts.join('') + '$');
 }
 
