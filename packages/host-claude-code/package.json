@@ -1,6 +1,6 @@
 {
   "name": "@thomas-powers-jr/cadence-host-claude-code",
-  "version": "1.61.1",
+  "version": "1.62.0",
   "engines": {
     "node": ">=22"
   },
