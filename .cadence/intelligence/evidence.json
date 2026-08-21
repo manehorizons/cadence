@@ -2159,21 +2159,36 @@
     },
     {
       "id": "ev-20260821-002",
+      "recommendationId": "rec-20260821-002",
+      "kind": "note",
+      "summary": "286-01-DRAFT.md's T3 As-built amendment (follow-up-filed section) and T3 independent review, 2026-08-21",
+      "createdAt": "2026-08-21T03:31:25.782Z"
+    },
+    {
+      "id": "ev-20260821-003",
+      "recommendationId": "rec-20260821-003",
+      "kind": "cadence-artifact",
+      "summary": "phase 286-boundary-glob-expansion, draft 286-01, SUMMARY contentHash 6e7dc29b827da233e9567a40f1b71067c551ff5763f7dd248e8612680b068b67 — medium finding at packages/core/src/services/build-task.ts:287: Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.",
+      "path": ".cadence/phases/286-boundary-glob-expansion/286-01-SUMMARY.json",
+      "createdAt": "2026-08-21T04:44:13.950Z"
+    },
+    {
+      "id": "ev-20260821-005",
       "recommendationId": "rec-20260807-005",
       "kind": "note",
       "summary": "Verified live 2026-08-21: packages/core/src/cli/commands/init.ts:481 writes coverageScheme: 'phase-qualified' as const unconditionally for every fresh cadence init (git blame: commit 90e3ed96, phase 239, 2026-07-30 -- predates this rec's own filing). packages/types/src/config.ts:583 confirms 'bare' is the deliberate defaultConfig back-compat literal for pre-existing/upgraded projects only. The rec's summary claim that 'bare' remains the default for every fresh cadence init is stale/incorrect; see dec-20260821-001 (supersedes dec-20260813-005, which checked plan.ts instead of cli/commands/init.ts). Remaining open question is narrower: whether/how pre-phase-239 projects migrate off 'bare', not whether fresh init should default to phase-qualified.",
       "createdAt": "2026-08-21T02:24:23.699Z"
     },
     {
-      "id": "ev-20260821-003",
+      "id": "ev-20260821-006",
       "recommendationId": "rec-20260815-005",
       "kind": "note",
       "summary": "HANDOFF-v1.62-record-reconciliation.md sec6 (Phase I): filed low, but treat as medium -- under dispatch-scoped block mode (phase 280) a wildcard files: declaration produces a hard refusal on correctly-scoped work, and phase 281's T6 already hit the warn-mode version live (declared .changeset/*.md, wrote exactly that file, got a files-outside-boundary anomaly anyway). Note for whoever specs this: cadence recommendation promote only mutates status/readiness (packages/core/src/services/recommendation-promote.ts), and no CLI/service path exists to change an existing rec's priority field -- verified by reading the promote service and grepping recommendation.ts's option set. Raising this rec's stored priority to medium would require a hand-edit of .cadence/intelligence/recommendations.json, which CLAUDE.md's sec7 ledger-write rule forbids. Leaving priority=low in the ledger; treat the severity as medium per this note until a priority-edit command exists or the rec is re-filed.",
       "createdAt": "2026-08-21T02:24:38.980Z"
     },
     {
-      "id": "ev-20260821-004",
-      "recommendationId": "rec-20260821-002",
+      "id": "ev-20260821-007",
+      "recommendationId": "rec-20260821-004",
       "kind": "note",
       "summary": "ev-20260821-003 on rec-20260815-005 is the workaround this gap forced",
       "createdAt": "2026-08-21T02:25:03.799Z"
