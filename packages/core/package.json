@@ -54,7 +54,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.116.0",
+    "@anthropic-ai/sdk": "^0.117.1",
     "@thomas-powers-jr/cadence-types": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^14.0.0",
