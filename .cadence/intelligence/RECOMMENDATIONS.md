@@ -1208,23 +1208,6 @@ Right now the only 'real LLM' path for the deep-verify/code-review settle gates 
 
 tests/docs/phase271-record-integrity.test.ts's roadmap-currency drift check (disk-vs-backfill, threshold 10) was already at its maximum tolerance (drift=10, disk=280, backfill=270) before phase 281 existed -- confirmed via cadence doctor at session start ('roadmap-currency: ok ... within the 10-phase threshold'). Phase 281's own directory creation alone (independent of its content) tipped drift to 11 and broke the test; phase 281 fixed this narrowly by recording only its own Phase 281 entry in both files (bringing drift back to 0), per D-N3-adjacent as-built scope decision -- see .cadence/phases/281-done-bypass-fix/281-01-DRAFT.md's T5. The underlying gap (phases 271-280 have zero ROADMAP.md/MILESTONES.md entries) is still open and will recur: the very next new phase after 281 will again sit at drift=1 with zero slack, and any phase after that risks tripping the same threshold again depending on how many phases land between now and the next backfill sweep. Precedent: rec-20260811-005 tracks the same class of gap for phases 239-241. Resolution: a dedicated backfill phase (or the release-cut skill's doc-sync step) should write full ### Phase N / - **Phase N** entries for 271 through (whatever the disk-max is at backfill time), sourced from real phase SUMMARY/PROGRESS records and merged PR numbers, not guessed.
 
-## rec-20260815-005 — Boundary-scan doesn't glob-expand declared files: patterns (e.g. .changeset/*.md)
-
-- status: settle-pending
-- ready: ready-for-cadence-spec
-- priority: low
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: core, dispatch
-- files: packages/core/src/git/boundary-diff.ts, packages/core/src/checks/boundary.ts
-- decisions: dec-20260821-001 (active), dec-20260821-002 (active)
-- evidence: cadence build task T6 --status=DONE against phase 281's own T6 (files: .changeset/*.md, wrote .changeset/done-bypass-fix.md) printed: 'cadence anomaly [warn] files-outside-boundary: .changeset/done-bypass-fix.md touched but not declared in any task's files:'
-- next: cadence milestone propose
-
-Phase 281's T6 declared files: `.changeset/*.md` in its DRAFT and then wrote .changeset/done-bypass-fix.md exactly as scoped, but cadence build task T6 still emitted a files-outside-boundary warn anomaly for that exact file. grep across packages/core/src/git/boundary-diff.ts and packages/core/src/checks/boundary.ts shows no glob/minimatch/micromatch usage -- declared files: entries appear to be compared as literal paths, not glob-expanded, so a wildcard pattern in files: can never actually match anything and any file it was meant to cover will always warn (or refuse, in block mode). This is warn-only and non-blocking today (boundaryEnforcement defaulted to warn for phase 281's build), but would be a real, surprising refusal for any dispatch-scoped phase (block mode) that declares a wildcard files: pattern -- the task would refuse no matter what it wrote. Resolution: either glob-expand files: entries at match time (minimatch/micromatch, zero-runtime-dep policy permitting -- check if a glob impl is already a transitive dep before adding one), or refuse to accept a files: pattern containing a glob character at draft coherence-check time with a clear error, so authors don't unknowingly write an unenforceable boundary.
-
 ## rec-20260820-001 — Amendment-vs-verifier gap: a legitimately amended AC has no path back to deep-verify
 
 - status: candidate
