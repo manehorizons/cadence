@@ -715,6 +715,15 @@
       "status": "active",
       "decidedAt": "2026-08-21T04:14:09.092Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260821-003",
+      "recommendationId": "rec-20260821-002",
+      "title": "rec-20260821-003 is a duplicate of rec-20260821-002 -- reconciled into the earlier, richer filing",
+      "rationale": "Both recs describe the identical build-task.ts:287 defect: findUnmatchedBoundaryPatterns receives the full draft's declaredFiles union but only the current task's touchedFiles delta, so a wildcard pattern already satisfied by an earlier task re-fires a spurious boundary-pattern-unmatched advisory when a later task is recorded. rec-20260821-002 (2026-08-21T03:31, manual filing from 286-01's T3 independent review) has the earlier timestamp and the decision-carrying content -- confirmed-real root-cause analysis plus a candidate fix shape (scope declaredFiles to the current task's own files: entries, matching touchedFiles' existing per-task scoping). rec-20260821-003 (2026-08-21T04:44) was auto-filed by cadence settle's code-review-finding-to-recommendation mechanism against the same SUMMARY finding -- same file/line, no additional analysis beyond the raw finding text, but it independently corroborates the defect and carries the auto-filer's own priority=medium/readiness=needs-decision signal (vs 002's manual priority=low/readiness=raw-idea). 002's readiness has been promoted to needs-decision to reflect that signal; priority could not be promoted the same way -- cadence recommendation promote has no --priority flag (a gap already flagged this session, not worked around here by hand-editing the ledger). rec-20260821-003 is rejected as a duplicate, not because the finding is wrong -- it corroborates and strengthens rec-20260821-002, matching this repo's established reconciliation precedent (dec-20260813-001).",
+      "status": "active",
+      "decidedAt": "2026-08-21T22:47:05.151Z",
+      "supersedes": []
     }
   ]
 }
