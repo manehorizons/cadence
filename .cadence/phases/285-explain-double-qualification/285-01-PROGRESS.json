@@ -1,0 +1,32 @@
+{
+  "draftId": "285-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "Snapshot fixtures for AC-2/AC-3 captured and green; AC-1 red regression test authored and confirmed failing for the documented reason (raw double-qualified acId flows through unnormalized). Independent reviewer flagged an inaccurate discriminating-mechanism comment on AC-3 (claimed satisfied would flip to false; empirically it does not, since bare AC-3 matches as a substring). Corrected the comment and the DRAFT's AC-3/T1 text to describe the real signal (expectedQualifier staying undefined / snapshot divergence). Re-verified independently before recording DONE.",
+      "touchedFiles": [
+        "packages/core/tests/verify/coverage-explain-qualified.test.ts",
+        "packages/core/tests/verify/__snapshots__/coverage-explain-qualified.test.ts.snap"
+      ],
+      "updatedAt": "2026-08-20T23:41:06.694Z"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "Fix implemented in runVerifyCoverage (service-layer only, coverage.ts untouched): already-qualified --explain argument is stripped of its leading <qualifier>/ prefix with a stderr notice, per D-X option 3 (dec-20260820-004, linked to rec-20260816-001). AC-4 shape test added (field set derived from source, not hand-copied). First independent review found a real blocking regression: stripping to an empty string (--explain '<Q>/') produced a false 'satisfied: true' via an empty-pattern match -- worse than the original bug. Reproduced independently, fixed with an explicit empty-strip refusal (non-zero exit, mirrors the existing empty-argument guard), added a regression test, amended AC-1's DRAFT text and added an As-built amendment note. Also strengthened a weak substring stderr assertion flagged as non-blocking. Second independent review re-verified the fix (including proving the regression test is honest by reverting the guard and confirming it fails) and ran an adversarial edge-case hunt (trailing whitespace, degenerate bare ids) -- came back clean, structurally safe via tokenHasExpectedQualifier's qualifier gate. Full repo pipeline (lint/typecheck/test/build) green throughout, re-run by both reviewers and independently by me.",
+      "touchedFiles": [
+        "packages/core/src/services/verify.ts",
+        "packages/core/tests/verify/coverage-explain-qualified.test.ts"
+      ],
+      "updatedAt": "2026-08-21T00:24:14.146Z"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "Docs amended: docs/reference/commands.md's verify->coverage --explain Behavior paragraph now states the bare-form contract under both schemes, the normalization+stderr-notice behavior for an already-qualified argument (T2), and the qualifier-only refusal (T2's as-built amendment). AC-5 asserting test added to coverage-scheme-docs.test.ts, reusing existing sliceSection/phraseRe helpers, tightly scoped. Independent review confirmed doc prose matches live source exactly (not a stale draft), the test is a real regression guard (verified non-vacuous by stashing the doc change and confirming the new assertions fail), and no collateral damage to the other 34 doc-content test files. One low-severity finding (Exit codes bullet didn't enumerate the new third exit-1 cause) fixed in the same pass and re-verified (38 doc test files / 225 tests green). Full repo pipeline (24/24, forced/uncached) green throughout.",
+      "touchedFiles": [
+        "docs/reference/commands.md",
+        "packages/core/tests/docs/coverage-scheme-docs.test.ts"
+      ],
+      "updatedAt": "2026-08-21T00:34:53.206Z"
+    }
+  }
+}

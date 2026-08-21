@@ -246,3 +246,39 @@ describe('docs/reference/commands.md "verify coverage --explain" prose is scheme
     expect(explainSection).toMatch(phraseRe('satisfies the active'));
   });
 });
+
+describe('docs/reference/commands.md "verify coverage --explain" Behavior paragraph documents the bare-form contract (285-01/AC-5)', () => {
+  const commands = read('docs', 'reference', 'commands.md');
+  // Scope tightly to the `coverage --explain` Behavior paragraph specifically
+  // -- from its own heading through (but not including) the Exit codes
+  // heading that closes the `coverage` subcommand's prose -- so this can
+  // never be satisfied by a stray mention elsewhere in the doc.
+  const behaviorSection = sliceSection(
+    commands,
+    '**Behavior** (phase 167, T8)',
+    /\n\*\*Exit codes\*\*/,
+  );
+
+  it('285-01/AC-5: sanity: the anchor actually captures the qualified-scheme prose', () => {
+    expect(behaviorSection).toContain('phase-qualified');
+  });
+
+  it('285-01/AC-5: states --explain takes the bare AC-N form under both schemes, not a caller-supplied qualified form', () => {
+    expect(behaviorSection).toMatch(phraseRe('always takes the bare `AC-N` form under either scheme'));
+    expect(behaviorSection).toMatch(phraseRe('never a caller-supplied `<phase>/AC-N` qualified form'));
+    expect(behaviorSection).toMatch(phraseRe('the qualifier is resolved automatically from the active draft'));
+  });
+
+  it('285-01/AC-5: documents that an already-qualified argument is normalized to its bare form with a stderr notice', () => {
+    expect(behaviorSection).toMatch(phraseRe('does not silently prepend the qualifier a second time'));
+    expect(behaviorSection).toMatch(phraseRe('an unmatchable double-qualified token'));
+    expect(behaviorSection).toMatch(phraseRe('prints a stderr notice'));
+    expect(behaviorSection).toMatch(phraseRe('naming both the original argument and the bare form actually used'));
+  });
+
+  it('285-01/AC-5: documents that a qualifier-only argument (nothing after the slash) is refused, not searched as an empty token', () => {
+    expect(behaviorSection).toMatch(phraseRe('qualifier-only argument with nothing after the slash'));
+    expect(behaviorSection).toMatch(phraseRe('is refused outright'));
+    expect(behaviorSection).toMatch(phraseRe('rather than searched as'));
+  });
+});
