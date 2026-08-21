@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.62.0] - 2026-08-21
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.62.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Added
+
+- A declared `files:` entry containing a wildcard (e.g. `.changeset/*.md`) now actually matches the files it describes, in both `warn` and `block` `boundaryEnforcement` modes. `runBoundaryCheck` previously compared declared entries against touched files via exact `Set` membership — no glob expansion at all, so a wildcard entry could never match anything; under dispatch-scoped `block` mode this produced a hard, surprising refusal on correctly-scoped work, and in `warn` mode a spurious `files-outside-boundary` anomaly even when the touched file was exactly what the pattern was written to cover. Declared entries containing `*` are now glob-expanded using the same matcher CADENCE's own coverage scanner already relies on (`globToRegExp`/`toMatcher`, extracted to a shared `packages/core/src/util/glob.ts` — no new runtime dependency); literal (non-wildcard) entries remain byte-identical to prior behavior. A declared wildcard entry that matches zero touched files now surfaces a new, additive, advisory-only `boundary-pattern-unmatched` anomaly at `severity: 'warn'`, structurally unable to escalate to a block-mode refusal. (Phase `286`.)
+
+### Fixed
+
+- `cadence verify coverage --explain` no longer silently double-qualifies an already-qualified AC id under `verification.coverageScheme: 'phase-qualified'`. Passing an already-qualified argument (e.g. `--explain 282-01/AC-4` when the active draft is already `282-01`) previously built an unmatchable search token (`282-01/282-01/AC-4`) and silently reported `NOT SATISFIED` at exit `0` with no warning. The command now detects and strips an already-qualified argument, searches the bare form instead, and prints a stderr notice naming both forms; a qualifier-only argument (e.g. `282-01/`) is now refused outright rather than searched as an empty pattern, which would have silently matched everywhere. The bare `--explain AC-N` form is byte-for-byte unchanged; the `bare` coverage scheme is unaffected. (Phase `285`.)
+
+### Process
+
+- Phase 282's AC-2/AC-4 `deep-verify` record reconciled without rewriting any historical `SUMMARY.json`: both verdicts had judged delivered artifacts against acceptance-criteria text that independent reviewers had already found and corrected in-flight (282's own As-built amendment blocks). AC-2's text is formally amended so no future reader is asked to reproduce a defect shape independent testing proved impossible; AC-4's objection is split into two independently-judged halves. The systemic finding — a legitimately amended AC currently has no path to reach `deep-verify`, so honest in-flight correction can still manufacture a verifier failure — is filed as a recommendation for future design work rather than fixed inline. (Phase `284`.)
+
 ## [1.61.1] - 2026-08-17
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.61.1`. Per-package bumps managed by changesets, lockstep across all five published packages.
