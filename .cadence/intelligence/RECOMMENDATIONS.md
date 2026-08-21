@@ -1293,3 +1293,20 @@ packages/core/src/services/build-task.ts passes findUnmatchedBoundaryPatterns th
 - next: cadence milestone propose
 
 cadence recommendation promote only mutates status/readiness/shippedRef (packages/core/src/services/recommendation-promote.ts); there is no CLI or service seam to correct a stale priority or summary on an existing recommendation once filed. Hand-editing .cadence/intelligence/recommendations.json is explicitly forbidden (CLAUDE.md sec7, 'No hand-edits to .cadence/intelligence/'). Hit directly 2026-08-21: HANDOFF-v1.62-record-reconciliation.md sec6 asked to raise rec-20260815-005's priority from low to medium, and no mechanism existed to do it -- worked around via an evidence note (ev-20260821-003) instead, which is a weaker signal than a real priority field since list/sort-by priority won't reflect it. The likely-correct fix is a promote-like verb (e.g. --priority on promote, or a new recommendation amend) that appends provenance the way promote already does, keeping the ledger's report-never-silently-rewrite posture intact.
+
+## rec-20260821-005 — Cross-session rec/dec/ev-id collision-avoidance mechanism needs a real fix, not renumber-on-conflict
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, intelligence
+- files: packages/core/src/services/recommendation-add.ts, packages/core/src/services/decision-add.ts, packages/core/src/checks/doctor/ledger-remote-collision.ts
+- evidence: 4th occurrence 2026-08-21: dec-20260821-003 collision between PR #455's dedupe decision and primary checkout's unpushed D-Z decision (dec-20260813-005 supersession), resolved by renumbering to dec-20260821-004
+- evidence: Correction: the affected files listed at filing time were guessed and wrong. Actual ID-minting logic lives in packages/core/src/intelligence/store/ids.ts (and packages/core/src/intelligence/store/ledger.ts), not the doctor/promote paths originally cited; doctor's ledger-remote-collision check lives in packages/core/src/doctor/run.ts.
+- next: cadence milestone propose
+
+The .cadence/intelligence/*.json ledger mints next-available IDs (rec-YYYYMMDD-NNN, dec-YYYYMMDD-NNN, ev-YYYYMMDD-NNN) by scanning the locally-visible ledger state. Two sessions/worktrees working against different bases (e.g. primary checkout's unpushed local history vs. a phase worktree branched from origin/main) independently mint the same next-available ID for genuinely different content, producing a real git merge conflict on the next sync. Hit and manually resolved at least 4 times now: twice during phase 286's two post-merge syncs (2026-08-21, see feedback-worktree-ledger-and-phase-collision-on-settle), once during the v1.57 arc (dec-20260813-001), and again immediately after PR #455 merged (dec-20260821-003 collided between the origin-based dedupe worktree's new decision and the primary checkout's unpushed 'D-Z' decision, renumbered to dec-20260821-004). The fix pattern is now well-rehearsed (git show :2:/:3:, diff by content not markers, renumber the not-yet-pushed side, patch cross-refs, cadence intelligence reconcile, verify via doctor's ledger-remote-collision check) but is manual and error-prone every time. Candidate real fixes: ID minting keyed off something collision-resistant across bases (e.g. a short content hash or session/worktree-scoped suffix instead of pure sequential NNN), or a cadence CLI verb that automates the rehearsed renumber-and-patch-cross-refs sequence instead of requiring a hand-rolled node diff script each time.

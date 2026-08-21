@@ -2319,6 +2319,37 @@
       "decisionIds": [],
       "createdAt": "2026-08-21T02:25:03.799Z",
       "updatedAt": "2026-08-21T02:25:03.799Z"
+    },
+    {
+      "id": "rec-20260821-005",
+      "title": "Cross-session rec/dec/ev-id collision-avoidance mechanism needs a real fix, not renumber-on-conflict",
+      "summary": "The .cadence/intelligence/*.json ledger mints next-available IDs (rec-YYYYMMDD-NNN, dec-YYYYMMDD-NNN, ev-YYYYMMDD-NNN) by scanning the locally-visible ledger state. Two sessions/worktrees working against different bases (e.g. primary checkout's unpushed local history vs. a phase worktree branched from origin/main) independently mint the same next-available ID for genuinely different content, producing a real git merge conflict on the next sync. Hit and manually resolved at least 4 times now: twice during phase 286's two post-merge syncs (2026-08-21, see feedback-worktree-ledger-and-phase-collision-on-settle), once during the v1.57 arc (dec-20260813-001), and again immediately after PR #455 merged (dec-20260821-003 collided between the origin-based dedupe worktree's new decision and the primary checkout's unpushed 'D-Z' decision, renumbered to dec-20260821-004). The fix pattern is now well-rehearsed (git show :2:/:3:, diff by content not markers, renumber the not-yet-pushed side, patch cross-refs, cadence intelligence reconcile, verify via doctor's ledger-remote-collision check) but is manual and error-prone every time. Candidate real fixes: ID minting keyed off something collision-resistant across bases (e.g. a short content hash or session/worktree-scoped suffix instead of pure sequential NNN), or a cadence CLI verb that automates the rehearsed renumber-and-patch-cross-refs sequence instead of requiring a hand-rolled node diff script each time.",
+      "source": "manual",
+      "status": "candidate",
+      "readiness": "needs-evidence",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "core",
+        "intelligence"
+      ],
+      "affectedFiles": [
+        "packages/core/src/services/recommendation-add.ts",
+        "packages/core/src/services/decision-add.ts",
+        "packages/core/src/checks/doctor/ledger-remote-collision.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260821-008",
+        "ev-20260821-009"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [],
+      "createdAt": "2026-08-21T23:07:13.195Z",
+      "updatedAt": "2026-08-21T23:07:27.934Z"
     }
   ],
   "archived": [

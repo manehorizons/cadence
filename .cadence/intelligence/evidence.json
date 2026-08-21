@@ -2199,6 +2199,20 @@
       "kind": "note",
       "summary": "ev-20260821-003 on rec-20260815-005 is the workaround this gap forced",
       "createdAt": "2026-08-21T02:25:03.799Z"
+    },
+    {
+      "id": "ev-20260821-008",
+      "recommendationId": "rec-20260821-005",
+      "kind": "note",
+      "summary": "4th occurrence 2026-08-21: dec-20260821-003 collision between PR #455's dedupe decision and primary checkout's unpushed D-Z decision (dec-20260813-005 supersession), resolved by renumbering to dec-20260821-004",
+      "createdAt": "2026-08-21T23:07:13.195Z"
+    },
+    {
+      "id": "ev-20260821-009",
+      "recommendationId": "rec-20260821-005",
+      "kind": "note",
+      "summary": "Correction: the affected files listed at filing time were guessed and wrong. Actual ID-minting logic lives in packages/core/src/intelligence/store/ids.ts (and packages/core/src/intelligence/store/ledger.ts), not the doctor/promote paths originally cited; doctor's ledger-remote-collision check lives in packages/core/src/doctor/run.ts.",
+      "createdAt": "2026-08-21T23:07:27.934Z"
     }
   ]
 }
