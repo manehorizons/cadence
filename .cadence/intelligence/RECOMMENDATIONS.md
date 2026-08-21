@@ -1224,24 +1224,6 @@ tests/docs/phase271-record-integrity.test.ts's roadmap-currency drift check (dis
 
 Phase 281's T6 declared files: `.changeset/*.md` in its DRAFT and then wrote .changeset/done-bypass-fix.md exactly as scoped, but cadence build task T6 still emitted a files-outside-boundary warn anomaly for that exact file. grep across packages/core/src/git/boundary-diff.ts and packages/core/src/checks/boundary.ts shows no glob/minimatch/micromatch usage -- declared files: entries appear to be compared as literal paths, not glob-expanded, so a wildcard pattern in files: can never actually match anything and any file it was meant to cover will always warn (or refuse, in block mode). This is warn-only and non-blocking today (boundaryEnforcement defaulted to warn for phase 281's build), but would be a real, surprising refusal for any dispatch-scoped phase (block mode) that declares a wildcard files: pattern -- the task would refuse no matter what it wrote. Resolution: either glob-expand files: entries at match time (minimatch/micromatch, zero-runtime-dep policy permitting -- check if a glob impl is already a transitive dep before adding one), or refuse to accept a files: pattern containing a glob character at draft coherence-check time with a clear error, so authors don't unknowingly write an unenforceable boundary.
 
-## rec-20260816-001 — verify coverage --explain silently double-qualifies an already-qualified token
-
-- status: candidate
-- ready: ready-for-cadence-spec
-- priority: medium
-- leverage: 5/10
-- risk: 5/10
-- confidence: 70%
-- decay: fresh
-- areas: verify, coverage, cli
-- files: packages/core/src/verify/coverage.ts, packages/core/src/cli/verify-coverage.ts
-- decisions: dec-20260820-004 (active)
-- evidence: Repro: node packages/core/bin/cadence.cjs verify coverage --explain 282-01/AC-4 prints 'scheme: phase-qualified (expected token: [REDACTED] and exits 0 reporting no occurrence, vs the correct bare --explain AC-4 which resolves to 282-01/AC-4 and finds real occurrences. Found and independently reproduced during phase 282 (coverage-scanner-determinism) T4.
-- evidence: File-path correction: the --file list on this rec named a guessed packages/core/src/cli/verify-coverage.ts, which does not exist. The real implementation sites are packages/core/src/services/verify.ts (verify coverage command wiring) and packages/core/src/verify/coverage.ts (explainAcCoverage, the double-qualification bug's actual location).
-- next: cadence milestone propose
-
-cadence verify coverage --explain <arg> unconditionally prepends the active phase qualifier, even when <arg> is already qualified. Passing the already-qualified form (e.g. 282-01/AC-4 instead of the correct bare AC-4) produces expected token: 282-01/282-01/AC-4, which never matches any real token, so the command reports a bogus 'NOT SATISFIED' with exit 0 (no error, no warning). This is a real operator trap discovered during phase 282's T3/T4 work (rec-20260814-002's original --explain/gate divergence was a different bug, already fixed by T1) -- the correct usage is always the bare AC-N form, but nothing tells the caller that, and the silent double-qualification with exit 0 makes it easy to misdiagnose as a real coverage gap.
-
 ## rec-20260820-001 — Amendment-vs-verifier gap: a legitimately amended AC has no path back to deep-verify
 
 - status: candidate
