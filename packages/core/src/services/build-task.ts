@@ -13,7 +13,7 @@ import {
   type RecordableStatus,
 } from '../build/record.js';
 import { deriveTaskTouchedFiles } from '../build/task-touched-files.js';
-import { runBoundaryCheck } from '../checks/boundary.js';
+import { findUnmatchedBoundaryPatterns, runBoundaryCheck } from '../checks/boundary.js';
 import { runRedundancyCheck } from '../checks/task-redundancy.js';
 import { LoopViolationError } from '../errors.js';
 import { emitLoopViolation } from '../notify/loop-violation.js';
@@ -276,6 +276,23 @@ export async function buildTaskService(
             root: repoRoot,
             severity: enforcement === 'block' ? 'error' : 'warn',
           });
+
+          // Phase 286-01 (dec-20260821-001, D-Y) -- separate, additive
+          // advisory pass: a declared wildcard entry that matched zero
+          // touched files. Deliberately independent of boundaryEvents/
+          // blockRefusal below -- never merged into that array, never
+          // gates the exit code, always printed regardless of whether a
+          // genuine files-outside-boundary refusal also fires this run.
+          const unmatchedPatternEvents = findUnmatchedBoundaryPatterns({
+            declaredFiles,
+            touchedFiles: delta,
+            stamp,
+            root: repoRoot,
+          });
+          for (const ev of unmatchedPatternEvents) {
+            io.err(`build task: ${ev.message}\n`);
+          }
+
           const taskStatuses: Record<string, string> = {};
           for (const [id, row] of Object.entries(priorTasks)) taskStatuses[id] = row.status;
           const redundancyEvents = runRedundancyCheck({

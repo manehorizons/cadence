@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 2,
+  "draftId": "286-01",
+  "completedAt": "2026-08-21T04:44:13.935Z",
+  "acResults": [
+    {
+      "id": "AC-1",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-2",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-3",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-4",
+      "pass": true,
+      "evidence": "ai-verified"
+    },
+    {
+      "id": "AC-5",
+      "pass": true,
+      "evidence": "ai-verified"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "draft-read",
+      "status": "ran"
+    },
+    {
+      "gate": "structural-verifier",
+      "status": "ran"
+    },
+    {
+      "gate": "boundary-scan",
+      "status": "skipped",
+      "skipReason": "boundaryEnforcement is not \"block\""
+    },
+    {
+      "gate": "task-verify-required",
+      "status": "ran"
+    },
+    {
+      "gate": "build-test-must-pass",
+      "status": "ran"
+    },
+    {
+      "gate": "test-coverage",
+      "status": "ran"
+    },
+    {
+      "gate": "interactive-verdict",
+      "status": "skipped",
+      "skipReason": "not requested (no --deep / --interactive, not in gate set)"
+    },
+    {
+      "gate": "deep-verify",
+      "status": "ran",
+      "observedProvider": "host-cli"
+    },
+    {
+      "gate": "code-review",
+      "status": "ran",
+      "provider": "host-cli",
+      "providerSelection": "configured"
+    },
+    {
+      "gate": "security-audit",
+      "status": "skipped",
+      "skipReason": "not in the active tier × profile gate set"
+    }
+  ],
+  "taskResults": [
+    {
+      "id": "T1",
+      "status": "DONE",
+      "notes": "AC-2 byte-identity fixtures captured across 4 boundary suites (checks/boundary, cli/build-task-boundary, gates/boundary-scan, hooks/handlers-boundary-block). AC-1/AC-3/AC-5 regression tests authored and confirmed red for the correct reason (10 failed/74 passed, independently re-run and reviewed). Test-only, no src/ touched. Independent review: no Critical/Important findings."
+    },
+    {
+      "id": "T2",
+      "status": "DONE",
+      "notes": "globToRegExp/toMatcher extracted verbatim to packages/core/src/util/glob.ts, imported by coverage.ts (zero behavior change, 320/320 coverage tests green) and boundary.ts. runBoundaryCheck's literal-entry path (Set.has) untouched by construction; wildcard entries additionally checked via a compiled matcher. New AnomalyType 'boundary-pattern-unmatched' added (additive enum literal). New exported findUnmatchedBoundaryPatterns: no severity parameter in its signature, hardcoded severity:'warn', returns a separate array with zero callers anywhere in src -- structurally isolated from block-mode refusal, independently verified. Full core suite: 4317/4318 green, sole failure is the T3-dependent stderr-wiring test. Independent review: no Critical/Important findings."
+    },
+    {
+      "id": "T3",
+      "status": "DONE",
+      "notes": "findUnmatchedBoundaryPatterns wired into build-task.ts only, printed unconditionally as an io.err advisory, isolated from blockRefusal (never touches boundaryEvents, never gates exit code). hooks/handlers.ts, gates/boundary-scan.ts, notify/collect.ts confirmed untouched. Full core suite: 442/442 files, 4319/4319 tests, typecheck/lint clean. Independent review found two real test-coverage gaps (no AC-4 pin; block-mode isolation test didn't assert the advisory prints) -- both fixed directly (test-only), a separate latent multi-task declaredFiles/delta limitation filed as rec-20260821-002 rather than expanded in scope, fix delta independently re-reviewed clean. All 5 ACs (AC-1..AC-5) satisfied end to end."
+    }
+  ],
+  "decisions": [],
+  "deferred": [],
+  "skillAudit": {
+    "required": [],
+    "invoked": []
+  },
+  "coverageScheme": "phase-qualified",
+  "coverageMode": "assertion",
+  "deepVerify": {
+    "AC-1": {
+      "pass": true,
+      "reason": "Shared matcher anchors `.changeset/*.md` with `*` as `[^/]*`; unit and CLI/gate/hook tests cover positive and negative paths.",
+      "provider": "host-cli"
+    },
+    "AC-2": {
+      "pass": true,
+      "reason": "Literal entries remain in a separate `Set` checked with `literalDeclared.has(normFile)`; all four suites add explicit hand-written `toEqual()` coverage.",
+      "provider": "host-cli"
+    },
+    "AC-3": {
+      "pass": true,
+      "reason": "Wildcard-covered files are skipped while undeclared files retain error severity; unit, CLI, gate, and hook adversarial fixtures verify refusal names only the stray.",
+      "provider": "host-cli"
+    },
+    "AC-4": {
+      "pass": true,
+      "reason": "Matcher functions were moved from coverage into shared `util/glob.ts` and imported by both consumers; live package.json key-set test confirms no glob dependency.",
+      "provider": "host-cli"
+    },
+    "AC-5": {
+      "pass": true,
+      "reason": "Separate matcher emits warn-only unmatched-pattern events; build-task alone prints them without merging into boundaryEvents/blockRefusal, with literal silence and block-mode tests.",
+      "provider": "host-cli"
+    }
+  },
+  "deepVerifyMeta": {
+    "diffProvided": true,
+    "diffBytes": 72874,
+    "truncated": false,
+    "filesCount": 10,
+    "provider": "host-cli"
+  },
+  "codeReview": {
+    "packages/core/src/services/build-task.ts": [
+      {
+        "severity": "medium",
+        "message": "Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.",
+        "line": 287,
+        "anchor": {
+          "kind": "ac",
+          "ref": "AC-3",
+          "tier": "executable"
+        },
+        "id": "acf54d9f6775dce2ff3cc275d621e8f15f3a68590392df2be713ae6699ba61ac",
+        "target": "artifact",
+        "disposition": "open"
+      }
+    ]
+  },
+  "stateAtSettle": {
+    "loopPositionBeforeSettle": "BUILD",
+    "revision": 66,
+    "sessionSubagentSpawns": 137
+  },
+  "assurance": {
+    "verifierRollup": [
+      {
+        "provider": "host-cli",
+        "gateCount": 1
+      }
+    ],
+    "evidenceTally": {
+      "ai-verified": 5,
+      "executed": 0,
+      "assertion": 0,
+      "mention": 0,
+      "unverified": 0
+    },
+    "overall": "strong"
+  },
+  "contentHash": {
+    "algorithm": "sha256",
+    "value": "6e7dc29b827da233e9567a40f1b71067c551ff5763f7dd248e8612680b068b67"
+  }
+}

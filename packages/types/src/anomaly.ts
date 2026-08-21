@@ -12,6 +12,12 @@ import { z } from 'zod';
  * Fired when the `'anomaly-notify'` gate is in the effective gate set
  * (auto + standard×{standard,complex} cells). Informational only —
  * never block the emitting command.
+ *
+ * Phase 286-01 adds `boundary-pattern-unmatched` (emitted by
+ * `findUnmatchedBoundaryPatterns`, `packages/core/src/checks/boundary.ts`,
+ * when a wildcard `files:` entry matches zero touched files). Deliberately
+ * NOT part of `runBoundaryCheck`'s own return array and always
+ * `severity: 'warn'` — see dec-20260821-001 (D-Y).
  */
 export const AnomalyTypeZ = z.enum([
   'ac-blocked',
@@ -31,6 +37,7 @@ export const AnomalyTypeZ = z.enum([
   'code-review-unconverged',
   'redundant-task-work',
   'auto-complex-override',
+  'boundary-pattern-unmatched',
 ]);
 export type AnomalyType = z.infer<typeof AnomalyTypeZ>;
 

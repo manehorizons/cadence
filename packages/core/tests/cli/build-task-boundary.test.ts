@@ -586,6 +586,423 @@ describe('T11 — re-recording the same task id preserves its own touchedFiles (
   });
 });
 
+// Phase 286-01 (dec-20260821-001, D-Y) -- `files:` glob expansion. Corpus
+// seeded ahead of T2 (the shared matcher change in checks/boundary.ts) and
+// the new-anomaly wire-up, whose ONLY call site per the decision is this
+// file's production counterpart, services/build-task.ts. RED today for two
+// distinct reasons depending on the AC: AC-1/AC-3 are red because the
+// pre-T2 exact-Set.has comparison can't match a wildcard against anything;
+// AC-5's new-anomaly half is red because the advisory text this task
+// asserts against ('boundary-pattern-unmatched') is never printed at all
+// pre-implementation, not because of a parse-time crash (that failure mode
+// is pinned separately at the schema level in
+// tests/checks/boundary.test.ts).
+
+const WILDCARD_ONLY_DRAFT = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+One task declaring a single wildcard files: entry, for glob-expansion fixtures.
+
+## Acceptance Criteria
+
+### AC-1: one
+Given a
+When b
+Then c
+
+## Tasks
+
+### T1: t1
+- files: \`.changeset/*.md\`
+- action: a
+- verify: v
+- done: AC-1
+
+## Boundaries
+
+- none
+`;
+
+const WILDCARD_BLOCK_DRAFT = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+boundaryEnforcement: block
+---
+
+# 01-01 — Demo
+
+## Objective
+
+One task declaring a single wildcard files: entry under block mode, for glob-expansion adversarial fixtures.
+
+## Acceptance Criteria
+
+### AC-1: one
+Given a
+When b
+Then c
+
+## Tasks
+
+### T1: t1
+- files: \`.changeset/*.md\`
+- action: a
+- verify: v
+- done: AC-1
+
+## Boundaries
+
+- none
+`;
+
+// Declares a wildcard (never touched), a literal that IS touched, and a
+// literal that is NEVER touched -- so the zero-match wildcard's advisory
+// anomaly and the literal's silence can both be asserted from one fixture
+// (a literal declared entry matching zero touched files must NOT warn --
+// the overwhelmingly common "declared 3, touched 2" case).
+const WILDCARD_MIXED_WARN_DRAFT = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+One task mixing a wildcard entry, a touched literal, and an untouched literal, for zero-match glob-expansion fixtures.
+
+## Acceptance Criteria
+
+### AC-1: one
+Given a
+When b
+Then c
+
+## Tasks
+
+### T1: t1
+- files: \`.changeset/*.md\`, \`src/touched.ts\`, \`docs/never-touched.md\`
+- action: a
+- verify: v
+- done: AC-1
+
+## Boundaries
+
+- none
+`;
+
+const WILDCARD_MIXED_BLOCK_DRAFT = WILDCARD_MIXED_WARN_DRAFT.replace(
+  'status: PENDING\n',
+  'status: PENDING\nboundaryEnforcement: block\n',
+);
+
+describe('286-01/AC-2 — a fully literal build task boundary run matches an explicit hand-written expected value', () => {
+  it('286-01/AC-2: cadence build task T1 --status=DONE with a purely literal declared/touched match matches an explicit hand-written expected value', async () => {
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await writeFile(
+      join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md'),
+      BLOCK_MODE_DRAFT,
+    );
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+
+    // T1's declared file PLUS a genuine stray -- a run with no finding at
+    // all (declared-only) can't detect a regression in offender naming or
+    // refusal wording, which is exactly what T2's matcher change could
+    // perturb. This mirrors the AC-3 fixture below: deterministic refusal
+    // text (no timestamp or ROOT-path leakage into stdout/stderr), so the
+    // raw output is safe to assert as a literal expected value without
+    // scrubbing.
+    await mkdir(join(active.root, 'src'), { recursive: true });
+    await writeFile(join(active.root, 'src/allowed.ts'), 'export const allowed = 1;\n');
+    await writeFile(join(active.root, 'src/stray.ts'), 'export const stray = 1;\n');
+
+    const r = await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+
+    // Hand-written expected value, not a `.snap` file (dec-20260821-002):
+    // a literal inline expectation is auditable from a static read, with no
+    // claim about when it was captured.
+    expect({ code: r.code, stdout: r.stdout, stderr: r.stderr }).toEqual({
+      code: 1,
+      stdout: '',
+      stderr:
+        "build task: refused — src/stray.ts touched but not declared in any task's files: (nearest owning task: T1)\n" +
+        'build task: refused — boundaryEnforcement resolved to block and 1 file(s) outside the declared boundary were found. Pass --allow-boundary-breach to record anyway.\n',
+    });
+  });
+
+  it('286-01/AC-2: cadence build task T1 --status=DONE in warn mode with a literal stray matches an explicit hand-written expected value', async () => {
+    // Distinct literal scenario from the block-mode one above: default
+    // enforcement (warn), default-scaffold declared files, a genuine stray
+    // -- mirrors the pre-existing 'T11 — AC-3 warn mode (default
+    // enforcement)' describe block, captured here as an AC-2 byte-identity
+    // baseline rather than a one-off assertion.
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+    // Default scaffold's T1 declares `path/to/file.ts` (nonexistent) --
+    // declaredFiles.length === 1, not 0, so the check runs (not skipped).
+
+    await mkdir(join(active.root, 'src'), { recursive: true });
+    await writeFile(join(active.root, 'src/stray.ts'), 'export const stray = 1;\n');
+
+    const r = await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+
+    expect({ code: r.code, stdout: r.stdout, stderr: r.stderr }).toEqual({
+      code: 0,
+      stdout: 'Recorded T1: DONE\n',
+      stderr: "cadence anomaly [warn] files-outside-boundary: src/stray.ts touched but not declared in any task's files:\n",
+    });
+  });
+
+  it('286-01/AC-2: cadence build task T1 --status=DONE with an empty declared-files union (skip path) matches an explicit hand-written expected value', async () => {
+    // Mirrors the pre-existing 'T11 — AC-3 skip: declared-files union is
+    // empty' describe block -- a task declaring literally zero files: is
+    // itself part of the existing literal-declaration surface (the trivial
+    // case, N=0), and must stay untouched by T2's wildcard-matcher change.
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await writeFile(
+      join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md'),
+      NO_FILES_DRAFT,
+    );
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+
+    const r = await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+
+    expect({ code: r.code, stdout: r.stdout, stderr: r.stderr }).toEqual({
+      code: 0,
+      stdout: 'Recorded T1: DONE\n',
+      stderr: 'build task: boundary/redundancy check skipped — no task declares files:\n',
+    });
+  });
+
+  it('286-01/AC-2: dispatch-scoped escalation to block mode with a literal stray matches an explicit hand-written expected value', async () => {
+    // Mirrors the pre-existing 'T11 — dispatch-scoped escalation (AC-2)'
+    // describe block -- a prior execution:'dispatch' recording escalates a
+    // later plain recording to block mode even though both draft and
+    // config leave boundaryEnforcement unset (default 'warn'). Exercised
+    // via buildTaskService directly (this scenario has no CLI flag for
+    // execution:'dispatch' pre-T12), same as the original test.
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await writeFile(
+      join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md'),
+      TWO_TASK_DRAFT,
+    );
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+
+    const io1 = bufferIO();
+    const r1 = await buildTaskService(
+      active.root,
+      { taskId: 'T1', status: 'DONE', execution: 'dispatch' },
+      io1,
+    );
+    expect(r1.exitCode).toBe(0);
+
+    await mkdir(join(active.root, 'src'), { recursive: true });
+    await writeFile(join(active.root, 'src/stray.ts'), 'export const stray = 1;\n');
+
+    const io2 = bufferIO();
+    const r2 = await buildTaskService(active.root, { taskId: 'T2', status: 'DONE' }, io2);
+
+    expect({
+      exitCode: r2.exitCode,
+      stdout: io2.stdout(),
+      stderr: io2.stderr(),
+    }).toEqual({
+      exitCode: 1,
+      stdout: '',
+      stderr:
+        "build task: refused — src/stray.ts touched but not declared in any task's files: (nearest owning task: T1)\n" +
+        'build task: refused — boundaryEnforcement resolved to block and 1 file(s) outside the declared boundary were found. Pass --allow-boundary-breach to record anyway.\n',
+    });
+  });
+});
+
+describe('286-01/AC-1 — a wildcard declared entry matches a touched file of the same shape', () => {
+  it('286-01/AC-1: cadence build task T1 --status=DONE emits no files-outside-boundary anomaly for `.changeset/foo.md` against a declared `.changeset/*.md` (RED pre-T2)', async () => {
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await writeFile(
+      join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md'),
+      WILDCARD_ONLY_DRAFT,
+    );
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+
+    await mkdir(join(active.root, '.changeset'), { recursive: true });
+    await writeFile(join(active.root, '.changeset/foo.md'), '# a changeset\n');
+
+    const r = await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/Recorded T1: DONE/);
+    // RED today: the pre-T2 exact Set.has comparison can't match
+    // '.changeset/*.md' against '.changeset/foo.md', so a
+    // files-outside-boundary warn anomaly is (wrongly) emitted today.
+    expect(r.stderr).not.toMatch(/files-outside-boundary/);
+  });
+
+  it('286-01/AC-1: cadence build task T1 --status=DONE still flags a nested path and a suffixed filename as outside the boundary for a declared `.changeset/*.md`', async () => {
+    // Negative half of AC-1's own Given/When/Then: '.changeset/*.md' must
+    // NOT match '.changeset/nested/foo.md' (crosses a '/') or
+    // '.changeset/foo.md.bak' (trailing literal '.md' isn't an exact
+    // suffix match). Both are genuine boundary violations end-to-end
+    // through the real CLI/git-delta path, not just the unit-level
+    // runBoundaryCheck call in tests/checks/boundary.test.ts.
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await writeFile(
+      join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md'),
+      WILDCARD_ONLY_DRAFT,
+    );
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+
+    await mkdir(join(active.root, '.changeset/nested'), { recursive: true });
+    await writeFile(join(active.root, '.changeset/nested/foo.md'), '# nested changeset\n');
+    await writeFile(join(active.root, '.changeset/foo.md.bak'), '# backup changeset\n');
+
+    const r = await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+
+    // WILDCARD_ONLY_DRAFT leaves boundaryEnforcement unset (default 'warn'),
+    // so both offenders are reported but the recording still succeeds.
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/Recorded T1: DONE/);
+    expect(r.stderr).toMatch(/cadence anomaly \[warn\] files-outside-boundary:.*nested\/foo\.md/);
+    expect(r.stderr).toMatch(/cadence anomaly \[warn\] files-outside-boundary:.*foo\.md\.bak/);
+  });
+});
+
+describe('286-01/AC-3 — a wildcard entry covers its own file, but a second genuinely undeclared file still refuses in block mode', () => {
+  it("286-01/AC-3: cadence build task T1 --status=DONE refuses on the genuinely undeclared file only, never on the wildcard-matched one (RED pre-T2)", async () => {
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await writeFile(
+      join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md'),
+      WILDCARD_BLOCK_DRAFT,
+    );
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+
+    await mkdir(join(active.root, '.changeset'), { recursive: true });
+    await writeFile(join(active.root, '.changeset/foo.md'), '# a changeset\n');
+    await mkdir(join(active.root, 'src'), { recursive: true });
+    await writeFile(join(active.root, 'src/stray.ts'), 'export const stray = 1;\n');
+
+    const r = await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+
+    // Refuses today AND after the fix -- src/stray.ts is genuinely
+    // undeclared either way. What's discriminating (RED today, GREEN after
+    // T2) is that '.changeset/foo.md' must stop being named too.
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/stray\.ts/);
+    expect(r.stderr).not.toMatch(/changeset\/foo\.md/);
+
+    const progressPath = join(
+      active.root,
+      '.cadence/phases/01-foundation/01-01-PROGRESS.json',
+    );
+    if (existsSync(progressPath)) {
+      const progress = JSON.parse(await readFile(progressPath, 'utf8'));
+      expect(progress.tasks?.T1).toBeUndefined();
+    }
+  });
+});
+
+describe('286-01/AC-5 — a zero-match wildcard entry gets a new warn-only advisory; a zero-match literal gets none', () => {
+  it("286-01/AC-5: warn mode -- '.changeset/*.md' matching zero touched files prints a boundary-pattern-unmatched advisory naming the pattern; the untouched literal `docs/never-touched.md` is silent (RED pre-implementation)", async () => {
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await writeFile(
+      join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md'),
+      WILDCARD_MIXED_WARN_DRAFT,
+    );
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+
+    // Only the literal `src/touched.ts` is ever created -- the wildcard
+    // '.changeset/*.md' matches nothing, and the literal
+    // 'docs/never-touched.md' is never created either. Per T7's build-task
+    // skip-path guard, delta must be non-empty (a real git-visible change)
+    // or the boundary/redundancy step is skipped entirely before it ever
+    // reaches the check this test targets.
+    await mkdir(join(active.root, 'src'), { recursive: true });
+    await writeFile(join(active.root, 'src/touched.ts'), 'export const touched = 1;\n');
+
+    const r = await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/Recorded T1: DONE/);
+    // RED today for a different reason than AC-1/AC-3: this text simply
+    // never appears anywhere pre-implementation (there is no crash to
+    // observe here -- the schema-level failure mode is pinned separately
+    // in tests/checks/boundary.test.ts).
+    expect(r.stderr).toMatch(/boundary-pattern-unmatched/);
+    expect(r.stderr).toMatch(/\.changeset\/\*\.md/);
+    // The untouched LITERAL entry must never trigger this advisory -- only
+    // wildcard-containing entries are eligible for zero-match detection.
+    expect(r.stderr).not.toMatch(/docs\/never-touched\.md/);
+  });
+
+  it('286-01/AC-5: the zero-match wildcard advisory cannot escalate to a block-mode refusal, even when boundaryEnforcement resolves to block (structural safety pin -- GREEN today and must stay GREEN)', async () => {
+    active = await tempRepo({ initialized: true });
+    initGitRepo(active.root);
+
+    await run(['draft', 'new', '01-foundation', '01', '--title=Demo'], active.root);
+    await writeFile(
+      join(active.root, '.cadence/phases/01-foundation/01-01-DRAFT.md'),
+      WILDCARD_MIXED_BLOCK_DRAFT,
+    );
+    await run(['draft', 'approve', '01-foundation', '01'], active.root);
+
+    await mkdir(join(active.root, 'src'), { recursive: true });
+    await writeFile(join(active.root, 'src/touched.ts'), 'export const touched = 1;\n');
+
+    const r = await run(['build', 'task', 'T1', '--status=DONE'], active.root);
+
+    // Per dec-20260821-001: the new anomaly is structurally unable to
+    // escalate to block -- it is returned from a separate function, never
+    // merged into runBoundaryCheck's own AnomalyEvent[] return, so
+    // blockRefusal (which only inspects boundaryEvents) can never see it.
+    // Nothing else in this fixture is out-of-boundary either, so this must
+    // pass today AND after the fix lands.
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/Recorded T1: DONE/);
+    // The advisory must still PRINT in block mode -- isolation from
+    // blockRefusal is not the same claim as "stays silent." `.changeset/
+    // *.md` is declared but never touched in this fixture, so the advisory
+    // is expected to fire here, unconditionally of enforcement mode.
+    expect(r.stderr).toMatch(/boundary-pattern-unmatched/);
+    expect(r.stderr).toMatch(/\.changeset\/\*\.md/);
+  });
+});
+
 // --- T12: build.ts CLI flags -- --execution/--isolation/--model-class thread
 // as DATA into recordTaskOutcome's options object (recorded regardless of
 // outcome), and the CONTROL-FLOW --allow-boundary-breach flag (already

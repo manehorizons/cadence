@@ -1,0 +1,23 @@
+{
+  "bypasses": [],
+  "roughTasks": [],
+  "findings": {
+    "codeReview": {
+      "packages/core/src/services/build-task.ts": [
+        {
+          "severity": "medium",
+          "message": "Uses all tasks’ patterns with only the current delta. After T1 satisfies a wildcard, recording T2 re-emits a false unmatched advisory because T1’s file was subtracted.",
+          "line": 287,
+          "anchor": {
+            "kind": "ac",
+            "ref": "AC-3",
+            "tier": "executable"
+          },
+          "id": "acf54d9f6775dce2ff3cc275d621e8f15f3a68590392df2be713ae6699ba61ac",
+          "target": "artifact",
+          "disposition": "open"
+        }
+      ]
+    }
+  }
+}
