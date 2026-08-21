@@ -499,6 +499,13 @@ host-cli's deep-verify objection to 282-01/AC-4 read: 'The linked test only stri
 
 Systemic finding surfaced while reconciling 282-01/AC-2 and AC-4: a legitimately amended acceptance criterion has no mechanism to re-reach deep-verify once amended, so honest in-flight correction (as phase 282's own independent reviewers performed, per the T2 and T4 As-built amendment blocks) manufactures a false pass:false verdict requiring --force to settle, which post-phase-283's assurance-record change now caps the overall grade at mixed even though the underlying work was correct. This is D-W: file-only (option a). The gap is recorded as a new high-priority recommendation via cadence recommendation add (284-01/T3), citing 282's four amendment blocks and the gateBypasses entry in 282-01-SUMMARY.json as evidence, but no re-verify-on-amendment mechanism or amendedAt/supersedes schema field is designed or built this arc -- 284-01-DRAFT.md's own Boundaries section reserves that scope explicitly for a future phase to pick up from the filed recommendation.
 
+### dec-20260820-004 — Normalize an already-qualified --explain arg, don't reject it
+
+- recommendation: rec-20260816-001
+- decided: 2026-08-20T23:48:08.531Z
+
+--explain is a read-only diagnostic, not a mutating command, so CLAUDE.md's 'refuse + suggest, never silently mutate' convention -- which governs mutating conflicts -- does not apply here. runVerifyCoverage already has a precedent a few lines above in the same function: the no-active-draft degraded path normalizes to an unqualified report and prints a loud stderr notice rather than rejecting outright (the Quiet Fallback pattern, done loudly). An already-qualified --explain argument under phase-qualified is the same shape of problem -- the caller supplied a token this diagnostic can trivially recover a usable search from -- so normalize-with-notice (strip the duplicated <qualifier>/ prefix, search the bare form, tell the operator both the original arg and the bare form used) is the consistent choice, not reject-loudly.
+
 ## Superseded
 
 ### dec-20260730-002 — Finding identity uses an anchor-derived content hash; no fingerprint primitive is extracted from Deja

@@ -688,6 +688,15 @@
       "status": "active",
       "decidedAt": "2026-08-20T21:55:34.674Z",
       "supersedes": []
+    },
+    {
+      "id": "dec-20260820-004",
+      "recommendationId": "rec-20260816-001",
+      "title": "Normalize an already-qualified --explain arg, don't reject it",
+      "rationale": "--explain is a read-only diagnostic, not a mutating command, so CLAUDE.md's 'refuse + suggest, never silently mutate' convention -- which governs mutating conflicts -- does not apply here. runVerifyCoverage already has a precedent a few lines above in the same function: the no-active-draft degraded path normalizes to an unqualified report and prints a loud stderr notice rather than rejecting outright (the Quiet Fallback pattern, done loudly). An already-qualified --explain argument under phase-qualified is the same shape of problem -- the caller supplied a token this diagnostic can trivially recover a usable search from -- so normalize-with-notice (strip the duplicated <qualifier>/ prefix, search the bare form, tell the operator both the original arg and the bare form used) is the consistent choice, not reject-loudly.",
+      "status": "active",
+      "decidedAt": "2026-08-20T23:48:08.531Z",
+      "supersedes": []
     }
   ]
 }
