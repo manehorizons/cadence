@@ -2194,39 +2194,6 @@
       "updatedAt": "2026-08-15T23:36:27.867Z"
     },
     {
-      "id": "rec-20260816-001",
-      "title": "verify coverage --explain silently double-qualifies an already-qualified token",
-      "summary": "cadence verify coverage --explain <arg> unconditionally prepends the active phase qualifier, even when <arg> is already qualified. Passing the already-qualified form (e.g. 282-01/AC-4 instead of the correct bare AC-4) produces expected token: 282-01/282-01/AC-4, which never matches any real token, so the command reports a bogus 'NOT SATISFIED' with exit 0 (no error, no warning). This is a real operator trap discovered during phase 282's T3/T4 work (rec-20260814-002's original --explain/gate divergence was a different bug, already fixed by T1) -- the correct usage is always the bare AC-N form, but nothing tells the caller that, and the silent double-qualification with exit 0 makes it easy to misdiagnose as a real coverage gap.",
-      "source": "manual",
-      "status": "candidate",
-      "readiness": "ready-for-cadence-spec",
-      "priority": "medium",
-      "leverageScore": 5,
-      "riskScore": 5,
-      "confidence": 0.7,
-      "decayState": "fresh",
-      "affectedAreas": [
-        "verify",
-        "coverage",
-        "cli"
-      ],
-      "affectedFiles": [
-        "packages/core/src/verify/coverage.ts",
-        "packages/core/src/cli/verify-coverage.ts"
-      ],
-      "suggestedBackendAction": "cadence milestone propose",
-      "evidenceIds": [
-        "ev-20260816-003",
-        "ev-20260816-004"
-      ],
-      "assumptionIds": [],
-      "decisionIds": [
-        "dec-20260820-004"
-      ],
-      "createdAt": "2026-08-16T14:12:06.535Z",
-      "updatedAt": "2026-08-16T14:12:31.824Z"
-    },
-    {
       "id": "rec-20260820-001",
       "title": "Amendment-vs-verifier gap: a legitimately amended AC has no path back to deep-verify",
       "summary": "Mechanism: when an acceptance criterion's text is legitimately amended in-flight (an independent reviewer finds the AC's literal wording describes an impossible or already-superseded defect shape and corrects it), the amended AC has no mechanism to re-reach deep-verify -- the verifier already rendered its pass:false verdict against the original, now-superseded wording, and there is no re-verify-on-amendment path. This forces settle --force to close the loop, and post-phase-283's assurance-record change now caps the resulting overall grade at mixed even when the underlying work and the amendment were both correct. Perverse incentive: left unaddressed, this quietly disincentivizes the honest behavior of amending a wrong AC in-flight, because doing so guarantees a --force and a capped grade, while silently leaving a known-wrong AC's text untouched avoids that penalty. Surfaced while reconciling phase 282-coverage-scanner-determinism's AC-2/AC-4 historical record (phase 284-record-reconciliation): 282's own four As-built amendment blocks show independent reviewers had already found and corrected the underlying issues in ways host-cli deep-verify's pass:false judgement didn't reflect, forcing the --force override captured in 282-01-SUMMARY.json's gateBypasses entry. See packages/core/src/gates/deep-verify.ts (no re-verify-on-amendment path exists), .cadence/phases/282-coverage-scanner-determinism/282-01-DRAFT.md (the four As-built amendment blocks), and .cadence/phases/282-coverage-scanner-determinism/282-01-SUMMARY.json (the gateBypasses entry and assurance record).",
@@ -2314,10 +2281,10 @@
       ],
       "assumptionIds": [],
       "decisionIds": [],
-      "createdAt": "2026-08-21T00:54:39.056Z",
-      "updatedAt": "2026-08-21T00:54:39.056Z",
       "scoutId": "scout-20260821-0054",
-      "sourceFindingId": "d9acf9332e28796a92272cb33ca30846d6728db5dd6f412a394d64b534f9af84"
+      "sourceFindingId": "d9acf9332e28796a92272cb33ca30846d6728db5dd6f412a394d64b534f9af84",
+      "createdAt": "2026-08-21T00:54:39.056Z",
+      "updatedAt": "2026-08-21T00:54:39.056Z"
     }
   ],
   "archived": [
@@ -8473,6 +8440,42 @@
       "archiveReason": "shipped",
       "createdAt": "2026-08-16T17:59:07.606Z",
       "updatedAt": "2026-08-16T19:49:44.921Z"
+    },
+    {
+      "id": "rec-20260816-001",
+      "title": "verify coverage --explain silently double-qualifies an already-qualified token",
+      "summary": "cadence verify coverage --explain <arg> unconditionally prepends the active phase qualifier, even when <arg> is already qualified. Passing the already-qualified form (e.g. 282-01/AC-4 instead of the correct bare AC-4) produces expected token: 282-01/282-01/AC-4, which never matches any real token, so the command reports a bogus 'NOT SATISFIED' with exit 0 (no error, no warning). This is a real operator trap discovered during phase 282's T3/T4 work (rec-20260814-002's original --explain/gate divergence was a different bug, already fixed by T1) -- the correct usage is always the bare AC-N form, but nothing tells the caller that, and the silent double-qualification with exit 0 makes it easy to misdiagnose as a real coverage gap.",
+      "source": "manual",
+      "status": "shipped",
+      "readiness": "ready-for-cadence-spec",
+      "priority": "medium",
+      "leverageScore": 5,
+      "riskScore": 5,
+      "confidence": 0.7,
+      "decayState": "fresh",
+      "affectedAreas": [
+        "verify",
+        "coverage",
+        "cli"
+      ],
+      "affectedFiles": [
+        "packages/core/src/verify/coverage.ts",
+        "packages/core/src/cli/verify-coverage.ts"
+      ],
+      "suggestedBackendAction": "cadence milestone propose",
+      "evidenceIds": [
+        "ev-20260816-003",
+        "ev-20260816-004"
+      ],
+      "assumptionIds": [],
+      "decisionIds": [
+        "dec-20260820-004"
+      ],
+      "createdAt": "2026-08-16T14:12:06.535Z",
+      "updatedAt": "2026-08-21T01:25:35.121Z",
+      "shippedRef": "PR #450 / phase 285",
+      "archivedAt": "2026-08-21T01:25:35.121Z",
+      "archiveReason": "shipped"
     }
   ]
 }
