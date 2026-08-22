@@ -24,15 +24,35 @@ function extractSection(body: string, heading: string): string {
   return m ? m[2]!.trim() : '';
 }
 
-function parseAcceptanceCriteria(section: string): Draft['acceptanceCriteria'] {
-  const out: Draft['acceptanceCriteria'] = [];
+interface AcceptanceCriteriaParseResult {
+  criteria: Draft['acceptanceCriteria'];
+  /**
+   * First `###`-prefixed line (trimmed) of every block that starts with
+   * `### AC-` but whose heading does not match the strict numeric-id form
+   * `### AC-<number>: ...` — e.g. `### AC-K1: Something`. Populated so
+   * `parseDraftMd` can fail loud instead of silently parsing to an empty
+   * `criteria` array (phase 288 — rec: gates must not pass vacuously on a
+   * malformed AC section).
+   */
+  malformedHeadings: string[];
+}
+
+function parseAcceptanceCriteria(section: string): AcceptanceCriteriaParseResult {
+  const criteria: Draft['acceptanceCriteria'] = [];
+  const malformedHeadings: string[] = [];
   const blocks = section.split(/\n(?=### AC-)/);
   for (const block of blocks) {
+    const trimmed = block.trim();
+    // A leading/prologue block that isn't a heading at all — not flagged.
+    if (!trimmed.startsWith('### AC-')) continue;
     // [ \t]* (not \s*) — a name-less heading (`### AC-2:` / `### AC-2: `)
     // must not let the separator swallow the newline into the next line's
     // Given/When/Then content (phase 151 draft-mutate round-trip fix).
     const head = /^### (AC-\d+):[ \t]*(.*)$/m.exec(block);
-    if (!head) continue;
+    if (!head) {
+      malformedHeadings.push(trimmed.split('\n')[0]!.trim());
+      continue;
+    }
     const id = head[1]!;
     const name = head[2]?.trim() ?? '';
     // Phase 157: [\s\S]+? (not .+) so a wrapped clause spanning more than one
@@ -41,9 +61,9 @@ function parseAcceptanceCriteria(section: string): Draft['acceptanceCriteria'] {
     const given = /Given\s+([\s\S]+?)(?=\nWhen\s|\nThen\s|$)/.exec(block)?.[1]?.trim() ?? '';
     const when = /When\s+([\s\S]+?)(?=\nThen\s|$)/.exec(block)?.[1]?.trim() ?? '';
     const then = /Then\s+([\s\S]+)/.exec(block)?.[1]?.trim() ?? '';
-    out.push({ id, name, given, when, then });
+    criteria.push({ id, name, given, when, then });
   }
-  return out;
+  return { criteria, malformedHeadings };
 }
 
 function parseTasks(section: string): Draft['tasks'] {
@@ -105,7 +125,17 @@ export function parseDraftMd(raw: string): Draft {
   // Phase 157: the full section text, not just its first line — extractSection
   // already isolates content up to the next `## ` heading (rec-20260704-002).
   const objective = extractSection(body, 'Objective');
-  const acceptanceCriteria = parseAcceptanceCriteria(extractSection(body, 'Acceptance Criteria'));
+  const acResult = parseAcceptanceCriteria(extractSection(body, 'Acceptance Criteria'));
+  if (acResult.malformedHeadings.length > 0) {
+    const found = acResult.malformedHeadings.map((h) => `"${h}"`).join(', ');
+    throw new CadenceError(
+      `## Acceptance Criteria contains malformed AC block(s) — every heading there must use the ` +
+        `numeric id form "### AC-<number>: <name>" (e.g. "### AC-1: ..."); found ` +
+        `non-numeric or malformed heading(s) instead: ${found}`,
+      'COHERENCE_FAILED',
+    );
+  }
+  const acceptanceCriteria = acResult.criteria;
   const tasks = parseTasks(extractSection(body, 'Tasks'));
   const boundaries = parseBoundaries(extractSection(body, 'Boundaries'));
 

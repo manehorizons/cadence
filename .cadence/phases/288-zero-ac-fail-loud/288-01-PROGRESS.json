@@ -1,0 +1,48 @@
+{
+  "draftId": "288-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "parseDraftMd throws CadenceError COHERENCE_FAILED on malformed AC headings; widened mid-build after independent review found the mixed valid+malformed case silently dropped the malformed one. Verified: typecheck clean, draft-parser tests 29/29 green.",
+      "touchedFiles": [
+        "packages/core/src/parse/draft-parser.ts",
+        "packages/core/src/services/settle.ts",
+        "packages/core/tests/cli/draft-check.test.ts",
+        "packages/core/tests/parse/draft-parser.test.ts",
+        "packages/core/tests/cli/settle-zero-ac.test.ts",
+        "packages/core/tests/parse/draft-parser-corpus.test.ts"
+      ],
+      "updatedAt": "2026-08-22T04:06:13.355Z",
+      "execution": "dispatch",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "End-to-end draft-check test proving the T1 throw surfaces as a non-zero exit with no coherence: OK; captured a real red run against pre-T1 draft-parser.ts before restoring T1's fix. 5/5 green.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-22T04:06:22.187Z",
+      "execution": "dispatch",
+      "isolation": "worktree",
+      "modelClass": "mechanical"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "settleService emits an explicit stderr notice when draft.acceptanceCriteria.length === 0; wording tightened after review flagged it presupposed a grade always gets produced. Negative-control test added. Full settle*/settle-auto* suite green (171 tests), non-empty-AC drafts byte-identical.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-22T04:06:22.372Z",
+      "execution": "dispatch",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Read-only corpus scan test (300 real DRAFT.md files incl. this phase's own). Found 12 pre-existing unrelated parseDraftMd failures (legacy status: DONE frontmatter) and built a classifier distinguishing them from phase 288's new rule; 0 newly-failing under the new rule. Synthetic self-test proves the classifier discriminates by cause.",
+      "touchedFiles": [],
+      "updatedAt": "2026-08-22T04:06:22.551Z",
+      "execution": "dispatch",
+      "isolation": "worktree",
+      "modelClass": "mechanical"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseDraftMd } from '../../src/parse/draft-parser.js';
+import { CadenceError } from '../../src/errors.js';
 
 const SAMPLE = `---
 phase: 01-foundation
@@ -212,6 +213,13 @@ on its own wrapped second line
   it('AC-4: existing single-line Objective/AC output is byte-identical', () => {
     const d = parseDraftMd(SAMPLE);
     expect(d.objective).toBe('Make widget glow.');
+    expect(d.acceptanceCriteria).toEqual([
+      { id: 'AC-1', name: 'Glows', given: 'widget exists', when: 'user enables glow mode', then: 'widget emits photons' },
+    ]);
+  });
+
+  it('288-01/AC-3: a well-formed numeric AC draft parses byte-identically (phase 288 regression pin)', () => {
+    const d = parseDraftMd(SAMPLE);
     expect(d.acceptanceCriteria).toEqual([
       { id: 'AC-1', name: 'Glows', given: 'widget exists', when: 'user enables glow mode', then: 'widget emits photons' },
     ]);
@@ -447,5 +455,149 @@ describe('redundantWorkEnforcement frontmatter', () => {
     const raw = `---\nphase: 01-foundation\nid: 01-01\ntier: standard\nstatus: PENDING\n---\n\n# 01-01 — Demo\n\n## Objective\n\nDemo.\n\n## Acceptance Criteria\n\n### AC-1: Demo\nGiven a\nWhen b\nThen c\n\n## Tasks\n\n## Boundaries\n\n- _(none)_\n`;
     const draft = parseDraftMd(raw);
     expect(draft.redundantWorkEnforcement).toBeUndefined();
+  });
+});
+
+// Phase 288 — a `## Acceptance Criteria` section that is non-empty but yields
+// zero parsed `### AC-N` blocks (e.g. a non-numeric heading like `### AC-K1:`)
+// must fail loud instead of silently parsing to acceptanceCriteria: [], which
+// would let structural-verifier / test-coverage / evidence-floor / settle
+// --auto's completeness check all pass vacuously.
+describe('malformed AC headings fail loud', () => {
+  const MALFORMED_DRAFT = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+Make widget glow.
+
+## Acceptance Criteria
+
+### AC-K1: Something
+Given widget exists
+When user enables glow mode
+Then widget emits photons
+
+## Tasks
+
+### T1: Add glow flag
+- files: \`src/widget.ts\`
+- action: add boolean glow prop
+- verify: vitest passes
+- done: AC-1
+
+## Boundaries
+
+- Do not change \`src/legacy.ts\`
+`;
+
+  it('throws instead of silently returning an empty acceptanceCriteria array', () => {
+    expect(() => parseDraftMd(MALFORMED_DRAFT)).toThrow();
+  });
+
+  it('288-01/AC-1: throws a CadenceError with code COHERENCE_FAILED naming the numeric-id requirement and the offending heading', () => {
+    let caught: unknown;
+    try {
+      parseDraftMd(MALFORMED_DRAFT);
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(CadenceError);
+    const err = caught as CadenceError;
+    expect(err.code).toBe('COHERENCE_FAILED');
+    expect(err.message).toMatch(/numeric/i);
+    expect(err.message).toContain('AC-K1');
+  });
+
+  it('does NOT throw when the AC section is genuinely empty (zero blocks at all)', () => {
+    const emptyAcDraft = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+Make widget glow.
+
+## Acceptance Criteria
+
+## Tasks
+
+### T1: Add glow flag
+- files: \`src/widget.ts\`
+- action: add boolean glow prop
+- verify: vitest passes
+- done: AC-1
+
+## Boundaries
+
+- Do not change \`src/legacy.ts\`
+`;
+    const d = parseDraftMd(emptyAcDraft);
+    expect(d.acceptanceCriteria).toEqual([]);
+  });
+
+  it('throws when a malformed heading sits alongside a valid one, rather than silently dropping it', () => {
+    const mixedDraft = `---
+phase: 01-foundation
+id: 01-01
+tier: standard
+status: PENDING
+---
+
+# 01-01 — Demo
+
+## Objective
+
+Make widget glow.
+
+## Acceptance Criteria
+
+### AC-1: Valid one
+Given widget exists
+When user enables glow mode
+Then widget emits photons
+
+### AC-K1: Malformed one
+Given widget exists
+When user enables glow mode
+Then widget emits photons
+
+## Tasks
+
+### T1: Add glow flag
+- files: \`src/widget.ts\`
+- action: add boolean glow prop
+- verify: vitest passes
+- done: AC-1
+
+## Boundaries
+
+- Do not change \`src/legacy.ts\`
+`;
+    let caught: unknown;
+    try {
+      parseDraftMd(mixedDraft);
+    } catch (e) {
+      caught = e;
+    }
+    // A mixed section must fail loud too — silently dropping AC-K1 while
+    // AC-1 parses fine would produce a well-formed-looking but quietly
+    // shrunken acceptanceCriteria array, the same vacuous-pass failure mode
+    // this phase exists to close, just partial instead of total.
+    expect(caught).toBeInstanceOf(CadenceError);
+    const err = caught as CadenceError;
+    expect(err.code).toBe('COHERENCE_FAILED');
+    expect(err.message).toContain('AC-K1');
   });
 });
