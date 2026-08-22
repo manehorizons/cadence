@@ -684,3 +684,121 @@ describe('deriveAssuranceRecord D-R exclusion touches only strongCount\'s numera
     expect(ac2.pass).toBe(true);
   });
 });
+
+/**
+ * Phase 287 (287-01) -- D-Z: closes the gap between phase 263 (gates learned
+ * to tag `providerSelection:'empty-diff'` when a real provider's diff was
+ * empty and it structurally could not judge anything) and this file's
+ * `hasRealVerifier` (which only ever read `provider`/`model`, never
+ * `providerSelection`). AC-J3 of HANDOFF-verifier-honesty-verify-premises.md
+ * proved by direct fixture call that a settle whose only non-mock signal was
+ * `empty-diff` could still grade `'strong'`.
+ */
+describe('deriveAssuranceRecord excludes empty-diff-only gates from hasRealVerifier (phase 287-01, D-Z)', () => {
+  it("287-01/AC-1: a settle whose every non-mock gate is providerSelection:'empty-diff' does not earn 'strong', even with strong AC evidence", () => {
+    const gates: GateProvenance[] = [
+      { gate: 'security-audit', status: 'ran', provider: 'host-cli', model: 'claude-x', providerSelection: 'empty-diff' },
+      { gate: 'code-review', status: 'ran', provider: 'host-cli', model: 'claude-x', providerSelection: 'empty-diff' },
+    ];
+    const acResults = [ac('AC-1', 'ai-verified'), ac('AC-2', 'ai-verified')];
+
+    const result = deriveAssuranceRecord(gates, acResults);
+    // Exact value, not just "not strong": hasRealVerifier is false (both
+    // gates empty-diff) but strongRatio is 1.0 (>0), so this lands on
+    // 'mixed' via the hasRealVerifier||strongRatio>0 branch, same as any
+    // other all-mock-with-strong-evidence shape.
+    expect(result.overall).toBe('mixed');
+  });
+
+  it("287-01/AC-2: a mixed set -- one 'empty-diff' gate plus one genuinely 'configured' non-mock gate -- still reaches 'strong' on the configured gate's evidence", () => {
+    const gates: GateProvenance[] = [
+      { gate: 'security-audit', status: 'ran', provider: 'host-cli', model: 'claude-x', providerSelection: 'empty-diff' },
+      { gate: 'code-review', status: 'ran', provider: 'host-cli', model: 'claude-x', providerSelection: 'configured' },
+    ];
+    const acResults = [ac('AC-1', 'ai-verified'), ac('AC-2', 'ai-verified')];
+
+    const result = deriveAssuranceRecord(gates, acResults);
+    expect(result.overall).toBe('strong');
+  });
+
+  it("287-01/AC-2: an untagged (pre-phase-263) non-mock gate alongside an 'empty-diff' gate still counts as real -- providerSelection is optional, absence is not empty-diff", () => {
+    const gates: GateProvenance[] = [
+      { gate: 'security-audit', status: 'ran', provider: 'host-cli', model: 'claude-x', providerSelection: 'empty-diff' },
+      { gate: 'code-review', status: 'ran', provider: 'host-cli', model: 'claude-x' },
+    ];
+    const acResults = [ac('AC-1', 'ai-verified'), ac('AC-2', 'ai-verified')];
+
+    const result = deriveAssuranceRecord(gates, acResults);
+    expect(result.overall).toBe('strong');
+  });
+
+  it("287-01/AC-1: verifierRollup and hasAnyVerifier stay untouched -- the empty-diff gate still shows up in the persisted rollup (report-never-rewrite), only the local 'strong' predicate changes", () => {
+    const gates: GateProvenance[] = [
+      { gate: 'security-audit', status: 'ran', provider: 'host-cli', model: 'claude-x', providerSelection: 'empty-diff' },
+    ];
+    const acResults = [ac('AC-1', 'unverified')];
+
+    const result = deriveAssuranceRecord(gates, acResults);
+    expect(result.verifierRollup).toEqual([{ provider: 'host-cli', model: 'claude-x', gateCount: 1 }]);
+    // hasAnyVerifier must stay true (verifierRollup is non-empty) -- an
+    // empty-diff-only settle with zero AC evidence lands at 'weak', not
+    // 'unverified' (which requires hasAnyVerifier to be false too).
+    expect(result.overall).toBe('weak');
+  });
+
+  it('287-01/AC-3: gate provenance carrying no providerSelection field anywhere is byte-identical to the pre-287 baseline (captured before this phase touched assurance-record.ts)', () => {
+    const gates: GateProvenance[] = [
+      { gate: 'code-review', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+      { gate: 'security-audit', status: 'ran', provider: 'anthropic', model: 'claude-x' },
+    ];
+    const acResults = [ac('AC-1', 'ai-verified'), ac('AC-2', 'executed')];
+
+    const result = deriveAssuranceRecord(gates, acResults);
+
+    // Baseline captured 2026-08-21 against the unmodified phase-233/283 code
+    // (same fixture shape as the phase-233 T2 AC-2 test above, which remains
+    // untouched and passing as an independent corroboration).
+    expect(JSON.stringify(result)).toBe(
+      JSON.stringify({
+        verifierRollup: [{ provider: 'anthropic', model: 'claude-x', gateCount: 2 }],
+        evidenceTally: { 'ai-verified': 1, executed: 1, assertion: 0, mention: 0, unverified: 0 },
+        overall: 'strong',
+      }),
+    );
+  });
+
+  it("287-01/AC-4: the empty-diff exclusion never reads gates[].gate -- results are identical across entries whose .gate differs (including a nonsense/unregistered name), driven by providerSelection alone (mirrors 283-01/AC-4's gate-agnostic proof)", () => {
+    const acResults = [ac('AC-1', 'ai-verified'), ac('AC-2', 'ai-verified')];
+
+    const emptyDiffGatesA: GateProvenance[] = [
+      { gate: 'security-audit', status: 'ran', provider: 'host-cli', model: 'claude-x', providerSelection: 'empty-diff' },
+    ];
+    const emptyDiffGatesB: GateProvenance[] = [
+      { gate: 'totally-not-a-real-registered-gate-name', status: 'ran', provider: 'host-cli', model: 'claude-x', providerSelection: 'empty-diff' },
+    ];
+
+    const resultA = deriveAssuranceRecord(emptyDiffGatesA, acResults);
+    const resultB = deriveAssuranceRecord(emptyDiffGatesB, acResults);
+
+    // Different .gate values (one real registered gate name, one nonsense)
+    // -- if the exclusion read .gate at all, these could plausibly diverge.
+    // They don't: providerSelection alone drives the outcome.
+    expect(resultA).toEqual(resultB);
+    expect(resultA.overall).toBe('mixed');
+  });
+});
+
+// Phase 287 (287-01) -- AC-5 (read-only corpus sweep: does this phase's fix
+// change any historical grade?) has its asserting test added directly to the
+// PRE-EXISTING `tests/gates/assurance-record-corpus.test.ts` (phase
+// 283-01/AC-5), not a new test here. That file already re-derives `overall` for every
+// `.cadence/phases/**/*-SUMMARY.json` record with the live `deriveAssuranceRecord`
+// and diffs against each record's own persisted grade, checking every drift
+// found against a committed whitelist (`283-01-ASSURANCE-DRIFT-REPORT.md`) --
+// a strictly stronger proof than a tag-presence sweep would be, and this
+// phase originally added a redundant, weaker duplicate of that walk here
+// (removed; see the DRAFT's As-built note). Re-run independently with this
+// phase's fix applied: `pnpm --filter @thomas-powers-jr/cadence-core test --
+// assurance-record-corpus` -- 6/6 pass, 0 new drift beyond the existing
+// whitelist (consistent with the corpus's 0 `providerSelection:'empty-diff'`
+// tally measured directly in Phase J's investigation).
