@@ -1273,24 +1273,43 @@ packages/core/src/mcp/server.ts:26 selects response text via (io.stdout() || io.
 - confidence: 70%
 - decay: fresh
 - areas: verify, deep-verify, host-cli
+- decisions: dec-20260822-015 (active), dec-20260822-016 (active)
 - evidence: 289-01 settle attempts 2026-08-22: round 3's AC-2/AC-3 refusal claims falsified by direct grep against the test files; rounds 1-2's claims on the same phase were real and independently confirmed
 - evidence: Follow-up investigation (same session, before user response on the settle decision): checked packages/core/src/verify/anthropic-verifier.ts's formatUserMessage -- the per-AC linked-tests list sent to the verifier is NOT truncated/sampled (every VerifyTestRef is included, no slice/limit). Checked the diff cap (verifier.diffCapBytes, default 256KB): the phase's actual cumulative working-tree diff is ~49KB, well under the cap, so diff truncation is not the mechanism either. This narrows the hypothesis: the false round-3 AC-2/AC-3 refusal is most likely plain LLM judgment inconsistency across repeated calls on the same complete, untruncated input (a known LLM reliability failure mode -- claiming a narrower evidence set than what was actually supplied), not a code-level evidence-assembly bug. Revises this rec's original 'incomplete or non-deterministic evidence-assembly' hypothesis toward 'the single-shot LLM verdict has no cross-check/majority-vote and is empirically not reliable enough to hard-block settle on its own for phases whose evidence set is unchanged between runs.' Possible directions: (a) log the exact verifier input alongside the verdict so a refusal is reproducible/auditable after the fact instead of only the verdict reason surviving; (b) require 2-of-3 agreement across repeated deep-verify calls before treating a refusal as blocking; (c) at minimum, surface to the operator when a re-run of deep-verify on unchanged evidence produces a different verdict than a prior run in the same settle session, since that's a strong signal the refusal shouldn't be trusted as-is.
+- evidence: Independently re-falsified round 3's specific claims (not just trusting the rec's own text): grep -n '289-01/AC-2' read-only-mode.test.ts returns 5 distinct it() blocks (context handoff L74, recommend L103, inspect L123, recommendation list L143, next L168) against round 3's claim that only context handoff was cited. grep -n '289-01/AC-3' returns 7 distinct it() blocks (decision add L351, recommendation add L377, recommendation list L403, decision supersede L422, assumption add+validate L440, milestone propose L467, intelligence reconcile L482) against round 3's claim that only decision add and milestone writing were cited. Both round-3 claims are directly false against the merged test file. Did not attempt a repeat-deep-verify run (D-AN option 1, real provider cost) or artifact-retention schema change (option 2) this session -- option 3 (reconstruct/falsify from the existing record) was judged sufficient; see rec-20260822-008 for the artifact-retention gap this surfaced.
 - next: cadence milestone propose
 
 During 289-01's settle, the real (non-mock) host-cli deep-verify pass was run three consecutive times against the phase's AC coverage. Rounds 1-2 caught two genuine, independently-confirmed gaps (a missing CLI-subprocess refusal test for AC-1, and an AC-3/AC-6 wording contradiction), both fixed and re-verified. Round 3, with zero AC-2-relevant changes made since round 1 (where AC-2 passed), refused AC-2 claiming 'only context handoff is cited as exercised' and refused AC-3 claiming 'cited tests cover only decision add and milestone writing' -- both claims are directly falsified by grepping the test files: read-only-mode.test.ts has all five 289-01/AC-2-tagged tests (context handoff, recommend, inspect, recommendation list, next) and seven 289-01/AC-3-tagged tests (decision add, recommendation add, recommendation list, decision supersede, assumption add, assumption validate, milestone propose, intelligence reconcile). This suggests the deep-verify pass's evidence-assembly step (whatever selects/truncates which matching test titles/spans get shown to the verifier LLM) is incomplete or non-deterministic under some condition -- possibly a token/context truncation when a phase accumulates many coverage-evidence rows across multiple settle attempts. Worth investigating packages/core/src/verify/*.ts's evidence-gathering path for coverage-gate-satisfied ACs, and/or adding a regression fixture that pins a phase with >5 tests per AC to check the verifier is shown all of them.
 
-## rec-20260822-006 — Code-review finding (high): `writeLedger` remains an exported, unguarded store writer; importing it with a …
+## rec-20260822-007 — Findings-to-ledger routing leaves an auto-filed rec unreconciled when a same-settle later round fixes the finding
 
 - status: candidate
 - ready: needs-decision
-- priority: high
+- priority: medium
 - leverage: 5/10
 - risk: 5/10
 - confidence: 70%
 - decay: fresh
-- areas: packages/core
-- files: packages/core/src/intelligence/store/io.ts
-- evidence: phase 289-dispatch-write-authority, draft 289-01, SUMMARY contentHash 889af0d0b662dba94b8e78e8cf8b6e38361b08761a83d0a4c664564accea1d35 — high finding at packages/core/src/intelligence/store/io.ts:57: `writeLedger` remains an exported, unguarded store writer; importing it with a real ledger spec/path can mutate `.cadence/intelligence` while `CADENCE_READ_ONLY=1`.
+- areas: core, intelligence-store
+- files: packages/core/src/services/settle.ts, packages/core/src/intelligence/finding-routing.ts
+- decisions: dec-20260822-014 (active)
+- evidence: 289-01-CODE-REVIEW.json history: round2 fail@18:14:36.047Z (1 finding) -> rec-20260822-006 createdAt 18:14:36.065Z -> round3 pass@18:24:17.029Z (0 findings), matching 289-01-SUMMARY.md's completed timestamp 18:24:17.031Z (T1's fix).
 - next: cadence milestone propose
 
-high finding at packages/core/src/intelligence/store/io.ts:57: `writeLedger` remains an exported, unguarded store writer; importing it with a real ledger spec/path can mutate `.cadence/intelligence` while `CADENCE_READ_ONLY=1`.
+Phase 289's rec-20260822-006 was a real instance: a code-review finding at round 2 (18:14:36.047Z, host-cli) correctly reported writeLedger as unguarded, and findings-to-ledger routing auto-filed rec-20260822-006 18ms later (18:14:36.065Z). T1's fix landed within the same settle, ~10 minutes later (289-01 completed 18:24:17.031Z), and round 3 passed with 0 findings -- but the auto-filed rec was never closed, reconciled, or even flagged stale; it sat open as candidate/needs-decision until this session manually rejected it with a full audit. The finding was never wrong -- the routing mechanism that files a rec at refusal time has no path back to check whether a later round of the same settle already resolved it. This is distinct from dec-20260731-001 (same-settle same-id finding merge -- multiple occurrences of one finding within a single round) and dec-20260801-003 (cross-settle message-drift dedup -- a re-worded finding across separate settles); neither covers a finding that is fixed by a later round of the same settle it was filed in. Worth a decision: on settle success, cross-check open candidate-status recs with a sourceFindingId against that phase's final (passing) code-review result and flag/auto-close ones the final round no longer reproduces -- or at minimum, surface a doctor check so these don't require a human noticing the discrepancy, as happened here.
+
+## rec-20260822-008 — SUMMARY.json's deepVerify only persists the final convergence round, hiding self-contradicting verifier rounds from the audit trail
+
+- status: candidate
+- ready: needs-decision
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: core, verify
+- files: packages/core/src/verify/deep-verify.ts, packages/types/src/summary.ts
+- evidence: 289-01-SUMMARY.json's persisted deepVerify block has AC-1/2/3/4 pass:false (round-3 verdicts); 289-01-CODE-REVIEW.json's separate 'history' array proves 3 rounds ran and that per-round retention is already a working pattern elsewhere in the same phase's own artifacts.
+- next: cadence milestone propose
+
+289-01's real (non-mock) host-cli deep-verify ran 3 consecutive rounds during settle (289-01-CODE-REVIEW.json's separate code-review history shows the pattern; the deepVerify equivalent is not separately retained round-by-round). Rounds 1-2 caught two genuine, independently-confirmed gaps and were fixed; round 3, with zero AC-2/AC-3-relevant changes since round 1 where those ACs passed, gave a false refusal on both -- directly falsified by grepping the test files (rec-20260822-005: 5 289-01/AC-2 tests and 7 289-01/AC-3 tests exist, contradicting round 3's specific 'only 1 test cited' claims). Only round 3's verdict survives in 289-01-SUMMARY.json's persisted deepVerify block; rounds 1-2's verdicts exist only in human-written task-note prose (T2's PROGRESS.json note), not in any queryable artifact. A verifier that disagrees with itself across rounds is therefore invisible to anything but a human reading task notes -- cadence doctor, summary verify-all, and any future automated audit over SUMMARY.json corpora would see only the last round's (possibly wrong) verdict with no record that it contradicted an earlier passing round on unchanged evidence. Worth a decision: persist all convergence rounds' deepVerify verdicts (not just the final one) in SUMMARY.json, analogous to how 289-01-CODE-REVIEW.json's own 'history' array already retains per-round pass/findingsCount/verdict for code-review.
