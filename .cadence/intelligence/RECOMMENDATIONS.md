@@ -1265,7 +1265,7 @@ packages/core/src/mcp/server.ts:26 selects response text via (io.stdout() || io.
 
 ## rec-20260822-003 — Dispatch write authority: a sub-agent instructed read-only must be structurally unable to mutate the intelligence ledger
 
-- status: candidate
+- status: settle-pending
 - ready: ready-for-cadence-spec
 - priority: high
 - leverage: 5/10
@@ -1278,3 +1278,51 @@ packages/core/src/mcp/server.ts:26 selects response text via (io.stdout() || io.
 - next: cadence milestone propose
 
 packages/core/src/dispatch/packet.ts:52-60 already forbids a dispatched sub-agent from running any state-mutating cadence subcommand, in bold, shipped via rec-20260718-001. It was violated anyway: during the phase 287 build a dispatched sub-agent (not even carrying a packet -- an ad-hoc session instruction, prose with even less ceremony) wrote dec-20260822-002 to the ledger, then misdiagnosed its own orchestrator's legitimate concurrent writes as a rival session and halted to ask (dec-20260822-007 records the reconciliation; confirmed no real concurrent session, no corruption). This is the repo's own thesis demonstrated against itself: a prompt-level constraint on an agent is shape, and shape drifts. Investigated the fix (dec-20260822-012, D-AF): every ledger write funnels through a single chokepoint, atomicWriteText (packages/core/src/state/atomic-write.ts), called from packages/core/src/intelligence/store/{io,decisions,assumptions,reconcile,milestones}.ts. An env-var read-only mode (e.g. CADENCE_READ_ONLY=1) enforced at or just above that chokepoint is empirically viable in this host's dispatch model -- confirmed a dispatched Agent-tool sub-agent shares the orchestrator's process-level environment (identical CLAUDECODE/CLAUDE_CODE_SESSION_ID/CLAUDE_PID across parent and child), contrary to the original hedge that the variable might not reach the child. The open design question the next phase should resolve empirically before building: HOW does the orchestrator scope the var to one dispatch rather than the whole session -- a plain shell export doesn't survive across separate tool-call boundaries (verified), so the mechanism likely needs to live in something that does persist, e.g. .claude/settings.json's env block (CADENCE already writes managed entries into that file for host hooks), or some other per-dispatch-scoped seam still to be identified. Also determine empirically which atomicWriteText callers are ledger mutations vs state writes vs caches, since enforcement at that exact chokepoint may be too broad (could also block .cadence/state.json writes, phase artifacts, settle output) -- that classification is the phase's real design work, per the original handoff. Do not merge with rec-20260821-005 (cross-session id-collision) -- adjacent, separate problem, confirmed by hitting a live instance of exactly that id-collision pattern while filing this very recommendation (a second worktree independently minted dec-20260822-010 before the first worktree's branch had merged; resolved by waiting for the merge rather than hand-resolving, not by fixing the collision mechanism itself).
+
+## rec-20260822-004 — settle: silent-swallow catch masks converted-rec advance failures (incl. read-only refusal)
+
+- status: candidate
+- ready: ready-for-cadence-spec
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: settle, intelligence-store
+- files: packages/core/src/services/settle.ts
+- evidence: 289-01 whole-branch review (2026-08-22), Important finding #1; sibling pattern at settle.ts:~1474 vs silent catch at ~1507-1516
+- next: cadence milestone propose
+
+cadence settle's best-effort advance of converted recs to settle-pending (runAdvanceConvertedToSettlePendingForPhase, packages/core/src/services/settle.ts:~1507-1516) is wrapped in a bare try{}catch{} with no stderr notice, unlike the sibling finding-ledger-routing block ~40 lines above (line ~1474) which does print one via io.err on failure. Phase 289 (289-01) added a new CADENCE_READ_ONLY guard at the intelligence store's write layer; that guard's refusal now routes through this same silent catch when settle runs with CADENCE_READ_ONLY active, so a settle can complete while silently failing to advance the rec -- violating this repo's own 'every fallback prints a loud stderr notice' convention (CLAUDE.md, The Quiet Fallback). Surfaced by 289-01's whole-branch review; out of scope to fix inside that phase since settle.ts is outside its declared task boundaries and the phase's own tasks were mid-settle. Fix: add an io.err notice in the catch mirroring the sibling block's pattern.
+
+## rec-20260822-005 — settle --deep verify (host-cli) gave a false AC refusal on unchanged evidence -- likely incomplete evidence-assembly
+
+- status: candidate
+- ready: needs-evidence
+- priority: medium
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: verify, deep-verify, host-cli
+- evidence: 289-01 settle attempts 2026-08-22: round 3's AC-2/AC-3 refusal claims falsified by direct grep against the test files; rounds 1-2's claims on the same phase were real and independently confirmed
+- evidence: Follow-up investigation (same session, before user response on the settle decision): checked packages/core/src/verify/anthropic-verifier.ts's formatUserMessage -- the per-AC linked-tests list sent to the verifier is NOT truncated/sampled (every VerifyTestRef is included, no slice/limit). Checked the diff cap (verifier.diffCapBytes, default 256KB): the phase's actual cumulative working-tree diff is ~49KB, well under the cap, so diff truncation is not the mechanism either. This narrows the hypothesis: the false round-3 AC-2/AC-3 refusal is most likely plain LLM judgment inconsistency across repeated calls on the same complete, untruncated input (a known LLM reliability failure mode -- claiming a narrower evidence set than what was actually supplied), not a code-level evidence-assembly bug. Revises this rec's original 'incomplete or non-deterministic evidence-assembly' hypothesis toward 'the single-shot LLM verdict has no cross-check/majority-vote and is empirically not reliable enough to hard-block settle on its own for phases whose evidence set is unchanged between runs.' Possible directions: (a) log the exact verifier input alongside the verdict so a refusal is reproducible/auditable after the fact instead of only the verdict reason surviving; (b) require 2-of-3 agreement across repeated deep-verify calls before treating a refusal as blocking; (c) at minimum, surface to the operator when a re-run of deep-verify on unchanged evidence produces a different verdict than a prior run in the same settle session, since that's a strong signal the refusal shouldn't be trusted as-is.
+- next: cadence milestone propose
+
+During 289-01's settle, the real (non-mock) host-cli deep-verify pass was run three consecutive times against the phase's AC coverage. Rounds 1-2 caught two genuine, independently-confirmed gaps (a missing CLI-subprocess refusal test for AC-1, and an AC-3/AC-6 wording contradiction), both fixed and re-verified. Round 3, with zero AC-2-relevant changes made since round 1 (where AC-2 passed), refused AC-2 claiming 'only context handoff is cited as exercised' and refused AC-3 claiming 'cited tests cover only decision add and milestone writing' -- both claims are directly falsified by grepping the test files: read-only-mode.test.ts has all five 289-01/AC-2-tagged tests (context handoff, recommend, inspect, recommendation list, next) and seven 289-01/AC-3-tagged tests (decision add, recommendation add, recommendation list, decision supersede, assumption add, assumption validate, milestone propose, intelligence reconcile). This suggests the deep-verify pass's evidence-assembly step (whatever selects/truncates which matching test titles/spans get shown to the verifier LLM) is incomplete or non-deterministic under some condition -- possibly a token/context truncation when a phase accumulates many coverage-evidence rows across multiple settle attempts. Worth investigating packages/core/src/verify/*.ts's evidence-gathering path for coverage-gate-satisfied ACs, and/or adding a regression fixture that pins a phase with >5 tests per AC to check the verifier is shown all of them.
+
+## rec-20260822-006 — Code-review finding (high): `writeLedger` remains an exported, unguarded store writer; importing it with a …
+
+- status: candidate
+- ready: needs-decision
+- priority: high
+- leverage: 5/10
+- risk: 5/10
+- confidence: 70%
+- decay: fresh
+- areas: packages/core
+- files: packages/core/src/intelligence/store/io.ts
+- evidence: phase 289-dispatch-write-authority, draft 289-01, SUMMARY contentHash 889af0d0b662dba94b8e78e8cf8b6e38361b08761a83d0a4c664564accea1d35 — high finding at packages/core/src/intelligence/store/io.ts:57: `writeLedger` remains an exported, unguarded store writer; importing it with a real ledger spec/path can mutate `.cadence/intelligence` while `CADENCE_READ_ONLY=1`.
+- next: cadence milestone propose
+
+high finding at packages/core/src/intelligence/store/io.ts:57: `writeLedger` remains an exported, unguarded store writer; importing it with a real ledger spec/path can mutate `.cadence/intelligence` while `CADENCE_READ_ONLY=1`.

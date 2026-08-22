@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 import {
@@ -38,6 +39,7 @@ const widgetSpec: SubjectLedgerSpec<Widget, WidgetLedger, string, string, Widget
 
 let active: Fixture | null = null;
 afterEach(async () => {
+  vi.unstubAllEnvs();
   if (active) {
     await active.cleanup();
     active = null;
@@ -93,6 +95,26 @@ describe('writeLedger', () => {
     await writeLedger(widgetSpec, path, seeded);
     const readBack = await readLedger(widgetSpec, path);
     expect(readBack).toEqual(seeded);
+  });
+
+  // Phase 289 T1 (289-01/AC-1, 289-01/AC-5 — second revisit, code-review HIGH
+  // finding): writeLedger is the shared primitive under all four
+  // subject-specific guarded wrappers, but was itself unguarded and directly
+  // importable — a caller that imports `ledger.js` instead of one of the four
+  // wrapper functions bypassed CADENCE_READ_ONLY entirely (no current caller
+  // did this, but nothing structurally stopped a future one). This is this
+  // primitive's own dedicated proof, one level below the four wrappers'
+  // existing tests, that the guard now holds at the lowest write layer too.
+  it('289-01/AC-1, 289-01/AC-5: refuses under CADENCE_READ_ONLY and never writes the file, even called directly (bypassing every subject-specific wrapper)', async () => {
+    active = await tempRepo();
+    const path = join(active.root, 'nested', 'widgets.json');
+    vi.stubEnv('CADENCE_READ_ONLY', '1');
+
+    await expect(writeLedger(widgetSpec, path, emptyWidgetLedger())).rejects.toThrow(
+      /CADENCE_READ_ONLY is set — refusing "writeLedger"/,
+    );
+
+    expect(existsSync(path)).toBe(false);
   });
 });
 

@@ -17,6 +17,7 @@ import {
   writeIntelligenceLedgers,
 } from './io.js';
 import { deriveRecommendationLinks } from './recommendations.js';
+import { assertNotReadOnly } from './read-only-guard.js';
 
 // The assumption ledger's on-disk schema (packages/types/src/intelligence.ts)
 // has no `archived` array — only recommendations soft-archives. `records()`
@@ -44,6 +45,7 @@ export async function readAssumptionLedger(root: string): Promise<AssumptionLedg
 }
 
 export async function writeAssumptionLedger(root: string, ledger: AssumptionLedger): Promise<void> {
+  assertNotReadOnly('writeAssumptionLedger');
   await writeLedger(assumptionLedgerSpec, assumptionsPath(root), ledger, { mode: 0o600 });
   await atomicWriteText(assumptionsMdPath(root), renderAssumptionsMd(ledger));
 }
@@ -57,6 +59,7 @@ export async function addAssumption(
   root: string,
   input: AddAssumptionInput,
 ): Promise<Assumption> {
+  assertNotReadOnly('addAssumption');
   const recLedger = await readRecommendationLedger(root);
   if (!recLedger.recommendations.some((r) => r.id === input.recommendationId)) {
     throw new Error(`unknown recommendation "${input.recommendationId}"`);
@@ -134,6 +137,7 @@ export async function runAssumptionTransition(
   id: string,
   action: AssumptionTransitionAction,
 ): Promise<AssumptionTransitionResult> {
+  assertNotReadOnly('runAssumptionTransition');
   const ledger = await readAssumptionLedger(root);
   const res = applyAssumptionTransition(ledger, id, action, new Date());
   if (!res.ok) return res;

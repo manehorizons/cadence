@@ -1,4 +1,4 @@
-import { describe, expect, it, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, expect, it, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, realpath, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -771,6 +771,37 @@ describe('runMilestoneExport', () => {
       const res = await runMilestoneExport(t.root, 'mil-e');
       expect(res).toEqual({ ok: false, error: 'cannot export milestone in status exported' });
     } finally {
+      await t.cleanup();
+    }
+  });
+
+  it('289-01/AC-1: refuses under CADENCE_READ_ONLY and writes no SPEC.md export artifact', async () => {
+    const t = await tempRepo({ initialized: true });
+    try {
+      await seedRecs(t.root, [mkRec({ id: 'rec-1', title: 'Ship it' })]);
+      await seedMilestones(t.root, [mkMs({ id: 'mil-ro', name: 'RO', recommendationIds: ['rec-1'] })]);
+
+      // vi.stubEnv/vi.unstubAllEnvs (rather than a manual process.env
+      // save/delete/restore) is the vitest-recommended idiom: vitest tracks
+      // the stubbed key itself, which is more robust than hand-rolled
+      // bookkeeping under vitest.shared.ts's `pool: 'forks'` config, where
+      // process.env is a live object shared by every test file a worker
+      // happens to execute. See packages/core/tests/intelligence/store/
+      // read-only-guard.test.ts for the same fix applied to the guard's own
+      // unit tests.
+      vi.stubEnv('CADENCE_READ_ONLY', '1');
+      await expect(runMilestoneExport(t.root, 'mil-ro')).rejects.toThrow(
+        /CADENCE_READ_ONLY.*runMilestoneExport/s,
+      );
+
+      vi.stubEnv('CADENCE_READ_ONLY', undefined);
+      const led = await readMilestoneLedger(t.root);
+      expect(led.milestones.find((m) => m.id === 'mil-ro')!.status).toBe('accepted');
+      await expect(
+        readFile(join(t.root, '.cadence', 'intelligence', 'exports', 'mil-ro', 'SPEC.md'), 'utf8'),
+      ).rejects.toThrow();
+    } finally {
+      vi.unstubAllEnvs();
       await t.cleanup();
     }
   });

@@ -1,0 +1,30 @@
+{
+  "specId": "289-01",
+  "converged": false,
+  "attempts": 1,
+  "maxAttempts": 3,
+  "history": [
+    {
+      "at": "2026-08-22T14:56:44.810Z",
+      "pass": false,
+      "findingsCount": 12,
+      "provider": "mock",
+      "providerSelection": "configured",
+      "verdict": "reloop"
+    },
+    {
+      "at": "2026-08-22T14:57:11.824Z",
+      "pass": false,
+      "findingsCount": 0,
+      "provider": "mock",
+      "providerSelection": "configured",
+      "verdict": "abstained",
+      "mockAbstained": true
+    }
+  ],
+  "pass": false,
+  "provider": "mock",
+  "providerSelection": "configured",
+  "findings": 0,
+  "at": "2026-08-22T14:57:11.824Z"
+}

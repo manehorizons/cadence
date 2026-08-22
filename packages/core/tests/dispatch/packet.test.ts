@@ -150,6 +150,14 @@ describe('Stop condition line — 280-01/AC-1', () => {
   // stop:-line logic. `task` above declares no `stop`, so this string is the
   // pre-DP-B baseline AC-1 requires renderPacketBase to keep reproducing
   // byte-for-byte when a task has no stop: declared.
+  //
+  // Updated for phase 289 (289-01/AC-6, T3): packet.ts's forbidden-actions
+  // block gained a fixed `CADENCE_READ_ONLY` note describing read-only
+  // mode's now-real, store-layer enforcement. This fixture is re-pinned to
+  // include that note verbatim — the invariant this describe block actually
+  // guards (a declared `stop:` renders as a bold-label line, not a heading,
+  // and an absent one adds nothing) is unaffected by that unrelated prose
+  // change.
   const PRE_DP_B_FIXTURE =
     '# Task T1: Add glow flag\n' +
     '\n' +
@@ -177,6 +185,12 @@ describe('Stop condition line — 280-01/AC-1', () => {
     '- Invoking `AskUserQuestion` or any other mechanism to prompt a human\n' +
     '  interactively.\n' +
     '\n' +
+    "If `CADENCE_READ_ONLY` is active for this dispatch, ledger-mutating\n" +
+    'operations (e.g. `decision add`, `assumption add`) are structurally\n' +
+    "refused at the intelligence store's write layer — not merely requested\n" +
+    'against by this prompt. See `docs/reference/commands.md` for how it is\n' +
+    'activated and its scoping limits.\n' +
+    '\n' +
     'The moment your Verify condition is met — or the moment you are genuinely\n' +
     'blocked or need more context — STOP. Do not record the outcome yourself.\n' +
     'Report back to the orchestrating session with what you did, the exact\n' +
@@ -184,7 +198,7 @@ describe('Stop condition line — 280-01/AC-1', () => {
     'orchestrator alone runs `cadence build task` (or `cadence settle`) and\n' +
     'records the outcome.';
 
-  it('280-01/AC-1: renders byte-identical to the pre-DP-B fixture when no stop: is declared', () => {
+  it('280-01/AC-1, 289-01/AC-6: renders byte-identical to the pre-DP-B fixture when no stop: is declared, including the CADENCE_READ_ONLY paragraph\'s exact accurate wording', () => {
     expect(renderPacketBase(task, draft)).toBe(PRE_DP_B_FIXTURE);
   });
 

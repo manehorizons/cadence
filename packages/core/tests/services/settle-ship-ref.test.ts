@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, readFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -212,5 +212,60 @@ describe('settle run --ship-ref (Phase 148)', () => {
       io,
     );
     expect(res.exitCode).toBe(0);
+  });
+});
+
+// Phase 289 T1 (289-01/AC-1): the read-only guard added to
+// `runAdvanceConvertedToSettlePendingForPhase` makes this catch block's
+// try newly throw under `CADENCE_READ_ONLY`. Before this fix the catch was
+// a bare `catch {}` — settle would exit 0 while silently failing to advance
+// the rec. Fixed to mirror the sibling `catch (err)` block ~40 lines above
+// (an `io.err` notice, not a swallow). These tests prove the fix: settle
+// still succeeds (best-effort, as designed), the rec is left untouched
+// (proving the write was actually refused, not silently no-opped some
+// other way), and the notice is visible on stderr rather than dropped.
+describe('settle run advances a converted recommendation under CADENCE_READ_ONLY (289-01/AC-1)', () => {
+  let parent: string;
+  beforeAll(async () => {
+    parent = await realpath(await mkdtemp(join(tmpdir(), 'cadence-settle-read-only-')));
+  });
+  afterAll(async () => {
+    await rm(parent, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }).catch(() => {});
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('289-01/AC-1: prints a notice on stderr and leaves the rec status untouched, rather than swallowing the guard refusal silently', async () => {
+    const root = await setupBuildRepo(parent);
+    vi.stubEnv('CADENCE_READ_ONLY', '1');
+    const { io, out, err } = captureIO();
+
+    const res = await settleService(root, { auto: true, allowMissingCoverage: true }, io);
+    expect(res.exitCode).toBe(0);
+
+    expect(err.join('')).toContain('note: converted-recommendation advance failed —');
+    expect(err.join('')).toContain('CADENCE_READ_ONLY is set');
+    expect(err.join('')).toContain('writeIntelligenceLedgers');
+    expect(out.join('')).not.toContain('moved to settle-pending');
+
+    const recs = await readRecs(root);
+    expect(recs.recommendations).toHaveLength(1);
+    expect(recs.recommendations[0]?.status).toBe('converted');
+    expect(recs.archived).toHaveLength(0);
+  });
+
+  it('289-01/AC-1: with CADENCE_READ_ONLY unset, behavior is unchanged from AC-2 above (no notice, rec advances)', async () => {
+    const root = await setupBuildRepo(parent);
+    vi.stubEnv('CADENCE_READ_ONLY', undefined);
+    const { io, out, err } = captureIO();
+
+    const res = await settleService(root, { auto: true, allowMissingCoverage: true }, io);
+    expect(res.exitCode).toBe(0);
+    expect(err.join('')).not.toContain('converted-recommendation advance failed');
+    expect(out.join('')).toContain('recommendation rec-20260601-001 moved to settle-pending');
+
+    const recs = await readRecs(root);
+    expect(recs.recommendations[0]?.status).toBe('settle-pending');
   });
 });

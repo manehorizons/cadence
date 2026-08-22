@@ -1512,8 +1512,10 @@ async function finalizeAndCloseSettle(
           io.out(`recommendation ${rid} moved to settle-pending (converted phase settled)\n`);
         }
       }
-    } catch {
+    } catch (err) {
       // best-effort: leave the rec untouched, keep settling.
+      const msg = err instanceof Error ? err.message : String(err);
+      io.err(`note: converted-recommendation advance failed — ${msg}\n`);
     }
   }
 

@@ -8,6 +8,7 @@ import { atomicWriteText } from '../../state/atomic-write.js';
 import { renderMilestonesMd } from '../render-milestone.js';
 import { milestonesMdPath, milestonesPath } from './paths.js';
 import { readLedger, writeLedger, type SubjectLedgerSpec } from './ledger.js';
+import { assertNotReadOnly } from './read-only-guard.js';
 
 /**
  * Milestone ids are cluster-derived (`mil-grp-<slug>` / `mil-rec-<recId>`,
@@ -46,6 +47,7 @@ export async function writeMilestoneLedger(
   root: string,
   ledger: MilestoneLedger,
 ): Promise<void> {
+  assertNotReadOnly('writeMilestoneLedger');
   await writeLedger(milestoneLedgerSpec, milestonesPath(root), ledger, { mode: 0o600 });
   await atomicWriteText(milestonesMdPath(root), renderMilestonesMd(ledger));
 }
