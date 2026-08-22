@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file. Format follows 
 
 ## [Unreleased]
 
+## [1.64.0] - 2026-08-22
+
+> Published to npm via the `Release` workflow (provenance), tag `v1.64.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
+
+### Fixed
+
+- A DRAFT whose `## Acceptance Criteria` section is non-empty but contains a malformed (non-numeric) `### AC-<id>:` heading — e.g. `### AC-K1:` — no longer parses silently to an empty `acceptanceCriteria` array. `parseDraftMd` now throws a `CadenceError('...', 'COHERENCE_FAILED')` naming the numeric-id requirement and the offending heading text, for any block starting with `### AC-` that doesn't match the strict `### AC-<number>: <name>` form — including a section that mixes valid and malformed headings, where the malformed one was previously dropped silently while the valid ones parsed fine. This closes a fail-open gap in the gate stack's front door: an empty AC set previously made `structural-verifier`, `test-coverage`, evidence-floor, and `settle --auto`'s completeness check all pass vacuously, since there was nothing to check against. A genuinely empty `## Acceptance Criteria` section (zero `### AC-` blocks at all) stays schema-legal by design; `settle run --auto`/interactive settle now emits an explicit stderr notice naming the empty AC set instead. (Phase `288`.)
+
 ## [1.63.0] - 2026-08-22
 
 > Published to npm via the `Release` workflow (provenance), tag `v1.63.0`. Per-package bumps managed by changesets, lockstep across all five published packages.
