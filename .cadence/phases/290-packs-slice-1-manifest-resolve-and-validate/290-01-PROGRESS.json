@@ -1,0 +1,56 @@
+{
+  "draftId": "290-01",
+  "tasks": {
+    "T1": {
+      "status": "DONE",
+      "notes": "PackManifestZ (.strict()) with id grammar, semver version, optional integrity/skillAudit/gates[]/commands. Independent reviewer verdict: ready to merge, zero Critical/Important findings (one Minor -- missing nested-strict regression test -- fixed inline, added 6th test). Re-verified independently: types package full suite 368/368 passed, typecheck clean, build clean, lint clean.",
+      "touchedFiles": [
+        "packages/types/src/index.ts",
+        "packages/types/src/pack.ts",
+        "packages/types/tests/pack.test.ts"
+      ],
+      "updatedAt": "2026-08-22T22:06:32.214Z",
+      "execution": "inline",
+      "isolation": "worktree",
+      "modelClass": "standard"
+    },
+    "T2": {
+      "status": "DONE",
+      "notes": "resolvePacks() reads .cadence/packs/<id>/pack.json, validates via PackManifestZ, never throws, disabled-wins-over-enabled. Independent reviewer verdict: ready to merge, zero Critical/Important (4 Minor). Fixed one Minor inline before recording done: config-supplied ids weren't validated against the id grammar before a path join, so a malformed id like ../../etc could reach the filesystem -- exported PACK_ID_GRAMMAR/isValidPackId from packages/types/src/pack.ts and guard resolvePackId with it, plus a regression test. Re-verified independently: core full suite 4393/4393 passed, types full suite 368/368 passed, typecheck/build/lint clean on both packages.",
+      "touchedFiles": [
+        "packages/core/src/packs/resolve.ts",
+        "packages/core/tests/packs/resolve.test.ts"
+      ],
+      "updatedAt": "2026-08-22T22:20:10.535Z",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "mechanical"
+    },
+    "T3": {
+      "status": "DONE",
+      "notes": "checkPacks doctor check (warning-severity, never error, per dec-20260822-025), commands.md doc row + manual-classification entry, cli-reference.test.ts doc-content test, changeset (types+core minor). Independent reviewer verdict: ready to merge, zero Critical/Important (2 Minor: an overstated doc-comment citation, a nice-to-have test sharpness). Reviewer independently re-derived (not trusted) both of the implementer's self-reported fixes -- the disabled-wins branching bug and the vacuous-test catch -- and confirmed both correct, plus empirically discrimination-tested the new AC-5 doc test by reverting each doc half. Fixed the doc-comment overstatement inline. Amended T3's files: line to declare packages/core/tests/doctor/packs.test.ts (a genuine DRAFT-authoring gap on my part -- the implementer chose the new test file's name/location per convention, which I hadn't pre-declared). Re-verified independently: core full suite 4400/4400 passed, typecheck/build/lint clean, doc-content test 8/8.",
+      "touchedFiles": [
+        "docs/reference/commands.md",
+        "packages/core/src/doctor/run.ts",
+        "packages/core/tests/docs/cli-reference.test.ts",
+        ".changeset/packs-slice-1-manifest-resolve.md",
+        "packages/core/tests/doctor/packs.test.ts"
+      ],
+      "updatedAt": "2026-08-22T22:40:23.571Z",
+      "execution": "dispatch",
+      "isolation": "none",
+      "modelClass": "complex"
+    },
+    "T4": {
+      "status": "DONE",
+      "notes": "Extended engine.test.ts with two AC-6 tests: byte-identical gatesFor/effectiveGateSet output (with a pack enabled+resolved in fixture setup) and a structural no-coupling scan (no gates/services file imports packs/). Independent reviewer found and fixed two real gaps I'd flagged myself before dispatch: (1) the byte-identical test used arrayContaining, which would NOT catch an extra leaked gate -- confirmed via injection, fixed to strict toEqual; (2) the import-scan regex missed default/namespace imports -- confirmed via injection, fixed through two iterations (a first fix introduced a false positive on an unrelated error-message string, caught and retightened to a statement-scoped extraction, verified against a 12-case matrix). Reviewer also found a third gap outside its authorized fix scope: the recursive scanDir's catch swallows a walk failure silently, which would make the coupling test vacuously pass having scanned zero files. Fixed inline: added a filesScanned counter with expect(filesScanned).toBeGreaterThan(0). Re-verified independently: core full suite 4402/4402 passed, typecheck/build/lint clean, engine.ts confirmed byte-unchanged.",
+      "touchedFiles": [
+        "packages/core/tests/gates/engine.test.ts"
+      ],
+      "updatedAt": "2026-08-22T22:57:40.957Z",
+      "execution": "inline",
+      "isolation": "worktree",
+      "modelClass": "mechanical"
+    }
+  }
+}

@@ -1,11 +1,18 @@
 # CADENCE Packs — Design (v1, internal-first)
 
-> **Status: design draft, zero consumers.** `config.packs` exists in the
-> schema (`packages/types/src/config.ts`) but nothing in `packages/core/src`
-> reads it. Nothing described below is enforced, resolved, or even parsed
-> yet. This document is the record of the design decisions made before any
-> of the slices in §7 are built — not user-facing documentation of a shipped
-> feature. It is intentionally **not** indexed in `docs/README.md`.
+> **Status: Slice 1 shipped (phase 290), zero behavioral effect.** As of
+> Slice 1, `config.packs` is parsed and resolved — `resolvePacks()`
+> (`packages/core/src/packs/resolve.ts`) validates each enabled id's
+> `.cadence/packs/<id>/pack.json` against `PackManifestZ`
+> (`packages/types/src/pack.ts`), and `cadence doctor`'s `packs` check
+> surfaces whether each one resolves. **Nothing in gate computation reads a
+> pack yet** — `gatesFor`/`effectiveGateSet`
+> (`packages/core/src/gates/engine.ts`) have zero diff from before Slice 1,
+> proven by a structural no-coupling test — so no `skillAudit` requirement,
+> gate-profile delta, or slash-command declaration a manifest carries has
+> any effect. This document remains the design record for the whole arc;
+> §7 tracks which slice is done. It is intentionally **not** indexed in
+> `docs/README.md`.
 
 Scout: `scout-20260822-packs-design`. Precedes any implementation.
 
@@ -301,7 +308,7 @@ phase ships publicly. This is a recorded deferral, not an open gap.
 Each slice is independently shippable with its own hard acceptance bar.
 Nothing before Slice 2 has any runtime effect.
 
-**Slice 1 — Resolve and validate, zero behavioral effect.**
+**Slice 1 — Resolve and validate, zero behavioral effect. Shipped (phase 290).**
 Manifest schema (§3), `resolvePacks()` (§4a), and a new `cadence doctor`
 check reporting each enabled pack resolved/unresolved with a reason.
 Proves I-1, I-2, I-4a.

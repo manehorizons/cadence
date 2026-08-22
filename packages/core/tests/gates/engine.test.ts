@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { describe, it, expect, afterEach } from 'vitest';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mkdir, writeFile } from 'node:fs/promises';
 import type { Profile, Tier } from '@thomas-powers-jr/cadence-types';
 import {
   effectiveGateSet,
@@ -16,6 +17,8 @@ import {
   ALWAYS_FIRE,
 } from '../../src/gates/engine.js';
 import { checkEvidenceFloor } from '../../src/gates/ac-evidence.js';
+import { resolvePacks } from '../../src/packs/resolve.js';
+import { tempRepo, type Fixture } from '@thomas-powers-jr/cadence-testkit';
 
 // Pre-existing local alias for this file's other describe blocks (unrelated
 // to phase 274) — left as-is rather than sweeping every call site. Phase
@@ -327,5 +330,173 @@ describe('effectiveGateSet', () => {
       'task-verify-required',
     ]);
     expect(set.softCap).toBe(false);
+  });
+});
+
+// Phase 290 T4 (AC-6) — zero-behavioral-effect regression proof: gate computation
+// is independent of pack resolution. This describe block provides two falsifiable
+// assertions: (a) that gatesFor()/effectiveGateSet() output is byte-identical
+// whether or not packs are enabled and resolved, and (b) that no file under
+// gates/ or services/ statically imports from packs/ — structural proof that
+// the two subsystems are decoupled.
+describe('290-01: pack resolution has zero behavioral effect on gate computation (AC-6)', () => {
+  let active: Fixture | null = null;
+  afterEach(async () => {
+    if (active) {
+      await active.cleanup();
+      active = null;
+    }
+  });
+
+  it('290-01/AC-6: gatesFor/effectiveGateSet output is byte-identical to ALWAYS_FIRE+DELTAS even with a pack enabled and successfully resolved in fixture setup (no consumer reads the resolved pack)', async () => {
+    // Set up fixture with a valid, resolvable pack enabled.
+    active = await tempRepo({ initialized: true });
+    const packDir = join(active.root, '.cadence/packs/cadence/test-pack');
+    await mkdir(packDir, { recursive: true });
+
+    const manifest = {
+      id: 'cadence/test-pack',
+      version: '1.0.0',
+    };
+    await writeFile(join(packDir, 'pack.json'), JSON.stringify(manifest));
+
+    // Load config and enable the pack.
+    const { loadConfig, writeConfig } = await import('../../src/config/loader.js');
+    const config = await loadConfig(active.root);
+    await writeConfig(active.root, {
+      ...config,
+      packs: { enabled: ['cadence/test-pack'], disabled: [] },
+    });
+
+    // Sanity-check: verify pack resolves.
+    const resolved = await resolvePacks(active.root, {
+      packs: { enabled: ['cadence/test-pack'], disabled: [] },
+    });
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].id).toBe('cadence/test-pack');
+    expect(resolved[0]).toHaveProperty('manifest');
+
+    // Tiers and profiles per the enums in types/src/state.ts and types/src/profile.ts.
+    const tiers: Tier[] = ['quick-fix', 'standard', 'complex'];
+    const profiles: Profile[] = ['strict', 'standard', 'auto'];
+
+    // For each (tier, profile) combo, assert gatesFor and effectiveGateSet are
+    // identical to what DELTAS/ALWAYS_FIRE would produce. Pull expected values
+    // from the constants directly (source of truth); do not hardcode a duplicate table.
+    for (const tier of tiers) {
+      for (const profile of profiles) {
+        const actual = gatesFor(tier, profile);
+
+        // Compute expected from ALWAYS_FIRE + DELTAS, mirroring gatesFor's logic.
+        const deltaGates = DELTAS[profile]?.[tier] ?? [];
+        const expectedGates = [...new Set([...ALWAYS_FIRE, ...deltaGates])];
+        const expectedSoftCap = profile === 'auto' && tier === 'complex';
+
+        // Strict array equality (not arrayContaining) — arrayContaining only
+        // proves actual.gates is a superset of expectedGates, which would
+        // silently pass even if gatesFor leaked an extra, unexpected gate
+        // (e.g. a pack-contributed gate) into its output. expectedGates is
+        // built with the same first-occurrence-order dedup semantics as
+        // gatesFor's own `for (const g of [...ALWAYS_FIRE, ...deltas])` loop
+        // (Set iteration order for primitive strings preserves insertion
+        // order), so order matches too — this is a real byte-identical proof.
+        expect(actual.gates).toEqual(expectedGates);
+        expect(new Set(actual.gates).size).toBe(actual.gates.length); // no duplicates
+        expect(actual.softCap).toBe(expectedSoftCap);
+      }
+    }
+
+    // Also test effectiveGateSet with the same fixture state (packs enabled/resolved).
+    const draftTier: Tier = 'standard';
+    const configProfile: Profile = 'auto';
+    const effectiveSet = effectiveGateSet({ tier: draftTier }, { profile: configProfile }, null);
+
+    const expectedDeltaGates = DELTAS[configProfile]?.[draftTier] ?? [];
+    const expectedEffectiveGates = [...new Set([...ALWAYS_FIRE, ...expectedDeltaGates])];
+
+    expect(effectiveSet.gates).toEqual(expectedEffectiveGates);
+    expect(new Set(effectiveSet.gates).size).toBe(effectiveSet.gates.length);
+  });
+
+  it('290-01/AC-6: structural no-coupling assertion — no file in gates/ or services/ imports from packs/', () => {
+    // Compute repo root: tests live at packages/core/tests/gates/engine.test.ts,
+    // so four levels up.
+    const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
+    const gatesDir = join(repoRoot, 'packages/core/src/gates');
+    const servicesDir = join(repoRoot, 'packages/core/src/services');
+
+    const offendingFiles: string[] = [];
+    // A directory-walk failure (bad path, permissions, a moved directory)
+    // must not silently produce a vacuous green — an unreached scan means
+    // zero files examined, which is indistinguishable from "examined every
+    // file, found nothing" unless something counts what was actually read.
+    let filesScanned = 0;
+
+    // Recursively walk gatesDir and servicesDir, checking each .ts file.
+    const scanDir = (dir: string) => {
+      try {
+        const entries = readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = join(dir, entry.name);
+          if (entry.isDirectory()) {
+            scanDir(fullPath);
+          } else if (entry.isFile() && entry.name.endsWith('.ts')) {
+            filesScanned += 1;
+            const content = readFileSync(fullPath, 'utf8');
+            // Look for import/export statements referencing packs/ — both
+            // relative and absolute, and both static and dynamic. Two-part
+            // check:
+            //   1. Extract each *statement-level* top-of-line `import`/
+            //      `export` clause (`^(?:import|export)\b[^;]*;`, multiline)
+            //      and check whether that whole statement's text contains
+            //      `/packs/`. Operating on the extracted statement (not the
+            //      raw file content) means a `from` module specifier that
+            //      happens to sit inside a non-import string — e.g. an error
+            //      message like `` `failed to load pack from
+            //      '.cadence/packs/${id}/pack.json'` `` — cannot produce a
+            //      false positive, while named/default/namespace/mixed
+            //      static imports and re-exports all match, because every
+            //      one of those forms requires `from` before the module
+            //      specifier and the whole clause (including a multi-line
+            //      one) sits on the same statement between `import`/`export`
+            //      and its terminating `;`.
+            //   2. Separately check for a dynamic `import('.../packs/...')`
+            //      call, which isn't anchored to line-start.
+            // A prior narrower pattern only matched named/side-effect static
+            // imports (its post-`import` clause was limited to an optional
+            // `{...}` group followed by `from`) and silently missed default
+            // and namespace imports — confirmed by injecting
+            // `import * as _unusedPacksNamespace from '../packs/resolve.js';`
+            // into engine.ts and observing this test still pass. A simpler
+            // whole-content `from\s+['"\`].../packs/...['"\`]` pattern (an
+            // intermediate fix) closed that gap but introduced its own false
+            // positive on the error-message case above — confirmed by
+            // testing both patterns against a matrix of positive and
+            // negative cases before picking this statement-scoped version.
+            const importStatements = content.match(/^(?:import|export)\b[^;]*;/gm) ?? [];
+            const hasStaticPackImport = importStatements.some((s) => s.includes('/packs/'));
+            const hasDynamicPackImport = /\bimport\s*\(\s*['"`][^'"`]*\/packs\//.test(content);
+            if (hasStaticPackImport || hasDynamicPackImport) {
+              offendingFiles.push(fullPath);
+            }
+          }
+        }
+      } catch {
+        // Best-effort: if a read fails, don't blow up the test.
+      }
+    };
+
+    scanDir(gatesDir);
+    scanDir(servicesDir);
+
+    // Guard against the scan itself silently finding nothing to look at.
+    expect(filesScanned).toBeGreaterThan(0);
+
+    expect(offendingFiles).toEqual(
+      [],
+      `Files in gates/ or services/ must not import from packs/. Found imports in: ${offendingFiles.join(
+        ', ',
+      )}`,
+    );
   });
 });
